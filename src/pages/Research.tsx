@@ -15,7 +15,7 @@ const researchAreas = [
   {
     icon: FlaskConical,
     title: "Applied Research",
-    description: "Real-world applications of the UOR standard in frontier technology, scientific data management, and decentralized infrastructure.",
+    description: "Real-world applications of the UOR standard in frontier technology and research, scientific data management, and decentralized infrastructure.",
   },
 ];
 

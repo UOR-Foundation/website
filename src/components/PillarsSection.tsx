@@ -14,7 +14,7 @@ const pillars = [
     title: "The Standard",
     subtitle: "Universal Coordinate System",
     description:
-      "An open standard creating true interoperability across systems. UOR enables the semantic web by giving every data object a universal, content-addressed identity — bridging science, frontier technology, and beyond.",
+      "An open standard creating true interoperability across systems. UOR enables the semantic web by giving every data object a universal, content-addressed identity — bridging open science, frontier technology and research.",
     tags: ["Interoperability", "Semantic Web", "Frontier Tech"],
   },
   {
