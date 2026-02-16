@@ -12,7 +12,7 @@ const HeroSection = () => {
               {" "}for Information
             </h1>
             <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl font-body">
-              Building interoperable infrastructure for the semantic web, open science, and next-generation frontier technology — together.
+              Building interoperable infrastructure for the semantic web, open science, and frontier technology and research — together.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a

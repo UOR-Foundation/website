@@ -22,9 +22,9 @@ const projects = [
   },
   {
     name: "Frontier Coordinate Engine",
-    category: "Frontier Technology",
+    category: "Frontier Technology & Research",
     status: "Research",
-    description: "Applying the universal coordinate system to next-generation frontier technology — enabling content-addressed referencing, cross-platform interoperability, and semantic search.",
+    description: "Applying the universal coordinate system to frontier technology and research — enabling content-addressed referencing, cross-platform interoperability, and semantic search.",
   },
   {
     name: "Open Science Toolkit",
