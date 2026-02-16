@@ -5,7 +5,7 @@ const pillars = [
     icon: Globe,
     title: "The Standard",
     description:
-      "Content-addressed identity for every data object — bridging open science and frontier technology and research.",
+      "Content-addressed identity for every data object — bridging open science and frontier research.",
   },
   {
     icon: Users,
@@ -25,16 +25,15 @@ const PillarsSection = () => {
   return (
     <section id="pillars" className="py-20 md:py-28 bg-background">
       <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="rule-accent mb-16" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border rounded-xl overflow-hidden border border-border">
           {pillars.map((pillar, index) => (
             <div
               key={pillar.title}
-              className="group bg-card rounded-2xl border border-border p-8 hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up"
-              style={{ animationDelay: `${index * 0.15}s` }}
+              className="bg-card p-8 md:p-10 animate-fade-in-up"
+              style={{ animationDelay: `${index * 0.12}s` }}
             >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
-                <pillar.icon className="w-6 h-6 text-primary" />
-              </div>
+              <pillar.icon className="w-5 h-5 text-primary mb-6" strokeWidth={1.5} />
               <h3 className="font-display text-xl font-semibold text-foreground mb-3">
                 {pillar.title}
               </h3>
