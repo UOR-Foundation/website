@@ -1,26 +1,34 @@
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 
+type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
+
 const featuredProjects = [
   {
     name: "UOR Core",
     category: "Infrastructure",
     description: "Reference implementation — content-addressed, composable data primitives.",
-    status: "Active",
+    maturity: "Graduated" as MaturityLevel,
   },
   {
     name: "Semantic Bridge",
     category: "Interoperability",
     description: "Translates existing data formats into UOR's universal coordinate system.",
-    status: "In Development",
+    maturity: "Incubating" as MaturityLevel,
   },
   {
-    name: "Research Hub",
-    category: "Distribution",
-    description: "Publish, discover, and license research products on UOR infrastructure.",
-    status: "Beta",
+    name: "Frontier Coordinate Engine",
+    category: "Frontier Technology & Research",
+    description: "Content-addressed referencing and semantic search for frontier technology and research.",
+    maturity: "Sandbox" as MaturityLevel,
   },
 ];
+
+const maturityColors: Record<MaturityLevel, string> = {
+  Graduated: "bg-primary/15 text-primary",
+  Incubating: "bg-accent/15 text-accent",
+  Sandbox: "bg-section-dark-foreground/10 text-section-dark-foreground/60",
+};
 
 const ProjectsShowcase = () => {
   return (
@@ -49,8 +57,8 @@ const ProjectsShowcase = () => {
                 <span className="text-xs font-medium px-3 py-1 rounded-full bg-primary/15 text-primary font-body">
                   {project.category}
                 </span>
-                <span className="text-xs text-section-dark-foreground/50 font-body">
-                  {project.status}
+                <span className={`text-xs font-medium px-3 py-1 rounded-full font-body ${maturityColors[project.maturity]}`}>
+                  {project.maturity}
                 </span>
               </div>
               <h3 className="font-display text-xl font-semibold mb-2">
