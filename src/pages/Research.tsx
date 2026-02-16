@@ -4,18 +4,18 @@ import { FileText, Users, FlaskConical } from "lucide-react";
 const researchAreas = [
   {
     icon: FileText,
-    title: "UOR Specification",
-    description: "Formalizing content-addressed identity, intrinsic attributes, and composable primitives.",
+    title: "Specification",
+    description: "Formalizing content-addressed identity and composable primitives.",
   },
   {
     icon: Users,
-    title: "Semantic Interoperability",
-    description: "Bridging heterogeneous data systems through universal referencing.",
+    title: "Interoperability",
+    description: "Universal referencing across heterogeneous data systems.",
   },
   {
     icon: FlaskConical,
     title: "Applied Research",
-    description: "Real-world applications in frontier technology and research, and decentralized infrastructure.",
+    description: "Frontier technology and decentralized infrastructure.",
   },
 ];
 
@@ -28,7 +28,7 @@ const Research = () => {
             Research
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-            Open, peer-reviewed research advancing universal data infrastructure.
+            Peer-reviewed work advancing universal data infrastructure.
           </p>
         </div>
       </section>

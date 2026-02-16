@@ -5,22 +5,22 @@ const features = [
   {
     icon: Shield,
     title: "Content-Addressed Identity",
-    description: "Objects identified by cryptographic hash, not location. Verifiable. No central authority.",
+    description: "Objects identified by cryptographic hash. Verifiable without central authority.",
   },
   {
     icon: Layers,
     title: "Composable Primitives",
-    description: "Intrinsic attributes compose into complex structures while maintaining referential integrity.",
+    description: "Intrinsic attributes compose into complex structures with referential integrity.",
   },
   {
     icon: Link2,
     title: "Semantic Interoperability",
-    description: "Bridges data formats and protocols. Seamless exchange without custom integration.",
+    description: "Bridges formats and protocols. No custom integration required.",
   },
   {
     icon: Zap,
-    title: "Serverless & Decentralized",
-    description: "Access data by what it is, not where it lives. Decentralized without sacrificing determinism.",
+    title: "Decentralized Determinism",
+    description: "Location-independent access without sacrificing consistency.",
   },
 ];
 
@@ -30,10 +30,10 @@ const Standard = () => {
       <section className="hero-gradient py-20 md:py-28">
         <div className="container max-w-3xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
-            The UOR Standard
+            The Standard
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-            An open standard for structured, composable data — identified by content, not location.
+            Composable data identified by content, not location.
           </p>
         </div>
       </section>

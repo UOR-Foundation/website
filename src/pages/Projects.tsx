@@ -128,9 +128,7 @@ const Projects = () => {
             Project Maturity Framework
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
-            Every UOR project follows a clear progression from <strong className="text-foreground">Sandbox</strong> to{" "}
-            <strong className="text-foreground">Incubating</strong> to{" "}
-            <strong className="text-foreground">Graduated</strong> — mirroring proven open-source governance models.
+            Sandbox → Incubating → Graduated. Clear criteria at every stage.
           </p>
         </div>
       </section>
@@ -138,12 +136,9 @@ const Projects = () => {
       {/* Visual Progression Flow */}
       <section className="py-16 md:py-20 bg-background border-b border-border">
         <div className="container">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4 text-center">
-            How Projects Evolve
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-12 text-center">
+            Progression
           </h2>
-          <p className="text-center text-muted-foreground font-body mb-12 max-w-2xl mx-auto">
-            Projects enter as Sandbox experiments and mature through demonstrated adoption, governance, and community health.
-          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-0 max-w-5xl mx-auto">
             {maturityInfo.map((stage, idx) => (
@@ -248,14 +243,11 @@ const Projects = () => {
       <section id="submit" className="section-dark py-20 md:py-28">
         <div className="container max-w-3xl">
           <div className="text-center mb-12">
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary font-body mb-4">
-              <Send size={14} /> Open to everyone
-            </span>
             <h2 className="font-display text-3xl md:text-4xl font-bold">
-              Submit a Project for Sandbox
+              Submit for Sandbox
             </h2>
             <p className="mt-4 text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto">
-              Have an idea that builds on the UOR standard? Submit it for Sandbox consideration. All you need is an open-source repo and a clear problem statement.
+              Open-source repo and a clear problem statement. That's all you need.
             </p>
           </div>
 
