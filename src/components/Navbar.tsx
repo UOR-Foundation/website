@@ -6,7 +6,6 @@ const navItems = [
   { label: "The Standard", href: "/standard" },
   { label: "Research", href: "/research" },
   { label: "Projects", href: "/projects" },
-  { label: "About", href: "/about" },
 ];
 
 const Navbar = () => {
@@ -38,14 +37,6 @@ const Navbar = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <a
-            href="https://github.com/UOR-Foundation"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="nav-pill"
-          >
-            GitHub
-          </a>
           <Link
             to="/about"
             className="px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
@@ -75,14 +66,6 @@ const Navbar = () => {
                 {item.label}
               </Link>
             ))}
-            <a
-              href="https://github.com/UOR-Foundation"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="nav-pill text-center"
-            >
-              GitHub
-            </a>
           </nav>
         </div>
       )}
