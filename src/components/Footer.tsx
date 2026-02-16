@@ -13,7 +13,7 @@ const Footer = () => {
               <span className="font-display text-base font-semibold">UOR Foundation</span>
             </div>
             <p className="text-section-dark-foreground/55 font-body max-w-sm leading-relaxed text-sm">
-              The open standard for universal data infrastructure.
+              Open standard. Universal infrastructure.
             </p>
           </div>
 
