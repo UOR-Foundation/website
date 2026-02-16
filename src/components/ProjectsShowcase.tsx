@@ -32,9 +32,9 @@ const maturityStyles: Record<MaturityLevel, string> = {
 
 const ProjectsShowcase = () => {
   return (
-    <section className="section-dark py-20 md:py-28">
+    <section className="section-dark py-16 md:py-28">
       <div className="container">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-14 gap-4">
           <div>
             <p className="text-sm font-medium tracking-widest uppercase text-primary mb-3 font-body">
               Ecosystem
@@ -55,7 +55,7 @@ const ProjectsShowcase = () => {
           {featuredProjects.map((project, index) => (
             <div
               key={project.name}
-              className="rounded-xl border border-section-dark-foreground/10 p-7 hover:border-section-dark-foreground/20 transition-all duration-300 animate-fade-in-up"
+              className="rounded-xl border border-section-dark-foreground/10 p-6 md:p-7 hover:border-section-dark-foreground/20 transition-all duration-300 animate-fade-in-up"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="flex items-center justify-between mb-5">

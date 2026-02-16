@@ -33,13 +33,13 @@ const Research = () => {
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-background">
+      <section className="py-16 md:py-28 bg-background">
         <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 mb-14 md:mb-16">
             {researchAreas.map((area, index) => (
               <div
                 key={area.title}
-                className="bg-card rounded-2xl border border-border p-8 animate-fade-in-up"
+                className="bg-card rounded-2xl border border-border p-6 md:p-8 animate-fade-in-up"
                 style={{ animationDelay: `${index * 0.12}s` }}
               >
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5">

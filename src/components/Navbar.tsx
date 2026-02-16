@@ -56,8 +56,8 @@ const Navbar = () => {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden bg-background border-b border-border p-4 animate-fade-in">
-          <nav className="flex flex-col gap-2">
+        <div className="md:hidden bg-background border-b border-border px-6 py-5 animate-fade-in">
+          <nav className="flex flex-col gap-2.5">
             {navItems.map((item) => (
               <Link
                 key={item.href}

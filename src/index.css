@@ -114,6 +114,14 @@
     background: linear-gradient(180deg, hsl(200 20% 96%) 0%, hsl(var(--background)) 100%);
   }
 
+  /* Consistent mobile container breathing room */
+  @media (max-width: 640px) {
+    .container {
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+    }
+  }
+
   .rule {
     @apply h-px w-full bg-border;
   }
