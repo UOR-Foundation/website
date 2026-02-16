@@ -1,5 +1,3 @@
-import heroSphere from "@/assets/hero-sphere.png";
-
 const HeroSection = () => {
   return (
     <section className="hero-gradient relative overflow-hidden">
@@ -28,15 +26,6 @@ const HeroSection = () => {
               Learn More
             </a>
           </div>
-        </div>
-
-        {/* Hero image — centered below headline */}
-        <div className="flex justify-center mt-12 md:mt-16 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-          <img
-            src={heroSphere}
-            alt="Universal coordinate system visualization — interconnected geometric nodes forming a crystalline sphere"
-            className="w-full max-w-sm md:max-w-lg lg:max-w-2xl opacity-90"
-          />
         </div>
       </div>
     </section>
