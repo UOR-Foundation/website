@@ -3,7 +3,7 @@ import { Globe, Users, Rocket } from "lucide-react";
 const pillars = [
   {
     icon: Users,
-    title: "The Community",
+    title: "Your Community",
     subtitle: "Collaboration & Governance",
     description:
       "A vibrant ecosystem of researchers, developers, and visionaries working together to shape the future of open data infrastructure. The community drives governance, contribution, and adoption of the standard.",
@@ -19,7 +19,7 @@ const pillars = [
   },
   {
     icon: Rocket,
-    title: "Distribution",
+    title: "Our Distribution",
     subtitle: "Research Products & Monetization",
     description:
       "A sustainable path for researchers and builders. The distribution platform enables discovery, licensing, and monetization of research products — creating viable economic models for open science.",
