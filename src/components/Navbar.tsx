@@ -37,12 +37,14 @@ const Navbar = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link
-            to="/about"
+          <a
+            href="https://www.uor.foundation/donate"
+            target="_blank"
+            rel="noopener noreferrer"
             className="px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
           >
-            Get Involved
-          </Link>
+            Donate Now
+          </a>
         </div>
 
         <button

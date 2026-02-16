@@ -4,7 +4,7 @@ const CTASection = () => {
       <div className="container">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
-            Get Involved
+            Donate Now
           </h2>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <a

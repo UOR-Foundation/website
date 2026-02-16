@@ -39,7 +39,7 @@ const About = () => {
           <div className="glow-line" />
 
           <div className="animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-            <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-4">Get Involved</h2>
+            <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-4">Donate Now</h2>
             <p className="text-muted-foreground font-body leading-relaxed mb-6">
               Researchers, developers, and advocates — there's a place for you.
             </p>
