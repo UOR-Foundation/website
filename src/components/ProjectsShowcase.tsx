@@ -42,7 +42,7 @@ const ProjectsShowcase = () => {
             to="/projects"
             className="flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all font-body"
           >
-            View all <ArrowRight size={16} />
+            View all projects <ArrowRight size={16} />
           </Link>
         </div>
 
