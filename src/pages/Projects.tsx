@@ -136,7 +136,7 @@ const Projects = () => {
       </section>
 
       {/* Visual Progression Flow */}
-      <section className="py-16 md:py-20 bg-background border-b border-border">
+      <section className="py-16 md:py-28 bg-background border-b border-border">
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4 text-center">
             How Projects Evolve
@@ -195,7 +195,7 @@ const Projects = () => {
       </section>
 
       {/* Projects by maturity */}
-      <section className="py-16 md:py-24 bg-background">
+      <section className="py-16 md:py-28 bg-background">
         <div className="container space-y-16">
           {(["Graduated", "Incubating", "Sandbox"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
@@ -215,7 +215,7 @@ const Projects = () => {
                   {levelProjects.map((project, index) => (
                     <div
                       key={project.name}
-                      className="group bg-card rounded-2xl border border-border p-8 hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up"
+                      className="group bg-card rounded-2xl border border-border p-6 md:p-8 hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up"
                       style={{ animationDelay: `${index * 0.08}s` }}
                     >
                       <div className="flex items-center justify-between mb-4">

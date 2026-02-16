@@ -3,19 +3,19 @@ import heroSphere from "@/assets/hero-sphere.png";
 const HeroSection = () => {
   return (
     <section className="hero-gradient relative overflow-hidden">
-      <div className="container py-24 md:py-36">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className="container py-20 md:py-32 lg:py-36">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="animate-fade-in-up">
-            <p className="text-sm font-medium tracking-widest uppercase text-primary mb-6 font-body">
+            <p className="text-sm font-medium tracking-widest uppercase text-primary mb-5 font-body">
               Open Standard
             </p>
-            <h1 className="font-display text-4xl md:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] tracking-tight text-foreground text-balance">
+            <h1 className="font-display text-[2.25rem] md:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] tracking-tight text-foreground text-balance">
               The Universal Coordinate System for Information
             </h1>
-            <p className="mt-8 text-lg text-muted-foreground leading-relaxed max-w-lg font-body">
+            <p className="mt-6 md:mt-8 text-base md:text-lg text-muted-foreground leading-relaxed max-w-lg font-body">
               Open infrastructure for the semantic web, open science, and frontier research. Data referenced by what it <em className="not-italic text-foreground/70">is</em>, not where it lives.
             </p>
-            <div className="mt-10 flex flex-wrap gap-3">
+            <div className="mt-8 md:mt-10 flex flex-wrap gap-3">
               <a
                 href="https://github.com/UOR-Foundation"
                 target="_blank"
@@ -33,11 +33,11 @@ const HeroSection = () => {
             </div>
           </div>
 
-          <div className="flex justify-center lg:justify-end animate-fade-in" style={{ animationDelay: "0.3s" }}>
+          <div className="flex justify-center lg:justify-end animate-fade-in mt-4 lg:mt-0" style={{ animationDelay: "0.3s" }}>
             <img
               src={heroSphere}
               alt="Universal coordinate system visualization — interconnected geometric nodes forming a crystalline sphere"
-              className="w-full max-w-md opacity-90"
+              className="w-full max-w-[280px] md:max-w-md opacity-90"
             />
           </div>
         </div>

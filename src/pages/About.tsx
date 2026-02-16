@@ -14,7 +14,7 @@ const About = () => {
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-background">
+      <section className="py-16 md:py-28 bg-background">
         <div className="container max-w-3xl space-y-12">
           <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-4">Our Mission</h2>

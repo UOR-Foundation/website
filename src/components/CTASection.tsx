@@ -1,8 +1,8 @@
 const CTASection = () => {
   return (
-    <section className="py-20 md:py-28 bg-background">
+    <section className="py-16 md:py-28 bg-background">
       <div className="container">
-        <div className="rule-accent mb-16" />
+        <div className="rule-accent mb-10 md:mb-16" />
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
             Donate Now
