@@ -13,7 +13,7 @@ const HeroSection = () => {
               The Universal Coordinate System for Information
             </h1>
             <p className="mt-8 text-lg text-muted-foreground leading-relaxed max-w-lg font-body">
-              Content-addressed identity, verified computation, and composable data primitives. Data referenced by what it <em className="not-italic text-foreground/70">is</em>, not where it lives.
+              Open infrastructure for the semantic web, open science, and frontier research. Data referenced by what it <em className="not-italic text-foreground/70">is</em>, not where it lives.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
               <a
