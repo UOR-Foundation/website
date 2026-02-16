@@ -6,37 +6,37 @@ const projects = [
     name: "UOR Core",
     category: "Infrastructure",
     status: "Active",
-    description: "The reference implementation of the Universal Object Reference specification. Content-addressed, cryptographically verifiable, composable data primitives that form the backbone of the UOR ecosystem.",
+    description: "Reference implementation — content-addressed, composable data primitives.",
   },
   {
     name: "Semantic Bridge",
     category: "Interoperability",
     status: "In Development",
-    description: "Middleware translating between existing data formats (JSON-LD, RDF, Protocol Buffers) and UOR's universal coordinate system. Enables seamless adoption without rewriting existing systems.",
+    description: "Translates JSON-LD, RDF, and Protocol Buffers into UOR's coordinate system.",
   },
   {
     name: "Research Hub",
     category: "Distribution",
     status: "Beta",
-    description: "A platform for publishing, discovering, and licensing research products built on UOR-standard infrastructure. Features reproducibility guarantees and transparent attribution.",
+    description: "Publish, discover, and license research products with reproducibility guarantees.",
   },
   {
     name: "Frontier Coordinate Engine",
     category: "Frontier Technology & Research",
     status: "Research",
-    description: "Applying the universal coordinate system to frontier technology and research — enabling content-addressed referencing, cross-platform interoperability, and semantic search.",
+    description: "Content-addressed referencing and semantic search for frontier technology and research.",
   },
   {
     name: "Open Science Toolkit",
     category: "Open Science",
     status: "Planning",
-    description: "Tools and libraries for researchers to publish reproducible experiments, manage datasets, and share findings using the UOR standard for data integrity and provenance.",
+    description: "Reproducible experiments, dataset management, and findings sharing on UOR.",
   },
   {
     name: "Developer SDK",
     category: "Developer Tools",
     status: "Active",
-    description: "SDKs and client libraries for building applications on the UOR standard. Available for JavaScript/TypeScript, Python, and Rust with comprehensive documentation.",
+    description: "Client libraries for JavaScript/TypeScript, Python, and Rust.",
   },
 ];
 

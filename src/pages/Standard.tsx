@@ -5,22 +5,22 @@ const features = [
   {
     icon: Shield,
     title: "Content-Addressed Identity",
-    description: "Every data object is identified by its cryptographic hash — not by its location. This ensures verifiability and eliminates dependency on centralized naming authorities.",
+    description: "Objects identified by cryptographic hash, not location. Verifiable. No central authority.",
   },
   {
     icon: Layers,
     title: "Composable Primitives",
-    description: "Data objects are described by intrinsic attributes (size, media type, content digest) and can be composed into complex structures while maintaining referential integrity.",
+    description: "Intrinsic attributes compose into complex structures while maintaining referential integrity.",
   },
   {
     icon: Link2,
     title: "Semantic Interoperability",
-    description: "The universal coordinate system bridges data formats and protocols, enabling seamless exchange between systems without custom integration layers.",
+    description: "Bridges data formats and protocols. Seamless exchange without custom integration.",
   },
   {
     icon: Zap,
     title: "Serverless & Decentralized",
-    description: "Access data by what it is, not where it lives. UOR enables truly decentralized, serverless infrastructure without sacrificing security or determinism.",
+    description: "Access data by what it is, not where it lives. Decentralized without sacrificing determinism.",
   },
 ];
 
@@ -38,17 +38,8 @@ const Standard = () => {
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-background">
+       <section className="py-16 md:py-24 bg-background">
         <div className="container">
-          <div className="max-w-3xl mx-auto mb-16">
-            <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-6">
-              A Rosetta Stone for Data
-            </h2>
-            <p className="text-muted-foreground font-body leading-relaxed">
-              Every piece of data — referenced, trusted, and composed like code. UOR treats everything as an object, uniquely identified by its intrinsic attributes.
-            </p>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
             {features.map((feature, index) => (
               <div

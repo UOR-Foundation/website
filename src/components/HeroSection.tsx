@@ -30,20 +30,6 @@ const HeroSection = () => {
                 Learn More
               </a>
             </div>
-            <div className="mt-10 flex items-center gap-6 text-sm text-muted-foreground font-body">
-              <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary" />
-                Open Source
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-accent" />
-                Community Driven
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-glow-green" />
-                Standards Based
-              </span>
-            </div>
           </div>
 
           <div className="flex justify-center lg:justify-end animate-fade-in" style={{ animationDelay: "0.3s" }}>
