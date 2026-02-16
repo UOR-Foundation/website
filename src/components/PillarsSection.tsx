@@ -1,6 +1,14 @@
-import { Globe, BookOpen, Rocket } from "lucide-react";
+import { Globe, Users, Rocket } from "lucide-react";
 
 const pillars = [
+  {
+    icon: Users,
+    title: "The Community",
+    subtitle: "Collaboration & Governance",
+    description:
+      "A vibrant ecosystem of researchers, developers, and visionaries working together to shape the future of open data infrastructure. The community drives governance, contribution, and adoption of the standard.",
+    tags: ["Open Source", "Governance", "Collaboration"],
+  },
   {
     icon: Globe,
     title: "The Standard",
@@ -10,19 +18,11 @@ const pillars = [
     tags: ["Interoperability", "Semantic Web", "Video Tech"],
   },
   {
-    icon: BookOpen,
-    title: "Open Science",
-    subtitle: "Research & Discovery",
-    description:
-      "Accelerating scientific progress through open collaboration. Our research programs support peer-reviewed publications, reproducible experiments, and transparent knowledge sharing built on the UOR standard.",
-    tags: ["Peer Review", "Reproducibility", "Open Access"],
-  },
-  {
     icon: Rocket,
-    title: "Distribution Platform",
+    title: "Distribution",
     subtitle: "Research Products & Monetization",
     description:
-      "A sustainable path for researchers and builders. Our distribution platform enables discovery, licensing, and monetization of research products — creating viable economic models for open science.",
+      "A sustainable path for researchers and builders. The distribution platform enables discovery, licensing, and monetization of research products — creating viable economic models for open science.",
     tags: ["Monetization", "Licensing", "Discovery"],
   },
 ];
