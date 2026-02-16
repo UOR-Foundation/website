@@ -6,78 +6,78 @@
 
 @layer base {
   :root {
-    --background: 200 20% 98%;
-    --foreground: 220 25% 12%;
+    --background: 210 25% 97%;
+    --foreground: 220 25% 10%;
 
-    --card: 200 15% 97%;
-    --card-foreground: 220 25% 12%;
+    --card: 210 20% 96%;
+    --card-foreground: 220 25% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 12%;
+    --popover-foreground: 220 25% 10%;
 
-    --primary: 160 40% 28%;
+    --primary: 152 36% 32%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 12% 92%;
-    --secondary-foreground: 220 25% 12%;
+    --secondary: 210 14% 92%;
+    --secondary-foreground: 220 25% 10%;
 
-    --muted: 200 10% 93%;
-    --muted-foreground: 220 10% 42%;
+    --muted: 210 12% 93%;
+    --muted-foreground: 220 10% 44%;
 
-    --accent: 200 35% 38%;
+    --accent: 200 30% 40%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 200 15% 88%;
-    --input: 200 15% 88%;
-    --ring: 160 40% 28%;
+    --border: 210 16% 88%;
+    --input: 210 16% 88%;
+    --ring: 152 36% 32%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 220 15% 26%;
-    --sidebar-primary: 160 40% 28%;
+    --sidebar-primary: 152 36% 32%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 200 12% 92%;
-    --sidebar-accent-foreground: 220 25% 12%;
-    --sidebar-border: 200 15% 88%;
-    --sidebar-ring: 160 40% 28%;
+    --sidebar-accent: 210 14% 92%;
+    --sidebar-accent-foreground: 220 25% 10%;
+    --sidebar-border: 210 16% 88%;
+    --sidebar-ring: 152 36% 32%;
 
     /* Structural tokens */
-    --section-dark: 220 20% 10%;
-    --section-dark-foreground: 200 15% 88%;
-    --pill-border: 200 12% 78%;
-    --rule: 200 15% 86%;
+    --section-dark: 220 18% 10%;
+    --section-dark-foreground: 210 15% 88%;
+    --pill-border: 210 14% 80%;
+    --rule: 210 16% 86%;
 
     font-family: 'DM Sans', system-ui, sans-serif;
   }
 
   .dark {
-    --background: 220 20% 7%;
-    --foreground: 200 15% 90%;
-    --card: 220 18% 11%;
-    --card-foreground: 200 15% 90%;
-    --popover: 220 18% 11%;
-    --popover-foreground: 200 15% 90%;
-    --primary: 160 38% 38%;
+    --background: 220 18% 7%;
+    --foreground: 210 15% 90%;
+    --card: 220 16% 11%;
+    --card-foreground: 210 15% 90%;
+    --popover: 220 16% 11%;
+    --popover-foreground: 210 15% 90%;
+    --primary: 152 34% 40%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 16%;
-    --secondary-foreground: 200 15% 90%;
-    --muted: 220 15% 16%;
+    --secondary: 220 14% 16%;
+    --secondary-foreground: 210 15% 90%;
+    --muted: 220 14% 16%;
     --muted-foreground: 210 10% 55%;
-    --accent: 200 30% 45%;
+    --accent: 200 28% 45%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 160 38% 38%;
-    --section-dark: 220 22% 5%;
-    --section-dark-foreground: 200 15% 85%;
+    --border: 220 14% 18%;
+    --input: 220 14% 18%;
+    --ring: 152 34% 40%;
+    --section-dark: 220 20% 5%;
+    --section-dark-foreground: 210 15% 85%;
     --pill-border: 220 12% 30%;
-    --rule: 220 15% 18%;
+    --rule: 220 14% 18%;
   }
 }
 
@@ -111,7 +111,7 @@
   }
 
   .hero-gradient {
-    background: linear-gradient(180deg, hsl(200 20% 96%) 0%, hsl(var(--background)) 100%);
+    background: linear-gradient(180deg, hsl(208 30% 94%) 0%, hsl(var(--background)) 100%);
   }
 
   /* Consistent mobile container breathing room */

@@ -25,16 +25,16 @@ const featuredProjects = [
 ];
 
 const maturityStyles: Record<MaturityLevel, string> = {
-  Graduated: "text-primary border-primary/30",
-  Incubating: "text-accent border-accent/30",
-  Sandbox: "text-muted-foreground border-border",
+  Graduated: "text-primary",
+  Incubating: "text-accent",
+  Sandbox: "text-muted-foreground",
 };
 
 const ProjectsShowcase = () => {
   return (
-    <section className="section-dark py-16 md:py-28">
-      <div className="container">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-14 gap-4">
+    <section className="section-dark py-20 md:py-32">
+      <div className="container max-w-5xl">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
           <div>
             <p className="text-sm font-medium tracking-widest uppercase text-primary mb-3 font-body">
               Ecosystem
@@ -51,27 +51,33 @@ const ProjectsShowcase = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="space-y-0">
           {featuredProjects.map((project, index) => (
             <div
               key={project.name}
-              className="rounded-xl border border-section-dark-foreground/10 p-6 md:p-7 hover:border-section-dark-foreground/20 transition-all duration-300 animate-fade-in-up"
+              className="animate-fade-in-up"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <div className="flex items-center justify-between mb-5">
-                <span className="text-xs font-medium text-section-dark-foreground/50 font-body uppercase tracking-wider">
+              {index === 0 && <div className="h-px w-full bg-section-dark-foreground/10" />}
+              <div className="py-8 md:py-10 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="font-display text-xl font-semibold">
+                      {project.name}
+                    </h3>
+                    <span className={`text-xs font-medium font-body ${maturityStyles[project.maturity]}`}>
+                      {project.maturity}
+                    </span>
+                  </div>
+                  <p className="text-section-dark-foreground/55 font-body text-sm leading-relaxed max-w-lg">
+                    {project.description}
+                  </p>
+                </div>
+                <span className="text-xs font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider md:mt-1">
                   {project.category}
                 </span>
-                <span className={`text-xs font-medium px-3 py-1 rounded-full border font-body ${maturityStyles[project.maturity]}`}>
-                  {project.maturity}
-                </span>
               </div>
-              <h3 className="font-display text-xl font-semibold mb-3">
-                {project.name}
-              </h3>
-              <p className="text-section-dark-foreground/55 font-body text-sm leading-relaxed">
-                {project.description}
-              </p>
+              <div className="h-px w-full bg-section-dark-foreground/10" />
             </div>
           ))}
         </div>
