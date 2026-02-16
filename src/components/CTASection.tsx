@@ -1,16 +1,19 @@
 const CTASection = () => {
   return (
     <section className="py-20 md:py-28 bg-background">
-      <div className="container">
+      <div className="container max-w-3xl">
         <div className="rule-accent mb-16" />
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+        <div className="text-center">
+          <p className="text-xs font-medium tracking-widest uppercase text-primary mb-4 font-body">
+            Support the Foundation
+          </p>
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
             Donate Now
           </h2>
-          <p className="mt-4 text-muted-foreground font-body leading-relaxed">
-            Support open infrastructure for the next foundation of the internet.
+          <p className="text-muted-foreground font-body leading-relaxed mb-10 max-w-lg mx-auto text-sm">
+            Open infrastructure for the next foundation of the internet. Every contribution sustains verified, composable, and freely available standards.
           </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             <a
               href="https://discord.gg/ZwuZaNyuve"
               target="_blank"

@@ -122,12 +122,15 @@ const Projects = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient py-20 md:py-28">
+      <section className="hero-gradient py-24 md:py-32">
         <div className="container max-w-4xl">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
+          <p className="text-sm font-medium tracking-widest uppercase text-primary mb-6 font-body animate-fade-in-up">
+            Ecosystem
+          </p>
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up">
             Project Maturity Framework
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.1s" }}>
             Every UOR project follows a clear progression from <strong className="text-foreground">Sandbox</strong> to{" "}
             <strong className="text-foreground">Incubating</strong> to{" "}
             <strong className="text-foreground">Graduated</strong> — mirroring proven open-source governance models.
