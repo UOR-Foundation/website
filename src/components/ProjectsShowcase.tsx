@@ -36,6 +36,9 @@ const ProjectsShowcase = () => {
       <div className="container">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
           <div>
+            <p className="text-sm font-medium tracking-widest uppercase text-primary mb-3 font-body">
+              Ecosystem
+            </p>
             <h2 className="font-display text-3xl md:text-4xl font-bold">
               Projects
             </h2>

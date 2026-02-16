@@ -3,21 +3,21 @@ import { Globe, Users, Rocket } from "lucide-react";
 const pillars = [
   {
     icon: Globe,
-    title: "Standard",
+    title: "The Standard",
     description:
-      "Content-addressed identity. Composable primitives. No central authority.",
+      "Content-addressed identity for every data object — bridging open science and frontier research.",
   },
   {
     icon: Users,
-    title: "Community",
+    title: "Your Community",
     description:
-      "Open governance. Shared stewardship. Collective adoption.",
+      "Open governance and collaboration driving adoption of the standard.",
   },
   {
     icon: Rocket,
-    title: "Distribution",
+    title: "Our Distribution",
     description:
-      "Discovery, licensing, and reproducibility for research products.",
+      "Discovery, licensing, and monetization of research products.",
   },
 ];
 

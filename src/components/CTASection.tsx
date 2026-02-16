@@ -5,16 +5,19 @@ const CTASection = () => {
         <div className="rule-accent mb-16" />
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
-            Support the Foundation
+            Donate Now
           </h2>
+          <p className="mt-4 text-muted-foreground font-body leading-relaxed">
+            Support open infrastructure for the next foundation of the internet.
+          </p>
           <div className="mt-10 flex flex-wrap justify-center gap-3">
             <a
-              href="https://www.uor.foundation/donate"
+              href="https://discord.gg/ZwuZaNyuve"
               target="_blank"
               rel="noopener noreferrer"
               className="px-7 py-3 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
             >
-              Donate Now
+              Join Discord Community
             </a>
             <a
               href="https://github.com/UOR-Foundation"
@@ -22,7 +25,7 @@ const CTASection = () => {
               rel="noopener noreferrer"
               className="px-7 py-3 rounded-full border border-pill text-foreground font-medium text-sm hover:border-foreground/25 transition-all"
             >
-              GitHub
+              Contribute on GitHub
             </a>
           </div>
         </div>
