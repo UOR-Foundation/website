@@ -9,6 +9,7 @@ const HeroSection = () => {
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-foreground text-balance">
               The Open Standard for{" "}
               <span className="text-primary">Universal Coordinates</span>
+              {" "}for Information
             </h1>
             <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl font-body">
               Building interoperable infrastructure for the semantic web, open science, and next-generation video technology — together.
