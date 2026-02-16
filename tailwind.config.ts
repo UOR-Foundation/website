@@ -58,7 +58,7 @@ export default {
         pill: {
           DEFAULT: "hsl(var(--pill-border))",
         },
-        "glow-green": "hsl(var(--glow-green))",
+        rule: "hsl(var(--rule))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

@@ -13,18 +13,18 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
-      <div className="container flex items-center justify-between h-16 md:h-20">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-display font-bold text-sm">U</span>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/40">
+      <div className="container flex items-center justify-between h-16 md:h-[4.5rem]">
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
+            <span className="text-primary-foreground font-display font-bold text-xs">U</span>
           </div>
-          <span className="font-display text-lg font-semibold tracking-tight">
+          <span className="font-display text-base font-semibold tracking-tight">
             UOR Foundation
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-2">
+        <nav className="hidden md:flex items-center gap-1">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -36,7 +36,7 @@ const Navbar = () => {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center">
           <a
             href="https://www.uor.foundation/donate"
             target="_blank"
@@ -51,7 +51,7 @@ const Navbar = () => {
           onClick={() => setMobileOpen(!mobileOpen)}
           className="md:hidden p-2 text-foreground"
         >
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
