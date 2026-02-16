@@ -4,10 +4,10 @@ const CTASection = () => {
       <div className="container">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
-            Join the Movement
+            Get Involved
           </h2>
           <p className="mt-4 text-lg text-muted-foreground font-body max-w-xl mx-auto leading-relaxed">
-            Whether you're a researcher, developer, or visionary — the UOR Foundation is building the future of open data infrastructure. Contribute, collaborate, and shape what comes next.
+            Contribute, collaborate, and shape the future of open data infrastructure.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <a

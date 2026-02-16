@@ -28,7 +28,7 @@ const Research = () => {
             Research
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-            Advancing the science behind universal data infrastructure through open, peer-reviewed research and community collaboration.
+            Open, peer-reviewed research advancing universal data infrastructure.
           </p>
         </div>
       </section>
@@ -56,7 +56,7 @@ const Research = () => {
               Contributing to Research
             </h2>
             <p className="text-muted-foreground font-body leading-relaxed mb-6">
-              The UOR Foundation welcomes researchers, academics, and practitioners who want to contribute to the development of universal data standards. Our research is open-access and community-driven.
+              Open-access, community-driven research. All contributions welcome.
             </p>
             <div className="flex flex-wrap gap-3">
               <a

@@ -6,7 +6,7 @@ const pillars = [
     title: "Your Community",
     subtitle: "Collaboration & Governance",
     description:
-      "A vibrant ecosystem of researchers, developers, and visionaries working together to shape the future of open data infrastructure. The community drives governance, contribution, and adoption of the standard.",
+      "Researchers, developers, and visionaries driving governance, contribution, and adoption of the standard.",
     tags: ["Open Source", "Governance", "Collaboration"],
   },
   {
@@ -14,7 +14,7 @@ const pillars = [
     title: "The Standard",
     subtitle: "Universal Coordinate System",
     description:
-      "An open standard creating true interoperability across systems. UOR enables the semantic web by giving every data object a universal, content-addressed identity — bridging open science, frontier technology and research.",
+      "An open standard giving every data object a universal, content-addressed identity — bridging open science and frontier technology and research.",
     tags: ["Interoperability", "Semantic Web", "Frontier Tech"],
   },
   {
@@ -22,7 +22,7 @@ const pillars = [
     title: "Our Distribution",
     subtitle: "Research Products & Monetization",
     description:
-      "A sustainable path for researchers and builders. The distribution platform enables discovery, licensing, and monetization of research products — creating viable economic models for open science.",
+      "Discovery, licensing, and monetization of research products — creating viable economic models for open science.",
     tags: ["Monetization", "Licensing", "Discovery"],
   },
 ];
@@ -33,10 +33,10 @@ const PillarsSection = () => {
       <div className="container">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
-            Three Pillars of the Foundation
+            Three Pillars
           </h2>
           <p className="mt-4 text-muted-foreground text-lg font-body">
-            Our mission rests on three interconnected pillars that together create a complete ecosystem for open infrastructure.
+            A complete ecosystem for open infrastructure.
           </p>
         </div>
 

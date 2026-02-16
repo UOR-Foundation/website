@@ -33,7 +33,7 @@ const Standard = () => {
             The UOR Standard
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-            Universal Object Reference — an open standard that reimagines data as a single, structured, composable dataset identified by content, not location.
+            An open standard for structured, composable data — identified by content, not location.
           </p>
         </div>
       </section>
@@ -45,7 +45,7 @@ const Standard = () => {
               A Rosetta Stone for Data
             </h2>
             <p className="text-muted-foreground font-body leading-relaxed">
-              What if every piece of data on the internet — every website, API, AI model, or configuration file — could be referenced, trusted, and composed like code? The Universal Object Reference makes this possible by treating everything as an object, uniquely identified by its intrinsic attributes rather than by location.
+              Every piece of data — referenced, trusted, and composed like code. UOR treats everything as an object, uniquely identified by its intrinsic attributes.
             </p>
           </div>
 

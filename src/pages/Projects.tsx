@@ -49,7 +49,7 @@ const Projects = () => {
             Projects
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-            Explore the ecosystem of projects built on the UOR standard. Each project extends the foundation's mission of creating open, interoperable data infrastructure.
+            The ecosystem building on the UOR standard.
           </p>
         </div>
       </section>
