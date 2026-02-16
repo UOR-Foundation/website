@@ -20,7 +20,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/70 backdrop-blur-xl border-b border-border/30 shadow-sm" : "bg-transparent border-b border-transparent"}`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/70 backdrop-blur-xl border-b border-border/30 shadow-sm" : "bg-background border-b border-transparent"}`}>
       <div className="container flex items-center justify-between h-16 md:h-[4.5rem]">
         <Link to="/" className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
