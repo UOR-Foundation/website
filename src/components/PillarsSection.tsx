@@ -2,16 +2,16 @@ import { Globe, Users, Rocket } from "lucide-react";
 
 const pillars = [
   {
-    icon: Users,
-    title: "Your Community",
-    description:
-      "Open governance and collaboration driving adoption of the standard.",
-  },
-  {
     icon: Globe,
     title: "The Standard",
     description:
       "Content-addressed identity for every data object — bridging open science and frontier technology and research.",
+  },
+  {
+    icon: Users,
+    title: "Your Community",
+    description:
+      "Open governance and collaboration driving adoption of the standard.",
   },
   {
     icon: Rocket,
