@@ -5,19 +5,19 @@ const featuredProjects = [
   {
     name: "UOR Core",
     category: "Infrastructure",
-    description: "The reference implementation of the Universal Object Reference specification — content-addressed, composable data primitives.",
+    description: "Reference implementation — content-addressed, composable data primitives.",
     status: "Active",
   },
   {
     name: "Semantic Bridge",
     category: "Interoperability",
-    description: "Middleware layer translating between existing data formats and UOR's universal coordinate system for seamless integration.",
+    description: "Translates existing data formats into UOR's universal coordinate system.",
     status: "In Development",
   },
   {
     name: "Research Hub",
     category: "Distribution",
-    description: "Platform for publishing, discovering, and licensing research products built on UOR-standard data infrastructure.",
+    description: "Publish, discover, and license research products on UOR infrastructure.",
     status: "Beta",
   },
 ];
@@ -27,19 +27,14 @@ const ProjectsShowcase = () => {
     <section className="section-dark py-20 md:py-28">
       <div className="container">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-          <div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold">
-              Featured Projects
-            </h2>
-            <p className="mt-3 text-section-dark-foreground/70 font-body text-lg max-w-xl">
-              Building on the UOR standard.
-            </p>
-          </div>
+          <h2 className="font-display text-3xl md:text-4xl font-bold">
+            Projects
+          </h2>
           <Link
             to="/projects"
             className="flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all font-body"
           >
-            View all projects <ArrowRight size={16} />
+            View all <ArrowRight size={16} />
           </Link>
         </div>
 

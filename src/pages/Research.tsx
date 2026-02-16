@@ -5,17 +5,17 @@ const researchAreas = [
   {
     icon: FileText,
     title: "UOR Specification",
-    description: "Formalizing the universal coordinate system — content-addressed identity, intrinsic attributes, and composable data primitives.",
+    description: "Formalizing content-addressed identity, intrinsic attributes, and composable primitives.",
   },
   {
     icon: Users,
     title: "Semantic Interoperability",
-    description: "Research into bridging heterogeneous data systems through universal referencing, enabling seamless cross-domain data exchange.",
+    description: "Bridging heterogeneous data systems through universal referencing.",
   },
   {
     icon: FlaskConical,
     title: "Applied Research",
-    description: "Real-world applications of the UOR standard in frontier technology and research, scientific data management, and decentralized infrastructure.",
+    description: "Real-world applications in frontier technology and research, and decentralized infrastructure.",
   },
 ];
 
@@ -52,12 +52,6 @@ const Research = () => {
           </div>
 
           <div className="max-w-3xl mx-auto">
-            <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-6">
-              Contributing to Research
-            </h2>
-            <p className="text-muted-foreground font-body leading-relaxed mb-6">
-              Open-access, community-driven research. All contributions welcome.
-            </p>
             <div className="flex flex-wrap gap-3">
               <a
                 href="https://github.com/UOR-Foundation"

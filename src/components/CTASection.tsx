@@ -6,9 +6,6 @@ const CTASection = () => {
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
             Get Involved
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground font-body max-w-xl mx-auto leading-relaxed">
-            Contribute, collaborate, and shape the future of open data infrastructure.
-          </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <a
               href="https://discord.gg/ZwuZaNyuve"
