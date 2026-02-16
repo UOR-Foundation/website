@@ -32,7 +32,7 @@ const ProjectsShowcase = () => {
               Featured Projects
             </h2>
             <p className="mt-3 text-section-dark-foreground/70 font-body text-lg max-w-xl">
-              Projects built on the UOR standard, driving real-world adoption of universal data infrastructure.
+              Building on the UOR standard.
             </p>
           </div>
           <Link

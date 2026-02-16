@@ -13,7 +13,7 @@ const Footer = () => {
               <span className="font-display text-lg font-semibold">UOR Foundation</span>
             </div>
             <p className="text-section-dark-foreground/70 font-body max-w-sm leading-relaxed">
-              Building the open standard for universal coordinate systems — enabling interoperability, open science, and the next generation of data infrastructure.
+              The open standard for universal data infrastructure.
             </p>
           </div>
 
