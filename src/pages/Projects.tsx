@@ -21,10 +21,10 @@ const projects = [
     description: "A platform for publishing, discovering, and licensing research products built on UOR-standard infrastructure. Features reproducibility guarantees and transparent attribution.",
   },
   {
-    name: "Video Coordinate Engine",
-    category: "Video Technology",
+    name: "Frontier Coordinate Engine",
+    category: "Frontier Technology",
     status: "Research",
-    description: "Applying the universal coordinate system to video data — enabling content-addressed frame referencing, cross-platform interoperability, and semantic video search.",
+    description: "Applying the universal coordinate system to next-generation frontier technology — enabling content-addressed referencing, cross-platform interoperability, and semantic search.",
   },
   {
     name: "Open Science Toolkit",
