@@ -40,8 +40,7 @@ const Navbar = () => {
             <img
               src={uorLogo}
               alt="UOR Foundation"
-              className="w-full h-full object-contain"
-              style={{ filter: 'invert(1)', mixBlendMode: 'multiply' }}
+              className="w-full h-full object-contain mix-blend-multiply"
             />
           </div>
           <span className="font-display text-base font-semibold tracking-tight">
