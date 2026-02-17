@@ -128,9 +128,10 @@ const Projects = () => {
             Project Maturity Framework
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
-            From <strong className="text-foreground">Sandbox</strong> to{" "}
-            <strong className="text-foreground">Incubating</strong> to{" "}
-            <strong className="text-foreground">Graduated</strong>.
+            An open, transparent path for community projects built on the UOR standard. Every project enters as a <strong className="text-foreground">Sandbox</strong> experiment, grows through <strong className="text-foreground">Incubation</strong> with real-world adoption, and earns <strong className="text-foreground">Graduated</strong> status through proven governance and stability.
+          </p>
+          <p className="mt-4 text-base text-muted-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.25s" }}>
+            Anyone can submit a project. You need an open-source repo and a clear problem statement — <a href="#submit" className="text-primary hover:underline font-medium">start here</a>.
           </p>
         </div>
       </section>
