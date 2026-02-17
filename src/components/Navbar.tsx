@@ -36,11 +36,12 @@ const Navbar = () => {
     >
       <div className="container flex items-center justify-between h-20 md:h-24">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 relative">
+          <div className="w-8 h-8 relative rounded">
             <img
               src={uorLogo}
               alt="UOR Foundation"
-              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-screen invert"
+              className="w-full h-full object-contain"
+              style={{ filter: 'invert(1)', mixBlendMode: 'multiply' }}
             />
           </div>
           <span className="font-display text-base font-semibold tracking-tight">
