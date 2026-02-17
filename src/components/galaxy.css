@@ -29,7 +29,7 @@
 }
 
 .circle {
-  animation: 12s galaxy ease-in-out infinite reverse, 1s heartbeat ease-in-out infinite;
+  animation: 8s galaxy ease-in-out infinite reverse;
 }
 
 .dot {
@@ -73,29 +73,32 @@
 
 
 @keyframes galaxy {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes heartbeat {
   0% {
-    transform: scale(1);
+    transform: rotate(0deg);
   }
   15% {
-    transform: scale(1.03);
+    transform: rotate(60deg);
   }
-  30% {
-    transform: scale(0.98);
+  25% {
+    transform: rotate(85deg);
   }
-  45% {
-    transform: scale(1.015);
+  40% {
+    transform: rotate(150deg);
   }
-  60% {
-    transform: scale(1);
+  50% {
+    transform: rotate(175deg);
+  }
+  65% {
+    transform: rotate(240deg);
+  }
+  75% {
+    transform: rotate(270deg);
+  }
+  90% {
+    transform: rotate(335deg);
   }
   100% {
-    transform: scale(1);
+    transform: rotate(360deg);
   }
 }
 /* Dot transformations (35 dots) */
