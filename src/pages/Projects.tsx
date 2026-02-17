@@ -256,7 +256,7 @@ const Projects = () => {
                       </p>
                       <ul className="space-y-1.5">
                         {stage.criteria.map((c) => (
-                          <li key={c} className="text-sm text-muted-foreground font-body flex items-start gap-2">
+                          <li key={c} className="text-base text-muted-foreground font-body flex items-start gap-2">
                             <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
                             {c}
                           </li>
@@ -347,7 +347,7 @@ const Projects = () => {
                   <step.icon size={20} className="text-primary" />
                 </div>
                 <h3 className="font-display text-lg font-bold text-foreground mb-2">{step.title}</h3>
-                <p className="text-sm text-muted-foreground font-body leading-relaxed">{step.description}</p>
+                <p className="text-base text-muted-foreground font-body leading-relaxed">{step.description}</p>
               </div>
             ))}
           </div>
