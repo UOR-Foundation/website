@@ -1,4 +1,4 @@
-
+import GalaxyAnimation from "./GalaxyAnimation";
 
 const HeroSection = () => {
   return (
@@ -41,6 +41,12 @@ const HeroSection = () => {
               Learn More
             </a>
           </div>
+        </div>
+        <div
+          className="mt-16 md:mt-24 animate-fade-in-up opacity-0"
+          style={{ animationDelay: "0.75s" }}
+        >
+          <GalaxyAnimation />
         </div>
       </div>
     </section>
