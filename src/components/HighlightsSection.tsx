@@ -1,28 +1,36 @@
-import { FileText, Megaphone, CalendarDays, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import highlightResearch from "@/assets/highlight-research.jpg";
+import highlightAnnouncement from "@/assets/highlight-announcement.jpg";
+import highlightEvent from "@/assets/highlight-event.jpg";
+
+type TagType = "Research" | "Announcement" | "Event";
+
+const tagStyles: Record<TagType, string> = {
+  Research: "bg-primary/10 text-primary",
+  Announcement: "bg-accent/10 text-accent",
+  Event: "bg-foreground/8 text-foreground/70",
+};
 
 const highlights = [
   {
-    icon: FileText,
-    title: "Research",
-    description:
-      "Latest findings and publications from the UOR research community.",
-    cta: "View research",
+    tag: "Research" as TagType,
+    title: "Formal Verification of Content-Addressed Data Primitives",
+    date: "February 14, 2026",
+    image: highlightResearch,
     href: "/research",
   },
   {
-    icon: Megaphone,
-    title: "Announcements",
-    description:
-      "Updates on the standard, governance, and foundation milestones.",
-    cta: "Read updates",
+    tag: "Announcement" as TagType,
+    title: "UOR Standard v2.0 Now Open for Community Review",
+    date: "February 10, 2026",
+    image: highlightAnnouncement,
     href: "/about",
   },
   {
-    icon: CalendarDays,
-    title: "Events",
-    description:
-      "Upcoming workshops, talks, and community gatherings.",
-    cta: "See events",
+    tag: "Event" as TagType,
+    title: "Open Data Infrastructure Workshop at Stanford",
+    date: "February 7, 2026",
+    image: highlightEvent,
     href: "/about",
   },
 ];
@@ -31,7 +39,7 @@ const HighlightsSection = () => {
   return (
     <section className="py-10 md:py-16 bg-background">
       <div className="container max-w-5xl">
-        <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+        <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-8">
           Highlights
         </p>
 
@@ -40,24 +48,42 @@ const HighlightsSection = () => {
             <a
               key={item.title}
               href={item.href}
-              className="group flex flex-col bg-card rounded-2xl border border-border p-7 md:p-9 hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up opacity-0"
+              className="group flex flex-col bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-border/60 transition-all duration-300 animate-fade-in-up opacity-0"
               style={{ animationDelay: `${0.1 + index * 0.1}s` }}
             >
-              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-105">
-                <item.icon className="w-5 h-5 text-primary" strokeWidth={1.5} />
+              <div className="relative aspect-[5/3] overflow-hidden">
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
               </div>
-              <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-3">
-                {item.title}
-              </h3>
-              <p className="text-muted-foreground font-body text-base leading-relaxed flex-1">
-                {item.description}
-              </p>
-              <span className="inline-flex items-center gap-1.5 text-base font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5 mt-6">
-                {item.cta}
-                <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-0.5" />
-              </span>
+              <div className="flex flex-col flex-1 p-6">
+                <span
+                  className={`self-start px-3 py-1 rounded-full text-xs font-medium font-body mb-4 ${tagStyles[item.tag]}`}
+                >
+                  {item.tag}
+                </span>
+                <h3 className="font-display text-lg md:text-xl font-semibold text-foreground leading-snug flex-1">
+                  {item.title}
+                </h3>
+                <p className="mt-4 text-sm text-muted-foreground font-body">
+                  {item.date}
+                </p>
+              </div>
             </a>
           ))}
+        </div>
+
+        <div className="mt-8 text-center">
+          <a
+            href="/research"
+            className="inline-flex items-center gap-1.5 text-base font-medium text-muted-foreground hover:text-foreground font-body transition-all duration-300 group"
+          >
+            View all highlights
+            <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-0.5" />
+          </a>
         </div>
       </div>
     </section>
