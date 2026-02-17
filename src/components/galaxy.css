@@ -40,10 +40,10 @@
 
 
 .galaxy-wrapper {
-  transform: translate(0px, 0px) scale(0.82);
+  transform: translate(0px, 0px) scale(0.72);
 }
 @media screen and (max-width: 1200px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.56); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.5); }
 }
 @media screen and (max-width: 1024px) {
   .galaxy-wrapper { transform: translate(0px, 0px) scale(0.52); }
