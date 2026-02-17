@@ -40,7 +40,7 @@ const HighlightsSection = () => {
     <section className="py-10 md:py-16 bg-background">
       <div className="container max-w-5xl">
         <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-8">
-          Highlights
+          Community Highlights
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
