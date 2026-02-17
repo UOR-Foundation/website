@@ -274,7 +274,7 @@ const Projects = () => {
                       <p className="text-muted-foreground font-body text-base leading-relaxed">
                         {project.description}
                       </p>
-                      <div className="mt-5 flex items-center gap-2 text-primary text-base font-medium opacity-0 group-hover:opacity-100 transition-opacity font-body cursor-pointer">
+                      <div className="mt-5 flex items-center gap-2 text-primary text-base font-medium transition-opacity font-body cursor-pointer">
                         Learn more <ExternalLink size={14} />
                       </div>
                     </div>
