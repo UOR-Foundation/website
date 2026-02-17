@@ -152,8 +152,8 @@ const Projects = () => {
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.35s" }}
           >
-            <a href="#maturity" className="btn-primary">
-              Learn More
+            <a href="#projects-list" className="btn-primary">
+              Explore Projects
             </a>
             <a href="#submit" className="btn-outline">
               Submit Your Project
@@ -238,7 +238,7 @@ const Projects = () => {
       </section>
 
       {/* Projects by maturity */}
-      <section className="py-12 md:py-20 bg-background">
+      <section id="projects-list" className="py-12 md:py-20 bg-background">
         <div className="container space-y-16">
           {(["Graduated", "Incubating", "Sandbox"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
