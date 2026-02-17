@@ -18,7 +18,7 @@ interface Project {
 const projects: Project[] = [
   {
     name: "Hologram",
-    category: "Frontier Technology & Research",
+    category: "Frontier Technology",
     description: "A software-defined foundation for computation. High-performance virtual infrastructure built on a fundamentally new geometric computing paradigm.",
     maturity: "Sandbox",
     url: "https://gethologram.ai/",
