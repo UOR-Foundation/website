@@ -8,8 +8,8 @@ const About = () => {
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             About the UOR Foundation
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-            A community-driven organization building open standards for universal data infrastructure.
+           <p className="mt-6 text-lg md:text-xl text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+            Open standards for universal data infrastructure.
           </p>
         </div>
       </section>
@@ -19,7 +19,7 @@ const About = () => {
           <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Our Mission</h2>
             <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed">
-              We create and maintain the Universal Coordinate System, an open standard enabling true interoperability across data systems. Data referenced by what it <em className="not-italic text-foreground/70">is</em>, not where it <em className="not-italic text-foreground/70">lives</em>.
+              An open standard for true interoperability. Data referenced by what it <em className="not-italic text-foreground/70">is</em>, not where it <em className="not-italic text-foreground/70">lives</em>.
             </p>
           </div>
 
@@ -48,7 +48,7 @@ const About = () => {
           <div className="animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Donate Now</h2>
             <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
-              Researchers, developers, and advocates: there's a place for you.
+              Join us.
             </p>
             <div className="flex flex-wrap gap-3">
               <a

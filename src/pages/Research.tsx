@@ -28,7 +28,7 @@ const Research = () => {
             Research
           </h1>
           <p className="mt-6 text-lg md:text-xl text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-            Open, peer-reviewed research advancing universal data infrastructure.
+            Open research advancing universal data infrastructure.
           </p>
         </div>
       </section>
