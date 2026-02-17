@@ -161,7 +161,7 @@ const Projects = () => {
             Project Maturity Levels
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-5xl mx-auto items-stretch">
             {maturityInfo.map((stage, idx) => {
               const StageIcon = [FlaskConical, Rocket, GraduationCap][idx];
               return (
@@ -174,7 +174,7 @@ const Projects = () => {
                   )}
 
                   <div
-                    className={`rounded-2xl border p-6 md:p-8 flex-1 transition-all duration-300 ${maturityBgColors[stage.level]} ${
+                    className={`rounded-2xl border p-6 md:p-8 flex-1 flex flex-col transition-all duration-300 ${maturityBgColors[stage.level]} ${
                       idx === 2 ? 'border-primary/30 shadow-lg shadow-primary/5' : ''
                     } animate-fade-in-up`}
                     style={{ animationDelay: `${idx * 0.12}s` }}
@@ -202,13 +202,13 @@ const Projects = () => {
                       </h3>
                     </div>
 
-                    <p className="text-base font-medium text-foreground/70 font-body mb-3 italic">
+                    <p className="text-base font-medium text-foreground/70 font-body mb-3 italic md:min-h-[3rem]">
                       {stage.tagline}
                     </p>
-                    <p className="text-base text-muted-foreground font-body leading-relaxed mb-5">
+                    <p className="text-base text-muted-foreground font-body leading-relaxed mb-5 md:min-h-[5.5rem]">
                       {stage.description}
                     </p>
-                    <div className="space-y-2">
+                    <div className="space-y-2 mt-auto">
                       <p className="text-sm font-semibold text-foreground/50 uppercase tracking-wider font-body">
                         Criteria
                       </p>
