@@ -278,7 +278,7 @@ const Projects = () => {
                       style={{ animationDelay: `${index * 0.08}s` }}
                     >
                       {project.image && (
-                        <div className="w-full h-60 overflow-hidden">
+                        <div className={`w-full h-60 overflow-hidden relative ${project.maturity === 'Sandbox' ? 'project-card-glow' : ''}`}>
                           <img
                             src={project.image}
                             alt={project.name}
