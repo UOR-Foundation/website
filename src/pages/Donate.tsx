@@ -63,7 +63,7 @@ const ProjectCard = ({ project }: { project: (typeof projects)[0] }) => {
           <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground">
             {project.title}
           </h3>
-          <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground font-body">
+          <div className="mt-3 flex items-center justify-between text-base text-muted-foreground font-body">
             <span>{formatCurrency(project.raised)} raised</span>
             <span>{formatCurrency(project.target)} target</span>
           </div>
@@ -98,7 +98,7 @@ const ProjectCard = ({ project }: { project: (typeof projects)[0] }) => {
         </p>
         <ul className="mt-4 space-y-2">
           {project.highlights.map((h) => (
-            <li key={h} className="flex items-start gap-3 text-muted-foreground font-body text-sm">
+            <li key={h} className="flex items-start gap-3 text-muted-foreground font-body text-base">
               <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
               {h}
             </li>
@@ -199,7 +199,7 @@ const Donate = () => {
               <h3 className="font-display text-lg font-semibold text-section-dark-foreground group-hover:text-primary transition-colors">
                 Credit Card →
               </h3>
-              <p className="mt-2 text-sm text-muted-foreground font-body leading-relaxed">
+              <p className="mt-2 text-base text-muted-foreground font-body leading-relaxed">
                 Make a one-time or recurring donation securely via credit card.
               </p>
             </a>
@@ -212,7 +212,7 @@ const Donate = () => {
               <h3 className="font-display text-lg font-semibold text-section-dark-foreground group-hover:text-primary transition-colors">
                 Get in Touch →
               </h3>
-              <p className="mt-2 text-sm text-muted-foreground font-body leading-relaxed">
+              <p className="mt-2 text-base text-muted-foreground font-body leading-relaxed">
                 For larger donations, sponsorships, or partnerships, reach out to us on Discord.
               </p>
             </a>

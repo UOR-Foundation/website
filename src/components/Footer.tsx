@@ -18,7 +18,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-body text-xs font-semibold mb-5 tracking-widest uppercase text-section-dark-foreground/40">Foundation</h4>
+            <h4 className="font-body text-sm font-semibold mb-5 tracking-widest uppercase text-section-dark-foreground/40">Foundation</h4>
             <nav className="flex flex-col gap-3">
               <Link to="/standard" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">The Standard</Link>
               <Link to="/research" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Research</Link>
@@ -27,7 +27,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-body text-xs font-semibold mb-5 tracking-widest uppercase text-section-dark-foreground/40">Community</h4>
+            <h4 className="font-body text-sm font-semibold mb-5 tracking-widest uppercase text-section-dark-foreground/40">Community</h4>
             <nav className="flex flex-col gap-3">
               <a href="https://github.com/UOR-Foundation" target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">GitHub</a>
               <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Discord</a>
@@ -37,7 +37,7 @@ const Footer = () => {
 
         <div className="h-px w-full bg-section-dark-foreground/10 mt-14 mb-6" />
 
-        <p className="text-section-dark-foreground/30 text-sm font-body text-center">
+        <p className="text-section-dark-foreground/30 text-base font-body text-center">
           © {new Date().getFullYear()} UOR Foundation. All rights reserved.
         </p>
       </div>

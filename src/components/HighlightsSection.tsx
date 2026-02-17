@@ -61,14 +61,14 @@ const HighlightsSection = () => {
               </div>
               <div className="flex flex-col flex-1 p-6">
                 <span
-                  className={`self-start px-3 py-1 rounded-full text-xs font-medium font-body mb-4 ${tagStyles[item.tag]}`}
+                  className={`self-start px-3 py-1 rounded-full text-sm font-medium font-body mb-4 ${tagStyles[item.tag]}`}
                 >
                   {item.tag}
                 </span>
                 <h3 className="font-display text-lg md:text-xl font-semibold text-foreground leading-snug flex-1">
                   {item.title}
                 </h3>
-                <p className="mt-4 text-sm text-muted-foreground font-body">
+                <p className="mt-4 text-base text-muted-foreground font-body">
                   {item.date}
                 </p>
               </div>

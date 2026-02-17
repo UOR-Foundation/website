@@ -69,7 +69,7 @@ const ProjectsShowcase = () => {
                     <h3 className="font-display text-xl md:text-2xl font-semibold text-section-dark-foreground transition-colors duration-300 group-hover:text-white">
                       {project.name}
                     </h3>
-                    <span className={`text-sm font-medium font-body ${maturityStyles[project.maturity]}`}>
+                    <span className={`text-base font-medium font-body ${maturityStyles[project.maturity]}`}>
                       {project.maturity}
                     </span>
                   </div>
@@ -77,7 +77,7 @@ const ProjectsShowcase = () => {
                     {project.description}
                   </p>
                 </div>
-                <span className="text-sm font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider md:mt-1">
+                <span className="text-base font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider md:mt-1">
                   {project.category}
                 </span>
               </div>
