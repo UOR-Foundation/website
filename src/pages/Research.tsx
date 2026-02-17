@@ -1,22 +1,19 @@
+import { useState, useMemo } from "react";
 import Layout from "@/components/Layout";
-import { FileText, Users, FlaskConical, BookOpen, Calendar, ExternalLink, ArrowRight } from "lucide-react";
+import { BookOpen, Calendar, ExternalLink, ArrowRight, Search, ChevronDown, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket } from "lucide-react";
 
-const researchAreas = [
-  {
-    icon: FileText,
-    title: "UOR Specification",
-    description: "Formalizing content-addressed identity, intrinsic attributes, and composable primitives for a universal data standard.",
-  },
-  {
-    icon: Users,
-    title: "Semantic Interoperability",
-    description: "Bridging heterogeneous data systems through universal referencing and lossless translation layers.",
-  },
-  {
-    icon: FlaskConical,
-    title: "Applied Research",
-    description: "Real-world applications in frontier technology, open science, and decentralized infrastructure.",
-  },
+const researchCategories = [
+  { icon: Cpu, label: "Hardware & Robotics", slug: "hardware-robotics", description: "Embedded systems, robotics middleware, and UOR-native hardware interfaces." },
+  { icon: Shield, label: "Cybersecurity", slug: "cybersecurity", description: "Content-addressed security, zero-trust identity, and verifiable data provenance." },
+  { icon: Calculator, label: "Mathematics", slug: "mathematics", description: "Formal methods, algebraic structures, and mathematical foundations of UOR." },
+  { icon: TrendingUp, label: "Finance", slug: "finance", description: "Decentralized finance primitives, auditable ledgers, and semantic financial data." },
+  { icon: Bot, label: "Agentic AI", slug: "agentic-ai", description: "Autonomous agents, tool-use frameworks, and UOR-native AI architectures." },
+  { icon: Atom, label: "Quantum", slug: "quantum", description: "Quantum computing interfaces, post-quantum cryptography, and hybrid algorithms." },
+  { icon: BarChart3, label: "Data Science", slug: "data-science", description: "Semantic datasets, reproducible pipelines, and interoperable analytics." },
+  { icon: HeartPulse, label: "Healthcare", slug: "healthcare", description: "Medical data interoperability, patient-centric identity, and open health standards." },
+  { icon: Globe, label: "Web3", slug: "web3", description: "Decentralized protocols, on-chain identity, and content-addressed storage." },
+  { icon: Microscope, label: "Physics", slug: "physics", description: "Simulation frameworks, open research data, and computational physics tooling." },
+  { icon: Rocket, label: "Frontier Tech", slug: "frontier-tech", description: "Emerging technology exploration at the intersection of UOR and next-gen infrastructure." },
 ];
 
 const blogPosts = [
@@ -71,6 +68,13 @@ const tagStyles: Record<string, string> = {
 };
 
 const Research = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  const filteredCategories = useMemo(
+    () => researchCategories.filter((cat) => cat.label.toLowerCase().includes(searchQuery.toLowerCase())),
+    [searchQuery]
+  );
   return (
     <Layout>
       {/* Hero */}
@@ -105,24 +109,54 @@ const Research = () => {
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-6">
             Open Research Areas
           </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-14">
+          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-10">
             Our research agenda is public, collaborative, and designed to push the boundaries of how digital information is structured, shared, and verified.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 mb-14">
-            {researchAreas.map((area, index) => (
-              <div
-                key={area.title}
-                className="group bg-card rounded-2xl border border-border p-7 md:p-9 animate-fade-in-up hover:shadow-lg hover:border-primary/20 transition-all duration-300"
-                style={{ animationDelay: `${index * 0.12}s` }}
-              >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
-                  <area.icon className="w-6 h-6 text-primary" />
+          {/* Searchable Dropdown */}
+          <div className="relative max-w-md mb-14">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="w-full flex items-center justify-between gap-3 px-5 py-3.5 rounded-xl border border-border bg-card text-foreground font-body text-sm font-medium hover:border-primary/30 transition-colors duration-200"
+            >
+              <span className="text-muted-foreground">Browse research categories</span>
+              <ChevronDown size={16} className={`text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {isOpen && (
+              <div className="absolute z-50 mt-2 w-full rounded-xl border border-border bg-card shadow-lg animate-fade-in-up overflow-hidden">
+                <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border">
+                  <Search size={15} className="text-muted-foreground/50 shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Search categories…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none font-body"
+                    autoFocus
+                  />
                 </div>
-                <h3 className="font-display text-xl font-semibold text-foreground mb-3">{area.title}</h3>
-                <p className="text-muted-foreground font-body text-base leading-relaxed">{area.description}</p>
+                <ul className="max-h-72 overflow-y-auto py-1.5">
+                  {filteredCategories.length > 0 ? (
+                    filteredCategories.map((cat) => (
+                      <li key={cat.slug}>
+                        <button className="w-full flex items-center gap-3.5 px-4 py-3 text-left hover:bg-muted/50 transition-colors duration-150 group">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105">
+                            <cat.icon size={16} className="text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground font-body truncate">{cat.label}</p>
+                            <p className="text-xs text-muted-foreground font-body leading-snug mt-0.5 line-clamp-1">{cat.description}</p>
+                          </div>
+                        </button>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="px-4 py-6 text-center text-sm text-muted-foreground/60 font-body">No categories found</li>
+                  )}
+                </ul>
               </div>
-            ))}
+            )}
           </div>
 
           <div>
