@@ -87,7 +87,7 @@ const ProjectsShowcase = () => {
                     {project.description}
                   </p>
                 </div>
-                <div className="flex items-center gap-4 md:mt-1">
+                <div className="flex flex-col items-end justify-between self-stretch gap-4">
                   <span className="text-base font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider">
                     {project.category}
                   </span>
