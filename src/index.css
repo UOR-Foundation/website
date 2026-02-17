@@ -184,3 +184,42 @@
     text-wrap: balance;
   }
 }
+
+/* Heartbeat glow for project cards (~66 BPM peaceful heartbeat) */
+@keyframes heartbeat-glow {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  14% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  28% {
+    opacity: 0.3;
+    transform: scale(0.9);
+  }
+  42% {
+    opacity: 0.5;
+    transform: scale(0.98);
+  }
+  56% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+}
+
+.project-card-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.project-card-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, hsl(220 60% 50% / 0.35) 0%, hsl(200 40% 45% / 0.15) 35%, transparent 70%);
+  animation: heartbeat-glow 1.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
