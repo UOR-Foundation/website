@@ -296,11 +296,11 @@ const Projects = () => {
                         </div>
                       )}
                       <div className="p-6 md:p-8">
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary font-body">
+                        <div className="flex items-center justify-between gap-2 mb-4">
+                          <span className="text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
                             {project.category}
                           </span>
-                          <span className={`text-sm font-medium px-3 py-1 rounded-full border font-body ${maturityColors[project.maturity]}`}>
+                          <span className={`text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full border font-body whitespace-nowrap shrink-0 ${maturityColors[project.maturity]}`}>
                             {project.maturity}
                           </span>
                         </div>
