@@ -6,7 +6,7 @@ const pillars = [
     icon: Globe,
     title: "The Standard",
     description:
-      "Content-addressed identity for every data object — bridging open science and frontier research.",
+      "Content-addressed identity for every data object, bridging open science and frontier research.",
     href: "/standard",
   },
   {
@@ -34,7 +34,7 @@ const PillarsSection = () => {
           {pillars.map((pillar, index) => (
             <div
               key={pillar.title}
-              className="group animate-fade-in-up opacity-0 py-10 md:py-14 md:px-8 first:md:pl-0 last:md:pr-0"
+              className="group flex flex-col animate-fade-in-up opacity-0 py-10 md:py-14 md:px-8 first:md:pl-0 last:md:pr-0"
               style={{ animationDelay: `${0.15 + index * 0.12}s` }}
             >
               <div className="flex items-center gap-3 mb-4">
@@ -46,12 +46,12 @@ const PillarsSection = () => {
                   {pillar.title}
                 </h3>
               </div>
-              <p className="text-muted-foreground font-body text-sm leading-relaxed mb-5">
+              <p className="text-muted-foreground font-body text-sm leading-relaxed flex-1">
                 {pillar.description}
               </p>
               <Link
                 to={pillar.href}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5 mt-5"
               >
                 Learn more
                 <ArrowRight size={13} className="transition-transform duration-300 group-hover:translate-x-0.5" />
