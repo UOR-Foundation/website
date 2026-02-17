@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    --background: 210 25% 97%;
-    --foreground: 220 25% 10%;
+    --background: 210 30% 96%;
+    --foreground: 220 20% 12%;
 
     --card: 210 20% 96%;
     --card-foreground: 220 25% 10%;
@@ -111,7 +111,7 @@
   }
 
   .hero-gradient {
-    background: linear-gradient(180deg, hsl(208 30% 94%) 0%, hsl(var(--background)) 100%);
+    background: linear-gradient(180deg, hsl(208 32% 93%) 0%, hsl(var(--background)) 100%);
   }
 
   /* Consistent mobile container breathing room */
