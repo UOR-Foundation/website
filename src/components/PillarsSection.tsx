@@ -27,7 +27,7 @@ const pillars = [
 
 const PillarsSection = () => {
   return (
-    <section id="pillars" className="py-10 md:py-16 bg-background">
+    <section id="pillars" className="pt-16 md:pt-24 pb-10 md:pb-16 bg-background">
       <div className="container max-w-5xl">
         <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-6">
           Our Three Pillars
