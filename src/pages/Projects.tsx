@@ -1,6 +1,8 @@
 import Layout from "@/components/Layout";
 import { ExternalLink, ChevronRight, ChevronDown, Send, FlaskConical, Rocket, GraduationCap, FileCheck, GitBranch, Users, Scale, ClipboardCheck } from "lucide-react";
 import { useState } from "react";
+import projectHologramImg from "@/assets/project-hologram.jpg";
+import projectOpenScienceImg from "@/assets/project-open-science.jpg";
 
 type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
@@ -10,6 +12,7 @@ interface Project {
   description: string;
   maturity: MaturityLevel;
   url?: string;
+  image?: string;
 }
 
 const projects: Project[] = [
@@ -19,12 +22,14 @@ const projects: Project[] = [
     description: "A software-defined foundation for computation. High-performance virtual infrastructure built on a fundamentally new geometric computing paradigm.",
     maturity: "Sandbox",
     url: "https://gethologram.ai/",
+    image: projectHologramImg,
   },
   {
     name: "Open Science Toolkit",
     category: "Open Science",
     description: "Reproducible experiments, dataset management, and findings sharing on UOR.",
     maturity: "Sandbox",
+    image: projectOpenScienceImg,
   },
 ];
 
@@ -259,28 +264,39 @@ const Projects = () => {
                   {levelProjects.map((project, index) => (
                     <div
                       key={project.name}
-                      className="group bg-card rounded-2xl border border-border p-6 md:p-8 hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up"
+                      className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up"
                       style={{ animationDelay: `${index * 0.08}s` }}
                     >
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary font-body">
-                          {project.category}
-                        </span>
-                        <span className={`text-sm font-medium px-3 py-1 rounded-full border font-body ${maturityColors[project.maturity]}`}>
-                          {project.maturity}
-                        </span>
-                      </div>
-                      <h3 className="font-display text-xl font-semibold text-foreground mb-3">
-                        {project.name}
-                      </h3>
-                      <p className="text-muted-foreground font-body text-base leading-relaxed">
-                        {project.description}
-                      </p>
-                      {project.url && (
-                        <a href={project.url} target="_blank" rel="noopener noreferrer" className="mt-5 flex items-center gap-2 text-primary text-base font-medium transition-opacity font-body cursor-pointer hover:underline">
-                          Learn more <ExternalLink size={14} />
-                        </a>
+                      {project.image && (
+                        <div className="w-full h-40 overflow-hidden">
+                          <img
+                            src={project.image}
+                            alt={project.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
                       )}
+                      <div className="p-6 md:p-8">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary font-body">
+                            {project.category}
+                          </span>
+                          <span className={`text-sm font-medium px-3 py-1 rounded-full border font-body ${maturityColors[project.maturity]}`}>
+                            {project.maturity}
+                          </span>
+                        </div>
+                        <h3 className="font-display text-xl font-semibold text-foreground mb-3">
+                          {project.name}
+                        </h3>
+                        <p className="text-muted-foreground font-body text-base leading-relaxed">
+                          {project.description}
+                        </p>
+                        {project.url && (
+                          <a href={project.url} target="_blank" rel="noopener noreferrer" className="mt-5 flex items-center gap-2 text-primary text-base font-medium transition-opacity font-body cursor-pointer hover:underline">
+                            Learn more <ExternalLink size={14} />
+                          </a>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
