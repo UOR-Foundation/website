@@ -128,9 +128,9 @@ const Projects = () => {
             Project Maturity Framework
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
-            Every UOR project follows a clear progression from <strong className="text-foreground">Sandbox</strong> to{" "}
+            From <strong className="text-foreground">Sandbox</strong> to{" "}
             <strong className="text-foreground">Incubating</strong> to{" "}
-            <strong className="text-foreground">Graduated</strong> — mirroring proven open-source governance models.
+            <strong className="text-foreground">Graduated</strong>.
           </p>
         </div>
       </section>
@@ -142,7 +142,7 @@ const Projects = () => {
             How Projects Evolve
           </h2>
           <p className="text-center text-muted-foreground font-body mb-12 max-w-2xl mx-auto">
-            Projects enter as Sandbox experiments and mature through demonstrated adoption, governance, and community health.
+            Mature through adoption, governance, and community health.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-0 max-w-5xl mx-auto">
@@ -255,7 +255,7 @@ const Projects = () => {
               Submit a Project for Sandbox
             </h2>
             <p className="mt-4 text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto">
-              Have an idea that builds on the UOR standard? Submit it for Sandbox consideration. All you need is an open-source repo and a clear problem statement.
+              Open-source repo and a clear problem statement. That's all you need.
             </p>
           </div>
 
