@@ -18,7 +18,7 @@ const HeroSection = () => {
             open data standard.
           </p>
           <h1
-            className="font-display text-[2.75rem] md:text-[4rem] lg:text-[5rem] font-bold leading-[1.05] tracking-tight text-foreground animate-fade-in-up opacity-0"
+            className="font-display text-[2rem] md:text-[3rem] lg:text-[3.75rem] font-bold leading-[1.1] tracking-tight text-foreground animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.25s" }}
           >
             <span className="block">Your Universal Coordinate System</span>
