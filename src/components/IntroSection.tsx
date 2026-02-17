@@ -27,10 +27,10 @@ const IntroSection = () => {
           </p>
           <a
             href="/about"
-            className="inline-flex items-center mt-8 text-sm md:text-base font-body font-medium tracking-wide text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-200 group"
+            className="inline-flex items-center mt-10 md:mt-12 text-base md:text-lg font-display font-bold tracking-widest uppercase text-section-dark-foreground hover:text-primary transition-colors duration-300 group"
           >
-            Our Manifesto
-            <span className="ml-2 group-hover:translate-x-1 transition-transform duration-200">→</span>
+            Read Our Manifesto
+            <span className="ml-3 text-xl group-hover:translate-x-2 transition-transform duration-300">→</span>
           </a>
         </div>
         <div className="h-px w-full bg-section-dark-foreground/10" />
