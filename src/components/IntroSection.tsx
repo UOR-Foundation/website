@@ -25,6 +25,13 @@ const IntroSection = () => {
           <p className="mt-8 text-section-dark-foreground/90 font-body text-base md:text-lg leading-[1.85] md:leading-[1.9] font-medium">
             The UOR Foundation is developing this universal data standard to support the semantic web, open science, and frontier technologies.
           </p>
+          <a
+            href="/about"
+            className="inline-flex items-center mt-8 text-sm md:text-base font-body font-medium tracking-wide text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-200 group"
+          >
+            Our Manifesto
+            <span className="ml-2 group-hover:translate-x-1 transition-transform duration-200">→</span>
+          </a>
         </div>
         <div className="h-px w-full bg-section-dark-foreground/10" />
       </div>
