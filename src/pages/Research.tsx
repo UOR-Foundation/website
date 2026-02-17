@@ -1,64 +1,264 @@
 import Layout from "@/components/Layout";
-import { FileText, Users, FlaskConical } from "lucide-react";
+import { FileText, Users, FlaskConical, BookOpen, Calendar, ExternalLink, ArrowRight } from "lucide-react";
 
 const researchAreas = [
   {
     icon: FileText,
     title: "UOR Specification",
-    description: "Formalizing content-addressed identity, intrinsic attributes, and composable primitives.",
+    description: "Formalizing content-addressed identity, intrinsic attributes, and composable primitives for a universal data standard.",
   },
   {
     icon: Users,
     title: "Semantic Interoperability",
-    description: "Bridging heterogeneous data systems through universal referencing.",
+    description: "Bridging heterogeneous data systems through universal referencing and lossless translation layers.",
   },
   {
     icon: FlaskConical,
     title: "Applied Research",
-    description: "Real-world applications in frontier technology and research, and decentralized infrastructure.",
+    description: "Real-world applications in frontier technology, open science, and decentralized infrastructure.",
   },
 ];
+
+const blogPosts = [
+  {
+    title: "Why Content-Addressed Identity Matters",
+    excerpt: "A deep dive into how replacing location-based references with content-based identity reduces fragmentation and builds trust between systems.",
+    date: "February 12, 2026",
+    tag: "Technical",
+  },
+  {
+    title: "Building the Semantic Web with UOR",
+    excerpt: "How universal object referencing enables machines to understand context, not just data — and what that means for the future of the open web.",
+    date: "February 5, 2026",
+    tag: "Vision",
+  },
+  {
+    title: "From Sandbox to Graduation: A Project's Journey",
+    excerpt: "An inside look at the maturity framework and what it takes for a community project to earn graduated status.",
+    date: "January 28, 2026",
+    tag: "Community",
+  },
+];
+
+const events = [
+  {
+    title: "Open Data Infrastructure Workshop",
+    location: "Stanford University",
+    date: "March 15, 2026",
+    type: "Workshop",
+  },
+  {
+    title: "UOR Community Call — Q1 Review",
+    location: "Virtual (Discord)",
+    date: "March 5, 2026",
+    type: "Community Call",
+  },
+  {
+    title: "Decentralized Identity Summit",
+    location: "Berlin, Germany",
+    date: "April 10, 2026",
+    type: "Conference",
+  },
+];
+
+const tagStyles: Record<string, string> = {
+  Technical: "bg-primary/10 text-primary",
+  Vision: "bg-accent/10 text-accent",
+  Community: "bg-primary/8 text-primary/80 border border-primary/15",
+  Workshop: "bg-primary/10 text-primary",
+  "Community Call": "bg-accent/10 text-accent",
+  Conference: "bg-primary/8 text-primary/80 border border-primary/15",
+};
 
 const Research = () => {
   return (
     <Layout>
-      <section className="hero-gradient pt-40 md:pt-52 pb-20 md:pb-28">
-        <div className="container max-w-3xl">
+      {/* Hero */}
+      <section className="hero-gradient pt-40 md:pt-52 pb-16 md:pb-22">
+        <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
-            Research
+            Our Community
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-            Open research advancing universal data infrastructure.
+          <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
+            Open research, shared knowledge, and collective progress. The UOR community brings together researchers, engineers, and builders advancing universal data infrastructure for the semantic web and beyond.
           </p>
+          <div
+            className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
+            style={{ animationDelay: "0.35s" }}
+          >
+            <a href="#research" className="btn-primary">
+              Explore Research
+            </a>
+            <a href="#join" className="btn-outline">
+              Join the Community
+            </a>
+          </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-28 bg-background">
+      {/* Research */}
+      <section id="research" className="py-16 md:py-28 bg-background border-b border-border scroll-mt-28">
         <div className="container max-w-5xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 mb-14 md:mb-16">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+            Research
+          </p>
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-6">
+            Open Research Areas
+          </h2>
+          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-14">
+            Our research agenda is public, collaborative, and designed to push the boundaries of how digital information is structured, shared, and verified.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 mb-14">
             {researchAreas.map((area, index) => (
               <div
                 key={area.title}
                 className="group bg-card rounded-2xl border border-border p-7 md:p-9 animate-fade-in-up hover:shadow-lg hover:border-primary/20 transition-all duration-300"
                 style={{ animationDelay: `${index * 0.12}s` }}
               >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-105">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                   <area.icon className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-3">{area.title}</h3>
+                <h3 className="font-display text-xl font-semibold text-foreground mb-3">{area.title}</h3>
                 <p className="text-muted-foreground font-body text-base leading-relaxed">{area.description}</p>
               </div>
             ))}
           </div>
 
-          <div className="max-w-3xl mx-auto text-center">
+          <div>
             <a
               href="https://github.com/UOR-Foundation"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary inline-flex"
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline font-body transition-colors"
             >
-              View Research on GitHub
+              View all research on GitHub <ExternalLink size={14} />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Blog */}
+      <section id="blog" className="py-16 md:py-28 bg-background border-b border-border scroll-mt-28">
+        <div className="container max-w-5xl">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+            Blog
+          </p>
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-14">
+            Latest Writing
+          </h2>
+
+          <div className="space-y-0">
+            {blogPosts.map((post, index) => (
+              <div
+                key={post.title}
+                className="animate-fade-in-up opacity-0"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {index === 0 && <div className="h-px w-full bg-border" />}
+                <div className="group py-8 md:py-10 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start transition-all duration-300 hover:pl-2">
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium font-body ${tagStyles[post.tag]}`}>
+                        {post.tag}
+                      </span>
+                      <span className="text-sm text-muted-foreground font-body">{post.date}</span>
+                    </div>
+                    <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary">
+                      {post.title}
+                    </h3>
+                    <p className="text-muted-foreground font-body text-base leading-relaxed max-w-lg">
+                      {post.excerpt}
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
+                      Read article <ArrowRight size={13} />
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 md:mt-1">
+                    <BookOpen size={14} className="text-muted-foreground/40" />
+                  </div>
+                </div>
+                <div className="h-px w-full bg-border" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Events */}
+      <section id="events" className="py-16 md:py-28 bg-background border-b border-border scroll-mt-28">
+        <div className="container max-w-5xl">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+            Events
+          </p>
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-14">
+            Upcoming Events
+          </h2>
+
+          <div className="space-y-0">
+            {events.map((event, index) => (
+              <div
+                key={event.title}
+                className="animate-fade-in-up opacity-0"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {index === 0 && <div className="h-px w-full bg-border" />}
+                <div className="group py-8 md:py-10 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start transition-all duration-300 hover:pl-2">
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium font-body ${tagStyles[event.type]}`}>
+                        {event.type}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary">
+                      {event.title}
+                    </h3>
+                    <p className="text-muted-foreground font-body text-base leading-relaxed">
+                      {event.location}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 md:mt-1">
+                    <span className="text-sm font-medium text-muted-foreground/60 font-body flex items-center gap-2">
+                      <Calendar size={14} />
+                      {event.date}
+                    </span>
+                  </div>
+                </div>
+                <div className="h-px w-full bg-border" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Join CTA */}
+      <section id="join" className="section-dark py-20 md:py-28 scroll-mt-28">
+        <div className="container max-w-3xl text-center">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
+            Get Involved
+          </p>
+          <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
+            Join the Community
+          </h2>
+          <p className="text-section-dark-foreground/60 font-body text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-10">
+            Whether you're a researcher, developer, or advocate for open data — there's a place for you. Connect with us on Discord, contribute on GitHub, or attend an upcoming event.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a
+              href="https://discord.gg/ZwuZaNyuve"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out bg-primary text-primary-foreground hover:opacity-90 hover:shadow-lg inline-flex items-center justify-center gap-2"
+            >
+              Join Our Discord
+            </a>
+            <a
+              href="https://github.com/UOR-Foundation"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"
+            >
+              Contribute on GitHub
             </a>
           </div>
         </div>
