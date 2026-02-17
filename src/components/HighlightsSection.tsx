@@ -34,9 +34,6 @@ const HighlightsSection = () => {
         <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
           Highlights
         </p>
-        <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-12">
-          From the Foundation
-        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
           {highlights.map((item, index) => (
