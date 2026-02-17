@@ -33,7 +33,7 @@ const HeroSection = () => {
             <em className="not-italic text-foreground/70">is</em>, not where it lives.
           </p>
           <div
-            className="mt-10 md:mt-14 flex flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
+            className="mt-10 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.6s" }}
           >
             <a href="#pillars" className="btn-primary">
