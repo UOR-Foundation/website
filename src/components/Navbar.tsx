@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Heart } from "lucide-react";
 import uorIcon from "@/assets/uor-icon.png";
 
 const navItems = [
@@ -66,6 +66,7 @@ const Navbar = () => {
             rel="noopener noreferrer"
             className="btn-primary !py-2 !px-5 !text-sm"
           >
+            <Heart size={14} fill="white" strokeWidth={0} className="mr-1" />
             Donate Now
           </a>
         </div>
