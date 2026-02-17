@@ -34,7 +34,7 @@ const Navbar = () => {
           : "bg-transparent"
       }`}
     >
-      <div className="container flex items-center justify-between h-16 md:h-[4.5rem]">
+      <div className="container flex items-center justify-between h-20 md:h-24">
         <Link to="/" className="flex items-center gap-2.5 group">
           <img
             src={uorIcon}
