@@ -146,13 +146,15 @@ const CTASection = () => {
               className="group flex flex-col items-center text-center animate-fade-in-up opacity-0"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-border group-hover:border-primary/40 transition-all duration-300 mb-3">
-                <img
-                  src={member.image}
-                  alt={member.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                  loading="lazy"
-                />
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-transparent bg-gradient-to-br from-purple-500/40 via-pink-500/30 to-blue-500/40 p-[2px] group-hover:from-purple-500/70 group-hover:via-pink-500/50 group-hover:to-blue-500/70 transition-all duration-300 mb-3 shadow-[0_0_12px_rgba(168,85,247,0.15)] group-hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+                <div className="w-full h-full rounded-full overflow-hidden bg-background">
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    loading="lazy"
+                  />
+                </div>
               </div>
               <h4 className="font-display text-base font-semibold text-foreground">
                 {member.name}
