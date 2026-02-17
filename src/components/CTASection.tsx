@@ -5,7 +5,7 @@ const CTASection = () => {
         <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
           Donate Now
         </h2>
-        <p className="mt-5 text-muted-foreground font-body leading-relaxed">
+        <p className="mt-5 text-lg text-muted-foreground font-body leading-relaxed">
           Support open infrastructure for the next foundation of the internet.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">

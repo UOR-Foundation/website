@@ -36,7 +36,7 @@ const ProjectsShowcase = () => {
       <div className="container max-w-5xl">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
           <div>
-            <p className="text-sm font-medium tracking-widest uppercase text-primary mb-3 font-body">
+            <p className="text-sm md:text-base font-medium tracking-widest uppercase text-primary mb-3 font-body">
               Ecosystem
             </p>
             <h2 className="font-display text-3xl md:text-4xl font-bold">
@@ -45,11 +45,11 @@ const ProjectsShowcase = () => {
           </div>
           <Link
             to="/projects"
-            className="group flex items-center gap-2 text-primary text-sm font-medium transition-all duration-300 font-body"
+            className="group flex items-center gap-2 text-primary text-base font-medium transition-all duration-300 font-body"
           >
             View all projects{" "}
             <ArrowRight
-              size={14}
+              size={16}
               className="transition-transform duration-300 group-hover:translate-x-1"
             />
           </Link>
@@ -66,18 +66,18 @@ const ProjectsShowcase = () => {
               <div className="group py-8 md:py-10 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start transition-all duration-300 hover:pl-2">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-display text-xl font-semibold transition-colors duration-300 group-hover:text-primary">
+                    <h3 className="font-display text-xl md:text-2xl font-semibold transition-colors duration-300 group-hover:text-primary">
                       {project.name}
                     </h3>
-                    <span className={`text-xs font-medium font-body ${maturityStyles[project.maturity]}`}>
+                    <span className={`text-sm font-medium font-body ${maturityStyles[project.maturity]}`}>
                       {project.maturity}
                     </span>
                   </div>
-                  <p className="text-section-dark-foreground/55 font-body text-sm leading-relaxed max-w-lg">
+                  <p className="text-section-dark-foreground/55 font-body text-base leading-relaxed max-w-lg">
                     {project.description}
                   </p>
                 </div>
-                <span className="text-xs font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider md:mt-1">
+                <span className="text-sm font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider md:mt-1">
                   {project.category}
                 </span>
               </div>
