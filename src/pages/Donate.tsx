@@ -123,7 +123,7 @@ const Donate = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-32 md:pt-44 pb-16 md:pb-24">
+      <section className="hero-gradient pt-36 md:pt-48 pb-16 md:pb-24">
         <div className="container max-w-3xl">
           <h1
             className="font-display text-4xl md:text-5xl lg:text-[3.5rem] font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up opacity-0"
