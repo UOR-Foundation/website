@@ -86,22 +86,20 @@ const ProjectsShowcase = () => {
                   <p className="text-section-dark-foreground/55 font-body text-base leading-relaxed max-w-lg">
                     {project.description}
                   </p>
-                </div>
-                <div className="flex flex-col items-end justify-between self-stretch gap-4">
-                  <span className="text-base font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider">
-                    {project.category}
-                  </span>
                   {project.url && (
                     <a
                       href={project.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-section-dark-foreground/50 hover:text-primary transition-colors duration-200 font-body"
+                      className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-section-dark-foreground/50 hover:text-primary transition-colors duration-200 font-body"
                     >
                       Learn more <ExternalLink size={13} />
                     </a>
                   )}
                 </div>
+                <span className="text-base font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider md:mt-1">
+                  {project.category}
+                </span>
               </div>
               <div className="h-px w-full bg-section-dark-foreground/10" />
             </div>
