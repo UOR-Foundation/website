@@ -68,7 +68,7 @@ const Navbar = () => {
             style={{ backgroundColor: 'hsl(216, 77%, 27%)' }}
           >
             <Heart size={14} fill="white" strokeWidth={0} className="mr-1" />
-            Donate Now
+            Donate
           </a>
         </div>
 
