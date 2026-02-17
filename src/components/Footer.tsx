@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import uorLogo from "@/assets/uor-logo.png";
 
 const Footer = () => {
   return (
@@ -7,9 +8,11 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-display font-bold text-xs">U</span>
-              </div>
+              <img
+                src={uorLogo}
+                alt="UOR Foundation"
+                className="w-7 h-7 object-contain brightness-0 invert"
+              />
               <span className="font-display text-base font-semibold">UOR Foundation</span>
             </div>
             <p className="text-section-dark-foreground/55 font-body max-w-sm leading-relaxed text-base">
