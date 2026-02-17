@@ -146,7 +146,18 @@ const CTASection = () => {
               className="group flex flex-col items-center text-center animate-fade-in-up opacity-0"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-transparent bg-gradient-to-br from-purple-500/40 via-pink-500/30 to-blue-500/40 p-[2px] group-hover:from-purple-500/70 group-hover:via-pink-500/50 group-hover:to-blue-500/70 transition-all duration-300 mb-3 shadow-[0_0_12px_rgba(168,85,247,0.15)] group-hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full p-[2px] mb-3 transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(168,85,247,0.25), rgba(192,132,252,0.15), rgba(139,92,246,0.25))',
+                  boxShadow: '0 0 16px 2px rgba(168,85,247,0.12), 0 0 32px 4px rgba(139,92,246,0.06)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 0 20px 4px rgba(168,85,247,0.25), 0 0 40px 8px rgba(139,92,246,0.12)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = '0 0 16px 2px rgba(168,85,247,0.12), 0 0 32px 4px rgba(139,92,246,0.06)';
+                }}
+              >
                 <div className="w-full h-full rounded-full overflow-hidden bg-background">
                   <img
                     src={member.image}
