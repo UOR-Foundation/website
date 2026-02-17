@@ -5,21 +5,27 @@ type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
 const featuredProjects = [
   {
-    name: "UOR Core",
-    category: "Infrastructure",
-    description: "Reference implementation of content-addressed, composable data primitives.",
-    maturity: "Graduated" as MaturityLevel,
+    name: "Hologram",
+    category: "Frontier Technology",
+    description: "A software-defined foundation for computation. High-performance virtual infrastructure built on a fundamentally new geometric computing paradigm.",
+    maturity: "Sandbox" as MaturityLevel,
   },
   {
-    name: "Semantic Bridge",
-    category: "Interoperability",
-    description: "Translates existing data formats into UOR's universal coordinate system.",
-    maturity: "Incubating" as MaturityLevel,
+    name: "Atlas Embeddings",
+    category: "Open Science",
+    description: "A rigorous mathematical framework demonstrating how all five exceptional Lie groups emerge from a single initial object: the Atlas of Resonance Classes.",
+    maturity: "Sandbox" as MaturityLevel,
   },
   {
-    name: "Frontier Coordinate Engine",
-    category: "Research",
-    description: "Content-addressed referencing and semantic search for frontier research.",
+    name: "Atomic Language Model",
+    category: "Frontier Technology",
+    description: "A mathematically rigorous, recursively complete language model implementing Chomsky's Minimalist Grammar via formal Merge and Move transformations.",
+    maturity: "Sandbox" as MaturityLevel,
+  },
+  {
+    name: "Prism",
+    category: "Open Science",
+    description: "A universal coordinate system for information. Prism provides a mathematically grounded framework for encoding, addressing, and navigating all forms of data.",
     maturity: "Sandbox" as MaturityLevel,
   },
 ];
