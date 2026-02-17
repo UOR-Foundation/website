@@ -157,12 +157,9 @@ const Projects = () => {
       {/* Visual Progression Flow */}
       <section className="py-12 md:py-20 bg-background border-b border-border">
         <div className="container">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4 text-center">
-            How Projects Evolve
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-12 text-center">
+            Project Maturity Levels
           </h2>
-          <p className="text-center text-muted-foreground font-body mb-12 max-w-2xl mx-auto">
-            Mature through adoption, governance, and community health.
-          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-5xl mx-auto">
             {maturityInfo.map((stage, idx) => {
