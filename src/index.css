@@ -86,20 +86,31 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', Georgia, serif;
     letter-spacing: -0.02em;
   }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.15);
+    color: hsl(var(--foreground));
+  }
 }
 
 @layer components {
   .nav-pill {
-    @apply px-5 py-2 rounded-full border border-pill text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/25 transition-all duration-200;
+    @apply px-5 py-2 rounded-full border border-pill text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/25 transition-all duration-300 ease-out;
   }
 
   .nav-pill-active {
@@ -129,6 +140,30 @@
   .rule-accent {
     @apply h-px w-full;
     background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.3), transparent);
+  }
+
+  /* Polished button base */
+  .btn-primary {
+    @apply px-7 py-3 rounded-full bg-primary text-primary-foreground font-medium text-sm transition-all duration-300 ease-out;
+  }
+  .btn-primary:hover {
+    @apply shadow-lg;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px -8px hsl(var(--primary) / 0.35);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-outline {
+    @apply px-7 py-3 rounded-full border border-pill text-foreground font-medium text-sm transition-all duration-300 ease-out;
+  }
+  .btn-outline:hover {
+    @apply border-foreground/25;
+    transform: translateY(-1px);
+  }
+  .btn-outline:active {
+    transform: translateY(0);
   }
 }
 

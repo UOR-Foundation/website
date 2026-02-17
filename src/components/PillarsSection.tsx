@@ -30,16 +30,19 @@ const PillarsSection = () => {
           {pillars.map((pillar, index) => (
             <div
               key={pillar.title}
-              className="animate-fade-in-up py-10 md:py-14 md:px-8 first:md:pl-0 last:md:pr-0"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className="group animate-fade-in-up opacity-0 py-10 md:py-14 md:px-8 first:md:pl-0 last:md:pr-0"
+              style={{ animationDelay: `${0.15 + index * 0.12}s` }}
             >
               <div className="flex items-center gap-3 mb-4">
-                <pillar.icon className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                <pillar.icon
+                  className="w-5 h-5 text-primary transition-transform duration-300 group-hover:scale-110"
+                  strokeWidth={1.5}
+                />
                 <h3 className="font-display text-xl font-semibold text-foreground">
                   {pillar.title}
                 </h3>
               </div>
-              <p className="text-muted-foreground font-body text-sm leading-relaxed">
+              <p className="text-muted-foreground font-body text-sm leading-relaxed transition-colors duration-300 group-hover:text-foreground/60">
                 {pillar.description}
               </p>
             </div>
