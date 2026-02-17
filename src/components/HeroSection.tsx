@@ -1,7 +1,7 @@
 const HeroSection = () => {
   return (
     <section className="hero-gradient relative overflow-hidden">
-      <div className="container py-20 md:py-28 lg:py-36">
+      <div className="container py-16 md:py-24 lg:py-28">
         {/* Centered editorial headline */}
         <div className="max-w-3xl mx-auto text-center animate-fade-in-up">
           <h1 className="font-display text-[2.5rem] md:text-[3.5rem] lg:text-[4.25rem] font-bold leading-[1.08] tracking-tight text-foreground text-balance">
