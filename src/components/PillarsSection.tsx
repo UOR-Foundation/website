@@ -9,13 +9,13 @@ const pillars = [
   },
   {
     icon: Users,
-    title: "Your Community",
+    title: "Our Community",
     description:
       "Open governance and collaboration driving adoption of the standard.",
   },
   {
     icon: Rocket,
-    title: "Our Distribution",
+    title: "Your Projects",
     description:
       "Discovery, licensing, and monetization of research products.",
   },
