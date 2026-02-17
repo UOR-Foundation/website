@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import uorIcon from "@/assets/uor-icon.png";
 
 const navItems = [
   { label: "About", href: "/about" },
@@ -35,9 +36,12 @@ const Navbar = () => {
     >
       <div className="container flex items-center justify-between h-16 md:h-[4.5rem]">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-            <span className="text-primary-foreground font-display font-bold text-xs">U</span>
-          </div>
+          <img
+            src={uorIcon}
+            alt="UOR Foundation"
+            className="w-8 h-8 object-contain transition-transform duration-300 group-hover:scale-105"
+            style={{ imageRendering: "auto" }}
+          />
           <span className="font-display text-base font-semibold tracking-tight">
             UOR Foundation
           </span>
