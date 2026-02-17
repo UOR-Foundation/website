@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import { ExternalLink, ArrowRight, ChevronRight, Send } from "lucide-react";
+import { ExternalLink, ChevronRight, Send, FlaskConical, Rocket, GraduationCap } from "lucide-react";
 import { useState } from "react";
 
 type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
@@ -145,62 +145,70 @@ const Projects = () => {
             Mature through adoption, governance, and community health.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-5xl mx-auto relative">
-            {/* Desktop progress bar */}
-            <div className="hidden md:block absolute top-1/2 left-[16%] right-[16%] -translate-y-1/2 h-1 rounded-full bg-gradient-to-r from-muted-foreground/20 via-primary/40 to-primary/70 z-0" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-5xl mx-auto">
+            {maturityInfo.map((stage, idx) => {
+              const StageIcon = [FlaskConical, Rocket, GraduationCap][idx];
+              return (
+                <div key={stage.level} className="relative flex flex-col">
+                  {/* Mobile arrow connector */}
+                  {idx > 0 && (
+                    <div className="md:hidden flex justify-center -mb-1 -mt-1 text-muted-foreground/30">
+                      <ChevronRight size={24} className="rotate-90" />
+                    </div>
+                  )}
 
-            {maturityInfo.map((stage, idx) => (
-              <div key={stage.level} className="relative flex flex-col">
-                {/* Mobile arrow connector */}
-                {idx < 2 && (
-                  <div className="md:hidden flex justify-center -mb-2 -mt-2 text-muted-foreground/30">
-                    <ChevronRight size={28} className="rotate-90" />
-                  </div>
-                )}
+                  <div
+                    className={`rounded-2xl border p-6 md:p-8 flex-1 transition-all duration-300 ${maturityBgColors[stage.level]} ${
+                      idx === 2 ? 'border-primary/30 shadow-lg shadow-primary/5' : ''
+                    } animate-fade-in-up`}
+                    style={{ animationDelay: `${idx * 0.12}s` }}
+                  >
+                    {/* Icon + Stage label */}
+                    <div className="flex items-center justify-between mb-5">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        idx === 0 ? 'bg-muted-foreground/10 text-muted-foreground/60' :
+                        idx === 1 ? 'bg-primary/10 text-primary/70' :
+                        'bg-primary/15 text-primary'
+                      }`}>
+                        <StageIcon size={20} />
+                      </div>
+                      <span className="text-xs font-bold text-muted-foreground/40 font-body uppercase tracking-widest">
+                        Stage {idx + 1}
+                      </span>
+                    </div>
 
-                <div
-                  className={`relative z-10 rounded-2xl border p-6 md:p-8 flex-1 transition-all duration-300 ${maturityBgColors[stage.level]} ${
-                    idx === 2 ? 'border-primary/30 shadow-lg shadow-primary/5' : ''
-                  } animate-fade-in-up`}
-                  style={{ animationDelay: `${idx * 0.12}s` }}
-                >
-                  {/* Stage number badge */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <span className={`w-4 h-4 rounded-full ${maturityDotColors[stage.level]} ${
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className={`w-3.5 h-3.5 rounded-full ${maturityDotColors[stage.level]} ${
                         idx === 0 ? 'opacity-40' : idx === 1 ? 'opacity-70' : 'opacity-100'
                       }`} />
                       <h3 className="font-display text-xl font-bold text-foreground">
                         {stage.level}
                       </h3>
                     </div>
-                    <span className="text-xs font-bold text-muted-foreground/40 font-body uppercase tracking-widest">
-                      Stage {idx + 1}
-                    </span>
-                  </div>
 
-                  <p className="text-base font-medium text-foreground/70 font-body mb-3 italic">
-                    {stage.tagline}
-                  </p>
-                  <p className="text-base text-muted-foreground font-body leading-relaxed mb-5">
-                    {stage.description}
-                  </p>
-                  <div className="space-y-2">
-                    <p className="text-sm font-semibold text-foreground/50 uppercase tracking-wider font-body">
-                      Criteria
+                    <p className="text-base font-medium text-foreground/70 font-body mb-3 italic">
+                      {stage.tagline}
                     </p>
-                    <ul className="space-y-1.5">
-                      {stage.criteria.map((c) => (
-                        <li key={c} className="text-sm text-muted-foreground font-body flex items-start gap-2">
-                          <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
-                          {c}
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="text-base text-muted-foreground font-body leading-relaxed mb-5">
+                      {stage.description}
+                    </p>
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-foreground/50 uppercase tracking-wider font-body">
+                        Criteria
+                      </p>
+                      <ul className="space-y-1.5">
+                        {stage.criteria.map((c) => (
+                          <li key={c} className="text-sm text-muted-foreground font-body flex items-start gap-2">
+                            <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
+                            {c}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
