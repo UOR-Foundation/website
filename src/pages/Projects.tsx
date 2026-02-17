@@ -111,9 +111,11 @@ const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { l
         <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
           {level}
         </h2>
-        <span className="text-sm text-muted-foreground font-body">
-          {count} {count === 1 ? "project" : "projects"}
-        </span>
+        {count > 0 && (
+          <span className="text-sm text-muted-foreground font-body">
+            {count} {count === 1 ? "project" : "projects"}
+          </span>
+        )}
         <ChevronDown
           size={20}
           className={`ml-auto text-muted-foreground transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
