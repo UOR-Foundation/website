@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
@@ -9,24 +9,28 @@ const featuredProjects = [
     category: "Frontier Technology",
     description: "A software-defined foundation for computation. High-performance virtual infrastructure built on a fundamentally new geometric computing paradigm.",
     maturity: "Sandbox" as MaturityLevel,
+    url: "https://gethologram.ai/",
   },
   {
     name: "Atlas Embeddings",
     category: "Open Science",
     description: "A rigorous mathematical framework demonstrating how all five exceptional Lie groups emerge from a single initial object: the Atlas of Resonance Classes.",
     maturity: "Sandbox" as MaturityLevel,
+    url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
   },
   {
     name: "Atomic Language Model",
     category: "Frontier Technology",
     description: "A mathematically rigorous, recursively complete language model implementing Chomsky's Minimalist Grammar via formal Merge and Move transformations.",
     maturity: "Sandbox" as MaturityLevel,
+    url: "https://github.com/dkypuros/atomic-lang-model",
   },
   {
     name: "Prism",
     category: "Open Science",
     description: "A universal coordinate system for information. Prism provides a mathematically grounded framework for encoding, addressing, and navigating all forms of data.",
     maturity: "Sandbox" as MaturityLevel,
+    url: "https://github.com/UOR-Foundation/prism",
   },
 ];
 
@@ -83,9 +87,21 @@ const ProjectsShowcase = () => {
                     {project.description}
                   </p>
                 </div>
-                <span className="text-base font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider md:mt-1">
-                  {project.category}
-                </span>
+                <div className="flex items-center gap-4 md:mt-1">
+                  <span className="text-base font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider">
+                    {project.category}
+                  </span>
+                  {project.url && (
+                    <a
+                      href={project.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-section-dark-foreground/50 hover:text-primary transition-colors duration-200 font-body"
+                    >
+                      Learn more <ExternalLink size={13} />
+                    </a>
+                  )}
+                </div>
               </div>
               <div className="h-px w-full bg-section-dark-foreground/10" />
             </div>
