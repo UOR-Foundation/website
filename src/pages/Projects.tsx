@@ -4,6 +4,7 @@ import { useState } from "react";
 import projectHologramImg from "@/assets/project-hologram.jpg";
 import projectAtlasImg from "@/assets/project-atlas.png";
 import projectAtomicLangImg from "@/assets/project-atomic-lang.jpg";
+import projectPrismImg from "@/assets/project-prism.png";
 
 type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
@@ -40,6 +41,14 @@ const projects: Project[] = [
     maturity: "Sandbox",
     url: "https://github.com/dkypuros/atomic-lang-model",
     image: projectAtomicLangImg,
+  },
+  {
+    name: "Prism",
+    category: "Open Science",
+    description: "A universal coordinate system for information. Prism provides a mathematically grounded framework for encoding, addressing, and navigating all forms of data.",
+    maturity: "Sandbox",
+    url: "https://github.com/UOR-Foundation/prism",
+    image: projectPrismImg,
   },
 ];
 
