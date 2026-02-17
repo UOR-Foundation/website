@@ -18,11 +18,14 @@ const HeroSection = () => {
             open data standard.
           </p>
           <h1
-            className="font-display text-[1.75rem] sm:text-[2.25rem] md:text-[3.5rem] lg:text-[4.25rem] font-bold leading-[1.1] tracking-tight text-foreground animate-fade-in-up opacity-0"
+            className="font-display text-[2rem] sm:text-[2.25rem] md:text-[3.5rem] lg:text-[4.25rem] font-bold leading-[1.1] tracking-tight text-foreground animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.25s" }}
           >
-            <span className="block">Your Universal Coordinate</span>
-            <span className="block">System for Information.</span>
+            <span className="hidden md:block">Your Universal Coordinate</span>
+            <span className="hidden md:block">System for Information.</span>
+            <span className="block md:hidden">Your Universal</span>
+            <span className="block md:hidden">Coordinate System</span>
+            <span className="block md:hidden">for Information.</span>
           </h1>
           <p
             className="mt-6 md:mt-10 text-base md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
