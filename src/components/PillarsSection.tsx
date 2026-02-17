@@ -33,7 +33,7 @@ const PillarsSection = () => {
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               {index === 0 && <div className="rule" />}
-              <div className="py-10 md:py-14 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-12 items-start">
+              <div className="py-10 md:py-14 grid grid-cols-1 md:grid-cols-[280px_1fr] gap-3 md:gap-16 items-center">
                 <div className="flex items-center gap-3">
                   <pillar.icon className="w-5 h-5 text-primary" strokeWidth={1.5} />
                   <h3 className="font-display text-xl font-semibold text-foreground">
