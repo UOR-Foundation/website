@@ -1,4 +1,5 @@
-import { Globe, Users, Rocket } from "lucide-react";
+import { Globe, Users, Rocket, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const pillars = [
   {
@@ -6,18 +7,21 @@ const pillars = [
     title: "The Standard",
     description:
       "Content-addressed identity for every data object — bridging open science and frontier research.",
+    href: "/standard",
   },
   {
     icon: Users,
     title: "Our Community",
     description:
       "Open governance and collaboration driving adoption of the standard.",
+    href: "/research",
   },
   {
     icon: Rocket,
     title: "Your Projects",
     description:
       "Discovery, licensing, and monetization of research products.",
+    href: "/projects",
   },
 ];
 
@@ -42,9 +46,16 @@ const PillarsSection = () => {
                   {pillar.title}
                 </h3>
               </div>
-              <p className="text-muted-foreground font-body text-sm leading-relaxed transition-colors duration-300 group-hover:text-foreground/60">
+              <p className="text-muted-foreground font-body text-sm leading-relaxed mb-5">
                 {pillar.description}
               </p>
+              <Link
+                to={pillar.href}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5"
+              >
+                Learn more
+                <ArrowRight size={13} className="transition-transform duration-300 group-hover:translate-x-0.5" />
+              </Link>
             </div>
           ))}
         </div>
