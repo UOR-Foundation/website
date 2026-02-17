@@ -45,9 +45,13 @@ const ProjectsShowcase = () => {
           </div>
           <Link
             to="/projects"
-            className="flex items-center gap-2 text-primary text-sm font-medium hover:gap-3 transition-all font-body"
+            className="group flex items-center gap-2 text-primary text-sm font-medium transition-all duration-300 font-body"
           >
-            View all projects <ArrowRight size={14} />
+            View all projects{" "}
+            <ArrowRight
+              size={14}
+              className="transition-transform duration-300 group-hover:translate-x-1"
+            />
           </Link>
         </div>
 
@@ -55,14 +59,14 @@ const ProjectsShowcase = () => {
           {featuredProjects.map((project, index) => (
             <div
               key={project.name}
-              className="animate-fade-in-up"
+              className="animate-fade-in-up opacity-0"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               {index === 0 && <div className="h-px w-full bg-section-dark-foreground/10" />}
-              <div className="py-8 md:py-10 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start">
+              <div className="group py-8 md:py-10 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start transition-all duration-300 hover:pl-2">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-display text-xl font-semibold">
+                    <h3 className="font-display text-xl font-semibold transition-colors duration-300 group-hover:text-primary">
                       {project.name}
                     </h3>
                     <span className={`text-xs font-medium font-body ${maturityStyles[project.maturity]}`}>

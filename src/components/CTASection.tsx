@@ -13,7 +13,7 @@ const CTASection = () => {
             href="https://discord.gg/ZwuZaNyuve"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-7 py-3 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
+            className="btn-primary"
           >
             Join Discord Community
           </a>
@@ -21,7 +21,7 @@ const CTASection = () => {
             href="https://github.com/UOR-Foundation"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-7 py-3 rounded-full border border-pill text-foreground font-medium text-sm hover:border-foreground/25 transition-all"
+            className="btn-outline"
           >
             Contribute on GitHub
           </a>
