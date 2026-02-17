@@ -37,7 +37,7 @@ const highlights = [
 
 const HighlightsSection = () => {
   return (
-    <section className="py-10 md:py-16 bg-background">
+    <section className="pt-6 md:pt-10 pb-10 md:pb-16 bg-background">
       <div className="container max-w-5xl">
         <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-8">
           Community Highlights
