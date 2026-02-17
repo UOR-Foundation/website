@@ -39,8 +39,11 @@
 }
 
 
+.galaxy-wrapper {
+  transform: translate(0px, 0px) scale(0.82);
+}
 @media screen and (max-width: 1200px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.62); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.56); }
 }
 @media screen and (max-width: 1024px) {
   .galaxy-wrapper { transform: translate(0px, 0px) scale(0.52); }
