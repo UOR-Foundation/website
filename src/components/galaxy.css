@@ -46,13 +46,13 @@
   .galaxy-wrapper { transform: translate(0px, 0px) scale(0.52); }
 }
 @media screen and (max-width: 768px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.38); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.45); }
 }
 @media screen and (max-width: 430px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.3); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.38); }
 }
 @media screen and (max-width: 356px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.22); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.28); }
 }
 
 
