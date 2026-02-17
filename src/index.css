@@ -188,24 +188,24 @@
 /* Heartbeat glow for project cards (~62 BPM peaceful loving heartbeat) */
 @keyframes heartbeat-glow {
   0%, 100% {
-    opacity: 0.15;
-    transform: scale(0.82);
+    opacity: 0.12;
+    transform: scale(0.3);
   }
   13% {
-    opacity: 0.52;
-    transform: scale(1.02);
+    opacity: 0.4;
+    transform: scale(1);
   }
   26% {
-    opacity: 0.18;
-    transform: scale(0.88);
+    opacity: 0.14;
+    transform: scale(0.4);
   }
   39% {
-    opacity: 0.45;
-    transform: scale(0.98);
+    opacity: 0.34;
+    transform: scale(0.9);
   }
   52% {
-    opacity: 0.15;
-    transform: scale(0.82);
+    opacity: 0.12;
+    transform: scale(0.3);
   }
 }
 
@@ -217,9 +217,14 @@
 .project-card-glow::after {
   content: '';
   position: absolute;
-  inset: -20%;
-  background: radial-gradient(circle at center, hsl(0 0% 100% / 0.32) 0%, hsl(210 50% 85% / 0.16) 25%, hsl(220 40% 70% / 0.06) 45%, transparent 65%);
+  top: 50%;
+  left: 50%;
+  width: 80%;
+  height: 80%;
+  translate: -50% -50%;
+  background: radial-gradient(circle at center, hsl(0 0% 100% / 0.45) 0%, hsl(0 0% 100% / 0.15) 15%, hsl(0 0% 100% / 0.04) 40%, transparent 60%);
   animation: heartbeat-glow 1.94s ease-in-out infinite;
   pointer-events: none;
   z-index: 1;
+  border-radius: 50%;
 }
