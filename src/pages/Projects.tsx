@@ -148,14 +148,22 @@ const Projects = () => {
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
             An open, transparent path for community projects built on the UOR standard. Every project enters as a <strong className="text-foreground">Sandbox</strong> experiment, grows through <strong className="text-foreground">Incubation</strong> with real-world adoption, and earns <strong className="text-foreground">Graduated</strong> status through proven governance and stability.
           </p>
-          <p className="mt-4 text-base text-muted-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.25s" }}>
-            Anyone can submit a project. You need an open-source repo and a clear problem statement — <a href="#submit" className="text-primary hover:underline font-medium">start here</a>.
-          </p>
+          <div
+            className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
+            style={{ animationDelay: "0.35s" }}
+          >
+            <a href="#maturity" className="btn-primary">
+              Learn More
+            </a>
+            <a href="#submit" className="btn-outline">
+              Submit Your Project
+            </a>
+          </div>
         </div>
       </section>
 
       {/* Visual Progression Flow */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
+      <section id="maturity" className="py-12 md:py-20 bg-background border-b border-border">
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-12 text-center">
             Project Maturity Levels
