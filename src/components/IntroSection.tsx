@@ -29,7 +29,7 @@ const IntroSection = () => {
             href="/about"
             className="inline-block mt-10 md:mt-12 px-8 py-3 border border-section-dark-foreground/40 rounded-full text-sm md:text-base font-body font-medium tracking-wide text-section-dark-foreground hover:bg-section-dark-foreground/10 transition-colors duration-200"
           >
-            Read Our Manifesto
+            About The Foundation
           </a>
         </div>
         <div className="h-px w-full bg-section-dark-foreground/10" />
