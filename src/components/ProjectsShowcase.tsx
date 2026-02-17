@@ -47,7 +47,7 @@ const ProjectsShowcase = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
           <div>
             <p className="text-sm md:text-base font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-3 font-body">
-              Ecosystem
+              UOR Ecosystem
             </p>
             <h2 className="font-display text-3xl md:text-4xl font-bold">
               Projects
