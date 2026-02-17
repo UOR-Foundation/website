@@ -29,6 +29,9 @@ const PillarsSection = () => {
   return (
     <section id="pillars" className="py-16 md:py-28 bg-background">
       <div className="container max-w-5xl">
+        <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-8">
+          The Three Pillars of the UOR Foundation
+        </p>
         <div className="rule" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:divide-x md:divide-border">
           {pillars.map((pillar, index) => (
