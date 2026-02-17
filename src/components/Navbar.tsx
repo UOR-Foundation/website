@@ -36,11 +36,13 @@ const Navbar = () => {
     >
       <div className="container flex items-center justify-between h-20 md:h-24">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <img
-            src={uorLogo}
-            alt="UOR Foundation"
-            className="w-8 h-8 object-contain invert"
-          />
+          <div className="w-8 h-8 relative">
+            <img
+              src={uorLogo}
+              alt="UOR Foundation"
+              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-screen invert"
+            />
+          </div>
           <span className="font-display text-base font-semibold tracking-tight">
             The UOR Foundation
           </span>
