@@ -1,6 +1,5 @@
-import { useState, useMemo } from "react";
 import Layout from "@/components/Layout";
-import { BookOpen, Calendar, ExternalLink, ArrowRight, Search, ChevronDown, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket } from "lucide-react";
+import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket } from "lucide-react";
 
 const researchCategories = [
   { icon: Cpu, label: "Hardware & Robotics", slug: "hardware-robotics", description: "Embedded systems, robotics middleware, and UOR-native hardware interfaces." },
@@ -68,13 +67,6 @@ const tagStyles: Record<string, string> = {
 };
 
 const Research = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-
-  const filteredCategories = useMemo(
-    () => researchCategories.filter((cat) => cat.label.toLowerCase().includes(searchQuery.toLowerCase())),
-    [searchQuery]
-  );
   return (
     <Layout>
       {/* Hero */}
@@ -106,69 +98,34 @@ const Research = () => {
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Research
           </p>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-6">
-            Open Research Areas
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+            Cross-Domain Research
           </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-10">
-            Our research agenda is public, collaborative, and designed to push the boundaries of how digital information is structured, shared, and verified.
+          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
+            The UOR community spans disciplines — validating ideas across boundaries and pursuing joint research where fields converge.
           </p>
 
-          {/* Searchable Dropdown */}
-          <div className="relative max-w-md mb-14">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="w-full flex items-center justify-between gap-3 px-5 py-3.5 rounded-xl border border-border bg-card text-foreground font-body text-sm font-medium hover:border-primary/30 transition-colors duration-200"
-            >
-              <span className="text-muted-foreground">Browse research categories</span>
-              <ChevronDown size={16} className={`text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-            </button>
-
-            {isOpen && (
-              <div className="absolute z-50 mt-2 w-full rounded-xl border border-border bg-card shadow-lg animate-fade-in-up overflow-hidden">
-                <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border">
-                  <Search size={15} className="text-muted-foreground/50 shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="Search categories…"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none font-body"
-                    autoFocus
-                  />
-                </div>
-                <ul className="max-h-72 overflow-y-auto py-1.5">
-                  {filteredCategories.length > 0 ? (
-                    filteredCategories.map((cat) => (
-                      <li key={cat.slug}>
-                        <button className="w-full flex items-center gap-3.5 px-4 py-3 text-left hover:bg-muted/50 transition-colors duration-150 group">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105">
-                            <cat.icon size={16} className="text-primary" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground font-body truncate">{cat.label}</p>
-                            <p className="text-xs text-muted-foreground font-body leading-snug mt-0.5 line-clamp-1">{cat.description}</p>
-                          </div>
-                        </button>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="px-4 py-6 text-center text-sm text-muted-foreground/60 font-body">No categories found</li>
-                  )}
-                </ul>
+          <div className="flex flex-wrap gap-3 mb-14">
+            {researchCategories.map((cat, index) => (
+              <div
+                key={cat.slug}
+                className="group flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-border bg-card hover:border-primary/25 hover:shadow-sm transition-all duration-200 animate-fade-in-up cursor-default"
+                style={{ animationDelay: `${index * 0.04}s` }}
+              >
+                <cat.icon size={15} className="text-primary shrink-0" />
+                <span className="text-sm font-medium text-foreground font-body whitespace-nowrap">{cat.label}</span>
               </div>
-            )}
+            ))}
           </div>
 
-          <div>
-            <a
-              href="https://github.com/UOR-Foundation"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline font-body transition-colors"
-            >
-              View all research on GitHub <ExternalLink size={14} />
-            </a>
-          </div>
+          <a
+            href="https://github.com/UOR-Foundation"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline font-body transition-colors"
+          >
+            View all research on GitHub <ExternalLink size={14} />
+          </a>
         </div>
       </section>
 
