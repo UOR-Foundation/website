@@ -168,19 +168,19 @@ const Projects = () => {
                       {stage.level}
                     </h3>
                   </div>
-                  <p className="text-sm font-medium text-foreground/70 font-body mb-3 italic">
+                  <p className="text-base font-medium text-foreground/70 font-body mb-3 italic">
                     {stage.tagline}
                   </p>
-                  <p className="text-sm text-muted-foreground font-body leading-relaxed mb-5">
+                  <p className="text-base text-muted-foreground font-body leading-relaxed mb-5">
                     {stage.description}
                   </p>
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider font-body">
+                    <p className="text-sm font-semibold text-foreground/50 uppercase tracking-wider font-body">
                       Criteria
                     </p>
                     <ul className="space-y-1.5">
                       {stage.criteria.map((c) => (
-                        <li key={c} className="text-xs text-muted-foreground font-body flex items-start gap-2">
+                        <li key={c} className="text-sm text-muted-foreground font-body flex items-start gap-2">
                           <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
                           {c}
                         </li>
@@ -207,7 +207,7 @@ const Projects = () => {
                   <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
                     {level}
                   </h2>
-                  <span className="text-sm text-muted-foreground font-body">
+                   <span className="text-sm text-muted-foreground font-body">
                     {levelProjects.length} {levelProjects.length === 1 ? "project" : "projects"}
                   </span>
                 </div>
@@ -219,20 +219,20 @@ const Projects = () => {
                       style={{ animationDelay: `${index * 0.08}s` }}
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <span className="text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary font-body">
+                        <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary font-body">
                           {project.category}
                         </span>
-                        <span className={`text-xs font-medium px-3 py-1 rounded-full border font-body ${maturityColors[project.maturity]}`}>
+                        <span className={`text-sm font-medium px-3 py-1 rounded-full border font-body ${maturityColors[project.maturity]}`}>
                           {project.maturity}
                         </span>
                       </div>
                       <h3 className="font-display text-xl font-semibold text-foreground mb-3">
                         {project.name}
                       </h3>
-                      <p className="text-muted-foreground font-body text-sm leading-relaxed">
+                      <p className="text-muted-foreground font-body text-base leading-relaxed">
                         {project.description}
                       </p>
-                      <div className="mt-5 flex items-center gap-2 text-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity font-body cursor-pointer">
+                      <div className="mt-5 flex items-center gap-2 text-primary text-base font-medium opacity-0 group-hover:opacity-100 transition-opacity font-body cursor-pointer">
                         Learn more <ExternalLink size={14} />
                       </div>
                     </div>
@@ -248,7 +248,7 @@ const Projects = () => {
       <section id="submit" className="section-dark py-20 md:py-28">
         <div className="container max-w-3xl">
           <div className="text-center mb-12">
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary font-body mb-4">
+            <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary font-body mb-4">
               <Send size={14} /> Open to everyone
             </span>
             <h2 className="font-display text-3xl md:text-4xl font-bold">
@@ -279,7 +279,7 @@ const Projects = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-section-dark-foreground font-body">
+                   <label className="text-base font-medium text-section-dark-foreground font-body">
                     Project Name *
                   </label>
                   <input
@@ -288,11 +288,11 @@ const Projects = () => {
                     value={formData.projectName}
                     onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
                     placeholder="e.g. UOR Visualization Engine"
-                    className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-section-dark-foreground font-body">
+                  <label className="text-base font-medium text-section-dark-foreground font-body">
                     Repository URL *
                   </label>
                   <input
@@ -301,13 +301,13 @@ const Projects = () => {
                     value={formData.repoUrl}
                     onChange={(e) => setFormData({ ...formData, repoUrl: e.target.value })}
                     placeholder="https://github.com/..."
-                    className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-section-dark-foreground font-body">
+                <label className="text-base font-medium text-section-dark-foreground font-body">
                   Contact Email *
                 </label>
                 <input
@@ -316,12 +316,12 @@ const Projects = () => {
                   value={formData.contactEmail}
                   onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
                   placeholder="maintainer@example.com"
-                  className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-section-dark-foreground font-body">
+                <label className="text-base font-medium text-section-dark-foreground font-body">
                   Short Description *
                 </label>
                 <input
@@ -330,12 +330,12 @@ const Projects = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="One-line summary of what your project does"
-                  className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-section-dark-foreground font-body">
+                <label className="text-base font-medium text-section-dark-foreground font-body">
                   Problem Statement *
                 </label>
                 <textarea
@@ -344,17 +344,17 @@ const Projects = () => {
                   value={formData.problemStatement}
                   onChange={(e) => setFormData({ ...formData, problemStatement: e.target.value })}
                   placeholder="What problem does your project solve? How does it relate to the UOR standard?"
-                  className="w-full px-4 py-3 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none"
                 />
               </div>
 
               <div className="rounded-xl border border-section-dark-foreground/10 bg-section-dark-foreground/5 p-5">
-                <p className="text-xs font-semibold text-section-dark-foreground/50 uppercase tracking-wider font-body mb-3">
+                <p className="text-sm font-semibold text-section-dark-foreground/50 uppercase tracking-wider font-body mb-3">
                   Sandbox Requirements Checklist
                 </p>
                 <ul className="space-y-2">
                   {maturityInfo[0].criteria.map((c) => (
-                    <li key={c} className="text-sm text-section-dark-foreground/60 font-body flex items-start gap-2.5">
+                    <li key={c} className="text-base text-section-dark-foreground/60 font-body flex items-start gap-2.5">
                       <span className="mt-1 w-2 h-2 rounded-full bg-primary/40 shrink-0" />
                       {c}
                     </li>
