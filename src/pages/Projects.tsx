@@ -15,7 +15,7 @@ const projects: Project[] = [
   {
     name: "UOR Core",
     category: "Infrastructure",
-    description: "Reference implementation — content-addressed, composable data primitives.",
+    description: "Reference implementation of content-addressed, composable data primitives.",
     maturity: "Graduated",
   },
   {

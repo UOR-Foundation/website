@@ -42,19 +42,19 @@ const PillarsSection = () => {
                   className="w-5 h-5 text-primary transition-transform duration-300 group-hover:scale-110"
                   strokeWidth={1.5}
                 />
-                <h3 className="font-display text-xl font-semibold text-foreground">
+                <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground">
                   {pillar.title}
                 </h3>
               </div>
-              <p className="text-muted-foreground font-body text-sm leading-relaxed flex-1">
+              <p className="text-muted-foreground font-body text-base leading-relaxed flex-1">
                 {pillar.description}
               </p>
               <Link
                 to={pillar.href}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5 mt-5"
+                className="inline-flex items-center gap-1.5 text-base font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5 mt-6"
               >
                 Learn more
-                <ArrowRight size={13} className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-0.5" />
               </Link>
             </div>
           ))}

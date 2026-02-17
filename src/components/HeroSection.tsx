@@ -4,7 +4,7 @@ const HeroSection = () => {
       <div className="container py-24 md:py-36 lg:py-44">
         <div className="max-w-4xl mx-auto text-center">
           <p
-            className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-8 animate-fade-in-up opacity-0"
+            className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-8 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.1s" }}
           >
             open standard.
@@ -16,7 +16,7 @@ const HeroSection = () => {
             The Universal Coordinate System for Information.
           </h1>
           <p
-            className="mt-8 md:mt-10 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
+            className="mt-8 md:mt-10 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.45s" }}
           >
             Open infrastructure for the semantic web, open science, and frontier research.

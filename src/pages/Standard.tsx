@@ -32,26 +32,26 @@ const Standard = () => {
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             The UOR Standard
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-            An open standard for structured, composable data — identified by content, not location.
+          <p className="mt-6 text-lg md:text-xl text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+            An open standard for structured, composable data, identified by content, not location.
           </p>
         </div>
       </section>
 
-       <section className="py-16 md:py-28 bg-background">
-        <div className="container">
+      <section className="py-16 md:py-28 bg-background">
+        <div className="container max-w-5xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mb-14 md:mb-16">
             {features.map((feature, index) => (
               <div
                 key={feature.title}
-                className="bg-card rounded-2xl border border-border p-6 md:p-8 animate-fade-in-up"
+                className="group bg-card rounded-2xl border border-border p-7 md:p-9 animate-fade-in-up hover:shadow-lg hover:border-primary/20 transition-all duration-300"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-105">
                   <feature.icon className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-display text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground font-body text-sm leading-relaxed">{feature.description}</p>
+                <h3 className="font-display text-lg md:text-xl font-semibold text-foreground mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground font-body text-base leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -61,7 +61,7 @@ const Standard = () => {
               href="https://github.com/UOR-Foundation"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex px-7 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity"
+              className="btn-primary inline-flex"
             >
               Read the Specification on GitHub
             </a>
