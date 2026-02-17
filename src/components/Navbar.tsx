@@ -73,8 +73,7 @@ const Navbar = () => {
           </div>
           <Link
             to="/donate"
-            className="!py-2 !px-5 !text-sm inline-flex items-center rounded-full font-medium transition-all duration-300 ease-out text-foreground hover:shadow-lg"
-            style={{ backgroundColor: 'hsl(152, 40%, 75%)' }}
+            className="!py-2 !px-5 !text-sm inline-flex items-center rounded-full font-medium transition-all duration-300 ease-out text-primary-foreground bg-primary hover:opacity-90 hover:shadow-lg"
           >
             <Heart size={14} fill="currentColor" strokeWidth={0} className="mr-1" />
             Donate
