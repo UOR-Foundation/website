@@ -8,11 +8,19 @@
   border-radius: 50%;
 }
 .hero-galaxy-container {
-  min-height: 245px;
-  display: grid;
+  min-height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(ellipse at center, #1a0040 0%, transparent 70%);
+  border-radius: 50%;
+  overflow: visible;
 }
 .galaxy-wrapper {
-  transform: translate(0px, 0px) scale(0.7);
+  position: relative;
+  width: 400px;
+  height: 400px;
+  transform: scale(0.7);
 }
 
 .galaxy:nth-child(1) {
@@ -24,19 +32,19 @@
 }
 
 @media screen and (max-width: 1200px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.7); }
+  .galaxy-wrapper { transform: scale(0.7); }
 }
 @media screen and (max-width: 1024px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.56); }
+  .galaxy-wrapper { transform: scale(0.56); }
 }
 @media screen and (max-width: 768px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.39); }
+  .galaxy-wrapper { transform: scale(0.39); }
 }
 @media screen and (max-width: 430px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.35); }
+  .galaxy-wrapper { transform: scale(0.35); }
 }
 @media screen and (max-width: 356px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.21); }
+  .galaxy-wrapper { transform: scale(0.21); }
 }
 
 
