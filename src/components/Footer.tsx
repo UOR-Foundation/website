@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import uorLogo from "@/assets/uor-logo.png";
+import uorLogo from "@/assets/uor-logo-original.png";
 
 const Footer = () => {
   return (
@@ -11,7 +11,7 @@ const Footer = () => {
               <img
                 src={uorLogo}
                 alt="UOR Foundation"
-                className="w-7 h-7 object-contain brightness-0 invert"
+                className="w-7 h-7 object-contain"
               />
               <span className="font-display text-base font-semibold">UOR Foundation</span>
             </div>

@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Menu, X, Heart, Github, Linkedin } from "lucide-react";
-import uorLogo from "@/assets/uor-logo.png";
+import uorLogo from "@/assets/uor-logo-original.png";
 
 const navItems = [
   { label: "About", href: "/about" },
@@ -39,7 +39,7 @@ const Navbar = () => {
           <img
             src={uorLogo}
             alt="UOR Foundation"
-            className="w-8 h-8 object-contain"
+            className="w-8 h-8 object-contain invert"
           />
           <span className="font-display text-base font-semibold tracking-tight">
             The UOR Foundation
