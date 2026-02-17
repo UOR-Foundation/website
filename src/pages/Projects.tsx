@@ -36,7 +36,7 @@ const projects: Project[] = [
   },
   {
     name: "Atomic Language Model",
-    category: "Open Science",
+    category: "Frontier Technology",
     description: "A mathematically rigorous, recursively complete language model implementing Chomsky's Minimalist Grammar via formal Merge and Move transformations.",
     maturity: "Sandbox",
     url: "https://github.com/dkypuros/atomic-lang-model",
