@@ -3,26 +3,26 @@ import GalaxyAnimation from "./GalaxyAnimation";
 const HeroSection = () => {
   return (
     <section className="hero-gradient relative overflow-hidden">
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
-        <GalaxyAnimation />
-      </div>
-      <div className="container relative z-10 py-24 md:py-36 lg:py-44">
+      <div className="container py-24 md:py-36 lg:py-44">
+        <div className="mb-12 md:mb-16 animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
+          <GalaxyAnimation />
+        </div>
         <div className="max-w-4xl mx-auto text-center">
           <p
             className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-8 animate-fade-in-up opacity-0"
-            style={{ animationDelay: "0.1s" }}
+            style={{ animationDelay: "0.2s" }}
           >
             open standard.
           </p>
           <h1
             className="font-display text-[2.75rem] md:text-[4rem] lg:text-[5rem] font-bold leading-[1.05] tracking-tight text-foreground text-balance animate-fade-in-up opacity-0"
-            style={{ animationDelay: "0.25s" }}
+            style={{ animationDelay: "0.35s" }}
           >
             The Universal Coordinate System for Information.
           </h1>
           <p
             className="mt-8 md:mt-10 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
-            style={{ animationDelay: "0.45s" }}
+            style={{ animationDelay: "0.5s" }}
           >
             Open infrastructure for the semantic web, open science, and frontier research.
             Data referenced by what it{" "}
@@ -30,7 +30,7 @@ const HeroSection = () => {
           </p>
           <div
             className="mt-10 md:mt-14 flex flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
-            style={{ animationDelay: "0.6s" }}
+            style={{ animationDelay: "0.65s" }}
           >
             <a
               href="https://github.com/UOR-Foundation"
