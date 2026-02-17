@@ -4,10 +4,16 @@ const HeroSection = () => {
   return (
     <section className="hero-gradient relative overflow-hidden">
       <div className="container py-24 md:py-36 lg:py-44">
+        <div
+          className="mb-12 md:mb-16 animate-fade-in-up opacity-0"
+          style={{ animationDelay: "0.1s" }}
+        >
+          <GalaxyAnimation />
+        </div>
         <div className="max-w-4xl mx-auto text-center">
           <p
             className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-8 animate-fade-in-up opacity-0"
-            style={{ animationDelay: "0.1s" }}
+            style={{ animationDelay: "0.2s" }}
           >
             open standard.
           </p>
@@ -41,12 +47,6 @@ const HeroSection = () => {
               Learn More
             </a>
           </div>
-        </div>
-        <div
-          className="mt-16 md:mt-24 animate-fade-in-up opacity-0"
-          style={{ animationDelay: "0.75s" }}
-        >
-          <GalaxyAnimation />
         </div>
       </div>
     </section>
