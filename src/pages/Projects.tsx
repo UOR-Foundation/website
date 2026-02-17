@@ -27,7 +27,7 @@ const projects: Project[] = [
     image: projectHologramImg,
   },
   {
-    name: "Atlas",
+    name: "Atlas Embeddings",
     category: "Open Science",
     description: "A rigorous mathematical framework demonstrating how all five exceptional Lie groups emerge from a single initial object: the Atlas of Resonance Classes.",
     maturity: "Sandbox",
