@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 const About = () => {
   return (
     <Layout>
-      <section className="hero-gradient pt-36 md:pt-44 pb-16 md:pb-28">
+      <section className="hero-gradient pt-40 md:pt-52 pb-16 md:pb-28">
         <div className="container max-w-3xl">
           <h1 className="font-display text-3xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             About the UOR Foundation
