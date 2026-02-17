@@ -3,10 +3,10 @@ const CTASection = () => {
     <section className="py-12 md:py-20 bg-background">
       <div className="container max-w-2xl text-center">
         <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
-          Donate Now
+          Join Your Community
         </h2>
         <p className="mt-5 text-lg text-muted-foreground font-body leading-relaxed">
-          Support open infrastructure for the next foundation of the internet.
+          Connect with researchers, developers, and advocates building the future of open data infrastructure.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <a
