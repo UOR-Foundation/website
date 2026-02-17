@@ -16,7 +16,7 @@ const projects: Project[] = [
   {
     name: "Hologram",
     category: "Frontier Technology & Research",
-    description: "A software-defined foundation for computation — high-performance virtual infrastructure built on a fundamentally new geometric computing paradigm.",
+    description: "A software-defined foundation for computation. High-performance virtual infrastructure built on a fundamentally new geometric computing paradigm.",
     maturity: "Sandbox",
     url: "https://gethologram.ai/",
   },
