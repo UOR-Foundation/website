@@ -62,10 +62,10 @@ const Navbar = () => {
         <div className="hidden md:flex items-center">
           <Link
             to="/donate"
-            className="!py-2 !px-5 !text-sm inline-flex items-center rounded-full font-medium transition-all duration-300 ease-out text-white hover:shadow-lg"
-            style={{ backgroundColor: 'hsl(216, 77%, 27%)' }}
+            className="!py-2 !px-5 !text-sm inline-flex items-center rounded-full font-medium transition-all duration-300 ease-out text-foreground hover:shadow-lg"
+            style={{ backgroundColor: 'hsl(152, 40%, 75%)' }}
           >
-            <Heart size={14} fill="white" strokeWidth={0} className="mr-1" />
+            <Heart size={14} fill="currentColor" strokeWidth={0} className="mr-1" />
             Donate
           </Link>
         </div>
