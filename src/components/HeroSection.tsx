@@ -31,7 +31,7 @@ const HeroSection = () => {
             className="mt-6 md:mt-10 text-base md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.45s" }}
           >
-            Open infrastructure for the semantic web, open science, and frontier research.
+            Open infrastructure for the semantic web, open science, and frontier technologies.
             Data referenced by what it{" "}
             <em className="not-italic text-foreground/70">is</em>, not where it lives.
           </p>
