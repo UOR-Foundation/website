@@ -140,7 +140,7 @@ const Projects = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-40 md:pt-52 pb-20 md:pb-28">
+      <section className="hero-gradient pt-40 md:pt-52 pb-16 md:pb-22">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             Project Maturity Framework
@@ -155,7 +155,7 @@ const Projects = () => {
       </section>
 
       {/* Visual Progression Flow */}
-      <section className="py-16 md:py-28 bg-background border-b border-border">
+      <section className="py-12 md:py-20 bg-background border-b border-border">
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4 text-center">
             How Projects Evolve
@@ -233,7 +233,7 @@ const Projects = () => {
       </section>
 
       {/* Projects by maturity */}
-      <section className="py-16 md:py-28 bg-background">
+      <section className="py-12 md:py-20 bg-background">
         <div className="container space-y-16">
           {(["Graduated", "Incubating", "Sandbox"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
@@ -283,7 +283,7 @@ const Projects = () => {
       </section>
 
       {/* Submission Process */}
-      <section className="py-16 md:py-28 bg-background border-b border-border">
+      <section className="py-12 md:py-20 bg-background border-b border-border">
         <div className="container max-w-5xl">
           <div className="text-center mb-14">
             <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary font-body mb-4">
@@ -312,7 +312,7 @@ const Projects = () => {
       </section>
 
       {/* Submit Form */}
-      <section id="submit" className="section-dark py-20 md:py-28">
+      <section id="submit" className="section-dark py-16 md:py-22">
         <div className="container max-w-3xl">
           <div className="text-center mb-12">
             <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-section-dark-foreground/50 font-body mb-4">
