@@ -23,7 +23,7 @@ const pillars = [
 
 const PillarsSection = () => {
   return (
-    <section id="pillars" className="py-14 md:py-24 bg-background">
+    <section id="pillars" className="py-16 md:py-28 bg-background">
       <div className="container max-w-5xl">
         <div className="rule" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:divide-x md:divide-border">

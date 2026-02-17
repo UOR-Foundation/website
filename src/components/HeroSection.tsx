@@ -1,19 +1,19 @@
 const HeroSection = () => {
   return (
     <section className="hero-gradient relative overflow-hidden">
-      <div className="container py-16 md:py-24 lg:py-28">
-        {/* Centered editorial headline */}
-        <div className="max-w-3xl mx-auto text-center animate-fade-in-up">
-          <span className="inline-block px-4 py-1.5 rounded-full border border-border/40 bg-muted/40 text-xs font-medium tracking-widest uppercase text-muted-foreground mb-6">
+      <div className="container py-24 md:py-36 lg:py-44">
+        {/* Centered editorial headline — foresight.org inspired */}
+        <div className="max-w-4xl mx-auto text-center animate-fade-in-up">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/70 mb-8">
             open standard.
-          </span>
-          <h1 className="font-display text-[2.5rem] md:text-[3.5rem] lg:text-[4.25rem] font-bold leading-[1.08] tracking-tight text-foreground text-balance">
-            The Universal Coordinate System for Information
+          </p>
+          <h1 className="font-display text-[2.75rem] md:text-[4rem] lg:text-[5rem] font-bold leading-[1.05] tracking-tight text-foreground text-balance">
+            The Universal Coordinate System for Information.
           </h1>
-          <p className="mt-6 md:mt-8 text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto font-body">
+          <p className="mt-8 md:mt-10 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto font-body">
             Open infrastructure for the semantic web, open science, and frontier research. Data referenced by what it <em className="not-italic text-foreground/70">is</em>, not where it lives.
           </p>
-          <div className="mt-8 md:mt-10 flex flex-wrap justify-center gap-3">
+          <div className="mt-10 md:mt-14 flex flex-wrap justify-center gap-3">
             <a
               href="https://github.com/UOR-Foundation"
               target="_blank"
