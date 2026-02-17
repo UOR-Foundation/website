@@ -136,7 +136,7 @@ const CTASection = () => {
         </div>
 
         {/* Members Grid */}
-        <div className="mt-16 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-10">
+        <div className="mt-16 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-12">
           {members.map((member, index) => (
             <a
               key={member.name}
@@ -167,13 +167,13 @@ const CTASection = () => {
                   />
                 </div>
               </div>
-              <h4 className="font-display text-base font-semibold text-foreground">
+              <h4 className="font-display text-sm font-semibold text-foreground leading-tight">
                 {member.name}
               </h4>
-              <p className="text-sm font-medium text-primary font-body mt-0.5">
+              <p className="text-xs font-medium text-primary font-body mt-0.5 leading-tight min-h-[2rem] flex items-center justify-center">
                 {member.role}
               </p>
-              <p className="text-sm text-muted-foreground font-body mt-1 leading-snug">
+              <p className="text-xs text-muted-foreground font-body mt-1 leading-snug min-h-[2.5rem] flex items-center justify-center">
                 {member.description}
               </p>
             </a>
