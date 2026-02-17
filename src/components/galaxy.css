@@ -29,7 +29,7 @@
 }
 
 .circle {
-  animation: 8s galaxy ease-in-out infinite reverse;
+  animation: 5s galaxy ease-in-out infinite reverse;
 }
 
 .dot {
@@ -73,30 +73,6 @@
 
 
 @keyframes galaxy {
-  0% {
-    transform: rotate(0deg);
-  }
-  15% {
-    transform: rotate(60deg);
-  }
-  25% {
-    transform: rotate(85deg);
-  }
-  40% {
-    transform: rotate(150deg);
-  }
-  50% {
-    transform: rotate(175deg);
-  }
-  65% {
-    transform: rotate(240deg);
-  }
-  75% {
-    transform: rotate(270deg);
-  }
-  90% {
-    transform: rotate(335deg);
-  }
   100% {
     transform: rotate(360deg);
   }
