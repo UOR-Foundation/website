@@ -32,7 +32,7 @@ const maturityStyles: Record<MaturityLevel, string> = {
 
 const ProjectsShowcase = () => {
   return (
-    <section className="section-dark py-12 md:py-20">
+    <section className="section-dark py-20 md:py-32">
       <div className="container max-w-5xl">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
           <div>
