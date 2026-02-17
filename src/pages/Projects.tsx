@@ -113,7 +113,7 @@ const submissionSteps = [
   {
     icon: FileCheck,
     title: "2. Submit for Review",
-    description: "Complete the form below with your project details and problem statement. Our technical committee reviews all submissions within 2 weeks.",
+    description: "Complete the form below with your project details and problem statement. Our technical committee reviews all submissions within 3 weeks.",
   },
   {
     icon: ClipboardCheck,
@@ -322,7 +322,7 @@ const Projects = () => {
               Submit for Sandbox Review
             </h2>
             <p className="mt-4 text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto">
-              All you need is an open-source repository and a clear problem statement. Our technical committee reviews every submission and responds within 2 weeks.
+              All you need is an open-source repository and a clear problem statement. Our technical committee reviews every submission and responds within 3 weeks.
             </p>
           </div>
 
@@ -335,7 +335,7 @@ const Projects = () => {
                 Submission Received
               </h3>
               <p className="text-section-dark-foreground/60 font-body">
-                We'll review your project and get back to you within 2 weeks. Join our{" "}
+                We'll review your project and get back to you within 3 weeks. Join our{" "}
                 <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                   Discord
                 </a>{" "}
