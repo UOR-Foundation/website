@@ -43,7 +43,7 @@ const Navbar = () => {
             style={{ imageRendering: "auto" }}
           />
           <span className="font-display text-base font-semibold tracking-tight">
-            UOR Foundation
+            The UOR Foundation
           </span>
         </Link>
 
