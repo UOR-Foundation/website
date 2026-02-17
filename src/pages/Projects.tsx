@@ -197,13 +197,13 @@ const Projects = () => {
       </section>
 
       {/* Visual Progression Flow */}
-      <section id="maturity" className="py-12 md:py-20 bg-background border-b border-border">
+      <section id="maturity" className="py-16 md:py-28 bg-background border-b border-border">
         <div className="container">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-12 text-center">
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-16 text-center">
             Project Maturity Levels
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-5xl mx-auto items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto items-stretch">
             {maturityInfo.map((stage, idx) => {
               const StageIcon = [FlaskConical, Rocket, GraduationCap][idx];
               return (
@@ -216,13 +216,13 @@ const Projects = () => {
                   )}
 
                   <div
-                    className={`rounded-2xl border p-6 md:p-8 flex-1 flex flex-col transition-all duration-300 ${maturityBgColors[stage.level]} ${
+                    className={`rounded-2xl border p-7 md:p-10 flex-1 flex flex-col transition-all duration-300 ${maturityBgColors[stage.level]} ${
                       idx === 2 ? 'border-primary/30 shadow-lg shadow-primary/5' : ''
                     } animate-fade-in-up`}
                     style={{ animationDelay: `${idx * 0.12}s` }}
                   >
                     {/* Icon + Stage label */}
-                    <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center justify-between mb-7">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                         idx === 0 ? 'bg-muted-foreground/10 text-muted-foreground/60' :
                         idx === 1 ? 'bg-primary/10 text-primary/70' :
@@ -235,7 +235,7 @@ const Projects = () => {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center gap-3 mb-5">
                       <span className={`w-3.5 h-3.5 rounded-full ${maturityDotColors[stage.level]} ${
                         idx === 0 ? 'opacity-40' : idx === 1 ? 'opacity-70' : 'opacity-100'
                       }`} />
@@ -244,17 +244,17 @@ const Projects = () => {
                       </h3>
                     </div>
 
-                    <p className="text-base font-medium text-foreground/70 font-body mb-3 italic md:min-h-[3rem]">
+                    <p className="text-base font-medium text-foreground/70 font-body mb-4 italic md:min-h-[3rem]">
                       {stage.tagline}
                     </p>
-                    <p className="text-base text-muted-foreground font-body leading-relaxed mb-5 md:min-h-[5.5rem]">
+                    <p className="text-base text-muted-foreground font-body leading-relaxed mb-7 md:min-h-[5.5rem]">
                       {stage.description}
                     </p>
-                    <div className="space-y-2 mt-auto">
-                      <p className="text-sm font-semibold text-foreground/50 uppercase tracking-wider font-body">
+                    <div className="space-y-3 mt-auto">
+                      <p className="text-sm font-semibold text-foreground/50 uppercase tracking-wider font-body mb-1">
                         Criteria
                       </p>
-                      <ul className="space-y-1.5">
+                      <ul className="space-y-2.5">
                         {stage.criteria.map((c) => (
                           <li key={c} className="text-base text-muted-foreground font-body flex items-start gap-2">
                             <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
@@ -272,14 +272,14 @@ const Projects = () => {
       </section>
 
       {/* Projects by maturity */}
-      <section id="projects-list" className="py-12 md:py-20 bg-background scroll-mt-28">
-        <div className="container space-y-6">
+      <section id="projects-list" className="py-16 md:py-28 bg-background scroll-mt-28">
+        <div className="container space-y-8">
           {(["Graduated", "Incubating", "Sandbox"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
             const hasProjects = levelProjects.length > 0;
             return (
               <CollapsibleCategory key={level} level={level} count={levelProjects.length} dotColor={maturityDotColors[level]} disabled={!hasProjects}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                   {levelProjects.map((project, index) => (
                     <div
                       key={project.name}
@@ -295,8 +295,8 @@ const Projects = () => {
                           />
                         </div>
                       )}
-                      <div className="p-6 md:p-8">
-                        <div className="flex items-center justify-between gap-2 mb-4">
+                      <div className="p-7 md:p-9">
+                        <div className="flex items-center justify-between gap-2 mb-5">
                           <span className="text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
                             {project.category}
                           </span>
@@ -304,14 +304,14 @@ const Projects = () => {
                             {project.maturity}
                           </span>
                         </div>
-                        <h3 className="font-display text-xl font-semibold text-foreground mb-3">
+                        <h3 className="font-display text-xl font-semibold text-foreground mb-4">
                           {project.name}
                         </h3>
                         <p className="text-muted-foreground font-body text-base leading-relaxed">
                           {project.description}
                         </p>
                         {project.url && (
-                          <a href={project.url} target="_blank" rel="noopener noreferrer" className="mt-5 flex items-center gap-2 text-primary text-base font-medium transition-opacity font-body cursor-pointer hover:underline">
+                          <a href={project.url} target="_blank" rel="noopener noreferrer" className="mt-6 flex items-center gap-2 text-primary text-base font-medium transition-opacity font-body cursor-pointer hover:underline">
                             Learn more <ExternalLink size={14} />
                           </a>
                         )}
@@ -326,9 +326,9 @@ const Projects = () => {
       </section>
 
       {/* Submission Process */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
+      <section className="py-16 md:py-28 bg-background border-b border-border">
         <div className="container max-w-5xl">
-          <div className="text-center mb-14">
+          <div className="text-center mb-16">
             <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary font-body mb-4">
               <Scale size={14} /> Open governance
             </span>
@@ -340,10 +340,10 @@ const Projects = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
             {submissionSteps.map((step, idx) => (
-              <div key={step.title} className="rounded-2xl border border-border bg-card p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: `${idx * 0.1}s` }}>
-                <div className="flex items-center gap-3 mb-4">
+              <div key={step.title} className="rounded-2xl border border-border bg-card p-7 md:p-10 animate-fade-in-up" style={{ animationDelay: `${idx * 0.1}s` }}>
+                <div className="flex items-center gap-3 mb-5">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <step.icon size={20} className="text-primary" />
                   </div>
@@ -357,7 +357,7 @@ const Projects = () => {
       </section>
 
       {/* Submit Form */}
-      <section id="submit" className="section-dark py-16 md:py-22">
+      <section id="submit" className="section-dark py-20 md:py-28">
         <div className="container max-w-3xl">
           <div className="text-center mb-12">
             <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-section-dark-foreground/50 font-body mb-4">
