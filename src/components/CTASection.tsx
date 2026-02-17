@@ -116,7 +116,7 @@ const CTASection = () => {
         <p className="mt-5 text-lg text-muted-foreground font-body leading-relaxed max-w-2xl mx-auto">
           Connect with researchers, developers, and advocates building the future of open data infrastructure.
         </p>
-        <div className="mt-10 flex flex-wrap justify-center gap-3">
+        <div className="mt-8 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
           <a
             href="https://discord.gg/ZwuZaNyuve"
             target="_blank"
@@ -136,7 +136,7 @@ const CTASection = () => {
         </div>
 
         {/* Members Grid */}
-        <div className="mt-16 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-12">
+        <div className="mt-12 md:mt-16 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-8 md:gap-y-12">
           {members.map((member, index) => (
             <a
               key={member.name}
@@ -146,7 +146,7 @@ const CTASection = () => {
               className="group flex flex-col items-center text-center animate-fade-in-up opacity-0"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full p-[2px] mb-3 transition-all duration-300"
+              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full p-[2px] mb-2 md:mb-3 transition-all duration-300"
                 style={{
                   background: 'linear-gradient(135deg, rgba(168,85,247,0.25), rgba(192,132,252,0.15), rgba(139,92,246,0.25))',
                   boxShadow: '0 0 16px 2px rgba(168,85,247,0.12), 0 0 32px 4px rgba(139,92,246,0.06)',

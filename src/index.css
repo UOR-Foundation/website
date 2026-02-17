@@ -131,6 +131,13 @@
       padding-left: 1.25rem;
       padding-right: 1.25rem;
     }
+
+    /* Full-width buttons on mobile for easy tapping */
+    .btn-primary,
+    .btn-outline {
+      @apply w-full justify-center text-center py-3.5 text-base;
+      min-height: 48px;
+    }
   }
 
   .rule {

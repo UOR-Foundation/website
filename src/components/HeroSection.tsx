@@ -3,9 +3,9 @@ import GalaxyAnimation from "./GalaxyAnimation";
 const HeroSection = () => {
   return (
     <section className="hero-gradient relative overflow-hidden">
-      <div className="container pt-48 md:pt-56 pb-16 md:pb-24 lg:pb-28">
+      <div className="container pt-36 md:pt-56 pb-14 md:pb-24 lg:pb-28">
         <div
-          className="mt-8 md:mt-12 mb-24 md:mb-32 lg:mb-36 animate-fade-in-up opacity-0"
+          className="mt-4 md:mt-12 mb-16 md:mb-32 lg:mb-36 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.1s" }}
         >
           <GalaxyAnimation />
@@ -18,14 +18,14 @@ const HeroSection = () => {
             open data standard.
           </p>
           <h1
-            className="font-display text-[2.25rem] md:text-[3.5rem] lg:text-[4.25rem] font-bold leading-[1.1] tracking-tight text-foreground animate-fade-in-up opacity-0"
+            className="font-display text-[1.75rem] sm:text-[2.25rem] md:text-[3.5rem] lg:text-[4.25rem] font-bold leading-[1.1] tracking-tight text-foreground animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.25s" }}
           >
             <span className="block">Your Universal Coordinate</span>
             <span className="block">System for Information.</span>
           </h1>
           <p
-            className="mt-8 md:mt-10 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
+            className="mt-6 md:mt-10 text-base md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.45s" }}
           >
             Open infrastructure for the semantic web, open science, and frontier research.
@@ -33,7 +33,7 @@ const HeroSection = () => {
             <em className="not-italic text-foreground/70">is</em>, not where it lives.
           </p>
           <div
-            className="mt-10 md:mt-14 flex flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
+            className="mt-8 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.6s" }}
           >
             <a href="#pillars" className="btn-primary">
