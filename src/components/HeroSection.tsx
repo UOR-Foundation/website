@@ -36,14 +36,14 @@ const HeroSection = () => {
             className="mt-10 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.6s" }}
           >
-            <a href="#pillars" className="btn-primary">
+            <a href="#pillars" className="btn-primary bg-black text-white border-black hover:bg-black/90">
               Learn More
             </a>
             <a
               href="https://github.com/UOR-Foundation"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-outline"
+              className="btn-outline bg-black text-white border-black hover:bg-black/90"
             >
               Explore on GitHub
             </a>
