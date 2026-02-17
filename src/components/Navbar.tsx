@@ -28,10 +28,10 @@ const Navbar = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out bg-background ${
         scrolled
-          ? "bg-background/70 backdrop-blur-xl border-b border-border/20 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]"
-          : "bg-transparent"
+          ? "border-b border-border/20 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]"
+          : ""
       }`}
     >
       <div className="container flex items-center justify-between h-16 md:h-[4.5rem]">
