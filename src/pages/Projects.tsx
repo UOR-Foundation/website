@@ -9,14 +9,16 @@ interface Project {
   category: string;
   description: string;
   maturity: MaturityLevel;
+  url?: string;
 }
 
 const projects: Project[] = [
   {
-    name: "Frontier Coordinate Engine",
+    name: "Hologram",
     category: "Frontier Technology & Research",
-    description: "Content-addressed referencing and semantic search for frontier technology and research.",
+    description: "A software-defined foundation for computation — high-performance virtual infrastructure built on a fundamentally new geometric computing paradigm.",
     maturity: "Sandbox",
+    url: "https://gethologram.ai/",
   },
   {
     name: "Open Science Toolkit",
@@ -274,9 +276,11 @@ const Projects = () => {
                       <p className="text-muted-foreground font-body text-base leading-relaxed">
                         {project.description}
                       </p>
-                      <div className="mt-5 flex items-center gap-2 text-primary text-base font-medium transition-opacity font-body cursor-pointer">
-                        Learn more <ExternalLink size={14} />
-                      </div>
+                      {project.url && (
+                        <a href={project.url} target="_blank" rel="noopener noreferrer" className="mt-5 flex items-center gap-2 text-primary text-base font-medium transition-opacity font-body cursor-pointer hover:underline">
+                          Learn more <ExternalLink size={14} />
+                        </a>
+                      )}
                     </div>
                   ))}
                 </div>
