@@ -167,13 +167,13 @@ const CTASection = () => {
                   />
                 </div>
               </div>
-              <h4 className="font-display text-sm font-semibold text-foreground leading-tight">
+              <h4 className="font-display text-base font-semibold text-foreground leading-tight">
                 {member.name}
               </h4>
-              <p className="text-xs font-medium text-primary font-body mt-0.5 leading-tight min-h-[2rem] flex items-center justify-center">
+              <p className="text-sm font-medium text-primary font-body mt-0.5 leading-tight min-h-[2rem] flex items-center justify-center">
                 {member.role}
               </p>
-              <p className="text-xs text-muted-foreground font-body mt-1 leading-snug min-h-[2.5rem] flex items-center justify-center">
+              <p className="text-sm text-muted-foreground font-body mt-1 leading-snug min-h-[2.5rem] flex items-center justify-center">
                 {member.description}
               </p>
             </a>
