@@ -64,7 +64,7 @@ const Navbar = () => {
             href="https://www.uor.foundation/donate"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-primary !py-2 !px-5 !text-sm"
+            className="btn-primary !py-2 !px-5 !text-sm inline-flex items-center"
           >
             <Heart size={14} fill="white" strokeWidth={0} className="mr-1" />
             Donate Now
