@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import { ExternalLink, ChevronRight, ChevronDown, Send, FlaskConical, Rocket, GraduationCap, FileCheck, GitBranch, Users, Scale, ClipboardCheck } from "lucide-react";
+import { ExternalLink, ChevronRight, ChevronDown, Send, FlaskConical, Rocket, GraduationCap, FolderGit2, SearchCheck, BadgeCheck, Users, Scale } from "lucide-react";
 import { useState } from "react";
 import projectHologramImg from "@/assets/project-hologram.jpg";
 import projectAtlasImg from "@/assets/project-atlas.png";
@@ -108,17 +108,17 @@ const maturityBgColors: Record<MaturityLevel, string> = {
 
 const submissionSteps = [
   {
-    icon: GitBranch,
+    icon: FolderGit2,
     title: "1. Prepare Your Repository",
     description: "Ensure your project is open-source (Apache 2.0 or MIT), hosted on GitHub, and has a clear README with purpose, installation, and usage.",
   },
   {
-    icon: FileCheck,
+    icon: SearchCheck,
     title: "2. Submit for Review",
     description: "Complete the form below with your project details and problem statement. Our technical committee reviews all submissions within 3 weeks.",
   },
   {
-    icon: ClipboardCheck,
+    icon: BadgeCheck,
     title: "3. Enter Sandbox",
     description: "Accepted projects join the Sandbox tier, gain visibility in the UOR ecosystem, and receive community support to grow toward Incubation.",
   },
@@ -343,10 +343,12 @@ const Projects = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             {submissionSteps.map((step, idx) => (
               <div key={step.title} className="rounded-2xl border border-border bg-card p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: `${idx * 0.1}s` }}>
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
-                  <step.icon size={20} className="text-primary" />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <step.icon size={20} className="text-primary" />
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-foreground">{step.title}</h3>
                 </div>
-                <h3 className="font-display text-lg font-bold text-foreground mb-2">{step.title}</h3>
                 <p className="text-base text-muted-foreground font-body leading-relaxed">{step.description}</p>
               </div>
             ))}
