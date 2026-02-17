@@ -7,7 +7,7 @@ const HeroSection = () => {
             className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-8 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.1s" }}
           >
-            open standard.
+            Introducing UOR
           </p>
           <h1
             className="font-display text-[2.75rem] md:text-[4rem] lg:text-[5rem] font-bold leading-[1.05] tracking-tight text-foreground text-balance animate-fade-in-up opacity-0"
