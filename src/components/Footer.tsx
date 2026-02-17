@@ -8,11 +8,13 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div className="sm:col-span-2 md:col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
-            <img
-              src={uorIcon}
-              alt="UOR Foundation"
-              className="w-7 h-7 object-contain invert"
-            />
+              <div className="relative w-7 h-7 flex items-center justify-center footer-icon-glow">
+                <img
+                  src={uorIcon}
+                  alt="UOR Foundation"
+                  className="w-7 h-7 object-contain invert relative z-10"
+                />
+              </div>
               <span className="font-display text-base font-semibold">The UOR Foundation</span>
             </div>
             <p className="text-section-dark-foreground/55 font-body max-w-sm leading-relaxed text-base">
