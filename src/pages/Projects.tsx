@@ -268,7 +268,7 @@ const Projects = () => {
                       style={{ animationDelay: `${index * 0.08}s` }}
                     >
                       {project.image && (
-                        <div className="w-full h-40 overflow-hidden">
+                        <div className="w-full h-52 overflow-hidden">
                           <img
                             src={project.image}
                             alt={project.name}
