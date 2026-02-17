@@ -15,7 +15,7 @@ const Footer = () => {
                   className="w-full h-full object-contain mix-blend-screen"
                 />
               </div>
-              <span className="font-display text-base font-semibold">UOR Foundation</span>
+              <span className="font-display text-base font-semibold">The UOR Foundation</span>
             </div>
             <p className="text-section-dark-foreground/55 font-body max-w-sm leading-relaxed text-base">
               The open standard for universal data infrastructure.
