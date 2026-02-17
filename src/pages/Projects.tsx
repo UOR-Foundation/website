@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import { ExternalLink, ChevronRight, Send, FlaskConical, Rocket, GraduationCap } from "lucide-react";
+import { ExternalLink, ChevronRight, Send, FlaskConical, Rocket, GraduationCap, FileCheck, GitBranch, Users, Scale, ClipboardCheck } from "lucide-react";
 import { useState } from "react";
 
 type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
@@ -103,6 +103,24 @@ const maturityBgColors: Record<MaturityLevel, string> = {
   Incubating: "border-accent/20 bg-accent/5",
   Sandbox: "border-border bg-muted/30",
 };
+
+const submissionSteps = [
+  {
+    icon: GitBranch,
+    title: "1. Prepare Your Repository",
+    description: "Ensure your project is open-source (Apache 2.0 or MIT), hosted on GitHub, and has a clear README with purpose, installation, and usage.",
+  },
+  {
+    icon: FileCheck,
+    title: "2. Submit for Review",
+    description: "Complete the form below with your project details and problem statement. Our technical committee reviews all submissions within 2 weeks.",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "3. Enter Sandbox",
+    description: "Accepted projects join the Sandbox tier, gain visibility in the UOR ecosystem, and receive community support to grow toward Incubation.",
+  },
+];
 
 const Projects = () => {
   const [formData, setFormData] = useState({
@@ -264,18 +282,63 @@ const Projects = () => {
         </div>
       </section>
 
-      {/* Submit a Sandbox Project */}
+      {/* Submission Process */}
+      <section className="py-16 md:py-28 bg-background border-b border-border">
+        <div className="container max-w-5xl">
+          <div className="text-center mb-14">
+            <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary font-body mb-4">
+              <Scale size={14} /> Open governance
+            </span>
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
+              How to Submit a Project
+            </h2>
+            <p className="text-muted-foreground font-body max-w-2xl mx-auto leading-relaxed">
+              The UOR Foundation accepts projects that advance the open data standard for the semantic web, open science, and frontier technology and research. All submissions are reviewed by our technical committee against published criteria.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            {submissionSteps.map((step, idx) => (
+              <div key={step.title} className="rounded-2xl border border-border bg-card p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: `${idx * 0.1}s` }}>
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
+                  <step.icon size={20} className="text-primary" />
+                </div>
+                <h3 className="font-display text-lg font-bold text-foreground mb-2">{step.title}</h3>
+                <p className="text-sm text-muted-foreground font-body leading-relaxed">{step.description}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Requirements summary */}
+          <div className="rounded-2xl border border-border bg-muted/30 p-6 md:p-8 max-w-3xl mx-auto">
+            <div className="flex items-center gap-3 mb-5">
+              <Users size={18} className="text-primary" />
+              <h3 className="font-display text-lg font-bold text-foreground">Sandbox Entry Requirements</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {maturityInfo[0].criteria.map((c) => (
+                <div key={c} className="flex items-start gap-2.5">
+                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                  <span className="text-sm text-muted-foreground font-body">{c}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Submit Form */}
       <section id="submit" className="section-dark py-20 md:py-28">
         <div className="container max-w-3xl">
           <div className="text-center mb-12">
-            <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary font-body mb-4">
+            <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-section-dark-foreground/50 font-body mb-4">
               <Send size={14} /> Open to everyone
             </span>
             <h2 className="font-display text-3xl md:text-4xl font-bold">
-              Submit a Project for Sandbox
+              Submit for Sandbox Review
             </h2>
             <p className="mt-4 text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto">
-              Open-source repo and a clear problem statement. That's all you need.
+              All you need is an open-source repository and a clear problem statement. Our technical committee reviews every submission and responds within 2 weeks.
             </p>
           </div>
 
@@ -299,7 +362,7 @@ const Projects = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                   <label className="text-base font-medium text-section-dark-foreground font-body">
+                  <label className="text-base font-medium text-section-dark-foreground font-body">
                     Project Name *
                   </label>
                   <input
@@ -366,20 +429,6 @@ const Projects = () => {
                   placeholder="What problem does your project solve? How does it relate to the UOR standard?"
                   className="w-full px-4 py-3 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none"
                 />
-              </div>
-
-              <div className="rounded-xl border border-section-dark-foreground/10 bg-section-dark-foreground/5 p-5">
-                <p className="text-sm font-semibold text-section-dark-foreground/50 uppercase tracking-wider font-body mb-3">
-                  Sandbox Requirements Checklist
-                </p>
-                <ul className="space-y-2">
-                  {maturityInfo[0].criteria.map((c) => (
-                    <li key={c} className="text-base text-section-dark-foreground/60 font-body flex items-start gap-2.5">
-                      <span className="mt-1 w-2 h-2 rounded-full bg-primary/40 shrink-0" />
-                      {c}
-                    </li>
-                  ))}
-                </ul>
               </div>
 
               <button
