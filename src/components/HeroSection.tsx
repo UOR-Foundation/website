@@ -2,8 +2,8 @@ import GalaxyAnimation from "./GalaxyAnimation";
 
 const HeroSection = () => {
   return (
-    <section className="hero-gradient relative overflow-hidden -mt-16 md:-mt-[4.5rem] pt-16 md:pt-[4.5rem]">
-      <div className="container py-16 md:py-24 lg:py-28">
+    <section className="hero-gradient relative overflow-hidden">
+      <div className="container pt-32 md:pt-40 pb-16 md:pb-24 lg:pb-28">
         <div
           className="mt-8 md:mt-12 mb-24 md:mb-32 lg:mb-36 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.1s" }}
