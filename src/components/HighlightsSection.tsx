@@ -8,7 +8,7 @@ type TagType = "Research" | "Announcement" | "Event";
 const tagStyles: Record<TagType, string> = {
   Research: "bg-primary/10 text-primary",
   Announcement: "bg-accent/10 text-accent",
-  Event: "bg-foreground/8 text-foreground/70",
+  Event: "bg-primary/8 text-primary/80 border border-primary/15",
 };
 
 const highlights = [
