@@ -145,29 +145,40 @@ const Projects = () => {
             Mature through adoption, governance, and community health.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-0 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-5xl mx-auto relative">
+            {/* Desktop progress bar */}
+            <div className="hidden md:block absolute top-1/2 left-[16%] right-[16%] -translate-y-1/2 h-1 rounded-full bg-gradient-to-r from-muted-foreground/20 via-primary/40 to-primary/70 z-0" />
+
             {maturityInfo.map((stage, idx) => (
               <div key={stage.level} className="relative flex flex-col">
-                {/* Arrow connector (desktop) */}
+                {/* Mobile arrow connector */}
                 {idx < 2 && (
-                  <div className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 text-muted-foreground/40">
-                    <ChevronRight size={32} />
-                  </div>
-                )}
-                {/* Arrow connector (mobile) */}
-                {idx < 2 && (
-                  <div className="md:hidden flex justify-center py-3 text-muted-foreground/40">
-                    <ArrowRight size={24} className="rotate-90" />
+                  <div className="md:hidden flex justify-center -mb-2 -mt-2 text-muted-foreground/30">
+                    <ChevronRight size={28} className="rotate-90" />
                   </div>
                 )}
 
-                <div className={`rounded-2xl border p-6 md:p-8 flex-1 ${maturityBgColors[stage.level]} animate-fade-in-up`} style={{ animationDelay: `${idx * 0.12}s` }}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className={`w-3.5 h-3.5 rounded-full ${maturityDotColors[stage.level]}`} />
-                    <h3 className="font-display text-xl font-bold text-foreground">
-                      {stage.level}
-                    </h3>
+                <div
+                  className={`relative z-10 rounded-2xl border p-6 md:p-8 flex-1 transition-all duration-300 ${maturityBgColors[stage.level]} ${
+                    idx === 2 ? 'border-primary/30 shadow-lg shadow-primary/5' : ''
+                  } animate-fade-in-up`}
+                  style={{ animationDelay: `${idx * 0.12}s` }}
+                >
+                  {/* Stage number badge */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className={`w-4 h-4 rounded-full ${maturityDotColors[stage.level]} ${
+                        idx === 0 ? 'opacity-40' : idx === 1 ? 'opacity-70' : 'opacity-100'
+                      }`} />
+                      <h3 className="font-display text-xl font-bold text-foreground">
+                        {stage.level}
+                      </h3>
+                    </div>
+                    <span className="text-xs font-bold text-muted-foreground/40 font-body uppercase tracking-widest">
+                      Stage {idx + 1}
+                    </span>
                   </div>
+
                   <p className="text-base font-medium text-foreground/70 font-body mb-3 italic">
                     {stage.tagline}
                   </p>
@@ -181,7 +192,7 @@ const Projects = () => {
                     <ul className="space-y-1.5">
                       {stage.criteria.map((c) => (
                         <li key={c} className="text-sm text-muted-foreground font-body flex items-start gap-2">
-                          <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
+                          <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
                           {c}
                         </li>
                       ))}
