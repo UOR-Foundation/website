@@ -144,22 +144,27 @@
 
   /* Polished button base */
   .btn-primary {
-    @apply px-7 py-3 rounded-full bg-primary text-primary-foreground font-medium text-sm transition-all duration-300 ease-out;
+    @apply px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out;
+    background-color: hsl(220 20% 12%);
+    color: hsl(0 0% 100%);
   }
   .btn-primary:hover {
     @apply shadow-lg;
     transform: translateY(-1px);
-    box-shadow: 0 8px 24px -8px hsl(var(--primary) / 0.35);
+    box-shadow: 0 8px 24px -8px hsl(220 20% 12% / 0.4);
   }
   .btn-primary:active {
     transform: translateY(0);
   }
 
   .btn-outline {
-    @apply px-7 py-3 rounded-full border border-pill text-foreground font-medium text-sm transition-all duration-300 ease-out;
+    @apply px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out;
+    border: 1px solid hsl(220 20% 12%);
+    color: hsl(220 20% 12%);
   }
   .btn-outline:hover {
-    @apply border-foreground/25;
+    background-color: hsl(220 20% 12%);
+    color: hsl(0 0% 100%);
     transform: translateY(-1px);
   }
   .btn-outline:active {
