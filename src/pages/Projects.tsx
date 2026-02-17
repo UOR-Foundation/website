@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import { ExternalLink, ChevronRight, Send, FlaskConical, Rocket, GraduationCap, FileCheck, GitBranch, Users, Scale, ClipboardCheck } from "lucide-react";
+import { ExternalLink, ChevronRight, ChevronDown, Send, FlaskConical, Rocket, GraduationCap, FileCheck, GitBranch, Users, Scale, ClipboardCheck } from "lucide-react";
 import { useState } from "react";
 
 type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
@@ -122,6 +122,35 @@ const submissionSteps = [
   },
 ];
 
+const CollapsibleCategory = ({ level, count, dotColor, children }: { level: string; count: number; dotColor: string; children: React.ReactNode }) => {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="border border-border rounded-2xl bg-card overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-3 px-6 py-5 md:px-8 md:py-6 hover:bg-muted/30 transition-colors cursor-pointer"
+      >
+        <span className={`w-3 h-3 rounded-full ${dotColor}`} />
+        <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
+          {level}
+        </h2>
+        <span className="text-sm text-muted-foreground font-body">
+          {count} {count === 1 ? "project" : "projects"}
+        </span>
+        <ChevronDown
+          size={20}
+          className={`ml-auto text-muted-foreground transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && (
+        <div className="px-6 pb-6 md:px-8 md:pb-8">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Projects = () => {
   const [formData, setFormData] = useState({
     projectName: "",
@@ -153,7 +182,7 @@ const Projects = () => {
             style={{ animationDelay: "0.35s" }}
           >
             <a href="#projects-list" className="btn-primary">
-              Explore Projects
+              Explore UOR Projects
             </a>
             <a href="#submit" className="btn-outline">
               Submit Your Project
@@ -239,22 +268,13 @@ const Projects = () => {
 
       {/* Projects by maturity */}
       <section id="projects-list" className="py-12 md:py-20 bg-background scroll-mt-28">
-        <div className="container space-y-16">
+        <div className="container space-y-6">
           {(["Graduated", "Incubating", "Sandbox"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
             if (levelProjects.length === 0) return null;
             return (
-              <div key={level}>
-                <div className="flex items-center gap-3 mb-6">
-                  <span className={`w-3 h-3 rounded-full ${maturityDotColors[level]}`} />
-                  <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
-                    {level}
-                  </h2>
-                   <span className="text-sm text-muted-foreground font-body">
-                    {levelProjects.length} {levelProjects.length === 1 ? "project" : "projects"}
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CollapsibleCategory key={level} level={level} count={levelProjects.length} dotColor={maturityDotColors[level]}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                   {levelProjects.map((project, index) => (
                     <div
                       key={project.name}
@@ -281,7 +301,7 @@ const Projects = () => {
                     </div>
                   ))}
                 </div>
-              </div>
+              </CollapsibleCategory>
             );
           })}
         </div>
