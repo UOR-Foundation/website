@@ -8,7 +8,7 @@
   border-radius: 50%;
 }
 .hero-galaxy-container {
-  min-height: 280px;
+  min-height: 230px;
   display: grid;
 }
 .galaxy-wrapper {
@@ -40,19 +40,19 @@
 
 
 @media screen and (max-width: 1200px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.85); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.72); }
 }
 @media screen and (max-width: 1024px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.7); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.6); }
 }
 @media screen and (max-width: 768px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.5); }
-}
-@media screen and (max-width: 430px) {
   .galaxy-wrapper { transform: translate(0px, 0px) scale(0.42); }
 }
+@media screen and (max-width: 430px) {
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.35); }
+}
 @media screen and (max-width: 356px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.28); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.24); }
 }
 
 
