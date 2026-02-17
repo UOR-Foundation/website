@@ -33,7 +33,7 @@ const PillarsSection = () => {
           Our Three Pillars
         </p>
         <div className="rule" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:divide-x md:divide-border">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:divide-x md:divide-border divide-y divide-border md:divide-y-0">
           {pillars.map((pillar, index) => (
             <div
               key={pillar.title}
