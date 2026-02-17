@@ -2,7 +2,7 @@ import Layout from "@/components/Layout";
 import { ExternalLink, ChevronRight, ChevronDown, Send, FlaskConical, Rocket, GraduationCap, FileCheck, GitBranch, Users, Scale, ClipboardCheck } from "lucide-react";
 import { useState } from "react";
 import projectHologramImg from "@/assets/project-hologram.jpg";
-import projectOpenScienceImg from "@/assets/project-open-science.jpg";
+import projectAtlasImg from "@/assets/project-atlas.png";
 import projectAtomicLangImg from "@/assets/project-atomic-lang.jpg";
 
 type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
@@ -26,11 +26,12 @@ const projects: Project[] = [
     image: projectHologramImg,
   },
   {
-    name: "Open Science Toolkit",
+    name: "Atlas",
     category: "Open Science",
-    description: "Reproducible experiments, dataset management, and findings sharing on UOR.",
+    description: "A rigorous mathematical framework demonstrating how all five exceptional Lie groups emerge from a single initial object: the Atlas of Resonance Classes.",
     maturity: "Sandbox",
-    image: projectOpenScienceImg,
+    url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
+    image: projectAtlasImg,
   },
   {
     name: "Atomic Language Model",
