@@ -12,7 +12,7 @@ const HeroSection = () => {
         </div>
         <div className="max-w-4xl mx-auto text-center">
           <p
-            className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-8 animate-fade-in-up opacity-0"
+            className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-5 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.2s" }}
           >
             open data standard.
