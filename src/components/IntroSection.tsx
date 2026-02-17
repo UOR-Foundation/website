@@ -2,7 +2,7 @@ const IntroSection = () => {
   return (
     <section className="section-dark py-10 md:py-16">
       <div className="container max-w-5xl">
-        <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
+        <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-section-dark-foreground/80 mb-6">
           Introducing UOR
         </p>
         <div className="h-px w-full bg-section-dark-foreground/10" />
