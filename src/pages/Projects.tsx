@@ -308,22 +308,6 @@ const Projects = () => {
               </div>
             ))}
           </div>
-
-          {/* Requirements summary */}
-          <div className="rounded-2xl border border-border bg-muted/30 p-6 md:p-8 max-w-3xl mx-auto">
-            <div className="flex items-center gap-3 mb-5">
-              <Users size={18} className="text-primary" />
-              <h3 className="font-display text-lg font-bold text-foreground">Sandbox Entry Requirements</h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {maturityInfo[0].criteria.map((c) => (
-                <div key={c} className="flex items-start gap-2.5">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                  <span className="text-sm text-muted-foreground font-body">{c}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
