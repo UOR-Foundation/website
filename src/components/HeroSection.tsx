@@ -33,17 +33,17 @@ const HeroSection = () => {
             <em className="not-italic text-foreground/70">is</em>, not where it lives.
           </p>
           <div
-            className="mt-10 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
+            className="mt-10 md:mt-14 flex flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.6s" }}
           >
-            <a href="#pillars" className="btn-primary bg-black text-white border-black hover:bg-black/90">
+            <a href="#pillars" className="btn-primary">
               Learn More
             </a>
             <a
               href="https://github.com/UOR-Foundation"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-outline bg-black text-white border-black hover:bg-black/90"
+              className="btn-outline"
             >
               Explore on GitHub
             </a>
