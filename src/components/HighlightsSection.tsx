@@ -76,15 +76,6 @@ const HighlightsSection = () => {
           ))}
         </div>
 
-        <div className="mt-8 text-center">
-          <a
-            href="/research"
-            className="inline-flex items-center gap-1.5 text-base font-medium text-muted-foreground hover:text-foreground font-body transition-all duration-300 group"
-          >
-            View all highlights
-            <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-0.5" />
-          </a>
-        </div>
       </div>
     </section>
   );
