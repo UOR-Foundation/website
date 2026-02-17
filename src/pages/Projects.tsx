@@ -3,6 +3,7 @@ import { ExternalLink, ChevronRight, ChevronDown, Send, FlaskConical, Rocket, Gr
 import { useState } from "react";
 import projectHologramImg from "@/assets/project-hologram.jpg";
 import projectOpenScienceImg from "@/assets/project-open-science.jpg";
+import projectAtomicLangImg from "@/assets/project-atomic-lang.jpg";
 
 type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
@@ -30,6 +31,14 @@ const projects: Project[] = [
     description: "Reproducible experiments, dataset management, and findings sharing on UOR.",
     maturity: "Sandbox",
     image: projectOpenScienceImg,
+  },
+  {
+    name: "Atomic Language Model",
+    category: "Open Science",
+    description: "A mathematically rigorous, recursively complete language model implementing Chomsky's Minimalist Grammar via formal Merge and Move transformations.",
+    maturity: "Sandbox",
+    url: "https://github.com/dkypuros/atomic-lang-model",
+    image: projectAtomicLangImg,
   },
 ];
 
