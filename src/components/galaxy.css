@@ -8,11 +8,11 @@
   border-radius: 50%;
 }
 .hero-galaxy-container {
-  min-height: 350px;
+  min-height: 245px;
   display: grid;
 }
 .galaxy-wrapper {
-  transform: translate(0px, 0px);
+  transform: translate(0px, 0px) scale(0.7);
 }
 
 .galaxy:nth-child(1) {
@@ -23,36 +23,20 @@
   transform: translateX(20px) scale(1, -1);
 }
 
-.stars {
-  width: 200px;
-  height: 200px;
-}
-
-.circle {
-  animation: 5s galaxy ease-in-out infinite reverse;
-}
-
-.dot {
-  width: 20px;
-  height: 20px;
-  border: 5px dotted #fff;
-}
-
-
 @media screen and (max-width: 1200px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(1); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.7); }
 }
 @media screen and (max-width: 1024px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.8); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.56); }
 }
 @media screen and (max-width: 768px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(.56); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.39); }
 }
 @media screen and (max-width: 430px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(.5); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.35); }
 }
 @media screen and (max-width: 356px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(.3); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.21); }
 }
 
 
