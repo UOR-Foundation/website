@@ -111,7 +111,7 @@ const UORDiagram = () => {
               </svg>
             </div>
             <p className="text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.65)] text-center mt-5 tracking-[0.15em] uppercase leading-snug">
-              Unified Coordinate<br />Space
+              Unified Computational<br />Substrate
             </p>
           </div>
         </div>
