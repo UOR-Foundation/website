@@ -31,7 +31,7 @@ const UORDiagram = () => {
           </div>
 
           {/* Arrow */}
-          <div className="flex flex-col items-center shrink-0">
+          <div className="flex flex-col items-center justify-center shrink-0 self-center mb-6">
             <ArrowRight className="hidden md:block w-8 h-8 text-primary/60" strokeWidth={1.5} />
             <ArrowDown className="block md:hidden w-6 h-6 text-primary/60" strokeWidth={1.5} />
             <span className="text-[9px] font-body font-bold tracking-[0.2em] uppercase text-primary mt-1">
