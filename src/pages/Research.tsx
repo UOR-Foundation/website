@@ -74,7 +74,7 @@ const Research = () => {
             Our Community
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
-            Open research, shared knowledge, and collective progress. The UOR community brings together researchers, engineers, and builders advancing universal data infrastructure for the semantic web and beyond.
+            The UOR community facilitates open research, cross pollination of ideas, and validation of existing work through joint research exploration to accelerate our scientific progress.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
