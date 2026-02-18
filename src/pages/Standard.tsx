@@ -60,6 +60,12 @@ const Standard = () => {
       {/* Visual Diagram */}
       <section className="py-12 md:py-20 bg-background border-b border-border">
         <div className="container max-w-5xl">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+            How It Works
+          </p>
+          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
+            UOR encodes every object into a single coordinate space where identity is derived from content, not location.
+          </p>
           <UORDiagram />
         </div>
       </section>
