@@ -15,90 +15,84 @@ const capabilities = Object.keys(capabilityDetails);
 const UORDiagram = () => {
   const [active, setActive] = useState<string>("Reason");
   return (
-    <div className="w-full max-w-3xl mx-auto px-4">
-      <div className="bg-card border border-border rounded-2xl p-7 md:p-10">
+    <div className="w-full max-w-4xl mx-auto px-4">
+      {/* Main diagram — dark for contrast */}
+      <div className="bg-[hsl(var(--section-dark))] border border-[hsl(var(--section-dark-foreground)/0.08)] rounded-2xl p-7 md:p-10 overflow-hidden">
         {/* Header */}
-        <p className="text-xs font-body font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-10 text-center">
+        <p className="text-[11px] font-body font-semibold tracking-[0.2em] uppercase text-[hsl(var(--section-dark-foreground)/0.4)] mb-10 text-center">
           Fragmentation → Universal Encoding → Agentic Substrate
         </p>
 
-        {/* Main flow: Silos → UOR → Unified Space */}
-        <div className="flex flex-col md:flex-row items-stretch gap-6 md:gap-0">
-          {/* Fragmented silos */}
-          <div className="flex-1 w-full flex flex-col">
-            <div className="grid grid-cols-3 gap-2.5 flex-1">
+        {/* Three-stage flow */}
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-0">
+          {/* Stage 1: Fragmented silos */}
+          <div className="flex-1 w-full">
+            <div className="grid grid-cols-3 gap-2">
               {silos.map((s) => (
                 <div
                   key={s}
-                  className="flex items-center justify-center rounded-lg border border-border/60 bg-muted/40 py-3 text-xs font-body font-medium text-muted-foreground"
+                  className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.1)] bg-[hsl(var(--section-dark-foreground)/0.04)] py-3.5 text-xs font-body font-medium text-[hsl(var(--section-dark-foreground)/0.5)]"
                 >
                   {s}
                 </div>
               ))}
             </div>
-            <p className="text-[11px] font-body font-medium text-muted-foreground/50 text-center mt-4 tracking-[0.12em] uppercase">
+            <p className="text-[10px] font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.3)] text-center mt-4 tracking-[0.15em] uppercase">
               Isolated Data Systems
             </p>
           </div>
 
-          {/* Arrow, centered vertically and with equal horizontal spacing */}
-          <div className="flex flex-col items-center justify-center shrink-0 md:px-8 md:ml-4 py-2 md:py-0">
-            <ArrowRight className="hidden md:block w-7 h-7 text-primary/50" strokeWidth={1.5} />
-            <ArrowDown className="block md:hidden w-6 h-6 text-primary/50" strokeWidth={1.5} />
-            <span className="text-base md:text-lg font-display font-extrabold tracking-[0.25em] uppercase text-primary mt-2">
+          {/* Arrow + UOR label */}
+          <div className="flex flex-col items-center justify-center shrink-0 md:px-10 py-2 md:py-0">
+            <ArrowRight className="hidden md:block w-8 h-8 text-primary" strokeWidth={1.5} />
+            <ArrowDown className="block md:hidden w-7 h-7 text-primary" strokeWidth={1.5} />
+            <span className="text-xl md:text-2xl font-display font-extrabold tracking-[0.3em] uppercase text-primary mt-3">
               UOR
             </span>
-            <span className="text-xs font-body font-semibold text-primary/70 mt-1 tracking-wide text-center leading-snug">
-              Universal Lossless<br />Encoder
+            <span className="text-[11px] font-body font-medium text-primary/60 mt-1 tracking-wide text-center leading-snug">
+              Universal Lossless Encoder
             </span>
           </div>
 
-          {/* Unified coordinate space */}
-          <div className="flex-1 w-full flex flex-col">
-            <div className="relative rounded-xl border border-primary/20 bg-primary/[0.03] p-5 aspect-square max-w-[180px] mx-auto flex-1 w-full">
+          {/* Stage 3: Unified substrate */}
+          <div className="flex-1 w-full flex flex-col items-center">
+            <div className="relative rounded-xl border border-primary/30 bg-primary/[0.06] p-4 aspect-square max-w-[180px] w-full">
               <svg viewBox="0 0 100 100" className="w-full h-full" fill="none">
-                {/* Grid */}
-                {[20, 40, 60, 80].map((v) => (
-                  <g key={v} opacity="0.06">
-                    <line x1={v} y1="10" x2={v} y2="90" stroke="hsl(var(--foreground))" strokeWidth="0.5" />
-                    <line x1="10" y1={v} x2="90" y2={v} stroke="hsl(var(--foreground))" strokeWidth="0.5" />
-                  </g>
-                ))}
                 {/* Connections */}
                 {[
                   [30, 25, 70, 50], [70, 50, 50, 75], [50, 75, 30, 25],
                   [30, 25, 20, 50], [70, 50, 80, 25], [50, 75, 80, 75],
                 ].map(([x1, y1, x2, y2], i) => (
-                  <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--primary))" strokeWidth="0.8" opacity="0.2" />
+                  <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--primary))" strokeWidth="1" opacity="0.35" />
                 ))}
                 {/* Nodes */}
                 {[
                   [30, 25], [70, 50], [50, 75], [20, 50], [80, 25], [80, 75],
                 ].map(([cx, cy], i) => (
                   <g key={i}>
-                    <circle cx={cx} cy={cy} r={i < 3 ? 4 : 2.5} fill="hsl(var(--primary))" opacity="0.7" />
-                    <circle cx={cx} cy={cy} r={i < 3 ? 7 : 5} fill="none" stroke="hsl(var(--primary))" strokeWidth="0.4" opacity="0.2" />
+                    <circle cx={cx} cy={cy} r={i < 3 ? 5 : 3} fill="hsl(var(--primary))" opacity="0.85" />
+                    <circle cx={cx} cy={cy} r={i < 3 ? 9 : 6} fill="none" stroke="hsl(var(--primary))" strokeWidth="0.5" opacity="0.25" />
                   </g>
                 ))}
               </svg>
             </div>
-            <p className="text-[11px] font-body font-medium text-primary/50 text-center mt-4 tracking-[0.12em] uppercase">
+            <p className="text-[10px] font-body font-semibold text-primary/50 text-center mt-4 tracking-[0.15em] uppercase">
               Unified Computational Substrate
             </p>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="h-px w-full bg-border my-8" />
+        <div className="h-px w-full bg-[hsl(var(--section-dark-foreground)/0.08)] my-9" />
 
-        {/* Agentic AI capabilities */}
+        {/* Agentic AI section */}
         <div className="flex flex-col gap-5">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
               <Bot className="w-5 h-5 text-primary" />
             </div>
-            <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
-              A single symbolic coordinate system becomes a <span className="text-foreground font-medium">computational substrate</span>. AI agents reason, verify, and act across all data sources autonomously.
+            <p className="text-sm text-[hsl(var(--section-dark-foreground)/0.65)] font-body leading-relaxed flex-1">
+              A single symbolic coordinate system becomes a <span className="text-[hsl(var(--section-dark-foreground))] font-medium">computational substrate</span>. AI agents reason, verify, and act across all data sources autonomously.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -108,16 +102,16 @@ const UORDiagram = () => {
                 onClick={() => setActive(c)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-body font-semibold border transition-all duration-200 cursor-pointer ${
                   active === c
-                    ? "border-primary/40 text-primary bg-primary/10 shadow-sm"
-                    : "border-border text-muted-foreground bg-transparent hover:border-primary/20 hover:text-primary/80"
+                    ? "border-primary/50 text-primary bg-primary/15 shadow-sm"
+                    : "border-[hsl(var(--section-dark-foreground)/0.12)] text-[hsl(var(--section-dark-foreground)/0.5)] bg-transparent hover:border-primary/30 hover:text-primary/80"
                 }`}
               >
                 {c}
               </button>
             ))}
           </div>
-          <div className="rounded-xl bg-muted/40 border border-border/60 px-5 py-4 transition-all duration-200">
-            <p className="text-sm font-body text-foreground/80 leading-relaxed">
+          <div className="rounded-xl bg-[hsl(var(--section-dark-foreground)/0.04)] border border-[hsl(var(--section-dark-foreground)/0.08)] px-5 py-4">
+            <p className="text-sm font-body text-[hsl(var(--section-dark-foreground)/0.75)] leading-relaxed">
               {capabilityDetails[active]}
             </p>
           </div>
