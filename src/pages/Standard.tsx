@@ -1,4 +1,5 @@
 import Layout from "@/components/Layout";
+import UORDiagram from "@/components/UORDiagram";
 import { Shield, Layers, Link2, Zap, Hash, GitBranch, ExternalLink } from "lucide-react";
 
 const principles = [
@@ -86,8 +87,15 @@ const Standard = () => {
         </div>
       </section>
 
+      {/* Visual Diagram */}
+      <section className="py-16 md:py-24 bg-background">
+        <div className="container max-w-5xl">
+          <UORDiagram />
+        </div>
+      </section>
+
       {/* How It Works — Core Principles */}
-      <section id="how-it-works" className="py-16 md:py-28 bg-background scroll-mt-28">
+      <section id="how-it-works" className="py-16 md:py-28 bg-background border-t border-border scroll-mt-28">
         <div className="container max-w-5xl">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4 text-center">
             Core Principles
