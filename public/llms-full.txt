@@ -1,0 +1,92 @@
+# UOR Foundation — Complete Reference for AI Agents
+
+> This document provides comprehensive information about the Universal Object Reference (UOR) framework for agentic AI systems.
+
+## Organization
+
+The UOR Foundation is a nonprofit organization dedicated to developing a universal data standard for the semantic web, open science, and frontier technologies.
+
+## UOR Framework Overview
+
+Universal Object Reference (UOR) is a universal, lossless coordinate system for information. It assigns every piece of digital content a unique and permanent identifier based on what it contains (content-based), not where it is stored (location-based).
+
+### Core Principle
+When two systems hold the same content, they resolve to the same identifier — enabling direct verification, reliable reuse, and reduced integration overhead. By replacing fragmented, location-based systems with shared, content-based identity, UOR strengthens trust between systems.
+
+## Namespace & Ontology
+
+### Canonical Namespace
+- IRI: `https://uor.foundation/u/`
+- Prefix: `u:`
+- Space: kernel
+
+### Classes
+
+#### u:Address
+- IRI: `https://uor.foundation/u/Address`
+- Subclass Of: `owl:Thing`
+- Description: A content-addressable identifier represented as a Braille string. Each Address uniquely identifies a piece of content via its Braille-encoded hash.
+- Properties:
+  - `glyph` (Datatype, Functional): The Braille string representation. Domain: u:Address, Range: xsd:string
+  - `length` (Datatype, Functional): Number of Braille glyphs. Domain: u:Address, Range: xsd:nonNegativeInteger
+
+#### u:Glyph
+- IRI: `https://uor.foundation/u/Glyph`
+- Subclass Of: `owl:Thing`
+- Description: A single Braille cell encoding 6 bits of an address. The bijection between Braille cells and 6-bit values is the foundational encoding.
+- Properties:
+  - `codepoint` (Datatype, Functional): Unicode codepoint (U+2800–U+28FF). Domain: u:Glyph, Range: xsd:nonNegativeInteger
+  - `byteValue` (Datatype, Functional): 6-bit integer value (0–63). Domain: u:Glyph, Range: xsd:nonNegativeInteger
+
+## Key Resources
+
+| Resource | URL |
+|----------|-----|
+| UOR Framework Repository | https://github.com/UOR-Foundation/UOR-Framework |
+| Namespace Documentation | https://uor-foundation.github.io/UOR-Framework/docs/namespaces/u.html |
+| GitHub Organization | https://github.com/UOR-Foundation |
+| Website | https://uor.foundation |
+| Discord Community | https://discord.gg/ZwuZaNyuve |
+
+## Pillars
+
+1. **Open Science** — Reproducible, verifiable, and universally accessible research data.
+2. **Semantic Web** — Machine-readable, interoperable data across systems and domains.
+3. **Frontier Technology** — Next-generation infrastructure for AI, quantum, and decentralized systems.
+
+## Research Areas
+
+- Hardware & Robotics
+- Cybersecurity
+- Mathematics
+- Finance
+- Agentic AI
+- Quantum Computing
+- Data Science
+- Healthcare
+- Web3
+- Physics
+- Frontier Tech
+
+## Projects
+
+- **ATLAS** — Universal coordinate infrastructure
+- **Hologram** — 3D content-addressable media
+- **OpenScience** — Open research data platform
+- **Prism** — Data visualization and analytics
+- **Atomic Language** — Formal specification language
+
+## How to Interact with the UOR Framework
+
+1. **Read the Ontology**: Start with the namespace docs to understand the data model.
+2. **Explore the Repository**: The GitHub repo contains the canonical specification, schemas, and reference implementations.
+3. **Use the Namespace**: Reference UOR content using the `u:` prefix and `https://uor.foundation/u/` IRI.
+4. **Contribute**: Submit issues, PRs, or join the Discord community.
+5. **Extend**: The namespace supports extensions — see the framework documentation for the extension model.
+
+## For Tool-Using AI Agents
+
+- The UOR Framework repo is the source of truth for all specifications.
+- Content-addressable identifiers can be resolved via the `u:` namespace.
+- The ontology follows OWL/RDF conventions and can be processed by standard semantic web tooling.
+- Extensions to the namespace follow the pattern documented in the framework repository.

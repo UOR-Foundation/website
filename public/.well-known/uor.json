@@ -1,0 +1,38 @@
+{
+  "@context": {
+    "u": "https://uor.foundation/u/",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/"
+  },
+  "@id": "https://uor.foundation",
+  "@type": "schema:Organization",
+  "schema:name": "UOR Foundation",
+  "schema:description": "The UOR Foundation develops a universal, lossless coordinate system for information — a content-addressable data standard for the semantic web, open science, and frontier technologies.",
+  "schema:url": "https://uor.foundation",
+  "uor:namespace": "https://uor.foundation/u/",
+  "uor:prefix": "u:",
+  "uor:ontology": "https://github.com/UOR-Foundation/UOR-Framework",
+  "uor:namespaceDocumentation": "https://uor-foundation.github.io/UOR-Framework/docs/namespaces/u.html",
+  "uor:classes": [
+    {
+      "@id": "u:Address",
+      "@type": "owl:Class",
+      "rdfs:comment": "A content-addressable identifier represented as a Braille string."
+    },
+    {
+      "@id": "u:Glyph",
+      "@type": "owl:Class",
+      "rdfs:comment": "A single Braille cell encoding 6 bits of an address."
+    }
+  ],
+  "uor:endpoints": {
+    "website": "https://uor.foundation",
+    "github": "https://github.com/UOR-Foundation",
+    "framework": "https://github.com/UOR-Foundation/UOR-Framework",
+    "discord": "https://discord.gg/ZwuZaNyuve",
+    "llms": "https://uor.foundation/llms.txt",
+    "llmsFull": "https://uor.foundation/llms-full.txt"
+  }
+}
