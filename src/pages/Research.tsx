@@ -54,6 +54,7 @@ const events = [
     date: "March 3, 2026",
     type: "Community Call",
     link: "https://discord.gg/ZwuZaNyuve",
+    calendarDate: "20260303",
   },
 ];
 
@@ -220,6 +221,17 @@ const Research = () => {
                       <Calendar size={14} />
                       {event.date}
                     </span>
+                    {event.calendarDate && (
+                      <a
+                        href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.calendarDate}/${event.calendarDate}&details=${encodeURIComponent(event.link ? `Join on Discord: ${event.link}` : '')}&location=${encodeURIComponent(event.location)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-medium text-primary hover:underline font-body flex items-center gap-1.5"
+                      >
+                        <Calendar size={12} />
+                        Add to Calendar
+                      </a>
+                    )}
                   </div>
                 </div>
                 <div className="h-px w-full bg-border" />
