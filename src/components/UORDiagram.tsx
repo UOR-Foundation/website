@@ -35,8 +35,11 @@ const UORDiagram = () => {
           <div className="flex flex-col items-center justify-center shrink-0 md:px-8 md:ml-4 py-2 md:py-0">
             <ArrowRight className="hidden md:block w-7 h-7 text-primary/50" strokeWidth={1.5} />
             <ArrowDown className="block md:hidden w-6 h-6 text-primary/50" strokeWidth={1.5} />
-            <span className="text-[10px] font-body font-bold tracking-[0.2em] uppercase text-primary mt-1.5">
+            <span className="text-sm font-display font-bold tracking-[0.2em] uppercase text-primary mt-2">
               UOR
+            </span>
+            <span className="text-[10px] font-body font-medium text-primary/60 mt-0.5 tracking-wide text-center leading-tight">
+              Universal Lossless<br />Encoder
             </span>
           </div>
 
