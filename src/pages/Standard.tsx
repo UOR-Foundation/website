@@ -66,19 +66,6 @@ const Standard = () => {
         </div>
       </section>
 
-      {/* Framework Architecture */}
-      <section id="architecture" className="py-16 md:py-28 bg-background border-t border-border scroll-mt-28">
-        <div className="container max-w-5xl">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4 text-center">
-            Framework Architecture
-          </h2>
-          <p className="text-muted-foreground font-body text-center max-w-2xl mx-auto mb-14 md:mb-16 leading-relaxed">
-            Five layers built on a shared foundation of symbolic representation and geometric structure. Each builds on the one below it.
-          </p>
-          <FrameworkLayers />
-        </div>
-      </section>
-
       {/* Applications */}
       <section className="py-16 md:py-24 bg-background border-t border-border">
         <div className="container max-w-5xl">
@@ -106,6 +93,19 @@ const Standard = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Framework Architecture */}
+      <section id="architecture" className="py-16 md:py-28 bg-background border-t border-border scroll-mt-28">
+        <div className="container max-w-5xl">
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4 text-center">
+            Framework Architecture
+          </h2>
+          <p className="text-muted-foreground font-body text-center max-w-2xl mx-auto mb-14 md:mb-16 leading-relaxed">
+            Five layers built on a shared foundation of symbolic representation and geometric structure. Each builds on the one below it.
+          </p>
+          <FrameworkLayers />
         </div>
       </section>
 
