@@ -1,6 +1,6 @@
 import { Bot, ArrowRight, ArrowDown } from "lucide-react";
 
-const silos = ["APIs", "DBs", "Files", "Models", "Graphs", "Streams"];
+const silos = ["APIs", "DBs", "Files", "AI Models", "Graphs", "Streams"];
 const capabilities = ["Reason", "Verify", "Compose", "Navigate"];
 
 const UORDiagram = () => {
