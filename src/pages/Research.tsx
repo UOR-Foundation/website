@@ -142,7 +142,7 @@ const Research = () => {
               <Link
                 key={post.title}
                 to={post.href}
-                className="group rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/20 animate-fade-in-up opacity-0"
+                className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/20 animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="aspect-video overflow-hidden">
@@ -152,7 +152,7 @@ const Research = () => {
                     className="w-full h-full object-contain bg-card transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
-                <div className="p-5">
+                <div className="p-5 flex flex-col flex-1">
                   <div className="flex items-center gap-3 mb-3">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium font-body ${tagStyles[post.tag]}`}>
                       {post.tag}
@@ -162,7 +162,7 @@ const Research = () => {
                   <h3 className="font-display text-lg font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary">
                     {post.title}
                   </h3>
-                  <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
+                  <span className="inline-flex items-center gap-1.5 mt-auto pt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
                     Read more <ArrowRight size={13} />
                   </span>
                 </div>
