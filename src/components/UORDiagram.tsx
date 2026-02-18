@@ -69,7 +69,7 @@ const UORDiagram = () => {
               </svg>
             </div>
             <p className="text-[10px] font-body text-primary/60 text-center mt-2.5 tracking-wide uppercase">
-              Unified Space
+              Unified Computational Substrate
             </p>
           </div>
         </div>
