@@ -37,7 +37,7 @@ const UORDiagram = () => {
                 </div>
               ))}
             </div>
-            <p className="text-xs font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.55)] text-center mt-5 tracking-[0.15em] uppercase">
+            <p className="text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] text-center mt-5 tracking-[0.15em] uppercase">
               Isolated Data Systems
             </p>
           </div>
@@ -49,7 +49,7 @@ const UORDiagram = () => {
             <span className="text-xl md:text-2xl font-display font-extrabold tracking-[0.3em] uppercase text-[hsl(var(--section-dark-foreground))] mt-3">
               UOR
             </span>
-            <span className="text-xs font-body font-medium text-[hsl(var(--section-dark-foreground)/0.6)] mt-1 tracking-wide text-center leading-snug">
+            <span className="text-sm font-body font-medium text-[hsl(var(--section-dark-foreground)/0.7)] mt-1 tracking-wide text-center leading-snug">
               Universal Lossless Encoder
             </span>
           </div>
@@ -76,7 +76,7 @@ const UORDiagram = () => {
                 ))}
               </svg>
             </div>
-            <p className="text-xs font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] text-center mt-5 tracking-[0.15em] uppercase">
+            <p className="text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.65)] text-center mt-5 tracking-[0.15em] uppercase">
               Unified Computational Substrate
             </p>
           </div>
