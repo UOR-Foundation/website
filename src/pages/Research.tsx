@@ -1,4 +1,5 @@
 import Layout from "@/components/Layout";
+import { Link } from "react-router-dom";
 import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket } from "lucide-react";
 
 const researchCategories = [
@@ -17,10 +18,11 @@ const researchCategories = [
 
 const blogPosts = [
   {
-    title: "Why Content-Addressed Identity Matters",
-    excerpt: "A deep dive into how replacing location-based references with content-based identity reduces fragmentation and builds trust between systems.",
-    date: "February 12, 2026",
-    tag: "Technical",
+    title: "UOR: Building the Internet's Knowledge Graph",
+    excerpt: "A deep dive into how Universal Object Reference promises to transform the internet from a chaotic collection of websites into a unified knowledge graph of everything.",
+    date: "December 21, 2023",
+    tag: "Vision",
+    href: "/blog/building-the-internets-knowledge-graph",
   },
   {
     title: "Building the Semantic Web with UOR",
@@ -147,7 +149,7 @@ const Research = () => {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {index === 0 && <div className="h-px w-full bg-border" />}
-                <div className="group py-8 md:py-10 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start transition-all duration-300 hover:pl-2">
+                <Link to={post.href || "#"} className="group block py-8 md:py-10 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start transition-all duration-300 hover:pl-2">
                   <div>
                     <div className="flex items-center gap-3 mb-3">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium font-body ${tagStyles[post.tag]}`}>
@@ -168,7 +170,7 @@ const Research = () => {
                   <div className="flex items-center gap-2 md:mt-1">
                     <BookOpen size={14} className="text-muted-foreground/40" />
                   </div>
-                </div>
+                </Link>
                 <div className="h-px w-full bg-border" />
               </div>
             ))}
