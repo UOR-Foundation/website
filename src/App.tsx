@@ -9,6 +9,7 @@ import Research from "./pages/Research";
 import Projects from "./pages/Projects";
 import Standard from "./pages/Standard";
 import Donate from "./pages/Donate";
+import BlogPost1 from "./pages/BlogPost1";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/projects" element={<Projects />} />
           <Route path="/standard" element={<Standard />} />
           <Route path="/donate" element={<Donate />} />
+          <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
