@@ -53,6 +53,7 @@ const events = [
     location: "Virtual",
     date: "March 3, 2026",
     type: "Community Call",
+    link: "https://discord.gg/ZwuZaNyuve",
   },
 ];
 
@@ -204,6 +205,14 @@ const Research = () => {
                     </h3>
                     <p className="text-muted-foreground font-body text-base leading-relaxed">
                       {event.location}
+                      {event.link && (
+                        <>
+                          {" · "}
+                          <a href={event.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+                            Join on Discord
+                          </a>
+                        </>
+                      )}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2 md:mt-1">
