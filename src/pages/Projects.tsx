@@ -173,6 +173,8 @@ const Projects = () => {
     try {
       await fetch("https://script.google.com/a/macros/uor.foundation/s/AKfycbyCwcvyZpCeGEnRyFiFiqoYvqx2VVenGORZRz9YbGoJ8LAN17Eafd63q1nUG_gx5TwpMg/exec", {
         method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({
           token: "uor-f0undati0n-s3cure-t0ken-2024x",
           projectName: formData.projectName,
