@@ -166,7 +166,7 @@ const Projects = () => {
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const SCRIPT_URL = "https://script.google.com/a/macros/uor.foundation/s/AKfycbyCwcvyZpCeGEnRyFiFiqoYvqx2VVenGORZRz9YbGoJ8LAN17Eafd63q1nUG_gx5TwpMg/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCwcvyZpCeGEnRyFiFiqoYvqx2VVenGORZRz9YbGoJ8LAN17Eafd63q1nUG_gx5TwpMg/exec";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
