@@ -98,7 +98,7 @@ const UORDiagram = () => {
               <Bot className="w-5 h-5 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
-              A single coordinate system becomes a <span className="text-foreground font-medium">computational substrate</span>. AI agents reason, verify, and act across all data sources autonomously.
+              A single symbolic coordinate system becomes a <span className="text-foreground font-medium">computational substrate</span>. AI agents reason, verify, and act across all data sources autonomously.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
