@@ -59,24 +59,28 @@ const UORDiagram = () => {
             <div className="relative rounded-xl border border-[hsl(var(--section-dark-foreground)/0.2)] bg-[hsl(var(--section-dark-foreground)/0.05)] p-4 aspect-square max-w-[220px] w-full">
               <svg viewBox="0 0 100 100" className="w-full h-full" fill="none">
                 <defs>
-                  {/* Heartbeat glow at ~62 BPM = ~968ms */}
                   <radialGradient id="nodeGlow">
-                    <stop offset="0%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.4" />
+                    <stop offset="0%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.25" />
+                    <stop offset="50%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.06" />
                     <stop offset="100%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0" />
                   </radialGradient>
                   <style>{`
-                    @keyframes heartbeat-glow {
-                      0%, 100% { opacity: 0.15; transform-origin: center; transform: scale(1); }
-                      30% { opacity: 0.45; transform: scale(1.15); }
-                      50% { opacity: 0.2; transform: scale(1.05); }
+                    @keyframes node-heartbeat {
+                      0%, 100% { opacity: 0.12; transform-origin: center; transform: scale(0.3); }
+                      13% { opacity: 0.35; transform: scale(1); }
+                      26% { opacity: 0.14; transform: scale(0.4); }
+                      39% { opacity: 0.28; transform: scale(0.85); }
+                      52% { opacity: 0.12; transform: scale(0.3); }
                     }
-                    .node-pulse { animation: heartbeat-glow 968ms ease-in-out infinite; }
-                    @keyframes line-pulse {
-                      0%, 100% { opacity: 0.2; }
-                      30% { opacity: 0.45; }
-                      50% { opacity: 0.25; }
+                    .uor-node-glow { animation: node-heartbeat 1.94s ease-in-out infinite; }
+                    @keyframes line-breathe {
+                      0%, 100% { opacity: 0.18; }
+                      13% { opacity: 0.32; }
+                      26% { opacity: 0.2; }
+                      39% { opacity: 0.28; }
+                      52% { opacity: 0.18; }
                     }
-                    .line-pulse { animation: line-pulse 968ms ease-in-out infinite; }
+                    .uor-line-breathe { animation: line-breathe 1.94s ease-in-out infinite; }
                   `}</style>
                 </defs>
                 {/* Connections */}
@@ -84,19 +88,16 @@ const UORDiagram = () => {
                   [30, 25, 70, 50], [70, 50, 50, 75], [50, 75, 30, 25],
                   [30, 25, 20, 50], [70, 50, 80, 25], [50, 75, 80, 75],
                 ].map(([x1, y1, x2, y2], i) => (
-                  <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--section-dark-foreground))" strokeWidth="1" className="line-pulse" style={{ animationDelay: `${i * 80}ms` }} />
+                  <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--section-dark-foreground))" strokeWidth="1" className="uor-line-breathe" />
                 ))}
                 {/* Nodes */}
                 {[
                   [30, 25], [70, 50], [50, 75], [20, 50], [80, 25], [80, 75],
                 ].map(([cx, cy], i) => (
                   <g key={i}>
-                    {/* Soft glow halo */}
-                    <circle cx={cx} cy={cy} r={i < 3 ? 14 : 10} fill="url(#nodeGlow)" className="node-pulse" style={{ animationDelay: `${i * 120}ms` }} />
-                    {/* Core dot */}
-                    <circle cx={cx} cy={cy} r={i < 3 ? 5 : 3} fill="hsl(var(--section-dark-foreground))" opacity="0.9" />
-                    {/* Ring */}
-                    <circle cx={cx} cy={cy} r={i < 3 ? 9 : 6} fill="none" stroke="hsl(var(--section-dark-foreground))" strokeWidth="0.6" className="node-pulse" style={{ animationDelay: `${i * 120}ms` }} />
+                    <circle cx={cx} cy={cy} r={i < 3 ? 16 : 11} fill="url(#nodeGlow)" className="uor-node-glow" />
+                    <circle cx={cx} cy={cy} r={i < 3 ? 5 : 3} fill="hsl(var(--section-dark-foreground))" opacity="0.85" />
+                    <circle cx={cx} cy={cy} r={i < 3 ? 9 : 6} fill="none" stroke="hsl(var(--section-dark-foreground))" strokeWidth="0.5" opacity="0.2" />
                   </g>
                 ))}
               </svg>
