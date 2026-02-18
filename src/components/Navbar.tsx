@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Menu, X, Heart, Github, Linkedin } from "lucide-react";
 import uorIcon from "@/assets/uor-icon-new.png";
+import uorIconWhite from "@/assets/uor-logo-white.png";
 
 const navItems = [
   { label: "About", href: "/about" },
@@ -14,6 +15,7 @@ const Navbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [overDark, setOverDark] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -21,27 +23,78 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Detect when navbar overlaps a dark section
+  const checkDarkBackground = useCallback(() => {
+    const navHeight = 96; // approximate navbar height
+    const checkY = navHeight / 2; // check at middle of navbar
+
+    // Get element at center of navbar
+    const el = document.elementFromPoint(window.innerWidth / 2, checkY);
+    if (!el) return;
+
+    // Walk up to find if we're inside a section-dark or hero-gradient
+    let current: Element | null = el;
+    let isDark = false;
+    while (current && current !== document.body) {
+      if (
+        current.classList.contains("section-dark") ||
+        current.classList.contains("hero-gradient")
+      ) {
+        isDark = true;
+        break;
+      }
+      current = current.parentElement;
+    }
+    setOverDark(isDark);
+  }, []);
+
+  useEffect(() => {
+    checkDarkBackground();
+    window.addEventListener("scroll", checkDarkBackground, { passive: true });
+    // Re-check after route change settles
+    const timeout = setTimeout(checkDarkBackground, 100);
+    return () => {
+      window.removeEventListener("scroll", checkDarkBackground);
+      clearTimeout(timeout);
+    };
+  }, [checkDarkBackground, location.pathname]);
+
   // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  const textClass = overDark
+    ? "text-white/90"
+    : "text-foreground";
+
+  const mutedClass = overDark
+    ? "text-white/50 hover:text-white/90"
+    : "text-muted-foreground hover:text-foreground";
+
+  const pillClass = (active: boolean) =>
+    overDark
+      ? `nav-pill ${active ? "!border-white/30 !text-white !bg-white/10" : "!border-white/15 !text-white/70 hover:!border-white/25 hover:!text-white/90"}`
+      : `nav-pill ${active ? "nav-pill-active" : ""}`;
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
         scrolled
-          ? "bg-background/25 backdrop-blur-2xl backdrop-saturate-150 border-b border-border/10"
+          ? overDark
+            ? "bg-section-dark/60 backdrop-blur-2xl backdrop-saturate-150 border-b border-white/5"
+            : "bg-background/25 backdrop-blur-2xl backdrop-saturate-150 border-b border-border/10"
           : "bg-transparent"
       }`}
     >
       <div className="container flex items-center justify-between h-20 md:h-24">
         <Link to="/" className="flex items-center gap-2.5 group">
           <img
-            src={uorIcon}
+            src={overDark ? uorIconWhite : uorIcon}
             alt="UOR Foundation"
-            className="w-8 h-8 object-contain"
+            className="w-8 h-8 object-contain transition-opacity duration-300"
           />
-          <span className="font-display text-base font-semibold tracking-tight">
+          <span className={`font-display text-base font-semibold tracking-tight transition-colors duration-300 ${textClass}`}>
             The UOR Foundation
           </span>
         </Link>
@@ -51,7 +104,7 @@ const Navbar = () => {
             <Link
               key={item.href}
               to={item.href}
-              className={`nav-pill ${location.pathname === item.href ? "nav-pill-active" : ""}`}
+              className={`transition-colors duration-300 ${pillClass(location.pathname === item.href)}`}
             >
               {item.label}
             </Link>
@@ -60,13 +113,13 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
+            <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className={`p-1.5 transition-colors duration-300 ${mutedClass}`} aria-label="Discord">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
             </a>
-            <a href="https://github.com/UOR-Foundation" target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
+            <a href="https://github.com/UOR-Foundation" target="_blank" rel="noopener noreferrer" className={`p-1.5 transition-colors duration-300 ${mutedClass}`} aria-label="GitHub">
               <Github size={18} />
             </a>
-            <a href="https://www.linkedin.com/company/uor-foundation" target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
+            <a href="https://www.linkedin.com/company/uor-foundation" target="_blank" rel="noopener noreferrer" className={`p-1.5 transition-colors duration-300 ${mutedClass}`} aria-label="LinkedIn">
               <Linkedin size={18} />
             </a>
           </div>
@@ -81,7 +134,7 @@ const Navbar = () => {
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-3 -mr-1 text-foreground transition-transform duration-200 active:scale-90"
+          className={`md:hidden p-3 -mr-1 transition-all duration-200 active:scale-90 ${textClass}`}
           aria-label="Toggle menu"
         >
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -93,7 +146,7 @@ const Navbar = () => {
           mobileOpen ? "max-h-[28rem] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="bg-background/95 backdrop-blur-xl border-b border-border px-5 py-4 space-y-2">
+        <div className={`${overDark ? 'bg-section-dark/95' : 'bg-background/95'} backdrop-blur-xl border-b ${overDark ? 'border-white/10' : 'border-border'} px-5 py-4 space-y-2`}>
           <nav className="flex flex-col gap-1">
             {navItems.map((item) => (
               <Link
@@ -101,8 +154,8 @@ const Navbar = () => {
                 to={item.href}
                 className={`py-3 px-4 rounded-xl text-base font-medium font-body text-center transition-colors ${
                   location.pathname === item.href
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground active:bg-muted"
+                    ? overDark ? "bg-white/10 text-white" : "bg-primary/10 text-primary"
+                    : overDark ? "text-white/60 active:bg-white/5" : "text-muted-foreground active:bg-muted"
                 }`}
               >
                 {item.label}
@@ -118,13 +171,13 @@ const Navbar = () => {
               Donate
             </Link>
             <div className="flex items-center justify-center gap-4 py-2">
-              <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
+              <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className={`p-2 transition-colors ${mutedClass}`} aria-label="Discord">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
               </a>
-              <a href="https://github.com/UOR-Foundation" target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
+              <a href="https://github.com/UOR-Foundation" target="_blank" rel="noopener noreferrer" className={`p-2 transition-colors ${mutedClass}`} aria-label="GitHub">
                 <Github size={20} />
               </a>
-              <a href="https://www.linkedin.com/company/uor-foundation" target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
+              <a href="https://www.linkedin.com/company/uor-foundation" target="_blank" rel="noopener noreferrer" className={`p-2 transition-colors ${mutedClass}`} aria-label="LinkedIn">
                 <Linkedin size={20} />
               </a>
             </div>
