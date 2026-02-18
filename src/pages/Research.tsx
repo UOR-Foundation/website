@@ -105,7 +105,7 @@ const Research = () => {
             <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
           </p>
 
-          <div className="flex flex-wrap gap-3 mb-14">
+          <div className="flex flex-wrap justify-center gap-3 mb-14">
             {researchCategories.map((cat, index) => (
               <div
                 key={cat.slug}
