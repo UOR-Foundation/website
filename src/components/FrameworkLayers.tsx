@@ -1,4 +1,4 @@
-import { Hash, Layers, Search, ShieldCheck, ArrowRightLeft, ExternalLink } from "lucide-react";
+import { Hash, Layers, Search, ShieldCheck, ArrowRightLeft, ExternalLink, Diamond } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface NamespaceLink {
@@ -15,6 +15,16 @@ interface Layer {
 }
 
 const layers: Layer[] = [
+  {
+    number: 0,
+    icon: Diamond,
+    title: "Foundation",
+    description:
+      "The axiomatic bedrock of the entire framework. Layer 0 defines the fundamental mathematical constraints — prime-based unique factorization, intrinsic primes, coherence norms, and trilateral coherence — that make every higher layer possible. These constraints are not arbitrary choices; they are the minimal conditions required for a universal, lossless, and verifiable symbolic substrate to exist. Every identity, structure, resolution, proof, and transformation above inherits its guarantees from this foundation.",
+    namespaces: [
+      { label: "Axioms", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/axiom/" },
+    ],
+  },
   {
     number: 1,
     icon: Hash,
