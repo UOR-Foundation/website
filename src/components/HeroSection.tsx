@@ -3,7 +3,7 @@ import GalaxyAnimation from "./GalaxyAnimation";
 const HeroSection = () => {
   return (
     <section className="hero-gradient relative overflow-hidden">
-      <div className="container pt-20 md:pt-36 pb-10 md:pb-18 lg:pb-22">
+      <div className="container pt-20 md:pt-36 pb-16 md:pb-24 lg:pb-28">
         <div
           className="mt-1 md:mt-2 mb-5 md:mb-16 lg:mb-20 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.1s" }}
