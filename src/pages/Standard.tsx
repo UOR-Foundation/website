@@ -79,6 +79,36 @@ const Standard = () => {
         </div>
       </section>
 
+      {/* Applications */}
+      <section className="py-16 md:py-24 bg-background border-t border-border">
+        <div className="container max-w-5xl">
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4 text-center">
+            Where It Applies
+          </h2>
+          <p className="text-muted-foreground font-body text-center max-w-2xl mx-auto mb-12 leading-relaxed">
+            A single symbolic substrate opens the door to breakthroughs across disciplines.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { title: "Semantic Web", text: "Give every piece of data a meaning machines can understand, making the web truly interoperable." },
+              { title: "Proof-Based Computation", text: "Run computations where every step is mathematically verifiable, eliminating blind trust." },
+              { title: "Agentic AI", text: "Enable autonomous agents to reason, verify, and act across all data sources within one unified space." },
+              { title: "Open Science", text: "Make research data findable, reproducible, and composable across institutions and fields." },
+              { title: "Cross-Domain Unification", text: "Bridge ideas across disciplines with a shared coordinate system that preserves meaning." },
+              { title: "Frontier Technologies", text: "Provide a foundational layer for emerging fields like topological quantum computing and neuro-symbolic AI." },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
+              >
+                <h3 className="font-display text-base font-bold text-foreground mb-2">{item.title}</h3>
+                <p className="text-sm font-body text-muted-foreground leading-relaxed">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="section-dark py-20 md:py-28">
         <div className="container max-w-3xl text-center">
