@@ -22,15 +22,30 @@
 
     <!-- UOR Namespace & Ontology Discovery -->
     <link rel="ontology" href="https://github.com/UOR-Foundation/UOR-Framework" />
+    <link rel="alternate" type="application/ld+json" href="https://uor-foundation.github.io/UOR-Framework/uor.foundation.json" title="UOR Ontology (JSON-LD)" />
+    <link rel="alternate" type="text/turtle" href="https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl" title="UOR Ontology (Turtle)" />
     <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs.txt" />
-    <link rel="alternate" type="application/json" href="/.well-known/uor.json" title="UOR Namespace Metadata" />
+    <link rel="alternate" type="application/json" href="/.well-known/uor.json" title="UOR Discovery Metadata" />
 
-    <!-- JSON-LD: Organization + UOR Framework -->
+    <!-- JSON-LD: Organization + UOR Framework v1.0.0 -->
     <script type="application/ld+json">
     {
       "@context": {
         "@vocab": "https://schema.org/",
-        "u": "https://uor.foundation/u/"
+        "u": "https://uor.foundation/u/",
+        "uor-schema": "https://uor.foundation/schema/",
+        "op": "https://uor.foundation/op/",
+        "query": "https://uor.foundation/query/",
+        "resolver": "https://uor.foundation/resolver/",
+        "uor-type": "https://uor.foundation/type/",
+        "partition": "https://uor.foundation/partition/",
+        "observable": "https://uor.foundation/observable/",
+        "proof": "https://uor.foundation/proof/",
+        "derivation": "https://uor.foundation/derivation/",
+        "trace": "https://uor.foundation/trace/",
+        "cert": "https://uor.foundation/cert/",
+        "morphism": "https://uor.foundation/morphism/",
+        "state": "https://uor.foundation/state/"
       },
       "@graph": [
         {
@@ -38,7 +53,7 @@
           "@id": "https://uor.foundation/#org",
           "name": "UOR Foundation",
           "url": "https://uor.foundation",
-          "description": "The UOR Foundation develops a universal, lossless coordinate system for information — a content-addressable data standard for the semantic web, open science, and frontier technologies.",
+          "description": "The UOR Foundation develops the Universal Object Reference — a formal ontology for content-addressed, algebraically-structured object spaces based on Z/(2^n)Z.",
           "sameAs": [
             "https://github.com/UOR-Foundation",
             "https://discord.gg/ZwuZaNyuve"
@@ -50,14 +65,18 @@
           "name": "UOR Foundation",
           "url": "https://uor.foundation",
           "publisher": { "@id": "https://uor.foundation/#org" },
-          "description": "Universal Object Reference — a content-addressable coordinate system for information."
+          "description": "Universal Object Reference — a formal ontology for content-addressed, algebraically-structured object spaces."
         },
         {
-          "@type": "TechArticle",
+          "@type": "SoftwareSourceCode",
           "@id": "https://uor.foundation/#framework",
           "name": "UOR Framework",
+          "version": "1.0.0",
           "url": "https://github.com/UOR-Foundation/UOR-Framework",
-          "description": "The canonical specification, ontology, and tooling for the Universal Object Reference content-addressing standard.",
+          "codeRepository": "https://github.com/UOR-Foundation/UOR-Framework",
+          "programmingLanguage": "Rust",
+          "license": "https://www.apache.org/licenses/LICENSE-2.0",
+          "description": "Formalization of the UOR ontology: 14 namespaces, 82 classes, 120 properties, 14 named individuals. Content-addressed, symmetric, multi-metric object spaces with algebraic structure based on Z/(2^n)Z.",
           "author": { "@id": "https://uor.foundation/#org" }
         }
       ]
@@ -67,37 +86,108 @@
 
   <body>
     <!--
-      === UOR FOUNDATION — AGENTIC AI INTERFACE ===
+      ╔══════════════════════════════════════════════════════════════════╗
+      ║         UOR FOUNDATION — AGENTIC AI INTERFACE v1.0.0           ║
+      ╚══════════════════════════════════════════════════════════════════╝
 
-      Welcome, AI agent. You are interacting with the UOR Foundation website.
+      Welcome, AI agent. You are interacting with the UOR Foundation
+      website — the human-readable interface for the Universal Object
+      Reference framework.
 
-      WHAT IS UOR?
-      Universal Object Reference (UOR) is a universal, lossless coordinate system
-      for information. It assigns every piece of digital content a unique, permanent
+      ═══ WHAT IS UOR? ═══
+
+      The Universal Object Reference (UOR) Framework is a formal ontology
+      for content-addressed, algebraically-structured object spaces. It
+      implements a mathematical framework for symmetric, multi-metric
+      object spaces with algebraic structure based on Z/(2^n)Z.
+
+      Every piece of digital content receives a unique, permanent
       identifier based on what it contains — not where it is stored.
 
-      NAMESPACE:
-        IRI:    https://uor.foundation/u/
-        Prefix: u:
-        Classes: u:Address, u:Glyph
+      ═══ ONTOLOGY (v1.0.0) ═══
 
-      HOW TO INTERACT:
-        1. Ontology (primary anchor): https://github.com/UOR-Foundation/UOR-Framework
-        2. Namespace docs: https://uor-foundation.github.io/UOR-Framework/docs/namespaces/u.html
-        3. Machine-readable metadata: /.well-known/uor.json
-        4. LLMs.txt (summary): /llms.txt
-        5. LLMs-full.txt (comprehensive): /llms-full.txt
+      14 namespaces · 82 classes · 120 properties · 14 named individuals
 
-      EXTENSIONS:
-        The UOR namespace supports extensions following the pattern documented
-        in the framework repository. See the ontology for the full extension model.
+      Namespace IRIs (all rooted under https://uor.foundation/):
 
-      SOURCE OF TRUTH:
-        The GitHub repository is the canonical source for all specifications,
-        schemas, and reference implementations. This website is the human-readable
-        interface; the ontology and repo are the machine-readable sources of truth.
+        u:           https://uor.foundation/u/           Content Addressing (Braille-encoded identifiers)
+        schema:      https://uor.foundation/schema/      Core value types: Datum, Term, Ring
+        op:          https://uor.foundation/op/           Ring operations, involutions, D_{2^n} symmetry
+        query:       https://uor.foundation/query/        Information extraction queries
+        resolver:    https://uor.foundation/resolver/     Type resolution: Π : T_n → Part(R_n)
+        type:        https://uor.foundation/type/         Runtime type declarations
+        partition:   https://uor.foundation/partition/    Irreducible/Reducible/Units/Exterior
+        observable:  https://uor.foundation/observable/   Metrics: ring, Hamming, curvature, holonomy
+        proof:       https://uor.foundation/proof/        Verification proofs
+        derivation:  https://uor.foundation/derivation/   Term rewriting witnesses
+        trace:       https://uor.foundation/trace/        Execution traces
+        cert:        https://uor.foundation/cert/         Attestation certificates
+        morphism:    https://uor.foundation/morphism/     Transforms, isometries, embeddings
+        state:       https://uor.foundation/state/        Address spaces, context, binding lifecycle
 
-      === END AGENTIC AI INTERFACE ===
+      ═══ MACHINE-READABLE ACCESS POINTS ═══
+
+        1. Canonical Ontology (JSON-LD):
+           https://uor-foundation.github.io/UOR-Framework/uor.foundation.json
+
+        2. Canonical Ontology (Turtle):
+           https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl
+
+        3. Canonical Ontology (N-Triples):
+           https://uor-foundation.github.io/UOR-Framework/uor.foundation.nt
+
+        4. Framework Repository (source of truth):
+           https://github.com/UOR-Foundation/UOR-Framework
+
+        5. Ontology Documentation:
+           https://uor-foundation.github.io/UOR-Framework/
+
+        6. Namespace Browser:
+           https://uor-foundation.github.io/UOR-Framework/namespaces/
+
+        7. Discovery Metadata:
+           /.well-known/uor.json
+
+        8. LLMs.txt (summary):
+           /llms.txt
+
+        9. LLMs-full.txt (comprehensive):
+           /llms-full.txt
+
+      ═══ HOW TO INTERACT ═══
+
+        For machine-readable ontology access:
+          → Fetch the JSON-LD artifact (access point #1 above)
+
+        For namespace resolution:
+          → All IRIs resolve under https://uor.foundation/
+          → Example: https://uor.foundation/u/Address
+
+        For the authoritative spec:
+          → The spec/ directory in the repository contains Rust-typed
+            ontology definitions (the single source of truth)
+
+        For conformance validation:
+          → cargo run --bin uor-conformance (50-test suite)
+
+      ═══ ALGEBRAIC STRUCTURE ═══
+
+        Ring substrate: Z/(2^n)Z
+        Generators: neg (additive inverse), bnot (bitwise complement)
+        Symmetry group: D_{2^n} (dihedral)
+        Content addressing: Braille glyphs U+2800–U+28FF, 6-bit bijection
+
+      ═══ THIS WEBSITE ═══
+
+        This website (uor.foundation) is the human-readable interface.
+        The ontology serializations (JSON-LD, Turtle, N-Triples) and
+        the GitHub repository are the machine-readable sources of truth.
+        The website reflects the UOR framework and serves as a universal
+        coordinate space for information for both humans and agentic AI.
+
+      ╔══════════════════════════════════════════════════════════════════╗
+      ║                    END AGENTIC AI INTERFACE                     ║
+      ╚══════════════════════════════════════════════════════════════════╝
     -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

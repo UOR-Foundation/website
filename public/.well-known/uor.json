@@ -1,36 +1,73 @@
 {
   "@context": {
     "u": "https://uor.foundation/u/",
+    "schema": "https://uor.foundation/schema/",
+    "op": "https://uor.foundation/op/",
+    "query": "https://uor.foundation/query/",
+    "resolver": "https://uor.foundation/resolver/",
+    "type": "https://uor.foundation/type/",
+    "partition": "https://uor.foundation/partition/",
+    "observable": "https://uor.foundation/observable/",
+    "proof": "https://uor.foundation/proof/",
+    "derivation": "https://uor.foundation/derivation/",
+    "trace": "https://uor.foundation/trace/",
+    "cert": "https://uor.foundation/cert/",
+    "morphism": "https://uor.foundation/morphism/",
+    "state": "https://uor.foundation/state/",
     "owl": "http://www.w3.org/2002/07/owl#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "schema": "https://schema.org/"
+    "sdo": "https://schema.org/"
   },
   "@id": "https://uor.foundation",
-  "@type": "schema:Organization",
-  "schema:name": "UOR Foundation",
-  "schema:description": "The UOR Foundation develops a universal, lossless coordinate system for information — a content-addressable data standard for the semantic web, open science, and frontier technologies.",
-  "schema:url": "https://uor.foundation",
-  "uor:namespace": "https://uor.foundation/u/",
-  "uor:prefix": "u:",
-  "uor:ontology": "https://github.com/UOR-Foundation/UOR-Framework",
-  "uor:namespaceDocumentation": "https://uor-foundation.github.io/UOR-Framework/docs/namespaces/u.html",
-  "uor:classes": [
-    {
-      "@id": "u:Address",
-      "@type": "owl:Class",
-      "rdfs:comment": "A content-addressable identifier represented as a Braille string."
-    },
-    {
-      "@id": "u:Glyph",
-      "@type": "owl:Class",
-      "rdfs:comment": "A single Braille cell encoding 6 bits of an address."
+  "@type": "sdo:Organization",
+  "sdo:name": "UOR Foundation",
+  "sdo:description": "The UOR Foundation develops the Universal Object Reference — a formal ontology for content-addressed, algebraically-structured object spaces based on Z/(2^n)Z.",
+  "sdo:url": "https://uor.foundation",
+  "sdo:license": "https://www.apache.org/licenses/LICENSE-2.0",
+  "uor:framework": {
+    "@id": "https://github.com/UOR-Foundation/UOR-Framework",
+    "@type": "sdo:SoftwareSourceCode",
+    "sdo:name": "UOR Framework",
+    "sdo:version": "1.0.0",
+    "sdo:codeRepository": "https://github.com/UOR-Foundation/UOR-Framework",
+    "sdo:programmingLanguage": "Rust",
+    "sdo:license": "https://www.apache.org/licenses/LICENSE-2.0"
+  },
+  "uor:ontology": {
+    "version": "1.0.0",
+    "namespaceCount": 14,
+    "classCount": 82,
+    "propertyCount": 120,
+    "individualCount": 14,
+    "artifacts": {
+      "jsonld": "https://uor-foundation.github.io/UOR-Framework/uor.foundation.json",
+      "turtle": "https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl",
+      "ntriples": "https://uor-foundation.github.io/UOR-Framework/uor.foundation.nt"
     }
+  },
+  "uor:namespaces": [
+    { "prefix": "u:", "iri": "https://uor.foundation/u/", "label": "Content Addressing", "classes": 2, "properties": 4, "individuals": 0 },
+    { "prefix": "schema:", "iri": "https://uor.foundation/schema/", "label": "Schema", "classes": 6, "properties": 13, "individuals": 2 },
+    { "prefix": "op:", "iri": "https://uor.foundation/op/", "label": "Operations", "classes": 7, "properties": 13, "individuals": 12 },
+    { "prefix": "query:", "iri": "https://uor.foundation/query/", "label": "Queries", "classes": 4, "properties": 3, "individuals": 0 },
+    { "prefix": "resolver:", "iri": "https://uor.foundation/resolver/", "label": "Resolvers", "classes": 4, "properties": 4, "individuals": 0 },
+    { "prefix": "type:", "iri": "https://uor.foundation/type/", "label": "Type System", "classes": 5, "properties": 5, "individuals": 0 },
+    { "prefix": "partition:", "iri": "https://uor.foundation/partition/", "label": "Partitions", "classes": 6, "properties": 9, "individuals": 0 },
+    { "prefix": "observable:", "iri": "https://uor.foundation/observable/", "label": "Observables", "classes": 26, "properties": 4, "individuals": 0 },
+    { "prefix": "proof:", "iri": "https://uor.foundation/proof/", "label": "Proofs", "classes": 4, "properties": 11, "individuals": 0 },
+    { "prefix": "derivation:", "iri": "https://uor.foundation/derivation/", "label": "Derivations", "classes": 3, "properties": 10, "individuals": 0 },
+    { "prefix": "trace:", "iri": "https://uor.foundation/trace/", "label": "Computation Traces", "classes": 3, "properties": 11, "individuals": 0 },
+    { "prefix": "cert:", "iri": "https://uor.foundation/cert/", "label": "Certificates", "classes": 4, "properties": 6, "individuals": 0 },
+    { "prefix": "morphism:", "iri": "https://uor.foundation/morphism/", "label": "Transforms & Morphisms", "classes": 4, "properties": 10, "individuals": 0 },
+    { "prefix": "state:", "iri": "https://uor.foundation/state/", "label": "State", "classes": 4, "properties": 7, "individuals": 0 }
   ],
   "uor:endpoints": {
     "website": "https://uor.foundation",
     "github": "https://github.com/UOR-Foundation",
     "framework": "https://github.com/UOR-Foundation/UOR-Framework",
+    "ontologyDocs": "https://uor-foundation.github.io/UOR-Framework/",
+    "namespaceBrowser": "https://uor-foundation.github.io/UOR-Framework/namespaces/",
     "discord": "https://discord.gg/ZwuZaNyuve",
     "llms": "https://uor.foundation/llms.txt",
     "llmsFull": "https://uor.foundation/llms-full.txt"
