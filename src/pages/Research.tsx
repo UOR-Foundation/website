@@ -161,7 +161,7 @@ const Research = () => {
                   <img
                     src={post.cover}
                     alt={post.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-contain bg-card transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
                 <div className="p-5">
