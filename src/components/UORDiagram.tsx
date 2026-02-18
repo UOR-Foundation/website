@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Bot, ArrowRight, ArrowDown } from "lucide-react";
 
-const silos = ["APIs", "DBs", "Files", "AI Models", "Graphs", "Streams"];
+const silos = ["APIs", "DBs", "Files", "AI Models", "Graphs", "Streams", "Ledgers", "Sensors", "Protocols"];
 
 const capabilityDetails: Record<string, string> = {
   Reason: "Agents traverse a unified semantic graph to draw inferences across formerly siloed data, with no custom connectors required.",
