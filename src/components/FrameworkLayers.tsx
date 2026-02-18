@@ -54,7 +54,7 @@ const layers: Layer[] = [
     icon: ShieldCheck,
     title: "Verification",
     description:
-      "Every operation is independently provable. Proofs confirm correctness, certificates attest to structural properties, derivations show each step of computation, and traces provide a complete audit trail. Trust is built into the system, not bolted on.",
+      "Every operation is mathematically verifiable. Proofs confirm correctness, certificates attest to structural properties, derivations show each step of computation, and traces provide a complete audit trail. Trust is built into the system, not bolted on.",
     namespaces: [
       { label: "Proofs", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/proof/" },
       { label: "Certificates", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/cert/" },
