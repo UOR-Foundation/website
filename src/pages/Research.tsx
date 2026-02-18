@@ -32,7 +32,7 @@ const blogPosts = [
     title: "Unveiling a Universal Mathematical Language",
     excerpt: "A breakthrough that reveals the hidden order behind nature's most complex systems — and could reshape the future of Open Science, Neuro-Symbolic AI, and topological quantum computing.",
     date: "October 10, 2025",
-    tag: "Technical",
+    tag: "Open Research",
     href: "/blog/universal-mathematical-language",
     cover: blogGoldenSeed,
   },
@@ -68,7 +68,7 @@ const events = [
 ];
 
 const tagStyles: Record<string, string> = {
-  Technical: "bg-primary/10 text-primary",
+  "Open Research": "bg-primary/10 text-primary",
   Vision: "bg-accent/10 text-accent",
   Community: "bg-primary/8 text-primary/80 border border-primary/15",
   Workshop: "bg-primary/10 text-primary",
