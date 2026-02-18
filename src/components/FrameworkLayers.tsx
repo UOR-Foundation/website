@@ -20,7 +20,7 @@ const layers: Layer[] = [
     icon: Diamond,
     title: "Foundation",
     description:
-      "The axiomatic bedrock of the entire framework. Layer 0 defines the fundamental mathematical constraints — prime-based unique factorization, intrinsic primes, coherence norms, and trilateral coherence — that make every higher layer possible. These constraints are not arbitrary choices; they are the minimal conditions required for a universal, lossless, and verifiable symbolic substrate to exist. Every identity, structure, resolution, proof, and transformation above inherits its guarantees from this foundation.",
+      "The axioms that make everything above possible. Unique factorization guarantees every object has exactly one irreducible decomposition. Intrinsic primes define the indivisible building blocks. Coherence norms measure structural faithfulness. Together, these constraints create the minimal substrate from which identity, structure, resolution, verification, and transformation emerge.",
     namespaces: [
       { label: "Axioms", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/axiom/" },
     ],
