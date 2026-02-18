@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import highlightResearch from "@/assets/highlight-research.jpg";
 import highlightAnnouncement from "@/assets/highlight-announcement.jpg";
-import highlightEvent from "@/assets/highlight-event.jpg";
+import highlightCommunityCall from "@/assets/highlight-community-call.jpg";
 
 type TagType = "Research" | "Announcement" | "Event";
 
@@ -17,21 +17,21 @@ const highlights = [
     title: "Formal Verification of Content-Addressed Data Primitives",
     date: "February 14, 2026",
     image: highlightResearch,
-    href: "/research",
+    href: "/research#research",
   },
   {
     tag: "Announcement" as TagType,
     title: "UOR Standard v2.0 Now Open for Community Review",
     date: "February 10, 2026",
     image: highlightAnnouncement,
-    href: "/about",
+    href: "/standard",
   },
   {
     tag: "Event" as TagType,
-    title: "Open Data Infrastructure Workshop at Stanford",
-    date: "February 7, 2026",
-    image: highlightEvent,
-    href: "/about",
+    title: "UOR Community Call: March 3, 2026",
+    date: "March 3, 2026",
+    image: highlightCommunityCall,
+    href: "/research#events",
   },
 ];
 
@@ -71,6 +71,9 @@ const HighlightsSection = () => {
                 <p className="mt-4 text-base text-muted-foreground font-body">
                   {item.date}
                 </p>
+                <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-primary font-body group-hover:gap-2.5 transition-all duration-200">
+                  Learn more <ArrowRight size={14} />
+                </span>
               </div>
             </a>
           ))}
