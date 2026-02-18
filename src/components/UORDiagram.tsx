@@ -20,7 +20,7 @@ const UORDiagram = () => {
       <div className="bg-[hsl(var(--section-dark))] border border-[hsl(var(--section-dark-foreground)/0.1)] rounded-2xl p-8 md:p-12 overflow-hidden">
         {/* Header */}
         <p className="text-xs md:text-sm font-body font-semibold tracking-[0.18em] uppercase text-[hsl(var(--section-dark-foreground)/0.7)] mb-10 text-center">
-          Fragmented Systems → Universal Encoding → Unified Coordinate Space
+          Fragmented Systems → Universal Encoding → Unified Computational Substrate
         </p>
 
         {/* Three-stage flow */}
