@@ -18,7 +18,6 @@ const researchCategories = [
   { icon: Microscope, label: "Physics", slug: "physics", description: "Simulation frameworks, open research data, and computational physics tooling." },
   { icon: Rocket, label: "Frontier Tech", slug: "frontier-tech", description: "Emerging technology exploration at the intersection of UOR and next-gen infrastructure." },
   { icon: Leaf, label: "Climate & Energy", slug: "climate-energy", description: "Sustainable infrastructure, carbon accounting, and open energy data standards." },
-  { icon: Box, label: "Spatial Computing", slug: "spatial-computing", description: "Mixed reality interfaces, 3D data interoperability, and immersive computing frameworks." },
 ];
 
 const blogPosts = [
