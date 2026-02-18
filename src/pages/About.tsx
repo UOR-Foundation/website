@@ -30,7 +30,7 @@ const About = () => {
             <ul className="space-y-4 text-muted-foreground font-body text-base md:text-lg leading-relaxed">
               <li className="flex items-start gap-3">
                 <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
-                <span><strong className="text-foreground">The Standard</strong> Universal coordinate system for semantic interoperability.</span>
+                <span><strong className="text-foreground">UOR Framework</strong> Universal coordinate system for semantic interoperability.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
