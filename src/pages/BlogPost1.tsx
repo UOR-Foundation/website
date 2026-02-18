@@ -43,7 +43,7 @@ const BlogPost1 = () => {
           >
             <iframe
               className="absolute inset-0 w-full h-full"
-              src="https://www.youtube.com/embed/IRkJK5wiB-A"
+              src="https://www.youtube.com/embed/WWAySQvHcr0"
               title="S07E08 - From SEAL Missions to Graph Theory: A Diverse Journey with Alex Flom"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
