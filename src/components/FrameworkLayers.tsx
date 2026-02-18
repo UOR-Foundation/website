@@ -17,7 +17,7 @@ const layers: Layer[] = [
     title: "Identity",
     subtitle: "Content Addressing + Schema",
     description:
-      "Every object receives a unique address derived from its content. The schema layer defines the core data types — Datum, Term, and Ring — that form the substrate.",
+      "Every object receives a unique address derived from its content. The schema layer defines the core data types (Datum, Term, and Ring) that form the substrate.",
     namespaces: ["Content Addressing", "Schema"],
   },
   {
@@ -26,7 +26,7 @@ const layers: Layer[] = [
     title: "Algebra",
     subtitle: "Operations + Partitions",
     description:
-      "Ring operations let objects compose, decompose, and transform algebraically. Partitions divide the space into irreducible components — the building blocks of all structure.",
+      "Ring operations let objects compose, decompose, and transform algebraically. Partitions divide the space into irreducible components, the building blocks of all structure.",
     namespaces: ["Operations", "Partitions"],
   },
   {
@@ -53,7 +53,7 @@ const layers: Layer[] = [
     title: "Transformation",
     subtitle: "Morphisms + Observables + State",
     description:
-      "Maps between objects — transforms, isometries, embeddings. Observable metrics measure structure. State management handles context, bindings, and transitions.",
+      "Maps between objects: transforms, isometries, and embeddings. Observable metrics measure structure. State management handles context, bindings, and transitions.",
     namespaces: ["Morphisms", "Observables", "State"],
   },
 ];

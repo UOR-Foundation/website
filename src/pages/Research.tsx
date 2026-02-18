@@ -30,7 +30,7 @@ const blogPosts = [
   },
   {
     title: "Unveiling a Universal Mathematical Language",
-    excerpt: "A breakthrough that reveals the hidden order behind nature's most complex systems — and could reshape the future of Open Science, Neuro-Symbolic AI, and topological quantum computing.",
+    excerpt: "A breakthrough that reveals the hidden order behind nature's most complex systems and could reshape the future of Open Science, Neuro-Symbolic AI, and topological quantum computing.",
     date: "October 10, 2025",
     tag: "Open Research",
     href: "/blog/universal-mathematical-language",
@@ -100,7 +100,7 @@ const Research = () => {
             Community
           </h2>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
-            The UOR community spans disciplines — validating ideas across boundaries and pursuing joint research where fields converge.
+            The UOR community spans disciplines, validating ideas across boundaries and pursuing joint research where fields converge.
           </p>
 
           <div className="flex flex-wrap gap-3 mb-14">
@@ -228,7 +228,7 @@ const Research = () => {
             Join the Community
           </h2>
           <p className="text-section-dark-foreground/60 font-body text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-10">
-            Whether you're a researcher, developer, or advocate for open data — there's a place for you. Connect with us on Discord, contribute on GitHub, or attend an upcoming event.
+            Whether you're a researcher, developer, or advocate for open data, there's a place for you. Connect with us on Discord, contribute on GitHub, or attend an upcoming event.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a

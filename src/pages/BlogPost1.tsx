@@ -60,7 +60,7 @@ const BlogPost1 = () => {
                 At the UOR Foundation, we often find ourselves contemplating ordinary objects in extraordinary ways. Take a simple coffee mug, for instance. To most, it's just a vessel for their morning caffeine fix. But to us, it represents something far more profound: a node in an infinite web of relationships, meanings, and possibilities.
               </p>
               <p className="mt-4">
-                This is the vision behind UOR (Universal Object Reference), a technology that promises to transform the internet from a chaotic collection of websites into a unified knowledge graph of everything. It's not just about organizing information — it's about fundamentally reimagining how digital systems understand, relate to, and interact with the world around us.
+                This is the vision behind UOR (Universal Object Reference), a technology that promises to transform the internet from a chaotic collection of websites into a unified knowledge graph of everything. It's not just about organizing information. It's about fundamentally reimagining how digital systems understand, relate to, and interact with the world around us.
               </p>
             </section>
 
@@ -69,7 +69,7 @@ const BlogPost1 = () => {
                 The Digital Chaos We Live In
               </h2>
               <p>
-                Today's internet is a marvel of human achievement, yet it's also a labyrinth of disconnected information. When you search for something online, you're not accessing a coherent understanding of the world — you're sifting through billions of isolated documents, hoping to piece together meaning from fragments.
+                Today's internet is a marvel of human achievement, yet it's also a labyrinth of disconnected information. When you search for something online, you're not accessing a coherent understanding of the world. You're sifting through billions of isolated documents, hoping to piece together meaning from fragments.
               </p>
               <blockquote className="my-6 border-l-4 border-primary/30 pl-6 italic text-foreground/80">
                 "The current web is like a library where every book is written in a different language, filed in a different system, and the librarians don't talk to each other."
@@ -84,7 +84,7 @@ const BlogPost1 = () => {
                 A Universal Language for Everything
               </h2>
               <p>
-                UOR addresses this challenge by creating a universal language for describing and relating objects in the digital realm. Every piece of information — whether it's a document, an image, a concept, or even a relationship between concepts — gets a unique, mathematically-derived identifier.
+                UOR addresses this challenge by creating a universal language for describing and relating objects in the digital realm. Every piece of information, whether it's a document, an image, a concept, or even a relationship between concepts, gets a unique, mathematically-derived identifier.
               </p>
               <p className="mt-4">
                 But here's where it gets interesting: these identifiers aren't just random strings. They're based on the fundamental mathematical properties of the objects they represent. This means that similar objects naturally cluster together, relationships become discoverable, and the entire system becomes self-organizing.
@@ -114,7 +114,7 @@ const BlogPost1 = () => {
                 The Digital Twin Revolution
               </h2>
               <p>
-                Imagine if every physical object, every concept, every relationship in the real world had a perfect digital twin — not just a representation, but a mathematically precise mirror that maintains all the essential properties and relationships of its physical counterpart.
+                Imagine if every physical object, every concept, every relationship in the real world had a perfect digital twin. Not just a representation, but a mathematically precise mirror that maintains all the essential properties and relationships of its physical counterpart.
               </p>
               <p className="mt-4">
                 This is what UOR enables. That coffee mug we mentioned earlier? In a UOR-powered system, its digital twin would know that it's made of ceramic, that it has a handle, that it's designed to hold liquids, that it was manufactured in a specific factory, that it's currently sitting on your desk next to your laptop, and that it has a small chip on the rim from when you accidentally knocked it against the sink last Tuesday.
@@ -135,7 +135,7 @@ const BlogPost1 = () => {
               <ul className="mt-4 space-y-3">
                 <li className="flex items-start gap-3">
                   <span className="mt-1.5 h-2 w-2 rounded-full bg-primary shrink-0" />
-                  <span>Search becomes discovery — systems don't just find documents, they understand what you're really looking for</span>
+                  <span>Search becomes discovery. Systems don't just find documents, they understand what you're really looking for</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1.5 h-2 w-2 rounded-full bg-primary shrink-0" />
@@ -160,10 +160,10 @@ const BlogPost1 = () => {
                 The Semantic Revolution
               </h2>
               <p>
-                What we're describing is essentially a semantic revolution — a shift from syntax-based computing (where systems manipulate symbols without understanding their meaning) to truly semantic computing (where systems understand the meaning and relationships of the information they process).
+                What we're describing is essentially a semantic revolution, a shift from syntax-based computing (where systems manipulate symbols without understanding their meaning) to truly semantic computing (where systems understand the meaning and relationships of the information they process).
               </p>
               <blockquote className="my-6 border-l-4 border-primary/30 pl-6 italic text-foreground/80">
-                "We're not just building better tools; we're creating a new form of digital intelligence that understands the world the way humans do — through relationships, context, and meaning."
+                "We're not just building better tools; we're creating a new form of digital intelligence that understands the world the way humans do, through relationships, context, and meaning."
               </blockquote>
               <p>
                 This has profound implications for artificial intelligence, data science, and virtually every field that deals with information. When systems can truly understand the semantic relationships between concepts, they can reason, infer, and discover in ways that were previously impossible.
@@ -175,7 +175,7 @@ const BlogPost1 = () => {
                 From Vision to Reality
               </h2>
               <p>
-                The UOR Foundation isn't just dreaming about this future — we're building it. Our work spans multiple domains:
+                The UOR Foundation isn't just dreaming about this future. We're building it. Our work spans multiple domains:
               </p>
               <ul className="mt-4 space-y-3">
                 <li className="flex items-start gap-3">
@@ -204,7 +204,7 @@ const BlogPost1 = () => {
                 One of the most exciting aspects of UOR is its promise of permanence. In today's digital world, links break, websites disappear, and information becomes inaccessible. But in a UOR-powered system, every object has a permanent, mathematically-derived address that can't be broken or lost.
               </p>
               <p className="mt-4">
-                This means that knowledge, once created and properly referenced, becomes part of the permanent fabric of human understanding. Future generations won't just inherit our information — they'll inherit our understanding, our relationships, and our insights in a form that can be built upon indefinitely.
+                This means that knowledge, once created and properly referenced, becomes part of the permanent fabric of human understanding. Future generations won't just inherit our information. They'll inherit our understanding, our relationships, and our insights in a form that can be built upon indefinitely.
               </p>
             </section>
 
@@ -213,13 +213,13 @@ const BlogPost1 = () => {
                 The Knowledge Graph Awaits
               </h2>
               <p>
-                We stand at the threshold of a new era in computing — one where systems don't just process information, but truly understand it. Where the internet isn't just a collection of documents, but a living, breathing knowledge graph that grows more intelligent with every connection.
+                We stand at the threshold of a new era in computing, one where systems don't just process information, but truly understand it. Where the internet isn't just a collection of documents, but a living, breathing knowledge graph that grows more intelligent with every connection.
               </p>
               <p className="mt-4">
                 The coffee mug on your desk is more than just a container for your morning coffee. It's a node in an infinite web of relationships, waiting to be discovered, understood, and connected to the vast tapestry of human knowledge.
               </p>
               <p className="mt-4">
-                The question isn't whether this future will arrive — it's whether we'll be ready for it when it does.
+                The question isn't whether this future will arrive. It's whether we'll be ready for it when it does.
               </p>
               <p className="mt-6 font-semibold text-foreground text-xl font-display">
                 The knowledge graph awaits. Are you ready to help build it?
