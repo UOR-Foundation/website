@@ -171,12 +171,9 @@ const Research = () => {
                     </span>
                     <span className="text-xs text-muted-foreground font-body">{post.date}</span>
                   </div>
-                  <h3 className="font-display text-lg font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary line-clamp-2">
+                  <h3 className="font-display text-lg font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary">
                     {post.title}
                   </h3>
-                  <p className="text-muted-foreground font-body text-sm leading-relaxed line-clamp-3">
-                    {post.excerpt}
-                  </p>
                   <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
                     Read article <ArrowRight size={13} />
                   </span>
