@@ -100,7 +100,8 @@ const Research = () => {
             Community
           </h2>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
-            The UOR community spans disciplines, validating ideas across boundaries and pursuing joint research where fields converge.
+            The UOR community spans disciplines, validating ideas across boundaries and pursuing joint research where fields converge. Find your community on{" "}
+            <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
           </p>
 
           <div className="flex flex-wrap gap-3 mb-14">
