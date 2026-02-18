@@ -25,13 +25,6 @@ const featuredProjects = [
     maturity: "Sandbox" as MaturityLevel,
     url: "https://github.com/dkypuros/atomic-lang-model",
   },
-  {
-    name: "Prism",
-    category: "Open Science",
-    description: "A universal coordinate system for information. Prism provides a mathematically grounded framework for encoding, addressing, and navigating all forms of data.",
-    maturity: "Sandbox" as MaturityLevel,
-    url: "https://github.com/UOR-Foundation/prism",
-  },
 ];
 
 const maturityStyles: Record<MaturityLevel, string> = {
