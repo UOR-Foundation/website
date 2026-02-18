@@ -228,7 +228,7 @@ const Research = () => {
                         rel="noopener noreferrer"
                         className="text-xs font-medium text-primary hover:underline font-body flex items-center gap-1.5"
                       >
-                        <Calendar size={12} />
+                        <ExternalLink size={11} />
                         Add to Calendar
                       </a>
                     )}
