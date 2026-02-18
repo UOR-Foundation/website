@@ -101,7 +101,7 @@ const Research = () => {
             Open Research
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Join Your Community
+            UOR Community
           </h2>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
             The UOR community spans disciplines — validating ideas across boundaries and pursuing joint research where fields converge.
