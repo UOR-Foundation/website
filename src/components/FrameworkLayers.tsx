@@ -11,6 +11,7 @@ interface Layer {
   number: number;
   icon: LucideIcon;
   title: string;
+  summary: string;
   description: string;
   namespaces: NamespaceLink[];
 }
@@ -20,6 +21,7 @@ const layers: Layer[] = [
     number: 0,
     icon: Diamond,
     title: "The Foundation",
+    summary: "The mathematical rules every object must obey.",
     description:
       "The absolute base layer. It defines a small set of mathematical rules that every object in the system must obey. These rules guarantee that anything built on top behaves predictably and never loses information. Without these constraints, higher-order structure cannot emerge. With them, every layer above is inevitable.",
     namespaces: [
@@ -30,6 +32,7 @@ const layers: Layer[] = [
     number: 1,
     icon: Hash,
     title: "Identity",
+    summary: "One permanent address per object, based on content.",
     description:
       "Every object gets a permanent symbolic address based on what it contains, not where it is stored. The same content always resolves to the same address, no matter which system holds it. A shared vocabulary of core data types ensures consistency across the entire space.",
     namespaces: [
@@ -41,6 +44,7 @@ const layers: Layer[] = [
     number: 2,
     icon: Layers,
     title: "Structure",
+    summary: "How objects combine, decompose, and transform.",
     description:
       "Objects combine, decompose, and transform through precise geometric and algebraic rules. Every complex structure can be broken down into its simplest, irreducible parts, and rebuilt without loss. This guarantees that composition is always lossless and reversible.",
     namespaces: [
@@ -52,6 +56,7 @@ const layers: Layer[] = [
     number: 3,
     icon: Search,
     title: "Resolution",
+    summary: "Find anything by what it is, not where it lives.",
     description:
       "Find any object by describing what you need, not by knowing where it lives. Type declarations define intent, resolvers locate the right data, and queries extract exactly the information required.",
     namespaces: [
@@ -64,6 +69,7 @@ const layers: Layer[] = [
     number: 4,
     icon: ShieldCheck,
     title: "Verification",
+    summary: "Every operation is mathematically provable.",
     description:
       "Every operation is mathematically verifiable. Proofs confirm correctness, certificates attest to structural properties, derivations show each step of computation, and traces provide a complete audit trail. Trust is built into the system, not bolted on.",
     namespaces: [
@@ -77,6 +83,7 @@ const layers: Layer[] = [
     number: 5,
     icon: ArrowRightLeft,
     title: "Transformation",
+    summary: "Move between representations without losing meaning.",
     description:
       "Objects move between symbolic representations while preserving their essential geometric properties. Measurable quantities track structure. State management handles context, bindings, and lifecycle transitions across systems.",
     namespaces: [
@@ -130,14 +137,21 @@ const FrameworkLayers = () => {
                   onClick={() => toggleLayer(layer.number)}
                   className="w-full flex items-center justify-between p-6 md:p-8 cursor-pointer text-left"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60">
-                      Layer {layer.number}
-                    </span>
-                    <span className="text-muted-foreground/30 font-body">·</span>
-                    <h3 className="font-display text-lg md:text-xl font-bold text-foreground">
-                      {layer.title}
-                    </h3>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60">
+                        Layer {layer.number}
+                      </span>
+                      <span className="text-muted-foreground/30 font-body">·</span>
+                      <h3 className="font-display text-lg md:text-xl font-bold text-foreground">
+                        {layer.title}
+                      </h3>
+                    </div>
+                    {!isOpen && (
+                      <p className="text-sm font-body text-muted-foreground/70 leading-relaxed mt-1">
+                        {layer.summary}
+                      </p>
+                    )}
                   </div>
                   <ChevronDown
                     className={`w-5 h-5 text-muted-foreground/50 shrink-0 ml-4 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
