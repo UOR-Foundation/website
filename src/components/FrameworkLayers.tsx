@@ -20,7 +20,7 @@ const layers: Layer[] = [
     icon: Hash,
     title: "Identity",
     description:
-      "Every object gets a permanent address based on what it contains, not where it is stored. The same content always resolves to the same address, no matter which system holds it. A shared vocabulary of core data types ensures consistency across the entire space.",
+      "Every object gets a permanent symbolic address based on what it contains, not where it is stored. The same content always resolves to the same address, no matter which system holds it. A shared vocabulary of core data types ensures consistency across the entire space.",
     namespaces: [
       { label: "Content Addressing", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/u/" },
       { label: "Schema", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/schema/" },
@@ -31,7 +31,7 @@ const layers: Layer[] = [
     icon: Layers,
     title: "Structure",
     description:
-      "Objects combine, decompose, and transform through precise mathematical rules. Every complex structure can be broken down into its simplest, irreducible parts, and rebuilt without loss. This guarantees that composition is always lossless and reversible.",
+      "Objects combine, decompose, and transform through precise geometric and algebraic rules. Every complex structure can be broken down into its simplest, irreducible parts, and rebuilt without loss. This guarantees that composition is always lossless and reversible.",
     namespaces: [
       { label: "Operations", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/op/" },
       { label: "Partitions", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/partition/" },
@@ -67,7 +67,7 @@ const layers: Layer[] = [
     icon: ArrowRightLeft,
     title: "Transformation",
     description:
-      "Objects move between representations while preserving their essential properties. Measurable quantities track structure. State management handles context, bindings, and lifecycle transitions across systems.",
+      "Objects move between symbolic representations while preserving their essential geometric properties. Measurable quantities track structure. State management handles context, bindings, and lifecycle transitions across systems.",
     namespaces: [
       { label: "Morphisms", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/morphism/" },
       { label: "Observables", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/observable/" },
