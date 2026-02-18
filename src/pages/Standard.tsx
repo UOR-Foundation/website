@@ -73,7 +73,7 @@ const Standard = () => {
             Framework Architecture
           </h2>
           <p className="text-muted-foreground font-body text-center max-w-2xl mx-auto mb-14 md:mb-16 leading-relaxed">
-            Five layers built on symbolic representation and geometric structure. Each builds on the one below it.
+            Five layers built on a shared foundation of symbolic representation and geometric structure. Each builds on the one below it.
           </p>
           <FrameworkLayers />
         </div>
