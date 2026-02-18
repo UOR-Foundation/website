@@ -26,7 +26,7 @@ const blogPosts = [
   },
   {
     title: "Unveiling a Universal Mathematical Language",
-    excerpt: "A breakthrough that reveals the hidden order behind nature's most complex systems — and could reshape the future of science, AI, and quantum computing.",
+    excerpt: "A breakthrough that reveals the hidden order behind nature's most complex systems — and could reshape the future of science, AI, and topological quantum computing.",
     date: "October 10, 2025",
     tag: "Technical",
     href: "/blog/universal-mathematical-language",
