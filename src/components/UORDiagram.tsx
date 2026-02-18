@@ -27,7 +27,7 @@ const UORDiagram = () => {
         <div className="flex flex-col md:flex-row items-center gap-6 md:gap-0">
           {/* Stage 1: Fragmented silos */}
           <div className="flex-1 w-full flex flex-col items-center">
-            <div className="grid grid-cols-3 gap-2.5 aspect-square max-w-[180px] w-full content-center">
+            <div className="grid grid-cols-3 gap-2.5 aspect-square max-w-[220px] w-full content-center">
               {silos.map((s) => (
                 <div
                   key={s}
@@ -56,7 +56,7 @@ const UORDiagram = () => {
 
           {/* Stage 3: Unified substrate */}
           <div className="flex-1 w-full flex flex-col items-center">
-            <div className="relative rounded-xl border border-[hsl(var(--section-dark-foreground)/0.2)] bg-[hsl(var(--section-dark-foreground)/0.05)] p-4 aspect-square max-w-[180px] w-full">
+            <div className="relative rounded-xl border border-[hsl(var(--section-dark-foreground)/0.2)] bg-[hsl(var(--section-dark-foreground)/0.05)] p-4 aspect-square max-w-[220px] w-full">
               <svg viewBox="0 0 100 100" className="w-full h-full" fill="none">
                 {/* Connections — white lines */}
                 {[
