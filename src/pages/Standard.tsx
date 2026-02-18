@@ -91,7 +91,7 @@ const Standard = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               { title: "Semantic Web", text: "Give every piece of data a meaning machines can understand, making the web truly interoperable." },
-              { title: "Proof-Based Computation", text: "Zero-knowledge proofs enable verifiable AI computation by separating execution from validation. Expensive models run once and their results reduce to compact proofs far cheaper to verify than to recompute. UOR makes this scalable by assigning every valid output a unique, deterministic coordinate in a bounded information space. Proofs attach to stable identities, and verification checks the result against its canonical coordinate, not its execution history. The outcome is trusted, compressed, machine-verifiable computation at scale." },
+              { title: "Proof-Based Computation", text: "Zero-knowledge proofs separate execution from validation. Models run once, results reduce to compact proofs, and UOR anchors each output to a unique coordinate for trusted, machine-verifiable computation at scale." },
               { title: "Agentic AI", text: "Enable autonomous agents to reason, verify, and act across all data sources within one unified space." },
               { title: "Open Science", text: "Make research data findable, reproducible, and composable across institutions and fields." },
               { title: "Cross-Domain Unification", text: "Bridge ideas across disciplines with a shared coordinate system that preserves meaning." },
