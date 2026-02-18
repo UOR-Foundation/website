@@ -1,6 +1,7 @@
 import Layout from "@/components/Layout";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Tag, ExternalLink } from "lucide-react";
+import coverImage from "@/assets/blog-golden-seed-vector.png";
 
 const BlogPost2 = () => {
   return (
@@ -33,8 +34,20 @@ const BlogPost2 = () => {
             className="font-display text-3xl md:text-5xl font-bold text-foreground leading-tight mb-6 animate-fade-in-up"
             style={{ animationDelay: "0.1s" }}
           >
-            UOR Foundation Unveils Universal Mathematical Language — A New Frontier for Science, AI, and Quantum Computing
+            Unveiling a Universal Mathematical Language
           </h1>
+
+          {/* Cover image */}
+          <div
+            className="relative w-full aspect-video rounded-xl overflow-hidden border border-border mb-6 animate-fade-in-up"
+            style={{ animationDelay: "0.15s" }}
+          >
+            <img
+              src={coverImage}
+              alt="The Golden Seed Vector — Open-source the Mathematical Universe"
+              className="w-full h-full object-cover"
+            />
+          </div>
 
           {/* Press release label */}
           <p
@@ -145,12 +158,12 @@ const BlogPost2 = () => {
                 The proofs, code, and documentation are developed and maintained by the UOR Community and are available at:
               </p>
               <a
-                href="https://github.com/UOR-Foundation/atlas-embeddings"
+                href="https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-4 text-primary font-medium hover:underline"
               >
-                github.com/UOR-Foundation/atlas-embeddings <ExternalLink size={14} />
+                github.com/UOR-Foundation/research/atlas-embeddings <ExternalLink size={14} />
               </a>
               <p className="mt-4">
                 Researchers, creators, and curious minds alike are invited to explore, challenge, and expand upon these findings, together writing the next chapter of humanity's dialogue with the universe.

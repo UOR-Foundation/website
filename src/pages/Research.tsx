@@ -25,7 +25,7 @@ const blogPosts = [
     href: "/blog/building-the-internets-knowledge-graph",
   },
   {
-    title: "UOR Foundation Unveils Universal Mathematical Language",
+    title: "Unveiling a Universal Mathematical Language",
     excerpt: "A breakthrough that reveals the hidden order behind nature's most complex systems — and could reshape the future of science, AI, and quantum computing.",
     date: "October 10, 2025",
     tag: "Technical",
