@@ -10,6 +10,17 @@ The UOR Foundation is a nonprofit organization dedicated to developing a univers
 
 The Universal Object Reference (UOR) Framework is a formal ontology for content-addressed, algebraically-structured object spaces. It implements a mathematical framework for symmetric, multi-metric object spaces with algebraic structure based on Z/(2^n)Z.
 
+Every piece of digital content receives a single, permanent identifier derived from what it contains, not where it is stored. Identical content always resolves to the same address, across every system, forever. This enables lossless composition, mathematical verification, and autonomous navigation of all information within a unified computational substrate.
+
+### Foundational Axioms
+
+The framework rests on four axioms that create the conditions for all higher-order structure:
+
+1. **Unique Factorization** — Every object has exactly one irreducible decomposition (up to ordering and units). Canonical representation with no ambiguity.
+2. **Intrinsic Primes** — The indivisible building blocks intrinsic to the algebraic structure, not assigned by convention.
+3. **Coherence Norms** — Measurable quantities (ring-metric, Hamming-metric, curvature, holonomy) that track how faithfully a representation preserves geometric structure.
+4. **Trilateral Coherence** — Simultaneous preservation of algebraic, geometric, and computational structure across all transformations. The binding constraint that makes the framework universal and lossless.
+
 ### Core Principle
 Every piece of digital content receives a unique, permanent identifier based on what it contains — not where it is stored. When two systems hold the same content, they resolve to the same identifier. This replaces fragmented, location-based systems with shared, content-based identity.
 
@@ -138,7 +149,7 @@ The ontology is encoded as typed Rust data in `spec/` and serialized to three fo
 
 1. **Open Science** — Reproducible, verifiable, and universally accessible research data.
 2. **Semantic Web** — Machine-readable, interoperable data across systems and domains.
-3. **Frontier Technology** — Next-generation infrastructure for AI, quantum, and decentralized systems.
+3. **Frontier Technology** — Next-generation infrastructure for AI, quantum computing, and decentralized systems.
 
 ## Research Areas
 

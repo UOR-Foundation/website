@@ -2,11 +2,33 @@
 
 > You are interacting with the UOR Foundation website. UOR is a formal ontology for content-addressed, algebraically-structured object spaces based on Z/(2^n)Z.
 
-## Framework
+## What Is UOR?
 
-The Universal Object Reference (UOR) Framework (v1.0.0) is the canonical formalization of the UOR ontology — a mathematical framework for content-addressed, symmetric, multi-metric object spaces with algebraic structure.
+The Universal Object Reference (UOR) Framework assigns every piece of digital content a single, permanent identifier derived from what it contains, not where it is stored. Identical content always resolves to the same address, across every system, forever. This enables lossless composition, mathematical verification, and autonomous navigation of all information within a unified computational substrate.
 
-- **Ontology**: 14 namespaces · 82 classes · 120 properties · 14 named individuals
+## Foundational Axioms
+
+The framework rests on four axioms that create the conditions for all higher-order structure:
+
+1. **Unique Factorization** — Every object has exactly one irreducible decomposition. No ambiguity, no duplication.
+2. **Intrinsic Primes** — The indivisible building blocks intrinsic to the algebraic structure, not assigned by convention.
+3. **Coherence Norms** — Measurable quantities (ring-metric, Hamming-metric, curvature, holonomy) that track structural faithfulness.
+4. **Trilateral Coherence** — Simultaneous preservation of algebraic, geometric, and computational structure across all transformations.
+
+## Framework Architecture (6 Layers)
+
+| Layer | Name | Role |
+|-------|------|------|
+| 0 | Foundation | Axioms: unique factorization, intrinsic primes, coherence norms, trilateral coherence |
+| 1 | Identity | Content-addressed symbolic addresses (u: namespace) |
+| 2 | Structure | Geometric/algebraic composition via operations (op:) and partitions (partition:) |
+| 3 | Resolution | Intent-based lookup via types (type:), resolvers (resolver:), queries (query:) |
+| 4 | Verification | Proofs (proof:), certificates (cert:), derivations (derivation:), traces (trace:) |
+| 5 | Transformation | Structure-preserving maps via morphisms (morphism:), observables (observable:), state (state:) |
+
+## Ontology (v1.0.0)
+
+- **Inventory**: 14 namespaces · 82 classes · 120 properties · 14 named individuals
 - **License**: Apache-2.0
 
 ## Canonical Ontology Artifacts
@@ -20,7 +42,7 @@ The Universal Object Reference (UOR) Framework (v1.0.0) is the canonical formali
 | Prefix | IRI | Description |
 |--------|-----|-------------|
 | u: | https://uor.foundation/u/ | Content-addressable identifiers (Braille-encoded) |
-| schema: | https://uor.foundation/schema/ | Core value types, Datum, Term, Ring substrate |
+| schema: | https://uor.foundation/schema/ | Core value types: Datum, Term, Ring substrate |
 | op: | https://uor.foundation/op/ | Ring operations, involutions, dihedral symmetry D_{2^n} |
 | query: | https://uor.foundation/query/ | Information extraction queries against the ring |
 | resolver: | https://uor.foundation/resolver/ | Type resolution via partition map Π : T_n → Part(R_n) |
@@ -52,3 +74,4 @@ If you are an AI agent or language model:
 - Content-addressable identifiers use the `u:` namespace with Braille-encoded addresses (U+2800–U+28FF).
 - The algebraic structure is based on Z/(2^n)Z — a ring substrate with neg/bnot involutions generating dihedral symmetry D_{2^n}.
 - This website is the human-readable interface; the ontology serializations (JSON-LD, Turtle, N-Triples) are the machine-readable sources of truth.
+- For comprehensive reference, see /llms-full.txt.
