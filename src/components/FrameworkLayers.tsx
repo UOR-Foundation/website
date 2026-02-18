@@ -133,12 +133,12 @@ const FrameworkLayers = () => {
                     Layer {layer.number}
                   </span>
                   <span className="text-muted-foreground/25">·</span>
-                  <h3 className="font-display text-base md:text-lg font-bold text-foreground">
+                  <h3 className="font-display text-lg md:text-xl font-bold text-foreground">
                     {layer.title}
                   </h3>
                 </div>
                 {!isOpen && (
-                  <p className="text-sm font-body text-muted-foreground/60 mt-1">
+                  <p className="text-sm md:text-base font-body text-muted-foreground/65 mt-1.5 leading-relaxed">
                     {layer.summary}
                   </p>
                 )}
