@@ -26,19 +26,19 @@ const UORDiagram = () => {
         {/* Three-stage flow */}
         <div className="flex flex-col md:flex-row items-center gap-6 md:gap-0">
           {/* Stage 1: Fragmented silos */}
-          <div className="flex-1 w-full">
-            <div className="grid grid-cols-3 gap-2.5">
+          <div className="flex-1 w-full flex flex-col items-center">
+            <div className="grid grid-cols-3 gap-2.5 aspect-square max-w-[180px] w-full content-center">
               {silos.map((s) => (
                 <div
                   key={s}
-                  className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] py-4 text-sm font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
+                  className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] py-3 text-sm font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
                 >
                   {s}
                 </div>
               ))}
             </div>
-            <p className="text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] text-center mt-5 tracking-[0.15em] uppercase">
-              Isolated Data Systems
+            <p className="text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] text-center mt-5 tracking-[0.15em] uppercase leading-snug">
+              Isolated Data<br />Systems
             </p>
           </div>
 
@@ -54,7 +54,7 @@ const UORDiagram = () => {
             </span>
           </div>
 
-          {/* Stage 3: Unified substrate — white/teal graph, not blue */}
+          {/* Stage 3: Unified substrate */}
           <div className="flex-1 w-full flex flex-col items-center">
             <div className="relative rounded-xl border border-[hsl(var(--section-dark-foreground)/0.2)] bg-[hsl(var(--section-dark-foreground)/0.05)] p-4 aspect-square max-w-[180px] w-full">
               <svg viewBox="0 0 100 100" className="w-full h-full" fill="none">
@@ -76,8 +76,8 @@ const UORDiagram = () => {
                 ))}
               </svg>
             </div>
-            <p className="text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.65)] text-center mt-5 tracking-[0.15em] uppercase">
-              Unified Computational Substrate
+            <p className="text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.65)] text-center mt-5 tracking-[0.15em] uppercase leading-snug">
+              Unified Computational<br />Substrate
             </p>
           </div>
         </div>
