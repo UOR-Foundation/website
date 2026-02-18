@@ -87,16 +87,7 @@ const BlogPost2 = () => {
                 , now emerging from the same simple mathematical principles.
               </p>
               <blockquote className="my-6 border-l-4 border-primary/30 pl-6 italic text-foreground/80">
-                "We started by studying the relationship between schemas and software artifacts as our approach to defining{" "}
-                <a
-                  href="https://next.redhat.com/2022/07/13/the-uor-framework/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Universal Object Reference
-                </a>
-                . It turns out the UOR embeddings model that we proposed for decentralized artifact search was mathematically grounded in something far more fundamental."
+                "We started by studying the relationship between schemas and software artifacts as our approach to defining Universal Object Reference. It turns out the UOR embeddings model that we proposed for decentralized artifact search was mathematically grounded in something far more fundamental."
               </blockquote>
               <p>
                 From this foundation, the Golden Seed Vector emerged, revealing the universal mathematical language encoded within Atlas itself.
