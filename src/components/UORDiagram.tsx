@@ -17,9 +17,9 @@ const UORDiagram = () => {
   return (
     <div className="w-full max-w-4xl mx-auto px-4">
       {/* Main diagram — dark for contrast */}
-      <div className="bg-[hsl(var(--section-dark))] border border-[hsl(var(--section-dark-foreground)/0.08)] rounded-2xl p-7 md:p-10 overflow-hidden">
+      <div className="bg-[hsl(var(--section-dark))] border border-[hsl(var(--section-dark-foreground)/0.1)] rounded-2xl p-7 md:p-10 overflow-hidden">
         {/* Header */}
-        <p className="text-[11px] font-body font-semibold tracking-[0.2em] uppercase text-[hsl(var(--section-dark-foreground)/0.4)] mb-10 text-center">
+        <p className="text-[11px] font-body font-semibold tracking-[0.2em] uppercase text-[hsl(var(--section-dark-foreground)/0.6)] mb-10 text-center">
           Fragmentation → Universal Encoding → Agentic Substrate
         </p>
 
@@ -31,13 +31,13 @@ const UORDiagram = () => {
               {silos.map((s) => (
                 <div
                   key={s}
-                  className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.1)] bg-[hsl(var(--section-dark-foreground)/0.04)] py-3.5 text-xs font-body font-medium text-[hsl(var(--section-dark-foreground)/0.5)]"
+                  className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.15)] bg-[hsl(var(--section-dark-foreground)/0.06)] py-3.5 text-xs font-body font-medium text-[hsl(var(--section-dark-foreground)/0.85)]"
                 >
                   {s}
                 </div>
               ))}
             </div>
-            <p className="text-[10px] font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.3)] text-center mt-4 tracking-[0.15em] uppercase">
+            <p className="text-[10px] font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.5)] text-center mt-4 tracking-[0.15em] uppercase">
               Isolated Data Systems
             </p>
           </div>
@@ -76,14 +76,14 @@ const UORDiagram = () => {
                 ))}
               </svg>
             </div>
-            <p className="text-[10px] font-body font-semibold text-primary/50 text-center mt-4 tracking-[0.15em] uppercase">
+            <p className="text-[10px] font-body font-semibold text-primary/70 text-center mt-4 tracking-[0.15em] uppercase">
               Unified Computational Substrate
             </p>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="h-px w-full bg-[hsl(var(--section-dark-foreground)/0.08)] my-9" />
+        <div className="h-px w-full bg-[hsl(var(--section-dark-foreground)/0.12)] my-9" />
 
         {/* Agentic AI section */}
         <div className="flex flex-col gap-5">
@@ -91,7 +91,7 @@ const UORDiagram = () => {
             <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
               <Bot className="w-5 h-5 text-primary" />
             </div>
-            <p className="text-sm text-[hsl(var(--section-dark-foreground)/0.65)] font-body leading-relaxed flex-1">
+            <p className="text-sm text-[hsl(var(--section-dark-foreground)/0.8)] font-body leading-relaxed flex-1">
               A single symbolic coordinate system becomes a <span className="text-[hsl(var(--section-dark-foreground))] font-medium">computational substrate</span>. AI agents reason, verify, and act across all data sources autonomously.
             </p>
           </div>
@@ -103,15 +103,15 @@ const UORDiagram = () => {
                 className={`px-3.5 py-1.5 rounded-full text-xs font-body font-semibold border transition-all duration-200 cursor-pointer ${
                   active === c
                     ? "border-primary/50 text-primary bg-primary/15 shadow-sm"
-                    : "border-[hsl(var(--section-dark-foreground)/0.12)] text-[hsl(var(--section-dark-foreground)/0.5)] bg-transparent hover:border-primary/30 hover:text-primary/80"
+                    : "border-[hsl(var(--section-dark-foreground)/0.15)] text-[hsl(var(--section-dark-foreground)/0.7)] bg-transparent hover:border-primary/30 hover:text-primary/80"
                 }`}
               >
                 {c}
               </button>
             ))}
           </div>
-          <div className="rounded-xl bg-[hsl(var(--section-dark-foreground)/0.04)] border border-[hsl(var(--section-dark-foreground)/0.08)] px-5 py-4">
-            <p className="text-sm font-body text-[hsl(var(--section-dark-foreground)/0.75)] leading-relaxed">
+          <div className="rounded-xl bg-[hsl(var(--section-dark-foreground)/0.06)] border border-[hsl(var(--section-dark-foreground)/0.1)] px-5 py-4">
+            <p className="text-sm font-body text-[hsl(var(--section-dark-foreground)/0.85)] leading-relaxed">
               {capabilityDetails[active]}
             </p>
           </div>
