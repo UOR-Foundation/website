@@ -37,52 +37,50 @@ const Standard = () => {
         </div>
       </section>
 
-      {/* One-liner explanation */}
-      <section className="section-dark py-12 md:py-20">
+      {/* The Problem */}
+      <section className="py-12 md:py-20 bg-background border-b border-border">
         <div className="container max-w-5xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-section-dark-foreground/80 mb-6">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             The Problem
           </p>
-          <div className="h-px w-full bg-section-dark-foreground/10" />
           <div
-            className="py-12 md:py-16 max-w-3xl animate-fade-in-up opacity-0"
+            className="pt-8 md:pt-10 max-w-3xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
-            <p className="text-section-dark-foreground/90 font-body text-base md:text-lg leading-[1.85] md:leading-[1.9] font-medium">
+            <p className="text-foreground font-body text-base md:text-lg leading-[1.85] md:leading-[1.9] font-medium">
               Today's data lives in silos. Different formats, protocols, and systems that can't natively understand each other.
             </p>
-            <p className="mt-6 text-section-dark-foreground/65 font-body text-base md:text-lg leading-[1.85] md:leading-[1.9]">
-              UOR replaces location-based identity with <span className="text-section-dark-foreground font-medium">symbolic, content-based identity</span>. Every object gets a single, permanent address derived from what it contains. Same content, same address, across every system, forever.
+            <p className="mt-6 text-muted-foreground font-body text-base md:text-lg leading-[1.85] md:leading-[1.9]">
+              UOR replaces location based identity with <span className="text-foreground font-medium">symbolic, content based identity</span>. Every object gets a single, permanent address derived from what it contains. Same content, same address, across every system, forever.
             </p>
           </div>
-          <div className="h-px w-full bg-section-dark-foreground/10" />
         </div>
       </section>
 
       {/* Visual Diagram */}
-      <section className="py-16 md:py-24 bg-background">
+      <section className="py-12 md:py-20 bg-background border-b border-border">
         <div className="container max-w-5xl">
           <UORDiagram />
         </div>
       </section>
 
       {/* Applications */}
-      <section className="py-16 md:py-24 bg-background border-t border-border">
+      <section className="py-12 md:py-20 bg-background border-b border-border">
         <div className="container max-w-5xl">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4 text-center">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Where It Applies
-          </h2>
-          <p className="text-muted-foreground font-body text-center max-w-2xl mx-auto mb-12 leading-relaxed">
+          </p>
+          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
             A single symbolic substrate opens the door to breakthroughs across disciplines.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               { title: "Semantic Web", text: "Give every piece of data a meaning machines can understand, making the web truly interoperable." },
-              { title: "Proof-Based Computation", text: "Zero-knowledge verified AI: models run once, outputs reduce to compact proofs anchored to deterministic coordinates." },
+              { title: "Proof Based Computation", text: "Zero knowledge verified AI: models run once, outputs reduce to compact proofs anchored to deterministic coordinates." },
               { title: "Agentic AI", text: "Enable autonomous agents to reason, verify, and act across all data sources within one unified space." },
               { title: "Open Science", text: "Make research data findable, reproducible, and composable across institutions and fields." },
-              { title: "Cross-Domain Unification", text: "Bridge ideas across disciplines with a shared coordinate system that preserves meaning." },
-              { title: "Frontier Technologies", text: "Provide a foundational layer for emerging fields like topological quantum computing and neuro-symbolic AI." },
+              { title: "Cross Domain Unification", text: "Bridge ideas across disciplines with a shared coordinate system that preserves meaning." },
+              { title: "Frontier Technologies", text: "Provide a foundational layer for emerging fields like topological quantum computing and neuro symbolic AI." },
             ].map((item) => (
               <div
                 key={item.title}
@@ -97,12 +95,15 @@ const Standard = () => {
       </section>
 
       {/* Framework Architecture */}
-      <section id="architecture" className="py-16 md:py-28 bg-background border-t border-border scroll-mt-28">
+      <section id="architecture" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
         <div className="container max-w-5xl">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4 text-center">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+            Architecture
+          </p>
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
             UOR Framework Architecture
           </h2>
-          <p className="text-muted-foreground font-body text-center max-w-2xl mx-auto mb-14 md:mb-16 leading-relaxed">
+          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-14 md:mb-16">
             Five layers built on a shared foundation of geometric structure and symbolic representation. Each builds on the one below it.
           </p>
           <FrameworkLayers />
@@ -110,7 +111,7 @@ const Standard = () => {
       </section>
 
       {/* CTA */}
-      <section className="section-dark py-20 md:py-28">
+      <section className="section-dark py-14 md:py-20">
         <div className="container max-w-3xl text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
             Explore the Full Specification
