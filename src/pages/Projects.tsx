@@ -168,41 +168,27 @@ const Projects = () => {
   const [submitting, setSubmitting] = useState(false);
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCwcvyZpCeGEnRyFiFiqoYvqx2VVenGORZRz9YbGoJ8LAN17Eafd63q1nUG_gx5TwpMg/exec";
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
-    try {
-      // Get reCAPTCHA v3 token
-      const recaptchaToken = await new Promise<string>((resolve, reject) => {
-        (window as any).grecaptcha.ready(() => {
-          (window as any).grecaptcha
-            .execute("6LcaInAsAAAAALGz2CyX4K9f_bW0KkRAu4-Mc12V", { action: "submit_project" })
-            .then(resolve)
-            .catch(reject);
-        });
-      });
+    // Build URL with query parameters — most reliable for Google Apps Script
+    const params = new URLSearchParams({
+      token: "uor-f0undati0n-s3cure-t0ken-2024x",
+      projectName: formData.projectName,
+      repoUrl: formData.repoUrl,
+      contactEmail: formData.contactEmail,
+      description: formData.description,
+      problemStatement: formData.problemStatement,
+    });
 
-      const params = new URLSearchParams({
-        token: "uor-f0undati0n-s3cure-t0ken-2024x",
-        recaptchaToken,
-        projectName: formData.projectName,
-        repoUrl: formData.repoUrl,
-        contactEmail: formData.contactEmail,
-        description: formData.description,
-        problemStatement: formData.problemStatement,
-      });
-
-      const img = new Image();
-      img.onload = img.onerror = () => {
-        setSubmitting(false);
-        setSubmitted(true);
-      };
-      img.src = `${SCRIPT_URL}?${params.toString()}`;
-    } catch {
+    // Use an image beacon to fire the GET request (bypasses CORS entirely)
+    const img = new Image();
+    img.onload = img.onerror = () => {
       setSubmitting(false);
-      alert("reCAPTCHA verification failed. Please try again.");
-    }
+      setSubmitted(true);
+    };
+    img.src = `${SCRIPT_URL}?${params.toString()}`;
   };
 
   return (
