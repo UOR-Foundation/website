@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const pillars = [
   {
     icon: Globe,
-    title: "The Standard",
+    title: "UOR Framework",
     description:
       "Content-addressed identity for every data object, bridging open science and frontier research.",
     href: "/standard",

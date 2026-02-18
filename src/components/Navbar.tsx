@@ -5,7 +5,7 @@ import uorIcon from "@/assets/uor-icon-new.png";
 
 const navItems = [
   { label: "About", href: "/about" },
-  { label: "The Standard", href: "/standard" },
+  { label: "UOR Framework", href: "/standard" },
   { label: "Our Community", href: "/research" },
   { label: "Your Projects", href: "/projects" },
 ];

@@ -10,7 +10,7 @@ const Standard = () => {
       <section className="hero-gradient pt-40 md:pt-52 pb-16 md:pb-22">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
-            The UOR Standard
+            The UOR Framework
           </h1>
           <p
             className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
