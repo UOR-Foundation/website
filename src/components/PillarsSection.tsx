@@ -6,7 +6,7 @@ const pillars = [
     icon: Globe,
     title: "UOR Framework",
     description:
-      "Content-addressed identity for every data object, bridging open science and frontier research.",
+      "A universal coordinate system for information. One address per object, derived from content, verifiable across every system.",
     href: "/standard",
     cta: "Learn",
   },
@@ -14,7 +14,7 @@ const pillars = [
     icon: Users,
     title: "Our Community",
     description:
-      "Open governance and collaboration driving adoption of the standard.",
+      "Open research, cross pollination of ideas, and joint exploration across disciplines to accelerate scientific progress.",
     href: "/research",
     cta: "Connect",
   },
@@ -22,7 +22,7 @@ const pillars = [
     icon: Rocket,
     title: "Your Projects",
     description:
-      "Discovery, licensing, and monetization of research products.",
+      "Build on UOR. Prototype, incubate, and graduate open source projects within the foundation's ecosystem.",
     href: "/projects",
     cta: "Build",
   },
