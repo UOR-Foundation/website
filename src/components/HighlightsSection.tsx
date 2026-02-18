@@ -28,8 +28,8 @@ const highlights = [
   },
   {
     tag: "Event" as TagType,
-    title: "UOR Community Call: March 3, 2026",
-    date: "March 3, 2026",
+    title: "UOR Community Call",
+    date: "Virtual Event",
     image: highlightCommunityCall,
     href: "/research#events",
   },
