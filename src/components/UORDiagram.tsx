@@ -121,6 +121,9 @@ const UORDiagram = () => {
 
         {/* Agentic AI section */}
         <div className="flex flex-col gap-5">
+          <p className="text-xs font-body font-medium tracking-widest uppercase text-[hsl(var(--section-dark-foreground)/0.4)]">
+            Example Use Case
+          </p>
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-lg bg-[hsl(var(--section-dark-foreground)/0.1)] flex items-center justify-center shrink-0 mt-0.5">
               <Bot className="w-5 h-5 text-[hsl(var(--section-dark-foreground)/0.8)]" />
