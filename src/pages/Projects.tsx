@@ -165,10 +165,29 @@ const Projects = () => {
     problemStatement: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      await fetch("https://script.google.com/a/macros/uor.foundation/s/AKfycbyCwcvyZpCeGEnRyFiFiqoYvqx2VVenGORZRz9YbGoJ8LAN17Eafd63q1nUG_gx5TwpMg/exec", {
+        method: "POST",
+        body: JSON.stringify({
+          token: "uor-f0undati0n-s3cure-t0ken-2024x",
+          projectName: formData.projectName,
+          repoUrl: formData.repoUrl,
+          contactEmail: formData.contactEmail,
+          description: formData.description,
+          problemStatement: formData.problemStatement,
+        }),
+      });
+      setSubmitted(true);
+    } catch {
+      alert("Submission failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -462,10 +481,11 @@ const Projects = () => {
 
               <button
                 type="submit"
-                className="w-full md:w-auto px-8 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity font-body flex items-center justify-center gap-2"
+                disabled={submitting}
+                className="w-full md:w-auto px-8 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity font-body flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Send size={16} />
-                Submit for Sandbox Review
+                <Send size={16} className={submitting ? 'animate-pulse' : ''} />
+                {submitting ? 'Submitting…' : 'Submit for Sandbox Review'}
               </button>
             </form>
           )}
