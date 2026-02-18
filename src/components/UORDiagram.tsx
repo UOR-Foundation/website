@@ -27,11 +27,11 @@ const UORDiagram = () => {
         <div className="flex flex-col md:flex-row items-center gap-6 md:gap-0">
           {/* Stage 1: Fragmented silos */}
           <div className="flex-1 w-full flex flex-col items-center">
-            <div className="grid grid-cols-3 gap-2.5 aspect-square max-w-[220px] w-full content-center">
+            <div className="grid grid-cols-3 gap-2.5 max-w-[220px] w-full content-center">
               {silos.map((s) => (
                 <div
                   key={s}
-                  className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] py-2.5 text-xs font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
+                  className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] h-[68px] text-xs font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
                 >
                   {s}
                 </div>
