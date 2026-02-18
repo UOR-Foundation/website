@@ -25,10 +25,11 @@ const blogPosts = [
     href: "/blog/building-the-internets-knowledge-graph",
   },
   {
-    title: "Building the Semantic Web with UOR",
-    excerpt: "How universal object referencing enables machines to understand context, not just data — and what that means for the future of the open web.",
-    date: "February 5, 2026",
-    tag: "Vision",
+    title: "UOR Foundation Unveils Universal Mathematical Language",
+    excerpt: "A breakthrough that reveals the hidden order behind nature's most complex systems — and could reshape the future of science, AI, and quantum computing.",
+    date: "October 10, 2025",
+    tag: "Technical",
+    href: "/blog/universal-mathematical-language",
   },
   {
     title: "From Sandbox to Graduation: A Project's Journey",
