@@ -8,6 +8,7 @@ const pillars = [
     description:
       "Content-addressed identity for every data object, bridging open science and frontier research.",
     href: "/standard",
+    cta: "Learn",
   },
   {
     icon: Users,
@@ -15,6 +16,7 @@ const pillars = [
     description:
       "Open governance and collaboration driving adoption of the standard.",
     href: "/research",
+    cta: "Connect",
   },
   {
     icon: Rocket,
@@ -22,6 +24,7 @@ const pillars = [
     description:
       "Discovery, licensing, and monetization of research products.",
     href: "/projects",
+    cta: "Build",
   },
 ];
 
@@ -56,7 +59,7 @@ const PillarsSection = () => {
                 to={pillar.href}
                 className="inline-flex items-center gap-1.5 text-base font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5 mt-6"
               >
-                Learn more
+                {pillar.cta}
                 <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-0.5" />
               </Link>
             </div>
