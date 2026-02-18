@@ -146,7 +146,7 @@ const Research = () => {
             Blog
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-14">
-            Latest Writing
+            Highlights
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
