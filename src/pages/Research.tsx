@@ -175,7 +175,7 @@ const Research = () => {
                     {post.title}
                   </h3>
                   <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
-                    Read article <ArrowRight size={13} />
+                    Read more <ArrowRight size={13} />
                   </span>
                 </div>
               </Link>
