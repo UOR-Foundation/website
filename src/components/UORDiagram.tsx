@@ -38,7 +38,7 @@ const UORDiagram = () => {
               ))}
             </div>
             <p className="text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] text-center mt-5 tracking-[0.15em] uppercase leading-snug">
-              Isolated Data<br />Systems
+              Isolated Data<br />Systems and Formats
             </p>
           </div>
 
