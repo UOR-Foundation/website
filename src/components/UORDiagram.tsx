@@ -60,19 +60,24 @@ const UORDiagram = () => {
               <svg viewBox="0 0 100 100" className="w-full h-full" fill="none">
                 <defs>
                   <radialGradient id="nodeGlow">
-                    <stop offset="0%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.25" />
-                    <stop offset="50%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.06" />
+                    <stop offset="0%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.5" />
+                    <stop offset="30%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.15" />
+                    <stop offset="60%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.04" />
                     <stop offset="100%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0" />
                   </radialGradient>
                   <style>{`
-                    @keyframes node-heartbeat {
-                      0%, 100% { opacity: 0.12; transform-origin: center; transform: scale(0.3); }
-                      13% { opacity: 0.35; transform: scale(1); }
+                    @keyframes node-emanate {
+                      0%, 100% { opacity: 0.12; transform: scale(0.3); }
+                      13% { opacity: 0.4; transform: scale(1); }
                       26% { opacity: 0.14; transform: scale(0.4); }
-                      39% { opacity: 0.28; transform: scale(0.85); }
+                      39% { opacity: 0.32; transform: scale(0.88); }
                       52% { opacity: 0.12; transform: scale(0.3); }
                     }
-                    .uor-node-glow { animation: node-heartbeat 1.94s ease-in-out infinite; }
+                    .uor-emanate {
+                      animation: node-emanate 1.94s ease-in-out infinite;
+                      transform-box: fill-box;
+                      transform-origin: center;
+                    }
                     @keyframes line-breathe {
                       0%, 100% { opacity: 0.18; }
                       13% { opacity: 0.32; }
@@ -95,9 +100,12 @@ const UORDiagram = () => {
                   [30, 25], [70, 50], [50, 75], [20, 50], [80, 25], [80, 75],
                 ].map(([cx, cy], i) => (
                   <g key={i}>
-                    <circle cx={cx} cy={cy} r={i < 3 ? 16 : 11} fill="url(#nodeGlow)" className="uor-node-glow" />
-                    <circle cx={cx} cy={cy} r={i < 3 ? 5 : 3} fill="hsl(var(--section-dark-foreground))" opacity="0.85" />
-                    <circle cx={cx} cy={cy} r={i < 3 ? 9 : 6} fill="none" stroke="hsl(var(--section-dark-foreground))" strokeWidth="0.5" opacity="0.2" />
+                    {/* Emanating glow — fixed at node center */}
+                    <circle cx={cx} cy={cy} r={i < 3 ? 18 : 13} fill="url(#nodeGlow)" className="uor-emanate" />
+                    {/* Core dot */}
+                    <circle cx={cx} cy={cy} r={i < 3 ? 4.5 : 2.8} fill="hsl(var(--section-dark-foreground))" opacity="0.9" />
+                    {/* Subtle ring */}
+                    <circle cx={cx} cy={cy} r={i < 3 ? 8 : 5.5} fill="none" stroke="hsl(var(--section-dark-foreground))" strokeWidth="0.5" opacity="0.18" />
                   </g>
                 ))}
               </svg>
