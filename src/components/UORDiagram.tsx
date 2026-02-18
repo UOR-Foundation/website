@@ -58,20 +58,45 @@ const UORDiagram = () => {
           <div className="flex-1 w-full flex flex-col items-center">
             <div className="relative rounded-xl border border-[hsl(var(--section-dark-foreground)/0.2)] bg-[hsl(var(--section-dark-foreground)/0.05)] p-4 aspect-square max-w-[220px] w-full">
               <svg viewBox="0 0 100 100" className="w-full h-full" fill="none">
-                {/* Connections — white lines */}
+                <defs>
+                  {/* Heartbeat glow at ~62 BPM = ~968ms */}
+                  <radialGradient id="nodeGlow">
+                    <stop offset="0%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0" />
+                  </radialGradient>
+                  <style>{`
+                    @keyframes heartbeat-glow {
+                      0%, 100% { opacity: 0.15; transform-origin: center; transform: scale(1); }
+                      30% { opacity: 0.45; transform: scale(1.15); }
+                      50% { opacity: 0.2; transform: scale(1.05); }
+                    }
+                    .node-pulse { animation: heartbeat-glow 968ms ease-in-out infinite; }
+                    @keyframes line-pulse {
+                      0%, 100% { opacity: 0.2; }
+                      30% { opacity: 0.45; }
+                      50% { opacity: 0.25; }
+                    }
+                    .line-pulse { animation: line-pulse 968ms ease-in-out infinite; }
+                  `}</style>
+                </defs>
+                {/* Connections */}
                 {[
                   [30, 25, 70, 50], [70, 50, 50, 75], [50, 75, 30, 25],
                   [30, 25, 20, 50], [70, 50, 80, 25], [50, 75, 80, 75],
                 ].map(([x1, y1, x2, y2], i) => (
-                  <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--section-dark-foreground))" strokeWidth="1" opacity="0.3" />
+                  <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--section-dark-foreground))" strokeWidth="1" className="line-pulse" style={{ animationDelay: `${i * 80}ms` }} />
                 ))}
-                {/* Nodes — white dots */}
+                {/* Nodes */}
                 {[
                   [30, 25], [70, 50], [50, 75], [20, 50], [80, 25], [80, 75],
                 ].map(([cx, cy], i) => (
                   <g key={i}>
+                    {/* Soft glow halo */}
+                    <circle cx={cx} cy={cy} r={i < 3 ? 14 : 10} fill="url(#nodeGlow)" className="node-pulse" style={{ animationDelay: `${i * 120}ms` }} />
+                    {/* Core dot */}
                     <circle cx={cx} cy={cy} r={i < 3 ? 5 : 3} fill="hsl(var(--section-dark-foreground))" opacity="0.9" />
-                    <circle cx={cx} cy={cy} r={i < 3 ? 9 : 6} fill="none" stroke="hsl(var(--section-dark-foreground))" strokeWidth="0.6" opacity="0.25" />
+                    {/* Ring */}
+                    <circle cx={cx} cy={cy} r={i < 3 ? 9 : 6} fill="none" stroke="hsl(var(--section-dark-foreground))" strokeWidth="0.6" className="node-pulse" style={{ animationDelay: `${i * 120}ms` }} />
                   </g>
                 ))}
               </svg>
