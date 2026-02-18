@@ -53,18 +53,6 @@ const events = [
     date: "March 15, 2026",
     type: "Workshop",
   },
-  {
-    title: "UOR Community Call — Q1 Review",
-    location: "Virtual (Discord)",
-    date: "March 5, 2026",
-    type: "Community Call",
-  },
-  {
-    title: "Decentralized Identity Summit",
-    location: "Berlin, Germany",
-    date: "April 10, 2026",
-    type: "Conference",
-  },
 ];
 
 const tagStyles: Record<string, string> = {
