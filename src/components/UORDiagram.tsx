@@ -1,9 +1,19 @@
+import { useState } from "react";
 import { Bot, ArrowRight, ArrowDown } from "lucide-react";
 
 const silos = ["APIs", "DBs", "Files", "AI Models", "Graphs", "Streams"];
-const capabilities = ["Reason", "Verify", "Compose", "Navigate"];
+
+const capabilityDetails: Record<string, string> = {
+  Reason: "Agents traverse a unified semantic graph to draw inferences across formerly siloed data — no custom connectors required.",
+  Verify: "Content-addressed identity lets any agent independently confirm data integrity and provenance without trusting a central authority.",
+  Compose: "Algebraic structure means objects combine into higher-order constructs while preserving referential integrity at every layer.",
+  Navigate: "A single coordinate system lets agents locate and access any object by what it is, not where it lives — across every system.",
+};
+
+const capabilities = Object.keys(capabilityDetails);
 
 const UORDiagram = () => {
+  const [active, setActive] = useState<string>("Reason");
   return (
     <div className="w-full max-w-3xl mx-auto px-4">
       <div className="bg-card border border-border rounded-2xl p-7 md:p-10">
@@ -81,20 +91,35 @@ const UORDiagram = () => {
         {/* Divider */}
         <div className="h-px w-full bg-border my-8" />
 
-        {/* Agentic AI row */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Bot className="w-5 h-5 text-primary" />
+        {/* Agentic AI capabilities */}
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Bot className="w-5 h-5 text-primary" />
+            </div>
+            <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
+              A single coordinate system becomes a <span className="text-foreground font-medium">computational substrate</span> — AI agents reason, verify, and act across all data sources autonomously.
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
-            A single coordinate system becomes a <span className="text-foreground font-medium">computational substrate</span> — AI agents reason, verify, and act across all data sources autonomously.
-          </p>
-          <div className="flex flex-wrap gap-1.5 shrink-0">
+          <div className="flex flex-wrap gap-2">
             {capabilities.map((c) => (
-              <span key={c} className="px-2.5 py-1 rounded-full text-[11px] font-body font-medium border border-primary/15 text-primary bg-primary/[0.05]">
+              <button
+                key={c}
+                onClick={() => setActive(c)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-body font-semibold border transition-all duration-200 cursor-pointer ${
+                  active === c
+                    ? "border-primary/40 text-primary bg-primary/10 shadow-sm"
+                    : "border-border text-muted-foreground bg-transparent hover:border-primary/20 hover:text-primary/80"
+                }`}
+              >
                 {c}
-              </span>
+              </button>
             ))}
+          </div>
+          <div className="rounded-xl bg-muted/40 border border-border/60 px-5 py-4 transition-all duration-200">
+            <p className="text-sm font-body text-foreground/80 leading-relaxed">
+              {capabilityDetails[active]}
+            </p>
           </div>
         </div>
       </div>
