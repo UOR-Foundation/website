@@ -44,7 +44,7 @@ const BlogPost2 = () => {
           >
             <img
               src={coverImage}
-              alt="The Golden Seed Vector — Open-source the Mathematical Universe"
+              alt="The Golden Seed Vector: Open-source the Mathematical Universe"
               className="w-full h-full object-cover"
             />
           </div>
@@ -60,7 +60,7 @@ const BlogPost2 = () => {
           {/* Article body */}
           <div className="space-y-8 font-body text-base md:text-lg leading-relaxed text-muted-foreground">
             <p>
-              <strong className="text-foreground">DENVER, October 10th, 2025</strong> — The UOR Foundation today announced the discovery of a Universal Mathematical Language, a breakthrough that reveals the hidden order behind nature's most complex systems and could reshape the future of science, artificial intelligence, and quantum computing.
+              <strong className="text-foreground">DENVER, October 10th, 2025</strong> · The UOR Foundation today announced the discovery of a Universal Mathematical Language, a breakthrough that reveals the hidden order behind nature's most complex systems and could reshape the future of science, artificial intelligence, and quantum computing.
             </p>
 
             <p>

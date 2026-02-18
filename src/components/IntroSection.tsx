@@ -17,7 +17,7 @@ const IntroSection = () => {
             that assigns every piece of digital content a unique and permanent identifier based on what it contains, not where it is stored.
           </p>
           <p className="mt-6 text-section-dark-foreground/75 font-body text-base md:text-lg leading-[1.85] md:leading-[1.9]">
-            When two systems hold the same content, they resolve to the same identifier—enabling direct verification and reliable reuse without broken references or translation layers.
+            When two systems hold the same content, they resolve to the same identifier, enabling direct verification and reliable reuse without broken references or translation layers.
           </p>
           <p className="mt-6 text-section-dark-foreground/75 font-body text-base md:text-lg leading-[1.85] md:leading-[1.9]">
             By replacing fragmented, location-based systems with shared, content-based identity, UOR reduces integration overhead and strengthens trust between systems.

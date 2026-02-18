@@ -4,10 +4,10 @@ import { Bot, ArrowRight, ArrowDown } from "lucide-react";
 const silos = ["APIs", "DBs", "Files", "AI Models", "Graphs", "Streams"];
 
 const capabilityDetails: Record<string, string> = {
-  Reason: "Agents traverse a unified semantic graph to draw inferences across formerly siloed data — no custom connectors required.",
+  Reason: "Agents traverse a unified semantic graph to draw inferences across formerly siloed data, with no custom connectors required.",
   Verify: "Content-addressed identity lets any agent independently confirm data integrity and provenance without trusting a central authority.",
   Compose: "Algebraic structure means objects combine into higher-order constructs while preserving referential integrity at every layer.",
-  Navigate: "A single coordinate system lets agents locate and access any object by what it is, not where it lives — across every system.",
+  Navigate: "A single coordinate system lets agents locate and access any object by what it is, not where it lives, across every system.",
 };
 
 const capabilities = Object.keys(capabilityDetails);
@@ -41,7 +41,7 @@ const UORDiagram = () => {
             </p>
           </div>
 
-          {/* Arrow — centered vertically and with equal horizontal spacing */}
+          {/* Arrow, centered vertically and with equal horizontal spacing */}
           <div className="flex flex-col items-center justify-center shrink-0 md:px-8 md:ml-4 py-2 md:py-0">
             <ArrowRight className="hidden md:block w-7 h-7 text-primary/50" strokeWidth={1.5} />
             <ArrowDown className="block md:hidden w-6 h-6 text-primary/50" strokeWidth={1.5} />
@@ -98,7 +98,7 @@ const UORDiagram = () => {
               <Bot className="w-5 h-5 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
-              A single coordinate system becomes a <span className="text-foreground font-medium">computational substrate</span> — AI agents reason, verify, and act across all data sources autonomously.
+              A single coordinate system becomes a <span className="text-foreground font-medium">computational substrate</span>. AI agents reason, verify, and act across all data sources autonomously.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

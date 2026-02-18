@@ -16,7 +16,7 @@ const Standard = () => {
             className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
             style={{ animationDelay: "0.15s" }}
           >
-            A universal, content-addressed coordinate system for information. One address per object — verifiable, composable, and permanent.
+            A universal, content-addressed coordinate system for information. One address per object, verifiable, composable, and permanent.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
@@ -49,10 +49,10 @@ const Standard = () => {
             style={{ animationDelay: "0.15s" }}
           >
             <p className="text-section-dark-foreground/90 font-body text-base md:text-lg leading-[1.85] md:leading-[1.9] font-medium">
-              Today's data lives in silos — different formats, protocols, and systems that can't natively understand each other.
+              Today's data lives in silos. Different formats, protocols, and systems that can't natively understand each other.
             </p>
             <p className="mt-6 text-section-dark-foreground/65 font-body text-base md:text-lg leading-[1.85] md:leading-[1.9]">
-              UOR replaces location-based identity with <span className="text-section-dark-foreground font-medium">content-based identity</span>. Every object gets a single, permanent address derived from what it contains. Same content, same address — across every system, forever.
+              UOR replaces location-based identity with <span className="text-section-dark-foreground font-medium">content-based identity</span>. Every object gets a single, permanent address derived from what it contains. Same content, same address, across every system, forever.
             </p>
           </div>
           <div className="h-px w-full bg-section-dark-foreground/10" />
@@ -73,7 +73,7 @@ const Standard = () => {
             Framework Architecture
           </h2>
           <p className="text-muted-foreground font-body text-center max-w-2xl mx-auto mb-14 md:mb-16 leading-relaxed">
-            Five layers — from raw identity to autonomous intelligence. Each builds on the one below it.
+            Five layers, from raw identity to autonomous intelligence. Each builds on the one below it.
           </p>
           <FrameworkLayers />
         </div>
@@ -86,7 +86,7 @@ const Standard = () => {
             Explore the Full Specification
           </h2>
           <p className="text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto mb-10">
-            14 namespaces · 82 classes · 119 properties — open-source and fully documented.
+            14 namespaces · 82 classes · 119 properties. Open-source and fully documented.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <a

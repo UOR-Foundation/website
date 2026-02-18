@@ -8,7 +8,7 @@ const projects = [
     raised: 42000,
     target: 200000,
     description:
-      "Fund the core development and formalization of the Universal Object Reference standard — the foundational specification enabling true semantic interoperability across all data systems.",
+      "Fund the core development and formalization of the Universal Object Reference standard, the foundational specification enabling true semantic interoperability across all data systems.",
     highlights: [
       "Formal specification and mathematical proofs",
       "Reference implementations in multiple languages",
@@ -136,7 +136,7 @@ const Donate = () => {
             style={{ animationDelay: "0.25s" }}
           >
             By donating to The UOR Foundation, you support open standards and research 
-            that make data universally referenceable — by what it{" "}
+            that make data universally referenceable by what it{" "}
             <em className="not-italic text-foreground/70">is</em>, not where it lives. 
             We are a nonprofit organization dedicated to building infrastructure for the semantic web, 
             open science, and frontier research.
