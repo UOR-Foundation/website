@@ -27,7 +27,7 @@ const UORDiagram = () => {
               ))}
             </div>
             <p className="text-[11px] font-body font-medium text-muted-foreground/50 text-center mt-4 tracking-[0.12em] uppercase">
-              Isolated Systems
+              Isolated Data Systems
             </p>
           </div>
 
