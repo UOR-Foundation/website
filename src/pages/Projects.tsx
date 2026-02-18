@@ -166,30 +166,51 @@ const Projects = () => {
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const SCRIPT_URL = "https://script.google.com/a/macros/uor.foundation/s/AKfycbyCwcvyZpCeGEnRyFiFiqoYvqx2VVenGORZRz9YbGoJ8LAN17Eafd63q1nUG_gx5TwpMg/exec";
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    try {
-      await fetch("https://script.google.com/a/macros/uor.foundation/s/AKfycbyCwcvyZpCeGEnRyFiFiqoYvqx2VVenGORZRz9YbGoJ8LAN17Eafd63q1nUG_gx5TwpMg/exec", {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({
-          token: "uor-f0undati0n-s3cure-t0ken-2024x",
-          projectName: formData.projectName,
-          repoUrl: formData.repoUrl,
-          contactEmail: formData.contactEmail,
-          description: formData.description,
-          problemStatement: formData.problemStatement,
-        }),
-      });
-      setSubmitted(true);
-    } catch {
-      alert("Submission failed. Please try again.");
-    } finally {
+
+    // Use a hidden iframe + form to bypass CORS entirely
+    const iframe = document.createElement("iframe");
+    iframe.name = "uor-submit-frame";
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = SCRIPT_URL;
+    form.target = "uor-submit-frame";
+
+    const payload = {
+      token: "uor-f0undati0n-s3cure-t0ken-2024x",
+      projectName: formData.projectName,
+      repoUrl: formData.repoUrl,
+      contactEmail: formData.contactEmail,
+      description: formData.description,
+      problemStatement: formData.problemStatement,
+    };
+
+    // Send as a single hidden input so Apps Script receives it in e.parameter
+    Object.entries(payload).forEach(([key, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+
+    // Clean up after submission and show success
+    setTimeout(() => {
+      document.body.removeChild(form);
+      document.body.removeChild(iframe);
       setSubmitting(false);
-    }
+      setSubmitted(true);
+    }, 3000);
   };
 
   return (
