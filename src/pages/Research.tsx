@@ -49,10 +49,10 @@ const blogPosts = [
 
 const events = [
   {
-    title: "Open Data Infrastructure Workshop",
-    location: "Stanford University",
-    date: "March 15, 2026",
-    type: "Workshop",
+    title: "UOR Community Call",
+    location: "Virtual",
+    date: "March 3, 2026",
+    type: "Community Call",
   },
 ];
 
