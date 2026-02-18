@@ -118,7 +118,7 @@ const Research = () => {
           </div>
 
           <a
-            href="https://github.com/UOR-Foundation"
+            href="https://github.com/UOR-Foundation/research"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline font-body transition-colors"
