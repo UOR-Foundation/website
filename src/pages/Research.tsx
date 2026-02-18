@@ -1,6 +1,6 @@
 import Layout from "@/components/Layout";
 import { Link } from "react-router-dom";
-import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket } from "lucide-react";
+import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf, Box } from "lucide-react";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogSandbox from "@/assets/blog-sandbox-graduation.png";
@@ -17,6 +17,8 @@ const researchCategories = [
   { icon: Globe, label: "Web3", slug: "web3", description: "Decentralized protocols, on-chain identity, and content-addressed storage." },
   { icon: Microscope, label: "Physics", slug: "physics", description: "Simulation frameworks, open research data, and computational physics tooling." },
   { icon: Rocket, label: "Frontier Tech", slug: "frontier-tech", description: "Emerging technology exploration at the intersection of UOR and next-gen infrastructure." },
+  { icon: Leaf, label: "Climate & Energy", slug: "climate-energy", description: "Sustainable infrastructure, carbon accounting, and open energy data standards." },
+  { icon: Box, label: "Spatial Computing", slug: "spatial-computing", description: "Mixed reality interfaces, 3D data interoperability, and immersive computing frameworks." },
 ];
 
 const blogPosts = [
