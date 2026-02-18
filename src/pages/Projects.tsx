@@ -172,45 +172,23 @@ const Projects = () => {
     e.preventDefault();
     setSubmitting(true);
 
-    // Use a hidden iframe + form to bypass CORS entirely
-    const iframe = document.createElement("iframe");
-    iframe.name = "uor-submit-frame";
-    iframe.style.display = "none";
-    document.body.appendChild(iframe);
-
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = SCRIPT_URL;
-    form.target = "uor-submit-frame";
-
-    const payload = {
+    // Build URL with query parameters — most reliable for Google Apps Script
+    const params = new URLSearchParams({
       token: "uor-f0undati0n-s3cure-t0ken-2024x",
       projectName: formData.projectName,
       repoUrl: formData.repoUrl,
       contactEmail: formData.contactEmail,
       description: formData.description,
       problemStatement: formData.problemStatement,
-    };
-
-    // Send as a single hidden input so Apps Script receives it in e.parameter
-    Object.entries(payload).forEach(([key, value]) => {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = key;
-      input.value = value;
-      form.appendChild(input);
     });
 
-    document.body.appendChild(form);
-    form.submit();
-
-    // Clean up after submission and show success
-    setTimeout(() => {
-      document.body.removeChild(form);
-      document.body.removeChild(iframe);
+    // Use an image beacon to fire the GET request (bypasses CORS entirely)
+    const img = new Image();
+    img.onload = img.onerror = () => {
       setSubmitting(false);
       setSubmitted(true);
-    }, 3000);
+    };
+    img.src = `${SCRIPT_URL}?${params.toString()}`;
   };
 
   return (
