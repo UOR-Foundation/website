@@ -1,6 +1,9 @@
 import Layout from "@/components/Layout";
 import { Link } from "react-router-dom";
 import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket } from "lucide-react";
+import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
+import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
+import blogSandbox from "@/assets/blog-sandbox-graduation.png";
 
 const researchCategories = [
   { icon: Cpu, label: "Hardware & Robotics", slug: "hardware-robotics", description: "Embedded systems, robotics middleware, and UOR-native hardware interfaces." },
@@ -23,6 +26,7 @@ const blogPosts = [
     date: "December 21, 2023",
     tag: "Vision",
     href: "/blog/building-the-internets-knowledge-graph",
+    cover: blogKnowledgeGraph,
   },
   {
     title: "Unveiling a Universal Mathematical Language",
@@ -30,12 +34,15 @@ const blogPosts = [
     date: "October 10, 2025",
     tag: "Technical",
     href: "/blog/universal-mathematical-language",
+    cover: blogGoldenSeed,
   },
   {
     title: "From Sandbox to Graduation: A Project's Journey",
     excerpt: "An inside look at the maturity framework and what it takes for a community project to earn graduated status.",
     date: "January 28, 2026",
     tag: "Community",
+    href: "#",
+    cover: blogSandbox,
   },
 ];
 
@@ -142,38 +149,39 @@ const Research = () => {
             Latest Writing
           </h2>
 
-          <div className="space-y-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {blogPosts.map((post, index) => (
-              <div
+              <Link
                 key={post.title}
-                className="animate-fade-in-up opacity-0"
+                to={post.href}
+                className="group rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/20 animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                {index === 0 && <div className="h-px w-full bg-border" />}
-                <Link to={post.href || "#"} className="group block py-8 md:py-10 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start transition-all duration-300 hover:pl-2">
-                  <div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium font-body ${tagStyles[post.tag]}`}>
-                        {post.tag}
-                      </span>
-                      <span className="text-sm text-muted-foreground font-body">{post.date}</span>
-                    </div>
-                    <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary">
-                      {post.title}
-                    </h3>
-                    <p className="text-muted-foreground font-body text-base leading-relaxed max-w-lg">
-                      {post.excerpt}
-                    </p>
-                    <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
-                      Read article <ArrowRight size={13} />
+                <div className="h-48 overflow-hidden">
+                  <img
+                    src={post.cover}
+                    alt={post.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium font-body ${tagStyles[post.tag]}`}>
+                      {post.tag}
                     </span>
+                    <span className="text-xs text-muted-foreground font-body">{post.date}</span>
                   </div>
-                  <div className="flex items-center gap-2 md:mt-1">
-                    <BookOpen size={14} className="text-muted-foreground/40" />
-                  </div>
-                </Link>
-                <div className="h-px w-full bg-border" />
-              </div>
+                  <h3 className="font-display text-lg font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary line-clamp-2">
+                    {post.title}
+                  </h3>
+                  <p className="text-muted-foreground font-body text-sm leading-relaxed line-clamp-3">
+                    {post.excerpt}
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
+                    Read article <ArrowRight size={13} />
+                  </span>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
