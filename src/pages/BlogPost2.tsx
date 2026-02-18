@@ -164,24 +164,7 @@ const BlogPost2 = () => {
               </blockquote>
             </section>
 
-            <section>
-              <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-4">
-                About The UOR Foundation
-              </h2>
-              <p>
-                The UOR Foundation is a nonprofit, open-source organization advancing research and standards that empower user ownership, decentralized data infrastructure, and breakthroughs at the intersection of mathematics, computation, and consciousness.
-              </p>
-              <p className="mt-4">
-                For media inquiries and further information about this discovery, please contact The UOR Foundation at{" "}
-                <a
-                  href="mailto:trinity@uor.foundation"
-                  className="text-primary hover:underline"
-                >
-                  trinity@uor.foundation
-                </a>
-                .
-              </p>
-            </section>
+
           </div>
 
           {/* CTA */}
