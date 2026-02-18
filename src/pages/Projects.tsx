@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import { ExternalLink, ChevronRight, ChevronDown, Send, FlaskConical, Rocket, GraduationCap, FolderGit2, SearchCheck, BadgeCheck, Users, Scale } from "lucide-react";
+import { ExternalLink, ChevronRight, ChevronDown, Send, FlaskConical, Rocket, GraduationCap, FolderGit2, SearchCheck, BadgeCheck, Users, Scale, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import projectHologramImg from "@/assets/project-hologram.jpg";
 import projectAtlasImg from "@/assets/project-atlas.png";
@@ -392,20 +392,43 @@ const Projects = () => {
           </div>
 
           {submitted ? (
-            <div className="text-center py-16 animate-fade-in-up">
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
-                <Send size={24} className="text-primary" />
+            <div className="text-center py-20 md:py-28 animate-fade-in-up">
+              {/* Pulsing success glow */}
+              <div className="relative w-28 h-28 mx-auto mb-10">
+                <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '1.94s' }} />
+                <div className="absolute inset-2 rounded-full bg-primary/10 animate-ping" style={{ animationDuration: '1.94s', animationDelay: '0.3s' }} />
+                <div className="relative w-28 h-28 rounded-full bg-primary/15 flex items-center justify-center border border-primary/20">
+                  <CheckCircle2 size={48} className="text-primary" />
+                </div>
               </div>
-              <h3 className="font-display text-2xl font-bold mb-3">
-                Submission Received
+
+              <h3 className="font-display text-4xl md:text-5xl font-bold text-section-dark-foreground mb-5 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                You're In.
               </h3>
-              <p className="text-section-dark-foreground/60 font-body">
-                We'll review your project and get back to you within 3 weeks. Join our{" "}
-                <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                  Discord
-                </a>{" "}
-                to stay updated.
+              <p className="text-xl md:text-2xl text-section-dark-foreground/70 font-body mb-4 animate-fade-in-up" style={{ animationDelay: '0.35s' }}>
+                Your project has been submitted for Sandbox review.
               </p>
+              <p className="text-base text-section-dark-foreground/45 font-body max-w-md mx-auto mb-10 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+                Our technical committee will review your submission and respond within 3 weeks.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up" style={{ animationDelay: '0.65s' }}>
+                <a
+                  href="https://discord.gg/ZwuZaNyuve"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity font-body text-base"
+                >
+                  Join Our Discord
+                  <ExternalLink size={14} />
+                </a>
+                <button
+                  onClick={() => { setSubmitted(false); setFormData({ projectName: "", repoUrl: "", contactEmail: "", description: "", problemStatement: "" }); }}
+                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-section-dark-foreground/15 text-section-dark-foreground/60 font-medium hover:border-section-dark-foreground/30 transition-colors font-body text-base"
+                >
+                  Submit Another
+                </button>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
