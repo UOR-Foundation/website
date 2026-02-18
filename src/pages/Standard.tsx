@@ -1,7 +1,7 @@
 import Layout from "@/components/Layout";
 import UORDiagram from "@/components/UORDiagram";
 import FrameworkLayers from "@/components/FrameworkLayers";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Globe, ShieldCheck, Bot, Microscope, Layers, Rocket } from "lucide-react";
 
 const Standard = () => {
   return (
@@ -81,19 +81,20 @@ const Standard = () => {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { title: "Semantic Web", text: "Give every piece of data a meaning machines can understand, making the web truly interoperable." },
-              { title: "Proof Based Computation", text: "Zero knowledge verified AI: models run once, outputs reduce to compact proofs anchored to deterministic coordinates." },
-              { title: "Agentic AI", text: "Enable autonomous agents to reason, verify, and act across all data sources within one unified space." },
-              { title: "Open Science", text: "Make research data findable, reproducible, and composable across institutions and fields." },
-              { title: "Cross Domain Unification", text: "Bridge ideas across disciplines with a shared coordinate system that preserves meaning." },
-              { title: "Frontier Technologies", text: "Provide a foundational layer for emerging fields like topological quantum computing and neuro symbolic AI." },
+              { title: "Semantic Web", text: "Give every piece of data a meaning machines can understand, making the web truly interoperable.", icon: Globe },
+              { title: "Proof Based Computation", text: "Zero knowledge verified AI: models run once, outputs reduce to compact proofs anchored to deterministic coordinates.", icon: ShieldCheck },
+              { title: "Agentic AI", text: "Enable autonomous agents to reason, verify, and act across all data sources within one unified space.", icon: Bot },
+              { title: "Open Science", text: "Make research data findable, reproducible, and composable across institutions and fields.", icon: Microscope },
+              { title: "Cross Domain Unification", text: "Bridge ideas across disciplines with a shared coordinate system that preserves meaning.", icon: Layers },
+              { title: "Frontier Technologies", text: "Provide a foundational layer for emerging fields like topological quantum computing and neuro symbolic AI.", icon: Rocket },
             ].map((item) => (
               <div
                 key={item.title}
                 className="rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
               >
-                <h3 className="font-display text-base font-bold text-foreground mb-2">{item.title}</h3>
-                <p className="text-sm font-body text-muted-foreground leading-relaxed">{item.text}</p>
+                <item.icon size={20} className="text-primary mb-4" />
+                <h3 className="font-display text-base md:text-lg font-bold text-foreground mb-2">{item.title}</h3>
+                <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed">{item.text}</p>
               </div>
             ))}
           </div>
