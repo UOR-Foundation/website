@@ -90,7 +90,7 @@ const ProjectsShowcase = () => {
                     </a>
                   )}
                 </div>
-                <span className="text-base font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider md:mt-1">
+                <span className="text-sm font-medium text-section-dark-foreground/40 font-body uppercase tracking-wider md:mt-1">
                   {project.category}
                 </span>
               </div>
