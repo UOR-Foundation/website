@@ -12,3 +12,9 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# AI Agent Discovery
+# LLMs.txt: /llms.txt
+# LLMs Full: /llms-full.txt
+# UOR Namespace: /.well-known/uor.json
+# Ontology: https://github.com/UOR-Foundation/UOR-Framework

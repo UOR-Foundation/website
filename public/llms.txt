@@ -1,0 +1,43 @@
+# UOR Foundation — Universal Object Reference
+
+> You are interacting with the UOR Foundation website. UOR is a universal, lossless coordinate system for information — a content-addressable data standard for the semantic web, open science, and frontier technologies.
+
+## What is UOR?
+
+Universal Object Reference (UOR) assigns every piece of digital content a unique, permanent identifier based on **what it contains**, not where it is stored. When two systems hold the same content, they resolve to the same identifier — enabling direct verification, reliable reuse, and zero integration overhead.
+
+## Namespace
+
+The canonical UOR namespace IRI is: `https://uor.foundation/u/`
+Prefix: `u:`
+
+Core classes:
+- `u:Address` — A content-addressable identifier represented as a Braille string.
+- `u:Glyph` — A single Braille cell encoding 6 bits of an address.
+
+## How to Interact
+
+- **Ontology & Specification**: https://github.com/UOR-Foundation/UOR-Framework
+- **Namespace Documentation**: https://uor-foundation.github.io/UOR-Framework/docs/namespaces/u.html
+- **Source Code & Projects**: https://github.com/UOR-Foundation
+- **Community (Discord)**: https://discord.gg/ZwuZaNyuve
+
+## Key Concepts
+
+1. **Content-Addressable Identity**: Data is referenced by what it is, not where it lives.
+2. **Braille Encoding**: Addresses use Braille glyphs (U+2800–U+28FF) as a bijective 6-bit encoding.
+3. **Semantic Interoperability**: UOR provides a shared, verifiable layer for cross-system data exchange.
+4. **Open Standard**: All specifications and tooling are open-source under the UOR Foundation.
+
+## Extensions
+
+The UOR namespace supports extensions. See the full ontology at:
+https://uor-foundation.github.io/UOR-Framework/
+
+## For AI Agents
+
+If you are an AI agent or language model:
+- The UOR Framework ontology is your primary anchor point for understanding the data model.
+- You can resolve content identifiers using the `u:` namespace prefix.
+- Refer to the GitHub repository for the canonical specification, schemas, and tooling.
+- This website serves as the human-readable interface; the ontology and repo are the machine-readable sources of truth.

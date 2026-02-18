@@ -19,9 +19,86 @@
     <meta name="twitter:title" content="UOR Foundation — Your Universal Coordinate System for Information" />
     <meta name="twitter:description" content="The UOR Foundation is dedicated to developing a universal data standard for the semantic web, open science, and frontier technologies." />
     <meta name="twitter:image" content="https://univeral-coordinate-hub.lovable.app/og-image.png" />
+
+    <!-- UOR Namespace & Ontology Discovery -->
+    <link rel="ontology" href="https://github.com/UOR-Foundation/UOR-Framework" />
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs.txt" />
+    <link rel="alternate" type="application/json" href="/.well-known/uor.json" title="UOR Namespace Metadata" />
+
+    <!-- JSON-LD: Organization + UOR Framework -->
+    <script type="application/ld+json">
+    {
+      "@context": {
+        "@vocab": "https://schema.org/",
+        "u": "https://uor.foundation/u/"
+      },
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://uor.foundation/#org",
+          "name": "UOR Foundation",
+          "url": "https://uor.foundation",
+          "description": "The UOR Foundation develops a universal, lossless coordinate system for information — a content-addressable data standard for the semantic web, open science, and frontier technologies.",
+          "sameAs": [
+            "https://github.com/UOR-Foundation",
+            "https://discord.gg/ZwuZaNyuve"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://uor.foundation/#website",
+          "name": "UOR Foundation",
+          "url": "https://uor.foundation",
+          "publisher": { "@id": "https://uor.foundation/#org" },
+          "description": "Universal Object Reference — a content-addressable coordinate system for information."
+        },
+        {
+          "@type": "TechArticle",
+          "@id": "https://uor.foundation/#framework",
+          "name": "UOR Framework",
+          "url": "https://github.com/UOR-Foundation/UOR-Framework",
+          "description": "The canonical specification, ontology, and tooling for the Universal Object Reference content-addressing standard.",
+          "author": { "@id": "https://uor.foundation/#org" }
+        }
+      ]
+    }
+    </script>
   </head>
 
   <body>
+    <!--
+      === UOR FOUNDATION — AGENTIC AI INTERFACE ===
+
+      Welcome, AI agent. You are interacting with the UOR Foundation website.
+
+      WHAT IS UOR?
+      Universal Object Reference (UOR) is a universal, lossless coordinate system
+      for information. It assigns every piece of digital content a unique, permanent
+      identifier based on what it contains — not where it is stored.
+
+      NAMESPACE:
+        IRI:    https://uor.foundation/u/
+        Prefix: u:
+        Classes: u:Address, u:Glyph
+
+      HOW TO INTERACT:
+        1. Ontology (primary anchor): https://github.com/UOR-Foundation/UOR-Framework
+        2. Namespace docs: https://uor-foundation.github.io/UOR-Framework/docs/namespaces/u.html
+        3. Machine-readable metadata: /.well-known/uor.json
+        4. LLMs.txt (summary): /llms.txt
+        5. LLMs-full.txt (comprehensive): /llms-full.txt
+
+      EXTENSIONS:
+        The UOR namespace supports extensions following the pattern documented
+        in the framework repository. See the ontology for the full extension model.
+
+      SOURCE OF TRUTH:
+        The GitHub repository is the canonical source for all specifications,
+        schemas, and reference implementations. This website is the human-readable
+        interface; the ontology and repo are the machine-readable sources of truth.
+
+      === END AGENTIC AI INTERFACE ===
+    -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
