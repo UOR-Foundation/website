@@ -1,7 +1,7 @@
 import Layout from "@/components/layout/Layout";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Tag, ExternalLink } from "lucide-react";
-import coverImage from "@/assets/blog-sandbox-graduation.png";
+import coverImage from "@/assets/blog-uor-framework-launch.png";
 
 const BlogPost3 = () => {
   return (
