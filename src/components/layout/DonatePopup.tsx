@@ -26,11 +26,16 @@ const DonatePopup = ({ open, onOpenChange }: DonatePopupProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-border/50 bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl">
         <div className="px-6 pt-6 pb-4 text-center border-b border-border/30">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
-            <Heart size={22} className="text-primary" fill="currentColor" strokeWidth={0} />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-3">
+            <Heart
+              size={24}
+              className="text-primary animate-[heartbeat_1.94s_ease-in-out_infinite]"
+              fill="currentColor"
+              strokeWidth={0}
+            />
           </div>
           <DialogTitle className="text-xl font-display font-semibold tracking-tight">
-            Support the UOR Foundation
+            Support the UOR-Foundation
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1.5 max-w-sm mx-auto font-body">
             Your contribution powers open science, frontier research, and the universal data standard.

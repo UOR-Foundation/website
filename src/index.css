@@ -209,6 +209,25 @@
   }
 }
 
+/* Heartbeat icon pulse — mirrors heartbeat-glow rhythm (62 BPM, 1.94s) */
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  13% {
+    transform: scale(1.25);
+  }
+  26% {
+    transform: scale(1);
+  }
+  39% {
+    transform: scale(1.18);
+  }
+  52% {
+    transform: scale(1);
+  }
+}
+
 .project-card-glow {
   position: relative;
   overflow: hidden;
