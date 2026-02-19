@@ -4,10 +4,12 @@
 |----------|-------|
 | Version | 2.0 |
 | Status | Approved for Implementation |
+| Classification | Public |
 | Effective Date | February 2026 |
 | Owner | UOR Foundation — Organisation Owners |
 | Review Cycle | Quarterly (next: May 2026) |
 | Location | `github.com/UOR-Foundation/.github/governance/` |
+| Supersedes | Version 1.0 (February 2026) |
 
 ---
 
@@ -28,6 +30,7 @@
 13. [Intellectual Property & Licensing](#13-intellectual-property--licensing)
 14. [Contributor Onboarding](#14-contributor-onboarding)
 15. [Compliance & Auditing](#15-compliance--auditing)
+16. [Implementation Roadmap](#16-implementation-roadmap)
 - [A. Repository Compliance Checklist](#appendix-a-repository-compliance-checklist)
 - [B. Pull Request Review Checklist](#appendix-b-pull-request-review-checklist)
 - [C. Repository Inventory](#appendix-c-repository-inventory)
@@ -37,14 +40,35 @@
 
 ## 1. Purpose & Scope
 
-This framework governs all repositories, teams, workflows, and artefacts under `github.com/UOR-Foundation`. It applies to:
+### 1.1 Purpose
+
+This document establishes the authoritative governance framework for the UOR Foundation's GitHub organisational space (`github.com/UOR-Foundation`). It defines the norms, standards, and operational procedures that govern how repositories are created, structured, maintained, versioned, reviewed, secured, and retired.
+
+The UOR Foundation is building a foundational substrate protocol for the open internet. The GitHub organisation is where this substrate takes material form — as code, formal proofs, specifications, and documentation. The governance of this space must reflect the same rigour, determinism, and integrity that the Foundation demands of its technical outputs.
+
+### 1.2 Scope
+
+This framework applies to all repositories, teams, workflows, and artefacts under `github.com/UOR-Foundation`. Specifically:
 
 - All public and private repositories, including forks and archives.
-- All contributors: members, external collaborators, and automated systems.
+- All contributors: members, external collaborators, and automated systems (CI bots, deployment agents).
 - All content: source code, formal proofs, documentation, configuration, media, and release artefacts.
 - All lifecycle stages: proposal, creation, active development, maintenance, deprecation, archival, and re-activation.
 
-This framework is the single source of truth. It is stored in the `.github` repository and versioned using the same semantic versioning standard it mandates for all repositories.
+### 1.3 Audience
+
+This document is written for four audiences:
+
+- **Organisation Owners** — structural decisions and compliance enforcement.
+- **Repository Maintainers** — repository management and contribution review.
+- **Contributors** (internal and external) — understanding expectations when submitting work.
+- **Researchers and evaluators** — assessing the Foundation's governance maturity.
+
+No prior knowledge of GitHub, version control, or software engineering is assumed. All technical terms are defined in the [Glossary (Section 2)](#2-glossary).
+
+### 1.4 Authority & Amendments
+
+This framework is maintained by the UOR Foundation's GitHub Organisation Owners. It is stored in the `.github` repository as the single source of truth. It is versioned using the same semantic versioning standard it mandates for all repositories ([Section 8](#8-version-management--releases)).
 
 Amendments follow the change control procedure in [Section 7](#7-change-control--contribution-workflow) and the amendment process in [Section 15.3](#153-framework-amendment-process).
 
@@ -60,14 +84,23 @@ Amendments follow the change control procedure in [Section 7](#7-change-control-
 | CODEOWNERS | A file mapping file paths to responsible reviewers. |
 | Commit | A snapshot of changes with a unique hash, author, timestamp, and message. |
 | Conventional Commits | Standardised commit format (e.g., `feat(atlas): add construction`) enabling automated changelogs. |
+| DOI | Digital Object Identifier. A permanent, unique identifier for a published work. Used to make research outputs citable. |
 | Fork | A copy of a repository under a different owner, used to propose changes. |
+| GitHub Actions | GitHub's built-in automation platform. Used to run CI/CD pipelines, automated tests, and compliance checks. |
+| GitHub Discussions | A forum feature within a GitHub organisation or repository. Used for proposals, Q&A, and governance decisions. |
 | Issue | A tracked item (bug, feature, task) with number, labels, and assignees. |
+| Lean 4 / Coq | Formal proof assistants — software tools that mathematically verify the correctness of proofs and code. Used in Tier 1 repositories. |
 | Main Branch | The default, production-ready branch (named `main`). |
+| Merge | The act of combining changes from one branch into another. In this framework, merges to `main` require a Pull Request and review. |
 | Pull Request (PR) | A proposal to merge changes from one branch into another, including review. |
+| Repository (Repo) | A storage space on GitHub containing a project's files, revision history, issues, and configuration. |
 | SemVer | Semantic Versioning: `MAJOR.MINOR.PATCH` (see [semver.org](https://semver.org)). |
+| Signed Commit | A commit cryptographically signed by its author, proving authenticity and integrity. |
 | Squash-and-Merge | Merge strategy combining all branch commits into one clean commit on `main`. |
 | Tag | A named reference to a specific commit, marking release points (e.g., `v1.0.0`). |
 | Tier | Classification level (1–4) determining governance obligations. See [Section 5](#5-repository-classification). |
+| Topic Tag | A keyword label applied to a GitHub repository for discoverability and categorisation. |
+| Zenodo | An open-access repository hosted by CERN that assigns DOIs to research outputs, including software releases. |
 
 ---
 
@@ -111,13 +144,13 @@ Governance documents, decision rationales, and contribution processes are visibl
 
 ### 4.1 Roles
 
-| Role | Permissions | Responsibilities |
-|------|-------------|-----------------|
-| **Organisation Owner** | Full administrative control. | Approve repos and tiers. Approve governance amendments. Manage teams. Final escalation. Min: 2. |
-| **Repository Maintainer** | Admin on assigned repos. | Enforce standards. Triage issues. Review and merge. Manage releases. Min: 1 per active repo. |
-| **Core Contributor** | Write access to assigned repos. | Develop code, proofs, docs. Follow conventions. Maintain test coverage. |
-| **External Contributor** | Fork access only. | Follow CONTRIBUTING.md. Sign off commits. Read onboarding guide before first contribution. |
-| **Automated Agent** | Workflow-defined. | Run tests, linters, compliance checks. Publish releases. Post status checks. |
+| Role | Permissions | Responsibilities | Min Count |
+|------|-------------|-----------------|-----------|
+| **Organisation Owner** | Full administrative control. | Approve repos and tiers. Approve governance amendments. Manage teams. Final escalation. | 2 (continuity) |
+| **Repository Maintainer** | Admin on assigned repos. | Enforce standards. Triage issues. Review and merge. Manage releases. Maintain CODEOWNERS. | 1 per active repo |
+| **Core Contributor** | Write access to assigned repos. | Develop code, proofs, docs. Follow conventions. Maintain test coverage. | No minimum |
+| **External Contributor** | Fork access only. | Follow CONTRIBUTING.md. Sign off commits. Read onboarding guide before first contribution. | No minimum |
+| **Automated Agent** | Workflow-defined. | Run tests, linters, compliance checks. Publish releases. Post status checks. | 1 CI system per T1–2 |
 
 ### 4.2 Teams
 
@@ -274,12 +307,15 @@ Follow [Keep a Changelog](https://keepachangelog.com/). Categories: Added, Chang
 
 ### 9.1 Review Requirements by Tier
 
-| Tier | Min Reviewers | Turnaround Target | Special Requirements |
-|------|:---:|---|---|
-| 1 | 2 | 5 business days | Formal proof verification (zero sorrys). CODEOWNERS review. |
-| 2 | 1 | 3 business days | CI/CD pass. CODEOWNERS review. |
-| 3 | 1 | 3 business days | Basic CI pass. |
-| 4 | — | — | Maintainer discretion. |
+| Aspect | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
+|--------|--------|--------|--------|--------|
+| Minimum reviewers | 2 (incl. 1 CODEOWNER) | 1 (CODEOWNER pref.) | 1 | 0 (self-merge ok) |
+| Formal proof verification | Required (Lean 4 / Coq) | If applicable | N/A | N/A |
+| CI status checks | All must pass | All must pass | All must pass | Recommended |
+| Documentation review | Required | Required | Required | Optional |
+| Review turnaround target | 3 business days | 5 business days | 7 business days | — |
+
+If the review turnaround target is exceeded, the escalation path in [Section 4.4](#44-escalation) applies.
 
 ### 9.2 Review Checklist
 
@@ -287,37 +323,55 @@ See [Appendix B](#appendix-b-pull-request-review-checklist).
 
 ### 9.3 Automated Quality Gates
 
-- **CI/CD** — Lint, test, build on every PR (Tier 1–3).
-- **Dependency audit** — Weekly automated scan (Tier 1–2).
-- **Licence compliance** — Monthly automated scan (all repos).
-- **Proof verification** — Lean 4 / Coq compilation (Tier 1 proofs).
+| Check | Tool | T1 | T2 | T3 |
+|-------|------|:---:|:---:|:---:|
+| Formatting | rustfmt / prettier / black | Req | Req | Rec |
+| Linting | clippy (pedantic) / eslint / flake8 | Req | Req | Rec |
+| Unit tests | cargo test / pytest / jest | Req | Req | Req |
+| Integration tests | Repo-specific | Req | Req | Rec |
+| Doc build | rustdoc / typedoc / sphinx | Req | Req | Opt |
+| Proof compilation | Lean 4 (`lake build`) / Coq | Req (if applicable) | If applicable | N/A |
+| Dependency audit | cargo audit / npm audit | Weekly + on PR | Weekly | Monthly |
+| Licence scan | REUSE / licence-checker | Monthly | Monthly | Quarterly |
 
 ---
 
 ## 10. Cross-Repository Coherence
 
-### 10.1 Naming Conventions
+### 10.1 Organisation-Level README
 
-Repository names: lowercase, hyphen-separated, descriptive of content.
+The `.github` repository contains a `profile/README.md` serving as the organisation's landing page. It must include a categorised table of all active repositories (grouped by tier), links to this governance framework, and links to the contributing guidelines and code of conduct. It is updated whenever a repository is created, archived, or reclassified.
 
 ### 10.2 Topic Tags
 
-Every repository must carry:
+| Category | Required Tags | When |
+|----------|--------------|------|
+| Identity | `uor`, `uor-foundation` | Every repository |
+| Tier | `tier-1-core`, `tier-2-impl`, `tier-3-presentation`, `tier-4-experimental` | Exactly one per repo |
+| Domain | `math`, `cryptography`, `computation`, `visualisation`, `documentation`, `governance`, `protocol` | All that apply |
+| Technology | `rust`, `python`, `typescript`, `lean4`, `coq`, `latex` | Primary languages |
+| Status | `active`, `maintenance`, `deprecated`, `archived` | Exactly one per repo |
 
-| Tag | Applied To |
-|-----|-----------|
-| `uor-foundation` | All repositories |
-| `uor-tier-{1-4}` | Tier classification |
-| `uor-{status}` | `active`, `maintenance`, `deprecated`, `archived` |
+### 10.3 Naming Conventions
 
-### 10.3 Dependencies
+- All lowercase with hyphens. Preferred: `uor-{domain}-{function}` (e.g., `uor-math-formalization`).
+- No version numbers in repo names (use tags).
+- Forks retain original name with clear README note explaining relationship to upstream.
 
-Cross-repository dependencies must be documented in each repository's README. Breaking changes in a dependency trigger a coordination procedure between affected Maintainers before release.
+### 10.4 Fork & Upstream Policy
 
-### 10.4 Fork Governance
+Forks introduce governance complexity. The following rules apply:
 
-- **Internal forks** (within org): Must declare purpose in README. Subject to same tier as parent.
-- **External forks**: Not governed. However, contributions back to the Foundation follow the standard contribution workflow.
+- **When to fork vs. branch**: Fork only when the variant will diverge significantly from upstream and serve a distinct purpose. For incremental improvements, contribute to the original via PR.
+- **Upstream sync**: If the fork is intended to stay aligned with upstream, the Maintainer must sync at least monthly and document the sync in the CHANGELOG.
+- **Fork retirement**: When a fork's purpose is fulfilled (changes merged upstream or project archived), the fork follows the deprecation procedure ([Section 11.3](#113-deprecation)).
+- **Current forks**: Hologram-APEX (fork of atlas-embeddings) must document its divergence purpose in its README and declare its upstream sync policy.
+
+### 10.5 Dependency Documentation
+
+- **Code dependencies**: Declared in package manifest (`Cargo.toml`, `package.json`). Pin to specific versions, never "latest."
+- **Conceptual dependencies**: Documented in README under "Relationship to UOR." All repositories implementing or extending the [UOR Framework](https://github.com/UOR-Foundation/UOR-Framework) must reference the specific ontology namespaces and classes they depend on (see the [UOR ontology](https://uor-foundation.github.io/UOR-Framework/)).
+- **Shared workflows**: Stored in `.github` repo, referenced via `uses: UOR-Foundation/.github/.github/workflows/shared.yml@main`.
 
 ---
 
@@ -344,7 +398,7 @@ Cross-repository dependencies must be documented in each repository's README. Br
 ### 11.3 Deprecation
 
 1. Prominent "DEPRECATED" banner in README with link to successor.
-2. Stop accepting new Issues and PRs.
+2. Stop accepting new Issues and PRs. Pin an explanatory Issue.
 3. Update dependent repos to point to successor.
 4. 90-day waiting period before archival.
 
@@ -352,7 +406,7 @@ Cross-repository dependencies must be documented in each repository's README. Br
 
 - Final release tag with CHANGELOG entry documenting rationale. Repository set to "Archived."
 - Archived repositories are never deleted.
-- Re-activation requires 2 Owner approvals and compliance with current Section 6 standards before new work is merged.
+- Re-activation requires 2 Owner approvals and compliance with current [Section 6](#6-repository-standards) standards before new work is merged.
 
 ### 11.5 Emergency Archival
 
@@ -368,7 +422,16 @@ Full policy: [SECURITY.md](/SECURITY.md).
 
 Tier 1–2 repositories must include SECURITY.md. Reports must use private channels (GitHub Security Advisories or email) — never public Issues.
 
-### 12.2 Response Timelines
+### 12.2 Incident Response Procedure
+
+1. **Acknowledge** — Receipt within 24 hours.
+2. **Triage** — Severity assessed (Critical / High / Medium / Low) within 48 hours.
+3. **Remediate** — Fix developed using the [Emergency Procedure (Section 7.4)](#74-emergency--hotfix-procedure). Critical and High vulnerabilities patched within 7 days.
+4. **Release** — Patch release published. Affected versions noted in GitHub Security Advisory.
+5. **Disclose** — After patch available, advisory made public with credit to reporter.
+6. **Review** — Post-incident review within 14 days, documented in a Discussion.
+
+### 12.3 Response Timelines
 
 | Severity | Acknowledge | Triage | Patch Released | Disclosure |
 |----------|:-----------:|:------:|:--------------:|:----------:|
@@ -376,10 +439,6 @@ Tier 1–2 repositories must include SECURITY.md. Reports must use private chann
 | High | 24 hours | 48 hours | 7 days | After patch |
 | Medium | 48 hours | 5 days | 30 days | After patch |
 | Low | 5 days | 14 days | Next release | With notes |
-
-### 12.3 Post-Incident Review
-
-Conducted within 14 days, documented in a Discussion: root cause, fix, and prevention measures.
 
 ---
 
@@ -391,7 +450,7 @@ MIT. Chosen for simplicity, permissiveness, and compatibility with academic and 
 
 ### 13.2 Exceptions
 
-Different licence requires Discussion in `.github`, rationale, and 2 Owner approvals. Documented in repository README.
+Different licence requires Discussion in `.github`, rationale, and 2 Owner approvals. Documented in repository README. Current exception: [UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework) uses Apache-2.0.
 
 ### 13.3 Contributor Expectations
 
@@ -417,9 +476,9 @@ All dependencies must carry licences compatible with MIT. Monthly licence compli
 1. Find an issue labelled `good first issue` or `help wanted`.
 2. Comment your intent. Wait for Maintainer acknowledgement.
 3. Fork the repository.
-4. Create a branch following naming conventions.
-5. Make changes following commit standards.
-6. Open a PR using the template. Complete the checklist. Link the Issue.
+4. Create a branch following naming conventions ([Section 7.2](#72-branch-naming)).
+5. Make changes following commit standards ([Section 7.3](#73-commit-messages)).
+6. Open a PR using the template. Complete the checklist ([Appendix B](#appendix-b-pull-request-review-checklist)). Link the Issue.
 7. Respond constructively to review feedback.
 
 ### 14.3 Getting Help
@@ -434,11 +493,11 @@ Post in the repository's Discussion tab or [organisation-level Discussions](http
 
 | Audit | Frequency | Scope | Owner | Output |
 |-------|-----------|-------|-------|--------|
-| Repo structure | Monthly (auto) | All repos: files, protection, tags. | CI bot | Report in Discussions |
-| Dependency security | Weekly (auto) | Tier 1–2. | CI bot | Auto-filed Issue |
-| Licence compliance | Monthly (auto) | All repos. | CI bot | Report + Issue |
+| Repo structure | Monthly (auto) | All repos: files, protection, tags ([Appendix A](#appendix-a-repository-compliance-checklist)). | CI bot | Report in Discussions |
+| Dependency security | Weekly (auto) | Tier 1–2: cargo audit / npm audit. | CI bot | Issue auto-filed |
+| Licence compliance | Monthly (auto) | All repos: REUSE / licence-checker. | CI bot | Report + Issue |
 | Governance review | Quarterly (manual) | Full framework. | Owners | Changelog entry |
-| Strategic review | Annually (manual) | Tiers, lifecycle, effectiveness. | Owners + Maintainers | New framework version |
+| Strategic review | Annually (manual) | Tiers, lifecycle, effectiveness, community health. | Owners + Maintainers | New framework version |
 
 ### 15.2 Compliance Metrics
 
@@ -453,9 +512,28 @@ Post in the repository's Discussion tab or [organisation-level Discussions](http
 
 1. Any contributor may propose an amendment via Discussion in `.github`.
 2. Amendments are reviewed against the five guiding principles.
-3. The traceability matrix (Section 3.6) must be updated if enforcement coverage changes.
+3. The traceability matrix ([Section 3.6](#36-traceability-matrix)) must be updated if enforcement coverage changes.
 4. Approved amendments are merged and the framework version incremented.
 5. The annual strategic review is the formal opportunity for structural changes.
+
+---
+
+## 16. Implementation Roadmap
+
+| Phase | Timeline | Objective | Key Actions |
+|-------|----------|-----------|-------------|
+| 1 | Wks 1–2 | Foundation | Create template repo ([Appendix D](#appendix-d-template-repository-manifest)). Update `.github` org README. Enable branch protection on Tier 1. Apply tier and status tags to all repos. |
+| 2 | Wks 3–4 | Standardise | Audit all repos against [Section 6](#6-repository-standards) (use [Appendix A](#appendix-a-repository-compliance-checklist)). Add missing files. Configure shared CI workflows. Enable org-level Discussions. Apply naming conventions. |
+| 3 | Wks 5–8 | Enforce | Deploy monthly compliance scan. Configure Conventional Commits enforcement. Set up Zenodo for Tier 1. Create CODEOWNERS for Tier 1–2. Publish onboarding guide ([Section 14](#14-contributor-onboarding)). |
+| 4 | Ongoing | Evolve | Quarterly governance reviews. Annual strategic review. Archive inactive repos. Promote experimental repos. Refine metrics. |
+
+### 16.1 Immediate Actions (Week 1)
+
+1. Apply topic tags to all repositories.
+2. Enable branch protection on all Tier 1 and 2 repos.
+3. Update `.github` profile README with full repo index.
+4. Add LICENSE to any repo missing one.
+5. Create template repository from [Appendix D](#appendix-d-template-repository-manifest).
 
 ---
 
@@ -463,8 +541,8 @@ Post in the repository's Discussion tab or [organisation-level Discussions](http
 
 | # | Item | Criteria | Tiers |
 |---|------|----------|-------|
-| 1 | README.md | Present, non-empty, follows Section 6 structure. | All |
-| 2 | LICENSE | Present, MIT (or approved exception). | All |
+| 1 | README.md | Present, non-empty, follows [Section 6](#6-repository-standards) structure. | All |
+| 2 | LICENSE | Present, MIT (or approved exception per [Section 13](#13-intellectual-property--licensing)). | All |
 | 3 | CONTRIBUTING.md | Present. Describes workflow, commit conventions. | T1–2 |
 | 4 | CODE_OF_CONDUCT.md | Present. Contributor Covenant v2.1. | T1–2 |
 | 5 | SECURITY.md | Present. Contact method and response time. | T1–2 |
@@ -473,8 +551,8 @@ Post in the repository's Discussion tab or [organisation-level Discussions](http
 | 8 | PR template | Present. Includes review checklist. | T1–2 |
 | 9 | Issue templates | Present. Bug, feature, question. | T1 |
 | 10 | CI workflows | Present. Runs on PR. | T1–2 |
-| 11 | Branch protection | Enabled per Section 6.2 for assigned tier. | T1–3 |
-| 12 | Topic tags | All required tags present. | All |
+| 11 | Branch protection | Enabled per [Section 6.2](#62-branch-protection-rules) for assigned tier. | T1–3 |
+| 12 | Topic tags | All required tags present ([Section 10.2](#102-topic-tags)). | All |
 | 13 | .gitignore | Present, appropriate for tech stack. | All |
 | 14 | CITATION.cff | Present. Valid metadata. | T1 |
 
@@ -501,22 +579,24 @@ This checklist is implemented in [`.github/pull_request_template.md`](/.github/p
 
 ## Appendix C: Repository Inventory
 
-All repositories as of February 2026. Refreshed quarterly.
+All repositories as of February 2026. Refreshed quarterly ([Section 15](#15-compliance--auditing)).
 
-| Repository | Tier | Language | Status |
-|------------|------|----------|--------|
-| atlas-embeddings | 1: Core | Rust | Active |
-| math | 1: Core | TeX | Active |
-| UOR-H1-HPO-Candidate | 1: Core | TeX/Coq | Active |
-| OOO | 1: Core | TeX | Active |
-| hologram-prototypes-1 | 2: Impl | Rust | Active |
-| Hologram-APEX | 2: Impl | Rust | Active (fork) |
-| hologram-archive | 2: Impl | Python | Maintenance |
-| sigmatics | 2: Impl | TypeScript | Active |
-| uorcontent | 2: Impl | TypeScript | Maintenance |
-| .github | 3: Pres | — | Active |
-| Math-Universe-Vis | 3: Pres | HTML | Maintenance |
-| CS | 3: Pres | HTML | Maintenance |
+| Repository | Tier | Language | Status | Stars | Open Issues |
+|------------|------|----------|--------|:-----:|:-----------:|
+| [UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework) | 1: Core | Rust | Active | 0 | 0 |
+| [atlas-embeddings](https://github.com/UOR-Foundation/atlas-embeddings) | 1: Core | Rust | Active | 22 | 2 |
+| [math](https://github.com/UOR-Foundation/math) | 1: Core | TeX | Active | — | 0 |
+| [UOR-H1-HPO-Candidate](https://github.com/UOR-Foundation/UOR-H1-HPO-Candidate) | 1: Core | TeX/Coq | Active | — | — |
+| [OOO](https://github.com/UOR-Foundation/OOO) | 1: Core | TeX | Active | — | — |
+| [hologram-prototypes-1](https://github.com/UOR-Foundation/hologram-prototypes-1) | 2: Impl | Rust | Active | 6 | 98 |
+| [Hologram-APEX](https://github.com/UOR-Foundation/Hologram-APEX) | 2: Impl | Rust | Active (fork) | 1 | 0 |
+| [hologram-archive](https://github.com/UOR-Foundation/hologram-archive) | 2: Impl | Python | Maintenance | 1 | 2 |
+| [sigmatics](https://github.com/UOR-Foundation/sigmatics) | 2: Impl | TypeScript | Active | 3 | 0 |
+| [uorcontent](https://github.com/UOR-Foundation/uorcontent) | 2: Impl | TypeScript | Maintenance | — | 5 |
+| [.github](https://github.com/UOR-Foundation/.github) | 3: Pres | — | Active | — | 0 |
+| [Math-Universe-Vis](https://github.com/UOR-Foundation/Math-Universe-Vis) | 3: Pres | HTML | Maintenance | — | 0 |
+| [CS](https://github.com/UOR-Foundation/CS) | 3: Pres | HTML | Maintenance | — | 0 |
+| (remaining repos) | 4: Exp | Various | Evaluate | — | — |
 
 ---
 
@@ -527,15 +607,17 @@ All new repositories are created from the organisation template, which contains:
 | File | Contents | Notes |
 |------|----------|-------|
 | README.md | Skeleton with badge placeholders, section headers, UOR relationship. | Maintainer fills specifics. |
-| LICENSE | MIT, pre-filled with UOR Foundation as copyright holder. | Change only with Owner approval. |
+| LICENSE | MIT, pre-filled with UOR Foundation as copyright holder. | Change only with Owner approval ([Section 13](#13-intellectual-property--licensing)). |
 | CONTRIBUTING.md | Generic guide referencing this governance framework. | Maintainer may add repo-specifics. |
 | CODE_OF_CONDUCT.md | Contributor Covenant v2.1. | Do not modify. |
 | SECURITY.md | Template with placeholder contact and 24-hour acknowledgement. | Maintainer fills contact details. |
 | CHANGELOG.md | Empty with `## [Unreleased]` header. | Entries added per release. |
 | .github/CODEOWNERS | Template with instructions. | Must be populated before first PR. |
-| .github/pull_request_template.md | Full PR checklist from Appendix B. | Pre-populated. |
+| .github/pull_request_template.md | Full PR checklist from [Appendix B](#appendix-b-pull-request-review-checklist). | Pre-populated. |
 | .github/ISSUE_TEMPLATE/bug_report.md | Structured bug report. | Pre-populated. |
 | .github/ISSUE_TEMPLATE/feature_request.md | Structured feature request. | Pre-populated. |
+| .github/ISSUE_TEMPLATE/question.md | Question template directing to Discussions. | Pre-populated. |
+| .github/workflows/ci.yml | Minimal CI workflow: lint, test, build. | Maintainer configures for language. |
 | .gitignore | Composite for Rust, Python, TypeScript, Node.js, TeX. | Maintainer prunes as needed. |
 | CITATION.cff | Skeleton with placeholders. | Required for Tier 1. |
 

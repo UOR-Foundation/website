@@ -18,11 +18,21 @@ Organisation-wide community health files, governance framework, and templates fo
 
 Files in this repository are automatically applied across all repositories in the [UOR Foundation](https://github.com/UOR-Foundation) organisation by GitHub. Individual repositories may override these defaults with their own versions.
 
+## Key Repositories
+
+| Repository | Tier | Description |
+|------------|------|-------------|
+| [UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework) | 1: Core | Canonical ontology — 14 namespaces, 82 classes, 120 properties ([docs](https://uor-foundation.github.io/UOR-Framework/)) |
+| [atlas-embeddings](https://github.com/UOR-Foundation/atlas-embeddings) | 1: Core | Atlas embeddings and algebraic foundations |
+| [math](https://github.com/UOR-Foundation/math) | 1: Core | Formal mathematical theory |
+
+See [Appendix C](governance/GOVERNANCE.md#appendix-c-repository-inventory) for the full inventory.
+
 ## Links
 
 - **Website:** [uor.foundation](https://uor.foundation)
 - **Framework:** [github.com/UOR-Foundation/UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework)
-- **Research:** [github.com/UOR-Foundation/research](https://github.com/UOR-Foundation/research)
+- **Ontology Docs:** [uor-foundation.github.io/UOR-Framework](https://uor-foundation.github.io/UOR-Framework/)
 - **Community:** [Discord](https://discord.gg/ZwuZaNyuve)
 
 ---
