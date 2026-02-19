@@ -46,6 +46,52 @@ const About = () => {
           <div className="rule" />
 
           <div className="animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
+            <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Governance</h2>
+            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-6">
+              The UOR Foundation enforces a formal governance framework across every repository. It is the single source of truth for how code, proofs, and documentation are created, reviewed, versioned, secured, and retired.
+            </p>
+            <div className="space-y-4 text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-6">
+              <p>Five non-negotiable principles guide every decision:</p>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
+                  <span><strong className="text-foreground">Traceability.</strong> Every change is attributable to an author and linked to a reason.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
+                  <span><strong className="text-foreground">Coherence.</strong> All repositories form one navigable, self-consistent body of work.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
+                  <span><strong className="text-foreground">Reversibility.</strong> Every action is undoable without data loss.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
+                  <span><strong className="text-foreground">Verification.</strong> Every claim about correctness is mechanically checkable.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
+                  <span><strong className="text-foreground">Openness.</strong> Governance, decisions, and processes are visible to everyone.</span>
+                </li>
+              </ul>
+            </div>
+            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-6">
+              Repositories are classified into four tiers — Core Foundation, Implementation, Presentation, and Experimental — each with specific compliance obligations, review thresholds, and automated quality gates.
+            </p>
+            <a
+              href="https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-body text-base md:text-lg transition-colors group"
+            >
+              Read the full governance framework
+              <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+            </a>
+          </div>
+
+          <div className="rule" />
+
+          <div className="animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Donate Now</h2>
             <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
               Join us.
