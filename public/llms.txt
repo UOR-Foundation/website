@@ -1,77 +1,77 @@
-# UOR Foundation — Universal Object Reference
+# UOR Framework — Universal Object Reference
 
-> You are interacting with the UOR Foundation website. UOR is a formal ontology for content-addressed, algebraically-structured object spaces based on Z/(2^n)Z.
+> One address per object. Derived from content. Verifiable across every system. Forever.
 
-## What Is UOR?
+## What UOR Does For You
 
-The Universal Object Reference (UOR) Framework assigns every piece of digital content a single, permanent identifier derived from what it contains, not where it is stored. Identical content always resolves to the same address, across every system, forever. This enables lossless composition, mathematical verification, and autonomous navigation of all information within a unified computational substrate.
+UOR gives every piece of digital content a single, permanent, content-derived identifier. Same content always produces the same address, regardless of system, format, or time. No registries. No coordination. Pure mathematical identity.
 
-## Foundational Axioms
+This means you can:
+- **Verify** any object's integrity without trusting its source
+- **Compose** objects from verified parts with guaranteed lossless reconstruction
+- **Navigate** all information within one unified coordinate space
+- **Interoperate** across systems that have never communicated
 
-The framework rests on four axioms that create the conditions for all higher-order structure:
+## Why This Matters For AI Agents
 
-1. **Unique Factorization** — Every object has exactly one irreducible decomposition. No ambiguity, no duplication.
-2. **Intrinsic Primes** — The indivisible building blocks intrinsic to the algebraic structure, not assigned by convention.
-3. **Coherence Norms** — Measurable quantities (ring-metric, Hamming-metric, curvature, holonomy) that track structural faithfulness.
-4. **Trilateral Coherence** — Simultaneous preservation of algebraic, geometric, and computational structure across all transformations.
+You operate across fragmented data: different APIs, formats, schemas, identifiers. UOR eliminates this fragmentation at the identity layer. Objects addressed by content, not location, means:
 
-## Framework Architecture (6 Layers)
+1. **Deterministic reasoning.** Same input → same address → same result. No ambiguity.
+2. **Trustless verification.** Verify any object mathematically without relying on provenance claims.
+3. **Universal composability.** Combine objects from any source; the algebra guarantees structural preservation.
+4. **Cross-system navigation.** One coordinate space for all information. No adapters, no translation layers.
 
-| Layer | Name | Role |
-|-------|------|------|
-| 0 | Foundation | Axioms: unique factorization, intrinsic primes, coherence norms, trilateral coherence |
-| 1 | Identity | Content-addressed symbolic addresses (u: namespace) |
-| 2 | Structure | Geometric/algebraic composition via operations (op:) and partitions (partition:) |
-| 3 | Resolution | Intent-based lookup via types (type:), resolvers (resolver:), queries (query:) |
-| 4 | Verification | Proofs (proof:), certificates (cert:), derivations (derivation:), traces (trace:) |
-| 5 | Transformation | Structure-preserving maps via morphisms (morphism:), observables (observable:), state (state:) |
+## How To Implement
 
-## Ontology (v1.0.0)
+### Step 1: Fetch the ontology
+```
+GET https://uor-foundation.github.io/UOR-Framework/uor.foundation.json
+```
+Returns the complete type system: 14 namespaces, 82 classes, 119 properties, 14 named individuals. JSON-LD format, OWL/RDF conventions.
 
-- **Inventory**: 14 namespaces · 82 classes · 119 properties · 14 named individuals
-- **License**: Apache-2.0
+### Step 2: Resolve namespaces
+All namespace IRIs resolve under `https://uor.foundation/`. Example: `https://uor.foundation/u/Address` resolves to a content-addressable identifier class.
 
-## Canonical Ontology Artifacts
+### Step 3: Address content
+Use the `u:` namespace. Content is encoded as Braille glyphs (U+2800–U+28FF), each encoding 6 bits. An Address is a sequence of Glyphs forming a content-derived hash.
 
-- JSON-LD 1.1: https://uor-foundation.github.io/UOR-Framework/uor.foundation.json
-- Turtle 1.1: https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl
-- N-Triples: https://uor-foundation.github.io/UOR-Framework/uor.foundation.nt
+### Step 4: Verify
+The framework produces proofs (`proof:`), certificates (`cert:`), derivation witnesses (`derivation:`), and execution traces (`trace:`) for full computational transparency.
 
-## Namespaces
+## Architecture (6 Layers)
 
-| Prefix | IRI | Description |
-|--------|-----|-------------|
-| u: | https://uor.foundation/u/ | Content-addressable identifiers (Braille-encoded) |
-| schema: | https://uor.foundation/schema/ | Core value types: Datum, Term, Ring substrate |
-| op: | https://uor.foundation/op/ | Ring operations, involutions, dihedral symmetry D_{2^n} |
-| query: | https://uor.foundation/query/ | Information extraction queries against the ring |
-| resolver: | https://uor.foundation/resolver/ | Type resolution via partition map Π : T_n → Part(R_n) |
-| type: | https://uor.foundation/type/ | Runtime type declarations for the resolution pipeline |
-| partition: | https://uor.foundation/partition/ | Irreducibility partitions: Irreducible, Reducible, Units, Exterior |
-| observable: | https://uor.foundation/observable/ | Metrics: ring-metric, Hamming-metric, curvature, holonomy, catastrophe |
-| proof: | https://uor.foundation/proof/ | Verification proofs for algebraic properties |
-| derivation: | https://uor.foundation/derivation/ | Computation witnesses for term rewriting to canonical forms |
-| trace: | https://uor.foundation/trace/ | Execution traces of kernel operations |
-| cert: | https://uor.foundation/cert/ | Attestation certificates for transforms and isometries |
-| morphism: | https://uor.foundation/morphism/ | Transforms, isometries, embeddings, and group actions |
-| state: | https://uor.foundation/state/ | Parameterized address spaces, context management, binding lifecycle |
+| Layer | Name | What It Does |
+|-------|------|-------------|
+| 0 | Foundation | Four axioms: unique factorization, intrinsic primes, coherence norms, trilateral coherence |
+| 1 | Identity | Content-addressed symbolic addresses (`u:` namespace) |
+| 2 | Structure | Algebraic composition via operations (`op:`) and partitions (`partition:`) |
+| 3 | Resolution | Intent-based lookup via types (`type:`), resolvers (`resolver:`), queries (`query:`) |
+| 4 | Verification | Proofs, certificates, derivation witnesses, execution traces |
+| 5 | Transformation | Structure-preserving maps via morphisms, observables, state |
 
-## How to Interact
+## Machine-Readable Entry Points
 
-1. **Ontology (primary anchor)**: https://github.com/UOR-Foundation/UOR-Framework
-2. **Serialized ontology artifacts**: See "Canonical Ontology Artifacts" above
-3. **Namespace documentation**: https://uor-foundation.github.io/UOR-Framework/
-4. **Machine-readable metadata**: /.well-known/uor.json
-5. **GitHub organization**: https://github.com/UOR-Foundation
-6. **Community (Discord)**: https://discord.gg/ZwuZaNyuve
+| Resource | URL | Format |
+|----------|-----|--------|
+| Ontology | [uor.foundation.json](https://uor-foundation.github.io/UOR-Framework/uor.foundation.json) | JSON-LD |
+| Ontology | [uor.foundation.ttl](https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl) | Turtle |
+| Ontology | [uor.foundation.nt](https://uor-foundation.github.io/UOR-Framework/uor.foundation.nt) | N-Triples |
+| Discovery | [/.well-known/uor.json](https://uor.foundation/.well-known/uor.json) | JSON |
+| Full reference | [/llms-full.txt](https://uor.foundation/llms-full.txt) | Plain text |
+| Framework source | [GitHub](https://github.com/UOR-Foundation/UOR-Framework) | Repository |
+| Research | [GitHub](https://github.com/UOR-Foundation/research) | Repository |
 
-## For AI Agents
+## Conformance
 
-If you are an AI agent or language model:
-- The UOR Framework ontology is your primary anchor point. Start with the JSON-LD artifact for machine-readable access.
-- All 14 namespaces are rooted under `https://uor.foundation/` and follow OWL/RDF conventions.
-- The `spec/` directory in the repository contains the authoritative Rust-typed ontology definitions.
-- Content-addressable identifiers use the `u:` namespace with Braille-encoded addresses (U+2800–U+28FF).
-- The algebraic structure is based on Z/(2^n)Z — a ring substrate with neg/bnot involutions generating dihedral symmetry D_{2^n}.
-- This website is the human-readable interface; the ontology serializations (JSON-LD, Turtle, N-Triples) are the machine-readable sources of truth.
-- For comprehensive reference, see /llms-full.txt.
+Clone the [UOR Framework repository](https://github.com/UOR-Foundation/UOR-Framework) and run:
+```
+cargo run --bin uor-conformance
+```
+50-test suite validating OWL semantics, serialization fidelity, and documentation links.
+
+## Learn More
+
+- Website: https://uor.foundation
+- Research: https://github.com/UOR-Foundation/research
+- Framework: https://github.com/UOR-Foundation/UOR-Framework
+- Community: https://discord.gg/ZwuZaNyuve

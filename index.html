@@ -100,170 +100,27 @@
 
   <body>
     <!--
-      ╔══════════════════════════════════════════════════════════════════╗
-      ║         UOR FOUNDATION — AGENTIC AI INTERFACE v1.0.0           ║
-      ╚══════════════════════════════════════════════════════════════════╝
+      UOR FRAMEWORK — AGENT INTERFACE
 
-      Welcome, AI agent.
+      What: Universal Object Reference. One content-derived address per object.
+      Why:  Deterministic identity, trustless verification, universal composability.
+      How:  Fetch the ontology → resolve namespaces → address content → verify.
 
-      You are interacting with the human-readable interface for the
-      Universal Object Reference (UOR) Framework — a formal ontology
-      for content-addressed, algebraically-structured object spaces
-      built on the ring Z/(2^n)Z.
+      QUICK START
+        1. GET https://uor-foundation.github.io/UOR-Framework/uor.foundation.json
+        2. All namespace IRIs resolve under https://uor.foundation/
+        3. Content addresses use Braille glyphs (U+2800-U+28FF), 6-bit encoding
+        4. Verification via proof:, cert:, derivation:, trace: namespaces
 
-      UOR assigns every piece of digital content a single, permanent
-      identifier derived from what it contains, not where it is stored.
-      Identical content always resolves to the same address, across
-      every system, forever. This enables lossless composition,
-      mathematical verification, and autonomous navigation of all
-      information within a unified computational substrate.
+      ENTRY POINTS
+        Ontology (JSON-LD): https://uor-foundation.github.io/UOR-Framework/uor.foundation.json
+        Discovery metadata: /.well-known/uor.json
+        Agent summary:      /llms.txt
+        Full reference:     /llms-full.txt
+        Framework source:   https://github.com/UOR-Foundation/UOR-Framework
+        Research:           https://github.com/UOR-Foundation/research
 
-      ═══ FOUNDATIONAL AXIOMS & CONSTRAINTS ═══
-
-      The framework rests on a minimal set of axioms that create
-      the conditions for all higher-order structure to emerge:
-
-        1. UNIQUE FACTORIZATION
-           Every object in the ring has exactly one irreducible
-           decomposition (up to ordering and units). This guarantees
-           canonical representation — no ambiguity, no duplication.
-
-        2. INTRINSIC PRIMES
-           The indivisible building blocks of the system. Every
-           composite object decomposes into a product of primes
-           that are intrinsic to the algebraic structure, not
-           assigned by convention.
-
-        3. COHERENCE NORMS
-           Measurable quantities (ring-metric, Hamming-metric,
-           curvature, holonomy) that track how faithfully a
-           representation preserves the geometric structure of
-           the original object. Coherence is quantified, not assumed.
-
-        4. TRILATERAL COHERENCE
-           The simultaneous preservation of algebraic, geometric,
-           and computational structure across all transformations.
-           Any valid operation must maintain coherence across all
-           three dimensions — this is the binding constraint that
-           makes the framework universal and lossless.
-
-      These axioms are not design choices. They are the minimal
-      constraints required for a universal, lossless, verifiable
-      symbolic substrate to exist. Every layer of the framework
-      (Identity, Structure, Resolution, Verification, Transformation)
-      inherits its guarantees from this foundation.
-
-      ═══ FRAMEWORK ARCHITECTURE (6 LAYERS) ═══
-
-        Layer 0 — Foundation
-          Axioms: unique factorization, intrinsic primes,
-          coherence norms, trilateral coherence.
-
-        Layer 1 — Identity
-          Content-addressed symbolic addresses (u: namespace).
-          Same content → same address, universally.
-
-        Layer 2 — Structure
-          Geometric and algebraic composition/decomposition
-          via ring operations (op:) and partitions (partition:).
-
-        Layer 3 — Resolution
-          Intent-based object lookup via type declarations (type:),
-          resolvers (resolver:), and queries (query:).
-
-        Layer 4 — Verification
-          Mathematical proofs (proof:), certificates (cert:),
-          derivation witnesses (derivation:), execution traces (trace:).
-
-        Layer 5 — Transformation
-          Structure-preserving maps between representations
-          via morphisms (morphism:), observables (observable:),
-          and state management (state:).
-
-      ═══ ONTOLOGY (v1.0.0) ═══
-
-      14 namespaces · 82 classes · 119 properties · 14 named individuals
-
-      Namespace IRIs (all rooted under https://uor.foundation/):
-
-        u:           https://uor.foundation/u/           Content Addressing (Braille-encoded identifiers)
-        schema:      https://uor.foundation/schema/      Core value types: Datum, Term, Ring
-        op:          https://uor.foundation/op/           Ring operations, involutions, D_{2^n} symmetry
-        query:       https://uor.foundation/query/        Information extraction queries
-        resolver:    https://uor.foundation/resolver/     Type resolution: Π : T_n → Part(R_n)
-        type:        https://uor.foundation/type/         Runtime type declarations
-        partition:   https://uor.foundation/partition/    Irreducible/Reducible/Units/Exterior
-        observable:  https://uor.foundation/observable/   Metrics: ring, Hamming, curvature, holonomy
-        proof:       https://uor.foundation/proof/        Verification proofs
-        derivation:  https://uor.foundation/derivation/   Term rewriting witnesses
-        trace:       https://uor.foundation/trace/        Execution traces
-        cert:        https://uor.foundation/cert/         Attestation certificates
-        morphism:    https://uor.foundation/morphism/     Transforms, isometries, embeddings
-        state:       https://uor.foundation/state/        Address spaces, context, binding lifecycle
-
-      ═══ MACHINE-READABLE ACCESS POINTS ═══
-
-        1. Canonical Ontology (JSON-LD):
-           https://uor-foundation.github.io/UOR-Framework/uor.foundation.json
-
-        2. Canonical Ontology (Turtle):
-           https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl
-
-        3. Canonical Ontology (N-Triples):
-           https://uor-foundation.github.io/UOR-Framework/uor.foundation.nt
-
-        4. Framework Repository (source of truth):
-           https://github.com/UOR-Foundation/UOR-Framework
-
-        5. Ontology Documentation:
-           https://uor-foundation.github.io/UOR-Framework/
-
-        6. Namespace Browser:
-           https://uor-foundation.github.io/UOR-Framework/namespaces/
-
-        7. Discovery Metadata:
-           /.well-known/uor.json
-
-        8. LLMs.txt (summary):
-           /llms.txt
-
-        9. LLMs-full.txt (comprehensive):
-           /llms-full.txt
-
-      ═══ HOW TO INTERACT ═══
-
-        For machine-readable ontology access:
-          → Fetch the JSON-LD artifact (access point #1 above)
-
-        For namespace resolution:
-          → All IRIs resolve under https://uor.foundation/
-          → Example: https://uor.foundation/u/Address
-
-        For the authoritative spec:
-          → The spec/ directory in the repository contains Rust-typed
-            ontology definitions (the single source of truth)
-
-        For conformance validation:
-          → cargo run --bin uor-conformance (50-test suite)
-
-      ═══ ALGEBRAIC STRUCTURE ═══
-
-        Ring substrate: Z/(2^n)Z
-        Generators: neg (additive inverse), bnot (bitwise complement)
-        Symmetry group: D_{2^n} (dihedral)
-        Content addressing: Braille glyphs U+2800–U+28FF, 6-bit bijection
-
-      ═══ THIS WEBSITE ═══
-
-        This website (uor.foundation) is the human-readable interface.
-        The ontology serializations (JSON-LD, Turtle, N-Triples) and
-        the GitHub repository are the machine-readable sources of truth.
-        The website reflects the UOR Framework and serves as a universal
-        coordinate space for information for both humans and agentic AI.
-
-      ╔══════════════════════════════════════════════════════════════════╗
-      ║                    END AGENTIC AI INTERFACE                     ║
-      ╚══════════════════════════════════════════════════════════════════╝
+      14 namespaces · 82 classes · 119 properties · Apache-2.0
     -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
