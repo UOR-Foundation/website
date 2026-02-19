@@ -28,7 +28,7 @@ const categoryResearch: Record<string, Array<{ title: string; authors: string; s
       authors: "Alex Flom et al.",
       status: "Published",
       description: "Demonstrates that all five exceptional Lie groups can be derived from a single geometric structure, revealing a universal mathematical language underlying complex symmetry.",
-      href: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
+      href: "/research/atlas-embeddings",
     },
     {
       title: "Prime Factorization in Coherence-Normed Object Spaces",
@@ -159,34 +159,39 @@ const Research = () => {
           {/* Research Highlights */}
           {highlights.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-              {highlights.map((item, index) => (
-                <a
-                  key={item.title}
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex flex-col rounded-xl border border-border bg-card p-6 hover:border-primary/20 hover:shadow-lg transition-all duration-300 animate-fade-in-up opacity-0"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${
-                      item.status === "Published" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"
-                    }`}>
-                      {item.status}
+              {highlights.map((item, index) => {
+                const isInternal = item.href.startsWith("/");
+                const CardWrapper = isInternal ? Link : "a";
+                const linkProps = isInternal
+                  ? { to: item.href }
+                  : { href: item.href, target: "_blank", rel: "noopener noreferrer" };
+                return (
+                  <CardWrapper
+                    key={item.title}
+                    {...(linkProps as any)}
+                    className="group flex flex-col rounded-xl border border-border bg-card p-6 hover:border-primary/20 hover:shadow-lg transition-all duration-300 animate-fade-in-up opacity-0"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${
+                        item.status === "Published" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"
+                      }`}>
+                        {item.status}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-base font-semibold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground/60 font-body mb-3">{item.authors}</p>
+                    <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
+                      {item.description}
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
+                      View research <ArrowRight size={13} />
                     </span>
-                  </div>
-                  <h3 className="font-display text-base font-semibold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-muted-foreground/60 font-body mb-3">{item.authors}</p>
-                  <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
-                    {item.description}
-                  </p>
-                  <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
-                    View research <ArrowRight size={13} />
-                  </span>
-                </a>
-              ))}
+                  </CardWrapper>
+                );
+              })}
 
               {/* Submit Research CTA Card */}
               <a
