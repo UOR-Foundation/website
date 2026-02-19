@@ -38,11 +38,11 @@ const blogPosts = [
     cover: blogGoldenSeed,
   },
   {
-    title: "From Sandbox to Graduation: A Project's Journey",
-    excerpt: "An inside look at the maturity framework and what it takes for a community project to earn graduated status.",
-    date: "January 28, 2026",
-    tag: "Community",
-    href: "#",
+    title: "The UOR Framework Is Now Live",
+    excerpt: "The open data standard that gives every piece of information a permanent, verifiable address based on what it is, not where it lives. Explore the full specification.",
+    date: "February 19, 2026",
+    tag: "Announcement",
+    href: "/blog/uor-framework-launch",
     cover: blogSandbox,
   },
 ];
@@ -61,6 +61,7 @@ const events = [
 const tagStyles: Record<string, string> = {
   "Open Research": "bg-primary/10 text-primary",
   Vision: "bg-accent/10 text-accent",
+  Announcement: "bg-accent/10 text-accent",
   Community: "bg-primary/8 text-primary/80 border border-primary/15",
   Workshop: "bg-primary/10 text-primary",
   "Community Call": "bg-accent/10 text-accent",
