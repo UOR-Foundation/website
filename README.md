@@ -1,4 +1,4 @@
-# UOR Foundation
+# The UOR Foundation Website
 
 **[uor.foundation](https://uor.foundation)**
 
