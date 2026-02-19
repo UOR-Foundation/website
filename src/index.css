@@ -176,6 +176,11 @@
   }
   .btn-outline:active {
     transform: translateY(0);
+    background-color: transparent;
+    color: hsl(220 20% 12%);
+  }
+  .btn-outline:visited {
+    color: hsl(220 20% 12%);
   }
 }
 
