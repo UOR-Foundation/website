@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf, Box } from "lucide-react";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
-import blogSandbox from "@/assets/blog-sandbox-graduation.png";
+import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 
 const researchCategories = [
   { icon: Cpu, label: "Hardware & Robotics", slug: "hardware-robotics", description: "Embedded systems, robotics middleware, and UOR-native hardware interfaces." },
@@ -39,11 +39,11 @@ const blogPosts = [
   },
   {
     title: "The UOR Framework Is Now Live",
-    excerpt: "The open data standard that gives every piece of information a permanent, verifiable address based on what it is, not where it lives. Explore the full specification.",
+    excerpt: "A universal coordinate system for information. One address per object, derived from content, verifiable across every system. The open specification is now available for community review.",
     date: "February 19, 2026",
     tag: "Announcement",
     href: "/blog/uor-framework-launch",
-    cover: blogSandbox,
+    cover: blogFrameworkLaunch,
   },
 ];
 
