@@ -41,7 +41,7 @@ const HeroSection = () => {
               I'm a Human
             </a>
             <a
-              href="/llms.txt"
+              href="/llms.md"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-outline"
