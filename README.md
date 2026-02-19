@@ -1,73 +1,106 @@
-# Welcome to your Lovable project
+# UOR Foundation — Website
 
-## Project info
+The official website for the **Universal Object Reference (UOR) Foundation**, live at [uor.foundation](https://uor.foundation).
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+The UOR Foundation develops an open data standard that gives every piece of digital content a single, permanent identifier based on *what it is* — not where it's stored. The same content always resolves to the same address, across every system, forever.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## What's in This Repo
 
-**Use Lovable**
+This repository contains the full source code for the UOR Foundation website: a single-page application built with React, TypeScript, Vite, and Tailwind CSS, deployed to GitHub Pages.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Site Structure
 
-Changes made via Lovable will be committed automatically to this repo.
+| Page | Route | Description |
+|------|-------|-------------|
+| Home | `/` | Hero, mission overview, framework layers, and project highlights |
+| About | `/about` | Team, history, and organizational mission |
+| Standard | `/standard` | The UOR specification and technical pillars |
+| Research | `/research` | Publications, blog posts, and research directions |
+| Projects | `/projects` | Active projects built on the UOR framework |
+| Donate | `/donate` | Support the foundation |
 
-**Use your preferred IDE**
+### Source Layout
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```
+src/
+├── assets/          # Images, logos, and static media
+├── components/      # Reusable React components (Navbar, Footer, sections, animations)
+│   └── ui/          # Design system primitives (buttons, cards, dialogs, etc.)
+├── hooks/           # Custom React hooks
+├── lib/             # Shared utilities
+├── pages/           # Route-level page components
+└── test/            # Test configuration and specs
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+public/
+├── .well-known/     # UOR discovery metadata (uor.json)
+├── images/          # Team profile photos and public assets
+├── 404.html         # SPA routing fallback for GitHub Pages
+├── CNAME            # Custom domain configuration
+├── llms.txt         # Machine-readable site summary for LLMs
+├── llms-full.txt    # Comprehensive LLM reference
+└── robots.txt       # Search engine crawling rules
+```
 
-Follow these steps:
+---
+
+## Getting Started
+
+**Prerequisites:** [Node.js](https://nodejs.org/) ≥ 18
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+git clone https://github.com/UOR-Foundation/website.git
+cd website
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The dev server starts at `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## Deployment
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The site deploys automatically to GitHub Pages via GitHub Actions on every push to `main`.
 
-## What technologies are used for this project?
+**Pipeline:** `npm ci` → `npm run build` → deploy `dist/` to GitHub Pages
 
-This project is built with:
+Custom domain (`uor.foundation`) is configured via `public/CNAME` and DNS A records pointing to GitHub's servers.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
-## How can I deploy this project?
+## Tech Stack
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+| Layer | Technology |
+|-------|-----------|
+| Framework | [React 18](https://react.dev) + [TypeScript](https://typescriptlang.org) |
+| Build | [Vite](https://vite.dev) |
+| Styling | [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com) |
+| Routing | [React Router v6](https://reactrouter.com) |
+| Animations | [Framer Motion](https://www.framer.com/motion/) patterns + CSS |
+| Hosting | [GitHub Pages](https://pages.github.com) |
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
+## Machine-Readable Access
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+The site provides structured metadata for AI agents and semantic web tooling:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- **JSON-LD** embedded in `index.html` (Organization + Framework schema)
+- **`/llms.txt`** — concise site summary for language models
+- **`/llms-full.txt`** — comprehensive reference
+- **`/.well-known/uor.json`** — UOR discovery metadata
+- **Ontology links** — JSON-LD, Turtle, and N-Triples formats
+
+---
+
+## Contributing
+
+This project is maintained by the UOR Foundation. For questions or contributions, visit [github.com/UOR-Foundation](https://github.com/UOR-Foundation) or join our [Discord](https://discord.gg/ZwuZaNyuve).
+
+---
+
+## License
+
+© UOR Foundation. All rights reserved.
