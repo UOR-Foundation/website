@@ -96,14 +96,14 @@ The UOR Foundation enforces a formal [governance framework](https://github.com/U
 
 ### How It Works
 
-Repositories are classified into four tiers. Each tier determines the exact compliance obligations — required files, branch protection rules, review thresholds, and automated quality gates.
+Repositories are classified into four tiers. Each tier determines the exact compliance obligations: required files, branch protection rules, review thresholds, and automated quality gates.
 
 | Tier | Name | Governance | Examples |
 |------|------|------------|----------|
-| 1 | **Core Foundation** | Maximum — multi-reviewer, signed commits, formal proof verification | [UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework), atlas-embeddings, math |
-| 2 | **Implementation** | High — required reviews, CI/CD, SemVer | hologram-prototypes-1, sigmatics |
-| 3 | **Presentation** | Standard — required reviews, basic CI | .github, this website |
-| 4 | **Experimental** | Baseline — README, LICENSE, status label | Early-stage experiments |
+| 1 | **Core Foundation** | Maximum: multi-reviewer, signed commits, formal proof verification | [UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework), atlas-embeddings, math |
+| 2 | **Implementation** | High: required reviews, CI/CD, SemVer | hologram-prototypes-1, sigmatics |
+| 3 | **Presentation** | Standard: required reviews, basic CI | .github, this website |
+| 4 | **Experimental** | Baseline: README, LICENSE, status label | Early-stage experiments |
 
 ### Key Components
 
@@ -117,19 +117,19 @@ Repositories are classified into four tiers. Each tier determines the exact comp
 
 ### For AI Agents: Governance Entry Points
 
-The governance framework is plain Markdown — readable, parseable, and linkable by section anchor.
+The governance framework is plain Markdown, readable, parseable, and linkable by section anchor.
 
 | What You Need | Where To Look |
 |---------------|---------------|
 | Full governance framework | [`governance/GOVERNANCE.md`](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md) |
-| Repository compliance checklist | [Appendix A](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#appendix-a-repository-compliance-checklist) — 14-item audit matrix |
-| PR review requirements | [Appendix B](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#appendix-b-pull-request-review-checklist) — 10-item checklist by tier |
-| Complete repository inventory | [Appendix C](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#appendix-c-repository-inventory) — all repos with tier, language, status |
-| Tier classification rules | [Section 5](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#5-repository-classification) — 4-tier taxonomy |
-| Contribution workflow | [Section 7](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#7-change-control--contribution-workflow) — 7-stage pipeline |
-| Security response SLAs | [Section 12](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#12-security--incident-response) — Critical: 72h patch, Low: next release |
+| Repository compliance checklist | [Appendix A](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#appendix-a-repository-compliance-checklist): 14-item audit matrix |
+| PR review requirements | [Appendix B](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#appendix-b-pull-request-review-checklist): 10-item checklist by tier |
+| Complete repository inventory | [Appendix C](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#appendix-c-repository-inventory): all repos with tier, language, status |
+| Tier classification rules | [Section 5](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#5-repository-classification): 4-tier taxonomy |
+| Contribution workflow | [Section 7](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#7-change-control--contribution-workflow): 7-stage pipeline |
+| Security response SLAs | [Section 12](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#12-security--incident-response): Critical: 72h patch, Low: next release |
 
-The framework aligns with the [UOR ontology](https://uor-foundation.github.io/UOR-Framework/) — the same principles of traceability, coherence, and verification that govern the mathematical framework also govern the organisation.
+The framework aligns with the [UOR ontology](https://uor-foundation.github.io/UOR-Framework/): the same principles of traceability, coherence, and verification that govern the mathematical framework also govern the organisation.
 
 ---
 
