@@ -18,14 +18,40 @@ This matters for the semantic web, open science, neuro symbolic AI, and any doma
 
 ## How It Works
 
-The framework rests on four axioms:
+Six layers, each building on the one below it.
 
-1. **Unique Factorization.** Every object decomposes into exactly one set of irreducible components. No ambiguity, no duplication.
-2. **Intrinsic Primes.** The indivisible building blocks are determined by the algebraic structure itself, not assigned by convention.
-3. **Coherence Norms.** Measurable quantities that track how faithfully a representation preserves the structure of the original object.
-4. **Trilateral Coherence.** Every valid transformation must simultaneously preserve algebraic, geometric, and computational structure.
+### Layer 0: The Foundation
 
-These constraints produce a unified computational substrate where objects can be composed, decomposed, transformed, and verified with mathematical certainty.
+The base layer. It defines a small set of mathematical rules that every object in the system must obey. These rules guarantee that anything built on top behaves predictably and never loses information. Without these constraints, nothing above can work. With them, every layer above is inevitable.
+
+The rules are four axioms:
+
+1. **Unique Factorization.** Every object breaks down into exactly one set of irreducible parts. No ambiguity, no duplication.
+2. **Intrinsic Primes.** The smallest building blocks are determined by the structure itself, not assigned by convention.
+3. **Coherence Norms.** Measurable quantities that track how faithfully a representation preserves the original object.
+4. **Trilateral Coherence.** Every valid transformation must preserve algebraic, geometric, and computational structure simultaneously.
+
+### Layer 1: Identity
+
+Every object gets a permanent address based on what it contains, not where it is stored. The same content always produces the same address, regardless of which system holds it. This is what makes UOR content addressed: identity comes from substance, not location.
+
+### Layer 2: Structure
+
+Objects combine, decompose, and transform through precise rules. Every complex structure can be broken into its simplest parts and rebuilt without loss. Composition is always lossless and reversible.
+
+### Layer 3: Resolution
+
+Find any object by describing what you need, not by knowing where it lives. The system locates the right data and extracts exactly the information required.
+
+### Layer 4: Verification
+
+Every operation is mathematically provable. Proofs confirm correctness, certificates attest to properties, derivations show each step, and traces provide a complete audit trail. Trust is built into the system, not bolted on.
+
+### Layer 5: Transformation
+
+Objects move between representations while preserving their essential properties. Measurable quantities track structural fidelity. State management handles context and lifecycle transitions across systems.
+
+Together, these layers produce a unified computational substrate where objects can be composed, decomposed, transformed, and verified with mathematical certainty.
 
 ## Where It Applies
 
