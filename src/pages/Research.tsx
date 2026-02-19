@@ -202,7 +202,7 @@ const Research = () => {
                 <h3 className="font-display text-base font-semibold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200">
                   Submit Your Research
                 </h3>
-                <p className="text-sm text-muted-foreground font-body leading-relaxed max-w-[240px] flex-1">
+                <p className="text-sm text-muted-foreground font-body leading-relaxed max-w-[240px]">
                   Share your work with the community for validation and collaboration.
                 </p>
                 <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-primary/60 group-hover:text-primary transition-colors duration-200 font-body">
