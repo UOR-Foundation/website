@@ -19,13 +19,13 @@ const ResearchPaperAtlasEmbeddings = () => {
           {/* arXiv-style header */}
           <header className="mb-12 animate-fade-in-up">
             {/* Subject classification */}
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs font-mono text-muted-foreground/70 tracking-wide">
-                Mathematics &gt; Group Theory
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-mono font-semibold tracking-wide">
+                uorXiv:2602.00001
               </span>
               <span className="text-xs font-mono text-muted-foreground/50">·</span>
               <span className="text-xs font-mono text-muted-foreground/70 tracking-wide">
-                UOR-2025-001
+                Mathematics &gt; Group Theory (math.GR)
               </span>
             </div>
 
@@ -43,10 +43,10 @@ const ResearchPaperAtlasEmbeddings = () => {
             </div>
 
             {/* Date & identifiers */}
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground/60 font-body mb-6">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground/60 font-body mb-4">
               <span className="inline-flex items-center gap-1.5">
                 <Calendar size={12} />
-                Published February 15, 2026 (v1)
+                Submitted 15 Feb 2026 (v1)
               </span>
               <a
                 href="https://doi.org/10.5281/zenodo.17289540"
@@ -58,6 +58,22 @@ const ResearchPaperAtlasEmbeddings = () => {
                 <ExternalLink size={10} />
               </a>
               <span>License: MIT</span>
+            </div>
+
+            {/* Subjects & Comments */}
+            <div className="text-xs text-muted-foreground/60 font-body space-y-1 mb-6">
+              <p>
+                <span className="text-muted-foreground/80 font-medium">Subjects:</span>{" "}
+                Group Theory (math.GR); Representation Theory (math.RT); Mathematical Physics (math-ph)
+              </p>
+              <p>
+                <span className="text-muted-foreground/80 font-medium">Comments:</span>{" "}
+                Computationally verified (Rust), formally verified (Lean 4, 54 theorems, 0 sorrys). Open source.
+              </p>
+              <p>
+                <span className="text-muted-foreground/80 font-medium">Cite as:</span>{" "}
+                <span className="font-mono">uorXiv:2602.00001 [math.GR]</span>
+              </p>
             </div>
 
             {/* Access links */}
@@ -287,15 +303,17 @@ const ResearchPaperAtlasEmbeddings = () => {
             </h2>
             <div className="bg-card border border-border rounded-xl p-5 md:p-6">
               <pre className="text-xs md:text-sm text-muted-foreground font-mono leading-relaxed whitespace-pre-wrap break-words">
-{`@software{atlas_embeddings,
-  title   = {Atlas Embeddings: First-Principles Construction
-             of Exceptional Lie Groups},
-  author  = {Flom, Alex and {UOR Foundation}},
-  year    = {2026},
-  doi     = {10.5281/zenodo.17289540},
-  url     = {https://github.com/UOR-Foundation/research/
-             tree/main/atlas-embeddings},
-  license = {MIT}
+{`@article{flom2026atlas,
+  title     = {Atlas Embeddings: First-Principles Construction
+               of Exceptional Lie Groups},
+  author    = {Flom, Alex and {UOR Foundation}},
+  year      = {2026},
+  eprint    = {2602.00001},
+  archivePrefix = {uorXiv},
+  primaryClass  = {math.GR},
+  doi       = {10.5281/zenodo.17289540},
+  url       = {https://uor.foundation/research/atlas-embeddings},
+  license   = {MIT}
 }`}
               </pre>
             </div>
