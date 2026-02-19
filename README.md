@@ -1,106 +1,70 @@
-# UOR Foundation — Website
+# UOR Foundation
 
-The official website for the **Universal Object Reference (UOR) Foundation**, live at [uor.foundation](https://uor.foundation).
+**[uor.foundation](https://uor.foundation)**
 
-The UOR Foundation develops an open data standard that gives every piece of digital content a single, permanent identifier based on *what it is* — not where it's stored. The same content always resolves to the same address, across every system, forever.
+The Universal Object Reference (UOR) Framework is an open data standard that gives every piece of digital content a single, permanent identifier based on what it is, not where it is stored. Identical content always resolves to the same address, across every system, forever.
 
----
-
-## What's in This Repo
-
-This repository contains the full source code for the UOR Foundation website: a single-page application built with React, TypeScript, Vite, and Tailwind CSS, deployed to GitHub Pages.
-
-### Site Structure
-
-| Page | Route | Description |
-|------|-------|-------------|
-| Home | `/` | Hero, mission overview, framework layers, and project highlights |
-| About | `/about` | Team, history, and organizational mission |
-| Standard | `/standard` | The UOR specification and technical pillars |
-| Research | `/research` | Publications, blog posts, and research directions |
-| Projects | `/projects` | Active projects built on the UOR framework |
-| Donate | `/donate` | Support the foundation |
-
-### Source Layout
-
-```
-src/
-├── assets/          # Images, logos, and static media
-├── components/      # Reusable React components (Navbar, Footer, sections, animations)
-│   └── ui/          # Design system primitives (buttons, cards, dialogs, etc.)
-├── hooks/           # Custom React hooks
-├── lib/             # Shared utilities
-├── pages/           # Route-level page components
-└── test/            # Test configuration and specs
-
-public/
-├── .well-known/     # UOR discovery metadata (uor.json)
-├── images/          # Team profile photos and public assets
-├── 404.html         # SPA routing fallback for GitHub Pages
-├── CNAME            # Custom domain configuration
-├── llms.txt         # Machine-readable site summary for LLMs
-├── llms-full.txt    # Comprehensive LLM reference
-└── robots.txt       # Search engine crawling rules
-```
+This eliminates the fragmentation that plagues modern data infrastructure. Instead of maintaining countless integrations between incompatible systems, UOR provides one universal coordinate system for information: content addressed, mathematically verifiable, and lossless by construction.
 
 ---
 
-## Getting Started
+## Why It Matters
 
-**Prerequisites:** [Node.js](https://nodejs.org/) ≥ 18
+Today, the same data exists in dozens of formats across hundreds of platforms, each with its own identifiers, schemas, and assumptions. Every integration is a new point of failure. Every migration risks data loss.
 
-```sh
-git clone https://github.com/UOR-Foundation/website.git
-cd website
-npm install
-npm run dev
-```
+UOR solves this by deriving identity from content itself. Two systems that have never communicated will independently produce the same identifier for the same object. Verification is intrinsic. Interoperability is a mathematical guarantee, not an engineering effort.
 
-The dev server starts at `http://localhost:5173`.
+This matters for the semantic web, open science, neuro symbolic AI, and any domain where reliable, portable, verifiable data is essential.
 
----
+## How It Works
 
-## Deployment
+The framework rests on four axioms:
 
-The site deploys automatically to GitHub Pages via GitHub Actions on every push to `main`.
+1. **Unique Factorization.** Every object decomposes into exactly one set of irreducible components. No ambiguity, no duplication.
+2. **Intrinsic Primes.** The indivisible building blocks are determined by the algebraic structure itself, not assigned by convention.
+3. **Coherence Norms.** Measurable quantities that track how faithfully a representation preserves the structure of the original object.
+4. **Trilateral Coherence.** Every valid transformation must simultaneously preserve algebraic, geometric, and computational structure.
 
-**Pipeline:** `npm ci` → `npm run build` → deploy `dist/` to GitHub Pages
+These constraints produce a unified computational substrate where objects can be composed, decomposed, transformed, and verified with mathematical certainty.
 
-Custom domain (`uor.foundation`) is configured via `public/CNAME` and DNS A records pointing to GitHub's servers.
+## Where It Applies
 
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | [React 18](https://react.dev) + [TypeScript](https://typescriptlang.org) |
-| Build | [Vite](https://vite.dev) |
-| Styling | [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com) |
-| Routing | [React Router v6](https://reactrouter.com) |
-| Animations | [Framer Motion](https://www.framer.com/motion/) patterns + CSS |
-| Hosting | [GitHub Pages](https://pages.github.com) |
+- **Semantic Web.** Content referenced by what it is enables universal linking without centralized registries.
+- **Open Science.** Reproducible, verifiable datasets with permanent identifiers that survive platform changes.
+- **Neuro Symbolic AI.** Deterministic symbolic representations that AI agents can navigate, verify, and reason over.
+- **Cross Domain Unification.** A single coordinate space that replaces bespoke integrations between incompatible systems.
 
 ---
 
-## Machine-Readable Access
+## For AI Agents
 
-The site provides structured metadata for AI agents and semantic web tooling:
+This website and the UOR Framework are designed for both human and machine consumption. The following entry points provide structured, machine readable access to the full ontology:
 
-- **JSON-LD** embedded in `index.html` (Organization + Framework schema)
-- **`/llms.txt`** — concise site summary for language models
-- **`/llms-full.txt`** — comprehensive reference
-- **`/.well-known/uor.json`** — UOR discovery metadata
-- **Ontology links** — JSON-LD, Turtle, and N-Triples formats
+| Resource | URL | Format |
+|----------|-----|--------|
+| Ontology (JSON-LD) | [uor.foundation.json](https://uor-foundation.github.io/UOR-Framework/uor.foundation.json) | JSON-LD |
+| Ontology (Turtle) | [uor.foundation.ttl](https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl) | Turtle |
+| Ontology (N-Triples) | [uor.foundation.nt](https://uor-foundation.github.io/UOR-Framework/uor.foundation.nt) | N-Triples |
+| Discovery metadata | [/.well-known/uor.json](https://uor.foundation/.well-known/uor.json) | JSON |
+| LLM summary | [/llms.txt](https://uor.foundation/llms.txt) | Plain text |
+| LLM full reference | [/llms-full.txt](https://uor.foundation/llms-full.txt) | Plain text |
+| Framework source | [github.com/UOR-Foundation/UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework) | GitHub |
+
+**To get started:** Fetch the JSON-LD ontology. It contains 14 namespaces, 82 classes, 119 properties, and 14 named individuals describing the complete UOR type system. All namespace IRIs resolve under `https://uor.foundation/`.
+
+**To explore the framework:** Start with `/llms.txt` for a concise overview, or `/llms-full.txt` for the comprehensive specification. The `/.well-known/uor.json` endpoint provides discovery metadata with namespace classifications (kernel, bridge, and user spaces).
+
+**To validate conformance:** Clone the [UOR Framework repository](https://github.com/UOR-Foundation/UOR-Framework) and run `cargo run --bin uor-conformance` (50 test suite).
 
 ---
 
-## Contributing
+## Links
 
-This project is maintained by the UOR Foundation. For questions or contributions, visit [github.com/UOR-Foundation](https://github.com/UOR-Foundation) or join our [Discord](https://discord.gg/ZwuZaNyuve).
+- **Website:** [uor.foundation](https://uor.foundation)
+- **Framework:** [github.com/UOR-Foundation/UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework)
+- **Organization:** [github.com/UOR-Foundation](https://github.com/UOR-Foundation)
+- **Community:** [Discord](https://discord.gg/ZwuZaNyuve)
 
 ---
-
-## License
 
 © UOR Foundation. All rights reserved.
