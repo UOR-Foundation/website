@@ -1,6 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import highlightKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
-import highlightAnnouncement from "@/assets/highlight-announcement.jpg";
+import highlightFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import highlightCommunityCall from "@/assets/highlight-community-call.jpg";
 
 type TagType = "Research" | "Announcement" | "Event";
@@ -21,10 +21,10 @@ const highlights = [
   },
   {
     tag: "Announcement" as TagType,
-    title: "UOR Standard v2.0 Now Open for Community Review",
-    date: "February 10, 2026",
-    image: highlightAnnouncement,
-    href: "/standard",
+    title: "Meet the UOR Framework",
+    date: "February 19, 2026",
+    image: highlightFrameworkLaunch,
+    href: "/blog/uor-framework-launch",
   },
   {
     tag: "Event" as TagType,
