@@ -16,7 +16,7 @@ const Standard = () => {
             className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
             style={{ animationDelay: "0.15s" }}
           >
-            A universal, content-addressed coordinate system for information built on symbolic and geometric foundations. One address per object, verifiable, composable, and permanent.
+            Every piece of information gets one permanent address, derived from what it is, not where it lives. Verify it, compose it, move it between systems. The address stays the same. That is the UOR Framework: a universal coordinate system for data.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
