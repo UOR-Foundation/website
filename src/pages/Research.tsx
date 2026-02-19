@@ -30,13 +30,6 @@ const categoryResearch: Record<string, Array<{ title: string; authors: string; s
       description: "Demonstrates that all five exceptional Lie groups can be derived from a single geometric structure, revealing a universal mathematical language underlying complex symmetry.",
       href: "/research/atlas-embeddings",
     },
-    {
-      title: "Prime Factorization in Coherence-Normed Object Spaces",
-      authors: "UOR Research Community",
-      status: "In Progress",
-      description: "Formalizing unique factorization guarantees within UOR's algebraic framework, ensuring every object decomposes into irreducible building blocks with mathematical certainty.",
-      href: "https://github.com/UOR-Foundation/research",
-    },
   ],
 };
 
