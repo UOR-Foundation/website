@@ -60,7 +60,7 @@
     { "prefix": "trace:", "iri": "https://uor.foundation/trace/", "label": "Computation Traces", "classes": 3, "properties": 11, "individuals": 0 },
     { "prefix": "cert:", "iri": "https://uor.foundation/cert/", "label": "Certificates", "classes": 4, "properties": 6, "individuals": 0 },
     { "prefix": "morphism:", "iri": "https://uor.foundation/morphism/", "label": "Transforms & Morphisms", "classes": 4, "properties": 10, "individuals": 0 },
-    { "prefix": "state:", "iri": "https://uor.foundation/state/", "label": "State", "classes": 4, "properties": 7, "individuals": 0 }
+    { "prefix": "state:", "iri": "https://uor.foundation/state/", "label": "State", "classes": 4, "properties": 16, "individuals": 0 }
   ],
   "uor:endpoints": {
     "website": "https://uor.foundation",
