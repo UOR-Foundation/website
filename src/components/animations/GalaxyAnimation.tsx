@@ -1,4 +1,4 @@
-import "./galaxy.css";
+import "@/components/animations/galaxy.css";
 
 const GalaxyAnimation = () => {
   // 2 galaxies, each with 20 stars, each star has a circle with 35 dots

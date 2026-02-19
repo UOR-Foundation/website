@@ -1,10 +1,10 @@
-import Layout from "@/components/Layout";
-import HeroSection from "@/components/HeroSection";
-import IntroSection from "@/components/IntroSection";
-import PillarsSection from "@/components/PillarsSection";
-import HighlightsSection from "@/components/HighlightsSection";
-import ProjectsShowcase from "@/components/ProjectsShowcase";
-import CTASection from "@/components/CTASection";
+import Layout from "@/components/layout/Layout";
+import HeroSection from "@/components/sections/HeroSection";
+import IntroSection from "@/components/sections/IntroSection";
+import PillarsSection from "@/components/sections/PillarsSection";
+import HighlightsSection from "@/components/sections/HighlightsSection";
+import ProjectsShowcase from "@/components/sections/ProjectsShowcase";
+import CTASection from "@/components/sections/CTASection";
 
 const Index = () => {
   return (

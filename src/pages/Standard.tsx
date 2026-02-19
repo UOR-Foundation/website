@@ -1,6 +1,6 @@
-import Layout from "@/components/Layout";
-import UORDiagram from "@/components/UORDiagram";
-import FrameworkLayers from "@/components/FrameworkLayers";
+import Layout from "@/components/layout/Layout";
+import UORDiagram from "@/components/animations/UORDiagram";
+import FrameworkLayers from "@/components/sections/FrameworkLayers";
 import { ExternalLink, Globe, ShieldCheck, Bot, Microscope, Layers, Rocket } from "lucide-react";
 
 const Standard = () => {

@@ -1,4 +1,4 @@
-import Layout from "@/components/Layout";
+import Layout from "@/components/layout/Layout";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Tag } from "lucide-react";
 
