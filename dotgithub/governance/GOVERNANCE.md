@@ -594,6 +594,7 @@ All repositories as of February 2026. Refreshed quarterly ([Section 15](#15-comp
 | [sigmatics](https://github.com/UOR-Foundation/sigmatics) | 2: Impl | TypeScript | Active | 3 | 0 |
 | [uorcontent](https://github.com/UOR-Foundation/uorcontent) | 2: Impl | TypeScript | Maintenance | — | 5 |
 | [.github](https://github.com/UOR-Foundation/.github) | 3: Pres | — | Active | — | 0 |
+| [website](https://github.com/UOR-Foundation/website) | 3: Pres | TypeScript | Active | — | 0 |
 | [Math-Universe-Vis](https://github.com/UOR-Foundation/Math-Universe-Vis) | 3: Pres | HTML | Maintenance | — | 0 |
 | [CS](https://github.com/UOR-Foundation/CS) | 3: Pres | HTML | Maintenance | — | 0 |
 | (remaining repos) | 4: Exp | Various | Evaluate | — | — |

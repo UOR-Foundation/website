@@ -28,6 +28,7 @@ const Footer = () => {
               <Link to="/standard" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">UOR Framework</Link>
               <Link to="/research" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Community</Link>
               <Link to="/projects" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Projects</Link>
+              <a href="https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md" target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Governance</a>
               <a href="https://github.com/UOR-Foundation/research" target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Research</a>
             </nav>
           </div>

@@ -76,7 +76,7 @@ This website and the UOR Framework are designed for both human and machine consu
 | LLM full reference | [/llms-full.txt](https://uor.foundation/llms-full.txt) | Plain text |
 | Framework source | [github.com/UOR-Foundation/UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework) | GitHub |
 
-**To get started:** Fetch the JSON-LD ontology. It contains 14 namespaces, 82 classes, 119 properties, and 14 named individuals describing the complete UOR type system. All namespace IRIs resolve under `https://uor.foundation/`.
+**To get started:** Fetch the JSON-LD ontology. It contains 14 namespaces, 82 classes, 120 properties, and 14 named individuals describing the complete UOR type system. All namespace IRIs resolve under `https://uor.foundation/`.
 
 **To explore the framework:** Start with `/llms.txt` for a concise overview, or `/llms-full.txt` for the comprehensive specification. The `/.well-known/uor.json` endpoint provides discovery metadata with namespace classifications (kernel, bridge, and user spaces).
 
