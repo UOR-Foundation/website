@@ -16,7 +16,7 @@ const Standard = () => {
             className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
             style={{ animationDelay: "0.15s" }}
           >
-            Every piece of information gets one permanent address, derived from what it is, not where it lives. Verify it, compose it, move it between systems. The address stays the same. That is the UOR Framework: a universal coordinate system for data.
+            One address per object, derived from its content, verifiable across every system. Data referenced by what it is, not where it lives.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
