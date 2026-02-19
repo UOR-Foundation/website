@@ -49,7 +49,7 @@ const About = () => {
           <div className="animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Our Governance</h2>
             <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
-              Everything the foundation produces is governed by a single transparent framework. It is built on six key principles:
+              Everything the foundation produces is governed by a single transparent framework. It is built on six key principles.
             </p>
 
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
