@@ -193,21 +193,19 @@ const Research = () => {
                 href="https://discord.gg/ZwuZaNyuve"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-col rounded-xl border border-dashed border-border bg-card/50 p-6 hover:border-primary/30 hover:bg-primary/[0.03] transition-all duration-300 animate-fade-in-up opacity-0"
+                className="group flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-primary/20 bg-primary/[0.03] p-6 hover:border-primary/40 hover:bg-primary/[0.06] transition-all duration-300 animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${highlights.length * 0.1}s` }}
               >
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-7 h-7 rounded-full border border-border bg-background flex items-center justify-center group-hover:border-primary/30 group-hover:bg-primary/5 transition-all duration-300">
-                    <Plus size={14} className="text-muted-foreground/50 group-hover:text-primary transition-colors duration-200" />
-                  </div>
+                <div className="w-9 h-9 rounded-full border border-primary/20 bg-primary/5 flex items-center justify-center mb-4 group-hover:border-primary/40 group-hover:bg-primary/10 transition-all duration-300">
+                  <Plus size={16} className="text-primary/60 group-hover:text-primary transition-colors duration-200" />
                 </div>
                 <h3 className="font-display text-base font-semibold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200">
                   Submit Your Research
                 </h3>
-                <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
+                <p className="text-sm text-muted-foreground font-body leading-relaxed max-w-[240px] flex-1">
                   Share your work with the community for validation and collaboration.
                 </p>
-                <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
+                <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-primary/60 group-hover:text-primary transition-colors duration-200 font-body">
                   Submit now <ArrowRight size={13} />
                 </span>
               </a>
