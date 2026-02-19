@@ -11,7 +11,7 @@ const About = () => {
             About the UOR Foundation
           </h1>
           <p className="mt-6 text-lg md:text-xl text-muted-foreground font-body leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-            We build the shelves. You bring the books.
+            Universe's best library, where you bring your own books.
           </p>
         </div>
       </section>
