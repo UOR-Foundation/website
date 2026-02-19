@@ -1,4 +1,4 @@
-import { Shield, GitBranch, Eye, CheckCircle, Undo2 } from "lucide-react";
+import { Shield, GitBranch, Eye, CheckCircle, Undo2, Users } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 
 const About = () => {
@@ -47,18 +47,22 @@ const About = () => {
           <div className="rule" />
 
           <div className="animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-            <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Governance</h2>
+            <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">How We Are Governed</h2>
+            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-4">
+              The UOR Foundation operates under a single, public governance framework. It defines who can contribute, how changes are proposed and reviewed, and what happens when something goes wrong. Every rule is documented, every decision is traceable, and nothing ships without review.
+            </p>
             <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
-              One framework governs every repository. How code is written, reviewed, secured, and shipped — defined once, enforced everywhere, visible to all.
+              Six principles underpin every process in the foundation:
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {[
-                { icon: GitBranch, label: "Traceability", desc: "Every change linked to an author and a reason." },
-                { icon: Shield, label: "Coherence", desc: "One navigable, self-consistent body of work." },
-                { icon: Undo2, label: "Reversibility", desc: "Every action undoable without data loss." },
-                { icon: CheckCircle, label: "Verification", desc: "Every correctness claim mechanically checkable." },
-                { icon: Eye, label: "Openness", desc: "All decisions and processes visible to everyone." },
+                { icon: GitBranch, label: "Traceability", desc: "Every change is tied to a person and a purpose. Nothing is anonymous." },
+                { icon: Shield, label: "Coherence", desc: "All projects follow the same standards, forming one consistent body of work." },
+                { icon: Undo2, label: "Reversibility", desc: "Any decision can be rolled back. No action causes permanent, unrecoverable damage." },
+                { icon: CheckCircle, label: "Verification", desc: "Claims of correctness are proven, not asserted. Automated checks run on every change." },
+                { icon: Eye, label: "Openness", desc: "Governance rules, decisions, and discussions are public. Anyone can read and scrutinise them." },
+                { icon: Users, label: "Accountability", desc: "Clear roles — owners, maintainers, contributors — each with defined responsibilities and escalation paths." },
               ].map(({ icon: Icon, label, desc }) => (
                 <div
                   key={label}
@@ -74,7 +78,7 @@ const About = () => {
             </div>
 
             <p className="text-muted-foreground font-body text-sm md:text-base leading-relaxed mb-6">
-              Four tiers — Core, Implementation, Presentation, Experimental — each with defined compliance, review thresholds, and automated quality gates.
+              Projects are classified into four tiers — Core, Implementation, Presentation, and Experimental — each with proportionate review requirements, compliance obligations, and quality gates. The framework is versioned, auditable, and open to amendment through public discussion.
             </p>
 
             <a
@@ -83,7 +87,7 @@ const About = () => {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-body text-base md:text-lg transition-colors group"
             >
-              Explore the governance framework
+              Read the full governance framework
               <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
             </a>
           </div>
