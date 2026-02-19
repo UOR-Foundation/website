@@ -1,4 +1,4 @@
-import GalaxyAnimation from "./GalaxyAnimation";
+import GalaxyAnimation from "@/components/animations/GalaxyAnimation";
 
 const HeroSection = () => {
   return (
