@@ -65,23 +65,6 @@ Full tier requirements: [Section 5](governance/GOVERNANCE.md#5-repository-classi
 
 ---
 
-## Repository Inventory
-
-| Repository | Tier | Language | Status |
-|------------|------|----------|--------|
-| [UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework) | 1: Core | Rust | Active |
-| [atlas-embeddings](https://github.com/UOR-Foundation/atlas-embeddings) | 1: Core | Rust | Active |
-| [math](https://github.com/UOR-Foundation/math) | 1: Core | TeX | Active |
-| [UOR-H1-HPO-Candidate](https://github.com/UOR-Foundation/UOR-H1-HPO-Candidate) | 1: Core | TeX/Coq | Active |
-| [OOO](https://github.com/UOR-Foundation/OOO) | 1: Core | TeX | Active |
-| [hologram-prototypes-1](https://github.com/UOR-Foundation/hologram-prototypes-1) | 2: Impl | Rust | Active |
-| [sigmatics](https://github.com/UOR-Foundation/sigmatics) | 2: Impl | TypeScript | Active |
-| [.github](https://github.com/UOR-Foundation/.github) | 3: Pres | — | Active |
-
-Full inventory with stars and issue counts: [Appendix C](governance/GOVERNANCE.md#appendix-c-repository-inventory)
-
----
-
 ## Quick Start
 
 ### For contributors
