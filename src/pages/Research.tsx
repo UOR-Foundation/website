@@ -38,7 +38,7 @@ const blogPosts = [
     cover: blogGoldenSeed,
   },
   {
-    title: "The UOR Framework Is Now Live",
+    title: "What If Every Piece of Data Had One Permanent Address?",
     excerpt: "A universal coordinate system for information. One address per object, derived from content, verifiable across every system. The open specification is now available for community review.",
     date: "February 19, 2026",
     tag: "Open Research",
