@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { Link } from "react-router-dom";
-import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf, Box, Lock } from "lucide-react";
+import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf, Box, Lock, Plus } from "lucide-react";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
@@ -35,13 +35,6 @@ const categoryResearch: Record<string, Array<{ title: string; authors: string; s
       authors: "UOR Research Community",
       status: "In Progress",
       description: "Formalizing unique factorization guarantees within UOR's algebraic framework, ensuring every object decomposes into irreducible building blocks with mathematical certainty.",
-      href: "https://github.com/UOR-Foundation/research",
-    },
-    {
-      title: "Coherence Norms and Metric Completeness in Z/(2^n)Z",
-      authors: "UOR Research Community",
-      status: "In Progress",
-      description: "Investigating the completeness properties of UOR's foundational number-theoretic structure and its implications for lossless data representation.",
       href: "https://github.com/UOR-Foundation/research",
     },
   ],
@@ -194,6 +187,28 @@ const Research = () => {
                   </span>
                 </a>
               ))}
+
+              {/* Submit Research CTA Card */}
+              <a
+                href="https://discord.gg/ZwuZaNyuve"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-6 hover:border-primary/30 hover:bg-primary/[0.03] transition-all duration-300 animate-fade-in-up opacity-0 text-center"
+                style={{ animationDelay: `${highlights.length * 0.1}s` }}
+              >
+                <div className="w-10 h-10 rounded-full border border-border bg-background flex items-center justify-center mb-4 group-hover:border-primary/30 group-hover:bg-primary/5 transition-all duration-300">
+                  <Plus size={18} className="text-muted-foreground/50 group-hover:text-primary transition-colors duration-200" />
+                </div>
+                <h3 className="font-display text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-200">
+                  Submit Your Research
+                </h3>
+                <p className="text-sm text-muted-foreground font-body leading-relaxed max-w-[220px]">
+                  Share your work with the community for validation and collaboration.
+                </p>
+                <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
+                  Get started <ArrowRight size={13} />
+                </span>
+              </a>
             </div>
           )}
 
