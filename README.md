@@ -61,6 +61,7 @@ This website and the UOR Framework are designed for both human and machine consu
 ## Links
 
 - **Website:** [uor.foundation](https://uor.foundation)
+- **Research:** [github.com/UOR-Foundation/research](https://github.com/UOR-Foundation/research)
 - **Framework:** [github.com/UOR-Foundation/UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework)
 - **Organization:** [github.com/UOR-Foundation](https://github.com/UOR-Foundation)
 - **Community:** [Discord](https://discord.gg/ZwuZaNyuve)
