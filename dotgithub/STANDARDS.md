@@ -4,7 +4,8 @@ This document summarises the naming, versioning, and tagging conventions enforce
 
 ## Naming Conventions
 
-- Repository names: lowercase, hyphen-separated. Descriptive of content.
+- Repository names: all lowercase, hyphen-separated. Preferred: `uor-{domain}-{function}` (e.g., `uor-math-formalization`).
+- No version numbers in repo names (use tags).
 - Branch names: `{type}/{issue#}-{short-description}` (e.g., `feat/42-add-parser`).
 - Commit messages: [Conventional Commits v1.0.0](https://www.conventionalcommits.org/).
 
@@ -22,16 +23,18 @@ All Tier 1 and 2 repositories follow [Semantic Versioning 2.0.0](https://semver.
 
 Every repository must carry the following GitHub topic tags:
 
-| Tag | When |
-|-----|------|
-| `uor-foundation` | All repositories |
-| `uor-tier-{1-4}` | Tier classification |
-| `uor-{status}` | Lifecycle status: `active`, `maintenance`, `deprecated`, `archived` |
+| Category | Required Tags | When |
+|----------|--------------|------|
+| Identity | `uor`, `uor-foundation` | Every repository |
+| Tier | `tier-1-core`, `tier-2-impl`, `tier-3-presentation`, `tier-4-experimental` | Exactly one per repo |
+| Domain | `math`, `cryptography`, `computation`, `visualisation`, `documentation`, `governance`, `protocol` | All that apply |
+| Technology | `rust`, `python`, `typescript`, `lean4`, `coq`, `latex` | Primary languages |
+| Status | `active`, `maintenance`, `deprecated`, `archived` | Exactly one per repo |
 
 ## Required Files by Tier
 
-See [Governance Framework, Section 6.2](governance/GOVERNANCE.md#62-required-files--configuration) for the complete requirements matrix.
+See [Governance Framework, Section 6.1](governance/GOVERNANCE.md#61-required-files) for the complete requirements matrix.
 
 ## Branch Protection
 
-See [Governance Framework, Section 6.3](governance/GOVERNANCE.md#63-branch-protection-rules) for tier-specific rules.
+See [Governance Framework, Section 6.2](governance/GOVERNANCE.md#62-branch-protection-rules) for tier-specific rules.
