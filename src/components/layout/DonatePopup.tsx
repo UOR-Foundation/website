@@ -35,7 +35,7 @@ const DonatePopup = ({ open, onOpenChange }: DonatePopupProps) => {
             />
           </div>
           <DialogTitle className="text-xl font-display font-semibold tracking-tight">
-            Support the UOR-Foundation
+            Support Your Foundation
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1.5 max-w-sm mx-auto font-body">
             Your contribution powers open science, frontier research, and the universal data standard.
