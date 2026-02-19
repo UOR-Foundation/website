@@ -1,3 +1,4 @@
+import { Shield, GitBranch, Eye, CheckCircle, Undo2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 
 const About = () => {
@@ -47,44 +48,42 @@ const About = () => {
 
           <div className="animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Governance</h2>
-            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-6">
-              The UOR Foundation enforces a formal governance framework across every repository. It is the single source of truth for how code, proofs, and documentation are created, reviewed, versioned, secured, and retired.
+            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
+              One framework governs every repository. How code is written, reviewed, secured, and shipped — defined once, enforced everywhere, visible to all.
             </p>
-            <div className="space-y-4 text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-6">
-              <p>Five non-negotiable principles guide every decision:</p>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
-                  <span><strong className="text-foreground">Traceability.</strong> Every change is attributable to an author and linked to a reason.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
-                  <span><strong className="text-foreground">Coherence.</strong> All repositories form one navigable, self-consistent body of work.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
-                  <span><strong className="text-foreground">Reversibility.</strong> Every action is undoable without data loss.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
-                  <span><strong className="text-foreground">Verification.</strong> Every claim about correctness is mechanically checkable.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />
-                  <span><strong className="text-foreground">Openness.</strong> Governance, decisions, and processes are visible to everyone.</span>
-                </li>
-              </ul>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {[
+                { icon: GitBranch, label: "Traceability", desc: "Every change linked to an author and a reason." },
+                { icon: Shield, label: "Coherence", desc: "One navigable, self-consistent body of work." },
+                { icon: Undo2, label: "Reversibility", desc: "Every action undoable without data loss." },
+                { icon: CheckCircle, label: "Verification", desc: "Every correctness claim mechanically checkable." },
+                { icon: Eye, label: "Openness", desc: "All decisions and processes visible to everyone." },
+              ].map(({ icon: Icon, label, desc }) => (
+                <div
+                  key={label}
+                  className="rounded-lg border border-border/60 bg-card/50 p-5 flex flex-col gap-3"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className="w-4 h-4 text-primary shrink-0" strokeWidth={1.8} />
+                    <span className="font-display text-sm font-semibold text-foreground tracking-wide">{label}</span>
+                  </div>
+                  <p className="text-muted-foreground font-body text-sm leading-relaxed">{desc}</p>
+                </div>
+              ))}
             </div>
-            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-6">
-              Repositories are classified into four tiers — Core Foundation, Implementation, Presentation, and Experimental — each with specific compliance obligations, review thresholds, and automated quality gates.
+
+            <p className="text-muted-foreground font-body text-sm md:text-base leading-relaxed mb-6">
+              Four tiers — Core, Implementation, Presentation, Experimental — each with defined compliance, review thresholds, and automated quality gates.
             </p>
+
             <a
-              href="https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md"
+              href="https://github.com/UOR-Foundation/.github"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-body text-base md:text-lg transition-colors group"
             >
-              Read the full governance framework
+              Explore the governance framework
               <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
             </a>
           </div>
