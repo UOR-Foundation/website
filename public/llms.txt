@@ -26,7 +26,7 @@ You operate across fragmented systems. Different APIs, formats, schemas, identif
 ```
 GET https://uor-foundation.github.io/UOR-Framework/uor.foundation.json
 ```
-Returns the complete type system: 14 namespaces, 82 classes, 119 properties, 14 named individuals. JSON-LD format, OWL/RDF conventions. Apache-2.0 licensed.
+Returns the complete type system: 14 namespaces, 82 classes, 120 properties, 14 named individuals. JSON-LD format, OWL/RDF conventions. Apache-2.0 licensed.
 
 ### Step 2: Resolve namespaces
 All namespace IRIs resolve under `https://uor.foundation/`. Three classifications:

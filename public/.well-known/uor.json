@@ -39,7 +39,7 @@
     "version": "1.0.0",
     "namespaceCount": 14,
     "classCount": 82,
-    "propertyCount": 119,
+    "propertyCount": 120,
     "individualCount": 14,
     "artifacts": {
       "jsonld": "https://uor-foundation.github.io/UOR-Framework/uor.foundation.json",

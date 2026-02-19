@@ -124,7 +124,7 @@ const Standard = () => {
             Explore the Full Specification
           </h2>
           <p className="text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto mb-10">
-            14 namespaces · 82 classes · 119 properties. Open-source and fully documented.
+            14 namespaces · 82 classes · 120 properties. Open source and fully documented.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <a
