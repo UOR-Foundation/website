@@ -28,7 +28,7 @@ Every piece of digital content receives a unique, permanent identifier based on 
 - Version: 1.0.0
 - 14 namespaces
 - 82 classes
-- 120 properties
+- 119 properties
 - 14 named individuals
 - License: Apache-2.0
 

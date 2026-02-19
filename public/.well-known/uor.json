@@ -38,7 +38,7 @@
     "version": "1.0.0",
     "namespaceCount": 14,
     "classCount": 82,
-    "propertyCount": 120,
+    "propertyCount": 119,
     "individualCount": 14,
     "artifacts": {
       "jsonld": "https://uor-foundation.github.io/UOR-Framework/uor.foundation.json",
@@ -47,20 +47,20 @@
     }
   },
   "uor:namespaces": [
-    { "prefix": "u:", "iri": "https://uor.foundation/u/", "label": "Content Addressing", "classes": 2, "properties": 4, "individuals": 0 },
-    { "prefix": "schema:", "iri": "https://uor.foundation/schema/", "label": "Schema", "classes": 6, "properties": 13, "individuals": 2 },
-    { "prefix": "op:", "iri": "https://uor.foundation/op/", "label": "Operations", "classes": 7, "properties": 13, "individuals": 12 },
-    { "prefix": "query:", "iri": "https://uor.foundation/query/", "label": "Queries", "classes": 4, "properties": 3, "individuals": 0 },
-    { "prefix": "resolver:", "iri": "https://uor.foundation/resolver/", "label": "Resolvers", "classes": 4, "properties": 4, "individuals": 0 },
-    { "prefix": "type:", "iri": "https://uor.foundation/type/", "label": "Type System", "classes": 5, "properties": 5, "individuals": 0 },
-    { "prefix": "partition:", "iri": "https://uor.foundation/partition/", "label": "Partitions", "classes": 6, "properties": 9, "individuals": 0 },
-    { "prefix": "observable:", "iri": "https://uor.foundation/observable/", "label": "Observables", "classes": 26, "properties": 4, "individuals": 0 },
-    { "prefix": "proof:", "iri": "https://uor.foundation/proof/", "label": "Proofs", "classes": 4, "properties": 11, "individuals": 0 },
-    { "prefix": "derivation:", "iri": "https://uor.foundation/derivation/", "label": "Derivations", "classes": 3, "properties": 10, "individuals": 0 },
-    { "prefix": "trace:", "iri": "https://uor.foundation/trace/", "label": "Computation Traces", "classes": 3, "properties": 11, "individuals": 0 },
-    { "prefix": "cert:", "iri": "https://uor.foundation/cert/", "label": "Certificates", "classes": 4, "properties": 6, "individuals": 0 },
-    { "prefix": "morphism:", "iri": "https://uor.foundation/morphism/", "label": "Transforms & Morphisms", "classes": 4, "properties": 10, "individuals": 0 },
-    { "prefix": "state:", "iri": "https://uor.foundation/state/", "label": "State", "classes": 4, "properties": 16, "individuals": 0 }
+    { "prefix": "u:", "iri": "https://uor.foundation/u/", "label": "Content Addressing", "space": "kernel", "classes": 2, "properties": 4, "individuals": 0 },
+    { "prefix": "schema:", "iri": "https://uor.foundation/schema/", "label": "Schema", "space": "kernel", "classes": 6, "properties": 13, "individuals": 2 },
+    { "prefix": "op:", "iri": "https://uor.foundation/op/", "label": "Operations", "space": "kernel", "classes": 7, "properties": 13, "individuals": 12 },
+    { "prefix": "query:", "iri": "https://uor.foundation/query/", "label": "Queries", "space": "bridge", "classes": 4, "properties": 3, "individuals": 0 },
+    { "prefix": "resolver:", "iri": "https://uor.foundation/resolver/", "label": "Resolvers", "space": "bridge", "classes": 4, "properties": 4, "individuals": 0 },
+    { "prefix": "type:", "iri": "https://uor.foundation/type/", "label": "Type System", "space": "user", "classes": 5, "properties": 5, "individuals": 0 },
+    { "prefix": "partition:", "iri": "https://uor.foundation/partition/", "label": "Partitions", "space": "bridge", "classes": 6, "properties": 9, "individuals": 0 },
+    { "prefix": "observable:", "iri": "https://uor.foundation/observable/", "label": "Observables", "space": "bridge", "classes": 26, "properties": 4, "individuals": 0 },
+    { "prefix": "proof:", "iri": "https://uor.foundation/proof/", "label": "Proofs", "space": "bridge", "classes": 4, "properties": 11, "individuals": 0 },
+    { "prefix": "derivation:", "iri": "https://uor.foundation/derivation/", "label": "Derivations", "space": "bridge", "classes": 3, "properties": 10, "individuals": 0 },
+    { "prefix": "trace:", "iri": "https://uor.foundation/trace/", "label": "Computation Traces", "space": "bridge", "classes": 3, "properties": 11, "individuals": 0 },
+    { "prefix": "cert:", "iri": "https://uor.foundation/cert/", "label": "Certificates", "space": "bridge", "classes": 4, "properties": 6, "individuals": 0 },
+    { "prefix": "morphism:", "iri": "https://uor.foundation/morphism/", "label": "Transforms & Morphisms", "space": "user", "classes": 4, "properties": 10, "individuals": 0 },
+    { "prefix": "state:", "iri": "https://uor.foundation/state/", "label": "State", "space": "user", "classes": 4, "properties": 16, "individuals": 0 }
   ],
   "uor:endpoints": {
     "website": "https://uor.foundation",
