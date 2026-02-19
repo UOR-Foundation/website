@@ -28,7 +28,7 @@ The framework rests on four axioms that create the conditions for all higher-ord
 
 ## Ontology (v1.0.0)
 
-- **Inventory**: 14 namespaces · 82 classes · 120 properties · 14 named individuals
+- **Inventory**: 14 namespaces · 82 classes · 119 properties · 14 named individuals
 - **License**: Apache-2.0
 
 ## Canonical Ontology Artifacts

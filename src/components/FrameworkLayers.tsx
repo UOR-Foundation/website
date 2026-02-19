@@ -25,7 +25,7 @@ const layers: Layer[] = [
     description:
       "The absolute base layer. It defines a small set of mathematical rules that every object in the system must obey. These rules guarantee that anything built on top behaves predictably and never loses information. Without these constraints, higher-order structure cannot emerge. With them, every layer above is inevitable.",
     namespaces: [
-      { label: "Axioms", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/axiom/" },
+      { label: "Axioms", url: "https://uor-foundation.github.io/UOR-Framework/docs/overview.html" },
     ],
   },
   {
