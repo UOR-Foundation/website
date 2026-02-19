@@ -55,13 +55,13 @@
   .galaxy-wrapper { transform: translate(0px, 0px) scale(0.52); }
 }
 @media screen and (max-width: 768px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.42); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.46); }
 }
 @media screen and (max-width: 430px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.36); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.40); }
 }
 @media screen and (max-width: 356px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.30); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.34); }
 }
 
 
