@@ -84,6 +84,55 @@ This website and the UOR Framework are designed for both human and machine consu
 
 ---
 
+## Governance
+
+The UOR Foundation enforces a formal [governance framework](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md) (v2.0) across all repositories. It is the single source of truth for how code, proofs, and documentation are created, reviewed, versioned, secured, and retired.
+
+### What It Achieves
+
+- **Deterministic quality.** Every change is traceable to an author, linked to a reason, and verified by automated checks before merge.
+- **Structural coherence.** All repositories connect into one navigable, self-consistent body of work through standardised naming, tagging, and dependency documentation.
+- **Reversibility by default.** Force pushes are prohibited, release tags are immutable, and every deprecation includes a documented path back.
+
+### How It Works
+
+Repositories are classified into four tiers. Each tier determines the exact compliance obligations — required files, branch protection rules, review thresholds, and automated quality gates.
+
+| Tier | Name | Governance | Examples |
+|------|------|------------|----------|
+| 1 | **Core Foundation** | Maximum — multi-reviewer, signed commits, formal proof verification | [UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework), atlas-embeddings, math |
+| 2 | **Implementation** | High — required reviews, CI/CD, SemVer | hologram-prototypes-1, sigmatics |
+| 3 | **Presentation** | Standard — required reviews, basic CI | .github, this website |
+| 4 | **Experimental** | Baseline — README, LICENSE, status label | Early-stage experiments |
+
+### Key Components
+
+| Component | Purpose | Location |
+|-----------|---------|----------|
+| [GOVERNANCE.md](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md) | 16 sections + 4 appendices defining all standards, roles, and procedures | `.github/governance/` |
+| [CONTRIBUTING.md](https://github.com/UOR-Foundation/.github/blob/main/CONTRIBUTING.md) | Contribution workflow, commit conventions, PR process | `.github/` (org-wide) |
+| [CODE_OF_CONDUCT.md](https://github.com/UOR-Foundation/.github/blob/main/CODE_OF_CONDUCT.md) | Contributor Covenant v2.1 | `.github/` (org-wide) |
+| [SECURITY.md](https://github.com/UOR-Foundation/.github/blob/main/SECURITY.md) | Vulnerability reporting with defined SLA response timelines | `.github/` (org-wide) |
+| [STANDARDS.md](https://github.com/UOR-Foundation/.github/blob/main/STANDARDS.md) | Naming, versioning, and 5-category topic tag system | `.github/` (org-wide) |
+
+### For AI Agents: Governance Entry Points
+
+The governance framework is plain Markdown — readable, parseable, and linkable by section anchor.
+
+| What You Need | Where To Look |
+|---------------|---------------|
+| Full governance framework | [`governance/GOVERNANCE.md`](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md) |
+| Repository compliance checklist | [Appendix A](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#appendix-a-repository-compliance-checklist) — 14-item audit matrix |
+| PR review requirements | [Appendix B](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#appendix-b-pull-request-review-checklist) — 10-item checklist by tier |
+| Complete repository inventory | [Appendix C](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#appendix-c-repository-inventory) — all repos with tier, language, status |
+| Tier classification rules | [Section 5](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#5-repository-classification) — 4-tier taxonomy |
+| Contribution workflow | [Section 7](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#7-change-control--contribution-workflow) — 7-stage pipeline |
+| Security response SLAs | [Section 12](https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md#12-security--incident-response) — Critical: 72h patch, Low: next release |
+
+The framework aligns with the [UOR ontology](https://uor-foundation.github.io/UOR-Framework/) — the same principles of traceability, coherence, and verification that govern the mathematical framework also govern the organisation.
+
+---
+
 ## Links
 
 - **Website:** [uor.foundation](https://uor.foundation)
