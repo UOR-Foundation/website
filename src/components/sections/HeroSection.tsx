@@ -5,7 +5,7 @@ const HeroSection = () => {
     <section className="hero-gradient relative overflow-hidden">
       <div className="container pt-16 md:pt-36 pb-10 md:pb-24 lg:pb-28">
         <div
-          className="mt-0 md:mt-2 mb-3 md:mb-16 lg:mb-20 animate-fade-in-up opacity-0"
+          className="mt-3 md:mt-2 mb-6 md:mb-16 lg:mb-20 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.1s" }}
         >
           <GalaxyAnimation />
