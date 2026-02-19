@@ -1,24 +1,51 @@
+import { useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { Link } from "react-router-dom";
-import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf, Box } from "lucide-react";
+import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf, Box, Lock } from "lucide-react";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 
 const researchCategories = [
-  { icon: Cpu, label: "Hardware & Robotics", slug: "hardware-robotics", description: "Embedded systems, robotics middleware, and UOR-native hardware interfaces." },
-  { icon: Shield, label: "Cybersecurity", slug: "cybersecurity", description: "Content-addressed security, zero-trust identity, and verifiable data provenance." },
-  { icon: Calculator, label: "Mathematics", slug: "mathematics", description: "Formal methods, algebraic structures, and mathematical foundations of UOR." },
-  { icon: TrendingUp, label: "Finance", slug: "finance", description: "Decentralized finance primitives, auditable ledgers, and semantic financial data." },
-  { icon: Bot, label: "Agentic AI", slug: "agentic-ai", description: "Autonomous agents, tool-use frameworks, and UOR-native AI architectures." },
-  { icon: Atom, label: "Quantum", slug: "quantum", description: "Quantum computing interfaces, post-quantum cryptography, and hybrid algorithms." },
-  { icon: BarChart3, label: "Data Science", slug: "data-science", description: "Semantic datasets, reproducible pipelines, and interoperable analytics." },
-  { icon: HeartPulse, label: "Healthcare", slug: "healthcare", description: "Medical data interoperability, patient-centric identity, and open health standards." },
-  { icon: Globe, label: "Web3", slug: "web3", description: "Decentralized protocols, on-chain identity, and content-addressed storage." },
-  { icon: Microscope, label: "Physics", slug: "physics", description: "Simulation frameworks, open research data, and computational physics tooling." },
-  { icon: Rocket, label: "Frontier Tech", slug: "frontier-tech", description: "Emerging technology exploration at the intersection of UOR and next-gen infrastructure." },
-  { icon: Leaf, label: "Climate & Energy", slug: "climate-energy", description: "Sustainable infrastructure, carbon accounting, and open energy data standards." },
+  { icon: Calculator, label: "Mathematics", slug: "mathematics", description: "Formal methods, algebraic structures, and mathematical foundations of UOR.", active: true },
+  { icon: Cpu, label: "Hardware & Robotics", slug: "hardware-robotics", description: "Embedded systems, robotics middleware, and UOR-native hardware interfaces.", active: false },
+  { icon: Shield, label: "Cybersecurity", slug: "cybersecurity", description: "Content-addressed security, zero-trust identity, and verifiable data provenance.", active: false },
+  { icon: TrendingUp, label: "Finance", slug: "finance", description: "Decentralized finance primitives, auditable ledgers, and semantic financial data.", active: false },
+  { icon: Bot, label: "Agentic AI", slug: "agentic-ai", description: "Autonomous agents, tool-use frameworks, and UOR-native AI architectures.", active: false },
+  { icon: Atom, label: "Quantum", slug: "quantum", description: "Quantum computing interfaces, post-quantum cryptography, and hybrid algorithms.", active: false },
+  { icon: BarChart3, label: "Data Science", slug: "data-science", description: "Semantic datasets, reproducible pipelines, and interoperable analytics.", active: false },
+  { icon: HeartPulse, label: "Healthcare", slug: "healthcare", description: "Medical data interoperability, patient-centric identity, and open health standards.", active: false },
+  { icon: Globe, label: "Web3", slug: "web3", description: "Decentralized protocols, on-chain identity, and content-addressed storage.", active: false },
+  { icon: Microscope, label: "Physics", slug: "physics", description: "Simulation frameworks, open research data, and computational physics tooling.", active: false },
+  { icon: Rocket, label: "Frontier Tech", slug: "frontier-tech", description: "Emerging technology exploration at the intersection of UOR and next-gen infrastructure.", active: false },
+  { icon: Leaf, label: "Climate & Energy", slug: "climate-energy", description: "Sustainable infrastructure, carbon accounting, and open energy data standards.", active: false },
 ];
+
+const categoryResearch: Record<string, Array<{ title: string; authors: string; status: string; description: string; href: string }>> = {
+  mathematics: [
+    {
+      title: "Atlas Embeddings: Exceptional Lie Groups from a Single 96-Vertex Construct",
+      authors: "Alex Flom et al.",
+      status: "Published",
+      description: "Demonstrates that all five exceptional Lie groups can be derived from a single geometric structure, revealing a universal mathematical language underlying complex symmetry.",
+      href: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
+    },
+    {
+      title: "Prime Factorization in Coherence-Normed Object Spaces",
+      authors: "UOR Research Community",
+      status: "In Progress",
+      description: "Formalizing unique factorization guarantees within UOR's algebraic framework, ensuring every object decomposes into irreducible building blocks with mathematical certainty.",
+      href: "https://github.com/UOR-Foundation/research",
+    },
+    {
+      title: "Coherence Norms and Metric Completeness in Z/(2^n)Z",
+      authors: "UOR Research Community",
+      status: "In Progress",
+      description: "Investigating the completeness properties of UOR's foundational number-theoretic structure and its implications for lossless data representation.",
+      href: "https://github.com/UOR-Foundation/research",
+    },
+  ],
+};
 
 const blogPosts = [
   {
@@ -69,6 +96,9 @@ const tagStyles: Record<string, string> = {
 };
 
 const Research = () => {
+  const [selectedCategory, setSelectedCategory] = useState("mathematics");
+  const highlights = categoryResearch[selectedCategory] || [];
+
   return (
     <Layout>
       {/* Hero */}
@@ -108,18 +138,65 @@ const Research = () => {
             <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
           </p>
 
-          <div className="flex flex-wrap justify-center gap-3 mb-14">
-            {researchCategories.map((cat, index) => (
-              <div
-                key={cat.slug}
-                className="group flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-border bg-card hover:border-primary/25 hover:shadow-sm transition-all duration-200 animate-fade-in-up cursor-default"
-                style={{ animationDelay: `${index * 0.04}s` }}
-              >
-                <cat.icon size={15} className="text-primary shrink-0" />
-                <span className="text-sm font-medium text-foreground font-body whitespace-nowrap">{cat.label}</span>
-              </div>
-            ))}
+          <div className="flex flex-wrap justify-center gap-3 mb-10">
+            {researchCategories.map((cat, index) => {
+              const isSelected = cat.slug === selectedCategory;
+              const isDisabled = !cat.active;
+              return (
+                <button
+                  key={cat.slug}
+                  onClick={() => cat.active && setSelectedCategory(cat.slug)}
+                  disabled={isDisabled}
+                  className={`group flex items-center gap-2.5 px-4 py-2.5 rounded-full border transition-all duration-200 animate-fade-in-up text-sm font-medium font-body whitespace-nowrap ${
+                    isSelected
+                      ? "border-primary bg-primary/10 text-primary shadow-sm"
+                      : isDisabled
+                      ? "border-border/40 bg-card/50 text-muted-foreground/40 cursor-not-allowed"
+                      : "border-border bg-card hover:border-primary/25 hover:shadow-sm cursor-pointer text-foreground"
+                  }`}
+                  style={{ animationDelay: `${index * 0.04}s` }}
+                >
+                  <cat.icon size={15} className={isSelected ? "text-primary" : isDisabled ? "text-muted-foreground/30" : "text-primary"} />
+                  <span>{cat.label}</span>
+                  {isDisabled && <Lock size={11} className="text-muted-foreground/30" />}
+                </button>
+              );
+            })}
           </div>
+
+          {/* Research Highlights */}
+          {highlights.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+              {highlights.map((item, index) => (
+                <a
+                  key={item.title}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex flex-col rounded-xl border border-border bg-card p-6 hover:border-primary/20 hover:shadow-lg transition-all duration-300 animate-fade-in-up opacity-0"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${
+                      item.status === "Published" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"
+                    }`}>
+                      {item.status}
+                    </span>
+                  </div>
+                  <h3 className="font-display text-base font-semibold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground/60 font-body mb-3">{item.authors}</p>
+                  <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
+                    {item.description}
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
+                    View research <ArrowRight size={13} />
+                  </span>
+                </a>
+              ))}
+            </div>
+          )}
 
           <a
             href="https://github.com/UOR-Foundation/research"
