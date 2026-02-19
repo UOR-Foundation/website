@@ -121,7 +121,7 @@ The ontology is encoded as typed Rust data in `spec/` and serialized to three fo
 ### 14. UOR State (`state:`)
 - IRI: `https://uor.foundation/state/`
 - Description: Parameterized address spaces, context management, binding lifecycle, and state transitions. The user-space overlay onto the kernel's read-only ring substrate.
-- Classes: 4 | Properties: 7 | Individuals: 0
+- Classes: 4 | Properties: 16 | Individuals: 0
 
 ## Repository Structure
 
