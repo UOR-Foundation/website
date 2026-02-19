@@ -151,7 +151,7 @@ const Research = () => {
 
           {/* Research Highlights */}
           {highlights.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
               {highlights.map((item, index) => {
                 const isInternal = item.href.startsWith("/");
                 const CardWrapper = isInternal ? Link : "a";
