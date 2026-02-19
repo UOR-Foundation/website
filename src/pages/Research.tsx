@@ -151,14 +151,13 @@ const Research = () => {
                     isSelected
                       ? "border-primary bg-primary/10 text-primary shadow-sm"
                       : isDisabled
-                      ? "border-border/40 bg-card/50 text-muted-foreground/40 cursor-not-allowed"
+                      ? "border-border/30 bg-card/40 text-muted-foreground/50 cursor-default"
                       : "border-border bg-card hover:border-primary/25 hover:shadow-sm cursor-pointer text-foreground"
                   }`}
                   style={{ animationDelay: `${index * 0.04}s` }}
                 >
-                  <cat.icon size={15} className={isSelected ? "text-primary" : isDisabled ? "text-muted-foreground/30" : "text-primary"} />
+                  <cat.icon size={15} className={isSelected ? "text-primary" : isDisabled ? "text-muted-foreground/40" : "text-primary"} />
                   <span>{cat.label}</span>
-                  {isDisabled && <Lock size={11} className="text-muted-foreground/30" />}
                 </button>
               );
             })}
