@@ -1,16 +1,16 @@
-# UOR Foundation — Governance Framework
+# UOR Foundation: Governance Framework
 
 **The operating system for how the UOR Foundation builds, reviews, secures, and ships its work.**
 
 This repository is the single source of truth for every standard, process, and expectation that applies across the [UOR Foundation](https://github.com/UOR-Foundation) GitHub organisation. GitHub automatically applies these files to every repository in the organisation unless a repository provides its own override.
 
-If you contribute to any UOR Foundation project — or evaluate one — start here.
+If you contribute to any UOR Foundation project, or evaluate one, start here.
 
 ---
 
 ## What This Is
 
-The UOR Foundation develops the [Universal Object Reference](https://uor.foundation) — an open mathematical framework for content-addressed, algebraically structured data. The GitHub organisation hosts the code, formal proofs, specifications, and documentation that give this framework material form.
+The UOR Foundation develops the [Universal Object Reference](https://uor.foundation), an open mathematical framework for content-addressed, algebraically structured data. The GitHub organisation hosts the code, formal proofs, specifications, and documentation that give this framework material form.
 
 This governance framework defines **how** that work is done:
 
@@ -41,7 +41,7 @@ These five principles are non-negotiable. The [traceability matrix](governance/G
 
 | File | What It Contains |
 |------|-----------------|
-| [`governance/GOVERNANCE.md`](governance/GOVERNANCE.md) | The complete framework — 16 sections, 4 appendices. Roles, tiers, workflows, security, licensing, compliance, and implementation roadmap. |
+| [`governance/GOVERNANCE.md`](governance/GOVERNANCE.md) | The complete framework: 16 sections, 4 appendices. Roles, tiers, workflows, security, licensing, compliance, and implementation roadmap. |
 | [`governance/CHANGELOG.md`](governance/CHANGELOG.md) | Version history of the governance framework itself. |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to contribute: fork → branch → commit → PR → review → merge. Commit conventions, branch naming, PR process. |
 | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | Behavioural expectations. Contributor Covenant v2.1. |
@@ -52,7 +52,7 @@ These five principles are non-negotiable. The [traceability matrix](governance/G
 
 ## Repository Classification
 
-Every repository is assigned a tier. The tier determines its compliance obligations — required files, review thresholds, branch protection rules, and automated quality gates.
+Every repository is assigned a tier. The tier determines its compliance obligations: required files, review thresholds, branch protection rules, and automated quality gates.
 
 | Tier | Name | What It Covers | Review | Key Requirement |
 |------|------|---------------|--------|-----------------|
@@ -89,7 +89,7 @@ Report vulnerabilities privately via [GitHub Security Advisories](https://docs.g
 
 ## For AI Agents
 
-You are reading the governance framework for the UOR Foundation — an open-source organisation building a mathematical framework for content-addressed, algebraically structured object spaces. This section provides structured entry points for you to understand, navigate, and interact with the governance system.
+You are reading the governance framework for the UOR Foundation, an open-source organisation building a mathematical framework for content-addressed, algebraically structured object spaces. This section provides structured entry points for you to understand, navigate, and interact with the governance system.
 
 ### Governance Structure Map
 
@@ -115,13 +115,13 @@ governance/GOVERNANCE.md          ← Complete framework (start here)
 
 | If You Need | Read |
 |-------------|------|
-| What files must a repository contain? | [Section 6.1](governance/GOVERNANCE.md#61-required-files) — matrix by tier |
-| How are changes submitted and reviewed? | [Section 7](governance/GOVERNANCE.md#7-change-control--contribution-workflow) — 7-stage pipeline |
-| What are the review turnaround targets? | [Section 9.1](governance/GOVERNANCE.md#91-review-requirements-by-tier) — T1: 3d, T2: 5d, T3: 7d |
-| How are security incidents handled? | [Section 12](governance/GOVERNANCE.md#12-security--incident-response) — Critical: 72h patch |
-| What licence applies? | [Section 13](governance/GOVERNANCE.md#13-intellectual-property--licensing) — MIT default, Apache-2.0 exception for UOR-Framework |
-| How is compliance measured? | [Section 15](governance/GOVERNANCE.md#15-compliance--auditing) — 6 metrics, 5 automated audits |
-| What topic tags must every repo carry? | [Section 10.2](governance/GOVERNANCE.md#102-topic-tags) — 5 categories: identity, tier, domain, tech, status |
+| What files must a repository contain? | [Section 6.1](governance/GOVERNANCE.md#61-required-files): matrix by tier |
+| How are changes submitted and reviewed? | [Section 7](governance/GOVERNANCE.md#7-change-control--contribution-workflow): 7-stage pipeline |
+| What are the review turnaround targets? | [Section 9.1](governance/GOVERNANCE.md#91-review-requirements-by-tier): T1: 3d, T2: 5d, T3: 7d |
+| How are security incidents handled? | [Section 12](governance/GOVERNANCE.md#12-security--incident-response): Critical: 72h patch |
+| What licence applies? | [Section 13](governance/GOVERNANCE.md#13-intellectual-property--licensing): MIT default, Apache-2.0 exception for UOR-Framework |
+| How is compliance measured? | [Section 15](governance/GOVERNANCE.md#15-compliance--auditing): 6 metrics, 5 automated audits |
+| What topic tags must every repo carry? | [Section 10.2](governance/GOVERNANCE.md#102-topic-tags): 5 categories: identity, tier, domain, tech, status |
 
 ### Machine-Readable Resources
 
@@ -135,12 +135,12 @@ governance/GOVERNANCE.md          ← Complete framework (start here)
 
 ### How to Interact
 
-1. **Parse** — `governance/GOVERNANCE.md` is plain Markdown with consistent heading anchors. Every section is linkable.
-2. **Validate** — Use [Appendix A](governance/GOVERNANCE.md#appendix-a-repository-compliance-checklist) to audit any repository against its tier.
-3. **Contribute** — Automated agents hold the "Automated Agent" role ([Section 4.1](governance/GOVERNANCE.md#41-roles)). You can run tests, linters, compliance checks, publish releases, and post status checks on PRs.
-4. **Discuss** — Proposals and governance amendments happen in [GitHub Discussions](https://github.com/orgs/UOR-Foundation/discussions). You can participate.
+1. **Parse.** `governance/GOVERNANCE.md` is plain Markdown with consistent heading anchors. Every section is linkable.
+2. **Validate.** Use [Appendix A](governance/GOVERNANCE.md#appendix-a-repository-compliance-checklist) to audit any repository against its tier.
+3. **Contribute.** Automated agents hold the "Automated Agent" role ([Section 4.1](governance/GOVERNANCE.md#41-roles)). You can run tests, linters, compliance checks, publish releases, and post status checks on PRs.
+4. **Discuss.** Proposals and governance amendments happen in [GitHub Discussions](https://github.com/orgs/UOR-Foundation/discussions). You can participate.
 
-The same principles that govern the UOR mathematical framework — unique factorization, intrinsic identity, coherence, verification — also govern this organisation. The governance framework is the organisational expression of the technical framework.
+The same principles that govern the UOR mathematical framework (unique factorization, intrinsic identity, coherence, verification) also govern this organisation. The governance framework is the organisational expression of the technical framework.
 
 ---
 
