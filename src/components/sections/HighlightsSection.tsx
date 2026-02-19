@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import highlightResearch from "@/assets/highlight-research.jpg";
+import highlightKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import highlightAnnouncement from "@/assets/highlight-announcement.jpg";
 import highlightCommunityCall from "@/assets/highlight-community-call.jpg";
 
@@ -14,10 +14,10 @@ const tagStyles: Record<TagType, string> = {
 const highlights = [
   {
     tag: "Research" as TagType,
-    title: "Formal Verification of Content-Addressed Data Primitives",
-    date: "February 14, 2026",
-    image: highlightResearch,
-    href: "/research#research",
+    title: "UOR: Building the Internet's Knowledge Graph",
+    date: "December 21, 2023",
+    image: highlightKnowledgeGraph,
+    href: "/blog/building-the-internets-knowledge-graph",
   },
   {
     tag: "Announcement" as TagType,
