@@ -11,6 +11,7 @@ import Standard from "./pages/Standard";
 import Donate from "./pages/Donate";
 import BlogPost1 from "./pages/BlogPost1";
 import BlogPost2 from "./pages/BlogPost2";
+import BlogPost3 from "./pages/BlogPost3";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/donate" element={<Donate />} />
           <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
           <Route path="/blog/universal-mathematical-language" element={<BlogPost2 />} />
+          <Route path="/blog/uor-framework-launch" element={<BlogPost3 />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
