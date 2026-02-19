@@ -1,14 +1,24 @@
 import { useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { Link } from "react-router-dom";
-import { BookOpen, Calendar, ExternalLink, ArrowRight, Calculator, Plus, Film } from "lucide-react";
+import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf, Box, Lock, Plus } from "lucide-react";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 
 const researchCategories = [
   { icon: Calculator, label: "Mathematics", slug: "mathematics", description: "Formal methods, algebraic structures, and mathematical foundations of UOR.", active: true },
-  { icon: Film, label: "Media Research", slug: "media-research", description: "Multimedia explorations, visual communications, and public-facing research narratives.", active: true },
+  { icon: Cpu, label: "Hardware & Robotics", slug: "hardware-robotics", description: "Embedded systems, robotics middleware, and UOR-native hardware interfaces.", active: false },
+  { icon: Shield, label: "Cybersecurity", slug: "cybersecurity", description: "Content-addressed security, zero-trust identity, and verifiable data provenance.", active: false },
+  { icon: TrendingUp, label: "Finance", slug: "finance", description: "Decentralized finance primitives, auditable ledgers, and semantic financial data.", active: false },
+  { icon: Bot, label: "Agentic AI", slug: "agentic-ai", description: "Autonomous agents, tool-use frameworks, and UOR-native AI architectures.", active: false },
+  { icon: Atom, label: "Quantum", slug: "quantum", description: "Quantum computing interfaces, post-quantum cryptography, and hybrid algorithms.", active: false },
+  { icon: BarChart3, label: "Data Science", slug: "data-science", description: "Semantic datasets, reproducible pipelines, and interoperable analytics.", active: false },
+  { icon: HeartPulse, label: "Healthcare", slug: "healthcare", description: "Medical data interoperability, patient-centric identity, and open health standards.", active: false },
+  { icon: Globe, label: "Web3", slug: "web3", description: "Decentralized protocols, on-chain identity, and content-addressed storage.", active: false },
+  { icon: Microscope, label: "Physics", slug: "physics", description: "Simulation frameworks, open research data, and computational physics tooling.", active: false },
+  { icon: Rocket, label: "Frontier Tech", slug: "frontier-tech", description: "Emerging technology exploration at the intersection of UOR and next-gen infrastructure.", active: false },
+  { icon: Leaf, label: "Climate & Energy", slug: "climate-energy", description: "Sustainable infrastructure, carbon accounting, and open energy data standards.", active: false },
 ];
 
 const categoryResearch: Record<string, Array<{ title: string; authors: string; status: string; description: string; href: string }>> = {
@@ -28,7 +38,6 @@ const categoryResearch: Record<string, Array<{ title: string; authors: string; s
       href: "https://github.com/UOR-Foundation/research",
     },
   ],
-  "media-research": [],
 };
 
 const blogPosts = [
