@@ -47,39 +47,32 @@ const About = () => {
           <div className="rule" />
 
           <div className="animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-            <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">How We Are Governed</h2>
-            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-4">
-              The UOR Foundation operates under a single, public governance framework. It defines who can contribute, how changes are proposed and reviewed, and what happens when something goes wrong. Every rule is documented, every decision is traceable, and nothing ships without review.
-            </p>
+            <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Our Governance</h2>
             <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
-              Six principles underpin every process in the foundation:
+              Everything the foundation produces — code, proofs, documentation — is governed by a single public framework. It is built on six principles:
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {[
-                { icon: GitBranch, label: "Traceability", desc: "Every change is tied to a person and a purpose. Nothing is anonymous." },
-                { icon: Shield, label: "Coherence", desc: "All projects follow the same standards, forming one consistent body of work." },
-                { icon: Undo2, label: "Reversibility", desc: "Any decision can be rolled back. No action causes permanent, unrecoverable damage." },
-                { icon: CheckCircle, label: "Verification", desc: "Claims of correctness are proven, not asserted. Automated checks run on every change." },
-                { icon: Eye, label: "Openness", desc: "Governance rules, decisions, and discussions are public. Anyone can read and scrutinise them." },
-                { icon: Users, label: "Accountability", desc: "Clear roles — owners, maintainers, contributors — each with defined responsibilities and escalation paths." },
+                { icon: GitBranch, label: "Traceability", desc: "Every change tied to a person and a reason." },
+                { icon: Shield, label: "Coherence", desc: "One standard across every project." },
+                { icon: Undo2, label: "Reversibility", desc: "Any action can be undone." },
+                { icon: CheckCircle, label: "Verification", desc: "Correctness is proven, not claimed." },
+                { icon: Eye, label: "Openness", desc: "All rules and decisions are public." },
+                { icon: Users, label: "Accountability", desc: "Clear roles with defined responsibilities." },
               ].map(({ icon: Icon, label, desc }) => (
                 <div
                   key={label}
-                  className="rounded-lg border border-border/60 bg-card/50 p-5 flex flex-col gap-3"
+                  className="rounded-lg border border-border/60 bg-card/50 p-4 flex flex-col gap-2"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2">
                     <Icon className="w-4 h-4 text-primary shrink-0" strokeWidth={1.8} />
-                    <span className="font-display text-sm font-semibold text-foreground tracking-wide">{label}</span>
+                    <span className="font-display text-sm font-semibold text-foreground">{label}</span>
                   </div>
-                  <p className="text-muted-foreground font-body text-sm leading-relaxed">{desc}</p>
+                  <p className="text-muted-foreground font-body text-xs leading-relaxed">{desc}</p>
                 </div>
               ))}
             </div>
-
-            <p className="text-muted-foreground font-body text-sm md:text-base leading-relaxed mb-6">
-              Projects are classified into four tiers — Core, Implementation, Presentation, and Experimental — each with proportionate review requirements, compliance obligations, and quality gates. The framework is versioned, auditable, and open to amendment through public discussion.
-            </p>
 
             <a
               href="https://github.com/UOR-Foundation/.github"
@@ -87,7 +80,7 @@ const About = () => {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-body text-base md:text-lg transition-colors group"
             >
-              Read the full governance framework
+              Read the governance framework
               <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
             </a>
           </div>
