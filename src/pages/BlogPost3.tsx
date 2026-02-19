@@ -259,12 +259,14 @@ const BlogPost3 = () => {
             <p className="text-muted-foreground font-body mb-4">
               Join the conversation. Review the framework, share your feedback, and help shape the future of universal data infrastructure.
             </p>
-          <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3">
               <a
-                href="/blog/meet-the-uor-framework"
+                href="https://github.com/UOR-Foundation/UOR-Framework"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="btn-primary"
               >
-                Learn
+                View the Framework
               </a>
               <a
                 href="https://discord.gg/ZwuZaNyuve"
@@ -272,15 +274,7 @@ const BlogPost3 = () => {
                 rel="noopener noreferrer"
                 className="btn-outline"
               >
-                Connect
-              </a>
-              <a
-                href="https://github.com/UOR-Foundation/UOR-Framework"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-outline"
-              >
-                Build
+                Join Our Discord
               </a>
             </div>
           </div>
