@@ -54,24 +54,25 @@ const About = () => {
 
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {[
-                { icon: GitBranch, label: "Traceability", desc: "Every change tied to a person and a reason." },
-                { icon: Shield, label: "Coherence", desc: "One standard across every project." },
-                { icon: Undo2, label: "Reversibility", desc: "Any action can be undone." },
-                { icon: CheckCircle, label: "Verification", desc: "Correctness is proven, not claimed." },
-                { icon: Eye, label: "Openness", desc: "All rules and decisions are public." },
-                { icon: Users, label: "Accountability", desc: "Clear roles with defined responsibilities." },
+                { icon: GitBranch, label: "Traceability", desc: "Every change is tied to a person and a documented reason." },
+                { icon: Shield, label: "Coherence", desc: "All projects follow one standard, forming a consistent whole." },
+                { icon: Undo2, label: "Reversibility", desc: "Any action can be rolled back without permanent data loss." },
+                { icon: CheckCircle, label: "Verification", desc: "Every correctness claim is mathematically proven, not asserted." },
+                { icon: Eye, label: "Openness", desc: "All governance rules and decisions are publicly documented." },
+                { icon: Users, label: "Accountability", desc: "Clear roles and responsibilities with defined escalation paths." },
               ].map(({ icon: Icon, label, desc }) => (
                 <div
                   key={label}
-                  className="rounded-lg border border-border/60 bg-card/50 p-4 flex flex-col gap-2"
+                  className="rounded-lg border border-border/60 bg-card/50 p-5 flex flex-col gap-2.5"
                 >
-                  <div className="flex items-center gap-2">
-                    <Icon className="w-4 h-4 text-primary shrink-0" strokeWidth={1.8} />
-                    <span className="font-display text-sm font-semibold text-foreground">{label}</span>
+                  <div className="flex items-center gap-2.5">
+                    <Icon className="w-[18px] h-[18px] text-primary shrink-0" strokeWidth={1.8} />
+                    <span className="font-display text-base font-semibold text-foreground">{label}</span>
                   </div>
-                  <p className="text-muted-foreground font-body text-xs leading-relaxed">{desc}</p>
+                  <p className="text-muted-foreground font-body text-sm leading-relaxed">{desc}</p>
                 </div>
               ))}
+
             </div>
 
             <a
