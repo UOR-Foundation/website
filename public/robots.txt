@@ -1,6 +1,14 @@
 User-agent: *
 Allow: /
 
-# AI agents: see /agent-discovery.md
+# === AI Agent Discovery ===
+# Entry point for AI agents (start here):
+# https://uor.foundation/llms.md
+#
+# Machine-readable discovery:
+# https://uor.foundation/llms.txt
+# https://uor.foundation/.well-known/uor.json
+# https://uor.foundation/agent-discovery.md
+# https://uor.foundation/openapi.json
 
 Sitemap: https://uor.foundation/sitemap.xml
