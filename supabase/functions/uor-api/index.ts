@@ -253,6 +253,15 @@ function opVerifyCriticalIdentity(url: URL, rl: RateLimitResult): Response {
   const etag = makeETag('/kernel/op/verify', { x: String(x), n: String(n) });
 
   return jsonResp({
+    "summary": {
+      "verified": holds,
+      "x": x,
+      "bnot_x": bnot_x,
+      "neg_bnot_x": neg_bnot_x,
+      "succ_x": succ_x,
+      "statement": `neg(bnot(${x})) = ${neg_bnot_x} = succ(${x}) [${holds ? 'PASS' : 'FAIL'}]`,
+      "ring": `Z/${m}Z`
+    },
     "@context": UOR_CONTEXT,
     "@id": `https://uor.foundation/instance/proof-critical-identity-x${x}-n${n}`,
     "@type": ["proof:Proof", "proof:CriticalIdentityProof"],
@@ -781,7 +790,14 @@ async function partitionResolve(req: Request, rl: RateLimitResult): Promise<Resp
         "expected": mEff,
         "valid": (irreducible + reducible + unit + exterior) === mEff
       },
-      "quality_signal": density > 0.25 ? `PASS — density ${density.toFixed(4)} > threshold 0.25` : `WARN — density ${density.toFixed(4)} ≤ threshold 0.25`,
+      "algebraic_density_signal": density > 0.25 ? `PASS — density ${density.toFixed(4)} > threshold 0.25` : `WARN — density ${density.toFixed(4)} ≤ threshold 0.25`,
+      "partition_interpretation": {
+        "method": "algebraic-byte-class",
+        "note": "Density measures algebraic class distribution of byte values — not semantic novelty or entropy. Repetitive content with algebraically irreducible byte values (odd bytes that are not ring units) will score high density.",
+        "threshold": 0.25,
+        "result": density > 0.25 ? "PASS" : "WARN",
+        "caveat": "A string of identical odd bytes (e.g. 'aaaa') will always PASS because each byte is algebraically irreducible — this is a byte-class property, not a content-quality judgement."
+      },
       "resolver": body.resolver ?? "EvaluationResolver",
       "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/partition.rs",
       "conformance_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/conformance/src/tests/fixtures/test5_partition.rs"
@@ -819,7 +835,14 @@ async function partitionResolve(req: Request, rl: RateLimitResult): Promise<Resp
       "bytes": bytes,
       "per_byte": perByte,
       "summary": { "irreducible": irreducible, "reducible": reducible, "unit": unit, "exterior": exterior, "total": bytes.length },
-      "quality_signal": density > 0.25 ? `PASS — density ${density.toFixed(4)} > threshold 0.25` : `WARN — density ${density.toFixed(4)} ≤ threshold 0.25`,
+      "algebraic_density_signal": density > 0.25 ? `PASS — density ${density.toFixed(4)} > threshold 0.25` : `WARN — density ${density.toFixed(4)} ≤ threshold 0.25`,
+      "partition_interpretation": {
+        "method": "algebraic-byte-class",
+        "note": "Density measures algebraic class distribution of byte values — not semantic novelty or entropy. Repetitive content with algebraically irreducible byte values (odd bytes that are not ring units) will score high density.",
+        "threshold": 0.25,
+        "result": density > 0.25 ? "PASS" : "WARN",
+        "caveat": "A string of identical odd bytes (e.g. 'aaaa') will always PASS because each byte is algebraically irreducible — this is a byte-class property, not a content-quality judgement."
+      },
       "resolver": body.resolver ?? "EvaluationResolver",
       "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/partition.rs"
     }, CACHE_HEADERS_CONTENT, undefined, rl);
@@ -847,6 +870,15 @@ function proofCriticalIdentity(url: URL, rl: RateLimitResult): Response {
   const etag = makeETag('/bridge/proof/critical-identity', { x: String(x), n: String(n) });
 
   return jsonResp({
+    "summary": {
+      "verified": holds,
+      "x": x,
+      "bnot_x": bnot_x,
+      "neg_bnot_x": neg_bnot_x,
+      "succ_x": succ_x,
+      "statement": `neg(bnot(${x})) = ${neg_bnot_x} = succ(${x}) [${holds ? 'PASS' : 'FAIL'}]`,
+      "proof_id": `https://uor.foundation/instance/bridge-proof-critical-identity-x${x}-n${n}`
+    },
     "@context": UOR_CONTEXT,
     "@id": `https://uor.foundation/instance/bridge-proof-critical-identity-x${x}-n${n}`,
     "@type": ["proof:Proof", "proof:CriticalIdentityProof"],
@@ -1113,6 +1145,7 @@ function typeList(rl: RateLimitResult): Response {
 // GET /navigate
 function frameworkIndex(rl: RateLimitResult): Response {
   const base = 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api';
+  const verifySimple = 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-verify';
   const etag = makeETag('/navigate', {});
   return jsonResp({
     "@context": UOR_CONTEXT,
@@ -1120,11 +1153,14 @@ function frameworkIndex(rl: RateLimitResult): Response {
     "@type": "sdo:WebAPI",
     "title": "UOR Framework REST API — Navigation Index",
     "version": "1.0.0",
-    "description": "Complete index of all endpoints. Start with /kernel/op/verify?x=42 to verify the mathematical foundation in one request.",
-    "openapi_spec": `${base}/openapi.json`,
+    "total_endpoints": 20,
+    "description": "Complete index of all 20 working endpoints. Start with uor-verify?x=42 for the simplest first call, or /kernel/op/verify?x=42 for the full proof.",
+    "openapi_spec": "https://uor.foundation/openapi.json",
     "agent_entry_point": "https://uor.foundation/llms.md",
     "discovery_metadata": "https://uor.foundation/.well-known/uor.json",
     "quick_start": {
+      "simplest_first_call": `${verifySimple}?x=42`,
+      "simplest_note": "Flat JSON, 5 fields, zero JSON-LD. Best entry point for agents new to UOR.",
       "verify_critical_identity": `${base}/kernel/op/verify?x=42`,
       "compute_all_ops": `${base}/kernel/op/compute?x=42&y=10`,
       "encode_address": `${base}/kernel/address/encode (POST {input:"hello"})`,
@@ -1134,35 +1170,39 @@ function frameworkIndex(rl: RateLimitResult): Response {
       "kernel": {
         "description": "Core ring algebra — u:, schema:, op: namespaces",
         "endpoints": [
-          { "method": "GET", "path": `${base}/kernel/op/verify`, "params": "x, n", "operationId": "opVerifyCriticalIdentity", "summary": "Verify neg(bnot(x)) = succ(x)" },
-          { "method": "GET", "path": `${base}/kernel/op/verify/all`, "params": "n, expand", "operationId": "opVerifyAll", "summary": "Universal coherence proof for all 2^n elements" },
-          { "method": "GET", "path": `${base}/kernel/op/compute`, "params": "x, n, y", "operationId": "opCompute", "summary": "All ring operations for x (and y)" },
-          { "method": "GET", "path": `${base}/kernel/op/operations`, "params": "none", "operationId": "opList", "summary": "All 12 named op/ individuals" },
-          { "method": "POST", "path": `${base}/kernel/address/encode`, "body": "{input, encoding}", "operationId": "addressEncode", "summary": "UTF-8 → u:Address with Glyph decomposition" },
-          { "method": "GET", "path": `${base}/kernel/schema/datum`, "params": "x, n", "operationId": "schemaDatum", "summary": "Full schema:Datum for a ring value" }
+          { "method": "GET", "path": `${base}/kernel/op/verify`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/op/verify?x=42`, "operationId": "opVerifyCriticalIdentity", "summary": "Verify neg(bnot(x)) = succ(x) — the framework's core rule" },
+          { "method": "GET", "path": `${base}/kernel/op/verify/all`, "required_params": "none", "optional_params": "n, expand", "example": `${base}/kernel/op/verify/all?n=8`, "operationId": "opVerifyAll", "summary": "Universal proof for all 2^n elements — 256 passes, zero failures" },
+          { "method": "GET", "path": `${base}/kernel/op/compute`, "required_params": "x", "optional_params": "n, y", "example": `${base}/kernel/op/compute?x=42&y=10`, "operationId": "opCompute", "summary": "All ring operations for x (and binary ops for x, y)" },
+          { "method": "GET", "path": `${base}/kernel/op/operations`, "required_params": "none", "example": `${base}/kernel/op/operations`, "operationId": "opList", "summary": "All 12 named op/ individuals with formulas and definitions" },
+          { "method": "POST", "path": `${base}/kernel/address/encode`, "body": "{input, encoding}", "example": `${base}/kernel/address/encode`, "operationId": "addressEncode", "summary": "UTF-8 → u:Address with per-byte Glyph decomposition" },
+          { "method": "GET", "path": `${base}/kernel/schema/datum`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/schema/datum?x=42`, "operationId": "schemaDatum", "summary": "Full schema:Datum — decimal, binary, bits set, content address" }
         ]
       },
       "bridge": {
-        "description": "Verification, proof, and certification — partition:, proof:, cert:, observable: namespaces",
+        "description": "Verification, proof, certification, traces — partition:, proof:, cert:, observable:, derivation:, trace:, resolver: namespaces",
         "endpoints": [
-          { "method": "POST", "path": `${base}/bridge/partition`, "body": "{type_definition|input}", "operationId": "partitionResolve", "summary": "Four-component partition:Partition of R_n" },
-          { "method": "GET", "path": `${base}/bridge/proof/critical-identity`, "params": "x, n", "operationId": "proofCriticalIdentity", "summary": "proof:CriticalIdentityProof with witness data" },
-          { "method": "POST", "path": `${base}/bridge/proof/coherence`, "body": "{type_definition, n}", "operationId": "proofCoherence", "summary": "proof:CoherenceProof for a type definition" },
-          { "method": "GET", "path": `${base}/bridge/cert/involution`, "params": "operation, n", "operationId": "certInvolution", "summary": "cert:InvolutionCertificate for neg or bnot" },
-          { "method": "GET", "path": `${base}/bridge/observable/metrics`, "params": "x, n", "operationId": "observableMetrics", "summary": "RingMetric, HammingMetric, CascadeLength" }
-        ],
-        "endpoints_also": [
-          { "method": "GET", "path": `${base}/bridge/derivation`, "params": "x, n, ops", "operationId": "bridgeDerivation", "summary": "derivation:DerivationTrace — step-by-step op sequence with verification" },
-          { "method": "GET", "path": `${base}/bridge/trace`, "params": "x, n, ops", "operationId": "bridgeTrace", "summary": "trace:ExecutionTrace — bitwise frames with hamming weight and delta" },
-          { "method": "GET", "path": `${base}/bridge/resolver`, "params": "x, n", "operationId": "bridgeResolver", "summary": "resolver:Resolution — canonical form with partition decomposition" }
+          { "method": "POST", "path": `${base}/bridge/partition`, "body": "{type_definition|input}", "example": `${base}/bridge/partition`, "operationId": "partitionResolve", "summary": "Algebraic density score — classify bytes into four ring-theoretic groups" },
+          { "method": "GET", "path": `${base}/bridge/proof/critical-identity`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/proof/critical-identity?x=42`, "operationId": "proofCriticalIdentity", "summary": "Shareable proof:CriticalIdentityProof — permanent address, all steps explicit" },
+          { "method": "POST", "path": `${base}/bridge/proof/coherence`, "body": "{type_definition, n}", "example": `${base}/bridge/proof/coherence`, "operationId": "proofCoherence", "summary": "proof:CoherenceProof — 256/256 elements pass, holds_universally: true" },
+          { "method": "GET", "path": `${base}/bridge/cert/involution`, "required_params": "operation", "optional_params": "n", "example": `${base}/bridge/cert/involution?operation=neg`, "operationId": "certInvolution", "summary": "cert:InvolutionCertificate — proves op undoes itself across all values" },
+          { "method": "GET", "path": `${base}/bridge/observable/metrics`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/observable/metrics?x=42`, "operationId": "observableMetrics", "summary": "RingMetric, HammingMetric, CascadeLength, CatastropheThreshold" },
+          { "method": "GET", "path": `${base}/bridge/derivation`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/derivation?x=42&ops=neg,bnot,succ`, "operationId": "bridgeDerivation", "summary": "derivation:DerivationTrace — auditable step-by-step op record with ontology refs" },
+          { "method": "GET", "path": `${base}/bridge/trace`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/trace?x=42&ops=neg,bnot`, "operationId": "bridgeTrace", "summary": "trace:ExecutionTrace — exact bit state per step, Hamming drift, XOR deltas" },
+          { "method": "GET", "path": `${base}/bridge/resolver`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/resolver?x=42`, "operationId": "bridgeResolver", "summary": "resolver:Resolution — canonical category with full factor decomposition" }
         ]
       },
       "user": {
         "description": "Type system and application layer — type:, morphism:, state: namespaces",
         "endpoints": [
-          { "method": "GET", "path": `${base}/user/type/primitives`, "params": "none", "operationId": "typeList", "summary": "Catalogue of type:PrimitiveType definitions" },
-          { "method": "GET", "path": `${base}/user/morphism/transforms`, "params": "x, from_n, to_n", "operationId": "morphismTransforms", "summary": "morphism:RingHomomorphism — structure-preserving map between rings" },
-          { "method": "GET", "path": `${base}/user/state`, "params": "x, n", "operationId": "userState", "summary": "state:Frame — agent lifecycle binding with transitions and conditions" }
+          { "method": "GET", "path": `${base}/user/type/primitives`, "required_params": "none", "example": `${base}/user/type/primitives`, "operationId": "typeList", "summary": "Catalogue of type:PrimitiveType — U1, U4, U8, U16 and composite types" },
+          { "method": "GET", "path": `${base}/user/morphism/transforms`, "required_params": "x", "optional_params": "from_n, to_n", "example": `${base}/user/morphism/transforms?x=42&from_n=8&to_n=16`, "operationId": "morphismTransforms", "summary": "morphism:RingHomomorphism — structure-preserving map between ring sizes" },
+          { "method": "GET", "path": `${base}/user/state`, "required_params": "x", "optional_params": "n", "example": `${base}/user/state?x=42`, "operationId": "userState", "summary": "state:Frame — agent lifecycle: category, entry/exit conditions, all 4 transitions" }
+        ]
+      },
+      "simple_verify": {
+        "description": "Standalone simple endpoint — no JSON-LD, flat JSON output. Best first call for agents.",
+        "endpoints": [
+          { "method": "GET", "path": `${verifySimple}`, "required_params": "x OR content", "example": `${verifySimple}?x=42`, "operationId": "uorVerify", "summary": "Flat JSON: {x, bnot_x, neg_bnot_x, succ_x, holds}. Zero JSON-LD, 5 fields." }
         ]
       }
     },
@@ -1619,23 +1659,16 @@ function userState(url: URL, rl: RateLimitResult): Response {
   }, CACHE_HEADERS_CONTENT, etag, rl);
 }
 
-// GET /openapi.json — inline JSON-LD spec metadata (RESTful, ETag-capable)
-function openapiSpec(rl: RateLimitResult): Response {
-  const etag = makeETag('/openapi.json', {});
-  return jsonResp({
-    "@context": UOR_CONTEXT,
-    "@type": "sdo:WebAPI",
-    "@id": "https://uor.foundation/api/v1",
-    "title": "UOR Framework Agent API — OpenAPI 3.1.0",
-    "version": "1.0.0",
-    "spec_url": "https://uor.foundation/openapi.json",
-    "live_spec_url": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json",
-    "note": "Fetch spec_url for the full OpenAPI 3.1.0 document (14 paths, 15 schemas).",
-    "paths_count": 14,
-    "schemas_count": 15,
-    "agent_entry": "https://uor.foundation/llms.md",
-    "navigate": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/navigate"
-  }, CACHE_HEADERS_KERNEL, etag, rl);
+// GET /openapi.json — 301 redirect to canonical static spec
+function openapiSpec(): Response {
+  return new Response(null, {
+    status: 301,
+    headers: {
+      ...CORS_HEADERS,
+      'Location': 'https://uor.foundation/openapi.json',
+      'Cache-Control': 'public, max-age=3600',
+    }
+  });
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1673,11 +1706,7 @@ Deno.serve(async (req: Request) => {
     }
     if (path === '/openapi.json') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
-      const resp = openapiSpec(rl);
-      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
-        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
-      }
-      return resp;
+      return openapiSpec();
     }
 
     // ── Kernel — op/ ──
