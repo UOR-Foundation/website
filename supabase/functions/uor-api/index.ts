@@ -20,10 +20,16 @@ const CACHE_HEADERS_KERNEL = {
   'X-UOR-Space': 'kernel',
 };
 
-const CACHE_HEADERS_CONTENT = {
+const CACHE_HEADERS_BRIDGE = {
   ...JSON_HEADERS,
   'Cache-Control': 'public, max-age=60',
   'X-UOR-Space': 'bridge',
+};
+
+const CACHE_HEADERS_USER = {
+  ...JSON_HEADERS,
+  'Cache-Control': 'public, max-age=60',
+  'X-UOR-Space': 'user',
 };
 
 // ── Known valid paths → allowed methods ─────────────────────────────────────
@@ -173,6 +179,14 @@ function error405(path: string, allowedMethods: string[]): Response {
   }), { status: 405, headers: { ...JSON_HEADERS, 'Allow': allow } });
 }
 
+function error415(rl?: RateLimitResult): Response {
+  return new Response(JSON.stringify({
+    error: 'Content-Type must be application/json',
+    code: 'UNSUPPORTED_MEDIA_TYPE',
+    docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
+  }), { status: 415, headers: { ...JSON_HEADERS, ...(rl ? rateLimitHeaders(rl) : {}) } });
+}
+
 function error429(rl: RateLimitResult): Response {
   return new Response(JSON.stringify({
     error: 'Rate limit exceeded',
@@ -208,27 +222,9 @@ function jsonResp(body: unknown, extraHeaders: Record<string, string> = CACHE_HE
   return new Response(JSON.stringify(body, null, 2), { status: 200, headers });
 }
 
-// ── JSON-LD @context (shared) — all 14 UOR namespaces + sdo + xsd ──────────
-const UOR_CONTEXT = {
-  "u": "https://uor.foundation/u/",
-  "schema": "https://uor.foundation/schema/",
-  "op": "https://uor.foundation/op/",
-  "query": "https://uor.foundation/query/",
-  "resolver": "https://uor.foundation/resolver/",
-  "type": "https://uor.foundation/type/",
-  "partition": "https://uor.foundation/partition/",
-  "observable": "https://uor.foundation/observable/",
-  "proof": "https://uor.foundation/proof/",
-  "derivation": "https://uor.foundation/derivation/",
-  "trace": "https://uor.foundation/trace/",
-  "cert": "https://uor.foundation/cert/",
-  "morphism": "https://uor.foundation/morphism/",
-  "state": "https://uor.foundation/state/",
-  "sdo": "https://schema.org/",
-  "owl": "http://www.w3.org/2002/07/owl#",
-  "xsd": "http://www.w3.org/2001/XMLSchema#",
-  "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
-};
+// ── JSON-LD @context URL — served at https://uor.foundation/contexts/uor-v1.jsonld ──
+// Inline object kept for reference; all responses now emit the URL string only.
+const UOR_CONTEXT_URL = "https://uor.foundation/contexts/uor-v1.jsonld";
 
 // ════════════════════════════════════════════════════════════════════════════
 // ENDPOINT HANDLERS
@@ -262,7 +258,7 @@ function opVerifyCriticalIdentity(url: URL, rl: RateLimitResult): Response {
       "statement": `neg(bnot(${x})) = ${neg_bnot_x} = succ(${x}) [${holds ? 'PASS' : 'FAIL'}]`,
       "ring": `Z/${m}Z`
     },
-    "@context": UOR_CONTEXT,
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/proof-critical-identity-x${x}-n${n}`,
     "@type": ["proof:Proof", "proof:CriticalIdentityProof"],
     "proof:quantum": n,
@@ -334,7 +330,7 @@ function opVerifyAll(url: URL, rl: RateLimitResult): Response {
   const etag = makeETag('/kernel/op/verify/all', { n: String(n), expand: String(expand) });
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/coherence-proof-n${n}`,
     "@type": ["proof:Proof", "proof:CoherenceProof"],
     "proof:quantum": n,
@@ -375,12 +371,31 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
     if (y >= m) return error400(`y must be in [0, ${m-1}] for n=${n}`, 'y', rl);
   }
 
-  const neg_bnot_x = neg(bnot(x, n), n);
+  const neg_x = neg(x, n);
+  const bnot_x = bnot(x, n);
   const succ_x = succOp(x, n);
+  const pred_x = predOp(x, n);
+  const neg_bnot_x = neg(bnot_x, n);
   const etag = makeETag('/kernel/op/compute', { x: String(x), n: String(n), y: String(y) });
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "x": x,
+      "y": y,
+      "ring": `Z/${m}Z`,
+      "neg": neg_x,
+      "bnot": bnot_x,
+      "succ": succ_x,
+      "pred": pred_x,
+      "add": addOp(x, y, n),
+      "sub": subOp(x, y, n),
+      "mul": mulOp(x, y, n),
+      "xor": xorOp(x, y),
+      "and": andOp(x, y),
+      "or": orOp(x, y),
+      "critical_identity_holds": neg_bnot_x === succ_x
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/op-compute-x${x}-n${n}`,
     "datum": makeDatum(x, n),
     "ring": {
@@ -395,7 +410,7 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:arity": 1,
         "op:geometricCharacter": "ring_reflection",
         "formula": `neg(x) = (-x) mod ${m}`,
-        "result": neg(x, n)
+        "result": neg_x
       },
       "bnot": {
         "@id": "https://uor.foundation/op/bnot",
@@ -403,7 +418,7 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:arity": 1,
         "op:geometricCharacter": "hypercube_reflection",
         "formula": `bnot(x) = x XOR ${m-1}`,
-        "result": bnot(x, n)
+        "result": bnot_x
       },
       "succ": {
         "@id": "https://uor.foundation/op/succ",
@@ -412,7 +427,7 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:geometricCharacter": "rotation",
         "op:composedOf": ["op:neg", "op:bnot"],
         "formula": `succ(x) = neg(bnot(x)) = (x+1) mod ${m}`,
-        "result": succOp(x, n)
+        "result": succ_x
       },
       "pred": {
         "@id": "https://uor.foundation/op/pred",
@@ -421,7 +436,7 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:geometricCharacter": "rotation_inverse",
         "op:composedOf": ["op:bnot", "op:neg"],
         "formula": `pred(x) = bnot(neg(x)) = (x-1) mod ${m}`,
-        "result": predOp(x, n)
+        "result": pred_x
       }
     },
     "binary_ops": {
@@ -504,7 +519,14 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
 function opList(rl: RateLimitResult): Response {
   const etag = makeETag('/kernel/op/operations', {});
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "total": 12,
+      "unary_count": 4,
+      "binary_count": 6,
+      "special_count": 2,
+      "critical_identity_individuals": ["neg", "bnot", "succ", "criticalIdentity"]
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": "https://uor.foundation/op/",
     "@type": "op:OperationCatalogue",
     "description": "All 12 named individuals in the op/ namespace (op.rs)",
@@ -646,6 +668,10 @@ function opList(rl: RateLimitResult): Response {
 
 // POST /kernel/address/encode
 async function addressEncode(req: Request, rl: RateLimitResult): Promise<Response> {
+  // 415 enforcement
+  const contentType = req.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) return error415(rl);
+
   let body: { input?: unknown; encoding?: unknown };
   try {
     body = await req.json();
@@ -681,7 +707,7 @@ async function addressEncode(req: Request, rl: RateLimitResult): Promise<Respons
   });
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "@context": UOR_CONTEXT_URL,
     "@type": "u:Address",
     "u:glyph": simplified,
     "u:length": bytes.length,
@@ -695,7 +721,7 @@ async function addressEncode(req: Request, rl: RateLimitResult): Promise<Respons
       "u_namespace": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/u.rs",
       "resolver_namespace": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/resolver.rs"
     }
-  }, CACHE_HEADERS_CONTENT, undefined, rl);
+  }, CACHE_HEADERS_KERNEL, undefined, rl);
 }
 
 // GET /kernel/schema/datum?x=42&n=8
@@ -711,10 +737,22 @@ function schemaDatum(url: URL, rl: RateLimitResult): Response {
   if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x', rl);
 
   const datum = makeDatum(x, n);
+  const spectrum = x.toString(2).padStart(n, '0');
+  const stratum = spectrum.split('').filter(b => b === '1').length;
+  const { component } = classifyByte(x, n);
   const etag = makeETag('/kernel/schema/datum', { x: String(x), n: String(n) });
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "value": x,
+      "quantum": n,
+      "stratum": stratum,
+      "spectrum": spectrum,
+      "glyph_character": encodeGlyph(x),
+      "ring": `Z/${m}Z`,
+      "partition_component": component
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/datum-x${x}-n${n}`,
     ...datum,
     "schema:ring": {
@@ -732,6 +770,10 @@ function schemaDatum(url: URL, rl: RateLimitResult): Response {
 
 // POST /bridge/partition
 async function partitionResolve(req: Request, rl: RateLimitResult): Promise<Response> {
+  // 415 enforcement
+  const contentType = req.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) return error415(rl);
+
   let body: { type_definition?: unknown; input?: unknown; encoding?: unknown; resolver?: unknown; n?: unknown };
   try {
     body = await req.json();
@@ -759,7 +801,7 @@ async function partitionResolve(req: Request, rl: RateLimitResult): Promise<Resp
     const density = irreducible / mEff;
 
     return jsonResp({
-      "@context": UOR_CONTEXT,
+      "@context": UOR_CONTEXT_URL,
       "@id": `https://uor.foundation/instance/partition-R${nEff}`,
       "@type": "partition:Partition",
       "partition:quantum": nEff,
@@ -801,7 +843,7 @@ async function partitionResolve(req: Request, rl: RateLimitResult): Promise<Resp
       "resolver": body.resolver ?? "EvaluationResolver",
       "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/partition.rs",
       "conformance_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/conformance/src/tests/fixtures/test5_partition.rs"
-    }, CACHE_HEADERS_CONTENT, undefined, rl);
+    }, CACHE_HEADERS_BRIDGE, undefined, rl);
   }
 
   if (typeof body.input === 'string') {
@@ -827,7 +869,7 @@ async function partitionResolve(req: Request, rl: RateLimitResult): Promise<Resp
     const density = bytes.length > 0 ? irreducible / bytes.length : 0;
 
     return jsonResp({
-      "@context": UOR_CONTEXT,
+      "@context": UOR_CONTEXT_URL,
       "@type": "partition:Partition",
       "partition:quantum": n,
       "partition:density": density,
@@ -845,7 +887,7 @@ async function partitionResolve(req: Request, rl: RateLimitResult): Promise<Resp
       },
       "resolver": body.resolver ?? "EvaluationResolver",
       "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/partition.rs"
-    }, CACHE_HEADERS_CONTENT, undefined, rl);
+    }, CACHE_HEADERS_BRIDGE, undefined, rl);
   }
 
   return error400("Request body must include 'type_definition' or 'input'", 'body', rl);
@@ -879,7 +921,7 @@ function proofCriticalIdentity(url: URL, rl: RateLimitResult): Response {
       "statement": `neg(bnot(${x})) = ${neg_bnot_x} = succ(${x}) [${holds ? 'PASS' : 'FAIL'}]`,
       "proof_id": `https://uor.foundation/instance/bridge-proof-critical-identity-x${x}-n${n}`
     },
-    "@context": UOR_CONTEXT,
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/bridge-proof-critical-identity-x${x}-n${n}`,
     "@type": ["proof:Proof", "proof:CriticalIdentityProof"],
     "proof:quantum": n,
@@ -913,11 +955,15 @@ function proofCriticalIdentity(url: URL, rl: RateLimitResult): Response {
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/proof.rs",
     "conformance_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/conformance/src/tests/fixtures/test6_critical_identity.rs"
-  }, CACHE_HEADERS_KERNEL, etag, rl);
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
 // POST /bridge/proof/coherence
 async function proofCoherence(req: Request, rl: RateLimitResult): Promise<Response> {
+  // 415 enforcement
+  const contentType = req.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) return error415(rl);
+
   let body: { type_definition?: unknown; n?: unknown };
   try {
     body = await req.json();
@@ -943,7 +989,7 @@ async function proofCoherence(req: Request, rl: RateLimitResult): Promise<Respon
   const td = body.type_definition ?? { "@type": "type:PrimitiveType", "type:bitWidth": n };
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/coherence-proof-n${n}`,
     "@type": ["proof:Proof", "proof:CoherenceProof"],
     "proof:quantum": n,
@@ -964,7 +1010,7 @@ async function proofCoherence(req: Request, rl: RateLimitResult): Promise<Respon
       "global": { "note": "Global coherence requires a proof:GlobalCoherenceProof aggregation" }
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/proof.rs"
-  }, CACHE_HEADERS_CONTENT, undefined, rl);
+  }, CACHE_HEADERS_BRIDGE, undefined, rl);
 }
 
 // GET /bridge/cert/involution?operation=neg&n=8
@@ -992,7 +1038,15 @@ function certInvolution(url: URL, rl: RateLimitResult): Response {
   const etag = makeETag('/bridge/cert/involution', { operation: op, n: String(n) });
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "operation": op,
+      "total_checked": m,
+      "passed": m - failCount,
+      "failed": failCount,
+      "verified": allHold,
+      "statement": `${op}(${op}(x)) = x for all x in R_${n} = Z/${m}Z [${allHold ? 'PASS' : 'FAIL'}]`
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/involution-cert-${op}-n${n}`,
     "@type": ["cert:Certificate", "cert:InvolutionCertificate"],
     "cert:operation": {
@@ -1013,7 +1067,7 @@ function certInvolution(url: URL, rl: RateLimitResult): Response {
       "holds_universally": allHold
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/cert.rs"
-  }, CACHE_HEADERS_KERNEL, etag, rl);
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
 // GET /bridge/observable/metrics?x=42&n=8
@@ -1037,7 +1091,14 @@ function observableMetrics(url: URL, rl: RateLimitResult): Response {
   const etag = makeETag('/bridge/observable/metrics', { x: String(x), n: String(n) });
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "value": x,
+      "ring_distance": ringMetric,
+      "hamming_weight": hammingMetric,
+      "cascade_depth": cascadeLength,
+      "at_phase_boundary": atThreshold
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/metrics-x${x}-n${n}`,
     "@type": "observable:MetricBundle",
     "observable:quantum": n,
@@ -1071,14 +1132,18 @@ function observableMetrics(url: URL, rl: RateLimitResult): Response {
       "description": "All ring operations commute at the element level (ring is commutative)"
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/observable.rs"
-  }, CACHE_HEADERS_KERNEL, etag, rl);
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
 // GET /user/type/primitives
 function typeList(rl: RateLimitResult): Response {
   const etag = makeETag('/user/type/primitives', {});
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "total_primitive_types": 4,
+      "rings": ["R_1 = Z/2Z (U1)", "R_4 = Z/16Z (U4)", "R_8 = Z/256Z (U8, default)", "R_16 = Z/65536Z (U16)"]
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": "https://uor.foundation/type/",
     "@type": "type:TypeCatalogue",
     "description": "Catalogue of primitive type definitions from type_.rs",
@@ -1139,7 +1204,7 @@ function typeList(rl: RateLimitResult): Response {
       }
     ],
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/type_.rs"
-  }, CACHE_HEADERS_KERNEL, etag, rl);
+  }, CACHE_HEADERS_USER, etag, rl);
 }
 
 // GET /navigate
@@ -1148,7 +1213,12 @@ function frameworkIndex(rl: RateLimitResult): Response {
   const verifySimple = 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-verify';
   const etag = makeETag('/navigate', {});
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "total_endpoints": 20,
+      "spaces": ["kernel", "bridge", "user", "simple_verify"],
+      "quick_start_url": `${verifySimple}?x=42`
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": "https://uor.foundation/api/v1",
     "@type": "sdo:WebAPI",
     "title": "UOR Framework REST API — Navigation Index",
@@ -1214,7 +1284,12 @@ function frameworkIndex(rl: RateLimitResult): Response {
       { "prefix": "proof:", "iri": "https://uor.foundation/proof/", "space": "bridge", "api_group": "/bridge/proof", "classes": 4, "properties": 11 },
       { "prefix": "cert:", "iri": "https://uor.foundation/cert/", "space": "bridge", "api_group": "/bridge/cert", "classes": 4, "properties": 6 },
       { "prefix": "observable:", "iri": "https://uor.foundation/observable/", "space": "bridge", "api_group": "/bridge/observable", "classes": 26, "properties": 4 },
-      { "prefix": "type:", "iri": "https://uor.foundation/type/", "space": "user", "api_group": "/user/type", "classes": 5, "properties": 5 }
+      { "prefix": "derivation:", "iri": "https://uor.foundation/derivation/", "space": "bridge", "api_group": "/bridge/derivation", "classes": 3, "properties": 8 },
+      { "prefix": "trace:", "iri": "https://uor.foundation/trace/", "space": "bridge", "api_group": "/bridge/trace", "classes": 3, "properties": 7 },
+      { "prefix": "resolver:", "iri": "https://uor.foundation/resolver/", "space": "bridge", "api_group": "/bridge/resolver", "classes": 3, "properties": 6 },
+      { "prefix": "type:", "iri": "https://uor.foundation/type/", "space": "user", "api_group": "/user/type", "classes": 5, "properties": 5 },
+      { "prefix": "morphism:", "iri": "https://uor.foundation/morphism/", "space": "user", "api_group": "/user/morphism", "classes": 4, "properties": 9 },
+      { "prefix": "state:", "iri": "https://uor.foundation/state/", "space": "user", "api_group": "/user/state", "classes": 5, "properties": 8 }
     ],
     "reading_order": [
       { "step": 1, "url": "https://uor.foundation/llms.md", "purpose": "Quick Card — 5 minutes", "time": "5 min" },
@@ -1266,7 +1341,7 @@ function opDescription(op: OpName): string {
   }
 }
 
-function hammingWeight(x: number): number {
+function hammingWeightFn(x: number): number {
   let count = 0, v = x;
   while (v) { count += v & 1; v >>>= 1; }
   return count;
@@ -1324,7 +1399,15 @@ function bridgeDerivation(url: URL, rl: RateLimitResult): Response {
   const etag = makeETag('/bridge/derivation', { x: String(x), n: String(n), ops: opsRaw });
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "source_value": x,
+      "operation_sequence": opNames,
+      "final_value": current,
+      "steps": steps.length,
+      "identity_holds": critHolds,
+      "statement": `neg(bnot(${x})) = succ(${x}) in R_${n} [${critHolds ? 'PASS' : 'FAIL'}]`
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/derivation-x${x}-n${n}`,
     "@type": "derivation:DerivationTrace",
     "derivation:sourceValue": x,
@@ -1343,7 +1426,7 @@ function bridgeDerivation(url: URL, rl: RateLimitResult): Response {
     },
     "derivation:timestamp": timestamp(),
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/derivation.rs"
-  }, CACHE_HEADERS_CONTENT, etag, rl);
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
 // GET /bridge/trace?x=42&n=8&ops=neg,bnot
@@ -1374,7 +1457,7 @@ function bridgeTrace(url: URL, rl: RateLimitResult): Response {
     "trace:operation": null,
     "trace:state": current,
     "trace:binaryState": current.toString(2).padStart(n, '0'),
-    "trace:hammingWeight": hammingWeight(current),
+    "trace:hammingWeight": hammingWeightFn(current),
     "trace:delta": "initial state"
   });
 
@@ -1389,17 +1472,46 @@ function bridgeTrace(url: URL, rl: RateLimitResult): Response {
       "trace:operationFormula": opFormula(op, prev, n, current),
       "trace:state": current,
       "trace:binaryState": current.toString(2).padStart(n, '0'),
-      "trace:hammingWeight": hammingWeight(current),
-      "trace:hammingWeightDelta": hammingWeight(current) - hammingWeight(prev),
+      "trace:hammingWeight": hammingWeightFn(current),
+      "trace:hammingWeightDelta": hammingWeightFn(current) - hammingWeightFn(prev),
       "trace:delta": bitDelta(prev, current, n),
       "trace:xorDiff": prev ^ current
     });
   }
 
+  const totalHammingDrift = hammingWeightFn(current) - hammingWeightFn(x);
+  const injectionDetected = totalHammingDrift !== 0;
   const etag = makeETag('/bridge/trace', { x: String(x), n: String(n), ops: opsRaw });
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "source_value": x,
+      "operation_sequence": opNames,
+      "final_state": current,
+      "frames": frames.length,
+      "total_hamming_drift": totalHammingDrift,
+      "injection_detected": injectionDetected,
+      "note": injectionDetected
+        ? `non-zero Hamming drift (${totalHammingDrift}) — operation sequence diverges from canonical`
+        : "zero Hamming drift — operation sequence is canonical"
+    },
+    "injection_example": {
+      "description": "How to use Hamming drift for injection detection",
+      "canonical_sequence": {
+        "ops": "neg,bnot",
+        "example_url": `https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/bridge/trace?x=${x}&ops=neg,bnot`,
+        "expected_drift": 0,
+        "meaning": "zero drift = sequence is canonical, no anomaly detected"
+      },
+      "anomalous_sequence": {
+        "ops": "neg,bnot,succ",
+        "example_url": `https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/bridge/trace?x=${x}&ops=neg,bnot,succ`,
+        "expected_drift": "non-zero",
+        "meaning": "non-zero drift = sequence diverges from canonical — possible injection signal"
+      },
+      "detection_rule": "Compare trace:totalHammingDrift between declared and executed operation sequences. Non-zero divergence signals a sequence anomaly."
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/trace-x${x}-n${n}`,
     "@type": "trace:ExecutionTrace",
     "trace:sourceValue": x,
@@ -1410,10 +1522,10 @@ function bridgeTrace(url: URL, rl: RateLimitResult): Response {
     "trace:finalBinaryState": current.toString(2).padStart(n, '0'),
     "trace:frames": frames,
     "trace:frameCount": frames.length,
-    "trace:totalHammingDrift": hammingWeight(current) - hammingWeight(x),
+    "trace:totalHammingDrift": totalHammingDrift,
     "trace:timestamp": timestamp(),
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/trace.rs"
-  }, CACHE_HEADERS_CONTENT, etag, rl);
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
 // GET /bridge/resolver?x=42&n=8
@@ -1464,12 +1576,33 @@ function bridgeResolver(url: URL, rl: RateLimitResult): Response {
     decompositionSteps.push({ step: 3, action: 'Canonical form', result: `${x} = 2^${depth} × ${v} in Z` });
   }
 
-  const canonicalForm = isIrreducible ? `${x}` : component === 'partition:ExteriorSet' ? '0' : `2^k × ${x % 2 !== 0 ? x : x / Math.pow(2, (() => { let v = x, d = 0; while (v % 2 === 0) { v /= 2; d++; } return d; })())}`;
+  // Compute canonical form string
+  let canonicalForm = String(x);
+  if (!isIrreducible && x !== 0 && !(x === 1 || x === m - 1) && x !== m / 2 && x % 2 === 0) {
+    let v2 = x, depth2 = 0;
+    while (v2 % 2 === 0) { v2 /= 2; depth2++; }
+    canonicalForm = `2^${depth2} × ${v2}`;
+  }
+
+  const categoryLabel = component === 'partition:IrreducibleSet'
+    ? `Irreducible — structurally unique in R_${n}`
+    : component === 'partition:ReducibleSet'
+    ? `Reducible — decomposes in R_${n}`
+    : component === 'partition:UnitSet'
+    ? `Unit — multiplicative identity group in R_${n}`
+    : `Exterior — boundary element in R_${n}`;
 
   const etag = makeETag('/bridge/resolver', { x: String(x), n: String(n) });
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "input": x,
+      "component": component,
+      "canonical_form": canonicalForm,
+      "is_irreducible": isIrreducible,
+      "category_label": categoryLabel
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/resolver-x${x}-n${n}`,
     "@type": "resolver:Resolution",
     "resolver:inputValue": x,
@@ -1488,17 +1621,17 @@ function bridgeResolver(url: URL, rl: RateLimitResult): Response {
     "resolver:datum": makeDatum(x, n),
     "resolver:timestamp": timestamp(),
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/resolver.rs"
-  }, CACHE_HEADERS_CONTENT, etag, rl);
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
-// GET /user/morphism/transforms?x=42&from_n=8&to_n=4
+// GET /user/morphism/transforms?x=42&from_n=8&to_n=16
 function morphismTransforms(url: URL, rl: RateLimitResult): Response {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const fromNRaw = url.searchParams.get('from_n') ?? '8';
   const fromNRes = parseIntParam(fromNRaw, 'from_n', 1, 16);
   if ('err' in fromNRes) return fromNRes.err;
-  const toNRaw = url.searchParams.get('to_n') ?? '4';
+  const toNRaw = url.searchParams.get('to_n') ?? '16'; // changed default from 4 to 16 (inclusion, lossless)
   const toNRes = parseIntParam(toNRaw, 'to_n', 1, 16);
   if ('err' in toNRes) return toNRes.err;
 
@@ -1514,7 +1647,6 @@ function morphismTransforms(url: URL, rl: RateLimitResult): Response {
   const image = isProjection ? x % toM : x; // inclusion: value is unchanged, identity ring changes
 
   // Kernel: elements mapping to 0 in the target ring
-  // For projection f(x) = x mod 2^toN: kernel = { k * 2^toN : k ∈ Z, 0 ≤ k < 2^(fromN-toN) }
   const kernelSize = isProjection ? Math.pow(2, fromN - toN) : (isIdentity ? 1 : 0);
   const kernelElements: number[] = [];
   if (isProjection) {
@@ -1538,7 +1670,17 @@ function morphismTransforms(url: URL, rl: RateLimitResult): Response {
   const etag = makeETag('/user/morphism/transforms', { x: String(x), from_n: String(fromN), to_n: String(toN) });
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "input": x,
+      "from_ring": `R_${fromN} = Z/${fromM}Z`,
+      "to_ring": `R_${toN} = Z/${toM}Z`,
+      "image": image,
+      "morphism_type": morphismType.replace('morphism:', ''),
+      "is_injective": isInjective,
+      "is_isomorphism": isInjective && isSurjective,
+      "ring_structure_preserved": true
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/morphism-x${x}-from${fromN}-to${toN}`,
     "@type": ["morphism:RingHomomorphism", morphismType],
     "morphism:source": {
@@ -1571,7 +1713,7 @@ function morphismTransforms(url: URL, rl: RateLimitResult): Response {
     },
     "morphism:timestamp": timestamp(),
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/morphism.rs"
-  }, CACHE_HEADERS_CONTENT, etag, rl);
+  }, CACHE_HEADERS_USER, etag, rl);
 }
 
 // GET /user/state?x=42&n=8
@@ -1591,6 +1733,7 @@ function userState(url: URL, rl: RateLimitResult): Response {
   const isUnit = x === 1 || x === m - 1;
   const isPhaseBoundary = x === m / 2;
   const isIrreducible = x % 2 !== 0 && !isUnit;
+  const critHolds = neg(bnot(x, n), n) === succOp(x, n);
 
   // Entry condition: stable entry states are identities and units
   const entryCondition = {
@@ -1635,7 +1778,15 @@ function userState(url: URL, rl: RateLimitResult): Response {
   const etag = makeETag('/user/state', { x: String(x), n: String(n) });
 
   return jsonResp({
-    "@context": UOR_CONTEXT,
+    "summary": {
+      "value": x,
+      "component": component,
+      "stable_entry": isIdentity || isUnit,
+      "phase_boundary": isPhaseBoundary,
+      "transition_count": transitions.length,
+      "critical_identity_holds": critHolds
+    },
+    "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/state-x${x}-n${n}`,
     "@type": "state:Frame",
     "state:binding": {
@@ -1653,10 +1804,10 @@ function userState(url: URL, rl: RateLimitResult): Response {
     "state:transitions": transitions,
     "state:transitionCount": transitions.length,
     "state:reachableComponents": [...new Set(transitions.map((t: any) => t['state:toComponent']))],
-    "state:criticalIdentityHolds": neg(bnot(x, n), n) === succOp(x, n),
+    "state:criticalIdentityHolds": critHolds,
     "state:timestamp": timestamp(),
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/state.rs"
-  }, CACHE_HEADERS_CONTENT, etag, rl);
+  }, CACHE_HEADERS_USER, etag, rl);
 }
 
 // GET /openapi.json — 301 redirect to canonical static spec

@@ -187,11 +187,12 @@ GET {BASE_URL}/user/type/primitives
 
 ### API Summary
 
-| Group   | Namespaces                          | Auth       | Rate Limit   |
-|---------|-------------------------------------|------------|--------------|
-| /kernel | u:, schema:, op:                    | None       | 120 req/min  |
-| /bridge | partition:, proof:, cert:, observable: | Optional X-UOR-Agent-Key | 60 req/min |
-| /user   | type:, morphism:, state:            | Optional   | 60 req/min   |
+| Group   | Namespaces                                                      | Auth       | Rate Limit          |
+|---------|-----------------------------------------------------------------|------------|---------------------|
+| /kernel | u:, schema:, op:                                                | None       | 120 req/min         |
+| /bridge | partition:, proof:, cert:, observable:,                         | Optional   | GET: 120 / POST: 60 |
+|         | derivation:, trace:, resolver:                                  |            |                     |
+| /user   | type:, morphism:, state:                                        | Optional   | 120 req/min         |
 
 All responses are valid JSON-LD with `@context` covering all 14 UOR namespaces, `@id` (instance IRI), and `@type` (ontology class). CORS open. No API key required to start.
 

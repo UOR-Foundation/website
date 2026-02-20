@@ -31,58 +31,75 @@
     {},
     { "AgentKey": [] }
   ],
+  "externalDocs": {
+    "description": "UOR Framework GitHub source and conformance suite",
+    "url": "https://github.com/UOR-Foundation/UOR-Framework"
+  },
   "tags": [
     {
       "name": "kernel-op",
-      "description": "**`op/` namespace** — Ring operations, involutions, and algebraic identities.\nSource: `spec/src/namespaces/op.rs`\nClasses: `Operation`, `UnaryOp`, `BinaryOp`, `Involution`, `Identity`, `Group`, `DihedralGroup`.\nNamed individuals: `neg`, `bnot`, `succ`, `pred`, `add`, `sub`, `mul`, `xor`, `and`, `or`, `criticalIdentity`, `D2n`."
+      "description": "**`op/` namespace** — Ring operations, involutions, and algebraic identities.\nSource: `spec/src/namespaces/op.rs`\nClasses: `Operation`, `UnaryOp`, `BinaryOp`, `Involution`, `Identity`, `Group`, `DihedralGroup`.\nNamed individuals: `neg`, `bnot`, `succ`, `pred`, `add`, `sub`, `mul`, `xor`, `and`, `or`, `criticalIdentity`, `D2n`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/op.rs", "description": "op.rs — ontology source" }
     },
     {
       "name": "kernel-schema",
-      "description": "**`schema/` + `u/` namespaces** — Ring substrate, term language, datum values, and content addressing.\nSource: `spec/src/namespaces/schema.rs`, `spec/src/namespaces/u.rs`"
+      "description": "**`schema/` + `u/` namespaces** — Ring substrate, term language, datum values, and content addressing.\nSource: `spec/src/namespaces/schema.rs`, `spec/src/namespaces/u.rs`",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/schema.rs", "description": "schema.rs — ontology source" }
     },
     {
       "name": "bridge-partition",
-      "description": "**`partition/` namespace** — Irreducibility partition of the ring.\nSource: `spec/src/namespaces/partition.rs`\nClasses: `Partition`, `IrreducibleSet`, `ReducibleSet`, `UnitSet`, `ExteriorSet`."
+      "description": "**`partition/` namespace** — Irreducibility partition of the ring.\nSource: `spec/src/namespaces/partition.rs`\nClasses: `Partition`, `IrreducibleSet`, `ReducibleSet`, `UnitSet`, `ExteriorSet`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/partition.rs", "description": "partition.rs — ontology source" }
     },
     {
       "name": "bridge-proof",
-      "description": "**`proof/` namespace** — Verification proofs.\nSource: `spec/src/namespaces/proof.rs`\nClasses: `Proof`, `CriticalIdentityProof`, `CoherenceProof`, `WitnessData`."
+      "description": "**`proof/` namespace** — Verification proofs.\nSource: `spec/src/namespaces/proof.rs`\nClasses: `Proof`, `CriticalIdentityProof`, `CoherenceProof`, `WitnessData`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/proof.rs", "description": "proof.rs — ontology source" }
     },
     {
       "name": "bridge-cert",
-      "description": "**`cert/` namespace** — Attestation certificates.\nSource: `spec/src/namespaces/cert.rs`\nClasses: `Certificate`, `TransformCertificate`, `IsometryCertificate`, `InvolutionCertificate`."
+      "description": "**`cert/` namespace** — Attestation certificates.\nSource: `spec/src/namespaces/cert.rs`\nClasses: `Certificate`, `TransformCertificate`, `IsometryCertificate`, `InvolutionCertificate`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/cert.rs", "description": "cert.rs — ontology source" }
     },
     {
       "name": "bridge-observable",
-      "description": "**`observable/` namespace** — Metric and geometric measurements.\nSource: `spec/src/namespaces/observable.rs`\nClasses: `RingMetric`, `HammingMetric`, `CascadeLength`, `CatastropheThreshold`, `Commutator`, `Monodromy`."
+      "description": "**`observable/` namespace** — Metric and geometric measurements.\nSource: `spec/src/namespaces/observable.rs`\nClasses: `RingMetric`, `HammingMetric`, `CascadeLength`, `CatastropheThreshold`, `Commutator`, `Monodromy`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/observable.rs", "description": "observable.rs — ontology source" }
     },
     {
       "name": "bridge-derivation",
-      "description": "**`derivation/` namespace** — Auditable step-by-step operation records.\nSource: `spec/src/namespaces/derivation.rs`\nClasses: `DerivationTrace`, `DerivationStep`, `OperationRecord`.\nReturns a `derivation:DerivationTrace` with input, output, formula, and ontology reference for each step. Use for execution audit trails and injection detection."
+      "description": "**`derivation/` namespace** — Auditable step-by-step operation records.\nSource: `spec/src/namespaces/derivation.rs`\nClasses: `DerivationTrace`, `DerivationStep`, `OperationRecord`.\nReturns a `derivation:DerivationTrace` with input, output, formula, and ontology reference for each step. Use for execution audit trails and injection detection.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/derivation.rs", "description": "derivation.rs — ontology source" }
     },
     {
       "name": "bridge-trace",
-      "description": "**`trace/` namespace** — Bit-level execution traces for injection detection.\nSource: `spec/src/namespaces/trace.rs`\nClasses: `ExecutionTrace`, `TraceFrame`, `HammingDrift`.\nReturns exact binary state after each operation — Hamming weight, XOR delta, bits flipped. Non-zero `trace:totalHammingDrift` signals anomalous operation sequences."
+      "description": "**`trace/` namespace** — Bit-level execution traces for injection detection.\nSource: `spec/src/namespaces/trace.rs`\nClasses: `ExecutionTrace`, `TraceFrame`, `HammingDrift`.\nReturns exact binary state after each operation — Hamming weight, XOR delta, bits flipped. Non-zero `trace:totalHammingDrift` signals anomalous operation sequences.\n\n**Injection detection:** Compare `trace:totalHammingDrift` between a declared and executed operation sequence. `GET /bridge/trace?x=42&ops=neg,bnot` → drift=0 (canonical). `GET /bridge/trace?x=42&ops=neg,bnot,succ` → drift≠0 (anomalous). Non-zero drift = possible injection signal.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/trace.rs", "description": "trace.rs — ontology source" }
     },
     {
       "name": "bridge-resolver",
-      "description": "**`resolver/` namespace** — Canonical form classification of ring elements.\nSource: `spec/src/namespaces/resolver.rs`\nClasses: `Resolution`, `CanonicalFormResolver`, `DihedralFactorizationResolver`.\nSorts any value into one of four canonical categories: IrreducibleSet, ReducibleSet, UnitSet, ExteriorSet. Returns full factor decomposition for reducible values."
+      "description": "**`resolver/` namespace** — Canonical form classification of ring elements.\nSource: `spec/src/namespaces/resolver.rs`\nClasses: `Resolution`, `CanonicalFormResolver`, `DihedralFactorizationResolver`.\nSorts any value into one of four canonical categories: IrreducibleSet, ReducibleSet, UnitSet, ExteriorSet. Returns full factor decomposition for reducible values.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/resolver.rs", "description": "resolver.rs — ontology source" }
     },
     {
       "name": "user-type",
-      "description": "**`type/` namespace** — Runtime type declarations.\nSource: `spec/src/namespaces/type_.rs`\nClasses: `PrimitiveType`, `ProductType`, `SumType`, `ConstrainedType`."
+      "description": "**`type/` namespace** — Runtime type declarations.\nSource: `spec/src/namespaces/type_.rs`\nClasses: `PrimitiveType`, `ProductType`, `SumType`, `ConstrainedType`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/type_.rs", "description": "type_.rs — ontology source" }
     },
     {
       "name": "user-morphism",
-      "description": "**`morphism/` namespace** — Structure-preserving maps between ring sizes.\nSource: `spec/src/namespaces/morphism.rs`\nClasses: `RingHomomorphism`, `ProjectionHomomorphism`, `InclusionHomomorphism`, `IdentityHomomorphism`.\nReturns the mapped value, preserved properties, injectivity and surjectivity flags, and a `morphism:CommutativityWitness`."
+      "description": "**`morphism/` namespace** — Structure-preserving maps between ring sizes.\nSource: `spec/src/namespaces/morphism.rs`\nClasses: `RingHomomorphism`, `ProjectionHomomorphism`, `InclusionHomomorphism`, `IdentityHomomorphism`.\nReturns the mapped value, preserved properties, injectivity and surjectivity flags, and a `morphism:CommutativityWitness`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/morphism.rs", "description": "morphism.rs — ontology source" }
     },
     {
       "name": "user-state",
-      "description": "**`state/` namespace** — Agent lifecycle state binding.\nSource: `spec/src/namespaces/state.rs`\nClasses: `Frame`, `StateBinding`, `Transition`, `EntryCondition`, `ExitCondition`.\nReturns the formal lifecycle state for a value: category, entry/exit conditions, and all 4 operation transitions showing where each operation leads and whether the component class changes."
+      "description": "**`state/` namespace** — Agent lifecycle state binding.\nSource: `spec/src/namespaces/state.rs`\nClasses: `Frame`, `StateBinding`, `Transition`, `EntryCondition`, `ExitCondition`.\nReturns the formal lifecycle state for a value: category, entry/exit conditions, and all 4 operation transitions showing where each operation leads and whether the component class changes.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/state.rs", "description": "state.rs — ontology source" }
     },
     {
       "name": "navigate",
-      "description": "Framework navigation — reading order, namespace index, ontology links, all endpoint URLs."
+      "description": "Framework navigation — reading order, namespace index, ontology links, all endpoint URLs.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework", "description": "UOR Framework source" }
     }
   ],
   "paths": {
@@ -766,8 +783,8 @@
             "name": "to_n",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer", "minimum": 1, "maximum": 16, "default": 4 },
-            "description": "Target ring size in bits. Default 4."
+            "schema": { "type": "integer", "minimum": 1, "maximum": 16, "default": 16 },
+            "description": "Target ring size in bits. Default 16 (inclusion/lossless embedding — demonstrates InclusionHomomorphism). Use to_n < from_n for projection."
           }
         ],
         "responses": {
