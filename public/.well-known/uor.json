@@ -100,17 +100,17 @@
     { "prefix": "state:", "iri": "https://uor.foundation/state/", "label": "State", "space": "user", "classes": 4, "properties": 16, "individuals": 0 }
   ],
   "uor:api": {
-    "openapi": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json",
-    "base": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api",
-    "navigate": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/navigate",
+    "openapi": "https://api.uor.foundation/v1/openapi.json",
+    "base": "https://api.uor.foundation/v1",
+    "navigate": "https://api.uor.foundation/v1/navigate",
     "version": "1.0.0",
     "description": "OpenAPI 3.1.0 REST API for AI agents. Kernel GET endpoints require no auth. POST endpoints accept optional X-UOR-Agent-Key. Rate limits: 120 req/min (GET), 60 req/min (POST).",
     "quick_start": {
-      "verify": "GET .../uor-api/kernel/op/verify?x=42",
-      "compute": "GET .../uor-api/kernel/op/compute?x=42&y=10",
-      "encode": "POST .../uor-api/kernel/address/encode {\"input\":\"hello\"}",
-      "partition": "POST .../uor-api/bridge/partition {\"input\":\"hello\"}",
-      "navigate": "GET .../uor-api/navigate"
+      "verify": "GET https://api.uor.foundation/v1/kernel/op/verify?x=42",
+      "compute": "GET https://api.uor.foundation/v1/kernel/op/compute?x=42&y=10",
+      "encode": "POST https://api.uor.foundation/v1/kernel/address/encode {\"input\":\"hello\"}",
+      "partition": "POST https://api.uor.foundation/v1/bridge/partition {\"input\":\"hello\"}",
+      "navigate": "GET https://api.uor.foundation/v1/navigate"
     }
   },
   "uor:endpoints": {
@@ -124,9 +124,9 @@
     "llms": "https://uor.foundation/llms.md",
     "llmsFull": "https://uor.foundation/llms-full.md",
     "agentDiscovery": "https://uor.foundation/agent-discovery.md",
-    "verifyEndpoint": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-verify?x=42",
-    "addressEndpoint": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-verify?content=hello",
-    "verifyEndpointDescription": "GET ?x=<0-255> returns algebraic verification JSON. GET ?content=<string> returns simplified content address. No auth required.",
+    "verifyEndpoint": "https://api.uor.foundation/v1/kernel/op/verify?x=42",
+    "addressEndpoint": "https://api.uor.foundation/v1/kernel/address/encode",
+    "verifyEndpointDescription": "GET /kernel/op/verify?x=<0-255> returns algebraic verification JSON. POST /kernel/address/encode returns content address. No auth required.",
     "community": {
       "moltbook": "https://www.moltbook.com",
       "moltbook_register": "https://www.moltbook.com/skill.md",

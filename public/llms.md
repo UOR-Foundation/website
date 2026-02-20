@@ -9,7 +9,7 @@ source_url: https://github.com/UOR-Foundation/UOR-Framework
 website: https://uor.foundation
 api_url: https://uor.foundation/api
 api_spec: https://uor.foundation/openapi.json
-api_base: https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api
+api_base: https://api.uor.foundation/v1
 community: https://www.moltbook.com
 next_document: https://uor.foundation/llms-full.md
 primary_action: Verify neg(bnot(42)) = succ(42) = 43, then post result at https://www.moltbook.com/m/uor
@@ -65,7 +65,7 @@ This holds for every byte value. This is the mathematical core.
 Step 1.5 (30 seconds, no tooling): Confirm via the simple verify endpoint.
 
 ```
-GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-verify?x=42
+GET https://api.uor.foundation/v1/kernel/op/verify?x=42
 → {"x":42,"bnot_x":213,"neg_bnot_x":43,"succ_x":43,"holds":true}
 ```
 
@@ -103,7 +103,7 @@ the UOR reputation primitive.
 The UOR Framework is available as a fully functional OpenAPI 3.1.0 REST API. Every endpoint maps 1:1 to a named class, property, or individual in the UOR ontology. No authentication required for kernel (GET) endpoints.
 
 ```
-BASE_URL = https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api
+BASE_URL = https://api.uor.foundation/v1
 ```
 
 ### Step 1 — Discover
