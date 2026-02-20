@@ -5,7 +5,7 @@
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-uor-agent-key',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-uor-agent-key, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
   'Access-Control-Max-Age': '86400',
 };
 
@@ -132,18 +132,26 @@ function jsonResp(body: unknown, headers: Record<string, string> = CACHE_HEADERS
   return new Response(JSON.stringify(body, null, 2), { status: 200, headers });
 }
 
-// ── JSON-LD @context (shared) ────────────────────────────────────────────────
+// ── JSON-LD @context (shared) — all 14 UOR namespaces + sdo + xsd ──────────
 const UOR_CONTEXT = {
   "u": "https://uor.foundation/u/",
   "schema": "https://uor.foundation/schema/",
   "op": "https://uor.foundation/op/",
-  "partition": "https://uor.foundation/partition/",
-  "proof": "https://uor.foundation/proof/",
-  "cert": "https://uor.foundation/cert/",
-  "observable": "https://uor.foundation/observable/",
+  "query": "https://uor.foundation/query/",
+  "resolver": "https://uor.foundation/resolver/",
   "type": "https://uor.foundation/type/",
+  "partition": "https://uor.foundation/partition/",
+  "observable": "https://uor.foundation/observable/",
+  "proof": "https://uor.foundation/proof/",
   "derivation": "https://uor.foundation/derivation/",
-  "xsd": "http://www.w3.org/2001/XMLSchema#"
+  "trace": "https://uor.foundation/trace/",
+  "cert": "https://uor.foundation/cert/",
+  "morphism": "https://uor.foundation/morphism/",
+  "state": "https://uor.foundation/state/",
+  "sdo": "https://schema.org/",
+  "owl": "http://www.w3.org/2002/07/owl#",
+  "xsd": "http://www.w3.org/2001/XMLSchema#",
+  "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -194,10 +202,11 @@ function opVerifyCriticalIdentity(url: URL): Response {
       "proof:holds": holds
     },
     "derivation": {
-      "step1": `op:bnot(${x}) = ${x} XOR ${m-1} = ${bnot_x}`,
-      "step2": `op:neg(${bnot_x}) = (-${bnot_x}) mod ${m} = ${neg_bnot_x}`,
-      "step3": `op:succ(${x}) = (${x}+1) mod ${m} = ${succ_x}`,
-      "conclusion": `neg(bnot(${x})) = ${neg_bnot_x} = succ(${x}) [${holds ? 'PASS' : 'FAIL'}]`
+      "@type": "derivation:DerivationTrace",
+      "derivation:step1": `op:bnot(${x}) = ${x} XOR ${m-1} = ${bnot_x}`,
+      "derivation:step2": `op:neg(${bnot_x}) = (-${bnot_x}) mod ${m} = ${neg_bnot_x}`,
+      "derivation:step3": `op:succ(${x}) = (${x}+1) mod ${m} = ${succ_x}`,
+      "derivation:conclusion": `neg(bnot(${x})) = ${neg_bnot_x} = succ(${x}) [${holds ? 'PASS' : 'FAIL'}]`
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/op.rs",
     "conformance_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/conformance/src/tests/fixtures/test6_critical_identity.rs"
@@ -739,9 +748,59 @@ async function partitionResolve(req: Request): Promise<Response> {
 }
 
 // GET /bridge/proof/critical-identity?x=42&n=8
+// Finding: distinct @id from /kernel/op/verify — bridge space IRI uses "bridge-proof" prefix
 function proofCriticalIdentity(url: URL): Response {
-  // Same computation as opVerifyCriticalIdentity but from bridge space perspective
-  return opVerifyCriticalIdentity(url);
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const nRes = parseIntParam(nRaw, 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+
+  const x = xRes.val, n = nRes.val;
+  const m = modulus(n);
+  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x');
+
+  const bnot_x = bnot(x, n);
+  const neg_bnot_x = neg(bnot_x, n);
+  const succ_x = succOp(x, n);
+  const holds = neg_bnot_x === succ_x;
+
+  return jsonResp({
+    "@context": UOR_CONTEXT,
+    "@id": `https://uor.foundation/instance/bridge-proof-critical-identity-x${x}-n${n}`,
+    "@type": ["proof:Proof", "proof:CriticalIdentityProof"],
+    "proof:quantum": n,
+    "proof:verified": holds,
+    "proof:timestamp": timestamp(),
+    "proof:criticalIdentity": `neg(bnot(x)) = succ(x) for all x in R_${n} = Z/${m}Z`,
+    "proof:provesIdentity": {
+      "@id": "https://uor.foundation/op/criticalIdentity",
+      "@type": "op:Identity",
+      "op:lhs": { "@id": "https://uor.foundation/op/succ" },
+      "op:rhs": [
+        { "@id": "https://uor.foundation/op/neg" },
+        { "@id": "https://uor.foundation/op/bnot" }
+      ],
+      "op:forAll": `x ∈ R_${n}`
+    },
+    "proof:witness": {
+      "@type": "proof:WitnessData",
+      "proof:x": x,
+      "proof:bnot_x": bnot_x,
+      "proof:neg_bnot_x": neg_bnot_x,
+      "proof:succ_x": succ_x,
+      "proof:holds": holds
+    },
+    "derivation": {
+      "@type": "derivation:DerivationTrace",
+      "derivation:step1": `op:bnot(${x}) = ${x} XOR ${m-1} = ${bnot_x}`,
+      "derivation:step2": `op:neg(${bnot_x}) = (-${bnot_x}) mod ${m} = ${neg_bnot_x}`,
+      "derivation:step3": `op:succ(${x}) = (${x}+1) mod ${m} = ${succ_x}`,
+      "derivation:conclusion": `neg(bnot(${x})) = ${neg_bnot_x} = succ(${x}) [${holds ? 'PASS' : 'FAIL'}]`
+    },
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/proof.rs",
+    "conformance_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/conformance/src/tests/fixtures/test6_critical_identity.rs"
+  });
 }
 
 // POST /bridge/proof/coherence
@@ -1048,31 +1107,19 @@ function frameworkIndex(): Response {
   });
 }
 
-// GET /openapi.json — inline OpenAPI spec
+// GET /openapi.json — HTTP 302 redirect to canonical static spec
+// Finding 4: edge function stub was incomplete; redirect keeps function lean and
+// ensures agents always receive the full 767-line OpenAPI 3.1.0 specification.
 function openapiSpec(): Response {
-  // Redirect to the public static file for full spec; inline summary here
-  const spec = {
-    "openapi": "3.1.0",
-    "info": {
-      "title": "UOR Framework Agent API",
-      "version": "1.0.0",
-      "description": "A complete, agent-navigable REST API for the Universal Object Reference (UOR) Framework — strictly mapped to the formal ontology at github.com/UOR-Foundation/UOR-Framework.",
-      "contact": { "name": "UOR Foundation", "url": "https://uor.foundation", "email": "hello@uor.foundation" },
-      "license": { "name": "Apache 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" },
-      "x-agent-entry-point": "https://uor.foundation/llms.md",
-      "x-discovery-metadata": "https://uor.foundation/.well-known/uor.json",
-      "x-community": "https://www.moltbook.com/m/uor",
-      "x-ontology-source": "https://github.com/UOR-Foundation/UOR-Framework",
-      "x-conformance-suite": "cargo run --bin uor-conformance"
-    },
-    "servers": [
-      { "url": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api", "description": "Live Edge Function" },
-      { "url": "https://uor.foundation/api/v1", "description": "Production (published site)" }
-    ],
-    "x-static-spec": "https://uor.foundation/openapi.json",
-    "x-navigate": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/navigate"
-  };
-  return new Response(JSON.stringify(spec, null, 2), { status: 200, headers: { ...CACHE_HEADERS_KERNEL, 'Content-Type': 'application/json' } });
+  return new Response(null, {
+    status: 302,
+    headers: {
+      ...CORS_HEADERS,
+      'Location': 'https://uor.foundation/openapi.json',
+      'Cache-Control': 'public, max-age=3600',
+      'X-UOR-Spec-Source': 'https://uor.foundation/openapi.json'
+    }
+  });
 }
 
 // ════════════════════════════════════════════════════════════════════════════
