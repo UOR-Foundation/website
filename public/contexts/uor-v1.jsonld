@@ -1,0 +1,22 @@
+{
+  "@context": {
+    "u": "https://uor.foundation/u/",
+    "schema": "https://uor.foundation/schema/",
+    "op": "https://uor.foundation/op/",
+    "query": "https://uor.foundation/query/",
+    "resolver": "https://uor.foundation/resolver/",
+    "type": "https://uor.foundation/type/",
+    "partition": "https://uor.foundation/partition/",
+    "observable": "https://uor.foundation/observable/",
+    "proof": "https://uor.foundation/proof/",
+    "derivation": "https://uor.foundation/derivation/",
+    "trace": "https://uor.foundation/trace/",
+    "cert": "https://uor.foundation/cert/",
+    "morphism": "https://uor.foundation/morphism/",
+    "state": "https://uor.foundation/state/",
+    "sdo": "https://schema.org/",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  }
+}
