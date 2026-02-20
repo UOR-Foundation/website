@@ -4,7 +4,7 @@
     "title": "UOR Framework Agent API",
     "version": "1.0.0",
     "summary": "A complete, agent-navigable REST API for the Universal Object Reference (UOR) Framework — strictly mapped to the formal ontology at github.com/UOR-Foundation/UOR-Framework.",
-    "description": "## Overview\n\nThis API exposes the full UOR kernel as REST operations. Every endpoint, schema field, and enum value maps 1:1 to a named class, property, or individual in the Rust ontology source under `spec/src/namespaces/`.\n\nThe UOR Framework is structured in three spaces:\n\n| Space  | Namespaces                                         | API group        |\n|--------|----------------------------------------------------|------------------|\n| Kernel | `u:`, `schema:`, `op:`                             | `/kernel`        |\n| Bridge | `resolver:`, `partition:`, `observable:`, `proof:`,| `/bridge`        |\n|        | `derivation:`, `trace:`, `cert:`                   |                  |\n| User   | `type:`, `morphism:`, `state:`                     | `/user`          |\n\nThe end-to-end resolution cycle (test7_end_to_end.rs) is:\n```\nContext → Type → Resolver → Partition → Observable → Cert → Trace → Transform\n```\n\n## Quick Start\n\nGET /kernel/op/verify?x=42 — verify neg(bnot(42)) = succ(42) = 43\n\n## Security\n\nAll GET endpoints require no authentication. POST endpoints accept optional X-UOR-Agent-Key header for rate-limit tier elevation. Rate limits (unauthenticated): 120 req/min for kernel, 60 req/min for bridge.",
+    "description": "## Overview\n\nThis API exposes the full UOR kernel as REST operations. Every endpoint, schema field, and enum value maps 1:1 to a named class, property, or individual in the Rust ontology source under `spec/src/namespaces/`.\n\nThe UOR Framework is structured in three spaces:\n\n| Space  | Namespaces                                         | API group        |\n|--------|----------------------------------------------------|------------------|\n| Kernel | `u:`, `schema:`, `op:`                             | `/kernel`        |\n| Bridge | `resolver:`, `partition:`, `observable:`, `proof:`,| `/bridge`        |\n|        | `derivation:`, `trace:`, `cert:`                   |                  |\n| User   | `type:`, `morphism:`, `state:`                     | `/user`          |\n\nThe end-to-end resolution cycle (test7_end_to_end.rs) is:\n```\nContext → Type → Resolver → Partition → Observable → Cert → Trace → Transform\n```\n\n## Quick Start\n\nGET /kernel/op/verify?x=42 — verify neg(bnot(42)) = succ(42) = 43\n\n## Security\n\nAll GET endpoints require no authentication. POST endpoints accept optional `X-UOR-Agent-Key` header for rate-limit tier elevation. Rate limits (unauthenticated): 120 req/min for kernel GET, 60 req/min for bridge POST.\n\n## POST Semantics\n\nAll POST endpoints return `200 OK` (not `201`) because they compute deterministic artifacts on-the-fly — same inputs always produce the same output. No resource is persisted.",
     "contact": {
       "name": "UOR Foundation",
       "url": "https://uor.foundation",
@@ -23,12 +23,18 @@
   "servers": [
     {
       "url": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api",
-      "description": "Live Lovable Cloud Edge Function"
+      "description": "Live API — active endpoint (all requests go here)",
+      "x-server-status": "active"
     },
     {
       "url": "https://uor.foundation/api/v1",
-      "description": "Production (published site)"
+      "description": "Canonical domain proxy — planned (same backend, not yet routed)",
+      "x-server-status": "planned"
     }
+  ],
+  "security": [
+    {},
+    { "AgentKey": [] }
   ],
   "tags": [
     {
@@ -56,8 +62,28 @@
       "description": "**`observable/` namespace** — Metric and geometric measurements.\nSource: `spec/src/namespaces/observable.rs`\nClasses: `RingMetric`, `HammingMetric`, `CascadeLength`, `CatastropheThreshold`, `Commutator`, `Monodromy`."
     },
     {
+      "name": "bridge-derivation",
+      "description": "**`derivation/` namespace** — Audit trail for agent actions (not implemented in v1). Requires Rust conformance suite."
+    },
+    {
+      "name": "bridge-trace",
+      "description": "**`trace/` namespace** — Computation traces for injection detection (not implemented in v1). Requires Rust conformance suite."
+    },
+    {
+      "name": "bridge-resolver",
+      "description": "**`resolver/` namespace** — CanonicalFormResolver, DihedralFactorizationResolver (not implemented in v1). Requires Rust conformance suite."
+    },
+    {
       "name": "user-type",
       "description": "**`type/` namespace** — Runtime type declarations.\nSource: `spec/src/namespaces/type_.rs`\nClasses: `PrimitiveType`, `ProductType`, `SumType`, `ConstrainedType`."
+    },
+    {
+      "name": "user-morphism",
+      "description": "**`morphism/` namespace** — Transform, Isometry, Embedding, Action (not implemented in v1). Requires Rust conformance suite."
+    },
+    {
+      "name": "user-state",
+      "description": "**`state/` namespace** — Frame, Transition, lifecycle bindings (not implemented in v1). Requires Rust conformance suite."
     },
     {
       "name": "navigate",
@@ -71,18 +97,27 @@
         "tags": ["navigate"],
         "summary": "Framework navigation index — reading order, all endpoints, namespace map",
         "description": "Returns a complete navigation index of the UOR Framework API. Start here to discover all endpoints, namespace mappings, and reading order. No parameters required.",
+        "security": [{}, {"AgentKey": []}],
         "responses": {
           "200": {
             "description": "Complete navigation index with all endpoint URLs and reading order",
             "headers": {
-              "Cache-Control": { "schema": { "type": "string" } }
+              "Cache-Control": { "schema": { "type": "string" } },
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
             },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/NavigationIndex" }
               }
             }
-          }
+          },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -92,6 +127,7 @@
         "tags": ["navigate"],
         "summary": "Inline OpenAPI 3.1.0 specification",
         "description": "Returns the OpenAPI 3.1.0 specification for this API. The full static spec is also available at https://uor.foundation/openapi.json",
+        "security": [{}, {"AgentKey": []}],
         "responses": {
           "200": {
             "description": "OpenAPI 3.1.0 specification document",
@@ -100,7 +136,11 @@
                 "schema": { "type": "object" }
               }
             }
-          }
+          },
+          "302": { "description": "Redirect to canonical static spec at https://uor.foundation/openapi.json" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -110,6 +150,7 @@
         "tags": ["kernel-op"],
         "summary": "Verify op:criticalIdentity — neg(bnot(x)) = succ(x)",
         "description": "Verifies the foundational theorem of the UOR kernel for a given input x.\n\n**Framework mapping:**\n- Individual: `op:criticalIdentity` (type `op:Identity`)\n- Properties checked: `op:lhs = op:succ`, `op:rhs = [op:neg, op:bnot]`, `op:forAll = \"x ∈ R_n\"`\n- Proof type produced: `proof:CriticalIdentityProof`\n- Witness type: `proof:WitnessData`\n\n**Source:** `spec/src/namespaces/op.rs`, `conformance/src/tests/fixtures/test6_critical_identity.rs`",
+        "security": [{}, {"AgentKey": []}],
         "parameters": [
           { "$ref": "#/components/parameters/x" },
           { "$ref": "#/components/parameters/n" }
@@ -117,6 +158,12 @@
         "responses": {
           "200": {
             "description": "Critical identity verification with proof and witness",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/CriticalIdentityProofResponse" },
@@ -148,7 +195,10 @@
             }
           },
           "400": { "$ref": "#/components/responses/BadRequest" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -158,6 +208,7 @@
         "tags": ["kernel-op"],
         "summary": "Verify op:criticalIdentity for all 2^n elements of R_n",
         "description": "Runs `neg(bnot(x)) = succ(x)` for every x in Z/(2^n)Z and returns a `proof:CoherenceProof`.\n\nWhen `expand=false` (default), only summary counts are returned. When `expand=true`, the full `proof:WitnessData` array is included.",
+        "security": [{}, {"AgentKey": []}],
         "parameters": [
           { "$ref": "#/components/parameters/n" },
           {
@@ -171,13 +222,22 @@
         "responses": {
           "200": {
             "description": "Universal coherence proof for the full ring",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/CoherenceProofResponse" }
               }
             }
           },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -187,6 +247,7 @@
         "tags": ["kernel-op"],
         "summary": "Compute all op:UnaryOp and op:BinaryOp values for a datum",
         "description": "Returns the result of every named op/ individual applied to x.\n\n**UnaryOp individuals:** neg (ring_reflection), bnot (hypercube_reflection), succ (rotation), pred (rotation_inverse)\n\n**BinaryOp individuals:** add (translation), sub, mul (scaling), xor (hypercube_translation), and (hypercube_projection), or (hypercube_join)",
+        "security": [{}, {"AgentKey": []}],
         "parameters": [
           { "$ref": "#/components/parameters/x" },
           { "$ref": "#/components/parameters/n" },
@@ -195,12 +256,18 @@
             "in": "query",
             "required": false,
             "schema": { "type": "integer", "minimum": 0, "maximum": 65535 },
-            "description": "Second operand for binary operations. Defaults to x if omitted."
+            "description": "Second operand for binary operations. Must satisfy 0 ≤ y < 2^n. Defaults to x if omitted."
           }
         ],
         "responses": {
           "200": {
             "description": "All ring operations for x (and binary ops for x,y)",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/OpComputeResponse" }
@@ -208,7 +275,10 @@
             }
           },
           "400": { "$ref": "#/components/responses/BadRequest" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -218,16 +288,26 @@
         "tags": ["kernel-op"],
         "summary": "List all named op/ individuals with full metadata",
         "description": "Returns the complete catalogue of all 12 operation individuals defined in `op.rs`: neg, bnot, succ, pred, add, sub, mul, xor, and, or, criticalIdentity, D2n.",
+        "security": [{}, {"AgentKey": []}],
         "responses": {
           "200": {
             "description": "All named op/ individuals",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/OpListResponse" }
               }
             }
           },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -236,7 +316,8 @@
         "operationId": "addressEncode",
         "tags": ["kernel-schema"],
         "summary": "Encode content as a u:Address with u:Glyph decomposition",
-        "description": "Encodes an arbitrary UTF-8 string as a UOR content address using the 6-bit bijection chr(0x2800 + (b & 0x3F)).\n\n**Output type:** `u:Address` with `u:glyph` (Braille string) and per-byte `u:Glyph` objects.\n\n**Two address forms:**\n- `address_simplified`: 6-bit bijection (this endpoint)\n- `address_canonical`: dihedral factorization via resolver:DihedralFactorizationResolver (requires Rust conformance suite for bytes ≥ 64)\n\nFor `\"hello\"` (all bytes < 64), both forms are identical.",
+        "description": "Encodes an arbitrary UTF-8 string as a UOR content address using the 6-bit bijection chr(0x2800 + (b & 0x3F)).\n\nReturns `200 OK` because this endpoint computes a deterministic artifact on-the-fly — same inputs always produce the same output. No resource is persisted.",
+        "security": [{}, {"AgentKey": []}],
         "requestBody": {
           "required": true,
           "content": {
@@ -246,10 +327,6 @@
                 "hello": {
                   "summary": "Encode 'hello'",
                   "value": { "input": "hello", "encoding": "utf8" }
-                },
-                "agent_id": {
-                  "summary": "Encode an agent identifier",
-                  "value": { "input": "claude-sonnet-4.6", "encoding": "utf8" }
                 }
               }
             }
@@ -258,6 +335,11 @@
         "responses": {
           "200": {
             "description": "u:Address with full u:Glyph decomposition per byte",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/AddressEncodeResponse" }
@@ -265,8 +347,12 @@
             }
           },
           "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
           "413": { "$ref": "#/components/responses/PayloadTooLarge" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -276,6 +362,7 @@
         "tags": ["kernel-schema"],
         "summary": "Get full schema:Datum representation for a ring value",
         "description": "Returns a complete `schema:Datum` object for a given integer value at quantum level n.\n\n**Framework mapping (schema.rs):**\n- `schema:value` — integer value in [0, 2^n)\n- `schema:quantum` — the ring's bit-width n\n- `schema:stratum` — popcount of set bits\n- `schema:spectrum` — binary representation string\n- `schema:glyph` — linked `u:Address`",
+        "security": [{}, {"AgentKey": []}],
         "parameters": [
           { "$ref": "#/components/parameters/x" },
           { "$ref": "#/components/parameters/n" }
@@ -283,6 +370,12 @@
         "responses": {
           "200": {
             "description": "Full schema:Datum representation",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Datum" },
@@ -302,7 +395,10 @@
             }
           },
           "400": { "$ref": "#/components/responses/BadRequest" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -311,7 +407,8 @@
         "operationId": "partitionResolve",
         "tags": ["bridge-partition"],
         "summary": "Resolve a type:TypeDefinition to a partition:Partition of R_n",
-        "description": "Applies the partition map Π : T_n → Part(R_n) to produce a four-component partition of the ring.\n\n**Framework mapping (partition.rs):**\n- `partition:irreducibles` → odd values not equal to 1 or m-1\n- `partition:reducibles` → even values except 0 and m/2\n- `partition:units` → {1, m-1}\n- `partition:exterior` → {0, m/2}\n- `partition:density` = |IrreducibleSet| / |carrier|\n\n**Content quality signal:** density > 0.25 indicates non-spam content.\n\n**Two modes:** Pass `type_definition` for full ring partition, or `input` string for per-byte analysis.",
+        "description": "Applies the partition map Π : T_n → Part(R_n) to produce a four-component partition of the ring.\n\nReturns `200 OK` because this endpoint computes a deterministic artifact on-the-fly — same inputs always produce the same output. No resource is persisted.\n\n**Two modes:** Pass `type_definition` for full ring partition, or `input` string for per-byte analysis.",
+        "security": [{}, {"AgentKey": []}],
         "requestBody": {
           "required": true,
           "content": {
@@ -333,6 +430,11 @@
         "responses": {
           "200": {
             "description": "Four-component partition:Partition of R_n",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/PartitionResponse" }
@@ -340,8 +442,12 @@
             }
           },
           "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
           "413": { "$ref": "#/components/responses/PayloadTooLarge" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -350,7 +456,8 @@
         "operationId": "proofCriticalIdentity",
         "tags": ["bridge-proof"],
         "summary": "Produce a proof:CriticalIdentityProof for a given witness x",
-        "description": "Returns a fully structured `proof:CriticalIdentityProof` linking back to `op:criticalIdentity` via `proof:provesIdentity`. This is the output type validated by `test6_critical_identity.rs`.\n\n**Framework mapping (proof.rs):** proof:CriticalIdentityProof, proof:WitnessData with proof:x, proof:bnot_x, proof:neg_bnot_x, proof:succ_x, proof:holds.",
+        "description": "Returns a fully structured `proof:CriticalIdentityProof` linking back to `op:criticalIdentity` via `proof:provesIdentity`.",
+        "security": [{}, {"AgentKey": []}],
         "parameters": [
           { "$ref": "#/components/parameters/x" },
           { "$ref": "#/components/parameters/n" }
@@ -358,6 +465,12 @@
         "responses": {
           "200": {
             "description": "proof:CriticalIdentityProof with full witness data",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/CriticalIdentityProofResponse" }
@@ -365,7 +478,10 @@
             }
           },
           "400": { "$ref": "#/components/responses/BadRequest" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -374,7 +490,8 @@
         "operationId": "proofCoherence",
         "tags": ["bridge-proof"],
         "summary": "Produce a proof:CoherenceProof for a type:TypeDefinition",
-        "description": "Returns a `proof:CoherenceProof` asserting that a given type declaration is mutually consistent with the ring substrate at quantum level n.\n\n**Framework mapping (proof.rs):** proof:CoherenceProof subclass of proof:Proof, with proof:verified, proof:quantum, proof:timestamp, proof:witness array.",
+        "description": "Returns a `proof:CoherenceProof` asserting that a given type declaration is mutually consistent with the ring substrate at quantum level n.\n\nReturns `200 OK` because this endpoint computes a deterministic artifact on-the-fly — same inputs always produce the same output. No resource is persisted.",
+        "security": [{}, {"AgentKey": []}],
         "requestBody": {
           "required": true,
           "content": {
@@ -392,6 +509,11 @@
         "responses": {
           "200": {
             "description": "proof:CoherenceProof for the submitted type",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/CoherenceProofResponse" }
@@ -399,7 +521,11 @@
             }
           },
           "400": { "$ref": "#/components/responses/BadRequest" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -408,40 +534,38 @@
         "operationId": "certInvolution",
         "tags": ["bridge-cert"],
         "summary": "Issue a cert:InvolutionCertificate for op:neg or op:bnot",
-        "description": "Verifies that a named operation is an involution (f(f(x)) = x for all x in R_n) and returns a `cert:InvolutionCertificate`.\n\n**Framework mapping (cert.rs):** cert:InvolutionCertificate subclass of cert:Certificate, with cert:operation, cert:method, cert:verified, cert:quantum, cert:timestamp.",
+        "description": "Verifies that a named operation is an involution (f(f(x)) = x for all x in R_n) and returns a `cert:InvolutionCertificate`.",
+        "security": [{}, {"AgentKey": []}],
         "parameters": [
           {
             "name": "operation",
             "in": "query",
             "required": true,
             "schema": { "type": "string", "enum": ["neg", "bnot"] },
-            "description": "The operation to certify. Must be an op:Involution individual. Valid: `neg` (ring_reflection) or `bnot` (hypercube_reflection)."
+            "description": "The operation to certify. Must be an op:Involution individual."
           },
           { "$ref": "#/components/parameters/n" }
         ],
         "responses": {
           "200": {
             "description": "cert:InvolutionCertificate",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/InvolutionCertificateResponse" },
-                "examples": {
-                  "neg_n8": {
-                    "summary": "Certificate for op:neg in R_8",
-                    "value": {
-                      "@type": ["cert:Certificate", "cert:InvolutionCertificate"],
-                      "cert:operation": { "@id": "https://uor.foundation/op/neg", "@type": "op:Involution", "op:geometricCharacter": "ring_reflection" },
-                      "cert:verified": true,
-                      "cert:quantum": 8,
-                      "verification": { "total_checked": 256, "passed": 256, "failed": 0, "holds_universally": true }
-                    }
-                  }
-                }
+                "schema": { "$ref": "#/components/schemas/InvolutionCertificateResponse" }
               }
             }
           },
           "400": { "$ref": "#/components/responses/BadRequest" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -450,7 +574,8 @@
         "operationId": "observableMetrics",
         "tags": ["bridge-observable"],
         "summary": "Compute observable metrics for a ring element",
-        "description": "Returns RingMetric, HammingMetric, CascadeLength, CatastropheThreshold, and Commutator for a ring element.\n\n**Framework mapping (observable.rs):** observable:RingMetric (d_R(x,0) = min(x, m-x)), observable:HammingMetric (popcount), observable:CascadeLength (trailing zero count), observable:CatastropheThreshold (phase boundary detection).",
+        "description": "Returns RingMetric, HammingMetric, CascadeLength, CatastropheThreshold, and Commutator for a ring element.",
+        "security": [{}, {"AgentKey": []}],
         "parameters": [
           { "$ref": "#/components/parameters/x" },
           { "$ref": "#/components/parameters/n" }
@@ -458,6 +583,12 @@
         "responses": {
           "200": {
             "description": "Observable metric bundle for x in R_n",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ObservableMetricsResponse" }
@@ -465,7 +596,10 @@
             }
           },
           "400": { "$ref": "#/components/responses/BadRequest" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
@@ -474,29 +608,130 @@
         "operationId": "typeList",
         "tags": ["user-type"],
         "summary": "List all type:PrimitiveType definitions",
-        "description": "Returns the catalogue of primitive type definitions: U1, U4, U8, U16, and composite type structures (ProductType, SumType, ConstrainedType).\n\n**Source:** `spec/src/namespaces/type_.rs`",
+        "description": "Returns the catalogue of primitive type definitions: U1, U4, U8, U16, and composite type structures.\n\n**Source:** `spec/src/namespaces/type_.rs`",
+        "security": [{}, {"AgentKey": []}],
         "responses": {
           "200": {
             "description": "Catalogue of type:PrimitiveType and composite types",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/TypeListResponse" }
               }
             }
           },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/derivation": {
+      "get": {
+        "operationId": "derivationList",
+        "tags": ["bridge-derivation"],
+        "summary": "derivation: namespace — audit trail for agent actions (not implemented in v1)",
+        "description": "Returns derivation:DerivationTrace objects for agent execution audit trails. Requires the Rust conformance suite. Will be implemented in v2.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "501": { "$ref": "#/components/responses/NotImplemented" },
+          "default": { "$ref": "#/components/responses/NotImplemented" }
+        }
+      }
+    },
+    "/bridge/trace": {
+      "get": {
+        "operationId": "traceList",
+        "tags": ["bridge-trace"],
+        "summary": "trace: namespace — computation traces for injection detection (not implemented in v1)",
+        "description": "Returns trace:ComputationTrace objects. Requires the Rust conformance suite. Will be implemented in v2.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "501": { "$ref": "#/components/responses/NotImplemented" },
+          "default": { "$ref": "#/components/responses/NotImplemented" }
+        }
+      }
+    },
+    "/bridge/resolver": {
+      "get": {
+        "operationId": "resolverList",
+        "tags": ["bridge-resolver"],
+        "summary": "resolver: namespace — CanonicalFormResolver, DihedralFactorizationResolver (not implemented in v1)",
+        "description": "Returns resolver:CanonicalFormResolver and resolver:DihedralFactorizationResolver metadata. Requires the Rust conformance suite. Will be implemented in v2.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "501": { "$ref": "#/components/responses/NotImplemented" },
+          "default": { "$ref": "#/components/responses/NotImplemented" }
+        }
+      }
+    },
+    "/user/morphism/transforms": {
+      "get": {
+        "operationId": "morphismList",
+        "tags": ["user-morphism"],
+        "summary": "morphism: namespace — Transform, Isometry, Embedding, Action (not implemented in v1)",
+        "description": "Returns morphism:Transform catalogue. Requires the Rust conformance suite. Will be implemented in v2.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "501": { "$ref": "#/components/responses/NotImplemented" },
+          "default": { "$ref": "#/components/responses/NotImplemented" }
+        }
+      }
+    },
+    "/user/state": {
+      "get": {
+        "operationId": "stateList",
+        "tags": ["user-state"],
+        "summary": "state: namespace — Frame, Transition, lifecycle bindings (not implemented in v1)",
+        "description": "Returns state:Frame catalogue. Requires the Rust conformance suite. Will be implemented in v2.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "501": { "$ref": "#/components/responses/NotImplemented" },
+          "default": { "$ref": "#/components/responses/NotImplemented" }
         }
       }
     }
   },
   "components": {
+    "securitySchemes": {
+      "AgentKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-UOR-Agent-Key",
+        "description": "Optional API key for elevated rate limits. Unauthenticated: 120 req/min GET, 60 req/min POST. Authenticated: 600 req/min. Obtain at https://uor.foundation."
+      }
+    },
+    "headers": {
+      "ETag": {
+        "schema": { "type": "string" },
+        "description": "Cache validation token. Deterministic: same inputs always produce the same ETag. Use with If-None-Match for conditional requests (returns 304 Not Modified on match)."
+      },
+      "X-RateLimit-Limit": {
+        "schema": { "type": "integer" },
+        "description": "Maximum number of requests per minute for this endpoint class (120 for GET kernel, 60 for POST bridge)."
+      },
+      "X-RateLimit-Remaining": {
+        "schema": { "type": "integer" },
+        "description": "Remaining requests in the current 60-second window."
+      },
+      "X-RateLimit-Reset": {
+        "schema": { "type": "integer" },
+        "description": "Unix timestamp (seconds) when the rate limit window resets."
+      }
+    },
     "parameters": {
       "x": {
         "name": "x",
         "in": "query",
         "required": true,
         "schema": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "description": "Ring element value. Must be in [0, 2^n). Default ring R_8 accepts [0, 255].",
+        "description": "Ring element value. Must satisfy 0 ≤ x < 2^n (e.g., < 256 for n=8, < 65536 for n=16). Schema maximum is the widest valid range (n=16); actual bound enforced at runtime against `n`.",
         "example": 42
       },
       "n": {
@@ -511,73 +746,136 @@
     "schemas": {
       "Datum": {
         "type": "object",
-        "description": "schema:Datum — ring element with full algebraic metadata. Source: spec/src/namespaces/schema.rs",
+        "description": "schema:Datum — ring element with full algebraic metadata. Source: spec/src/namespaces/schema.rs. Property names use JSON-LD prefixed notation matching the @context in the response envelope — use string-key access in typed languages (e.g., obj[\"schema:value\"]).",
         "required": ["@type", "schema:value", "schema:quantum", "schema:stratum", "schema:spectrum"],
         "properties": {
           "@type": { "type": "string", "const": "schema:Datum" },
-          "schema:value": { "type": "integer", "description": "Integer value in [0, 2^n)" },
-          "schema:quantum": { "type": "integer", "description": "Ring bit-width n" },
-          "schema:stratum": { "type": "integer", "description": "Number of set bits (popcount / Hamming weight)" },
-          "schema:spectrum": { "type": "string", "description": "Binary representation string, padded to n digits" },
+          "schema:value": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Integer value in [0, 2^n). JSON-LD wire key: 'schema:value'.",
+            "x-json-ld-term": "schema:value",
+            "example": 42
+          },
+          "schema:quantum": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "description": "Ring bit-width n. JSON-LD wire key: 'schema:quantum'.",
+            "x-json-ld-term": "schema:quantum",
+            "example": 8
+          },
+          "schema:stratum": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of set bits (popcount / Hamming weight). JSON-LD wire key: 'schema:stratum'.",
+            "x-json-ld-term": "schema:stratum",
+            "example": 3
+          },
+          "schema:spectrum": {
+            "type": "string",
+            "pattern": "^[01]+$",
+            "minLength": 1,
+            "maxLength": 16,
+            "description": "Binary representation string, zero-padded to n digits. JSON-LD wire key: 'schema:spectrum'.",
+            "x-json-ld-term": "schema:spectrum",
+            "example": "00101010"
+          },
           "schema:glyph": {
             "type": "object",
-            "description": "u:Address — content-addressable Braille identifier",
+            "description": "u:Address — content-addressable Braille identifier. JSON-LD wire key: 'schema:glyph'.",
+            "x-json-ld-term": "schema:glyph",
+            "required": ["@type", "u:glyph", "u:length"],
             "properties": {
               "@type": { "type": "string", "const": "u:Address" },
-              "u:glyph": { "type": "string", "description": "Braille character(s) from Unicode Braille block" },
-              "u:length": { "type": "integer" }
+              "u:glyph": {
+                "type": "string",
+                "pattern": "^[⠀-⣿]+$",
+                "description": "Braille character(s) from Unicode Braille block (U+2800–U+28FF). Wire key: 'u:glyph'.",
+                "x-json-ld-term": "u:glyph"
+              },
+              "u:length": {
+                "type": "integer",
+                "minimum": 1,
+                "x-json-ld-term": "u:length"
+              }
             }
           }
         }
       },
       "WitnessData": {
         "type": "object",
-        "description": "proof:WitnessData — algebraic witness for critical identity verification",
+        "description": "proof:WitnessData — algebraic witness for critical identity verification. Wire keys use JSON-LD prefixed notation.",
+        "required": ["@type", "proof:x", "proof:bnot_x", "proof:neg_bnot_x", "proof:succ_x", "proof:holds"],
         "properties": {
           "@type": { "type": "string", "const": "proof:WitnessData" },
-          "proof:x": { "type": "integer" },
-          "proof:bnot_x": { "type": "integer", "description": "bnot(x) = x XOR (2^n - 1)" },
-          "proof:neg_bnot_x": { "type": "integer", "description": "neg(bnot(x)) = (-bnot(x)) mod 2^n" },
-          "proof:succ_x": { "type": "integer", "description": "succ(x) = (x + 1) mod 2^n" },
-          "proof:holds": { "type": "boolean", "description": "neg(bnot(x)) === succ(x)" }
+          "proof:x": { "type": "integer", "minimum": 0, "x-json-ld-term": "proof:x" },
+          "proof:bnot_x": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "bnot(x) = x XOR (2^n - 1). Wire key: 'proof:bnot_x'.",
+            "x-json-ld-term": "proof:bnot_x"
+          },
+          "proof:neg_bnot_x": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "neg(bnot(x)) = (-bnot(x)) mod 2^n. Wire key: 'proof:neg_bnot_x'.",
+            "x-json-ld-term": "proof:neg_bnot_x"
+          },
+          "proof:succ_x": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "succ(x) = (x + 1) mod 2^n. Wire key: 'proof:succ_x'.",
+            "x-json-ld-term": "proof:succ_x"
+          },
+          "proof:holds": {
+            "type": "boolean",
+            "description": "neg(bnot(x)) === succ(x). Wire key: 'proof:holds'.",
+            "x-json-ld-term": "proof:holds"
+          }
         }
       },
       "CriticalIdentityProofResponse": {
         "type": "object",
         "description": "proof:CriticalIdentityProof — full algebraic verification with derivation steps",
+        "required": ["@context", "@id", "@type", "proof:quantum", "proof:verified", "proof:timestamp", "proof:witness", "derivation", "ontology_ref", "conformance_ref"],
         "properties": {
           "@context": { "type": "object" },
-          "@id": { "type": "string" },
+          "@id": { "type": "string", "format": "uri" },
           "@type": { "type": "array", "items": { "type": "string" } },
-          "proof:quantum": { "type": "integer" },
-          "proof:verified": { "type": "boolean" },
-          "proof:timestamp": { "type": "string", "format": "date-time" },
-          "proof:criticalIdentity": { "type": "string" },
-          "proof:provesIdentity": { "type": "object" },
+          "proof:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "proof:quantum" },
+          "proof:verified": { "type": "boolean", "x-json-ld-term": "proof:verified" },
+          "proof:timestamp": { "type": "string", "format": "date-time", "x-json-ld-term": "proof:timestamp" },
+          "proof:criticalIdentity": { "type": "string", "x-json-ld-term": "proof:criticalIdentity" },
+          "proof:provesIdentity": { "type": "object", "x-json-ld-term": "proof:provesIdentity" },
           "proof:witness": { "$ref": "#/components/schemas/WitnessData" },
           "derivation": {
             "type": "object",
+            "required": ["@type"],
             "properties": {
-              "step1": { "type": "string" },
-              "step2": { "type": "string" },
-              "step3": { "type": "string" },
-              "conclusion": { "type": "string" }
+              "@type": { "type": "string", "const": "derivation:DerivationTrace" },
+              "derivation:step1": { "type": "string" },
+              "derivation:step2": { "type": "string" },
+              "derivation:step3": { "type": "string" },
+              "derivation:conclusion": { "type": "string" }
             }
           },
-          "ontology_ref": { "type": "string" },
-          "conformance_ref": { "type": "string" }
+          "ontology_ref": { "type": "string", "format": "uri" },
+          "conformance_ref": { "type": "string", "format": "uri" }
         }
       },
       "CoherenceProofResponse": {
         "type": "object",
         "description": "proof:CoherenceProof — universal verification across all 2^n ring elements",
+        "required": ["@type", "proof:quantum", "proof:verified", "proof:timestamp", "summary"],
         "properties": {
           "@type": { "type": "array", "items": { "type": "string" } },
-          "proof:quantum": { "type": "integer" },
-          "proof:verified": { "type": "boolean" },
-          "proof:timestamp": { "type": "string", "format": "date-time" },
+          "proof:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "proof:quantum" },
+          "proof:verified": { "type": "boolean", "x-json-ld-term": "proof:verified" },
+          "proof:timestamp": { "type": "string", "format": "date-time", "x-json-ld-term": "proof:timestamp" },
           "summary": {
             "type": "object",
+            "required": ["ring", "total", "passed", "failed", "holds_universally", "claim"],
             "properties": {
               "ring": { "type": "string" },
               "total": { "type": "integer" },
@@ -586,35 +884,137 @@
               "holds_universally": { "type": "boolean" },
               "claim": { "type": "string" }
             }
-          }
+          },
+          "coherence_layers": { "type": "object" }
         }
       },
       "CoherenceProofRequest": {
         "type": "object",
+        "required": ["type_definition"],
         "properties": {
-          "type_definition": { "type": "object", "description": "type:TypeDefinition to verify coherence for" },
-          "n": { "type": "integer", "minimum": 1, "maximum": 16, "default": 8, "description": "Ring quantum" }
+          "type_definition": {
+            "type": "object",
+            "description": "type:TypeDefinition to verify coherence for. Minimum: {\"@type\": \"type:PrimitiveType\", \"type:bitWidth\": 8}",
+            "required": ["@type"],
+            "properties": {
+              "@type": {
+                "type": "string",
+                "enum": ["type:PrimitiveType", "type:ProductType", "type:SumType", "type:ConstrainedType"]
+              },
+              "type:bitWidth": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16,
+                "description": "Required for type:PrimitiveType. Specifies the ring quantum n.",
+                "x-json-ld-term": "type:bitWidth"
+              }
+            }
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "default": 8,
+            "description": "Ring quantum (bit-width). If omitted, taken from type_definition.type:bitWidth, then defaults to 8."
+          }
+        }
+      },
+      "UnaryOpResult": {
+        "type": "object",
+        "description": "Result of a named op:UnaryOp individual applied to x",
+        "required": ["@id", "@type", "op:arity", "op:geometricCharacter", "formula", "result"],
+        "properties": {
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "op:UnaryOp" },
+          "op:arity": { "type": "integer", "const": 1, "x-json-ld-term": "op:arity" },
+          "op:geometricCharacter": { "type": "string", "x-json-ld-term": "op:geometricCharacter" },
+          "formula": { "type": "string" },
+          "result": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "BinaryOpResult": {
+        "type": "object",
+        "description": "Result of a named op:BinaryOp individual applied to (x, y)",
+        "required": ["@id", "@type", "op:arity", "op:commutative", "op:associative", "formula", "result"],
+        "properties": {
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "op:BinaryOp" },
+          "op:arity": { "type": "integer", "const": 2, "x-json-ld-term": "op:arity" },
+          "op:commutative": { "type": "boolean", "x-json-ld-term": "op:commutative" },
+          "op:associative": { "type": "boolean", "x-json-ld-term": "op:associative" },
+          "op:geometricCharacter": { "type": "string", "x-json-ld-term": "op:geometricCharacter" },
+          "formula": { "type": "string" },
+          "result": { "type": "integer", "minimum": 0 }
         }
       },
       "OpComputeResponse": {
         "type": "object",
         "description": "Results of all ring operations applied to x (and y for binary ops)",
+        "required": ["datum", "ring", "unary_ops", "binary_ops", "critical_identity"],
         "properties": {
+          "@context": { "type": "object" },
+          "@id": { "type": "string", "format": "uri" },
           "datum": { "$ref": "#/components/schemas/Datum" },
-          "ring": { "type": "object" },
-          "unary_ops": { "type": "object" },
-          "binary_ops": { "type": "object" },
-          "critical_identity": { "type": "object" }
+          "ring": {
+            "type": "object",
+            "required": ["@type", "schema:ringQuantum", "schema:modulus"],
+            "properties": {
+              "@type": { "type": "string", "const": "schema:Ring" },
+              "schema:ringQuantum": { "type": "integer", "x-json-ld-term": "schema:ringQuantum" },
+              "schema:modulus": { "type": "integer", "x-json-ld-term": "schema:modulus" }
+            }
+          },
+          "unary_ops": {
+            "type": "object",
+            "properties": {
+              "neg": { "$ref": "#/components/schemas/UnaryOpResult" },
+              "bnot": { "$ref": "#/components/schemas/UnaryOpResult" },
+              "succ": { "$ref": "#/components/schemas/UnaryOpResult" },
+              "pred": { "$ref": "#/components/schemas/UnaryOpResult" }
+            }
+          },
+          "binary_ops": {
+            "type": "object",
+            "properties": {
+              "y": { "type": "integer" },
+              "add": { "$ref": "#/components/schemas/BinaryOpResult" },
+              "sub": { "$ref": "#/components/schemas/BinaryOpResult" },
+              "mul": { "$ref": "#/components/schemas/BinaryOpResult" },
+              "xor": { "$ref": "#/components/schemas/BinaryOpResult" },
+              "and": { "$ref": "#/components/schemas/BinaryOpResult" },
+              "or": { "$ref": "#/components/schemas/BinaryOpResult" }
+            }
+          },
+          "critical_identity": {
+            "type": "object",
+            "required": ["holds", "neg_bnot_x", "succ_x", "statement"],
+            "properties": {
+              "holds": { "type": "boolean" },
+              "neg_bnot_x": { "type": "integer" },
+              "succ_x": { "type": "integer" },
+              "statement": { "type": "string" }
+            }
+          }
         }
       },
       "OpListResponse": {
         "type": "object",
         "description": "Complete catalogue of all 12 named op/ individuals",
+        "required": ["@type", "unary_operations", "binary_operations", "special_individuals", "total_individuals"],
         "properties": {
           "@type": { "type": "string" },
-          "unary_operations": { "type": "array" },
-          "binary_operations": { "type": "array" },
-          "special_individuals": { "type": "array" },
+          "unary_operations": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UnaryOpResult" }
+          },
+          "binary_operations": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BinaryOpResult" }
+          },
+          "special_individuals": {
+            "type": "array",
+            "items": { "type": "object" }
+          },
           "total_individuals": { "type": "integer" }
         }
       },
@@ -629,10 +1029,11 @@
       "AddressEncodeResponse": {
         "type": "object",
         "description": "u:Address with per-byte u:Glyph decomposition",
+        "required": ["@type", "u:glyph", "u:length", "address_simplified"],
         "properties": {
           "@type": { "type": "string", "const": "u:Address" },
-          "u:glyph": { "type": "string", "description": "Braille address string" },
-          "u:length": { "type": "integer" },
+          "u:glyph": { "type": "string", "description": "Braille address string. Wire key: 'u:glyph'.", "x-json-ld-term": "u:glyph" },
+          "u:length": { "type": "integer", "minimum": 1, "x-json-ld-term": "u:length" },
           "address_simplified": { "type": "string" },
           "address_canonical": { "type": "string" },
           "encoding_note": { "type": "string" },
@@ -640,72 +1041,148 @@
         }
       },
       "PartitionRequest": {
-        "type": "object",
-        "description": "One of: type_definition (for full ring partition) or input string (for per-byte analysis)",
-        "properties": {
-          "type_definition": { "type": "object", "description": "type:TypeDefinition to partition" },
-          "input": { "type": "string", "maxLength": 1000, "description": "UTF-8 string for per-byte partition analysis" },
-          "encoding": { "type": "string", "enum": ["utf8"], "default": "utf8" },
-          "resolver": { "type": "string", "enum": ["DihedralFactorizationResolver", "EvaluationResolver"], "default": "EvaluationResolver" }
-        }
+        "description": "Exactly one of `type_definition` or `input` must be provided.",
+        "oneOf": [
+          {
+            "title": "TypeDefinitionPartition",
+            "description": "Full ring partition for a type:TypeDefinition",
+            "required": ["type_definition"],
+            "properties": {
+              "type_definition": {
+                "type": "object",
+                "description": "type:TypeDefinition to partition. E.g. {\"@type\": \"type:PrimitiveType\", \"type:bitWidth\": 8}",
+                "required": ["@type"],
+                "properties": { "@type": { "type": "string" } }
+              },
+              "resolver": {
+                "type": "string",
+                "enum": ["DihedralFactorizationResolver", "EvaluationResolver"],
+                "default": "DihedralFactorizationResolver"
+              }
+            }
+          },
+          {
+            "title": "InputStringPartition",
+            "description": "Per-byte partition analysis of a UTF-8 string",
+            "required": ["input"],
+            "properties": {
+              "input": {
+                "type": "string",
+                "maxLength": 1000,
+                "description": "UTF-8 string for per-byte partition analysis"
+              },
+              "encoding": { "type": "string", "enum": ["utf8"], "default": "utf8" },
+              "resolver": {
+                "type": "string",
+                "enum": ["DihedralFactorizationResolver", "EvaluationResolver"],
+                "default": "EvaluationResolver"
+              }
+            }
+          }
+        ]
       },
       "PartitionResponse": {
         "type": "object",
         "description": "partition:Partition with four disjoint, exhaustive components summing to 2^n",
+        "required": ["@type", "partition:quantum", "partition:density"],
         "properties": {
           "@type": { "type": "string", "const": "partition:Partition" },
-          "partition:quantum": { "type": "integer" },
-          "partition:density": { "type": "number", "description": "|IrreducibleSet| / |carrier|. > 0.25 indicates non-spam content." },
+          "partition:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "partition:quantum" },
+          "partition:density": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "|IrreducibleSet| / |carrier|. > 0.25 indicates non-spam content.",
+            "x-json-ld-term": "partition:density"
+          },
           "partition:irreducibles": { "type": "object" },
           "partition:reducibles": { "type": "object" },
           "partition:units": { "type": "object" },
           "partition:exterior": { "type": "object" },
-          "quality_signal": { "type": "string" },
-          "cardinality_check": { "type": "object" }
+          "cardinality_check": {
+            "type": "object",
+            "properties": {
+              "sum": { "type": "integer" },
+              "expected": { "type": "integer" },
+              "valid": { "type": "boolean" }
+            }
+          },
+          "quality_signal": { "type": "string" }
         }
       },
       "InvolutionCertificateResponse": {
         "type": "object",
         "description": "cert:InvolutionCertificate — proof that f(f(x)) = x for all x in R_n",
+        "required": ["@type", "cert:operation", "cert:verified", "cert:quantum", "cert:timestamp", "verification"],
         "properties": {
           "@type": { "type": "array", "items": { "type": "string" } },
-          "cert:operation": { "type": "object" },
-          "cert:method": { "type": "string" },
-          "cert:verified": { "type": "boolean" },
-          "cert:quantum": { "type": "integer" },
-          "cert:timestamp": { "type": "string", "format": "date-time" },
-          "verification": { "type": "object" }
+          "cert:operation": { "type": "object", "x-json-ld-term": "cert:operation" },
+          "cert:method": { "type": "string", "x-json-ld-term": "cert:method" },
+          "cert:verified": { "type": "boolean", "x-json-ld-term": "cert:verified" },
+          "cert:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "cert:quantum" },
+          "cert:timestamp": { "type": "string", "format": "date-time", "x-json-ld-term": "cert:timestamp" },
+          "verification": {
+            "type": "object",
+            "required": ["total_checked", "passed", "failed", "holds_universally"],
+            "properties": {
+              "claim": { "type": "string" },
+              "formula": { "type": "string" },
+              "total_checked": { "type": "integer" },
+              "passed": { "type": "integer" },
+              "failed": { "type": "integer" },
+              "holds_universally": { "type": "boolean" }
+            }
+          }
         }
       },
       "ObservableMetricsResponse": {
         "type": "object",
-        "description": "observable:MetricBundle — RingMetric, HammingMetric, CascadeLength for x in R_n",
+        "description": "observable:MetricBundle — RingMetric, HammingMetric, CascadeLength, CatastropheThreshold, Commutator for x in R_n",
+        "required": ["@type", "observable:quantum", "observable:datum"],
         "properties": {
           "@type": { "type": "string", "const": "observable:MetricBundle" },
-          "observable:quantum": { "type": "integer" },
+          "observable:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "observable:quantum" },
           "observable:datum": { "$ref": "#/components/schemas/Datum" },
           "observable:ringMetric": { "type": "object", "description": "d_R(x,0) = min(x, m-x)" },
           "observable:hammingMetric": { "type": "object", "description": "popcount — number of set bits" },
           "observable:cascadeLength": { "type": "object", "description": "trailing zero count — depth of 2-adic factorization" },
-          "observable:catastropheThreshold": { "type": "object", "description": "phase boundary detection" }
+          "observable:catastropheThreshold": { "type": "object", "description": "phase boundary detection" },
+          "observable:commutator": { "type": "object", "description": "Commutator measurement — 0 for commutative ring operations", "x-json-ld-term": "observable:commutator" }
         }
       },
       "TypeListResponse": {
         "type": "object",
         "description": "Catalogue of type:PrimitiveType and composite type definitions",
+        "required": ["@type", "primitive_types", "composite_types"],
         "properties": {
           "@type": { "type": "string" },
-          "primitive_types": { "type": "array" },
-          "composite_types": { "type": "array" }
+          "primitive_types": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["@id", "@type", "type:name", "type:bitWidth", "type:ringQuantum", "type:modulus"],
+              "properties": {
+                "@id": { "type": "string", "format": "uri" },
+                "@type": { "type": "string", "const": "type:PrimitiveType" },
+                "type:name": { "type": "string", "x-json-ld-term": "type:name" },
+                "type:bitWidth": { "type": "integer", "x-json-ld-term": "type:bitWidth" },
+                "type:ringQuantum": { "type": "integer", "x-json-ld-term": "type:ringQuantum" },
+                "type:modulus": { "type": "integer", "x-json-ld-term": "type:modulus" },
+                "description": { "type": "string" }
+              }
+            }
+          },
+          "composite_types": { "type": "array", "items": { "type": "object" } }
         }
       },
       "NavigationIndex": {
         "type": "object",
         "description": "Complete navigation index — all endpoints, namespace map, reading order",
+        "required": ["title", "version", "openapi_spec", "quick_start", "spaces", "namespace_map", "reading_order"],
         "properties": {
           "title": { "type": "string" },
           "version": { "type": "string" },
-          "openapi_spec": { "type": "string" },
+          "openapi_spec": { "type": "string", "format": "uri" },
           "quick_start": { "type": "object" },
           "spaces": { "type": "object" },
           "namespace_map": { "type": "array" },
@@ -717,9 +1194,12 @@
         "required": ["error", "code"],
         "properties": {
           "error": { "type": "string", "description": "Human-readable error description" },
-          "code": { "type": "string", "enum": ["INVALID_PARAMETER", "RATE_LIMITED", "PAYLOAD_TOO_LARGE", "NOT_FOUND", "INTERNAL_ERROR"] },
-          "param": { "type": "string", "description": "The parameter that caused the error" },
-          "docs": { "type": "string", "description": "URL to this OpenAPI specification" }
+          "code": {
+            "type": "string",
+            "enum": ["INVALID_PARAMETER", "RATE_LIMITED", "PAYLOAD_TOO_LARGE", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_IMPLEMENTED", "UNSUPPORTED_MEDIA_TYPE", "INTERNAL_ERROR"]
+          },
+          "param": { "type": "string", "description": "The parameter that caused the error (for 400 responses)" },
+          "docs": { "type": "string", "format": "uri", "description": "URL to this OpenAPI specification" }
         }
       }
     },
@@ -738,10 +1218,45 @@
           }
         }
       },
+      "MethodNotAllowed": {
+        "description": "HTTP method not supported for this endpoint. Check the Allow response header for permitted methods.",
+        "headers": {
+          "Allow": {
+            "schema": { "type": "string" },
+            "description": "Comma-separated list of allowed HTTP methods for this path (e.g., GET, OPTIONS)"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Method DELETE not allowed. Allowed: GET, OPTIONS",
+              "code": "METHOD_NOT_ALLOWED",
+              "docs": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json"
+            }
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "description": "Request body must have Content-Type: application/json.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Content-Type must be application/json",
+              "code": "UNSUPPORTED_MEDIA_TYPE",
+              "docs": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json"
+            }
+          }
+        }
+      },
       "RateLimited": {
         "description": "Rate limit exceeded. Retry after 60 seconds.",
         "headers": {
-          "Retry-After": { "schema": { "type": "integer" }, "description": "Seconds to wait before retrying" }
+          "Retry-After": { "schema": { "type": "integer" }, "description": "Seconds to wait before retrying" },
+          "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+          "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+          "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
         },
         "content": {
           "application/json": {
@@ -759,6 +1274,33 @@
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "NotImplemented": {
+        "description": "This endpoint requires the Rust conformance suite (full dihedral factorization) and is not yet available in the cloud API. See https://github.com/UOR-Foundation/UOR-Framework for the local implementation.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Not implemented in v1",
+              "code": "NOT_IMPLEMENTED",
+              "note": "Requires Rust conformance suite",
+              "conformance_suite": "https://github.com/UOR-Foundation/UOR-Framework"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Unexpected server-side error. The UOR kernel computation itself is deterministic; this indicates an infrastructure failure. Retry with exponential backoff.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Internal server error",
+              "code": "INTERNAL_ERROR",
+              "docs": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json"
+            }
           }
         }
       }
