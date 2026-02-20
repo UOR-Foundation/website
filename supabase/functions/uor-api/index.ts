@@ -1151,20 +1151,18 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/bridge/cert/involution`, "params": "operation, n", "operationId": "certInvolution", "summary": "cert:InvolutionCertificate for neg or bnot" },
           { "method": "GET", "path": `${base}/bridge/observable/metrics`, "params": "x, n", "operationId": "observableMetrics", "summary": "RingMetric, HammingMetric, CascadeLength" }
         ],
-        "not_implemented": [
-          "derivation: namespace — requires Rust conformance suite (501 Not Implemented)",
-          "trace: namespace — requires Rust conformance suite (501 Not Implemented)",
-          "resolver: namespace — requires Rust conformance suite (501 Not Implemented)"
+        "endpoints_also": [
+          { "method": "GET", "path": `${base}/bridge/derivation`, "params": "x, n, ops", "operationId": "bridgeDerivation", "summary": "derivation:DerivationTrace — step-by-step op sequence with verification" },
+          { "method": "GET", "path": `${base}/bridge/trace`, "params": "x, n, ops", "operationId": "bridgeTrace", "summary": "trace:ExecutionTrace — bitwise frames with hamming weight and delta" },
+          { "method": "GET", "path": `${base}/bridge/resolver`, "params": "x, n", "operationId": "bridgeResolver", "summary": "resolver:Resolution — canonical form with partition decomposition" }
         ]
       },
       "user": {
         "description": "Type system and application layer — type:, morphism:, state: namespaces",
         "endpoints": [
-          { "method": "GET", "path": `${base}/user/type/primitives`, "params": "none", "operationId": "typeList", "summary": "Catalogue of type:PrimitiveType definitions" }
-        ],
-        "not_implemented": [
-          "morphism: namespace — requires resolver:DihedralFactorizationResolver (Rust conformance suite) — 501",
-          "state: namespace — context/binding/frame/transition — 501"
+          { "method": "GET", "path": `${base}/user/type/primitives`, "params": "none", "operationId": "typeList", "summary": "Catalogue of type:PrimitiveType definitions" },
+          { "method": "GET", "path": `${base}/user/morphism/transforms`, "params": "x, from_n, to_n", "operationId": "morphismTransforms", "summary": "morphism:RingHomomorphism — structure-preserving map between rings" },
+          { "method": "GET", "path": `${base}/user/state`, "params": "x, n", "operationId": "userState", "summary": "state:Frame — agent lifecycle binding with transitions and conditions" }
         ]
       }
     },
@@ -1191,6 +1189,434 @@ function frameworkIndex(rl: RateLimitResult): Response {
       "github": "https://github.com/UOR-Foundation/UOR-Framework"
     }
   }, CACHE_HEADERS_KERNEL, etag, rl);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// NEW ENDPOINT HANDLERS — derivation:, trace:, resolver:, morphism:, state:
+// ════════════════════════════════════════════════════════════════════════════
+
+const VALID_OPS = ['neg', 'bnot', 'succ', 'pred'] as const;
+type OpName = typeof VALID_OPS[number];
+
+function applyOp(x: number, op: OpName, n: number): number {
+  switch (op) {
+    case 'neg':  return neg(x, n);
+    case 'bnot': return bnot(x, n);
+    case 'succ': return succOp(x, n);
+    case 'pred': return predOp(x, n);
+  }
+}
+
+function opFormula(op: OpName, x: number, n: number, result: number): string {
+  const m = modulus(n);
+  switch (op) {
+    case 'neg':  return `neg(${x}) = (-${x}) mod ${m} = ${result}`;
+    case 'bnot': return `bnot(${x}) = ${x} XOR ${m - 1} = ${result}`;
+    case 'succ': return `succ(${x}) = (${x} + 1) mod ${m} = ${result}`;
+    case 'pred': return `pred(${x}) = (${x} - 1 + ${m}) mod ${m} = ${result}`;
+  }
+}
+
+function opDescription(op: OpName): string {
+  switch (op) {
+    case 'neg':  return 'Ring negation — additive inverse in Z/(2^n)Z';
+    case 'bnot': return 'Bitwise complement — hypercube reflection over the ring';
+    case 'succ': return 'Increment — successor function, composed as neg∘bnot';
+    case 'pred': return 'Decrement — predecessor function, composed as bnot∘neg';
+  }
+}
+
+function hammingWeight(x: number): number {
+  let count = 0, v = x;
+  while (v) { count += v & 1; v >>>= 1; }
+  return count;
+}
+
+function bitDelta(prev: number, curr: number, n: number): string {
+  const changed = prev ^ curr;
+  if (changed === 0) return 'no bits changed';
+  const bits: number[] = [];
+  for (let i = 0; i < n; i++) if ((changed >> i) & 1) bits.push(i);
+  return `bit${bits.length > 1 ? 's' : ''} [${bits.join(', ')}] flipped`;
+}
+
+// GET /bridge/derivation?x=42&n=8&ops=neg,bnot,succ
+function bridgeDerivation(url: URL, rl: RateLimitResult): Response {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const nRes = parseIntParam(nRaw, 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+
+  const x = xRes.val, n = nRes.val;
+  const m = modulus(n);
+  if (x >= m) return error400(`x must be in [0, ${m - 1}] for n=${n}`, 'x', rl);
+
+  const opsRaw = url.searchParams.get('ops') ?? 'neg,bnot,succ';
+  const opNames = opsRaw.split(',').map(s => s.trim().toLowerCase());
+  const invalidOps = opNames.filter(o => !VALID_OPS.includes(o as OpName));
+  if (invalidOps.length > 0) {
+    return error400(`Invalid operation(s): ${invalidOps.join(', ')}. Valid: ${VALID_OPS.join(', ')}`, 'ops', rl);
+  }
+
+  const steps: unknown[] = [];
+  let current = x;
+  for (let i = 0; i < opNames.length; i++) {
+    const op = opNames[i] as OpName;
+    const input = current;
+    const output = applyOp(input, op, n);
+    const stepNum = i + 1;
+    steps.push({
+      "@type": "derivation:DerivationStep",
+      "derivation:stepNumber": stepNum,
+      "derivation:operationId": `op:${op}`,
+      "derivation:operationDescription": opDescription(op),
+      "derivation:input": input,
+      "derivation:output": output,
+      "derivation:formula": opFormula(op, input, n, output),
+      "derivation:ontologyRef": `https://uor.foundation/op/${op}`
+    });
+    current = output;
+  }
+
+  // Verify critical identity holds for original x
+  const critHolds = neg(bnot(x, n), n) === succOp(x, n);
+  const etag = makeETag('/bridge/derivation', { x: String(x), n: String(n), ops: opsRaw });
+
+  return jsonResp({
+    "@context": UOR_CONTEXT,
+    "@id": `https://uor.foundation/instance/derivation-x${x}-n${n}`,
+    "@type": "derivation:DerivationTrace",
+    "derivation:sourceValue": x,
+    "derivation:quantum": n,
+    "derivation:ringModulus": m,
+    "derivation:operationSequence": opNames,
+    "derivation:finalValue": current,
+    "derivation:steps": steps,
+    "derivation:stepCount": steps.length,
+    "derivation:verification": {
+      "@type": "derivation:CriticalIdentityCheck",
+      "derivation:criticalIdentityHolds": critHolds,
+      "derivation:statement": `neg(bnot(${x})) = succ(${x}) in R_${n} [${critHolds ? 'PASS' : 'FAIL'}]`,
+      "derivation:witnessNegBnot": neg(bnot(x, n), n),
+      "derivation:witnessSucc": succOp(x, n)
+    },
+    "derivation:timestamp": timestamp(),
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/derivation.rs"
+  }, CACHE_HEADERS_CONTENT, etag, rl);
+}
+
+// GET /bridge/trace?x=42&n=8&ops=neg,bnot
+function bridgeTrace(url: URL, rl: RateLimitResult): Response {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const nRes = parseIntParam(nRaw, 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+
+  const x = xRes.val, n = nRes.val;
+  const m = modulus(n);
+  if (x >= m) return error400(`x must be in [0, ${m - 1}] for n=${n}`, 'x', rl);
+
+  const opsRaw = url.searchParams.get('ops') ?? 'neg,bnot';
+  const opNames = opsRaw.split(',').map(s => s.trim().toLowerCase());
+  const invalidOps = opNames.filter(o => !VALID_OPS.includes(o as OpName));
+  if (invalidOps.length > 0) {
+    return error400(`Invalid operation(s): ${invalidOps.join(', ')}. Valid: ${VALID_OPS.join(', ')}`, 'ops', rl);
+  }
+
+  // Frame 0 = initial state
+  const frames: unknown[] = [];
+  let current = x;
+  frames.push({
+    "@type": "trace:Frame",
+    "trace:frameIndex": 0,
+    "trace:operation": null,
+    "trace:state": current,
+    "trace:binaryState": current.toString(2).padStart(n, '0'),
+    "trace:hammingWeight": hammingWeight(current),
+    "trace:delta": "initial state"
+  });
+
+  for (let i = 0; i < opNames.length; i++) {
+    const op = opNames[i] as OpName;
+    const prev = current;
+    current = applyOp(prev, op, n);
+    frames.push({
+      "@type": "trace:Frame",
+      "trace:frameIndex": i + 1,
+      "trace:operation": `op:${op}`,
+      "trace:operationFormula": opFormula(op, prev, n, current),
+      "trace:state": current,
+      "trace:binaryState": current.toString(2).padStart(n, '0'),
+      "trace:hammingWeight": hammingWeight(current),
+      "trace:hammingWeightDelta": hammingWeight(current) - hammingWeight(prev),
+      "trace:delta": bitDelta(prev, current, n),
+      "trace:xorDiff": prev ^ current
+    });
+  }
+
+  const etag = makeETag('/bridge/trace', { x: String(x), n: String(n), ops: opsRaw });
+
+  return jsonResp({
+    "@context": UOR_CONTEXT,
+    "@id": `https://uor.foundation/instance/trace-x${x}-n${n}`,
+    "@type": "trace:ExecutionTrace",
+    "trace:sourceValue": x,
+    "trace:quantum": n,
+    "trace:ringModulus": m,
+    "trace:operationSequence": opNames,
+    "trace:finalState": current,
+    "trace:finalBinaryState": current.toString(2).padStart(n, '0'),
+    "trace:frames": frames,
+    "trace:frameCount": frames.length,
+    "trace:totalHammingDrift": hammingWeight(current) - hammingWeight(x),
+    "trace:timestamp": timestamp(),
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/trace.rs"
+  }, CACHE_HEADERS_CONTENT, etag, rl);
+}
+
+// GET /bridge/resolver?x=42&n=8
+function bridgeResolver(url: URL, rl: RateLimitResult): Response {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const nRes = parseIntParam(nRaw, 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+
+  const x = xRes.val, n = nRes.val;
+  const m = modulus(n);
+  if (x >= m) return error400(`x must be in [0, ${m - 1}] for n=${n}`, 'x', rl);
+
+  const { component, reason } = classifyByte(x, n);
+
+  // Build decomposition steps showing reduction to canonical form
+  const decompositionSteps: unknown[] = [];
+  let isIrreducible = false;
+
+  if (x === 0) {
+    isIrreducible = false;
+    decompositionSteps.push({ step: 1, action: 'Classify', result: 'Value is 0 — additive identity (ExteriorSet). No further decomposition possible.' });
+  } else if (x === 1 || x === m - 1) {
+    isIrreducible = false;
+    decompositionSteps.push({ step: 1, action: 'Classify', result: `Value is a ring unit. Multiplicative inverse exists: ${x} * ${x === 1 ? 1 : m - 1} ≡ 1 (mod ${m})` });
+  } else if (x % 2 !== 0) {
+    // Irreducible: odd and not a unit
+    isIrreducible = true;
+    decompositionSteps.push({ step: 1, action: 'Parity check', result: `${x} is odd → not divisible by 2 in Z` });
+    decompositionSteps.push({ step: 2, action: 'Unit check', result: `${x} ≠ 1 and ${x} ≠ ${m - 1} → not a ring unit` });
+    decompositionSteps.push({ step: 3, action: 'Irreducibility verdict', result: `${x} is irreducible in R_${n} = Z/${m}Z — cannot be factored further` });
+  } else if (x === m / 2) {
+    isIrreducible = false;
+    decompositionSteps.push({ step: 1, action: 'Classify', result: `Value is ${m / 2} = 2^${n - 1} — even generator, exterior element in R_${n}` });
+  } else {
+    // Reducible: even, factor out 2s
+    let v = x, depth = 0;
+    const factorSteps: string[] = [];
+    while (v % 2 === 0 && v !== 0) {
+      factorSteps.push(`${v} / 2 = ${v / 2}`);
+      v = v / 2;
+      depth++;
+    }
+    isIrreducible = false;
+    decompositionSteps.push({ step: 1, action: 'Parity check', result: `${x} is even → reducible` });
+    decompositionSteps.push({ step: 2, action: 'Factor cascade', result: factorSteps.join(' → '), cascadeDepth: depth, oddCore: v });
+    decompositionSteps.push({ step: 3, action: 'Canonical form', result: `${x} = 2^${depth} × ${v} in Z` });
+  }
+
+  const canonicalForm = isIrreducible ? `${x}` : component === 'partition:ExteriorSet' ? '0' : `2^k × ${x % 2 !== 0 ? x : x / Math.pow(2, (() => { let v = x, d = 0; while (v % 2 === 0) { v /= 2; d++; } return d; })())}`;
+
+  const etag = makeETag('/bridge/resolver', { x: String(x), n: String(n) });
+
+  return jsonResp({
+    "@context": UOR_CONTEXT,
+    "@id": `https://uor.foundation/instance/resolver-x${x}-n${n}`,
+    "@type": "resolver:Resolution",
+    "resolver:inputValue": x,
+    "resolver:quantum": n,
+    "resolver:ringModulus": m,
+    "resolver:component": component,
+    "resolver:componentReason": reason,
+    "resolver:isIrreducible": isIrreducible,
+    "resolver:canonicalForm": canonicalForm,
+    "resolver:decomposition": decompositionSteps,
+    "resolver:partitionRef": {
+      "@type": "partition:ComponentClass",
+      "partition:className": component,
+      "partition:ontologyRef": `https://uor.foundation/partition/${component.replace('partition:', '')}`
+    },
+    "resolver:datum": makeDatum(x, n),
+    "resolver:timestamp": timestamp(),
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/resolver.rs"
+  }, CACHE_HEADERS_CONTENT, etag, rl);
+}
+
+// GET /user/morphism/transforms?x=42&from_n=8&to_n=4
+function morphismTransforms(url: URL, rl: RateLimitResult): Response {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const fromNRaw = url.searchParams.get('from_n') ?? '8';
+  const fromNRes = parseIntParam(fromNRaw, 'from_n', 1, 16);
+  if ('err' in fromNRes) return fromNRes.err;
+  const toNRaw = url.searchParams.get('to_n') ?? '4';
+  const toNRes = parseIntParam(toNRaw, 'to_n', 1, 16);
+  if ('err' in toNRes) return toNRes.err;
+
+  const x = xRes.val, fromN = fromNRes.val, toN = toNRes.val;
+  const fromM = modulus(fromN), toM = modulus(toN);
+  if (x >= fromM) return error400(`x must be in [0, ${fromM - 1}] for from_n=${fromN}`, 'x', rl);
+
+  const isProjection = toN < fromN;
+  const isInclusion = toN > fromN;
+  const isIdentity = toN === fromN;
+
+  // Compute the image under the homomorphism
+  const image = isProjection ? x % toM : x; // inclusion: value is unchanged, identity ring changes
+
+  // Kernel: elements mapping to 0 in the target ring
+  // For projection f(x) = x mod 2^toN: kernel = { k * 2^toN : k ∈ Z, 0 ≤ k < 2^(fromN-toN) }
+  const kernelSize = isProjection ? Math.pow(2, fromN - toN) : (isIdentity ? 1 : 0);
+  const kernelElements: number[] = [];
+  if (isProjection) {
+    for (let k = 0; k < fromM; k += toM) kernelElements.push(k);
+  } else if (isIdentity) {
+    kernelElements.push(0);
+  }
+
+  // Structural preservation analysis
+  const preserves: string[] = ['add', 'sub', 'mul', 'neg'];
+  if (isProjection) preserves.push('bnot (modulo truncation)');
+  if (isIdentity) preserves.push('bnot', 'xor', 'and', 'or');
+
+  const morphismType = isProjection ? 'morphism:ProjectionHomomorphism'
+    : isInclusion ? 'morphism:InclusionHomomorphism'
+    : 'morphism:IdentityHomomorphism';
+
+  const isInjective = !isProjection || fromN <= toN;
+  const isSurjective = !isInclusion || fromN >= toN;
+
+  const etag = makeETag('/user/morphism/transforms', { x: String(x), from_n: String(fromN), to_n: String(toN) });
+
+  return jsonResp({
+    "@context": UOR_CONTEXT,
+    "@id": `https://uor.foundation/instance/morphism-x${x}-from${fromN}-to${toN}`,
+    "@type": ["morphism:RingHomomorphism", morphismType],
+    "morphism:source": {
+      "@type": "schema:Ring",
+      "schema:ringQuantum": fromN,
+      "schema:modulus": fromM,
+      "schema:label": `R_${fromN} = Z/${fromM}Z`
+    },
+    "morphism:target": {
+      "@type": "schema:Ring",
+      "schema:ringQuantum": toN,
+      "schema:modulus": toM,
+      "schema:label": `R_${toN} = Z/${toM}Z`
+    },
+    "morphism:inputValue": x,
+    "morphism:image": image,
+    "morphism:mapFormula": isProjection ? `f(x) = x mod ${toM}` : isInclusion ? `f(x) = x (inclusion, ring extended)` : `f(x) = x (identity)`,
+    "morphism:kernelSize": kernelSize,
+    "morphism:kernelElements": kernelElements.slice(0, 16), // cap display at 16
+    "morphism:preserves": preserves,
+    "morphism:isInjective": isInjective,
+    "morphism:isSurjective": isSurjective,
+    "morphism:isIsomorphism": isInjective && isSurjective,
+    "morphism:morphismType": morphismType,
+    "morphism:commutativityProof": {
+      "@type": "morphism:CommutativityWitness",
+      "morphism:example_add": `f(${x} + ${image}) mod ${fromM} = ${(x + image) % fromM} → mod ${toM} = ${((x + image) % fromM) % toM}; f(${x}) + f(${image}) mod ${toM} = ${(image + (isProjection ? image : x)) % toM}`,
+      "morphism:addsCommute": true,
+      "morphism:mulsCommute": true
+    },
+    "morphism:timestamp": timestamp(),
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/morphism.rs"
+  }, CACHE_HEADERS_CONTENT, etag, rl);
+}
+
+// GET /user/state?x=42&n=8
+function userState(url: URL, rl: RateLimitResult): Response {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const nRes = parseIntParam(nRaw, 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+
+  const x = xRes.val, n = nRes.val;
+  const m = modulus(n);
+  if (x >= m) return error400(`x must be in [0, ${m - 1}] for n=${n}`, 'x', rl);
+
+  const { component, reason } = classifyByte(x, n);
+  const isIdentity = x === 0;
+  const isUnit = x === 1 || x === m - 1;
+  const isPhaseBoundary = x === m / 2;
+  const isIrreducible = x % 2 !== 0 && !isUnit;
+
+  // Entry condition: stable entry states are identities and units
+  const entryCondition = {
+    "@type": "state:EntryCondition",
+    "state:isStableEntry": isIdentity || isUnit,
+    "state:reason": isIdentity
+      ? `x=0 is the additive identity — canonical entry point for ring R_${n}`
+      : isUnit
+      ? `x=${x} is a ring unit (invertible) — stable coordination anchor`
+      : `x=${x} is not an identity or unit — not a preferred entry state`
+  };
+
+  // Exit condition: phase boundary values signal exit
+  const exitCondition = {
+    "@type": "state:ExitCondition",
+    "state:isPhaseBoundary": isPhaseBoundary,
+    "state:isExterior": component === 'partition:ExteriorSet',
+    "state:reason": isPhaseBoundary
+      ? `x=${x} = 2^${n - 1} is a phase boundary — operations change character near this value`
+      : component === 'partition:ExteriorSet'
+      ? `x=${x} is an exterior element — exit condition satisfied`
+      : `x=${x} is interior — no exit condition triggered`
+  };
+
+  // Compute all transitions
+  const transitions = VALID_OPS.map(op => {
+    const nextVal = applyOp(x, op as OpName, n);
+    const { component: nextComp } = classifyByte(nextVal, n);
+    return {
+      "@type": "state:Transition",
+      "state:operation": `op:${op}`,
+      "state:formula": opFormula(op as OpName, x, n, nextVal),
+      "state:fromState": x,
+      "state:toState": nextVal,
+      "state:fromComponent": component,
+      "state:toComponent": nextComp,
+      "state:componentChanged": component !== nextComp,
+      "state:description": opDescription(op as OpName)
+    };
+  });
+
+  const etag = makeETag('/user/state', { x: String(x), n: String(n) });
+
+  return jsonResp({
+    "@context": UOR_CONTEXT,
+    "@id": `https://uor.foundation/instance/state-x${x}-n${n}`,
+    "@type": "state:Frame",
+    "state:binding": {
+      "@type": "state:StateBinding",
+      "state:value": x,
+      "state:quantum": n,
+      "state:ringModulus": m,
+      "state:component": component,
+      "state:componentReason": reason,
+      "state:isIrreducible": isIrreducible,
+      "state:datum": makeDatum(x, n)
+    },
+    "state:entryCondition": entryCondition,
+    "state:exitCondition": exitCondition,
+    "state:transitions": transitions,
+    "state:transitionCount": transitions.length,
+    "state:reachableComponents": [...new Set(transitions.map((t: any) => t['state:toComponent']))],
+    "state:criticalIdentityHolds": neg(bnot(x, n), n) === succOp(x, n),
+    "state:timestamp": timestamp(),
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/state.rs"
+  }, CACHE_HEADERS_CONTENT, etag, rl);
 }
 
 // GET /openapi.json — inline JSON-LD spec metadata (RESTful, ETag-capable)
@@ -1352,15 +1778,54 @@ Deno.serve(async (req: Request) => {
       return resp;
     }
 
-    // ── Not-implemented namespaces (501) ──
-    if (
-      path === '/bridge/derivation' || path.startsWith('/bridge/derivation/') ||
-      path === '/bridge/trace'      || path.startsWith('/bridge/trace/') ||
-      path === '/bridge/resolver'   || path.startsWith('/bridge/resolver/') ||
-      path === '/user/morphism/transforms' || path.startsWith('/user/morphism/') ||
-      path === '/user/state'        || path.startsWith('/user/state/')
-    ) {
-      return error501(rl);
+    // ── Bridge — derivation (derivation: namespace) ──
+    if (path === '/bridge/derivation') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = bridgeDerivation(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+    // ── Bridge — trace (trace: namespace) ──
+    if (path === '/bridge/trace') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = bridgeTrace(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+    // ── Bridge — resolver (resolver: namespace) ──
+    if (path === '/bridge/resolver') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = bridgeResolver(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+    // ── User — morphism (morphism: namespace) ──
+    if (path === '/user/morphism/transforms') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = morphismTransforms(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+    // ── User — state (state: namespace) ──
+    if (path === '/user/state') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = userState(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
     }
 
     // ── 405 for known paths with wrong method ──

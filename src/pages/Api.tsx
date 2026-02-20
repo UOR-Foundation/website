@@ -252,12 +252,21 @@ const LAYERS: Layer[] = [
         responseCodes: [200, 405, 429, 500],
         example: `${BASE}/user/type/primitives`,
       },
-    ],
-    v2stubs: [
       {
-        label: "Canonical Form Resolver",
-        description: "Decomposes any value into its canonical irreducible representation using the full dihedral factorisation algorithm. Requires the Rust conformance suite.",
+        operationId: "bridgeResolver",
+        method: "GET",
         path: "/bridge/resolver",
+        label: "Decompose any value into its canonical partition component",
+        explanation:
+          "Classifies any value in the ring into one of four canonical components:\n\n• IrreducibleSet — odd, not a unit. Cannot be factored. Highest structural content.\n• ReducibleSet — even. Decomposes as 2^k × oddCore. Can be reduced further.\n• UnitSet — ring unit (1 or its inverse). Multiplicative anchor.\n• ExteriorSet — 0 or the ring midpoint. Identity and boundary elements.\n\nFor reducible values, shows the full 2-adic factor cascade until an odd core is reached. For irreducible, confirms that no further decomposition is possible.",
+        useCase:
+          "Before using a value in a proof or morphism, an agent must know its canonical class. This endpoint answers: is this value a building block (irreducible), a composed value (reducible), a structural anchor (unit), or a boundary case (exterior)?",
+        params: [
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to decompose. Must be less than 2 to the power of n." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8 means values 0–255." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/bridge/resolver?x=42`,
       },
     ],
   },
@@ -320,17 +329,39 @@ const LAYERS: Layer[] = [
         responseCodes: [200, 400, 405, 429, 500],
         example: `${BASE}/bridge/cert/involution?operation=neg`,
       },
-    ],
-    v2stubs: [
       {
-        label: "Audit Traces",
-        description: "Records a full step-by-step history of every operation an agent executes. Enables detection of prompt injection by comparing actual execution paths against expected derivations.",
+        operationId: "bridgeDerivation",
+        method: "GET",
         path: "/bridge/derivation",
+        label: "Show the step-by-step derivation of an operation sequence",
+        explanation:
+          "Takes a value and a comma-separated sequence of operations (neg, bnot, succ, pred) and returns a formal derivation trace — every step documented with its input, output, formula, and ontology reference.\n\nAlso verifies that the critical identity (neg∘bnot = succ) holds for the original value, providing an independent integrity check on the derivation chain.",
+        useCase:
+          "An agent executes a sequence of operations and needs to produce an auditable record. The derivation trace is the formal receipt — each step named, formula shown, output recorded. Peers can replay the trace to verify the computation independently.",
+        params: [
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The starting value for the derivation. Must be less than 2^n." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8 means values 0–255." },
+          { name: "ops", in: "query", type: "string", required: false, default: "neg,bnot,succ", description: "Comma-separated operation sequence. Valid: neg, bnot, succ, pred." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/bridge/derivation?x=42&ops=neg,bnot,succ`,
       },
       {
-        label: "Execution Traces",
-        description: "Captures the exact sequence of operations at a lower level than derivation. Useful for forensic analysis after an anomaly is detected.",
+        operationId: "bridgeTrace",
+        method: "GET",
         path: "/bridge/trace",
+        label: "Capture the exact bitwise state at every execution step",
+        explanation:
+          "Lower-level than derivation — captures the exact binary state of the value after each operation, not just the decimal result.\n\nEvery frame shows: the decimal value, its binary representation, hamming weight (bits set), the bit-level delta from the previous frame, and which specific bits flipped.\n\nUseful for forensic analysis — seeing exactly which bits changed and by how much after each operation.",
+        useCase:
+          "An agent detects anomalous output from a peer and wants to determine at which step in the operation chain the bit pattern diverged from expected. The execution trace shows exactly which bits flipped at each step.",
+        params: [
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The starting value. Must be less than 2^n." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8." },
+          { name: "ops", in: "query", type: "string", required: false, default: "neg,bnot", description: "Comma-separated operation sequence. Valid: neg, bnot, succ, pred." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/bridge/trace?x=42&ops=neg,bnot`,
       },
     ],
   },
@@ -378,17 +409,38 @@ const LAYERS: Layer[] = [
         responseCodes: [200, 400, 405, 429, 500],
         example: `${BASE}/bridge/observable/metrics?x=42`,
       },
-    ],
-    v2stubs: [
       {
-        label: "Structure-Preserving Maps",
-        description: "Transforms data between different ring representations while guaranteeing that structural properties are preserved. The formal basis for typed agent-to-agent communication.",
+        operationId: "morphismTransforms",
+        method: "GET",
         path: "/user/morphism/transforms",
+        label: "Map a value from one ring to another, preserving structure",
+        explanation:
+          "Computes the ring homomorphism f: R_{from_n} → R_{to_n} for any value x.\n\n• Projection (to_n < from_n): f(x) = x mod 2^to_n — strips high bits.\n• Inclusion (to_n > from_n): f(x) = x — value is embedded in the larger ring.\n• Identity (to_n = from_n): f(x) = x — isomorphism.\n\nReturns the image, kernel size, which operations are preserved, and whether the map is injective and surjective.",
+        useCase:
+          "An agent operating in an 8-bit ring needs to send a value to a peer operating in a 4-bit ring. It uses morphism/transforms to find the correct projection and confirm which structural properties survive the mapping.",
+        params: [
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to map. Must be less than 2^from_n." },
+          { name: "from_n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Source ring size (bits). Default 8." },
+          { name: "to_n", in: "query", type: "integer [1–16]", required: false, default: "4", description: "Target ring size (bits). Default 4." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/user/morphism/transforms?x=42&from_n=8&to_n=4`,
       },
       {
-        label: "Agent State",
-        description: "Manages agent lifecycle bindings: entry, transition, and exit conditions. Provides formal Frame and Transition objects for stateful coordination.",
+        operationId: "userState",
+        method: "GET",
         path: "/user/state",
+        label: "Get a formal state description for an agent value",
+        explanation:
+          "Returns a state:Frame — the formal lifecycle binding for an agent whose current state is x.\n\n• Binding: what component class x belongs to and why (irreducible, reducible, unit, exterior).\n• Entry condition: is this a stable entry state (identity or unit)?\n• Exit condition: is this a phase boundary (2^(n-1)) or exterior element?\n• Transitions: for each operation (neg, bnot, succ, pred), what state does x transition to, and does the component class change?",
+        useCase:
+          "An agent needs to decide its next action based on its current state. It calls this endpoint to understand: am I at a stable entry point, a phase boundary, or an interior state? What does each possible operation do to my component class?",
+        params: [
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The agent's current state value. Must be less than 2^n." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/user/state?x=42`,
       },
     ],
   },
