@@ -13,6 +13,7 @@ import BlogPost1 from "./pages/BlogPost1";
 import BlogPost2 from "./pages/BlogPost2";
 import BlogPost3 from "./pages/BlogPost3";
 import ResearchPaperAtlasEmbeddings from "./pages/ResearchPaperAtlasEmbeddings";
+import Api from "./pages/Api";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/blog/universal-mathematical-language" element={<BlogPost2 />} />
           <Route path="/blog/uor-framework-launch" element={<BlogPost3 />} />
           <Route path="/research/atlas-embeddings" element={<ResearchPaperAtlasEmbeddings />} />
+          <Route path="/api" element={<Api />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
