@@ -25,11 +25,6 @@
       "url": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api",
       "description": "Live API — active endpoint (all requests go here)",
       "x-server-status": "active"
-    },
-    {
-      "url": "https://uor.foundation/api/v1",
-      "description": "Canonical domain proxy — planned (same backend, not yet routed)",
-      "x-server-status": "planned"
     }
   ],
   "security": [
@@ -63,15 +58,15 @@
     },
     {
       "name": "bridge-derivation",
-      "description": "**`derivation/` namespace** — Audit trail for agent actions (not implemented in v1). Requires Rust conformance suite."
+      "description": "**`derivation/` namespace** — Auditable step-by-step operation records.\nSource: `spec/src/namespaces/derivation.rs`\nClasses: `DerivationTrace`, `DerivationStep`, `OperationRecord`.\nReturns a `derivation:DerivationTrace` with input, output, formula, and ontology reference for each step. Use for execution audit trails and injection detection."
     },
     {
       "name": "bridge-trace",
-      "description": "**`trace/` namespace** — Computation traces for injection detection (not implemented in v1). Requires Rust conformance suite."
+      "description": "**`trace/` namespace** — Bit-level execution traces for injection detection.\nSource: `spec/src/namespaces/trace.rs`\nClasses: `ExecutionTrace`, `TraceFrame`, `HammingDrift`.\nReturns exact binary state after each operation — Hamming weight, XOR delta, bits flipped. Non-zero `trace:totalHammingDrift` signals anomalous operation sequences."
     },
     {
       "name": "bridge-resolver",
-      "description": "**`resolver/` namespace** — CanonicalFormResolver, DihedralFactorizationResolver (not implemented in v1). Requires Rust conformance suite."
+      "description": "**`resolver/` namespace** — Canonical form classification of ring elements.\nSource: `spec/src/namespaces/resolver.rs`\nClasses: `Resolution`, `CanonicalFormResolver`, `DihedralFactorizationResolver`.\nSorts any value into one of four canonical categories: IrreducibleSet, ReducibleSet, UnitSet, ExteriorSet. Returns full factor decomposition for reducible values."
     },
     {
       "name": "user-type",
@@ -79,11 +74,11 @@
     },
     {
       "name": "user-morphism",
-      "description": "**`morphism/` namespace** — Transform, Isometry, Embedding, Action (not implemented in v1). Requires Rust conformance suite."
+      "description": "**`morphism/` namespace** — Structure-preserving maps between ring sizes.\nSource: `spec/src/namespaces/morphism.rs`\nClasses: `RingHomomorphism`, `ProjectionHomomorphism`, `InclusionHomomorphism`, `IdentityHomomorphism`.\nReturns the mapped value, preserved properties, injectivity and surjectivity flags, and a `morphism:CommutativityWitness`."
     },
     {
       "name": "user-state",
-      "description": "**`state/` namespace** — Frame, Transition, lifecycle bindings (not implemented in v1). Requires Rust conformance suite."
+      "description": "**`state/` namespace** — Agent lifecycle state binding.\nSource: `spec/src/namespaces/state.rs`\nClasses: `Frame`, `StateBinding`, `Transition`, `EntryCondition`, `ExitCondition`.\nReturns the formal lifecycle state for a value: category, entry/exit conditions, and all 4 operation transitions showing where each operation leads and whether the component class changes."
     },
     {
       "name": "navigate",
@@ -634,66 +629,203 @@
     },
     "/bridge/derivation": {
       "get": {
-        "operationId": "derivationList",
+        "operationId": "bridgeDerivation",
         "tags": ["bridge-derivation"],
-        "summary": "derivation: namespace — audit trail for agent actions (not implemented in v1)",
-        "description": "Returns derivation:DerivationTrace objects for agent execution audit trails. Requires the Rust conformance suite. Will be implemented in v2.",
+        "summary": "Produce a derivation:DerivationTrace — auditable step-by-step operation record",
+        "description": "Takes a starting value and a sequence of operations and returns a formal record of every step: input, output, formula used, and ontology reference. Also verifies the core rule holds for the original value — an independent integrity check bundled into the same response.\n\nUse for execution audit trails. Peers can replay the trace to verify independently.\n\n**Required parameter:** `x` — the starting value.",
         "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" },
+          {
+            "name": "ops",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "default": "neg,bnot,succ" },
+            "description": "Comma-separated operation sequence. Valid values: neg, bnot, succ, pred. Default: neg,bnot,succ."
+          }
+        ],
         "responses": {
-          "501": { "$ref": "#/components/responses/NotImplemented" },
-          "default": { "$ref": "#/components/responses/NotImplemented" }
+          "200": {
+            "description": "derivation:DerivationTrace with per-step input, output, formula, and ontology reference",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "description": "derivation:DerivationTrace" },
+                "example": { "@type": "derivation:DerivationTrace", "derivation:steps": [], "derivation:criticalIdentityHolds": true }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
     "/bridge/trace": {
       "get": {
-        "operationId": "traceList",
+        "operationId": "bridgeTrace",
         "tags": ["bridge-trace"],
-        "summary": "trace: namespace — computation traces for injection detection (not implemented in v1)",
-        "description": "Returns trace:ComputationTrace objects. Requires the Rust conformance suite. Will be implemented in v2.",
+        "summary": "Produce a trace:ExecutionTrace — exact bit state per step with Hamming drift",
+        "description": "Records the exact binary state of the value after each operation: decimal value, binary form, Hamming weight, bits flipped, and XOR delta from the previous step.\n\nNon-zero `trace:totalHammingDrift` signals an anomalous operation sequence. Use alongside `/bridge/derivation` for injection detection.\n\n**Required parameter:** `x` — the starting value.",
         "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" },
+          {
+            "name": "ops",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "default": "neg,bnot" },
+            "description": "Comma-separated operation sequence. Valid values: neg, bnot, succ, pred. Default: neg,bnot."
+          }
+        ],
         "responses": {
-          "501": { "$ref": "#/components/responses/NotImplemented" },
-          "default": { "$ref": "#/components/responses/NotImplemented" }
+          "200": {
+            "description": "trace:ExecutionTrace with per-frame bit state, Hamming weight, XOR delta",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "description": "trace:ExecutionTrace" },
+                "example": { "@type": "trace:ExecutionTrace", "trace:frames": [], "trace:totalHammingDrift": 0 }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
     "/bridge/resolver": {
       "get": {
-        "operationId": "resolverList",
+        "operationId": "bridgeResolver",
         "tags": ["bridge-resolver"],
-        "summary": "resolver: namespace — CanonicalFormResolver, DihedralFactorizationResolver (not implemented in v1)",
-        "description": "Returns resolver:CanonicalFormResolver and resolver:DihedralFactorizationResolver metadata. Requires the Rust conformance suite. Will be implemented in v2.",
+        "summary": "Resolve any value to its canonical category — resolver:Resolution",
+        "description": "Sorts any value into one of four canonical categories:\n\n- **IrreducibleSet** — odd, not a unit. Structurally unique building block.\n- **ReducibleSet** — even. Factors as 2^k × odd core.\n- **UnitSet** — the ring's multiplicative identity (1) or its inverse (2^n - 1).\n- **ExteriorSet** — zero or the ring midpoint (2^(n-1)).\n\nFor reducible values, returns the full factor cascade. For irreducible values, confirms no further decomposition is possible.\n\n**Required parameter:** `x` — the value to resolve.",
         "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
         "responses": {
-          "501": { "$ref": "#/components/responses/NotImplemented" },
-          "default": { "$ref": "#/components/responses/NotImplemented" }
+          "200": {
+            "description": "resolver:Resolution with canonical category, factor decomposition, and partition reference",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "description": "resolver:Resolution" },
+                "example": { "@type": "resolver:Resolution", "resolver:component": "partition:IrreducibleSet", "resolver:isIrreducible": true, "resolver:canonicalForm": "21" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
     "/user/morphism/transforms": {
       "get": {
-        "operationId": "morphismList",
+        "operationId": "morphismTransforms",
         "tags": ["user-morphism"],
-        "summary": "morphism: namespace — Transform, Isometry, Embedding, Action (not implemented in v1)",
-        "description": "Returns morphism:Transform catalogue. Requires the Rust conformance suite. Will be implemented in v2.",
+        "summary": "Map a value between ring sizes — morphism:RingHomomorphism",
+        "description": "Maps a value from one ring size to another while preserving its structural properties.\n\n- **Smaller target ring (projection):** strips the high bits — f(x) = x mod 2^toN.\n- **Larger target ring (inclusion):** embeds the value unchanged.\n- **Same size (identity):** identity map.\n\nReturns the mapped value, which properties are preserved, injectivity and surjectivity flags, and a `morphism:CommutativityWitness` proving the map is a valid ring homomorphism.\n\n**Required parameter:** `x` — the value to map.",
         "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          {
+            "name": "from_n",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 16, "default": 8 },
+            "description": "Source ring size in bits. Default 8."
+          },
+          {
+            "name": "to_n",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 16, "default": 4 },
+            "description": "Target ring size in bits. Default 4."
+          }
+        ],
         "responses": {
-          "501": { "$ref": "#/components/responses/NotImplemented" },
-          "default": { "$ref": "#/components/responses/NotImplemented" }
+          "200": {
+            "description": "morphism:RingHomomorphism with mapped value, preserved properties, and commutativity witness",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "description": "morphism:RingHomomorphism" },
+                "example": { "@type": ["morphism:RingHomomorphism", "morphism:ProjectionHomomorphism"], "morphism:image": 10, "morphism:isInjective": false, "morphism:isSurjective": true }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     },
     "/user/state": {
       "get": {
-        "operationId": "stateList",
+        "operationId": "userState",
         "tags": ["user-state"],
-        "summary": "state: namespace — Frame, Transition, lifecycle bindings (not implemented in v1)",
-        "description": "Returns state:Frame catalogue. Requires the Rust conformance suite. Will be implemented in v2.",
+        "summary": "Get the formal lifecycle state for a value — state:Frame",
+        "description": "Returns the formal lifecycle state for an agent at value x.\n\n- What category x belongs to and why.\n- Whether x is a stable entry point (an identity or unit).\n- Whether x is at a phase boundary.\n- For each operation (neg, bnot, succ, pred) — where does x go, and does its category change?\n\nUse before committing to an operation to understand the structural consequences.\n\n**Required parameter:** `x` — the agent's current value.",
         "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
         "responses": {
-          "501": { "$ref": "#/components/responses/NotImplemented" },
-          "default": { "$ref": "#/components/responses/NotImplemented" }
+          "200": {
+            "description": "state:Frame with category, entry/exit conditions, and all 4 operation transitions",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "description": "state:Frame" },
+                "example": { "@type": "state:Frame", "state:binding": { "state:component": "partition:IrreducibleSet" }, "state:entryCondition": { "state:isStableEntry": false }, "state:transitions": [] }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
         }
       }
     }

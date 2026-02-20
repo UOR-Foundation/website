@@ -372,8 +372,8 @@ const LAYERS: Layer[] = [
     title: "Transformation",
     oneLiner: "Translate values between contexts, score information density — formally and deterministically.",
     whyItMatters:
-      "Spam filters use pattern-matching, which can be fooled. UOR uses algebraic structure: every value has a measurable information density, computed from the same rules as everything else in the framework. Morphisms let agents safely translate values between different ring sizes without losing structural properties.",
-    solves: "Solves: Content spam and prompt injection — partition analysis is a formal property of the content, not a heuristic.",
+      "Spam filters use pattern-matching, which can be fooled. UOR partition analysis measures algebraic byte-class distribution — how bytes in your content distribute across the ring's four structural groups. This is a formal, deterministic property, not a trained guess. Morphisms let agents safely translate values between different ring sizes without losing structural properties.",
+    solves: "Solves: Content spam — partition analysis is a formal structural property of byte values, not a semantic heuristic. A low density score is reproducible and machine-verifiable. Combine with other signals for content-quality decisions.",
     endpoints: [
       {
         operationId: "partitionResolve",
@@ -381,7 +381,7 @@ const LAYERS: Layer[] = [
         path: "/bridge/partition",
         label: "Score the information density of any content",
         explanation:
-          "Classifies every value in the ring into four groups — building blocks, composed values, structural anchors, and boundaries — then returns the fraction that are building blocks as a density score.\n\nAbove 0.25: meaningful content. Below 0.1: strong signal of spam or filler.\n\nPass text for per-character analysis, or a type definition for full-ring analysis.",
+          "Classifies every byte in the input into one of four ring-theoretic groups — building blocks, composed values, structural anchors, and boundaries — then returns the fraction that are building blocks as a density score.\n\nAbove 0.25: content passes the algebraic density threshold. Below 0.1: strong signal of structurally uniform or repetitive content.\n\nImportant: this measures algebraic byte-class distribution, not semantic novelty. Repetitive content with odd byte values (e.g. 'aaaa') will score high. Use as one signal among others.\n\nPass text for per-character analysis, or a type definition for full-ring analysis.",
         useCase:
           "An agent receives a long message and runs partition analysis before processing it. A low density score is a formal, reproducible signal — not a heuristic guess.",
         params: [
@@ -851,7 +851,7 @@ const Api = () => {
               { problem: "Identity Fraud", solution: "Anyone can claim to be an agent. UOR content addresses are derived from what an agent actually produced — they cannot be faked.", endpoint: "Layer 1" },
               { problem: "Auth Exploits", solution: "Tokens and signatures can be stolen. UOR proof objects are self-verifying — any party checks them independently, with no server contact.", endpoint: "Layer 4" },
               { problem: "Prompt Injection", solution: "Malicious instructions can be hidden in inputs. Execution traces record every step taken — divergence from expected behaviour is immediately visible.", endpoint: "Layer 4" },
-              { problem: "Content Spam", solution: "Pattern-matching filters are easy to fool. UOR measures information density algebraically — it is a formal property, not a trained guess.", endpoint: "Layer 5" },
+              { problem: "Content Spam", solution: "Pattern-matching filters are easy to fool. UOR measures algebraic byte-class distribution — a formal, reproducible property of the content's structure, not a trained heuristic. Low density is a reliable signal; high density requires content-level review.", endpoint: "Layer 5" },
               { problem: "Opaque Coordination", solution: "Agents sharing values cannot verify each other's work without a shared definition. Every UOR operation is named, formal, and reproducible.", endpoint: "Layer 2" },
               { problem: "No Coherence Model", solution: "Without a common mathematical foundation, agent coordination breaks on edge cases. UOR coherence proofs confirm a data type is consistent across every possible value.", endpoint: "Layer 4" },
             ].map(item => (
@@ -1027,10 +1027,9 @@ const Api = () => {
               <div className="space-y-4">
                 {[
                   { step: "1", label: "/.well-known/uor.json", note: "Organisation descriptor. The uor:api.openapi field points to the spec.", href: "https://uor.foundation/.well-known/uor.json" },
-                  { step: "2", label: "GET /openapi.json", note: "Full OpenAPI 3.1.0 spec. Parse all paths, operationIds, and response schemas.", href: `${BASE}/openapi.json` },
-                  { step: "3", label: "GET /navigate", note: "Human-readable endpoint index with recommended reading order.", href: `${BASE}/navigate` },
+                  { step: "2", label: "GET /openapi.json", note: "Redirects to the full OpenAPI 3.1.0 spec at uor.foundation/openapi.json — 19 paths, all working.", href: `${BASE}/openapi.json` },
+                  { step: "3", label: "GET /navigate", note: "Complete endpoint index — all 20 endpoints with required params and example URLs.", href: `${BASE}/navigate` },
                   { step: "4", label: "GET /kernel/op/verify?x=42", note: "First verifiable claim. Zero auth. Returns a full proof in under 100ms.", href: `${BASE}/kernel/op/verify?x=42` },
-                  { step: "4", label: "GET /kernel/op/verify?x=42", note: "Zero auth. Returns a full proof in under 100 ms. The first verifiable claim.", href: `${BASE}/kernel/op/verify?x=42` },
                 ].map(({ step, label, note, href }) => (
                   <div key={step} className="flex items-start gap-3">
                     <span className="shrink-0 w-6 h-6 rounded-full bg-section-dark-foreground/20 text-section-dark-foreground text-xs font-bold flex items-center justify-center mt-0.5">
