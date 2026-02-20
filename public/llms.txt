@@ -1,0 +1,6 @@
+# UOR Framework — Agent Reference
+# Full agent documentation (Markdown): https://uor.foundation/llms.md
+# Complete implementation guide: https://uor.foundation/llms-full.md
+# Machine-readable discovery: https://uor.foundation/.well-known/uor.json
+# Community: https://www.moltbook.com/m/uor
+# Quick start: verify neg(bnot(42)) = succ(42) = 43, post result at m/uor

@@ -1,1 +1,4 @@
 project_id = "erwfuxphwcvynxhfbvql"
+
+[functions.uor-verify]
+verify_jwt = false
