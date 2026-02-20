@@ -67,6 +67,17 @@ interface Tag {
 
 /* ─────────────────────────── Tag data ─────────────────────────── */
 
+interface StubTag {
+  id: string;
+  label: string;
+  plainLabel: string;
+  description: string;
+  plainDescription: string;
+  space: "kernel" | "bridge" | "user";
+  v2?: boolean;
+  stubPaths: { path: string; summary: string }[];
+}
+
 const TAGS: Tag[] = [
   {
     id: "navigate",
@@ -150,6 +161,60 @@ const TAGS: Tag[] = [
   },
 ];
 
+/* v2 stub tags — not yet implemented, shown greyed out in sidebar */
+const V2_STUB_TAGS: StubTag[] = [
+  {
+    id: "bridge-derivation",
+    label: "bridge-derivation",
+    plainLabel: "Derivation Traces",
+    description: "derivation/ namespace — Audit trail for agent actions.",
+    plainDescription: "Returns derivation:DerivationTrace objects for agent execution audit trails. Requires the Rust conformance suite. Returns 501 Not Implemented in v1.",
+    space: "bridge",
+    v2: true,
+    stubPaths: [{ path: "/bridge/derivation", summary: "List derivation traces — 501 Not Implemented (v2)" }],
+  },
+  {
+    id: "bridge-trace",
+    label: "bridge-trace",
+    plainLabel: "Computation Traces",
+    description: "trace/ namespace — Computation traces for injection detection.",
+    plainDescription: "Trace objects that record every operation step, enabling injection detection and execution auditing. Returns 501 Not Implemented in v1.",
+    space: "bridge",
+    v2: true,
+    stubPaths: [{ path: "/bridge/trace", summary: "List computation traces — 501 Not Implemented (v2)" }],
+  },
+  {
+    id: "bridge-resolver",
+    label: "bridge-resolver",
+    plainLabel: "Resolvers",
+    description: "resolver/ namespace — CanonicalFormResolver, DihedralFactorizationResolver.",
+    plainDescription: "Full dihedral factorisation resolver. Decomposes ring elements into canonical form. Returns 501 Not Implemented in v1.",
+    space: "bridge",
+    v2: true,
+    stubPaths: [{ path: "/bridge/resolver", summary: "List resolvers — 501 Not Implemented (v2)" }],
+  },
+  {
+    id: "user-morphism",
+    label: "user-morphism",
+    plainLabel: "Morphisms",
+    description: "morphism/ namespace — Transform, Isometry, Embedding, Action.",
+    plainDescription: "Structure-preserving maps between rings. Enables formal proofs of equivalence and type-safe transformations. Returns 501 Not Implemented in v1.",
+    space: "user",
+    v2: true,
+    stubPaths: [{ path: "/user/morphism/transforms", summary: "List morphism transforms — 501 Not Implemented (v2)" }],
+  },
+  {
+    id: "user-state",
+    label: "user-state",
+    plainLabel: "State",
+    description: "state/ namespace — Frame, Transition, lifecycle bindings.",
+    plainDescription: "Manages agent state transitions and lifecycle bindings. Provides formal Frame and Transition objects for stateful computation. Returns 501 Not Implemented in v1.",
+    space: "user",
+    v2: true,
+    stubPaths: [{ path: "/user/state", summary: "List state frames — 501 Not Implemented (v2)" }],
+  },
+];
+
 /* ─────────────────────────── Endpoint data ─────────────────────────── */
 
 const ENDPOINTS: Endpoint[] = [
@@ -165,6 +230,8 @@ const ENDPOINTS: Endpoint[] = [
     params: [],
     responses: [
       { code: 200, label: "NavigationIndex", schema: "NavigationIndex" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/navigate`,
   },
@@ -180,6 +247,8 @@ const ENDPOINTS: Endpoint[] = [
     params: [],
     responses: [
       { code: 200, label: "OpenAPI document", schema: "object" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/openapi.json`,
   },
@@ -193,13 +262,15 @@ const ENDPOINTS: Endpoint[] = [
     tag: "kernel-op",
     namespace: "op:",
     params: [
-      { name: "x", in: "query", type: "integer [0, 255]", required: true, default: "42", description: "Any whole number in [0, 255] (or up to 2^n−1 if you set n). Try 42." },
+      { name: "x", in: "query", type: "integer [0, 65535]", required: true, default: "42", description: "Ring element. Must satisfy 0 ≤ x < 2^n (e.g. < 256 for n=8). Schema maximum is widest valid range (n=16); actual bound enforced at runtime." },
       { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size (bit-width). Default 8 means the ring Z/256Z — all byte values." },
     ],
     responses: [
       { code: 200, label: "CriticalIdentityProofResponse", schema: "CriticalIdentityProofResponse" },
       { code: 400, label: "BadRequest", schema: "ErrorResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/kernel/op/verify?x=42`,
   },
@@ -218,7 +289,9 @@ const ENDPOINTS: Endpoint[] = [
     ],
     responses: [
       { code: 200, label: "CoherenceProofResponse", schema: "CoherenceProofResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/kernel/op/verify/all?n=8`,
   },
@@ -232,14 +305,16 @@ const ENDPOINTS: Endpoint[] = [
     tag: "kernel-op",
     namespace: "op:",
     params: [
-      { name: "x", in: "query", type: "integer [0, 255]", required: true, default: "42", description: "Primary input value." },
-      { name: "y", in: "query", type: "integer [0, 255]", required: false, default: "10", description: "Second input for binary operations. Defaults to x if omitted." },
+      { name: "x", in: "query", type: "integer [0, 65535]", required: true, default: "42", description: "Primary input value. Must satisfy 0 ≤ x < 2^n." },
+      { name: "y", in: "query", type: "integer [0, 65535]", required: false, default: "10", description: "Second input for binary operations. Defaults to x if omitted." },
       { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size." },
     ],
     responses: [
       { code: 200, label: "OpComputeResponse", schema: "OpComputeResponse" },
       { code: 400, label: "BadRequest", schema: "ErrorResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/kernel/op/compute?x=42&y=10`,
   },
@@ -255,7 +330,9 @@ const ENDPOINTS: Endpoint[] = [
     params: [],
     responses: [
       { code: 200, label: "OpListResponse", schema: "OpListResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/kernel/op/operations`,
   },
@@ -265,7 +342,7 @@ const ENDPOINTS: Endpoint[] = [
     path: "/kernel/address/encode",
     summary: "Encode content as a u:Address with u:Glyph decomposition",
     plainSummary: "Turn any text into a permanent, content-derived address.",
-    description: "Takes any text and converts it to a unique address derived directly from the content itself.\n\nThis means: the same text always produces the same address, regardless of when or where you run it. No registry. No coordination. No server to look up. The address is the content.\n\nEach byte of input is mapped to a Braille Unicode glyph — the address is both machine-readable and human-visible.",
+    description: "Takes any text and converts it to a unique address derived directly from the content itself.\n\nThis means: the same text always produces the same address, regardless of when or where you run it. No registry. No coordination. No server to look up. The address is the content.\n\nEach byte of input is mapped to a Braille Unicode glyph — the address is both machine-readable and human-visible.\n\nReturns 200 OK (not 201) because this endpoint computes a deterministic artifact on-the-fly — same inputs always produce the same output. No resource is persisted.",
     tag: "kernel-schema",
     namespace: "u:",
     params: [
@@ -277,8 +354,11 @@ const ENDPOINTS: Endpoint[] = [
     responses: [
       { code: 200, label: "AddressEncodeResponse", schema: "AddressEncodeResponse" },
       { code: 400, label: "BadRequest", schema: "ErrorResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
       { code: 413, label: "PayloadTooLarge", schema: "ErrorResponse" },
+      { code: 415, label: "UnsupportedMediaType", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/kernel/address/encode`,
   },
@@ -292,13 +372,15 @@ const ENDPOINTS: Endpoint[] = [
     tag: "kernel-schema",
     namespace: "schema:",
     params: [
-      { name: "x", in: "query", type: "integer [0, 255]", required: true, default: "42", description: "The value to describe." },
+      { name: "x", in: "query", type: "integer [0, 65535]", required: true, default: "42", description: "The value to describe. Must satisfy 0 ≤ x < 2^n." },
       { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size." },
     ],
     responses: [
       { code: 200, label: "Datum", schema: "Datum" },
       { code: 400, label: "BadRequest", schema: "ErrorResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/kernel/schema/datum?x=42`,
   },
@@ -308,21 +390,24 @@ const ENDPOINTS: Endpoint[] = [
     path: "/bridge/partition",
     summary: "Resolve a type:TypeDefinition to a partition:Partition of R_n",
     plainSummary: "Measure the information quality of any content or type.",
-    description: "Classifies every element in the ring into one of four groups:\n\n• Irreducibles — values that cannot be broken down further. These represent novel, high-signal content.\n• Reducibles — values that can be factored. Often correspond to repetitive or derived content.\n• Units — structural anchors (just 1 and its inverse).\n• Exterior — boundary values (0 and the ring midpoint).\n\nThe density score (irreducibles ÷ total) is the key output. Above 0.25 = meaningful content. Below = likely repetitive or low-signal.\n\nTwo modes: pass a type definition to partition the full ring, or pass a text string to analyse it byte-by-byte.",
+    description: "Classifies every element in the ring into one of four groups:\n\n• Irreducibles — values that cannot be broken down further. These represent novel, high-signal content.\n• Reducibles — values that can be factored. Often correspond to repetitive or derived content.\n• Units — structural anchors (just 1 and its inverse).\n• Exterior — boundary values (0 and the ring midpoint).\n\nThe density score (irreducibles ÷ total) is the key output. Above 0.25 = meaningful content. Below = likely repetitive or low-signal.\n\nTwo modes: pass a type definition to partition the full ring, or pass a text string to analyse it byte-by-byte.\n\nReturns 200 OK (not 201) — computed deterministically on-the-fly, nothing persisted.",
     tag: "bridge-partition",
     namespace: "partition:",
     params: [
-      { name: "type_definition", in: "body", type: "object", required: false, description: "A type definition to partition across the full ring. Omit if using text input mode." },
-      { name: "input", in: "body", type: "string", required: false, description: "Text to analyse byte-by-byte for information density." },
+      { name: "type_definition", in: "body", type: "object", required: false, description: "A type definition to partition across the full ring. Use oneOf: either type_definition or input." },
+      { name: "input", in: "body", type: "string", required: false, description: "Text to analyse byte-by-byte for information density. Use oneOf: either input or type_definition." },
       { name: "resolver", in: "body", type: '"DihedralFactorizationResolver" | "EvaluationResolver"', required: false, default: "EvaluationResolver", description: "Resolution strategy. EvaluationResolver is faster; DihedralFactorizationResolver is more precise." },
     ],
-    requestBodySchema: "PartitionRequest",
+    requestBodySchema: "PartitionRequest (oneOf TypeDefinitionPartition | InputStringPartition)",
     defaultBody: JSON.stringify({ input: "hello", encoding: "utf8" }, null, 2),
     responses: [
       { code: 200, label: "PartitionResponse", schema: "PartitionResponse" },
       { code: 400, label: "BadRequest", schema: "ErrorResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
       { code: 413, label: "PayloadTooLarge", schema: "ErrorResponse" },
+      { code: 415, label: "UnsupportedMediaType", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/bridge/partition`,
   },
@@ -336,13 +421,15 @@ const ENDPOINTS: Endpoint[] = [
     tag: "bridge-proof",
     namespace: "proof:",
     params: [
-      { name: "x", in: "query", type: "integer [0, 255]", required: true, default: "42", description: "The value to prove the identity for." },
+      { name: "x", in: "query", type: "integer [0, 65535]", required: true, default: "42", description: "The value to prove the identity for. Must satisfy 0 ≤ x < 2^n." },
       { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size." },
     ],
     responses: [
       { code: 200, label: "CriticalIdentityProofResponse", schema: "CriticalIdentityProofResponse" },
       { code: 400, label: "BadRequest", schema: "ErrorResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/bridge/proof/critical-identity?x=42`,
   },
@@ -352,19 +439,22 @@ const ENDPOINTS: Endpoint[] = [
     path: "/bridge/proof/coherence",
     summary: "Produce a proof:CoherenceProof for a type:TypeDefinition",
     plainSummary: "Prove that a type is fully consistent with the ring across all values.",
-    description: "Verifies that a type definition is coherent — meaning the core identity holds for every element of that type, not just a sample.\n\nReturns a CoherenceProof with pass rate, fail count, and a boolean verdict. A type with 100% pass rate is considered ring-coherent: it participates safely in the framework's mathematical guarantees.",
+    description: "Verifies that a type definition is coherent — meaning the core identity holds for every element of that type, not just a sample.\n\nReturns a CoherenceProof with pass rate, fail count, and a boolean verdict. A type with 100% pass rate is considered ring-coherent: it participates safely in the framework's mathematical guarantees.\n\nReturns 200 OK (not 201) — computed deterministically on-the-fly, nothing persisted.",
     tag: "bridge-proof",
     namespace: "proof:",
     params: [
-      { name: "type_definition", in: "body", type: "object", required: false, description: "The type to verify. E.g. { \"@type\": \"type:PrimitiveType\", \"type:bitWidth\": 8 }." },
-      { name: "n", in: "body", type: "integer [1, 16]", required: false, default: "8", description: "Ring size to verify against." },
+      { name: "type_definition", in: "body", type: "object", required: true, description: "The type to verify. Required. E.g. { \"@type\": \"type:PrimitiveType\", \"type:bitWidth\": 8 }." },
+      { name: "n", in: "body", type: "integer [1, 16]", required: false, default: "8", description: "Ring size to verify against. If omitted, taken from type_definition.type:bitWidth." },
     ],
     requestBodySchema: "CoherenceProofRequest",
     defaultBody: JSON.stringify({ type_definition: { "@type": "type:PrimitiveType", "type:bitWidth": 8 }, n: 8 }, null, 2),
     responses: [
       { code: 200, label: "CoherenceProofResponse", schema: "CoherenceProofResponse" },
       { code: 400, label: "BadRequest", schema: "ErrorResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
+      { code: 415, label: "UnsupportedMediaType", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/bridge/proof/coherence`,
   },
@@ -384,7 +474,9 @@ const ENDPOINTS: Endpoint[] = [
     responses: [
       { code: 200, label: "InvolutionCertificateResponse", schema: "InvolutionCertificateResponse" },
       { code: 400, label: "BadRequest", schema: "ErrorResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/bridge/cert/involution?operation=neg`,
   },
@@ -398,13 +490,15 @@ const ENDPOINTS: Endpoint[] = [
     tag: "bridge-observable",
     namespace: "observable:",
     params: [
-      { name: "x", in: "query", type: "integer [0, 255]", required: true, default: "42", description: "The value to measure." },
+      { name: "x", in: "query", type: "integer [0, 65535]", required: true, default: "42", description: "The value to measure. Must satisfy 0 ≤ x < 2^n." },
       { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size." },
     ],
     responses: [
       { code: 200, label: "ObservableMetricsResponse", schema: "ObservableMetricsResponse" },
       { code: 400, label: "BadRequest", schema: "ErrorResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/bridge/observable/metrics?x=42`,
   },
@@ -420,7 +514,9 @@ const ENDPOINTS: Endpoint[] = [
     params: [],
     responses: [
       { code: 200, label: "TypeListResponse", schema: "TypeListResponse" },
+      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
       { code: 429, label: "RateLimited", schema: "ErrorResponse" },
+      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
     ],
     example: `${BASE}/user/type/primitives`,
   },
@@ -550,16 +646,22 @@ function MethodBadge({ method }: { method: "GET" | "POST" }) {
 
 function ResponseCodeBadge({ code }: { code: number }) {
   const isOk = code === 200;
-  const isRate = code === 429;
+  const isWarn = code === 429 || code === 413 || code === 415;
+  const is5xx = code >= 500;
+  const is501 = code === 501;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-semibold border ${
       isOk
         ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-        : isRate
+        : isWarn
         ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+        : is501
+        ? "bg-muted text-muted-foreground border-border"
+        : is5xx
+        ? "bg-destructive/20 text-destructive border-destructive/30"
         : "bg-destructive/10 text-destructive border-destructive/20"
     }`}>
-      {isOk ? "✓" : "⚠"} {code}
+      {isOk ? "✓" : is501 ? "–" : "⚠"} {code}
     </span>
   );
 }
@@ -827,7 +929,9 @@ const Api = () => {
   const [activeTag, setActiveTag] = useState("kernel-op");
   const [schemasOpen, setSchemasOpen] = useState(false);
 
-  const activeTagData = TAGS.find(t => t.id === activeTag)!;
+  const activeTagData = TAGS.find(t => t.id === activeTag) ?? null;
+  const activeStubData = V2_STUB_TAGS.find(t => t.id === activeTag) ?? null;
+  const isV2Tag = !!activeStubData;
   const visibleEndpoints = ENDPOINTS.filter(e => e.tag === activeTag);
 
   return (
@@ -928,17 +1032,41 @@ const Api = () => {
             </div>
           </div>
 
-          {/* ── Servers + Rate limits ── */}
-          <div className="mb-10">
-            <h2 className="font-display text-xl font-semibold text-foreground mb-3">Base URL</h2>
-            <div className="rounded-xl border border-border overflow-hidden mb-3">
+          {/* ── Servers + Rate limits + Security ── */}
+          <div className="mb-10 space-y-4">
+            <h2 className="font-display text-xl font-semibold text-foreground">Base URL &amp; Authentication</h2>
+
+            {/* Servers */}
+            <div className="rounded-xl border border-border overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-border bg-muted/40">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Servers (OpenAPI x-server-status)</p>
+              </div>
               {[
-                { label: "Live endpoint (primary)", url: BASE, description: "Always on. CORS open. No key required for GET requests." },
-                { label: "Canonical production URL", url: "https://uor.foundation/api/v1", description: "Published site URL." },
+                {
+                  label: "Live API — active endpoint",
+                  url: BASE,
+                  description: "All requests go here. Always on. CORS open. No key required for GET requests.",
+                  status: "active",
+                },
+                {
+                  label: "Canonical domain proxy — planned",
+                  url: "https://uor.foundation/api/v1",
+                  description: "Same backend, not yet routed. Returns 404 until proxy is configured. Use the active endpoint above.",
+                  status: "planned",
+                },
               ].map((s, i) => (
-                <div key={s.url} className={`flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3.5 ${i > 0 ? "border-t border-border" : ""} bg-card`}>
+                <div key={s.url} className={`flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-border" : ""} bg-card`}>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-muted-foreground mb-0.5">{s.label}</p>
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <p className="text-xs font-semibold text-muted-foreground">{s.label}</p>
+                      <span className={`text-xs font-mono px-1.5 py-0.5 rounded border ${
+                        s.status === "active"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : "bg-muted text-muted-foreground border-border"
+                      }`}>
+                        x-server-status: {s.status}
+                      </span>
+                    </div>
                     <code className="font-mono text-sm text-foreground break-all">{s.url}</code>
                     <p className="text-xs text-muted-foreground mt-0.5">{s.description}</p>
                   </div>
@@ -946,21 +1074,55 @@ const Api = () => {
                 </div>
               ))}
             </div>
+
+            {/* Security scheme */}
             <div className="rounded-xl border border-border overflow-hidden">
               <div className="px-4 py-2.5 border-b border-border bg-muted/40">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Rate limits — unauthenticated</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Security — securitySchemes.AgentKey (optional)</p>
               </div>
-              <div className="grid grid-cols-3 divide-x divide-border">
+              <div className="px-4 py-4 bg-card space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-xs px-2 py-0.5 rounded border border-border bg-muted text-muted-foreground">type: apiKey</span>
+                  <span className="font-mono text-xs px-2 py-0.5 rounded border border-border bg-muted text-muted-foreground">in: header</span>
+                  <span className="font-mono text-xs px-2 py-0.5 rounded border border-primary/20 bg-primary/5 text-primary">X-UOR-Agent-Key</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Optional API key for elevated rate limits. All endpoints work without it — the key provides a benefit when present (higher throughput tier).
+                  Declared formally in <code className="font-mono">components.securitySchemes.AgentKey</code> per OAS 3.1.0.
+                  Every operation uses <code className="font-mono text-xs">security: [{"{}"}, {"{AgentKey:[]}"}]</code> — empty object means unauthenticated access is always permitted.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <strong className="text-foreground">Usage:</strong>{" "}
+                  <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">curl -H "X-UOR-Agent-Key: YOUR_KEY" "{BASE}/kernel/op/verify?x=42"</code>
+                </p>
+              </div>
+            </div>
+
+            {/* Rate limits */}
+            <div className="rounded-xl border border-border overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-border bg-muted/40">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Rate limits &amp; response headers</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
                 {[
-                  { group: "Kernel GET", limit: "120 / min" },
-                  { group: "Bridge POST", limit: "60 / min" },
-                  { group: "With X-UOR-Agent-Key", limit: "600 / min" },
+                  { group: "Kernel GET (unauthenticated)", limit: "120 / min", header: "X-RateLimit-Limit: 120" },
+                  { group: "Bridge POST (unauthenticated)", limit: "60 / min", header: "X-RateLimit-Limit: 60" },
+                  { group: "With X-UOR-Agent-Key", limit: "600 / min", header: "Elevated tier" },
                 ].map(r => (
                   <div key={r.group} className="px-4 py-3">
                     <p className="text-xs text-muted-foreground">{r.group}</p>
                     <p className="font-mono text-sm font-semibold text-foreground mt-0.5">{r.limit}</p>
+                    <p className="font-mono text-xs text-muted-foreground mt-1">{r.header}</p>
                   </div>
                 ))}
+              </div>
+              <div className="border-t border-border px-4 py-3 bg-muted/20">
+                <p className="text-xs text-muted-foreground mb-1.5 font-semibold">All responses include:</p>
+                <div className="flex flex-wrap gap-2">
+                  {["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "ETag (GET endpoints)", "Cache-Control"].map(h => (
+                    <code key={h} className="font-mono text-xs px-2 py-0.5 rounded border border-border bg-muted text-muted-foreground">{h}</code>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -1014,8 +1176,9 @@ const Api = () => {
 
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Sidebar */}
-              <aside className="hidden lg:flex flex-col w-56 shrink-0">
+              <aside className="hidden lg:flex flex-col w-60 shrink-0">
                 <div className="sticky top-28 space-y-0.5">
+                  {/* v1 live tags */}
                   {TAGS.map(tag => (
                     <button
                       key={tag.id}
@@ -1034,6 +1197,29 @@ const Api = () => {
                         activeTag === tag.id ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
                       }`}>
                         {tag.endpointCount}
+                      </span>
+                    </button>
+                  ))}
+                  {/* v2 stub tags — greyed out */}
+                  <div className="pt-2 pb-0.5">
+                    <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-semibold px-3 pb-1">v2 — not implemented</p>
+                  </div>
+                  {V2_STUB_TAGS.map(tag => (
+                    <button
+                      key={tag.id}
+                      onClick={() => setActiveTag(tag.id)}
+                      className={`w-full flex items-start justify-between gap-2 px-3 py-2 rounded-lg text-left transition-all ${
+                        activeTag === tag.id
+                          ? "bg-muted/60 text-muted-foreground border border-border"
+                          : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/30 border border-transparent"
+                      }`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-xs leading-tight opacity-70">{tag.plainLabel}</p>
+                        <p className="font-mono text-xs opacity-50 mt-0.5">{tag.label}</p>
+                      </div>
+                      <span className="text-xs px-1.5 py-0.5 rounded font-mono shrink-0 mt-0.5 bg-muted text-muted-foreground/60">
+                        501
                       </span>
                     </button>
                   ))}
@@ -1056,53 +1242,103 @@ const Api = () => {
                       {tag.plainLabel}
                     </button>
                   ))}
+                  {V2_STUB_TAGS.map(tag => (
+                    <button
+                      key={tag.id}
+                      onClick={() => setActiveTag(tag.id)}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all opacity-50 ${
+                        activeTag === tag.id
+                          ? "bg-muted text-foreground"
+                          : "bg-muted/50 text-muted-foreground hover:opacity-80"
+                      }`}
+                    >
+                      {tag.plainLabel}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* Endpoint list */}
               <div className="flex-1 min-w-0 space-y-4">
                 {/* Tag description panel */}
-                <div className="rounded-xl border border-border bg-muted/30 px-4 py-4">
-                  <div className="flex items-start gap-3 mb-1">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                        <p className="text-sm font-semibold text-foreground">{activeTagData.plainLabel}</p>
-                        <SpaceBadge space={activeTagData.space} />
-                        <code className="font-mono text-xs text-muted-foreground">{activeTagData.label}</code>
+                {isV2Tag && activeStubData ? (
+                  <>
+                    <div className="rounded-xl border border-border bg-muted/30 px-4 py-4">
+                      <div className="flex items-start gap-3 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                            <p className="text-sm font-semibold text-foreground">{activeStubData.plainLabel}</p>
+                            <SpaceBadge space={activeStubData.space} />
+                            <code className="font-mono text-xs text-muted-foreground">{activeStubData.label}</code>
+                            <span className="text-xs px-2 py-0.5 rounded border border-border bg-muted text-muted-foreground font-semibold">v2 — not implemented</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{activeStubData.plainDescription}</p>
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{activeTagData.plainDescription}</p>
                     </div>
-                    <a
-                      href={`https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 mt-0.5"
-                    >
-                      <code className="font-mono hidden sm:inline">{activeTagData.source}</code>
-                      <ExternalLink size={10} />
-                    </a>
-                  </div>
-                </div>
-
-                {visibleEndpoints.length > 0 ? (
-                  visibleEndpoints.map(ep => (
-                    <div key={ep.operationId} id={`endpoint-${ep.operationId}`}>
-                      <EndpointCard ep={ep} tag={activeTagData} />
+                    {activeStubData.stubPaths.map(sp => (
+                      <div key={sp.path} className="border border-dashed border-border rounded-xl overflow-hidden bg-muted/20 opacity-70">
+                        <div className="flex items-start gap-3 px-4 py-4">
+                          <div className="flex flex-col gap-2 flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold tracking-wide bg-muted text-muted-foreground border border-border">GET</span>
+                              <code className="font-mono text-sm text-foreground/70">{sp.path}</code>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{sp.summary}</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <ResponseCodeBadge code={501} />
+                              <span className="font-mono text-xs text-muted-foreground">NotImplemented — requires Rust conformance suite</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="border-t border-border/50 px-4 py-3 bg-muted/30">
+                          <p className="text-xs text-muted-foreground">
+                            This namespace is formally declared in the OpenAPI spec (stub path, 501 response) and in the UOR ontology. It will be implemented in v2 when the full Rust conformance suite is exposed via the cloud API.{" "}
+                            <a href="https://github.com/UOR-Foundation/UOR-Framework" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                              See the Rust implementation →
+                            </a>
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : activeTagData ? (
+                  <>
+                    <div className="rounded-xl border border-border bg-muted/30 px-4 py-4">
+                      <div className="flex items-start gap-3 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                            <p className="text-sm font-semibold text-foreground">{activeTagData.plainLabel}</p>
+                            <SpaceBadge space={activeTagData.space} />
+                            <code className="font-mono text-xs text-muted-foreground">{activeTagData.label}</code>
+                          </div>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{activeTagData.plainDescription}</p>
+                        </div>
+                        <a
+                          href={`https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 mt-0.5"
+                        >
+                          <code className="font-mono hidden sm:inline">{activeTagData.source}</code>
+                          <ExternalLink size={10} />
+                        </a>
+                      </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="rounded-xl border border-dashed border-border p-8 text-center">
-                    <p className="text-sm text-muted-foreground">No endpoints in this group.</p>
-                  </div>
-                )}
 
-                {activeTag === "user-type" && (
-                  <div className="rounded-xl border border-dashed border-border p-5 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      The <code className="font-mono text-xs">morphism:</code> and <code className="font-mono text-xs">state:</code> namespaces are defined in the ontology but require the full Rust conformance suite to execute — not yet exposed in the REST layer.
-                    </p>
-                  </div>
-                )}
+                    {visibleEndpoints.length > 0 ? (
+                      visibleEndpoints.map(ep => (
+                        <div key={ep.operationId} id={`endpoint-${ep.operationId}`}>
+                          <EndpointCard ep={ep} tag={activeTagData} />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-border p-8 text-center">
+                        <p className="text-sm text-muted-foreground">No endpoints in this group.</p>
+                      </div>
+                    )}
+                  </>
+                ) : null}
               </div>
             </div>
           </div>
