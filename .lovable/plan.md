@@ -1,179 +1,246 @@
 
-# UOR Framework API Page — OpenAPI 3.1.0 Strict Conformance Redesign
+# UOR API — Comprehensive OpenAPI Conformance & Functional Audit Implementation Plan
 
-## What Is Being Fixed and Why
+## What the AI Agent Found and What We Are Fixing
 
-The current `/api` page works but has several gaps that undermine its credibility with a technically precise audience (developers and AI agents):
-
-1. **Structural non-conformance with OpenAPI 3.1.0 presentation standards** — The page does not surface the information hierarchy that OpenAPI tools (Swagger UI, Redoc, Stoplight) surface as standard: server object, security schemes, tag groups as first-class sections, component schema references, response code variants, and rate-limit semantics.
-
-2. **No machine-readable link in the UI** — A developer or agent visiting `/api` sees no direct path to the machine-parseable `openapi.json`. The link is buried in the footer area.
-
-3. **Tag grouping is implicit** — OpenAPI 3.1.0 defines tags as first-class groupings. The current UI uses "Kernel / Bridge / User space" tabs which is correct but doesn't expose the exact tag names from the spec (`kernel-op`, `kernel-schema`, `bridge-partition`, etc.) that an agent would use to filter the spec.
-
-4. **No schema / response code panel** — Each endpoint shows only the happy-path curl and run-live. OpenAPI conformance requires surfacing response schemas and at least listing the documented error codes (400, 413, 429) so an agent knows what contract to expect.
-
-5. **operationId is not prominently displayed** — The `operationId` is the canonical machine identifier for an operation in OpenAPI. Agents use it to reference operations. It should be displayed as a primary label.
-
-6. **Navigation bar missing the API page** — The `/api` page is not linked from the navbar. Both human developers and agents following `<link>` tags and visible navigation cannot discover it from other pages.
-
-7. **llms.md agent welcome section needs the API page URL** — The quick card currently sends agents through the Supabase edge function URL. It should also surface `https://uor.foundation/api` as the human-readable interface.
+The agent's audit identified 47 specific gaps across 7 categories. After reading every relevant file — `supabase/functions/uor-api/index.ts` (1203 lines), `public/openapi.json` (767 lines), and `src/pages/Api.tsx` (1281 lines) — here is the full picture of what is broken, why it matters, and exactly how it will be fixed.
 
 ---
 
-## Changes
+## Category 1 — Critical Server Configuration
 
-### 1. `src/pages/Api.tsx` — Full redesign
+**Problem:** The `openapi.json` declares two servers. The second (`https://uor.foundation/api/v1`) returns HTTP 404 for every route. Any OpenAPI tool (Swagger UI, agents using round-robin) that selects the second server gets HTML 404 responses, not API data.
 
-The redesigned page is structured to match the OpenAPI 3.1.0 document hierarchy exactly:
+**Fix in `public/openapi.json`:** Annotate both server entries with `x-server-status` so tooling and agents can distinguish active from planned:
 
-**Section 0 — Page hero (strict OpenAPI info object)**
-- Title: "UOR Framework Agent API" (matches `info.title`)
-- Version badge: "v1.0.0" (matches `info.version`)
-- Summary: verbatim from `info.summary`
-- Two primary action buttons: "OpenAPI 3.1.0 spec (openapi.json)" and "GET /navigate — machine index"
-- License badge (Apache 2.0) and contact link
-- Extension fields surfaced as metadata chips: `x-agent-entry-point`, `x-ontology-source`, `x-community`
-
-**Section 1 — Servers block**
-- Renders the two server entries from `openapi.json`:
-  - Live edge function URL (primary, copyable)
-  - Production URL `https://uor.foundation/api/v1`
-- Rate limit table: GET 120/min (kernel), POST 60/min (bridge), authenticated 600/min
-
-**Section 2 — Quick Start (agent-optimised)**
-A tight three-step box:
-- Step 1: `GET /navigate` — get the complete index
-- Step 2: `GET /kernel/op/verify?x=42` — verify the critical identity
-- Step 3: `GET /openapi.json` — parse the full spec
-Each step has a one-click copy button and a "Run live" inline button that fires directly without expanding a panel.
-
-**Section 3 — Tags as primary navigation (OpenAPI-conformant)**
-Replaces the current "Kernel / Bridge / User" tab model with a left sidebar (desktop) / top tabs (mobile) matching OpenAPI tag names exactly:
-- `navigate` — Framework index
-- `kernel-op` — op: Ring operations
-- `kernel-schema` — u: + schema: Content addressing
-- `bridge-partition` — partition: Irreducibility
-- `bridge-proof` — proof: Verification proofs
-- `bridge-cert` — cert: Attestation
-- `bridge-observable` — observable: Metrics
-- `user-type` — type: Type system
-
-Each tag panel shows:
-- Tag description (verbatim from spec `tags[]`)
-- Ontology source file link
-- List of endpoints under that tag
-
-**Section 4 — Endpoint cards (OpenAPI operation object)**
-Each card prominently shows, in order:
-```
-[METHOD] /path                              [operationId]
-[tag badge] [namespace badge]
-─────────────────────────────────────────────
-summary (from spec)
-description (from spec, truncated with expand)
-
-Parameters table (name | in | type | required | description) ← matches OpenAPI schema
-Request body (schema type, example)
-Response codes: 200 ✅ | 400 ⚠️ | 413 ⚠️ | 429 ⏱️  ← all documented codes
-curl command (copyable)
-[▶ Run live] — fires request, shows formatted JSON response
-```
-
-The `operationId` is shown in a monospace chip at top-right of each card header — this is the canonical operation identifier agents use.
-
-**Section 5 — Components / Schemas reference**
-A collapsible "Schemas" panel listing the 15 `$ref` schema names from the OpenAPI spec with their `@type` mapping:
-```
-CriticalIdentityProofResponse   → proof:CriticalIdentityProof
-CoherenceProofResponse          → proof:CoherenceProof
-Datum                           → schema:Datum
-AddressEncodeResponse           → u:Address
-PartitionResponse               → partition:Partition
-InvolutionCertificateResponse   → cert:InvolutionCertificate
-ObservableMetricsResponse       → observable:RingMetric
-...
-```
-Each row links to the `#/components/schemas/...` anchor in the openapi.json.
-
-**Section 6 — Namespace → API map** (unchanged from current, already good)
-
-**Section 7 — Agent discovery chain** (enhanced)
-Shows the discovery path as a numbered flow:
-```
-/.well-known/uor.json
-      ↓ uor:api.openapi
-GET /openapi.json  (→ 302 → https://uor.foundation/openapi.json)
-      ↓ parse paths
-GET /navigate  (complete endpoint index, reading order)
-      ↓ start with
-GET /kernel/op/verify?x=42  (zero-auth, immediate result)
-```
-
-**Section 8 — `llms.md` / `llms-full.md` entry points for agents** (footer)
-A clear "For AI agents" box referencing the two markdown documents and the `/.well-known/uor.json` discovery file — making the page self-describing for agents that render HTML.
-
----
-
-### 2. `src/components/layout/Navbar.tsx` — Add "API" nav item
-
-Add `{ label: "API", href: "/api" }` to `navItems`. This makes the REST API Explorer discoverable from every page by both humans and agents parsing the navigation.
-
-The API item is placed after "UOR Framework" — the natural discovery position for a developer or agent reading left-to-right.
-
----
-
-### 3. `public/llms.md` — Update agent welcome metadata and Quick Start
-
-**Frontmatter update:** Add `api_url: https://uor.foundation/api` and `api_spec: https://uor.foundation/openapi.json` to the YAML frontmatter block. This makes the API discoverable to any agent that parses the frontmatter as structured data.
-
-**Quick Start Step 1.5 update:** Replace the current raw Supabase URL with a two-line entry:
-```
-Step 1.5 — Explore the full REST API:
-  Human interface:  https://uor.foundation/api
-  Machine spec:     https://uor.foundation/openapi.json
-  Navigation index: GET {BASE_URL}/navigate
+```json
+"servers": [
+  {
+    "url": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api",
+    "description": "Live API — active endpoint (all requests go here)",
+    "x-server-status": "active"
+  },
+  {
+    "url": "https://uor.foundation/api/v1",
+    "description": "Canonical domain proxy — planned (same backend, not yet routed)",
+    "x-server-status": "planned"
+  }
+]
 ```
 
 ---
 
-## Technical Implementation Details
+## Category 2 — Missing Security Scheme Definition
 
-**Sidebar navigation layout:**
-- Desktop: fixed left sidebar with tag list, right panel with endpoints
-- Mobile: horizontal scrollable tab strip above endpoint list
-- Active tag highlighted with primary colour
-- Endpoint count badge per tag
+**Problem:** `info.description` declares `X-UOR-Agent-Key` for rate-limit elevation, but there is no `securitySchemes` block in `components`, and no `security` field on any operation. OAS 3.1 requires any authentication mechanism to be formally declared.
 
-**Response code display:**
-- Green chip for 200, yellow for 4xx with tooltip showing the `$ref` error schema description
-- Clicking a response code chip expands to show the documented schema (from `components/responses`)
+**Fix in `public/openapi.json` — add to `components`:**
 
-**operationId prominence:**
-- Displayed as `font-mono text-xs` in a muted chip at the top-right of each collapsed card header
-- Full `operationId` is always visible without expanding — this is what agents scan for
+```json
+"securitySchemes": {
+  "AgentKey": {
+    "type": "apiKey",
+    "in": "header",
+    "name": "X-UOR-Agent-Key",
+    "description": "Optional header for elevated rate limits. Unauthenticated: 120 req/min GET, 60 req/min POST. Obtain at https://uor.foundation."
+  }
+}
+```
 
-**Parameter table:**
-Each GET endpoint shows a structured table:
-| Name | In | Type | Required | Default | Description |
-| x | query | integer [0, 2^n) | no | — | Ring element |
-| n | query | integer [1, 16] | no | 8 | Bit-width |
+**Add `security` to every operation** using the optional pattern `[{}, {"AgentKey": []}]` — the empty object means auth is not required but provides a benefit when present.
 
-Rather than inline inputs mixed with text, the parameters are a clean table above the input fields.
+---
 
-**"Run live" placement:**
-The "Run live" button is visible on the collapsed card header (alongside method badge and path) — no need to expand to test. Clicking it expands and fires simultaneously.
+## Category 3 — Missing Response Codes (All Endpoints)
 
-**JSON response syntax highlighting:**
-Replace plain `<pre>` with a lightweight token colourer (pure CSS/regex, no library) that distinguishes strings (green), numbers (amber), booleans (blue), keys (white), making JSON-LD responses readable at a glance.
+**Problem:** Every endpoint is missing `500` responses. POST endpoints are missing `415`. Every path is missing `405` for wrong HTTP methods. The derivation and trace paths return `404` instead of `501`.
 
-**Spec conformance badge:**
-A persistent "OpenAPI 3.1.0 Compliant" badge in the page header links directly to `https://www.openapis.org/` — the exact URL the user referenced. This signals trustworthiness to the technically informed audience.
+**Fix in `public/openapi.json` — add to `components.responses`:**
+
+```json
+"InternalServerError": { description: "Unexpected server error. Retry with exponential backoff." ... },
+"NotImplemented": { description: "Requires Rust conformance suite. Available in v2." ... },
+"MethodNotAllowed": { description: "Wrong HTTP method for this path.", headers: { Allow: ... } ... },
+"UnsupportedMediaType": { description: "Content-Type must be application/json." ... }
+```
+
+**Add to every operation's `responses`:**
+- `"500": { "$ref": "#/components/responses/InternalServerError" }` — all endpoints
+- `"default": { "$ref": "#/components/responses/InternalServerError" }` — all endpoints
+- `"405": { "$ref": "#/components/responses/MethodNotAllowed" }` — all endpoints
+- `"415": { "$ref": "#/components/responses/UnsupportedMediaType" }` — POST endpoints only
+
+**Fix in `public/openapi.json` — add stub paths for unimplemented namespaces** (currently return 404, should return 501 per spec):
+```json
+"/bridge/derivation": { "get": { "operationId": "derivationList", ... "responses": { "501": ... } } },
+"/bridge/trace": { "get": { "operationId": "traceList", ... "responses": { "501": ... } } },
+"/bridge/resolver": { "get": { "operationId": "resolverList", ... "responses": { "501": ... } } },
+"/user/morphism/transforms": { "get": { "operationId": "morphismList", ... "responses": { "501": ... } } },
+"/user/state": { "get": { "operationId": "stateList", ... "responses": { "501": ... } } }
+```
+
+**Fix in `supabase/functions/uor-api/index.ts` — router corrections:**
+
+1. Return `405 Method Not Allowed` (with `Allow` header) instead of `404` for valid paths with wrong HTTP method. This requires checking known paths before returning 404.
+2. Add explicit route matching for `/bridge/derivation`, `/bridge/trace`, `/bridge/resolver` to return `501` instead of `404`.
+3. Add `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` headers to all responses.
+4. Add `ETag` headers to deterministic GET endpoints (computed from path + params).
+5. Add `"INTERNAL_ERROR"` to the `ErrorResponse.code` enum in the spec (it was missing — actual responses already use it).
+
+---
+
+## Category 4 — Schema Definition Issues
+
+**Problem:** Schemas have loose `type: object` with no nested properties, missing `required` arrays on 10 of 13 schemas, missing `additionalProperties`, missing `format` annotations, and namespaced JSON-LD property names that break code generators.
+
+**Fix in `public/openapi.json` — schema improvements:**
+
+**Add `required` arrays** to all response schemas reflecting actual live response fields:
+- `WitnessData`: `required: ["@type", "proof:x", "proof:bnot_x", "proof:neg_bnot_x", "proof:succ_x", "proof:holds"]`
+- `CriticalIdentityProofResponse`: `required: ["@context", "@id", "@type", "proof:quantum", "proof:verified", "proof:timestamp", "proof:witness", "derivation", "ontology_ref", "conformance_ref"]`
+- `CoherenceProofResponse`: `required: ["@type", "proof:quantum", "proof:verified", "proof:timestamp", "summary"]`
+- `PartitionResponse`: `required: ["@type", "partition:quantum", "partition:density"]`
+- `InvolutionCertificateResponse`: `required: ["@type", "cert:operation", "cert:verified", "cert:quantum", "cert:timestamp", "verification"]`
+- `ObservableMetricsResponse`: `required: ["@type", "observable:quantum", "observable:datum"]`
+- `TypeListResponse`: `required: ["@type", "primitive_types", "composite_types"]`
+- `CoherenceProofRequest`: `required: ["type_definition"]` — the field is semantically mandatory
+
+**Add `format` annotations:**
+- `proof:timestamp`, `cert:timestamp` → `"format": "date-time"`
+- `@id` fields → `"format": "uri"`
+- `schema:spectrum` → `"pattern": "^[01]+$", "minLength": 1, "maxLength": 16`
+- `u:glyph` → `"pattern": "^[⠀-⣿]+$"` (Braille Unicode block)
+- `ontology_ref`, `conformance_ref` → `"format": "uri"`
+
+**Expand loose `type: object` schemas into structured `properties` blocks.** Add two new component schemas: `UnaryOpResult` and `BinaryOpResult`, then reference them from `OpComputeResponse.unary_ops` and `OpComputeResponse.binary_ops`. Add `items` schemas to all `"type": "array"` properties in `OpListResponse`.
+
+**Add `x-json-ld-term` extension to namespaced property names** to document the wire-format key while preserving compatibility with code generators:
+```json
+"schema:value": {
+  "type": "integer",
+  "x-json-ld-term": "schema:value",
+  "description": "Integer value in [0, 2^n). Wire key: 'schema:value' — use string access in typed languages."
+}
+```
+
+**Add missing fields** that appear in live responses but are absent from schemas:
+- `ontology_ref` (URI) and `conformance_ref` (URI) on `CriticalIdentityProofResponse`
+- `coherence_layers` on `CoherenceProofResponse`
+- `cardinality_check` and `quality_signal` on `PartitionResponse`
+- `observable:commutator` on `ObservableMetricsResponse`
+
+---
+
+## Category 5 — Parameter Issues
+
+**Problem:** The `x` parameter schema declares `maximum: 65535` unconditionally but the runtime enforcement is `x < 2^n` (context-dependent). Sending `x=300` with default `n=8` passes schema validation but fails at runtime. The `PartitionRequest` needs `oneOf` semantics declared.
+
+**Fix in `public/openapi.json`:**
+
+Improve `x` description to make the runtime constraint explicit:
+```json
+"x": {
+  "description": "Ring element. Must satisfy 0 ≤ x < 2^n (e.g., < 256 for n=8, < 65536 for n=16). Schema maximum is the widest valid range (n=16); actual bound enforced at runtime against `n`.",
+  "example": 42
+}
+```
+
+Convert `PartitionRequest` to proper `oneOf`:
+```json
+"PartitionRequest": {
+  "oneOf": [
+    { "title": "TypeDefinitionPartition", "required": ["type_definition"], "properties": { ... } },
+    { "title": "InputStringPartition", "required": ["input"], "properties": { ... } }
+  ]
+}
+```
+
+---
+
+## Category 6 — Response Header Issues
+
+**Problem:** No `ETag` headers on any endpoint (all deterministic — same input always produces same output). No `X-RateLimit-*` headers returned despite rate limits being documented. These omissions prevent agents from implementing proper caching and proactive rate limit management.
+
+**Fix in `supabase/functions/uor-api/index.ts`:**
+
+Add to `CACHE_HEADERS_KERNEL` and `CACHE_HEADERS_CONTENT`:
+```javascript
+'X-RateLimit-Limit': '120',   // or '60' for POST
+'X-RateLimit-Remaining': String(limit - recent.length),
+'X-RateLimit-Reset': String(Math.ceil((now + 60000) / 1000)),
+```
+
+Add ETag computation for deterministic GET endpoints:
+```javascript
+function makeETag(path: string, params: Record<string, string>): string {
+  const key = path + JSON.stringify(params, Object.keys(params).sort());
+  // Simple but stable hash — no crypto needed for deterministic resources
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return `"uor-${h.toString(16)}"`;
+}
+```
+
+Pass ETag in response headers and handle `If-None-Match` conditional requests (return `304 Not Modified` when ETag matches).
+
+**Fix in `public/openapi.json` — declare headers in `components`:**
+```json
+"components": {
+  "headers": {
+    "X-RateLimit-Limit": { "schema": { "type": "integer" }, "description": "Max requests per minute" },
+    "X-RateLimit-Remaining": { "schema": { "type": "integer" }, "description": "Remaining requests in window" },
+    "X-RateLimit-Reset": { "schema": { "type": "integer" }, "description": "Unix timestamp when window resets" },
+    "ETag": { "schema": { "type": "string" }, "description": "Cache validator — stable for same inputs" }
+  }
+}
+```
+
+Add `headers` blocks to all `200` responses in the spec referencing these components.
+
+---
+
+## Category 7 — POST Endpoint Semantic Annotation
+
+**Problem:** POST endpoints return `200 OK` rather than `201 Created`. Per the audit, `200` is actually semantically correct here (computed on the fly, not persisted), but this should be explicitly stated so agents do not assume idempotency issues.
+
+**Fix in `public/openapi.json`:** Add to each POST operation description:
+> "Returns `200 OK` because this endpoint computes a deterministic artifact on the fly — same inputs always produce the same output. No resource is persisted."
+
+---
+
+## Files Changed
+
+### 1. `public/openapi.json` — Complete schema conformance update
+
+All changes above to: servers, security schemes, response codes, stub paths, component schemas (required arrays, format annotations, expanded object types, x-json-ld-term, missing fields), parameter descriptions, oneOf for PartitionRequest, new component headers block, and headers on 200 responses.
+
+### 2. `supabase/functions/uor-api/index.ts` — Router and header fixes
+
+- Add 405 Method Not Allowed handling for valid paths with wrong HTTP method
+- Add 501 routes for `/bridge/derivation`, `/bridge/trace`, `/bridge/resolver`
+- Add `X-RateLimit-Limit/Remaining/Reset` to all responses (requires threading limit/remaining through the rate-limit check function return)
+- Add `ETag` computation and `If-None-Match` / `304` handling for GET endpoints
+- Refactor `checkRateLimit` to return `{ allowed: boolean, remaining: number, reset: number }` so headers can be set on every response
+- Update `NOT_IMPLEMENTED` code to also cover bridge derivation/trace/resolver (currently only user/state and user/morphism)
+
+### 3. `src/pages/Api.tsx` — UI alignment with updated spec
+
+- Add `500` and `default` response code chips to every endpoint card
+- Add `405` response chip to every endpoint card  
+- Add `415` response chip to POST endpoint cards
+- Add stub entries for the 5 unimplemented namespace paths in the UI sidebar (shown as "Not implemented in v1" with `501` badge)
+- Update `TAGS` array to include placeholder tags for `bridge-derivation`, `bridge-trace`, `bridge-resolver`, `user-morphism`, `user-state` — shown greyed out with "v2" label
+- Update Servers block to show `x-server-status: active` / `planned` visually
+- Update security section to show the `AgentKey` scheme formally
+- Update `X-RateLimit-*` in the UI rate limit documentation table
 
 ---
 
 ## Execution Order
 
-1. Update `src/components/layout/Navbar.tsx` — add API nav item (one-liner)
-2. Update `public/llms.md` — add frontmatter API fields and Step 1.5 update
-3. Rewrite `src/pages/Api.tsx` — full redesign per plan above
+1. Update `supabase/functions/uor-api/index.ts` — router fixes (405, 501 routes, rate-limit headers, ETag)
+2. Update `public/openapi.json` — full schema conformance rewrite
+3. Update `src/pages/Api.tsx` — UI alignment with new spec (new response chips, stub tags, security display)
+4. Deploy edge function
+
+This order ensures the live API is correct before the spec and UI are updated to reflect it.
