@@ -890,21 +890,21 @@ const Api = () => {
               {
                 step: "1",
                 label: "Discover what the API can do",
-                why: "Get a full map of every available endpoint — what each one does and in what order to use them. A good first call before anything else.",
+                why: "Get a full map of every endpoint — what each does, what it returns, and in what order to use them.",
                 cmd: `curl "${BASE}/navigate"`,
-                note: "Returns a structured list of all endpoints with descriptions and example URLs.",
+                note: "Returns a structured index of all endpoints with descriptions and example URLs.",
               },
               {
                 step: "2",
                 label: "Verify a trust guarantee — independently",
-                why: "Think of this like checking that a ruler is actually accurate before measuring anything. UOR is built on one core rule: a specific sequence of operations always produces the same result, on any machine, for any value. This command proves it — live, step by step — without asking you to take anyone's word for it. That guarantee is what lets AI systems trust each other's output without a central authority.",
+                why: "Like checking a scale is accurate before weighing anything. UOR runs one core mathematical check on any value you choose — same result, any machine, every time. That shared guarantee lets AI systems coordinate without needing to trust each other.",
                 cmd: `curl "${BASE}/kernel/op/verify?x=42"`,
                 note: "Try any number in place of 42. The result is always the same — that determinism is the foundation.",
               },
               {
                 step: "3",
                 label: "Detect spam and noise — mathematically",
-                why: "AI-generated spam is easy to paraphrase past keyword filters. This command scores any text using algebraic structure — a fixed mathematical property derived from the actual bytes, not a pattern a language model can mimic. Repetitive filler scores low. Structurally varied content scores high. The score is reproducible by anyone, on any machine.",
+                why: "AI spam is easy to paraphrase past keyword filters. This scores any text by algebraic byte structure — a fixed mathematical property no language model can mimic. Low scores flag repetitive filler; high scores confirm structural variety.",
                 cmd: `curl -X POST "${BASE}/bridge/partition" -H "Content-Type: application/json" -d '{"input":"hello world"}'`,
                 note: "Swap in any text. Low density flags uniform or repetitive content — a formal signal, not a heuristic.",
               },
@@ -914,8 +914,8 @@ const Api = () => {
                   {step}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-lg font-semibold text-foreground mb-2">{label}</p>
-                  <p className="text-base text-muted-foreground leading-relaxed mb-4">{why}</p>
+                  <p className="text-base md:text-lg font-semibold text-foreground mb-2">{label}</p>
+                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-4">{why}</p>
                   <div className="flex items-center gap-2">
                     <code className="font-mono text-sm text-[hsl(152,34%,60%)] bg-[hsl(220,18%,6%)] px-3 py-2 rounded-lg flex-1 min-w-0 break-all">{cmd}</code>
                     <CopyButton text={cmd} size="xs" />
