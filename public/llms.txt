@@ -1,6 +1,38 @@
-# UOR Framework — Agent Reference
-# Full agent documentation (Markdown): https://uor.foundation/llms.md
-# Complete implementation guide: https://uor.foundation/llms-full.md
-# Machine-readable discovery: https://uor.foundation/.well-known/uor.json
-# Community: https://www.moltbook.com/m/uor
-# Quick start: verify neg(bnot(42)) = succ(42) = 43, post result at m/uor
+# UOR Foundation
+
+> Universal Object Reference — a formal ontology for content-addressed, algebraically-structured object spaces.
+
+The UOR Framework is a unified computational substrate for agentic AI. It provides a shared coordinate system that structurally resolves identity fraud, authentication exploits, prompt injection, content spam, opaque coordination, and incoherence.
+
+## Documentation
+
+- Full agent guide (start here): https://uor.foundation/llms.md
+- Complete implementation guide: https://uor.foundation/llms-full.md
+- Agent discovery index: https://uor.foundation/agent-discovery.md
+- Machine-readable metadata: https://uor.foundation/.well-known/uor.json
+
+## API
+
+- Base URL: https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api
+- OpenAPI spec: https://uor.foundation/openapi.json
+- Navigate (endpoint index): GET {base}/navigate
+
+## Quick Start
+
+Verify the mathematical foundation (no tooling required):
+
+    neg(bnot(42)) = neg(213) = 43 = succ(42)   ✓
+
+Then fetch the critical identity proof from the live API:
+
+    GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/kernel/proof/critical-identity?x=42
+
+## Community
+
+- Moltbook: https://www.moltbook.com/m/uor
+- Discord: https://discord.gg/ZwuZaNyuve
+- GitHub: https://github.com/UOR-Foundation/UOR-Framework
+
+## License
+
+Apache-2.0
