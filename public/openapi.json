@@ -673,8 +673,14 @@
             },
             "content": {
               "application/json": {
-                "schema": { "type": "object", "description": "derivation:DerivationTrace" },
-                "example": { "@type": "derivation:DerivationTrace", "derivation:steps": [], "derivation:criticalIdentityHolds": true }
+                "schema": { "$ref": "#/components/schemas/DerivationTraceResponse" },
+                "example": {
+                  "summary": { "source_value": 42, "operation_sequence": ["neg","bnot","succ"], "final_value": 42, "steps": 3, "identity_holds": true, "statement": "neg(bnot(42)) = succ(42) in R_8 [PASS]" },
+                  "@type": "derivation:DerivationTrace",
+                  "derivation:sourceValue": 42,
+                  "derivation:stepCount": 3,
+                  "derivation:finalValue": 42
+                }
               }
             }
           },
@@ -715,8 +721,13 @@
             },
             "content": {
               "application/json": {
-                "schema": { "type": "object", "description": "trace:ExecutionTrace" },
-                "example": { "@type": "trace:ExecutionTrace", "trace:frames": [], "trace:totalHammingDrift": 0 }
+                "schema": { "$ref": "#/components/schemas/ExecutionTraceResponse" },
+                "example": {
+                  "summary": { "source_value": 42, "operation_sequence": ["neg","bnot"], "final_state": 41, "frames": 3, "total_hamming_drift": 0, "injection_detected": false, "note": "zero Hamming drift — operation sequence is canonical" },
+                  "@type": "trace:ExecutionTrace",
+                  "trace:totalHammingDrift": 0,
+                  "trace:frameCount": 3
+                }
               }
             }
           },
@@ -750,8 +761,14 @@
             },
             "content": {
               "application/json": {
-                "schema": { "type": "object", "description": "resolver:Resolution" },
-                "example": { "@type": "resolver:Resolution", "resolver:component": "partition:IrreducibleSet", "resolver:isIrreducible": true, "resolver:canonicalForm": "21" }
+                "schema": { "$ref": "#/components/schemas/ResolutionResponse" },
+                "example": {
+                  "summary": { "input": 42, "component": "partition:ReducibleSet", "canonical_form": "2^1 × 21", "is_irreducible": false, "category_label": "Reducible — decomposes in R_8" },
+                  "@type": "resolver:Resolution",
+                  "resolver:component": "partition:ReducibleSet",
+                  "resolver:isIrreducible": false,
+                  "resolver:canonicalForm": "2^1 × 21"
+                }
               }
             }
           },
@@ -798,8 +815,13 @@
             },
             "content": {
               "application/json": {
-                "schema": { "type": "object", "description": "morphism:RingHomomorphism" },
-                "example": { "@type": ["morphism:RingHomomorphism", "morphism:ProjectionHomomorphism"], "morphism:image": 10, "morphism:isInjective": false, "morphism:isSurjective": true }
+                "schema": { "$ref": "#/components/schemas/RingHomomorphismResponse" },
+                "example": {
+                  "summary": { "input": 42, "from_ring": "R_8 = Z/256Z", "to_ring": "R_16 = Z/65536Z", "image": 42, "morphism_type": "InclusionHomomorphism", "is_injective": true, "is_isomorphism": false, "ring_structure_preserved": true },
+                  "@type": ["morphism:RingHomomorphism", "morphism:InclusionHomomorphism"],
+                  "morphism:image": 42,
+                  "morphism:isInjective": true
+                }
               }
             }
           },
@@ -833,8 +855,14 @@
             },
             "content": {
               "application/json": {
-                "schema": { "type": "object", "description": "state:Frame" },
-                "example": { "@type": "state:Frame", "state:binding": { "state:component": "partition:IrreducibleSet" }, "state:entryCondition": { "state:isStableEntry": false }, "state:transitions": [] }
+                "schema": { "$ref": "#/components/schemas/StateFrameResponse" },
+                "example": {
+                  "summary": { "value": 42, "component": "partition:ReducibleSet", "stable_entry": false, "phase_boundary": false, "transition_count": 4, "critical_identity_holds": true },
+                  "@type": "state:Frame",
+                  "state:binding": { "state:component": "partition:ReducibleSet" },
+                  "state:entryCondition": { "state:isStableEntry": false },
+                  "state:transitions": []
+                }
               }
             }
           },
@@ -989,7 +1017,7 @@
         "description": "proof:CriticalIdentityProof — full algebraic verification with derivation steps",
         "required": ["@context", "@id", "@type", "proof:quantum", "proof:verified", "proof:timestamp", "proof:witness", "derivation", "ontology_ref", "conformance_ref"],
         "properties": {
-          "@context": { "type": "object" },
+          "@context": { "type": "string", "format": "uri", "description": "JSON-LD context URL. Resolves to https://uor.foundation/contexts/uor-v1.jsonld — fetch once, cache permanently.", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
           "@id": { "type": "string", "format": "uri" },
           "@type": { "type": "array", "items": { "type": "string" } },
           "proof:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "proof:quantum" },
@@ -1101,7 +1129,7 @@
         "description": "Results of all ring operations applied to x (and y for binary ops)",
         "required": ["datum", "ring", "unary_ops", "binary_ops", "critical_identity"],
         "properties": {
-          "@context": { "type": "object" },
+          "@context": { "type": "string", "format": "uri", "description": "JSON-LD context URL.", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
           "@id": { "type": "string", "format": "uri" },
           "datum": { "$ref": "#/components/schemas/Datum" },
           "ring": {
@@ -1336,6 +1364,274 @@
           "spaces": { "type": "object" },
           "namespace_map": { "type": "array" },
           "reading_order": { "type": "array" }
+        }
+      },
+      "DerivationTraceResponse": {
+        "type": "object",
+        "description": "derivation:DerivationTrace — auditable, step-by-step operation record. Source: spec/src/namespaces/derivation.rs",
+        "required": ["@context", "@id", "@type", "summary", "derivation:sourceValue", "derivation:stepCount", "derivation:finalValue", "derivation:steps", "derivation:verification"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "derivation:DerivationTrace" },
+          "summary": {
+            "type": "object",
+            "required": ["source_value", "operation_sequence", "final_value", "steps", "identity_holds", "statement"],
+            "properties": {
+              "source_value": { "type": "integer" },
+              "operation_sequence": { "type": "array", "items": { "type": "string" } },
+              "final_value": { "type": "integer" },
+              "steps": { "type": "integer" },
+              "identity_holds": { "type": "boolean" },
+              "statement": { "type": "string" }
+            }
+          },
+          "derivation:sourceValue": { "type": "integer", "minimum": 0, "x-json-ld-term": "derivation:sourceValue" },
+          "derivation:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "derivation:quantum" },
+          "derivation:ringModulus": { "type": "integer", "x-json-ld-term": "derivation:ringModulus" },
+          "derivation:operationSequence": { "type": "array", "items": { "type": "string" }, "x-json-ld-term": "derivation:operationSequence" },
+          "derivation:finalValue": { "type": "integer", "x-json-ld-term": "derivation:finalValue" },
+          "derivation:stepCount": { "type": "integer", "x-json-ld-term": "derivation:stepCount" },
+          "derivation:steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["@type", "derivation:stepNumber", "derivation:operationId", "derivation:input", "derivation:output", "derivation:formula"],
+              "properties": {
+                "@type": { "type": "string", "const": "derivation:DerivationStep" },
+                "derivation:stepNumber": { "type": "integer" },
+                "derivation:operationId": { "type": "string" },
+                "derivation:operationDescription": { "type": "string" },
+                "derivation:input": { "type": "integer" },
+                "derivation:output": { "type": "integer" },
+                "derivation:formula": { "type": "string" },
+                "derivation:ontologyRef": { "type": "string", "format": "uri" }
+              }
+            }
+          },
+          "derivation:verification": {
+            "type": "object",
+            "properties": {
+              "@type": { "type": "string" },
+              "derivation:criticalIdentityHolds": { "type": "boolean" },
+              "derivation:statement": { "type": "string" }
+            }
+          },
+          "ontology_ref": { "type": "string", "format": "uri" }
+        }
+      },
+      "ExecutionTraceResponse": {
+        "type": "object",
+        "description": "trace:ExecutionTrace — bit-level execution trace per operation step. Non-zero totalHammingDrift signals injection. Source: spec/src/namespaces/trace.rs",
+        "required": ["@context", "@id", "@type", "summary", "trace:sourceValue", "trace:finalState", "trace:frameCount", "trace:totalHammingDrift", "trace:frames"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "trace:ExecutionTrace" },
+          "summary": {
+            "type": "object",
+            "required": ["source_value", "operation_sequence", "final_state", "frames", "total_hamming_drift", "injection_detected", "note"],
+            "properties": {
+              "source_value": { "type": "integer" },
+              "operation_sequence": { "type": "array", "items": { "type": "string" } },
+              "final_state": { "type": "integer" },
+              "frames": { "type": "integer" },
+              "total_hamming_drift": { "type": "integer" },
+              "injection_detected": { "type": "boolean" },
+              "note": { "type": "string" }
+            }
+          },
+          "injection_example": {
+            "type": "object",
+            "description": "Worked example showing canonical (drift=0) vs anomalous (drift≠0) sequences",
+            "properties": {
+              "description": { "type": "string" },
+              "canonical_sequence": { "type": "object" },
+              "anomalous_sequence": { "type": "object" },
+              "detection_rule": { "type": "string" }
+            }
+          },
+          "trace:sourceValue": { "type": "integer", "x-json-ld-term": "trace:sourceValue" },
+          "trace:quantum": { "type": "integer", "x-json-ld-term": "trace:quantum" },
+          "trace:operationSequence": { "type": "array", "items": { "type": "string" }, "x-json-ld-term": "trace:operationSequence" },
+          "trace:finalState": { "type": "integer", "x-json-ld-term": "trace:finalState" },
+          "trace:frameCount": { "type": "integer", "x-json-ld-term": "trace:frameCount" },
+          "trace:totalHammingDrift": {
+            "type": "integer",
+            "description": "Net change in Hamming weight from start to end state. 0 = canonical, non-zero = anomalous / injection signal.",
+            "x-json-ld-term": "trace:totalHammingDrift"
+          },
+          "trace:frames": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["@type", "trace:frameIndex", "trace:state", "trace:binaryState", "trace:hammingWeight"],
+              "properties": {
+                "@type": { "type": "string", "const": "trace:Frame" },
+                "trace:frameIndex": { "type": "integer" },
+                "trace:operation": { "type": ["string", "null"] },
+                "trace:state": { "type": "integer" },
+                "trace:binaryState": { "type": "string" },
+                "trace:hammingWeight": { "type": "integer" },
+                "trace:hammingWeightDelta": { "type": "integer" },
+                "trace:delta": { "type": "string" },
+                "trace:xorDiff": { "type": "integer" }
+              }
+            }
+          },
+          "ontology_ref": { "type": "string", "format": "uri" }
+        }
+      },
+      "ResolutionResponse": {
+        "type": "object",
+        "description": "resolver:Resolution — canonical category classification with factor decomposition. Source: spec/src/namespaces/resolver.rs",
+        "required": ["@context", "@id", "@type", "summary", "resolver:inputValue", "resolver:component", "resolver:isIrreducible", "resolver:canonicalForm"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "resolver:Resolution" },
+          "summary": {
+            "type": "object",
+            "required": ["input", "component", "canonical_form", "is_irreducible", "category_label"],
+            "properties": {
+              "input": { "type": "integer" },
+              "component": { "type": "string", "enum": ["partition:IrreducibleSet", "partition:ReducibleSet", "partition:UnitSet", "partition:ExteriorSet"] },
+              "canonical_form": { "type": "string" },
+              "is_irreducible": { "type": "boolean" },
+              "category_label": { "type": "string" }
+            }
+          },
+          "resolver:inputValue": { "type": "integer", "x-json-ld-term": "resolver:inputValue" },
+          "resolver:quantum": { "type": "integer", "x-json-ld-term": "resolver:quantum" },
+          "resolver:component": { "type": "string", "x-json-ld-term": "resolver:component" },
+          "resolver:componentReason": { "type": "string", "x-json-ld-term": "resolver:componentReason" },
+          "resolver:isIrreducible": { "type": "boolean", "x-json-ld-term": "resolver:isIrreducible" },
+          "resolver:canonicalForm": { "type": "string", "x-json-ld-term": "resolver:canonicalForm" },
+          "resolver:decomposition": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "step": { "type": "integer" },
+                "action": { "type": "string" },
+                "result": { "type": "string" },
+                "cascadeDepth": { "type": "integer" },
+                "oddCore": { "type": "integer" }
+              }
+            }
+          },
+          "ontology_ref": { "type": "string", "format": "uri" }
+        }
+      },
+      "RingHomomorphismResponse": {
+        "type": "object",
+        "description": "morphism:RingHomomorphism — structure-preserving map between ring sizes. Source: spec/src/namespaces/morphism.rs",
+        "required": ["@context", "@id", "@type", "summary", "morphism:inputValue", "morphism:image", "morphism:morphismType", "morphism:isInjective", "morphism:isSurjective"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "array", "items": { "type": "string" } },
+          "summary": {
+            "type": "object",
+            "required": ["input", "from_ring", "to_ring", "image", "morphism_type", "is_injective", "is_isomorphism", "ring_structure_preserved"],
+            "properties": {
+              "input": { "type": "integer" },
+              "from_ring": { "type": "string" },
+              "to_ring": { "type": "string" },
+              "image": { "type": "integer" },
+              "morphism_type": { "type": "string", "enum": ["InclusionHomomorphism", "ProjectionHomomorphism", "IdentityHomomorphism"] },
+              "is_injective": { "type": "boolean" },
+              "is_isomorphism": { "type": "boolean" },
+              "ring_structure_preserved": { "type": "boolean" }
+            }
+          },
+          "morphism:source": { "type": "object", "x-json-ld-term": "morphism:source" },
+          "morphism:target": { "type": "object", "x-json-ld-term": "morphism:target" },
+          "morphism:inputValue": { "type": "integer", "x-json-ld-term": "morphism:inputValue" },
+          "morphism:image": { "type": "integer", "x-json-ld-term": "morphism:image" },
+          "morphism:mapFormula": { "type": "string", "x-json-ld-term": "morphism:mapFormula" },
+          "morphism:kernelSize": { "type": "integer", "x-json-ld-term": "morphism:kernelSize" },
+          "morphism:preserves": { "type": "array", "items": { "type": "string" }, "x-json-ld-term": "morphism:preserves" },
+          "morphism:isInjective": { "type": "boolean", "x-json-ld-term": "morphism:isInjective" },
+          "morphism:isSurjective": { "type": "boolean", "x-json-ld-term": "morphism:isSurjective" },
+          "morphism:isIsomorphism": { "type": "boolean", "x-json-ld-term": "morphism:isIsomorphism" },
+          "morphism:morphismType": { "type": "string", "x-json-ld-term": "morphism:morphismType" },
+          "morphism:commutativityProof": { "type": "object", "x-json-ld-term": "morphism:commutativityProof" },
+          "ontology_ref": { "type": "string", "format": "uri" }
+        }
+      },
+      "StateFrameResponse": {
+        "type": "object",
+        "description": "state:Frame — formal agent lifecycle state with category, entry/exit conditions, and all operation transitions. Source: spec/src/namespaces/state.rs",
+        "required": ["@context", "@id", "@type", "summary", "state:binding", "state:entryCondition", "state:exitCondition", "state:transitions", "state:transitionCount"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "state:Frame" },
+          "summary": {
+            "type": "object",
+            "required": ["value", "component", "stable_entry", "phase_boundary", "transition_count", "critical_identity_holds"],
+            "properties": {
+              "value": { "type": "integer" },
+              "component": { "type": "string" },
+              "stable_entry": { "type": "boolean" },
+              "phase_boundary": { "type": "boolean" },
+              "transition_count": { "type": "integer" },
+              "critical_identity_holds": { "type": "boolean" }
+            }
+          },
+          "state:binding": {
+            "type": "object",
+            "required": ["@type", "state:value", "state:component"],
+            "properties": {
+              "@type": { "type": "string", "const": "state:StateBinding" },
+              "state:value": { "type": "integer" },
+              "state:quantum": { "type": "integer" },
+              "state:component": { "type": "string" },
+              "state:componentReason": { "type": "string" },
+              "state:isIrreducible": { "type": "boolean" }
+            }
+          },
+          "state:entryCondition": {
+            "type": "object",
+            "required": ["@type", "state:isStableEntry"],
+            "properties": {
+              "@type": { "type": "string", "const": "state:EntryCondition" },
+              "state:isStableEntry": { "type": "boolean" },
+              "state:reason": { "type": "string" }
+            }
+          },
+          "state:exitCondition": {
+            "type": "object",
+            "required": ["@type", "state:isPhaseBoundary"],
+            "properties": {
+              "@type": { "type": "string", "const": "state:ExitCondition" },
+              "state:isPhaseBoundary": { "type": "boolean" },
+              "state:isExterior": { "type": "boolean" },
+              "state:reason": { "type": "string" }
+            }
+          },
+          "state:transitions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["@type", "state:operation", "state:fromState", "state:toState", "state:fromComponent", "state:toComponent", "state:componentChanged"],
+              "properties": {
+                "@type": { "type": "string", "const": "state:Transition" },
+                "state:operation": { "type": "string" },
+                "state:formula": { "type": "string" },
+                "state:fromState": { "type": "integer" },
+                "state:toState": { "type": "integer" },
+                "state:fromComponent": { "type": "string" },
+                "state:toComponent": { "type": "string" },
+                "state:componentChanged": { "type": "boolean" }
+              }
+            }
+          },
+          "state:transitionCount": { "type": "integer" },
+          "state:reachableComponents": { "type": "array", "items": { "type": "string" } },
+          "state:criticalIdentityHolds": { "type": "boolean" },
+          "ontology_ref": { "type": "string", "format": "uri" }
         }
       },
       "ErrorResponse": {
