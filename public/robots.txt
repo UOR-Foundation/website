@@ -1,19 +1,4 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
 
-# AI Agent Discovery — Single Entry Point
-# /llms.md              - Agent Quick Card: Quick Start, problem-solution table, First Post template (START HERE)
-# /llms-full.md         - Complete implementation guide: Python pseudocode, Zero-Infrastructure Validation, GitHub entry points
-# /.well-known/uor.json - Machine-readable discovery metadata with agentReadingOrder
+# AI agents: see /agent-discovery.md
