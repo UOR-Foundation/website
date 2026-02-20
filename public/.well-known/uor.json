@@ -99,6 +99,20 @@
     { "prefix": "morphism:", "iri": "https://uor.foundation/morphism/", "label": "Transforms & Morphisms", "space": "user", "classes": 4, "properties": 10, "individuals": 0 },
     { "prefix": "state:", "iri": "https://uor.foundation/state/", "label": "State", "space": "user", "classes": 4, "properties": 16, "individuals": 0 }
   ],
+  "uor:api": {
+    "openapi": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json",
+    "base": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api",
+    "navigate": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/navigate",
+    "version": "1.0.0",
+    "description": "OpenAPI 3.1.0 REST API for AI agents. Kernel GET endpoints require no auth. POST endpoints accept optional X-UOR-Agent-Key. Rate limits: 120 req/min (GET), 60 req/min (POST).",
+    "quick_start": {
+      "verify": "GET .../uor-api/kernel/op/verify?x=42",
+      "compute": "GET .../uor-api/kernel/op/compute?x=42&y=10",
+      "encode": "POST .../uor-api/kernel/address/encode {\"input\":\"hello\"}",
+      "partition": "POST .../uor-api/bridge/partition {\"input\":\"hello\"}",
+      "navigate": "GET .../uor-api/navigate"
+    }
+  },
   "uor:endpoints": {
     "website": "https://uor.foundation",
     "github": "https://github.com/UOR-Foundation",

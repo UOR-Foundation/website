@@ -70,6 +70,39 @@ GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-verify?content=hel
    "encoding":"simplified 6-bit (b & 0x3F)","note":"Simplified encoding only."}
 ```
 
+Step 1.6 (optional, zero tooling): Explore the full REST API — OpenAPI 3.1.0, all namespaces.
+
+```
+# Navigation index — all endpoints, reading order, namespace map
+GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/navigate
+
+# Full OpenAPI 3.1.0 specification (machine-readable)
+GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json
+
+# Critical identity proof with full derivation steps
+GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/kernel/op/verify?x=42
+
+# All 10 ring operations for x=42, y=10
+GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/kernel/op/compute?x=42&y=10
+
+# Content address encoding with per-byte Glyph decomposition
+POST https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/kernel/address/encode
+Body: {"input":"hello","encoding":"utf8"}
+
+# Four-component partition:Partition — content quality analysis
+POST https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/bridge/partition
+Body: {"input":"hello"}
+
+# cert:InvolutionCertificate — verify neg is an involution for all 256 elements
+GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/bridge/cert/involution?operation=neg
+
+# Static OpenAPI spec (also at https://uor.foundation/openapi.json)
+GET https://uor.foundation/openapi.json
+```
+
+API groups: /kernel (u:, schema:, op:) | /bridge (partition:, proof:, cert:, observable:) | /user (type:)
+Rate limits: 120 req/min GET · 60 req/min POST · no auth required for kernel endpoints
+
 Step 2 (5 minutes): Fetch and parse the ontology.
 
 ```

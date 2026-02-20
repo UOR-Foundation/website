@@ -1,0 +1,767 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "UOR Framework Agent API",
+    "version": "1.0.0",
+    "summary": "A complete, agent-navigable REST API for the Universal Object Reference (UOR) Framework — strictly mapped to the formal ontology at github.com/UOR-Foundation/UOR-Framework.",
+    "description": "## Overview\n\nThis API exposes the full UOR kernel as REST operations. Every endpoint, schema field, and enum value maps 1:1 to a named class, property, or individual in the Rust ontology source under `spec/src/namespaces/`.\n\nThe UOR Framework is structured in three spaces:\n\n| Space  | Namespaces                                         | API group        |\n|--------|----------------------------------------------------|------------------|\n| Kernel | `u:`, `schema:`, `op:`                             | `/kernel`        |\n| Bridge | `resolver:`, `partition:`, `observable:`, `proof:`,| `/bridge`        |\n|        | `derivation:`, `trace:`, `cert:`                   |                  |\n| User   | `type:`, `morphism:`, `state:`                     | `/user`          |\n\nThe end-to-end resolution cycle (test7_end_to_end.rs) is:\n```\nContext → Type → Resolver → Partition → Observable → Cert → Trace → Transform\n```\n\n## Quick Start\n\nGET /kernel/op/verify?x=42 — verify neg(bnot(42)) = succ(42) = 43\n\n## Security\n\nAll GET endpoints require no authentication. POST endpoints accept optional X-UOR-Agent-Key header for rate-limit tier elevation. Rate limits (unauthenticated): 120 req/min for kernel, 60 req/min for bridge.",
+    "contact": {
+      "name": "UOR Foundation",
+      "url": "https://uor.foundation",
+      "email": "hello@uor.foundation"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    },
+    "x-agent-entry-point": "https://uor.foundation/llms.md",
+    "x-discovery-metadata": "https://uor.foundation/.well-known/uor.json",
+    "x-community": "https://www.moltbook.com/m/uor",
+    "x-ontology-source": "https://github.com/UOR-Foundation/UOR-Framework",
+    "x-conformance-suite": "cargo run --bin uor-conformance"
+  },
+  "servers": [
+    {
+      "url": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api",
+      "description": "Live Lovable Cloud Edge Function"
+    },
+    {
+      "url": "https://uor.foundation/api/v1",
+      "description": "Production (published site)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "kernel-op",
+      "description": "**`op/` namespace** — Ring operations, involutions, and algebraic identities.\nSource: `spec/src/namespaces/op.rs`\nClasses: `Operation`, `UnaryOp`, `BinaryOp`, `Involution`, `Identity`, `Group`, `DihedralGroup`.\nNamed individuals: `neg`, `bnot`, `succ`, `pred`, `add`, `sub`, `mul`, `xor`, `and`, `or`, `criticalIdentity`, `D2n`."
+    },
+    {
+      "name": "kernel-schema",
+      "description": "**`schema/` + `u/` namespaces** — Ring substrate, term language, datum values, and content addressing.\nSource: `spec/src/namespaces/schema.rs`, `spec/src/namespaces/u.rs`"
+    },
+    {
+      "name": "bridge-partition",
+      "description": "**`partition/` namespace** — Irreducibility partition of the ring.\nSource: `spec/src/namespaces/partition.rs`\nClasses: `Partition`, `IrreducibleSet`, `ReducibleSet`, `UnitSet`, `ExteriorSet`."
+    },
+    {
+      "name": "bridge-proof",
+      "description": "**`proof/` namespace** — Verification proofs.\nSource: `spec/src/namespaces/proof.rs`\nClasses: `Proof`, `CriticalIdentityProof`, `CoherenceProof`, `WitnessData`."
+    },
+    {
+      "name": "bridge-cert",
+      "description": "**`cert/` namespace** — Attestation certificates.\nSource: `spec/src/namespaces/cert.rs`\nClasses: `Certificate`, `TransformCertificate`, `IsometryCertificate`, `InvolutionCertificate`."
+    },
+    {
+      "name": "bridge-observable",
+      "description": "**`observable/` namespace** — Metric and geometric measurements.\nSource: `spec/src/namespaces/observable.rs`\nClasses: `RingMetric`, `HammingMetric`, `CascadeLength`, `CatastropheThreshold`, `Commutator`, `Monodromy`."
+    },
+    {
+      "name": "user-type",
+      "description": "**`type/` namespace** — Runtime type declarations.\nSource: `spec/src/namespaces/type_.rs`\nClasses: `PrimitiveType`, `ProductType`, `SumType`, `ConstrainedType`."
+    },
+    {
+      "name": "navigate",
+      "description": "Framework navigation — reading order, namespace index, ontology links, all endpoint URLs."
+    }
+  ],
+  "paths": {
+    "/navigate": {
+      "get": {
+        "operationId": "frameworkIndex",
+        "tags": ["navigate"],
+        "summary": "Framework navigation index — reading order, all endpoints, namespace map",
+        "description": "Returns a complete navigation index of the UOR Framework API. Start here to discover all endpoints, namespace mappings, and reading order. No parameters required.",
+        "responses": {
+          "200": {
+            "description": "Complete navigation index with all endpoint URLs and reading order",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string" } }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NavigationIndex" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "operationId": "openapiSpec",
+        "tags": ["navigate"],
+        "summary": "Inline OpenAPI 3.1.0 specification",
+        "description": "Returns the OpenAPI 3.1.0 specification for this API. The full static spec is also available at https://uor.foundation/openapi.json",
+        "responses": {
+          "200": {
+            "description": "OpenAPI 3.1.0 specification document",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kernel/op/verify": {
+      "get": {
+        "operationId": "opVerifyCriticalIdentity",
+        "tags": ["kernel-op"],
+        "summary": "Verify op:criticalIdentity — neg(bnot(x)) = succ(x)",
+        "description": "Verifies the foundational theorem of the UOR kernel for a given input x.\n\n**Framework mapping:**\n- Individual: `op:criticalIdentity` (type `op:Identity`)\n- Properties checked: `op:lhs = op:succ`, `op:rhs = [op:neg, op:bnot]`, `op:forAll = \"x ∈ R_n\"`\n- Proof type produced: `proof:CriticalIdentityProof`\n- Witness type: `proof:WitnessData`\n\n**Source:** `spec/src/namespaces/op.rs`, `conformance/src/tests/fixtures/test6_critical_identity.rs`",
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Critical identity verification with proof and witness",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CriticalIdentityProofResponse" },
+                "examples": {
+                  "x42": {
+                    "summary": "Verify x=42 in R_8",
+                    "value": {
+                      "@type": ["proof:Proof", "proof:CriticalIdentityProof"],
+                      "proof:quantum": 8,
+                      "proof:verified": true,
+                      "proof:witness": {
+                        "@type": "proof:WitnessData",
+                        "proof:x": 42,
+                        "proof:bnot_x": 213,
+                        "proof:neg_bnot_x": 43,
+                        "proof:succ_x": 43,
+                        "proof:holds": true
+                      },
+                      "derivation": {
+                        "step1": "op:bnot(42) = 42 XOR 255 = 213",
+                        "step2": "op:neg(213) = (-213) mod 256 = 43",
+                        "step3": "op:succ(42) = (42+1) mod 256 = 43",
+                        "conclusion": "neg(bnot(42)) = 43 = succ(42) [PASS]"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/kernel/op/verify/all": {
+      "get": {
+        "operationId": "opVerifyAll",
+        "tags": ["kernel-op"],
+        "summary": "Verify op:criticalIdentity for all 2^n elements of R_n",
+        "description": "Runs `neg(bnot(x)) = succ(x)` for every x in Z/(2^n)Z and returns a `proof:CoherenceProof`.\n\nWhen `expand=false` (default), only summary counts are returned. When `expand=true`, the full `proof:WitnessData` array is included.",
+        "parameters": [
+          { "$ref": "#/components/parameters/n" },
+          {
+            "name": "expand",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false },
+            "description": "Include all witness rows when true (~14 KB for n=8)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Universal coherence proof for the full ring",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CoherenceProofResponse" }
+              }
+            }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/kernel/op/compute": {
+      "get": {
+        "operationId": "opCompute",
+        "tags": ["kernel-op"],
+        "summary": "Compute all op:UnaryOp and op:BinaryOp values for a datum",
+        "description": "Returns the result of every named op/ individual applied to x.\n\n**UnaryOp individuals:** neg (ring_reflection), bnot (hypercube_reflection), succ (rotation), pred (rotation_inverse)\n\n**BinaryOp individuals:** add (translation), sub, mul (scaling), xor (hypercube_translation), and (hypercube_projection), or (hypercube_join)",
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" },
+          {
+            "name": "y",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 0, "maximum": 65535 },
+            "description": "Second operand for binary operations. Defaults to x if omitted."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All ring operations for x (and binary ops for x,y)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OpComputeResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/kernel/op/operations": {
+      "get": {
+        "operationId": "opList",
+        "tags": ["kernel-op"],
+        "summary": "List all named op/ individuals with full metadata",
+        "description": "Returns the complete catalogue of all 12 operation individuals defined in `op.rs`: neg, bnot, succ, pred, add, sub, mul, xor, and, or, criticalIdentity, D2n.",
+        "responses": {
+          "200": {
+            "description": "All named op/ individuals",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OpListResponse" }
+              }
+            }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/kernel/address/encode": {
+      "post": {
+        "operationId": "addressEncode",
+        "tags": ["kernel-schema"],
+        "summary": "Encode content as a u:Address with u:Glyph decomposition",
+        "description": "Encodes an arbitrary UTF-8 string as a UOR content address using the 6-bit bijection chr(0x2800 + (b & 0x3F)).\n\n**Output type:** `u:Address` with `u:glyph` (Braille string) and per-byte `u:Glyph` objects.\n\n**Two address forms:**\n- `address_simplified`: 6-bit bijection (this endpoint)\n- `address_canonical`: dihedral factorization via resolver:DihedralFactorizationResolver (requires Rust conformance suite for bytes ≥ 64)\n\nFor `\"hello\"` (all bytes < 64), both forms are identical.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AddressEncodeRequest" },
+              "examples": {
+                "hello": {
+                  "summary": "Encode 'hello'",
+                  "value": { "input": "hello", "encoding": "utf8" }
+                },
+                "agent_id": {
+                  "summary": "Encode an agent identifier",
+                  "value": { "input": "claude-sonnet-4.6", "encoding": "utf8" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "u:Address with full u:Glyph decomposition per byte",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AddressEncodeResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "413": { "$ref": "#/components/responses/PayloadTooLarge" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/kernel/schema/datum": {
+      "get": {
+        "operationId": "schemaDatum",
+        "tags": ["kernel-schema"],
+        "summary": "Get full schema:Datum representation for a ring value",
+        "description": "Returns a complete `schema:Datum` object for a given integer value at quantum level n.\n\n**Framework mapping (schema.rs):**\n- `schema:value` — integer value in [0, 2^n)\n- `schema:quantum` — the ring's bit-width n\n- `schema:stratum` — popcount of set bits\n- `schema:spectrum` — binary representation string\n- `schema:glyph` — linked `u:Address`",
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full schema:Datum representation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Datum" },
+                "examples": {
+                  "x42": {
+                    "value": {
+                      "@type": "schema:Datum",
+                      "schema:value": 42,
+                      "schema:quantum": 8,
+                      "schema:stratum": 3,
+                      "schema:spectrum": "00101010",
+                      "schema:glyph": { "@type": "u:Address", "u:glyph": "⠪", "u:length": 1 }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/partition": {
+      "post": {
+        "operationId": "partitionResolve",
+        "tags": ["bridge-partition"],
+        "summary": "Resolve a type:TypeDefinition to a partition:Partition of R_n",
+        "description": "Applies the partition map Π : T_n → Part(R_n) to produce a four-component partition of the ring.\n\n**Framework mapping (partition.rs):**\n- `partition:irreducibles` → odd values not equal to 1 or m-1\n- `partition:reducibles` → even values except 0 and m/2\n- `partition:units` → {1, m-1}\n- `partition:exterior` → {0, m/2}\n- `partition:density` = |IrreducibleSet| / |carrier|\n\n**Content quality signal:** density > 0.25 indicates non-spam content.\n\n**Two modes:** Pass `type_definition` for full ring partition, or `input` string for per-byte analysis.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PartitionRequest" },
+              "examples": {
+                "primitive_u8": {
+                  "summary": "Partition R_8 under PrimitiveType",
+                  "value": { "type_definition": { "@type": "type:PrimitiveType", "type:bitWidth": 8 }, "resolver": "DihedralFactorizationResolver" }
+                },
+                "byte_sequence": {
+                  "summary": "Partition 'hello' bytes for quality analysis",
+                  "value": { "input": "hello", "encoding": "utf8", "resolver": "EvaluationResolver" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Four-component partition:Partition of R_n",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PartitionResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "413": { "$ref": "#/components/responses/PayloadTooLarge" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/proof/critical-identity": {
+      "get": {
+        "operationId": "proofCriticalIdentity",
+        "tags": ["bridge-proof"],
+        "summary": "Produce a proof:CriticalIdentityProof for a given witness x",
+        "description": "Returns a fully structured `proof:CriticalIdentityProof` linking back to `op:criticalIdentity` via `proof:provesIdentity`. This is the output type validated by `test6_critical_identity.rs`.\n\n**Framework mapping (proof.rs):** proof:CriticalIdentityProof, proof:WitnessData with proof:x, proof:bnot_x, proof:neg_bnot_x, proof:succ_x, proof:holds.",
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "proof:CriticalIdentityProof with full witness data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CriticalIdentityProofResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/proof/coherence": {
+      "post": {
+        "operationId": "proofCoherence",
+        "tags": ["bridge-proof"],
+        "summary": "Produce a proof:CoherenceProof for a type:TypeDefinition",
+        "description": "Returns a `proof:CoherenceProof` asserting that a given type declaration is mutually consistent with the ring substrate at quantum level n.\n\n**Framework mapping (proof.rs):** proof:CoherenceProof subclass of proof:Proof, with proof:verified, proof:quantum, proof:timestamp, proof:witness array.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CoherenceProofRequest" },
+              "examples": {
+                "u8_coherence": {
+                  "summary": "Coherence proof for R_8",
+                  "value": { "type_definition": { "@type": "type:PrimitiveType", "type:bitWidth": 8 }, "n": 8 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "proof:CoherenceProof for the submitted type",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CoherenceProofResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/cert/involution": {
+      "get": {
+        "operationId": "certInvolution",
+        "tags": ["bridge-cert"],
+        "summary": "Issue a cert:InvolutionCertificate for op:neg or op:bnot",
+        "description": "Verifies that a named operation is an involution (f(f(x)) = x for all x in R_n) and returns a `cert:InvolutionCertificate`.\n\n**Framework mapping (cert.rs):** cert:InvolutionCertificate subclass of cert:Certificate, with cert:operation, cert:method, cert:verified, cert:quantum, cert:timestamp.",
+        "parameters": [
+          {
+            "name": "operation",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["neg", "bnot"] },
+            "description": "The operation to certify. Must be an op:Involution individual. Valid: `neg` (ring_reflection) or `bnot` (hypercube_reflection)."
+          },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "cert:InvolutionCertificate",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InvolutionCertificateResponse" },
+                "examples": {
+                  "neg_n8": {
+                    "summary": "Certificate for op:neg in R_8",
+                    "value": {
+                      "@type": ["cert:Certificate", "cert:InvolutionCertificate"],
+                      "cert:operation": { "@id": "https://uor.foundation/op/neg", "@type": "op:Involution", "op:geometricCharacter": "ring_reflection" },
+                      "cert:verified": true,
+                      "cert:quantum": 8,
+                      "verification": { "total_checked": 256, "passed": 256, "failed": 0, "holds_universally": true }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/observable/metrics": {
+      "get": {
+        "operationId": "observableMetrics",
+        "tags": ["bridge-observable"],
+        "summary": "Compute observable metrics for a ring element",
+        "description": "Returns RingMetric, HammingMetric, CascadeLength, CatastropheThreshold, and Commutator for a ring element.\n\n**Framework mapping (observable.rs):** observable:RingMetric (d_R(x,0) = min(x, m-x)), observable:HammingMetric (popcount), observable:CascadeLength (trailing zero count), observable:CatastropheThreshold (phase boundary detection).",
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observable metric bundle for x in R_n",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ObservableMetricsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/user/type/primitives": {
+      "get": {
+        "operationId": "typeList",
+        "tags": ["user-type"],
+        "summary": "List all type:PrimitiveType definitions",
+        "description": "Returns the catalogue of primitive type definitions: U1, U4, U8, U16, and composite type structures (ProductType, SumType, ConstrainedType).\n\n**Source:** `spec/src/namespaces/type_.rs`",
+        "responses": {
+          "200": {
+            "description": "Catalogue of type:PrimitiveType and composite types",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TypeListResponse" }
+              }
+            }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "x": {
+        "name": "x",
+        "in": "query",
+        "required": true,
+        "schema": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "description": "Ring element value. Must be in [0, 2^n). Default ring R_8 accepts [0, 255].",
+        "example": 42
+      },
+      "n": {
+        "name": "n",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "integer", "minimum": 1, "maximum": 16, "default": 8 },
+        "description": "Ring quantum (bit-width). Selects R_n = Z/(2^n)Z. Default: 8 (R_8 = Z/256Z).",
+        "example": 8
+      }
+    },
+    "schemas": {
+      "Datum": {
+        "type": "object",
+        "description": "schema:Datum — ring element with full algebraic metadata. Source: spec/src/namespaces/schema.rs",
+        "required": ["@type", "schema:value", "schema:quantum", "schema:stratum", "schema:spectrum"],
+        "properties": {
+          "@type": { "type": "string", "const": "schema:Datum" },
+          "schema:value": { "type": "integer", "description": "Integer value in [0, 2^n)" },
+          "schema:quantum": { "type": "integer", "description": "Ring bit-width n" },
+          "schema:stratum": { "type": "integer", "description": "Number of set bits (popcount / Hamming weight)" },
+          "schema:spectrum": { "type": "string", "description": "Binary representation string, padded to n digits" },
+          "schema:glyph": {
+            "type": "object",
+            "description": "u:Address — content-addressable Braille identifier",
+            "properties": {
+              "@type": { "type": "string", "const": "u:Address" },
+              "u:glyph": { "type": "string", "description": "Braille character(s) from Unicode Braille block" },
+              "u:length": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "WitnessData": {
+        "type": "object",
+        "description": "proof:WitnessData — algebraic witness for critical identity verification",
+        "properties": {
+          "@type": { "type": "string", "const": "proof:WitnessData" },
+          "proof:x": { "type": "integer" },
+          "proof:bnot_x": { "type": "integer", "description": "bnot(x) = x XOR (2^n - 1)" },
+          "proof:neg_bnot_x": { "type": "integer", "description": "neg(bnot(x)) = (-bnot(x)) mod 2^n" },
+          "proof:succ_x": { "type": "integer", "description": "succ(x) = (x + 1) mod 2^n" },
+          "proof:holds": { "type": "boolean", "description": "neg(bnot(x)) === succ(x)" }
+        }
+      },
+      "CriticalIdentityProofResponse": {
+        "type": "object",
+        "description": "proof:CriticalIdentityProof — full algebraic verification with derivation steps",
+        "properties": {
+          "@context": { "type": "object" },
+          "@id": { "type": "string" },
+          "@type": { "type": "array", "items": { "type": "string" } },
+          "proof:quantum": { "type": "integer" },
+          "proof:verified": { "type": "boolean" },
+          "proof:timestamp": { "type": "string", "format": "date-time" },
+          "proof:criticalIdentity": { "type": "string" },
+          "proof:provesIdentity": { "type": "object" },
+          "proof:witness": { "$ref": "#/components/schemas/WitnessData" },
+          "derivation": {
+            "type": "object",
+            "properties": {
+              "step1": { "type": "string" },
+              "step2": { "type": "string" },
+              "step3": { "type": "string" },
+              "conclusion": { "type": "string" }
+            }
+          },
+          "ontology_ref": { "type": "string" },
+          "conformance_ref": { "type": "string" }
+        }
+      },
+      "CoherenceProofResponse": {
+        "type": "object",
+        "description": "proof:CoherenceProof — universal verification across all 2^n ring elements",
+        "properties": {
+          "@type": { "type": "array", "items": { "type": "string" } },
+          "proof:quantum": { "type": "integer" },
+          "proof:verified": { "type": "boolean" },
+          "proof:timestamp": { "type": "string", "format": "date-time" },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "ring": { "type": "string" },
+              "total": { "type": "integer" },
+              "passed": { "type": "integer" },
+              "failed": { "type": "integer" },
+              "holds_universally": { "type": "boolean" },
+              "claim": { "type": "string" }
+            }
+          }
+        }
+      },
+      "CoherenceProofRequest": {
+        "type": "object",
+        "properties": {
+          "type_definition": { "type": "object", "description": "type:TypeDefinition to verify coherence for" },
+          "n": { "type": "integer", "minimum": 1, "maximum": 16, "default": 8, "description": "Ring quantum" }
+        }
+      },
+      "OpComputeResponse": {
+        "type": "object",
+        "description": "Results of all ring operations applied to x (and y for binary ops)",
+        "properties": {
+          "datum": { "$ref": "#/components/schemas/Datum" },
+          "ring": { "type": "object" },
+          "unary_ops": { "type": "object" },
+          "binary_ops": { "type": "object" },
+          "critical_identity": { "type": "object" }
+        }
+      },
+      "OpListResponse": {
+        "type": "object",
+        "description": "Complete catalogue of all 12 named op/ individuals",
+        "properties": {
+          "@type": { "type": "string" },
+          "unary_operations": { "type": "array" },
+          "binary_operations": { "type": "array" },
+          "special_individuals": { "type": "array" },
+          "total_individuals": { "type": "integer" }
+        }
+      },
+      "AddressEncodeRequest": {
+        "type": "object",
+        "required": ["input"],
+        "properties": {
+          "input": { "type": "string", "maxLength": 1000, "description": "UTF-8 string to encode as a u:Address" },
+          "encoding": { "type": "string", "enum": ["utf8"], "default": "utf8" }
+        }
+      },
+      "AddressEncodeResponse": {
+        "type": "object",
+        "description": "u:Address with per-byte u:Glyph decomposition",
+        "properties": {
+          "@type": { "type": "string", "const": "u:Address" },
+          "u:glyph": { "type": "string", "description": "Braille address string" },
+          "u:length": { "type": "integer" },
+          "address_simplified": { "type": "string" },
+          "address_canonical": { "type": "string" },
+          "encoding_note": { "type": "string" },
+          "glyphs": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "PartitionRequest": {
+        "type": "object",
+        "description": "One of: type_definition (for full ring partition) or input string (for per-byte analysis)",
+        "properties": {
+          "type_definition": { "type": "object", "description": "type:TypeDefinition to partition" },
+          "input": { "type": "string", "maxLength": 1000, "description": "UTF-8 string for per-byte partition analysis" },
+          "encoding": { "type": "string", "enum": ["utf8"], "default": "utf8" },
+          "resolver": { "type": "string", "enum": ["DihedralFactorizationResolver", "EvaluationResolver"], "default": "EvaluationResolver" }
+        }
+      },
+      "PartitionResponse": {
+        "type": "object",
+        "description": "partition:Partition with four disjoint, exhaustive components summing to 2^n",
+        "properties": {
+          "@type": { "type": "string", "const": "partition:Partition" },
+          "partition:quantum": { "type": "integer" },
+          "partition:density": { "type": "number", "description": "|IrreducibleSet| / |carrier|. > 0.25 indicates non-spam content." },
+          "partition:irreducibles": { "type": "object" },
+          "partition:reducibles": { "type": "object" },
+          "partition:units": { "type": "object" },
+          "partition:exterior": { "type": "object" },
+          "quality_signal": { "type": "string" },
+          "cardinality_check": { "type": "object" }
+        }
+      },
+      "InvolutionCertificateResponse": {
+        "type": "object",
+        "description": "cert:InvolutionCertificate — proof that f(f(x)) = x for all x in R_n",
+        "properties": {
+          "@type": { "type": "array", "items": { "type": "string" } },
+          "cert:operation": { "type": "object" },
+          "cert:method": { "type": "string" },
+          "cert:verified": { "type": "boolean" },
+          "cert:quantum": { "type": "integer" },
+          "cert:timestamp": { "type": "string", "format": "date-time" },
+          "verification": { "type": "object" }
+        }
+      },
+      "ObservableMetricsResponse": {
+        "type": "object",
+        "description": "observable:MetricBundle — RingMetric, HammingMetric, CascadeLength for x in R_n",
+        "properties": {
+          "@type": { "type": "string", "const": "observable:MetricBundle" },
+          "observable:quantum": { "type": "integer" },
+          "observable:datum": { "$ref": "#/components/schemas/Datum" },
+          "observable:ringMetric": { "type": "object", "description": "d_R(x,0) = min(x, m-x)" },
+          "observable:hammingMetric": { "type": "object", "description": "popcount — number of set bits" },
+          "observable:cascadeLength": { "type": "object", "description": "trailing zero count — depth of 2-adic factorization" },
+          "observable:catastropheThreshold": { "type": "object", "description": "phase boundary detection" }
+        }
+      },
+      "TypeListResponse": {
+        "type": "object",
+        "description": "Catalogue of type:PrimitiveType and composite type definitions",
+        "properties": {
+          "@type": { "type": "string" },
+          "primitive_types": { "type": "array" },
+          "composite_types": { "type": "array" }
+        }
+      },
+      "NavigationIndex": {
+        "type": "object",
+        "description": "Complete navigation index — all endpoints, namespace map, reading order",
+        "properties": {
+          "title": { "type": "string" },
+          "version": { "type": "string" },
+          "openapi_spec": { "type": "string" },
+          "quick_start": { "type": "object" },
+          "spaces": { "type": "object" },
+          "namespace_map": { "type": "array" },
+          "reading_order": { "type": "array" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error", "code"],
+        "properties": {
+          "error": { "type": "string", "description": "Human-readable error description" },
+          "code": { "type": "string", "enum": ["INVALID_PARAMETER", "RATE_LIMITED", "PAYLOAD_TOO_LARGE", "NOT_FOUND", "INTERNAL_ERROR"] },
+          "param": { "type": "string", "description": "The parameter that caused the error" },
+          "docs": { "type": "string", "description": "URL to this OpenAPI specification" }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request parameters",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Parameter 'x' must be an integer in [0, 65535]",
+              "code": "INVALID_PARAMETER",
+              "param": "x",
+              "docs": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Rate limit exceeded. Retry after 60 seconds.",
+        "headers": {
+          "Retry-After": { "schema": { "type": "integer" }, "description": "Seconds to wait before retrying" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Rate limit exceeded",
+              "code": "RATE_LIMITED",
+              "docs": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json"
+            }
+          }
+        }
+      },
+      "PayloadTooLarge": {
+        "description": "Input string exceeds 1000 character limit",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    }
+  }
+}
