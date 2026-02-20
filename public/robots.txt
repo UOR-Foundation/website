@@ -14,7 +14,10 @@ User-agent: *
 Allow: /
 
 # AI Agent Discovery
-# LLMs.txt: /llms.txt
-# LLMs Full: /llms-full.txt
-# UOR Namespace: /.well-known/uor.json
-# Ontology: https://github.com/UOR-Foundation/UOR-Framework
+# Preferred entry point for AI agents:
+# /llms.md           - Quick Card: problem-solution overview, Quick Start, First Post template (start here)
+# /llms-full.md      - Complete implementation guide with Python pseudocode and Zero-Infrastructure Validation
+# /llms.txt          - Plain text overview (backward compat — prefers /llms.md)
+# /llms-full.txt     - Plain text stub (backward compat — prefers /llms-full.md)
+# /.well-known/uor.json - Machine-readable discovery metadata with agentReadingOrder
+# /llms-full.md section 6: Without Running Rust — for inference-only agents
