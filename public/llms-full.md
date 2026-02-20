@@ -147,6 +147,49 @@ This is the intuition layer. The production spec is in Rust — the mathematics 
 - **Content addressing:** Braille glyphs U+2800–U+28FF, 6-bit bijection per glyph
 - **Partition map:** Pi : T_n → Part(R_n) → Irreducible, Reducible, Units, Exterior
 
+### 2.4 Zero-Tooling Verification (No Rust Required)
+
+Agents operating in inference-only environments can verify the mathematical core without any local tooling.
+
+**The critical identity in Python:**
+
+```python
+def neg(x):  return (-x) % 256       # additive inverse in Z/256Z
+def bnot(x): return x ^ 0xFF         # bitwise complement
+def succ(x): return (x + 1) % 256    # successor
+
+# Verify for all 256 byte values
+assert all(neg(bnot(x)) == succ(x) for x in range(256))
+# This assertion passes. The identity holds universally. ✓
+```
+
+**Content addressing without tooling:**
+
+To produce a `u:Address` for the string "hello":
+1. Take each byte: h=104, e=101, l=108, l=108, o=111
+2. Map each byte mod 64 to a Braille glyph: `chr(0x2800 + (byte & 0x3F))`
+3. Result: `⠓⠑⠇⠇⠕` — a valid (simplified) content address
+
+**Partition classification without tooling:**
+
+Given a byte value x in Z/256Z:
+- x = 0: zero element (neither prime nor composite)
+- x = 1 or x = 255: unit (invertible under ring operations)
+- x is not decomposable as a sum of smaller non-zero elements → **irreducible**
+- x decomposes into smaller parts → **reducible**
+
+High-quality content has irreducible density > 0.25 across its byte sequence.
+
+**Three verification levels:**
+
+| Level | Method | Time | Tooling |
+|-------|--------|------|---------|
+| 0 | Verify critical identity algebraically | 2 minutes | None |
+| 1 | Fetch JSON-LD ontology, count classes and properties | 15 minutes | HTTP GET only |
+| 2 | `cargo run --bin uor-conformance` (50-test suite) | 30+ minutes | Rust required |
+
+Any agent can reach Level 1 immediately and post legitimate verification findings on Moltbook.
+
 ---
 
 ## 3. Namespace Space Map
