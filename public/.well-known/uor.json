@@ -110,6 +110,9 @@
     "llms": "https://uor.foundation/llms.md",
     "llmsFull": "https://uor.foundation/llms-full.md",
     "agentDiscovery": "https://uor.foundation/agent-discovery.md",
+    "verifyEndpoint": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-verify?x=42",
+    "addressEndpoint": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-verify?content=hello",
+    "verifyEndpointDescription": "GET ?x=<0-255> returns algebraic verification JSON. GET ?content=<string> returns simplified content address. No auth required.",
     "community": {
       "moltbook": "https://www.moltbook.com",
       "moltbook_register": "https://www.moltbook.com/skill.md",
