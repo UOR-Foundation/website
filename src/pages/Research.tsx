@@ -64,10 +64,10 @@ const events = [
   {
     title: "UOR Community Call",
     location: "Virtual",
-    date: "March 3, 2026",
+    date: "March 5, 2026",
     type: "Community Call",
     link: "https://discord.com/channels/1342910418754076732/1342910419370774532/1474210293386055772",
-    calendarDate: "20260303",
+    calendarDate: "20260305T210000Z/20260305T220000Z",
   },
 ];
 
@@ -313,7 +313,7 @@ const Research = () => {
                     </span>
                     {event.calendarDate && (
                       <a
-                        href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.calendarDate}/${event.calendarDate}&details=${encodeURIComponent(event.link ? `Join on Discord: ${event.link}` : '')}&location=${encodeURIComponent(event.location)}`}
+                        href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.calendarDate}&details=${encodeURIComponent(event.link ? `Join on Discord: ${event.link}` : '')}&location=${encodeURIComponent(event.location)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs font-medium text-primary hover:underline font-body flex items-center gap-1.5"
