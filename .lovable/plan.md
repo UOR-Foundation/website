@@ -1,61 +1,71 @@
 
 
-# AI Agent Discovery Hook — Implementation Plan
+# Canonical API URL — Implementation Plan
 
-## Problem
+## Overview
 
-When an AI agent is given `https://uor.foundation/`, it fetches the HTML but cannot execute JavaScript (SPA client-side routing). The agent sees raw HTML with no rendered content, misses the `<link rel="llms">` tags buried in the `<head>`, and concludes the site is inaccessible. The existing discovery signals (HTML comments, meta tags, link tags) are present but not in the formats and locations that AI agents actually check.
+Replace every occurrence of the raw backend URL (`erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api`) with `https://api.uor.foundation/v1` across all documentation and code. Remove the "coming soon" note from the API page.
 
-## Solution
-
-Strengthen the three discovery layers that AI agents **do** check before, during, and after fetching a page — all working silently in the background with zero impact on human visitors.
-
-## Changes
-
-### 1. Expand `robots.txt` — the first file every agent reads
-
-Add explicit AI-agent directives pointing to `llms.md`, `llms.txt`, and the discovery metadata. Many AI crawlers (GPTBot, Anthropic, Google-Extended) parse `robots.txt` before anything else.
-
-```
-User-agent: *
-Allow: /
-
-# === AI Agent Discovery ===
-# Entry point for AI agents (start here):
-# https://uor.foundation/llms.md
-#
-# Machine-readable discovery:
-# https://uor.foundation/llms.txt
-# https://uor.foundation/.well-known/uor.json
-# https://uor.foundation/agent-discovery.md
-# https://uor.foundation/openapi.json
-
-Sitemap: https://uor.foundation/sitemap.xml
-```
-
-### 2. Expand `llms.txt` — the emerging agent standard
-
-The current `llms.txt` is 6 lines of comments. The `/llms.txt` convention (used by Anthropic, OpenAI, and others) expects a structured, self-contained document that agents can parse immediately. Rewrite it to be a proper entry point with enough context for an agent to understand UOR and find the full documentation — all without needing to fetch anything else first.
-
-### 3. Add a `<noscript>` block in `index.html`
-
-Since agents don't execute JavaScript, add a `<noscript>` section inside `<body>` containing structured plain text with direct links to `llms.md`, the API, and the discovery chain. This is invisible to human visitors (whose browsers execute JS) but is the primary content an agent sees when parsing the HTML.
-
-### 4. Add well-known AI discovery meta tags to `<head>`
-
-Add the `ai-plugin` and `robots` meta hints that newer agent frameworks scan for:
-- `<meta name="ai-plugin" content="/llms.md">`  
-- `<meta http-equiv="Link" content="</llms.md>; rel=ai-agent-entry; type=text/markdown">`
+**Important prerequisite you must handle outside Lovable:** Set up a DNS record so that `api.uor.foundation` proxies to the backend. The simplest approach is a Cloudflare CNAME + proxy rule, or a Vercel/Netlify reverse proxy. The old URL will continue to work — existing integrations won't break.
 
 ---
 
-## Technical Details
+## Files to Change
 
-| File | Change |
-|------|--------|
-| `public/robots.txt` | Add AI agent discovery block with links to llms.md, llms.txt, .well-known/uor.json |
-| `public/llms.txt` | Rewrite as a full structured discovery document (~40 lines) with title, description, API base URL, entry points, and quick start |
-| `index.html` | Add `<noscript>` block with plain-text agent content; add `ai-plugin` meta tag |
+### 1. `src/pages/Api.tsx`
+- **Line 21:** Change the `BASE` constant from the raw backend URL to `https://api.uor.foundation/v1`
+- **Lines 942-944:** Remove the "Canonical URL at ... coming soon" paragraph entirely
 
-No JavaScript changes, no edge function changes, no database changes. All modifications are to static files that are served directly by GitHub Pages without client-side routing interference.
+Since the entire API page builds all curl examples from the `BASE` constant, this single constant change updates every endpoint example, every copy button, and every "Try it" link on the page automatically.
+
+### 2. `public/openapi.json`
+- **Line 25:** Update the server URL to `https://api.uor.foundation/v1`
+- **Lines 1661, 1680, 1693, 1712, 1747:** Update all `docs` fields from the raw URL to `https://api.uor.foundation/v1/openapi.json`
+
+### 3. `public/.well-known/uor.json`
+- **Lines 103-105:** Update `uor:api.openapi`, `uor:api.base`, and `uor:api.navigate` to use `https://api.uor.foundation/v1`
+- **Lines 127-128:** Update `verifyEndpoint` and `addressEndpoint` to use `https://api.uor.foundation/v1/verify`
+
+### 4. `public/llms.md`
+- **Line 12 (frontmatter):** Change `api_base` to `https://api.uor.foundation/v1`
+- **Line 68:** Update the verify GET example
+- **Line 106:** Update the `BASE_URL` example
+- All other occurrences of the raw URL in this file
+
+### 5. `public/llms-full.md`
+- **Line 319:** Update the verify GET example
+- **Line 334:** Update `BASE_URL`
+- **Line 699:** Update `BASE_URL`
+- All other occurrences (15 total in this file)
+
+### 6. `public/llms.txt`
+- **Line 16:** Update `Base URL` to `https://api.uor.foundation/v1`
+- **Line 28:** Update the GET example URL
+
+### 7. `index.html`
+- **Line 210:** Update the noscript Base URL reference
+- **Line 220:** Update the noscript verify link
+
+### 8. `supabase/functions/uor-api/index.ts` (edge function)
+- **Lines 169, 178, 186, 194, 202, 212:** Update all `docs` fields in error responses from the raw URL to `https://api.uor.foundation/v1/openapi.json`
+
+### 9. `public/.well-known/ai-plugin.json`
+- Update the `description_for_model` field and `api.url` to reference `https://api.uor.foundation/v1`
+
+---
+
+## What This Does NOT Change
+
+- The actual backend routing — the edge function continues to run on the same infrastructure
+- The `supabase/config.toml` project ID (that's internal config, not documentation)
+- The `src/integrations/supabase/client.ts` (auto-generated, never edited)
+
+## DNS Setup (External — Not Done in Lovable)
+
+You need to create a DNS record at your domain registrar for `api.uor.foundation`:
+
+- If using **Cloudflare**: Add a CNAME record `api` pointing to `erwfuxphwcvynxhfbvql.supabase.co`, with Proxy enabled. Then add a Transform Rule to rewrite the URL path, prepending `/functions/v1/uor-api` to all incoming requests.
+- If using another provider: Set up a reverse proxy that forwards `https://api.uor.foundation/v1/*` to `https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/*`
+
+The `uor-verify` function references will also be updated to route through `api.uor.foundation/v1/verify` (or you can keep them as a separate path if preferred).
 
