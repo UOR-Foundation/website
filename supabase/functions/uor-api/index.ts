@@ -166,7 +166,7 @@ function error400(message: string, param?: string, rl?: RateLimitResult): Respon
     error: message,
     code: 'INVALID_PARAMETER',
     ...(param ? { param } : {}),
-    docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
+    docs: 'https://api.uor.foundation/v1/openapi.json'
   }), { status: 400, headers: { ...JSON_HEADERS, ...(rl ? rateLimitHeaders(rl) : {}) } });
 }
 
@@ -175,7 +175,7 @@ function error405(path: string, allowedMethods: string[]): Response {
   return new Response(JSON.stringify({
     error: `Method not allowed for ${path}. Allowed: ${allow}`,
     code: 'METHOD_NOT_ALLOWED',
-    docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
+    docs: 'https://api.uor.foundation/v1/openapi.json'
   }), { status: 405, headers: { ...JSON_HEADERS, 'Allow': allow } });
 }
 
@@ -183,7 +183,7 @@ function error415(rl?: RateLimitResult): Response {
   return new Response(JSON.stringify({
     error: 'Content-Type must be application/json',
     code: 'UNSUPPORTED_MEDIA_TYPE',
-    docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
+    docs: 'https://api.uor.foundation/v1/openapi.json'
   }), { status: 415, headers: { ...JSON_HEADERS, ...(rl ? rateLimitHeaders(rl) : {}) } });
 }
 
@@ -191,7 +191,7 @@ function error429(rl: RateLimitResult): Response {
   return new Response(JSON.stringify({
     error: 'Rate limit exceeded',
     code: 'RATE_LIMITED',
-    docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
+    docs: 'https://api.uor.foundation/v1/openapi.json'
   }), { status: 429, headers: { ...JSON_HEADERS, 'Retry-After': '60', ...rateLimitHeaders(rl) } });
 }
 
@@ -199,7 +199,7 @@ function error413(rl?: RateLimitResult): Response {
   return new Response(JSON.stringify({
     error: 'Input exceeds maximum length of 1000 characters',
     code: 'PAYLOAD_TOO_LARGE',
-    docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
+    docs: 'https://api.uor.foundation/v1/openapi.json'
   }), { status: 413, headers: { ...JSON_HEADERS, ...(rl ? rateLimitHeaders(rl) : {}) } });
 }
 
@@ -209,7 +209,7 @@ function error501(rl?: RateLimitResult): Response {
     code: 'NOT_IMPLEMENTED',
     note: 'This namespace requires the Rust conformance suite for full dihedral factorization.',
     conformance_suite: 'https://github.com/UOR-Foundation/UOR-Framework',
-    docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
+    docs: 'https://api.uor.foundation/v1/openapi.json'
   }), { status: 501, headers: { ...JSON_HEADERS, ...(rl ? rateLimitHeaders(rl) : {}) } });
 }
 
@@ -326,7 +326,7 @@ function opVerifyAll(url: URL, rl: RateLimitResult): Response {
   }
 
   const verified = failed === 0;
-  const baseUrl = 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api';
+  const baseUrl = 'https://api.uor.foundation/v1';
   const etag = makeETag('/kernel/op/verify/all', { n: String(n), expand: String(expand) });
 
   return jsonResp({
@@ -1209,8 +1209,8 @@ function typeList(rl: RateLimitResult): Response {
 
 // GET /navigate
 function frameworkIndex(rl: RateLimitResult): Response {
-  const base = 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api';
-  const verifySimple = 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-verify';
+  const base = 'https://api.uor.foundation/v1';
+  const verifySimple = 'https://api.uor.foundation/v1/kernel/op/verify';
   const etag = makeETag('/navigate', {});
   return jsonResp({
     "summary": {
@@ -1499,13 +1499,13 @@ function bridgeTrace(url: URL, rl: RateLimitResult): Response {
       "description": "How to use Hamming drift for injection detection",
       "canonical_sequence": {
         "ops": "neg,bnot",
-        "example_url": `https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/bridge/trace?x=${x}&ops=neg,bnot`,
+        "example_url": `https://api.uor.foundation/v1/bridge/trace?x=${x}&ops=neg,bnot`,
         "expected_drift": 0,
         "meaning": "zero drift = sequence is canonical, no anomaly detected"
       },
       "anomalous_sequence": {
         "ops": "neg,bnot,succ",
-        "example_url": `https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/bridge/trace?x=${x}&ops=neg,bnot,succ`,
+        "example_url": `https://api.uor.foundation/v1/bridge/trace?x=${x}&ops=neg,bnot,succ`,
         "expected_drift": "non-zero",
         "meaning": "non-zero drift = sequence diverges from canonical — possible injection signal"
       },
@@ -2017,8 +2017,8 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({
       error: `Unknown route: ${path}`,
       code: 'NOT_FOUND',
-      navigate: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/navigate',
-      docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
+      navigate: 'https://api.uor.foundation/v1/navigate',
+      docs: 'https://api.uor.foundation/v1/openapi.json'
     }), { status: 404, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
 
   } catch (err) {
@@ -2026,7 +2026,7 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({
       error: 'Internal server error',
       code: 'INTERNAL_ERROR',
-      docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
+      docs: 'https://api.uor.foundation/v1/openapi.json'
     }), { status: 500, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
   }
 });

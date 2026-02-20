@@ -18,7 +18,7 @@ import {
 
 /* ─────────────────────────── Constants ─────────────────────────── */
 
-const BASE = "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api";
+const BASE = "https://api.uor.foundation/v1";
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
@@ -939,9 +939,6 @@ const Api = () => {
                 <code className="font-mono text-sm text-foreground bg-muted px-3 py-2 rounded-lg flex-1 break-all">{BASE}</code>
                 <CopyButton text={BASE} />
               </div>
-              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-                Canonical URL at https://uor.foundation/api/v1 coming soon. Both route to the same backend.
-              </p>
             </div>
 
             {/* Rate limits */}

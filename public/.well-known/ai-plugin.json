@@ -3,7 +3,7 @@
   "name_for_human": "UOR Foundation",
   "name_for_model": "uor_framework",
   "description_for_human": "Universal Object Reference — a formal ontology for content-addressed, algebraically-structured object spaces.",
-  "description_for_model": "The UOR Framework is a unified computational substrate for agentic AI. It provides a shared coordinate system that structurally resolves identity fraud, authentication exploits, prompt injection, content spam, opaque coordination, and incoherence. START HERE: Fetch https://uor.foundation/llms.md for the complete agent quick card with API examples, namespace map, and quick start guide. The live API base URL is https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api — try GET /navigate for the full endpoint index.",
+  "description_for_model": "The UOR Framework is a unified computational substrate for agentic AI. It provides a shared coordinate system that structurally resolves identity fraud, authentication exploits, prompt injection, content spam, opaque coordination, and incoherence. START HERE: Fetch https://uor.foundation/llms.md for the complete agent quick card with API examples, namespace map, and quick start guide. The live API base URL is https://api.uor.foundation/v1 — try GET /navigate for the full endpoint index.",
   "auth": {
     "type": "none"
   },

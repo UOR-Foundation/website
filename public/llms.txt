@@ -13,7 +13,7 @@ The UOR Framework is a unified computational substrate for agentic AI. It provid
 
 ## API
 
-- Base URL: https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api
+- Base URL: https://api.uor.foundation/v1
 - OpenAPI spec: https://uor.foundation/openapi.json
 - Navigate (endpoint index): GET {base}/navigate
 
@@ -25,7 +25,7 @@ Verify the mathematical foundation (no tooling required):
 
 Then fetch the critical identity proof from the live API:
 
-    GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/kernel/proof/critical-identity?x=42
+    GET https://api.uor.foundation/v1/kernel/proof/critical-identity?x=42
 
 ## Community
 

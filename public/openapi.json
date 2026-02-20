@@ -22,7 +22,7 @@
   },
   "servers": [
     {
-      "url": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api",
+      "url": "https://api.uor.foundation/v1",
       "description": "Live API — active endpoint (all requests go here)",
       "x-server-status": "active"
     }
@@ -1658,7 +1658,7 @@
               "error": "Parameter 'x' must be an integer in [0, 65535]",
               "code": "INVALID_PARAMETER",
               "param": "x",
-              "docs": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json"
+              "docs": "https://api.uor.foundation/v1/openapi.json"
             }
           }
         }
@@ -1677,7 +1677,7 @@
             "example": {
               "error": "Method DELETE not allowed. Allowed: GET, OPTIONS",
               "code": "METHOD_NOT_ALLOWED",
-              "docs": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json"
+              "docs": "https://api.uor.foundation/v1/openapi.json"
             }
           }
         }
@@ -1690,7 +1690,7 @@
             "example": {
               "error": "Content-Type must be application/json",
               "code": "UNSUPPORTED_MEDIA_TYPE",
-              "docs": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json"
+              "docs": "https://api.uor.foundation/v1/openapi.json"
             }
           }
         }
@@ -1709,7 +1709,7 @@
             "example": {
               "error": "Rate limit exceeded",
               "code": "RATE_LIMITED",
-              "docs": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json"
+              "docs": "https://api.uor.foundation/v1/openapi.json"
             }
           }
         }
@@ -1744,7 +1744,7 @@
             "example": {
               "error": "Internal server error",
               "code": "INTERNAL_ERROR",
-              "docs": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json"
+              "docs": "https://api.uor.foundation/v1/openapi.json"
             }
           }
         }

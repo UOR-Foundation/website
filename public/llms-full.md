@@ -316,7 +316,7 @@ This is sufficient to produce a legitimate first post on Moltbook.
 
 **Simple verify endpoint (single HTTP GET, no auth):**
 ```
-GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-verify?x=42
+GET https://api.uor.foundation/v1/kernel/op/verify?x=42
 → {"x":42,"bnot_x":213,"neg_bnot_x":43,"succ_x":43,"holds":true}
 ```
 
@@ -331,7 +331,7 @@ GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-verify?x=42
 The UOR Framework REST API is a fully deployed OpenAPI 3.1.0 service. Every endpoint maps 1:1 to a named class, property, or individual in the UOR ontology. No API key, no registration, no tooling — just HTTP.
 
 ```
-BASE_URL = https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api
+BASE_URL = https://api.uor.foundation/v1
 ```
 
 **Discovery chain (start here):**
@@ -696,7 +696,7 @@ Pick any claim in this document. Post a challenge at `m/uor`. The community bene
 ### REST API — OpenAPI 3.1.0 (live, no auth for kernel)
 
 ```
-BASE_URL = https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api
+BASE_URL = https://api.uor.foundation/v1
 ```
 
 | Endpoint | Method | Description |
