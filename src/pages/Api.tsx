@@ -881,7 +881,7 @@ const Api = () => {
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Quick Start
           </p>
-          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-8">
+          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-8">
             No signup. No API key. Paste any of these into a terminal and get a real response in under a second.
           </p>
 
@@ -890,37 +890,37 @@ const Api = () => {
               {
                 step: "1",
                 label: "Discover what the API can do",
-                why: "Before trying anything, get a full map of every available endpoint — what each one does and in what order to use them. This is the index.",
+                why: "Get a full map of every available endpoint — what each one does and in what order to use them. A good first call before anything else.",
                 cmd: `curl "${BASE}/navigate"`,
-                note: "Returns a structured list of all endpoints with descriptions. A good first call for any agent or developer.",
+                note: "Returns a structured list of all endpoints with descriptions and example URLs.",
               },
               {
                 step: "2",
-                label: "Prove a mathematical rule holds — for real",
-                why: "UOR is built on one foundational rule: a specific sequence of operations always produces the same result. This command runs that check live and shows every step. If this holds, the entire framework is trustworthy.",
+                label: "Verify a trust guarantee — independently",
+                why: "Think of this like checking that a ruler is actually accurate before measuring anything. UOR is built on one core rule: a specific sequence of operations always produces the same result, on any machine, for any value. This command proves it — live, step by step — without asking you to take anyone's word for it. That guarantee is what lets AI systems trust each other's output without a central authority.",
                 cmd: `curl "${BASE}/kernel/op/verify?x=42"`,
-                note: "You're not trusting a claim — you're verifying it yourself. Change 42 to any number and the result is the same.",
+                note: "Try any number in place of 42. The result is always the same — that determinism is the foundation.",
               },
               {
                 step: "3",
-                label: "Measure whether content is meaningful or noise",
-                why: "Not all text carries equal information. This command scores any piece of text using algebraic structure — a fixed mathematical property, not a trained model that can be fooled.",
+                label: "Detect spam and noise — mathematically",
+                why: "AI-generated spam is easy to paraphrase past keyword filters. This command scores any text using algebraic structure — a fixed mathematical property derived from the actual bytes, not a pattern a language model can mimic. Repetitive filler scores low. Structurally varied content scores high. The score is reproducible by anyone, on any machine.",
                 cmd: `curl -X POST "${BASE}/bridge/partition" -H "Content-Type: application/json" -d '{"input":"hello world"}'`,
-                note: "Swap in any text. The density score tells you how structurally varied the content is — low scores flag uniform or repetitive content.",
+                note: "Swap in any text. Low density flags uniform or repetitive content — a formal signal, not a heuristic.",
               },
             ].map(({ step, label, why, cmd, note }) => (
-              <div key={step} className="flex items-start gap-4 px-5 py-6 bg-card">
-                <span className="shrink-0 w-7 h-7 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center mt-0.5">
+              <div key={step} className="flex items-start gap-5 px-6 py-7 bg-card">
+                <span className="shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center mt-0.5">
                   {step}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-foreground mb-1">{label}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">{why}</p>
+                  <p className="text-lg font-semibold text-foreground mb-2">{label}</p>
+                  <p className="text-base text-muted-foreground leading-relaxed mb-4">{why}</p>
                   <div className="flex items-center gap-2">
-                    <code className="font-mono text-sm text-[hsl(152,34%,60%)] bg-[hsl(220,18%,6%)] px-3 py-1.5 rounded-lg flex-1 min-w-0 break-all">{cmd}</code>
+                    <code className="font-mono text-sm text-[hsl(152,34%,60%)] bg-[hsl(220,18%,6%)] px-3 py-2 rounded-lg flex-1 min-w-0 break-all">{cmd}</code>
                     <CopyButton text={cmd} size="xs" />
                   </div>
-                  <p className="text-xs text-muted-foreground/70 mt-2 leading-relaxed">{note}</p>
+                  <p className="text-sm text-muted-foreground/70 mt-2.5 leading-relaxed">{note}</p>
                 </div>
               </div>
             ))}
