@@ -16,6 +16,38 @@
       }(window.location));
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ============================================================ -->
+    <!-- SECURITY HEADERS                                             -->
+    <!-- NIST SP 800-53 SI-10, SC-8, AC-17 / OWASP Top 10 mitigations -->
+    <!-- ============================================================ -->
+
+    <!-- Clickjacking protection (X-Frame-Options as meta fallback) -->
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+
+    <!-- Referrer policy: send only origin on cross-origin requests -->
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+
+    <!-- Permissions policy: deny unused browser features -->
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(self 'https://donorbox.org')">
+
+    <!-- Content Security Policy
+         default-src 'self'          — block everything not explicitly listed
+         script-src                  — allow inline (Vite HMR) + Donorbox widget
+         frame-src                   — only Donorbox embeds allowed
+         style-src                   — allow inline styles (Tailwind, shadcn)
+         font-src                    — self-hosted only (no Google Fonts CDN)
+         img-src                     — self + data URIs + any HTTPS image
+         connect-src                 — self + Supabase API
+         object-src 'none'           — block Flash / legacy plugin execution
+         base-uri 'self'             — prevent base tag injection
+         form-action                 — only allow form posts to self + Donorbox
+         frame-ancestors 'self'      — CSP-level clickjacking guard
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://donorbox.org; frame-src https://donorbox.org; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self' https://donorbox.org; frame-ancestors 'self';">
+
+    <!-- Donorbox widget — loaded as static script for Subresource Integrity eligibility -->
+    <script src="https://donorbox.org/widgets.js" paypalExpress="false" defer></script>
     <link rel="icon" href="/favicon.png" type="image/png" />
     <title>The UOR Foundation — Your Universal Coordinate System for Information</title>
     <meta name="description" content="An open data standard for universal data infrastructure. Data referenced by what it is, not where it lives. Open science, frontier technology, and semantic interoperability.">
