@@ -882,41 +882,45 @@ const Api = () => {
             Quick Start
           </p>
           <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-8">
-            Three curl commands. No setup, no account, no API key.
+            No signup. No API key. Paste any of these into a terminal and get a real response in under a second.
           </p>
 
           <div className="rounded-2xl border border-border overflow-hidden divide-y divide-border">
             {[
               {
                 step: "1",
-                label: "See every endpoint at once",
+                label: "Discover what the API can do",
+                why: "Before trying anything, get a full map of every available endpoint — what each one does and in what order to use them. This is the index.",
                 cmd: `curl "${BASE}/navigate"`,
-                note: "Returns a complete map of the API with reading order. Start here.",
+                note: "Returns a structured list of all endpoints with descriptions. A good first call for any agent or developer.",
               },
               {
                 step: "2",
-                label: "Run the framework's core proof",
+                label: "Prove a mathematical rule holds — for real",
+                why: "UOR is built on one foundational rule: a specific sequence of operations always produces the same result. This command runs that check live and shows every step. If this holds, the entire framework is trustworthy.",
                 cmd: `curl "${BASE}/kernel/op/verify?x=42"`,
-                note: "Checks that negate(bitwise-invert(42)) equals increment(42). Returns every intermediate step — not just pass or fail.",
+                note: "You're not trusting a claim — you're verifying it yourself. Change 42 to any number and the result is the same.",
               },
               {
                 step: "3",
-                label: "Score the information density of any text",
+                label: "Measure whether content is meaningful or noise",
+                why: "Not all text carries equal information. This command scores any piece of text using algebraic structure — a fixed mathematical property, not a trained model that can be fooled.",
                 cmd: `curl -X POST "${BASE}/bridge/partition" -H "Content-Type: application/json" -d '{"input":"hello world"}'`,
-                note: "Returns a density score — what fraction of the content is structurally novel versus repetitive.",
+                note: "Swap in any text. The density score tells you how structurally varied the content is — low scores flag uniform or repetitive content.",
               },
-            ].map(({ step, label, cmd, note }) => (
-              <div key={step} className="flex items-start gap-4 px-5 py-5 bg-card">
+            ].map(({ step, label, why, cmd, note }) => (
+              <div key={step} className="flex items-start gap-4 px-5 py-6 bg-card">
                 <span className="shrink-0 w-7 h-7 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center mt-0.5">
                   {step}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-foreground mb-2">{label}</p>
+                  <p className="text-base font-semibold text-foreground mb-1">{label}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">{why}</p>
                   <div className="flex items-center gap-2">
                     <code className="font-mono text-sm text-[hsl(152,34%,60%)] bg-[hsl(220,18%,6%)] px-3 py-1.5 rounded-lg flex-1 min-w-0 break-all">{cmd}</code>
                     <CopyButton text={cmd} size="xs" />
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{note}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-2 leading-relaxed">{note}</p>
                 </div>
               </div>
             ))}
