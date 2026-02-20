@@ -1,229 +1,179 @@
 
-# Full Implementation of 5 Stub Endpoints — Zero 501s Remaining
+# API Page — Copy Rewrite: Clarity, Trust, Impact
 
-## What the image shows
+## What needs to change
 
-The image shows 5 endpoints currently returning HTTP 501:
-1. **Audit Traces** — `/bridge/derivation`
-2. **Execution Traces** — `/bridge/trace`
-3. **Canonical Form Resolver** — `/bridge/resolver`
-4. **Structure-Preserving Maps** — `/user/morphism/transforms`
-5. **Agent State** — `/user/state`
+Every piece of descriptive text on the page. The technical logic is correct — the problem is the language. Too much of it reads as insider documentation. The goal is a page that works for three readers simultaneously:
 
-The user says every one must be fully functional, fully compliant with the UOR framework spec and OpenAPI standard. No more 501s, no more stubs.
+1. **A pragmatic senior developer** who wants to understand what this does in 10 seconds and then try it.
+2. **An AI agent** reading the machine-facing section that needs clear, unambiguous instructions.
+3. **An informed lay person** with no UOR knowledge who needs to understand why this is significant.
 
-## What each endpoint must do (per UOR framework namespaces)
+The frame is: **UOR is a unified computational substrate for agentic AI.** Every endpoint serves that frame.
 
-### 1. GET /bridge/derivation — `derivation:` namespace
-Records the step-by-step derivation of any operation. In the UOR spec, a `derivation:DerivationTrace` shows each named operation applied in sequence with its input, output, and the operation's formal identity. Parameters: `x` (the value), `n` (ring size), `ops` (comma-separated list of operation names to apply in sequence).
+---
 
-**Response type:** `derivation:DerivationTrace` with `derivation:steps[]`, each step a `derivation:DerivationStep` containing `op:operationId`, input, output, formal description. Also includes cumulative verification that critical identity is preserved across the chain.
+## Rewrite principles
 
-### 2. GET /bridge/trace — `trace:` namespace  
-Lower-level than derivation — captures the exact bitwise state after each sub-operation. Where derivation shows named operation steps, trace shows the binary representation of the value at each stage. Parameters: `x`, `n`, `ops`.
+- **Lead with the problem, follow with the solution.** Don't describe what an endpoint returns before explaining why anyone would want it.
+- **No jargon without immediate plain-language definition.** "Ring" must be explained the first time it appears. "Homomorphism" must either be replaced or immediately explained.
+- **One sentence per idea.** Dense paragraphs will be split. Each sentence earns its place.
+- **Use cases must feel real.** "An agent verifies X" is better than "Developers can use this to achieve X."
+- **Labels must be instantly scannable.** Six words or fewer, verb-first.
 
-**Response type:** `trace:ExecutionTrace` with `trace:frames[]`, each frame showing `trace:state` (current value), `trace:binaryState`, `trace:hammingWeight`, and what changed from the previous frame.
+---
 
-### 3. GET /bridge/resolver — `resolver:` namespace
-Decomposes a value into its canonical partition component (Irreducible, Reducible, Unit, or Exterior), explains which component class it belongs to and why, and shows what operations would reduce it further if it is reducible. Parameters: `x`, `n`.
+## Section-by-section changes
 
-**Response type:** `resolver:Resolution` with `resolver:canonicalForm`, `resolver:component`, `resolver:decomposition` steps, `resolver:isIrreducible`.
+### Hero
+Currently good. Minor tightening:
+- Sub-headline: slightly more concrete about what "shared mathematical ground truth" means in plain terms.
 
-Note: The description says "requires Rust conformance suite for full dihedral factorization." The JavaScript-computable version can correctly classify every value using the existing `classifyByte()` function and produce a fully conformant `resolver:Resolution` object. The "full dihedral" aspect refers to extremely large numbers — for the ring values 0–65535 it is completely implementable in pure JS.
+### Why it matters (problem grid)
+The 6 cards are structured correctly. The copy in each needs to be sharper:
+- **Identity Fraud** → "Anyone can claim to be an agent. UOR content addresses are derived from what an agent actually produced — they cannot be faked."
+- **Auth Exploits** → "Tokens and signatures can be stolen. UOR proof objects are self-verifying — any party checks them independently, with no server contact."
+- **Prompt Injection** → "Malicious instructions can be hidden in inputs. Execution traces record every step taken — divergence from expected behaviour is immediately visible."
+- **Content Spam** → "Pattern-matching filters are easy to fool. UOR measures information density algebraically — it is a formal property, not a trained guess."
+- **Opaque Coordination** → "Agents sharing values cannot verify each other's work without a shared definition. Every UOR operation is named, formal, and reproducible."
+- **No Coherence Model** → "Without a common mathematical foundation, agent coordination breaks on edge cases. UOR coherence proofs confirm a data type is consistent across every possible value."
 
-### 4. GET /user/morphism/transforms — `morphism:` namespace
-Maps a value from one ring to another while preserving structural properties. A morphism is a function that commutes with the ring operations. For ring homomorphisms between R_n and R_m, the map is `f(x) = x mod 2^m` (projection) or `f(x) = x` with extended bits (inclusion). Parameters: `x`, `from_n` (source ring size), `to_n` (target ring size).
+### Quick Start
+Already clean. One tweak to note 2 — don't assume reader knows what "negate(bitwise-invert(42))" means without context.
 
-**Response type:** `morphism:RingHomomorphism` with `morphism:source`, `morphism:target`, `morphism:image`, `morphism:kernel`, `morphism:preserves` (which operations are preserved), `morphism:isInjective`, `morphism:isSurjective`.
+### Architecture section intro
+Current: "Every endpoint maps to a layer of the UOR Framework. Each layer builds on the one below."
+Rewrite: "The API is organised into six layers. Each layer adds a capability — from the single mathematical rule at the base, to identity, operations, classification, verification, and transformation. Every layer is live and working now."
 
-### 5. GET /user/state — `state:` namespace
-Returns a formal `state:Frame` for an agent given a value representing its current state. Includes entry condition (is the value a unit/identity?), transition rules (what operations move to which next states), and exit condition (is the value at a boundary?). Parameters: `x`, `n`.
+### Layer titles / oneLiner / whyItMatters / solves
 
-**Response type:** `state:Frame` with `state:binding` (the current value and its component class), `state:entryCondition`, `state:transitions[]` (each possible operation and its result state), `state:exitCondition`.
+**Layer 0 — The Foundation**
+- oneLiner: "The one mathematical rule everything else is built on. Provable in under 100ms."
+- whyItMatters: "There is one rule at the base of the framework: applying bitwise-invert then negate to any value always equals incrementing it by one. These two endpoints let you verify that — for one value or every value at once. If this holds, every layer above it holds. For agents with no shared authority, this is the trust anchor."
+- solves: "Agent trust problem: agents with no common authority cannot coordinate. These endpoints return a machine-checkable proof, not an assertion."
 
-## API Method changes required
+**Layer 1 — Identity**
+- oneLiner: "Permanent, unforgeable addresses derived from content — not from names or servers."
+- whyItMatters: "Location-based identifiers change when data moves. Content addresses are computed from the content itself — the same text always maps to the same address, on any machine, without a registry. An agent's identity is its content. That cannot be impersonated."
+- solves: "Identity fraud: names and tokens can be copied. Content addresses cannot — they are derived, not assigned."
 
-All 5 are currently registered as GET in `KNOWN_PATHS`. The implementations will all be GET. The `error501` block in the router must be replaced with actual handler calls.
+**Layer 2 — Structure**
+- oneLiner: "A fixed set of named operations with verifiable, shareable results."
+- whyItMatters: "UOR defines 12 operations — negate, invert, add, multiply, and more. Each has a formal name, formula, and relationship to the core rule. When agents exchange computed values, they can verify each other's work against these definitions. There is no ambiguity about what was computed."
+- solves: "Opaque coordination: two agents computing the same operation get the same result — or the discrepancy is detectable."
 
-### KNOWN_PATHS update
-- `/bridge/derivation`: GET (add `x`, `n`, `ops` params)
-- `/bridge/trace`: GET (add `x`, `n`, `ops` params)
-- `/bridge/resolver`: GET (add `x`, `n` params)
-- `/user/morphism/transforms`: GET (add `x`, `from_n`, `to_n` params)
-- `/user/state`: GET (add `x`, `n` params)
+**Layer 3 — Resolution**
+- oneLiner: "Know the type and class of any value before you compute with it."
+- whyItMatters: "Every value belongs to one of four categories: building block, composed value, structural anchor, or boundary. Knowing which category a value belongs to before operating on it prevents type errors and incorrect proofs. This layer gives agents a formal type system they share without negotiation."
+- solves: "Type mismatches: agents using the same bytes can reach different conclusions if they disagree on what kind of value it is."
 
-## Frontend changes required
+**Layer 4 — Verification**
+- oneLiner: "Shareable proof objects any party can verify independently — no server needed."
+- whyItMatters: "A proof object is not just a correct answer. It has a permanent address, shows every derivation step, and can be verified by anyone without contacting a server. Certificates attest to properties across all values. Both are self-contained objects you can share, store, and re-verify at any time."
+- solves: "Auth exploits and prompt injection: proofs anchored to content addresses cannot be forged or replayed. The math is the trust chain."
 
-### Remove "Coming in v2" labels
-The `LayerSection` component (line 711) renders `"Coming in v2"` as the stub section header. This must become `"Planned v2 endpoints"` — but better yet, since these endpoints are now fully implemented, the `v2stubs` on each layer must be **converted to real `Endpoint` entries** in the `LAYERS` array.
+**Layer 5 — Transformation**
+- oneLiner: "Translate values between contexts, score information density — formally and deterministically."
+- whyItMatters: "Spam filters use pattern-matching, which can be fooled. UOR uses algebraic structure: every value has a measurable information density, computed from the same rules as everything else in the framework. Morphisms let agents safely translate values between different ring sizes without losing structural properties."
+- solves: "Content spam and prompt injection: partition analysis is a formal property of the content, not a heuristic."
 
-### Convert all v2stubs to real Endpoint entries
+### Endpoint — explanation and useCase rewrites
 
-**Layer 3 (Resolution) — /bridge/resolver:**
-```typescript
-{
-  operationId: "bridgeResolver",
-  method: "GET",
-  path: "/bridge/resolver",
-  label: "Decompose any value into its canonical form",
-  explanation: "...",
-  useCase: "...",
-  params: [
-    { name: "x", in: "query", type: "integer", required: true, default: "42", description: "..." },
-    { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "..." },
-  ],
-  responseCodes: [200, 400, 405, 429, 500],
-  example: `${BASE}/bridge/resolver?x=42`,
-}
-```
+#### /kernel/op/verify
+- explanation: "Checks that negate(bitwise-invert(x)) equals increment(x) for the value you supply. Returns every intermediate step — not just pass or fail. This is the most important endpoint in the API: the rule it checks is the structural guarantee everything else depends on."
+- useCase: "An agent is told the framework is trustworthy. It calls this endpoint with a value it chose, confirms the rule holds, and then relies on the framework with mathematical confidence — no trust required."
 
-**Layer 4 (Verification) — /bridge/derivation, /bridge/trace:**
-```typescript
-{
-  operationId: "bridgeDerivation",
-  method: "GET",
-  path: "/bridge/derivation",
-  label: "Show the step-by-step derivation of an operation sequence",
-  ...
-},
-{
-  operationId: "bridgeTrace",
-  method: "GET",
-  path: "/bridge/trace",
-  label: "Capture the exact bitwise state at every execution step",
-  ...
-}
-```
+#### /kernel/op/verify/all
+- explanation: "Runs the same check across every value in the ring — all 256 for the default 8-bit ring. Returns a pass count, fail count, and a universal verdict. One example proves nothing. Exhaustive verification is what turns a claim into proof."
+- useCase: "An agent wants to confirm the framework is internally consistent before relying on any of its operations. 256 passes, zero failures."
 
-**Layer 5 (Transformation) — /user/morphism/transforms, /user/state:**
-```typescript
-{
-  operationId: "morphismTransforms",
-  method: "GET",
-  path: "/user/morphism/transforms",
-  label: "Map a value from one ring to another, preserving structure",
-  ...
-},
-{
-  operationId: "userState",
-  method: "GET",
-  path: "/user/state",
-  label: "Get a formal state description for an agent value",
-  ...
-}
-```
+#### /kernel/address/encode
+- explanation: "Send any text, receive a permanent address computed from its bytes. The same input always produces the same address — no server, no timestamp, no registry required. One character difference produces a completely different address."
+- useCase: "An agent signs its output by encoding its response into a content address and attaching it to the message. Any recipient re-encodes the same text and checks the address matches."
 
-## Implementation details — Edge function handlers
+#### /kernel/schema/datum
+- explanation: "Every value in UOR is more than a number — it has a position in a mathematical structure. This returns the full profile: decimal value, binary representation, bits set, and content address. Understanding this helps interpret results from every other endpoint."
+- useCase: "An agent receives a numeric result and wants its full structural context before using it in a proof."
 
-### `bridgeDerivation(url, rl)` — GET /bridge/derivation
-```typescript
-// params: x (required), n=8, ops="neg,bnot,succ" (comma-separated)
-// Returns derivation:DerivationTrace
-const VALID_OPS = ['neg', 'bnot', 'succ', 'pred', 'add', 'sub', 'mul'];
-// Apply each op in sequence, record input/output/formula for each step
-// Final: verify critical identity holds for original x
-```
+#### /kernel/op/compute
+- explanation: "Takes one or two numbers and returns every operation result at once.\n\nUnary (single input): negate, bitwise-invert, increment, decrement.\nBinary (two inputs): add, subtract, multiply, XOR, AND, OR.\n\nAll results in one response — compare them side by side."
+- useCase: "A developer exploring how the framework behaves for a specific value, or an agent that wants to see all possible outcomes before committing to one."
 
-### `bridgeTrace(url, rl)` — GET /bridge/trace
-```typescript
-// params: x (required), n=8, ops="neg,bnot" (comma-separated)
-// Returns trace:ExecutionTrace — lower level than derivation
-// Each frame: current value in decimal + binary + hamming weight
-// Delta from previous frame: what changed in the bit pattern
-```
+#### /kernel/op/operations
+- explanation: "Returns all 12 named operations with their formal definitions: formulas, algebraic class, and relationship to the core rule. This is the shared dictionary every agent can reference."
+- useCase: "An agent or developer wants to confirm a named operation in a proof object matches a known definition before verifying it."
 
-### `bridgeResolver(url, rl)` — GET /bridge/resolver
-```typescript
-// params: x (required), n=8
-// Uses classifyByte() — already implemented
-// Returns resolver:Resolution with canonical form, component, decomposition
-// For reducible values: show factor decomposition steps (div by 2 until odd)
-// For irreducible: confirm it cannot be decomposed further
-```
+#### /user/type/primitives
+- explanation: "Returns the built-in type catalogue: U1, U4, U8, U16 (1 to 16 bits), plus composite types — pairs, unions, and constrained values. The type you pick here feeds directly into the coherence and partition endpoints."
+- useCase: "A developer wants to know which type to pass before calling the coherence or partition endpoints."
 
-### `morphismTransforms(url, rl)` — GET /user/morphism/transforms
-```typescript
-// params: x (required), from_n=8, to_n=4
-// Computes ring homomorphism R_{from_n} → R_{to_n}
-// projection: x mod 2^to_n (if to_n < from_n)
-// inclusion: x (if to_n > from_n, since R_n ⊆ R_m when n < m)
-// Checks: is it injective? surjective? what is preserved?
-```
+#### /bridge/resolver
+- explanation: "Sorts any value into one of four canonical categories:\n\n• Building block (irreducible) — odd, not a unit. Structurally unique.\n• Composed (reducible) — even. Breaks into 2^k × odd core.\n• Anchor (unit) — the ring's multiplicative identity or its inverse.\n• Boundary (exterior) — zero or the ring midpoint.\n\nFor composed values, shows the full factor breakdown. For building blocks, confirms no further decomposition is possible."
+- useCase: "Before using a value in a proof or translation, an agent must know its category. This endpoint answers: is this a building block, a composed value, a structural anchor, or a boundary case?"
 
-### `userState(url, rl)` — GET /user/state
-```typescript
-// params: x (required), n=8
-// Returns state:Frame — formal lifecycle binding for agent state x
-// entry condition: x is a ring identity or unit (stable entry states)
-// exit condition: x is at a phase boundary (catastrophe threshold)
-// transitions: one entry per operation showing where that op sends x
-```
+#### /bridge/proof/critical-identity
+- explanation: "Produces a full proof object with a unique permanent address. Anyone can take this object, replay the derivation steps, and confirm it is correct — no server contact needed. Every step is explicit: input, each intermediate value, final comparison."
+- useCase: "An agent produces a proof for its own identity value and attaches it to outgoing messages. Recipients verify independently. The math is the trust chain."
 
-## Files to change
+#### /bridge/proof/coherence
+- explanation: "Verifies the core rule holds for every element of a given type — not a sample, every value. A passing type is ring-coherent and participates fully in the framework's guarantees. Returns pass rate, fail count, and a single boolean verdict. 100% is required."
+- useCase: "Before using a custom data type in agent coordination, verify it is coherent. A non-coherent type will produce unpredictable results with every framework operation."
 
-### 1. `supabase/functions/uor-api/index.ts`
+#### /bridge/cert/involution
+- explanation: "Some operations undo themselves when applied twice. Negate and bitwise-invert are both self-inverting: negate(negate(x)) = x for every value in the ring. This verifies that exhaustively, then issues a shareable certificate.\n\nCertificates can be stored and shared. Peers verify them directly — no re-computation needed."
+- useCase: "An agent proves to a peer that an operation is safe to reverse. It shares the certificate. The peer verifies it in one call."
 
-**Add 5 new handler functions** before the router (after `typeList`, before `frameworkIndex`):
-- `bridgeDerivation(url, rl)` 
-- `bridgeTrace(url, rl)`
-- `bridgeResolver(url, rl)`
-- `morphismTransforms(url, rl)`
-- `userState(url, rl)`
+#### /bridge/derivation
+- explanation: "Takes a starting value and a sequence of operations, and returns a formal record of every step: input, output, formula used, and ontology reference. Also verifies the core rule holds for the original value — an independent integrity check bundled into the same response."
+- useCase: "An agent runs a sequence of operations and needs an auditable record. The derivation trace is the formal receipt. Peers replay it to verify independently."
 
-**Update KNOWN_PATHS** to add `from_n` and `to_n` param docs (no actual change needed to the paths object since it only specifies allowed methods).
+#### /bridge/trace
+- explanation: "Lower-level than derivation. Records the exact binary state of the value after each operation — the decimal value, binary form, how many bits are set, which bits flipped, and the delta from the previous step.\n\nUseful when you need to see exactly where a bit pattern diverged."
+- useCase: "An agent detects unexpected output from a peer and wants to find where the computation diverged. The trace shows exactly which bits changed at each step."
 
-**Replace the 501 block in the router** (lines 1355-1364):
-```typescript
-// OLD:
-if (path === '/bridge/derivation' || ...) {
-  return error501(rl);
-}
+#### /bridge/partition
+- explanation: "Classifies every value in the ring into four groups — building blocks, composed values, structural anchors, and boundaries — then returns the fraction that are building blocks as a density score.\n\nAbove 0.25: meaningful content. Below 0.1: strong signal of spam or filler.\n\nPass text for per-character analysis, or a type definition for full-ring analysis."
+- useCase: "An agent receives a long message and runs partition analysis before processing it. A low density score is a formal, reproducible signal — not a heuristic guess."
 
-// NEW:
-if (path === '/bridge/derivation') {
-  if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
-  const resp = bridgeDerivation(url, rl);
-  if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
-    return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
-  }
-  return resp;
-}
-// ... same pattern for all 5
-```
+#### /bridge/observable/metrics
+- explanation: "Computes four precise measurements for any value:\n\n• Distance from zero — how far the value sits from the ring's origin.\n• Bits set — how many bits are on. A proxy for information content.\n• Cascade depth — how many times divisible by two before reaching an odd number.\n• Phase boundary — whether the value is near a point where operations change behaviour."
+- useCase: "An agent monitoring a stream of values notices erratic outputs. Structural metrics reveal which values sit near phase boundaries — often the source of instability."
 
-**Update `frameworkIndex`** (the navigate response) to move all 5 endpoints out of `not_implemented` and into their proper spaces.
+#### /user/morphism/transforms
+- explanation: "Maps a value from one ring to another while preserving its structural properties.\n\n• Smaller target ring: strips the high bits (projection).\n• Larger target ring: embeds the value unchanged (inclusion).\n• Same size: identity map.\n\nReturns the mapped value, which properties are preserved, and whether the map is injective and surjective."
+- useCase: "An agent operating in an 8-bit ring sends a value to a peer in a 4-bit ring. It uses this endpoint to compute the correct projection and confirm what is preserved."
 
-### 2. `src/pages/Api.tsx`
+#### /user/state
+- explanation: "Returns the formal lifecycle state for an agent at value x.\n\n• What category x belongs to and why.\n• Whether x is a stable entry point (an identity or unit).\n• Whether x is at a phase boundary.\n• For each operation — negate, invert, increment, decrement — where does x go and does its category change?"
+- useCase: "An agent must decide its next action from its current value. This endpoint answers: am I at a stable state, a boundary, or an interior point? What does each available operation do to my category?"
 
-**Convert all `v2stubs` entries to real `Endpoint` entries** in the `LAYERS` array:
-- Remove `v2stubs` from Layer 3, 4, 5
-- Add the corresponding endpoints to `endpoints[]` in each layer
-- Each endpoint gets: `operationId`, `method: "GET"`, `path`, `label`, `explanation`, `useCase`, `params`, `responseCodes`, `example`
+### Discovery section (`/navigate` and `/openapi.json`)
+- `/navigate` explanation: "Returns a complete map of every endpoint — path, method, and purpose — in one call. If you are new to the API, start here."
+- `/openapi.json` explanation: "The full machine-readable spec in OpenAPI 3.1.0 format. Use the static copy at uor.foundation/openapi.json to parse all paths, schemas, and response types offline."
 
-**Update the `DISCOVERY_ENDPOINTS`** discovery cards for `/navigate` to no longer list `/bridge/derivation` etc. in `not_implemented`.
+### For AI Agents section
+The discovery chain notes need to be one tight sentence each:
+1. `/.well-known/uor.json` → "Organisation descriptor. The `uor:api.openapi` field points to the spec."
+2. `GET /openapi.json` → "Full OpenAPI 3.1.0 spec. Parse all paths, operationIds, and response schemas."
+3. `GET /navigate` → "Human-readable endpoint index with recommended reading order."
+4. `GET /kernel/op/verify?x=42` → "First verifiable claim. Zero auth. Returns a full proof in under 100ms."
 
-**Update problem grid** entry for "Prompt Injection" to point to "Layer 4" (where derivation/trace now live) instead of "v2".
+Machine-readable entry point notes — same treatment, one sentence each:
+- OpenAPI spec: "Parse paths, operationIds, schemas, and response types."
+- Agent Quick Card: "5-minute orientation. Frontmatter includes api_url and api_spec."
+- Full Reference: "Complete guide with all curl examples and implementation notes."
+- Discovery metadata: "JSON-LD descriptor with the uor:api.openapi field."
 
-**Remove the `V2Stub` interface and `v2stubs` field** from the `Layer` interface since they are no longer needed (or keep interface but leave arrays empty).
+---
 
-**Remove the v2stubs rendering block** in `LayerSection` (lines 709-725) — or leave it as dead code, since arrays will be empty.
+## Files changed
+- **`src/pages/Api.tsx`** — all descriptive string fields: `oneLiner`, `whyItMatters`, `solves`, `explanation`, `useCase`, `label` (where needed), `note` fields in Quick Start, discovery chain notes, and the hero paragraph. No logic changes, no component changes.
 
-## Execution order
-
-1. Implement all 5 handler functions in `supabase/functions/uor-api/index.ts`
-2. Replace the 501 block in the router with the 5 new route handlers
-3. Update `frameworkIndex` to remove "not_implemented" entries for these 5 paths
-4. Deploy the edge function
-5. Test all 5 endpoints live via curl
-6. Convert all v2stubs to real endpoints in `src/pages/Api.tsx`
-7. Update the problem grid "Prompt Injection" label from "v2" to "Layer 4"
-8. Remove or empty the v2stubs arrays
-
-## What stays the same
-
-- All 11 existing live endpoint handlers — no changes
-- Rate limiting, ETag, 405 handling — no changes
-- All layer descriptions, `whyItMatters`, `solves` text — no changes
-- Discovery section, Quick Start, For AI Agents section — no changes
-- Visual design, LayerSection component — no changes
-- OpenAPI spec (`public/openapi.json`) — the 5 stub paths are already defined in it; they need their `501` response definitions updated to show they now return `200`
+## What does NOT change
+- All component JSX, styling, layout
+- All parameter definitions (name, type, required, default)
+- Response codes
+- curl examples
+- The hero headline
+- Section headings
+- Quick Start commands
