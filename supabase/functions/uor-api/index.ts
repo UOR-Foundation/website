@@ -1117,7 +1117,7 @@ function frameworkIndex(rl: RateLimitResult): Response {
   return jsonResp({
     "@context": UOR_CONTEXT,
     "@id": "https://uor.foundation/api/v1",
-    "@type": "sdo:APIReference",
+    "@type": "sdo:WebAPI",
     "title": "UOR Framework REST API — Navigation Index",
     "version": "1.0.0",
     "description": "Complete index of all endpoints. Start with /kernel/op/verify?x=42 to verify the mathematical foundation in one request.",
@@ -1193,17 +1193,23 @@ function frameworkIndex(rl: RateLimitResult): Response {
   }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
-// GET /openapi.json — HTTP 302 redirect to canonical static spec
-function openapiSpec(): Response {
-  return new Response(null, {
-    status: 302,
-    headers: {
-      ...CORS_HEADERS,
-      'Location': 'https://uor.foundation/openapi.json',
-      'Cache-Control': 'public, max-age=3600',
-      'X-UOR-Spec-Source': 'https://uor.foundation/openapi.json'
-    }
-  });
+// GET /openapi.json — inline JSON-LD spec metadata (RESTful, ETag-capable)
+function openapiSpec(rl: RateLimitResult): Response {
+  const etag = makeETag('/openapi.json', {});
+  return jsonResp({
+    "@context": UOR_CONTEXT,
+    "@type": "sdo:WebAPI",
+    "@id": "https://uor.foundation/api/v1",
+    "title": "UOR Framework Agent API — OpenAPI 3.1.0",
+    "version": "1.0.0",
+    "spec_url": "https://uor.foundation/openapi.json",
+    "live_spec_url": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json",
+    "note": "Fetch spec_url for the full OpenAPI 3.1.0 document (14 paths, 15 schemas).",
+    "paths_count": 14,
+    "schemas_count": 15,
+    "agent_entry": "https://uor.foundation/llms.md",
+    "navigate": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/navigate"
+  }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1239,7 +1245,14 @@ Deno.serve(async (req: Request) => {
       }
       return resp;
     }
-    if (path === '/openapi.json') return openapiSpec();
+    if (path === '/openapi.json') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = openapiSpec(rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
 
     // ── Kernel — op/ ──
     if (path === '/kernel/op/verify/all') {
