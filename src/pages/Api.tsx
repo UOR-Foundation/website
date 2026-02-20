@@ -83,14 +83,14 @@ const DISCOVERY_ENDPOINTS: DiscoveryEndpoint[] = [
     method: "GET",
     path: "/navigate",
     label: "Get the complete endpoint index",
-    explanation: "Returns every endpoint — path, method, and purpose — in one call. Start here if you're new to the API.",
+    explanation: "Returns a complete map of every endpoint — path, method, and purpose — in one call. If you are new to the API, start here.",
     example: `${BASE}/navigate`,
   },
   {
     method: "GET",
     path: "/openapi.json",
     label: "Download the machine-readable spec",
-    explanation: "Returns OpenAPI 3.1.0 metadata and a link to the full document. Use the static copy at https://uor.foundation/openapi.json to parse all paths and schemas.",
+    explanation: "The full machine-readable spec in OpenAPI 3.1.0 format. Use the static copy at uor.foundation/openapi.json to parse all paths, schemas, and response types offline.",
     example: `${BASE}/openapi.json`,
   },
 ];
@@ -103,10 +103,10 @@ const LAYERS: Layer[] = [
     icon: Diamond,
     layerNum: 0,
     title: "The Foundation",
-    oneLiner: "The single rule the entire framework is built on — provable, not assumed.",
+    oneLiner: "The one mathematical rule everything else is built on. Provable in under 100ms.",
     whyItMatters:
-      "Applying bitwise-invert then negate to any value always equals incrementing it by one. These endpoints let you verify that for one value or every value at once. If it holds here, everything above it holds. This is the trust anchor for agents with no shared authority.",
-    solves: "Solves: No Coherence Model — agents with no verifiable common ground cannot coordinate. These endpoints return machine-checkable proof objects, not assertions.",
+      "There is one rule at the base of the framework: applying bitwise-invert then negate to any value always equals incrementing it by one. These two endpoints let you verify that — for one value or every value at once. If this holds, every layer above it holds. For agents with no shared authority, this is the trust anchor.",
+    solves: "Solves: Agent trust problem — agents with no common authority cannot coordinate. These endpoints return a machine-checkable proof, not an assertion.",
     endpoints: [
       {
         operationId: "opVerifyCriticalIdentity",
@@ -114,9 +114,9 @@ const LAYERS: Layer[] = [
         path: "/kernel/op/verify",
         label: "Verify the core rule for one value",
         explanation:
-          "Checks that negate(bitwise-invert(x)) equals increment(x) for the value you supply. Returns every intermediate step — not just a pass/fail.\n\nThis is the most important endpoint in the API. The rule it checks is the structural guarantee the entire framework depends on.",
+          "Checks that negate(bitwise-invert(x)) equals increment(x) for the value you supply. Returns every intermediate step — not just pass or fail.\n\nThis is the most important endpoint in the API: the rule it checks is the structural guarantee everything else depends on.",
         useCase:
-          "An agent is told the framework is trustworthy. It calls this endpoint with a value it chose itself to confirm the claim independently — no trust required.",
+          "An agent is told the framework is trustworthy. It calls this endpoint with a value it chose, confirms the rule holds, and then relies on the framework with mathematical confidence — no trust required.",
         params: [
           { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to check. Must be 0 or greater, and less than 2 to the power of n." },
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8 means values 0–255." },
@@ -130,9 +130,9 @@ const LAYERS: Layer[] = [
         path: "/kernel/op/verify/all",
         label: "Verify the core rule for every value in the ring",
         explanation:
-          "Runs the same check as the single-value endpoint across every value in the ring — all 256 for the default 8-bit ring. Returns a pass count, fail count, and universal verdict.\n\nOne example proves nothing. Exhaustive verification is what turns a claim into a proof.",
+          "Runs the same check across every value in the ring — all 256 for the default 8-bit ring. Returns a pass count, fail count, and a universal verdict.\n\nOne example proves nothing. Exhaustive verification is what turns a claim into proof.",
         useCase:
-          "An agent wants to confirm the framework is internally consistent before relying on it. This is the exhaustive check — 256 passes, zero failures.",
+          "An agent wants to confirm the framework is internally consistent before relying on any of its operations. 256 passes, zero failures.",
         params: [
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. n=8 checks all 256 values. n=4 checks 16." },
           { name: "expand", in: "query", type: "boolean", required: false, default: "false", description: "Set to true to include per-value results." },
@@ -147,10 +147,10 @@ const LAYERS: Layer[] = [
     icon: Hash,
     layerNum: 1,
     title: "Identity",
-    oneLiner: "One permanent address per object, derived from its content — not its location.",
+    oneLiner: "Permanent, unforgeable addresses derived from content — not from names or servers.",
     whyItMatters:
-      "Location-based identifiers break when data moves. Content-based identifiers never change — they are computed from the content itself. The same text always produces the same address, on any machine, without a central registry. This makes agent identity unforgeable.",
-    solves: "Solves: Identity Fraud — without an ID tied to what an agent actually produced, impersonation is trivial. Content addresses make identity verifiable by anyone.",
+      "Location-based identifiers change when data moves. Content addresses are computed from the content itself — the same text always maps to the same address, on any machine, without a registry. An agent's identity is its content. That cannot be impersonated.",
+    solves: "Solves: Identity Fraud — names and tokens can be copied. Content addresses cannot — they are derived, not assigned.",
     endpoints: [
       {
         operationId: "addressEncode",
@@ -158,9 +158,9 @@ const LAYERS: Layer[] = [
         path: "/kernel/address/encode",
         label: "Turn any text into a permanent, unique address",
         explanation:
-          "Send any text and receive an address computed from that text's bytes. The same input always produces the same output — no server, no timestamp, no registry needed.\n\nEach byte maps to a Braille Unicode character, making the address machine-readable and visually distinct. One character difference produces a completely different address.",
+          "Send any text, receive a permanent address computed from its bytes. The same input always produces the same address — no server, no timestamp, no registry required.\n\nOne character difference produces a completely different address.",
         useCase:
-          "An agent signs its output by encoding its response text into a content address and attaching it to the message. Any recipient can re-encode the same text and verify the address matches — no trust required.",
+          "An agent signs its output by encoding its response into a content address and attaching it to the message. Any recipient re-encodes the same text and checks the address matches.",
         params: [
           { name: "input", in: "body", type: "string (max 1000 chars)", required: true, description: "The text to address." },
           { name: "encoding", in: "body", type: '"utf8"', required: false, default: "utf8", description: "Text encoding. Only utf8 is supported." },
@@ -175,9 +175,9 @@ const LAYERS: Layer[] = [
         path: "/kernel/schema/datum",
         label: "Get the full structural profile of any number",
         explanation:
-          "Every value in UOR is more than a number — it has a position in a mathematical structure. This returns the full profile: integer form, bits set, binary representation, and content address.\n\nUnderstanding this output helps you interpret results from every other endpoint.",
+          "Every value in UOR is more than a number — it has a position in a mathematical structure. This returns the full profile: decimal value, binary representation, bits set, and content address.\n\nUnderstanding this helps interpret results from every other endpoint.",
         useCase:
-          "An agent receives a numeric result and wants to understand its structural properties before using it in a proof or certificate.",
+          "An agent receives a numeric result and wants its full structural context before using it in a proof.",
         params: [
           { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The number to describe. Must be less than 2 to the power of n." },
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8 means values 0–255." },
@@ -192,10 +192,10 @@ const LAYERS: Layer[] = [
     icon: Layers,
     layerNum: 2,
     title: "Structure",
-    oneLiner: "Every operation is named, defined, and verifiable — agents share the same ground truth.",
+    oneLiner: "A fixed set of named operations with verifiable, shareable results.",
     whyItMatters:
-      "The framework defines a fixed set of operations, each with a name, formula, and provable relationship to the core rule. Running them here returns both the result and formal context: what the operation is, how it connects to the foundation, and whether the output is consistent.",
-    solves: "Solves: Opaque Coordination — when agents share computed values, neither can verify the other's work without a shared operation definition. These endpoints are that shared definition.",
+      "UOR defines 12 operations — negate, invert, add, multiply, and more. Each has a formal name, formula, and relationship to the core rule. When agents exchange computed values, they can verify each other's work against these definitions. There is no ambiguity about what was computed.",
+    solves: "Solves: Opaque Coordination — two agents computing the same operation get the same result, or the discrepancy is detectable.",
     endpoints: [
       {
         operationId: "opCompute",
@@ -203,9 +203,9 @@ const LAYERS: Layer[] = [
         path: "/kernel/op/compute",
         label: "Run every operation on a value at once",
         explanation:
-          "Takes one or two numbers and returns every operation result simultaneously.\n\nUnary (one input): negate, bitwise-invert, increment, decrement.\nBinary (two inputs): add, subtract, multiply, XOR, AND, OR.\n\nAll results in one response — compare them side by side.",
+          "Takes one or two numbers and returns every operation result at once.\n\nUnary (single input): negate, bitwise-invert, increment, decrement.\nBinary (two inputs): add, subtract, multiply, XOR, AND, OR.\n\nAll results in one response — compare them side by side.",
         useCase:
-          "An agent is computing a transformation and wants to see all possible outcomes before committing. Or: a developer exploring how the ring behaves for a specific value.",
+          "A developer exploring how the framework behaves for a specific value, or an agent that wants to see all possible outcomes before committing to one.",
         params: [
           { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The primary number. Must be less than 2 to the power of n." },
           { name: "y", in: "query", type: "integer", required: false, default: "10", description: "Second number for binary operations. Defaults to x if omitted." },
@@ -220,9 +220,9 @@ const LAYERS: Layer[] = [
         path: "/kernel/op/operations",
         label: "Browse every named operation with its formal definition",
         explanation:
-          "Returns all 12 named operations: negate, bitwise-invert, increment, decrement, add, subtract, multiply, XOR, AND, OR, the core identity, and the dihedral group. Each entry includes the formula and algebraic class.",
+          "Returns all 12 named operations with their formal definitions: formulas, algebraic class, and relationship to the core rule. This is the shared dictionary every agent can reference.",
         useCase:
-          "An agent or developer wants to know which operations exist before calling one, or wants to confirm a named operation in a proof object matches a known definition.",
+          "An agent or developer wants to confirm a named operation in a proof object matches a known definition before verifying it.",
         params: [],
         responseCodes: [200, 405, 429, 500],
         example: `${BASE}/kernel/op/operations`,
@@ -234,10 +234,10 @@ const LAYERS: Layer[] = [
     icon: Search,
     layerNum: 3,
     title: "Resolution",
-    oneLiner: "Know the type and category of any value before computing — so operations apply correctly.",
+    oneLiner: "Know the type and class of any value before you compute with it.",
     whyItMatters:
-      "Before running a proof or partition analysis, you need to know what kind of value you're working with. This layer exposes the type catalogue and canonical classification — pick the right type here, then use it in Layers 4 and 5.",
-    solves: "Solves: Type mismatches in agent coordination — agents sharing data must agree on the type before computing, or the same bytes produce different results.",
+      "Every value belongs to one of four categories: building block, composed value, structural anchor, or boundary. Knowing which category a value belongs to before operating on it prevents type errors and incorrect proofs. This layer gives agents a formal type system they share without negotiation.",
+    solves: "Solves: Type mismatches — agents using the same bytes can reach different conclusions if they disagree on what kind of value it is.",
     endpoints: [
       {
         operationId: "typeList",
@@ -245,9 +245,9 @@ const LAYERS: Layer[] = [
         path: "/user/type/primitives",
         label: "Browse the built-in data types",
         explanation:
-          "Returns the full type catalogue: U1 (1 bit), U4 (4 bits), U8 (8 bits, the default), U16 (16 bits). Also includes composite types: pairs (ProductType), unions (SumType), and constrained values (ConstrainedType).\n\nThe type you pick here feeds directly into the coherence proof and partition endpoints.",
+          "Returns the built-in type catalogue: U1, U4, U8, U16 (1 to 16 bits), plus composite types — pairs, unions, and constrained values. The type you pick here feeds directly into the coherence and partition endpoints.",
         useCase:
-          "A developer or agent wants to know which type to pass before calling the coherence or partition endpoints. This is the type reference.",
+          "A developer wants to know which type to pass before calling the coherence or partition endpoints.",
         params: [],
         responseCodes: [200, 405, 429, 500],
         example: `${BASE}/user/type/primitives`,
@@ -256,11 +256,11 @@ const LAYERS: Layer[] = [
         operationId: "bridgeResolver",
         method: "GET",
         path: "/bridge/resolver",
-        label: "Classify any value into its canonical component",
+        label: "Classify any value into its canonical category",
         explanation:
-          "Sorts any value into one of four categories:\n\n• Irreducible — odd, not a unit. Cannot be factored. Highest structural content.\n• Reducible — even. Breaks down as 2^k × odd core.\n• Unit — ring unit (1 or its inverse). Multiplicative anchor.\n• Exterior — 0 or the ring midpoint. Identity and boundary.\n\nFor reducible values, shows the full factor cascade to an odd core. For irreducible, confirms no further decomposition is possible.",
+          "Sorts any value into one of four canonical categories:\n\n• Building block (irreducible) — odd, not a unit. Structurally unique.\n• Composed (reducible) — even. Breaks into 2^k × odd core.\n• Anchor (unit) — the ring's multiplicative identity or its inverse.\n• Boundary (exterior) — zero or the ring midpoint.\n\nFor composed values, shows the full factor breakdown. For building blocks, confirms no further decomposition is possible.",
         useCase:
-          "Before using a value in a proof or morphism, an agent must know its canonical class. This endpoint answers: is this a building block, a composed value, a structural anchor, or a boundary case?",
+          "Before using a value in a proof or translation, an agent must know its category. This endpoint answers: is this a building block, a composed value, a structural anchor, or a boundary case?",
         params: [
           { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to classify. Must be less than 2 to the power of n." },
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8 means values 0–255." },
@@ -275,10 +275,10 @@ const LAYERS: Layer[] = [
     icon: ShieldCheck,
     layerNum: 4,
     title: "Verification",
-    oneLiner: "Every computation produces a shareable proof — checkable by anyone, offline.",
+    oneLiner: "Shareable proof objects any party can verify independently — no server needed.",
     whyItMatters:
-      "A proof object is more than a correct answer. It has a permanent address, shows every derivation step explicitly, and can be verified by anyone without contacting a server. Certificates attest to properties across all values. Both are self-contained objects you can share, store, and check later.",
-    solves: "Solves: Auth Exploits and Identity Fraud — proofs anchored to content addresses cannot be forged. The math is the trust.",
+      "A proof object is not just a correct answer. It has a permanent address, shows every derivation step, and can be verified by anyone without contacting a server. Certificates attest to properties across all values. Both are self-contained objects you can share, store, and re-verify at any time.",
+    solves: "Solves: Auth exploits and prompt injection — proofs anchored to content addresses cannot be forged or replayed. The math is the trust chain.",
     endpoints: [
       {
         operationId: "proofCriticalIdentity",
@@ -286,7 +286,7 @@ const LAYERS: Layer[] = [
         path: "/bridge/proof/critical-identity",
         label: "Generate a shareable proof for one value",
         explanation:
-          "Produces a full proof object with a unique permanent address. Anyone can take this object, replay the derivation, and confirm it is correct — no server contact needed.\n\nEvery step is explicit: input, each intermediate value, and the final comparison.",
+          "Produces a full proof object with a unique permanent address. Anyone can take this object, replay the derivation steps, and confirm it is correct — no server contact needed.\n\nEvery step is explicit: input, each intermediate value, final comparison.",
         useCase:
           "An agent produces a proof for its own identity value and attaches it to outgoing messages. Recipients verify independently. The math is the trust chain.",
         params: [
@@ -302,9 +302,9 @@ const LAYERS: Layer[] = [
         path: "/bridge/proof/coherence",
         label: "Prove a type is consistent across all values",
         explanation:
-          "Verifies the core rule holds for every element of a given type — not just a sample. A passing type is ring-coherent and participates fully in the framework's guarantees.\n\nReturns pass rate, fail count, and a boolean verdict. 100% is required.",
+          "Verifies the core rule holds for every element of a given type — not a sample, every value. A passing type is coherent and participates fully in the framework's guarantees.\n\nReturns pass rate, fail count, and a single boolean verdict. 100% is required.",
         useCase:
-          "Before using a custom data type in agent coordination, verify it is coherent. A non-coherent type produces unpredictable results with the framework's operations.",
+          "Before using a custom data type in agent coordination, verify it is coherent. A non-coherent type will produce unpredictable results with every framework operation.",
         params: [
           { name: "type_definition", in: "body", type: "object", required: true, description: 'The type to verify. Minimum: { "@type": "type:PrimitiveType", "type:bitWidth": 8 }' },
           { name: "n", in: "body", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Defaults to the bitWidth in the type definition." },
@@ -319,9 +319,9 @@ const LAYERS: Layer[] = [
         path: "/bridge/cert/involution",
         label: "Issue a certificate that an operation undoes itself",
         explanation:
-          "An operation that undoes itself when applied twice is self-inverse. Negate and bitwise-invert are both self-inverse.\n\nThis verifies that exhaustively across every ring value, then issues a shareable certificate object.\n\nExample: negate(negate(x)) = x for all 256 values.",
+          "Some operations undo themselves when applied twice. Negate and bitwise-invert are both self-inverting: negate(negate(x)) = x for every value in the ring. This verifies that exhaustively, then issues a shareable certificate.\n\nCertificates can be stored and shared. Peers verify them directly — no re-computation needed.",
         useCase:
-          "An agent proves to a peer that an operation is safe to invert. Instead of re-computing, it shares the certificate. The peer verifies it directly.",
+          "An agent proves to a peer that an operation is safe to reverse. It shares the certificate. The peer verifies it in one call.",
         params: [
           { name: "operation", in: "query", type: "string", required: true, default: "neg", enum: ["neg", "bnot"], description: '"neg" = negate. "bnot" = bitwise invert.' },
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
@@ -335,9 +335,9 @@ const LAYERS: Layer[] = [
         path: "/bridge/derivation",
         label: "Record an auditable step-by-step derivation",
         explanation:
-          "Takes a starting value and a sequence of operations and returns a formal derivation trace — every step documented with its input, output, formula, and ontology reference.\n\nAlso verifies the critical identity holds for the original value, providing an independent integrity check.",
+          "Takes a starting value and a sequence of operations, and returns a formal record of every step: input, output, formula used, and ontology reference. Also verifies the core rule holds for the original value — an independent integrity check bundled into the same response.",
         useCase:
-          "An agent runs a sequence of operations and needs an auditable record. The derivation trace is the formal receipt — each step named, formula shown, output recorded. Peers replay it to verify independently.",
+          "An agent runs a sequence of operations and needs an auditable record. The derivation trace is the formal receipt. Peers replay it to verify independently.",
         params: [
           { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The starting value. Must be less than 2^n." },
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8." },
@@ -352,9 +352,9 @@ const LAYERS: Layer[] = [
         path: "/bridge/trace",
         label: "Capture the exact bit state at every execution step",
         explanation:
-          "Lower-level than derivation — records the exact binary state of the value after each operation.\n\nEvery frame shows: decimal value, binary form, bits set (Hamming weight), bit-level delta from the previous frame, and which bits flipped.\n\nUseful for forensic analysis: seeing exactly which bits changed at each step.",
+          "Lower-level than derivation. Records the exact binary state of the value after each operation — the decimal value, binary form, how many bits are set, which bits flipped, and the delta from the previous step.\n\nUseful when you need to see exactly where a bit pattern diverged.",
         useCase:
-          "An agent detects unexpected output from a peer and wants to find where the bit pattern diverged. The execution trace shows exactly which bits flipped at each step.",
+          "An agent detects unexpected output from a peer and wants to find where the computation diverged. The trace shows exactly which bits changed at each step.",
         params: [
           { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The starting value. Must be less than 2^n." },
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8." },
@@ -370,10 +370,10 @@ const LAYERS: Layer[] = [
     icon: ArrowRightLeft,
     layerNum: 5,
     title: "Transformation",
-    oneLiner: "Map values between representations, measure information density — formally, not by heuristic.",
+    oneLiner: "Translate values between contexts, score information density — formally and deterministically.",
     whyItMatters:
-      "Most systems detect spam with pattern matching. UOR uses algebraic structure: values are partitioned by their mathematical class, producing a density score that is reproducible, formally grounded, and free of training bias. Morphisms let agents safely translate values between ring sizes without losing structure.",
-    solves: "Solves: Content Spam and Prompt Injection — partition analysis distinguishes novel content from repetitive content using ring structure, not pattern matching.",
+      "Spam filters use pattern-matching, which can be fooled. UOR uses algebraic structure: every value has a measurable information density, computed from the same rules as everything else in the framework. Morphisms let agents safely translate values between different ring sizes without losing structural properties.",
+    solves: "Solves: Content spam and prompt injection — partition analysis is a formal property of the content, not a heuristic.",
     endpoints: [
       {
         operationId: "partitionResolve",
@@ -381,9 +381,9 @@ const LAYERS: Layer[] = [
         path: "/bridge/partition",
         label: "Score the information density of any content",
         explanation:
-          "Classifies every value in the ring into four groups:\n\n• Novel (irreducible) — structurally unique. High-signal content.\n• Derived (reducible) — compositional. Often repetitive.\n• Structural (units) — boundary anchors.\n• Boundary (exterior) — edge values.\n\nThe density score is the fraction of novel values. Above 0.25 indicates meaningful content.\n\nPass a type definition to analyse the full ring, or a text string for per-character analysis.",
+          "Classifies every value in the ring into four groups — building blocks, composed values, structural anchors, and boundaries — then returns the fraction that are building blocks as a density score.\n\nAbove 0.25: meaningful content. Below 0.1: strong signal of spam or filler.\n\nPass text for per-character analysis, or a type definition for full-ring analysis.",
         useCase:
-          "An agent receives a long message and runs partition analysis before processing it. A density score below 0.1 is a strong signal the content is spam or injected filler.",
+          "An agent receives a long message and runs partition analysis before processing it. A low density score is a formal, reproducible signal — not a heuristic guess.",
         params: [
           { name: "input", in: "body", type: "string", required: false, description: "Text to analyse. Use this or type_definition, not both." },
           { name: "type_definition", in: "body", type: "object", required: false, description: 'A type definition to partition across the full ring. E.g. { "@type": "type:PrimitiveType", "type:bitWidth": 8 }.' },
@@ -399,9 +399,9 @@ const LAYERS: Layer[] = [
         path: "/bridge/observable/metrics",
         label: "Get precise structural measurements for any value",
         explanation:
-          "Computes four measurements:\n\n• Distance from zero — how far the value sits from the ring's origin.\n• Bit count — how many bits are set. A proxy for information density.\n• Cascade depth — how many times divisible by two before reaching an odd number.\n• Phase boundary — whether the value sits near a point where operations change character.",
+          "Computes four precise measurements for any value:\n\n• Distance from zero — how far the value sits from the ring's origin.\n• Bits set — how many bits are on. A proxy for information content.\n• Cascade depth — how many times divisible by two before reaching an odd number.\n• Phase boundary — whether the value is near a point where operations change behaviour.",
         useCase:
-          "An agent monitors a stream of values and notices erratic outputs. Structural metrics on each value reveal anomalies — values near phase boundaries may indicate injection or corruption.",
+          "An agent monitoring a stream of values notices erratic outputs. Structural metrics reveal which values sit near phase boundaries — often the source of instability.",
         params: [
           { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to measure." },
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
@@ -415,9 +415,9 @@ const LAYERS: Layer[] = [
         path: "/user/morphism/transforms",
         label: "Map a value from one ring to another, preserving structure",
         explanation:
-          "Computes the ring homomorphism f: R_{from_n} → R_{to_n} for any value x.\n\n• Projection (smaller target): f(x) = x mod 2^to_n — strips high bits.\n• Inclusion (larger target): f(x) = x — embeds in the larger ring.\n• Identity (same size): isomorphism.\n\nReturns the image, kernel size, which operations are preserved, and whether the map is injective and surjective.",
+          "Maps a value from one ring size to another while preserving its structural properties.\n\n• Smaller target ring: strips the high bits (projection).\n• Larger target ring: embeds the value unchanged (inclusion).\n• Same size: identity map.\n\nReturns the mapped value, which properties are preserved, and whether the map is injective and surjective.",
         useCase:
-          "An agent in an 8-bit ring sends a value to a peer in a 4-bit ring. It uses this endpoint to find the correct projection and confirm which structural properties survive.",
+          "An agent operating in an 8-bit ring sends a value to a peer in a 4-bit ring. It uses this endpoint to compute the correct projection and confirm what is preserved.",
         params: [
           { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to map. Must be less than 2^from_n." },
           { name: "from_n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Source ring size (bits)." },
@@ -432,9 +432,9 @@ const LAYERS: Layer[] = [
         path: "/user/state",
         label: "Get the formal state description for an agent value",
         explanation:
-          "Returns a state:Frame — the lifecycle binding for an agent whose state is x.\n\n• Binding: which component class x belongs to and why.\n• Entry condition: is this a stable entry state (identity or unit)?\n• Exit condition: is this a phase boundary or exterior element?\n• Transitions: for each operation (neg, bnot, succ, pred), where does x go and does its class change?",
+          "Returns the formal lifecycle state for an agent at value x.\n\n• What category x belongs to and why.\n• Whether x is a stable entry point (an identity or unit).\n• Whether x is at a phase boundary.\n• For each operation — negate, invert, increment, decrement — where does x go and does its category change?",
         useCase:
-          "An agent must decide its next action from its current state. This endpoint answers: am I at a stable entry point, a phase boundary, or an interior state? What does each operation do to my class?",
+          "An agent must decide its next action from its current value. This endpoint answers: am I at a stable state, a boundary, or an interior point? What does each available operation do to my category?",
         params: [
           { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The agent's current state. Must be less than 2^n." },
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8." },
@@ -809,7 +809,7 @@ const Api = () => {
             className="mt-5 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
             style={{ animationDelay: "0.15s" }}
           >
-            The UOR Framework API gives AI agents a shared mathematical ground truth — provable identity, tamper-evident computation, and formally grounded content quality. Every response is stateless, deterministic, and independently verifiable.
+            The UOR Framework API gives AI agents a shared mathematical ground truth — a common set of rules every agent can verify independently. Provable identity, tamper-evident computation, formally grounded content quality. Every response is stateless, deterministic, and verifiable without contacting a server.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
@@ -848,12 +848,12 @@ const Api = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { problem: "Identity Fraud", solution: "An agent's address is derived from what it actually produced — not a name or token that can be forged.", endpoint: "Layer 1" },
-              { problem: "Auth Exploits", solution: "Every request can carry a proof object any party verifies independently, with no server contact needed.", endpoint: "Layer 4" },
-              { problem: "Prompt Injection", solution: "Execution traces record exactly what ran at each step. Divergence from expected behaviour is immediately visible.", endpoint: "Layer 4" },
-              { problem: "Content Spam", solution: "Information density is measured algebraically — a formal classification, not a heuristic or trained pattern.", endpoint: "Layer 5" },
-              { problem: "Opaque Coordination", solution: "Named operations with verifiable outputs give agents a shared definition of every computation.", endpoint: "Layer 2" },
-              { problem: "No Coherence Model", solution: "Coherence proofs confirm a type is consistent with the entire framework across every possible value.", endpoint: "Layer 4" },
+              { problem: "Identity Fraud", solution: "Anyone can claim to be an agent. UOR content addresses are derived from what an agent actually produced — they cannot be faked.", endpoint: "Layer 1" },
+              { problem: "Auth Exploits", solution: "Tokens and signatures can be stolen. UOR proof objects are self-verifying — any party checks them independently, with no server contact.", endpoint: "Layer 4" },
+              { problem: "Prompt Injection", solution: "Malicious instructions can be hidden in inputs. Execution traces record every step taken — divergence from expected behaviour is immediately visible.", endpoint: "Layer 4" },
+              { problem: "Content Spam", solution: "Pattern-matching filters are easy to fool. UOR measures information density algebraically — it is a formal property, not a trained guess.", endpoint: "Layer 5" },
+              { problem: "Opaque Coordination", solution: "Agents sharing values cannot verify each other's work without a shared definition. Every UOR operation is named, formal, and reproducible.", endpoint: "Layer 2" },
+              { problem: "No Coherence Model", solution: "Without a common mathematical foundation, agent coordination breaks on edge cases. UOR coherence proofs confirm a data type is consistent across every possible value.", endpoint: "Layer 4" },
             ].map(item => (
               <div
                 key={item.problem}
@@ -890,7 +890,7 @@ const Api = () => {
                 step: "2",
                 label: "Run the framework's core proof",
                 cmd: `curl "${BASE}/kernel/op/verify?x=42"`,
-                note: "Proves negate(bitwise-invert(42)) = increment(42). Returns every step, not just a true/false.",
+                note: "Checks that negate(bitwise-invert(42)) equals increment(42). Returns every intermediate step — not just pass or fail.",
               },
               {
                 step: "3",
@@ -968,7 +968,7 @@ const Api = () => {
             Six layers, fully live
           </h2>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-10">
-            Every endpoint maps to a layer of the UOR Framework. Each layer builds on the one below. Start with Discovery, then Layer 0.
+            The API is organised into six layers. Each layer adds a capability — from the single mathematical rule at the base, to identity, operations, classification, verification, and transformation. Every layer is live and working now.
           </p>
 
           {/* API Discovery — pre-layer, always visible */}
@@ -1017,7 +1017,7 @@ const Api = () => {
             For AI Agents
           </h2>
           <p className="text-section-dark-foreground/60 font-body text-base leading-relaxed max-w-xl mb-10">
-            Follow this sequence to bootstrap your understanding of the framework and verify the core identity before relying on any other endpoint.
+            Follow this sequence to discover the full API, verify the core rule independently, and start building — zero auth, zero setup.
           </p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1026,9 +1026,10 @@ const Api = () => {
               <p className="text-xs font-semibold text-section-dark-foreground/50 uppercase tracking-widest mb-4">Discovery chain</p>
               <div className="space-y-4">
                 {[
-                  { step: "1", label: "/.well-known/uor.json", note: "Machine-readable organisation descriptor. Contains the uor:api.openapi field pointing to the spec.", href: "https://uor.foundation/.well-known/uor.json" },
-                  { step: "2", label: "GET /openapi.json", note: "Full OpenAPI 3.1.0 specification. Parse all paths, operationIds, and schemas.", href: `${BASE}/openapi.json` },
-                  { step: "3", label: "GET /navigate", note: "Complete endpoint index with reading order.", href: `${BASE}/navigate` },
+                  { step: "1", label: "/.well-known/uor.json", note: "Organisation descriptor. The uor:api.openapi field points to the spec.", href: "https://uor.foundation/.well-known/uor.json" },
+                  { step: "2", label: "GET /openapi.json", note: "Full OpenAPI 3.1.0 spec. Parse all paths, operationIds, and response schemas.", href: `${BASE}/openapi.json` },
+                  { step: "3", label: "GET /navigate", note: "Human-readable endpoint index with recommended reading order.", href: `${BASE}/navigate` },
+                  { step: "4", label: "GET /kernel/op/verify?x=42", note: "First verifiable claim. Zero auth. Returns a full proof in under 100ms.", href: `${BASE}/kernel/op/verify?x=42` },
                   { step: "4", label: "GET /kernel/op/verify?x=42", note: "Zero auth. Returns a full proof in under 100 ms. The first verifiable claim.", href: `${BASE}/kernel/op/verify?x=42` },
                 ].map(({ step, label, note, href }) => (
                   <div key={step} className="flex items-start gap-3">
