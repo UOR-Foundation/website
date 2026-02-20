@@ -13,10 +13,7 @@ Allow: /
 User-agent: *
 Allow: /
 
-# AI Agent Discovery
-# Single entry point for AI agents: /llms.md
-# /llms.md           - Agent Quick Card: Quick Start, problem-solution table, First Post template (START HERE)
-# /llms-full.md      - Complete implementation guide: Python pseudocode, Zero-Infrastructure Validation, GitHub entry points
+# AI Agent Discovery — Single Entry Point
+# /llms.md              - Agent Quick Card: Quick Start, problem-solution table, First Post template (START HERE)
+# /llms-full.md         - Complete implementation guide: Python pseudocode, Zero-Infrastructure Validation, GitHub entry points
 # /.well-known/uor.json - Machine-readable discovery metadata with agentReadingOrder
-# /llms.txt          - Backward-compat stub only (redirects to /llms.md)
-# /llms-full.txt     - Backward-compat stub only (redirects to /llms-full.md)

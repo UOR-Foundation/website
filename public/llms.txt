@@ -1,9 +1,0 @@
----
-type: redirect-stub
-preferred: https://uor.foundation/llms.md
----
-
-This file is a backward-compatibility stub.
-The primary agent entry point has moved to Markdown.
-
-Read: https://uor.foundation/llms.md
