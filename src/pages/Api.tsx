@@ -850,23 +850,23 @@ const Api = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { problem: "Identity Fraud", solution: "Anyone can claim to be an agent. UOR content addresses are derived from what an agent actually produced — they cannot be faked.", endpoint: "Layer 1", layerId: "layer-1", layerNum: 1 },
-              { problem: "Auth Exploits", solution: "Tokens and signatures can be stolen. UOR proof objects are self-verifying — any party checks them independently, with no server contact.", endpoint: "Layer 4", layerId: "layer-4", layerNum: 4 },
-              { problem: "Prompt Injection", solution: "Malicious instructions can be hidden in inputs. Execution traces record every step taken — divergence from expected behaviour is immediately visible.", endpoint: "Layer 4", layerId: "layer-4", layerNum: 4 },
-              { problem: "Content Spam", solution: "Pattern-matching filters are easy to fool. UOR measures algebraic byte-class distribution — a formal, reproducible property of the content's structure, not a trained heuristic. Low density is a reliable signal; high density requires content-level review.", endpoint: "Layer 5", layerId: "layer-5", layerNum: 5 },
-              { problem: "Opaque Coordination", solution: "Agents sharing values cannot verify each other's work without a shared definition. Every UOR operation is named, formal, and reproducible.", endpoint: "Layer 2", layerId: "layer-2", layerNum: 2 },
-              { problem: "No Coherence Model", solution: "Without a common mathematical foundation, agent coordination breaks on edge cases. UOR coherence proofs confirm a data type is consistent across every possible value.", endpoint: "Layer 4", layerId: "layer-4", layerNum: 4 },
+              { problem: "Identity Fraud", solution: "Anyone can pretend to be anyone online. UOR gives every piece of content a unique fingerprint — derived from what it actually says, not who claims to own it.", endpoint: "Layer 1", layerId: "layer-1", layerNum: 1 },
+              { problem: "Auth Exploits", solution: "Passwords and tokens get stolen. UOR proofs are mathematical — any recipient can verify them independently, with no server or middleman involved.", endpoint: "Layer 4", layerId: "layer-4", layerNum: 4 },
+              { problem: "Prompt Injection", solution: "Hidden instructions can silently change what an AI does. UOR records every step of a computation — so any deviation from expected behaviour is immediately detectable.", endpoint: "Layer 4", layerId: "layer-4", layerNum: 4 },
+              { problem: "Content Spam", solution: "AI spam filters are easy to fool with paraphrasing. UOR scores content using algebraic structure — a fixed mathematical property that cannot be gamed by rewording.", endpoint: "Layer 5", layerId: "layer-5", layerNum: 5 },
+              { problem: "Opaque Coordination", solution: "When AI agents share results, there is no standard way to check the work. Every UOR operation has a formal name and definition — any agent can verify any result.", endpoint: "Layer 2", layerId: "layer-2", layerNum: 2 },
+              { problem: "No Coherence Model", solution: "AI systems break down when they silently disagree on the meaning of data. UOR coherence proofs confirm that a data type behaves consistently — across every possible value.", endpoint: "Layer 4", layerId: "layer-4", layerNum: 4 },
             ].map(item => (
               <a
                 key={item.problem}
                 href={`#${item.layerId}`}
-                className="rounded-2xl border border-border bg-card p-5 hover:border-primary/30 hover:shadow-md transition-all duration-300 group block"
+                className="rounded-2xl border border-border bg-card p-5 hover:border-primary/30 hover:shadow-md transition-all duration-300 group flex flex-col"
               >
                 <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-2">{item.endpoint}</p>
                 <h3 className="font-display text-lg font-bold text-foreground mb-2">{item.problem}</h3>
-                <p className="text-base font-body text-muted-foreground leading-relaxed mb-4">{item.solution}</p>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary/70 group-hover:text-primary transition-colors duration-200">
-                  Validate with Layer {item.layerNum} endpoints
+                <p className="text-sm font-body text-muted-foreground leading-relaxed flex-1">{item.solution}</p>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary/70 group-hover:text-primary transition-colors duration-200 mt-4 pt-4 border-t border-border">
+                  Try this now
                   <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform duration-200" />
                 </span>
               </a>
