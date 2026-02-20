@@ -31,7 +31,7 @@ const highlights = [
     title: "UOR Community Call",
     date: "March 3, 2026",
     image: highlightCommunityCall,
-    href: "/research#events",
+    href: "https://discord.com/channels/1342910418754076732/1342910419370774532/1474210293386055772",
   },
 ];
 

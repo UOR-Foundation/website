@@ -66,7 +66,7 @@ const events = [
     location: "Virtual",
     date: "March 3, 2026",
     type: "Community Call",
-    link: "https://discord.gg/ZwuZaNyuve",
+    link: "https://discord.com/channels/1342910418754076732/1342910419370774532/1474210293386055772",
     calendarDate: "20260303",
   },
 ];
