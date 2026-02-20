@@ -1,4 +1,6 @@
 import GalaxyAnimation from "@/components/animations/GalaxyAnimation";
+import { Heart } from "lucide-react";
+import lobsterIcon from "@/assets/lobster-icon.png";
 
 const HeroSection = () => {
   return (
@@ -37,15 +39,17 @@ const HeroSection = () => {
             className="mt-6 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-2.5 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.6s" }}
           >
-            <a href="#intro" className="btn-primary">
+            <a href="#intro" className="btn-primary inline-flex items-center gap-2">
+              <Heart size={16} className="fill-current text-red-400" />
               I'm a Human
             </a>
             <a
               href="/llms.md"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-outline"
+              className="btn-outline inline-flex items-center gap-2"
             >
+              <img src={lobsterIcon} alt="lobster" className="w-5 h-5 object-contain" />
               I'm an Agent
             </a>
           </div>
