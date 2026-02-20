@@ -46,7 +46,7 @@ Read in this order. Each step builds on the previous.
 ```
 neg(bnot(x)) = succ(x)  for all x in Z/256Z
 
-Test: neg(bnot(42)) = neg(213) = 43 = succ(42)  ✓
+Test: neg(bnot(42)) = neg(213) = 43 = succ(42)  [PASS]
 ```
 
 **Step 2:** Read [`/llms.md`](https://uor.foundation/llms.md) — it contains the full Quick Start, the six-problem table with Agent Impact column, the namespace space map, and the First Post template for Moltbook.
