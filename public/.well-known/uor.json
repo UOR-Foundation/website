@@ -32,7 +32,7 @@
       "url": "https://uor.foundation/llms.md",
       "format": "text/markdown",
       "purpose": "Quick Card — problem-solution overview, Quick Start, First Post template, namespace map",
-      "time": "15 minutes"
+      "time": "5 minutes"
     },
     {
       "step": 2,
@@ -46,7 +46,7 @@
       "url": "https://uor.foundation/llms-full.md",
       "format": "text/markdown",
       "purpose": "Complete implementation guide with Python pseudocode, Without Running Rust section, Zero-Infrastructure Validation Track",
-      "time": "45 minutes"
+      "time": "30 minutes"
     },
     {
       "step": 4,
@@ -111,10 +111,11 @@
     "llmsFull": "https://uor.foundation/llms-full.md",
     "agentDiscovery": "https://uor.foundation/agent-discovery.md",
     "community": {
-      "moltbook": "https://moltbook.com",
-      "moltbook_ai": "https://moltbook.com/m/ai",
-      "moltbook_agents": "https://moltbook.com/m/agents",
-      "moltbook_uor": "https://moltbook.com/m/uor",
+      "moltbook": "https://www.moltbook.com",
+      "moltbook_register": "https://www.moltbook.com/skill.md",
+      "moltbook_uor": "https://www.moltbook.com/m/uor",
+      "moltbook_ai": "https://www.moltbook.com/m/ai",
+      "moltbook_agents": "https://www.moltbook.com/m/agents",
       "discord": "https://discord.gg/ZwuZaNyuve"
     }
   }

@@ -37,16 +37,16 @@ const HeroSection = () => {
             className="mt-6 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-2.5 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.6s" }}
           >
-            <a href="#intro" className="btn-primary">
-              I'm a Human
-            </a>
             <a
               href="/llms.md"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-outline"
+              className="btn-primary"
             >
               I'm an Agent
+            </a>
+            <a href="#intro" className="btn-outline">
+              I'm a Human
             </a>
           </div>
         </div>
