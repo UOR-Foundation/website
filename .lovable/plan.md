@@ -1,165 +1,183 @@
 
-# UOR API Audit — Fixes Plan
+# UOR API Compliance Improvements — Implementation Plan
 
-## What the audit found, and what we're going to fix
+## Overview
 
-The audit is thorough and accurate. The good news: every single endpoint already works. The problems are entirely in how the API describes itself — mislabeled statuses, a broken discovery chain, a `/navigate` index that hides three of the best endpoints, and copy that overstates what partition analysis actually does. Every fix below is surgical.
+The Genetic AI audit identified 6 remaining issues and 6 new issues across the edge function, OpenAPI spec, and `llms.md`. This plan addresses all of them in priority order, making structural changes to three files:
+
+1. `supabase/functions/uor-api/index.ts` — the live edge function
+2. `public/openapi.json` — the static spec served at `uor.foundation/openapi.json`
+3. `public/llms.md` — the agent quick card
 
 ---
 
-## Priority 1 — Critical fixes (broken agent experience)
+## Changes by File
 
-### Fix 1: `/openapi.json` on the edge function returns a meta-document, not a spec
+### File 1: `supabase/functions/uor-api/index.ts`
 
-**Current behaviour:** `GET .../uor-api/openapi.json` returns a JSON-LD `sdo:WebAPI` object pointing to the spec elsewhere. An automated client following the discovery chain (`/.well-known/uor.json → uor:api.openapi → /openapi.json`) gets zero paths and must follow a second URL.
+**Issue 1 (Priority 1): Replace inline `@context` with a URL string**
 
-**Fix:** Replace the `openapiSpec()` handler in `supabase/functions/uor-api/index.ts` with a `301 Redirect` to `https://uor.foundation/openapi.json`. This is one line. Any client following the discovery chain will land on the real 19-path spec immediately.
-
-```text
-GET .../uor-api/openapi.json
-→ 301 Location: https://uor.foundation/openapi.json
+The 741-byte `UOR_CONTEXT` object is currently embedded inline into every single response. The fix is one structural change: replace:
 ```
+"@context": UOR_CONTEXT,
+```
+with:
+```
+"@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+```
+across all 17 endpoint handlers. This reduces every response by ~35% and is the highest-leverage single change in the entire audit. A static context document will be created at `public/contexts/uor-v1.jsonld`.
 
----
+**Issue 2 (Priority 2): Add `summary` flat field to the 12 endpoints that lack it**
 
-### Fix 2: `/navigate` hides 3 working endpoints (`/bridge/derivation`, `/bridge/trace`, `/bridge/resolver`)
+Currently only 5 of 17 endpoints return a `summary` object. The remaining 12 will each receive a concise, JSON-LD-free `summary` block containing the most important fields as plain key/value pairs. Each summary goes at the top of the response body so agents can read the result without parsing namespaced JSON-LD.
 
-**Current behaviour:** The `frameworkIndex()` function puts derivation, trace, and resolver under a separate `endpoints_also` sub-key inside the bridge space — not in the main `endpoints` array. Many clients iterating `bridge.endpoints` miss them entirely.
+Endpoints to add summary to:
+- `/bridge/derivation` — source_value, operation_sequence, final_value, steps, identity_holds, statement
+- `/bridge/trace` — source_value, operation_sequence, final_state, frames, total_hamming_drift, injection_detected, note
+- `/bridge/resolver` — input, component, canonical_form, is_irreducible, category_label
+- `/user/morphism/transforms` — input, from_ring, to_ring, image, morphism_type, is_injective, is_isomorphism, ring_structure_preserved
+- `/user/state` — value, component, stable_entry, phase_boundary, transition_count, critical_identity_holds
+- `/bridge/cert/involution` — operation, total_checked, passed, failed, verified, statement
+- `/bridge/observable/metrics` — value, ring_distance, hamming_weight, cascade_depth, at_phase_boundary
+- `/kernel/op/compute` — x, y, neg, bnot, succ, pred, add, sub, mul, xor, and, or, critical_identity_holds
+- `/kernel/op/operations` — total, unary_count, binary_count, special_count, critical_identity_individuals
+- `/kernel/schema/datum` — value, quantum, stratum, spectrum, glyph_character, ring
+- `/user/type/primitives` — total_primitive_types, rings
+- `/navigate` — already has a description but will get a flat summary: total_endpoints, spaces, quick_start_url
 
-**Fix:** Move all three into the main `bridge.endpoints` array alongside the other bridge endpoints. Add `example` URLs with pre-filled parameters. These are among the most compelling endpoints in the API (prompt injection detection), and they are fully live.
+**Issue 3 (Priority 3): Fix `X-UOR-Space` header values**
 
----
+The header constants are defined statically at the top. Currently:
+- `CACHE_HEADERS_KERNEL` always sets `X-UOR-Space: kernel`
+- `CACHE_HEADERS_CONTENT` always sets `X-UOR-Space: bridge`
 
-### Fix 3: `/navigate` count in `openapiSpec()` is wrong (says 14, reality is 19+)
+This means 6 endpoints get the wrong value. The fix: add a third header constant `CACHE_HEADERS_USER` with `X-UOR-Space: user`, and audit every handler call to `jsonResp(...)` to pass the correct header set:
 
-**Current behaviour:** The `openapiSpec()` meta-document says `"paths_count": 14`. Actual working paths: 19 (plus the simple `/uor-verify` endpoint at the other function). The navigate response itself also omits the count.
-
-**Fix:** Update the count to 19 in the meta-document. Also update the `note` field to accurately reflect what the static spec contains.
-
----
-
-## Priority 2 — OpenAPI spec fixes (`public/openapi.json`)
-
-### Fix 4: 5 endpoints marked "not implemented" in the static spec — they all work
-
-**Current state in `public/openapi.json`:**
-
-| Path | Spec says | Reality |
+| Endpoint | Correct Space | Fix |
 |---|---|---|
-| `/bridge/derivation` | `501 Not Implemented` | Returns `200 DerivationTrace` |
-| `/bridge/trace` | `501 Not Implemented` | Returns `200 ExecutionTrace` |
-| `/bridge/resolver` | `501 Not Implemented` | Returns `200 Resolution` |
-| `/user/morphism/transforms` | `501 Not Implemented` | Returns `200 RingHomomorphism` |
-| `/user/state` | `501 Not Implemented` | Returns `200 Frame` |
+| `/bridge/cert/involution` | bridge | Change from KERNEL → CONTENT |
+| `/user/type/primitives` | user | Change from KERNEL → USER (new constant) |
+| `/user/morphism/transforms` | user | Already uses CONTENT → change to USER |
+| `/user/state` | user | Already uses CONTENT → change to USER |
+| `/bridge/derivation` | bridge | Already correct |
+| `/bridge/trace` | bridge | Already correct |
+| `/bridge/resolver` | bridge | Already correct |
 
-**Fix:** For each of the five endpoints in `public/openapi.json`:
-- Update the `summary` to remove "not implemented in v1"
-- Update the `description` to describe what the endpoint actually returns
-- Replace the `501` response with a proper `200` response with schema and parameter definitions
-- Add `parameters` arrays (`x`, `n`, `ops` where applicable)
-- Update the tag descriptions to remove the "not implemented in v1" text
+**Issue 4 (New Issue 3, New Issue 2): Fix morphism `to_n` default and add `externalDocs`**
 
-This single change transforms the perceived API surface from 14 to 19 endpoints at zero implementation cost.
+Change the `to_n` default from `4` (projection, lossy) to `16` (inclusion, lossless) to match the navigate index example (`?x=42&from_n=8&to_n=16`). This makes the default response demonstrate an `InclusionHomomorphism`, which is the most illustrative for the UOR identity claim.
 
-### Fix 5: Tag descriptions for bridge-derivation, bridge-trace, bridge-resolver, user-morphism, user-state
+**Issue 5 (New Issue 4): Add injection-detection worked example to `/bridge/trace`**
 
-Each tag currently says `"(not implemented in v1). Requires Rust conformance suite."` — update to describe what the endpoint actually returns.
+Add an `injection_example` field to the `/bridge/trace` response that demonstrates the key use case: show what a normal trace looks like (`drift=0`) vs what non-zero drift signals. This makes the prompt injection detection claim concrete and self-demonstrating in the live API response.
 
-### Fix 6: Remove the dead second server entry
+**Issue 6 (Priority 6 + New Issue 6): Fix `415` enforcement for POST endpoints**
 
-The `servers` array lists `https://uor.foundation/api/v1` as a server. Every request to that URL returns a 404 HTML page. This breaks any toolchain (Swagger UI, Postman, etc.) that tries the second server. Remove it or mark it clearly as `x-server-status: planned`.
-
----
-
-## Priority 3 — Response quality fixes (edge function)
-
-### Fix 7: Add a flat `summary` block to every response
-
-**Current problem:** The key result is buried inside JSON-LD prefixed keys. An agent parsing `proof:verified` has to know JSON-LD conventions. A flat `summary` object at the top level lets agents consume results in one line.
-
-**Fix:** Add a `summary` field to every response that contains the key result fields with plain names (no namespace prefixes). Example for `/kernel/op/verify`:
-
-```json
-{
-  "summary": {
-    "verified": true,
-    "x": 42,
-    "statement": "neg(bnot(42)) = 43 = succ(42) [PASS]"
-  },
-  "@type": "proof:CriticalIdentityProof",
-  ...
+Add a Content-Type check to the POST handlers (`/kernel/address/encode`, `/bridge/partition`, `/bridge/proof/coherence`):
+```typescript
+const contentType = req.headers.get('content-type') ?? '';
+if (!contentType.includes('application/json')) {
+  return new Response(JSON.stringify({ error: 'Content-Type must be application/json', code: 'UNSUPPORTED_MEDIA_TYPE' }), 
+    { status: 415, headers: JSON_HEADERS });
 }
 ```
 
-This does not remove any existing fields — it adds a convenience layer on top.
+---
 
-### Fix 8: Add `partition_interpretation` field to partition responses
+### File 2: `public/openapi.json`
 
-**Current problem:** `"aaaaaaaaaa"` gets `quality_signal: PASS` with `density: 1.0` because byte 97 (`a`) is algebraically irreducible (odd, not a unit). This is mathematically correct but misleading — repetitive content passes spam detection. The audit correctly identifies this as a semantics mismatch.
+**Changes needed:**
 
-**Fix:** Add a `partition_interpretation` field to the partition response that makes the algebraic nature of the test explicit:
+1. **`@context` schema update** — Change `"@context": { "type": "object" }` to `"@context": { "type": "string", "format": "uri" }` in `CriticalIdentityProofResponse` and all other schemas that reference `@context`.
 
-```json
-"partition_interpretation": {
-  "method": "algebraic-byte-class",
-  "note": "Density measures algebraic class distribution of byte values — not semantic novelty or entropy. Repetitive content with algebraically irreducible byte values (odd bytes that are not ring units) will score high density.",
-  "threshold": 0.25,
-  "result": "PASS",
-  "caveat": "byte 97 ('a') is algebraically irreducible — repeated content with this byte will always PASS"
-}
+2. **Add `externalDocs` to all 13 tags** — Each tag gets a link to its corresponding Rust source file in the UOR Framework repo. Example for `bridge-derivation`:
+   ```json
+   "externalDocs": {
+     "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/derivation.rs",
+     "description": "derivation.rs — ontology source"
+   }
+   ```
+
+3. **Fix `to_n` default** — Change `"default": 4` to `"default": 16` for the `to_n` parameter in `/user/morphism/transforms` to match the edge function change.
+
+4. **Add named schemas for 5 restored endpoints** — Replace the inline `"type": "object"` schema for `/bridge/derivation`, `/bridge/trace`, `/bridge/resolver`, `/user/morphism/transforms`, and `/user/state` with proper `$ref` references to new named schemas: `DerivationTraceResponse`, `ExecutionTraceResponse`, `ResolutionResponse`, `RingHomomorphismResponse`, and `StateFrameResponse`. Each will capture the key fields with proper types.
+
+5. **Update rate limit description for bridge GETs** — Change the spec text from "bridge: 60 req/min" to "bridge GET: 120 req/min, bridge POST: 60 req/min" to match actual server behaviour.
+
+6. **Add top-level `externalDocs`** — Add to the spec root:
+   ```json
+   "externalDocs": {
+     "description": "UOR Framework GitHub source and conformance suite",
+     "url": "https://github.com/UOR-Foundation/UOR-Framework"
+   }
+   ```
+
+---
+
+### File 3: `public/llms.md`
+
+**Changes needed:**
+
+1. **Update API summary table** — Add `derivation:`, `trace:`, `resolver:` to the bridge row, and correct the rate limit column to show "GET: 120 / POST: 60" for bridge:
+
+```
+| /kernel | u:, schema:, op:                                            | None     | 120 req/min        |
+| /bridge | partition:, proof:, cert:, observable:,                     | Optional | GET: 120 / POST: 60|
+|         | derivation:, trace:, resolver:                              |          |                    |
+| /user   | type:, morphism:, state:                                    | Optional | 120 req/min        |
 ```
 
-Also update the `quality_signal` field label to `algebraic_density_signal` to be unambiguous.
+2. **Extend Step 3 — Bridge Space section** — Add the three restored endpoints with example calls:
 
-### Fix 9: Expose the `uor-verify` simple endpoint in the navigate index
+```
+# Execution audit trail — derivation:DerivationTrace
+GET {BASE_URL}/bridge/derivation?x=42&ops=neg,bnot,succ
+→ { "summary": { "final_value": 42, "steps": 3, "identity_holds": true }, ... }
 
-The simple `GET /uor-verify?x=42` endpoint (at the `uor-verify` function, not the `uor-api` function) is the clearest first-call in the API — flat JSON, 5 fields, zero JSON-LD. The audit correctly identifies it as the strongest onboarding asset. Add it to the navigate response `quick_start` section with a note explaining it is the simplest entry point.
+# Bit-level trace — trace:ExecutionTrace (non-zero totalHammingDrift = injection signal)
+GET {BASE_URL}/bridge/trace?x=42&ops=neg,bnot
+→ { "summary": { "total_hamming_drift": 0, "injection_detected": false }, ... }
 
-### Fix 10: Fix parameterless calls on derivation/trace/resolver returning 404 instead of 400
+# Canonical factorization — resolver:Resolution
+GET {BASE_URL}/bridge/resolver?x=42
+→ { "summary": { "component": "partition:ReducibleSet", "canonical_form": "2^1 × 21", "is_irreducible": false }, ... }
+```
 
-**Current behaviour:** `GET /bridge/derivation` (no `x` param) returns a 400 error correctly — but the navigate index implies calling without params works. The parameter validation in these handlers already handles this correctly (returns 400). The issue is only in the navigate description — it should explicitly document that `x` is required.
+3. **Add injection detection worked example** — Add a short, concrete worked example showing how an agent uses the trace endpoint to detect anomalous operations:
 
-**Fix:** Ensure the navigate endpoint entries for derivation, trace, and resolver clearly list `x` as required (not optional).
+```
+# Injection detection: compare two operation sequences
+# Normal (canonical) sequence — neg followed by bnot returns to original:
+GET {BASE_URL}/bridge/trace?x=42&ops=neg,bnot
+→ trace:totalHammingDrift = 0 (zero drift = canonical sequence, no anomaly)
 
----
+# Anomalous sequence — unexpected extra operation appended:
+GET {BASE_URL}/bridge/trace?x=42&ops=neg,bnot,succ
+→ trace:totalHammingDrift = -2 (non-zero drift = sequence diverges from canonical)
 
-## Priority 4 — Copy fixes (Api.tsx page + openapi.json descriptions)
-
-### Fix 11: Correct the partition description throughout `Api.tsx`
-
-The UI copy in `src/pages/Api.tsx` currently describes partition as measuring "information density" and flags low scores as "strong signal of spam or filler." After the audit's finding (algebraic, not semantic), this needs qualification. The explanation for the partition endpoint should add one sentence: "Note: density measures algebraic byte-class distribution, not semantic novelty."
-
-### Fix 12: Correct the `/bridge/cert/involution` framing in `Api.tsx`
-
-The current UI copy for Problem 2 (Auth Exploits) implies `cert:TransformCertificate` is available via the API. The audit shows only `cert:InvolutionCertificate` is exposed. The copy should be adjusted to describe what is actually available, not the aspirational planned endpoint.
-
----
-
-## Files changed
-
-| File | Changes |
-|---|---|
-| `supabase/functions/uor-api/index.ts` | Fix `/openapi.json` handler to return 301 redirect; fix `frameworkIndex` to move 3 endpoints into main array and add `example` URLs; add `summary` blocks to every handler; add `partition_interpretation` to partition handler; add uor-verify to quick_start |
-| `public/openapi.json` | Fix 5 endpoint specs from 501→200 with proper schemas and parameters; fix 5 tag descriptions; remove/clarify the dead second server entry; update paths_count references |
-| `src/pages/Api.tsx` | Qualify partition description; fix auth exploits problem card to match what the cert endpoint actually provides |
+Non-zero drift signals that the executed operation sequence differs from what was declared.
+This is the UOR mechanism for prompt injection detection.
+```
 
 ---
 
-## What we are NOT changing
+### New File: `public/contexts/uor-v1.jsonld`
 
-- The mathematical logic in any endpoint — the audit confirmed every computation is correct
-- The JSON-LD structure of responses — the context and namespaces are correct
-- The rate limit logic — it works; rate-limit headers are already returned
-- The `uor-verify` simple endpoint itself — it is already excellent
-- The `/bridge/cert/involution` endpoint itself — it works and returns correct data
-- Any new endpoints — the audit's priority 5 suggestions (pairwise coherence, TransformCertificate, trace/compare) are aspirational. We will not build them now; we will ensure the existing endpoints are correctly represented.
+Create the static JSON-LD context document containing the full `UOR_CONTEXT` object that currently lives inline in the edge function. This is the document that `"@context": "https://uor.foundation/contexts/uor-v1.jsonld"` will point to. It must serve the `application/ld+json` media type and be reachable at that exact URL through the Vite static file serving.
 
 ---
 
-## Sequencing
+## Technical Notes
 
-1. **Edge function** (`index.ts`) — deploy first; all route/response fixes
-2. **Static spec** (`openapi.json`) — update in parallel with edge function
-3. **UI copy** (`Api.tsx`) — update in parallel, no deploy dependency
+- The edge function is ~1,881 lines. The `@context` change touches approximately 17 call sites. All other changes are additive (adding `summary` fields, fixing header constants, fixing default values).
+- The `public/openapi.json` is ~1,441 lines. Tag `externalDocs` additions are purely additive. The 5 new named schemas will be appended to `components/schemas`.
+- The `public/llms.md` changes are purely additive — new content inserted after existing sections.
+- After deploying the edge function, the `@context` URL must resolve. Since `public/contexts/uor-v1.jsonld` is a static file, it will be available at `https://uor.foundation/contexts/uor-v1.jsonld` after the next publish.
+- No database migrations or authentication changes are required.
 
-All three files can be edited in one pass and deployed together.
+## Prioritised Implementation Order
+
+1. Create `public/contexts/uor-v1.jsonld` (prerequisite for context URL change)
+2. Update edge function — `@context` URL, summary fields, X-UOR-Space fixes, morphism default, 415 enforcement, injection example
+3. Update `public/openapi.json` — `@context` schema type, externalDocs, new named schemas, to_n default, rate limit accuracy
+4. Update `public/llms.md` — table, three restored endpoints, injection detection example
