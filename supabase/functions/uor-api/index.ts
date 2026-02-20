@@ -1833,7 +1833,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const url = new URL(req.url);
-  let path = url.pathname.replace(/^\/functions\/v1\/uor-api/, '').replace(/^\/uor-api/, '') || '/';
+  let path = url.pathname.replace(/^\/functions\/v1\/uor-api/, '').replace(/^\/uor-api/, '').replace(/^\/v1/, '') || '/';
 
   const ip = getIP(req);
   const isPost = req.method === 'POST';
