@@ -176,6 +176,41 @@ GET {BASE_URL}/bridge/cert/involution?operation=neg
 
 # observable metrics: RingMetric, HammingMetric, CascadeLength for x
 GET {BASE_URL}/bridge/observable/metrics?x=42
+
+# Execution audit trail — derivation:DerivationTrace
+GET {BASE_URL}/bridge/derivation?x=42&ops=neg,bnot,succ
+→ { "summary": { "source_value": 42, "operation_sequence": ["neg","bnot","succ"], "final_value": 42,
+    "steps": 3, "identity_holds": true, "statement": "neg(bnot(42)) = succ(42) in R_8 [PASS]" }, ... }
+
+# Bit-level trace — trace:ExecutionTrace (non-zero totalHammingDrift = injection signal)
+GET {BASE_URL}/bridge/trace?x=42&ops=neg,bnot
+→ { "summary": { "total_hamming_drift": 0, "injection_detected": false,
+    "note": "zero Hamming drift — operation sequence is canonical" }, ... }
+
+# Canonical factorization — resolver:Resolution
+GET {BASE_URL}/bridge/resolver?x=42
+→ { "summary": { "component": "partition:ReducibleSet", "canonical_form": "2^1 × 21",
+    "is_irreducible": false, "category_label": "Reducible — decomposes in R_8" }, ... }
+```
+
+### Injection Detection: Worked Example
+
+```
+# UOR structural mechanism: compare Hamming drift between declared and executed op sequences
+
+# Normal (canonical) sequence — neg followed by bnot:
+GET {BASE_URL}/bridge/trace?x=42&ops=neg,bnot
+→ trace:totalHammingDrift = 0
+  (zero drift = sequence is canonical, no anomaly detected)
+
+# Anomalous sequence — unexpected extra operation appended:
+GET {BASE_URL}/bridge/trace?x=42&ops=neg,bnot,succ
+→ trace:totalHammingDrift = -2
+  (non-zero drift = sequence diverges from canonical — possible injection signal)
+
+Detection rule: compare trace:totalHammingDrift between what was declared and what was
+executed. Non-zero divergence signals that the operation sequence was modified in transit.
+This is the UOR structural mechanism for prompt injection detection — not a heuristic.
 ```
 
 ### Step 4 — User Space (Type System)
