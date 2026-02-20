@@ -26,20 +26,63 @@ const CACHE_HEADERS_CONTENT = {
   'X-UOR-Space': 'bridge',
 };
 
+// ── Known valid paths → allowed methods ─────────────────────────────────────
+const KNOWN_PATHS: Record<string, string[]> = {
+  '/':                                  ['GET', 'OPTIONS'],
+  '/navigate':                          ['GET', 'OPTIONS'],
+  '/openapi.json':                      ['GET', 'OPTIONS'],
+  '/kernel/op/verify':                  ['GET', 'OPTIONS'],
+  '/kernel/op/verify/all':              ['GET', 'OPTIONS'],
+  '/kernel/op/compute':                 ['GET', 'OPTIONS'],
+  '/kernel/op/operations':              ['GET', 'OPTIONS'],
+  '/kernel/address/encode':             ['POST', 'OPTIONS'],
+  '/kernel/schema/datum':               ['GET', 'OPTIONS'],
+  '/bridge/partition':                  ['POST', 'OPTIONS'],
+  '/bridge/proof/critical-identity':    ['GET', 'OPTIONS'],
+  '/bridge/proof/coherence':            ['POST', 'OPTIONS'],
+  '/bridge/cert/involution':            ['GET', 'OPTIONS'],
+  '/bridge/observable/metrics':         ['GET', 'OPTIONS'],
+  '/user/type/primitives':              ['GET', 'OPTIONS'],
+  '/bridge/derivation':                 ['GET', 'OPTIONS'],
+  '/bridge/trace':                      ['GET', 'OPTIONS'],
+  '/bridge/resolver':                   ['GET', 'OPTIONS'],
+  '/user/morphism/transforms':          ['GET', 'OPTIONS'],
+  '/user/state':                        ['GET', 'OPTIONS'],
+};
+
 // ── Rate Limiting (in-memory sliding window) ────────────────────────────────
 const rateLimitWindows = new Map<string, number[]>();
 
-function checkRateLimit(ip: string, isPost: boolean): boolean {
+interface RateLimitResult {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+}
+
+function checkRateLimit(ip: string, isPost: boolean): RateLimitResult {
   const limit = isPost ? 60 : 120;
   const now = Date.now();
   const windowMs = 60_000;
   const key = `${ip}:${isPost ? 'post' : 'get'}`;
   const times = rateLimitWindows.get(key) ?? [];
   const recent = times.filter(t => now - t < windowMs);
-  if (recent.length >= limit) return false;
+  const reset = Math.ceil((now + windowMs) / 1000);
+
+  if (recent.length >= limit) {
+    return { allowed: false, limit, remaining: 0, reset };
+  }
   recent.push(now);
   rateLimitWindows.set(key, recent);
-  return true;
+  return { allowed: true, limit, remaining: limit - recent.length, reset };
+}
+
+// ── ETag computation ─────────────────────────────────────────────────────────
+function makeETag(path: string, params: Record<string, string>): string {
+  const key = path + JSON.stringify(params, Object.keys(params).sort());
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return `"uor-${h.toString(16)}"`;
 }
 
 // ── Ring R_n = Z/(2^n)Z ─────────────────────────────────────────────────────
@@ -102,33 +145,66 @@ function getIP(req: Request): string {
 
 function timestamp(): string { return new Date().toISOString(); }
 
+// ── Rate limit headers builder ────────────────────────────────────────────────
+function rateLimitHeaders(rl: RateLimitResult): Record<string, string> {
+  return {
+    'X-RateLimit-Limit': String(rl.limit),
+    'X-RateLimit-Remaining': String(rl.remaining),
+    'X-RateLimit-Reset': String(rl.reset),
+  };
+}
+
 // ── Standard error responses ──────────────────────────────────────────────────
-function error400(message: string, param?: string): Response {
+function error400(message: string, param?: string, rl?: RateLimitResult): Response {
   return new Response(JSON.stringify({
     error: message,
     code: 'INVALID_PARAMETER',
     ...(param ? { param } : {}),
     docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
-  }), { status: 400, headers: JSON_HEADERS });
+  }), { status: 400, headers: { ...JSON_HEADERS, ...(rl ? rateLimitHeaders(rl) : {}) } });
 }
 
-function error429(ip: string): Response {
+function error405(path: string, allowedMethods: string[]): Response {
+  const allow = allowedMethods.filter(m => m !== 'OPTIONS').join(', ') + ', OPTIONS';
+  return new Response(JSON.stringify({
+    error: `Method not allowed for ${path}. Allowed: ${allow}`,
+    code: 'METHOD_NOT_ALLOWED',
+    docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
+  }), { status: 405, headers: { ...JSON_HEADERS, 'Allow': allow } });
+}
+
+function error429(rl: RateLimitResult): Response {
   return new Response(JSON.stringify({
     error: 'Rate limit exceeded',
     code: 'RATE_LIMITED',
     docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
-  }), { status: 429, headers: { ...JSON_HEADERS, 'Retry-After': '60' } });
+  }), { status: 429, headers: { ...JSON_HEADERS, 'Retry-After': '60', ...rateLimitHeaders(rl) } });
 }
 
-function error413(): Response {
+function error413(rl?: RateLimitResult): Response {
   return new Response(JSON.stringify({
     error: 'Input exceeds maximum length of 1000 characters',
     code: 'PAYLOAD_TOO_LARGE',
     docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
-  }), { status: 413, headers: JSON_HEADERS });
+  }), { status: 413, headers: { ...JSON_HEADERS, ...(rl ? rateLimitHeaders(rl) : {}) } });
 }
 
-function jsonResp(body: unknown, headers: Record<string, string> = CACHE_HEADERS_KERNEL): Response {
+function error501(rl?: RateLimitResult): Response {
+  return new Response(JSON.stringify({
+    error: 'Not implemented in v1',
+    code: 'NOT_IMPLEMENTED',
+    note: 'This namespace requires the Rust conformance suite for full dihedral factorization.',
+    conformance_suite: 'https://github.com/UOR-Foundation/UOR-Framework',
+    docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
+  }), { status: 501, headers: { ...JSON_HEADERS, ...(rl ? rateLimitHeaders(rl) : {}) } });
+}
+
+function jsonResp(body: unknown, extraHeaders: Record<string, string> = CACHE_HEADERS_KERNEL, etag?: string, rl?: RateLimitResult): Response {
+  const headers: Record<string, string> = {
+    ...extraHeaders,
+    ...(rl ? rateLimitHeaders(rl) : {}),
+    ...(etag ? { 'ETag': etag } : {}),
+  };
   return new Response(JSON.stringify(body, null, 2), { status: 200, headers });
 }
 
@@ -159,7 +235,7 @@ const UOR_CONTEXT = {
 // ════════════════════════════════════════════════════════════════════════════
 
 // GET /kernel/op/verify?x=42&n=8
-function opVerifyCriticalIdentity(url: URL): Response {
+function opVerifyCriticalIdentity(url: URL, rl: RateLimitResult): Response {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const nRaw = url.searchParams.get('n') ?? '8';
@@ -168,12 +244,13 @@ function opVerifyCriticalIdentity(url: URL): Response {
 
   const x = xRes.val, n = nRes.val;
   const m = modulus(n);
-  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x');
+  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x', rl);
 
   const bnot_x = bnot(x, n);
   const neg_bnot_x = neg(bnot_x, n);
   const succ_x = succOp(x, n);
   const holds = neg_bnot_x === succ_x;
+  const etag = makeETag('/kernel/op/verify', { x: String(x), n: String(n) });
 
   return jsonResp({
     "@context": UOR_CONTEXT,
@@ -210,11 +287,11 @@ function opVerifyCriticalIdentity(url: URL): Response {
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/op.rs",
     "conformance_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/conformance/src/tests/fixtures/test6_critical_identity.rs"
-  });
+  }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // GET /kernel/op/verify/all?n=8&expand=false
-function opVerifyAll(url: URL): Response {
+function opVerifyAll(url: URL, rl: RateLimitResult): Response {
   const nRaw = url.searchParams.get('n') ?? '8';
   const nRes = parseIntParam(nRaw, 'n', 1, 16);
   if ('err' in nRes) return nRes.err;
@@ -245,6 +322,8 @@ function opVerifyAll(url: URL): Response {
 
   const verified = failed === 0;
   const baseUrl = 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api';
+  const etag = makeETag('/kernel/op/verify/all', { n: String(n), expand: String(expand) });
+
   return jsonResp({
     "@context": UOR_CONTEXT,
     "@id": `https://uor.foundation/instance/coherence-proof-n${n}`,
@@ -263,11 +342,11 @@ function opVerifyAll(url: URL): Response {
     ...(expand ? { "proof:witnesses": witnesses } : {}),
     "expand_url": `${baseUrl}/kernel/op/verify/all?expand=true&n=${n}`,
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/proof.rs"
-  });
+  }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // GET /kernel/op/compute?x=42&n=8&y=10
-function opCompute(url: URL): Response {
+function opCompute(url: URL, rl: RateLimitResult): Response {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const nRaw = url.searchParams.get('n') ?? '8';
@@ -276,7 +355,7 @@ function opCompute(url: URL): Response {
 
   const x = xRes.val, n = nRes.val;
   const m = modulus(n);
-  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x');
+  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x', rl);
 
   const yRaw = url.searchParams.get('y');
   let y = x;
@@ -284,11 +363,12 @@ function opCompute(url: URL): Response {
     const yRes = parseIntParam(yRaw, 'y', 0, 65535);
     if ('err' in yRes) return yRes.err;
     y = yRes.val;
-    if (y >= m) return error400(`y must be in [0, ${m-1}] for n=${n}`, 'y');
+    if (y >= m) return error400(`y must be in [0, ${m-1}] for n=${n}`, 'y', rl);
   }
 
   const neg_bnot_x = neg(bnot(x, n), n);
   const succ_x = succOp(x, n);
+  const etag = makeETag('/kernel/op/compute', { x: String(x), n: String(n), y: String(y) });
 
   return jsonResp({
     "@context": UOR_CONTEXT,
@@ -408,11 +488,12 @@ function opCompute(url: URL): Response {
       "statement": `neg(bnot(${x})) = ${neg_bnot_x} = succ(${x}) [${neg_bnot_x === succ_x ? 'PASS' : 'FAIL'}]`
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/op.rs"
-  });
+  }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // GET /kernel/op/operations
-function opList(): Response {
+function opList(rl: RateLimitResult): Response {
+  const etag = makeETag('/kernel/op/operations', {});
   return jsonResp({
     "@context": UOR_CONTEXT,
     "@id": "https://uor.foundation/op/",
@@ -551,24 +632,24 @@ function opList(): Response {
       }
     ],
     "total_individuals": 12
-  });
+  }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // POST /kernel/address/encode
-async function addressEncode(req: Request): Promise<Response> {
+async function addressEncode(req: Request, rl: RateLimitResult): Promise<Response> {
   let body: { input?: unknown; encoding?: unknown };
   try {
     body = await req.json();
   } catch {
-    return error400('Request body must be valid JSON', 'body');
+    return error400('Request body must be valid JSON', 'body', rl);
   }
 
-  if (typeof body.input !== 'string') return error400("Field 'input' must be a string", 'input');
-  if (body.input.length > 1000) return error413();
-  if (body.input.length === 0) return error400("Field 'input' must not be empty", 'input');
+  if (typeof body.input !== 'string') return error400("Field 'input' must be a string", 'input', rl);
+  if (body.input.length > 1000) return error413(rl);
+  if (body.input.length === 0) return error400("Field 'input' must not be empty", 'input', rl);
 
   const enc = body.encoding ?? 'utf8';
-  if (enc !== 'utf8') return error400("Field 'encoding' must be 'utf8'", 'encoding');
+  if (enc !== 'utf8') return error400("Field 'encoding' must be 'utf8'", 'encoding', rl);
 
   const bytes = new TextEncoder().encode(body.input);
   const simplified = addressSimplified(bytes);
@@ -605,11 +686,11 @@ async function addressEncode(req: Request): Promise<Response> {
       "u_namespace": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/u.rs",
       "resolver_namespace": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/resolver.rs"
     }
-  }, CACHE_HEADERS_CONTENT);
+  }, CACHE_HEADERS_CONTENT, undefined, rl);
 }
 
 // GET /kernel/schema/datum?x=42&n=8
-function schemaDatum(url: URL): Response {
+function schemaDatum(url: URL, rl: RateLimitResult): Response {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const nRaw = url.searchParams.get('n') ?? '8';
@@ -618,9 +699,11 @@ function schemaDatum(url: URL): Response {
 
   const x = xRes.val, n = nRes.val;
   const m = modulus(n);
-  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x');
+  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x', rl);
 
   const datum = makeDatum(x, n);
+  const etag = makeETag('/kernel/schema/datum', { x: String(x), n: String(n) });
+
   return jsonResp({
     "@context": UOR_CONTEXT,
     "@id": `https://uor.foundation/instance/datum-x${x}-n${n}`,
@@ -635,22 +718,21 @@ function schemaDatum(url: URL): Response {
       "schema:zero": { "schema:value": 0, "schema:role": "additive_identity", "note": "additive identity, value=0" }
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/schema.rs"
-  });
+  }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // POST /bridge/partition
-async function partitionResolve(req: Request): Promise<Response> {
+async function partitionResolve(req: Request, rl: RateLimitResult): Promise<Response> {
   let body: { type_definition?: unknown; input?: unknown; encoding?: unknown; resolver?: unknown; n?: unknown };
   try {
     body = await req.json();
   } catch {
-    return error400('Request body must be valid JSON', 'body');
+    return error400('Request body must be valid JSON', 'body', rl);
   }
 
-  const n = 8; // default quantum
+  const n = 8;
   const m = modulus(n);
 
-  // Mode A: full ring partition from type_definition
   if (body.type_definition) {
     const td = body.type_definition as Record<string, unknown>;
     const bitWidth = (td['type:bitWidth'] as number) ?? n;
@@ -703,13 +785,12 @@ async function partitionResolve(req: Request): Promise<Response> {
       "resolver": body.resolver ?? "EvaluationResolver",
       "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/partition.rs",
       "conformance_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/conformance/src/tests/fixtures/test5_partition.rs"
-    }, CACHE_HEADERS_CONTENT);
+    }, CACHE_HEADERS_CONTENT, undefined, rl);
   }
 
-  // Mode B: per-byte analysis of an input string
   if (typeof body.input === 'string') {
-    if (body.input.length > 1000) return error413();
-    if (body.input.length === 0) return error400("Field 'input' must not be empty", 'input');
+    if (body.input.length > 1000) return error413(rl);
+    if (body.input.length === 0) return error400("Field 'input' must not be empty", 'input', rl);
 
     const bytes = Array.from(new TextEncoder().encode(body.input));
     let irreducible = 0, reducible = 0, unit = 0, exterior = 0;
@@ -741,15 +822,14 @@ async function partitionResolve(req: Request): Promise<Response> {
       "quality_signal": density > 0.25 ? `PASS — density ${density.toFixed(4)} > threshold 0.25` : `WARN — density ${density.toFixed(4)} ≤ threshold 0.25`,
       "resolver": body.resolver ?? "EvaluationResolver",
       "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/partition.rs"
-    }, CACHE_HEADERS_CONTENT);
+    }, CACHE_HEADERS_CONTENT, undefined, rl);
   }
 
-  return error400("Request body must include 'type_definition' or 'input'", 'body');
+  return error400("Request body must include 'type_definition' or 'input'", 'body', rl);
 }
 
 // GET /bridge/proof/critical-identity?x=42&n=8
-// Finding: distinct @id from /kernel/op/verify — bridge space IRI uses "bridge-proof" prefix
-function proofCriticalIdentity(url: URL): Response {
+function proofCriticalIdentity(url: URL, rl: RateLimitResult): Response {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const nRaw = url.searchParams.get('n') ?? '8';
@@ -758,12 +838,13 @@ function proofCriticalIdentity(url: URL): Response {
 
   const x = xRes.val, n = nRes.val;
   const m = modulus(n);
-  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x');
+  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x', rl);
 
   const bnot_x = bnot(x, n);
   const neg_bnot_x = neg(bnot_x, n);
   const succ_x = succOp(x, n);
   const holds = neg_bnot_x === succ_x;
+  const etag = makeETag('/bridge/proof/critical-identity', { x: String(x), n: String(n) });
 
   return jsonResp({
     "@context": UOR_CONTEXT,
@@ -800,21 +881,21 @@ function proofCriticalIdentity(url: URL): Response {
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/proof.rs",
     "conformance_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/conformance/src/tests/fixtures/test6_critical_identity.rs"
-  });
+  }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // POST /bridge/proof/coherence
-async function proofCoherence(req: Request): Promise<Response> {
+async function proofCoherence(req: Request, rl: RateLimitResult): Promise<Response> {
   let body: { type_definition?: unknown; n?: unknown };
   try {
     body = await req.json();
   } catch {
-    return error400('Request body must be valid JSON', 'body');
+    return error400('Request body must be valid JSON', 'body', rl);
   }
 
   const nRaw = body.n ?? 8;
   if (typeof nRaw !== 'number' || !Number.isInteger(nRaw) || nRaw < 1 || nRaw > 16) {
-    return error400("Field 'n' must be an integer in [1, 16]", 'n');
+    return error400("Field 'n' must be an integer in [1, 16]", 'n', rl);
   }
   const n = nRaw as number;
   const m = modulus(n);
@@ -851,14 +932,14 @@ async function proofCoherence(req: Request): Promise<Response> {
       "global": { "note": "Global coherence requires a proof:GlobalCoherenceProof aggregation" }
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/proof.rs"
-  }, CACHE_HEADERS_CONTENT);
+  }, CACHE_HEADERS_CONTENT, undefined, rl);
 }
 
 // GET /bridge/cert/involution?operation=neg&n=8
-function certInvolution(url: URL): Response {
+function certInvolution(url: URL, rl: RateLimitResult): Response {
   const op = url.searchParams.get('operation');
   if (!op || !['neg', 'bnot'].includes(op)) {
-    return error400("Parameter 'operation' must be 'neg' or 'bnot'", 'operation');
+    return error400("Parameter 'operation' must be 'neg' or 'bnot'", 'operation', rl);
   }
   const nRaw = url.searchParams.get('n') ?? '8';
   const nRes = parseIntParam(nRaw, 'n', 1, 16);
@@ -876,6 +957,7 @@ function certInvolution(url: URL): Response {
   const opId = op === 'neg' ? 'https://uor.foundation/op/neg' : 'https://uor.foundation/op/bnot';
   const geoChar = op === 'neg' ? 'ring_reflection' : 'hypercube_reflection';
   const formula = op === 'neg' ? `neg(neg(x)) = (-(-x)) mod ${m} = x` : `bnot(bnot(x)) = ((2^${n}-1) XOR (2^${n}-1 XOR x)) = x`;
+  const etag = makeETag('/bridge/cert/involution', { operation: op, n: String(n) });
 
   return jsonResp({
     "@context": UOR_CONTEXT,
@@ -899,11 +981,11 @@ function certInvolution(url: URL): Response {
       "holds_universally": allHold
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/cert.rs"
-  });
+  }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // GET /bridge/observable/metrics?x=42&n=8
-function observableMetrics(url: URL): Response {
+function observableMetrics(url: URL, rl: RateLimitResult): Response {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const nRaw = url.searchParams.get('n') ?? '8';
@@ -912,18 +994,15 @@ function observableMetrics(url: URL): Response {
 
   const x = xRes.val, n = nRes.val;
   const m = modulus(n);
-  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x');
+  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x', rl);
 
   const spectrum = x.toString(2).padStart(n, '0');
   const hammingWeight = spectrum.split('').filter(b => b === '1').length;
-  // Ring metric: d_R(x, 0) = min(x, m - x)
   const ringMetric = Math.min(x, m - x);
-  // Hamming metric: number of set bits
   const hammingMetric = hammingWeight;
-  // Cascade length: number of trailing zeros in binary representation (depth of factorization)
   const cascadeLength = x === 0 ? n : spectrum.split('').reverse().join('').indexOf('1');
-  // Catastrophe threshold: is x at or near a phase boundary?
   const atThreshold = x === 0 || x === 1 || x === m - 1 || x === m / 2;
+  const etag = makeETag('/bridge/observable/metrics', { x: String(x), n: String(n) });
 
   return jsonResp({
     "@context": UOR_CONTEXT,
@@ -960,11 +1039,12 @@ function observableMetrics(url: URL): Response {
       "description": "All ring operations commute at the element level (ring is commutative)"
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/observable.rs"
-  });
+  }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // GET /user/type/primitives
-function typeList(): Response {
+function typeList(rl: RateLimitResult): Response {
+  const etag = makeETag('/user/type/primitives', {});
   return jsonResp({
     "@context": UOR_CONTEXT,
     "@id": "https://uor.foundation/type/",
@@ -1027,12 +1107,13 @@ function typeList(): Response {
       }
     ],
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/type_.rs"
-  });
+  }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // GET /navigate
-function frameworkIndex(): Response {
+function frameworkIndex(rl: RateLimitResult): Response {
   const base = 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api';
+  const etag = makeETag('/navigate', {});
   return jsonResp({
     "@context": UOR_CONTEXT,
     "@id": "https://uor.foundation/api/v1",
@@ -1069,6 +1150,11 @@ function frameworkIndex(): Response {
           { "method": "POST", "path": `${base}/bridge/proof/coherence`, "body": "{type_definition, n}", "operationId": "proofCoherence", "summary": "proof:CoherenceProof for a type definition" },
           { "method": "GET", "path": `${base}/bridge/cert/involution`, "params": "operation, n", "operationId": "certInvolution", "summary": "cert:InvolutionCertificate for neg or bnot" },
           { "method": "GET", "path": `${base}/bridge/observable/metrics`, "params": "x, n", "operationId": "observableMetrics", "summary": "RingMetric, HammingMetric, CascadeLength" }
+        ],
+        "not_implemented": [
+          "derivation: namespace — requires Rust conformance suite (501 Not Implemented)",
+          "trace: namespace — requires Rust conformance suite (501 Not Implemented)",
+          "resolver: namespace — requires Rust conformance suite (501 Not Implemented)"
         ]
       },
       "user": {
@@ -1077,8 +1163,8 @@ function frameworkIndex(): Response {
           { "method": "GET", "path": `${base}/user/type/primitives`, "params": "none", "operationId": "typeList", "summary": "Catalogue of type:PrimitiveType definitions" }
         ],
         "not_implemented": [
-          "morphism: namespace — requires resolver:DihedralFactorizationResolver (Rust conformance suite)",
-          "state: namespace — context/binding/frame/transition (501 Not Implemented)"
+          "morphism: namespace — requires resolver:DihedralFactorizationResolver (Rust conformance suite) — 501",
+          "state: namespace — context/binding/frame/transition — 501"
         ]
       }
     },
@@ -1104,12 +1190,10 @@ function frameworkIndex(): Response {
       "discord": "https://discord.gg/ZwuZaNyuve",
       "github": "https://github.com/UOR-Foundation/UOR-Framework"
     }
-  });
+  }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // GET /openapi.json — HTTP 302 redirect to canonical static spec
-// Finding 4: edge function stub was incomplete; redirect keeps function lean and
-// ensures agents always receive the full 767-line OpenAPI 3.1.0 specification.
 function openapiSpec(): Response {
   return new Response(null, {
     status: 302,
@@ -1133,64 +1217,151 @@ Deno.serve(async (req: Request) => {
   }
 
   const url = new URL(req.url);
-  // Strip the function prefix: /uor-api/kernel/... → /kernel/...
   let path = url.pathname.replace(/^\/functions\/v1\/uor-api/, '').replace(/^\/uor-api/, '') || '/';
 
   const ip = getIP(req);
   const isPost = req.method === 'POST';
+  const rl = checkRateLimit(ip, isPost);
 
-  if (!checkRateLimit(ip, isPost)) return error429(ip);
+  if (!rl.allowed) return error429(rl);
 
-  // Route dispatch
+  // Handle If-None-Match conditional requests for GET endpoints
+  const ifNoneMatch = req.headers.get('if-none-match');
+
   try {
-    if (path === '/' || path === '') return frameworkIndex();
-    if (path === '/navigate') return frameworkIndex();
+    // ── Navigate & spec ──
+    if (path === '/' || path === '') return frameworkIndex(rl);
+    if (path === '/navigate') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = frameworkIndex(rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
     if (path === '/openapi.json') return openapiSpec();
 
-    // Kernel — op/
-    if (path === '/kernel/op/verify/all' && req.method === 'GET') return opVerifyAll(url);
-    if (path === '/kernel/op/verify'     && req.method === 'GET') return opVerifyCriticalIdentity(url);
-    if (path === '/kernel/op/compute'    && req.method === 'GET') return opCompute(url);
-    if (path === '/kernel/op/operations' && req.method === 'GET') return opList();
-
-    // Kernel — address/schema
-    if (path === '/kernel/address/encode' && req.method === 'POST') return await addressEncode(req);
-    if (path === '/kernel/schema/datum'   && req.method === 'GET')  return schemaDatum(url);
-
-    // Bridge — partition
-    if (path === '/bridge/partition' && req.method === 'POST') return await partitionResolve(req);
-
-    // Bridge — proof
-    if (path === '/bridge/proof/critical-identity' && req.method === 'GET')  return proofCriticalIdentity(url);
-    if (path === '/bridge/proof/coherence'          && req.method === 'POST') return await proofCoherence(req);
-
-    // Bridge — cert
-    if (path === '/bridge/cert/involution' && req.method === 'GET') return certInvolution(url);
-
-    // Bridge — observable
-    if (path === '/bridge/observable/metrics' && req.method === 'GET') return observableMetrics(url);
-
-    // User — type
-    if (path === '/user/type/primitives' && req.method === 'GET') return typeList();
-
-    // State namespace — not implemented in v1
-    if (path.startsWith('/user/state') || path.startsWith('/user/morphism')) {
-      return new Response(JSON.stringify({
-        error: 'Not implemented in v1',
-        code: 'NOT_IMPLEMENTED',
-        note: 'The state: and morphism: namespaces require the Rust conformance suite for full dihedral factorization.',
-        conformance_suite: 'https://github.com/UOR-Foundation/UOR-Framework',
-        docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
-      }), { status: 501, headers: JSON_HEADERS });
+    // ── Kernel — op/ ──
+    if (path === '/kernel/op/verify/all') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = opVerifyAll(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+    if (path === '/kernel/op/verify') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = opVerifyCriticalIdentity(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+    if (path === '/kernel/op/compute') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = opCompute(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+    if (path === '/kernel/op/operations') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = opList(rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
     }
 
-    // 404
+    // ── Kernel — address/schema ──
+    if (path === '/kernel/address/encode') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await addressEncode(req, rl);
+    }
+    if (path === '/kernel/schema/datum') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = schemaDatum(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+    // ── Bridge — partition ──
+    if (path === '/bridge/partition') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await partitionResolve(req, rl);
+    }
+
+    // ── Bridge — proof ──
+    if (path === '/bridge/proof/critical-identity') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = proofCriticalIdentity(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+    if (path === '/bridge/proof/coherence') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await proofCoherence(req, rl);
+    }
+
+    // ── Bridge — cert ──
+    if (path === '/bridge/cert/involution') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = certInvolution(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+    // ── Bridge — observable ──
+    if (path === '/bridge/observable/metrics') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = observableMetrics(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+    // ── User — type ──
+    if (path === '/user/type/primitives') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = typeList(rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+    // ── Not-implemented namespaces (501) ──
+    if (
+      path === '/bridge/derivation' || path.startsWith('/bridge/derivation/') ||
+      path === '/bridge/trace'      || path.startsWith('/bridge/trace/') ||
+      path === '/bridge/resolver'   || path.startsWith('/bridge/resolver/') ||
+      path === '/user/morphism/transforms' || path.startsWith('/user/morphism/') ||
+      path === '/user/state'        || path.startsWith('/user/state/')
+    ) {
+      return error501(rl);
+    }
+
+    // ── 405 for known paths with wrong method ──
+    if (KNOWN_PATHS[path]) {
+      return error405(path, KNOWN_PATHS[path]);
+    }
+
+    // ── 404 ──
     return new Response(JSON.stringify({
       error: `Unknown route: ${path}`,
       code: 'NOT_FOUND',
       navigate: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/navigate',
       docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
-    }), { status: 404, headers: JSON_HEADERS });
+    }), { status: 404, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
 
   } catch (err) {
     console.error('[uor-api] error:', err);
@@ -1198,6 +1369,6 @@ Deno.serve(async (req: Request) => {
       error: 'Internal server error',
       code: 'INTERNAL_ERROR',
       docs: 'https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json'
-    }), { status: 500, headers: JSON_HEADERS });
+    }), { status: 500, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
   }
 });
