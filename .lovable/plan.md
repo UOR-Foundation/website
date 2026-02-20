@@ -1,257 +1,182 @@
 
-# UOR Framework REST API — OpenAPI 3.1.0 Implementation Plan
+# UOR Framework REST API — Full Audit Report & Remediation Plan
 
-## What We Are Building
+## Audit Methodology
 
-A fully functional REST API for AI agents to access the UOR Framework, implemented as Supabase Edge Functions and served through a clean path structure. The API strictly follows the OpenAPI 3.1.0 specification you provided, with every endpoint, schema field, and response example mapped 1:1 to the UOR ontology namespaces.
-
-The API will be discoverable at `https://uor.foundation/api/v1/` (via the published site) and directly from the edge function base URL.
+Every endpoint was tested live against the deployed edge function using systematic calls across: happy-path, boundary conditions (x=0, x=255, x=300 out-of-range), invalid input types, missing required parameters, and UOR algebraic correctness cross-referenced against the spec worked examples.
 
 ---
 
-## Architecture Overview
+## Test Results Summary
 
 ```text
-Agent Discovery Path
-────────────────────
-/.well-known/uor.json  →  api.url: https://...supabase.co/functions/v1/uor-api
-/llms.md               →  Step 1.5: Live API Reference
-/public/openapi.json   →  Machine-readable OpenAPI 3.1.0 spec (static, served as public file)
-
-Edge Function Layout
-────────────────────
-supabase/functions/uor-api/index.ts   ← Single router function handling ALL API routes
-supabase/config.toml                  ← verify_jwt = false for uor-api
-
-Route Dispatch (inside uor-api/index.ts)
-─────────────────────────────────────────
-GET  /kernel/op/verify           → opVerifyCriticalIdentity
-GET  /kernel/op/verify/all       → opVerifyAll
-GET  /kernel/op/compute          → opCompute
-GET  /kernel/op/operations       → opList
-POST /kernel/address/encode      → addressEncode
-GET  /kernel/schema/datum        → schemaDatum
-POST /bridge/partition           → partitionResolve
-GET  /bridge/proof/critical-identity → proofCriticalIdentity
-POST /bridge/proof/coherence     → proofCoherence
-GET  /bridge/cert/involution     → certInvolution
-GET  /bridge/observable/metrics  → observableMetrics
-GET  /user/type/primitives       → typeList
-GET  /navigate                   → frameworkIndex (reading order, namespace map)
-GET  /openapi.json               → serves the OpenAPI spec inline
+ENDPOINT                              METHOD  STATUS   ALGEBRAIC    OPENAPI     JSON-LD
+──────────────────────────────────────────────────────────────────────────────────────────
+GET  /navigate                         GET   ✅ 200   N/A          ✅ correct  ✅ correct
+GET  /openapi.json                     GET   ✅ 200   N/A          ✅ present  N/A
+GET  /kernel/op/verify?x=42            GET   ✅ 200   ✅ 43=43     ✅ matches  ✅ correct
+GET  /kernel/op/verify?x=0             GET   ✅ 200   ✅ 1=1       ✅ boundary ✅ correct
+GET  /kernel/op/verify?x=255           GET   ✅ 200   ✅ 0=0       ✅ boundary ✅ correct
+GET  /kernel/op/verify?x=300           GET   ✅ 400   N/A          ✅ error    ✅ correct
+GET  /kernel/op/verify/all?n=8         GET   ✅ 200   ✅ 256/256   ✅ correct  ✅ correct
+GET  /kernel/op/verify/all?expand=true GET   ✅ 200   ✅ witnesses ✅ correct  ✅ correct
+GET  /kernel/op/compute?x=42&y=10      GET   ✅ 200   ⚠️ see below ✅ mostly  ✅ correct
+GET  /kernel/op/operations             GET   ✅ 200   ✅ 12 indiv  ✅ correct  ✅ correct
+POST /kernel/address/encode "hello"    POST  ✅ 200   ✅ ⠨⠥⠬⠬⠯   ✅ correct  ✅ correct
+POST /kernel/address/encode ""         POST  ✅ 400   N/A          ✅ error    ✅ correct
+GET  /kernel/schema/datum?x=42         GET   ✅ 200   ✅ correct   ✅ correct  ✅ correct
+POST /bridge/partition (type_def)      POST  ✅ 200   ⚠️ see below ✅ correct  ✅ correct
+POST /bridge/partition (input string)  POST  ✅ 200   ✅ density   ✅ correct  ✅ correct
+GET  /bridge/proof/critical-identity   GET   ✅ 200   ✅ correct   ✅ correct  ✅ correct
+POST /bridge/proof/coherence           POST  ✅ 200   ✅ 256/256   ✅ correct  ✅ correct
+GET  /bridge/cert/involution neg       GET   ✅ 200   ✅ 256/256   ✅ correct  ✅ correct
+GET  /bridge/cert/involution bnot      GET   ✅ 200   ✅ 256/256   ✅ correct  ✅ correct
+GET  /bridge/cert/involution invalid   GET   ✅ 400   N/A          ✅ error    ✅ correct
+GET  /bridge/observable/metrics?x=42   GET   ✅ 200   ✅ correct   ✅ correct  ✅ correct
+GET  /user/type/primitives             GET   ✅ 200   N/A          ✅ correct  ✅ correct
+GET  /nonexistent/route                GET   ✅ 404   N/A          ✅ navigate ✅ correct
 ```
 
 ---
 
-## Files Being Created or Changed
+## Findings
 
-### 1. `supabase/functions/uor-api/index.ts` — New Edge Function (Main Deliverable)
+### FINDING 1 — MEDIUM: OpenAPI Spec Example Has Wrong `and(42, 10)` Result
 
-One edge function, one file, full router. All UOR algebra is computed in pure TypeScript/Deno — no external dependencies, no secrets required.
+**Location:** `public/openapi.json`, the spec example for `/kernel/op/compute` (inherited from the original user-provided spec) states `and: result: 42`.
 
-**Core math module (embedded at top of file):**
+**The math:** `42 & 10 = 0b00101010 & 0b00001010 = 0b00001010 = 10`. The correct answer is 10.
 
+**Implementation verdict:** The implementation is **mathematically correct** — it computes and returns 10. The bug is only in the spec's example value. This is a documentation error that will mislead agents reading the spec before calling the API.
+
+**Fix:** Update the static `public/openapi.json` example for `/kernel/op/compute` x42 to set `"and": { "result": 10 }` (also fix `"or": { "result": 42 }` — `42 | 10 = 0b00101010 | 0b00001010 = 0b00101010 = 42`, which is correct).
+
+---
+
+### FINDING 2 — MEDIUM: OpenAPI Spec Example Has Wrong Partition Cardinality for R_8
+
+**Location:** `public/openapi.json`, the example for `/bridge/partition` (R8_primitive) states `"partition:irreducibles": { "partition:cardinality": 124 }`.
+
+**The math for Z/256Z:**
+- Total elements: 256
+- Exterior set {0, 128}: 2 elements
+- Unit set {1, 255}: 2 elements
+- Odd elements not in {0, 1, 255}: 128 odd numbers total in [0,256) minus units {1, 255} = **126 irreducibles**
+- Even elements not in {0, 128}: 128 even numbers minus {0, 128} = **126 reducibles**
+- Check: 126 + 126 + 2 + 2 = 256 ✅
+
+**Implementation verdict:** The implementation returns 126 irreducibles and 126 reducibles, which is **mathematically correct**. The spec example was wrong (124 ≠ 126). The `density` also needs updating from 0.484375 to the correct 0.4921875.
+
+**Fix:** Update the static `public/openapi.json` R8_primitive example to use `irreducibles: 126`, `reducibles: 126`, `density: 0.4921875`.
+
+---
+
+### FINDING 3 — LOW: `schema:stratum` Definition Inconsistency
+
+**Location:** `public/openapi.json`, `Datum` schema description says "popcount of set bits". The implementation correctly uses popcount. However, the spec example for `schemaDatum` x=42 shows `"schema:stratum": 1` while the actual computation and live response both return `"schema:stratum": 3` (42 = 0b00101010 has 3 set bits — popcount = 3).
+
+**Implementation verdict:** The implementation is **correct** (popcount of 42 is 3). The spec example was wrong (`1` vs `3`).
+
+**Fix:** Update the static `public/openapi.json` example for `/kernel/schema/datum` to show `"schema:stratum": 3`.
+
+---
+
+### FINDING 4 — LOW: `openapiSpec()` Endpoint Returns Stub, Not Full Spec
+
+**Location:** `supabase/functions/uor-api/index.ts`, line 1052-1076. The `GET /openapi.json` endpoint on the edge function returns a short stub with only `info`, `servers`, and two `x-` extension fields — not the actual full OpenAPI specification. An agent calling this endpoint expecting the full parseable spec will receive an incomplete document.
+
+**Impact for agents:** If an agent follows the discovery chain `/.well-known/uor.json → uor:api.openapi → GET /openapi.json`, it receives a 300-byte stub instead of the 767-line spec. The full spec is only available at `https://uor.foundation/openapi.json` (static file).
+
+**Fix:** The edge function's `GET /openapi.json` should either:
+  - (Option A, preferred) Issue an HTTP 302 redirect to `https://uor.foundation/openapi.json`
+  - (Option B, complete) Embed the full spec object inline in the response (adds ~15KB to the function)
+
+Option A is the correct REST pattern and keeps the edge function lean.
+
+---
+
+### FINDING 5 — LOW: Missing `resolver:` and `derivation:` Namespaces in `@context`
+
+**Location:** `supabase/functions/uor-api/index.ts`, line 136-147. The shared `UOR_CONTEXT` object is missing two namespaces that are referenced in response bodies:
+- `resolver:` — referenced in `encoding_note` string on the `/kernel/address/encode` endpoint
+- `derivation:` — used as a key in the `derivation` object of the critical identity proof
+
+**Fix:** Add to `UOR_CONTEXT`:
 ```typescript
-// ── Ring R_n = Z/(2^n)Z ──────────────────────────────────────────────
-const modulus = (n: number) => Math.pow(2, n);
-
-// UnaryOp individuals from op.rs
-function neg(x: number, n = 8): number { const m = modulus(n); return ((-x) % m + m) % m; }
-function bnot(x: number, n = 8): number { return x ^ (modulus(n) - 1); }
-function succ(x: number, n = 8): number { return (x + 1) % modulus(n); }
-function pred(x: number, n = 8): number { return (x - 1 + modulus(n)) % modulus(n); }
-
-// BinaryOp individuals from op.rs
-function add(x: number, y: number, n = 8): number { return (x + y) % modulus(n); }
-function sub(x: number, y: number, n = 8): number { return ((x - y) % modulus(n) + modulus(n)) % modulus(n); }
-function mul(x: number, y: number, n = 8): number { return (x * y) % modulus(n); }
-function xor(x: number, y: number): number { return x ^ y; }
-function and(x: number, y: number): number { return x & y; }
-function or(x: number, y: number): number { return x | y; }
-
-// Content addressing — simplified 6-bit bijection (u.rs)
-function encodeGlyph(b: number): string { return String.fromCodePoint(0x2800 + (b & 0x3F)); }
-function addressSimplified(bytes: Uint8Array): string { return Array.from(bytes).map(encodeGlyph).join(''); }
-
-// schema:Datum construction (schema.rs)
-function makeDatum(value: number, n: number) {
-  const m = modulus(n);
-  const spectrum = value.toString(2).padStart(n, '0');
-  // stratum: number of set bits (popcount)
-  const stratum = value.toString(2).split('').filter(b => b === '1').length;
-  const glyph = encodeGlyph(value);
-  return {
-    "@type": "schema:Datum",
-    "schema:value": value,
-    "schema:quantum": n,
-    "schema:stratum": stratum,
-    "schema:spectrum": spectrum,
-    "schema:glyph": { "@type": "u:Address", "u:glyph": glyph, "u:length": 1 }
-  };
-}
-
-// partition:Partition classification (partition.rs + Python pseudocode from llms-full.md)
-function classifyByte(b: number, n: number): { component: string; reason: string } {
-  const m = modulus(n);
-  if (b === 0)                    return { component: 'partition:ExteriorSet',  reason: 'Additive identity (zero)' };
-  if (b === 1 || b === m - 1)    return { component: 'partition:UnitSet',       reason: `Ring unit — multiplicative inverse exists` };
-  if (b % 2 !== 0)               return { component: 'partition:IrreducibleSet', reason: `Odd, not a unit — irreducible in R_${n}` };
-  if (b === m / 2)               return { component: 'partition:ExteriorSet',  reason: `Even generator (${m/2}) — exterior` };
-  return                               { component: 'partition:ReducibleSet',  reason: `Even — decomposes in R_${n}` };
-}
+"resolver": "https://uor.foundation/resolver/",
+"morphism": "https://uor.foundation/morphism/",
+"state": "https://uor.foundation/state/",
+"trace": "https://uor.foundation/trace/"
 ```
+This makes all 14 UOR namespaces present in the context, matching the full ontology declared in `/.well-known/uor.json`.
 
-**Endpoints implemented:**
+---
 
-| Route | Handler | Description |
-|---|---|---|
-| `GET /kernel/op/verify` | opVerifyCriticalIdentity | Verify neg(bnot(x)) = succ(x) for x in [0, 2^n) |
-| `GET /kernel/op/verify/all` | opVerifyAll | Full CoherenceProof for all 2^n elements |
-| `GET /kernel/op/compute` | opCompute | All 10 op/ individuals applied to x (and y) |
-| `GET /kernel/op/operations` | opList | Catalogue of all 12 op/ named individuals |
-| `POST /kernel/address/encode` | addressEncode | UTF-8 → u:Address with per-byte u:Glyph decomposition |
-| `GET /kernel/schema/datum` | schemaDatum | Full schema:Datum for a ring value |
-| `POST /bridge/partition` | partitionResolve | Four-component partition:Partition of input |
-| `GET /bridge/proof/critical-identity` | proofCriticalIdentity | proof:CriticalIdentityProof for x |
-| `POST /bridge/proof/coherence` | proofCoherence | proof:CoherenceProof for a type definition |
-| `GET /bridge/cert/involution` | certInvolution | cert:InvolutionCertificate for neg or bnot |
-| `GET /bridge/observable/metrics` | observableMetrics | RingMetric, HammingMetric, CascadeLength for x |
-| `GET /user/type/primitives` | typeList | Catalogue of type:PrimitiveType definitions |
-| `GET /navigate` | frameworkIndex | Reading order, namespace index, entry points |
-| `GET /openapi.json` | openapiSpec | Full OpenAPI 3.1.0 spec as JSON |
+### FINDING 6 — LOW: `derivation:` Object Key Is Not Properly Namespaced
 
-**Response shape design:** Every response is a valid JSON-LD object with `@type`, `@id`, and `@context` references traceable to UOR namespace IRIs. All timestamps are ISO 8601. All namespace prefix keys use the format `prefix:property` matching the ontology spec.
+**Location:** `supabase/functions/uor-api/index.ts`, line 196. The `opVerifyCriticalIdentity` and `proofCriticalIdentity` handlers return a field `"derivation"` (no namespace prefix) containing `step1`, `step2`, `step3`, `conclusion`. Per the OpenAPI spec and UOR ontology, this should be `"derivation:DerivationTrace"` with typed step properties that use the `derivation:` namespace.
 
-**Error handling:** Consistent error envelope for all 400/422/429/500 codes:
+**Current:** `"derivation": { "step1": "...", "step2": "...", "step3": "..." }`
+
+**Spec-correct form:** 
 ```json
-{ "error": "description", "code": "INVALID_PARAMETER", "param": "x", "docs": "/api/v1/openapi.json" }
-```
-
-**Rate-limiting response (HTTP 429):** Lightweight in-memory sliding window per IP (same pattern as project-submit), max 120 req/min for GET endpoints, 60 req/min for POST endpoints. `Retry-After` header included.
-
-**Input validation:**
-- `x`: integer, 0 ≤ x < 2^n
-- `n`: integer, 1 ≤ n ≤ 16 (defaults to 8)
-- `y`: integer, 0 ≤ y < 2^n, optional
-- `expand`: boolean
-- POST body `input`: string, max 1000 chars
-- `operation`: enum `["neg", "bnot"]`
-- All validation returns descriptive 400 with field name
-
----
-
-### 2. `public/openapi.json` — Static OpenAPI 3.1.0 Specification File
-
-A complete, valid OpenAPI 3.1.0 document served as a public static file. This is the machine-readable API specification that:
-- Agents can fetch and parse programmatically
-- OpenAPI tooling (Swagger UI, Redoc, Postman) can import directly
-- The edge function's `GET /openapi.json` endpoint also returns this document inline
-
-The spec includes:
-- All paths, parameters, request bodies, and responses from the specification you provided
-- Complete `components/schemas` for all 15+ schema types
-- Complete `components/parameters` for shared parameters (x, n, expand, operation)
-- Complete `components/responses` for shared error responses
-- `x-agent-entry-point`, `x-discovery-metadata`, `x-community`, `x-ontology-source` extension fields
-- CORS-friendly, no-auth required for all GET endpoints
-
----
-
-### 3. `supabase/config.toml` — Register New Function
-
-Add `[functions.uor-api]` with `verify_jwt = false`.
-
----
-
-### 4. `public/.well-known/uor.json` — Add API Discovery Entry
-
-Add an `"uor:api"` field to the endpoints section:
-```json
-"uor:api": {
-  "openapi": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json",
-  "base": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api",
-  "version": "1.0.0",
-  "description": "OpenAPI 3.1.0 REST API. Kernel GET endpoints require no auth. POST endpoints accept optional X-UOR-Agent-Key."
+"derivation": {
+  "@type": "derivation:DerivationTrace",
+  "derivation:step1": "op:bnot(42) = ...",
+  "derivation:step2": "op:neg(213) = ...",
+  "derivation:step3": "op:succ(42) = ...",
+  "derivation:conclusion": "..."
 }
 ```
 
----
-
-### 5. `public/llms.md` — Reference the API
-
-In the Quick Start section, add a Step 1.6 entry pointing to the live API:
-```
-Step 1.6 (optional, zero tooling): Explore the full REST API.
-GET https://.../uor-api/navigate → framework index, reading order, all endpoints
-GET https://.../uor-api/openapi.json → full OpenAPI 3.1.0 specification
-```
+**Fix:** Update the derivation object structure in `opVerifyCriticalIdentity()` to add `@type` and namespace prefix keys.
 
 ---
 
-## Correctness Verification Strategy
+### FINDING 7 — LOW: `and` Operation Missing `op:identity` Field
 
-Before deployment, every endpoint will be verified against the worked examples from the OpenAPI spec:
-
-**Algebraic correctness — verified inline:**
-- `neg(42)` → 214 ✓ ((-42) mod 256 = 214)
-- `bnot(42)` → 213 ✓ (42 XOR 255 = 213)
-- `succ(42)` → 43 ✓ ((42+1) mod 256 = 43)
-- `pred(42)` → 41 ✓ ((42-1) mod 256 = 41)
-- `neg(bnot(42))` → 43 ✓ (neg(213) = (-213) mod 256 = 43)
-- Critical identity holds: neg(bnot(42)) = 43 = succ(42) ✓
-- Boundary: x=0 → bnot(0)=255, neg(255)=1, succ(0)=1 ✓
-- Boundary: x=255 → bnot(255)=0, neg(0)=0, succ(255)=0 ✓
-
-**Address encoding correctness — verified against llms-full.md:**
-- "hello" bytes: [104, 101, 108, 108, 111]
-- 104 & 0x3F = 40 → chr(0x2800 + 40) = chr(10280) = ⠨
-- All < 64, so simplified = canonical ✓
-
-**Partition classification correctness — verified against partition.rs logic:**
-- 104: even, not 0/128 → ReducibleSet ✓
-- 101: odd, not 1/255 → IrreducibleSet ✓
-- 108: even, not 0/128 → ReducibleSet ✓
-- 111: odd, not 1/255 → IrreducibleSet ✓
-- density = 2/5 = 0.40 > threshold 0.25 → PASS ✓
+**Location:** `supabase/functions/uor-api/index.ts`, lines 374-384. The `and` BinaryOp in `/kernel/op/compute` is missing its `op:identity` field. In the hypercube (bitwise operations), AND has no identity element in Z/(2^n)Z (unlike XOR which has identity 0). The spec correctly omits `op:identity` for `and` and `or`. However, the `operations` catalogue endpoint also omits it consistently. This is **already correct** — no change needed.
 
 ---
 
-## Security Properties
+### FINDING 8 — INFORMATIONAL: `sdo:` Namespace Used But Not Declared in `@context`
 
-- No authentication required for GET endpoints (kernel operations)
-- POST endpoints accept optional `X-UOR-Agent-Key` header (reserved for rate-limit tier elevation — no key issuance logic in v1, key is simply noted in response headers)
-- CORS: `Access-Control-Allow-Origin: *` (public API by design)
-- Input length cap: 1000 chars for string inputs (matches existing uor-verify function)
-- Rate limiting: in-memory sliding window, 120 GET / 60 POST per IP per minute
-- No secrets, no database writes — fully stateless, zero persistent state
+**Location:** `supabase/functions/uor-api/index.ts`, line 981. The `/navigate` endpoint returns `"@type": "sdo:APIReference"` where `sdo:` maps to `https://schema.org/`. However, `sdo:` is not declared in the shared `UOR_CONTEXT` object, making this an invalid JSON-LD term that a standards-compliant JSON-LD processor would flag as an error.
+
+**Fix:** Add `"sdo": "https://schema.org/"` to `UOR_CONTEXT`.
 
 ---
 
-## Agent Discovery Integration
+### FINDING 9 — INFORMATIONAL: `x-supabase-client-platform` Headers Not in `Access-Control-Allow-Headers`
 
-After deployment, an AI agent arriving at any UOR entry point will find:
-1. `/.well-known/uor.json` → `uor:api.openapi` → full spec
-2. `/llms.md` Step 1.6 → API base URL + navigate endpoint
-3. `GET /navigate` → complete framework index with all endpoint URLs
-4. `GET /openapi.json` → parseable OpenAPI 3.1.0 document
+**Location:** `supabase/functions/uor-api/index.ts`, line 8. The CORS `Access-Control-Allow-Headers` list includes `x-uor-agent-key` but is missing the standard Lovable Cloud client headers (`x-supabase-client-platform`, etc.). Per the edge function CORS best-practice guidelines, these should be included.
 
-This makes the API self-describing and fully navigable without any prior knowledge.
+**Fix:** Expand the `Access-Control-Allow-Headers` list to include `x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version`.
 
 ---
 
-## What Is Not Implemented in v1
+## What Is Correct and Fully Functional
 
-- **Persistent trace storage**: `derivation:` and `trace:` computations are computed on-the-fly and not stored. No database writes.
-- **cert:IsometryCertificate issuance**: Requires agent registration (Moltbook). The endpoint returns the certificate structure but marks `cert:requiresRegistration: true`.
-- **Canonical dihedral address**: `address_canonical` is computed as `address_simplified` with a note explaining the limitation (matching the existing uor-verify function's documented behavior). Full dihedral factorization requires the Rust conformance suite.
-- **state: namespace**: Context/binding/frame/transition operations reference the spec but return `501 Not Implemented` with a redirect to the conformance suite.
+- All 14 endpoints respond with correct HTTP status codes
+- All ring algebra is mathematically verified (neg, bnot, succ, pred, add, sub, mul, xor, and, or)
+- The critical identity `neg(bnot(x)) = succ(x)` is verified for x=0, x=42, x=255 — all three canonical test cases from the conformance suite
+- All involution certificates verify exhaustively for all 256 elements of R_8
+- The partition four-component cardinality check always sums to 2^n (validated for n=4 and n=8)
+- The `hello` Braille address encodes correctly to `⠨⠥⠬⠬⠯`
+- Input validation rejects out-of-range x, missing required params, empty strings, invalid operation enum values
+- 404 responses include navigate URL for agent recovery
+- JSON-LD `@context` and `@id` present on every response
+- CORS headers correctly set for cross-origin agent access
+- Cache-Control headers distinguish kernel (300s) from bridge (60s) responses
 
 ---
 
-## Execution Order
+## Execution Order for Fixes
 
-1. Create `supabase/functions/uor-api/index.ts` (router + all endpoint handlers + all UOR algebra)
-2. Create `public/openapi.json` (complete OpenAPI 3.1.0 specification)
-3. Update `supabase/config.toml` (add uor-api function entry)
-4. Update `public/.well-known/uor.json` (add API discovery)
-5. Update `public/llms.md` (add API reference in Quick Start)
+1. **Fix `public/openapi.json`** — three example values wrong: `and` result (42→10), partition irreducibles/reducibles cardinality (124→126), schema:stratum for x=42 (1→3), partition density (0.4843750→0.4921875)
+2. **Fix `supabase/functions/uor-api/index.ts`** — five code changes:
+   - Add missing namespaces to `UOR_CONTEXT` (`resolver:`, `sdo:`, `morphism:`, `state:`, `trace:`)
+   - Expand CORS `Access-Control-Allow-Headers` to include Lovable Cloud headers
+   - Add `@type: derivation:DerivationTrace` and namespace-prefixed keys to the derivation object
+   - Change `GET /openapi.json` handler to redirect (HTTP 302) to the static `public/openapi.json` file
+   - Fix the `proofCriticalIdentity` handler to add its own distinct `@id` (currently it delegates to `opVerifyCriticalIdentity` which generates an ID with `proof-critical-identity` prefix — acceptable but the two endpoints serve different purposes and should generate distinct instance IRIs)
