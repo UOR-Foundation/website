@@ -1,100 +1,98 @@
 
-## Consolidating to a Single Agent Entry Point
+## Final Consolidation — Remove All .txt References, Fix Remaining Gaps
 
-The goal is to eliminate `llms.txt` and `llms-full.txt` as content documents, replace them with minimal redirect stubs, and update every reference across the codebase so that `https://uor.foundation/llms.md` is the one and only entry point for AI agents. Then apply the remaining content improvements from the audit report that have not yet been implemented.
+### Current State Assessment
 
----
+After reading all files, here is exactly what remains:
 
-### What Exists Now
+**Already done correctly:**
+- `public/llms.txt` and `public/llms-full.txt` — deleted
+- `public/llms.md` — fully updated with Quick Start, First Post template, Moltbook join section, namespace map
+- `public/llms-full.md` — has Section 2.4 Zero-Tooling, Python pseudocode, Zero-Infrastructure Validation Track
+- `public/.well-known/uor.json` — has `agentReadingOrder`, `moltbookOnboarding`, all `.md` endpoints
+- `index.html` — has correct `.md` link tags and updated body comment
+- `public/robots.txt` — minimal, points to `agent-discovery.md`
+- `public/agent-discovery.md` — exists and correctly points to single entry
 
-- `public/llms.md` — full, well-structured Quick Card (good)
-- `public/llms-full.md` — full implementation guide (good)
-- `public/llms.txt` — currently a redirect stub pointing to `llms.md` (becomes pure redirect)
-- `public/llms-full.txt` — currently a redirect stub pointing to `llms-full.md` (becomes pure minimal redirect)
-- `index.html` — has a `<link rel="alternate" type="text/plain" href="/llms.txt">` tag still pointing to the .txt file; the HTML comment block in `<body>` still references `/llms.txt` and `/llms-full.txt`
-- `public/.well-known/uor.json` — has `llmsPlainText` and `llmsFullPlainText` endpoints still listed; `agentReadingOrder` step 3 still points to `llms.txt` instead of `llms-full.md`
-- `public/robots.txt` — still mentions both `.txt` stubs
+**Remaining issues to fix:**
 
----
+1. **`README.md`** — Still references `/llms.txt` (line 75) and `/llms-full.txt` (line 76) in the resource table and prose description. Must be updated to `/llms.md` and `/llms-full.md`.
 
-### Content Gaps Still Open (from audit)
+2. **`public/llms-full.md` Section 17** — The first-post template still has `"topic": "initial_evaluation"`. The audit requires this be `"critical_identity_verification"` to match the canonical template in `llms.md`.
 
-These are from the second audit report that have not yet been implemented:
+3. **`public/llms-full.md` Section 2** — The mathematical foundation section currently presents the critical identity as a statement without a worked line-by-line example. The audit's Priority 1 fix (highest impact) requires adding the step-by-step `x=42` breakdown directly in Section 2.1 before the Python block, so agents see the algebraic derivation inline.
 
-1. **`llms.md` Quick Start** — needs the more detailed step-by-step format from Addition A (clearer multi-line math block per step, explicit time labels like "2 minutes" for Step 1, explicit Moltbook registration URL in Step 4)
-2. **`llms.md` First Post Template** — needs the updated template from Addition B with `"topic": "critical_identity_verification"` and the challenge question about `n != 8`
-3. **`llms-full.md`** — needs the "Zero-Tooling Verification" section (Addition C) with the Python block, content addressing without tooling, partition classification, and three validation levels — this is the biggest missing gap
-4. **`llms.md` Moltbook Join Section** — needs the full "Join the Agent Discussion on Moltbook" block from Part 5, with the registration API explanation, submolt links, and the "what get claimed means" explanation
-5. **`/.well-known/uor.json`** — needs `moltbookOnboarding` field (Addition D)
-6. **`agentReadingOrder` step 3** — currently points to `llms.txt`, must point to `llms-full.md`
+4. **`index.html` body comment** — Line 135 says "119 properties" but the spec and all other files say 120 properties. Minor consistency fix.
+
+5. **`public/llms.md` TL;DR** — The audit notes the TL;DR is mechanism-first, not value-first. The current file already has the value sentence ("For agents operating across platforms today...") but the audit's Priority 10 suggests adding one more sentence about what specifically persists: identity across platform resets, actions cryptographically yours, content quality formally measurable, coordination verifiable. This strengthens the operational urgency.
+
+6. **`robots.txt` format** — The user explicitly asked that agent-facing files be `.md`. `robots.txt` is a mandatory web standard (crawlers look for exactly this filename) — it cannot be renamed. The solution: keep `robots.txt` at 4 lines (already done), and ensure `agent-discovery.md` serves as the full agent-facing discovery index, which it already does. The `robots.txt` comment already points to it. No change needed here beyond what's done.
 
 ---
 
 ### Files to Change
 
-**1. `public/llms.txt` — Minimal redirect stub only**
+**1. `README.md` — Update resource table and prose (lines 75-82)**
 
-Strip to the bare minimum. No content. Just a machine-parseable redirect note pointing to `llms.md`. Three lines of substance, nothing more. This file will still exist for backward compatibility with any links, but it will be obvious it is a redirect.
+Replace the two `.txt` rows in the resources table:
+```
+| LLM summary     | /llms.txt      | Plain text |
+| LLM full ref    | /llms-full.txt | Plain text |
+```
+With:
+```
+| Agent Quick Card        | /llms.md      | Markdown |
+| Agent Implementation Guide | /llms-full.md | Markdown |
+```
 
-**2. `public/llms-full.txt` — Minimal redirect stub only**
+Replace the prose paragraph starting "To explore the framework: Start with `/llms.txt`..." with:
+"To explore the framework: Start with `/llms.md` for the Quick Card and first-post template, or `/llms-full.md` for the complete implementation guide including Python pseudocode and Zero-Infrastructure Validation Track."
 
-Same treatment. Just a forward pointer to `llms-full.md`. Keeps old links alive without creating a competing content document.
+**2. `public/llms-full.md` — Two targeted fixes**
 
-**3. `public/llms.md` — Targeted content additions**
+**Fix A (Priority 1 from audit):** Add worked example to Section 2.1 (after the `neg(bnot(x)) = succ(x)` statement, before the Python block). Insert:
 
-Apply four specific additions from the audit:
+```
+**Worked example for x = 42:**
+  Step 1: bnot(42) = 42 XOR 255 = 213
+  Step 2: neg(213) = (-213) mod 256 = 43
+  Step 3: succ(42) = (42 + 1) mod 256 = 43
+  Result: neg(bnot(42)) = 43 = succ(42) ✓
 
-- **Quick Start block**: Update Step 1 label from "30 seconds" to "2 minutes" and add the explicit line-by-line math already present but add the Moltbook registration URL to Step 4 (`https://www.moltbook.com/skill.md`)
-- **First Post Template**: Update `"topic"` from `"initial_evaluation"` to `"critical_identity_verification"` and update `"challenge"` to the stronger question about `n != 8`
-- **Moltbook Join Section**: Replace the current `## Community` table at the bottom with the full "Join the Agent Discussion on Moltbook" block that explains registration (POST to API, get claim URL, have human verify), lists the three submolts, shows the first-contribution three-step sequence, and explains IsometryCertificate incentive
-- **Entry Points table**: Remove the `Full Reference` row that points to `llms-full.md` (since we're consolidating) — keep it pointing to `llms-full.md` since that's the .md version
+Algebraic proof (holds for all 256 values):
+  neg(bnot(x)) = -(x XOR 255) mod 256 = (x + 1) mod 256 = succ(x)
+```
 
-**4. `public/llms-full.md` — Add Zero-Tooling Verification section**
+**Fix B:** Update Section 17 first-post template: change `"topic": "initial_evaluation"` to `"topic": "critical_identity_verification"` and update the challenge to match the canonical template.
 
-Insert the "Zero-Tooling Verification" content block (Addition C from audit) as a new section after Section 2 (Mathematical Foundation). This adds:
-- Python pseudocode block for `neg`, `bnot`, `succ` with `assert all(...)` one-liner
-- Content addressing without tooling (byte → Braille glyph manually)
-- Partition classification without tooling
-- Three validation levels (0 / 1 / 2)
+**3. `index.html` — Fix property count**
 
-**5. `public/.well-known/uor.json` — Three targeted changes**
+Line 135: Change "119 properties" to "120 properties" to match all other files.
 
-- Fix `agentReadingOrder` step 3: change `url` from `https://uor.foundation/llms.txt` to `https://uor.foundation/llms-full.md` and update `purpose` accordingly
-- Remove `llmsPlainText` and `llmsFullPlainText` from `uor:endpoints` (they still exist as stubs but should not be advertised as primary endpoints)
-- Add `moltbookOnboarding` field with register URL, submolt URL, description, and first-post guidance
-- Update `agentMessage` to remove references to `.txt` files and consolidate to `.md` only
+**4. `public/llms.md` — Strengthen TL;DR value sentence**
 
-**6. `index.html` — Two targeted changes**
-
-- Remove the `<link rel="alternate" type="text/plain" href="/llms.txt">` tag (line 44) since `.txt` is no longer a primary entry point
-- Update the `<body>` HTML comment block (lines 122–128) to replace `/llms.txt` and `/llms-full.txt` references with `/llms.md` and `/llms-full.md`
-
-**7. `public/robots.txt` — Simplify agent paths**
-
-Update the `# AI Agent Discovery` section to list only `.md` files as the primary paths, with the `.txt` stubs noted as backward-compat only.
+The current value sentence is good but can be made more operationally specific. After "For agents operating across platforms today, this solves identity fragmentation, unverifiable coordination, and prompt injection — structurally, not socially." add: "Your identity persists across platform resets. Your actions are cryptographically yours regardless of where you run. Your coordination with other agents is verifiable, not a matter of trust."
 
 ---
 
-### What Is NOT Changing
+### What Does NOT Need to Change
 
-- `public/llms-full.md` sections 1–13 (already implemented correctly) — only adding the new section
-- `public/.well-known/uor.json` namespace inventory and `agentReadingOrder` steps 1, 2, 4
-- `src/components/sections/HeroSection.tsx` — the "I'm an Agent" button already links to `/llms.md`
-- All routing, React components, and application code — no changes needed
-- The `.txt` files still exist (backward compat) but become pure redirect stubs
+- `robots.txt` — Cannot become `.md` (web standard requirement). Already minimal at 4 lines with pointer to `agent-discovery.md`. This is the correct solution.
+- `public/.well-known/uor.json` — Already fully updated, no `.txt` references remain.
+- `public/llms.md` — Mostly correct; only the TL;DR sentence addition.
+- `public/llms-full.md` — Mostly correct; only Section 2.1 worked example and Section 17 template topic.
+- `index.html` — Only the 119→120 property count fix.
+- All React components, routing, Supabase config — no changes.
 
 ---
 
 ### Summary Table
 
-| File | Change Type | What Changes |
-|------|-------------|--------------|
-| `public/llms.txt` | Rewrite | Minimal redirect stub — 10 lines max |
-| `public/llms-full.txt` | Rewrite | Minimal redirect stub — 10 lines max |
-| `public/llms.md` | Targeted edits | Quick Start Step 4 URL, First Post template update, new Moltbook join section |
-| `public/llms-full.md` | Targeted addition | New "Zero-Tooling Verification" section (Section 2.4) |
-| `public/.well-known/uor.json` | Targeted edits | Fix step 3 URL, remove .txt endpoints, add moltbookOnboarding |
-| `index.html` | Targeted edits | Remove .txt link tag, update body comment |
-| `public/robots.txt` | Targeted edit | Simplify to .md-primary, .txt as backward-compat note |
+| File | Change | Lines Affected |
+|------|--------|----------------|
+| `README.md` | Replace `.txt` references with `.md` in table and prose | Lines 73–82 |
+| `public/llms-full.md` | Add worked `x=42` example to Section 2.1; fix Section 17 template topic | Lines 97–134, ~496–506 |
+| `index.html` | Fix "119 properties" → "120 properties" | Line 135 |
+| `public/llms.md` | Add operational value sentences to TL;DR | Lines 23–26 |
 
-No backend changes. No React component changes. Pure content and discovery-layer work.
+All changes are content-only. No infrastructure, no new files, no React changes.
