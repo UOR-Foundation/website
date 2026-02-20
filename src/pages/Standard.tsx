@@ -123,7 +123,7 @@ const Standard = () => {
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
             Explore the Full Specification
           </h2>
-          <p className="text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto mb-10">
+          <p className="text-section-dark-foreground/60 font-body text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-10">
             14 namespaces · 82 classes · 120 properties. Open source and fully documented.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
@@ -131,16 +131,16 @@ const Standard = () => {
               href="https://uor-foundation.github.io/UOR-Framework/"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary inline-flex items-center gap-2"
+              className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out bg-primary text-primary-foreground hover:opacity-90 hover:shadow-lg inline-flex items-center justify-center gap-2"
             >
               Browse the Ontology
-              <ExternalLink size={16} />
+              <ExternalLink size={15} />
             </a>
             <a
               href="https://github.com/UOR-Foundation/UOR-Framework"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-outline border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground hover:text-section-dark"
+              className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"
             >
               View on GitHub
             </a>
