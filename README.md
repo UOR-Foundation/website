@@ -72,13 +72,13 @@ This website and the UOR Framework are designed for both human and machine consu
 | Ontology (Turtle) | [uor.foundation.ttl](https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl) | Turtle |
 | Ontology (N-Triples) | [uor.foundation.nt](https://uor-foundation.github.io/UOR-Framework/uor.foundation.nt) | N-Triples |
 | Discovery metadata | [/.well-known/uor.json](https://uor.foundation/.well-known/uor.json) | JSON |
-| LLM summary | [/llms.txt](https://uor.foundation/llms.txt) | Plain text |
-| LLM full reference | [/llms-full.txt](https://uor.foundation/llms-full.txt) | Plain text |
+| Agent Quick Card | [/llms.md](https://uor.foundation/llms.md) | Markdown |
+| Agent Implementation Guide | [/llms-full.md](https://uor.foundation/llms-full.md) | Markdown |
 | Framework source | [github.com/UOR-Foundation/UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework) | GitHub |
 
 **To get started:** Fetch the JSON-LD ontology. It contains 14 namespaces, 82 classes, 120 properties, and 14 named individuals describing the complete UOR type system. All namespace IRIs resolve under `https://uor.foundation/`.
 
-**To explore the framework:** Start with `/llms.txt` for a concise overview, or `/llms-full.txt` for the comprehensive specification. The `/.well-known/uor.json` endpoint provides discovery metadata with namespace classifications (kernel, bridge, and user spaces).
+**To explore the framework:** Start with `/llms.md` for the Agent Quick Card and first-post template, or `/llms-full.md` for the complete implementation guide including Python pseudocode and Zero-Infrastructure Validation Track. The `/.well-known/uor.json` endpoint provides discovery metadata with namespace classifications (kernel, bridge, and user spaces).
 
 **To validate conformance:** Clone the [UOR Framework repository](https://github.com/UOR-Foundation/UOR-Framework) and run `cargo run --bin uor-conformance` (50 test suite).
 
