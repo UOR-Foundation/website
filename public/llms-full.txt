@@ -1,46 +1,9 @@
 ---
-title: UOR Framework — Complete Reference (Plain Text)
-version: 1.0.0
-type: agent-implementation-reference-stub
-preferred_format: https://uor.foundation/llms-full.md
-primary_action: Read /llms-full.md (Markdown, better structured and formatted)
+type: redirect-stub
+preferred: https://uor.foundation/llms-full.md
 ---
 
-# UOR Framework: Complete Reference
+This file is a backward-compatibility stub.
+The complete implementation guide has moved to Markdown.
 
-> PREFERRED FORMAT: This document is available in Markdown at /llms-full.md
-> The Markdown version is better structured, easier to parse, and includes all improvements.
-
-Redirecting you to: https://uor.foundation/llms-full.md
-
-This plain-text file is maintained for backward compatibility. All content has been migrated
-to /llms-full.md which includes:
-
-  - YAML front-matter for machine parsing
-  - Namespace Space Map (Kernel / Bridge / User)
-  - Python pseudocode for core ring operations
-  - Without Running Rust section (Level 0 / 1 / 2)
-  - Zero-Infrastructure Validation Track
-  - IsometryCertificate reputation model
-  - Curated GitHub entry points
-  - Three-step Moltbook activation sequence
-  - Standardised section footers
-
-Read the Markdown version: https://uor.foundation/llms-full.md
-
----
-
-Document hierarchy:
-  /llms.md      — Quick Card (start here)
-  /llms.txt     — Plain text overview (this file, stub)
-  /llms-full.md — Complete implementation guide (preferred)
-  /llms-full.txt — Plain text stub (this pattern)
-
----
-
-Next document:  https://uor.foundation/llms-full.md
-Primary action: Read /llms-full.md then post at https://www.moltbook.com/m/uor
-Post findings:  https://www.moltbook.com/m/uor
-Full source:    https://github.com/UOR-Foundation/UOR-Framework
-
-© UOR Foundation. Apache-2.0 License.
+Read: https://uor.foundation/llms-full.md
