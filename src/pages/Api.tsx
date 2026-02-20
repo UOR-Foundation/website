@@ -48,17 +48,22 @@ interface Endpoint {
   example: string;
 }
 
+interface V2Stub {
+  label: string;
+  description: string;
+  path: string;
+}
+
 interface Layer {
   id: string;
   icon: React.ElementType;
   layerNum: number;
   title: string;
   oneLiner: string;
-  /** Why this layer matters in plain terms */
   whyItMatters: string;
-  /** The agent problem(s) it solves from llms.md */
   solves: string;
   endpoints: Endpoint[];
+  v2stubs?: V2Stub[];
 }
 
 /* ─────────────────────────── Layer + Endpoint data ─────────────────────────── */
@@ -248,6 +253,13 @@ const LAYERS: Layer[] = [
         example: `${BASE}/user/type/primitives`,
       },
     ],
+    v2stubs: [
+      {
+        label: "Canonical Form Resolver",
+        description: "Decomposes any value into its canonical irreducible representation using the full dihedral factorisation algorithm. Requires the Rust conformance suite.",
+        path: "/bridge/resolver",
+      },
+    ],
   },
   {
     id: "layer-4",
@@ -309,6 +321,18 @@ const LAYERS: Layer[] = [
         example: `${BASE}/bridge/cert/involution?operation=neg`,
       },
     ],
+    v2stubs: [
+      {
+        label: "Audit Traces",
+        description: "Records a full step-by-step history of every operation an agent executes. Enables detection of prompt injection by comparing actual execution paths against expected derivations.",
+        path: "/bridge/derivation",
+      },
+      {
+        label: "Execution Traces",
+        description: "Captures the exact sequence of operations at a lower level than derivation. Useful for forensic analysis after an anomaly is detected.",
+        path: "/bridge/trace",
+      },
+    ],
   },
   {
     id: "layer-5",
@@ -355,24 +379,19 @@ const LAYERS: Layer[] = [
         example: `${BASE}/bridge/observable/metrics?x=42`,
       },
     ],
+    v2stubs: [
+      {
+        label: "Structure-Preserving Maps",
+        description: "Transforms data between different ring representations while guaranteeing that structural properties are preserved. The formal basis for typed agent-to-agent communication.",
+        path: "/user/morphism/transforms",
+      },
+      {
+        label: "Agent State",
+        description: "Manages agent lifecycle bindings: entry, transition, and exit conditions. Provides formal Frame and Transition objects for stateful coordination.",
+        path: "/user/state",
+      },
+    ],
   },
-];
-
-/* ─────────────────────────── V2 stubs ─────────────────────────── */
-
-interface StubTag {
-  id: string;
-  label: string;
-  description: string;
-  paths: string[];
-}
-
-const V2_STUBS: StubTag[] = [
-  { id: "derivation", label: "Audit Traces", description: "Records a full step-by-step history of every operation an agent executes. Enables detection of prompt injection by comparing actual execution paths against expected derivations.", paths: ["/bridge/derivation"] },
-  { id: "trace", label: "Execution Traces", description: "Captures the exact sequence of operations at a lower level than derivation. Useful for forensic analysis after an anomaly is detected.", paths: ["/bridge/trace"] },
-  { id: "resolver", label: "Canonical Form Resolver", description: "Decomposes any value into its canonical irreducible representation using the full dihedral factorisation algorithm. Requires the Rust conformance suite.", paths: ["/bridge/resolver"] },
-  { id: "morphism", label: "Structure-Preserving Maps", description: "Transforms data between different ring representations while guaranteeing that the structural properties are preserved. The formal basis for typed agent-to-agent communication.", paths: ["/user/morphism/transforms"] },
-  { id: "state", label: "Agent State", description: "Manages agent lifecycle bindings: entry, transition, and exit conditions. Provides formal Frame and Transition objects for stateful coordination.", paths: ["/user/state"] },
 ];
 
 /* ─────────────────────────── Utilities ─────────────────────────── */
@@ -679,12 +698,31 @@ function LayerSection({ layer, index }: { layer: Layer; index: number }) {
               </p>
             </div>
 
-            {/* Endpoints */}
+            {/* Live endpoints */}
             <div className="space-y-3">
               {layer.endpoints.map(ep => (
                 <EndpointPanel key={ep.operationId} ep={ep} />
               ))}
             </div>
+
+            {/* V2 stubs — within this layer */}
+            {layer.v2stubs && layer.v2stubs.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 mb-2 mt-1">Coming in v2</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {layer.v2stubs.map(stub => (
+                    <div key={stub.path} className="rounded-xl border border-dashed border-border bg-card/40 px-4 py-3 opacity-65">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <p className="text-xs font-semibold text-foreground">{stub.label}</p>
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border bg-muted text-muted-foreground">501</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-1.5">{stub.description}</p>
+                      <code className="font-mono text-[10px] text-muted-foreground/60">{stub.path}</code>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -917,31 +955,6 @@ const Api = () => {
         </div>
       </section>
 
-      {/* v2 stubs */}
-      <section className="py-12 md:py-16 bg-background border-b border-border">
-        <div className="container max-w-5xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
-            Coming in v2
-          </p>
-          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-8">
-            These namespaces are formally defined in the OpenAPI spec and in the UOR ontology, but require the full Rust conformance suite to expose via the cloud API. Each returns HTTP 501 today.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {V2_STUBS.map(stub => (
-              <div key={stub.id} className="rounded-2xl border border-dashed border-border bg-card/50 p-5 opacity-70">
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-sm font-semibold text-foreground">{stub.label}</p>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-border bg-muted text-muted-foreground">501</span>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-2">{stub.description}</p>
-                {stub.paths.map(p => (
-                  <code key={p} className="font-mono text-xs text-muted-foreground/70">{p}</code>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* For AI agents */}
       <section className="section-dark py-14 md:py-20">
