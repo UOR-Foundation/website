@@ -549,7 +549,7 @@ function EndpointPanel({ ep }: { ep: Endpoint }) {
             <MethodBadge method={ep.method} />
             <code className="font-mono text-sm text-foreground">{ep.path}</code>
           </div>
-          <p className="text-sm font-medium text-foreground">{ep.label}</p>
+          <p className="text-base font-medium text-foreground">{ep.label}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
@@ -577,13 +577,13 @@ function EndpointPanel({ ep }: { ep: Endpoint }) {
             {/* What it does */}
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">What it does</p>
-              <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">{ep.explanation}</p>
+              <p className="text-base text-foreground/80 whitespace-pre-line leading-relaxed">{ep.explanation}</p>
             </div>
 
             {/* Use case */}
             <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Example use case</p>
-              <p className="text-sm text-foreground/80 leading-relaxed">{ep.useCase}</p>
+              <p className="text-base text-foreground/80 leading-relaxed">{ep.useCase}</p>
             </div>
 
             {/* Parameters */}
@@ -593,10 +593,10 @@ function EndpointPanel({ ep }: { ep: Endpoint }) {
                 <div className="space-y-2">
                   {ep.params.map(p => (
                     <div key={p.name} className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
-                      <code className={`font-mono text-xs mt-0.5 ${p.required ? "text-primary" : "text-muted-foreground"}`}>
+                      <code className={`font-mono text-sm mt-0.5 ${p.required ? "text-primary" : "text-muted-foreground"}`}>
                         {p.name}{p.required ? "" : "?"}
                       </code>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{p.description}{p.default ? ` Default: ${p.default}.` : ""}</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{p.description}{p.default ? ` Default: ${p.default}.` : ""}</p>
                     </div>
                   ))}
                 </div>
@@ -610,7 +610,7 @@ function EndpointPanel({ ep }: { ep: Endpoint }) {
                 <div className="space-y-2">
                   {ep.params.filter(p => p.in === "query").map(p => (
                     <div key={p.name} className="flex items-center gap-3">
-                      <label className="font-mono text-xs text-primary w-20 shrink-0">{p.name}</label>
+                      <label className="font-mono text-sm text-primary w-24 shrink-0">{p.name}</label>
                       {p.enum ? (
                         <select
                           value={paramValues[p.name] ?? p.default ?? ""}
@@ -652,7 +652,7 @@ function EndpointPanel({ ep }: { ep: Endpoint }) {
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">curl</p>
                 <CopyButton text={curlCmd} />
               </div>
-              <pre className="bg-[hsl(220,18%,6%)] text-[hsl(152,34%,60%)] text-xs rounded-lg px-4 py-3 overflow-x-auto font-mono leading-relaxed">{curlCmd}</pre>
+              <pre className="bg-[hsl(220,18%,6%)] text-[hsl(152,34%,60%)] text-sm rounded-lg px-4 py-3 overflow-x-auto font-mono leading-relaxed">{curlCmd}</pre>
             </div>
 
             {/* Run + response codes */}
@@ -669,7 +669,7 @@ function EndpointPanel({ ep }: { ep: Endpoint }) {
                 {ep.responseCodes.map(c => <ResponseBadge key={c} code={c} />)}
               </div>
               {response && (
-                <button onClick={() => setResponse(null)} className="text-xs text-muted-foreground hover:text-foreground transition-colors ml-auto">
+                <button onClick={() => setResponse(null)} className="text-sm text-muted-foreground hover:text-foreground transition-colors ml-auto">
                   Clear
                 </button>
               )}
@@ -683,7 +683,7 @@ function EndpointPanel({ ep }: { ep: Endpoint }) {
                   <CopyButton text={response} />
                 </div>
                 <pre
-                  className="bg-[hsl(220,18%,6%)] text-xs rounded-lg px-4 py-3 overflow-x-auto font-mono leading-relaxed max-h-72 overflow-y-auto json-response"
+                  className="bg-[hsl(220,18%,6%)] text-sm rounded-lg px-4 py-3 overflow-x-auto font-mono leading-relaxed max-h-72 overflow-y-auto json-response"
                   dangerouslySetInnerHTML={{ __html: highlightJson(response) }}
                 />
               </div>
@@ -742,10 +742,10 @@ function LayerSection({ layer, index }: { layer: Layer; index: number }) {
           <div className="px-5 md:px-7 pb-7 pt-0 space-y-6">
             {/* Layer description */}
             <div className="ml-14 md:ml-16 space-y-3">
-              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+              <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
                 {layer.whyItMatters}
               </p>
-              <p className="text-xs font-semibold text-primary/70 leading-relaxed">
+              <p className="text-sm font-semibold text-primary/70 leading-relaxed">
                 {layer.solves}
               </p>
             </div>
@@ -860,8 +860,8 @@ const Api = () => {
                 className="rounded-2xl border border-border bg-card p-5 hover:border-primary/20 transition-all duration-300"
               >
                 <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-2">{item.endpoint}</p>
-                <h3 className="font-display text-base font-bold text-foreground mb-2">{item.problem}</h3>
-                <p className="text-sm font-body text-muted-foreground leading-relaxed">{item.solution}</p>
+                <h3 className="font-display text-lg font-bold text-foreground mb-2">{item.problem}</h3>
+                <p className="text-base font-body text-muted-foreground leading-relaxed">{item.solution}</p>
               </div>
             ))}
           </div>
@@ -899,17 +899,17 @@ const Api = () => {
                 note: "Returns a density score — what fraction of the content is structurally novel versus repetitive.",
               },
             ].map(({ step, label, cmd, note }) => (
-              <div key={step} className="flex items-start gap-4 px-5 py-4 bg-card">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
+              <div key={step} className="flex items-start gap-4 px-5 py-5 bg-card">
+                <span className="shrink-0 w-7 h-7 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center mt-0.5">
                   {step}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground mb-2">{label}</p>
+                  <p className="text-base font-semibold text-foreground mb-2">{label}</p>
                   <div className="flex items-center gap-2">
-                    <code className="font-mono text-xs text-[hsl(152,34%,60%)] bg-[hsl(220,18%,6%)] px-3 py-1.5 rounded-lg flex-1 min-w-0 break-all">{cmd}</code>
+                    <code className="font-mono text-sm text-[hsl(152,34%,60%)] bg-[hsl(220,18%,6%)] px-3 py-1.5 rounded-lg flex-1 min-w-0 break-all">{cmd}</code>
                     <CopyButton text={cmd} size="xs" />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{note}</p>
+                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{note}</p>
                 </div>
               </div>
             ))}
@@ -922,35 +922,35 @@ const Api = () => {
         <div className="container max-w-5xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Base URL */}
-            <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="rounded-2xl border border-border bg-card p-6">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Base URL</p>
               <div className="flex items-center gap-2">
-                <code className="font-mono text-xs text-foreground bg-muted px-3 py-2 rounded-lg flex-1 break-all">{BASE}</code>
+                <code className="font-mono text-sm text-foreground bg-muted px-3 py-2 rounded-lg flex-1 break-all">{BASE}</code>
                 <CopyButton text={BASE} />
               </div>
-              <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
                 Canonical URL at https://uor.foundation/api/v1 coming soon. Both route to the same backend.
               </p>
             </div>
 
             {/* Rate limits */}
-            <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="rounded-2xl border border-border bg-card p-6">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Rate limits</p>
               <div className="space-y-2 mb-3">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-base">
                   <span className="text-muted-foreground">GET</span>
                   <span className="font-semibold text-foreground font-mono">120 / min</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-base">
                   <span className="text-muted-foreground">POST</span>
                   <span className="font-semibold text-foreground font-mono">60 / min</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-base">
                   <span className="text-muted-foreground">X-UOR-Agent-Key header</span>
                   <span className="font-semibold text-foreground font-mono">elevated</span>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Every response includes X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, and ETag headers.
               </p>
             </div>
@@ -981,18 +981,18 @@ const Api = () => {
                 <div key={ep.path} className="rounded-2xl border border-border bg-card p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-semibold">GET</span>
-                    <code className="font-mono text-xs text-foreground">{ep.path}</code>
+                    <code className="font-mono text-sm text-foreground">{ep.path}</code>
                   </div>
-                  <p className="text-sm font-semibold text-foreground mb-1">{ep.label}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed mb-3">{ep.explanation}</p>
+                  <p className="text-base font-semibold text-foreground mb-1">{ep.label}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">{ep.explanation}</p>
                   <div className="flex items-center gap-2">
                     <a
                       href={ep.example}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-mono text-primary hover:opacity-80 transition-opacity"
+                      className="inline-flex items-center gap-1.5 text-sm font-mono text-primary hover:opacity-80 transition-opacity"
                     >
-                      Run <ExternalLink size={10} />
+                      Run <ExternalLink size={11} />
                     </a>
                     <CopyButton text={`curl "${ep.example}"`} size="xs" />
                   </div>
