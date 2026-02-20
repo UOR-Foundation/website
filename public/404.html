@@ -3,6 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <title>Redirecting…</title>
+
+    <!-- ============================================================ -->
+    <!-- SECURITY HEADERS (mirrors index.html hardening)              -->
+    <!-- ============================================================ -->
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
+    <!-- Inline-only CSP: only the SPA redirect script needs to run; no external resources. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; base-uri 'self'; frame-ancestors 'self';">
+
     <script>
       // SPA redirect for GitHub Pages
       // https://github.com/rafgraph/spa-github-pages

@@ -43,6 +43,13 @@ Deno.serve(async (req: Request) => {
 
     // Endpoint B: simplified content addressing ?content=<string>
     if (contentParam !== null) {
+      // F9 — payload size cap to prevent DoS against edge function quota
+      if (contentParam.length > 1000) {
+        return new Response(
+          JSON.stringify({ error: 'content must be 1000 characters or fewer' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       const encoder = new TextEncoder();
       const bytes = encoder.encode(contentParam);
       const byteArray = Array.from(bytes);
