@@ -3,18 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <!-- SPA redirect script for GitHub Pages (spa-github-pages) -->
-    <script>
-      (function(l) {
-        if (l.search[1] === '/') {
-          var decoded = l.search.slice(1).split('&').map(function(s) {
-            return s.replace(/~and~/g, '&');
-          }).join('?');
-          window.history.replaceState(null, null,
-            l.pathname.slice(0, -1) + decoded + l.hash
-          );
-        }
-      }(window.location));
-    </script>
+    <!-- Externalised to /spa-redirect.js so CSP script-src can drop unsafe-inline (F3) -->
+    <script src="/spa-redirect.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- ============================================================ -->
@@ -32,19 +22,26 @@
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(self 'https://donorbox.org')">
 
     <!-- Content Security Policy
-         default-src 'self'          — block everything not explicitly listed
-         script-src                  — allow inline (Vite HMR) + Donorbox widget
+         NIST SP 800-53 SI-10, SC-8, AC-17 / OWASP Top 10 A03, A05
+         ─────────────────────────────────────────────────────────────────────
+         script-src  'self'          — /spa-redirect.js served from origin
+                     https://donorbox.org — payment widget (no unsafe-inline)
          frame-src                   — only Donorbox embeds allowed
-         style-src                   — allow inline styles (Tailwind, shadcn)
-         font-src                    — self-hosted only (no Google Fonts CDN)
-         img-src                     — self + data URIs + any HTTPS image
-         connect-src                 — self + Supabase API
-         object-src 'none'           — block Flash / legacy plugin execution
-         base-uri 'self'             — prevent base tag injection
-         form-action                 — only allow form posts to self + Donorbox
+         style-src   'self' 'unsafe-inline' — required: Tailwind injects a
+                     <style> block at runtime via Vite; removable only after
+                     confirming the built stylesheet is fully external (F4)
+         font-src    'self'          — self-hosted via @fontsource (no CDN)
+         img-src     'self' data: https: — project images + data URIs
+         connect-src 'self' https://*.supabase.co — edge function API calls
+         object-src  'none'          — block Flash / legacy plugin execution
+         base-uri    'self'          — prevent base-tag injection
+         form-action 'self' https://donorbox.org — form posts only to origin
          frame-ancestors 'self'      — CSP-level clickjacking guard
+         ─────────────────────────────────────────────────────────────────────
+         F3 FIXED: unsafe-inline removed from script-src (SPA script externalised)
+         F4 OPEN:  unsafe-inline retained in style-src pending Tailwind CSS audit
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://donorbox.org; frame-src https://donorbox.org; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self' https://donorbox.org; frame-ancestors 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://donorbox.org; frame-src https://donorbox.org; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self' https://donorbox.org; frame-ancestors 'self';">
 
     <!-- Donorbox widget — loaded as static script for Subresource Integrity eligibility -->
     <script src="https://donorbox.org/widgets.js" paypalExpress="false" defer></script>
