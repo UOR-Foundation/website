@@ -699,7 +699,7 @@ function EndpointPanel({ ep }: { ep: Endpoint }) {
 /* ─────────────────────────── LayerSection ─────────────────────────── */
 
 function LayerSection({ layer, index }: { layer: Layer; index: number }) {
-  const [open, setOpen] = useState(index === 0 || index === 3);
+  const [open, setOpen] = useState(false);
   const Icon = layer.icon;
 
   return (
