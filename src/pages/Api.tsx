@@ -805,13 +805,13 @@ const Api = () => {
             OpenAPI 3.1.0 · No account required
           </p>
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
-            A unified computational substrate for agentic AI
+            A Unified Computational Substrate for Agentic AI
           </h1>
           <p
-            className="mt-5 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
+            className="mt-5 text-base md:text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
             style={{ animationDelay: "0.15s" }}
           >
-            The UOR Framework API gives AI agents a shared mathematical ground truth — a common set of rules every agent can verify independently. Provable identity, tamper-evident computation, formally grounded content quality. Every response is stateless, deterministic, and verifiable without contacting a server.
+            AI systems today cannot verify each other's identity, confirm each other's outputs, or agree on whether data is trustworthy. The UOR Framework API gives every agent a common mathematical foundation to check any of this independently — no account, no server, no central authority required.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
