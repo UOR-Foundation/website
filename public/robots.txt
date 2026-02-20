@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 
 # AI agents: see /agent-discovery.md
+
+Sitemap: https://uor.foundation/sitemap.xml

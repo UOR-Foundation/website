@@ -1,6 +1,5 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Heart } from "lucide-react";
-import { useEffect } from "react";
 
 interface DonatePopupProps {
   open: boolean;
@@ -8,20 +7,9 @@ interface DonatePopupProps {
 }
 
 const DonatePopup = ({ open, onOpenChange }: DonatePopupProps) => {
-  useEffect(() => {
-    if (open) {
-      // Load Donorbox script when popup opens
-      const existing = document.querySelector('script[src="https://donorbox.org/widgets.js"]');
-      if (!existing) {
-        const script = document.createElement("script");
-        script.src = "https://donorbox.org/widgets.js";
-        script.async = true;
-        script.setAttribute("paypalExpress", "false");
-        document.head.appendChild(script);
-      }
-    }
-  }, [open]);
-
+  // NOTE: The Donorbox widgets.js script is loaded as a static <script> tag in
+  // index.html for Subresource Integrity eligibility. Dynamic script injection
+  // was removed because it bypasses SRI checks (security audit finding #3).
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-border/50 bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl">
@@ -48,6 +36,12 @@ const DonatePopup = ({ open, onOpenChange }: DonatePopupProps) => {
             // @ts-ignore - allowpaymentrequest is valid for payment iframes
             allowpaymentrequest=""
             allow="payment"
+            // sandbox: minimum permissions Donorbox requires to function
+            // allow-same-origin: needed for the Donorbox session cookies
+            // allow-scripts: needed for the payment form JS
+            // allow-forms: needed for form submission
+            // allow-popups: needed for PayPal / 3DS redirect windows
+            sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox"
             style={{
               width: "100%",
               minHeight: 420,
