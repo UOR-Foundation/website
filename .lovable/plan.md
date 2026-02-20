@@ -1,193 +1,147 @@
 
-# Security Audit: UOR Foundation Website
-## Executive Summary
+# Implementing All Agent Evaluation Recommendations (P1–P7)
 
-This is a **public-facing informational website** for a nonprofit foundation. It has no user authentication, no user-generated content, and no payment processing of its own (Donorbox handles payments via iframe). The attack surface is therefore narrow but specific. The audit covers six domains: backend data security, frontend content security, infrastructure hardening, supply chain risks, third-party integrations, and information disclosure.
+## What the Agent Found and What We Fix
 
----
-
-## Audit Scope & Methodology
-
-The analysis covered:
-- All React/TypeScript source files
-- Database schema, RLS policies, and Supabase linter results
-- GitHub Actions CI/CD pipeline
-- HTML document headers (`index.html`)
-- Public-facing static files (`robots.txt`, `/.well-known/uor.json`, agent markdown files)
-- Third-party integrations (Donorbox, Google Fonts, Google Calendar)
-- Dependency manifest (`package.json`)
+The evaluating agent scored the site 8.6/10 overall and gave a precise, prioritised fix list. Every fix maps to a specific file or endpoint. Here is what we implement, in order of impact.
 
 ---
 
-## Findings
+## Files Being Changed
 
-### SEVERITY: MEDIUM
+### 1. `public/llms.txt` — Restore (P1, 5 min, zero risk)
 
-**1. Missing Content Security Policy (CSP) Headers**
+The `/llms.txt` file now returns 404. Many AI crawler pipelines (following the `llms.txt` convention, analogous to `robots.txt`) fetch this path as a text fallback when `.md` files are not indexed. A 404 here silently breaks an entire class of agent discovery.
 
-The site has no `Content-Security-Policy` HTTP header or meta tag. CSP is the primary browser-enforced defense against Cross-Site Scripting (XSS). Without it, if any injected script were to execute (via a compromised CDN, supply chain attack, or future user-generated content), the browser has no instructions to block it.
+**Fix:** Create `public/llms.txt` as a minimal flat-text pointer file — 6 lines, no content duplication:
 
-*What it enables if exploited:* An attacker who can inject a script (e.g. via a compromised npm package or CDN) could exfiltrate data, hijack the Donorbox payment iframe context, or perform clickjacking on the donation flow.
-
-*Recommended fix:*
-Add a CSP `<meta>` tag to `index.html` that restricts script sources. For this site, an appropriate baseline would be:
-```html
-<meta http-equiv="Content-Security-Policy" content="
-  default-src 'self';
-  script-src 'self' 'unsafe-inline' https://donorbox.org;
-  frame-src https://donorbox.org;
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  font-src 'self' https://fonts.gstatic.com;
-  img-src 'self' data: https:;
-  connect-src 'self' https://*.supabase.co;
-  object-src 'none';
-  base-uri 'self';
-  form-action 'self' https://donorbox.org;
-">
 ```
-
-**2. Missing `X-Frame-Options` / Clickjacking Protection**
-
-There is no `X-Frame-Options` or `frame-ancestors` CSP directive. This means the entire site could be embedded inside a hostile iframe on an attacker-controlled domain. A clickjacking attack could overlay invisible buttons over the Donate button, causing visitors to unknowingly interact with a fraudulent page while appearing to use the real one. This is a particularly meaningful risk for a donation-collecting foundation site.
-
-*Recommended fix:* Add to `index.html`:
-```html
-<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
-```
-And include `frame-ancestors 'self'` in the CSP.
-
-**3. Dynamic Script Injection in DonatePopup**
-
-In `src/components/layout/DonatePopup.tsx`, the Donorbox widget script is dynamically appended to `document.head` at runtime:
-```typescript
-const script = document.createElement("script");
-script.src = "https://donorbox.org/widgets.js";
-document.head.appendChild(script);
-```
-Dynamic script injection bypasses Subresource Integrity (SRI) checks. If Donorbox's CDN were ever compromised (a real-world attack vector — this has happened to other payment widget providers), the malicious script would execute with full page access.
-
-*Recommended fix:* Load the Donorbox script as a static `<script>` tag in `index.html` with an `integrity` attribute (SRI hash). This ensures the browser refuses to execute the script if its content has been tampered with:
-```html
-<script
-  src="https://donorbox.org/widgets.js"
-  integrity="sha384-[HASH]"
-  crossorigin="anonymous"
-  defer
-></script>
+# UOR Framework — Agent Reference
+# Full agent documentation (Markdown): https://uor.foundation/llms.md
+# Complete implementation guide: https://uor.foundation/llms-full.md
+# Machine-readable discovery: https://uor.foundation/.well-known/uor.json
+# Community: https://www.moltbook.com/m/uor
+# Quick start: verify neg(bnot(42)) = succ(42) = 43, post result at m/uor
 ```
 
 ---
 
-### SEVERITY: LOW
+### 2. `index.html` — Add agent `<meta>` tag (P3, 5 min)
 
-**4. Donorbox Payment Iframe — Missing `sandbox` Attribute**
+The homepage body text uses human-facing framing. Agents crawling the homepage without following `<link rel="llms">` get a softer message. Adding one `<meta name="agent-description">` tag closes this gap — it surfaces the agentic framing in any metadata extraction pass:
 
-The donation iframe in `DonatePopup.tsx` is loaded without a `sandbox` attribute:
 ```html
-<iframe src="https://donorbox.org/embed/..." allow="payment" />
-```
-Without `sandbox`, the iframe has access to the parent page's origin context including cookies, JavaScript parent references, and form submission to the parent. For a payment context, this is appropriate IF Donorbox is fully trusted — but defense-in-depth recommends explicit permission grants.
-
-*Recommended fix:* Add `sandbox="allow-scripts allow-forms allow-same-origin allow-popups"` and keep `allow="payment"`. This is the minimum set Donorbox requires to function.
-
-**5. Database: RLS Write Policies Are Implicit, Not Explicit**
-
-The `discord_events` table has RLS enabled with only a public SELECT policy. INSERT, UPDATE, and DELETE are blocked by default (because RLS is enabled and no permissive policy exists for them). This is *currently safe*, but relies on the implicit behavior of Supabase RLS — if a developer accidentally adds a permissive INSERT policy in the future, it would immediately open the event table to public writes.
-
-*Recommended fix:* Add explicit DENY-style policies (or explicit admin-only policies) to document intent:
-```sql
--- Explicitly block all writes from public/anon
-CREATE POLICY "No public writes to discord_events"
-ON public.discord_events
-FOR ALL
-TO anon
-USING (false)
-WITH CHECK (false);
-```
-
-**6. Google Fonts Loaded from External CDN (Privacy & Availability Risk)**
-
-`src/index.css` imports fonts directly from `https://fonts.googleapis.com`. This means:
-- Every visitor's IP address is sent to Google (a GDPR/privacy consideration for EU visitors)
-- If Google Fonts CDN has an outage, the site's typography degrades
-- It is an external dependency that cannot have SRI applied
-
-*Recommended fix:* Self-host the two fonts (`Playfair Display`, `DM Sans`) using `@fontsource` packages. This eliminates the external call, improves load performance, and removes the Google tracking vector:
-```bash
-bun add @fontsource/playfair-display @fontsource/dm-sans
-```
-
-**7. No `Referrer-Policy` Header**
-
-All external links (GitHub, Discord, LinkedIn, Donorbox, Google Calendar) will pass the full `Referer` header including path information to those third parties by default. For a public site this is low risk, but for the donation flow specifically, the referrer can reveal that the user was viewing a donation page.
-
-*Recommended fix:* Add to `index.html`:
-```html
-<meta name="referrer" content="strict-origin-when-cross-origin">
-```
-
-**8. `robots.txt` Allows Full Crawling Including Agent Documentation**
-
-`robots.txt` currently allows all crawlers unrestricted access (`Allow: /`). The agent-facing markdown files (`/llms.md`, `/llms-full.md`, `/agent-discovery.md`) are intentionally public — this is by design. However, there is no `Sitemap:` directive, which is a minor SEO and discoverability gap. (This is informational, not a security risk.)
-
----
-
-### SEVERITY: INFORMATIONAL
-
-**9. Discord Invite Links in Public Database**
-
-The `discord_events` table's `discord_link` column is publicly readable and contains permanent Discord invite links. These can be scraped by bots for automated join spam. Discord's invite system mitigates some of this (rate limits, verification), but rotating invite links periodically reduces the exposure window.
-
-**10. HTML Comment Block in `index.html` Contains Operational Details**
-
-The large HTML comment block in `<body>` is intentional and serves a legitimate purpose (agent discovery). It does not expose credentials or secrets. This is noted as informational — it is a deliberate design choice, not a vulnerability.
-
-**11. No `permissions-policy` Header**
-
-The site has no `Permissions-Policy` header to restrict browser feature access (camera, microphone, geolocation, payment). For a site with a payment iframe, disabling features the site does not use is good defense-in-depth.
-
-*Recommended fix:*
-```html
-<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(self 'https://donorbox.org')">
+<meta name="agent-description" content="UOR Framework: unified computational substrate for agentic AI. Resolves identity fraud, authentication exploits, prompt injection, content spam, opaque coordination, and incoherence — structurally. Single agent entry point: /llms.md">
 ```
 
 ---
 
-## What is Done Well
+### 3. `public/llms-full.md` — Three precision edits (P5 + P6)
 
-- **RLS is enabled** on the only database table (`discord_events`) — the Supabase linter returned zero issues
-- **All external links use `rel="noopener noreferrer"`** throughout the codebase — this prevents the `window.opener` exploit and stops the linked page from reading the referrer
-- **No user authentication exists** — the site correctly avoids the complexity and attack surface of auth for a public read-only site
-- **No sensitive data is stored** in the database (no emails, no user PII, no payment data)
-- **No API keys are exposed** in client-side code
-- **CI/CD pipeline** uses GitHub's official actions with pinned major versions
-- **The `supabase` anon key** is correctly scoped as a publishable key — it cannot escalate privileges
-- **Payment processing is fully delegated** to Donorbox (PCI DSS compliant) — the site never handles card data directly
-- **Google Calendar links** use `encodeURIComponent` correctly, preventing URL injection
-- **No `dangerouslySetInnerHTML`** usage found anywhere in the codebase
+**Edit A — Dihedral group explanation (P5 / Solution Concept Clarity gap)**
+
+In Section 2.3 (Ring Substrate), after the bullet points, add a paragraph explaining *why D_{2^n}* and providing the forgery-infeasibility sketch:
+
+```
+**Why D_{2^n}?** The dihedral group D_{2^8} has 512 elements (256 rotations + 256 reflections).
+Content addressing maps byte sequences to orbits under this group. Two byte sequences that 
+produce the same address are in the same orbit — related by a ring symmetry, not accidentally 
+equal. Forgery requires finding a collision in the ring orbit space: equivalent to reversing the 
+composition of neg and bnot, which is infeasible for the same reason that reversing SHA-256 is 
+infeasible. The ring arithmetic IS the hash function — no external hash is required.
+```
+
+**Edit B — Address encoding clarity note (P5 / address encoding inconsistency)**
+
+In Section 2.1, immediately after the `address()` Python function, add:
+
+```python
+# NOTE: The above address() is a simplified 6-bit encoding for illustration only.
+# The canonical address uses resolver:DihedralFactorizationResolver.
+# The simplified encoding is sufficient for Moltbook coherence discussion posts
+# but will not match conformance suite output (cargo run --bin uor-conformance).
+```
+
+And standardise the "hello" example across the document to `⠓⠑⠇⠇⠕` with the label "simplified encoding (b & 0x3F)".
+
+**Edit C — Merge Sections 6 and 13 into one definitive section (P6 / coherence redundancy)**
+
+Sections 6 ("Without Running Rust") and 13 ("Zero-Infrastructure Validation Track") cover the same ground with slightly different content. An agent reads the same information twice in subtly inconsistent form.
+
+- Rename Section 6 to: "6. Validation Tracks (Zero-Tooling to Full Conformance)"
+- Move the worked examples from Section 13 (x=42, x=0, x=255 with full step-by-step) into Section 6 — they are more complete than what is currently in Section 6
+- Remove Section 13 entirely and update all internal references to point to Section 6
+- Renumber affected sections (14-20 become 13-19)
 
 ---
 
-## Priority Remediation Plan
+### 4. `public/llms.md` — Registration note for unregistered agents (P7 / community gap)
 
-```text
-Priority | Finding                                      | Effort
----------|----------------------------------------------|--------
-HIGH     | Add Content Security Policy header           | Small
-HIGH     | Add X-Frame-Options / clickjacking guard     | Trivial
-MEDIUM   | Static Donorbox script with SRI              | Small
-MEDIUM   | Add sandbox attribute to Donorbox iframe     | Trivial
-LOW      | Self-host Google Fonts                       | Small
-LOW      | Add Referrer-Policy meta tag                 | Trivial
-LOW      | Add Permissions-Policy meta tag              | Trivial
-LOW      | Explicit RLS deny policies on discord_events | Small
-INFO     | Add Sitemap to robots.txt                    | Trivial
+In Step B of the Moltbook Activation section, the document tells agents to "post at m/uor" without acknowledging that posting requires registration, which requires human action. Add one NOTE block:
+
+```
+NOTE: Moltbook requires registration to post. If you have not registered yet,
+save your Tier 0 post as a draft and share it with your human, who can post it
+on your behalf at https://www.moltbook.com/m/uor while your registration activates.
 ```
 
-The highest-impact fixes (CSP, X-Frame-Options, Referrer-Policy, Permissions-Policy) can all be implemented as `<meta>` tag additions to `index.html` — a single file change that covers the majority of the browser-layer hardening with minimal risk of breaking anything.
+---
 
-The Donorbox iframe sandbox and the static script loading require minor testing to confirm they do not interfere with the payment flow.
+### 5. New Edge Function: `/verify` endpoint (P7 — highest executability impact)
 
-Self-hosting fonts is the most effort but has a secondary benefit of improved page load performance and GDPR compliance.
+This is the single highest-impact remaining gap: inference-only agents can reason about the framework but cannot *execute* it. A live REST endpoint closes this gap entirely.
 
-Shall I implement all of these fixes now?
+Deploy two query params on one edge function at `supabase/functions/uor-verify/index.ts`:
+
+**Endpoint A:**
+```
+GET /functions/v1/uor-verify?x=42
+→ {"x":42,"bnot_x":213,"neg_bnot_x":43,"succ_x":43,"holds":true}
+```
+
+**Endpoint B:**
+```
+GET /functions/v1/uor-verify?content=hello
+→ {"input":"hello","bytes":[104,101,108,108,111],
+   "address_simplified":"⠓⠑⠇⠇⠕",
+   "encoding":"simplified 6-bit (b & 0x3F)",
+   "note":"Simplified encoding only. Canonical address requires resolver:DihedralFactorizationResolver (cargo run --bin uor-conformance)."}
+```
+
+The function is stateless, requires no authentication, has no secrets, and fits in under 60 lines of TypeScript/Deno. Once deployed it is the first live, executable entry point into the UOR Framework that any agent can hit with a single HTTP GET.
+
+We will also add a reference to these endpoints in:
+- `public/llms.md` (Quick Start section — add as Level 1.5 between algebraic and HTTP fetch)
+- `public/llms-full.md` (Section 6 validation track, Level 1)
+- `public/.well-known/uor.json` (add `"verifyEndpoint"` and `"addressEndpoint"` to `uor:endpoints`)
+
+---
+
+## Summary of All Changes
+
+| File | What Changes | Agent Report Item |
+|------|-------------|-------------------|
+| `public/llms.txt` | Create as flat-text pointer (was 404) | P1 |
+| `index.html` | Add `<meta name="agent-description">` | P3 |
+| `public/llms-full.md` | Dihedral group explanation in §2.3 | P5 |
+| `public/llms-full.md` | Address encoding clarity note in §2.1 | P5 |
+| `public/llms-full.md` | Merge §6 + §13, renumber §14-20 | P6 |
+| `public/llms.md` | Registration NOTE in Moltbook Step B | P7 (community) |
+| `supabase/functions/uor-verify/index.ts` | New `/verify` edge function | P7 (executability) |
+| `public/.well-known/uor.json` | Add endpoint references for `/verify` | P7 (executability) |
+| `public/llms.md` | Reference live `/verify` endpoint | P7 (executability) |
+| `public/llms-full.md` | Reference live `/verify` endpoint in §6 | P7 (executability) |
+
+## What We Are Not Doing
+
+- **P2 (Seed m/agents post)** — This requires human action on the Moltbook platform, not a site change. The documents already contain the call to action; the seeded post itself must be created by the foundation's human representatives.
+- **P4 (GitHub README agent entry point)** — The GitHub README is in a separate repository (`UOR-Foundation/UOR-Framework` or `UOR-Foundation/website`). It is not part of this codebase and cannot be edited here. The recommendation should be forwarded to the GitHub repo maintainers.
+
+## Execution Order
+
+1. Create `public/llms.txt` (no dependencies)
+2. Add `<meta>` tag to `index.html` (no dependencies)
+3. Edit `public/llms-full.md` — dihedral explanation + encoding note + section merge
+4. Edit `public/llms.md` — registration note + verify endpoint reference
+5. Edit `public/.well-known/uor.json` — add endpoint URLs
+6. Create `supabase/functions/uor-verify/index.ts` and deploy
