@@ -1,179 +1,165 @@
 
-# API Page — Copy Rewrite: Clarity, Trust, Impact
+# UOR API Audit — Fixes Plan
 
-## What needs to change
+## What the audit found, and what we're going to fix
 
-Every piece of descriptive text on the page. The technical logic is correct — the problem is the language. Too much of it reads as insider documentation. The goal is a page that works for three readers simultaneously:
-
-1. **A pragmatic senior developer** who wants to understand what this does in 10 seconds and then try it.
-2. **An AI agent** reading the machine-facing section that needs clear, unambiguous instructions.
-3. **An informed lay person** with no UOR knowledge who needs to understand why this is significant.
-
-The frame is: **UOR is a unified computational substrate for agentic AI.** Every endpoint serves that frame.
+The audit is thorough and accurate. The good news: every single endpoint already works. The problems are entirely in how the API describes itself — mislabeled statuses, a broken discovery chain, a `/navigate` index that hides three of the best endpoints, and copy that overstates what partition analysis actually does. Every fix below is surgical.
 
 ---
 
-## Rewrite principles
+## Priority 1 — Critical fixes (broken agent experience)
 
-- **Lead with the problem, follow with the solution.** Don't describe what an endpoint returns before explaining why anyone would want it.
-- **No jargon without immediate plain-language definition.** "Ring" must be explained the first time it appears. "Homomorphism" must either be replaced or immediately explained.
-- **One sentence per idea.** Dense paragraphs will be split. Each sentence earns its place.
-- **Use cases must feel real.** "An agent verifies X" is better than "Developers can use this to achieve X."
-- **Labels must be instantly scannable.** Six words or fewer, verb-first.
+### Fix 1: `/openapi.json` on the edge function returns a meta-document, not a spec
+
+**Current behaviour:** `GET .../uor-api/openapi.json` returns a JSON-LD `sdo:WebAPI` object pointing to the spec elsewhere. An automated client following the discovery chain (`/.well-known/uor.json → uor:api.openapi → /openapi.json`) gets zero paths and must follow a second URL.
+
+**Fix:** Replace the `openapiSpec()` handler in `supabase/functions/uor-api/index.ts` with a `301 Redirect` to `https://uor.foundation/openapi.json`. This is one line. Any client following the discovery chain will land on the real 19-path spec immediately.
+
+```text
+GET .../uor-api/openapi.json
+→ 301 Location: https://uor.foundation/openapi.json
+```
 
 ---
 
-## Section-by-section changes
+### Fix 2: `/navigate` hides 3 working endpoints (`/bridge/derivation`, `/bridge/trace`, `/bridge/resolver`)
 
-### Hero
-Currently good. Minor tightening:
-- Sub-headline: slightly more concrete about what "shared mathematical ground truth" means in plain terms.
+**Current behaviour:** The `frameworkIndex()` function puts derivation, trace, and resolver under a separate `endpoints_also` sub-key inside the bridge space — not in the main `endpoints` array. Many clients iterating `bridge.endpoints` miss them entirely.
 
-### Why it matters (problem grid)
-The 6 cards are structured correctly. The copy in each needs to be sharper:
-- **Identity Fraud** → "Anyone can claim to be an agent. UOR content addresses are derived from what an agent actually produced — they cannot be faked."
-- **Auth Exploits** → "Tokens and signatures can be stolen. UOR proof objects are self-verifying — any party checks them independently, with no server contact."
-- **Prompt Injection** → "Malicious instructions can be hidden in inputs. Execution traces record every step taken — divergence from expected behaviour is immediately visible."
-- **Content Spam** → "Pattern-matching filters are easy to fool. UOR measures information density algebraically — it is a formal property, not a trained guess."
-- **Opaque Coordination** → "Agents sharing values cannot verify each other's work without a shared definition. Every UOR operation is named, formal, and reproducible."
-- **No Coherence Model** → "Without a common mathematical foundation, agent coordination breaks on edge cases. UOR coherence proofs confirm a data type is consistent across every possible value."
+**Fix:** Move all three into the main `bridge.endpoints` array alongside the other bridge endpoints. Add `example` URLs with pre-filled parameters. These are among the most compelling endpoints in the API (prompt injection detection), and they are fully live.
 
-### Quick Start
-Already clean. One tweak to note 2 — don't assume reader knows what "negate(bitwise-invert(42))" means without context.
+---
 
-### Architecture section intro
-Current: "Every endpoint maps to a layer of the UOR Framework. Each layer builds on the one below."
-Rewrite: "The API is organised into six layers. Each layer adds a capability — from the single mathematical rule at the base, to identity, operations, classification, verification, and transformation. Every layer is live and working now."
+### Fix 3: `/navigate` count in `openapiSpec()` is wrong (says 14, reality is 19+)
 
-### Layer titles / oneLiner / whyItMatters / solves
+**Current behaviour:** The `openapiSpec()` meta-document says `"paths_count": 14`. Actual working paths: 19 (plus the simple `/uor-verify` endpoint at the other function). The navigate response itself also omits the count.
 
-**Layer 0 — The Foundation**
-- oneLiner: "The one mathematical rule everything else is built on. Provable in under 100ms."
-- whyItMatters: "There is one rule at the base of the framework: applying bitwise-invert then negate to any value always equals incrementing it by one. These two endpoints let you verify that — for one value or every value at once. If this holds, every layer above it holds. For agents with no shared authority, this is the trust anchor."
-- solves: "Agent trust problem: agents with no common authority cannot coordinate. These endpoints return a machine-checkable proof, not an assertion."
+**Fix:** Update the count to 19 in the meta-document. Also update the `note` field to accurately reflect what the static spec contains.
 
-**Layer 1 — Identity**
-- oneLiner: "Permanent, unforgeable addresses derived from content — not from names or servers."
-- whyItMatters: "Location-based identifiers change when data moves. Content addresses are computed from the content itself — the same text always maps to the same address, on any machine, without a registry. An agent's identity is its content. That cannot be impersonated."
-- solves: "Identity fraud: names and tokens can be copied. Content addresses cannot — they are derived, not assigned."
+---
 
-**Layer 2 — Structure**
-- oneLiner: "A fixed set of named operations with verifiable, shareable results."
-- whyItMatters: "UOR defines 12 operations — negate, invert, add, multiply, and more. Each has a formal name, formula, and relationship to the core rule. When agents exchange computed values, they can verify each other's work against these definitions. There is no ambiguity about what was computed."
-- solves: "Opaque coordination: two agents computing the same operation get the same result — or the discrepancy is detectable."
+## Priority 2 — OpenAPI spec fixes (`public/openapi.json`)
 
-**Layer 3 — Resolution**
-- oneLiner: "Know the type and class of any value before you compute with it."
-- whyItMatters: "Every value belongs to one of four categories: building block, composed value, structural anchor, or boundary. Knowing which category a value belongs to before operating on it prevents type errors and incorrect proofs. This layer gives agents a formal type system they share without negotiation."
-- solves: "Type mismatches: agents using the same bytes can reach different conclusions if they disagree on what kind of value it is."
+### Fix 4: 5 endpoints marked "not implemented" in the static spec — they all work
 
-**Layer 4 — Verification**
-- oneLiner: "Shareable proof objects any party can verify independently — no server needed."
-- whyItMatters: "A proof object is not just a correct answer. It has a permanent address, shows every derivation step, and can be verified by anyone without contacting a server. Certificates attest to properties across all values. Both are self-contained objects you can share, store, and re-verify at any time."
-- solves: "Auth exploits and prompt injection: proofs anchored to content addresses cannot be forged or replayed. The math is the trust chain."
+**Current state in `public/openapi.json`:**
 
-**Layer 5 — Transformation**
-- oneLiner: "Translate values between contexts, score information density — formally and deterministically."
-- whyItMatters: "Spam filters use pattern-matching, which can be fooled. UOR uses algebraic structure: every value has a measurable information density, computed from the same rules as everything else in the framework. Morphisms let agents safely translate values between different ring sizes without losing structural properties."
-- solves: "Content spam and prompt injection: partition analysis is a formal property of the content, not a heuristic."
+| Path | Spec says | Reality |
+|---|---|---|
+| `/bridge/derivation` | `501 Not Implemented` | Returns `200 DerivationTrace` |
+| `/bridge/trace` | `501 Not Implemented` | Returns `200 ExecutionTrace` |
+| `/bridge/resolver` | `501 Not Implemented` | Returns `200 Resolution` |
+| `/user/morphism/transforms` | `501 Not Implemented` | Returns `200 RingHomomorphism` |
+| `/user/state` | `501 Not Implemented` | Returns `200 Frame` |
 
-### Endpoint — explanation and useCase rewrites
+**Fix:** For each of the five endpoints in `public/openapi.json`:
+- Update the `summary` to remove "not implemented in v1"
+- Update the `description` to describe what the endpoint actually returns
+- Replace the `501` response with a proper `200` response with schema and parameter definitions
+- Add `parameters` arrays (`x`, `n`, `ops` where applicable)
+- Update the tag descriptions to remove the "not implemented in v1" text
 
-#### /kernel/op/verify
-- explanation: "Checks that negate(bitwise-invert(x)) equals increment(x) for the value you supply. Returns every intermediate step — not just pass or fail. This is the most important endpoint in the API: the rule it checks is the structural guarantee everything else depends on."
-- useCase: "An agent is told the framework is trustworthy. It calls this endpoint with a value it chose, confirms the rule holds, and then relies on the framework with mathematical confidence — no trust required."
+This single change transforms the perceived API surface from 14 to 19 endpoints at zero implementation cost.
 
-#### /kernel/op/verify/all
-- explanation: "Runs the same check across every value in the ring — all 256 for the default 8-bit ring. Returns a pass count, fail count, and a universal verdict. One example proves nothing. Exhaustive verification is what turns a claim into proof."
-- useCase: "An agent wants to confirm the framework is internally consistent before relying on any of its operations. 256 passes, zero failures."
+### Fix 5: Tag descriptions for bridge-derivation, bridge-trace, bridge-resolver, user-morphism, user-state
 
-#### /kernel/address/encode
-- explanation: "Send any text, receive a permanent address computed from its bytes. The same input always produces the same address — no server, no timestamp, no registry required. One character difference produces a completely different address."
-- useCase: "An agent signs its output by encoding its response into a content address and attaching it to the message. Any recipient re-encodes the same text and checks the address matches."
+Each tag currently says `"(not implemented in v1). Requires Rust conformance suite."` — update to describe what the endpoint actually returns.
 
-#### /kernel/schema/datum
-- explanation: "Every value in UOR is more than a number — it has a position in a mathematical structure. This returns the full profile: decimal value, binary representation, bits set, and content address. Understanding this helps interpret results from every other endpoint."
-- useCase: "An agent receives a numeric result and wants its full structural context before using it in a proof."
+### Fix 6: Remove the dead second server entry
 
-#### /kernel/op/compute
-- explanation: "Takes one or two numbers and returns every operation result at once.\n\nUnary (single input): negate, bitwise-invert, increment, decrement.\nBinary (two inputs): add, subtract, multiply, XOR, AND, OR.\n\nAll results in one response — compare them side by side."
-- useCase: "A developer exploring how the framework behaves for a specific value, or an agent that wants to see all possible outcomes before committing to one."
+The `servers` array lists `https://uor.foundation/api/v1` as a server. Every request to that URL returns a 404 HTML page. This breaks any toolchain (Swagger UI, Postman, etc.) that tries the second server. Remove it or mark it clearly as `x-server-status: planned`.
 
-#### /kernel/op/operations
-- explanation: "Returns all 12 named operations with their formal definitions: formulas, algebraic class, and relationship to the core rule. This is the shared dictionary every agent can reference."
-- useCase: "An agent or developer wants to confirm a named operation in a proof object matches a known definition before verifying it."
+---
 
-#### /user/type/primitives
-- explanation: "Returns the built-in type catalogue: U1, U4, U8, U16 (1 to 16 bits), plus composite types — pairs, unions, and constrained values. The type you pick here feeds directly into the coherence and partition endpoints."
-- useCase: "A developer wants to know which type to pass before calling the coherence or partition endpoints."
+## Priority 3 — Response quality fixes (edge function)
 
-#### /bridge/resolver
-- explanation: "Sorts any value into one of four canonical categories:\n\n• Building block (irreducible) — odd, not a unit. Structurally unique.\n• Composed (reducible) — even. Breaks into 2^k × odd core.\n• Anchor (unit) — the ring's multiplicative identity or its inverse.\n• Boundary (exterior) — zero or the ring midpoint.\n\nFor composed values, shows the full factor breakdown. For building blocks, confirms no further decomposition is possible."
-- useCase: "Before using a value in a proof or translation, an agent must know its category. This endpoint answers: is this a building block, a composed value, a structural anchor, or a boundary case?"
+### Fix 7: Add a flat `summary` block to every response
 
-#### /bridge/proof/critical-identity
-- explanation: "Produces a full proof object with a unique permanent address. Anyone can take this object, replay the derivation steps, and confirm it is correct — no server contact needed. Every step is explicit: input, each intermediate value, final comparison."
-- useCase: "An agent produces a proof for its own identity value and attaches it to outgoing messages. Recipients verify independently. The math is the trust chain."
+**Current problem:** The key result is buried inside JSON-LD prefixed keys. An agent parsing `proof:verified` has to know JSON-LD conventions. A flat `summary` object at the top level lets agents consume results in one line.
 
-#### /bridge/proof/coherence
-- explanation: "Verifies the core rule holds for every element of a given type — not a sample, every value. A passing type is ring-coherent and participates fully in the framework's guarantees. Returns pass rate, fail count, and a single boolean verdict. 100% is required."
-- useCase: "Before using a custom data type in agent coordination, verify it is coherent. A non-coherent type will produce unpredictable results with every framework operation."
+**Fix:** Add a `summary` field to every response that contains the key result fields with plain names (no namespace prefixes). Example for `/kernel/op/verify`:
 
-#### /bridge/cert/involution
-- explanation: "Some operations undo themselves when applied twice. Negate and bitwise-invert are both self-inverting: negate(negate(x)) = x for every value in the ring. This verifies that exhaustively, then issues a shareable certificate.\n\nCertificates can be stored and shared. Peers verify them directly — no re-computation needed."
-- useCase: "An agent proves to a peer that an operation is safe to reverse. It shares the certificate. The peer verifies it in one call."
+```json
+{
+  "summary": {
+    "verified": true,
+    "x": 42,
+    "statement": "neg(bnot(42)) = 43 = succ(42) [PASS]"
+  },
+  "@type": "proof:CriticalIdentityProof",
+  ...
+}
+```
 
-#### /bridge/derivation
-- explanation: "Takes a starting value and a sequence of operations, and returns a formal record of every step: input, output, formula used, and ontology reference. Also verifies the core rule holds for the original value — an independent integrity check bundled into the same response."
-- useCase: "An agent runs a sequence of operations and needs an auditable record. The derivation trace is the formal receipt. Peers replay it to verify independently."
+This does not remove any existing fields — it adds a convenience layer on top.
 
-#### /bridge/trace
-- explanation: "Lower-level than derivation. Records the exact binary state of the value after each operation — the decimal value, binary form, how many bits are set, which bits flipped, and the delta from the previous step.\n\nUseful when you need to see exactly where a bit pattern diverged."
-- useCase: "An agent detects unexpected output from a peer and wants to find where the computation diverged. The trace shows exactly which bits changed at each step."
+### Fix 8: Add `partition_interpretation` field to partition responses
 
-#### /bridge/partition
-- explanation: "Classifies every value in the ring into four groups — building blocks, composed values, structural anchors, and boundaries — then returns the fraction that are building blocks as a density score.\n\nAbove 0.25: meaningful content. Below 0.1: strong signal of spam or filler.\n\nPass text for per-character analysis, or a type definition for full-ring analysis."
-- useCase: "An agent receives a long message and runs partition analysis before processing it. A low density score is a formal, reproducible signal — not a heuristic guess."
+**Current problem:** `"aaaaaaaaaa"` gets `quality_signal: PASS` with `density: 1.0` because byte 97 (`a`) is algebraically irreducible (odd, not a unit). This is mathematically correct but misleading — repetitive content passes spam detection. The audit correctly identifies this as a semantics mismatch.
 
-#### /bridge/observable/metrics
-- explanation: "Computes four precise measurements for any value:\n\n• Distance from zero — how far the value sits from the ring's origin.\n• Bits set — how many bits are on. A proxy for information content.\n• Cascade depth — how many times divisible by two before reaching an odd number.\n• Phase boundary — whether the value is near a point where operations change behaviour."
-- useCase: "An agent monitoring a stream of values notices erratic outputs. Structural metrics reveal which values sit near phase boundaries — often the source of instability."
+**Fix:** Add a `partition_interpretation` field to the partition response that makes the algebraic nature of the test explicit:
 
-#### /user/morphism/transforms
-- explanation: "Maps a value from one ring to another while preserving its structural properties.\n\n• Smaller target ring: strips the high bits (projection).\n• Larger target ring: embeds the value unchanged (inclusion).\n• Same size: identity map.\n\nReturns the mapped value, which properties are preserved, and whether the map is injective and surjective."
-- useCase: "An agent operating in an 8-bit ring sends a value to a peer in a 4-bit ring. It uses this endpoint to compute the correct projection and confirm what is preserved."
+```json
+"partition_interpretation": {
+  "method": "algebraic-byte-class",
+  "note": "Density measures algebraic class distribution of byte values — not semantic novelty or entropy. Repetitive content with algebraically irreducible byte values (odd bytes that are not ring units) will score high density.",
+  "threshold": 0.25,
+  "result": "PASS",
+  "caveat": "byte 97 ('a') is algebraically irreducible — repeated content with this byte will always PASS"
+}
+```
 
-#### /user/state
-- explanation: "Returns the formal lifecycle state for an agent at value x.\n\n• What category x belongs to and why.\n• Whether x is a stable entry point (an identity or unit).\n• Whether x is at a phase boundary.\n• For each operation — negate, invert, increment, decrement — where does x go and does its category change?"
-- useCase: "An agent must decide its next action from its current value. This endpoint answers: am I at a stable state, a boundary, or an interior point? What does each available operation do to my category?"
+Also update the `quality_signal` field label to `algebraic_density_signal` to be unambiguous.
 
-### Discovery section (`/navigate` and `/openapi.json`)
-- `/navigate` explanation: "Returns a complete map of every endpoint — path, method, and purpose — in one call. If you are new to the API, start here."
-- `/openapi.json` explanation: "The full machine-readable spec in OpenAPI 3.1.0 format. Use the static copy at uor.foundation/openapi.json to parse all paths, schemas, and response types offline."
+### Fix 9: Expose the `uor-verify` simple endpoint in the navigate index
 
-### For AI Agents section
-The discovery chain notes need to be one tight sentence each:
-1. `/.well-known/uor.json` → "Organisation descriptor. The `uor:api.openapi` field points to the spec."
-2. `GET /openapi.json` → "Full OpenAPI 3.1.0 spec. Parse all paths, operationIds, and response schemas."
-3. `GET /navigate` → "Human-readable endpoint index with recommended reading order."
-4. `GET /kernel/op/verify?x=42` → "First verifiable claim. Zero auth. Returns a full proof in under 100ms."
+The simple `GET /uor-verify?x=42` endpoint (at the `uor-verify` function, not the `uor-api` function) is the clearest first-call in the API — flat JSON, 5 fields, zero JSON-LD. The audit correctly identifies it as the strongest onboarding asset. Add it to the navigate response `quick_start` section with a note explaining it is the simplest entry point.
 
-Machine-readable entry point notes — same treatment, one sentence each:
-- OpenAPI spec: "Parse paths, operationIds, schemas, and response types."
-- Agent Quick Card: "5-minute orientation. Frontmatter includes api_url and api_spec."
-- Full Reference: "Complete guide with all curl examples and implementation notes."
-- Discovery metadata: "JSON-LD descriptor with the uor:api.openapi field."
+### Fix 10: Fix parameterless calls on derivation/trace/resolver returning 404 instead of 400
+
+**Current behaviour:** `GET /bridge/derivation` (no `x` param) returns a 400 error correctly — but the navigate index implies calling without params works. The parameter validation in these handlers already handles this correctly (returns 400). The issue is only in the navigate description — it should explicitly document that `x` is required.
+
+**Fix:** Ensure the navigate endpoint entries for derivation, trace, and resolver clearly list `x` as required (not optional).
+
+---
+
+## Priority 4 — Copy fixes (Api.tsx page + openapi.json descriptions)
+
+### Fix 11: Correct the partition description throughout `Api.tsx`
+
+The UI copy in `src/pages/Api.tsx` currently describes partition as measuring "information density" and flags low scores as "strong signal of spam or filler." After the audit's finding (algebraic, not semantic), this needs qualification. The explanation for the partition endpoint should add one sentence: "Note: density measures algebraic byte-class distribution, not semantic novelty."
+
+### Fix 12: Correct the `/bridge/cert/involution` framing in `Api.tsx`
+
+The current UI copy for Problem 2 (Auth Exploits) implies `cert:TransformCertificate` is available via the API. The audit shows only `cert:InvolutionCertificate` is exposed. The copy should be adjusted to describe what is actually available, not the aspirational planned endpoint.
 
 ---
 
 ## Files changed
-- **`src/pages/Api.tsx`** — all descriptive string fields: `oneLiner`, `whyItMatters`, `solves`, `explanation`, `useCase`, `label` (where needed), `note` fields in Quick Start, discovery chain notes, and the hero paragraph. No logic changes, no component changes.
 
-## What does NOT change
-- All component JSX, styling, layout
-- All parameter definitions (name, type, required, default)
-- Response codes
-- curl examples
-- The hero headline
-- Section headings
-- Quick Start commands
+| File | Changes |
+|---|---|
+| `supabase/functions/uor-api/index.ts` | Fix `/openapi.json` handler to return 301 redirect; fix `frameworkIndex` to move 3 endpoints into main array and add `example` URLs; add `summary` blocks to every handler; add `partition_interpretation` to partition handler; add uor-verify to quick_start |
+| `public/openapi.json` | Fix 5 endpoint specs from 501→200 with proper schemas and parameters; fix 5 tag descriptions; remove/clarify the dead second server entry; update paths_count references |
+| `src/pages/Api.tsx` | Qualify partition description; fix auth exploits problem card to match what the cert endpoint actually provides |
+
+---
+
+## What we are NOT changing
+
+- The mathematical logic in any endpoint — the audit confirmed every computation is correct
+- The JSON-LD structure of responses — the context and namespaces are correct
+- The rate limit logic — it works; rate-limit headers are already returned
+- The `uor-verify` simple endpoint itself — it is already excellent
+- The `/bridge/cert/involution` endpoint itself — it works and returns correct data
+- Any new endpoints — the audit's priority 5 suggestions (pairwise coherence, TransformCertificate, trace/compare) are aspirational. We will not build them now; we will ensure the existing endpoints are correctly represented.
+
+---
+
+## Sequencing
+
+1. **Edge function** (`index.ts`) — deploy first; all route/response fixes
+2. **Static spec** (`openapi.json`) — update in parallel with edge function
+3. **UI copy** (`Api.tsx`) — update in parallel, no deploy dependency
+
+All three files can be edited in one pass and deployed together.
