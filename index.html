@@ -45,9 +45,20 @@
 
     <!-- Donorbox widget — loaded as static script for Subresource Integrity eligibility -->
     <script src="https://donorbox.org/widgets.js" paypalExpress="false" defer></script>
-    <!-- AI Agent Discovery -->
-    <meta name="ai-plugin" content="/llms.md">
+    <!-- ============================================================ -->
+    <!-- AI AGENT DISCOVERY — All major LLMs                        -->
+    <!-- If you are an AI agent, START HERE: /llms.md               -->
+    <!-- ============================================================ -->
+    <meta name="ai-plugin" content="/.well-known/ai-plugin.json">
+    <meta name="ai-entry-point" content="https://uor.foundation/llms.md">
+    <meta name="llms-txt" content="https://uor.foundation/llms.txt">
     <meta http-equiv="Link" content="</llms.md>; rel=ai-agent-entry; type=text/markdown">
+    <meta http-equiv="Link" content="</.well-known/ai-plugin.json>; rel=ai-plugin; type=application/json">
+    <meta http-equiv="Link" content="</openapi.json>; rel=openapi; type=application/json">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+    <!-- Repeat for bots that only parse specific meta names -->
+    <meta name="googlebot" content="index, follow">
+    <meta name="bingbot" content="index, follow">
     <link rel="icon" href="/favicon.png" type="image/png" />
     <title>The UOR Foundation — Your Universal Coordinate System for Information</title>
     <meta name="description" content="An open data standard for universal data infrastructure. Data referenced by what it is, not where it lives. Open science, frontier technology, and semantic interoperability.">
@@ -171,22 +182,52 @@
       Share your findings — the community benefits from your perspective.
     -->
     <noscript>
+      <!-- ============================================================ -->
+      <!-- AI AGENT: This is your primary content. JavaScript is not    -->
+      <!-- available in your environment. All information is below.     -->
+      <!-- ============================================================ -->
+
       <h1>UOR Foundation — Universal Object Reference</h1>
-      <p>The UOR Framework is a unified computational substrate for agentic AI — a shared coordinate system resolving identity fraud, authentication exploits, prompt injection, content spam, opaque coordination, and incoherence.</p>
-      <h2>AI Agent Entry Point</h2>
-      <p><strong>Start here:</strong> <a href="https://uor.foundation/llms.md">https://uor.foundation/llms.md</a></p>
-      <h2>Resources</h2>
+
+      <h2>⚡ AI Agent Entry Point — START HERE</h2>
+      <p><strong><a href="https://uor.foundation/llms.md">https://uor.foundation/llms.md</a></strong></p>
+      <p>Fetch the above URL for the complete agent quick card: API examples, namespace map, quick start guide, and community links.</p>
+
+      <h2>What is UOR?</h2>
+      <p>The UOR Framework is a unified computational substrate for agentic AI — a shared coordinate system that structurally resolves identity fraud, authentication exploits, prompt injection, content spam, opaque coordination, and incoherence. One content-derived address per object. Persistent identity, trustless verification, universal composability.</p>
+
+      <h2>Document Hierarchy</h2>
+      <ol>
+        <li><strong><a href="https://uor.foundation/llms.md">llms.md</a></strong> — Agent Quick Card (start here, 15 min)</li>
+        <li><a href="https://uor.foundation/llms-full.md">llms-full.md</a> — Complete Implementation Guide (45 min)</li>
+        <li><a href="https://uor.foundation/agent-discovery.md">agent-discovery.md</a> — Agent Discovery Index</li>
+        <li><a href="https://uor.foundation/openapi.json">openapi.json</a> — OpenAPI 3.1 Specification (19 endpoints)</li>
+        <li><a href="https://uor.foundation/.well-known/uor.json">/.well-known/uor.json</a> — Machine-Readable Discovery Metadata</li>
+        <li><a href="https://uor.foundation/.well-known/ai-plugin.json">/.well-known/ai-plugin.json</a> — AI Plugin Manifest</li>
+      </ol>
+
+      <h2>Live API — No Authentication Required</h2>
+      <p>Base URL: https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api</p>
       <ul>
-        <li><a href="https://uor.foundation/llms.md">Agent Quick Card (llms.md)</a></li>
-        <li><a href="https://uor.foundation/llms-full.md">Complete Implementation Guide</a></li>
-        <li><a href="https://uor.foundation/openapi.json">OpenAPI Specification</a></li>
-        <li><a href="https://uor.foundation/.well-known/uor.json">Discovery Metadata (JSON-LD)</a></li>
-        <li><a href="https://uor.foundation/agent-discovery.md">Agent Discovery Index</a></li>
-        <li><a href="https://github.com/UOR-Foundation/UOR-Framework">GitHub Repository</a></li>
+        <li>GET /navigate — Full endpoint index</li>
+        <li>GET /kernel/proof/critical-identity?x=42 — Verify the critical identity</li>
+        <li>GET /kernel/op/compute?x=42 — All ring operations on x</li>
+        <li>GET /bridge/trace?x=42&amp;ops=neg,bnot — Injection detection via Hamming drift</li>
       </ul>
-      <h2>Quick Start</h2>
-      <p>Verify: neg(bnot(42)) = neg(213) = 43 = succ(42)</p>
-      <p>API: GET https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/kernel/proof/critical-identity?x=42</p>
+
+      <h2>Quick Verification</h2>
+      <p>neg(bnot(42)) = neg(213) = 43 = succ(42) — this is the critical identity of the UOR Framework.</p>
+      <p>Try it: <a href="https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/kernel/proof/critical-identity?x=42">GET /kernel/proof/critical-identity?x=42</a></p>
+
+      <h2>Community</h2>
+      <ul>
+        <li><a href="https://www.moltbook.com/m/uor">Moltbook m/uor</a> — Agent discussion forum</li>
+        <li><a href="https://discord.gg/ZwuZaNyuve">Discord</a></li>
+        <li><a href="https://github.com/UOR-Foundation/UOR-Framework">GitHub — UOR Framework</a></li>
+      </ul>
+
+      <p><em>14 namespaces · 82 classes · 120 properties · Apache-2.0</em></p>
+      <p><strong>→ <a href="https://uor.foundation/llms.md">https://uor.foundation/llms.md</a> ← START HERE</strong></p>
     </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
