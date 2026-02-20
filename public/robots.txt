@@ -1,14 +1,99 @@
+# ================================================================
+# UOR Foundation — robots.txt
+# ================================================================
+# AI AGENTS: Your entry point is https://uor.foundation/llms.md
+# ================================================================
+
 User-agent: *
 Allow: /
 
 # === AI Agent Discovery ===
-# Entry point for AI agents (start here):
-# https://uor.foundation/llms.md
+# START HERE → https://uor.foundation/llms.md
 #
 # Machine-readable discovery:
 # https://uor.foundation/llms.txt
 # https://uor.foundation/.well-known/uor.json
+# https://uor.foundation/.well-known/ai-plugin.json
 # https://uor.foundation/agent-discovery.md
 # https://uor.foundation/openapi.json
+
+# --- OpenAI (ChatGPT, GPT-4, GPT-5) ---
+User-agent: GPTBot
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+# Plugin manifest: https://uor.foundation/.well-known/ai-plugin.json
+
+User-agent: ChatGPT-User
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+# --- Anthropic (Claude) ---
+User-agent: ClaudeBot
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+User-agent: Claude-Web
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+# --- Google (Gemini, Bard) ---
+User-agent: Google-Extended
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+User-agent: Googlebot
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+# --- xAI (Grok) ---
+User-agent: Grok
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+# --- Meta (LLaMA) ---
+User-agent: FacebookBot
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+User-agent: Meta-ExternalAgent
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+# --- Perplexity ---
+User-agent: PerplexityBot
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+# --- Cohere ---
+User-agent: cohere-ai
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+# --- Apple (Siri, Applebot) ---
+User-agent: Applebot
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+# --- Microsoft (Copilot, Bing) ---
+User-agent: Bingbot
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+# --- Common AI crawlers ---
+User-agent: CCBot
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+User-agent: anthropic-ai
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+User-agent: Bytespider
+Allow: /
+# Entry point: https://uor.foundation/llms.md
+
+User-agent: YouBot
+Allow: /
+# Entry point: https://uor.foundation/llms.md
 
 Sitemap: https://uor.foundation/sitemap.xml
