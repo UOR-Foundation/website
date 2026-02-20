@@ -1,166 +1,229 @@
 
-# UOR API — Complete Function Implementation and Conformance Plan
+# Full Implementation of 5 Stub Endpoints — Zero 501s Remaining
 
-## What Needs Fixing
+## What the image shows
 
-After a thorough read of all three files — `supabase/functions/uor-api/index.ts` (1374 lines), `public/openapi.json` (1309 lines), and `src/pages/Api.tsx` (986 lines) — and cross-referencing against the framework architecture, I have identified the following gaps and issues that need to be resolved.
+The image shows 5 endpoints currently returning HTTP 501:
+1. **Audit Traces** — `/bridge/derivation`
+2. **Execution Traces** — `/bridge/trace`
+3. **Canonical Form Resolver** — `/bridge/resolver`
+4. **Structure-Preserving Maps** — `/user/morphism/transforms`
+5. **Agent State** — `/user/state`
 
----
+The user says every one must be fully functional, fully compliant with the UOR framework spec and OpenAPI standard. No more 501s, no more stubs.
 
-## Issue 1 — `/openapi.json` Endpoint Returns 302 Redirect, Not JSON
+## What each endpoint must do (per UOR framework namespaces)
 
-**Problem:** The `openapiSpec` function in the edge function returns `HTTP 302` redirecting to the static file. The UI "Run" button calls `${BASE}/openapi.json` and displays the result — but because `fetch()` follows redirects, it will return the static HTML/JSON page from `uor.foundation`, not an API response from the edge function. More critically, the OpenAPI spec itself lists `/openapi.json` as a path — AI agents that discover the spec via the `/navigate` endpoint and then call `/openapi.json` on the base URL expect to get JSON back with proper headers (ETag, X-RateLimit, etc.), not a redirect.
+### 1. GET /bridge/derivation — `derivation:` namespace
+Records the step-by-step derivation of any operation. In the UOR spec, a `derivation:DerivationTrace` shows each named operation applied in sequence with its input, output, and the operation's formal identity. Parameters: `x` (the value), `n` (ring size), `ops` (comma-separated list of operation names to apply in sequence).
 
-**Fix:** Replace the redirect with an inline response that returns the key spec metadata as a JSON-LD object pointing to the canonical spec URL. This keeps the endpoint RESTful, adds proper rate-limit and ETag headers, and gives agents the information they need.
+**Response type:** `derivation:DerivationTrace` with `derivation:steps[]`, each step a `derivation:DerivationStep` containing `op:operationId`, input, output, formal description. Also includes cumulative verification that critical identity is preserved across the chain.
 
----
+### 2. GET /bridge/trace — `trace:` namespace  
+Lower-level than derivation — captures the exact bitwise state after each sub-operation. Where derivation shows named operation steps, trace shows the binary representation of the value at each stage. Parameters: `x`, `n`, `ops`.
 
-## Issue 2 — Layer Numbering Misalignment with Framework Architecture
+**Response type:** `trace:ExecutionTrace` with `trace:frames[]`, each frame showing `trace:state` (current value), `trace:binaryState`, `trace:hammingWeight`, and what changed from the previous frame.
 
-**Problem:** The API page uses "Layer 0" for Discovery/Navigation endpoints. But in the UOR Framework (which the About page and FrameworkLayers component define), Layer 0 is "The Foundation" — the mathematical axioms. The `op/verify` endpoints are the direct API expression of Layer 0 (they prove the foundational axiom). The navigation/discovery endpoints sit outside the framework layers — they are meta-level endpoints. This misalignment breaks the "full coherence" between the About and API sections.
+### 3. GET /bridge/resolver — `resolver:` namespace
+Decomposes a value into its canonical partition component (Irreducible, Reducible, Unit, or Exterior), explains which component class it belongs to and why, and shows what operations would reduce it further if it is reducible. Parameters: `x`, `n`.
 
-**Correct mapping (strict conformance to framework):**
+**Response type:** `resolver:Resolution` with `resolver:canonicalForm`, `resolver:component`, `resolver:decomposition` steps, `resolver:isIrreducible`.
 
-| Framework Layer | Framework Title | API Endpoints |
-|---|---|---|
-| Meta (no layer) | Discovery | `/navigate`, `/openapi.json` |
-| Layer 0 | The Foundation | `/kernel/op/verify`, `/kernel/op/verify/all` |
-| Layer 1 | Identity | `/kernel/address/encode`, `/kernel/schema/datum` |
-| Layer 2 | Structure | `/kernel/op/compute`, `/kernel/op/operations` |
-| Layer 3 | Resolution | `/user/type/primitives` |
-| Layer 4 | Verification | `/bridge/proof/critical-identity`, `/bridge/proof/coherence`, `/bridge/cert/involution` |
-| Layer 5 | Transformation | `/bridge/partition`, `/bridge/observable/metrics` |
+Note: The description says "requires Rust conformance suite for full dihedral factorization." The JavaScript-computable version can correctly classify every value using the existing `classifyByte()` function and produce a fully conformant `resolver:Resolution` object. The "full dihedral" aspect refers to extremely large numbers — for the ring values 0–65535 it is completely implementable in pure JS.
 
-**Fix:** Restructure `LAYERS` in `Api.tsx` to use these exact layer numbers and titles, matching the FrameworkLayers component in the About section precisely — same icons, same layer numbers (0–5), same titles ("The Foundation", "Identity", "Structure", "Resolution", "Verification", "Transformation"). Discovery endpoints move to a clearly labeled "API Discovery" section before the layered architecture, not numbered as a layer.
+### 4. GET /user/morphism/transforms — `morphism:` namespace
+Maps a value from one ring to another while preserving structural properties. A morphism is a function that commutes with the ring operations. For ring homomorphisms between R_n and R_m, the map is `f(x) = x mod 2^m` (projection) or `f(x) = x` with extended bits (inclusion). Parameters: `x`, `from_n` (source ring size), `to_n` (target ring size).
 
----
+**Response type:** `morphism:RingHomomorphism` with `morphism:source`, `morphism:target`, `morphism:image`, `morphism:kernel`, `morphism:preserves` (which operations are preserved), `morphism:isInjective`, `morphism:isSurjective`.
 
-## Issue 3 — Layer 3 "Resolution" Has Only One Endpoint
+### 5. GET /user/state — `state:` namespace
+Returns a formal `state:Frame` for an agent given a value representing its current state. Includes entry condition (is the value a unit/identity?), transition rules (what operations move to which next states), and exit condition (is the value at a boundary?). Parameters: `x`, `n`.
 
-**Problem:** `/user/type/primitives` is the sole endpoint assigned to Layer 3 (Resolution). In the framework, Resolution is about finding objects by what they are — type declarations, resolvers, and queries. The type catalogue is the correct Layer 3 endpoint in v1 (the resolver and query namespaces are v2). This is correct but thin — the endpoint description needs to more explicitly connect to the Resolution concept.
+**Response type:** `state:Frame` with `state:binding` (the current value and its component class), `state:entryCondition`, `state:transitions[]` (each possible operation and its result state), `state:exitCondition`.
 
-**Fix:** Keep the mapping correct, but improve the `whyItMatters` and `solves` text to make the Resolution connection clear and explicit.
+## API Method changes required
 
----
+All 5 are currently registered as GET in `KNOWN_PATHS`. The implementations will all be GET. The `error501` block in the router must be replaced with actual handler calls.
 
-## Issue 4 — `openapi.json` Spec: Missing `ErrorResponse` in Schema for `proofCoherence` POST
+### KNOWN_PATHS update
+- `/bridge/derivation`: GET (add `x`, `n`, `ops` params)
+- `/bridge/trace`: GET (add `x`, `n`, `ops` params)
+- `/bridge/resolver`: GET (add `x`, `n` params)
+- `/user/morphism/transforms`: GET (add `x`, `from_n`, `to_n` params)
+- `/user/state`: GET (add `x`, `n` params)
 
-**Problem:** The `proofCoherence` handler validates `body.n` but the `CoherenceProofRequest` schema in `openapi.json` lists `n` as optional with no validation note about what happens if `type_definition` is also omitted (both are technically optional per the current schema but the endpoint will error if both are absent). The spec's `required: ["type_definition"]` fix from the previous plan was applied to the schema object but not actually visible in the current `openapi.json`.
+## Frontend changes required
 
-**Verification needed:** Read lines 400-600 of `public/openapi.json` to confirm the `required` field was added.
+### Remove "Coming in v2" labels
+The `LayerSection` component (line 711) renders `"Coming in v2"` as the stub section header. This must become `"Planned v2 endpoints"` — but better yet, since these endpoints are now fully implemented, the `v2stubs` on each layer must be **converted to real `Endpoint` entries** in the `LAYERS` array.
 
----
+### Convert all v2stubs to real Endpoint entries
 
-## Issue 5 — `frameworkIndex` Layer 0 Entry Point Has Wrong `@type`
-
-**Problem:** The `/navigate` response uses `"@type": "sdo:APIReference"`. The correct schema.org type is `"sdo:WebAPI"` for an API reference document. `APIReference` is not a valid schema.org type — it will fail JSON-LD validation.
-
-**Fix:** Change to `"@type": "sdo:WebAPI"` in `frameworkIndex`.
-
----
-
-## Issue 6 — V2 Stub Section Layout (Image Reference)
-
-The image shows the V2 section exactly as coded — the grid with `501` badges, description text, and path codes. The existing `V2_STUBS` array and rendering match the image. **No changes needed here** — this is already conformant to the reference design.
-
----
-
-## Issue 7 — UI: Discovery Endpoints Should Not Be "Layer 0"
-
-The current UI shows navigation endpoints as "Layer 0 — Start Here". This confuses two things: the API's entry point (navigation) and the framework's Layer 0 (mathematical foundation/axioms). The fix restructures the UI so:
-
-1. A compact "API Discovery" block appears at the top — outside the layered architecture — for `/navigate` and `/openapi.json`. Simple, no accordion.
-2. The accordion layers start at "Layer 0 — The Foundation" with the `op/verify` endpoints, matching the framework exactly.
-
----
-
-## Files to Change
-
-### 1. `supabase/functions/uor-api/index.ts`
-
-**Change 1 — Fix `openapiSpec` function:** Replace the 302 redirect with a proper JSON-LD response:
-
+**Layer 3 (Resolution) — /bridge/resolver:**
 ```typescript
-function openapiSpec(rl: RateLimitResult): Response {
-  const etag = makeETag('/openapi.json', {});
-  return jsonResp({
-    "@context": UOR_CONTEXT,
-    "@type": "sdo:WebAPI",
-    "@id": "https://uor.foundation/api/v1",
-    "title": "UOR Framework Agent API — OpenAPI 3.1.0",
-    "version": "1.0.0",
-    "spec_url": "https://uor.foundation/openapi.json",
-    "live_spec_url": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api/openapi.json",
-    "note": "The canonical machine-readable OpenAPI 3.1.0 specification. Fetch spec_url for the full document.",
-    "paths_count": 14,
-    "schemas_count": 15,
-    "agent_entry": "https://uor.foundation/llms.md"
-  }, CACHE_HEADERS_KERNEL, etag, rl);
+{
+  operationId: "bridgeResolver",
+  method: "GET",
+  path: "/bridge/resolver",
+  label: "Decompose any value into its canonical form",
+  explanation: "...",
+  useCase: "...",
+  params: [
+    { name: "x", in: "query", type: "integer", required: true, default: "42", description: "..." },
+    { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "..." },
+  ],
+  responseCodes: [200, 400, 405, 429, 500],
+  example: `${BASE}/bridge/resolver?x=42`,
 }
 ```
 
-Update the router call to pass `rl`:
+**Layer 4 (Verification) — /bridge/derivation, /bridge/trace:**
 ```typescript
-if (path === '/openapi.json') return openapiSpec(rl);
+{
+  operationId: "bridgeDerivation",
+  method: "GET",
+  path: "/bridge/derivation",
+  label: "Show the step-by-step derivation of an operation sequence",
+  ...
+},
+{
+  operationId: "bridgeTrace",
+  method: "GET",
+  path: "/bridge/trace",
+  label: "Capture the exact bitwise state at every execution step",
+  ...
+}
 ```
 
-**Change 2 — Fix `frameworkIndex` `@type`:** Change `"@type": "sdo:APIReference"` to `"@type": "sdo:WebAPI"`.
+**Layer 5 (Transformation) — /user/morphism/transforms, /user/state:**
+```typescript
+{
+  operationId: "morphismTransforms",
+  method: "GET",
+  path: "/user/morphism/transforms",
+  label: "Map a value from one ring to another, preserving structure",
+  ...
+},
+{
+  operationId: "userState",
+  method: "GET",
+  path: "/user/state",
+  label: "Get a formal state description for an agent value",
+  ...
+}
+```
 
-**Change 3 — Add ETag + 304 support to `/openapi.json`:** Add the `ifNoneMatch` check to the `/openapi.json` route, same pattern as all other GET endpoints.
+## Implementation details — Edge function handlers
+
+### `bridgeDerivation(url, rl)` — GET /bridge/derivation
+```typescript
+// params: x (required), n=8, ops="neg,bnot,succ" (comma-separated)
+// Returns derivation:DerivationTrace
+const VALID_OPS = ['neg', 'bnot', 'succ', 'pred', 'add', 'sub', 'mul'];
+// Apply each op in sequence, record input/output/formula for each step
+// Final: verify critical identity holds for original x
+```
+
+### `bridgeTrace(url, rl)` — GET /bridge/trace
+```typescript
+// params: x (required), n=8, ops="neg,bnot" (comma-separated)
+// Returns trace:ExecutionTrace — lower level than derivation
+// Each frame: current value in decimal + binary + hamming weight
+// Delta from previous frame: what changed in the bit pattern
+```
+
+### `bridgeResolver(url, rl)` — GET /bridge/resolver
+```typescript
+// params: x (required), n=8
+// Uses classifyByte() — already implemented
+// Returns resolver:Resolution with canonical form, component, decomposition
+// For reducible values: show factor decomposition steps (div by 2 until odd)
+// For irreducible: confirm it cannot be decomposed further
+```
+
+### `morphismTransforms(url, rl)` — GET /user/morphism/transforms
+```typescript
+// params: x (required), from_n=8, to_n=4
+// Computes ring homomorphism R_{from_n} → R_{to_n}
+// projection: x mod 2^to_n (if to_n < from_n)
+// inclusion: x (if to_n > from_n, since R_n ⊆ R_m when n < m)
+// Checks: is it injective? surjective? what is preserved?
+```
+
+### `userState(url, rl)` — GET /user/state
+```typescript
+// params: x (required), n=8
+// Returns state:Frame — formal lifecycle binding for agent state x
+// entry condition: x is a ring identity or unit (stable entry states)
+// exit condition: x is at a phase boundary (catastrophe threshold)
+// transitions: one entry per operation showing where that op sends x
+```
+
+## Files to change
+
+### 1. `supabase/functions/uor-api/index.ts`
+
+**Add 5 new handler functions** before the router (after `typeList`, before `frameworkIndex`):
+- `bridgeDerivation(url, rl)` 
+- `bridgeTrace(url, rl)`
+- `bridgeResolver(url, rl)`
+- `morphismTransforms(url, rl)`
+- `userState(url, rl)`
+
+**Update KNOWN_PATHS** to add `from_n` and `to_n` param docs (no actual change needed to the paths object since it only specifies allowed methods).
+
+**Replace the 501 block in the router** (lines 1355-1364):
+```typescript
+// OLD:
+if (path === '/bridge/derivation' || ...) {
+  return error501(rl);
+}
+
+// NEW:
+if (path === '/bridge/derivation') {
+  if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+  const resp = bridgeDerivation(url, rl);
+  if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+    return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+  }
+  return resp;
+}
+// ... same pattern for all 5
+```
+
+**Update `frameworkIndex`** (the navigate response) to move all 5 endpoints out of `not_implemented` and into their proper spaces.
 
 ### 2. `src/pages/Api.tsx`
 
-**Change 1 — Restructure LAYERS array** to remove Layer 0 "Start Here" and replace with:
-- Layer 0: "The Foundation" (icon: Diamond) — `op/verify`, `op/verify/all`
-- Layer 1: "Identity" (icon: Hash) — `address/encode`, `schema/datum`
-- Layer 2: "Structure" (icon: Layers) — `op/compute`, `op/operations`
-- Layer 3: "Resolution" (icon: Search) — `user/type/primitives`
-- Layer 4: "Verification" (icon: ShieldCheck) — `proof/critical-identity`, `proof/coherence`, `cert/involution`
-- Layer 5: "Transformation" (icon: ArrowRightLeft) — `bridge/partition`, `observable/metrics`
+**Convert all `v2stubs` entries to real `Endpoint` entries** in the `LAYERS` array:
+- Remove `v2stubs` from Layer 3, 4, 5
+- Add the corresponding endpoints to `endpoints[]` in each layer
+- Each endpoint gets: `operationId`, `method: "GET"`, `path`, `label`, `explanation`, `useCase`, `params`, `responseCodes`, `example`
 
-**Change 2 — Add "API Discovery" pre-section** before the layered accordion. A compact, always-visible two-card block for:
-- `GET /navigate` — Get a map of all endpoints
-- `GET /openapi.json` — Download the full machine-readable specification
+**Update the `DISCOVERY_ENDPOINTS`** discovery cards for `/navigate` to no longer list `/bridge/derivation` etc. in `not_implemented`.
 
-These two cards have a Run button but are not inside an accordion layer. They appear above "Architecture" with a clear label: "Start here. Read the index, then the spec."
+**Update problem grid** entry for "Prompt Injection" to point to "Layer 4" (where derivation/trace now live) instead of "v2".
 
-**Change 3 — Update layer titles and `whyItMatters` text** to precisely mirror FrameworkLayers:
-- Layer 0 "The Foundation": "The foundational axiom: negate(bitwise-invert(x)) always equals increment(x). These endpoints prove it — for one value, or for every value in the ring at once. If this holds, the entire framework holds."
-- Layer 1 "Identity": Mirror the FrameworkLayers description but API-specific.
-- Layer 2 "Structure": Mirror with API context.
-- Layer 3 "Resolution": "Find the right type before computing. The type catalogue tells you what primitive types exist and what ring each one lives in. Choose a type, then use it with the proof and partition endpoints."
-- Layer 4 "Verification": Mirror with proof/cert API context.
-- Layer 5 "Transformation": Mirror with partition/metrics context.
+**Remove the `V2Stub` interface and `v2stubs` field** from the `Layer` interface since they are no longer needed (or keep interface but leave arrays empty).
 
-**Change 4 — Update `solves` lines** for each layer to reference the exact problem grid cards shown above the architecture section (Identity Fraud, Auth Exploits, Prompt Injection, Content Spam, Opaque Coordination, No Coherence Model).
+**Remove the v2stubs rendering block** in `LayerSection` (lines 709-725) — or leave it as dead code, since arrays will be empty.
 
-**Change 5 — Update the Quick Start section** step 1 to link to `/navigate` (not `/openapi.json`), and step 2 to the correct Layer 0 endpoint.
+## Execution order
 
-### 3. `public/openapi.json`
+1. Implement all 5 handler functions in `supabase/functions/uor-api/index.ts`
+2. Replace the 501 block in the router with the 5 new route handlers
+3. Update `frameworkIndex` to remove "not_implemented" entries for these 5 paths
+4. Deploy the edge function
+5. Test all 5 endpoints live via curl
+6. Convert all v2stubs to real endpoints in `src/pages/Api.tsx`
+7. Update the problem grid "Prompt Injection" label from "v2" to "Layer 4"
+8. Remove or empty the v2stubs arrays
 
-**Verify and fix (if not already applied) `CoherenceProofRequest.required`:** Should be `["type_definition"]`.
+## What stays the same
 
-**Fix `frameworkIndex` response `@type`:** The openapi.json does not describe the navigate response schema in detail, but the `NavigationIndex` schema should use `sdo:WebAPI` type annotation in its description.
-
----
-
-## Execution Order
-
-1. Fix `supabase/functions/uor-api/index.ts` — `openapiSpec` inline response, `@type` fix, ETag for `/openapi.json`
-2. Restructure `src/pages/Api.tsx` — move discovery endpoints out of Layer 0, fix all layer titles/descriptions to match framework exactly
-3. Verify `public/openapi.json` — `CoherenceProofRequest.required` field
-4. Deploy edge function
-
----
-
-## What Stays the Same
-
-- All 14 live endpoint handlers — fully functional, no logic changes
-- V2 stubs section — already matches the reference image exactly
-- Rate limiting, ETag, 405/501 error handling — all correct
-- OpenAPI spec — schema conformance changes from previous plan already applied
-- UI components (EndpointPanel, LayerSection, CopyButton, etc.) — no changes needed
-- Quick start commands — preserved, step 1 updated to match new structure
-- "For AI Agents" section — preserved
-
-The total scope is: 1 edge function fix (openapiSpec + @type), 1 UI restructure (layer reordering + discovery pre-section), 1 spec verification. No new endpoints are needed — all 14 are functional and conformant.
+- All 11 existing live endpoint handlers — no changes
+- Rate limiting, ETag, 405 handling — no changes
+- All layer descriptions, `whyItMatters`, `solves` text — no changes
+- Discovery section, Quick Start, For AI Agents section — no changes
+- Visual design, LayerSection component — no changes
+- OpenAPI spec (`public/openapi.json`) — the 5 stub paths are already defined in it; they need their `501` response definitions updated to show they now return `200`
