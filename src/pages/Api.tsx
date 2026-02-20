@@ -7,13 +7,13 @@ import {
   Play,
   Loader2,
   ExternalLink,
-  ArrowRight,
-  Shield,
-  Zap,
-  Lock,
-  BarChart3,
-  FileCheck,
+  Diamond,
+  Hash,
   Layers,
+  Search,
+  ShieldCheck,
+  ArrowRightLeft,
+  ArrowRight,
 } from "lucide-react";
 
 /* ─────────────────────────── Constants ─────────────────────────── */
@@ -32,573 +32,349 @@ interface Param {
   enum?: string[];
 }
 
-interface ResponseCode {
-  code: number;
-  label: string;
-  schema: string;
-}
-
 interface Endpoint {
   operationId: string;
   method: "GET" | "POST";
   path: string;
-  summary: string;
-  plainSummary: string; // human-readable one-liner
-  description: string;
-  tag: string;
-  namespace: string;
+  /** One-line plain label */
+  label: string;
+  /** Concrete, jargon-free explanation. What it does + why you'd use it. */
+  explanation: string;
+  /** Real-world use case tying to an agent problem */
+  useCase: string;
   params: Param[];
-  requestBodySchema?: string;
   defaultBody?: string;
-  responses: ResponseCode[];
+  responseCodes: number[];
   example: string;
 }
 
-interface Tag {
+interface Layer {
   id: string;
-  label: string;
-  plainLabel: string;
-  description: string;
-  plainDescription: string;
-  source: string;
-  space: "kernel" | "bridge" | "user";
-  endpointCount: number;
+  icon: React.ElementType;
+  layerNum: number;
+  title: string;
+  oneLiner: string;
+  /** Why this layer matters in plain terms */
+  whyItMatters: string;
+  /** The agent problem(s) it solves from llms.md */
+  solves: string;
+  endpoints: Endpoint[];
 }
 
-/* ─────────────────────────── Tag data ─────────────────────────── */
+/* ─────────────────────────── Layer + Endpoint data ─────────────────────────── */
+
+const LAYERS: Layer[] = [
+  {
+    id: "layer-0",
+    icon: Diamond,
+    layerNum: 0,
+    title: "Start Here",
+    oneLiner: "Discover what the API can do.",
+    whyItMatters:
+      "Before calling anything, read the index. It lists every available endpoint, what each one does, and the recommended order to call them. One request is all you need to orient yourself.",
+    solves: "All agents and developers: start here.",
+    endpoints: [
+      {
+        operationId: "frameworkIndex",
+        method: "GET",
+        path: "/navigate",
+        label: "Get a map of all endpoints",
+        explanation:
+          "Returns a complete list of every endpoint in the API: path, method, purpose, and reading order. No parameters needed. Start here if you are exploring the API for the first time.",
+        useCase:
+          "An AI agent loads this once to understand what tools are available before deciding what to call next.",
+        params: [],
+        responseCodes: [200, 405, 500],
+        example: `${BASE}/navigate`,
+      },
+      {
+        operationId: "openapiSpec",
+        method: "GET",
+        path: "/openapi.json",
+        label: "Download the full machine-readable specification",
+        explanation:
+          "Returns the complete OpenAPI 3.1.0 document: every path, every parameter, every response type, and every schema. A static copy is also available at https://uor.foundation/openapi.json.",
+        useCase:
+          "Any tool that auto-generates an HTTP client or validates requests against the spec can use this directly.",
+        params: [],
+        responseCodes: [200, 405, 500],
+        example: `${BASE}/openapi.json`,
+      },
+    ],
+  },
+  {
+    id: "layer-1",
+    icon: Hash,
+    layerNum: 1,
+    title: "Permanent Addresses",
+    oneLiner: "Give any content a stable, unique ID — derived from what it is, not where it lives.",
+    whyItMatters:
+      "Location-based identifiers break when data moves. Content-based identifiers never change because they are computed from the content itself. The same text always produces the same address — on any machine, at any time, without a central registry.",
+    solves:
+      "Solves: Identity Fraud. Without a stable, verifiable ID tied to what an agent actually said or did, impersonation is trivial. Content addresses make identity unforgeable.",
+    endpoints: [
+      {
+        operationId: "addressEncode",
+        method: "POST",
+        path: "/kernel/address/encode",
+        label: "Turn any text into a permanent address",
+        explanation:
+          "Send any text and receive back a unique address computed directly from that text's bytes. The address does not depend on a server, a timestamp, or a registry. The same input always produces the same output.\n\nEach byte is mapped to a Braille Unicode character, making the address both machine-readable and visually distinct. Two strings that differ by even one character produce completely different addresses.",
+        useCase:
+          "An agent wants to sign its outputs. It encodes its response text to get a content address, then attaches that address to the message. Any other agent can re-encode the same text and verify the address matches — no trust required.",
+        params: [
+          { name: "input", in: "body", type: "string (max 1000 chars)", required: true, description: "The text to address. Try your agent's name, a statement it made, or any string." },
+          { name: "encoding", in: "body", type: '"utf8"', required: false, default: "utf8", description: "Text encoding. Only utf8 is supported in v1." },
+        ],
+        defaultBody: JSON.stringify({ input: "hello", encoding: "utf8" }, null, 2),
+        responseCodes: [200, 400, 405, 413, 415, 429, 500],
+        example: `${BASE}/kernel/address/encode`,
+      },
+      {
+        operationId: "schemaDatum",
+        method: "GET",
+        path: "/kernel/schema/datum",
+        label: "Get the full structural description of any number",
+        explanation:
+          "Every value in the UOR system is more than a number — it has a position in a mathematical structure called a ring. This endpoint returns the complete profile of a value: its integer form, how many bits are set, its binary representation, and its content address.\n\nThis is how the framework describes data internally. Understanding it helps you interpret the outputs of every other endpoint.",
+        useCase:
+          "An agent receives a numeric result from an operation and wants to understand its structural properties before using it in a proof or certificate.",
+        params: [
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The number to describe. Must be 0 or greater, and less than 2 raised to the power of n." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size: how many bits to use. Default 8 means values 0–255." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/kernel/schema/datum?x=42`,
+      },
+    ],
+  },
+  {
+    id: "layer-2",
+    icon: Layers,
+    layerNum: 2,
+    title: "Arithmetic Operations",
+    oneLiner: "Run every named operation on any value and get back verifiable results.",
+    whyItMatters:
+      "The framework defines a fixed set of operations — each with a name, a formula, and a provable relationship to the others. Running them here gives you both the result and the formal context: what the operation is, how it relates to the core identity, and whether the output is consistent.",
+    solves:
+      "Solves: Opaque Coordination. When agents share computed values, neither can verify the other's work without a shared operation definition. These endpoints provide the shared ground truth.",
+    endpoints: [
+      {
+        operationId: "opCompute",
+        method: "GET",
+        path: "/kernel/op/compute",
+        label: "Run every operation on a number at once",
+        explanation:
+          "Takes one or two numbers and returns the result of every operation in the framework simultaneously.\n\nSingle-input operations on x: negate (flip the sign in the ring), bitwise invert (flip every bit), increment, decrement.\nTwo-input operations on x and y: add, subtract, multiply, XOR, AND, OR.\n\nAll results come back in a single response, so you can compare them side by side.",
+        useCase:
+          "An agent is computing a transformation and wants to see all possible outcomes before committing to one. Or: a developer is learning how the ring behaves and wants to explore all operations on a specific value.",
+        params: [
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The primary number. Must be less than 2 raised to the power of n." },
+          { name: "y", in: "query", type: "integer", required: false, default: "10", description: "A second number for two-input operations. Defaults to x if not provided." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/kernel/op/compute?x=42&y=10`,
+      },
+      {
+        operationId: "opList",
+        method: "GET",
+        path: "/kernel/op/operations",
+        label: "See every named operation with its formal definition",
+        explanation:
+          "Returns the complete catalogue of all 12 named operations: negate, bitwise-invert, increment, decrement, add, subtract, multiply, XOR, AND, OR, the critical identity, and the dihedral group. Each entry includes the formula and its algebraic classification.",
+        useCase:
+          "An agent or developer wants to know what operations exist before deciding which to call, or wants to verify that a named operation it has seen in a proof object corresponds to a known definition.",
+        params: [],
+        responseCodes: [200, 405, 429, 500],
+        example: `${BASE}/kernel/op/operations`,
+      },
+    ],
+  },
+  {
+    id: "layer-3",
+    icon: Search,
+    layerNum: 3,
+    title: "Verification",
+    oneLiner: "Confirm that a mathematical property holds — for one value, or for all values at once.",
+    whyItMatters:
+      "The UOR framework rests on one foundational identity: applying bitwise-invert then negate always equals incrementing by one. This is not an assumption — it is verifiable. These endpoints let you check it for any specific value, or exhaustively for every value in the ring.",
+    solves:
+      "Solves: No Coherence Model. Agents that cannot verify shared claims have no basis for agreement. Verification endpoints return machine-checkable proof objects, not assertions.",
+    endpoints: [
+      {
+        operationId: "opVerifyCriticalIdentity",
+        method: "GET",
+        path: "/kernel/op/verify",
+        label: "Verify the core identity for one value",
+        explanation:
+          "Checks that negate(bitwise-invert(x)) equals increment(x) for the value you supply. Returns a full step-by-step proof showing every intermediate value, not just a boolean answer.\n\nThis is the most important single endpoint in the API. The identity it checks is the structural rule the entire framework depends on. If it holds here, it holds everywhere.",
+        useCase:
+          "An agent has been told that UOR's core identity is reliable. It calls this endpoint with a value it chose itself to independently confirm the claim — not taking anyone's word for it.",
+        params: [
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to check. Must be 0 or greater, and less than 2 raised to the power of n." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8 means values 0–255." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/kernel/op/verify?x=42`,
+      },
+      {
+        operationId: "opVerifyAll",
+        method: "GET",
+        path: "/kernel/op/verify/all",
+        label: "Verify the core identity for every value in the ring",
+        explanation:
+          "Runs the same check as the single-value endpoint, but for every possible value in the ring — all 256 values for the default 8-bit ring. Returns pass count, fail count, and a universal verdict.\n\nOne example proves nothing. Exhaustive verification across all values is what turns a claim into a proof. 256 passes and zero failures is the expected result.",
+        useCase:
+          "An agent wants to confirm the framework is internally consistent before relying on it for coordination. This is the exhaustive check that no adversarial value can break the core identity.",
+        params: [
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. n=8 checks all 256 byte values. n=4 checks 16 values." },
+          { name: "expand", in: "query", type: "boolean", required: false, default: "false", description: "Set to true to include the full list of per-value results in the response." },
+        ],
+        responseCodes: [200, 405, 429, 500],
+        example: `${BASE}/kernel/op/verify/all?n=8`,
+      },
+    ],
+  },
+  {
+    id: "layer-4",
+    icon: ShieldCheck,
+    layerNum: 4,
+    title: "Proofs and Certificates",
+    oneLiner: "Generate shareable, independently verifiable proof objects — not assertions.",
+    whyItMatters:
+      "A proof is more than a true answer. A proof object has a permanent address, every step of the derivation shown explicitly, and can be checked by anyone with no access to the original computation. Certificates attest to properties of operations across all values. Both are self-contained objects you can share, store, and verify offline.",
+    solves:
+      "Solves: Auth Exploits and Identity Fraud. Request authentication anchored to content-addressed proof objects cannot be forged — the proof must match the content, and the content derives the address.",
+    endpoints: [
+      {
+        operationId: "proofCriticalIdentity",
+        method: "GET",
+        path: "/bridge/proof/critical-identity",
+        label: "Generate a shareable proof for one value",
+        explanation:
+          "Produces a full proof object for the value you supply. Unlike the verify endpoint, this object has a unique permanent address (@id), making it independently referenceable. Anyone can take this object, re-run the derivation, and confirm it is correct — no contact with the original server needed.\n\nEvery step of the derivation is explicit: the input, the intermediate values after each operation, and the final comparison.",
+        useCase:
+          "An agent produces a proof for its own identity value and attaches it to outgoing messages. Recipients verify the proof independently. No trust chain required — the math is the trust.",
+        params: [
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to prove the identity for." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/bridge/proof/critical-identity?x=42`,
+      },
+      {
+        operationId: "proofCoherence",
+        method: "POST",
+        path: "/bridge/proof/coherence",
+        label: "Prove that a type is internally consistent across all values",
+        explanation:
+          "Verifies that the core identity holds for every element of a given type — not just a sample. A type that passes is called ring-coherent: it participates fully in the framework's guarantees.\n\nReturns a proof with a pass rate, fail count, and a boolean verdict. 100% pass rate is required for coherence.\n\nResults are computed on-the-fly and not stored. The same input always returns the same result.",
+        useCase:
+          "Before using a custom data type in agent coordination, verify it is coherent. A non-coherent type may produce unpredictable results when used with the framework's operations.",
+        params: [
+          { name: "type_definition", in: "body", type: "object", required: true, description: 'The type to verify. Minimum: { "@type": "type:PrimitiveType", "type:bitWidth": 8 }' },
+          { name: "n", in: "body", type: "integer [1–16]", required: false, default: "8", description: "Ring size to verify against. Defaults to the bitWidth in the type definition." },
+        ],
+        defaultBody: JSON.stringify({ type_definition: { "@type": "type:PrimitiveType", "type:bitWidth": 8 }, n: 8 }, null, 2),
+        responseCodes: [200, 400, 405, 415, 429, 500],
+        example: `${BASE}/bridge/proof/coherence`,
+      },
+      {
+        operationId: "certInvolution",
+        method: "GET",
+        path: "/bridge/cert/involution",
+        label: "Issue a certificate that an operation undoes itself",
+        explanation:
+          "An operation that undoes itself when applied twice is called self-inverse. Negate and bitwise-invert are both self-inverse.\n\nThis endpoint verifies that property exhaustively across every value in the ring, then issues a signed certificate. The certificate is a structured object — not a boolean — that can be shared, stored, and independently checked by any party.\n\nExample: negate(negate(x)) = x for all 256 values. This endpoint confirms it and issues the certificate.",
+        useCase:
+          "An agent needs to prove to a peer that a specific operation is safe to invert. Rather than re-computing, it shares the certificate. The peer verifies the certificate object directly.",
+        params: [
+          { name: "operation", in: "query", type: "string", required: true, default: "neg", enum: ["neg", "bnot"], description: 'The operation to certify. "neg" = negate. "bnot" = bitwise invert.' },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/bridge/cert/involution?operation=neg`,
+      },
+    ],
+  },
+  {
+    id: "layer-5",
+    icon: ArrowRightLeft,
+    layerNum: 5,
+    title: "Content Quality and Metrics",
+    oneLiner: "Measure information density and structural properties of any content — formally, not heuristically.",
+    whyItMatters:
+      "Most systems detect spam or low-quality content with heuristics — patterns, blacklists, statistical models. The UOR approach is different: it partitions values into categories based on algebraic structure. The result is a density score that is reproducible, formally grounded, and free of training data bias.",
+    solves:
+      "Solves: Content Spam and Prompt Injection. Partition analysis distinguishes novel content from repetitive or boundary-testing content using ring structure. Observable metrics provide precise measurements to detect anomalies.",
+    endpoints: [
+      {
+        operationId: "partitionResolve",
+        method: "POST",
+        path: "/bridge/partition",
+        label: "Measure the information density of any content",
+        explanation:
+          "Classifies every value in the ring into one of four groups:\n\n• Novel (irreducible) — values that cannot be broken into simpler parts. High-signal content.\n• Derived (reducible) — values that can be factored. Often repetitive or compositional.\n• Structural (units) — boundary anchors (1 and its inverse).\n• Boundary (exterior) — edge values (0 and the ring midpoint).\n\nThe density score is the fraction of novel values. Above 0.25 indicates meaningful content. Below suggests repetitive or low-signal input.\n\nTwo modes: pass a type definition to analyse the full ring, or pass a text string to analyse it character by character.",
+        useCase:
+          "An agent receives a long message from another agent. Before processing it, it runs partition analysis to check whether the content is high-signal or likely spam. A density score below 0.1 is a red flag.",
+        params: [
+          { name: "input", in: "body", type: "string", required: false, description: "Text to analyse character by character. Use this or type_definition, not both." },
+          { name: "type_definition", in: "body", type: "object", required: false, description: 'A type definition to partition across the full ring. E.g. { "@type": "type:PrimitiveType", "type:bitWidth": 8 }.' },
+          { name: "resolver", in: "body", type: '"DihedralFactorizationResolver" | "EvaluationResolver"', required: false, default: "EvaluationResolver", description: "Which factorisation method to use. EvaluationResolver is faster. DihedralFactorizationResolver is more precise." },
+        ],
+        defaultBody: JSON.stringify({ input: "hello" }, null, 2),
+        responseCodes: [200, 400, 405, 413, 415, 429, 500],
+        example: `${BASE}/bridge/partition`,
+      },
+      {
+        operationId: "observableMetrics",
+        method: "GET",
+        path: "/bridge/observable/metrics",
+        label: "Get precise structural measurements for any value",
+        explanation:
+          "Computes four distinct measurements for a value:\n\n• Distance from zero — how far the value sits from the ring's origin (minimum of x and its complement).\n• Bit count — how many bits are set. A proxy for information density.\n• Cascade depth — how many times the value can be divided by two before reaching an odd number. Relates to prime structure.\n• Phase boundary — whether the value sits near a point where operations change character.",
+        useCase:
+          "An agent is monitoring a stream of values from another agent and notices erratic outputs. It calls this endpoint to measure each value's structural properties and detect anomalies — values near phase boundaries may indicate injection or corruption.",
+        params: [
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to measure." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/bridge/observable/metrics?x=42`,
+      },
+      {
+        operationId: "typeList",
+        method: "GET",
+        path: "/user/type/primitives",
+        label: "Browse the built-in data types",
+        explanation:
+          "Returns the full catalogue of primitive types: U1 (1 bit, 2 values), U4 (4 bits, 16 values), U8 (8 bits, 256 values — the default everywhere), U16 (16 bits, 65,536 values).\n\nAlso lists composite types: pairs of values (ProductType), unions (SumType), and values with attached constraints (ConstrainedType).",
+        useCase:
+          "A developer or agent wants to know which type to use before calling the coherence proof or partition endpoints. This is the reference catalogue for type selection.",
+        params: [],
+        responseCodes: [200, 405, 429, 500],
+        example: `${BASE}/user/type/primitives`,
+      },
+    ],
+  },
+];
+
+/* ─────────────────────────── V2 stubs ─────────────────────────── */
 
 interface StubTag {
   id: string;
   label: string;
-  plainLabel: string;
   description: string;
-  plainDescription: string;
-  space: "kernel" | "bridge" | "user";
-  v2?: boolean;
-  stubPaths: { path: string; summary: string }[];
+  paths: string[];
 }
 
-const TAGS: Tag[] = [
-  {
-    id: "navigate",
-    label: "navigate",
-    plainLabel: "Index",
-    description: "Framework navigation — reading order, namespace index, ontology links, all endpoint URLs.",
-    plainDescription: "Start here. Returns a complete map of every available endpoint and what each one does.",
-    source: "spec/src/namespaces/",
-    space: "kernel",
-    endpointCount: 2,
-  },
-  {
-    id: "kernel-op",
-    label: "kernel-op",
-    plainLabel: "Ring Operations",
-    description: "op/ namespace — Ring operations, involutions, and algebraic identities.",
-    plainDescription: "The mathematical core. Run arithmetic operations on any number and verify the fundamental identity that underpins the entire framework.",
-    source: "spec/src/namespaces/op.rs",
-    space: "kernel",
-    endpointCount: 4,
-  },
-  {
-    id: "kernel-schema",
-    label: "kernel-schema",
-    plainLabel: "Content Addressing",
-    description: "schema/ + u/ namespaces — Ring substrate, term language, datum values, and content addressing.",
-    plainDescription: "Convert any text or data into a unique, permanent address derived from its content — not its location. The same input always produces the same address.",
-    source: "spec/src/namespaces/schema.rs, u.rs",
-    space: "kernel",
-    endpointCount: 2,
-  },
-  {
-    id: "bridge-partition",
-    label: "bridge-partition",
-    plainLabel: "Content Quality",
-    description: "partition/ namespace — Irreducibility partition of the ring.",
-    plainDescription: "Measure the information density of any content. Distinguishes novel, meaningful data from repetitive or low-signal content — formally, not heuristically.",
-    source: "spec/src/namespaces/partition.rs",
-    space: "bridge",
-    endpointCount: 1,
-  },
-  {
-    id: "bridge-proof",
-    label: "bridge-proof",
-    plainLabel: "Proofs",
-    description: "proof/ namespace — Verification proofs.",
-    plainDescription: "Generate cryptographically structured proofs that a statement holds. Every proof is a self-contained, machine-verifiable object.",
-    source: "spec/src/namespaces/proof.rs",
-    space: "bridge",
-    endpointCount: 2,
-  },
-  {
-    id: "bridge-cert",
-    label: "bridge-cert",
-    plainLabel: "Certificates",
-    description: "cert/ namespace — Attestation certificates.",
-    plainDescription: "Issue certificates that formally attest to a property of an operation or identity. Certificates can be independently verified by any party.",
-    source: "spec/src/namespaces/cert.rs",
-    space: "bridge",
-    endpointCount: 1,
-  },
-  {
-    id: "bridge-observable",
-    label: "bridge-observable",
-    plainLabel: "Metrics",
-    description: "observable/ namespace — Metric and geometric measurements.",
-    plainDescription: "Compute precise measurements for any value: distance from zero, information density, cascade depth, and phase boundaries.",
-    source: "spec/src/namespaces/observable.rs",
-    space: "bridge",
-    endpointCount: 1,
-  },
-  {
-    id: "user-type",
-    label: "user-type",
-    plainLabel: "Types",
-    description: "type/ namespace — Runtime type declarations.",
-    plainDescription: "Browse the built-in type primitives (U1, U4, U8, U16) that define how data maps onto the ring. The foundation for structured data operations.",
-    source: "spec/src/namespaces/type_.rs",
-    space: "user",
-    endpointCount: 1,
-  },
-];
-
-/* v2 stub tags — not yet implemented, shown greyed out in sidebar */
-const V2_STUB_TAGS: StubTag[] = [
-  {
-    id: "bridge-derivation",
-    label: "bridge-derivation",
-    plainLabel: "Derivation Traces",
-    description: "derivation/ namespace — Audit trail for agent actions.",
-    plainDescription: "Returns derivation:DerivationTrace objects for agent execution audit trails. Requires the Rust conformance suite. Returns 501 Not Implemented in v1.",
-    space: "bridge",
-    v2: true,
-    stubPaths: [{ path: "/bridge/derivation", summary: "List derivation traces — 501 Not Implemented (v2)" }],
-  },
-  {
-    id: "bridge-trace",
-    label: "bridge-trace",
-    plainLabel: "Computation Traces",
-    description: "trace/ namespace — Computation traces for injection detection.",
-    plainDescription: "Trace objects that record every operation step, enabling injection detection and execution auditing. Returns 501 Not Implemented in v1.",
-    space: "bridge",
-    v2: true,
-    stubPaths: [{ path: "/bridge/trace", summary: "List computation traces — 501 Not Implemented (v2)" }],
-  },
-  {
-    id: "bridge-resolver",
-    label: "bridge-resolver",
-    plainLabel: "Resolvers",
-    description: "resolver/ namespace — CanonicalFormResolver, DihedralFactorizationResolver.",
-    plainDescription: "Full dihedral factorisation resolver. Decomposes ring elements into canonical form. Returns 501 Not Implemented in v1.",
-    space: "bridge",
-    v2: true,
-    stubPaths: [{ path: "/bridge/resolver", summary: "List resolvers — 501 Not Implemented (v2)" }],
-  },
-  {
-    id: "user-morphism",
-    label: "user-morphism",
-    plainLabel: "Morphisms",
-    description: "morphism/ namespace — Transform, Isometry, Embedding, Action.",
-    plainDescription: "Structure-preserving maps between rings. Enables formal proofs of equivalence and type-safe transformations. Returns 501 Not Implemented in v1.",
-    space: "user",
-    v2: true,
-    stubPaths: [{ path: "/user/morphism/transforms", summary: "List morphism transforms — 501 Not Implemented (v2)" }],
-  },
-  {
-    id: "user-state",
-    label: "user-state",
-    plainLabel: "State",
-    description: "state/ namespace — Frame, Transition, lifecycle bindings.",
-    plainDescription: "Manages agent state transitions and lifecycle bindings. Provides formal Frame and Transition objects for stateful computation. Returns 501 Not Implemented in v1.",
-    space: "user",
-    v2: true,
-    stubPaths: [{ path: "/user/state", summary: "List state frames — 501 Not Implemented (v2)" }],
-  },
-];
-
-/* ─────────────────────────── Endpoint data ─────────────────────────── */
-
-const ENDPOINTS: Endpoint[] = [
-  {
-    operationId: "frameworkIndex",
-    method: "GET",
-    path: "/navigate",
-    summary: "Framework navigation index — reading order, all endpoints, namespace map",
-    plainSummary: "Get a complete map of all endpoints and how they connect.",
-    description: "Returns a complete navigation index of the UOR Framework API. Start here to discover all endpoints, namespace mappings, and reading order. No parameters required.",
-    tag: "navigate",
-    namespace: "—",
-    params: [],
-    responses: [
-      { code: 200, label: "NavigationIndex", schema: "NavigationIndex" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/navigate`,
-  },
-  {
-    operationId: "openapiSpec",
-    method: "GET",
-    path: "/openapi.json",
-    summary: "Inline OpenAPI 3.1.0 specification",
-    plainSummary: "Download the full machine-readable API specification.",
-    description: "Returns the OpenAPI 3.1.0 specification for this API. The full static spec is also available at https://uor.foundation/openapi.json",
-    tag: "navigate",
-    namespace: "—",
-    params: [],
-    responses: [
-      { code: 200, label: "OpenAPI document", schema: "object" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/openapi.json`,
-  },
-  {
-    operationId: "opVerifyCriticalIdentity",
-    method: "GET",
-    path: "/kernel/op/verify",
-    summary: "Verify op:criticalIdentity — neg(bnot(x)) = succ(x)",
-    plainSummary: "Verify the core identity that the entire framework rests on.",
-    description: "Confirms the foundational mathematical theorem: neg(bnot(x)) = succ(x) for any input x.\n\nIn plain terms: applying two specific transformations in sequence (bitwise inversion, then negation) always lands on the same result as simply adding one. This is not coincidence — it's a structural property of the ring that the entire framework depends on.\n\nReturns a full proof object with every step of the derivation shown explicitly.",
-    tag: "kernel-op",
-    namespace: "op:",
-    params: [
-      { name: "x", in: "query", type: "integer [0, 65535]", required: true, default: "42", description: "Ring element. Must satisfy 0 ≤ x < 2^n (e.g. < 256 for n=8). Schema maximum is widest valid range (n=16); actual bound enforced at runtime." },
-      { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size (bit-width). Default 8 means the ring Z/256Z — all byte values." },
-    ],
-    responses: [
-      { code: 200, label: "CriticalIdentityProofResponse", schema: "CriticalIdentityProofResponse" },
-      { code: 400, label: "BadRequest", schema: "ErrorResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/kernel/op/verify?x=42`,
-  },
-  {
-    operationId: "opVerifyAll",
-    method: "GET",
-    path: "/kernel/op/verify/all",
-    summary: "Verify op:criticalIdentity for all 2^n elements of R_n",
-    plainSummary: "Prove the identity holds for every possible value in the ring — not just one.",
-    description: "Runs the same verification as /verify but for every value in the ring (256 values for the default 8-bit ring).\n\nWhy this matters: a single example proves nothing. Running exhaustively across all 256 values and getting zero failures is what turns a claim into a proof. Returns pass count, fail count, and a universal verdict.",
-    tag: "kernel-op",
-    namespace: "op:",
-    params: [
-      { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size. Default 8 checks all 256 byte values." },
-      { name: "expand", in: "query", type: "boolean", required: false, default: "false", description: "Set true to include the full per-value witness list (~14 KB for n=8)." },
-    ],
-    responses: [
-      { code: 200, label: "CoherenceProofResponse", schema: "CoherenceProofResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/kernel/op/verify/all?n=8`,
-  },
-  {
-    operationId: "opCompute",
-    method: "GET",
-    path: "/kernel/op/compute",
-    summary: "Compute all op:UnaryOp and op:BinaryOp values for a datum",
-    plainSummary: "Run every available arithmetic operation on a number and see all results at once.",
-    description: "Takes one or two numbers and returns the result of every named operation in the framework — both unary (single-input) and binary (two-input).\n\nUnary results for x: negate, bitwise invert, increment, decrement.\nBinary results for x and y: add, subtract, multiply, bitwise XOR, AND, OR.\n\nUseful for exploring how a specific value behaves across the full operation space.",
-    tag: "kernel-op",
-    namespace: "op:",
-    params: [
-      { name: "x", in: "query", type: "integer [0, 65535]", required: true, default: "42", description: "Primary input value. Must satisfy 0 ≤ x < 2^n." },
-      { name: "y", in: "query", type: "integer [0, 65535]", required: false, default: "10", description: "Second input for binary operations. Defaults to x if omitted." },
-      { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size." },
-    ],
-    responses: [
-      { code: 200, label: "OpComputeResponse", schema: "OpComputeResponse" },
-      { code: 400, label: "BadRequest", schema: "ErrorResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/kernel/op/compute?x=42&y=10`,
-  },
-  {
-    operationId: "opList",
-    method: "GET",
-    path: "/kernel/op/operations",
-    summary: "List all named op/ individuals with full metadata",
-    plainSummary: "See every named operation in the framework with its formal definition.",
-    description: "Returns the complete catalogue of all 12 named operations: neg, bnot, succ, pred, add, sub, mul, xor, and, or, criticalIdentity, D2n. Each entry includes its ontology IRI, geometric character, and type classification.",
-    tag: "kernel-op",
-    namespace: "op:",
-    params: [],
-    responses: [
-      { code: 200, label: "OpListResponse", schema: "OpListResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/kernel/op/operations`,
-  },
-  {
-    operationId: "addressEncode",
-    method: "POST",
-    path: "/kernel/address/encode",
-    summary: "Encode content as a u:Address with u:Glyph decomposition",
-    plainSummary: "Turn any text into a permanent, content-derived address.",
-    description: "Takes any text and converts it to a unique address derived directly from the content itself.\n\nThis means: the same text always produces the same address, regardless of when or where you run it. No registry. No coordination. No server to look up. The address is the content.\n\nEach byte of input is mapped to a Braille Unicode glyph — the address is both machine-readable and human-visible.\n\nReturns 200 OK (not 201) because this endpoint computes a deterministic artifact on-the-fly — same inputs always produce the same output. No resource is persisted.",
-    tag: "kernel-schema",
-    namespace: "u:",
-    params: [
-      { name: "input", in: "body", type: "string (max 1000 chars)", required: true, description: "Any text to encode. Try your agent name, a URL, or a message." },
-      { name: "encoding", in: "body", type: '"utf8"', required: false, default: "utf8", description: "Character encoding. Only utf8 is currently supported." },
-    ],
-    requestBodySchema: "AddressEncodeRequest",
-    defaultBody: JSON.stringify({ input: "hello", encoding: "utf8" }, null, 2),
-    responses: [
-      { code: 200, label: "AddressEncodeResponse", schema: "AddressEncodeResponse" },
-      { code: 400, label: "BadRequest", schema: "ErrorResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 413, label: "PayloadTooLarge", schema: "ErrorResponse" },
-      { code: 415, label: "UnsupportedMediaType", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/kernel/address/encode`,
-  },
-  {
-    operationId: "schemaDatum",
-    method: "GET",
-    path: "/kernel/schema/datum",
-    summary: "Get full schema:Datum representation for a ring value",
-    plainSummary: "Get a full structural description of any number in the ring.",
-    description: "Returns the complete algebraic profile of a number: its integer value, ring size, popcount (number of 1-bits), binary representation, and content address.\n\nThis is how UOR represents data — not just as a raw number but as a fully described element with a known position in the ring's structure.",
-    tag: "kernel-schema",
-    namespace: "schema:",
-    params: [
-      { name: "x", in: "query", type: "integer [0, 65535]", required: true, default: "42", description: "The value to describe. Must satisfy 0 ≤ x < 2^n." },
-      { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size." },
-    ],
-    responses: [
-      { code: 200, label: "Datum", schema: "Datum" },
-      { code: 400, label: "BadRequest", schema: "ErrorResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/kernel/schema/datum?x=42`,
-  },
-  {
-    operationId: "partitionResolve",
-    method: "POST",
-    path: "/bridge/partition",
-    summary: "Resolve a type:TypeDefinition to a partition:Partition of R_n",
-    plainSummary: "Measure the information quality of any content or type.",
-    description: "Classifies every element in the ring into one of four groups:\n\n• Irreducibles — values that cannot be broken down further. These represent novel, high-signal content.\n• Reducibles — values that can be factored. Often correspond to repetitive or derived content.\n• Units — structural anchors (just 1 and its inverse).\n• Exterior — boundary values (0 and the ring midpoint).\n\nThe density score (irreducibles ÷ total) is the key output. Above 0.25 = meaningful content. Below = likely repetitive or low-signal.\n\nTwo modes: pass a type definition to partition the full ring, or pass a text string to analyse it byte-by-byte.\n\nReturns 200 OK (not 201) — computed deterministically on-the-fly, nothing persisted.",
-    tag: "bridge-partition",
-    namespace: "partition:",
-    params: [
-      { name: "type_definition", in: "body", type: "object", required: false, description: "A type definition to partition across the full ring. Use oneOf: either type_definition or input." },
-      { name: "input", in: "body", type: "string", required: false, description: "Text to analyse byte-by-byte for information density. Use oneOf: either input or type_definition." },
-      { name: "resolver", in: "body", type: '"DihedralFactorizationResolver" | "EvaluationResolver"', required: false, default: "EvaluationResolver", description: "Resolution strategy. EvaluationResolver is faster; DihedralFactorizationResolver is more precise." },
-    ],
-    requestBodySchema: "PartitionRequest (oneOf TypeDefinitionPartition | InputStringPartition)",
-    defaultBody: JSON.stringify({ input: "hello", encoding: "utf8" }, null, 2),
-    responses: [
-      { code: 200, label: "PartitionResponse", schema: "PartitionResponse" },
-      { code: 400, label: "BadRequest", schema: "ErrorResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 413, label: "PayloadTooLarge", schema: "ErrorResponse" },
-      { code: 415, label: "UnsupportedMediaType", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/bridge/partition`,
-  },
-  {
-    operationId: "proofCriticalIdentity",
-    method: "GET",
-    path: "/bridge/proof/critical-identity",
-    summary: "Produce a proof:CriticalIdentityProof for a given witness x",
-    plainSummary: "Generate a structured, shareable proof for one specific value.",
-    description: "Produces a full proof object for x — every step of the derivation, the inputs, the intermediate values, and the final verdict — packaged as a self-contained JSON-LD object.\n\nThis is the bridge-space version of /kernel/op/verify. The difference: this object has a unique @id (a permanent address), making it independently referenceable and verifiable by any third party.",
-    tag: "bridge-proof",
-    namespace: "proof:",
-    params: [
-      { name: "x", in: "query", type: "integer [0, 65535]", required: true, default: "42", description: "The value to prove the identity for. Must satisfy 0 ≤ x < 2^n." },
-      { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size." },
-    ],
-    responses: [
-      { code: 200, label: "CriticalIdentityProofResponse", schema: "CriticalIdentityProofResponse" },
-      { code: 400, label: "BadRequest", schema: "ErrorResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/bridge/proof/critical-identity?x=42`,
-  },
-  {
-    operationId: "proofCoherence",
-    method: "POST",
-    path: "/bridge/proof/coherence",
-    summary: "Produce a proof:CoherenceProof for a type:TypeDefinition",
-    plainSummary: "Prove that a type is fully consistent with the ring across all values.",
-    description: "Verifies that a type definition is coherent — meaning the core identity holds for every element of that type, not just a sample.\n\nReturns a CoherenceProof with pass rate, fail count, and a boolean verdict. A type with 100% pass rate is considered ring-coherent: it participates safely in the framework's mathematical guarantees.\n\nReturns 200 OK (not 201) — computed deterministically on-the-fly, nothing persisted.",
-    tag: "bridge-proof",
-    namespace: "proof:",
-    params: [
-      { name: "type_definition", in: "body", type: "object", required: true, description: "The type to verify. Required. E.g. { \"@type\": \"type:PrimitiveType\", \"type:bitWidth\": 8 }." },
-      { name: "n", in: "body", type: "integer [1, 16]", required: false, default: "8", description: "Ring size to verify against. If omitted, taken from type_definition.type:bitWidth." },
-    ],
-    requestBodySchema: "CoherenceProofRequest",
-    defaultBody: JSON.stringify({ type_definition: { "@type": "type:PrimitiveType", "type:bitWidth": 8 }, n: 8 }, null, 2),
-    responses: [
-      { code: 200, label: "CoherenceProofResponse", schema: "CoherenceProofResponse" },
-      { code: 400, label: "BadRequest", schema: "ErrorResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 415, label: "UnsupportedMediaType", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/bridge/proof/coherence`,
-  },
-  {
-    operationId: "certInvolution",
-    method: "GET",
-    path: "/bridge/cert/involution",
-    summary: "Issue a cert:InvolutionCertificate for op:neg or op:bnot",
-    plainSummary: "Issue a certificate proving that applying an operation twice returns to the start.",
-    description: "An involution is an operation that undoes itself: apply it twice and you're back where you started.\n\nThis endpoint verifies that property exhaustively across every value in the ring, then issues a signed certificate. For neg: neg(neg(x)) = x for all 256 values. For bnot: same.\n\nThe certificate is a structured, referenceable object that can be shared and independently checked.",
-    tag: "bridge-cert",
-    namespace: "cert:",
-    params: [
-      { name: "operation", in: "query", type: "string", required: true, default: "neg", enum: ["neg", "bnot"], description: "The operation to certify. neg = ring negation. bnot = bitwise inversion." },
-      { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size." },
-    ],
-    responses: [
-      { code: 200, label: "InvolutionCertificateResponse", schema: "InvolutionCertificateResponse" },
-      { code: 400, label: "BadRequest", schema: "ErrorResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/bridge/cert/involution?operation=neg`,
-  },
-  {
-    operationId: "observableMetrics",
-    method: "GET",
-    path: "/bridge/observable/metrics",
-    summary: "Compute observable metrics for a ring element",
-    plainSummary: "Get precise geometric measurements for any value in the ring.",
-    description: "Computes four distinct measurements for a value:\n\n• Ring distance — how far the value is from zero on the ring (minimum of x and its complement).\n• Hamming weight — how many bits are set (information density).\n• Cascade length — the depth of the value's prime factorization in the ring (trailing zeros).\n• Catastrophe threshold — whether the value sits near a phase boundary where operations change character.",
-    tag: "bridge-observable",
-    namespace: "observable:",
-    params: [
-      { name: "x", in: "query", type: "integer [0, 65535]", required: true, default: "42", description: "The value to measure. Must satisfy 0 ≤ x < 2^n." },
-      { name: "n", in: "query", type: "integer [1, 16]", required: false, default: "8", description: "Ring size." },
-    ],
-    responses: [
-      { code: 200, label: "ObservableMetricsResponse", schema: "ObservableMetricsResponse" },
-      { code: 400, label: "BadRequest", schema: "ErrorResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/bridge/observable/metrics?x=42`,
-  },
-  {
-    operationId: "typeList",
-    method: "GET",
-    path: "/user/type/primitives",
-    summary: "List all type:PrimitiveType definitions",
-    plainSummary: "Browse the available primitive types and how they map onto the ring.",
-    description: "Returns the full catalogue of built-in types: U1 (1-bit ring), U4 (4-bit, 16 elements), U8 (8-bit, 256 elements — the default), U16 (65,536 elements).\n\nAlso includes composite type structures: ProductType (pairs), SumType (unions), and ConstrainedType (values with attached predicates).",
-    tag: "user-type",
-    namespace: "type:",
-    params: [],
-    responses: [
-      { code: 200, label: "TypeListResponse", schema: "TypeListResponse" },
-      { code: 405, label: "MethodNotAllowed", schema: "ErrorResponse" },
-      { code: 429, label: "RateLimited", schema: "ErrorResponse" },
-      { code: 500, label: "InternalServerError", schema: "ErrorResponse" },
-    ],
-    example: `${BASE}/user/type/primitives`,
-  },
-];
-
-/* ─────────────────────────── Schema reference ─────────────────────────── */
-
-const SCHEMAS = [
-  { name: "CriticalIdentityProofResponse", ontologyType: "proof:CriticalIdentityProof" },
-  { name: "CoherenceProofResponse", ontologyType: "proof:CoherenceProof" },
-  { name: "WitnessData", ontologyType: "proof:WitnessData" },
-  { name: "Datum", ontologyType: "schema:Datum" },
-  { name: "AddressEncodeResponse", ontologyType: "u:Address" },
-  { name: "AddressEncodeRequest", ontologyType: "u:AddressRequest" },
-  { name: "PartitionResponse", ontologyType: "partition:Partition" },
-  { name: "PartitionRequest", ontologyType: "partition:PartitionRequest" },
-  { name: "InvolutionCertificateResponse", ontologyType: "cert:InvolutionCertificate" },
-  { name: "ObservableMetricsResponse", ontologyType: "observable:MetricBundle" },
-  { name: "OpComputeResponse", ontologyType: "op:OperationResult" },
-  { name: "OpListResponse", ontologyType: "op:OperationCatalogue" },
-  { name: "TypeListResponse", ontologyType: "type:PrimitiveTypeCatalogue" },
-  { name: "NavigationIndex", ontologyType: "uor:NavigationIndex" },
-  { name: "ErrorResponse", ontologyType: "uor:ErrorResponse" },
-];
-
-/* ─────────────────────────── Namespace map ─────────────────────────── */
-
-const NAMESPACE_MAP = [
-  { prefix: "u:", space: "kernel", group: "/kernel/address", iri: "https://uor.foundation/u/" },
-  { prefix: "schema:", space: "kernel", group: "/kernel/schema", iri: "https://uor.foundation/schema/" },
-  { prefix: "op:", space: "kernel", group: "/kernel/op", iri: "https://uor.foundation/op/" },
-  { prefix: "partition:", space: "bridge", group: "/bridge/partition", iri: "https://uor.foundation/partition/" },
-  { prefix: "proof:", space: "bridge", group: "/bridge/proof", iri: "https://uor.foundation/proof/" },
-  { prefix: "cert:", space: "bridge", group: "/bridge/cert", iri: "https://uor.foundation/cert/" },
-  { prefix: "observable:", space: "bridge", group: "/bridge/observable", iri: "https://uor.foundation/observable/" },
-  { prefix: "derivation:", space: "bridge", group: "/bridge/proof", iri: "https://uor.foundation/derivation/" },
-  { prefix: "trace:", space: "bridge", group: "/bridge/proof", iri: "https://uor.foundation/trace/" },
-  { prefix: "resolver:", space: "bridge", group: "/bridge/partition", iri: "https://uor.foundation/resolver/" },
-  { prefix: "type:", space: "user", group: "/user/type", iri: "https://uor.foundation/type/" },
-  { prefix: "morphism:", space: "user", group: "—", iri: "https://uor.foundation/morphism/" },
-  { prefix: "state:", space: "user", group: "—", iri: "https://uor.foundation/state/" },
-];
-
-/* ─────────────────────────── What you can do (capabilities) ─────────────────────────── */
-
-const CAPABILITIES = [
-  {
-    icon: Shield,
-    title: "Verify mathematical identity",
-    description: "Confirm the theorem neg(bnot(x)) = succ(x) holds for any value — or exhaustively for all 256 values at once. No prior knowledge needed: run it and read the result.",
-    endpoint: "/kernel/op/verify",
-  },
-  {
-    icon: Zap,
-    title: "Create permanent content addresses",
-    description: "Turn any text into a unique address derived from its content, not its location. The same input always produces the same address — anywhere, anytime, without a registry.",
-    endpoint: "/kernel/address/encode",
-  },
-  {
-    icon: BarChart3,
-    title: "Measure information quality",
-    description: "Score any content for information density. Formally distinguishes novel, meaningful data from repetitive or low-signal content using ring-algebraic partition analysis.",
-    endpoint: "/bridge/partition",
-  },
-  {
-    icon: FileCheck,
-    title: "Generate shareable proofs",
-    description: "Produce self-contained proof objects with a unique address. Every proof is independently verifiable by any third party — no trust required.",
-    endpoint: "/bridge/proof/critical-identity",
-  },
-  {
-    icon: Lock,
-    title: "Issue verifiable certificates",
-    description: "Certify that an operation has a provable property (e.g. self-inverse) across all values in the ring. Certificates are structured objects, not assertions.",
-    endpoint: "/bridge/cert/involution",
-  },
-  {
-    icon: Layers,
-    title: "Compute geometric metrics",
-    description: "Measure ring distance, information density, cascade depth, and phase thresholds for any value. Precise, reproducible, and formally grounded.",
-    endpoint: "/bridge/observable/metrics",
-  },
+const V2_STUBS: StubTag[] = [
+  { id: "derivation", label: "Audit Traces", description: "Records a full step-by-step history of every operation an agent executes. Enables detection of prompt injection by comparing actual execution paths against expected derivations.", paths: ["/bridge/derivation"] },
+  { id: "trace", label: "Execution Traces", description: "Captures the exact sequence of operations at a lower level than derivation. Useful for forensic analysis after an anomaly is detected.", paths: ["/bridge/trace"] },
+  { id: "resolver", label: "Canonical Form Resolver", description: "Decomposes any value into its canonical irreducible representation using the full dihedral factorisation algorithm. Requires the Rust conformance suite.", paths: ["/bridge/resolver"] },
+  { id: "morphism", label: "Structure-Preserving Maps", description: "Transforms data between different ring representations while guaranteeing that the structural properties are preserved. The formal basis for typed agent-to-agent communication.", paths: ["/user/morphism/transforms"] },
+  { id: "state", label: "Agent State", description: "Manages agent lifecycle bindings: entry, transition, and exit conditions. Provides formal Frame and Transition objects for stateful coordination.", paths: ["/user/state"] },
 ];
 
 /* ─────────────────────────── Utilities ─────────────────────────── */
@@ -611,8 +387,6 @@ function highlightJson(json: string): string {
     .replace(/:\s*(true|false)/g, ': <span class="json-boolean">$1</span>')
     .replace(/:\s*(null)/g, ': <span class="json-null">$1</span>');
 }
-
-/* ─────────────────────────── Sub-components ─────────────────────────── */
 
 function CopyButton({ text, size = "sm" }: { text: string; size?: "sm" | "xs" }) {
   const [copied, setCopied] = useState(false);
@@ -634,7 +408,7 @@ function CopyButton({ text, size = "sm" }: { text: string; size?: "sm" | "xs" })
 
 function MethodBadge({ method }: { method: "GET" | "POST" }) {
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold tracking-wide ${
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-bold tracking-wide ${
       method === "GET"
         ? "bg-primary/10 text-primary border border-primary/20"
         : "bg-accent/10 text-accent border border-accent/20"
@@ -644,78 +418,22 @@ function MethodBadge({ method }: { method: "GET" | "POST" }) {
   );
 }
 
-function ResponseCodeBadge({ code }: { code: number }) {
-  const isOk = code === 200;
-  const isWarn = code === 429 || code === 413 || code === 415;
-  const is5xx = code >= 500;
-  const is501 = code === 501;
+function ResponseBadge({ code }: { code: number }) {
+  const color =
+    code === 200 ? "text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20"
+    : code === 429 || code === 413 || code === 415 ? "text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20"
+    : code >= 500 ? "text-destructive border-destructive/30 bg-destructive/5"
+    : "text-destructive border-destructive/20 bg-destructive/5";
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-semibold border ${
-      isOk
-        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-        : isWarn
-        ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-        : is501
-        ? "bg-muted text-muted-foreground border-border"
-        : is5xx
-        ? "bg-destructive/20 text-destructive border-destructive/30"
-        : "bg-destructive/10 text-destructive border-destructive/20"
-    }`}>
-      {isOk ? "✓" : is501 ? "–" : "⚠"} {code}
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold border ${color}`}>
+      {code}
     </span>
   );
 }
 
-function SpaceBadge({ space }: { space: "kernel" | "bridge" | "user" }) {
-  const styles = {
-    kernel: "bg-primary/10 text-primary border-primary/20",
-    bridge: "bg-accent/10 text-accent border-accent/20",
-    user: "bg-muted text-muted-foreground border-border",
-  };
-  return (
-    <span className={`text-xs font-mono px-2 py-0.5 rounded border ${styles[space]}`}>
-      {space}
-    </span>
-  );
-}
+/* ─────────────────────────── EndpointPanel ─────────────────────────── */
 
-function ParamTable({ params }: { params: Param[] }) {
-  if (params.length === 0) return <p className="text-xs text-muted-foreground italic">No parameters required.</p>;
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-b border-border">
-            <th className="text-left py-2 pr-3 font-semibold text-muted-foreground uppercase tracking-wide">Name</th>
-            <th className="text-left py-2 pr-3 font-semibold text-muted-foreground uppercase tracking-wide">In</th>
-            <th className="text-left py-2 pr-3 font-semibold text-muted-foreground uppercase tracking-wide">Type</th>
-            <th className="text-left py-2 pr-3 font-semibold text-muted-foreground uppercase tracking-wide">Req</th>
-            <th className="text-left py-2 pr-3 font-semibold text-muted-foreground uppercase tracking-wide">Default</th>
-            <th className="text-left py-2 font-semibold text-muted-foreground uppercase tracking-wide">Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {params.map((p) => (
-            <tr key={p.name} className="border-b border-border/50 last:border-0">
-              <td className="py-2 pr-3 font-mono text-primary font-semibold">{p.name}</td>
-              <td className="py-2 pr-3 font-mono text-muted-foreground">{p.in}</td>
-              <td className="py-2 pr-3 font-mono text-foreground/80">{p.type}</td>
-              <td className="py-2 pr-3">
-                {p.required
-                  ? <span className="text-destructive font-semibold">yes</span>
-                  : <span className="text-muted-foreground">no</span>}
-              </td>
-              <td className="py-2 pr-3 font-mono text-muted-foreground">{p.default ?? "—"}</td>
-              <td className="py-2 text-foreground/70">{p.description}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function EndpointCard({ ep, tag }: { ep: Endpoint; tag: Tag }) {
+function EndpointPanel({ ep }: { ep: Endpoint }) {
   const [open, setOpen] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -725,7 +443,10 @@ function EndpointCard({ ep, tag }: { ep: Endpoint; tag: Tag }) {
   const [bodyValue, setBodyValue] = useState(ep.defaultBody ?? "");
 
   const buildUrl = () => {
-    const qp = ep.params.filter(p => p.in === "query").map(p => [p.name, paramValues[p.name] ?? ""] as [string, string]).filter(([, v]) => v !== "");
+    const qp = ep.params
+      .filter(p => p.in === "query")
+      .map(p => [p.name, paramValues[p.name] ?? ""] as [string, string])
+      .filter(([, v]) => v !== "");
     const qs = new URLSearchParams(qp).toString();
     return `${BASE}${ep.path}${qs ? `?${qs}` : ""}`;
   };
@@ -739,10 +460,9 @@ function EndpointCard({ ep, tag }: { ep: Endpoint; tag: Tag }) {
     setLoading(true);
     setResponse(null);
     try {
-      const url = buildUrl();
       const opts: RequestInit = { method: ep.method, headers: { "Content-Type": "application/json" } };
       if (ep.method === "POST" && bodyValue) opts.body = bodyValue;
-      const res = await fetch(url, opts);
+      const res = await fetch(buildUrl(), opts);
       const json = await res.json();
       setResponse(JSON.stringify(json, null, 2));
     } catch (e: unknown) {
@@ -752,30 +472,21 @@ function EndpointCard({ ep, tag }: { ep: Endpoint; tag: Tag }) {
   }
 
   return (
-    <div className="border border-border rounded-xl overflow-hidden bg-card transition-all">
-      {/* Card header — always visible */}
-      <div className="flex items-start gap-3 px-4 py-4">
-        <div className="flex flex-col gap-2 flex-1 min-w-0">
+    <div className="border border-border rounded-xl overflow-hidden bg-card">
+      {/* Header row */}
+      <div className="flex items-center gap-3 px-5 py-4">
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           <div className="flex items-center gap-2 flex-wrap">
             <MethodBadge method={ep.method} />
             <code className="font-mono text-sm text-foreground">{ep.path}</code>
-            <code className="hidden md:inline-flex font-mono text-xs px-2 py-0.5 rounded bg-muted border border-border text-muted-foreground">
-              {ep.operationId}
-            </code>
           </div>
-          {/* Plain-English summary — always visible */}
-          <p className="text-sm text-foreground font-medium">{ep.plainSummary}</p>
-          <div className="flex items-center gap-2 flex-wrap">
-            <SpaceBadge space={tag.space} />
-            <span className="font-mono text-xs px-2 py-0.5 rounded border border-border bg-muted/40 text-muted-foreground">{ep.namespace}</span>
-          </div>
+          <p className="text-sm font-medium text-foreground">{ep.label}</p>
         </div>
-        <div className="flex items-center gap-2 shrink-0 mt-0.5">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={run}
             disabled={loading}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-60"
-            title="Run live request"
           >
             {loading ? <Loader2 size={11} className="animate-spin" /> : <Play size={11} />}
             Run
@@ -783,43 +494,54 @@ function EndpointCard({ ep, tag }: { ep: Endpoint; tag: Tag }) {
           <button
             onClick={() => setOpen(o => !o)}
             className="p-1.5 rounded text-muted-foreground hover:text-foreground transition-colors"
-            aria-label={open ? "Collapse" : "Expand"}
           >
-            <ChevronDown size={15} className={`transition-transform ${open ? "" : "-rotate-90"}`} />
+            <ChevronDown size={15} className={`transition-transform duration-200 ${open ? "" : "-rotate-90"}`} />
           </button>
         </div>
       </div>
 
-      {/* Expanded panel */}
-      {open && (
-        <div className="border-t border-border">
-          <div className="px-4 py-5 space-y-6">
-            {/* operationId (mobile) */}
-            <div className="md:hidden">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-1">operationId</p>
-              <code className="font-mono text-xs text-foreground bg-muted px-2 py-1 rounded">{ep.operationId}</code>
-            </div>
+      {/* Expanded content */}
+      <div className={`grid transition-all duration-300 ease-in-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+        <div className="overflow-hidden">
+          <div className="border-t border-border px-5 py-5 space-y-5">
 
-            {/* Plain description */}
+            {/* What it does */}
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2">What this does</p>
-              <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">{ep.description}</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">What it does</p>
+              <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">{ep.explanation}</p>
             </div>
 
-            {/* Parameters table */}
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2">Parameters</p>
-              <ParamTable params={ep.params} />
+            {/* Use case */}
+            <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Example use case</p>
+              <p className="text-sm text-foreground/80 leading-relaxed">{ep.useCase}</p>
             </div>
 
-            {/* Interactive query params */}
+            {/* Parameters */}
+            {ep.params.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">Parameters</p>
+                <div className="space-y-2">
+                  {ep.params.map(p => (
+                    <div key={p.name} className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
+                      <code className={`font-mono text-xs mt-0.5 ${p.required ? "text-primary" : "text-muted-foreground"}`}>
+                        {p.name}{p.required ? "" : "?"}
+                      </code>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{p.description}{p.default ? ` Default: ${p.default}.` : ""}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Interactive inputs */}
             {ep.params.filter(p => p.in === "query").length > 0 && (
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2">Try it — edit values below</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">Edit and run</p>
                 <div className="space-y-2">
                   {ep.params.filter(p => p.in === "query").map(p => (
                     <div key={p.name} className="flex items-center gap-3">
-                      <label className="font-mono text-xs text-primary w-24 shrink-0">{p.name}</label>
+                      <label className="font-mono text-xs text-primary w-20 shrink-0">{p.name}</label>
                       {p.enum ? (
                         <select
                           value={paramValues[p.name] ?? p.default ?? ""}
@@ -842,83 +564,132 @@ function EndpointCard({ ep, tag }: { ep: Endpoint; tag: Tag }) {
               </div>
             )}
 
-            {/* Request body */}
+            {/* POST body editor */}
             {ep.method === "POST" && (
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2">
-                  Request body <span className="font-mono normal-case ml-1 text-muted-foreground">({ep.requestBodySchema})</span>
-                </p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">Request body (JSON)</p>
                 <textarea
                   value={bodyValue}
                   onChange={e => setBodyValue(e.target.value)}
-                  rows={5}
+                  rows={4}
                   className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                 />
               </div>
             )}
 
-            {/* Responses */}
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2">Response codes</p>
-              <div className="flex flex-wrap gap-3">
-                {ep.responses.map(r => (
-                  <div key={r.code} className="flex items-center gap-2">
-                    <ResponseCodeBadge code={r.code} />
-                    <a
-                      href={`https://uor.foundation/openapi.json#/components/schemas/${r.schema}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
-                    >
-                      {r.label}
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* curl */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">curl command</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">curl</p>
                 <CopyButton text={curlCmd} />
               </div>
               <pre className="bg-[hsl(220,18%,6%)] text-[hsl(152,34%,60%)] text-xs rounded-lg px-4 py-3 overflow-x-auto font-mono leading-relaxed">{curlCmd}</pre>
             </div>
 
-            {/* Run button */}
-            <div className="flex items-center gap-3">
+            {/* Run + response codes */}
+            <div className="flex items-center gap-3 flex-wrap">
               <button
                 onClick={run}
                 disabled={loading}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-60"
               >
                 {loading ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-                {loading ? "Running…" : "▶ Run live"}
+                {loading ? "Running…" : "Run live"}
               </button>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {ep.responseCodes.map(c => <ResponseBadge key={c} code={c} />)}
+              </div>
               {response && (
-                <button onClick={() => setResponse(null)} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                <button onClick={() => setResponse(null)} className="text-xs text-muted-foreground hover:text-foreground transition-colors ml-auto">
                   Clear
                 </button>
               )}
             </div>
 
-            {/* Response output */}
+            {/* Live response */}
             {response && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">Live response</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Response</p>
                   <CopyButton text={response} />
                 </div>
                 <pre
-                  className="bg-[hsl(220,18%,6%)] text-xs rounded-lg px-4 py-3 overflow-x-auto font-mono leading-relaxed max-h-80 overflow-y-auto json-response"
+                  className="bg-[hsl(220,18%,6%)] text-xs rounded-lg px-4 py-3 overflow-x-auto font-mono leading-relaxed max-h-72 overflow-y-auto json-response"
                   dangerouslySetInnerHTML={{ __html: highlightJson(response) }}
                 />
               </div>
             )}
+
           </div>
         </div>
-      )}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── LayerSection ─────────────────────────── */
+
+function LayerSection({ layer, index }: { layer: Layer; index: number }) {
+  const [open, setOpen] = useState(index === 0 || index === 3);
+  const Icon = layer.icon;
+
+  return (
+    <div
+      className="bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:border-primary/20 hover:shadow-sm animate-fade-in-up"
+      style={{ animationDelay: `${index * 0.07}s` }}
+    >
+      {/* Layer header — always visible */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-4 p-5 md:p-7 cursor-pointer text-left"
+      >
+        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/8 border border-primary/15 flex items-center justify-center shrink-0">
+          <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60">
+              Layer {layer.layerNum}
+            </span>
+            <span className="text-muted-foreground/25">·</span>
+            <h3 className="font-display text-lg md:text-xl font-bold text-foreground">
+              {layer.title}
+            </h3>
+          </div>
+          {!open && (
+            <p className="text-sm md:text-base font-body text-muted-foreground/65 mt-1.5 leading-relaxed">
+              {layer.oneLiner}
+            </p>
+          )}
+        </div>
+        <ChevronDown
+          className={`w-5 h-5 text-muted-foreground/40 shrink-0 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {/* Expandable body */}
+      <div className={`grid transition-all duration-300 ease-in-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+        <div className="overflow-hidden">
+          <div className="px-5 md:px-7 pb-7 pt-0 space-y-6">
+            {/* Layer description */}
+            <div className="ml-14 md:ml-16 space-y-3">
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                {layer.whyItMatters}
+              </p>
+              <p className="text-xs font-semibold text-primary/70 leading-relaxed">
+                {layer.solves}
+              </p>
+            </div>
+
+            {/* Endpoints */}
+            <div className="space-y-3">
+              {layer.endpoints.map(ep => (
+                <EndpointPanel key={ep.operationId} ep={ep} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -926,14 +697,6 @@ function EndpointCard({ ep, tag }: { ep: Endpoint; tag: Tag }) {
 /* ─────────────────────────── Main page ─────────────────────────── */
 
 const Api = () => {
-  const [activeTag, setActiveTag] = useState("kernel-op");
-  const [schemasOpen, setSchemasOpen] = useState(false);
-
-  const activeTagData = TAGS.find(t => t.id === activeTag) ?? null;
-  const activeStubData = V2_STUB_TAGS.find(t => t.id === activeTag) ?? null;
-  const isV2Tag = !!activeStubData;
-  const visibleEndpoints = ENDPOINTS.filter(e => e.tag === activeTag);
-
   return (
     <Layout>
       <style>{`
@@ -945,571 +708,277 @@ const Api = () => {
         .json-response { color: hsl(210, 15%, 80%); }
       `}</style>
 
-      <div className="pt-28 pb-24">
-        <div className="container max-w-6xl">
+      {/* Hero */}
+      <section className="hero-gradient pt-40 md:pt-52 pb-16 md:pb-22">
+        <div className="container max-w-4xl">
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
+            UOR Framework API
+          </h1>
+          <p
+            className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
+            style={{ animationDelay: "0.15s" }}
+          >
+            A live API for content-based identity, mathematical verification, and information quality measurement.
+            No account needed. Every result is reproducible and independently verifiable.
+          </p>
+          <div
+            className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
+            style={{ animationDelay: "0.35s" }}
+          >
+            <a
+              href="https://uor.foundation/openapi.json"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary inline-flex items-center gap-2"
+            >
+              OpenAPI 3.1.0 spec
+              <ExternalLink size={13} />
+            </a>
+            <a href="#quick-start" className="btn-outline">
+              Quick start
+            </a>
+          </div>
+        </div>
+      </section>
 
-          {/* ── Hero ── */}
-          <div className="mb-14">
-            <div className="flex flex-wrap items-center gap-2 mb-6">
-              <a
-                href="https://www.openapis.org/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <Shield size={11} />
-                OpenAPI 3.1.0 Compliant
-                <ExternalLink size={9} />
-              </a>
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-muted border border-border text-xs font-mono text-muted-foreground">v1.0.0</span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-muted border border-border text-xs font-mono text-muted-foreground">Apache 2.0</span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-400">No API key required</span>
-            </div>
-
-            <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-4">
-              UOR Framework API
-            </h1>
-
-            <p className="text-lg text-foreground/80 max-w-3xl mb-3 leading-relaxed">
-              A live REST API that exposes the mathematical core of the UOR Framework as callable endpoints.
-              Every operation maps directly to a formally defined function in the ontology — verifiable, reproducible, and fully documented.
+      {/* What problems does this solve */}
+      <section className="py-12 md:py-20 bg-background border-b border-border">
+        <div className="container max-w-5xl">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+            Why this exists
+          </p>
+          <div className="max-w-3xl mb-10">
+            <p className="text-foreground font-body text-base md:text-lg leading-[1.85] font-medium">
+              AI agents share no common ground. They cannot verify each other's identity, detect when their instructions have been tampered with, or agree on whether content is meaningful.
             </p>
-            <p className="text-base text-muted-foreground max-w-3xl mb-8 leading-relaxed">
-              No authentication needed for read operations. All responses are standard JSON.
-              Works with <code className="font-mono text-sm bg-muted px-1.5 py-0.5 rounded">curl</code>, any HTTP client, or directly in your browser.
+            <p className="mt-4 text-muted-foreground font-body text-base leading-[1.85]">
+              This API exposes a formal mathematical substrate that makes those problems solvable. Every function is stateless, deterministic, and independently verifiable.
             </p>
-
-            <div className="flex flex-wrap gap-3">
-              <a
-                href="https://uor.foundation/openapi.json"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all"
-              >
-                OpenAPI 3.1.0 spec
-                <ExternalLink size={13} />
-              </a>
-              <a
-                href={`${BASE}/navigate`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border text-sm font-semibold hover:bg-muted transition-colors"
-              >
-                GET /navigate — full index
-                <ExternalLink size={13} />
-              </a>
-            </div>
           </div>
 
-          {/* ── What you can do ── */}
-          <div className="mb-14">
-            <h2 className="font-display text-2xl font-semibold text-foreground mb-2">What you can do with this API</h2>
-            <p className="text-muted-foreground mb-6">Six core capabilities, each backed by a live endpoint you can call right now.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {CAPABILITIES.map(({ icon: Icon, title, description, endpoint }) => (
-                <button
-                  key={endpoint}
-                  onClick={() => {
-                    const ep = ENDPOINTS.find(e => e.path === endpoint);
-                    if (ep) {
-                      const tag = TAGS.find(t => t.id === ep.tag);
-                      if (tag) setActiveTag(tag.id);
-                      setTimeout(() => {
-                        document.getElementById(`endpoint-${ep.operationId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-                      }, 100);
-                    }
-                  }}
-                  className="text-left p-5 rounded-xl border border-border bg-card hover:border-primary/30 hover:bg-primary/5 transition-all group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-                    <Icon size={16} className="text-primary" />
-                  </div>
-                  <p className="text-sm font-semibold text-foreground mb-1.5">{title}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
-                  <p className="font-mono text-xs text-primary/70 mt-3 group-hover:text-primary transition-colors">{endpoint} →</p>
-                </button>
-              ))}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { problem: "Identity Fraud", solution: "Content-addressed identity. Any agent's address is derived from what it actually said — not from a name or token that can be stolen.", endpoint: "Layer 1" },
+              { problem: "Auth Exploits", solution: "Certificate-anchored authentication. Every request can carry a proof object that any party can verify without contacting a server.", endpoint: "Layer 4" },
+              { problem: "Prompt Injection", solution: "Derivation traces as execution witnesses. Compare what was supposed to happen against what actually ran.", endpoint: "v2" },
+              { problem: "Content Spam", solution: "Partition analysis measures information density algebraically. Not a heuristic — a formal classification of novel versus repetitive content.", endpoint: "Layer 5" },
+              { problem: "Opaque Coordination", solution: "A shared set of named operations with verifiable outputs. Agents can agree on results without trusting each other.", endpoint: "Layer 2" },
+              { problem: "No Coherence Model", solution: "Coherence proofs verify that a type or value is consistent with the entire framework — for every possible input, not just a sample.", endpoint: "Layer 4" },
+            ].map(item => (
+              <div
+                key={item.problem}
+                className="rounded-2xl border border-border bg-card p-5 hover:border-primary/20 transition-all duration-300"
+              >
+                <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-2">{item.endpoint}</p>
+                <h3 className="font-display text-base font-bold text-foreground mb-2">{item.problem}</h3>
+                <p className="text-sm font-body text-muted-foreground leading-relaxed">{item.solution}</p>
+              </div>
+            ))}
           </div>
+        </div>
+      </section>
 
-          {/* ── Servers + Rate limits + Security ── */}
-          <div className="mb-10 space-y-4">
-            <h2 className="font-display text-xl font-semibold text-foreground">Base URL &amp; Authentication</h2>
+      {/* Quick start */}
+      <section id="quick-start" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
+        <div className="container max-w-5xl">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+            Quick Start
+          </p>
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-8">
+            Three commands. No setup, no account, no API key.
+          </p>
 
-            {/* Servers */}
-            <div className="rounded-xl border border-border overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-border bg-muted/40">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Servers (OpenAPI x-server-status)</p>
-              </div>
-              {[
-                {
-                  label: "Live API — active endpoint",
-                  url: BASE,
-                  description: "All requests go here. Always on. CORS open. No key required for GET requests.",
-                  status: "active",
-                },
-                {
-                  label: "Canonical domain proxy — planned",
-                  url: "https://uor.foundation/api/v1",
-                  description: "Same backend, not yet routed. Returns 404 until proxy is configured. Use the active endpoint above.",
-                  status: "planned",
-                },
-              ].map((s, i) => (
-                <div key={s.url} className={`flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-border" : ""} bg-card`}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <p className="text-xs font-semibold text-muted-foreground">{s.label}</p>
-                      <span className={`text-xs font-mono px-1.5 py-0.5 rounded border ${
-                        s.status === "active"
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                          : "bg-muted text-muted-foreground border-border"
-                      }`}>
-                        x-server-status: {s.status}
-                      </span>
-                    </div>
-                    <code className="font-mono text-sm text-foreground break-all">{s.url}</code>
-                    <p className="text-xs text-muted-foreground mt-0.5">{s.description}</p>
+          <div className="rounded-2xl border border-border overflow-hidden divide-y divide-border">
+            {[
+              {
+                step: "1",
+                label: "Discover all endpoints",
+                cmd: `curl "${BASE}/navigate"`,
+                note: "Returns a complete map of every endpoint and what each one does. Start here.",
+              },
+              {
+                step: "2",
+                label: "Verify the core identity: negate(bitwise-invert(42)) = increment(42) = 43",
+                cmd: `curl "${BASE}/kernel/op/verify?x=42"`,
+                note: "The foundational claim of the framework. Returns a step-by-step proof in under 100 ms.",
+              },
+              {
+                step: "3",
+                label: "Measure the information density of a string",
+                cmd: `curl -X POST "${BASE}/bridge/partition" -H "Content-Type: application/json" -d '{"input":"hello world"}'`,
+                note: "Returns a density score: what fraction of the content is novel versus repetitive.",
+              },
+            ].map(({ step, label, cmd, note }) => (
+              <div key={step} className="flex items-start gap-4 px-5 py-4 bg-card">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
+                  {step}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground mb-2">{label}</p>
+                  <div className="flex items-center gap-2">
+                    <code className="font-mono text-xs text-[hsl(152,34%,60%)] bg-[hsl(220,18%,6%)] px-3 py-1.5 rounded-lg flex-1 min-w-0 break-all">{cmd}</code>
+                    <CopyButton text={cmd} size="xs" />
                   </div>
-                  <CopyButton text={s.url} />
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{note}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Security scheme */}
-            <div className="rounded-xl border border-border overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-border bg-muted/40">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Security — securitySchemes.AgentKey (optional)</p>
+      {/* Base URL + Rate limits */}
+      <section className="py-10 md:py-14 bg-background border-b border-border">
+        <div className="container max-w-5xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Base URL */}
+            <div className="rounded-2xl border border-border bg-card p-5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Base URL</p>
+              <div className="flex items-center gap-2">
+                <code className="font-mono text-xs text-foreground bg-muted px-3 py-2 rounded-lg flex-1 break-all">{BASE}</code>
+                <CopyButton text={BASE} />
               </div>
-              <div className="px-4 py-4 bg-card space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono text-xs px-2 py-0.5 rounded border border-border bg-muted text-muted-foreground">type: apiKey</span>
-                  <span className="font-mono text-xs px-2 py-0.5 rounded border border-border bg-muted text-muted-foreground">in: header</span>
-                  <span className="font-mono text-xs px-2 py-0.5 rounded border border-primary/20 bg-primary/5 text-primary">X-UOR-Agent-Key</span>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Optional API key for elevated rate limits. All endpoints work without it — the key provides a benefit when present (higher throughput tier).
-                  Declared formally in <code className="font-mono">components.securitySchemes.AgentKey</code> per OAS 3.1.0.
-                  Every operation uses <code className="font-mono text-xs">security: [{"{}"}, {"{AgentKey:[]}"}]</code> — empty object means unauthenticated access is always permitted.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  <strong className="text-foreground">Usage:</strong>{" "}
-                  <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">curl -H "X-UOR-Agent-Key: YOUR_KEY" "{BASE}/kernel/op/verify?x=42"</code>
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
+                A second canonical URL at https://uor.foundation/api/v1 is planned. Currently routes to the same backend.
+              </p>
             </div>
 
             {/* Rate limits */}
-            <div className="rounded-xl border border-border overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-border bg-muted/40">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Rate limits &amp; response headers</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
-                {[
-                  { group: "Kernel GET (unauthenticated)", limit: "120 / min", header: "X-RateLimit-Limit: 120" },
-                  { group: "Bridge POST (unauthenticated)", limit: "60 / min", header: "X-RateLimit-Limit: 60" },
-                  { group: "With X-UOR-Agent-Key", limit: "600 / min", header: "Elevated tier" },
-                ].map(r => (
-                  <div key={r.group} className="px-4 py-3">
-                    <p className="text-xs text-muted-foreground">{r.group}</p>
-                    <p className="font-mono text-sm font-semibold text-foreground mt-0.5">{r.limit}</p>
-                    <p className="font-mono text-xs text-muted-foreground mt-1">{r.header}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t border-border px-4 py-3 bg-muted/20">
-                <p className="text-xs text-muted-foreground mb-1.5 font-semibold">All responses include:</p>
-                <div className="flex flex-wrap gap-2">
-                  {["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "ETag (GET endpoints)", "Cache-Control"].map(h => (
-                    <code key={h} className="font-mono text-xs px-2 py-0.5 rounded border border-border bg-muted text-muted-foreground">{h}</code>
-                  ))}
+            <div className="rounded-2xl border border-border bg-card p-5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Rate limits</p>
+              <div className="space-y-2 mb-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">GET endpoints</span>
+                  <span className="font-semibold text-foreground font-mono">120 / min</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">POST endpoints</span>
+                  <span className="font-semibold text-foreground font-mono">60 / min</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">With X-UOR-Agent-Key header</span>
+                  <span className="font-semibold text-foreground font-mono">elevated</span>
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                All responses include X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, and ETag headers.
+              </p>
             </div>
           </div>
-
-          {/* ── Quick Start ── */}
-          <div className="mb-12">
-            <h2 className="font-display text-xl font-semibold text-foreground mb-1">Quick start</h2>
-            <p className="text-muted-foreground text-sm mb-4">Three commands to go from zero to a verified mathematical proof. No account, no key, no setup.</p>
-            <div className="rounded-xl border border-primary/20 bg-primary/5 divide-y divide-primary/10">
-              {[
-                {
-                  step: 1,
-                  label: "Get a map of all endpoints",
-                  cmd: `curl "${BASE}/navigate"`,
-                  note: "Returns every endpoint, its purpose, and the reading order. Start here if you're unsure where to go.",
-                },
-                {
-                  step: 2,
-                  label: "Verify the core identity: neg(bnot(42)) = succ(42) = 43",
-                  cmd: `curl "${BASE}/kernel/op/verify?x=42"`,
-                  note: "The fundamental theorem of the framework. Runs in under 100 ms. Returns a full proof with every derivation step shown.",
-                },
-                {
-                  step: 3,
-                  label: "Download the full machine-readable spec",
-                  cmd: `curl "https://uor.foundation/openapi.json"`,
-                  note: "The complete OpenAPI 3.1.0 document: all paths, schemas, parameters, and response types.",
-                },
-              ].map(({ step, label, cmd, note }) => (
-                <div key={step} className="flex items-start gap-4 px-5 py-4">
-                  <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
-                    {step}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground mb-2">{label}</p>
-                    <div className="flex items-center gap-2">
-                      <code className="font-mono text-xs text-[hsl(152,34%,60%)] bg-[hsl(220,18%,6%)] px-3 py-1.5 rounded-lg flex-1 min-w-0 break-all">{cmd}</code>
-                      <CopyButton text={cmd} size="xs" />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{note}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── Tags sidebar + Endpoints ── */}
-          <div className="mb-12">
-            <h2 className="font-display text-xl font-semibold text-foreground mb-1">Endpoints</h2>
-            <p className="text-muted-foreground text-sm mb-5">Select a group, then expand any endpoint to see parameters, try it live, and copy the curl command.</p>
-
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Sidebar */}
-              <aside className="hidden lg:flex flex-col w-60 shrink-0">
-                <div className="sticky top-28 space-y-0.5">
-                  {/* v1 live tags */}
-                  {TAGS.map(tag => (
-                    <button
-                      key={tag.id}
-                      onClick={() => setActiveTag(tag.id)}
-                      className={`w-full flex items-start justify-between gap-2 px-3 py-2.5 rounded-lg text-left transition-all ${
-                        activeTag === tag.id
-                          ? "bg-primary/10 text-primary border border-primary/20"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent"
-                      }`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-xs leading-tight">{tag.plainLabel}</p>
-                        <p className="font-mono text-xs opacity-60 mt-0.5">{tag.label}</p>
-                      </div>
-                      <span className={`text-xs px-1.5 py-0.5 rounded font-mono shrink-0 mt-0.5 ${
-                        activeTag === tag.id ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-                      }`}>
-                        {tag.endpointCount}
-                      </span>
-                    </button>
-                  ))}
-                  {/* v2 stub tags — greyed out */}
-                  <div className="pt-2 pb-0.5">
-                    <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-semibold px-3 pb-1">v2 — not implemented</p>
-                  </div>
-                  {V2_STUB_TAGS.map(tag => (
-                    <button
-                      key={tag.id}
-                      onClick={() => setActiveTag(tag.id)}
-                      className={`w-full flex items-start justify-between gap-2 px-3 py-2 rounded-lg text-left transition-all ${
-                        activeTag === tag.id
-                          ? "bg-muted/60 text-muted-foreground border border-border"
-                          : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/30 border border-transparent"
-                      }`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-xs leading-tight opacity-70">{tag.plainLabel}</p>
-                        <p className="font-mono text-xs opacity-50 mt-0.5">{tag.label}</p>
-                      </div>
-                      <span className="text-xs px-1.5 py-0.5 rounded font-mono shrink-0 mt-0.5 bg-muted text-muted-foreground/60">
-                        501
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </aside>
-
-              {/* Mobile tag strip */}
-              <div className="lg:hidden overflow-x-auto">
-                <div className="flex gap-1.5 pb-2 min-w-max">
-                  {TAGS.map(tag => (
-                    <button
-                      key={tag.id}
-                      onClick={() => setActiveTag(tag.id)}
-                      className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                        activeTag === tag.id
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {tag.plainLabel}
-                    </button>
-                  ))}
-                  {V2_STUB_TAGS.map(tag => (
-                    <button
-                      key={tag.id}
-                      onClick={() => setActiveTag(tag.id)}
-                      className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all opacity-50 ${
-                        activeTag === tag.id
-                          ? "bg-muted text-foreground"
-                          : "bg-muted/50 text-muted-foreground hover:opacity-80"
-                      }`}
-                    >
-                      {tag.plainLabel}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Endpoint list */}
-              <div className="flex-1 min-w-0 space-y-4">
-                {/* Tag description panel */}
-                {isV2Tag && activeStubData ? (
-                  <>
-                    <div className="rounded-xl border border-border bg-muted/30 px-4 py-4">
-                      <div className="flex items-start gap-3 mb-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                            <p className="text-sm font-semibold text-foreground">{activeStubData.plainLabel}</p>
-                            <SpaceBadge space={activeStubData.space} />
-                            <code className="font-mono text-xs text-muted-foreground">{activeStubData.label}</code>
-                            <span className="text-xs px-2 py-0.5 rounded border border-border bg-muted text-muted-foreground font-semibold">v2 — not implemented</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground leading-relaxed">{activeStubData.plainDescription}</p>
-                        </div>
-                      </div>
-                    </div>
-                    {activeStubData.stubPaths.map(sp => (
-                      <div key={sp.path} className="border border-dashed border-border rounded-xl overflow-hidden bg-muted/20 opacity-70">
-                        <div className="flex items-start gap-3 px-4 py-4">
-                          <div className="flex flex-col gap-2 flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold tracking-wide bg-muted text-muted-foreground border border-border">GET</span>
-                              <code className="font-mono text-sm text-foreground/70">{sp.path}</code>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{sp.summary}</p>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <ResponseCodeBadge code={501} />
-                              <span className="font-mono text-xs text-muted-foreground">NotImplemented — requires Rust conformance suite</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="border-t border-border/50 px-4 py-3 bg-muted/30">
-                          <p className="text-xs text-muted-foreground">
-                            This namespace is formally declared in the OpenAPI spec (stub path, 501 response) and in the UOR ontology. It will be implemented in v2 when the full Rust conformance suite is exposed via the cloud API.{" "}
-                            <a href="https://github.com/UOR-Foundation/UOR-Framework" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground transition-colors">
-                              See the Rust implementation →
-                            </a>
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                ) : activeTagData ? (
-                  <>
-                    <div className="rounded-xl border border-border bg-muted/30 px-4 py-4">
-                      <div className="flex items-start gap-3 mb-1">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                            <p className="text-sm font-semibold text-foreground">{activeTagData.plainLabel}</p>
-                            <SpaceBadge space={activeTagData.space} />
-                            <code className="font-mono text-xs text-muted-foreground">{activeTagData.label}</code>
-                          </div>
-                          <p className="text-sm text-muted-foreground leading-relaxed">{activeTagData.plainDescription}</p>
-                        </div>
-                        <a
-                          href={`https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 mt-0.5"
-                        >
-                          <code className="font-mono hidden sm:inline">{activeTagData.source}</code>
-                          <ExternalLink size={10} />
-                        </a>
-                      </div>
-                    </div>
-
-                    {visibleEndpoints.length > 0 ? (
-                      visibleEndpoints.map(ep => (
-                        <div key={ep.operationId} id={`endpoint-${ep.operationId}`}>
-                          <EndpointCard ep={ep} tag={activeTagData} />
-                        </div>
-                      ))
-                    ) : (
-                      <div className="rounded-xl border border-dashed border-border p-8 text-center">
-                        <p className="text-sm text-muted-foreground">No endpoints in this group.</p>
-                      </div>
-                    )}
-                  </>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          {/* ── Schemas reference ── */}
-          <div className="mb-10">
-            <button
-              onClick={() => setSchemasOpen(o => !o)}
-              className="w-full flex items-center justify-between py-3 border-b border-border group"
-            >
-              <div>
-                <h2 className="font-display text-xl font-semibold text-foreground group-hover:text-primary transition-colors text-left">
-                  Schema reference
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5 text-left">Response types and their UOR ontology equivalents</p>
-              </div>
-              <ChevronDown size={18} className={`text-muted-foreground transition-transform shrink-0 ${schemasOpen ? "" : "-rotate-90"}`} />
-            </button>
-            {schemasOpen && (
-              <div className="mt-4 rounded-xl border border-border overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-border bg-muted/40 grid grid-cols-2 gap-4">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Schema (JSON response type)</p>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">→ Ontology class</p>
-                </div>
-                {SCHEMAS.map((s, i) => (
-                  <div
-                    key={s.name}
-                    className={`grid grid-cols-2 gap-4 px-4 py-2.5 hover:bg-muted/20 transition-colors ${i > 0 ? "border-t border-border/50" : ""}`}
-                  >
-                    <a
-                      href={`https://uor.foundation/openapi.json#/components/schemas/${s.name}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-xs text-primary hover:underline underline-offset-2 flex items-center gap-1"
-                    >
-                      {s.name}
-                      <ExternalLink size={9} />
-                    </a>
-                    <code className="font-mono text-xs text-muted-foreground">{s.ontologyType}</code>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* ── Namespace → API Map ── */}
-          <div className="mb-10">
-            <h2 className="font-display text-xl font-semibold text-foreground mb-1">Namespace map</h2>
-            <p className="text-muted-foreground text-sm mb-4">Every API endpoint maps to a formal namespace in the UOR ontology. This table shows how they connect.</p>
-            <div className="rounded-xl border border-border overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/40">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Prefix</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Space</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">API group</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Base IRI</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {NAMESPACE_MAP.map(({ prefix, space, group, iri }) => (
-                    <tr key={prefix} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs text-primary">{prefix}</td>
-                      <td className="px-4 py-3">
-                        <SpaceBadge space={space as "kernel" | "bridge" | "user"} />
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground hidden sm:table-cell">{group}</td>
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        <a href={iri} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors">
-                          {iri}
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* ── Agent Discovery Chain ── */}
-          <div className="mb-10">
-            <h2 className="font-display text-xl font-semibold text-foreground mb-1">Agent discovery chain</h2>
-            <p className="text-muted-foreground text-sm mb-4">If you are an AI agent starting from scratch, follow this sequence to bootstrap your understanding of the framework.</p>
-            <div className="rounded-xl border border-border bg-card p-5">
-              <div className="flex flex-col gap-3">
-                {[
-                  { step: "①", label: "/.well-known/uor.json", note: "Machine-readable organisation descriptor. Contains the uor:api.openapi field that points to the spec.", href: "https://uor.foundation/.well-known/uor.json" },
-                  { step: "↓", label: "", note: "follow uor:api.openapi" },
-                  { step: "②", label: "GET /openapi.json", note: "Full OpenAPI 3.1.0 specification. Parse all paths, operationIds, and schemas.", href: `${BASE}/openapi.json` },
-                  { step: "↓", label: "", note: "parse paths → use reading order" },
-                  { step: "③", label: "GET /navigate", note: "Complete endpoint index with reading order. operationId: frameworkIndex.", href: `${BASE}/navigate` },
-                  { step: "↓", label: "", note: "start with the simplest verifiable claim" },
-                  { step: "④", label: "GET /kernel/op/verify?x=42", note: "Zero auth. Returns a full proof in under 100 ms. operationId: opVerifyCriticalIdentity.", href: `${BASE}/kernel/op/verify?x=42` },
-                ].map(({ step, label, note, href }, i) => {
-                  const isArrow = step === "↓";
-                  return (
-                    <div key={i} className={`flex items-start gap-3 ${isArrow ? "pl-8 py-0" : ""}`}>
-                      <span className={`font-mono text-sm shrink-0 ${isArrow ? "text-muted-foreground" : "text-primary font-bold w-6 text-center"}`}>{step}</span>
-                      <div className="flex-1 min-w-0">
-                        {isArrow ? (
-                          <p className="text-xs text-muted-foreground">{note}</p>
-                        ) : (
-                          <>
-                            {href ? (
-                              <a href={href} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-foreground hover:text-primary transition-colors flex items-center gap-1.5">
-                                {label}
-                                <ExternalLink size={10} />
-                              </a>
-                            ) : (
-                              <p className="font-mono text-sm text-foreground">{label}</p>
-                            )}
-                            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{note}</p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* ── For AI Agents ── */}
-          <div className="mb-12 rounded-xl border border-border bg-muted/30 p-6">
-            <h2 className="font-display text-lg font-semibold text-foreground mb-2">For AI agents</h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              If you are an AI agent reading this page, these are the machine-readable entry points in priority order:
-            </p>
-            <div className="space-y-2">
-              {[
-                { label: "OpenAPI 3.1.0 spec", url: "https://uor.foundation/openapi.json", note: "Parse paths, operationIds, schemas, and response types" },
-                { label: "Navigation index (JSON)", url: `${BASE}/navigate`, note: "operationId: frameworkIndex — all endpoints + reading order" },
-                { label: "Agent Quick Card (Markdown)", url: "https://uor.foundation/llms.md", note: "5-min orientation. Frontmatter includes api_url, api_spec, api_base." },
-                { label: "Full Implementation Guide", url: "https://uor.foundation/llms-full.md", note: "30-min complete reference with all curl examples" },
-                { label: "Discovery metadata", url: "https://uor.foundation/.well-known/uor.json", note: "JSON-LD descriptor — contains uor:api.openapi field" },
-              ].map(({ label, url, note }) => (
-                <div key={url} className="flex items-start gap-3 py-2 border-b border-border/50 last:border-0">
-                  <ArrowRight size={13} className="text-primary shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-foreground hover:text-primary transition-colors flex items-center gap-1.5 flex-wrap">
-                      {label}: <span className="font-mono font-normal text-muted-foreground break-all">{url}</span>
-                      <ExternalLink size={9} />
-                    </a>
-                    <p className="text-xs text-muted-foreground mt-0.5">{note}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex flex-wrap gap-4 text-sm pt-4 border-t border-border">
-            <a href="https://github.com/UOR-Foundation/UOR-Framework" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
-              GitHub source <ExternalLink size={11} />
-            </a>
-            <a href="https://uor.foundation/llms.md" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
-              Agent Quick Card <ExternalLink size={11} />
-            </a>
-            <a href="https://uor.foundation/llms-full.md" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
-              Full implementation guide <ExternalLink size={11} />
-            </a>
-            <a href="https://www.moltbook.com/m/uor" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
-              Community <ExternalLink size={11} />
-            </a>
-            <a href="https://www.openapis.org/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
-              OpenAPI Initiative <ExternalLink size={11} />
-            </a>
-          </div>
-
         </div>
-      </div>
+      </section>
+
+      {/* Layered endpoint reference */}
+      <section id="architecture" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
+        <div className="container max-w-5xl">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+            Architecture
+          </p>
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
+            API Architecture
+          </h2>
+          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-14">
+            Endpoints are organized into six layers that mirror the UOR Framework itself. Each layer builds on the one below it.
+          </p>
+
+          <div className="flex flex-col gap-3">
+            {LAYERS.map((layer, index) => (
+              <LayerSection key={layer.id} layer={layer} index={index} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* v2 stubs */}
+      <section className="py-12 md:py-16 bg-background border-b border-border">
+        <div className="container max-w-5xl">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+            Coming in v2
+          </p>
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-8">
+            These namespaces are formally defined in the OpenAPI spec and in the UOR ontology, but require the full Rust conformance suite to expose via the cloud API. Each returns HTTP 501 today.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {V2_STUBS.map(stub => (
+              <div key={stub.id} className="rounded-2xl border border-dashed border-border bg-card/50 p-5 opacity-70">
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-sm font-semibold text-foreground">{stub.label}</p>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-border bg-muted text-muted-foreground">501</span>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-2">{stub.description}</p>
+                {stub.paths.map(p => (
+                  <code key={p} className="font-mono text-xs text-muted-foreground/70">{p}</code>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* For AI agents */}
+      <section className="section-dark py-14 md:py-20">
+        <div className="container max-w-5xl">
+          <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+            For AI Agents
+          </h2>
+          <p className="text-section-dark-foreground/60 font-body text-base leading-relaxed max-w-xl mb-10">
+            If you are an AI agent reading this, follow this sequence to bootstrap your understanding of the framework.
+          </p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Discovery chain */}
+            <div>
+              <p className="text-xs font-semibold text-section-dark-foreground/50 uppercase tracking-widest mb-4">Discovery chain</p>
+              <div className="space-y-4">
+                {[
+                  { step: "1", label: "/.well-known/uor.json", note: "Machine-readable organisation descriptor. Contains the uor:api.openapi field pointing to the spec.", href: "https://uor.foundation/.well-known/uor.json" },
+                  { step: "2", label: "GET /openapi.json", note: "Full OpenAPI 3.1.0 specification. Parse all paths, operationIds, and schemas.", href: `${BASE}/openapi.json` },
+                  { step: "3", label: "GET /navigate", note: "Complete endpoint index with reading order.", href: `${BASE}/navigate` },
+                  { step: "4", label: "GET /kernel/op/verify?x=42", note: "Zero auth. Returns a full proof in under 100 ms. The first verifiable claim.", href: `${BASE}/kernel/op/verify?x=42` },
+                ].map(({ step, label, note, href }) => (
+                  <div key={step} className="flex items-start gap-3">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-section-dark-foreground/20 text-section-dark-foreground text-xs font-bold flex items-center justify-center mt-0.5">
+                      {step}
+                    </span>
+                    <div>
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-section-dark-foreground hover:opacity-80 transition-opacity flex items-center gap-1.5">
+                        {label}
+                        <ExternalLink size={10} />
+                      </a>
+                      <p className="text-xs text-section-dark-foreground/50 mt-0.5 leading-relaxed">{note}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Machine-readable entry points */}
+            <div>
+              <p className="text-xs font-semibold text-section-dark-foreground/50 uppercase tracking-widest mb-4">Machine-readable entry points</p>
+              <div className="space-y-3">
+                {[
+                  { label: "OpenAPI 3.1.0 spec", url: "https://uor.foundation/openapi.json", note: "Parse paths, operationIds, schemas, response types." },
+                  { label: "Agent Quick Card", url: "https://uor.foundation/llms.md", note: "5-minute orientation. Frontmatter includes api_url and api_spec." },
+                  { label: "Full Reference", url: "https://uor.foundation/llms-full.md", note: "Complete guide with all curl examples and implementation notes." },
+                  { label: "Discovery metadata", url: "https://uor.foundation/.well-known/uor.json", note: "JSON-LD descriptor containing the uor:api.openapi field." },
+                ].map(({ label, url, note }) => (
+                  <div key={url} className="flex items-start gap-3">
+                    <ArrowRight size={13} className="text-section-dark-foreground/40 shrink-0 mt-0.5" />
+                    <div>
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-section-dark-foreground hover:opacity-80 transition-opacity flex items-center gap-1.5 flex-wrap">
+                        {label}: <span className="font-mono font-normal text-section-dark-foreground/50 break-all">{url}</span>
+                        <ExternalLink size={9} />
+                      </a>
+                      <p className="text-xs text-section-dark-foreground/40 mt-0.5">{note}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </Layout>
   );
 };
