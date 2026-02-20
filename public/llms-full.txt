@@ -1,9 +1,0 @@
----
-type: redirect-stub
-preferred: https://uor.foundation/llms-full.md
----
-
-This file is a backward-compatibility stub.
-The complete implementation guide has moved to Markdown.
-
-Read: https://uor.foundation/llms-full.md
