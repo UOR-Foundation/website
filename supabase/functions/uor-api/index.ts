@@ -1347,8 +1347,8 @@ function frameworkIndex(rl: RateLimitResult): Response {
   const etag = makeETag('/navigate', {});
   return jsonResp({
     "summary": {
-      "total_endpoints": 20,
-      "spaces": ["kernel", "bridge", "user", "simple_verify"],
+      "total_endpoints": 26,
+      "spaces": ["kernel", "bridge", "user", "store", "simple_verify"],
       "quick_start_url": `${verifySimple}?x=42`
     },
     "@context": UOR_CONTEXT_URL,
@@ -1356,8 +1356,8 @@ function frameworkIndex(rl: RateLimitResult): Response {
     "@type": "sdo:WebAPI",
     "title": "UOR Framework REST API — Navigation Index",
     "version": "1.0.0",
-    "total_endpoints": 20,
-    "description": "Complete index of all 20 working endpoints. Start with /kernel/op/verify?x=42 for the simplest first call.",
+    "total_endpoints": 26,
+    "description": "Complete index of all 26 working endpoints across 4 spaces (kernel, bridge, user, store). Start with /kernel/op/verify?x=42 for the simplest first call.",
     "openapi_spec": "https://uor.foundation/openapi.json",
     "agent_entry_point": "https://uor.foundation/llms.md",
     "discovery_metadata": "https://uor.foundation/.well-known/uor.json",
@@ -1402,12 +1402,59 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/user/state`, "required_params": "x", "optional_params": "n", "example": `${base}/user/state?x=42`, "operationId": "userState", "summary": "state:Frame — agent lifecycle: category, entry/exit conditions, all 4 transitions" }
         ]
       },
+      "store": {
+        "description": "Persistent IPFS storage — store:, u: namespaces. Write UOR objects to IPFS, read them back with dual verification (CID + UOR address), persist agent memory contexts.",
+        "endpoints": [
+          { "method": "POST", "path": `${base}/store/write`, "body": "{object, gateway?}", "example": `${base}/store/write`, "operationId": "storeWrite", "summary": "Serialise a UOR object to JSON-LD + pin to IPFS. Returns CID and u:Address." },
+          { "method": "GET", "path": `${base}/store/read/{cid}`, "required_params": "cid (path)", "optional_params": "gateway, strict", "example": `${base}/store/read/QmXYZ...`, "operationId": "storeRead", "summary": "Retrieve from IPFS + dual verification (CID integrity + UOR address recomputation)" },
+          { "method": "GET", "path": `${base}/store/verify/{cid}`, "required_params": "cid (path)", "optional_params": "gateway, expected_uor", "example": `${base}/store/verify/QmXYZ...`, "operationId": "storeVerify", "summary": "Lightweight verify-only — returns boolean verdict without echoing content" },
+          { "method": "POST", "path": `${base}/store/write-context`, "body": "{context: {name, bindings}}", "example": `${base}/store/write-context`, "operationId": "storeWriteContext", "summary": "Persist a state:Context as an IPLD DAG. Each binding is a separate IPFS block." },
+          { "method": "GET", "path": `${base}/store/resolve`, "required_params": "url", "optional_params": "none", "example": `${base}/store/resolve?url=https://example.com`, "operationId": "storeResolve", "summary": "Fetch remote content and compute its u:Address + CID without storing" },
+          { "method": "GET", "path": `${base}/store/gateways`, "required_params": "none", "example": `${base}/store/gateways`, "operationId": "storeGateways", "summary": "List IPFS gateways with live health status" }
+        ],
+        "cid_format_note": "Pinata returns CIDv0 (Qm...). Use the CID from the pinResult for subsequent reads, not the computed CIDv1 in the envelope."
+      },
       "simple_verify": {
         "description": "Standalone simple endpoint — no JSON-LD, flat JSON output. Best first call for agents.",
         "endpoints": [
           { "method": "GET", "path": `${verifySimple}`, "required_params": "x OR content", "example": `${verifySimple}?x=42`, "operationId": "uorVerify", "summary": "Flat JSON: {x, bnot_x, neg_bnot_x, succ_x, holds}. Zero JSON-LD, 5 fields." }
         ]
       }
+    },
+    "what_you_can_do": {
+      "description": "Five concrete capabilities for AI agents — each links to a recipe in llms.md.",
+      "capabilities": [
+        {
+          "name": "Persist Agent Memory",
+          "what": "Store session state, tool outputs, or reasoning traces as verifiable IPFS objects. Retrieve them in any future session using the CID.",
+          "endpoints": ["POST /store/write-context", "GET /store/read/{cid}"],
+          "recipe": "https://uor.foundation/llms.md#recipe-persist-agent-memory"
+        },
+        {
+          "name": "Verify Peer Content",
+          "what": "Before trusting content from another agent, verify its integrity: recompute the CID and UOR address and confirm they match the claimed values.",
+          "endpoints": ["GET /store/verify/{cid}"],
+          "recipe": "https://uor.foundation/llms.md#recipe-verify-peer-content"
+        },
+        {
+          "name": "Detect Prompt Injection",
+          "what": "Compare Hamming drift between a declared and executed operation sequence. Non-zero drift signals that instructions were modified in transit.",
+          "endpoints": ["GET /bridge/trace?x={x}&ops={declared}", "GET /bridge/trace?x={x}&ops={executed}"],
+          "recipe": "https://uor.foundation/llms.md#recipe-detect-prompt-injection"
+        },
+        {
+          "name": "Build Verifiable Output",
+          "what": "Encode your output as a UOR address, pin it to IPFS, and share the CID. Any agent can independently verify it was you who produced it.",
+          "endpoints": ["POST /kernel/address/encode", "POST /store/write", "GET /store/verify/{cid}"],
+          "recipe": "https://uor.foundation/llms.md#recipe-build-verifiable-output"
+        },
+        {
+          "name": "Assess Content Quality",
+          "what": "Run partition analysis on any text to measure its irreducible density. Density > 0.25 = novel signal. Density < 0.25 = likely spam or recycled content.",
+          "endpoints": ["POST /bridge/partition"],
+          "recipe": "https://uor.foundation/llms.md#recipe-assess-content-quality"
+        }
+      ]
     },
     "namespace_map": [
       { "prefix": "u:", "iri": "https://uor.foundation/u/", "space": "kernel", "api_group": "/kernel", "classes": 2, "properties": 4 },
@@ -1422,7 +1469,8 @@ function frameworkIndex(rl: RateLimitResult): Response {
       { "prefix": "resolver:", "iri": "https://uor.foundation/resolver/", "space": "bridge", "api_group": "/bridge/resolver", "classes": 3, "properties": 6 },
       { "prefix": "type:", "iri": "https://uor.foundation/type/", "space": "user", "api_group": "/user/type", "classes": 5, "properties": 5 },
       { "prefix": "morphism:", "iri": "https://uor.foundation/morphism/", "space": "user", "api_group": "/user/morphism", "classes": 4, "properties": 9 },
-      { "prefix": "state:", "iri": "https://uor.foundation/state/", "space": "user", "api_group": "/user/state", "classes": 5, "properties": 8 }
+      { "prefix": "state:", "iri": "https://uor.foundation/state/", "space": "user", "api_group": "/user/state", "classes": 5, "properties": 8 },
+      { ...STORE_NAMESPACE_META }
     ],
     "reading_order": [
       { "step": 1, "url": "https://uor.foundation/llms.md", "purpose": "Quick Card — 5 minutes", "time": "5 min" },
@@ -2182,10 +2230,11 @@ interface PinResult {
   timestamp: string;
 }
 
-const GATEWAY_CONFIGS: Record<string, { apiUrl: string; readUrl: string }> = {
+const GATEWAY_CONFIGS: Record<string, { apiUrl: string; readUrl: string; deprecated?: boolean }> = {
   "web3.storage": {
     apiUrl: "https://api.web3.storage",
     readUrl: "https://w3s.link/ipfs/",
+    deprecated: true,
   },
   "pinata": {
     apiUrl: "https://api.pinata.cloud",
@@ -2200,7 +2249,10 @@ async function pinToIpfs(
   const ts = timestamp();
 
   if (gateway === "web3.storage" || gateway === "https://api.web3.storage") {
-    return await pinToWeb3Storage(bytes, ts);
+    throw new Error(
+      "web3.storage is deprecated. The legacy upload API has been sunset. " +
+      "Use gateway:'pinata' with PINATA_JWT instead. See GET /store/gateways for current options."
+    );
   }
   if (gateway === "pinata" || gateway === "https://api.pinata.cloud") {
     return await pinToPinata(bytes, ts);
@@ -2705,8 +2757,15 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
   let ipfsUrl = `${gateway}/ipfs/${cidParam}`;
   const pinataDedicatedGw = PINATA_DEDICATED_GATEWAY;
   if (gateway === pinataDedicatedGw) {
-    const gwToken = Deno.env.get("PINATA_GATEWAY_TOKEN") ?? Deno.env.get("PINATA_JWT") ?? "";
-    if (gwToken) ipfsUrl += `?pinataGatewayToken=${gwToken}`;
+    const gwToken = Deno.env.get("PINATA_GATEWAY_TOKEN") ?? "";
+    if (!gwToken) {
+      return new Response(JSON.stringify({
+        error: "PINATA_GATEWAY_TOKEN secret is not configured. Cannot authenticate with dedicated gateway.",
+        code: "GATEWAY_AUTH_MISSING",
+        docs: "https://api.uor.foundation/v1/openapi.json",
+      }), { status: 500, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+    }
+    ipfsUrl += `?pinataGatewayToken=${gwToken}`;
   }
   let fetchResponse: Response;
   try {
@@ -3100,8 +3159,15 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
   let ipfsUrl = `${gateway}/ipfs/${cidParam}`;
   const pinataDedicatedGw = PINATA_DEDICATED_GATEWAY;
   if (gateway === pinataDedicatedGw) {
-    const gwToken = Deno.env.get("PINATA_GATEWAY_TOKEN") ?? Deno.env.get("PINATA_JWT") ?? "";
-    if (gwToken) ipfsUrl += `?pinataGatewayToken=${gwToken}`;
+    const gwToken = Deno.env.get("PINATA_GATEWAY_TOKEN") ?? "";
+    if (!gwToken) {
+      return new Response(JSON.stringify({
+        error: "PINATA_GATEWAY_TOKEN secret is not configured. Cannot authenticate with dedicated gateway.",
+        code: "GATEWAY_AUTH_MISSING",
+        docs: "https://api.uor.foundation/v1/openapi.json",
+      }), { status: 500, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+    }
+    ipfsUrl += `?pinataGatewayToken=${gwToken}`;
   }
   let fetchResponse: Response;
   try {
@@ -3403,7 +3469,8 @@ async function storeGateways(rl: RateLimitResult): Promise<Response> {
       "cid_spec": "https://github.com/multiformats/cid",
     },
     "summary": {
-      "write_gateways": ["web3.storage", "pinata"],
+      "write_gateways": ["pinata"],
+      "deprecated_write_gateways": ["web3.storage (sunset — legacy API no longer functional)"],
       "read_gateways": ["ipfs.io", "w3s.link", "cloudflare-ipfs.com", "gateway.pinata.cloud"],
       "note": "Use POST /store/write with gateway parameter to select write gateway. Use gateway query param on GET /store/read/:cid and GET /store/verify/:cid to select read gateway.",
     },

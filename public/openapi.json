@@ -1031,12 +1031,14 @@
             "schema": {
               "type": "string",
               "enum": [
+                "https://uor.mypinata.cloud",
+                "https://gateway.pinata.cloud",
                 "https://ipfs.io",
                 "https://w3s.link",
-                "https://cloudflare-ipfs.com",
-                "https://gateway.pinata.cloud"
+                "https://cloudflare-ipfs.com"
               ],
-              "default": "https://ipfs.io"
+              "default": "https://uor.mypinata.cloud",
+              "description": "IPFS read gateway. Default is the dedicated Pinata gateway (fastest, most reliable). Use CIDv0 (Qm...) for reliable reads."
             }
           },
           {
@@ -1151,7 +1153,18 @@
             "name": "gateway",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "default": "https://ipfs.io" }
+            "schema": {
+              "type": "string",
+              "enum": [
+                "https://uor.mypinata.cloud",
+                "https://gateway.pinata.cloud",
+                "https://ipfs.io",
+                "https://w3s.link",
+                "https://cloudflare-ipfs.com"
+              ],
+              "default": "https://uor.mypinata.cloud",
+              "description": "IPFS read gateway. Default is the dedicated Pinata gateway."
+            }
           },
           {
             "name": "expected_uor",

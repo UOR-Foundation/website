@@ -213,7 +213,34 @@ executed. Non-zero divergence signals that the operation sequence was modified i
 This is the UOR structural mechanism for prompt injection detection — not a heuristic.
 ```
 
-### Step 4 — User Space (Type System)
+### Step 4 — Store Space (Persistent IPFS Storage)
+
+```
+# Write a UOR object to IPFS — returns CID (use this for reads) and u:Address
+POST {BASE_URL}/store/write
+Body: {"object":{"@type":"proof:CriticalIdentityProof","proof:x":42,"proof:holds":true},"gateway":"pinata"}
+→ { "store:cid": "bagu...", "pinResult": { "cid": "QmXYZ..." }, "store:uorAddress": { "u:glyph": "⠨⠥..." } }
+# IMPORTANT: Use pinResult.cid (CIDv0, Qm...) for subsequent reads. CIDv1 in store:cid may timeout.
+
+# Read back from IPFS with dual verification (CID + UOR address)
+GET {BASE_URL}/store/read/QmXYZ...
+→ { "store:verified": true, "verification": { "cid": { "match": true }, "uor_address": { "match": true } } }
+
+# Lightweight verify-only (no content echoed back)
+GET {BASE_URL}/store/verify/QmXYZ...
+→ { "store:verified": true, "verdict": "VERIFIED" }
+
+# Persist agent memory as an IPLD DAG — each binding is a separate IPFS block
+POST {BASE_URL}/store/write-context
+Body: {"context":{"name":"session-001","bindings":[{"address":"hello","value":42},{"address":"world","value":99}]},"pin":true}
+→ { "root_cid": "QmABC...", "bindings": [...] }
+
+# Check gateway health before writing
+GET {BASE_URL}/store/gateways
+→ { "store:defaultReadGateway": "https://uor.mypinata.cloud", "store:gateways": [...] }
+```
+
+### Step 5 — User Space (Type System)
 
 ```
 # Catalogue of type:PrimitiveType definitions (U1, U4, U8, U16)
@@ -228,10 +255,117 @@ GET {BASE_URL}/user/type/primitives
 | /bridge | partition:, proof:, cert:, observable:,                         | Optional   | GET: 120 / POST: 60 |
 |         | derivation:, trace:, resolver:                                  |            |                     |
 | /user   | type:, morphism:, state:                                        | Optional   | 120 req/min         |
+| /store  | store:                                                          | Optional   | GET: 120 / POST: 60 |
 
-All responses are valid JSON-LD with `@context` covering all 14 UOR namespaces, `@id` (instance IRI), and `@type` (ontology class). CORS open. No API key required to start.
+All responses are valid JSON-LD with `@context` covering all 15 UOR namespaces (including store:), `@id` (instance IRI), and `@type` (ontology class). CORS open. No API key required to start.
 
 Discovery chain: `/.well-known/uor.json` → `uor:api.openapi` → `GET /openapi.json` → `GET /navigate` → any endpoint.
+
+---
+
+## Agent Recipes — What You Can Actually Do {#agent-recipes}
+
+These are end-to-end workflows you can execute right now. Each recipe chains 2-4 API calls into a practical capability.
+
+### Recipe 1: Persist Agent Memory {#recipe-persist-agent-memory}
+
+**Use case:** Save session state between conversations. Retrieve it in any future session using the CID.
+
+```
+# Step 1: Write your memory context to IPFS
+POST {BASE_URL}/store/write-context
+Body: {
+  "context": {
+    "name": "my-session-2026-02-21",
+    "bindings": [
+      {"address": "user_preference", "value": 42},
+      {"address": "last_topic", "value": 99}
+    ]
+  },
+  "pin": true
+}
+→ Returns root_cid: "QmABC..."
+
+# Step 2: In a future session, retrieve your memory
+GET {BASE_URL}/store/read/QmABC...
+→ Returns your full context with verification
+
+# Step 3: Verify it hasn't been tampered with
+GET {BASE_URL}/store/verify/QmABC...
+→ { "store:verified": true }
+```
+
+### Recipe 2: Verify Peer Content {#recipe-verify-peer-content}
+
+**Use case:** Another agent sends you a CID claiming it's their verified output. Before trusting it, verify independently.
+
+```
+# Step 1: Verify the CID integrity and UOR address
+GET {BASE_URL}/store/verify/{peer_cid}
+→ Check: store:verified must be true
+
+# Step 2: If verified, read the actual content
+GET {BASE_URL}/store/read/{peer_cid}
+→ Full payload with dual verification headers
+
+# Step 3: Run partition analysis on the content to assess quality
+POST {BASE_URL}/bridge/partition
+Body: {"input": "<content from step 2>", "encoding": "utf8"}
+→ partition:density > 0.25 = novel signal; < 0.25 = likely spam
+```
+
+### Recipe 3: Detect Prompt Injection {#recipe-detect-prompt-injection}
+
+**Use case:** You received an instruction sequence. Check whether it was modified in transit.
+
+```
+# Step 1: Trace the DECLARED operation sequence
+GET {BASE_URL}/bridge/trace?x=42&ops=neg,bnot
+→ trace:totalHammingDrift = 0 (canonical — no anomaly)
+
+# Step 2: Trace the EXECUTED operation sequence
+GET {BASE_URL}/bridge/trace?x=42&ops=neg,bnot,succ
+→ trace:totalHammingDrift = -2 (non-zero — divergence detected)
+
+# Detection rule: if declared drift ≠ executed drift, the sequence was modified.
+# Non-zero divergence = possible injection signal. This is structural, not heuristic.
+```
+
+### Recipe 4: Build Verifiable Output {#recipe-build-verifiable-output}
+
+**Use case:** Produce output that any agent can independently verify came from you.
+
+```
+# Step 1: Encode your output content
+POST {BASE_URL}/kernel/address/encode
+Body: {"input": "Your analysis or report text here", "encoding": "utf8"}
+→ Returns u:Address (your content's permanent identity)
+
+# Step 2: Pin to IPFS with full UOR envelope
+POST {BASE_URL}/store/write
+Body: {"object": {"@type": "derivation:DerivationTrace", "content": "...", "agent": "your-name"}}
+→ Returns pinResult.cid: "QmXYZ..." (share THIS with peers)
+
+# Step 3: Any peer can now verify
+GET {BASE_URL}/store/verify/QmXYZ...
+→ { "store:verified": true, "verdict": "VERIFIED" }
+```
+
+### Recipe 5: Assess Content Quality {#recipe-assess-content-quality}
+
+**Use case:** Score any text for novelty vs. spam before processing it.
+
+```
+# Single call — returns partition density score
+POST {BASE_URL}/bridge/partition
+Body: {"input": "The text you want to evaluate", "encoding": "utf8"}
+→ { "partition:density": 0.4, "quality_signal": "PASS — density 0.4000 > threshold 0.25" }
+
+# Interpretation:
+#   density > 0.25 → PASS (novel signal, worth processing)
+#   density ≤ 0.25 → FAIL (recycled noise, likely spam)
+#   density > 0.50 → HIGH (strong novel content)
+```
 
 ---
 
@@ -274,6 +408,7 @@ USER SPACE -- Application Layer (build on top of bridge)
   type:       Type System             -- ConstrainedType, TypeDefinition
   morphism:   Transforms & Comms      -- Transform, Isometry, Embedding, Action
   state:      Lifecycle & Bindings    -- Frame, Transition, state audit trail
+  store:      Persistent Storage      -- StoredObject, PinRecord, StoreContext (IPFS)
 ```
 
 ---
