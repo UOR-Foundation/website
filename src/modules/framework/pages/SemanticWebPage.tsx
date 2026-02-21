@@ -359,18 +359,6 @@ const SemanticWebPage = () => {
 
           <SemanticWebTower />
 
-          {/* Quick-nav links below tower */}
-          <div className="mt-8 flex flex-wrap gap-2 justify-center">
-            {allLayers.map((layer) => (
-              <a
-                key={layer.number}
-                href={`#layer-${layer.number}`}
-                className="text-xs font-body font-medium text-muted-foreground hover:text-primary border border-border rounded-full px-3 py-1.5 transition-colors duration-150 hover:border-primary/30"
-              >
-                {layer.shortTitle}
-              </a>
-            ))}
-          </div>
         </div>
       </section>
 
