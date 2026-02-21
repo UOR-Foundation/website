@@ -13,4 +13,8 @@ export const routeTable = [
   { path: "/blog/uor-framework-launch", label: "Blog: Framework Launch" },
   { path: "/research/atlas-embeddings", label: "Research: Atlas Embeddings" },
   { path: "/api", label: "API Explorer" },
+  { path: "/projects/hologram", label: "Project: Hologram" },
+  { path: "/projects/atlas-embeddings", label: "Project: Atlas Embeddings" },
+  { path: "/projects/atomic-language-model", label: "Project: Atomic Language Model" },
+  { path: "/projects/prism", label: "Project: Prism" },
 ];
