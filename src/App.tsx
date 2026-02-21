@@ -11,7 +11,7 @@ import { initializeContentRegistry } from "@/lib/uor-content-registry";
 import { IndexPage } from "@/modules/landing";
 import { AboutPage, NotFoundPage } from "@/modules/core";
 import { ResearchPage, BlogPost1, BlogPost2, BlogPost3, ResearchPaperAtlasEmbeddings } from "@/modules/community";
-import { ProjectsPage } from "@/modules/projects";
+import { ProjectsPage, ProjectHologram, ProjectAtlasEmbeddings, ProjectAtomicLang, ProjectPrism } from "@/modules/projects";
 import { StandardPage } from "@/modules/framework";
 import { DonatePage } from "@/modules/donate";
 import { ApiPage } from "@/modules/api-explorer";
@@ -35,6 +35,10 @@ const App = () => {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/research" element={<ResearchPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/hologram" element={<ProjectHologram />} />
+          <Route path="/projects/atlas-embeddings" element={<ProjectAtlasEmbeddings />} />
+          <Route path="/projects/atomic-language-model" element={<ProjectAtomicLang />} />
+          <Route path="/projects/prism" element={<ProjectPrism />} />
           <Route path="/standard" element={<StandardPage />} />
           <Route path="/donate" element={<DonatePage />} />
           <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />

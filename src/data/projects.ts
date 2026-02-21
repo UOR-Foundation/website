@@ -6,6 +6,7 @@ export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
 export interface ProjectData {
   name: string;
+  slug: string;
   category: string;
   description: string;
   maturity: MaturityLevel;
@@ -16,6 +17,7 @@ export interface ProjectData {
 export const projects: ProjectData[] = [
   {
     name: "Hologram",
+    slug: "hologram",
     category: "Frontier Technology",
     description: "A new kind of computing infrastructure built from the ground up. Software-defined, high-performance, and designed for the next generation of applications.",
     maturity: "Sandbox",
@@ -24,6 +26,7 @@ export const projects: ProjectData[] = [
   },
   {
     name: "Atlas Embeddings",
+    slug: "atlas-embeddings",
     category: "Open Science",
     description: "Research showing that five of the most complex structures in mathematics all come from a single, simple starting point, revealing a deeper shared order.",
     maturity: "Sandbox",
@@ -32,6 +35,7 @@ export const projects: ProjectData[] = [
   },
   {
     name: "Atomic Language Model",
+    slug: "atomic-language-model",
     category: "Frontier Technology",
     description: "A language model built on formal grammar rules rather than statistical prediction. Every output is traceable to precise, well-defined operations.",
     maturity: "Sandbox",
@@ -40,6 +44,7 @@ export const projects: ProjectData[] = [
   },
   {
     name: "Prism",
+    slug: "prism",
     category: "Core Infrastructure",
     description: "The computation engine for the UOR Framework. While the Framework defines the rules (what concepts exist and how they relate), Prism proves they work by running them: encoding data, generating addresses, verifying computations, and producing certificates. Same algebra, same coordinates, same guarantees.",
     maturity: "Sandbox",

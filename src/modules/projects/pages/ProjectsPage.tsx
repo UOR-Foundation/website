@@ -1,4 +1,5 @@
 import Layout from "@/modules/core/components/Layout";
+import { Link } from "react-router-dom";
 import { ExternalLink, ChevronRight, ChevronDown, Send, FlaskConical, Rocket, GraduationCap, FolderGit2, SearchCheck, BadgeCheck, Users, Scale, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import projectHologramImg from "@/assets/project-hologram.jpg";
@@ -265,9 +266,16 @@ const Projects = () => {
                           {project.description}
                         </p>
                         {project.url && (
-                          <a href={project.url} target="_blank" rel="noopener noreferrer" className="mt-6 flex items-center gap-2 text-primary text-base font-medium transition-opacity font-body cursor-pointer hover:underline">
-                            Learn more <ExternalLink size={14} />
-                          </a>
+                          <div className="mt-6 flex items-center gap-4">
+                            {(project as any).slug && (
+                              <Link to={`/projects/${(project as any).slug}`} className="flex items-center gap-2 text-primary text-base font-medium transition-opacity font-body cursor-pointer hover:underline">
+                                Learn more
+                              </Link>
+                            )}
+                            <a href={project.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground text-sm font-medium transition-opacity font-body cursor-pointer hover:text-foreground hover:underline">
+                              Repository <ExternalLink size={13} />
+                            </a>
+                          </div>
                         )}
                       </div>
                     </div>
