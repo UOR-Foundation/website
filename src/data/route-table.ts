@@ -19,4 +19,5 @@ export const routeTable = [
   { path: "/projects/prism", label: "Project: Prism" },
   { path: "/sparql-editor", label: "SPARQL Editor" },
   { path: "/conformance", label: "Conformance Suite" },
+  { path: "/code-knowledge-graph", label: "Code Knowledge Graph" },
 ];

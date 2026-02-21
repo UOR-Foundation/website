@@ -20,6 +20,7 @@ import { DerivationLabPage } from "@/modules/derivation";
 import { KnowledgeGraphPage } from "@/modules/kg-store";
 import { SparqlEditorPage } from "@/modules/sparql";
 import { ConformancePage } from "@/modules/shacl";
+import { CodeKnowledgeGraphPage } from "@/modules/code-kg";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => {
           <Route path="/knowledge-graph" element={<KnowledgeGraphPage />} />
           <Route path="/sparql-editor" element={<SparqlEditorPage />} />
           <Route path="/conformance" element={<ConformancePage />} />
+          <Route path="/code-knowledge-graph" element={<CodeKnowledgeGraphPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>

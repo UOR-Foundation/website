@@ -1,0 +1,25 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "code-kg",
+  "version": "1.0.0",
+  "description": "Code-to-Knowledge-Graph bridge — transforms TypeScript source structure into UOR-grounded knowledge graphs with full derivation provenance.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["code:", "morphism:"],
+  "exports": [
+    "analyzeTypeScript",
+    "ingestCodeGraph",
+    "exportToKgStore",
+    "buildVisualization",
+    "CodeKnowledgeGraphPage"
+  ],
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "derivation": "^1.0.0",
+    "kg-store": "^1.0.0",
+    "jsonld": "^1.0.0",
+    "identity": "^1.0.0"
+  },
+  "routes": ["/code-knowledge-graph"],
+  "assets": []
+}
