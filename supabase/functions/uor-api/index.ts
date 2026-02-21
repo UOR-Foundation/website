@@ -2666,7 +2666,7 @@ async function dualVerify(
 }
 
 // ── IPFS Read Gateways ──────────────────────────────────────────────────────
-const PINATA_DEDICATED_GATEWAY = Deno.env.get("PINATA_GATEWAY_URL") ?? "https://salmon-adorable-pheasant-856.mypinata.cloud";
+const PINATA_DEDICATED_GATEWAY = Deno.env.get("PINATA_GATEWAY_URL") ?? "https://uor.mypinata.cloud";
 const ALLOWED_READ_GATEWAYS = [
   PINATA_DEDICATED_GATEWAY,
   "https://gateway.pinata.cloud",
