@@ -2056,150 +2056,219 @@ function userState(url: URL, rl: RateLimitResult): Response {
 // STORE/ ENDPOINTS (Section 2+)
 // ════════════════════════════════════════════════════════════════════════════
 
+const STORE_MAX_BYTES = 10 * 1024 * 1024; // 10MB
+const STORE_FETCH_TIMEOUT_MS = 15_000;
+
+// ── Partition analysis for raw bytes ────────────────────────────────────────
+function computePartitionFromBytes(bytes: Uint8Array, n: number): Record<string, unknown> {
+  const m = modulus(n);
+  let irreducible = 0, reducible = 0, units = 0, exterior = 0;
+  for (const b of bytes) {
+    const val = b % m;
+    if (val === 0) {
+      exterior++;
+    } else if (val === 1 || val === m - 1) {
+      units++;
+    } else if (val % 2 === 0) {
+      reducible++;
+    } else {
+      irreducible++;
+    }
+  }
+  const total = bytes.length;
+  const density = total > 0 ? irreducible / total : 0;
+  return {
+    "@type": "partition:Partition",
+    "partition:quantum": n,
+    "partition:irreducibles": { "@type": "partition:IrreducibleSet", "partition:cardinality": irreducible },
+    "partition:reducibles": { "@type": "partition:ReducibleSet", "partition:cardinality": reducible },
+    "partition:units": { "@type": "partition:UnitSet", "partition:cardinality": units },
+    "partition:exterior": { "@type": "partition:ExteriorSet", "partition:cardinality": exterior },
+    "partition:density": density,
+    "quality_signal": density >= 0.25 ? "PASS" : "LOW — structurally uniform content",
+    "partition:note":
+      "Partition is based on algebraic byte-class distribution, not semantic content. " +
+      "Use as one signal among others.",
+  };
+}
+
+// ── Observable metrics for a single byte ────────────────────────────────────
+function computeMetricsFromByte(b: number, n: number): Record<string, unknown> {
+  const m = modulus(n);
+  const val = b % m;
+  const bitsSet = val.toString(2).split('1').length - 1;
+  let cascade = 0;
+  let tmp = val;
+  while (tmp > 0 && tmp % 2 === 0) { tmp = tmp / 2; cascade++; }
+  return {
+    "@type": "observable:Observable",
+    "observable:value": val,
+    "observable:bitsSet": bitsSet,
+    "observable:cascadeDepth": cascade,
+    "observable:stratum": bitsSet,
+    "observable:isNearPhaseBoundary": val === 0 || val === 1 || val === m / 2 || val === m - 1,
+  };
+}
+
 // GET /store/resolve?url=...&n=8&include_partition=false&include_metrics=false
 async function storeResolve(url: URL, rl: RateLimitResult): Promise<Response> {
   const targetUrl = url.searchParams.get('url');
-  if (!targetUrl) return error400("Parameter 'url' is required", 'url', rl);
+  if (!targetUrl) return error400("Missing required parameter: url", 'url', rl);
 
-  // Validate protocol
-  let parsed: URL;
+  // Validate URL
+  let parsedTarget: URL;
   try {
-    parsed = new URL(targetUrl);
+    parsedTarget = new URL(targetUrl);
   } catch {
-    return error400("Parameter 'url' is not a valid URL", 'url', rl);
+    return error400(`Invalid URL: "${targetUrl}" is not a valid URL.`, 'url', rl);
   }
-  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    return error400("Only http: and https: protocols are accepted", 'url', rl);
+  if (parsedTarget.protocol !== 'http:' && parsedTarget.protocol !== 'https:') {
+    return error400(`Unsupported protocol: "${parsedTarget.protocol}". Only http: and https: are supported.`, 'url', rl);
   }
 
   // Ring size
-  const nRaw = url.searchParams.get('n') ?? '8';
-  const allowedN = [4, 8, 16];
-  const n = Number(nRaw);
-  if (!allowedN.includes(n)) return error400("Parameter 'n' must be 4, 8, or 16", 'n', rl);
+  const n = parseInt(url.searchParams.get('n') ?? '8');
+  if (![4, 8, 16].includes(n)) return error400("Invalid ring size n. Allowed values: 4, 8, 16.", 'n', rl);
   const m = modulus(n);
 
   const includePartition = url.searchParams.get('include_partition') === 'true';
   const includeMetrics = url.searchParams.get('include_metrics') === 'true';
 
-  // Fetch remote resource
-  let fetchResp: Response;
+  // Fetch remote resource with timeout
+  let fetchResponse: Response;
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15_000);
-    fetchResp = await fetch(targetUrl, {
+    const timeoutId = setTimeout(() => controller.abort(), STORE_FETCH_TIMEOUT_MS);
+    fetchResponse = await fetch(targetUrl, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'UOR-Framework/1.0 (+https://uor.foundation)' },
+      headers: {
+        'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/resolve)',
+        'Accept': '*/*',
+      },
     });
-    clearTimeout(timeout);
-  } catch (err: unknown) {
-    const msg = err instanceof Error && err.name === 'AbortError'
-      ? 'Remote resource did not respond within 15 seconds'
-      : 'Remote resource unreachable';
+    clearTimeout(timeoutId);
+  } catch (e: unknown) {
+    if (e instanceof Error && e.name === 'AbortError') {
+      return new Response(JSON.stringify({
+        error: `Request timed out after ${STORE_FETCH_TIMEOUT_MS / 1000}s: ${targetUrl}`,
+        code: 'GATEWAY_TIMEOUT',
+        docs: 'https://api.uor.foundation/v1/openapi.json',
+      }), { status: 504, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+    }
     return new Response(JSON.stringify({
-      error: msg,
-      code: err instanceof Error && err.name === 'AbortError' ? 'GATEWAY_TIMEOUT' : 'BAD_GATEWAY',
-      url: targetUrl,
-      docs: 'https://api.uor.foundation/v1/openapi.json',
-    }), { status: err instanceof Error && err.name === 'AbortError' ? 504 : 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
-  }
-
-  if (!fetchResp.ok) {
-    return new Response(JSON.stringify({
-      error: `Remote resource returned HTTP ${fetchResp.status}`,
+      error: `Failed to fetch: ${e instanceof Error ? e.message : 'unknown error'}`,
       code: 'BAD_GATEWAY',
-      url: targetUrl,
-      remoteStatus: fetchResp.status,
       docs: 'https://api.uor.foundation/v1/openapi.json',
     }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
   }
 
-  // Read body with 10MB limit
-  const contentLength = fetchResp.headers.get('content-length');
-  if (contentLength && Number(contentLength) > 10_485_760) {
-    return error413(rl);
+  if (!fetchResponse.ok) {
+    return new Response(JSON.stringify({
+      error: `Remote resource returned HTTP ${fetchResponse.status} ${fetchResponse.statusText}`,
+      code: 'BAD_GATEWAY',
+      url: targetUrl,
+      remoteStatus: fetchResponse.status,
+      docs: 'https://api.uor.foundation/v1/openapi.json',
+    }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
   }
-  const bodyBuffer = await fetchResp.arrayBuffer();
-  if (bodyBuffer.byteLength > 10_485_760) {
-    return error413(rl);
-  }
-  const rawBytes = new Uint8Array(bodyBuffer);
 
-  // Compute UOR address and CID
-  const uorAddress = computeUorAddress(rawBytes);
-  const cid = await computeCid(rawBytes);
-  const contentType = fetchResp.headers.get('content-type') ?? 'application/octet-stream';
+  // Read bytes with streaming size limit
+  const reader = fetchResponse.body?.getReader();
+  if (!reader) {
+    return new Response(JSON.stringify({
+      error: 'Response body is empty or unreadable.',
+      code: 'BAD_GATEWAY',
+      docs: 'https://api.uor.foundation/v1/openapi.json',
+    }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalBytes += value.length;
+    if (totalBytes > STORE_MAX_BYTES) {
+      reader.cancel();
+      return error413(rl);
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  // Compute UOR address (Braille bijection from u.rs)
+  const uorAddress = computeUorAddress(bytes);
+
+  // CID preview — computed from raw bytes as a reference.
+  // The actual store:Cid after POST /store/write will differ (computed from envelope).
+  const rawCidPreview = await computeCid(bytes);
+  const contentType = fetchResponse.headers.get('content-type') ?? 'application/octet-stream';
 
   // Build response
   const result: Record<string, unknown> = {
-    "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/store/resolved/${encodeURIComponent(uorAddress.glyph)}`,
+    "@context": UOR_STORE_CONTEXT,
+    "@id": "https://uor.foundation/store/resolved/transient",
     "@type": "store:RetrievedObject",
-    "summary": {
-      "url": targetUrl,
-      "content_type": contentType,
-      "byte_count": rawBytes.length,
-      "uor_address_length": uorAddress.length,
-      "cid": cid,
-      "ring": `Z/${m}Z`,
-    },
-    "store:retrievedFrom": targetUrl,
-    "store:recomputedUorAddress": {
+    "store:sourceUrl": targetUrl,
+    "store:contentType": contentType,
+    "store:byteLength": bytes.length,
+    "store:uorAddress": {
       "@type": "u:Address",
       "u:glyph": uorAddress.glyph,
       "u:length": uorAddress.length,
+      "u:encoding": "braille_bijection_Z_2n_Z",
+      "u:quantum": n,
     },
-    "store:cid": cid,
-    "store:verified": true,
-    "store:contentType": contentType,
-    "store:byteCount": rawBytes.length,
-    "store:timestamp": timestamp(),
+    "store:verified": null,
+    "store:verifiedNote":
+      "No verification performed — this is a resolve-only call. " +
+      "store:verified is null until the object is stored and retrieved.",
+    "store:cidPreview": rawCidPreview,
+    "store:cidPreviewNote":
+      "This CID is computed from raw fetched bytes. " +
+      "The actual store:Cid after POST /store/write will be computed from the " +
+      "canonical JSON-LD StoredObject envelope bytes and will differ.",
+    "store:nextStep":
+      "To persist this content to IPFS: POST /store/write with {url: '" +
+      targetUrl + "'}",
+    "resolution": {
+      "ring_label": `Z/(2^${n})Z = Z/${m}Z`,
+      "method": "braille_bijection",
+      "spec": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/u.rs",
+      "algorithm":
+        "Each byte b in [0,255] maps to Unicode codepoint U+(2800+b). " +
+        "The address glyph string is the concatenation of all mapped codepoints. " +
+        "This is a lossless bijection, not a hash.",
+    },
   };
 
-  // Optional: partition analysis
+  // Optional partition analysis
   if (includePartition) {
-    const partitions: Record<string, number> = {
-      'partition:ExteriorSet': 0,
-      'partition:UnitSet': 0,
-      'partition:IrreducibleSet': 0,
-      'partition:ReducibleSet': 0,
-    };
-    for (const b of rawBytes) {
-      const byteVal = b % m;
-      const { component } = classifyByte(byteVal, n);
-      partitions[component]++;
-    }
-    const total = rawBytes.length;
-    result["partition:analysis"] = {
-      "@type": "partition:Partition",
-      "partition:quantum": n,
-      "partition:ring": `Z/${m}Z`,
-      "partition:totalBytes": total,
-      "partition:components": Object.entries(partitions).map(([component, count]) => ({
-        "@type": component,
-        "count": count,
-        "ratio": Number((count / total).toFixed(6)),
-      })),
-      "partition:density": Number((1 - partitions['partition:ExteriorSet'] / total).toFixed(6)),
-    };
+    result["partition_analysis"] = computePartitionFromBytes(bytes, n);
   }
 
-  // Optional: observable metrics on first byte
-  if (includeMetrics && rawBytes.length > 0) {
-    const firstByte = rawBytes[0] % m;
-    const spectrum = firstByte.toString(2).padStart(n, '0');
-    const hammingMetric = spectrum.split('').filter(b => b === '1').length;
-    const ringMetric = Math.min(firstByte, m - firstByte);
-    result["observable:firstByteMetrics"] = {
-      "@type": "observable:MetricBundle",
-      "observable:byte": firstByte,
-      "observable:datum": makeDatum(firstByte, n),
-      "observable:ringMetric": ringMetric,
-      "observable:hammingMetric": hammingMetric,
-    };
+  // Optional metrics on first byte
+  if (includeMetrics) {
+    result["observable_metrics"] = computeMetricsFromByte(bytes[0] ?? 0, n);
   }
 
-  return jsonResp(result, CACHE_HEADERS_USER, undefined, rl);
+  const responseBody = canonicalJsonLd(result);
+  return new Response(responseBody, {
+    status: 200,
+    headers: {
+      ...CORS_HEADERS,
+      ...rateLimitHeaders(rl),
+      'Content-Type': 'application/ld+json',
+      'X-UOR-Address': uorAddress.glyph.substring(0, 64),
+      'X-UOR-Byte-Length': String(bytes.length),
+      'X-UOR-Source-URL': targetUrl,
+      'X-UOR-Space': 'user',
+    },
+  });
 }
 
 function openapiSpec(): Response {
