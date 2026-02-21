@@ -24,7 +24,7 @@ import type { Derivation } from "@/modules/derivation/derivation";
 import { generateReceipt } from "@/modules/derivation/receipt";
 import type { DerivationReceipt } from "@/modules/derivation/receipt";
 import { issueCertificate } from "@/modules/derivation/certificate";
-import { ingestDerivation, getDerivation } from "@/modules/kg-store/store";
+import { ingestDerivation, ingestReceipt, getDerivation } from "@/modules/kg-store/store";
 import { executeSparql } from "@/modules/sparql/executor";
 import type { SparqlResult } from "@/modules/sparql/executor";
 import { correlate } from "@/modules/resolver/correlation";
@@ -83,6 +83,9 @@ export async function uor_derive(input: DeriveInput): Promise<DeriveOutput> {
 
   // Store to kg-store
   await ingestDerivation(derivationResult, ring.quantum);
+
+  // Persist receipt
+  try { await ingestReceipt(receipt); } catch { /* non-fatal */ }
 
   return {
     derivation_id: derivationResult.derivationId,
