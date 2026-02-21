@@ -3,14 +3,7 @@ import { useState, useEffect } from "react";
 import { Menu, X, Heart, Github, Linkedin } from "lucide-react";
 import uorIcon from "@/assets/uor-icon-new.png";
 import DonatePopup from "@/modules/donate/components/DonatePopup";
-
-const navItems = [
-  { label: "About", href: "/about" },
-  { label: "UOR Framework", href: "/standard" },
-  { label: "API", href: "/api" },
-  { label: "Our Community", href: "/research" },
-  { label: "Your Projects", href: "/projects" },
-];
+import { navItems } from "@/data/nav-items";
 
 const Navbar = () => {
   const location = useLocation();

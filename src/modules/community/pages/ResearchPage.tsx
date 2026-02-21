@@ -1,25 +1,23 @@
 import { useState } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf, Box, Lock, Plus } from "lucide-react";
+import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf, Plus } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
+import { researchCategories } from "@/data/research-categories";
+import { blogPosts } from "@/data/blog-posts";
 
-const researchCategories = [
-  { icon: Calculator, label: "Mathematics", slug: "mathematics", description: "Formal methods, algebraic structures, and mathematical foundations of UOR.", active: true },
-  { icon: Cpu, label: "Hardware & Robotics", slug: "hardware-robotics", description: "Embedded systems, robotics middleware, and UOR-native hardware interfaces.", active: false },
-  { icon: Shield, label: "Cybersecurity", slug: "cybersecurity", description: "Security that is built into the data itself. Verify where information came from and confirm it has not been altered.", active: false },
-  { icon: TrendingUp, label: "Finance", slug: "finance", description: "Financial systems where every transaction is independently auditable and data flows reliably between institutions.", active: false },
-  { icon: Bot, label: "Agentic AI", slug: "agentic-ai", description: "Give AI systems a reliable, shared map of data so they can find, verify, and use information without custom integrations.", active: false },
-  { icon: Atom, label: "Quantum", slug: "quantum", description: "Preparing data systems for the next generation of computing, where today's security methods will need to be replaced.", active: false },
-  { icon: BarChart3, label: "Data Science", slug: "data-science", description: "Semantic datasets, reproducible pipelines, and interoperable analytics.", active: false },
-  { icon: HeartPulse, label: "Healthcare", slug: "healthcare", description: "Medical data interoperability, patient-centric identity, and open health standards.", active: false },
-  { icon: Globe, label: "Web3", slug: "web3", description: "Decentralized protocols, on-chain identity, and content-addressed storage.", active: false },
-  { icon: Microscope, label: "Physics", slug: "physics", description: "Simulation frameworks, open research data, and computational physics tooling.", active: false },
-  { icon: Rocket, label: "Frontier Tech", slug: "frontier-tech", description: "Emerging technology exploration at the intersection of UOR and next-gen infrastructure.", active: false },
-  { icon: Leaf, label: "Climate & Energy", slug: "climate-energy", description: "Sustainable infrastructure, carbon accounting, and open energy data standards.", active: false },
-];
+const iconMap: Record<string, LucideIcon> = {
+  Calculator, Cpu, Shield, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf,
+};
+
+const coverMap: Record<string, string> = {
+  knowledgeGraph: blogKnowledgeGraph,
+  goldenSeed: blogGoldenSeed,
+  frameworkLaunch: blogFrameworkLaunch,
+};
 
 const categoryResearch: Record<string, Array<{ title: string; authors: string; status: string; description: string; href: string }>> = {
   mathematics: [
@@ -32,33 +30,6 @@ const categoryResearch: Record<string, Array<{ title: string; authors: string; s
     },
   ],
 };
-
-const blogPosts = [
-  {
-    title: "UOR: Building the Internet's Knowledge Graph",
-    excerpt: "How a single addressing system could turn the internet into a structured, navigable knowledge graph.",
-    date: "December 21, 2023",
-    tag: "Vision",
-    href: "/blog/building-the-internets-knowledge-graph",
-    cover: blogKnowledgeGraph,
-  },
-  {
-    title: "Unveiling a Universal Mathematical Language",
-    excerpt: "A breakthrough that reveals the hidden order behind nature's most complex systems and could reshape the future of open science, next-generation AI, and quantum computing.",
-    date: "October 10, 2025",
-    tag: "Open Research",
-    href: "/blog/universal-mathematical-language",
-    cover: blogGoldenSeed,
-  },
-  {
-    title: "What If Every Piece of Data Had One Permanent Address?",
-    excerpt: "The open specification is live. Browse the full framework, review the architecture, and start building.",
-    date: "February 19, 2026",
-    tag: "Open Research",
-    href: "/blog/uor-framework-launch",
-    cover: blogFrameworkLaunch,
-  },
-];
 
 const events = [
   {
@@ -142,7 +113,7 @@ const Research = () => {
                   }`}
                   style={{ animationDelay: `${index * 0.04}s` }}
                 >
-                  <cat.icon size={15} className={isSelected ? "text-primary" : isDisabled ? "text-muted-foreground/40" : "text-primary"} />
+                  {(() => { const Icon = iconMap[cat.iconKey]; return Icon ? <Icon size={15} className={isSelected ? "text-primary" : isDisabled ? "text-muted-foreground/40" : "text-primary"} /> : null; })()}
                   <span>{cat.label}</span>
                 </button>
               );
@@ -241,7 +212,7 @@ const Research = () => {
               >
                 <div className="aspect-video overflow-hidden">
                   <img
-                    src={post.cover}
+                    src={coverMap[post.coverKey]}
                     alt={post.title}
                     className="w-full h-full object-contain bg-card transition-transform duration-500 group-hover:scale-105"
                   />
