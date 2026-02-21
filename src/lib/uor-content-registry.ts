@@ -25,6 +25,10 @@ import { whatWeDoCards, ourPrinciplesCards } from "@/data/about-cards";
 import { donationProjects } from "@/data/donation-projects";
 import { applications } from "@/data/applications";
 import { LAYERS, DISCOVERY_ENDPOINTS } from "@/data/api-layers";
+import { quantumLevels } from "@/data/quantum-levels";
+import { closureModes } from "@/data/closure-modes";
+import { canonicalizationRules } from "@/data/canonicalization-rules";
+import { signatureOps } from "@/data/signature-ops";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -78,6 +82,10 @@ const CERTIFIABLE_CONTENT: Array<{
   { subjectId: "content:donation-projects", label: "Donation Projects", data: donationProjects },
   { subjectId: "content:applications", label: "Application Domains", data: applications },
   { subjectId: "content:api-layers", label: "API Layers", data: { layers: LAYERS, discovery: DISCOVERY_ENDPOINTS } },
+  { subjectId: "content:quantum-levels", label: "Quantum Levels", data: quantumLevels },
+  { subjectId: "content:closure-modes", label: "Closure Modes", data: closureModes },
+  { subjectId: "content:canonicalization-rules", label: "Canonicalization Rules", data: canonicalizationRules },
+  { subjectId: "content:signature-ops", label: "Signature Operations", data: signatureOps },
 ];
 
 // ── Initialization ──────────────────────────────────────────────────────────
