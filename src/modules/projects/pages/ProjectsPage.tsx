@@ -6,6 +6,8 @@ import projectAtlasImg from "@/assets/project-atlas.png";
 import projectAtomicLangImg from "@/assets/project-atomic-lang.jpg";
 import projectPrismImg from "@/assets/project-prism.png";
 import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
+import { DISCORD_URL } from "@/data/external-links";
+import { supabase } from "@/integrations/supabase/client";
 
 const imageMap: Record<string, string> = {
   hologram: projectHologramImg,
@@ -99,29 +101,33 @@ const Projects = () => {
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCwcvyZpCeGEnRyFiFiqoYvqx2VVenGORZRz9YbGoJ8LAN17Eafd63q1nUG_gx5TwpMg/exec";
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setSubmitError(null);
 
-    // Build URL with query parameters — most reliable for Google Apps Script
-    const params = new URLSearchParams({
-      token: "uor-f0undati0n-s3cure-t0ken-2024x",
-      projectName: formData.projectName,
-      repoUrl: formData.repoUrl,
-      contactEmail: formData.contactEmail,
-      description: formData.description,
-      problemStatement: formData.problemStatement,
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('project-submit', {
+        body: {
+          projectName: formData.projectName,
+          repoUrl: formData.repoUrl,
+          contactEmail: formData.contactEmail,
+          description: formData.description,
+          problemStatement: formData.problemStatement,
+        },
+      });
 
-    // Use an image beacon to fire the GET request (bypasses CORS entirely)
-    const img = new Image();
-    img.onload = img.onerror = () => {
-      setSubmitting(false);
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
       setSubmitted(true);
-    };
-    img.src = `${SCRIPT_URL}?${params.toString()}`;
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : 'Submission failed. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -161,20 +167,17 @@ const Projects = () => {
               const StageIcon = [FlaskConical, Rocket, GraduationCap][idx];
               return (
                 <div key={stage.level} className="relative flex flex-col">
-                  {/* Mobile arrow connector */}
                   {idx > 0 && (
                     <div className="md:hidden flex justify-center -mb-1 -mt-1 text-muted-foreground/30">
                       <ChevronRight size={24} className="rotate-90" />
                     </div>
                   )}
-
                   <div
                     className={`rounded-2xl border p-7 md:p-10 flex-1 flex flex-col transition-all duration-300 ${maturityBgColors[stage.level]} ${
                       idx === 2 ? 'border-primary/30 shadow-lg shadow-primary/5' : ''
                     } animate-fade-in-up`}
                     style={{ animationDelay: `${idx * 0.12}s` }}
                   >
-                    {/* Icon + Stage label */}
                     <div className="flex items-center justify-between mb-7">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                         idx === 0 ? 'bg-muted-foreground/10 text-muted-foreground/60' :
@@ -187,7 +190,6 @@ const Projects = () => {
                         Stage {idx + 1}
                       </span>
                     </div>
-
                     <div className="flex items-center gap-3 mb-5">
                       <span className={`w-3.5 h-3.5 rounded-full ${maturityDotColors[stage.level]} ${
                         idx === 0 ? 'opacity-40' : idx === 1 ? 'opacity-70' : 'opacity-100'
@@ -196,7 +198,6 @@ const Projects = () => {
                         {stage.level}
                       </h3>
                     </div>
-
                     <p className="text-base font-medium text-foreground/70 font-body mb-4 italic md:min-h-[3rem]">
                       {stage.tagline}
                     </p>
@@ -326,7 +327,6 @@ const Projects = () => {
 
           {submitted ? (
             <div className="text-center py-20 md:py-28 animate-fade-in-up">
-              {/* Pulsing success glow */}
               <div className="relative w-28 h-28 mx-auto mb-10">
                 <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '1.94s' }} />
                 <div className="absolute inset-2 rounded-full bg-primary/10 animate-ping" style={{ animationDuration: '1.94s', animationDelay: '0.3s' }} />
@@ -347,7 +347,7 @@ const Projects = () => {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up" style={{ animationDelay: '0.65s' }}>
                 <a
-                  href="https://discord.gg/ZwuZaNyuve"
+                  href={DISCORD_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity font-body text-base"
@@ -435,6 +435,10 @@ const Projects = () => {
                   className="w-full px-4 py-3 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none"
                 />
               </div>
+
+              {submitError && (
+                <p className="text-sm text-destructive font-body">{submitError}</p>
+              )}
 
               <button
                 type="submit"
