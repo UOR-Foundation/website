@@ -23,7 +23,7 @@ const layers: Layer[] = [
     title: "The Foundation",
     summary: "The mathematical rules every object must obey.",
     description:
-      "The absolute base layer. It defines a small set of mathematical rules that every object in the system must obey. These rules guarantee that anything built on top behaves predictably and never loses information. Without these constraints, higher-order structure cannot emerge. With them, every layer above is inevitable.",
+      "The absolute base layer. It defines a small set of mathematical rules that every object in the system must obey: Unique Factorization (guaranteeing irreducible decomposition), Intrinsic Primes (defining indivisible building blocks), Coherence Norms (measuring structural faithfulness), and Trilateral Coherence. The ring R_n = Z/(2^n)Z provides the arithmetic substrate, with quantum scaling at 8 × (N+1) bits per value. Closure semantics (FIXED_POINT, ABSORBING, CYCLIC, CHAOTIC) classify the long-run behaviour of every operation. Without these constraints, higher-order structure cannot emerge. With them, every layer above is inevitable.",
     namespaces: [
       { label: "Axioms", url: "https://uor-foundation.github.io/UOR-Framework/docs/overview.html" },
     ],
@@ -34,7 +34,7 @@ const layers: Layer[] = [
     title: "Identity",
     summary: "One permanent address per object, based on content.",
     description:
-      "Every object gets a permanent symbolic address based on what it contains, not where it is stored. The same content always resolves to the same address, no matter which system holds it. A shared vocabulary of core data types ensures consistency across the entire space.",
+      "Every object gets a permanent symbolic address based on what it contains, not where it is stored. The same content always resolves to the same address, no matter which system holds it. Identity is enforced through 8 canonicalization rules: involution cancellation (neg(neg(x)) → x), double-complement elimination, AC (associative-commutative) flatten+sort, identity-element removal, zero annihilation, idempotent collapse, complement fusion (neg(bnot(x)) → succ(x)), and modular reduction. Each object is structured as a formal Triad(datum, stratum, spectrum) — a positional vector of its value, bit-weight, and binary signature. A shared vocabulary of core data types ensures consistency across the entire space.",
     namespaces: [
       { label: "Content Addressing", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/u/" },
       { label: "Schema", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/schema/" },

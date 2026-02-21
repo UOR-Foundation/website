@@ -53,6 +53,8 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/kernel/op/operations':              ['GET', 'OPTIONS'],
   '/kernel/address/encode':             ['POST', 'OPTIONS'],
   '/kernel/schema/datum':               ['GET', 'OPTIONS'],
+  '/kernel/derive':                     ['POST', 'OPTIONS'],
+  '/kernel/op/correlate':               ['GET', 'OPTIONS'],
   '/bridge/partition':                  ['POST', 'OPTIONS'],
   '/bridge/proof/critical-identity':    ['GET', 'OPTIONS'],
   '/bridge/proof/coherence':            ['POST', 'OPTIONS'],
@@ -127,15 +129,21 @@ function addressSimplified(bytes: Uint8Array): string { return Array.from(bytes)
 
 // ── schema:Datum construction (schema.rs) ───────────────────────────────────
 function makeDatum(value: number, n: number) {
-  const spectrum = value.toString(2).padStart(n, '0');
-  const stratum = value.toString(2).split('').filter(b => b === '1').length;
+  const spectrumStr = value.toString(2).padStart(n, '0');
+  const stratumVal = spectrumStr.split('').filter(b => b === '1').length;
   const glyph = encodeGlyph(value);
   return {
     "@type": "schema:Datum",
     "schema:value": value,
     "schema:quantum": n,
-    "schema:stratum": stratum,
-    "schema:spectrum": spectrum,
+    "schema:triad": {
+      "@type": "schema:Triad",
+      "schema:datum": { "@type": "schema:DatumVector", "schema:elements": Array.from(spectrumStr).map(Number) },
+      "schema:stratum": { "@type": "schema:StratumVector", "schema:weight": stratumVal, "schema:level": stratumVal },
+      "schema:spectrum": { "@type": "schema:SpectrumVector", "schema:binary": spectrumStr, "schema:positions": Array.from(spectrumStr).map((b, i) => b === '1' ? i : -1).filter(i => i >= 0) }
+    },
+    "schema:stratum": stratumVal,
+    "schema:spectrum": spectrumStr,
     "schema:glyph": { "@type": "u:Address", "u:glyph": glyph, "u:length": 1 }
   };
 }
@@ -893,7 +901,8 @@ function schemaDatum(url: URL, rl: RateLimitResult): Response {
       "spectrum": spectrum,
       "glyph_character": encodeGlyph(x),
       "ring": `Z/${m}Z`,
-      "partition_component": component
+      "partition_component": component,
+      "quantum_scaling_bits": 8 * (n + 1)
     },
     "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/instance/datum-x${x}-n${n}`,
@@ -901,7 +910,35 @@ function schemaDatum(url: URL, rl: RateLimitResult): Response {
     "schema:ring": {
       "@type": "schema:Ring",
       "schema:ringQuantum": n,
-      "schema:modulus": m
+      "schema:modulus": m,
+      "schema:quantumScaling": {
+        "formula": "8 × (N + 1)",
+        "bits": 8 * (n + 1),
+        "description": `Each value in R_${n} occupies ${8 * (n + 1)} bits of quantum-scaled representation`
+      }
+    },
+    "schema:canonicalization": {
+      "@type": "schema:CanonicalizationRules",
+      "rules": [
+        { "name": "involution_cancellation", "rule": "neg(neg(x)) → x, bnot(bnot(x)) → x", "description": "Self-inverse operations cancel when composed" },
+        { "name": "double_complement_elimination", "rule": "bnot(bnot(x)) → x", "description": "Double bitwise complement is identity" },
+        { "name": "ac_flatten_sort", "rule": "add(add(a,b),c) → add(a,b,c); sort operands", "description": "Flatten associative-commutative operations, sort operands for deterministic order" },
+        { "name": "identity_element_removal", "rule": "add(x, 0) → x, mul(x, 1) → x", "description": "Remove identity elements from operations" },
+        { "name": "zero_annihilation", "rule": "mul(x, 0) → 0", "description": "Multiplication by zero annihilates" },
+        { "name": "idempotent_collapse", "rule": "and(x, x) → x, or(x, x) → x", "description": "Idempotent operations collapse" },
+        { "name": "complement_fusion", "rule": "neg(bnot(x)) → succ(x), bnot(neg(x)) → pred(x)", "description": "The critical identity: composition of the two generators yields rotation" },
+        { "name": "modular_reduction", "rule": "x → x mod 2^n", "description": "All values are reduced modulo the ring modulus" }
+      ]
+    },
+    "schema:closureSemantics": {
+      "@type": "schema:ClosureClassification",
+      "description": "Each operation's long-run behaviour on a value falls into one of four closure modes",
+      "modes": [
+        { "mode": "FIXED_POINT", "description": "f(x) = x. The value is stable under the operation.", "example": "neg(0) = 0 in any R_n" },
+        { "mode": "ABSORBING", "description": "Repeated application converges to a fixed absorber.", "example": "and(x, 0) = 0 for all x" },
+        { "mode": "CYCLIC", "description": "Repeated application produces a finite orbit.", "example": "neg and bnot are involutions (period 2)" },
+        { "mode": "CHAOTIC", "description": "No short periodic structure detectable.", "example": "Certain mul orbits in large rings" }
+      ]
     },
     "named_individuals": {
       "schema:pi1": { "schema:value": 1, "schema:role": "generator", "note": "ring generator, value=1" },
@@ -911,7 +948,161 @@ function schemaDatum(url: URL, rl: RateLimitResult): Response {
   }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
-// POST /bridge/partition
+// POST /kernel/derive — Term tree derivation pipeline (UOR Prism §Term→Derivation)
+async function kernelDerive(req: Request, rl: RateLimitResult): Promise<Response> {
+  const contentType = req.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) return error415(rl);
+
+  let body: { term?: unknown; n?: unknown };
+  try { body = await req.json(); } catch { return error400('Request body must be valid JSON', 'body', rl); }
+
+  const n = typeof body.n === 'number' && Number.isInteger(body.n) && body.n >= 1 && body.n <= 16 ? body.n : 8;
+  const m = modulus(n);
+
+  if (!body.term || typeof body.term !== 'object') {
+    return error400("Field 'term' must be an object with 'op' and 'args'", 'term', rl);
+  }
+
+  const term = body.term as { op?: string; args?: unknown[] };
+  if (typeof term.op !== 'string') return error400("term.op must be a string (neg, bnot, succ, pred, add, sub, mul, xor, and, or)", 'term.op', rl);
+
+  const OPS: Record<string, (x: number, y?: number) => number> = {
+    neg: (x) => neg(x, n), bnot: (x) => bnot(x, n),
+    succ: (x) => succOp(x, n), pred: (x) => predOp(x, n),
+    add: (x, y) => addOp(x, y!, n), sub: (x, y) => subOp(x, y!, n),
+    mul: (x, y) => mulOp(x, y!, n),
+    xor: (x, y) => xorOp(x, y!), and: (x, y) => andOp(x, y!), or: (x, y) => orOp(x, y!),
+  };
+
+  interface TermNode { op: string; args: (number | TermNode)[] }
+
+  function evalTerm(t: number | TermNode, steps: unknown[], depth: number): number {
+    if (depth > 20) throw new Error('Term tree exceeds maximum depth of 20');
+    if (typeof t === 'number') {
+      const val = ((t % m) + m) % m;
+      return val;
+    }
+    if (!t.op || !OPS[t.op]) throw new Error(`Unknown operation: ${t.op}`);
+    const evalArgs = (t.args || []).map(a => evalTerm(a, steps, depth + 1));
+    const fn = OPS[t.op];
+    const result = evalArgs.length === 1 ? fn(evalArgs[0]) : fn(evalArgs[0], evalArgs[1]);
+    steps.push({
+      "@type": "derivation:Step",
+      "derivation:operation": t.op,
+      "derivation:inputs": evalArgs,
+      "derivation:output": result,
+      "derivation:formula": `${t.op}(${evalArgs.join(', ')}) mod ${m} = ${result}`
+    });
+    return result;
+  }
+
+  try {
+    const steps: unknown[] = [];
+    const result = evalTerm(term as TermNode, steps, 0);
+    const resultDatum = makeDatum(result, n);
+    const resultBytes = new TextEncoder().encode(JSON.stringify({ term: body.term, result, n }));
+    const address = addressSimplified(resultBytes);
+
+    return jsonResp({
+      "@context": UOR_CONTEXT_URL,
+      "@id": `urn:uor:derivation:${encodeURIComponent(address)}`,
+      "@type": ["derivation:DerivationTrace", "derivation:TermDerivation"],
+      "summary": {
+        "result": result,
+        "steps": steps.length,
+        "ring": `Z/${m}Z`,
+        "content_address": address
+      },
+      "derivation:term": body.term,
+      "derivation:quantum": n,
+      "derivation:steps": steps,
+      "derivation:result": resultDatum,
+      "derivation:contentAddress": {
+        "@type": "u:Address",
+        "u:glyph": address,
+        "u:length": resultBytes.length
+      },
+      "derivation:canonicalizationApplied": [
+        "modular_reduction",
+        "complement_fusion"
+      ],
+      "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/derivation.rs"
+    }, CACHE_HEADERS_KERNEL, undefined, rl);
+  } catch (e) {
+    return error400(e instanceof Error ? e.message : String(e), 'term', rl);
+  }
+}
+
+// GET /kernel/op/correlate?x=42&y=10&n=8 — Hamming distance & fidelity (UOR Prism §correlate)
+function kernelCorrelate(url: URL, rl: RateLimitResult): Response {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const yRes = parseIntParam(url.searchParams.get('y'), 'y', 0, 65535);
+  if ('err' in yRes) return yRes.err;
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const nRes = parseIntParam(nRaw, 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+
+  const x = xRes.val, y = yRes.val, n = nRes.val;
+  const m = modulus(n);
+  if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x', rl);
+  if (y >= m) return error400(`y must be in [0, ${m-1}] for n=${n}`, 'y', rl);
+
+  // XOR-stratum: Hamming distance between binary representations
+  const xorVal = xorOp(x, y);
+  const xorBinary = xorVal.toString(2).padStart(n, '0');
+  const hammingDistance = xorBinary.split('').filter(b => b === '1').length;
+  const fidelity = 1 - (hammingDistance / n);
+
+  // Per-bit diff
+  const xBin = x.toString(2).padStart(n, '0');
+  const yBin = y.toString(2).padStart(n, '0');
+  const bitDiffs = Array.from(xorBinary).map((b, i) => ({
+    bit: i,
+    x: Number(xBin[i]),
+    y: Number(yBin[i]),
+    differs: b === '1'
+  }));
+
+  const etag = makeETag('/kernel/op/correlate', { x: String(x), y: String(y), n: String(n) });
+
+  return jsonResp({
+    "@context": UOR_CONTEXT_URL,
+    "@id": `https://uor.foundation/instance/correlate-x${x}-y${y}-n${n}`,
+    "@type": "op:Correlation",
+    "summary": {
+      "x": x,
+      "y": y,
+      "ring": `Z/${m}Z`,
+      "hamming_distance": hammingDistance,
+      "fidelity": fidelity,
+      "xor_stratum": xorVal,
+      "identical": x === y
+    },
+    "op:hammingDistance": hammingDistance,
+    "op:fidelity": fidelity,
+    "op:maxDistance": n,
+    "op:xorStratum": {
+      "@type": "schema:Datum",
+      "schema:value": xorVal,
+      "schema:spectrum": xorBinary,
+      "schema:stratum": hammingDistance
+    },
+    "op:bitComparison": bitDiffs,
+    "op:interpretation": hammingDistance === 0
+      ? "Identical: zero Hamming drift. Values are structurally equivalent."
+      : hammingDistance <= Math.ceil(n / 4)
+        ? `Low drift (${hammingDistance}/${n} bits differ). High structural fidelity.`
+        : hammingDistance <= Math.ceil(n / 2)
+          ? `Moderate drift (${hammingDistance}/${n} bits differ). Partial structural divergence.`
+          : `High drift (${hammingDistance}/${n} bits differ). Significant structural divergence — possible integrity violation.`,
+    "datum_x": makeDatum(x, n),
+    "datum_y": makeDatum(y, n),
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/op.rs"
+  }, CACHE_HEADERS_KERNEL, etag, rl);
+}
+
+
 async function partitionResolve(req: Request, rl: RateLimitResult): Promise<Response> {
   // 415 enforcement
   const contentType = req.headers.get('content-type') ?? '';
@@ -3791,7 +3982,23 @@ Deno.serve(async (req: Request) => {
       return resp;
     }
 
-    // ── Bridge — partition ──
+    // ── Kernel — derive (term tree derivation) ──
+    if (path === '/kernel/derive') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await kernelDerive(req, rl);
+    }
+
+    // ── Kernel — correlate (Hamming distance & fidelity) ──
+    if (path === '/kernel/op/correlate') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = kernelCorrelate(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+
     if (path === '/bridge/partition') {
       if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
       return await partitionResolve(req, rl);

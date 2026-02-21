@@ -111,7 +111,7 @@ const Standard = () => {
             UOR Framework Architecture
           </h2>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-14 md:mb-16">
-            Five layers built on a shared foundation of geometric structure and symbolic representation. Each builds on the one below it.
+            Six layers built on a shared foundation of geometric structure and symbolic representation. Each builds on the one below it.
           </p>
           <FrameworkLayers />
         </div>
