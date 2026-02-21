@@ -1,0 +1,26 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "core",
+  "version": "1.0.0",
+  "description": "Design system, layout shell, shared types, and UI primitives for the UOR Foundation website.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": [],
+  "exports": [
+    "Layout",
+    "Navbar",
+    "Footer",
+    "ScrollProgress",
+    "NavLink",
+    "Dialog",
+    "Toast",
+    "Toaster",
+    "Sonner",
+    "Tooltip",
+    "useToast",
+    "cn"
+  ],
+  "dependencies": {},
+  "routes": ["/about"],
+  "assets": []
+}

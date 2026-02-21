@@ -11,10 +11,10 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "@/components",
+    "components": "@/modules/core",
     "utils": "@/lib/utils",
-    "ui": "@/components/ui",
+    "ui": "@/modules/core/ui",
     "lib": "@/lib",
-    "hooks": "@/hooks"
+    "hooks": "@/modules/core/hooks"
   }
 }
