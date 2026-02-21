@@ -6,7 +6,7 @@ const pillars = [
     icon: Globe,
     title: "UOR Framework",
     description:
-      "Every piece of data gets one permanent address, based on what it contains. Findable, verifiable, and reusable across every system, without translation layers or lock-in.",
+      "The open specification behind content-based addressing. Six layers, from identity to transformation, fully documented and ready to build on.",
     href: "/standard",
     cta: "Learn",
   },
@@ -14,7 +14,7 @@ const pillars = [
     icon: Users,
     title: "Our Community",
     description:
-      "A global network of researchers, engineers, and builders. Test ideas across disciplines, validate results openly, and move faster by building on what others have proven.",
+      "Researchers, engineers, and builders validating ideas across disciplines. Share results, get feedback, and accelerate your work.",
     href: "/research",
     cta: "Connect",
   },
@@ -22,7 +22,7 @@ const pillars = [
     icon: Rocket,
     title: "Your Projects",
     description:
-      "A structured path from early idea to production-ready software. The foundation provides tooling, community review, and visibility to help open source projects ship and grow.",
+      "A structured path from idea to production. The foundation provides tooling, review, and visibility to help open source projects ship.",
     href: "/projects",
     cta: "Build",
   },

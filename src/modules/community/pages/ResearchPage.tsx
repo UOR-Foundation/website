@@ -36,7 +36,7 @@ const categoryResearch: Record<string, Array<{ title: string; authors: string; s
 const blogPosts = [
   {
     title: "UOR: Building the Internet's Knowledge Graph",
-    excerpt: "A deep dive into how Universal Object Reference promises to transform the internet from a chaotic collection of websites into a unified knowledge graph of everything.",
+    excerpt: "How a single addressing system could turn the internet into a structured, navigable knowledge graph.",
     date: "December 21, 2023",
     tag: "Vision",
     href: "/blog/building-the-internets-knowledge-graph",
@@ -52,7 +52,7 @@ const blogPosts = [
   },
   {
     title: "What If Every Piece of Data Had One Permanent Address?",
-    excerpt: "A universal coordinate system for information. One address per object, derived from content, verifiable across every system. The open specification is now available for community review.",
+    excerpt: "The open specification is live. Browse the full framework, review the architecture, and start building.",
     date: "February 19, 2026",
     tag: "Open Research",
     href: "/blog/uor-framework-launch",
@@ -120,7 +120,7 @@ const Research = () => {
             Community
           </h2>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
-            The UOR community spans disciplines, validating ideas across boundaries and pursuing joint research where fields converge. Find your community on{" "}
+            Find your discipline, validate ideas, and collaborate on{" "}
             <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
           </p>
 

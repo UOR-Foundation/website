@@ -356,7 +356,7 @@ const Projects = () => {
               How to Submit a Project
             </h2>
             <p className="text-muted-foreground font-body max-w-2xl mx-auto leading-relaxed">
-              The UOR Foundation accepts projects that advance the open data standard for the semantic web, open science, and frontier technology and research. All submissions are reviewed by our technical committee against published criteria.
+              Open source projects that align with the UOR standard. Reviewed by our technical committee against published criteria.
             </p>
           </div>
 
