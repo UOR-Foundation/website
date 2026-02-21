@@ -13,6 +13,7 @@ import type { GraphStats } from "../graph-manager";
 import { contentAddress } from "@/modules/identity";
 import { PartitionVisualizer } from "@/modules/resolver/components/PartitionVisualizer";
 import { CorrelationTool } from "@/modules/resolver/components/CorrelationTool";
+import { EntitySearch } from "@/modules/semantic-index/components/EntitySearch";
 
 const KnowledgeGraphPage = () => {
   const [stats, setStats] = useState<GraphStats | null>(null);
@@ -175,6 +176,11 @@ const KnowledgeGraphPage = () => {
                 {JSON.stringify(lookupResult, null, 2)}
               </pre>
             )}
+          </div>
+
+          {/* Entity Search (Semantic Index) */}
+          <div className="mb-8">
+            <EntitySearch />
           </div>
 
           {/* Partition Visualizer */}
