@@ -1,0 +1,9 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "schema:SoftwareModule",
+  "schema:name": "self-verify",
+  "schema:version": "1.0.0",
+  "schema:description": "Self-verification system — every operation produces a canonical receipt proving its own correctness.",
+  "u:namespace": ["receipt:", "proof:"],
+  "u:dependencies": ["ring-core", "derivation", "kg-store"]
+}
