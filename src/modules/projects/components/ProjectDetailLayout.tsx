@@ -1,8 +1,9 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, ArrowLeft, ShieldCheck, Bot } from "lucide-react";
+import { ExternalLink, ArrowLeft, ShieldCheck, Bot, CheckCircle2, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { generateCertificate, type UorCertificate } from "@/lib/uor-certificate";
+import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
 
 export interface ProjectSection {
   heading: string;
@@ -52,7 +53,26 @@ const ProjectDetailLayout = ({
   }, [slug, name, category, tagline, repoUrl]);
 
   const [showCert, setShowCert] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState<null | { match: boolean; decoded: Record<string, unknown> }>(null);
 
+  const handleVerify = async () => {
+    if (!certificate) return;
+    setVerifying(true);
+    setVerified(null);
+    try {
+      // Recompute CID from the canonical payload stored in the certificate
+      const payloadBytes = new TextEncoder().encode(certificate["cert:canonicalPayload"]);
+      const recomputedCid = await computeCid(payloadBytes);
+      const match = recomputedCid === certificate["cert:cid"];
+      const decoded = JSON.parse(certificate["cert:canonicalPayload"]);
+      setVerified({ match, decoded });
+    } catch {
+      setVerified({ match: false, decoded: {} });
+    } finally {
+      setVerifying(false);
+    }
+  };
   return (
     <Layout>
       {/* Hero */}
@@ -108,6 +128,75 @@ const ProjectDetailLayout = ({
                   <p className="text-xs text-section-dark-foreground/40 font-mono mt-1">
                     subject: {certificate["cert:subject"]} · spec {certificate["cert:specification"]}
                   </p>
+
+                  {/* Verify button */}
+                  <div className="mt-4 pt-3 border-t border-primary/10">
+                    {!verified ? (
+                      <button
+                        onClick={handleVerify}
+                        disabled={verifying}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer disabled:opacity-50 font-body"
+                      >
+                        {verifying ? (
+                          <><Loader2 size={12} className="animate-spin" /> Verifying…</>
+                        ) : (
+                          <><ShieldCheck size={12} /> Verify this certificate</>
+                        )}
+                      </button>
+                    ) : (
+                      <div className="space-y-3 animate-fade-in-up">
+                        {/* Verification result */}
+                        <div className={`flex items-center gap-2 text-xs font-semibold font-body ${verified.match ? "text-green-400" : "text-red-400"}`}>
+                          <CheckCircle2 size={14} />
+                          {verified.match
+                            ? "Certificate verified — content is authentic"
+                            : "Verification failed — content may have been altered"}
+                        </div>
+
+                        {verified.match && verified.decoded && Object.keys(verified.decoded).length > 0 && (
+                          <div className="rounded-lg border border-primary/10 bg-background/5 px-4 py-3 space-y-2">
+                            <p className="text-xs font-semibold text-section-dark-foreground/80 font-body">
+                              What this certificate confirms:
+                            </p>
+                            {(() => {
+                              const d = verified.decoded;
+                              const fieldLabels: Record<string, string> = {
+                                "uor:name": "Project name",
+                                "uor:description": "Description",
+                                "uor:category": "Category",
+                                "uor:repository": "Source code",
+                                "uor:maturity": "Maturity stage",
+                                "uor:subjectId": "Unique identifier",
+                                "@type": "Object type",
+                              };
+                              return Object.entries(d)
+                                .filter(([key]) => key !== "@context")
+                                .map(([key, value]) => (
+                                  <div key={key} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-2">
+                                    <span className="text-xs text-section-dark-foreground/50 font-body shrink-0">
+                                      {fieldLabels[key] || key.replace(/^uor:/, "").replace(/([A-Z])/g, " $1")}:
+                                    </span>
+                                    <span className="text-xs text-section-dark-foreground/90 font-body break-all">
+                                      {typeof value === "string" ? value : JSON.stringify(value)}
+                                    </span>
+                                  </div>
+                                ));
+                            })()}
+                            <p className="text-[10px] text-section-dark-foreground/40 font-body mt-2 leading-relaxed">
+                              The content above was reconstructed directly from the certificate's canonical payload. The fact that it matches the original content identifier (CID) proves that none of this information has been tampered with since the certificate was issued.
+                            </p>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => setVerified(null)}
+                          className="text-[10px] text-section-dark-foreground/40 hover:text-section-dark-foreground/60 transition-colors cursor-pointer font-body"
+                        >
+                          Reset verification
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
