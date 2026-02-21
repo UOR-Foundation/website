@@ -1,0 +1,21 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "resolver",
+  "version": "1.0.0",
+  "description": "UOR Resolver & Partition Engine — maps entities to canonical IRIs, classifies ring elements, and computes algebraic correlation.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["resolver:", "partition:"],
+  "exports": [
+    "resolve",
+    "classifyElement",
+    "computePartition",
+    "correlate"
+  ],
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "identity": "^1.0.0",
+    "triad": "^1.0.0"
+  },
+  "assets": []
+}
