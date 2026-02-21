@@ -4522,9 +4522,9 @@ async function storeGateways(rl: RateLimitResult): Promise<Response> {
   });
 }
 
-// ── GET /bridge/emit — Explicit emit() function producing JSON-LD 1.1 (§1.6) ──
-// Exposes the emit() function as a first-class endpoint rather than a side-effect.
-// Emits a complete JSON-LD document for a ring subset, loadable by any triplestore.
+// ── GET /bridge/emit — Explicit emit() with R4 verify() gate (§1.6 + §1.7) ──
+// Requirement R4: verify() MUST pass before emit(). If coherence fails, emission is refused.
+// Every emitted document embeds a machine-readable proof:CoherenceProof node.
 function bridgeEmit(url: URL, rl: RateLimitResult): Response {
   const nRaw = url.searchParams.get('n') ?? '8';
   const nRes = parseIntParam(nRaw, 'n', 1, 16);
@@ -4532,9 +4532,39 @@ function bridgeEmit(url: URL, rl: RateLimitResult): Response {
   const n = nRes.val;
   const m = modulus(n);
 
-  // Optional: specific values to emit (comma-separated)
+  // ── R4 GATE: verify() before emit() ────────────────────────────────────
+  // Run exhaustive coherence check: neg(bnot(x)) = succ(x) for ALL x in ring
+  const verifyStart = performance.now();
+  const failures: { x: number; expected: number; actual: number }[] = [];
+  for (let x = 0; x < m; x++) {
+    const actual = neg(bnot(x, n), n);
+    const expected = succOp(x, n);
+    if (actual !== expected) {
+      failures.push({ x, expected, actual });
+    }
+  }
+  const verifyMs = Math.round(performance.now() - verifyStart);
+  const coherenceVerified = failures.length === 0;
+
+  // R4 enforcement: if verify() fails, REFUSE to emit
+  if (!coherenceVerified) {
+    return jsonResp({
+      "@context": UOR_CONTEXT_URL,
+      "@type": "proof:CoherenceFailure",
+      "proof:r4_enforcement": "EMISSION BLOCKED — verify() failed. R4 requires coherence before emit().",
+      "proof:quantum": Math.ceil(n / 8) - 1,
+      "proof:bits": n,
+      "proof:verified": false,
+      "proof:failureCount": failures.length,
+      "proof:failures": failures.slice(0, 10),
+      "proof:criticalIdentity": "neg(bnot(x)) = succ(x)",
+      "proof:verificationTimeMs": verifyMs,
+      "proof:timestamp": timestamp(),
+    }, { ...JSON_HEADERS, 'X-UOR-R4-Gate': 'BLOCKED' }, undefined, rl);
+  }
+
+  // ── verify() passed — proceed to emit() ────────────────────────────────
   const valuesRaw = url.searchParams.get('values');
-  // Optional: limit (default 16 for manageable output)
   const limitRaw = url.searchParams.get('limit') ?? '16';
   const limitRes = parseIntParam(limitRaw, 'limit', 1, 256);
   if ('err' in limitRes) return limitRes.err;
@@ -4564,19 +4594,31 @@ function bridgeEmit(url: URL, rl: RateLimitResult): Response {
     };
   });
 
-  // Coherence proof node
-  let allPass = true;
-  for (let x = 0; x < m; x++) {
-    if (neg(bnot(x, n), n) !== succOp(x, n)) { allPass = false; break; }
-  }
+  // Machine-readable CoherenceProof node — embedded in every published graph (§1.7)
+  const quantum = Math.ceil(n / 8) - 1;
   const proofNode = {
-    "@id": `urn:uor:proof:coherence:Q${Math.ceil(n / 8) - 1}`,
+    "@id": `urn:uor:proof:coherence:Q${quantum}`,
     "@type": "proof:CoherenceProof",
-    "proof:quantum": Math.ceil(n / 8) - 1,
+    "proof:quantum": quantum,
     "proof:bits": n,
-    "proof:verified": allPass,
+    "proof:ringModulus": m,
+    "proof:verified": true,
+    "proof:elementsTested": m,
+    "proof:failureCount": 0,
     "proof:criticalIdentity": "neg(bnot(x)) = succ(x)",
+    "proof:universalStatement": `∀ x ∈ Z/${m}Z : neg(bnot(x)) = succ(x)`,
+    "proof:verificationTimeMs": verifyMs,
+    "proof:r4_adherence": {
+      "@type": "proof:R4Gate",
+      "proof:requirement": "Requirement R4: verify() MUST pass before emit()",
+      "proof:gateResult": "PASSED",
+      "proof:verifyCalledAt": timestamp(),
+      "proof:emitAllowedAt": timestamp(),
+      "proof:sequencing": "verify() → emit() — enforced by API"
+    },
     "proof:timestamp": timestamp(),
+    "prov:wasGeneratedBy": "urn:uor:agent:ring-core",
+    "prov:startedAtTime": timestamp(),
   };
 
   const doc = {
@@ -4584,15 +4626,11 @@ function bridgeEmit(url: URL, rl: RateLimitResult): Response {
     "@type": "jsonld:EmittedDocument",
     "jsonld:emitFunction": "emit()",
     "jsonld:specification": "W3C JSON-LD 1.1",
+    "jsonld:r4_status": "VERIFIED — verify() passed before emit()",
     "jsonld:triplestore_compatible": true,
     "jsonld:compatible_triplestores": [
-      "Apache Jena (TDB2)",
-      "Oxigraph",
-      "GraphDB (Ontotext)",
-      "Blazegraph",
-      "Stardog",
-      "Amazon Neptune",
-      "MarkLogic"
+      "Apache Jena (TDB2)", "Oxigraph", "GraphDB (Ontotext)",
+      "Blazegraph", "Stardog", "Amazon Neptune", "MarkLogic"
     ],
     "jsonld:loading_instructions": {
       "step1": "Download this document (GET /bridge/emit?n=8&limit=256)",
@@ -4600,7 +4638,7 @@ function bridgeEmit(url: URL, rl: RateLimitResult): Response {
       "step3": "Query with SPARQL: SELECT ?s ?p ?o WHERE { ?s ?p ?o }",
       "step4": "Or use POST /bridge/sparql for in-API SPARQL queries"
     },
-    "proof:coherenceVerified": allPass,
+    "proof:coherenceVerified": true,
     "proof:timestamp": timestamp(),
     "jsonld:nodeCount": 1 + datumNodes.length,
     "jsonld:ringDescriptor": `Z/${m}Z (R_${n}, ${m} elements)`,
@@ -4611,6 +4649,7 @@ function bridgeEmit(url: URL, rl: RateLimitResult): Response {
   return jsonResp(doc, {
     ...CACHE_HEADERS_BRIDGE,
     'Content-Type': 'application/ld+json',
+    'X-UOR-R4-Gate': 'PASSED',
   }, etag, rl);
 }
 
