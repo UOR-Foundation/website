@@ -24,6 +24,7 @@ import { CodeKnowledgeGraphPage } from "@/modules/code-kg";
 import { AgentConsolePage } from "@/modules/agent-tools";
 import AuditPage from "@/modules/self-verify/pages/AuditPage";
 import { DashboardPage } from "@/modules/dashboard";
+import SessionsPage from "@/modules/state/pages/SessionsPage";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => {
           <Route path="/code-knowledge-graph" element={<CodeKnowledgeGraphPage />} />
           <Route path="/agent-console" element={<AgentConsolePage />} />
           <Route path="/audit" element={<AuditPage />} />
+          <Route path="/sessions" element={<SessionsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
