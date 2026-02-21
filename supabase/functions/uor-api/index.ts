@@ -56,7 +56,8 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/user/state':                        ['GET', 'OPTIONS'],
   '/store/resolve':                     ['GET', 'OPTIONS'],
   '/store/write':                       ['POST', 'OPTIONS'],
-  // /store/read/:cid is handled dynamically (path prefix match)
+  '/store/write-context':               ['POST', 'OPTIONS'],
+  // /store/read/:cid and /store/verify/:cid are handled dynamically
 };
 
 // ── Rate Limiting (in-memory sliding window) ────────────────────────────────
@@ -2844,6 +2845,324 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
   });
 }
 
+// ── POST /store/write-context — IPLD DAG for state:Context ─────────────────
+interface BindingResult {
+  inputAddress: string;
+  uorAddress: string;
+  value: number;
+  bindingCid: string;
+  bindingUorAddress: string;
+  pinResult: PinResult | null;
+  ipldLink: string;
+}
+
+async function storeWriteContext(req: Request, rl: RateLimitResult): Promise<Response> {
+  const ct = req.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) return error415(rl);
+
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch {
+    return error400('Invalid JSON body.', 'body', rl);
+  }
+
+  const ctx = body['context'] as Record<string, unknown> | undefined;
+  if (!ctx) return error400('Missing required field: context', 'context', rl);
+
+  const name = (ctx['name'] as string) ?? `context-${Date.now()}`;
+  const quantum = (ctx['quantum'] as number) ?? 8;
+  const shouldPin = body['pin'] !== false;
+  const gateway = (body['gateway'] as string) ?? (Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? 'web3.storage');
+  const rawBindings = (ctx['bindings'] as unknown[]) ?? [];
+
+  if (!Array.isArray(rawBindings) || rawBindings.length === 0) {
+    return error400('context.bindings must be a non-empty array.', 'bindings', rl);
+  }
+  if (rawBindings.length > 256) {
+    return error400(`Too many bindings. Maximum 256 per context.`, 'bindings', rl);
+  }
+  if (!GATEWAY_CONFIGS[gateway]) {
+    return error400(`Unknown gateway: "${gateway}". Accepted: ${Object.keys(GATEWAY_CONFIGS).join(', ')}`, 'gateway', rl);
+  }
+
+  const ts = timestamp();
+  const bindingResults: BindingResult[] = [];
+
+  // Step 1: Process each binding individually
+  for (const raw of rawBindings) {
+    const binding = raw as Record<string, unknown>;
+    const rawAddress = binding['address'] as string;
+    const value = binding['value'] as number;
+    const bindingType = (binding['type'] as string) ?? 'type:PrimitiveType';
+
+    if (rawAddress === undefined || value === undefined) {
+      return error400('Each binding must have "address" and "value" fields.', 'bindings', rl);
+    }
+
+    // Detect if address is already Braille
+    let addressGlyph: string;
+    let addressLength: number;
+    const isBraille = [...rawAddress].every(c => {
+      const cp = c.codePointAt(0) ?? 0;
+      return cp >= 0x2800 && cp <= 0x28FF;
+    });
+
+    if (isBraille) {
+      addressGlyph = rawAddress;
+      addressLength = [...rawAddress].length;
+    } else {
+      const encoded = computeUorAddress(new TextEncoder().encode(rawAddress));
+      addressGlyph = encoded.glyph;
+      addressLength = encoded.length;
+    }
+
+    const stratum = value.toString(2).split('1').length - 1;
+    const spectrum = value.toString(2).padStart(quantum, '0');
+
+    // Build binding block
+    const bindingBlock: Record<string, unknown> = {
+      "@context": UOR_STORE_CONTEXT,
+      "@id": `https://uor.foundation/store/binding/${encodeURIComponent(addressGlyph)}`,
+      "@type": "state:Binding",
+      "state:address": {
+        "@type": "u:Address",
+        "u:glyph": addressGlyph,
+        "u:length": addressLength,
+      },
+      "state:content": {
+        "@type": "schema:Datum",
+        "schema:quantum": quantum,
+        "schema:spectrum": spectrum,
+        "schema:stratum": stratum,
+        "schema:value": value,
+      },
+      "state:timestamp": ts,
+      "store:storedType": "https://uor.foundation/state/Binding",
+    };
+
+    // Compute addresses (round 1)
+    const bindingBytes = new TextEncoder().encode(canonicalJsonLd(bindingBlock));
+    const bindingUor = computeUorAddress(bindingBytes);
+    const bindingCid = await computeCid(bindingBytes);
+
+    const completeBindingBlock = {
+      ...bindingBlock,
+      "store:cid": bindingCid,
+      "store:uorAddress": {
+        "@type": "u:Address",
+        "u:glyph": bindingUor.glyph,
+        "u:length": bindingUor.length,
+      },
+    };
+
+    // Pin binding block
+    let pinResult: PinResult | null = null;
+    if (shouldPin) {
+      try {
+        const finalBytes = new TextEncoder().encode(canonicalJsonLd(completeBindingBlock));
+        pinResult = await pinToIpfs(finalBytes, gateway);
+      } catch (e) {
+        return new Response(JSON.stringify({
+          error: `Failed to pin binding "${rawAddress}": ${e.message}`,
+          code: 'GATEWAY_ERROR', status: 502,
+        }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+      }
+    }
+
+    bindingResults.push({
+      inputAddress: rawAddress,
+      uorAddress: addressGlyph,
+      value,
+      bindingCid,
+      bindingUorAddress: bindingUor.glyph,
+      pinResult,
+      ipldLink: `/ipfs/${bindingCid}`,
+    });
+  }
+
+  // Step 2: Build root context block linking all bindings
+  const rootBlock: Record<string, unknown> = {
+    "@context": UOR_STORE_CONTEXT,
+    "@id": `https://uor.foundation/store/context/${encodeURIComponent(name)}`,
+    "@type": "store:StoreContext",
+    "state:capacity": Math.pow(2, quantum),
+    "state:contentAddress": name,
+    "state:quantum": quantum,
+    "store:bindingCount": bindingResults.length,
+    "store:bindingLinks": bindingResults.map(b => ({
+      "binding:address": b.uorAddress,
+      "ipld:link": b.ipldLink,
+      "store:cid": b.bindingCid,
+    })),
+    "store:pinnedAt": shouldPin ? ts : null,
+    "store:storedType": "https://uor.foundation/store/StoreContext",
+  };
+
+  const rootBytes = new TextEncoder().encode(canonicalJsonLd(rootBlock));
+  const rootUor = computeUorAddress(rootBytes);
+  const rootCid = await computeCid(rootBytes);
+
+  const completeRootBlock = {
+    ...rootBlock,
+    "store:rootCid": rootCid,
+    "store:uorAddress": {
+      "@type": "u:Address",
+      "u:glyph": rootUor.glyph,
+      "u:length": rootUor.length,
+    },
+  };
+
+  // Pin root block
+  if (shouldPin) {
+    try {
+      const finalRootBytes = new TextEncoder().encode(canonicalJsonLd(completeRootBlock));
+      await pinToIpfs(finalRootBytes, gateway);
+    } catch (e) {
+      return new Response(JSON.stringify({
+        error: `Failed to pin context root: ${e.message}`,
+        code: 'GATEWAY_ERROR', status: 502,
+      }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+    }
+  }
+
+  // Build response
+  const response = {
+    "@context": UOR_STORE_CONTEXT,
+    "@id": `https://uor.foundation/store/context/${encodeURIComponent(name)}`,
+    "@type": "store:StoreContext",
+    "state:contentAddress": name,
+    "state:quantum": quantum,
+    "store:bindingCount": bindingResults.length,
+    "store:rootCid": rootCid,
+    "store:uorAddress": {
+      "@type": "u:Address",
+      "u:glyph": rootUor.glyph,
+      "u:length": rootUor.length,
+    },
+    "store:pinnedAt": shouldPin ? ts : null,
+    "store:bindings": bindingResults.map(b => ({
+      "binding:inputAddress": b.inputAddress,
+      "binding:uorAddress": b.uorAddress,
+      "binding:value": b.value,
+      "store:cid": b.bindingCid,
+      "ipld:link": b.ipldLink,
+    })),
+    "summary": {
+      "context_name": name,
+      "binding_count": bindingResults.length,
+      "root_cid": rootCid,
+      "root_uor_address": rootUor.glyph,
+      "dry_run": !shouldPin,
+      "how_to_retrieve_context": `GET /store/read/${rootCid}`,
+      "how_to_verify_context": `GET /store/verify/${rootCid}`,
+      "how_to_retrieve_binding": "GET /store/read/{binding-cid}",
+      "ipld_structure": "Each binding is an individual IPFS block. The root block links to all bindings via IPLD links. Retrieve any binding independently by its CID.",
+      "agent_memory_note":
+        "This context is now persistent. Share the root CID with any agent to " +
+        "give it read access to this memory state. Each binding is independently " +
+        "retrievable and verifiable.",
+    },
+  };
+
+  return new Response(canonicalJsonLd(response), {
+    status: 200,
+    headers: {
+      ...CORS_HEADERS,
+      'Content-Type': 'application/ld+json',
+      'X-UOR-Context-Root-CID': rootCid,
+      'X-UOR-Binding-Count': String(bindingResults.length),
+      'X-Store-Dry-Run': String(!shouldPin),
+      ...rateLimitHeaders(rl),
+    },
+  });
+}
+
+// ── GET /store/verify/:cid — Lightweight verification-only ─────────────────
+async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Promise<Response> {
+  const cidValidation = validateCid(cidParam ?? "");
+  if (!cidValidation.valid) {
+    return error400(`Invalid CID: ${cidValidation.error}`, 'cid', rl);
+  }
+
+  const gatewayOverride = url.searchParams.get('gateway');
+  let gateway = DEFAULT_READ_GATEWAY;
+  if (gatewayOverride) {
+    if (!ALLOWED_READ_GATEWAYS.includes(gatewayOverride)) {
+      return error400(
+        `Unknown gateway "${gatewayOverride}". Allowed: ${ALLOWED_READ_GATEWAYS.join(', ')}`,
+        'gateway', rl,
+      );
+    }
+    gateway = gatewayOverride;
+  }
+
+  // Fetch from IPFS
+  const ipfsUrl = `${gateway}/ipfs/${cidParam}?format=raw`;
+  let fetchResponse: Response;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), READ_FETCH_TIMEOUT_MS);
+    fetchResponse = await fetch(ipfsUrl, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/vnd.ipld.raw, application/ld+json, application/json, */*',
+        'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/verify)',
+      },
+    });
+    clearTimeout(timeoutId);
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      return new Response(JSON.stringify({
+        error: `Gateway timeout after ${READ_FETCH_TIMEOUT_MS / 1000}s.`,
+        code: 'GATEWAY_TIMEOUT', status: 504,
+      }), { status: 504, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+    }
+    return new Response(JSON.stringify({
+      error: `Gateway unreachable: ${e.message}`,
+      code: 'GATEWAY_UNREACHABLE', status: 502,
+    }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+
+  if (fetchResponse.status === 404) {
+    return new Response(JSON.stringify({
+      error: `CID not found: ${cidParam}`,
+      code: 'NOT_FOUND', status: 404,
+    }), { status: 404, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+
+  if (!fetchResponse.ok) {
+    return new Response(JSON.stringify({
+      error: `Gateway returned HTTP ${fetchResponse.status}.`,
+      code: 'GATEWAY_ERROR', status: 502,
+    }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+
+  const rawBytes = new Uint8Array(await fetchResponse.arrayBuffer());
+
+  // Run dual verification (no content returned — verification only)
+  const verification = await dualVerify(rawBytes, cidParam);
+
+  const response = {
+    "@context": UOR_STORE_CONTEXT,
+    "@type": "store:VerificationResult",
+    "store:cid": cidParam,
+    "store:byteLength": rawBytes.length,
+    "store:gatewayUsed": gateway,
+    "store:verified": verification.store_verified,
+    "verification": verification,
+  };
+
+  return new Response(canonicalJsonLd(response), {
+    status: 200,
+    headers: {
+      ...CORS_HEADERS,
+      'Content-Type': 'application/ld+json',
+      'X-UOR-Verified': String(verification.store_verified),
+      'X-IPFS-CID': cidParam,
+      ...rateLimitHeaders(rl),
+    },
+  });
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // ROUTER
 // ════════════════════════════════════════════════════════════════════════════
@@ -3047,6 +3366,19 @@ Deno.serve(async (req: Request) => {
       if (req.method !== 'GET') return error405(path, ['GET', 'OPTIONS']);
       const cidParam = path.replace('/store/read/', '');
       return await storeRead(cidParam, url, rl);
+    }
+
+    // ── Store — write-context (store: namespace) ──
+    if (path === '/store/write-context') {
+      if (req.method !== 'POST') return error405(path, ['POST', 'OPTIONS']);
+      return await storeWriteContext(req, rl);
+    }
+
+    // ── Store — verify/:cid (store: namespace) ──
+    if (path.startsWith('/store/verify/')) {
+      if (req.method !== 'GET') return error405(path, ['GET', 'OPTIONS']);
+      const cidParam = path.replace('/store/verify/', '');
+      return await storeVerify(cidParam, url, rl);
     }
 
     // ── 405 for known paths with wrong method ──
