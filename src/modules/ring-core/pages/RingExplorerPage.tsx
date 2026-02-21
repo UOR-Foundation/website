@@ -5,6 +5,7 @@ import { verifyQ0Exhaustive } from "../coherence";
 import type { CoherenceResult } from "../coherence";
 import { bytePopcount, byteBasis } from "@/lib/uor-ring";
 import { bytesToGlyph, bytesToIRI, bytesToUPlus, contentAddress, datumApiUrl } from "@/modules/identity";
+import { computeTriad, stratumLevel, stratumDensity } from "@/modules/triad";
 
 const QUANTUM_OPTIONS = [
   { label: "Q0 (8-bit)", quantum: 0, max: 255 },
@@ -38,8 +39,9 @@ const RingExplorerPage = () => {
   const bnotResult = ring.bnot(bytes);
   const succResult = ring.succ(bytes);
   const predResult = ring.pred(bytes);
-  const stratum = bytes.reduce((s, b) => s + bytePopcount(b), 0);
-  const spectrum = bytes.map(byteBasis);
+  const triad = computeTriad(bytes);
+  const density = stratumDensity(triad.totalStratum, ring.bits);
+  const level = stratumLevel(triad.totalStratum, ring.bits);
 
   // Verify coherence
   const runCoherence = useCallback(() => {
@@ -164,12 +166,73 @@ const RingExplorerPage = () => {
             <ResultCard label="bnot(x)" value={`${fromBytes(bnotResult)} [${formatHex(bnotResult.slice())}]`} mono />
             <ResultCard label="succ(x) = neg(bnot(x))" value={`${fromBytes(succResult)}`} mono highlight />
             <ResultCard label="pred(x) = bnot(neg(x))" value={`${fromBytes(predResult)}`} mono />
-            <ResultCard label="Stratum (popcount)" value={String(stratum)} />
-            <ResultCard
-              label="Spectrum (active bits)"
-              value={spectrum.map((s) => `[${s.join(",")}]`).join(" ")}
-              mono
-            />
+            {/* UOR Triadic Coordinates (Module 3) */}
+            <div className="md:col-span-2 rounded-lg border border-border bg-card p-4">
+              <p className="text-xs font-medium text-muted-foreground mb-3">
+                Triadic Coordinates — datum / stratum / spectrum
+              </p>
+
+              {/* Stratum bar chart */}
+              <div className="mb-3">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <p className="text-[10px] text-muted-foreground w-16">Stratum</p>
+                  <p className="text-xs font-mono text-foreground">
+                    {triad.totalStratum}/{ring.bits} bits ({density.toFixed(0)}%) —{" "}
+                    <span className={
+                      level === "high" ? "text-primary font-semibold" :
+                      level === "medium" ? "text-muted-foreground" :
+                      "text-muted-foreground/60"
+                    }>
+                      {level}
+                    </span>
+                  </p>
+                </div>
+                <div className="flex gap-1">
+                  {triad.stratum.map((s, i) => (
+                    <div key={i} className="flex-1">
+                      <div className="h-6 bg-muted rounded-sm relative overflow-hidden">
+                        <div
+                          className="absolute bottom-0 left-0 right-0 bg-primary/60 rounded-sm transition-all duration-200"
+                          style={{ height: `${(s / 8) * 100}%` }}
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-mono text-foreground/70">
+                          {s}
+                        </span>
+                      </div>
+                      <p className="text-[8px] text-center text-muted-foreground mt-0.5">B{i}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Spectrum bit grid */}
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1.5">Spectrum (active basis elements)</p>
+                <div className="flex gap-2">
+                  {triad.spectrum.map((bits, byteIdx) => (
+                    <div key={byteIdx} className="flex-1">
+                      <div className="grid grid-cols-8 gap-px">
+                        {Array.from({ length: 8 }, (_, bitIdx) => {
+                          const active = bits.includes(bitIdx);
+                          return (
+                            <div
+                              key={bitIdx}
+                              className={`aspect-square rounded-[2px] flex items-center justify-center text-[7px] font-mono transition-colors ${
+                                active
+                                  ? "bg-primary/70 text-primary-foreground"
+                                  : "bg-muted text-muted-foreground/30"
+                              }`}
+                            >
+                              {bitIdx}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {/* UOR Identity (Module 2) */}
             <div className="md:col-span-2 rounded-lg border border-primary/20 bg-primary/5 p-4">
