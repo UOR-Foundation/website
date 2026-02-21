@@ -54,6 +54,41 @@ const PRIMITIVE_TYPES: PrimitiveType[] = [
     quantum: 0,
     aliases: ["nibble", "half-byte", "hex digit"],
   },
+  // ── Q1 additional ──────────────────────────────────────────────────
+  {
+    "@type": "type:PrimitiveType",
+    typeIri: "urn:uor:type:string",
+    label: "string",
+    bitWidth: 16,
+    quantum: 1,
+    aliases: ["string", "text", "str", "varchar"],
+  },
+  // ── Q2 types (32-bit) ─────────────────────────────────────────────
+  {
+    "@type": "type:PrimitiveType",
+    typeIri: "urn:uor:type:uint32",
+    label: "uint32",
+    bitWidth: 32,
+    quantum: 2,
+    aliases: ["u32", "uint32", "int", "int32", "dword", "unsigned int"],
+  },
+  {
+    "@type": "type:PrimitiveType",
+    typeIri: "urn:uor:type:float32",
+    label: "float32",
+    bitWidth: 32,
+    quantum: 2,
+    aliases: ["float", "float32", "f32", "single", "real"],
+  },
+  // ── Q3 types (64-bit) ─────────────────────────────────────────────
+  {
+    "@type": "type:PrimitiveType",
+    typeIri: "urn:uor:type:uint64",
+    label: "uint64",
+    bitWidth: 64,
+    quantum: 3,
+    aliases: ["u64", "uint64", "long", "int64", "qword", "bigint"],
+  },
 ];
 
 // ── Lookup functions ────────────────────────────────────────────────────────
