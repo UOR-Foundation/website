@@ -4,6 +4,7 @@ import { UORRing, Q0, Q1, Q2, fromBytes } from "../ring";
 import { verifyQ0Exhaustive } from "../coherence";
 import type { CoherenceResult } from "../coherence";
 import { bytePopcount, byteBasis } from "@/lib/uor-ring";
+import { bytesToGlyph, bytesToIRI, bytesToUPlus, contentAddress, datumApiUrl } from "@/modules/identity";
 
 const QUANTUM_OPTIONS = [
   { label: "Q0 (8-bit)", quantum: 0, max: 255 },
@@ -169,6 +170,34 @@ const RingExplorerPage = () => {
               value={spectrum.map((s) => `[${s.join(",")}]`).join(" ")}
               mono
             />
+
+            {/* UOR Identity (Module 2) */}
+            <div className="md:col-span-2 rounded-lg border border-primary/20 bg-primary/5 p-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">
+                UOR Content Address (Braille Bijection)
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm font-mono">
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-0.5">Glyph</p>
+                  <p className="text-lg">{bytesToGlyph(bytes)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-0.5">Codepoint</p>
+                  <p className="break-all">{bytesToUPlus(bytes)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-0.5">IRI</p>
+                  <a
+                    href={datumApiUrl(value, ring.bits)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline break-all text-xs"
+                  >
+                    {contentAddress(ring, value)}
+                  </a>
+                </div>
+              </div>
+            </div>
             {/* Critical identity check */}
             <div className="md:col-span-2 rounded-lg border border-border bg-card p-4">
               <p className="text-xs font-medium text-muted-foreground mb-1">
