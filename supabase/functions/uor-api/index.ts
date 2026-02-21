@@ -104,8 +104,10 @@ function xorOp(x: number, y: number): number { return x ^ y; }
 function andOp(x: number, y: number): number { return x & y; }
 function orOp(x: number, y: number): number { return x | y; }
 
-// ── Content Addressing (u.rs) ───────────────────────────────────────────────
-function encodeGlyph(b: number): string { return String.fromCodePoint(0x2800 + (b & 0x3F)); }
+// ── Content Addressing (u.rs) — Braille Bijection ──────────────────────────
+// Every byte (0–255) maps to exactly one Unicode Braille cell (U+2800–U+28FF).
+// This is a LOSSLESS BIJECTION, not a hash. The address IS the content in Braille form.
+function encodeGlyph(b: number): string { return String.fromCodePoint(0x2800 + b); }
 function addressSimplified(bytes: Uint8Array): string { return Array.from(bytes).map(encodeGlyph).join(''); }
 
 // ── schema:Datum construction (schema.rs) ───────────────────────────────────
@@ -263,36 +265,27 @@ function canonicalSerialise(obj: unknown): string {
 }
 
 // ── CID computation — CIDv1 / dag-json / sha2-256 / base32lower ────────────
-// Binary structure: <0x01><varint(0x0129)><0x12><0x20><sha256 digest>
-// String form: base32lower with 'b' prefix
-
-/** Encode an unsigned integer as a varint (LEB128). */
-function encodeVarint(value: number): Uint8Array {
-  const bytes: number[] = [];
-  while (value > 0x7f) {
-    bytes.push((value & 0x7f) | 0x80);
-    value >>>= 7;
-  }
-  bytes.push(value & 0x7f);
-  return new Uint8Array(bytes);
-}
+// Binary structure: <0x01><0xa9, 0x02 (dag-json 0x0129 varint)><0x12><0x20><sha256 digest>
+// String form: 'b' + base32lower(CID binary)
 
 /** RFC 4648 base32 (lowercase, no padding) — the IPFS base32lower encoding. */
-function base32Lower(data: Uint8Array): string {
+function encodeBase32Lower(bytes: Uint8Array): string {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz234567';
-  let bits = 0, value = 0, output = '';
-  for (const byte of data) {
-    value = (value << 8) | byte;
-    bits += 8;
-    while (bits >= 5) {
-      bits -= 5;
-      output += alphabet[(value >>> bits) & 0x1f];
+  let result = '';
+  let buffer = 0;
+  let bitsLeft = 0;
+  for (const byte of bytes) {
+    buffer = (buffer << 8) | byte;
+    bitsLeft += 8;
+    while (bitsLeft >= 5) {
+      bitsLeft -= 5;
+      result += alphabet[(buffer >> bitsLeft) & 31];
     }
   }
-  if (bits > 0) {
-    output += alphabet[(value << (5 - bits)) & 0x1f];
+  if (bitsLeft > 0) {
+    result += alphabet[(buffer << (5 - bitsLeft)) & 31];
   }
-  return output;
+  return result;
 }
 
 /**
@@ -301,7 +294,7 @@ function base32Lower(data: Uint8Array): string {
  * Steps:
  *   1. SHA-256 digest of the canonical bytes
  *   2. Multihash: <0x12 (sha2-256)><0x20 (32 bytes)><digest>
- *   3. CID binary: <0x01 (CIDv1)><varint(0x0129) (dag-json)><multihash>
+ *   3. CID binary: <0x01 (CIDv1)><0xa9, 0x02 (dag-json 0x0129 varint)><multihash>
  *   4. String: 'b' + base32lower(CID binary)
  *
  * @param canonicalBytes - The deterministic serialised JSON-LD as Uint8Array
@@ -320,24 +313,26 @@ async function computeCid(canonicalBytes: Uint8Array): Promise<string> {
   multihash.set(digest, 2);
 
   // 3. CID binary: <version><codec><multihash>
-  //    version = 0x01, codec = 0x0129 (dag-json) as varint
-  const version = new Uint8Array([0x01]);
-  const codec = encodeVarint(0x0129);
-  const cidBinary = new Uint8Array(version.length + codec.length + multihash.length);
-  cidBinary.set(version, 0);
-  cidBinary.set(codec, version.length);
-  cidBinary.set(multihash, version.length + codec.length);
+  //    version = 0x01
+  //    dag-json codec = 0x0129, varint-encoded as [0xa9, 0x02]
+  const cidBinary = new Uint8Array(1 + 2 + multihash.length);
+  cidBinary[0] = 0x01;   // CIDv1 version
+  cidBinary[1] = 0xa9;   // dag-json 0x0129 varint low byte
+  cidBinary[2] = 0x02;   // dag-json 0x0129 varint high byte
+  cidBinary.set(multihash, 3);
 
   // 4. base32lower with 'b' multibase prefix
-  return 'b' + base32Lower(cidBinary);
+  return 'b' + encodeBase32Lower(cidBinary);
 }
 
 /**
- * Compute the u:Address (Braille bijection) from canonical bytes.
- * Reuses the existing addressSimplified function.
+ * Compute the u:Address (Braille bijection) from raw bytes.
+ * Per u.rs: every byte maps to exactly one Braille cell (U+2800 + byte).
+ * Lossless bijection — the glyph string has the same character count as the byte count.
  */
-function computeUorAddress(canonicalBytes: Uint8Array): string {
-  return addressSimplified(canonicalBytes);
+function computeUorAddress(bytes: Uint8Array): { glyph: string; length: number } {
+  const glyph = addressSimplified(bytes);
+  return { glyph, length: bytes.length };
 }
 
 /**
@@ -348,7 +343,7 @@ async function buildStoredObject(payload: Record<string, unknown>): Promise<{
   storedObject: Record<string, unknown>;
   canonicalBytes: Uint8Array;
   cid: string;
-  uorAddress: string;
+  uorAddress: { glyph: string; length: number };
   serialisation: string;
 }> {
   const serialisation = canonicalSerialise(payload);
@@ -360,7 +355,11 @@ async function buildStoredObject(payload: Record<string, unknown>): Promise<{
     "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/store/object/${cid}`,
     "@type": "store:StoredObject",
-    "store:uorAddress": uorAddress,
+    "store:uorAddress": {
+      "@type": "u:Address",
+      "u:glyph": uorAddress.glyph,
+      "u:length": uorAddress.length,
+    },
     "store:cid": cid,
     "store:storedType": payload["@type"] ?? "unknown",
     "store:serialisation": serialisation,
