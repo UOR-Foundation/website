@@ -7,6 +7,7 @@ import {
   uor_correlate,
   uor_partition,
 } from "../tools";
+import { crossQuantumTransform } from "@/modules/morphism";
 import type {
   DeriveOutput,
   QueryOutput,
@@ -14,10 +15,11 @@ import type {
   CorrelateOutput,
   PartitionOutput,
 } from "../tools";
+import type { CrossQuantumResult } from "@/modules/morphism";
 import { parseTerm } from "../parser";
 import { serializeTerm } from "@/modules/ring-core/canonicalization";
 
-type TabId = "derive" | "query" | "verify" | "correlate" | "partition" | "chat";
+type TabId = "derive" | "query" | "verify" | "correlate" | "partition" | "transform" | "chat";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "derive", label: "Derive" },
@@ -25,6 +27,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "verify", label: "Verify" },
   { id: "correlate", label: "Correlate" },
   { id: "partition", label: "Partition" },
+  { id: "transform", label: "Transform" },
   { id: "chat", label: "Agent Chat" },
 ];
 
@@ -238,6 +241,59 @@ function PartitionTab() {
   );
 }
 
+function TransformTab() {
+  const [value, setValue] = useState("42");
+  const [sourceQ, setSourceQ] = useState(0);
+  const [targetQ, setTargetQ] = useState(1);
+  const [result, setResult] = useState<CrossQuantumResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const execute = useCallback(async () => {
+    setLoading(true); setError(null);
+    try {
+      const r = await crossQuantumTransform(parseInt(value), sourceQ, targetQ);
+      setResult(r);
+    } catch (e) { setError(String(e)); }
+    finally { setLoading(false); }
+  }, [value, sourceQ, targetQ]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3 flex-wrap">
+        <input value={value} onChange={(e) => setValue(e.target.value)} placeholder="Value" className="flex-1 min-w-[100px] px-4 py-2 rounded-lg border border-border bg-card text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+        <select value={sourceQ} onChange={(e) => setSourceQ(Number(e.target.value))} className="px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm">
+          <option value={0}>Q0 (8-bit)</option><option value={1}>Q1 (16-bit)</option>
+        </select>
+        <span className="self-center text-muted-foreground text-sm">→</span>
+        <select value={targetQ} onChange={(e) => setTargetQ(Number(e.target.value))} className="px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm">
+          <option value={0}>Q0 (8-bit)</option><option value={1}>Q1 (16-bit)</option>
+        </select>
+        <button onClick={execute} disabled={loading} className="btn-primary text-sm disabled:opacity-50">{loading ? "…" : "Transform"}</button>
+      </div>
+      {error && <p className="text-sm text-destructive font-mono">{error}</p>}
+      {result && (
+        <div>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <Stat label="Source" value={result.sourceValue} />
+            <Stat label="Target" value={result.targetValue} />
+            <div className="rounded-lg border border-border bg-muted/30 p-3 text-center">
+              <p className={`text-lg font-display font-bold ${result.lossless ? "text-green-400" : "text-amber-400"}`}>{result.lossless ? "✓" : "⚠"}</p>
+              <p className="text-[10px] text-muted-foreground">{result.lossless ? "Lossless" : "Lossy"}</p>
+            </div>
+          </div>
+          <div className="mb-3">
+            <p className="text-xs text-muted-foreground mb-1">Morphism: <span className="text-foreground font-mono">{result.transform["@type"]}</span></p>
+            <p className="text-xs text-muted-foreground">Receipt: <span className={`font-mono ${result.receipt.selfVerified ? "text-green-400" : "text-red-400"}`}>{result.receipt.selfVerified ? "✓ Self-verified" : "✗ Failed"}</span></p>
+            <p className="text-xs text-muted-foreground">Time: <span className="text-foreground">{result.executionTimeMs}ms</span></p>
+          </div>
+          <ResultPanel data={result} label="Transform Result" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ChatTab() {
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<{ role: "user" | "agent"; text: string }[]>([]);
@@ -370,6 +426,7 @@ const AgentConsolePage = () => {
             {activeTab === "verify" && <VerifyTab />}
             {activeTab === "correlate" && <CorrelateTab />}
             {activeTab === "partition" && <PartitionTab />}
+            {activeTab === "transform" && <TransformTab />}
             {activeTab === "chat" && <ChatTab />}
           </div>
         </div>

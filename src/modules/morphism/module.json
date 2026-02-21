@@ -1,0 +1,9 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "schema:SoftwareModule",
+  "schema:name": "morphism",
+  "schema:version": "1.0.0",
+  "schema:description": "Structure-preserving maps between different ring sizes and schema translations.",
+  "u:namespace": ["morphism:"],
+  "u:dependencies": ["ring-core", "identity", "derivation", "kg-store", "agent-tools"]
+}
