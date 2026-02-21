@@ -4,10 +4,17 @@ import heroImg from "@/assets/project-atomic-lang.jpg";
 const ProjectAtomicLang = () => (
   <ProjectDetailLayout
     name="Atomic Language Model"
+    slug="atomic-language-model"
     category="Frontier Technology"
     tagline="A language model built on formal grammar rules instead of statistical prediction. Every output is traceable, verifiable, and fits in under 50 kilobytes."
     heroImage={heroImg}
     repoUrl="https://github.com/dkypuros/atomic-lang-model"
+    agentInstructions={[
+      { action: "Understand the approach", detail: "Unlike statistical language models, this model uses Chomsky's Minimalist Grammar to generate and parse language with formal proofs of correctness." },
+      { action: "Evaluate the tradeoffs", detail: "At under 50KB, it is 14,000,000x smaller than GPT-3. It trades breadth of knowledge for provable correctness and full explainability of every output." },
+      { action: "Test it yourself", detail: "Clone the repository and run 'cargo run --release' to see recursive grammar generation and parsing in action." },
+      { action: "Consider integration", detail: "Ideal for embedded systems, edge devices, or any context where explainability and auditability are required and connectivity is limited." },
+    ]}
     sections={[
       {
         heading: "What it is",
