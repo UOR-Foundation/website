@@ -3508,20 +3508,21 @@ const GATEWAY_REGISTRY = [
   {
     "@type": "store:GatewayConfig",
     "store:id": "storacha",
-    "store:provider": "Storacha (formerly web3.storage)",
-    "store:gatewayReadUrl": "https://storacha.link",
-    "store:pinsApiUrl": "https://up.storacha.network",
+    "store:provider": "Storacha (Storacha Network — web3.storage successor)",
     "store:capabilities": ["read", "write"],
     "store:defaultFor": [],
     "store:authRequired": true,
     "store:authNote":
-      "Requires STORACHA_KEY (Ed25519 private key) and STORACHA_PROOF (base64 UCAN delegation). " +
-      "Generate via: storacha key create && storacha delegation create <did> --base64",
+      "Requires STORACHA_KEY (Ed25519 private key) and STORACHA_PROOF (base64 UCAN delegation) " +
+      "environment variables. Generate via: storacha key create && storacha delegation create <agent-did> --base64",
+    "store:gatewayReadUrl": "https://{cid}.ipfs.storacha.link",
+    "store:pinsApiUrl": "https://up.storacha.network",
     "store:note":
-      "Filecoin-backed persistence with IPFS hot retrieval. Data is stored on Filecoin with " +
-      "cryptographic storage proofs — truly decentralized, no single point of failure. " +
-      "5 GB free tier, no credit card required. Acts as decentralized backup alongside Pinata. " +
-      "Reads via {cid}.ipfs.storacha.link/{filename}.",
+      "Storacha is the official successor to web3.storage. Uses UCAN authorization. " +
+      "Uploads raw bytes via uploadFile() — byte-exact, lossless. Files stored on Filecoin " +
+      "with IPFS hot retrieval. 5 GB free tier. Read via {cid}.ipfs.storacha.link/{filename}. " +
+      "CID returned is a UnixFS directory CID (bafy...) — append filename to gateway URL to " +
+      "retrieve file content.",
     "store:filecoinBacked": true,
     "store:freeTier": "5 GB",
   },
@@ -3543,13 +3544,30 @@ async function checkGatewayHealth(readUrl: string): Promise<"healthy" | "degrade
   }
 }
 
+// ── Storacha health check — uses subdomain-style CID gateway ────────────────
+async function checkStorachaHealth(): Promise<"healthy" | "degraded" | "unreachable"> {
+  try {
+    // bafkqaaa is the IPFS identity CID (empty content) — standard probe per trustless gateway spec
+    const resp = await fetch(
+      'https://bafkqaaa.ipfs.storacha.link/',
+      { signal: AbortSignal.timeout(5000) }
+    )
+    // 200 or 404 both indicate the gateway is reachable
+    return (resp.ok || resp.status === 404) ? 'healthy' : 'degraded'
+  } catch {
+    return 'unreachable'
+  }
+}
+
 async function storeGateways(rl: RateLimitResult): Promise<Response> {
   const ts = timestamp();
 
-  // Run health checks in parallel
+  // Run health checks in parallel — Storacha uses subdomain-style gateway
   const healthChecks = await Promise.all(
     GATEWAY_REGISTRY.map(async (gw) => {
-      const health = await checkGatewayHealth(gw["store:gatewayReadUrl"]);
+      const health = gw["store:id"] === "storacha"
+        ? await checkStorachaHealth()
+        : await checkGatewayHealth(gw["store:gatewayReadUrl"]);
       return { id: gw["store:id"], health };
     })
   );
@@ -3569,10 +3587,10 @@ async function storeGateways(rl: RateLimitResult): Promise<Response> {
     "store:defaultWriteGateway": Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? "pinata",
     "store:gateways": gatewaysWithHealth,
     "store:note":
-      "All write operations use pinFileToIPFS for byte-exact canonical storage. " +
-      "The default read gateway is the Pinata dedicated gateway, which serves unwrapped file content " +
-      "for true byte-level lossless round-trips (write_bytes === read_bytes). " +
-      "Health is checked via the bafkqaaa identity probe (IPFS trustless gateway spec §7.1).",
+      "All write operations use raw byte upload for byte-exact canonical storage. " +
+      "Pinata: pinFileToIPFS multipart. Storacha: uploadFile() with File blob. " +
+      "Both guarantee write_bytes === read_bytes. " +
+      "Health checked via bafkqaaa identity probe.",
     "store:ipfsSpecs": {
       "trustless_gateway": "https://specs.ipfs.tech/http-gateways/trustless-gateway/",
       "pinning_service_api": "https://ipfs.github.io/pinning-services-api-spec/",
