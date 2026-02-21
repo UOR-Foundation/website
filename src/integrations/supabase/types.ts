@@ -268,6 +268,39 @@ export type Database = {
           },
         ]
       }
+      uor_observables: {
+        Row: {
+          context_id: string | null
+          created_at: string
+          id: string
+          observable_iri: string
+          quantum: number
+          source: string
+          stratum: number
+          value: number
+        }
+        Insert: {
+          context_id?: string | null
+          created_at?: string
+          id?: string
+          observable_iri: string
+          quantum?: number
+          source: string
+          stratum?: number
+          value: number
+        }
+        Update: {
+          context_id?: string | null
+          created_at?: string
+          id?: string
+          observable_iri?: string
+          quantum?: number
+          source?: string
+          stratum?: number
+          value?: number
+        }
+        Relationships: []
+      }
       uor_receipts: {
         Row: {
           coherence_verified: boolean
@@ -337,6 +370,36 @@ export type Database = {
           quantum?: number
           transition_count?: number
           value?: number
+        }
+        Relationships: []
+      }
+      uor_traces: {
+        Row: {
+          certified_by: string | null
+          created_at: string
+          derivation_id: string | null
+          operation: string
+          quantum: number
+          steps: Json
+          trace_id: string
+        }
+        Insert: {
+          certified_by?: string | null
+          created_at?: string
+          derivation_id?: string | null
+          operation: string
+          quantum?: number
+          steps?: Json
+          trace_id: string
+        }
+        Update: {
+          certified_by?: string | null
+          created_at?: string
+          derivation_id?: string | null
+          operation?: string
+          quantum?: number
+          steps?: Json
+          trace_id?: string
         }
         Relationships: []
       }

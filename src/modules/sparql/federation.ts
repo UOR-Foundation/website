@@ -63,17 +63,70 @@ export async function federatedQuery(
       const result = await executeSparql(query);
       results.push({ endpoint, result });
     } else if (endpoint.type === "uor-api") {
-      // Stub: future API integration
-      results.push({
-        endpoint,
-        result: {
-          rows: [],
-          totalCount: 0,
-          executionTimeMs: 0,
-          query,
-          parsed: { prefixes: [], variables: [], patterns: [], filters: [] },
-        },
-      });
+      // Federated query against UOR Live API
+      const apiStart = performance.now();
+      try {
+        // Extract numeric values from query for ring-grounded resolution
+        const numMatch = query.match(/(\d+)/);
+        const value = numMatch ? parseInt(numMatch[1]) : 0;
+
+        const response = await fetch(
+          `${endpoint.url}/v1/kernel/op/compute`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ op: "neg", x: value, quantum: 0 }),
+            signal: AbortSignal.timeout(5000),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          // Parse API response into SparqlResult format
+          const rows: SparqlResultRow[] = [{
+            subject: data?.result?.iri ?? `urn:uor:api:${value}`,
+            predicate: "u:value",
+            object: String(data?.result?.value ?? value),
+            graph_iri: "urn:uor:graph:api",
+            epistemic_grade: "B" as const,
+          }];
+
+          results.push({
+            endpoint,
+            result: {
+              rows,
+              totalCount: rows.length,
+              executionTimeMs: Math.round(performance.now() - apiStart),
+              query,
+              parsed: { prefixes: [], variables: [], patterns: [], filters: [] },
+            },
+          });
+        } else {
+          // API returned error — return empty result
+          results.push({
+            endpoint,
+            result: {
+              rows: [],
+              totalCount: 0,
+              executionTimeMs: Math.round(performance.now() - apiStart),
+              query,
+              parsed: { prefixes: [], variables: [], patterns: [], filters: [] },
+            },
+          });
+        }
+      } catch {
+        // Network error — return empty result gracefully
+        results.push({
+          endpoint,
+          result: {
+            rows: [],
+            totalCount: 0,
+            executionTimeMs: Math.round(performance.now() - apiStart),
+            query,
+            parsed: { prefixes: [], variables: [], patterns: [], filters: [] },
+          },
+        });
+      }
     }
   }
 
