@@ -2485,6 +2485,17 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
     return error400(`Unknown gateway: "${gateway}". Accepted: ${Object.keys(GATEWAY_CONFIGS).join(', ')}`, 'gateway', rl);
   }
 
+  // Early credential check for Storacha
+  if (gateway === "storacha" && shouldPin) {
+    if (!STORACHA_KEY || !STORACHA_PROOF) {
+      return new Response(JSON.stringify({
+        error: "Storacha gateway requires STORACHA_KEY and STORACHA_PROOF environment variables.",
+        code: "MISSING_STORACHA_CREDENTIALS",
+        docs: "https://docs.storacha.network/how-to/upload/"
+      }), { status: 503, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+    }
+  }
+
   const ts = timestamp();
   const gatewayConfig = GATEWAY_CONFIGS[gateway];
 
@@ -2547,9 +2558,23 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
 
   // ── Step 8: Pin to IPFS (skip if dry run) ──
   let pinResult: PinResult | null = null;
+  let storachaDirectResult: StorachaPinResult | null = null;
   if (shouldPin) {
     try {
-      pinResult = await pinToIpfs(finalBytes, gateway);
+      if (gateway === "storacha") {
+        // Storacha: use direct pinToStoracha for full result, then adapt to PinResult
+        const storachaLabel = objectType.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase().substring(0, 64) || "uor-object";
+        storachaDirectResult = await pinToStoracha(finalBytes, storachaLabel);
+        pinResult = {
+          cid: storachaDirectResult.directoryCid,
+          gatewayUrl: "https://up.storacha.network",
+          gatewayReadUrl: storachaDirectResult.gatewayUrl,
+          status: "pinned",
+          timestamp: ts,
+        };
+      } else {
+        pinResult = await pinToIpfs(finalBytes, gateway);
+      }
     } catch (e) {
       const msg = e.message ?? String(e);
       const status = msg.includes('timed out') || msg.includes('unreachable') ? 502 : 503;
@@ -2562,22 +2587,35 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
   }
 
   // ── Step 9: Build response ──
+  const gatewayCid = pinResult ? pinResult.cid : cid;
+  const gatewayReadUrl = pinResult ? pinResult.gatewayReadUrl : `${gatewayConfig.readUrl}${cid}`;
+
+  const summaryPinned: Record<string, unknown> = {
+    "uor_address": uorAddress.glyph,
+    "ipfs_cid": cid,
+    "gateway_cid": gatewayCid,
+    "retrievable_at": gatewayReadUrl,
+    "dry_run": false,
+    "byte_length": finalBytes.length,
+    "how_to_retrieve": `GET /store/read/${gatewayCid}`,
+    "how_to_verify": `GET /store/verify/${gatewayCid}`,
+    "cid_note": gatewayCid !== cid
+      ? `The gateway CID (${gatewayCid}) is a CIDv0/dag-pb hash assigned by the pinning service. The UOR CID (${cid}) is a CIDv1/dag-json content-address computed canonically. Use the gateway CID for retrieval and the UOR CID for algebraic verification.`
+      : undefined,
+  };
+
+  // Storacha-specific retrieval guidance
+  if (gateway === "storacha" && storachaDirectResult) {
+    summaryPinned["storacha_note"] = `Retrieve via GET /store/read/${gatewayCid}?gateway=https://storacha.link — or fetch directly at ${gatewayReadUrl}`;
+    summaryPinned["cid_note"] = `The directory CID (${gatewayCid}) is a UnixFS/dag-pb CID assigned by Storacha. The UOR CID (${cid}) is the canonical dag-json CID. Use the directory CID for retrieval, the UOR CID for algebraic verification.`;
+    summaryPinned["storacha_provider"] = storachaDirectResult.provider;
+    summaryPinned["storacha_filename"] = `${objectType.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase().substring(0, 64) || "uor-object"}.jsonld`;
+  }
+
   const response: Record<string, unknown> = {
     ...completeEnvelope,
     "summary": shouldPin
-      ? {
-          "uor_address": uorAddress.glyph,
-          "ipfs_cid": cid,
-          "gateway_cid": pinResult ? pinResult.cid : cid,
-          "retrievable_at": pinResult ? pinResult.gatewayReadUrl : `${gatewayConfig.readUrl}${cid}`,
-          "dry_run": false,
-          "byte_length": finalBytes.length,
-          "how_to_retrieve": `GET /store/read/${pinResult ? pinResult.cid : cid}`,
-          "how_to_verify": `GET /store/verify/${pinResult ? pinResult.cid : cid}`,
-          "cid_note": pinResult && pinResult.cid !== cid
-            ? `The gateway CID (${pinResult.cid}) is a CIDv0/dag-pb hash assigned by the pinning service. The UOR CID (${cid}) is a CIDv1/dag-json content-address computed canonically. Use the gateway CID for retrieval and the UOR CID for algebraic verification.`
-            : undefined,
-        }
+      ? summaryPinned
       : {
           "dry_run": true,
           "uor_address": uorAddress.glyph,
@@ -2591,9 +2629,7 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
   };
 
   const ipfsCidHeader = shouldPin ? cid : 'dry-run';
-  const ipfsGatewayHeader = shouldPin
-    ? (pinResult ? pinResult.gatewayReadUrl : gatewayConfig.readUrl)
-    : 'dry-run';
+  const ipfsGatewayHeader = shouldPin ? gatewayReadUrl : 'dry-run';
 
   return new Response(canonicalJsonLd(response), {
     status: 200,
