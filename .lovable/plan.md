@@ -1,164 +1,166 @@
 
-# IPFS Integration Audit: Critical Issues and Fixes
 
-## Audit Summary
+# IPFS x UOR Integration Audit -- Final Technical Report and Fix Plan
 
-Testing the live store/ endpoints revealed three critical issues that make the IPFS write/read cycle completely non-functional. The read-only endpoints (`/store/gateways`, `/store/resolve`) and the pure-computation layer (UOR addressing, CID computation, kernel-space rejection) are architecturally sound but also affected by one of these bugs.
+## Current Status Summary
 
----
+Live testing of all six store/ endpoints confirms:
 
-## Critical Issues Found
+| Endpoint | Dry-Run | Live Pin | Status |
+|---|---|---|---|
+| POST /store/write (pin:false) | 200 OK | -- | WORKING |
+| POST /store/write (pin:true) | -- | 503 | BLOCKED (no PINATA_JWT) |
+| POST /store/write-context (pin:false) | 200 OK | -- | WORKING |
+| POST /store/write-context (pin:true) | -- | 503 | BLOCKED (no PINATA_JWT) |
+| GET /store/resolve | 200 OK | -- | WORKING |
+| GET /store/gateways | 200 OK | -- | WORKING |
+| GET /store/read/:cid | -- | N/A | UNTESTABLE (no pinned content) |
+| GET /store/verify/:cid | 400 | -- | PARTIAL (bafkqaaa rejected as "too short") |
+| Kernel-space rejection | 422 | -- | WORKING |
+| Braille header encoding | ASCII hex | -- | FIXED |
 
-### Issue 1: All Store Endpoints Crash -- Braille Characters in HTTP Headers (SEVERITY: BLOCKER)
-
-Every store/ endpoint that returns a UOR address sets a response header like:
-
-```text
-X-UOR-Address: ⠓⠑⠇⠇⠕  (Braille Unicode U+2800-U+28FF)
-```
-
-HTTP headers are restricted to ASCII (the "ByteString" type). Deno throws `TypeError: Value is not a valid ByteString` and the entire response fails with HTTP 500.
-
-**Affected endpoints:**
-- `POST /store/write` -- crashes on both dry-run and live pin
-- `GET /store/resolve` -- crashes
-- `GET /store/read/:cid` -- crashes (X-UOR-Recomputed-Address header)
-- `GET /store/verify/:cid` -- crashes
-
-**Fix:** Encode Braille glyphs to hex or percent-encoding before placing in headers. The full glyph remains in the JSON-LD body (which supports Unicode). For headers, use a hex representation like `U+2868U+2865...` or simply omit the header and rely on the body.
+The three critical blockers from the previous audit have been addressed:
+1. Braille-in-headers crash -- FIXED (glyphToHeaderSafe produces ASCII hex)
+2. dualVerify round-trip -- FIXED (stripSelfReferentialFields reconstructs Round 1)
+3. Default gateway switched to Pinata -- FIXED (code defaults to "pinata")
 
 ---
 
-### Issue 2: No Working IPFS Write Gateway (SEVERITY: BLOCKER)
+## Remaining Issues
 
-Neither write gateway is functional:
+### Issue A: No PINATA_JWT Secret Configured (BLOCKER for live writes)
 
-- **web3.storage**: The API at `https://api.web3.storage/upload` returns `401 ERROR_NO_TOKEN`. The old web3.storage upload API has been sunset and now requires authentication via the w3up protocol (UCAN-based). The `WEB3_STORAGE_TOKEN` secret is not configured, and even if it were, the old API format is deprecated.
-- **Pinata**: Requires `PINATA_JWT` secret which is not configured.
+The single blocking issue preventing the full write-read-verify cycle. The code correctly defaults to Pinata and the `pinToPinata()` implementation is correct, but the `PINATA_JWT` secret is not configured. Without it, `pin:true` returns HTTP 503.
 
-This means `POST /store/write` with `pin:true` and `POST /store/write-context` with `pin:true` will always fail.
+**Fix:** Configure the `PINATA_JWT` secret. Pinata offers a free tier with 1GB storage -- sufficient for agent memory use cases.
 
-**Fix options (in order of preference):**
-1. Switch to Pinata as default gateway and configure the `PINATA_JWT` secret (Pinata's API is stable and the code already implements it correctly)
-2. Update web3.storage integration to use the new w3up/UCAN protocol
-3. As a minimum viable fix: ensure dry-run mode works perfectly (it currently crashes due to Issue 1) so users can compute addresses without pinning, and document that live pinning requires gateway credentials
+### Issue B: Gateway Registry Metadata Inconsistency
 
----
+The `/store/gateways` response contains stale metadata that contradicts the actual implementation:
 
-### Issue 3: Write-Read-Verify Round-Trip Always Fails (SEVERITY: CRITICAL)
+1. **web3.storage** is listed with `"store:defaultFor": ["write"]` and `"store:authRequired": false` with a note saying "Anonymous uploads accepted" -- but the actual code rejects requests without `WEB3_STORAGE_TOKEN` and the old API is sunset
+2. **Pinata** is listed with `"store:defaultFor": []` -- but it IS the actual default write gateway now
+3. The `"store:authNote"` on web3.storage says "Anonymous uploads accepted" which is false
 
-The dual verification algorithm has a fundamental design flaw that means verification will never pass, even for legitimately stored content:
+These mismatches will confuse AI agents reading the gateway registry.
 
-**The problem:**
-1. `POST /store/write` computes CID and UOR address from "Round 1" bytes (the envelope WITHOUT the `store:cid` and `store:uorAddress` fields)
-2. It then inserts those computed addresses into the envelope, creating "Round 2" bytes
-3. Round 2 bytes (with addresses embedded) are what gets pinned to IPFS
-4. `GET /store/read/:cid` retrieves the Round 2 bytes from IPFS
-5. Verification recomputes CID from the full Round 2 bytes -- but Round 2 includes the address fields that weren't in Round 1
-6. Result: CID mismatch (always) and UOR address mismatch (always)
+**Fix:** Update the GATEWAY_REGISTRY constant to reflect reality:
+- Pinata: set `"store:defaultFor": ["write"]`, keep `"store:authRequired": true`
+- web3.storage: set `"store:defaultFor": []`, set `"store:authRequired": true`, update note to explain the API has been sunset
 
-The code even documents this in `store:cidScope`:
-> "Verification: strip store:cid and store:uorAddress from the retrieved JSON-LD, serialise canonically, recompute -- addresses must match."
+### Issue C: CID Validation Rejects Valid Short CIDs
 
-But the `dualVerify()` function does NOT strip these fields before recomputing. It operates on the raw retrieved bytes.
+The `validateCid()` function requires CIDv1 to be at least 10 characters. The IPFS identity CID `bafkqaaa` (8 characters) is a valid CIDv1 used as the IPFS probe standard (Trustless Gateway spec section 7.1), but it's rejected with "CIDv1 is too short." The gateways endpoint itself uses `bafkqaaa` for health probing, creating an inconsistency where the system uses a CID internally that it rejects from users.
 
-**Fix:** Before recomputing addresses during verification, parse the JSON-LD, remove `store:cid`, `store:uorAddress`, and `@id` (which contains the encoded glyph), restore the placeholder `@id`, then re-serialise canonically and recompute. This matches the verification algorithm described in `cidScope`.
+**Fix:** Lower the minimum CIDv1 length from 10 to 8 characters.
+
+### Issue D: OpenAPI Spec Default Gateway Mismatch
+
+The OpenAPI spec at `public/openapi.json` line 1107 lists the default gateway for write-context as `"web3.storage"` but the actual implementation defaults to `"pinata"`. AI agents reading the spec will send requests with the wrong gateway assumption.
+
+**Fix:** Update the OpenAPI spec default from `"web3.storage"` to `"pinata"` for both `/store/write` and `/store/write-context`.
+
+### Issue E: Duplicate Code Between index.ts and lib/store.ts
+
+The shared library `lib/store.ts` exports `computeUorAddress`, `computeCid`, `canonicalJsonLd`, `validateStorableType`, `KERNEL_SPACE_TYPES`, `glyphToHeaderSafe`, and `stripSelfReferentialFields`. But `index.ts` re-declares all of these identically (lines 254-404) instead of using the imports from lib/store.ts. The imports exist (lines 246-252) but are aliased with `_IMPORTED` suffixes and never used. This means any future bug fix must be applied in two places.
+
+**Fix:** Remove the duplicated declarations in index.ts and use the imported versions directly.
+
+### Issue F: storeRead Recomputes UOR from Round 2 Bytes for Header
+
+At line 2879, `storeRead` recomputes the UOR address from the raw retrieved bytes (Round 2) for the response body field `store:recomputedUorAddress`. But the `dualVerify` function correctly uses Round 1 reconstruction. This means the `store:recomputedUorAddress` in the response body will differ from what `dualVerify` computed, creating confusion in the response.
+
+**Fix:** Use the verification result's `recomputed_uor_address` instead of recomputing.
 
 ---
 
 ## Implementation Plan
 
-### Step 1: Fix Braille-in-Headers Crash
+### Step 1: Configure PINATA_JWT Secret
 
-In `storeWrite`, `storeResolve`, `storeRead`, and `storeVerify`, replace all Braille glyph values in HTTP headers with a hex-encoded representation:
+Prompt the user to add the `PINATA_JWT` secret. This unblocks the entire write-read-verify pipeline.
 
-```typescript
-function glyphToHeaderSafe(glyph: string): string {
-  return [...glyph].slice(0, 32).map(c =>
-    'U+' + (c.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')
-  ).join('');
-}
+### Step 2: Fix Gateway Registry Metadata
+
+Update the `GATEWAY_REGISTRY` constant in index.ts:
+
+```text
+Lines 3352-3366 (web3.storage entry):
+- "store:defaultFor": ["write"]  -->  "store:defaultFor": []
+- "store:authRequired": false    -->  "store:authRequired": true
+- Remove "Anonymous uploads accepted" note
+- Add note: "Legacy API sunset. Requires WEB3_STORAGE_TOKEN (UCAN). Use Pinata for new deployments."
+
+Lines 3368-3381 (Pinata entry):
+- "store:defaultFor": []         -->  "store:defaultFor": ["write"]
 ```
 
-Apply to every `X-UOR-Address` and `X-UOR-Recomputed-Address` header across all four endpoints.
+### Step 3: Fix CID Validation Minimum Length
 
-### Step 2: Fix Dual Verification (Round-Trip Integrity)
-
-Update `dualVerify()` to strip the self-referential fields before recomputing:
-
-```typescript
-async function dualVerify(retrievedBytes, requestedCid) {
-  // Parse the stored JSON-LD
-  let parsed;
-  try { parsed = JSON.parse(new TextDecoder().decode(retrievedBytes)); }
-  catch { /* not JSON -- fall through to raw verification */ }
-
-  if (parsed && parsed["store:cid"]) {
-    // Strip self-referential fields to reconstruct Round 1
-    const round1 = { ...parsed };
-    delete round1["store:cid"];
-    delete round1["store:cidScope"];
-    delete round1["store:uorAddress"];
-    round1["@id"] = "https://uor.foundation/store/object/pending";
-    const round1Bytes = new TextEncoder().encode(canonicalJsonLd(round1));
-    // Recompute from Round 1
-    const recomputedCid = await computeCid(round1Bytes);
-    const recomputedUor = computeUorAddress(round1Bytes);
-    // Compare against stored values
-    ...
-  }
-}
+```text
+Line 2633: change `if (cid.length < 10)` to `if (cid.length < 8)`
 ```
 
-Apply the same stripping logic in `storeVerify()`.
+### Step 4: Remove Duplicate Code in index.ts
 
-### Step 3: Fix IPFS Write Gateway
+- Delete the duplicated declarations (lines 254-404): `KERNEL_SPACE_TYPES`, `validateStorableType`, `UOR_STORE_CONTEXT`, `canonicalJsonLd`, `encodeBase32Lower`, `computeCid`, `computeUorAddress`, `glyphToHeaderSafe`, `stripSelfReferentialFields`
+- Rename imports to drop the `_IMPORTED` suffix and use them directly
+- Add missing imports from lib/store.ts: `UOR_JSONLD_CONTEXT` as `UOR_STORE_CONTEXT`, plus `encodeGlyph` (or keep the local one for the non-store endpoints)
 
-Configure Pinata as the default write gateway since its API is stable and the existing `pinToPinata()` implementation is correct:
+### Step 5: Fix storeRead Response Inconsistency
 
-1. Add the `PINATA_JWT` secret to the project
-2. Change `DEFAULT_WRITE_GATEWAY` fallback from `web3.storage` to `pinata`
-3. Update `pinToWeb3Storage` to handle the 401 gracefully with a clear error message directing users to configure credentials or use Pinata
-4. Add a `try-catch` in `storeWrite` around the gateway selection to provide a helpful error when no credentials are configured for any gateway
+Replace line 2879:
+```typescript
+// Before:
+const recomputedUor = computeUorAddress(bytes);
 
-### Step 4: Add Global Error Handler
+// After: use the verification result
+const recomputedUorGlyph = verification.uor_consistency.recomputed_uor_address;
+```
 
-Wrap the store endpoint handlers in try-catch to return structured JSON errors instead of Deno's raw 500 errors. Currently, the Braille crash produces an unhelpful generic error.
+And update `store:recomputedUorAddress` and the header to use this value.
 
-### Step 5: Update Test Suite
+### Step 6: Update OpenAPI Spec
 
-Update the test file at `supabase/functions/uor-api/store/tests/store.test.ts`:
-- Fix unit tests that check glyph characters use actual Unicode assertions (not escaped string literals like `\\u2800`)
-- Add a test for the header-safe encoding
-- Add a round-trip test that validates the stripping-based verification works
+In `public/openapi.json`, update the store endpoint defaults:
+- Line 1107: change `"default": "web3.storage"` to `"default": "pinata"`
+- Also update the `/store/write` schema default gateway if present
+
+### Step 7: End-to-End Validation (After PINATA_JWT)
+
+Once the secret is configured, run the full cycle:
+1. `POST /store/write` with `pin:true` -- should return 200 with a real CID
+2. `GET /store/read/{cid}` -- should return the content with `store:verified: true`
+3. `GET /store/verify/{cid}` -- should return `verdict: VERIFIED`
 
 ---
 
-## What Works Correctly (No Changes Needed)
+## What is Already Correct (No Changes Needed)
 
-- Braille bijection computation (each byte to U+2800+byte) -- mathematically correct
-- CID computation (CIDv1 / dag-json / sha2-256 / base32lower) -- correctly implemented
-- Canonical JSON-LD serialisation (recursive key sorting, minified) -- correct
-- Kernel-space type rejection (13 types blocked with HTTP 422) -- correct
-- `GET /store/gateways` endpoint -- works and returns health data
-- Rate limiting, CORS, error responses -- all functional
-- Router path matching for all store/ endpoints -- correctly wired
+- Braille bijection (byte to U+2800+byte) -- mathematically sound, lossless
+- CIDv1 computation (dag-json 0x0129, sha2-256, base32lower) -- IPFS-compliant
+- Canonical JSON-LD serialisation (recursive key sort, minified) -- deterministic
+- Kernel-space type guard (13 types, HTTP 422) -- working correctly
+- Round 1/Round 2 envelope design -- architecturally sound
+- stripSelfReferentialFields for verification -- correctly implemented
+- glyphToHeaderSafe for ASCII headers -- working
+- Full @context with all 17 UOR namespaces in every response -- correct
+- CORS, rate limiting, error responses -- all functional
+- IPLD DAG structure for write-context -- correctly links bindings to root
+- Global try-catch error handler in router -- present and working
 
 ---
 
-## Technical Details
-
-### Files to Modify
+## Files to Modify
 
 | File | Changes |
 |---|---|
-| `supabase/functions/uor-api/index.ts` | Fix headers in 4 endpoints, fix `dualVerify()`, update default gateway, add error handler |
-| `supabase/functions/uor-api/store/tests/store.test.ts` | Fix unit test assertions, add round-trip verification test |
+| `supabase/functions/uor-api/index.ts` | Fix gateway registry, remove duplicates, fix CID validation, fix storeRead |
+| `public/openapi.json` | Update default gateway |
 
-### Deployment
+## Secret to Add
 
-After implementing, the edge function will be automatically redeployed. Testing can be done immediately via curl to validate:
-1. `POST /store/write` with `pin:false` returns 200 (not 500)
-2. Headers contain ASCII-safe UOR address representations
-3. If Pinata JWT is configured: `POST /store/write` with `pin:true` returns a real CID
-4. `GET /store/read/:cid` with that CID returns `store:verified: true`
+| Secret | Purpose |
+|---|---|
+| `PINATA_JWT` | Authenticate with Pinata IPFS pinning API for live writes |
+
