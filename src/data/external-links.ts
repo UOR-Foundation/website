@@ -8,6 +8,7 @@ export const GITHUB_ORG_URL = "https://github.com/UOR-Foundation";
 export const GITHUB_FRAMEWORK_URL = "https://github.com/UOR-Foundation/UOR-Framework";
 export const GITHUB_FRAMEWORK_DOCS_URL = "https://uor-foundation.github.io/UOR-Framework/";
 export const GITHUB_RESEARCH_URL = "https://github.com/UOR-Foundation/research";
+export const GITHUB_PRISM_URL = "https://github.com/UOR-Foundation/prism";
 export const GITHUB_ATLAS_URL = "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings";
 export const GITHUB_ATLAS_LEAN4_URL = "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings/lean4";
 export const GITHUB_GOVERNANCE_URL = "https://github.com/UOR-Foundation/.github/blob/main/governance/GOVERNANCE.md";
