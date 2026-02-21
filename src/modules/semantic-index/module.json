@@ -1,0 +1,20 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "semantic-index",
+  "version": "1.0.0",
+  "description": "Entity resolution — maps text mentions to canonical UOR IRIs via index lookup, fuzzy correlation, and derivation-based deduplication.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["semidx:"],
+  "exports": [
+    "buildIndex",
+    "resolveEntity",
+    "deduplicateEntities"
+  ],
+  "dependencies": {
+    "kg-store": "^1.0.0",
+    "resolver": "^1.0.0",
+    "identity": "^1.0.0"
+  },
+  "assets": []
+}
