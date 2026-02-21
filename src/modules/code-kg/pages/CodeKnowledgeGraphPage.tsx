@@ -7,13 +7,7 @@ import { buildVisualization, ENTITY_COLORS, ENTITY_STROKE } from "../visualizer"
 import type { CodeGraphResult } from "../bridge";
 import type { VisualizationData } from "../visualizer";
 import type { EpistemicGrade } from "@/types/uor";
-
-const GRADE_STYLES: Record<EpistemicGrade, string> = {
-  A: "bg-green-500/20 text-green-400 border-green-500/30",
-  B: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  C: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  D: "bg-red-500/20 text-red-400 border-red-500/30",
-};
+import { EpistemicBadge } from "@/modules/epistemic";
 
 const EXAMPLE_CODE = `// Example TypeScript code for analysis
 interface UserProfile {
@@ -151,13 +145,7 @@ const CodeKnowledgeGraphPage = () => {
                       key={de.entity.name}
                       className="flex items-start gap-2 p-2 rounded bg-muted/30"
                     >
-                      <span
-                        className={`inline-flex items-center justify-center w-6 h-6 rounded border text-[9px] font-bold flex-shrink-0 ${
-                          GRADE_STYLES[de.derivation.epistemicGrade as EpistemicGrade]
-                        }`}
-                      >
-                        {de.derivation.epistemicGrade}
-                      </span>
+                      <EpistemicBadge grade={de.derivation.epistemicGrade as EpistemicGrade} size="sm" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-mono font-semibold text-foreground">

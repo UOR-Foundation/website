@@ -1,0 +1,25 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "epistemic",
+  "version": "1.0.0",
+  "description": "Epistemic grading system — every piece of knowledge carries a trust level (A/B/C/D) with upgrade paths and a reusable badge component.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["epistemic:"],
+  "exports": [
+    "computeGrade",
+    "gradeToLabel",
+    "gradeToStyles",
+    "gradeInfo",
+    "upgradeToA",
+    "upgradeToB",
+    "EpistemicBadge",
+    "EpistemicGradeLegend"
+  ],
+  "dependencies": {
+    "derivation": "^1.0.0",
+    "kg-store": "^1.0.0",
+    "ring-core": "^1.0.0"
+  },
+  "assets": []
+}

@@ -4,6 +4,7 @@ import { Q0, Q1, Q2 } from "@/modules/ring-core/ring";
 import type { Term } from "@/modules/ring-core/canonicalization";
 import { serializeTerm } from "@/modules/ring-core/canonicalization";
 import { bytesToGlyph, contentAddress } from "@/modules/identity";
+import { EpistemicBadge } from "@/modules/epistemic";
 import { derive } from "../derivation";
 import type { Derivation } from "../derivation";
 import { issueCertificate } from "../certificate";
@@ -206,7 +207,8 @@ const DerivationLabPage = () => {
                 <h3 className="text-sm font-semibold mb-3">Derivation Record</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                   <Field label="Derivation ID" value={result.derivation.derivationId} mono />
-                  <Field label="Epistemic Grade" value={`${result.derivation.epistemicGrade} (algebraically proven)`} />
+                  <Field label="Epistemic Grade" value="" />
+                  <div className="-mt-1"><EpistemicBadge grade={result.derivation.epistemicGrade} showLabel /></div>
                   <Field label="Original Term" value={result.derivation.originalTerm} mono />
                   <Field label="Canonical Term" value={result.derivation.canonicalTerm} mono highlight />
                   <Field label="Result Value" value={String(result.derivation.resultValue)} mono />

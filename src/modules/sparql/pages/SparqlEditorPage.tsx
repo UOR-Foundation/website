@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { executeSparql } from "../executor";
 import type { SparqlResult, SparqlResultRow } from "../executor";
-import type { EpistemicGrade } from "@/types/uor";
+import { EpistemicBadge, EpistemicGradeLegend } from "@/modules/epistemic";
 
 // ── Example queries ─────────────────────────────────────────────────────────
 
@@ -28,25 +28,6 @@ const EXAMPLES: { label: string; query: string }[] = [
     query: `SELECT ?s ?p ?o WHERE { ?s schema:value ?o . FILTER(?o = "42") } LIMIT 20`,
   },
 ];
-
-// ── Grade badge ─────────────────────────────────────────────────────────────
-
-const GRADE_STYLES: Record<EpistemicGrade, string> = {
-  A: "bg-green-500/20 text-green-400 border-green-500/30",
-  B: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  C: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  D: "bg-red-500/20 text-red-400 border-red-500/30",
-};
-
-function GradeBadge({ grade }: { grade: EpistemicGrade }) {
-  return (
-    <span
-      className={`inline-flex items-center justify-center w-6 h-6 rounded border text-[10px] font-bold ${GRADE_STYLES[grade]}`}
-    >
-      {grade}
-    </span>
-  );
-}
 
 // ── Page component ──────────────────────────────────────────────────────────
 
@@ -165,7 +146,7 @@ const SparqlEditorPage = () => {
                         className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                       >
                         <td className="px-3 py-2">
-                          <GradeBadge grade={row.epistemic_grade} />
+                          <EpistemicBadge grade={row.epistemic_grade} />
                         </td>
                         <td className="px-3 py-2 font-mono text-foreground truncate max-w-[200px]">
                           {row.subject}
@@ -198,12 +179,8 @@ const SparqlEditorPage = () => {
           )}
 
           {/* Grade legend */}
-          <div className="mt-6 flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="font-medium">Grade key:</span>
-            <span className="flex items-center gap-1"><GradeBadge grade="A" /> Algebraically proven</span>
-            <span className="flex items-center gap-1"><GradeBadge grade="B" /> Certified</span>
-            <span className="flex items-center gap-1"><GradeBadge grade="C" /> Attributed</span>
-            <span className="flex items-center gap-1"><GradeBadge grade="D" /> Unverified</span>
+          <div className="mt-6">
+            <EpistemicGradeLegend />
           </div>
         </div>
       </section>
