@@ -2,14 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { buildIndex, resolveEntity, findSimilar } from "@/modules/semantic-index";
 import type { SemanticIndex, EntityResolution, SimilarEntry } from "@/modules/semantic-index";
 import { getDatum } from "@/modules/kg-store/store";
-import type { EpistemicGrade } from "@/types/uor";
-
-const GRADE_STYLES: Record<EpistemicGrade, string> = {
-  A: "bg-green-500/20 text-green-400 border-green-500/30",
-  B: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  C: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  D: "bg-red-500/20 text-red-400 border-red-500/30",
-};
+import { EpistemicBadge } from "@/modules/epistemic";
 
 export function EntitySearch() {
   const [index, setIndex] = useState<SemanticIndex | null>(null);
@@ -86,13 +79,7 @@ export function EntitySearch() {
         <div className="space-y-4">
           {/* Match result */}
           <div className="flex items-start gap-3 p-3 rounded bg-muted/50">
-            <span
-              className={`inline-flex items-center justify-center w-7 h-7 rounded border text-[10px] font-bold flex-shrink-0 ${
-                GRADE_STYLES[resolution.grade]
-              }`}
-            >
-              {resolution.grade}
-            </span>
+            <EpistemicBadge grade={resolution.grade} size="lg" />
             <div className="flex-1 min-w-0">
               {resolution.iri ? (
                 <>
