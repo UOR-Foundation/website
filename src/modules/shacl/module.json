@@ -1,0 +1,23 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "shacl",
+  "version": "1.0.0",
+  "description": "SHACL-like runtime validation of UOR data against shape constraints, with a 7-test conformance suite.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["shacl:"],
+  "exports": [
+    "validate",
+    "validateOnWrite",
+    "runConformanceSuite",
+    "ConformancePage"
+  ],
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "resolver": "^1.0.0",
+    "identity": "^1.0.0",
+    "triad": "^1.0.0"
+  },
+  "routes": ["/conformance"],
+  "assets": []
+}
