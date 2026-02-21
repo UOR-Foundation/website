@@ -50,7 +50,7 @@ const UORDiagram = () => {
               UOR
             </span>
             <span className="text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] mt-1.5 tracking-[0.15em] uppercase text-center leading-snug">
-              Universal<br />Lossless Encoder
+              Universal<br />Address System
             </span>
           </div>
 
@@ -111,7 +111,7 @@ const UORDiagram = () => {
               </svg>
             </div>
             <p className="text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.65)] text-center mt-5 tracking-[0.15em] uppercase leading-snug">
-              Unified Computational<br />Substrate
+              One Shared<br />System
             </p>
           </div>
         </div>
@@ -129,7 +129,7 @@ const UORDiagram = () => {
               <Bot className="w-5 h-5 text-[hsl(var(--section-dark-foreground)/0.8)]" />
             </div>
             <p className="text-sm md:text-base text-[hsl(var(--section-dark-foreground)/0.85)] font-body leading-relaxed flex-1">
-              A single symbolic coordinate system becomes a <span className="text-[hsl(var(--section-dark-foreground))] font-medium">computational substrate</span>. AI agents reason, verify, and act across all data sources autonomously.
+              When all data shares one address system, AI can find, verify, and use information across every source <span className="text-[hsl(var(--section-dark-foreground))] font-medium">without custom connectors or translations</span>.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

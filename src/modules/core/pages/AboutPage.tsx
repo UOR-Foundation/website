@@ -52,7 +52,7 @@ const About = () => {
                 {
                   icon: BookOpen,
                   title: "The Framework",
-                  desc: "A universal coordinate system for information. One address per object, derived from content, verifiable everywhere."
+                  desc: "Every piece of data gets one permanent address, based on what it contains. Findable and verifiable across every system."
                 },
                 {
                   icon: Microscope,
@@ -160,7 +160,7 @@ const About = () => {
                 There are many ways to solve problems in data, AI, and computation. We do not prescribe one. The foundation is a neutral space where different perspectives coexist, get tested, and are judged on their merits.
               </p>
               <p>
-                If your work benefits from permanent identity, lossless composition, or verifiable transformations, there is a place for it here, regardless of your tools, language, or paradigm.
+                If your work benefits from permanent data identity, reliable data combination, or provable accuracy, there is a place for it here, regardless of your tools, language, or paradigm.
               </p>
             </div>
           </div>

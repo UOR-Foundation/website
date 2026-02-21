@@ -8,7 +8,7 @@ const projects = [
     raised: 42000,
     target: 200000,
     description:
-      "Fund the core development and formalization of the Universal Object Reference standard, the foundational specification enabling true semantic interoperability across all data systems.",
+      "Fund the core development and formalization of the Universal Object Reference standard, the foundational specification that gives every piece of data one permanent, verifiable address.",
     highlights: [
       "Formal specification and mathematical proofs",
       "Reference implementations in multiple languages",
