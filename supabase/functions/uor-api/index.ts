@@ -53,8 +53,10 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/kernel/op/operations':              ['GET', 'OPTIONS'],
   '/kernel/address/encode':             ['POST', 'OPTIONS'],
   '/kernel/schema/datum':               ['GET', 'OPTIONS'],
+  '/kernel/schema/triad':               ['GET', 'OPTIONS'],
   '/kernel/derive':                     ['POST', 'OPTIONS'],
   '/kernel/op/correlate':               ['GET', 'OPTIONS'],
+  '/bridge/graph/query':                ['GET', 'OPTIONS'],
   '/bridge/partition':                  ['POST', 'OPTIONS'],
   '/bridge/proof/critical-identity':    ['GET', 'OPTIONS'],
   '/bridge/proof/coherence':            ['POST', 'OPTIONS'],
@@ -195,7 +197,12 @@ function makeDatum(value: number, n: number) {
       "schema:datum": bytes,
       "schema:stratum": stratumPerByte,
       "schema:spectrum": spectrumPerByte,
-      "schema:totalStratum": totalStratum
+      "schema:totalStratum": totalStratum,
+      "schema:rdfAnalogy": {
+        "datum↔subject": "WHAT the object is (its identity, the byte content)",
+        "stratum↔predicate": "HOW MUCH information it carries (popcount — the relationship measure)",
+        "spectrum↔object": "WHICH bits compose it (the specific basis elements — the value)"
+      }
     },
     "schema:stratum": totalStratum,
     "schema:spectrum": value.toString(2).padStart(n, '0'),
@@ -1028,6 +1035,174 @@ function schemaDatum(url: URL, rl: RateLimitResult): Response {
   }, CACHE_HEADERS_KERNEL, etag, rl);
 }
 
+// GET /kernel/schema/triad?x=42&n=8 — schema:Triad as first-class class (roadmap §1.4)
+function schemaTriad(url: URL, rl: RateLimitResult): Response {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const nRes = parseIntParam(nRaw, 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+
+  const x = xRes.val, n = nRes.val;
+  const m = modulus(n);
+  if (x >= m) return error400(`x must be in [0, ${m - 1}] for n=${n}`, 'x', rl);
+
+  const bytes = toBytesTuple(x, n);
+  const stratumPerByte = bytes.map(bytePopcount);
+  const spectrumPerByte = bytes.map(byteBasis);
+  const totalStratum = stratumPerByte.reduce((a: number, b: number) => a + b, 0);
+  const glyph = bytes.map(encodeGlyph).join('');
+  const iri = _iri(bytes);
+  const spectrum = x.toString(2).padStart(n, '0');
+  const { component } = classifyByte(x, n);
+
+  const etag = makeETag('/kernel/schema/triad', { x: String(x), n: String(n) });
+
+  return jsonResp({
+    "summary": {
+      "value": x,
+      "datum": bytes,
+      "stratum": totalStratum,
+      "spectrum": spectrum,
+      "glyph": glyph,
+      "partition": component,
+      "description": "The Triad is the UOR equivalent of an RDF triple. Datum (subject) = what it is. Stratum (predicate) = how much information it carries. Spectrum (object) = which bits compose it."
+    },
+    "@context": UOR_CONTEXT_URL,
+    "@id": iri,
+    "@type": "schema:Triad",
+    "schema:rdfCorrespondence": {
+      "@type": "schema:TriadRDFMapping",
+      "description": "schema:Triad is the formal UOR correspondent to the RDF 1.1 triple model. Every datum in Z/(2^n)Z is fully described by exactly three coordinates.",
+      "mapping": [
+        {
+          "uor": "schema:datum",
+          "rdf": "rdf:subject",
+          "role": "Identity — WHAT the object is",
+          "value": bytes,
+          "explanation": "The raw byte representation IS the content-addressed identity. In RDF, the subject identifies the resource. In UOR, the datum bytes ARE the resource."
+        },
+        {
+          "uor": "schema:stratum",
+          "rdf": "rdf:predicate",
+          "role": "Measure — HOW MUCH information it carries",
+          "value": { "perByte": stratumPerByte, "total": totalStratum, "maxPossible": n },
+          "explanation": "The Hamming weight (popcount) measures information density. In RDF, the predicate describes the relationship. In UOR, stratum describes the datum's complexity level."
+        },
+        {
+          "uor": "schema:spectrum",
+          "rdf": "rdf:object",
+          "role": "Composition — WHICH bits compose it",
+          "value": { "binary": spectrum, "perByte": spectrumPerByte },
+          "explanation": "The active basis indices enumerate the structural components. In RDF, the object is the value. In UOR, spectrum is the complete decomposition into basis elements."
+        }
+      ],
+      "namedGraphs": {
+        "uor": "partition:Partition",
+        "rdf": "Named Graph (rdf:Graph)",
+        "role": "Context — which algebraic partition contains this datum",
+        "value": component,
+        "explanation": "Named graphs in RDF scope triples into contexts. In UOR, partition:Partition classifies each datum into one of four disjoint sets (UnitSet, ExteriorSet, IrreducibleSet, ReducibleSet), providing the graph-level context."
+      }
+    },
+    "schema:datum": {
+      "@type": "schema:ByteTuple",
+      "schema:bytes": bytes,
+      "schema:glyph": glyph,
+      "schema:contentAddressedIRI": iri
+    },
+    "schema:stratum": {
+      "@type": "schema:Stratum",
+      "schema:perByte": stratumPerByte,
+      "schema:total": totalStratum,
+      "schema:maxBits": n,
+      "schema:density": totalStratum / n,
+      "schema:level": totalStratum / n <= 1/3 ? "low" : totalStratum / n <= 2/3 ? "medium" : "high"
+    },
+    "schema:spectrum": {
+      "@type": "schema:Spectrum",
+      "schema:binary": spectrum,
+      "schema:perByte": spectrumPerByte,
+      "schema:activeBits": totalStratum,
+      "schema:inactiveBits": n - totalStratum
+    },
+    "partition:Partition": {
+      "@type": "partition:Partition",
+      "partition:component": component,
+      "partition:role": "Named graph context — scopes this Triad within the ring's algebraic structure"
+    },
+    "schema:formalStatement": `Triad(${x}) = ⟨ datum:[${bytes}], stratum:${totalStratum}/${n}, spectrum:${spectrum} ⟩ ∈ ${component} ⊂ Z/${m}Z`,
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/schema.rs"
+  }, CACHE_HEADERS_KERNEL, etag, rl);
+}
+
+// GET /bridge/graph/query?graph=partition:UnitSet&n=8 — Named graph query (roadmap §1.4)
+function bridgeGraphQuery(url: URL, rl: RateLimitResult): Response {
+  const graph = url.searchParams.get('graph') ?? 'partition:UnitSet';
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const nRes = parseIntParam(nRaw, 'n', 1, 8);
+  if ('err' in nRes) return nRes.err;
+  const n = nRes.val;
+  const m = modulus(n);
+  const limit = Math.min(Number(url.searchParams.get('limit') ?? '32'), 256);
+
+  // Classify all elements and filter by named graph
+  const members: unknown[] = [];
+  for (let x = 0; x < m && members.length < limit; x++) {
+    const { component, reason } = classifyByte(x, n);
+    if (component === graph || graph === 'all') {
+      const bytes = toBytesTuple(x, n);
+      const stratumPerByte = bytes.map(bytePopcount);
+      const totalStratum = stratumPerByte.reduce((a: number, b: number) => a + b, 0);
+      members.push({
+        "@id": _iri(bytes),
+        "@type": "schema:Triad",
+        "schema:value": x,
+        "schema:datum": bytes,
+        "schema:stratum": totalStratum,
+        "schema:spectrum": x.toString(2).padStart(n, '0'),
+        "schema:glyph": bytes.map(encodeGlyph).join(''),
+        "partition:reason": reason
+      });
+    }
+  }
+
+  // Count totals per partition
+  const counts: Record<string, number> = {};
+  for (let x = 0; x < m; x++) {
+    const { component } = classifyByte(x, n);
+    counts[component] = (counts[component] ?? 0) + 1;
+  }
+
+  const etag = makeETag('/bridge/graph/query', { graph, n: String(n), limit: String(limit) });
+
+  return jsonResp({
+    "summary": {
+      "named_graph": graph,
+      "ring": `Z/${m}Z`,
+      "members_returned": members.length,
+      "total_in_graph": graph === 'all' ? m : (counts[graph] ?? 0),
+      "partition_counts": counts,
+      "description": "Named graphs in UOR correspond to partition:Partition — each element of the ring belongs to exactly one of four disjoint algebraic partitions."
+    },
+    "@context": UOR_CONTEXT_URL,
+    "@id": `https://uor.foundation/graph/${graph.replace('partition:', '')}/R${n}`,
+    "@type": ["partition:Partition", "rdf:Graph"],
+    "partition:graphName": graph,
+    "partition:quantum": n,
+    "partition:ringModulus": m,
+    "partition:disjointPartitions": [
+      { "name": "partition:UnitSet", "count": counts["partition:UnitSet"] ?? 0, "description": "Ring units — elements with multiplicative inverses" },
+      { "name": "partition:ExteriorSet", "count": counts["partition:ExteriorSet"] ?? 0, "description": "Additive identity and even generators" },
+      { "name": "partition:IrreducibleSet", "count": counts["partition:IrreducibleSet"] ?? 0, "description": "Odd non-units — cannot be decomposed" },
+      { "name": "partition:ReducibleSet", "count": counts["partition:ReducibleSet"] ?? 0, "description": "Even elements — decomposable in the ring" }
+    ],
+    "partition:disjointness": `UnitSet ∩ ExteriorSet ∩ IrreducibleSet ∩ ReducibleSet = ∅ and UnitSet ∪ ExteriorSet ∪ IrreducibleSet ∪ ReducibleSet = Z/${m}Z`,
+    "partition:members": members,
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/partition.rs"
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
 // POST /kernel/derive — Term tree derivation pipeline (UOR Prism §Term→Derivation)
 async function kernelDerive(req: Request, rl: RateLimitResult): Promise<Response> {
   const contentType = req.headers.get('content-type') ?? '';
@@ -1696,7 +1871,8 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/kernel/op/compute`, "required_params": "x", "optional_params": "n, y", "example": `${base}/kernel/op/compute?x=42&y=10`, "operationId": "opCompute", "summary": "All ring operations for x (and binary ops for x, y)" },
           { "method": "GET", "path": `${base}/kernel/op/operations`, "required_params": "none", "example": `${base}/kernel/op/operations`, "operationId": "opList", "summary": "All named op/ individuals — 5 primitives + derived — with formulas and definitions" },
           { "method": "POST", "path": `${base}/kernel/address/encode`, "body": "{input, encoding}", "example": `${base}/kernel/address/encode`, "operationId": "addressEncode", "summary": "UTF-8 → u:Address with per-byte Glyph decomposition" },
-          { "method": "GET", "path": `${base}/kernel/schema/datum`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/schema/datum?x=42`, "operationId": "schemaDatum", "summary": "Full schema:Datum — decimal, binary, bits set, content address" },
+          { "method": "GET", "path": `${base}/kernel/schema/datum`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/schema/datum?x=42`, "operationId": "schemaDatum", "summary": "Full schema:Datum — decimal, binary, bits set, content address, embedded schema:Triad" },
+          { "method": "GET", "path": `${base}/kernel/schema/triad`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/schema/triad?x=42`, "operationId": "schemaTriad", "summary": "schema:Triad — first-class triadic coordinate (datum/stratum/spectrum ↔ subject/predicate/object) with RDF 1.1 correspondence and partition:Partition named graph context" },
           { "method": "POST", "path": `${base}/kernel/derive`, "body": "{term: {op, args}, n?}", "example": `${base}/kernel/derive`, "operationId": "kernelDerive", "summary": "uor.derive() — term tree derivation with SHA-256 derivation_id (urn:uor:derivation:sha256:...), cert:Certificate, and Grade A epistemic certainty" }
         ]
       },
@@ -1710,7 +1886,8 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/bridge/observable/metrics`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/observable/metrics?x=42`, "operationId": "observableMetrics", "summary": "RingMetric, HammingMetric, CascadeLength, CatastropheThreshold" },
           { "method": "GET", "path": `${base}/bridge/derivation`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/derivation?x=42&ops=neg,bnot,succ`, "operationId": "bridgeDerivation", "summary": "derivation:DerivationTrace — SHA-256 derivation_id, cert:Certificate with cert:certifies, Grade A epistemic grading" },
           { "method": "GET", "path": `${base}/bridge/trace`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/trace?x=42&ops=neg,bnot`, "operationId": "bridgeTrace", "summary": "trace:ExecutionTrace — exact bit state per step, Hamming drift, XOR deltas" },
-          { "method": "GET", "path": `${base}/bridge/resolver`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/resolver?x=42`, "operationId": "bridgeResolver", "summary": "resolver:Resolution — canonical category with full factor decomposition" }
+          { "method": "GET", "path": `${base}/bridge/resolver`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/resolver?x=42`, "operationId": "bridgeResolver", "summary": "resolver:Resolution — canonical category with full factor decomposition" },
+          { "method": "GET", "path": `${base}/bridge/graph/query`, "required_params": "none", "optional_params": "graph, n, limit", "example": `${base}/bridge/graph/query?graph=partition:UnitSet&n=8`, "operationId": "bridgeGraphQuery", "summary": "Named graph query — enumerate Triads scoped by partition:Partition (UnitSet, ExteriorSet, IrreducibleSet, ReducibleSet)" }
         ]
       },
       "user": {
@@ -4138,6 +4315,14 @@ Deno.serve(async (req: Request) => {
       }
       return resp;
     }
+    if (path === '/kernel/schema/triad') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = schemaTriad(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
 
     // ── Kernel — derive (term tree derivation) ──
     if (path === '/kernel/derive') {
@@ -4173,6 +4358,16 @@ Deno.serve(async (req: Request) => {
     if (path === '/bridge/proof/coherence') {
       if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
       return await proofCoherence(req, rl);
+    }
+
+    // ── Bridge — graph query (named graphs as partition:Partition) ──
+    if (path === '/bridge/graph/query') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = bridgeGraphQuery(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
     }
 
     // ── Bridge — cert ──
