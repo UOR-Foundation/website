@@ -6,6 +6,7 @@ import type { CoherenceResult } from "../coherence";
 import { bytePopcount, byteBasis } from "@/lib/uor-ring";
 import { bytesToGlyph, bytesToIRI, bytesToUPlus, contentAddress, datumApiUrl } from "@/modules/identity";
 import { computeTriad, stratumLevel, stratumDensity } from "@/modules/triad";
+import { JsonLdExportPanel } from "@/modules/jsonld/components/JsonLdExportPanel";
 
 const QUANTUM_OPTIONS = [
   { label: "Q0 (8-bit)", quantum: 0, max: 255 },
@@ -314,6 +315,11 @@ const RingExplorerPage = () => {
               )}
             </div>
           )}
+
+          {/* JSON-LD Export */}
+          <div className="mb-8">
+            <JsonLdExportPanel ring={ring} />
+          </div>
 
           {/* Coherence verification */}
           <div className="rounded-lg border border-border bg-card p-5">
