@@ -23,4 +23,8 @@ export const routeTable = [
   { path: "/code-knowledge-graph", label: "Code Knowledge Graph" },
   { path: "/agent-console", label: "Agent Console" },
   { path: "/audit", label: "System Audit" },
+  { path: "/ring-explorer", label: "Ring Explorer" },
+  { path: "/derivation-lab", label: "Derivation Lab" },
+  { path: "/knowledge-graph", label: "Knowledge Graph" },
+  { path: "/sessions", label: "State Explorer" },
 ];
