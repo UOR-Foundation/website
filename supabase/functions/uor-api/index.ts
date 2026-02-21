@@ -2277,9 +2277,15 @@ async function getStorachaClient() {
   const store = new StoreMemory()
   const client = await StorachaClient.create({ principal, store })
 
+  // Normalize proof: convert base64url to base64pad if needed
+  let proofStr = STORACHA_PROOF.replace(/-/g, '+').replace(/_/g, '/')
+  const pad = proofStr.length % 4
+  if (pad === 2) proofStr += '=='
+  else if (pad === 3) proofStr += '='
+
   let proof;
   try {
-    proof = await StorachaProof.parse(STORACHA_PROOF)
+    proof = await StorachaProof.parse(proofStr)
   } catch (e) {
     throw new Error(`STORACHA_PROOF parse failed: ${e.message}. Proof starts with "${STORACHA_PROOF.substring(0, 8)}..." (length ${STORACHA_PROOF.length}). Expected: base64 UCAN delegation from 'storacha delegation create --base64'`)
   }
