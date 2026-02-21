@@ -1,0 +1,24 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "jsonld",
+  "version": "1.0.0",
+  "description": "UOR JSON-LD Emission & W3C Serialization — produces valid W3C JSON-LD 1.1 documents from ring data (requirement R6).",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["schema:", "op:", "proof:", "derivation:", "cert:", "partition:"],
+  "exports": [
+    "emitContext",
+    "emitDatum",
+    "emitDerivation",
+    "emitCoherenceProof",
+    "emitGraph",
+    "validateJsonLd"
+  ],
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "identity": "^1.0.0",
+    "triad": "^1.0.0",
+    "derivation": "^1.0.0"
+  },
+  "assets": []
+}
