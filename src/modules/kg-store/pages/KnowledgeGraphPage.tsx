@@ -11,6 +11,8 @@ import {
 import { getGraphStats, listGraphs } from "../graph-manager";
 import type { GraphStats } from "../graph-manager";
 import { contentAddress } from "@/modules/identity";
+import { PartitionVisualizer } from "@/modules/resolver/components/PartitionVisualizer";
+import { CorrelationTool } from "@/modules/resolver/components/CorrelationTool";
 
 const KnowledgeGraphPage = () => {
   const [stats, setStats] = useState<GraphStats | null>(null);
@@ -173,6 +175,16 @@ const KnowledgeGraphPage = () => {
                 {JSON.stringify(lookupResult, null, 2)}
               </pre>
             )}
+          </div>
+
+          {/* Partition Visualizer */}
+          <div className="mb-8">
+            <PartitionVisualizer />
+          </div>
+
+          {/* Correlation Tool */}
+          <div className="mb-8">
+            <CorrelationTool />
           </div>
 
           {/* Named graphs */}
