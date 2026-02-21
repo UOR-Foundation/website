@@ -2289,7 +2289,25 @@ async function pinToIpfs(
     return await pinToPinata(bytes, ts);
   }
   if (gateway === "storacha" || gateway === "https://up.storacha.network") {
-    return await pinToStoracha(bytes, ts);
+    // Derive a human-readable label from the bytes (try to extract @type)
+    let label = "uor-object";
+    try {
+      const parsed = JSON.parse(new TextDecoder().decode(bytes));
+      const objType = parsed?.["payload"]?.["@type"] ?? parsed?.["@type"] ?? "";
+      if (typeof objType === "string" && objType.length > 0) {
+        label = objType.replace(/[:/]/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "uor-object";
+      }
+    } catch { /* use default label */ }
+
+    const storachaResult = await pinToStoracha(bytes, label);
+    // Adapt StorachaPinResult → PinResult for unified downstream handling
+    return {
+      cid: storachaResult.directoryCid,
+      gatewayUrl: "https://up.storacha.network",
+      gatewayReadUrl: storachaResult.gatewayUrl,
+      status: "pinned" as const,
+      timestamp: ts,
+    };
   }
   throw new Error(`Unknown gateway: "${gateway}". Use GET /store/gateways for valid options.`);
 }
@@ -2375,22 +2393,40 @@ async function pinToPinata(bytes: Uint8Array, ts: string): Promise<PinResult> {
 }
 
 // ── Storacha write — raw bytes, same lossless pattern as Pinata ─────────────
-async function pinToStoracha(bytes: Uint8Array, ts: string): Promise<PinResult> {
-  const client = await getStorachaClient();
+// Storacha wraps the file in a UnixFS directory by default — this is expected.
+// The directoryCid differs from the UOR CIDv1 (baguqeera...) — same dual-CID
+// pattern already present with Pinata. Both are deterministic and correct.
 
-  // Upload raw canonical bytes as a File blob — same lossless principle as pinFileToIPFS.
-  // Never JSON.parse/re-serialize: that would destroy deterministic key ordering.
-  const file = new File([bytes], "uor-object.jsonld", { type: "application/ld+json" });
-  const cid = await client.uploadFile(file);
-  const cidStr = cid.toString();
+interface StorachaPinResult {
+  directoryCid: string        // CIDv1 bafy... of the wrapping directory (use for retrieval)
+  gatewayUrl: string          // Full HTTPS URL to retrieve the file
+  provider: string
+}
+
+async function pinToStoracha(
+  canonicalBytes: Uint8Array,
+  label: string
+): Promise<StorachaPinResult> {
+  const client = await getStorachaClient()
+
+  // Upload raw bytes as a File — byte-exact, no re-serialization.
+  // This is the Storacha equivalent of Pinata's pinFileToIPFS.
+  const filename = `${label}.jsonld`
+  const file = new File(
+    [canonicalBytes],
+    filename,
+    { type: 'application/ld+json' }
+  )
+
+  // uploadFile returns the CID of the UnixFS directory wrapping the file
+  const dirCid = await client.uploadFile(file)
+  const cidStr = dirCid.toString()
 
   return {
-    cid: cidStr,
-    gatewayUrl: "https://up.storacha.network",
-    gatewayReadUrl: `https://${cidStr}.ipfs.storacha.link/uor-object.jsonld`,
-    status: "pinned",
-    timestamp: ts,
-  };
+    directoryCid: cidStr,
+    gatewayUrl: `https://${cidStr}.ipfs.storacha.link/${filename}`,
+    provider: 'storacha'
+  }
 }
 
 // ── POST /store/write — Serialise UOR Object + Pin to IPFS ─────────────────
