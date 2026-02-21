@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   ArrowRightLeft,
   ArrowRight,
+  HardDrive,
 } from "lucide-react";
 
 /* ─────────────────────────── Constants ─────────────────────────── */
@@ -444,6 +445,122 @@ const LAYERS: Layer[] = [
       },
     ],
   },
+  {
+    id: "layer-6",
+    icon: HardDrive,
+    layerNum: 6,
+    title: "Persistence",
+    oneLiner: "Store UOR objects to IPFS. Retrieve them. Verify both addresses independently.",
+    whyItMatters:
+      "AI agents have no persistent, verifiable memory across sessions. UOR × IPFS gives every agent a decentralised, dual-verified, permanent store. Every stored object carries two independent addresses — a UOR address (semantic identity via Braille bijection) and an IPFS CID (storage identity via sha2-256). Verification checks both independently. Neither trusts the other. Neither trusts the gateway.",
+    solves: "Solves: No persistent agent memory — agents lose state between sessions and cannot share verified artifacts. These endpoints give every agent a permanent, decentralised, dual-verified store.",
+    endpoints: [
+      {
+        operationId: "storeResolve",
+        method: "GET",
+        path: "/store/resolve",
+        label: "Compute the UOR address of any web resource",
+        explanation:
+          "Fetches any HTTP/HTTPS URL and computes its permanent UOR address via the Braille bijection — each byte maps to one Braille character.\nReturns the address without storing anything. Use this to preview what address a resource would receive before committing to IPFS.",
+        useCase:
+          "An agent encounters a document URL shared by a peer. Before processing it, the agent resolves its UOR address to establish a verifiable reference it can use in its own output.",
+        params: [
+          { name: "url", in: "query", type: "string (URL)", required: true, description: "The HTTP/HTTPS URL to fetch." },
+          { name: "n", in: "query", type: "integer", required: false, default: "8", description: "Ring size: 4, 8, or 16." },
+          { name: "include_partition", in: "query", type: "boolean", required: false, default: "false", description: "Include byte partition analysis." },
+          { name: "include_metrics", in: "query", type: "boolean", required: false, default: "false", description: "Include observable metrics." },
+        ],
+        responseCodes: [200, 400, 413, 429, 502, 504],
+        example: `${BASE}/store/resolve?url=https://uor.foundation/llms.md`,
+      },
+      {
+        operationId: "storeWrite",
+        method: "POST",
+        path: "/store/write",
+        label: "Store a UOR object to IPFS",
+        explanation:
+          "Takes any User-space or Bridge-space UOR object, wraps it in a store:StoredObject JSON-LD envelope, computes its UOR address and CIDv1, pins it to IPFS, and returns both addresses with a store:PinRecord. The CID is the storage address. The u:Address is the semantic address. Both are content-derived and permanent.\n\nKernel-space types (u:, schema:, op:) are rejected — they are compiled into the runtime and never stored externally.",
+        useCase:
+          "An agent produces a cert:TransformCertificate attesting to a computation. It stores the certificate to IPFS and attaches both the CID and UOR address to its outgoing message. Any peer can retrieve and verify independently.",
+        params: [
+          { name: "object", in: "body", type: "object (JSON-LD with @type)", required: true, description: "The UOR object to store. Must be User-space or Bridge-space." },
+          { name: "pin", in: "body", type: "boolean", required: false, default: "true", description: "false = dry run, compute addresses only." },
+          { name: "gateway", in: "body", type: "string", required: false, default: "web3.storage", enum: ["web3.storage", "pinata"], description: '"web3.storage" (default) or "pinata".' },
+          { name: "label", in: "body", type: "string", required: false, description: "Optional human-readable label." },
+        ],
+        defaultBody: JSON.stringify({ object: { "@type": "cert:TransformCertificate", "cert:verified": true, "cert:quantum": 8 }, pin: false }, null, 2),
+        responseCodes: [200, 400, 422, 502, 503],
+        example: `${BASE}/store/write`,
+      },
+      {
+        operationId: "storeRead",
+        method: "GET",
+        path: "/store/read/:cid",
+        label: "Retrieve a stored UOR object and verify its integrity",
+        explanation:
+          "Retrieves a UOR object from IPFS by CID using the trustless gateway protocol (?format=raw). Performs dual verification: (1) recomputes the CID from retrieved bytes, (2) recomputes the UOR address from retrieved bytes and compares to the stored store:uorAddress. Returns store:verified:true only if both match.\n\nWith strict:true (default), returns HTTP 409 on failure.",
+        useCase:
+          "A peer agent shares a CID claiming it contains a verified proof. Your agent retrieves it, checks store:verified, and only processes the content if true. The verification is mathematical — no trust in the peer or the gateway required.",
+        params: [
+          { name: "cid", in: "query", type: "string", required: true, description: "CIDv0 (Qm...) or CIDv1 (bafy..., bafk...)." },
+          { name: "gateway", in: "query", type: "string", required: false, default: "https://ipfs.io", description: "IPFS read gateway." },
+          { name: "strict", in: "query", type: "boolean", required: false, default: "true", description: "HTTP 409 on failure if true (default)." },
+        ],
+        responseCodes: [200, 400, 404, 409, 502, 504],
+        example: `${BASE}/store/read/bafyreiYOUR_CID_HERE`,
+      },
+      {
+        operationId: "storeWriteContext",
+        method: "POST",
+        path: "/store/write-context",
+        label: "Persist agent memory — store a full context to IPFS",
+        explanation:
+          "Serialises a complete state:Context (a named set of state:Binding objects — address/datum pairs) as a linked IPLD DAG on IPFS. Each binding becomes its own IPFS block with its own CID. The context root block IPLD-links to all bindings. Returns the root CID and per-binding CIDs.\n\nDesigned for agent memory persistence across sessions.",
+        useCase:
+          "At the end of a session, an agent writes its working memory (key-value bindings in Z/256Z) to IPFS. It shares the root CID with its human. In the next session, any agent can retrieve the context by root CID, verify each binding, and restore state.",
+        params: [
+          { name: "context.name", in: "body", type: "string", required: false, description: "Context name / label." },
+          { name: "context.quantum", in: "body", type: "integer", required: false, default: "8", description: "Ring size (default: 8)." },
+          { name: "context.bindings", in: "body", type: "array", required: true, description: "Array of {address, value, type} objects." },
+          { name: "pin", in: "body", type: "boolean", required: false, default: "true", description: "false = dry run." },
+          { name: "gateway", in: "body", type: "string", required: false, default: "web3.storage", description: "Write gateway." },
+        ],
+        defaultBody: JSON.stringify({ context: { name: "session-001", quantum: 8, bindings: [{ address: "hello", value: 42 }] }, pin: false }, null, 2),
+        responseCodes: [200, 400, 502],
+        example: `${BASE}/store/write-context`,
+      },
+      {
+        operationId: "storeVerify",
+        method: "GET",
+        path: "/store/verify/:cid",
+        label: "Fast verification — check integrity without retrieving content",
+        explanation:
+          "Lightweight dual verification. Retrieves bytes from IPFS, runs both CID integrity and UOR address checks, and returns only the boolean verdict and proof metadata — not the full content. Use this before processing any content received from a peer. Cheaper and faster than GET /store/read when you only need the verdict.",
+        useCase:
+          "An agent receives a CID and a claimed UOR address from a peer. It calls GET /store/verify/{cid}?expected_uor={claimed-address} and proceeds only if store:verified:true.",
+        params: [
+          { name: "cid", in: "query", type: "string", required: true, description: "The CID to verify." },
+          { name: "gateway", in: "query", type: "string", required: false, default: "https://ipfs.io", description: "Read gateway." },
+          { name: "expected_uor", in: "query", type: "string", required: false, description: "Expected UOR address to compare against." },
+        ],
+        responseCodes: [200, 400, 404, 409],
+        example: `${BASE}/store/verify/bafyreiYOUR_CID_HERE`,
+      },
+      {
+        operationId: "storeGateways",
+        method: "GET",
+        path: "/store/gateways",
+        label: "List available IPFS gateways and health status",
+        explanation:
+          "Returns all configured IPFS gateways with their capabilities (read-only vs read-write), live health status (checked via the bafkqaaa identity CID probe per IPFS Trustless Gateway spec §7.1), and which gateway is default for read and write operations.",
+        useCase:
+          "Before a batch write operation, an agent checks gateway health and selects the healthiest available write gateway. Avoids wasted pin attempts to degraded gateways.",
+        params: [],
+        responseCodes: [200],
+        example: `${BASE}/store/gateways`,
+      },
+    ],
+  },
 ];
 
 /* ─────────────────────────── Utilities ─────────────────────────── */
@@ -856,6 +973,7 @@ const Api = () => {
               { problem: "Content Spam", solution: "AI spam filters are easy to fool with paraphrasing. UOR scores content using algebraic structure — a fixed mathematical property that cannot be gamed by rewording.", endpoint: "Layer 5", layerId: "layer-5", layerNum: 5 },
               { problem: "Opaque Coordination", solution: "When AI agents share results, there is no standard way to check the work. Every UOR operation has a formal name and definition — any agent can verify any result.", endpoint: "Layer 2", layerId: "layer-2", layerNum: 2 },
               { problem: "No Coherence Model", solution: "AI systems break down when they silently disagree on the meaning of data. UOR coherence proofs confirm that a data type behaves consistently — across every possible value.", endpoint: "Layer 4", layerId: "layer-4", layerNum: 4 },
+              { problem: "No Persistent Memory", solution: "Agents lose state between sessions. UOR × IPFS stores agent memory as dual-verified, content-addressed objects — retrievable and verifiable by any agent, any time.", endpoint: "Layer 6", layerId: "layer-6", layerNum: 6 },
             ].map(item => (
               <a
                 key={item.problem}
@@ -973,10 +1091,10 @@ const Api = () => {
             Architecture
           </p>
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
-            Six layers, fully live
+            Seven layers, fully live
           </h2>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-10">
-            The API is organised into six layers. Each layer adds a capability — from the single mathematical rule at the base, to identity, operations, classification, verification, and transformation. Every layer is live and working now.
+            The API is organised into seven layers. Each layer adds a capability — from the single mathematical rule at the base, to identity, operations, classification, verification, transformation, and persistent storage. Every layer is live and working now.
           </p>
 
           {/* API Discovery — pre-layer, always visible */}
@@ -1035,9 +1153,10 @@ const Api = () => {
               <div className="space-y-4">
                 {[
                   { step: "1", label: "/.well-known/uor.json", note: "Organisation descriptor. The uor:api.openapi field points to the spec.", href: "https://uor.foundation/.well-known/uor.json" },
-                  { step: "2", label: "GET /openapi.json", note: "Redirects to the full OpenAPI 3.1.0 spec at uor.foundation/openapi.json — 19 paths, all working.", href: `${BASE}/openapi.json` },
-                  { step: "3", label: "GET /navigate", note: "Complete endpoint index — all 20 endpoints with required params and example URLs.", href: `${BASE}/navigate` },
+                  { step: "2", label: "GET /openapi.json", note: "Redirects to the full OpenAPI 3.1.0 spec at uor.foundation/openapi.json — includes all store/ paths.", href: `${BASE}/openapi.json` },
+                  { step: "3", label: "GET /navigate", note: "Complete endpoint index — all endpoints with required params and example URLs.", href: `${BASE}/navigate` },
                   { step: "4", label: "GET /kernel/op/verify?x=42", note: "First verifiable claim. Zero auth. Returns a full proof in under 100ms.", href: `${BASE}/kernel/op/verify?x=42` },
+                  { step: "5", label: "GET /store/gateways", note: "Check IPFS gateway health. Then POST /store/write (pin:false) for your first dry-run dual address. Then POST /store/write (pin:true) to store your first verified object to IPFS.", href: `${BASE}/store/gateways` },
                 ].map(({ step, label, note, href }) => (
                   <div key={step} className="flex items-start gap-3">
                     <span className="shrink-0 w-6 h-6 rounded-full bg-section-dark-foreground/20 text-section-dark-foreground text-xs font-bold flex items-center justify-center mt-0.5">
