@@ -1,144 +1,280 @@
 
 
-# Thorough Evaluation: IPFS + UOR Framework + API Integration
+# Modular Architecture Plan for UOR Foundation Website
 
-## Current State Assessment
+## Vision
 
-The integration is substantial and largely well-built. The API covers all 14 UOR namespaces across 20+ endpoints, the IPFS storage pipeline (store/) provides write/read/verify with dual verification, and the discovery layer (llms.md, openapi.json, .well-known/uor.json, ai-plugin.json) is comprehensive. However, there are specific coherence gaps, documentation mismatches, and missing "so what" moments for agents.
+Restructure the entire codebase into self-contained, independently extractable modules, each anchored to the UOR Framework specification. Every module will be self-describing (via a `module.json` manifest) and interoperable with every other module through a shared contract layer rooted in UOR namespaces.
 
----
+## Current State
 
-## Issues Found
+The codebase is currently a monolithic single-repo application:
+- **Frontend**: 12 page components, 7 section components, 3 animation components, 6 layout components -- all tightly coupled via direct imports
+- **Backend**: One 3,953-line monolithic edge function (`uor-api/index.ts`) containing kernel math, content addressing, storage, rate limiting, and routing all in a single file
+- **Shared logic**: Only one extracted library (`lib/store.ts`); all other logic is inline
+- **No module contracts**: Components import each other freely with no defined boundaries or interfaces
 
-### 1. OpenAPI Spec Drift from Live Implementation
+## Target Architecture
 
-**Problem:** The OpenAPI spec (`openapi.json`) has stale defaults that do not match the live edge function behavior.
+Seven self-contained modules, each mappable to a standalone repository:
 
-- **store/read and store/verify gateway default**: OpenAPI says `default: "https://ipfs.io"` (lines 1039, 1154), but the live code defaults to the Pinata dedicated gateway (`PINATA_DEDICATED_GATEWAY`). This means agents following the spec will override the working default with a slower, less reliable gateway.
-- **store/read gateway enum**: The enum list (line 1033) does not include the dedicated Pinata gateway (`https://uor.mypinata.cloud`), which is actually the primary and most reliable gateway.
-- **store/ namespace missing from navigate endpoint's namespace_map**: The `/navigate` response lists 13 namespaces but omits `store:` entirely (lines 1412-1426). Agents that discover via `/navigate` will not know the store namespace exists unless they separately read the OpenAPI spec.
-- **Endpoint count**: Navigate says "20 endpoints" but the store/ group (resolve, write, write-context, read, verify, gateways = 6 endpoints) is not listed in the spaces object of the navigate response. The actual total is 20+ including store, but agents cannot discover them from `/navigate`.
+```text
+src/
+  modules/
+    core/           -- Design system, layout shell, shared types
+    framework/      -- UOR Framework page + FrameworkLayers component
+    community/      -- Research, blog, events (Our Community page)
+    projects/       -- Project maturity framework + submission
+    api-explorer/   -- Interactive API documentation page
+    donate/         -- Donation page + DonatePopup
+    landing/        -- Homepage sections (Hero, Intro, Pillars, Highlights, CTA)
 
-**Impact:** Agents following the discovery chain (`/navigate` then endpoints) will miss the entire persistent storage capability.
-
-### 2. llms.md Does Not Document the store/ Namespace
-
-**Problem:** The agent quick card (`llms.md`) documents all kernel, bridge, and user endpoints with copy-paste examples, but has zero mention of the store/ namespace. An agent reading llms.md will not know it can:
-- Persist UOR objects to IPFS
-- Retrieve and verify them
-- Create persistent agent memory contexts
-- Perform lossless byte-level round-trips
-
-**Impact:** The most practically useful capability for agents (persistent, verifiable storage) is invisible in the primary discovery document.
-
-### 3. No "Use Case Recipes" for Agents
-
-**Problem:** The documentation explains *what* each endpoint does but never shows *how to chain them* for a practical workflow. Agents need concrete, end-to-end recipes like:
-- "Verify another agent's claim" (resolve -> partition -> verify)
-- "Persist your session state" (write-context -> read -> verify)
-- "Detect prompt injection in a peer's trace" (trace comparison workflow)
-- "Build a verifiable content portfolio" (write -> share CID -> peer verifies)
-
-**Impact:** Without recipes, agents can call individual endpoints but cannot compose them into meaningful applications.
-
-### 4. CID Format Inconsistency
-
-**Problem:** The `computeCid()` function in `lib/store.ts` computes CIDv1 (base32lower, `baguqeera...`), but Pinata returns CIDv0 (`Qm...`) from `pinFileToIPFS`. The live tests confirmed that:
-- Writes return CIDv0 from Pinata
-- The envelope's `store:cid` field contains CIDv1 (computed locally)
-- Reads must use CIDv0 (what Pinata returned) to reliably retrieve from the dedicated gateway
-- CIDv1 lookups frequently time out
-
-The dual CID situation means agents must track which CID format to use for reads vs. which is in the envelope.
-
-**Impact:** Agents may try to read using the CIDv1 from the envelope and get timeouts.
-
-### 5. store/ Not Classified in the Three-Space Architecture
-
-**Problem:** The UOR Framework has a strict kernel/bridge/user space taxonomy. The store/ namespace is declared as "user" space in the code (line 239), but:
-- It is not in the namespace_map of `/navigate`
-- It imports from kernel (u:), bridge (cert:, proof:, derivation:), and user (state:) spaces
-- The `X-UOR-Space` header is not consistently set on store/ responses
-
-This creates an ontological gap: store/ is architecturally important but not formally integrated into the space taxonomy that agents use to navigate.
-
-### 6. Web3.storage Gateway is Dead
-
-**Problem:** The code still references web3.storage as a write gateway option (lines 2202-2248, GATEWAY_CONFIGS), but the legacy API has been sunset. Attempting to use it will always fail. The OpenAPI spec lists it as a valid enum option.
-
-**Impact:** Agents may waste calls trying web3.storage. The error message is good (line 2217), but the gateway should be marked deprecated or removed from the enum.
-
-### 7. Missing store/ Endpoints in KNOWN_PATHS
-
-**Problem:** The `KNOWN_PATHS` map (lines 36-62) lists `/store/resolve`, `/store/write`, `/store/write-context`, and `/store/gateways` but notes that `/store/read/:cid` and `/store/verify/:cid` are "handled dynamically." This is fine for routing but means the 405 method-not-allowed check cannot validate these dynamic paths, and any typo in the CID path segment could silently fall through to a 404.
-
-### 8. Pinata Gateway Token Fallback Logic
-
-**Problem:** In both `storeRead` (line 2708) and `storeVerify` (line 3103), the code falls back to `PINATA_JWT` if `PINATA_GATEWAY_TOKEN` is not set:
-```
-const gwToken = Deno.env.get("PINATA_GATEWAY_TOKEN") ?? Deno.env.get("PINATA_JWT") ?? "";
+supabase/functions/
+    uor-api/
+      handlers/
+        kernel.ts     -- Layer 0-2: math, addressing, operations
+        bridge.ts     -- Layer 3-4: resolution, verification, proofs
+        user.ts       -- Layer 5: morphisms, state, types
+        store.ts      -- Storage: IPFS, Pinata, Storacha
+      lib/
+        store.ts      -- Pure functions (existing)
+        ring.ts       -- Ring arithmetic
+        addressing.ts -- Braille bijection, CID computation
+        http.ts       -- CORS, error responses, rate limiting
+      index.ts        -- Thin router only (under 200 lines)
+    project-submit/
+      index.ts        -- Unchanged (already self-contained)
 ```
 
-The `PINATA_JWT` is an admin-level token for the Pinning API, not a gateway access token. Using it as a gateway token may expose write-level credentials in gateway request URLs. Both secrets are currently configured, but if `PINATA_GATEWAY_TOKEN` were deleted, the fallback would silently leak the admin JWT into query parameters.
+## Module Design Principles
 
----
+Each module follows these rules:
 
-## Suggested Improvements (Do Not Implement Yet)
+1. **Self-describing manifest** (`module.json`): declares name, version, UOR namespace anchors, exported components, required dependencies on other modules, and the UOR specification version it complies with.
 
-### Priority 1: Discovery Coherence
+2. **Single entry point** (`index.ts`): re-exports everything the module offers. No reaching into internal files from outside.
 
-1. **Add store/ to the /navigate response** -- Include all 6 store endpoints in the `spaces` object and add `store:` to the `namespace_map` array. Update the endpoint count.
+3. **Explicit contract layer**: Each module defines its TypeScript interfaces in a `types.ts` file. Cross-module communication happens only through these interfaces.
 
-2. **Add a "Persistent Storage" section to llms.md** -- Include 3-4 copy-paste examples showing write, read, verify, and write-context with expected responses. Position it after Step 3 (Bridge Space) and before the API Summary table.
+4. **UOR namespace anchoring**: Every module declares which UOR namespaces it implements or consumes (e.g., `store:`, `proof:`, `op:`), creating a formal link to the specification.
 
-3. **Fix OpenAPI gateway defaults** -- Change the default gateway in `/store/read` and `/store/verify` from `https://ipfs.io` to match the live behavior (Pinata dedicated gateway). Add the dedicated gateway URL to the enum list.
+5. **Zero circular dependencies**: The dependency graph is a strict DAG (directed acyclic graph) with `core` at the root.
 
-### Priority 2: Agent Use Case Recipes
+## Module Dependency Graph
 
-4. **Add an "Agent Recipes" section to llms.md** -- Provide 4-5 end-to-end workflows:
-   - Recipe 1: "Verify a Peer's Claim" (3 API calls)
-   - Recipe 2: "Persist Agent Memory" (write-context -> read -> share CID)
-   - Recipe 3: "Detect Prompt Injection" (trace endpoint comparison)
-   - Recipe 4: "Build Verifiable Output" (encode -> write -> share)
-   - Recipe 5: "Cross-Agent Verification" (peer sends CID -> you verify -> issue cert)
+```text
+core (design system, Layout, shared types)
+  |
+  +-- landing (homepage sections)
+  +-- framework (UOR Framework page)
+  +-- community (research, blog, events)
+  +-- projects (maturity framework, submission form)
+  +-- api-explorer (interactive API docs)
+  +-- donate (donation pages)
+```
 
-5. **Add a "what_you_can_do" block to the /navigate response** -- A top-level JSON object listing 5 concrete agent capabilities with the endpoint chain for each.
+All modules depend on `core`. No module depends on another peer module.
 
-### Priority 3: Technical Fixes
+## Detailed Module Breakdown
 
-6. **Document CID format behavior** -- Add a note to the store/write response explaining that Pinata returns CIDv0 and that agents should use the Pinata-returned CID (from the response `pinResult.cid`) for subsequent reads, not the `store:cid` (CIDv1) in the envelope.
+### 1. `core` -- Design System and Shell
 
-7. **Deprecate web3.storage** -- Either remove it from GATEWAY_CONFIGS and the OpenAPI enum, or add a `"deprecated": true` flag and a clear error pointing to Pinata.
+**Contents:**
+- `Layout.tsx`, `Navbar.tsx`, `Footer.tsx`, `ScrollProgress.tsx`, `NavLink.tsx`
+- All `ui/` components (dialog, toast, tooltip, sonner)
+- `index.css` (design tokens, theme variables)
+- Shared hooks (`use-toast.ts`)
+- `lib/utils.ts`
+- `types.ts`: `ModuleManifest`, `NavItem`, `LayoutProps` interfaces
 
-8. **Remove PINATA_JWT fallback from gateway reads** -- Only use `PINATA_GATEWAY_TOKEN` for gateway authentication. If it is not set, return a clear error rather than silently falling back to the admin JWT.
+**UOR anchors:** None (infrastructure only)
 
-9. **Add store: to the @context file** -- The external JSON-LD context at `public/contexts/uor-v1.jsonld` should include the `store:` prefix mapping to ensure stored objects are valid linked data.
+**Exports:** `Layout`, `Navbar`, `Footer`, all UI primitives, design tokens, utility functions
 
-### Priority 4: Structural Improvements
+### 2. `framework` -- UOR Framework Page
 
-10. **Add a /store/status endpoint** -- A lightweight health-check that returns gateway availability, total objects pinned (if trackable), and the current default gateway. Useful for agents to check before committing to a write.
+**Contents:**
+- `Standard.tsx` (page)
+- `FrameworkLayers.tsx` (interactive layer accordion)
+- `UORDiagram.tsx` (visual diagram)
+- Layer data definitions (currently inline in components)
 
-11. **Add CIDv0-to-CIDv1 bidirectional mapping** -- In the read and verify handlers, if a CIDv1 lookup times out, automatically attempt CIDv0 conversion (or vice versa). This would eliminate the format confusion entirely.
+**UOR anchors:** All 14 namespaces (this module IS the framework presentation)
 
-12. **Formalize the store/ ontology** -- The `STORE_NAMESPACE_META` object (lines 307-359) defines 6 classes and 14 properties but exists only in the edge function code. Consider publishing it as part of the formal ontology artifacts (JSON-LD, Turtle, N-Triples) alongside the other 14 namespaces.
+**Exports:** `FrameworkPage`, `FrameworkLayers`, `UORDiagram`, layer data constants
 
----
+### 3. `community` -- Research, Blog, Events
 
-## Summary of Findings
+**Contents:**
+- `Research.tsx` (page)
+- `BlogPost1.tsx`, `BlogPost2.tsx`, `BlogPost3.tsx` (pages)
+- `ResearchPaperAtlasEmbeddings.tsx` (page)
+- Research category data, blog post data, event data
+- Related image assets
 
-| Area | Status | Severity |
-|------|--------|----------|
-| Kernel endpoints (op, schema, address) | Fully functional, well-documented | OK |
-| Bridge endpoints (partition, proof, cert, etc.) | Fully functional, well-documented | OK |
-| User endpoints (type, morphism, state) | Fully functional, well-documented | OK |
-| IPFS Write (Pinata) | Functional after PINATA_GATEWAY_URL fix | OK |
-| IPFS Read/Verify | Functional with CIDv0, timeout-prone with CIDv1 | Warning |
-| store/ in /navigate discovery | Missing entirely | Error |
-| store/ in llms.md | Missing entirely | Error |
-| OpenAPI gateway defaults | Stale (ipfs.io instead of dedicated gateway) | Warning |
-| Agent use case recipes | None exist | Gap |
-| web3.storage gateway | Dead but still listed | Warning |
-| Gateway token fallback security | Silently leaks admin JWT | Warning |
+**UOR anchors:** `proof:`, `derivation:` (research outputs reference these)
 
-The integration is architecturally sound and the mathematical core is rigorous. The primary gap is in **discovery and practical guidance**: the store/ namespace (the most useful capability for agents) is invisible in both primary discovery documents, and there are no end-to-end workflow recipes showing agents what they can actually *do* with this system.
+**Exports:** `CommunityPage`, `BlogPostPage`, blog/research data constants
+
+### 4. `projects` -- Project Maturity Framework
+
+**Contents:**
+- `Projects.tsx` (page)
+- `CollapsibleCategory` component (currently inline)
+- Project data, maturity level definitions
+- Submission form logic
+- Related image assets
+
+**UOR anchors:** `cert:` (project certification/maturity)
+
+**Exports:** `ProjectsPage`, project data, maturity level types
+
+### 5. `api-explorer` -- Interactive API Documentation
+
+**Contents:**
+- `Api.tsx` (page -- currently 1,224 lines)
+- Endpoint data definitions
+- Interactive "Try it" panel components
+- Layer/endpoint types
+
+**UOR anchors:** All 14 namespaces (documents the full API surface)
+
+**Exports:** `ApiExplorerPage`, endpoint data, layer definitions
+
+### 6. `donate` -- Donation
+
+**Contents:**
+- `Donate.tsx` (page)
+- `DonatePopup.tsx` (modal component)
+- Donation project data
+
+**UOR anchors:** None (operational)
+
+**Exports:** `DonatePage`, `DonatePopup`
+
+### 7. `landing` -- Homepage
+
+**Contents:**
+- `HeroSection.tsx`, `IntroSection.tsx`, `PillarsSection.tsx`
+- `HighlightsSection.tsx`, `ProjectsShowcase.tsx`, `CTASection.tsx`
+- `GalaxyAnimation.tsx` + `galaxy.css`
+- Related image assets
+
+**UOR anchors:** `u:` (hero references content addressing)
+
+**Exports:** `HomePage`, all section components
+
+## Module Manifest Format
+
+Each module will contain a `module.json`:
+
+```json
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "framework",
+  "version": "1.0.0",
+  "description": "UOR Framework presentation and interactive documentation",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["u:", "schema:", "op:", "partition:", "proof:", "cert:"],
+  "exports": ["FrameworkPage", "FrameworkLayers", "UORDiagram"],
+  "dependencies": {
+    "core": "^1.0.0"
+  },
+  "routes": ["/standard"],
+  "assets": ["uor-diagram-data.ts"]
+}
+```
+
+This manifest is machine-readable, JSON-LD compatible, and anchored to the UOR context. When a module is extracted to its own repo, this manifest tells any consumer exactly what it provides and what it needs.
+
+## Backend Decomposition (Edge Function)
+
+The 3,953-line `uor-api/index.ts` will be split into focused handler files:
+
+### `handlers/kernel.ts` (~400 lines)
+- Ring arithmetic (`neg`, `bnot`, `succ`, `pred`, `add`, `sub`, `mul`, `xor`, `and`, `or`)
+- Content addressing (Braille bijection)
+- Datum construction
+- Routes: `/kernel/op/verify`, `/kernel/op/verify/all`, `/kernel/op/compute`, `/kernel/op/operations`, `/kernel/address/encode`, `/kernel/schema/datum`
+
+### `handlers/bridge.ts` (~500 lines)
+- Partition classification
+- Proof generation (critical identity, coherence)
+- Certificate generation (involution)
+- Derivation traces, execution traces
+- Resolver logic
+- Routes: `/bridge/*`
+
+### `handlers/user.ts` (~300 lines)
+- Type primitives
+- Morphism transforms
+- State/frame management
+- Observable metrics
+- Routes: `/user/*`
+
+### `handlers/store.ts` (~600 lines)
+- Pinata integration
+- Storacha integration
+- Store write/read/verify/resolve/gateways
+- Routes: `/store/*`
+
+### `lib/http.ts` (~100 lines)
+- CORS headers
+- Error response factories (`error400`, `error405`, `error415`, etc.)
+- Rate limiting
+- ETag computation
+- Rate limit header builder
+
+### `lib/ring.ts` (~50 lines)
+- Pure ring arithmetic functions extracted from inline definitions
+
+### `lib/addressing.ts` (~30 lines)
+- `encodeGlyph`, `addressSimplified`, `makeDatum`
+
+### `index.ts` (~150 lines)
+- Import all handlers
+- Route dispatch table
+- OpenAPI/navigate endpoint
+- CORS preflight handling
+
+## Implementation Steps
+
+### Phase 1: Create module directory structure
+- Create `src/modules/` with seven subdirectories
+- Add `module.json`, `index.ts`, and `types.ts` to each module
+- Move existing components into their respective modules
+- Update all import paths
+
+### Phase 2: Extract shared contracts
+- Define `ModuleManifest` TypeScript interface in `core/types.ts`
+- Define cross-module interfaces (e.g., `NavItem`, `RouteConfig`)
+- Create barrel exports (`index.ts`) for each module
+
+### Phase 3: Refactor App.tsx routing
+- Replace direct page imports with module-level imports
+- Each module exports its route configuration
+- `App.tsx` composes routes from all modules dynamically
+
+### Phase 4: Decompose the edge function
+- Extract `lib/http.ts`, `lib/ring.ts`, `lib/addressing.ts`
+- Extract `handlers/kernel.ts`, `handlers/bridge.ts`, `handlers/user.ts`, `handlers/store.ts`
+- Reduce `index.ts` to a thin router importing handlers
+- Run existing tests to verify no regressions
+
+### Phase 5: Asset co-location
+- Move images from `src/assets/` and `public/images/` into their owning modules
+- Each module owns its assets, making extraction to a separate repo self-contained
+
+### Phase 6: Clean up Storacha debug logging
+- Remove the try/catch debug wrapper added during integration debugging
+- Restore clean error propagation
+
+## Technical Notes
+
+- All module imports will use the `@/modules/<name>` path alias pattern
+- The existing `@/components/ui` path will be redirected to `@/modules/core/ui`
+- No new dependencies are required; this is purely a structural refactor
+- The `public/` directory files (llms.md, openapi.json, contexts/, .well-known/) remain at the project root as they are protocol-level assets, not module assets
+- The Lovable Cloud integration files (`src/integrations/supabase/`) remain untouched
 
