@@ -51,38 +51,12 @@ const ProjectDetailLayout = ({
     generateCertificate(`project:${slug}`, envelope).then(setCertificate);
   }, [slug, name, category, tagline, repoUrl]);
 
+  const [showCert, setShowCert] = useState(false);
+
   return (
     <Layout>
-      {/* UOR Certificate Banner */}
-      {certificate && (
-        <section className="bg-section-dark border-b border-border pt-20 md:pt-24">
-          <div className="container max-w-4xl py-4">
-            <div className="flex items-start gap-3 rounded-xl border border-primary/15 bg-primary/5 px-5 py-4">
-              <ShieldCheck size={18} className="text-primary mt-0.5 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-primary font-body mb-1.5">
-                  UOR Content Certificate
-                </p>
-                <p className="text-xs text-section-dark-foreground/70 font-mono break-all leading-relaxed">
-                  <span className="text-section-dark-foreground/40">cid:</span>{" "}
-                  {certificate["cert:cid"]}
-                </p>
-                <p className="text-xs text-section-dark-foreground/70 font-mono mt-1">
-                  <span className="text-section-dark-foreground/40">addr:</span>{" "}
-                  <span className="tracking-widest">{certificate["store:uorAddress"]["u:glyph"].slice(0, 32)}…</span>
-                  <span className="text-section-dark-foreground/40 ml-2">({certificate["store:uorAddress"]["u:length"]} bytes)</span>
-                </p>
-                <p className="text-xs text-section-dark-foreground/40 font-mono mt-1">
-                  subject: {certificate["cert:subject"]} · spec {certificate["cert:specification"]}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Hero */}
-      <section className="hero-gradient pt-12 md:pt-16 pb-12 md:pb-16">
+      <section className="hero-gradient pt-32 md:pt-44 pb-12 md:pb-16">
         <div className="container max-w-4xl">
           <Link
             to="/projects"
@@ -107,6 +81,37 @@ const ProjectDetailLayout = ({
           <p className="mt-5 text-lg text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
             {tagline}
           </p>
+
+          {certificate && (
+            <div className="mt-5 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+              <button
+                onClick={() => setShowCert(!showCert)}
+                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-body transition-colors cursor-pointer"
+              >
+                <ShieldCheck size={13} />
+                {showCert ? "Hide certificate" : "View certificate"}
+              </button>
+              {showCert && (
+                <div className="mt-3 rounded-xl border border-primary/15 bg-section-dark px-5 py-4 animate-fade-in-up">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-primary font-body mb-1.5">
+                    UOR Content Certificate
+                  </p>
+                  <p className="text-xs text-section-dark-foreground/70 font-mono break-all leading-relaxed">
+                    <span className="text-section-dark-foreground/40">cid:</span>{" "}
+                    {certificate["cert:cid"]}
+                  </p>
+                  <p className="text-xs text-section-dark-foreground/70 font-mono mt-1">
+                    <span className="text-section-dark-foreground/40">addr:</span>{" "}
+                    <span className="tracking-widest">{certificate["store:uorAddress"]["u:glyph"].slice(0, 32)}…</span>
+                    <span className="text-section-dark-foreground/40 ml-2">({certificate["store:uorAddress"]["u:length"]} bytes)</span>
+                  </p>
+                  <p className="text-xs text-section-dark-foreground/40 font-mono mt-1">
+                    subject: {certificate["cert:subject"]} · spec {certificate["cert:specification"]}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
