@@ -100,6 +100,14 @@
       "name": "navigate",
       "description": "Framework navigation — reading order, namespace index, ontology links, all endpoint URLs.",
       "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework", "description": "UOR Framework source" }
+    },
+    {
+      "name": "store",
+      "description": "UOR × IPFS persistent storage. Serialises UOR objects to JSON-LD, computes dual addresses (u:Address via Braille bijection + CIDv1 via sha2-256 multihash), and stores to IPFS. Only User-space and Bridge-space objects may be stored. Kernel-space objects (u:, schema:, op:) are never stored.",
+      "externalDocs": {
+        "description": "UOR store/ namespace spec",
+        "url": "https://github.com/UOR-Foundation/UOR-Framework"
+      }
     }
   ],
   "paths": {
@@ -871,6 +879,306 @@
           "429": { "$ref": "#/components/responses/RateLimited" },
           "500": { "$ref": "#/components/responses/InternalServerError" },
           "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/store/resolve": {
+      "get": {
+        "operationId": "storeResolve",
+        "summary": "Fetch a URL and compute its UOR address",
+        "description": "Fetches any HTTP/HTTPS resource, computes its UOR address via the Braille bijection (each byte b maps to Unicode codepoint U+2800+b), and returns a store:RetrievedObject. Does NOT write to IPFS. To persist the content, call POST /store/write.",
+        "tags": ["store"],
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" },
+            "description": "The HTTP or HTTPS URL to fetch. Only http: and https: protocols accepted."
+          },
+          {
+            "name": "n",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "enum": [4, 8, 16], "default": 8 },
+            "description": "Ring size. Determines Z/(2^n)Z. Default 8 gives Z/256Z."
+          },
+          {
+            "name": "include_partition",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false },
+            "description": "If true, include partition analysis of the fetched bytes."
+          },
+          {
+            "name": "include_metrics",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false },
+            "description": "If true, include observable metrics on the first byte."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "UOR address computed successfully.",
+            "content": {
+              "application/ld+json": {
+                "schema": { "$ref": "#/components/schemas/StoreRetrievedObject" }
+              }
+            },
+            "headers": {
+              "X-UOR-Address": { "schema": { "type": "string" }, "description": "First 64 chars of the computed u:Address glyph." },
+              "X-UOR-Byte-Length": { "schema": { "type": "string" }, "description": "Number of bytes fetched." },
+              "X-UOR-Source-URL": { "schema": { "type": "string" }, "description": "The URL that was fetched." }
+            }
+          },
+          "400": { "description": "Missing or invalid url parameter." },
+          "413": { "description": "Remote resource exceeds 10MB limit." },
+          "429": { "description": "Rate limit exceeded." },
+          "502": { "description": "Remote resource unreachable or returned non-2xx." },
+          "504": { "description": "Remote resource timed out after 15 seconds." }
+        }
+      }
+    },
+    "/store/write": {
+      "post": {
+        "operationId": "storeWrite",
+        "summary": "Serialise a UOR object and pin it to IPFS",
+        "description": "Takes any valid User-space or Bridge-space UOR object, wraps it in a store:StoredObject JSON-LD envelope, computes the UOR address (Braille bijection) and CIDv1 (dag-json, sha2-256), pins the envelope to IPFS, and returns the complete store:StoredObject with a store:PinRecord. Kernel-space types (u:, schema:, op:) are rejected with 422.",
+        "tags": ["store"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["object"],
+                "properties": {
+                  "object": {
+                    "type": "object",
+                    "description": "The UOR object to store. Must have an @type field. Must be a User-space or Bridge-space type.",
+                    "required": ["@type"]
+                  },
+                  "pin": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "If false, compute addresses only — do not pin to IPFS (dry run)."
+                  },
+                  "gateway": {
+                    "type": "string",
+                    "enum": ["web3.storage", "pinata"],
+                    "default": "web3.storage",
+                    "description": "IPFS gateway to use for pinning."
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Optional human-readable label. Does not affect computed addresses."
+                  }
+                }
+              },
+              "example": {
+                "object": {
+                  "@type": "cert:TransformCertificate",
+                  "cert:transformType": "uor-address-to-ipfs-cid",
+                  "cert:verified": true,
+                  "cert:quantum": 8
+                },
+                "pin": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Object stored successfully.",
+            "content": {
+              "application/ld+json": {
+                "schema": { "$ref": "#/components/schemas/StoreStoredObject" }
+              }
+            },
+            "headers": {
+              "X-UOR-Address": { "schema": { "type": "string" } },
+              "X-IPFS-CID": { "schema": { "type": "string" } },
+              "X-IPFS-Gateway-URL": { "schema": { "type": "string" } },
+              "X-Store-Dry-Run": { "schema": { "type": "string", "enum": ["true", "false"] } }
+            }
+          },
+          "400": { "description": "Missing object field or missing @type." },
+          "422": { "description": "Kernel-space type rejected. Only User-space and Bridge-space types may be stored." },
+          "502": { "description": "IPFS gateway unreachable." },
+          "503": { "description": "IPFS gateway returned an error." }
+        }
+      }
+    },
+    "/store/read/{cid}": {
+      "get": {
+        "operationId": "storeRead",
+        "summary": "Retrieve a stored UOR object from IPFS and verify integrity",
+        "description": "Retrieves a stored UOR object by CID from an IPFS gateway, performs dual verification (CID integrity check + UOR address recomputation), and returns the full store:RetrievedObject. Set strict=true (default) to receive HTTP 409 on verification failure.",
+        "tags": ["store"],
+        "parameters": [
+          {
+            "name": "cid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "A valid IPFS CID. Accepts CIDv0 (Qm...) or CIDv1 (bafy...)."
+          },
+          {
+            "name": "gateway",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "https://ipfs.io",
+                "https://w3s.link",
+                "https://cloudflare-ipfs.com",
+                "https://gateway.pinata.cloud"
+              ],
+              "default": "https://ipfs.io"
+            }
+          },
+          {
+            "name": "strict",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": true },
+            "description": "If true, return 409 when store:verified is false. If false, return 200 with verified:false."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Object retrieved. Check store:verified for integrity result.",
+            "content": {
+              "application/ld+json": {
+                "schema": { "$ref": "#/components/schemas/StoreRetrievedObject" }
+              }
+            },
+            "headers": {
+              "X-UOR-Verified": { "schema": { "type": "string", "enum": ["true", "false"] } },
+              "X-IPFS-CID": { "schema": { "type": "string" } }
+            }
+          },
+          "400": { "description": "Invalid or missing CID." },
+          "404": { "description": "CID not found on IPFS gateway." },
+          "409": { "description": "Retrieved but verification failed: UOR address mismatch (strict mode)." },
+          "502": { "description": "Gateway unreachable." },
+          "504": { "description": "Gateway timeout." }
+        }
+      }
+    },
+    "/store/write-context": {
+      "post": {
+        "operationId": "storeWriteContext",
+        "summary": "Persist a state:Context as an IPLD DAG on IPFS",
+        "description": "Serialises a complete UOR state:Context (a set of state:Binding objects) as a linked IPLD DAG on IPFS. Each binding becomes an individual IPFS block. The root block links to all bindings. Returns the root CID and per-binding CIDs. Designed for agent memory persistence.",
+        "tags": ["store"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["context"],
+                "properties": {
+                  "context": {
+                    "type": "object",
+                    "required": ["bindings"],
+                    "properties": {
+                      "name": { "type": "string", "description": "Context name. Used as state:contentAddress." },
+                      "quantum": { "type": "integer", "default": 8, "enum": [4, 8, 16] },
+                      "bindings": {
+                        "type": "array",
+                        "maxItems": 256,
+                        "items": {
+                          "type": "object",
+                          "required": ["address", "value"],
+                          "properties": {
+                            "address": { "type": "string", "description": "Braille glyph or plain string (will be bijected)." },
+                            "value": { "type": "integer", "minimum": 0 },
+                            "type": { "type": "string", "default": "type:PrimitiveType" }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "pin": { "type": "boolean", "default": true },
+                  "gateway": { "type": "string", "default": "web3.storage" }
+                }
+              },
+              "example": {
+                "context": {
+                  "name": "agent-session-001",
+                  "quantum": 8,
+                  "bindings": [
+                    { "address": "hello", "value": 42 },
+                    { "address": "world", "value": 99 }
+                  ]
+                },
+                "pin": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Context persisted. Returns root CID and all binding CIDs.",
+            "headers": {
+              "X-UOR-Context-Root-CID": { "schema": { "type": "string" } },
+              "X-UOR-Binding-Count": { "schema": { "type": "string" } }
+            }
+          },
+          "400": { "description": "Missing context, empty bindings, or invalid binding format." },
+          "502": { "description": "Gateway unreachable during pin." }
+        }
+      }
+    },
+    "/store/verify/{cid}": {
+      "get": {
+        "operationId": "storeVerify",
+        "summary": "Verify a stored UOR object without returning its content",
+        "description": "Lightweight verification endpoint. Retrieves bytes from IPFS, runs dual verification (CID integrity + UOR address recomputation), and returns only the boolean verdict and proof metadata. Content is not echoed back. Use this before processing any content received from a peer.",
+        "tags": ["store"],
+        "parameters": [
+          {
+            "name": "cid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "gateway",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "default": "https://ipfs.io" }
+          },
+          {
+            "name": "expected_uor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Compare recomputed UOR address against this expected value instead of the stored one."
+          }
+        ],
+        "responses": {
+          "200": { "description": "Verified or indeterminate. Check store:verified." },
+          "400": { "description": "Invalid CID." },
+          "404": { "description": "CID not found." },
+          "409": { "description": "Verification failed: UOR address mismatch." }
+        }
+      }
+    },
+    "/store/gateways": {
+      "get": {
+        "operationId": "storeGateways",
+        "summary": "List available IPFS gateways and their health status",
+        "description": "Returns all configured IPFS gateways with their capabilities, health status (checked via the bafkqaaa identity probe per IPFS Trustless Gateway spec §7.1), and which gateway is default for read and write operations.",
+        "tags": ["store"],
+        "responses": {
+          "200": {
+            "description": "Gateway registry returned successfully."
+          }
         }
       }
     }
@@ -1645,6 +1953,98 @@
           },
           "param": { "type": "string", "description": "The parameter that caused the error (for 400 responses)" },
           "docs": { "type": "string", "format": "uri", "description": "URL to this OpenAPI specification" }
+        }
+      },
+      "StoreStoredObject": {
+        "type": "object",
+        "description": "A UOR object that has been serialised to JSON-LD and stored on IPFS. Carries both a u:Address (semantic identity) and a store:Cid (storage identity).",
+        "properties": {
+          "@context": { "type": "object" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "store:StoredObject" },
+          "store:cid": { "type": "string", "description": "CIDv1, base32lower, dag-json codec, sha2-256." },
+          "store:cidScope": { "type": "string" },
+          "store:uorAddress": { "$ref": "#/components/schemas/UorAddress" },
+          "store:storedType": { "type": "string", "format": "uri" },
+          "store:pinnedAt": { "type": "string", "format": "date-time" },
+          "store:pinRecord": { "$ref": "#/components/schemas/StorePinRecord" },
+          "payload": { "type": "object", "description": "The original UOR object as stored." },
+          "summary": { "type": "object" }
+        }
+      },
+      "StoreRetrievedObject": {
+        "type": "object",
+        "description": "The result of retrieving a stored UOR object from IPFS, with dual verification results.",
+        "properties": {
+          "@context": { "type": "object" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "store:RetrievedObject" },
+          "store:retrievedFrom": { "type": "string", "description": "The CID used for retrieval." },
+          "store:byteLength": { "type": "integer" },
+          "store:verified": {
+            "type": ["boolean", "null"],
+            "description": "true = verified, false = integrity failure, null = indeterminate (no reference address)."
+          },
+          "store:recomputedUorAddress": { "type": "string" },
+          "store:storedUorAddress": { "type": "string" },
+          "verification": { "$ref": "#/components/schemas/DualVerificationResult" },
+          "content": { "description": "The retrieved content. Present on /store/read, absent on /store/verify." }
+        }
+      },
+      "StorePinRecord": {
+        "type": "object",
+        "properties": {
+          "@type": { "type": "string", "const": "store:PinRecord" },
+          "store:pinnedAt": { "type": "string", "format": "date-time" },
+          "store:gatewayUrl": { "type": "string", "format": "uri" },
+          "store:pinCertificate": { "$ref": "#/components/schemas/CertTransformCertificate" }
+        }
+      },
+      "UorAddress": {
+        "type": "object",
+        "properties": {
+          "@type": { "type": "string", "const": "u:Address" },
+          "u:glyph": { "type": "string", "description": "Braille string. Each character encodes one byte via U+2800+byte." },
+          "u:length": { "type": "integer", "description": "Number of bytes (= number of Braille glyphs)." },
+          "u:encoding": { "type": "string", "const": "braille_bijection_Z_2n_Z" },
+          "u:quantum": { "type": "integer" }
+        }
+      },
+      "DualVerificationResult": {
+        "type": "object",
+        "properties": {
+          "cid_integrity": {
+            "type": "object",
+            "properties": {
+              "performed": { "type": "boolean" },
+              "expected_cid": { "type": "string" },
+              "computed_cid": { "type": "string" },
+              "match": { "type": ["boolean", "null"] },
+              "note": { "type": "string" }
+            }
+          },
+          "uor_consistency": {
+            "type": "object",
+            "properties": {
+              "performed": { "type": "boolean" },
+              "stored_uor_address": { "type": ["string", "null"] },
+              "recomputed_uor_address": { "type": "string" },
+              "match": { "type": ["boolean", "null"] },
+              "note": { "type": "string" }
+            }
+          },
+          "store_verified": { "type": "boolean" },
+          "verdict": { "type": "string" }
+        }
+      },
+      "CertTransformCertificate": {
+        "type": "object",
+        "properties": {
+          "@type": { "type": "string", "const": "cert:TransformCertificate" },
+          "cert:transformType": { "type": "string" },
+          "cert:verified": { "type": "boolean" },
+          "cert:quantum": { "type": "integer" },
+          "cert:timestamp": { "type": "string", "format": "date-time" }
         }
       }
     },
