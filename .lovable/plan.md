@@ -1,170 +1,133 @@
 
 
-# UOR-Compliant Modular Architecture with Content-Addressed Verification
+# Full UOR Compliance: Content-Addressed Certificates for All Key Components
 
-## Current State Assessment
+## Current Compliance Gap
 
-### What works well
-- Seven self-contained modules, each with a `module.json` JSON-LD manifest
-- Barrel exports (`index.ts`) per module with clean public APIs
-- Typed contracts (`types.ts`) per module
-- Dependency declarations in manifests (e.g., `landing` depends on `core`)
-- Existing CID computation and canonical JSON-LD serialization in the edge function (`store.ts`)
+The registry currently certifies **only the 7 module manifests**. All other key data objects -- navigation items, route tables, framework layers, pillars, projects, research categories, blog posts, highlights, and team descriptions -- exist as plain JavaScript arrays with no mathematical proof of authenticity. They are uncertified and therefore non-compliant with the UOR framework.
 
-### What does not work
-1. **Manifests are dead files.** No code reads, validates, or uses `module.json` at build or runtime. They are documentation, not infrastructure.
-2. **No content addressing.** Modules have no verifiable identity. Nothing proves a module is what it claims to be.
-3. **No runtime registry.** `App.tsx` hardcodes every route and import. The manifest's `routes` and `dependencies` fields are ignored.
-4. **No verification.** There is no mechanism to check that a module's actual exports match its declared manifest.
-5. **The `ModuleManifest` TypeScript interface exists** but is never instantiated or used beyond being exported as a type.
-6. **CID computation lives only in Deno** (edge function). The browser has no access to these utilities.
+## What Changes
+
+We will create a centralized **content registry** that generates UOR verification certificates for every significant data object on the site, then expose those certificates in both the verification UI and the machine-readable JSON-LD metadata.
 
 ---
 
-## Plan
+### 1. Create `src/lib/uor-content-registry.ts`
 
-### Phase 1: Browser-Compatible UOR Addressing Library
+A new file that defines all certifiable content objects as JSON-LD-compatible structures, generates certificates for each at startup, and exposes them alongside the module registry.
 
-Create `src/lib/uor-address.ts` porting the core content-addressing functions from the edge function to the browser using the Web Crypto API (already available in all modern browsers):
+Certifiable content objects (each becomes a formally addressed, verifiable entity):
 
-- `canonicalJsonLd(obj)` -- deterministic JSON-LD serialization with sorted keys
-- `computeCid(bytes)` -- CIDv1 / dag-json / sha2-256 / base32lower
-- `computeUorAddress(bytes)` -- Braille bijection address
-- `computeModuleIdentity(manifest)` -- takes a manifest object, canonicalizes it, and returns `{ cid, uorAddress, canonicalBytes }`
+| Subject ID | Source | Description |
+|---|---|---|
+| `content:route-table` | App.tsx route config | All routes as a canonical array |
+| `content:nav-items` | Navbar.tsx navItems | Navigation contract |
+| `content:pillars` | PillarsSection.tsx | Three-pillar data |
+| `content:highlights` | HighlightsSection.tsx | Community highlights data |
+| `content:featured-projects` | ProjectsShowcase.tsx | Homepage project showcase |
+| `content:framework-layers` | FrameworkLayers.tsx | Six UOR layers definition |
+| `content:research-categories` | ResearchPage.tsx | 12 research domain categories |
+| `content:blog-posts` | ResearchPage.tsx | Blog post metadata |
+| `content:projects` | ProjectsPage.tsx | Full project catalog |
+| `content:maturity-model` | ProjectsPage.tsx | Sandbox/Incubating/Graduated criteria |
+| `content:governance-principles` | AboutPage.tsx | Six governance principles |
 
-These are pure functions with zero dependencies.
+Each object will be canonicalized via `canonicalJsonLd`, hashed via SHA-256/CIDv1/dag-json, and assigned a UOR Braille address -- the same pipeline used for module manifests and the edge function's stored objects.
 
-### Phase 2: Module Manifest Registry
+### 2. Extract Data Constants into Certifiable Modules
 
-Create `src/lib/uor-registry.ts` that:
+Currently, data arrays like `pillars`, `navItems`, `layers`, `highlights`, `featuredProjects`, `researchCategories`, and `blogPosts` are defined inline inside component files. To make them certifiable:
 
-1. Imports all seven `module.json` files statically (Vite handles JSON imports natively)
-2. On initialization, computes the CID and UOR address for each module manifest
-3. Validates that declared dependencies exist in the registry
-4. Validates that declared exports match the actual barrel export keys
-5. Exposes a typed registry: `getModule(name)` returns the manifest plus its computed identity
-6. Exposes `getAllModules()` for iteration
-7. Exposes `verifyModule(name)` that recomputes the CID and compares it to the stored one
+- Create `src/data/nav-items.ts` -- exports `navItems` array
+- Create `src/data/pillars.ts` -- exports `pillars` array
+- Create `src/data/highlights.ts` -- exports `highlights` array
+- Create `src/data/featured-projects.ts` -- exports `featuredProjects` array
+- Create `src/data/framework-layers.ts` -- exports `layers` array (the 6-layer definitions)
+- Create `src/data/research-categories.ts` -- exports `researchCategories` array
+- Create `src/data/blog-posts.ts` -- exports `blogPosts` array
+- Create `src/data/projects.ts` -- exports full `projects` array and `maturityInfo`
+- Create `src/data/governance.ts` -- exports governance principles
+- Create `src/data/route-table.ts` -- exports canonical route definitions
 
-### Phase 3: Enhance Module Manifests with Identity Fields
+Each file exports a plain data object (no JSX, no icons -- just serializable attributes). The component files will import from these data files and attach icons/rendering at the component level.
 
-Add computed identity fields to each `module.json`:
+### 3. Update `src/lib/uor-content-registry.ts` Initialization
 
-```json
-{
-  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-  "@type": "uor:Module",
-  "name": "core",
-  "version": "1.0.0",
-  "store:cid": "bafy...",
-  "store:uorAddress": { "u:glyph": "...", "u:length": 42 }
-}
-```
+On app startup (called from `App.tsx` alongside `initializeRegistry`), this new registry will:
 
-These fields are self-referential (the CID is computed from the manifest without these fields, then embedded). The verification function strips them before recomputing, exactly matching the `stripSelfReferentialFields` pattern already used in the edge function.
+1. Import all data constants from `src/data/*`
+2. For each, wrap it in a JSON-LD envelope with `@context` and `@type`
+3. Call `generateCertificate(subjectId, attributes)` to produce a UOR certificate
+4. Store the certificate in a `Map<string, ContentCertificate>`
+5. Expose `getAllContentCertificates()` and `getContentCertificate(id)` APIs
 
-### Phase 4: Component-Level Verification Certificates
+### 4. Update `UorVerification.tsx`
 
-Create `src/lib/uor-certificate.ts` with a `generateCertificate` function that takes any component's descriptive attributes and produces a UOR verification receipt:
+The verification panel currently shows only the 7 module certificates. It will be extended with a second section: **"Content Certificates"** that lists all content objects with their CID, UOR address, and verification status. This turns the badge from a module-only checker into a full-site integrity dashboard.
 
-```typescript
-interface UorCertificate {
-  "@context": "https://uor.foundation/contexts/uor-v1.jsonld";
-  "@type": "cert:ModuleCertificate";
-  "cert:subject": string;        // module or component name
-  "cert:cid": string;            // CIDv1
-  "store:uorAddress": {
-    "u:glyph": string;
-    "u:length": number;
-  };
-  "cert:computedAt": string;     // ISO timestamp
-  "cert:specification": "1.0.0";
-}
-```
+### 5. Update `UorMetadata.tsx`
 
-Generate certificates for:
-- All 7 module manifests
-- The route table (App.tsx route configuration as a JSON-LD object)
-- The navigation contract (navItems array)
-- The UOR layer definitions (FrameworkLayers data)
-- The project maturity data
-- The research categories
+The JSON-LD `<script>` injected into `<head>` will be extended to include a `contentCertificates` array alongside the existing `modules` array, making all content certificates machine-readable.
 
-### Phase 5: Verification Console and Metadata Exposure
+### 6. Update Component Files
 
-Create `src/modules/core/components/UorVerification.tsx`:
+Each component that currently defines data inline will be updated to import from the corresponding `src/data/*` file:
 
-- A small, unobtrusive verification badge in the footer (or accessible via a keyboard shortcut)
-- When activated, it runs verification on all registered modules
-- Displays each module's name, CID, UOR address, and verification status (pass/fail)
-- This serves as a live demonstration of UOR's content-addressing capability on the website itself
+- `Navbar.tsx` -- imports from `src/data/nav-items.ts`
+- `PillarsSection.tsx` -- imports from `src/data/pillars.ts`
+- `HighlightsSection.tsx` -- imports from `src/data/highlights.ts`
+- `ProjectsShowcase.tsx` -- imports from `src/data/featured-projects.ts`
+- `FrameworkLayers.tsx` -- imports from `src/data/framework-layers.ts`
+- `ResearchPage.tsx` -- imports from `src/data/research-categories.ts` and `src/data/blog-posts.ts`
+- `ProjectsPage.tsx` -- imports from `src/data/projects.ts`
+- `AboutPage.tsx` -- imports from `src/data/governance.ts`
 
-Additionally, inject `<script type="application/ld+json">` into the page head with the site's module graph and certificates, making the site machine-readable and self-describing.
+The data files contain only serializable values (strings, numbers, booleans). Icons (Lucide components) are mapped at the component level by referencing a key/slug.
+
+### 7. Update `App.tsx`
+
+Add a call to `initializeContentRegistry()` alongside the existing `initializeRegistry()` call so both module and content certificates are computed at startup.
 
 ---
 
 ## Files to Create
 
 | File | Purpose |
-|------|---------|
-| `src/lib/uor-address.ts` | Browser-compatible CID, canonical JSON-LD, and UOR address computation |
-| `src/lib/uor-registry.ts` | Module manifest registry with dependency validation and identity computation |
-| `src/lib/uor-certificate.ts` | Certificate generation for components and data objects |
-| `src/modules/core/components/UorVerification.tsx` | Verification UI component |
-| `src/modules/core/components/UorMetadata.tsx` | JSON-LD metadata injector for `<head>` |
+|---|---|
+| `src/data/nav-items.ts` | Navigation items data |
+| `src/data/pillars.ts` | Three pillars data |
+| `src/data/highlights.ts` | Community highlights data |
+| `src/data/featured-projects.ts` | Homepage featured projects |
+| `src/data/framework-layers.ts` | Six UOR layers (serializable) |
+| `src/data/research-categories.ts` | Research domain categories |
+| `src/data/blog-posts.ts` | Blog post metadata |
+| `src/data/projects.ts` | Full project catalog + maturity model |
+| `src/data/governance.ts` | Governance principles |
+| `src/data/route-table.ts` | Canonical route definitions |
+| `src/lib/uor-content-registry.ts` | Content certificate registry |
 
 ## Files to Modify
 
 | File | Changes |
-|------|---------|
-| 7x `module.json` files | Add computed `store:cid` and `store:uorAddress` identity fields |
-| `src/modules/core/types.ts` | Extend `ModuleManifest` interface with identity fields and certificate type |
-| `src/modules/core/index.ts` | Export new verification and metadata components |
-| `src/modules/core/components/Layout.tsx` | Mount `UorMetadata` in head and `UorVerification` badge |
-| `src/App.tsx` | Initialize the module registry on app startup |
+|---|---|
+| `src/App.tsx` | Add `initializeContentRegistry()` call |
+| `src/modules/core/components/Navbar.tsx` | Import `navItems` from data file |
+| `src/modules/landing/components/PillarsSection.tsx` | Import `pillars` from data file |
+| `src/modules/landing/components/HighlightsSection.tsx` | Import `highlights` from data file |
+| `src/modules/landing/components/ProjectsShowcase.tsx` | Import `featuredProjects` from data file |
+| `src/modules/framework/components/FrameworkLayers.tsx` | Import `layers` from data file |
+| `src/modules/community/pages/ResearchPage.tsx` | Import categories and blog posts from data files |
+| `src/modules/projects/pages/ProjectsPage.tsx` | Import projects and maturity model from data files |
+| `src/modules/core/pages/AboutPage.tsx` | Import governance principles from data file |
+| `src/modules/core/components/UorVerification.tsx` | Add content certificates section |
+| `src/modules/core/components/UorMetadata.tsx` | Include content certificates in JSON-LD |
 
 ## What Does Not Change
-- Visual design, layout, animations
-- All page content and messaging
-- Navigation structure and routing behavior
-- Edge function code (it already has its own implementation)
-- Any external-facing behavior (this is internal infrastructure)
 
----
-
-## Technical Details
-
-### Why this approach works with the existing UOR framework
-
-The edge function's `store.ts` already implements exactly this pattern for stored objects:
-1. Canonicalize the JSON-LD object (sorted keys, deterministic serialization)
-2. Compute SHA-256 digest of the canonical bytes
-3. Encode as CIDv1 with dag-json codec
-4. Compute UOR address via Braille bijection
-5. Embed the identity back into the object (self-referential)
-6. Verify by stripping self-referential fields and recomputing
-
-We are applying the same pattern to module manifests and component data. The functions are identical; we are simply porting them from Deno to the browser.
-
-### Dependency graph enforced by the registry
-
-```text
-core (no dependencies)
-  |
-  +-- landing (depends on core)
-  +-- framework (depends on core)
-  +-- community (depends on core)
-  +-- projects (depends on core)
-  +-- donate (depends on core)
-  +-- api-explorer (depends on core)
-```
-
-The registry will validate this graph at startup and log warnings for any undeclared cross-module imports.
-
-### Certificate rehydration capability
-
-Because each certificate captures all canonical attributes of its subject, and because the CID is deterministically derived from those attributes, a certificate can be used to:
-1. Verify that the current component matches its declared identity
-2. Detect any unauthorized modification (the CID will not match)
-3. In theory, reconstruct the full attribute set from the canonical bytes (the "rehydration" the user described)
+- Visual design, layout, animations, or styling
+- The UOR addressing library (`uor-address.ts`)
+- The certificate generation library (`uor-certificate.ts`)
+- The module registry (`uor-registry.ts`)
+- Edge function code
+- Any user-facing behavior beyond the expanded verification panel
 
