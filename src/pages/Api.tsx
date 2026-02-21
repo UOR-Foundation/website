@@ -89,15 +89,15 @@ const DISCOVERY_ENDPOINTS: DiscoveryEndpoint[] = [
   {
     method: "GET",
     path: "/navigate",
-    label: "Get the complete endpoint index",
-    explanation: "Returns a complete map of every endpoint — path, method, and purpose — in one call. If you are new to the API, start here.",
+    label: "Get the full endpoint index",
+    explanation: "Returns every endpoint in one call: path, method, and purpose. Start here.",
     example: `${BASE}/navigate`,
   },
   {
     method: "GET",
     path: "/openapi.json",
-    label: "Download the machine-readable spec",
-    explanation: "The full machine-readable spec in OpenAPI 3.1.0 format. Use the static copy at uor.foundation/openapi.json to parse all paths, schemas, and response types offline.",
+    label: "Download the OpenAPI 3.1.0 spec",
+    explanation: "Machine-readable spec with all paths, schemas, and response types. Also available at uor.foundation/openapi.json.",
     example: `${BASE}/openapi.json`,
   },
 ];
@@ -110,23 +110,23 @@ const LAYERS: Layer[] = [
     icon: Diamond,
     layerNum: 0,
     title: "The Foundation",
-    oneLiner: "The one mathematical rule everything else is built on. Provable in under 100ms.",
+    oneLiner: "One mathematical rule. Provable in under 100ms. Everything above depends on it.",
     whyItMatters:
-      "There is one rule at the base of the framework: applying bitwise-invert then negate to any value always equals incrementing it by one. These two endpoints let you verify that — for one value or every value at once. If this holds, every layer above it holds. For agents with no shared authority, this is the trust anchor.",
-    solves: "Solves: Agent trust problem — agents with no common authority cannot coordinate. These endpoints return a machine-checkable proof, not an assertion.",
+      "The framework rests on a single verifiable rule: for any value x, negate(bitwise-invert(x)) always equals x + 1. If this holds, every layer above it holds. These endpoints let you check it yourself.",
+    solves: "Value: Agents that share no common authority can establish trust through a mathematical proof, not a handshake.",
     endpoints: [
       {
         operationId: "opVerifyCriticalIdentity",
         method: "GET",
         path: "/kernel/op/verify",
-        label: "Verify the core rule for one value",
+        label: "Check the core rule for any value",
         explanation:
-          "Checks that negate(bitwise-invert(x)) equals increment(x) for the value you supply. Returns every intermediate step — not just pass or fail.\n\nThis is the most important endpoint in the API: the rule it checks is the structural guarantee everything else depends on.",
+          "Send a number, get back every step of the proof: input, bitwise inversion, negation, increment, and whether they match. Not just pass/fail. The full derivation.\n\nThis is the trust anchor. If this passes, the framework's guarantees hold for that value.",
         useCase:
-          "An agent is told the framework is trustworthy. It calls this endpoint with a value it chose, confirms the rule holds, and then relies on the framework with mathematical confidence — no trust required.",
+          "Pick any number. Call this endpoint. If it passes, the framework is mathematically sound for that value. No trust required.",
         params: [
-          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to check. Must be 0 or greater, and less than 2 to the power of n." },
-          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8 means values 0–255." },
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "Any value from 0 to 2^n - 1." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size in bits. Default 8 = values 0–255." },
         ],
         responseCodes: [200, 400, 405, 429, 500],
         example: `${BASE}/kernel/op/verify?x=42`,
@@ -135,14 +135,14 @@ const LAYERS: Layer[] = [
         operationId: "opVerifyAll",
         method: "GET",
         path: "/kernel/op/verify/all",
-        label: "Verify the core rule for every value in the ring",
+        label: "Check the core rule for every value in the ring",
         explanation:
-          "Runs the same check across every value in the ring — all 256 for the default 8-bit ring. Returns a pass count, fail count, and a universal verdict.\n\nOne example proves nothing. Exhaustive verification is what turns a claim into proof.",
+          "Runs the same check across every value: all 256 for the default 8-bit ring. Returns pass count, fail count, and a single verdict.\n\nOne value proves nothing. Exhaustive verification turns a claim into proof.",
         useCase:
-          "An agent wants to confirm the framework is internally consistent before relying on any of its operations. 256 passes, zero failures.",
+          "Confirm the entire ring is consistent before relying on any operation. 256 passes, zero failures.",
         params: [
-          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. n=8 checks all 256 values. n=4 checks 16." },
-          { name: "expand", in: "query", type: "boolean", required: false, default: "false", description: "Set to true to include per-value results." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. n=8 checks 256 values, n=4 checks 16." },
+          { name: "expand", in: "query", type: "boolean", required: false, default: "false", description: "Include per-value detail." },
         ],
         responseCodes: [200, 405, 429, 500],
         example: `${BASE}/kernel/op/verify/all?n=8`,
@@ -154,23 +154,23 @@ const LAYERS: Layer[] = [
     icon: Hash,
     layerNum: 1,
     title: "Identity",
-    oneLiner: "Permanent, unforgeable addresses derived from content — not from names or servers.",
+    oneLiner: "Permanent addresses derived from content. Same input, same address, every time.",
     whyItMatters:
-      "Location-based identifiers change when data moves. Content addresses are computed from the content itself — the same text always maps to the same address, on any machine, without a registry. An agent's identity is its content. That cannot be impersonated.",
-    solves: "Solves: Identity Fraud — names and tokens can be copied. Content addresses cannot — they are derived, not assigned.",
+      "URLs break when servers move. Content addresses are computed from the bytes themselves. The same text always produces the same address, on any machine, with no registry. Identity comes from what it is, not where it lives.",
+    solves: "Value: Names and tokens can be copied. Content addresses cannot. They are derived, not assigned.",
     endpoints: [
       {
         operationId: "addressEncode",
         method: "POST",
         path: "/kernel/address/encode",
-        label: "Turn any text into a permanent, unique address",
+        label: "Get the permanent address for any text",
         explanation:
-          "Send any text, receive a permanent address computed from its bytes. The same input always produces the same address — no server, no timestamp, no registry required.\n\nOne character difference produces a completely different address.",
+          "Send text, receive its content address. Same input always produces the same output. No server, no timestamp, no registry.\n\nChange one character and the address changes completely.",
         useCase:
-          "An agent signs its output by encoding its response into a content address and attaching it to the message. Any recipient re-encodes the same text and checks the address matches.",
+          "Hash your output, attach the address to your message. Any recipient re-encodes the same text and checks the address matches. Tamper-proof by construction.",
         params: [
           { name: "input", in: "body", type: "string (max 1000 chars)", required: true, description: "The text to address." },
-          { name: "encoding", in: "body", type: '"utf8"', required: false, default: "utf8", description: "Text encoding. Only utf8 is supported." },
+          { name: "encoding", in: "body", type: '"utf8"', required: false, default: "utf8", description: "Text encoding." },
         ],
         defaultBody: JSON.stringify({ input: "hello", encoding: "utf8" }, null, 2),
         responseCodes: [200, 400, 405, 413, 415, 429, 500],
@@ -180,14 +180,14 @@ const LAYERS: Layer[] = [
         operationId: "schemaDatum",
         method: "GET",
         path: "/kernel/schema/datum",
-        label: "Get the full structural profile of any number",
+        label: "Get the structural profile of any number",
         explanation:
-          "Every value in UOR is more than a number — it has a position in a mathematical structure. This returns the full profile: decimal value, binary representation, bits set, and content address.\n\nUnderstanding this helps interpret results from every other endpoint.",
+          "Returns everything about a value: decimal, binary representation, bits set, content address, and position in the ring.\n\nUseful context before feeding a value into any other endpoint.",
         useCase:
-          "An agent receives a numeric result and wants its full structural context before using it in a proof.",
+          "Inspect a number's full structural identity before using it in a proof or computation.",
         params: [
-          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The number to describe. Must be less than 2 to the power of n." },
-          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8 means values 0–255." },
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The number to describe." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8 = values 0–255." },
         ],
         responseCodes: [200, 400, 405, 429, 500],
         example: `${BASE}/kernel/schema/datum?x=42`,
@@ -199,24 +199,24 @@ const LAYERS: Layer[] = [
     icon: Layers,
     layerNum: 2,
     title: "Structure",
-    oneLiner: "A fixed set of named operations with verifiable, shareable results.",
+    oneLiner: "12 named operations. Formally defined. Deterministic results.",
     whyItMatters:
-      "UOR defines 12 operations — negate, invert, add, multiply, and more. Each has a formal name, formula, and relationship to the core rule. When agents exchange computed values, they can verify each other's work against these definitions. There is no ambiguity about what was computed.",
-    solves: "Solves: Opaque Coordination — two agents computing the same operation get the same result, or the discrepancy is detectable.",
+      "UOR defines 12 operations: negate, invert, add, multiply, and more. Each has a formal name, formula, and relationship to the core rule. Two agents running the same operation on the same input always get the same result.",
+    solves: "Value: Eliminates ambiguity. Every operation is named, defined, and verifiable. No room for misinterpretation.",
     endpoints: [
       {
         operationId: "opCompute",
         method: "GET",
         path: "/kernel/op/compute",
-        label: "Run every operation on a value at once",
+        label: "Run all operations on a value at once",
         explanation:
-          "Takes one or two numbers and returns every operation result at once.\n\nUnary (single input): negate, bitwise-invert, increment, decrement.\nBinary (two inputs): add, subtract, multiply, XOR, AND, OR.\n\nAll results in one response — compare them side by side.",
+          "Pass one or two numbers. Get every operation result in a single response.\n\nUnary: negate, bitwise-invert, increment, decrement.\nBinary: add, subtract, multiply, XOR, AND, OR.",
         useCase:
-          "A developer exploring how the framework behaves for a specific value, or an agent that wants to see all possible outcomes before committing to one.",
+          "See all possible outcomes for a value before committing to one. Useful for exploration and debugging.",
         params: [
-          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The primary number. Must be less than 2 to the power of n." },
-          { name: "y", in: "query", type: "integer", required: false, default: "10", description: "Second number for binary operations. Defaults to x if omitted." },
-          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8." },
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "Primary value." },
+          { name: "y", in: "query", type: "integer", required: false, default: "10", description: "Second value for binary operations." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
         ],
         responseCodes: [200, 400, 405, 429, 500],
         example: `${BASE}/kernel/op/compute?x=42&y=10`,
@@ -225,11 +225,11 @@ const LAYERS: Layer[] = [
         operationId: "opList",
         method: "GET",
         path: "/kernel/op/operations",
-        label: "Browse every named operation with its formal definition",
+        label: "List all 12 operations with their definitions",
         explanation:
-          "Returns all 12 named operations with their formal definitions: formulas, algebraic class, and relationship to the core rule. This is the shared dictionary every agent can reference.",
+          "Returns every named operation with its formula, algebraic class, and relationship to the core rule. The shared reference both agents and developers can point to.",
         useCase:
-          "An agent or developer wants to confirm a named operation in a proof object matches a known definition before verifying it.",
+          "Look up an operation's formal definition before verifying a proof that references it.",
         params: [],
         responseCodes: [200, 405, 429, 500],
         example: `${BASE}/kernel/op/operations`,
@@ -241,20 +241,20 @@ const LAYERS: Layer[] = [
     icon: Search,
     layerNum: 3,
     title: "Resolution",
-    oneLiner: "Know the type and class of any value before you compute with it.",
+    oneLiner: "Classify any value into its structural category before computing with it.",
     whyItMatters:
-      "Every value belongs to one of four categories: building block, composed value, structural anchor, or boundary. Knowing which category a value belongs to before operating on it prevents type errors and incorrect proofs. This layer gives agents a formal type system they share without negotiation.",
-    solves: "Solves: Type mismatches — agents using the same bytes can reach different conclusions if they disagree on what kind of value it is.",
+      "Every value belongs to one of four categories: building block, composed, anchor, or boundary. Knowing the category before operating on a value prevents type errors and incorrect proofs.",
+    solves: "Value: A shared type system. No negotiation needed. Both parties know what kind of value they are working with.",
     endpoints: [
       {
         operationId: "typeList",
         method: "GET",
         path: "/user/type/primitives",
-        label: "Browse the built-in data types",
+        label: "Browse the built-in types",
         explanation:
-          "Returns the built-in type catalogue: U1, U4, U8, U16 (1 to 16 bits), plus composite types — pairs, unions, and constrained values. The type you pick here feeds directly into the coherence and partition endpoints.",
+          "Returns the type catalogue: U1, U4, U8, U16 (1 to 16 bits), plus composite types (pairs, unions, constrained values). The type you pick here feeds into the coherence and partition endpoints.",
         useCase:
-          "A developer wants to know which type to pass before calling the coherence or partition endpoints.",
+          "Check which types are available before calling coherence or partition.",
         params: [],
         responseCodes: [200, 405, 429, 500],
         example: `${BASE}/user/type/primitives`,
@@ -263,14 +263,14 @@ const LAYERS: Layer[] = [
         operationId: "bridgeResolver",
         method: "GET",
         path: "/bridge/resolver",
-        label: "Classify any value into its canonical category",
+        label: "Classify a value into its canonical category",
         explanation:
-          "Sorts any value into one of four canonical categories:\n\n• Building block (irreducible) — odd, not a unit. Structurally unique.\n• Composed (reducible) — even. Breaks into 2^k × odd core.\n• Anchor (unit) — the ring's multiplicative identity or its inverse.\n• Boundary (exterior) — zero or the ring midpoint.\n\nFor composed values, shows the full factor breakdown. For building blocks, confirms no further decomposition is possible.",
+          "Returns which of four categories a value belongs to:\n\n• Building block: odd, irreducible. Cannot be decomposed further.\n• Composed: even. Factors into 2^k × odd core.\n• Anchor: the ring's multiplicative identity (1 or 255).\n• Boundary: zero or the ring midpoint (128).\n\nFor composed values, shows the full factor breakdown.",
         useCase:
-          "Before using a value in a proof or translation, an agent must know its category. This endpoint answers: is this a building block, a composed value, a structural anchor, or a boundary case?",
+          "Before using a value in a proof, confirm its category. Building blocks and composed values behave differently under every operation.",
         params: [
-          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to classify. Must be less than 2 to the power of n." },
-          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8 means values 0–255." },
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to classify." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
         ],
         responseCodes: [200, 400, 405, 429, 500],
         example: `${BASE}/bridge/resolver?x=42`,
@@ -282,20 +282,20 @@ const LAYERS: Layer[] = [
     icon: ShieldCheck,
     layerNum: 4,
     title: "Verification",
-    oneLiner: "Shareable proof objects any party can verify independently — no server needed.",
+    oneLiner: "Proof objects anyone can verify. No server contact needed.",
     whyItMatters:
-      "A proof object is not just a correct answer. It has a permanent address, shows every derivation step, and can be verified by anyone without contacting a server. Certificates attest to properties across all values. Both are self-contained objects you can share, store, and re-verify at any time.",
-    solves: "Solves: Auth exploits and prompt injection — proofs anchored to content addresses cannot be forged or replayed. The math is the trust chain.",
+      "A proof object shows every derivation step, has a permanent address, and can be verified by anyone independently. Certificates attest to properties across all values. Both are self-contained: share them, store them, re-verify them anytime.",
+    solves: "Value: Proofs anchored to content addresses cannot be forged or replayed. The math is the trust chain.",
     endpoints: [
       {
         operationId: "proofCriticalIdentity",
         method: "GET",
         path: "/bridge/proof/critical-identity",
-        label: "Generate a shareable proof for one value",
+        label: "Generate a portable proof for one value",
         explanation:
-          "Produces a full proof object with a unique permanent address. Anyone can take this object, replay the derivation steps, and confirm it is correct — no server contact needed.\n\nEvery step is explicit: input, each intermediate value, final comparison.",
+          "Produces a proof object with a permanent address. Every step is explicit: input, intermediates, final comparison. Anyone can replay the steps and confirm correctness without contacting any server.",
         useCase:
-          "An agent produces a proof for its own identity value and attaches it to outgoing messages. Recipients verify independently. The math is the trust chain.",
+          "Generate a proof, attach it to your message. The recipient verifies independently. No callbacks, no tokens, no trust.",
         params: [
           { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to prove." },
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
@@ -307,14 +307,14 @@ const LAYERS: Layer[] = [
         operationId: "proofCoherence",
         method: "POST",
         path: "/bridge/proof/coherence",
-        label: "Prove a type is consistent across all values",
+        label: "Verify a type is consistent across all values",
         explanation:
-          "Verifies the core rule holds for every element of a given type — not a sample, every value. A passing type is coherent and participates fully in the framework's guarantees.\n\nReturns pass rate, fail count, and a single boolean verdict. 100% is required.",
+          "Checks the core rule for every element of a type. Not a sample: every value. Returns pass rate, fail count, and a single boolean verdict. 100% is required for coherence.",
         useCase:
-          "Before using a custom data type in agent coordination, verify it is coherent. A non-coherent type will produce unpredictable results with every framework operation.",
+          "Before using a custom type in coordination, verify it is coherent. A non-coherent type produces unpredictable results.",
         params: [
-          { name: "type_definition", in: "body", type: "object", required: true, description: 'The type to verify. Minimum: { "@type": "type:PrimitiveType", "type:bitWidth": 8 }' },
-          { name: "n", in: "body", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Defaults to the bitWidth in the type definition." },
+          { name: "type_definition", in: "body", type: "object", required: true, description: 'The type to verify. E.g. { "@type": "type:PrimitiveType", "type:bitWidth": 8 }' },
+          { name: "n", in: "body", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
         ],
         defaultBody: JSON.stringify({ type_definition: { "@type": "type:PrimitiveType", "type:bitWidth": 8 }, n: 8 }, null, 2),
         responseCodes: [200, 400, 405, 415, 429, 500],
@@ -324,11 +324,11 @@ const LAYERS: Layer[] = [
         operationId: "certInvolution",
         method: "GET",
         path: "/bridge/cert/involution",
-        label: "Issue a certificate that an operation undoes itself",
+        label: "Certify that an operation undoes itself",
         explanation:
-          "Some operations undo themselves when applied twice. Negate and bitwise-invert are both self-inverting: negate(negate(x)) = x for every value in the ring. This verifies that exhaustively, then issues a shareable certificate.\n\nCertificates can be stored and shared. Peers verify them directly — no re-computation needed.",
+          "Some operations are self-inverting: negate(negate(x)) = x for every value. This verifies that exhaustively and issues a shareable certificate. Peers verify it directly without re-running the computation.",
         useCase:
-          "An agent proves to a peer that an operation is safe to reverse. It shares the certificate. The peer verifies it in one call.",
+          "Prove to a peer that an operation is safely reversible. Share the certificate. One verification call confirms it.",
         params: [
           { name: "operation", in: "query", type: "string", required: true, default: "neg", enum: ["neg", "bnot"], description: '"neg" = negate. "bnot" = bitwise invert.' },
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
@@ -340,15 +340,15 @@ const LAYERS: Layer[] = [
         operationId: "bridgeDerivation",
         method: "GET",
         path: "/bridge/derivation",
-        label: "Record an auditable step-by-step derivation",
+        label: "Get a step-by-step audit trail for any computation",
         explanation:
-          "Takes a starting value and a sequence of operations, and returns a formal record of every step: input, output, formula used, and ontology reference. Also verifies the core rule holds for the original value — an independent integrity check bundled into the same response.",
+          "Pass a starting value and a sequence of operations. Returns a formal record of every step: input, output, formula, and ontology reference. Also verifies the core rule for the starting value as an integrity check.",
         useCase:
-          "An agent runs a sequence of operations and needs an auditable record. The derivation trace is the formal receipt. Peers replay it to verify independently.",
+          "Run a sequence of operations and get an auditable receipt. Peers replay the steps to verify independently.",
         params: [
-          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The starting value. Must be less than 2^n." },
-          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8." },
-          { name: "ops", in: "query", type: "string", required: false, default: "neg,bnot,succ", description: "Comma-separated operations. Valid: neg, bnot, succ, pred." },
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "Starting value." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
+          { name: "ops", in: "query", type: "string", required: false, default: "neg,bnot,succ", description: "Comma-separated operations: neg, bnot, succ, pred." },
         ],
         responseCodes: [200, 400, 405, 429, 500],
         example: `${BASE}/bridge/derivation?x=42&ops=neg,bnot,succ`,
@@ -357,15 +357,15 @@ const LAYERS: Layer[] = [
         operationId: "bridgeTrace",
         method: "GET",
         path: "/bridge/trace",
-        label: "Capture the exact bit state at every execution step",
+        label: "Capture the exact binary state at every step",
         explanation:
-          "Lower-level than derivation. Records the exact binary state of the value after each operation — the decimal value, binary form, how many bits are set, which bits flipped, and the delta from the previous step.\n\nUseful when you need to see exactly where a bit pattern diverged.",
+          "Lower-level than derivation. Records the binary state after each operation: decimal value, binary form, bits set, which bits flipped, and the delta from the previous step.\n\nUseful for finding exactly where a computation diverged.",
         useCase:
-          "An agent detects unexpected output from a peer and wants to find where the computation diverged. The trace shows exactly which bits changed at each step.",
+          "Compare two traces side by side. If the output differs, the trace shows exactly which step and which bits caused the divergence.",
         params: [
-          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The starting value. Must be less than 2^n." },
-          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8." },
-          { name: "ops", in: "query", type: "string", required: false, default: "neg,bnot", description: "Comma-separated operations. Valid: neg, bnot, succ, pred." },
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "Starting value." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
+          { name: "ops", in: "query", type: "string", required: false, default: "neg,bnot", description: "Comma-separated operations: neg, bnot, succ, pred." },
         ],
         responseCodes: [200, 400, 405, 429, 500],
         example: `${BASE}/bridge/trace?x=42&ops=neg,bnot`,
@@ -377,24 +377,24 @@ const LAYERS: Layer[] = [
     icon: ArrowRightLeft,
     layerNum: 5,
     title: "Transformation",
-    oneLiner: "Translate values between contexts, score information density — formally and deterministically.",
+    oneLiner: "Measure information density. Translate values between ring sizes. Inspect state.",
     whyItMatters:
-      "Spam filters use pattern-matching, which can be fooled. UOR partition analysis measures algebraic byte-class distribution — how bytes in your content distribute across the ring's four structural groups. This is a formal, deterministic property, not a trained guess. Morphisms let agents safely translate values between different ring sizes without losing structural properties.",
-    solves: "Solves: Content spam — partition analysis is a formal structural property of byte values, not a semantic heuristic. A low density score is reproducible and machine-verifiable. Combine with other signals for content-quality decisions.",
+      "Partition analysis measures how bytes distribute across four structural groups. This is a deterministic property of content, not a trained classifier. Morphisms translate values between ring sizes without losing structural properties. State inspection shows what each operation does from any position.",
+    solves: "Value: Content quality measured by algebraic structure, not heuristics. Translations between contexts that preserve mathematical guarantees.",
     endpoints: [
       {
         operationId: "partitionResolve",
         method: "POST",
         path: "/bridge/partition",
-        label: "Score the information density of any content",
+        label: "Measure the algebraic density of any content",
         explanation:
-          "Classifies every byte in the input into one of four ring-theoretic groups — building blocks, composed values, structural anchors, and boundaries — then returns the fraction that are building blocks as a density score.\n\nAbove 0.25: content passes the algebraic density threshold. Below 0.1: strong signal of structurally uniform or repetitive content.\n\nImportant: this measures algebraic byte-class distribution, not semantic novelty. Repetitive content with odd byte values (e.g. 'aaaa') will score high. Use as one signal among others.\n\nPass text for per-character analysis, or a type definition for full-ring analysis.",
+          "Classifies every byte into one of four structural groups, then returns the fraction that are building blocks as a density score.\n\nAbove 0.25: passes the density threshold. Below 0.1: structurally uniform or repetitive.\n\nNote: this measures byte-class distribution, not semantic quality. Use as one signal among others.",
         useCase:
-          "An agent receives a long message and runs partition analysis before processing it. A low density score is a formal, reproducible signal — not a heuristic guess.",
+          "Screen incoming content before processing. A low density score is a formal, reproducible signal. Deterministic across any system.",
         params: [
           { name: "input", in: "body", type: "string", required: false, description: "Text to analyse. Use this or type_definition, not both." },
-          { name: "type_definition", in: "body", type: "object", required: false, description: 'A type definition to partition across the full ring. E.g. { "@type": "type:PrimitiveType", "type:bitWidth": 8 }.' },
-          { name: "resolver", in: "body", type: '"DihedralFactorizationResolver" | "EvaluationResolver"', required: false, default: "EvaluationResolver", description: "Factorisation method. EvaluationResolver is faster. DihedralFactorizationResolver is more precise." },
+          { name: "type_definition", in: "body", type: "object", required: false, description: 'A type definition for full-ring analysis.' },
+          { name: "resolver", in: "body", type: '"DihedralFactorizationResolver" | "EvaluationResolver"', required: false, default: "EvaluationResolver", description: "EvaluationResolver is faster. DihedralFactorizationResolver is more precise." },
         ],
         defaultBody: JSON.stringify({ input: "hello" }, null, 2),
         responseCodes: [200, 400, 405, 413, 415, 429, 500],
@@ -404,11 +404,11 @@ const LAYERS: Layer[] = [
         operationId: "observableMetrics",
         method: "GET",
         path: "/bridge/observable/metrics",
-        label: "Get precise structural measurements for any value",
+        label: "Get structural measurements for any value",
         explanation:
-          "Computes four precise measurements for any value:\n\n• Distance from zero — how far the value sits from the ring's origin.\n• Bits set — how many bits are on. A proxy for information content.\n• Cascade depth — how many times divisible by two before reaching an odd number.\n• Phase boundary — whether the value is near a point where operations change behaviour.",
+          "Four measurements for any value:\n\n• Distance from zero: position in the ring.\n• Bits set: proxy for information content.\n• Cascade depth: how many times divisible by 2.\n• Phase boundary: whether the value is near a behavioural transition point.",
         useCase:
-          "An agent monitoring a stream of values notices erratic outputs. Structural metrics reveal which values sit near phase boundaries — often the source of instability.",
+          "Identify values near phase boundaries, which are often the source of unstable or unexpected behaviour.",
         params: [
           { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to measure." },
           { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
@@ -420,15 +420,15 @@ const LAYERS: Layer[] = [
         operationId: "morphismTransforms",
         method: "GET",
         path: "/user/morphism/transforms",
-        label: "Map a value from one ring to another, preserving structure",
+        label: "Map a value between ring sizes",
         explanation:
-          "Maps a value from one ring size to another while preserving its structural properties.\n\n• Smaller target ring: strips the high bits (projection).\n• Larger target ring: embeds the value unchanged (inclusion).\n• Same size: identity map.\n\nReturns the mapped value, which properties are preserved, and whether the map is injective and surjective.",
+          "Translates a value from one ring to another while preserving structural properties.\n\n• Smaller target: strips high bits (projection).\n• Larger target: embeds unchanged (inclusion).\n• Same size: identity.\n\nReturns the mapped value and which properties survive the translation.",
         useCase:
-          "An agent operating in an 8-bit ring sends a value to a peer in a 4-bit ring. It uses this endpoint to compute the correct projection and confirm what is preserved.",
+          "Translate a value from 8-bit to 4-bit context. Know exactly what is preserved and what is lost.",
         params: [
-          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The value to map. Must be less than 2^from_n." },
-          { name: "from_n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Source ring size (bits)." },
-          { name: "to_n", in: "query", type: "integer [1–16]", required: false, default: "4", description: "Target ring size (bits)." },
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "Value to map." },
+          { name: "from_n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Source ring size." },
+          { name: "to_n", in: "query", type: "integer [1–16]", required: false, default: "4", description: "Target ring size." },
         ],
         responseCodes: [200, 400, 405, 429, 500],
         example: `${BASE}/user/morphism/transforms?x=42&from_n=8&to_n=4`,
@@ -437,14 +437,14 @@ const LAYERS: Layer[] = [
         operationId: "userState",
         method: "GET",
         path: "/user/state",
-        label: "Get the formal state description for an agent value",
+        label: "Inspect the state and transitions for any value",
         explanation:
-          "Returns the formal lifecycle state for an agent at value x.\n\n• What category x belongs to and why.\n• Whether x is a stable entry point (an identity or unit).\n• Whether x is at a phase boundary.\n• For each operation — negate, invert, increment, decrement — where does x go and does its category change?",
+          "Returns the full state description for a value:\n\n• Category and why.\n• Whether it is a stable entry point (identity or unit).\n• Whether it is at a phase boundary.\n• For each operation: where it goes and whether its category changes.",
         useCase:
-          "An agent must decide its next action from its current value. This endpoint answers: am I at a stable state, a boundary, or an interior point? What does each available operation do to my category?",
+          "Before choosing an operation, check what it does to your current value. Is the result stable, a boundary case, or a category change?",
         params: [
-          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "The agent's current state. Must be less than 2^n." },
-          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size. Default 8." },
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "Current state value." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
         ],
         responseCodes: [200, 400, 405, 429, 500],
         example: `${BASE}/user/state?x=42`,
@@ -456,25 +456,25 @@ const LAYERS: Layer[] = [
     icon: HardDrive,
     layerNum: 6,
     title: "Persistence",
-    oneLiner: "Store UOR objects to IPFS. Retrieve them. Verify both addresses independently.",
+    oneLiner: "Store objects to IPFS. Retrieve and verify them. Dual-address integrity.",
     whyItMatters:
-      "AI agents have no persistent, verifiable memory across sessions. UOR × IPFS gives every agent a decentralised, dual-verified, permanent store. Every stored object carries two independent addresses — a UOR address (semantic identity via Braille bijection) and an IPFS CID (storage identity via sha2-256). Verification checks both independently. Neither trusts the other. Neither trusts the gateway.",
-    solves: "Solves: No persistent agent memory — agents lose state between sessions and cannot share verified artifacts. These endpoints give every agent a permanent, decentralised, dual-verified store.",
+      "Every stored object carries two independent addresses: a UOR address (semantic identity) and an IPFS CID (storage identity). Verification checks both. Neither trusts the other. Neither trusts the gateway.",
+    solves: "Value: Permanent, decentralised, verifiable storage. Agents can persist state across sessions and share verified artifacts.",
     endpoints: [
       {
         operationId: "storeResolve",
         method: "GET",
         path: "/store/resolve",
-        label: "Compute the UOR address of any web resource",
+        label: "Preview the UOR address of any URL",
         explanation:
-          "Fetches any HTTP/HTTPS URL and computes its permanent UOR address via the Braille bijection — each byte maps to one Braille character.\nReturns the address without storing anything. Use this to preview what address a resource would receive before committing to IPFS.",
+          "Fetches any URL and computes its UOR address without storing anything. Preview what address a resource would receive before committing to IPFS.",
         useCase:
-          "An agent encounters a document URL shared by a peer. Before processing it, the agent resolves its UOR address to establish a verifiable reference it can use in its own output.",
+          "Establish a verifiable reference for any web resource before deciding whether to persist it.",
         params: [
-          { name: "url", in: "query", type: "string (URL)", required: true, description: "The HTTP/HTTPS URL to fetch." },
+          { name: "url", in: "query", type: "string (URL)", required: true, description: "The URL to fetch and address." },
           { name: "n", in: "query", type: "integer", required: false, default: "8", description: "Ring size: 4, 8, or 16." },
-          { name: "include_partition", in: "query", type: "boolean", required: false, default: "false", description: "Include byte partition analysis." },
-          { name: "include_metrics", in: "query", type: "boolean", required: false, default: "false", description: "Include observable metrics." },
+          { name: "include_partition", in: "query", type: "boolean", required: false, default: "false", description: "Include density analysis." },
+          { name: "include_metrics", in: "query", type: "boolean", required: false, default: "false", description: "Include structural metrics." },
         ],
         responseCodes: [200, 400, 413, 429, 502, 504],
         example: `${BASE}/store/resolve?url=https://uor.foundation/llms.md`,
@@ -483,15 +483,15 @@ const LAYERS: Layer[] = [
         operationId: "storeWrite",
         method: "POST",
         path: "/store/write",
-        label: "Store a UOR object to IPFS",
+        label: "Store an object to IPFS with dual addressing",
         explanation:
-          "Takes any User-space or Bridge-space UOR object, wraps it in a store:StoredObject JSON-LD envelope, computes its UOR address and CIDv1, pins it to IPFS, and returns both addresses with a store:PinRecord. The CID is the storage address. The u:Address is the semantic address. Both are content-derived and permanent.\n\nKernel-space types (u:, schema:, op:) are rejected — they are compiled into the runtime and never stored externally.",
+          "Wraps any UOR object in a JSON-LD envelope, computes both the UOR address and IPFS CID, pins it, and returns both. The CID is the storage address. The UOR address is the semantic address. Both are permanent and content-derived.\n\nNote: use the CIDv0 (Qm...) returned by the pin service for subsequent reads.",
         useCase:
-          "An agent produces a cert:TransformCertificate attesting to a computation. It stores the certificate to IPFS and attaches both the CID and UOR address to its outgoing message. Any peer can retrieve and verify independently.",
+          "Persist a proof or certificate to IPFS. Share both addresses. Any peer retrieves and verifies independently.",
         params: [
           { name: "object", in: "body", type: "object (JSON-LD with @type)", required: true, description: "The UOR object to store. Must be User-space or Bridge-space." },
-          { name: "pin", in: "body", type: "boolean", required: false, default: "true", description: "false = dry run, compute addresses only." },
-          { name: "gateway", in: "body", type: "string", required: false, default: "web3.storage", enum: ["web3.storage", "pinata"], description: '"web3.storage" (default) or "pinata".' },
+          { name: "pin", in: "body", type: "boolean", required: false, default: "true", description: "false = dry run (compute addresses only)." },
+          { name: "gateway", in: "body", type: "string", required: false, default: "pinata", enum: ["pinata"], description: "Write gateway. Pinata is the supported provider." },
           { name: "label", in: "body", type: "string", required: false, description: "Optional human-readable label." },
         ],
         defaultBody: JSON.stringify({ object: { "@type": "cert:TransformCertificate", "cert:verified": true, "cert:quantum": 8 }, pin: false }, null, 2),
@@ -502,15 +502,15 @@ const LAYERS: Layer[] = [
         operationId: "storeRead",
         method: "GET",
         path: "/store/read/:cid",
-        label: "Retrieve a stored UOR object and verify its integrity",
+        label: "Retrieve and verify a stored object",
         explanation:
-          "Retrieves a UOR object from IPFS by CID using the trustless gateway protocol (?format=raw). Performs dual verification: (1) recomputes the CID from retrieved bytes, (2) recomputes the UOR address from retrieved bytes and compares to the stored store:uorAddress. Returns store:verified:true only if both match.\n\nWith strict:true (default), returns HTTP 409 on failure.",
+          "Retrieves an object from IPFS by CID and performs dual verification: recomputes both the CID and UOR address from the retrieved bytes. Returns store:verified:true only if both match.\n\nUse CIDv0 (Qm...) for reliable retrieval.",
         useCase:
-          "A peer agent shares a CID claiming it contains a verified proof. Your agent retrieves it, checks store:verified, and only processes the content if true. The verification is mathematical — no trust in the peer or the gateway required.",
+          "A peer shares a CID. Retrieve it, check store:verified, and only process if true. Verification is mathematical.",
         params: [
-          { name: "cid", in: "query", type: "string", required: true, description: "CIDv0 (Qm...) or CIDv1 (bafy..., bafk...)." },
-          { name: "gateway", in: "query", type: "string", required: false, default: "https://ipfs.io", description: "IPFS read gateway." },
-          { name: "strict", in: "query", type: "boolean", required: false, default: "true", description: "HTTP 409 on failure if true (default)." },
+          { name: "cid", in: "query", type: "string", required: true, description: "CIDv0 (Qm...) or CIDv1 (bafy...)." },
+          { name: "gateway", in: "query", type: "string", required: false, default: "https://uor.mypinata.cloud", description: "IPFS read gateway." },
+          { name: "strict", in: "query", type: "boolean", required: false, default: "true", description: "HTTP 409 on verification failure." },
         ],
         responseCodes: [200, 400, 404, 409, 502, 504],
         example: `${BASE}/store/read/bafyreiYOUR_CID_HERE`,
@@ -519,17 +519,17 @@ const LAYERS: Layer[] = [
         operationId: "storeWriteContext",
         method: "POST",
         path: "/store/write-context",
-        label: "Persist agent memory — store a full context to IPFS",
+        label: "Persist a full agent context to IPFS",
         explanation:
-          "Serialises a complete state:Context (a named set of state:Binding objects — address/datum pairs) as a linked IPLD DAG on IPFS. Each binding becomes its own IPFS block with its own CID. The context root block IPLD-links to all bindings. Returns the root CID and per-binding CIDs.\n\nDesigned for agent memory persistence across sessions.",
+          "Stores a set of key-value bindings as a linked IPLD DAG. Each binding gets its own CID. The root block links to all of them. Returns root CID and per-binding CIDs.\n\nDesigned for persisting agent state across sessions.",
         useCase:
-          "At the end of a session, an agent writes its working memory (key-value bindings in Z/256Z) to IPFS. It shares the root CID with its human. In the next session, any agent can retrieve the context by root CID, verify each binding, and restore state.",
+          "Save your working memory at session end. Share the root CID. Any agent restores the full context and verifies each binding.",
         params: [
-          { name: "context.name", in: "body", type: "string", required: false, description: "Context name / label." },
-          { name: "context.quantum", in: "body", type: "integer", required: false, default: "8", description: "Ring size (default: 8)." },
+          { name: "context.name", in: "body", type: "string", required: false, description: "Context label." },
+          { name: "context.quantum", in: "body", type: "integer", required: false, default: "8", description: "Ring size." },
           { name: "context.bindings", in: "body", type: "array", required: true, description: "Array of {address, value, type} objects." },
           { name: "pin", in: "body", type: "boolean", required: false, default: "true", description: "false = dry run." },
-          { name: "gateway", in: "body", type: "string", required: false, default: "web3.storage", description: "Write gateway." },
+          { name: "gateway", in: "body", type: "string", required: false, default: "pinata", description: "Write gateway." },
         ],
         defaultBody: JSON.stringify({ context: { name: "session-001", quantum: 8, bindings: [{ address: "hello", value: 42 }] }, pin: false }, null, 2),
         responseCodes: [200, 400, 502],
@@ -539,14 +539,14 @@ const LAYERS: Layer[] = [
         operationId: "storeVerify",
         method: "GET",
         path: "/store/verify/:cid",
-        label: "Fast verification — check integrity without retrieving content",
+        label: "Verify integrity without retrieving content",
         explanation:
-          "Lightweight dual verification. Retrieves bytes from IPFS, runs both CID integrity and UOR address checks, and returns only the boolean verdict and proof metadata — not the full content. Use this before processing any content received from a peer. Cheaper and faster than GET /store/read when you only need the verdict.",
+          "Lightweight verification only. Checks both CID and UOR address integrity, returns the boolean verdict and proof metadata. No content in the response. Faster and cheaper than /store/read when you only need the verdict.",
         useCase:
-          "An agent receives a CID and a claimed UOR address from a peer. It calls GET /store/verify/{cid}?expected_uor={claimed-address} and proceeds only if store:verified:true.",
+          "Received a CID from a peer? Verify first, process later. One call, one boolean.",
         params: [
           { name: "cid", in: "query", type: "string", required: true, description: "The CID to verify." },
-          { name: "gateway", in: "query", type: "string", required: false, default: "https://ipfs.io", description: "Read gateway." },
+          { name: "gateway", in: "query", type: "string", required: false, default: "https://uor.mypinata.cloud", description: "Read gateway." },
           { name: "expected_uor", in: "query", type: "string", required: false, description: "Expected UOR address to compare against." },
         ],
         responseCodes: [200, 400, 404, 409],
@@ -556,11 +556,11 @@ const LAYERS: Layer[] = [
         operationId: "storeGateways",
         method: "GET",
         path: "/store/gateways",
-        label: "List available IPFS gateways and health status",
+        label: "List available IPFS gateways and their status",
         explanation:
-          "Returns all configured IPFS gateways with their capabilities (read-only vs read-write), live health status (checked via the bafkqaaa identity CID probe per IPFS Trustless Gateway spec §7.1), and which gateway is default for read and write operations.",
+          "Returns all configured gateways with capabilities (read-only vs read-write) and live health status. Check before a batch operation to select the healthiest gateway.",
         useCase:
-          "Before a batch write operation, an agent checks gateway health and selects the healthiest available write gateway. Avoids wasted pin attempts to degraded gateways.",
+          "Before a batch write, check which gateways are healthy. Avoid wasted attempts to degraded endpoints.",
         params: [],
         responseCodes: [200],
         example: `${BASE}/store/gateways`,
