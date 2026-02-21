@@ -15,6 +15,7 @@ import { ProjectsPage, ProjectHologram, ProjectAtlasEmbeddings, ProjectAtomicLan
 import { StandardPage } from "@/modules/framework";
 import { DonatePage } from "@/modules/donate";
 import { ApiPage } from "@/modules/api-explorer";
+import { RingExplorerPage } from "@/modules/ring-core";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => {
           <Route path="/blog/uor-framework-launch" element={<BlogPost3 />} />
           <Route path="/research/atlas-embeddings" element={<ResearchPaperAtlasEmbeddings />} />
           <Route path="/api" element={<ApiPage />} />
+          <Route path="/ring-explorer" element={<RingExplorerPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
