@@ -127,6 +127,20 @@ function orOp(x: number, y: number): number { return x | y; }
 function encodeGlyph(b: number): string { return String.fromCodePoint(0x2800 + b); }
 function addressSimplified(bytes: Uint8Array): string { return Array.from(bytes).map(encodeGlyph).join(''); }
 
+// ── _iri() — Content-addressed IRI per roadmap §1.2 ────────────────────────
+// Produces IRIs of the form https://uor.foundation/u/U{HEX4} per byte.
+// Example: value 42 in 8-bit ring → bytes [42] → U+282A → https://uor.foundation/u/U282A
+// Example: value 300 in 16-bit ring → bytes [1, 44] → https://uor.foundation/u/U2801U282C
+function _iri(bytes: number[]): string {
+  const segments = bytes.map(b => `U${(0x2800 + (b & 0xFF)).toString(16).toUpperCase().padStart(4, '0')}`).join('');
+  return `https://uor.foundation/u/${segments}`;
+}
+
+/** Content-addressed IRI for a value in ring R_n */
+function datumIRI(value: number, n: number): string {
+  return _iri(toBytesTuple(value, n));
+}
+
 // ── Byte-level helpers for Triad (UOR Prism v3 §Triadic Coordinates) ────────
 // Width = quantum + 1 bytes. API parameter n = bits = 8 × width.
 function toBytesTuple(value: number, n: number): number[] {
@@ -170,8 +184,8 @@ function makeDatum(value: number, n: number) {
   const quantum = Math.ceil(n / 8) - 1; // Prism quantum level
 
   return {
+    "@id": _iri(bytes),
     "@type": "schema:Datum",
-    "schema:value": value,
     "schema:quantum": quantum,
     "schema:width": bytes.length,
     "schema:bits": n,
@@ -452,7 +466,7 @@ function opVerifyCriticalIdentity(url: URL, rl: RateLimitResult): Response {
       "ring": `Z/${m}Z`
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/proof-critical-identity-x${x}-n${n}`,
+    "@id": `https://uor.foundation/proof/critical-identity/x${x}/n${n}`,
     "@type": ["proof:Proof", "proof:CriticalIdentityProof"],
     "proof:quantum": n,
     "proof:verified": holds,
@@ -524,7 +538,7 @@ function opVerifyAll(url: URL, rl: RateLimitResult): Response {
 
   return jsonResp({
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/coherence-proof-n${n}`,
+    "@id": `https://uor.foundation/proof/coherence/n${n}`,
     "@type": ["proof:Proof", "proof:CoherenceProof"],
     "proof:quantum": n,
     "proof:verified": verified,
@@ -589,7 +603,7 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
       "critical_identity_holds": neg_bnot_x === succ_x
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/op-compute-x${x}-n${n}`,
+    "@id": datumIRI(x, n),
     "datum": makeDatum(x, n),
     "ring": {
       "@type": "schema:Ring",
@@ -722,7 +736,7 @@ function opList(rl: RateLimitResult): Response {
     "@context": UOR_CONTEXT_URL,
     "@id": "https://uor.foundation/op/",
     "@type": "op:OperationCatalogue",
-    "description": "All 12 named individuals in the op/ namespace (op.rs)",
+    "description": "All named individuals in the op/ namespace — 5 primitives (neg, bnot, xor, and, or) plus derived operations (op.rs)",
     "source": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/op.rs",
     "unary_operations": [
       {
@@ -730,9 +744,10 @@ function opList(rl: RateLimitResult): Response {
         "@type": ["op:Operation", "op:UnaryOp", "op:Involution"],
         "op:name": "neg",
         "op:arity": 1,
+        "op:primitive": true,
         "op:geometricCharacter": "ring_reflection",
         "formula": "neg(x) = (-x) mod 2^n",
-        "description": "Ring negation — additive inverse. Self-inverse: neg(neg(x)) = x.",
+        "description": "Ring negation — additive inverse. Self-inverse: neg(neg(x)) = x. One of the 5 primitive operations.",
         "example_n8": "neg(42) = 214"
       },
       {
@@ -740,9 +755,10 @@ function opList(rl: RateLimitResult): Response {
         "@type": ["op:Operation", "op:UnaryOp", "op:Involution"],
         "op:name": "bnot",
         "op:arity": 1,
+        "op:primitive": true,
         "op:geometricCharacter": "hypercube_reflection",
         "formula": "bnot(x) = (2^n - 1) XOR x",
-        "description": "Bitwise NOT — hypercube reflection. Self-inverse: bnot(bnot(x)) = x.",
+        "description": "Bitwise NOT — hypercube reflection. Self-inverse: bnot(bnot(x)) = x. One of the 5 primitive operations.",
         "example_n8": "bnot(42) = 213"
       },
       {
@@ -750,10 +766,12 @@ function opList(rl: RateLimitResult): Response {
         "@type": ["op:Operation", "op:UnaryOp"],
         "op:name": "succ",
         "op:arity": 1,
+        "op:primitive": false,
+        "op:derivedFrom": ["op:neg", "op:bnot"],
         "op:geometricCharacter": "rotation",
         "op:composedOf": ["op:neg", "op:bnot"],
         "formula": "succ(x) = neg(bnot(x)) = (x + 1) mod 2^n",
-        "description": "Successor — composed rotation. Proves the critical identity.",
+        "description": "Successor — derived from the two primitive unary operations. Proves the critical identity.",
         "example_n8": "succ(42) = 43"
       },
       {
@@ -761,10 +779,12 @@ function opList(rl: RateLimitResult): Response {
         "@type": ["op:Operation", "op:UnaryOp"],
         "op:name": "pred",
         "op:arity": 1,
+        "op:primitive": false,
+        "op:derivedFrom": ["op:bnot", "op:neg"],
         "op:geometricCharacter": "rotation_inverse",
         "op:composedOf": ["op:bnot", "op:neg"],
         "formula": "pred(x) = bnot(neg(x)) = (x - 1) mod 2^n",
-        "description": "Predecessor — inverse rotation.",
+        "description": "Predecessor — derived inverse rotation.",
         "example_n8": "pred(42) = 41"
       }
     ],
@@ -774,6 +794,8 @@ function opList(rl: RateLimitResult): Response {
         "@type": ["op:Operation", "op:BinaryOp"],
         "op:name": "add",
         "op:arity": 2,
+        "op:primitive": false,
+        "op:derivedFrom": ["op:neg", "op:xor"],
         "op:geometricCharacter": "translation",
         "op:commutative": true,
         "op:associative": true,
@@ -785,6 +807,8 @@ function opList(rl: RateLimitResult): Response {
         "@type": ["op:Operation", "op:BinaryOp"],
         "op:name": "sub",
         "op:arity": 2,
+        "op:primitive": false,
+        "op:derivedFrom": ["op:add", "op:neg"],
         "op:geometricCharacter": "translation",
         "op:commutative": false,
         "op:associative": false,
@@ -795,6 +819,8 @@ function opList(rl: RateLimitResult): Response {
         "@type": ["op:Operation", "op:BinaryOp"],
         "op:name": "mul",
         "op:arity": 2,
+        "op:primitive": false,
+        "op:derivedFrom": ["op:add"],
         "op:geometricCharacter": "scaling",
         "op:commutative": true,
         "op:associative": true,
@@ -806,6 +832,7 @@ function opList(rl: RateLimitResult): Response {
         "@type": ["op:Operation", "op:BinaryOp"],
         "op:name": "xor",
         "op:arity": 2,
+        "op:primitive": true,
         "op:geometricCharacter": "hypercube_translation",
         "op:commutative": true,
         "op:associative": true,
@@ -817,6 +844,7 @@ function opList(rl: RateLimitResult): Response {
         "@type": ["op:Operation", "op:BinaryOp"],
         "op:name": "and",
         "op:arity": 2,
+        "op:primitive": true,
         "op:geometricCharacter": "hypercube_projection",
         "op:commutative": true,
         "op:associative": true,
@@ -827,6 +855,7 @@ function opList(rl: RateLimitResult): Response {
         "@type": ["op:Operation", "op:BinaryOp"],
         "op:name": "or",
         "op:arity": 2,
+        "op:primitive": true,
         "op:geometricCharacter": "hypercube_join",
         "op:commutative": true,
         "op:associative": true,
@@ -947,7 +976,7 @@ function schemaDatum(url: URL, rl: RateLimitResult): Response {
       "quantum_scaling_bits": 8 * (n + 1)
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/datum-x${x}-n${n}`,
+    "@id": datumIRI(x, n),
     ...datum,
     "schema:ring": {
       "@type": "schema:Ring",
@@ -1135,7 +1164,7 @@ function kernelCorrelate(url: URL, rl: RateLimitResult): Response {
 
   return jsonResp({
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/correlate-x${x}-y${y}-n${n}`,
+    "@id": `https://uor.foundation/op/correlate/x${x}/y${y}/n${n}`,
     "@type": "op:Correlation",
     "summary": {
       "x": x,
@@ -1200,7 +1229,7 @@ async function partitionResolve(req: Request, rl: RateLimitResult): Promise<Resp
 
     return jsonResp({
       "@context": UOR_CONTEXT_URL,
-      "@id": `https://uor.foundation/instance/partition-R${nEff}`,
+      "@id": `https://uor.foundation/partition/R${nEff}`,
       "@type": "partition:Partition",
       "partition:quantum": nEff,
       "partition:density": density,
@@ -1317,10 +1346,10 @@ function proofCriticalIdentity(url: URL, rl: RateLimitResult): Response {
       "neg_bnot_x": neg_bnot_x,
       "succ_x": succ_x,
       "statement": `neg(bnot(${x})) = ${neg_bnot_x} = succ(${x}) [${holds ? 'PASS' : 'FAIL'}]`,
-      "proof_id": `https://uor.foundation/instance/bridge-proof-critical-identity-x${x}-n${n}`
+      "proof_id": `https://uor.foundation/proof/critical-identity/x${x}/n${n}`
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/bridge-proof-critical-identity-x${x}-n${n}`,
+    "@id": `https://uor.foundation/proof/critical-identity/x${x}/n${n}`,
     "@type": ["proof:Proof", "proof:CriticalIdentityProof"],
     "proof:quantum": n,
     "proof:verified": holds,
@@ -1388,7 +1417,7 @@ async function proofCoherence(req: Request, rl: RateLimitResult): Promise<Respon
 
   return jsonResp({
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/coherence-proof-n${n}`,
+    "@id": `https://uor.foundation/proof/coherence/n${n}`,
     "@type": ["proof:Proof", "proof:CoherenceProof"],
     "proof:quantum": n,
     "proof:verified": verified,
@@ -1445,7 +1474,7 @@ function certInvolution(url: URL, rl: RateLimitResult): Response {
       "statement": `${op}(${op}(x)) = x for all x in R_${n} = Z/${m}Z [${allHold ? 'PASS' : 'FAIL'}]`
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/involution-cert-${op}-n${n}`,
+    "@id": `https://uor.foundation/cert/involution/${op}/n${n}`,
     "@type": ["cert:Certificate", "cert:InvolutionCertificate"],
     "cert:operation": {
       "@id": opId,
@@ -1497,7 +1526,7 @@ function observableMetrics(url: URL, rl: RateLimitResult): Response {
       "at_phase_boundary": atThreshold
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/metrics-x${x}-n${n}`,
+    "@id": `https://uor.foundation/observable/metrics/x${x}/n${n}`,
     "@type": "observable:MetricBundle",
     "observable:quantum": n,
     "observable:datum": makeDatum(x, n),
@@ -1641,7 +1670,7 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/kernel/op/verify`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/op/verify?x=42`, "operationId": "opVerifyCriticalIdentity", "summary": "Verify neg(bnot(x)) = succ(x) — the framework's core rule" },
           { "method": "GET", "path": `${base}/kernel/op/verify/all`, "required_params": "none", "optional_params": "n, expand", "example": `${base}/kernel/op/verify/all?n=8`, "operationId": "opVerifyAll", "summary": "Universal proof for all 2^n elements — 256 passes, zero failures" },
           { "method": "GET", "path": `${base}/kernel/op/compute`, "required_params": "x", "optional_params": "n, y", "example": `${base}/kernel/op/compute?x=42&y=10`, "operationId": "opCompute", "summary": "All ring operations for x (and binary ops for x, y)" },
-          { "method": "GET", "path": `${base}/kernel/op/operations`, "required_params": "none", "example": `${base}/kernel/op/operations`, "operationId": "opList", "summary": "All 12 named op/ individuals with formulas and definitions" },
+          { "method": "GET", "path": `${base}/kernel/op/operations`, "required_params": "none", "example": `${base}/kernel/op/operations`, "operationId": "opList", "summary": "All named op/ individuals — 5 primitives + derived — with formulas and definitions" },
           { "method": "POST", "path": `${base}/kernel/address/encode`, "body": "{input, encoding}", "example": `${base}/kernel/address/encode`, "operationId": "addressEncode", "summary": "UTF-8 → u:Address with per-byte Glyph decomposition" },
           { "method": "GET", "path": `${base}/kernel/schema/datum`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/schema/datum?x=42`, "operationId": "schemaDatum", "summary": "Full schema:Datum — decimal, binary, bits set, content address" }
         ]
@@ -1854,7 +1883,7 @@ function bridgeDerivation(url: URL, rl: RateLimitResult): Response {
       "statement": `neg(bnot(${x})) = succ(${x}) in R_${n} [${critHolds ? 'PASS' : 'FAIL'}]`
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/derivation-x${x}-n${n}`,
+    "@id": `https://uor.foundation/derivation/x${x}/n${n}`,
     "@type": "derivation:DerivationTrace",
     "derivation:sourceValue": x,
     "derivation:quantum": n,
@@ -1958,7 +1987,7 @@ function bridgeTrace(url: URL, rl: RateLimitResult): Response {
       "detection_rule": "Compare trace:totalHammingDrift between declared and executed operation sequences. Non-zero divergence signals a sequence anomaly."
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/trace-x${x}-n${n}`,
+    "@id": `https://uor.foundation/trace/x${x}/n${n}`,
     "@type": "trace:ExecutionTrace",
     "trace:sourceValue": x,
     "trace:quantum": n,
@@ -2049,7 +2078,7 @@ function bridgeResolver(url: URL, rl: RateLimitResult): Response {
       "category_label": categoryLabel
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/resolver-x${x}-n${n}`,
+    "@id": `https://uor.foundation/resolver/x${x}/n${n}`,
     "@type": "resolver:Resolution",
     "resolver:inputValue": x,
     "resolver:quantum": n,
@@ -2127,7 +2156,7 @@ function morphismTransforms(url: URL, rl: RateLimitResult): Response {
       "ring_structure_preserved": true
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/morphism-x${x}-from${fromN}-to${toN}`,
+    "@id": `https://uor.foundation/morphism/x${x}/from${fromN}/to${toN}`,
     "@type": ["morphism:RingHomomorphism", morphismType],
     "morphism:source": {
       "@type": "schema:Ring",
@@ -2233,7 +2262,7 @@ function userState(url: URL, rl: RateLimitResult): Response {
       "critical_identity_holds": critHolds
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/instance/state-x${x}-n${n}`,
+    "@id": `https://uor.foundation/state/x${x}/n${n}`,
     "@type": "state:Frame",
     "state:binding": {
       "@type": "state:StateBinding",
