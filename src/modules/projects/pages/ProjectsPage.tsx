@@ -21,7 +21,7 @@ const projects: Project[] = [
   {
     name: "Hologram",
     category: "Frontier Technology",
-    description: "A software-defined foundation for computation. High-performance virtual infrastructure built on a fundamentally new geometric computing paradigm.",
+    description: "A new kind of computing infrastructure built from the ground up. Software-defined, high-performance, and designed for the next generation of applications.",
     maturity: "Sandbox",
     url: "https://gethologram.ai/",
     image: projectHologramImg,
@@ -29,7 +29,7 @@ const projects: Project[] = [
   {
     name: "Atlas Embeddings",
     category: "Open Science",
-    description: "A rigorous mathematical framework demonstrating how all five exceptional Lie groups emerge from a single initial object: the Atlas of Resonance Classes.",
+    description: "Research showing that five of the most complex structures in mathematics all come from a single, simple starting point, revealing a deeper shared order.",
     maturity: "Sandbox",
     url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
     image: projectAtlasImg,
@@ -37,7 +37,7 @@ const projects: Project[] = [
   {
     name: "Atomic Language Model",
     category: "Frontier Technology",
-    description: "A mathematically rigorous, recursively complete language model implementing Chomsky's Minimalist Grammar via formal Merge and Move transformations.",
+    description: "A language model built on formal grammar rules rather than statistical prediction. Every output is traceable to precise, well-defined operations.",
     maturity: "Sandbox",
     url: "https://github.com/dkypuros/atomic-lang-model",
     image: projectAtomicLangImg,
@@ -45,7 +45,7 @@ const projects: Project[] = [
   {
     name: "Prism",
     category: "Open Science",
-    description: "A universal coordinate system for information. Prism provides a mathematically grounded framework for encoding, addressing, and navigating all forms of data.",
+    description: "The reference implementation of UOR. Prism turns the framework's ideas into working code: encoding, addressing, and navigating data in a single system.",
     maturity: "Sandbox",
     url: "https://github.com/UOR-Foundation/prism",
     image: projectPrismImg,
