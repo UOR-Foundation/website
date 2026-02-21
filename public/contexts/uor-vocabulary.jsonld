@@ -1,0 +1,237 @@
+{
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "schema": "https://uor.foundation/schema/",
+    "op": "https://uor.foundation/op/",
+    "type": "https://uor.foundation/type/",
+    "resolver": "https://uor.foundation/resolver/",
+    "partition": "https://uor.foundation/partition/",
+    "observable": "https://uor.foundation/observable/",
+    "proof": "https://uor.foundation/proof/",
+    "derivation": "https://uor.foundation/derivation/",
+    "trace": "https://uor.foundation/trace/",
+    "cert": "https://uor.foundation/cert/",
+    "morphism": "https://uor.foundation/morphism/",
+    "state": "https://uor.foundation/state/",
+    "u": "https://uor.foundation/u/"
+  },
+  "@id": "https://uor.foundation/ontology/uor-v1",
+  "@type": "owl:Ontology",
+  "rdfs:label": "UOR Framework Ontology",
+  "rdfs:comment": "Formal RDFS/OWL vocabulary for the Universal Object Reference (UOR) Framework. Grounded in ring arithmetic Z/(2^n)Z with the critical identity neg(bnot(x)) = succ(x). Aligned with W3C PROV-O, RDFS, and OWL 2 for full Semantic Web interoperability.",
+  "dcterms:title": "UOR Framework Ontology v1",
+  "dcterms:creator": "UOR Foundation",
+  "dcterms:issued": "2025-01-01",
+  "owl:versionInfo": "1.0.0",
+  "@graph": [
+    {
+      "@id": "schema:Datum",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "rdfs:Resource",
+      "rdfs:label": "Datum",
+      "rdfs:comment": "A ring element in Z/(2^n)Z. The atomic unit of the UOR algebraic substrate."
+    },
+    {
+      "@id": "derivation:Record",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "prov:Activity",
+      "rdfs:label": "Derivation Record",
+      "rdfs:comment": "A canonical derivation transforming a term into a ring element. Subclass of prov:Activity."
+    },
+    {
+      "@id": "cert:DerivationCertificate",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "prov:Entity",
+      "rdfs:label": "Derivation Certificate",
+      "rdfs:comment": "A SHA-256 CID-based certificate attesting derivation under ring coherence."
+    },
+    {
+      "@id": "trace:ComputationTrace",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "prov:Activity",
+      "rdfs:label": "Computation Trace",
+      "rdfs:comment": "Step-by-step record of ring operations. PROV-O compatible."
+    },
+    {
+      "@id": "observable:Observable",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "prov:Entity",
+      "rdfs:label": "Observable",
+      "rdfs:comment": "A fact observation anchored to a ring stratum."
+    },
+    {
+      "@id": "proof:CoherenceProof",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "rdfs:Resource",
+      "rdfs:label": "Coherence Proof",
+      "rdfs:comment": "Verification that neg(bnot(x)) = succ(x) holds for all ring elements."
+    },
+    {
+      "@id": "morphism:Transform",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "rdfs:Resource",
+      "rdfs:label": "Morphism Transform",
+      "rdfs:comment": "Property-preserving transformation between ring quanta."
+    },
+    {
+      "@id": "partition:Set",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "rdfs:Resource",
+      "rdfs:label": "Partition Set",
+      "rdfs:comment": "Base class for the four-fold ring partition."
+    },
+    {
+      "@id": "partition:UnitSet",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "partition:Set",
+      "rdfs:label": "Unit Set",
+      "owl:disjointWith": ["partition:ExteriorSet", "partition:IrreducibleSet", "partition:ReducibleSet"]
+    },
+    {
+      "@id": "partition:ExteriorSet",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "partition:Set",
+      "rdfs:label": "Exterior Set",
+      "owl:disjointWith": ["partition:UnitSet", "partition:IrreducibleSet", "partition:ReducibleSet"]
+    },
+    {
+      "@id": "partition:IrreducibleSet",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "partition:Set",
+      "rdfs:label": "Irreducible Set",
+      "owl:disjointWith": ["partition:UnitSet", "partition:ExteriorSet", "partition:ReducibleSet"]
+    },
+    {
+      "@id": "partition:ReducibleSet",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "partition:Set",
+      "rdfs:label": "Reducible Set",
+      "owl:disjointWith": ["partition:UnitSet", "partition:ExteriorSet", "partition:IrreducibleSet"]
+    },
+    {
+      "@id": "state:Context",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "rdfs:Resource",
+      "rdfs:label": "State Context"
+    },
+    {
+      "@id": "state:Frame",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "rdfs:Resource",
+      "rdfs:label": "State Frame"
+    },
+    {
+      "@id": "cert:Receipt",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "prov:Entity",
+      "rdfs:label": "Self-Verifying Receipt"
+    },
+    {
+      "@id": "cert:EpistemicGrade",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "rdfs:Resource",
+      "rdfs:label": "Epistemic Grade"
+    },
+    {
+      "@id": "op:neg",
+      "@type": ["rdf:Property", "owl:ObjectProperty"],
+      "rdfs:domain": "schema:Datum",
+      "rdfs:range": "schema:Datum",
+      "rdfs:label": "Additive Negation",
+      "rdfs:comment": "neg(x) = 2^n - x. Involution: neg(neg(x)) = x.",
+      "owl:inverseOf": "op:neg"
+    },
+    {
+      "@id": "op:bnot",
+      "@type": ["rdf:Property", "owl:ObjectProperty"],
+      "rdfs:domain": "schema:Datum",
+      "rdfs:range": "schema:Datum",
+      "rdfs:label": "Bitwise NOT",
+      "rdfs:comment": "bnot(x) = ~x & mask. Involution: bnot(bnot(x)) = x.",
+      "owl:inverseOf": "op:bnot"
+    },
+    {
+      "@id": "u:succ",
+      "@type": ["rdf:Property", "owl:ObjectProperty", "owl:FunctionalProperty"],
+      "rdfs:domain": "schema:Datum",
+      "rdfs:range": "schema:Datum",
+      "rdfs:label": "Successor",
+      "rdfs:comment": "succ(x) = (x+1) mod 2^n. Critical identity: neg(bnot(x)) = succ(x).",
+      "owl:propertyChainAxiom": ["op:bnot", "op:neg"]
+    },
+    {
+      "@id": "u:pred",
+      "@type": ["rdf:Property", "owl:ObjectProperty", "owl:FunctionalProperty"],
+      "rdfs:domain": "schema:Datum",
+      "rdfs:range": "schema:Datum",
+      "rdfs:label": "Predecessor",
+      "owl:inverseOf": "u:succ"
+    },
+    {
+      "@id": "schema:value",
+      "@type": ["rdf:Property", "owl:DatatypeProperty", "owl:FunctionalProperty"],
+      "rdfs:domain": "schema:Datum",
+      "rdfs:range": "xsd:nonNegativeInteger"
+    },
+    {
+      "@id": "schema:quantum",
+      "@type": ["rdf:Property", "owl:DatatypeProperty", "owl:FunctionalProperty"],
+      "rdfs:domain": "schema:Datum",
+      "rdfs:range": "xsd:nonNegativeInteger"
+    },
+    {
+      "@id": "partition:component",
+      "@type": ["rdf:Property", "owl:ObjectProperty", "owl:FunctionalProperty"],
+      "rdfs:domain": "schema:Datum",
+      "rdfs:range": "partition:Set"
+    },
+    {
+      "@id": "derivation:derivedBy",
+      "@type": ["rdf:Property", "owl:ObjectProperty"],
+      "rdfs:domain": "schema:Datum",
+      "rdfs:range": "derivation:Record"
+    },
+    {
+      "@id": "derivation:epistemicGrade",
+      "@type": ["rdf:Property", "owl:DatatypeProperty", "owl:FunctionalProperty"],
+      "rdfs:domain": "derivation:Record",
+      "rdfs:range": "xsd:string"
+    },
+    {
+      "@id": "prov:wasGeneratedBy",
+      "@type": ["rdf:Property", "owl:ObjectProperty"],
+      "rdfs:domain": "prov:Entity",
+      "rdfs:range": "prov:Activity"
+    },
+    {
+      "@id": "prov:used",
+      "@type": ["rdf:Property", "owl:ObjectProperty"],
+      "rdfs:domain": "prov:Activity",
+      "rdfs:range": "prov:Entity"
+    },
+    {
+      "@id": "prov:wasAttributedTo",
+      "@type": ["rdf:Property", "owl:ObjectProperty"],
+      "rdfs:domain": "prov:Entity",
+      "rdfs:range": "prov:Agent"
+    },
+    {
+      "@id": "trace:certifiedBy",
+      "@type": ["rdf:Property", "owl:ObjectProperty"],
+      "rdfs:domain": "trace:ComputationTrace",
+      "rdfs:range": "cert:DerivationCertificate"
+    },
+    {
+      "@id": "_:datum-disjoint",
+      "@type": "owl:AllDisjointClasses",
+      "owl:members": ["schema:Datum", "derivation:Record", "trace:ComputationTrace"]
+    }
+  ]
+}

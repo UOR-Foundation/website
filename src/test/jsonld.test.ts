@@ -11,10 +11,11 @@ describe("emitContext", () => {
     expect(ctx["@vocab"]).toBe("https://uor.foundation/u/");
   });
 
-  it("has all 14 namespaces", () => {
+  it("has all 14 UOR namespaces plus 7 W3C prefixes", () => {
     const ctx = emitContext();
     const namespaces = ["xsd", "schema", "op", "type", "resolver", "partition",
-      "observable", "proof", "derivation", "trace", "cert", "morphism", "state", "u"];
+      "observable", "proof", "derivation", "trace", "cert", "morphism", "state", "u",
+      "rdf", "rdfs", "owl", "skos", "dcterms", "foaf", "prov"];
     for (const ns of namespaces) {
       expect(ctx).toHaveProperty(ns);
     }

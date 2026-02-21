@@ -1,5 +1,15 @@
 {
   "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "sdo": "https://schema.org/",
+
     "u": "https://uor.foundation/u/",
     "schema": "https://uor.foundation/schema/",
     "op": "https://uor.foundation/op/",
@@ -15,10 +25,6 @@
     "morphism": "https://uor.foundation/morphism/",
     "state": "https://uor.foundation/state/",
     "store": "https://uor.foundation/store/",
-    "sdo": "https://schema.org/",
-    "owl": "http://www.w3.org/2002/07/owl#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
 
     "store:StoredObject": {"@id": "store:StoredObject"},
     "store:Cid": {"@id": "store:Cid"},
