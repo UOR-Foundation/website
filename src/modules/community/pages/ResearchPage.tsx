@@ -27,7 +27,7 @@ const categoryResearch: Record<string, Array<{ title: string; authors: string; s
       title: "Atlas Embeddings: Exceptional Lie Groups from a Single 96-Vertex Construct",
       authors: "Alex Flom et al.",
       status: "Published",
-      description: "Demonstrates that all five exceptional Lie groups can be derived from a single geometric structure, revealing a universal mathematical language underlying complex symmetry.",
+      description: "Demonstrates that five of the most complex structures in mathematics all come from a single starting point, revealing a shared order beneath apparently unrelated systems.",
       href: "/research/atlas-embeddings",
     },
   ],
@@ -44,7 +44,7 @@ const blogPosts = [
   },
   {
     title: "Unveiling a Universal Mathematical Language",
-    excerpt: "A breakthrough that reveals the hidden order behind nature's most complex systems and could reshape the future of Open Science, Neuro-Symbolic AI, and topological quantum computing.",
+    excerpt: "A breakthrough that reveals the hidden order behind nature's most complex systems and could reshape the future of open science, next-generation AI, and quantum computing.",
     date: "October 10, 2025",
     tag: "Open Research",
     href: "/blog/universal-mathematical-language",

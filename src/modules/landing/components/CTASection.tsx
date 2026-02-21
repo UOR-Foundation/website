@@ -114,7 +114,7 @@ const CTASection = () => {
           Join Your Community
         </h2>
         <p className="mt-5 text-lg text-muted-foreground font-body leading-relaxed max-w-2xl mx-auto">
-          Connect with researchers, developers, and advocates building the future of open data infrastructure.
+          Connect with researchers, developers, and advocates building the future of reliable, open data.
         </p>
         <div className="mt-8 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
           <a
