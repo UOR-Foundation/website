@@ -2424,11 +2424,15 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
       ? {
           "uor_address": uorAddress.glyph,
           "ipfs_cid": cid,
+          "gateway_cid": pinResult ? pinResult.cid : cid,
           "retrievable_at": pinResult ? pinResult.gatewayReadUrl : `${gatewayConfig.readUrl}${cid}`,
           "dry_run": false,
           "byte_length": finalBytes.length,
-          "how_to_retrieve": `GET /store/read/${cid}`,
-          "how_to_verify": `GET /store/verify/${cid}`,
+          "how_to_retrieve": `GET /store/read/${pinResult ? pinResult.cid : cid}`,
+          "how_to_verify": `GET /store/verify/${pinResult ? pinResult.cid : cid}`,
+          "cid_note": pinResult && pinResult.cid !== cid
+            ? `The gateway CID (${pinResult.cid}) is a CIDv0/dag-pb hash assigned by the pinning service. The UOR CID (${cid}) is a CIDv1/dag-json content-address computed canonically. Use the gateway CID for retrieval and the UOR CID for algebraic verification.`
+            : undefined,
         }
       : {
           "dry_run": true,
@@ -2591,12 +2595,12 @@ async function dualVerify(
 
 // ── IPFS Read Gateways ──────────────────────────────────────────────────────
 const ALLOWED_READ_GATEWAYS = [
+  "https://gateway.pinata.cloud",
   "https://ipfs.io",
   "https://w3s.link",
   "https://cloudflare-ipfs.com",
-  "https://gateway.pinata.cloud",
 ];
-const DEFAULT_READ_GATEWAY = "https://ipfs.io";
+const DEFAULT_READ_GATEWAY = "https://gateway.pinata.cloud";
 const READ_FETCH_TIMEOUT_MS = 20_000;
 const READ_MAX_BYTES = 10 * 1024 * 1024;
 
