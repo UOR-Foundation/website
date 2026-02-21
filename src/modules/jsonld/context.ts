@@ -29,8 +29,17 @@ export function emitContext(): UorJsonLdContext {
     "@base": "https://uor.foundation/u/",
     "@vocab": "https://uor.foundation/u/",
 
-    // ── 14 namespaces ────────────────────────────────────────────────────
+    // ── W3C standard namespaces ──────────────────────────────────────────
+    rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+    owl: "http://www.w3.org/2002/07/owl#",
     xsd: "http://www.w3.org/2001/XMLSchema#",
+    skos: "http://www.w3.org/2004/02/skos/core#",
+    dcterms: "http://purl.org/dc/terms/",
+    foaf: "http://xmlns.com/foaf/0.1/",
+    prov: "http://www.w3.org/ns/prov#",
+
+    // ── 14 UOR namespaces ────────────────────────────────────────────────
     schema: "https://uor.foundation/schema/",
     op: "https://uor.foundation/op/",
     type: "https://uor.foundation/type/",

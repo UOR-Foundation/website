@@ -70,6 +70,8 @@ export function emitDatum(
   const node: JsonLdNode = {
     "@id": iri,
     "@type": "schema:Datum",
+    "rdfs:label": `Datum(${value})`,
+    "rdfs:comment": `Ring element ${value} in Q${ring.quantum} [Z/(2^${ring.bits})Z]`,
     "schema:value": value,
     "schema:quantum": ring.quantum,
     "schema:width": ring.width,
@@ -108,6 +110,7 @@ export function emitDerivation(d: Derivation): JsonLdNode {
   return {
     "@id": d.derivationId,
     "@type": "derivation:Record",
+    "rdfs:label": `Derivation: ${d.originalTerm}`,
     "derivation:originalTerm": d.originalTerm,
     "derivation:canonicalTerm": d.canonicalTerm,
     "derivation:resultValue": d.resultValue,
@@ -117,6 +120,10 @@ export function emitDerivation(d: Derivation): JsonLdNode {
     "derivation:originalComplexity": d.metrics.originalComplexity,
     "derivation:canonicalComplexity": d.metrics.canonicalComplexity,
     "derivation:reductionRatio": d.metrics.reductionRatio,
+    // W3C PROV-O alignment
+    "prov:wasGeneratedBy": `urn:uor:proof:coherence:Q0`,
+    "prov:startedAtTime": d.timestamp,
+    "prov:wasAttributedTo": "urn:uor:agent:ring-core",
   };
 }
 

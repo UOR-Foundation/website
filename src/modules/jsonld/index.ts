@@ -8,3 +8,5 @@ export { emitDatum, emitDerivation, emitCoherenceProof, emitGraph } from "./emit
 export type { JsonLdNode, JsonLdDocument, EmitGraphOptions } from "./emitter";
 export { validateJsonLd } from "./validator";
 export type { ValidationResult } from "./validator";
+export { emitVocabulary } from "./vocabulary";
+export type { VocabularyDocument, VocabularyNode } from "./vocabulary";

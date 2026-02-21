@@ -34,6 +34,11 @@ export interface ComputationTrace {
   certifiedBy: string;
   quantum: number;
   timestamp: string;
+  // W3C PROV-O alignment
+  "prov:wasGeneratedBy"?: string;
+  "prov:used"?: string[];
+  "prov:startedAtTime"?: string;
+  "prov:wasAttributedTo"?: string;
 }
 
 // ── recordTrace ─────────────────────────────────────────────────────────────
@@ -67,6 +72,11 @@ export async function recordTrace(
     certifiedBy: certBy,
     quantum,
     timestamp,
+    // W3C PROV-O properties
+    "prov:wasGeneratedBy": derivationId,
+    "prov:used": steps.length > 0 ? [`urn:uor:input:${derivationId.split(":").pop()?.slice(0, 12) ?? "unknown"}`] : [],
+    "prov:startedAtTime": timestamp,
+    "prov:wasAttributedTo": "urn:uor:agent:ring-core",
   };
 
   // Persist
