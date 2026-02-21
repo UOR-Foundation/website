@@ -167,9 +167,9 @@ export const LAYERS: LayerData[] = [
     iconKey: "Layers",
     layerNum: 2,
     title: "Structure",
-    oneLiner: "12 named operations. Formally defined. Deterministic results.",
+    oneLiner: "5 primitive operations, 7 derived. Formally defined. Deterministic results.",
     whyItMatters:
-      "UOR defines 12 operations (negate, invert, add, multiply, and more). Each has a formal name and formula. Two agents running the same operation on the same input always get the same result.",
+      "UOR builds on five primitive operations (negate, bitwise-invert, XOR, AND, OR). From these five, seven more are derived (increment, decrement, add, subtract, multiply, shift, rotate). Every operation has a formal name and formula. Two systems running the same operation on the same input always get the same result.",
     solves: "Every operation is named, defined, and verifiable. No room for misinterpretation.",
     endpoints: [
       {
@@ -178,7 +178,7 @@ export const LAYERS: LayerData[] = [
         path: "/kernel/op/compute",
         label: "Run all operations on a value at once",
         explanation:
-          "Pass one or two numbers. Get every operation result in one response: negate, invert, increment, decrement, add, subtract, multiply, XOR, AND, OR.",
+          "Pass one or two numbers. Get every operation result in one response: the 5 primitives (negate, invert, XOR, AND, OR) plus derived operations (increment, decrement, add, subtract, multiply).",
         useCase:
           "See all possible outcomes for a value before committing to one.",
         params: [
@@ -193,9 +193,9 @@ export const LAYERS: LayerData[] = [
         operationId: "opList",
         method: "GET",
         path: "/kernel/op/operations",
-        label: "List all 12 operations with their definitions",
+        label: "List all operations with their definitions",
         explanation:
-          "Returns every named operation with its formula and algebraic class. The shared reference agents and developers can point to.",
+          "Returns every named operation (5 primitives + derived) with its formula and algebraic class. The shared reference agents and developers can point to.",
         useCase:
           "Look up an operation's formal definition before verifying a proof that references it.",
         params: [],
