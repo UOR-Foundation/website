@@ -5,53 +5,152 @@ import { Link } from "react-router-dom";
 
 const W3C_REFERENCE_URL = "https://www.w3.org/RDF/Metalog/docs/sw-easy";
 
-/* ── Semantic Web Tower ─────────────────────────────────────────────────── */
+/* ── Refined color palette ───────────────────────────────────────────────── */
 
+const TOWER_COLORS = {
+  unicode: "hsl(220, 15%, 25%)",       // charcoal
+  uri:     "hsl(220, 15%, 25%)",       // charcoal (matching)
+  xml:     "hsl(12, 80%, 52%)",        // warm red-orange
+  rdf:     "hsl(42, 92%, 55%)",        // amber gold
+  ontology:"hsl(100, 55%, 52%)",       // fresh green
+  logic:   "hsl(205, 65%, 52%)",       // clear blue
+  proof:   "hsl(240, 45%, 62%)",       // soft indigo
+  trust:   "hsl(290, 55%, 75%)",       // soft violet
+  sig:     "hsl(25, 45%, 38%)",        // warm brown
+};
+
+/*
+ * Semantic Web Tower — faithful to Tim Berners-Lee's whiteboard drawing.
+ *
+ * Layout (bottom to top):
+ *   Row 0: [Unicode] [URI]              ← two boxes side-by-side
+ *   Row 1: [XML + NS + xmlschema]       ← wide
+ *   Row 2: [RDF + rdfschema]            ← progressively narrower
+ *   Row 3: [Ontology vocabulary]
+ *   Row 4: [Logic]
+ *   Row 5: [Proof]
+ *   Row 6: [Trust]                      ← narrowest
+ *   Overlay: [Digital Signature]        ← tall box on right, spanning rows 1–4
+ *
+ * Every box links to its detail section below.
+ */
 function SemanticWebTower() {
-  const pyramid = semanticWebLayers.filter((l) => l.number <= 6);
-  const signature = semanticWebLayers.find((l) => l.number === 7);
+  // Each row: left offset %, width %, height in px
+  const rows = [
+    // Row 6 (top) — Trust
+    { id: 6, label: "Trust",                     left: 5,  width: 38, color: TOWER_COLORS.trust,    dark: true  },
+    // Row 5 — Proof
+    { id: 5, label: "Proof",                     left: 3,  width: 45, color: TOWER_COLORS.proof,    dark: false },
+    // Row 4 — Logic
+    { id: 4, label: "Logic",                     left: 1,  width: 52, color: TOWER_COLORS.logic,    dark: false },
+    // Row 3 — Ontology vocabulary
+    { id: 3, label: "Ontology vocabulary",       left: 0,  width: 60, color: TOWER_COLORS.ontology, dark: true  },
+    // Row 2 — RDF + rdfschema
+    { id: 2, label: "RDF + rdfschema",           left: 0,  width: 68, color: TOWER_COLORS.rdf,      dark: true  },
+    // Row 1 — XML + NS + xmlschema
+    { id: 1, label: "XML + NS + xmlschema",      left: 0,  width: 78, color: TOWER_COLORS.xml,      dark: false },
+  ];
+
+  const ROW_H = 44;   // px per row
+  const GAP = 3;       // px between rows
+  const TOTAL_ROWS = 7; // 0–6
+  const TOWER_H = TOTAL_ROWS * ROW_H + (TOTAL_ROWS - 1) * GAP;
+  // Bottom row (Unicode + URI) height
+  const BOTTOM_H = ROW_H;
 
   return (
-    <div className="relative mx-auto" style={{ maxWidth: 640 }}>
-      {/* Pyramid (bottom to top) */}
-      <div className="flex flex-col-reverse items-start gap-[3px]" style={{ marginRight: signature ? "22%" : 0 }}>
-        {pyramid.map((layer) => {
-          const widthPct = 100 - layer.number * 8;
-          return (
-            <a
-              key={layer.number}
-              href={`#layer-${layer.number}`}
-              className="group relative flex items-center justify-center rounded font-display font-bold text-xs sm:text-sm py-3.5 sm:py-4 transition-all duration-200 hover:brightness-110 hover:translate-x-1"
-              style={{
-                width: `${widthPct}%`,
-                backgroundColor: layer.color,
-                color: layer.textDark ? "hsl(220, 20%, 12%)" : "white",
-              }}
-              title={`Jump to: ${layer.title}`}
-            >
-              {layer.title}
-            </a>
-          );
-        })}
-      </div>
+    <div
+      className="relative mx-auto select-none"
+      style={{ maxWidth: 560, height: TOWER_H + BOTTOM_H + GAP }}
+    >
+      {/* Rows 1–6 (stacked, top to bottom) */}
+      {rows.map((row, i) => {
+        const top = i * (ROW_H + GAP);
+        return (
+          <a
+            key={row.id}
+            href={`#layer-${row.id}`}
+            className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
+            style={{
+              top,
+              left: `${row.left}%`,
+              width: `${row.width}%`,
+              height: ROW_H,
+              backgroundColor: row.color,
+              color: row.dark ? "hsl(220, 20%, 12%)" : "white",
+              borderRadius: 3,
+            }}
+            title={`Jump to: ${row.label}`}
+          >
+            {row.label}
+          </a>
+        );
+      })}
 
-      {/* Digital Signature sidebar */}
-      {signature && (
-        <a
-          href="#layer-7"
-          className="absolute right-0 top-0 bottom-0 flex items-center justify-center rounded font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110"
-          style={{
-            width: "20%",
-            backgroundColor: signature.color,
-            color: "hsl(0, 0%, 95%)",
-            writingMode: "vertical-rl",
-            textOrientation: "mixed",
-          }}
-          title="Jump to: Digital Signature"
-        >
-          Digital Signature
-        </a>
-      )}
+      {/* Row 0 — Unicode | URI (two side-by-side boxes) */}
+      {(() => {
+        const bottomTop = rows.length * (ROW_H + GAP);
+        const totalWidth = 82; // % — slightly wider than XML row
+        return (
+          <>
+            <a
+              href="#layer-0"
+              className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
+              style={{
+                top: bottomTop,
+                left: "0%",
+                width: `${totalWidth * 0.55}%`,
+                height: BOTTOM_H,
+                backgroundColor: TOWER_COLORS.unicode,
+                color: "white",
+                borderRadius: 3,
+              }}
+              title="Jump to: Unicode + URI"
+            >
+              Unicode
+            </a>
+            <a
+              href="#layer-0"
+              className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
+              style={{
+                top: bottomTop,
+                left: `${totalWidth * 0.55 + 0.5}%`,
+                width: `${totalWidth * 0.45}%`,
+                height: BOTTOM_H,
+                backgroundColor: TOWER_COLORS.uri,
+                color: "white",
+                borderRadius: 3,
+              }}
+              title="Jump to: Unicode + URI"
+            >
+              URI
+            </a>
+          </>
+        );
+      })()}
+
+      {/* Digital Signature — tall box on right, spanning from Logic (row 4) down through URI */}
+      <a
+        href="#layer-7"
+        className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
+        style={{
+          // Starts at Logic row (index 2 in the rows array = row id 4)
+          top: 2 * (ROW_H + GAP),
+          right: 0,
+          width: "20%",
+          // Spans from Logic row top to bottom of URI row
+          height: (rows.length - 2) * (ROW_H + GAP) + BOTTOM_H + GAP,
+          backgroundColor: TOWER_COLORS.sig,
+          color: "hsl(0, 0%, 92%)",
+          borderRadius: 3,
+          writingMode: "vertical-rl",
+          textOrientation: "mixed",
+          letterSpacing: "0.05em",
+        }}
+        title="Jump to: Digital Signature"
+      >
+        Digital Signature
+      </a>
     </div>
   );
 }
