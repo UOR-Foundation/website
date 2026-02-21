@@ -130,17 +130,17 @@ const ProjectDetailLayout = ({
                   </p>
 
                   {/* Verify button */}
-                  <div className="mt-4 pt-3 border-t border-primary/10">
+                  <div className="mt-4 pt-3 border-t border-section-dark-foreground/10">
                     {!verified ? (
                       <button
                         onClick={handleVerify}
                         disabled={verifying}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer disabled:opacity-50 font-body"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 font-body"
                       >
                         {verifying ? (
-                          <><Loader2 size={12} className="animate-spin" /> Verifying…</>
+                          <><Loader2 size={14} className="animate-spin" /> Verifying…</>
                         ) : (
-                          <><ShieldCheck size={12} /> Verify this certificate</>
+                          <><ShieldCheck size={14} /> Verify this certificate</>
                         )}
                       </button>
                     ) : (
