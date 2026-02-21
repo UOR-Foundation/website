@@ -2,6 +2,16 @@
 // OpenAPI 3.1.0 compliant router — all endpoints, no external dependencies
 // Every response is a valid JSON-LD object traceable to UOR ontology namespaces
 
+// ── Storacha (Filecoin-backed IPFS persistence) ────────────────────────────
+import * as StorachaClient from 'npm:@storacha/client'
+import { StoreMemory } from 'npm:@storacha/client/stores/memory'
+import * as StorachaProof from 'npm:@storacha/client/proof'
+import { Signer } from 'npm:@storacha/client/principal/ed25519'
+
+// Storacha credentials — generated via storacha CLI (see setup instructions)
+const STORACHA_KEY = Deno.env.get('STORACHA_KEY')    // Ed25519 private key: MgCa...
+const STORACHA_PROOF = Deno.env.get('STORACHA_PROOF') // base64 UCAN delegation
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -2240,7 +2250,28 @@ const GATEWAY_CONFIGS: Record<string, { apiUrl: string; readUrl: string; depreca
     apiUrl: "https://api.pinata.cloud",
     readUrl: "https://gateway.pinata.cloud/ipfs/",
   },
+  "storacha": {
+    apiUrl: "https://up.storacha.network",
+    readUrl: "https://storacha.link/ipfs/",
+  },
 };
+
+// ── Storacha client factory (stateless — Edge Functions have no filesystem) ──
+async function getStorachaClient() {
+  if (!STORACHA_KEY || !STORACHA_PROOF) {
+    throw new Error(
+      'Storacha gateway requires STORACHA_KEY and STORACHA_PROOF. ' +
+      'Generate via: storacha key create && storacha delegation create <did> --base64'
+    )
+  }
+  const principal = Signer.parse(STORACHA_KEY)
+  const store = new StoreMemory()
+  const client = await StorachaClient.create({ principal, store })
+  const proof = await StorachaProof.parse(STORACHA_PROOF)
+  const space = await client.addSpace(proof)
+  await client.setCurrentSpace(space.did())
+  return client
+}
 
 async function pinToIpfs(
   bytes: Uint8Array,
@@ -2256,6 +2287,9 @@ async function pinToIpfs(
   }
   if (gateway === "pinata" || gateway === "https://api.pinata.cloud") {
     return await pinToPinata(bytes, ts);
+  }
+  if (gateway === "storacha" || gateway === "https://up.storacha.network") {
+    return await pinToStoracha(bytes, ts);
   }
   throw new Error(`Unknown gateway: "${gateway}". Use GET /store/gateways for valid options.`);
 }
@@ -2335,6 +2369,25 @@ async function pinToPinata(bytes: Uint8Array, ts: string): Promise<PinResult> {
     cid,
     gatewayUrl: "https://api.pinata.cloud",
     gatewayReadUrl: `${dedicatedGw}/ipfs/${cid}`,
+    status: "pinned",
+    timestamp: ts,
+  };
+}
+
+// ── Storacha write — raw bytes, same lossless pattern as Pinata ─────────────
+async function pinToStoracha(bytes: Uint8Array, ts: string): Promise<PinResult> {
+  const client = await getStorachaClient();
+
+  // Upload raw canonical bytes as a File blob — same lossless principle as pinFileToIPFS.
+  // Never JSON.parse/re-serialize: that would destroy deterministic key ordering.
+  const file = new File([bytes], "uor-object.jsonld", { type: "application/ld+json" });
+  const cid = await client.uploadFile(file);
+  const cidStr = cid.toString();
+
+  return {
+    cid: cidStr,
+    gatewayUrl: "https://up.storacha.network",
+    gatewayReadUrl: `https://${cidStr}.ipfs.storacha.link/uor-object.jsonld`,
     status: "pinned",
     timestamp: ts,
   };
@@ -2725,6 +2778,7 @@ const ALLOWED_READ_GATEWAYS = [
   "https://ipfs.io",
   "https://w3s.link",
   "https://cloudflare-ipfs.com",
+  "https://storacha.link",
 ];
 const DEFAULT_READ_GATEWAY = PINATA_DEDICATED_GATEWAY;
 const READ_FETCH_TIMEOUT_MS = 20_000;
@@ -3415,6 +3469,26 @@ const GATEWAY_REGISTRY = [
     "store:authRequired": false,
     "store:note": "Cloudflare public read gateway. Fast global CDN. Read-only.",
   },
+  {
+    "@type": "store:GatewayConfig",
+    "store:id": "storacha",
+    "store:provider": "Storacha (formerly web3.storage)",
+    "store:gatewayReadUrl": "https://storacha.link",
+    "store:pinsApiUrl": "https://up.storacha.network",
+    "store:capabilities": ["read", "write"],
+    "store:defaultFor": [],
+    "store:authRequired": true,
+    "store:authNote":
+      "Requires STORACHA_KEY (Ed25519 private key) and STORACHA_PROOF (base64 UCAN delegation). " +
+      "Generate via: storacha key create && storacha delegation create <did> --base64",
+    "store:note":
+      "Filecoin-backed persistence with IPFS hot retrieval. Data is stored on Filecoin with " +
+      "cryptographic storage proofs — truly decentralized, no single point of failure. " +
+      "5 GB free tier, no credit card required. Acts as decentralized backup alongside Pinata. " +
+      "Reads via {cid}.ipfs.storacha.link/{filename}.",
+    "store:filecoinBacked": true,
+    "store:freeTier": "5 GB",
+  },
 ];
 
 async function checkGatewayHealth(readUrl: string): Promise<"healthy" | "degraded" | "unreachable"> {
@@ -3469,10 +3543,11 @@ async function storeGateways(rl: RateLimitResult): Promise<Response> {
       "cid_spec": "https://github.com/multiformats/cid",
     },
     "summary": {
-      "write_gateways": ["pinata"],
+      "write_gateways": ["pinata", "storacha"],
       "deprecated_write_gateways": ["web3.storage (sunset — legacy API no longer functional)"],
-      "read_gateways": ["ipfs.io", "w3s.link", "cloudflare-ipfs.com", "gateway.pinata.cloud"],
-      "note": "Use POST /store/write with gateway parameter to select write gateway. Use gateway query param on GET /store/read/:cid and GET /store/verify/:cid to select read gateway.",
+      "read_gateways": ["ipfs.io", "w3s.link", "cloudflare-ipfs.com", "gateway.pinata.cloud", "storacha.link"],
+      "note": "Use POST /store/write with gateway parameter to select write gateway (pinata or storacha). Use gateway query param on GET /store/read/:cid and GET /store/verify/:cid to select read gateway.",
+      "storacha_note": "Storacha provides Filecoin-backed persistence (5 GB free). Use gateway:'storacha' for long-term decentralized storage. Pinata remains the default for fastest hot reads.",
     },
   };
 
