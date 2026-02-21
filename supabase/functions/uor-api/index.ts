@@ -1102,6 +1102,10 @@ async function kernelDerive(req: Request, rl: RateLimitResult): Promise<Response
     const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
     const derivationId = `urn:uor:derivation:sha256:${hashHex}`;
 
+    // Build cert:Certificate with cert:certifies linking to the derived fact
+    const certificateId = `urn:uor:cert:sha256:${hashHex}`;
+    const critHolds = neg(bnot(result, n), n) === succOp(result, n);
+
     return jsonResp({
       "@context": UOR_CONTEXT_URL,
       "@id": derivationId,
@@ -1110,7 +1114,9 @@ async function kernelDerive(req: Request, rl: RateLimitResult): Promise<Response
         "result": result,
         "steps": steps.length,
         "ring": `Z/${m}Z`,
-        "derivation_id": derivationId
+        "derivation_id": derivationId,
+        "epistemic_grade": "A",
+        "certificate_id": certificateId
       },
       "derivation:originalTerm": body.term,
       "derivation:canonicalTerm": canonicalForm,
@@ -1122,10 +1128,28 @@ async function kernelDerive(req: Request, rl: RateLimitResult): Promise<Response
         "@id": resultIri,
         ...resultDatum
       },
-      "derivation:canonicalizationApplied": [
-        "constant_reduction",
-        "derived_expansion"
-      ],
+      "derivation:metrics": {
+        "derivation:stepCount": steps.length,
+        "derivation:canonicalizationRulesApplied": ["constant_reduction", "derived_expansion"],
+        "derivation:criticalIdentityHolds": critHolds
+      },
+      "epistemic:grade": "A",
+      "epistemic:justification": "Derived algebraically via term-tree evaluation in Z/(2^n)Z. Derivation ID is SHA-256 content-addressed. Grade A = algebraically proven.",
+      "cert:Certificate": {
+        "@id": certificateId,
+        "@type": "cert:Certificate",
+        "cert:certifies": {
+          "@id": resultIri,
+          "cert:fact": `${canonicalForm} = ${result} in Z/${m}Z`,
+          "cert:derivedBy": derivationId
+        },
+        "cert:method": "algebraic_derivation",
+        "cert:epistemicGrade": "A",
+        "cert:criticalIdentityHolds": critHolds,
+        "cert:timestamp": timestamp()
+      },
+      "derivation:derivationId": derivationId,
+      "derivation:timestamp": timestamp(),
       "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/derivation.rs"
     }, CACHE_HEADERS_KERNEL, undefined, rl);
   } catch (e) {
@@ -1672,7 +1696,8 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/kernel/op/compute`, "required_params": "x", "optional_params": "n, y", "example": `${base}/kernel/op/compute?x=42&y=10`, "operationId": "opCompute", "summary": "All ring operations for x (and binary ops for x, y)" },
           { "method": "GET", "path": `${base}/kernel/op/operations`, "required_params": "none", "example": `${base}/kernel/op/operations`, "operationId": "opList", "summary": "All named op/ individuals — 5 primitives + derived — with formulas and definitions" },
           { "method": "POST", "path": `${base}/kernel/address/encode`, "body": "{input, encoding}", "example": `${base}/kernel/address/encode`, "operationId": "addressEncode", "summary": "UTF-8 → u:Address with per-byte Glyph decomposition" },
-          { "method": "GET", "path": `${base}/kernel/schema/datum`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/schema/datum?x=42`, "operationId": "schemaDatum", "summary": "Full schema:Datum — decimal, binary, bits set, content address" }
+          { "method": "GET", "path": `${base}/kernel/schema/datum`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/schema/datum?x=42`, "operationId": "schemaDatum", "summary": "Full schema:Datum — decimal, binary, bits set, content address" },
+          { "method": "POST", "path": `${base}/kernel/derive`, "body": "{term: {op, args}, n?}", "example": `${base}/kernel/derive`, "operationId": "kernelDerive", "summary": "uor.derive() — term tree derivation with SHA-256 derivation_id (urn:uor:derivation:sha256:...), cert:Certificate, and Grade A epistemic certainty" }
         ]
       },
       "bridge": {
@@ -1683,7 +1708,7 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "POST", "path": `${base}/bridge/proof/coherence`, "body": "{type_definition, n}", "example": `${base}/bridge/proof/coherence`, "operationId": "proofCoherence", "summary": "proof:CoherenceProof — 256/256 elements pass, holds_universally: true" },
           { "method": "GET", "path": `${base}/bridge/cert/involution`, "required_params": "operation", "optional_params": "n", "example": `${base}/bridge/cert/involution?operation=neg`, "operationId": "certInvolution", "summary": "cert:InvolutionCertificate — proves op undoes itself across all values" },
           { "method": "GET", "path": `${base}/bridge/observable/metrics`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/observable/metrics?x=42`, "operationId": "observableMetrics", "summary": "RingMetric, HammingMetric, CascadeLength, CatastropheThreshold" },
-          { "method": "GET", "path": `${base}/bridge/derivation`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/derivation?x=42&ops=neg,bnot,succ`, "operationId": "bridgeDerivation", "summary": "derivation:DerivationTrace — auditable step-by-step op record with ontology refs" },
+          { "method": "GET", "path": `${base}/bridge/derivation`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/derivation?x=42&ops=neg,bnot,succ`, "operationId": "bridgeDerivation", "summary": "derivation:DerivationTrace — SHA-256 derivation_id, cert:Certificate with cert:certifies, Grade A epistemic grading" },
           { "method": "GET", "path": `${base}/bridge/trace`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/trace?x=42&ops=neg,bnot`, "operationId": "bridgeTrace", "summary": "trace:ExecutionTrace — exact bit state per step, Hamming drift, XOR deltas" },
           { "method": "GET", "path": `${base}/bridge/resolver`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/resolver?x=42`, "operationId": "bridgeResolver", "summary": "resolver:Resolution — canonical category with full factor decomposition" }
         ]
@@ -1831,7 +1856,7 @@ function bitDelta(prev: number, curr: number, n: number): string {
 }
 
 // GET /bridge/derivation?x=42&n=8&ops=neg,bnot,succ
-function bridgeDerivation(url: URL, rl: RateLimitResult): Response {
+async function bridgeDerivation(url: URL, rl: RateLimitResult): Promise<Response> {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const nRaw = url.searchParams.get('n') ?? '8';
@@ -1871,6 +1896,16 @@ function bridgeDerivation(url: URL, rl: RateLimitResult): Response {
 
   // Verify critical identity holds for original x
   const critHolds = neg(bnot(x, n), n) === succOp(x, n);
+
+  // SHA-256 content-addressed derivation ID (roadmap §1.3)
+  const canonicalForm = `${opNames.join(',')}(${x})`;
+  const contentForHash = `${canonicalForm}=${current}@R${n}`;
+  const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(contentForHash));
+  const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+  const derivationId = `urn:uor:derivation:sha256:${hashHex}`;
+  const certificateId = `urn:uor:cert:sha256:${hashHex}`;
+  const resultIri = datumIRI(current, n);
+
   const etag = makeETag('/bridge/derivation', { x: String(x), n: String(n), ops: opsRaw });
 
   return jsonResp({
@@ -1880,24 +1915,53 @@ function bridgeDerivation(url: URL, rl: RateLimitResult): Response {
       "final_value": current,
       "steps": steps.length,
       "identity_holds": critHolds,
+      "derivation_id": derivationId,
+      "epistemic_grade": "A",
       "statement": `neg(bnot(${x})) = succ(${x}) in R_${n} [${critHolds ? 'PASS' : 'FAIL'}]`
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/derivation/x${x}/n${n}`,
+    "@id": derivationId,
     "@type": "derivation:DerivationTrace",
     "derivation:sourceValue": x,
     "derivation:quantum": n,
     "derivation:ringModulus": m,
+    "derivation:originalTerm": `${opNames.join('(')}(${x}${')'.repeat(opNames.length)}`,
+    "derivation:canonicalTerm": canonicalForm,
     "derivation:operationSequence": opNames,
     "derivation:finalValue": current,
     "derivation:steps": steps,
     "derivation:stepCount": steps.length,
+    "derivation:derivationId": derivationId,
+    "derivation:result": {
+      "@id": resultIri,
+      "@type": "schema:Datum",
+      "schema:value": current
+    },
+    "derivation:metrics": {
+      "derivation:stepCount": steps.length,
+      "derivation:criticalIdentityHolds": critHolds
+    },
     "derivation:verification": {
       "@type": "derivation:CriticalIdentityCheck",
       "derivation:criticalIdentityHolds": critHolds,
       "derivation:statement": `neg(bnot(${x})) = succ(${x}) in R_${n} [${critHolds ? 'PASS' : 'FAIL'}]`,
       "derivation:witnessNegBnot": neg(bnot(x, n), n),
       "derivation:witnessSucc": succOp(x, n)
+    },
+    "epistemic:grade": "A",
+    "epistemic:justification": "All steps algebraically computed in Z/(2^n)Z and critical identity verified. Grade A = algebraically proven.",
+    "cert:Certificate": {
+      "@id": certificateId,
+      "@type": "cert:Certificate",
+      "cert:certifies": {
+        "@id": resultIri,
+        "cert:fact": `${canonicalForm} = ${current} in Z/${m}Z`,
+        "cert:derivedBy": derivationId
+      },
+      "cert:method": "algebraic_derivation",
+      "cert:epistemicGrade": "A",
+      "cert:criticalIdentityHolds": critHolds,
+      "cert:timestamp": timestamp()
     },
     "derivation:timestamp": timestamp(),
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/derivation.rs"
@@ -4144,7 +4208,7 @@ Deno.serve(async (req: Request) => {
     // ── Bridge — derivation (derivation: namespace) ──
     if (path === '/bridge/derivation') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
-      const resp = bridgeDerivation(url, rl);
+      const resp = await bridgeDerivation(url, rl);
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
