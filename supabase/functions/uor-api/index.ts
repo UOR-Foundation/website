@@ -56,6 +56,7 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/user/state':                        ['GET', 'OPTIONS'],
   '/store/resolve':                     ['GET', 'OPTIONS'],
   '/store/write':                       ['POST', 'OPTIONS'],
+  // /store/read/:cid is handled dynamically (path prefix match)
 };
 
 // ── Rate Limiting (in-memory sliding window) ────────────────────────────────
@@ -2424,8 +2425,16 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
     validateStorableType(objectType);
   } catch (e) {
     return new Response(JSON.stringify({
-      error: e.message,
-      code: 'KERNEL_SPACE_REJECTED',
+      error: `Kernel-space type '${objectType}' cannot be stored on IPFS.`,
+      detail: "Kernel objects (u:, schema:, op: namespaces) are compiled into the UOR runtime and recomputed on demand. Only User-space and Bridge-space objects may be persisted.",
+      valid_types: [
+        "cert:Certificate", "cert:TransformCertificate", "cert:IsometryCertificate",
+        "cert:InvolutionCertificate", "proof:Proof", "proof:CriticalIdentityProof",
+        "proof:CoherenceProof", "partition:Partition", "state:Binding", "state:Context",
+        "state:Transition", "state:Frame", "morphism:Transform", "morphism:Isometry",
+        "morphism:Embedding", "type:TypeDefinition", "type:PrimitiveType",
+        "derivation:Derivation", "trace:ComputationTrace",
+      ],
       status: 422,
     }), { status: 422, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
   }
@@ -2487,8 +2496,10 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
       "serialise canonically, recompute — addresses must match.",
     "store:uorAddress": {
       "@type": "u:Address",
+      "u:encoding": "braille_bijection_Z_2n_Z",
       "u:glyph": uorAddress.glyph,
       "u:length": uorAddress.length,
+      "u:quantum": 8,
     },
   };
 
@@ -2551,6 +2562,219 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
       'X-IPFS-CID': ipfsCidHeader,
       'X-IPFS-Gateway-URL': ipfsGatewayHeader,
       'X-Store-Dry-Run': String(!shouldPin),
+      ...rateLimitHeaders(rl),
+    },
+  });
+}
+
+// ── IPFS Read Gateways ──────────────────────────────────────────────────────
+const IPFS_READ_GATEWAYS: Record<string, string> = {
+  "https://ipfs.io": "https://ipfs.io/ipfs/",
+  "https://w3s.link": "https://w3s.link/ipfs/",
+  "https://cloudflare-ipfs.com": "https://cloudflare-ipfs.com/ipfs/",
+  "https://gateway.pinata.cloud": "https://gateway.pinata.cloud/ipfs/",
+};
+
+const CID_PATTERN = /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{58,})$/;
+
+// ── GET /store/read/:cid — Retrieve from IPFS + Dual Verification ──────────
+async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promise<Response> {
+  // Validate CID format
+  if (!cidParam || !CID_PATTERN.test(cidParam)) {
+    return error400(
+      `Invalid or missing CID: "${cidParam}". Expected CIDv0 (Qm...) or CIDv1 (bafy..., bafk...).`,
+      'cid', rl,
+    );
+  }
+
+  const gatewayBase = url.searchParams.get('gateway') ?? 'https://ipfs.io';
+  const strict = url.searchParams.get('strict') !== 'false'; // default true
+
+  const gatewayPrefix = IPFS_READ_GATEWAYS[gatewayBase];
+  if (!gatewayPrefix) {
+    return error400(
+      `Unknown read gateway: "${gatewayBase}". Accepted: ${Object.keys(IPFS_READ_GATEWAYS).join(', ')}`,
+      'gateway', rl,
+    );
+  }
+
+  const fetchUrl = `${gatewayPrefix}${cidParam}`;
+
+  // Fetch from IPFS gateway
+  let fetchResponse: Response;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30_000);
+    fetchResponse = await fetch(fetchUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/read)',
+        'Accept': 'application/json, application/ld+json, */*',
+      },
+    });
+    clearTimeout(timeoutId);
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      return new Response(JSON.stringify({
+        error: `Gateway timeout after 30s: ${fetchUrl}`,
+        code: 'GATEWAY_TIMEOUT',
+        status: 504,
+      }), { status: 504, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+    }
+    return new Response(JSON.stringify({
+      error: `Gateway unreachable: ${e.message}`,
+      code: 'GATEWAY_UNREACHABLE',
+      status: 502,
+    }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+
+  if (fetchResponse.status === 404) {
+    return new Response(JSON.stringify({
+      error: `CID not found on gateway: ${cidParam}`,
+      code: 'NOT_FOUND',
+      status: 404,
+    }), { status: 404, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+
+  if (!fetchResponse.ok) {
+    return new Response(JSON.stringify({
+      error: `Gateway returned HTTP ${fetchResponse.status}: ${fetchResponse.statusText}`,
+      code: 'GATEWAY_ERROR',
+      status: 502,
+    }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+
+  // Read bytes
+  const rawBytes = new Uint8Array(await fetchResponse.arrayBuffer());
+
+  // ── Dual verification ──
+
+  // Check 1: CID integrity — recompute CID from retrieved bytes
+  const recomputedCid = await computeCid(rawBytes);
+  const cidMatch = recomputedCid === cidParam;
+
+  // Check 2: UOR address recomputation
+  const recomputedAddress = computeUorAddress(rawBytes);
+
+  // Try to parse as JSON-LD to extract stored UOR address
+  let storedAddress: { glyph: string; length: number } | null = null;
+  let parsedEnvelope: Record<string, unknown> | null = null;
+  let storedCid: string | null = null;
+  try {
+    const text = new TextDecoder().decode(rawBytes);
+    parsedEnvelope = JSON.parse(text);
+    if (parsedEnvelope && typeof parsedEnvelope === 'object') {
+      const addr = parsedEnvelope['store:uorAddress'] as Record<string, unknown> | undefined;
+      if (addr) {
+        storedAddress = {
+          glyph: String(addr['u:glyph'] ?? ''),
+          length: Number(addr['u:length'] ?? 0),
+        };
+      }
+      storedCid = (parsedEnvelope['store:cid'] as string) ?? null;
+    }
+  } catch {
+    // Not valid JSON — that's fine, verification still proceeds on raw bytes
+  }
+
+  // For self-referential consistency check: if stored envelope has store:cid,
+  // strip store:cid and store:uorAddress, re-serialise, recompute CID
+  let round1CidMatch = false;
+  if (parsedEnvelope && storedCid) {
+    try {
+      const stripped = { ...parsedEnvelope };
+      delete stripped['store:cid'];
+      delete stripped['store:cidScope'];
+      delete stripped['store:uorAddress'];
+      const strippedBytes = new TextEncoder().encode(canonicalJsonLd(stripped));
+      const strippedCid = await computeCid(strippedBytes);
+      round1CidMatch = strippedCid === storedCid;
+    } catch {
+      // Stripping failed — skip
+    }
+  }
+
+  // Address match check
+  const addressMatch = storedAddress
+    ? storedAddress.glyph === recomputedAddress.glyph && storedAddress.length === recomputedAddress.length
+    : false;
+
+  // Verified = round1 CID matches stored CID (self-referential consistency)
+  // OR direct CID match if no envelope structure
+  const verified = round1CidMatch || (cidMatch && addressMatch);
+
+  // If strict and not verified, return 409
+  if (strict && !verified) {
+    return new Response(JSON.stringify({
+      "@context": UOR_STORE_CONTEXT,
+      "@type": "store:RetrievedObject",
+      "store:requestedCid": cidParam,
+      "store:retrievedFrom": fetchUrl,
+      "store:verified": false,
+      "store:verificationDetail": {
+        "cidMatch": cidMatch,
+        "round1CidMatch": round1CidMatch,
+        "addressMatch": addressMatch,
+        "recomputedCid": recomputedCid,
+        "storedCid": storedCid,
+        "recomputedUorAddress": {
+          "@type": "u:Address",
+          "u:glyph": recomputedAddress.glyph.substring(0, 128),
+          "u:length": recomputedAddress.length,
+        },
+        ...(storedAddress ? {
+          "storedUorAddress": {
+            "@type": "u:Address",
+            "u:glyph": storedAddress.glyph.substring(0, 128),
+            "u:length": storedAddress.length,
+          },
+        } : {}),
+      },
+      "error": "Content integrity verification failed. The retrieved content does not match the expected UOR address or CID.",
+      "status": 409,
+    }), { status: 409, headers: { ...CORS_HEADERS, 'Content-Type': 'application/ld+json', ...rateLimitHeaders(rl) } });
+  }
+
+  // Build successful response
+  const result: Record<string, unknown> = {
+    "@context": UOR_STORE_CONTEXT,
+    "@type": "store:RetrievedObject",
+    "store:requestedCid": cidParam,
+    "store:retrievedFrom": fetchUrl,
+    "store:verified": verified,
+    "store:verificationDetail": {
+      "cidMatch": cidMatch,
+      "round1CidMatch": round1CidMatch,
+      "addressMatch": addressMatch,
+      "recomputedCid": recomputedCid,
+      "storedCid": storedCid,
+    },
+    "store:storedUorAddress": storedAddress ? {
+      "@type": "u:Address",
+      "u:encoding": "braille_bijection_Z_2n_Z",
+      "u:glyph": storedAddress.glyph,
+      "u:length": storedAddress.length,
+      "u:quantum": 8,
+    } : null,
+    "store:recomputedUorAddress": {
+      "@type": "u:Address",
+      "u:encoding": "braille_bijection_Z_2n_Z",
+      "u:glyph": recomputedAddress.glyph,
+      "u:length": recomputedAddress.length,
+      "u:quantum": 8,
+    },
+    "store:byteLength": rawBytes.length,
+    ...(parsedEnvelope ? { "payload": parsedEnvelope['payload'] ?? parsedEnvelope } : {}),
+  };
+
+  return new Response(canonicalJsonLd(result), {
+    status: 200,
+    headers: {
+      ...CORS_HEADERS,
+      'Content-Type': 'application/ld+json',
+      'X-UOR-Verified': String(verified),
+      'X-UOR-Address': recomputedAddress.glyph.substring(0, 64),
+      'X-IPFS-CID': cidParam,
       ...rateLimitHeaders(rl),
     },
   });
@@ -2750,8 +2974,15 @@ Deno.serve(async (req: Request) => {
 
     // ── Store — write (store: namespace) ──
     if (path === '/store/write') {
-      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      if (req.method !== 'POST') return error405(path, ['POST', 'OPTIONS']);
       return await storeWrite(req, rl);
+    }
+
+    // ── Store — read/:cid (store: namespace) ──
+    if (path.startsWith('/store/read/')) {
+      if (req.method !== 'GET') return error405(path, ['GET', 'OPTIONS']);
+      const cidParam = path.replace('/store/read/', '');
+      return await storeRead(cidParam, url, rl);
     }
 
     // ── 405 for known paths with wrong method ──
