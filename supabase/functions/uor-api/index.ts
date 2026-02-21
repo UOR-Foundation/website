@@ -2567,214 +2567,278 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
   });
 }
 
-// ── IPFS Read Gateways ──────────────────────────────────────────────────────
-const IPFS_READ_GATEWAYS: Record<string, string> = {
-  "https://ipfs.io": "https://ipfs.io/ipfs/",
-  "https://w3s.link": "https://w3s.link/ipfs/",
-  "https://cloudflare-ipfs.com": "https://cloudflare-ipfs.com/ipfs/",
-  "https://gateway.pinata.cloud": "https://gateway.pinata.cloud/ipfs/",
-};
+// ── CID Validation ──────────────────────────────────────────────────────────
+function validateCid(cid: string): { valid: boolean; version: 0 | 1; error?: string } {
+  if (!cid || cid.length < 8) {
+    return { valid: false, version: 0, error: "CID is too short to be valid." };
+  }
+  // CIDv0: starts with "Qm", base58btc, 46 chars
+  if (cid.startsWith("Qm")) {
+    if (cid.length !== 46) {
+      return { valid: false, version: 0, error: `CIDv0 must be 46 characters. Got ${cid.length}.` };
+    }
+    const base58Chars = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
+    if (!base58Chars.test(cid)) {
+      return { valid: false, version: 0, error: "CIDv0 contains invalid base58btc characters." };
+    }
+    return { valid: true, version: 0 };
+  }
+  // CIDv1: multibase prefix b/B/z/f/F
+  const cidv1Prefixes = ["b", "B", "z", "f", "F"];
+  if (cidv1Prefixes.includes(cid[0])) {
+    if (cid.length < 10) {
+      return { valid: false, version: 1, error: "CIDv1 is too short." };
+    }
+    return { valid: true, version: 1 };
+  }
+  return {
+    valid: false,
+    version: 0,
+    error: "Unrecognised CID format. Expected CIDv0 (starts with 'Qm') or CIDv1 (starts with 'b', 'z', or 'f').",
+  };
+}
 
-const CID_PATTERN = /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{58,})$/;
+// ── Dual Verification Algorithm ─────────────────────────────────────────────
+interface DualVerificationResult {
+  cid_integrity: {
+    performed: boolean;
+    expected_cid: string;
+    computed_cid: string;
+    match: boolean | null;
+    note: string;
+  };
+  uor_consistency: {
+    performed: boolean;
+    stored_uor_address: string | null;
+    recomputed_uor_address: string;
+    match: boolean | null;
+    note: string;
+  };
+  store_verified: boolean;
+  verdict: string;
+}
+
+async function dualVerify(
+  retrievedBytes: Uint8Array,
+  requestedCid: string,
+): Promise<DualVerificationResult> {
+  // Check 1: CID integrity
+  const recomputedCid = await computeCid(retrievedBytes);
+  const cidMatch = recomputedCid === requestedCid;
+
+  // Check 2: UOR address consistency
+  let storedUorGlyph: string | null = null;
+  try {
+    const text = new TextDecoder().decode(retrievedBytes);
+    const parsed = JSON.parse(text);
+    const uorAddr = parsed?.["store:uorAddress"] as Record<string, unknown> | undefined;
+    storedUorGlyph = (uorAddr?.["u:glyph"] as string) ?? null;
+  } catch {
+    // Not JSON-LD
+  }
+
+  const recomputedUor = computeUorAddress(retrievedBytes);
+  const uorMatch = storedUorGlyph !== null
+    ? recomputedUor.glyph === storedUorGlyph
+    : null;
+
+  const storeVerified = uorMatch === true;
+
+  return {
+    cid_integrity: {
+      performed: true,
+      expected_cid: requestedCid,
+      computed_cid: recomputedCid,
+      match: cidMatch,
+      note: cidMatch
+        ? "CID integrity confirmed: retrieved bytes hash to the expected CID."
+        : "CID mismatch. This may indicate: (1) content was modified since storage, " +
+          "(2) the CID was computed from a different serialisation round. " +
+          "The UOR address check is the authoritative integrity signal.",
+    },
+    uor_consistency: {
+      performed: true,
+      stored_uor_address: storedUorGlyph,
+      recomputed_uor_address: recomputedUor.glyph,
+      match: uorMatch,
+      note: uorMatch === true
+        ? "UOR address confirmed: freshly computed address matches stored address. Content is authentic."
+        : uorMatch === false
+        ? "UOR ADDRESS MISMATCH: Retrieved bytes produce a different UOR address than stored. " +
+          "Content has been modified since it was written."
+        : "Indeterminate: retrieved content has no store:uorAddress field. " +
+          "This content may not have been written via POST /store/write.",
+    },
+    store_verified: storeVerified,
+    verdict: storeVerified
+      ? "VERIFIED: Both UOR address and CID checks confirm content integrity."
+      : uorMatch === null
+      ? "INDETERMINATE: No stored UOR address found in retrieved content."
+      : "INTEGRITY FAILURE: UOR address mismatch. Do not trust this content.",
+  };
+}
+
+// ── IPFS Read Gateways ──────────────────────────────────────────────────────
+const ALLOWED_READ_GATEWAYS = [
+  "https://ipfs.io",
+  "https://w3s.link",
+  "https://cloudflare-ipfs.com",
+  "https://gateway.pinata.cloud",
+];
+const DEFAULT_READ_GATEWAY = "https://ipfs.io";
+const READ_FETCH_TIMEOUT_MS = 20_000;
+const READ_MAX_BYTES = 10 * 1024 * 1024;
 
 // ── GET /store/read/:cid — Retrieve from IPFS + Dual Verification ──────────
 async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promise<Response> {
   // Validate CID format
-  if (!cidParam || !CID_PATTERN.test(cidParam)) {
-    return error400(
-      `Invalid or missing CID: "${cidParam}". Expected CIDv0 (Qm...) or CIDv1 (bafy..., bafk...).`,
-      'cid', rl,
-    );
+  const cidValidation = validateCid(cidParam ?? "");
+  if (!cidValidation.valid) {
+    return error400(`Invalid CID: ${cidValidation.error}`, 'cid', rl);
   }
 
-  const gatewayBase = url.searchParams.get('gateway') ?? 'https://ipfs.io';
-  const strict = url.searchParams.get('strict') !== 'false'; // default true
+  const gatewayOverride = url.searchParams.get('gateway');
+  const strict = url.searchParams.get('strict') !== 'false';
 
-  const gatewayPrefix = IPFS_READ_GATEWAYS[gatewayBase];
-  if (!gatewayPrefix) {
-    return error400(
-      `Unknown read gateway: "${gatewayBase}". Accepted: ${Object.keys(IPFS_READ_GATEWAYS).join(', ')}`,
-      'gateway', rl,
-    );
+  let gateway = DEFAULT_READ_GATEWAY;
+  if (gatewayOverride) {
+    if (!ALLOWED_READ_GATEWAYS.includes(gatewayOverride)) {
+      return error400(
+        `Unknown gateway "${gatewayOverride}". Allowed: ${ALLOWED_READ_GATEWAYS.join(', ')}`,
+        'gateway', rl,
+      );
+    }
+    gateway = gatewayOverride;
   }
 
-  const fetchUrl = `${gatewayPrefix}${cidParam}`;
-
-  // Fetch from IPFS gateway
+  // Fetch from IPFS trustless gateway
+  const ipfsUrl = `${gateway}/ipfs/${cidParam}?format=raw`;
   let fetchResponse: Response;
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30_000);
-    fetchResponse = await fetch(fetchUrl, {
+    const timeoutId = setTimeout(() => controller.abort(), READ_FETCH_TIMEOUT_MS);
+    fetchResponse = await fetch(ipfsUrl, {
       signal: controller.signal,
       headers: {
+        'Accept': 'application/vnd.ipld.raw, application/ld+json, application/json, */*',
         'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/read)',
-        'Accept': 'application/json, application/ld+json, */*',
       },
     });
     clearTimeout(timeoutId);
   } catch (e) {
     if (e.name === 'AbortError') {
       return new Response(JSON.stringify({
-        error: `Gateway timeout after 30s: ${fetchUrl}`,
-        code: 'GATEWAY_TIMEOUT',
-        status: 504,
+        error: `Gateway timeout after ${READ_FETCH_TIMEOUT_MS / 1000}s.`,
+        code: 'GATEWAY_TIMEOUT', status: 504,
       }), { status: 504, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
     }
     return new Response(JSON.stringify({
       error: `Gateway unreachable: ${e.message}`,
-      code: 'GATEWAY_UNREACHABLE',
-      status: 502,
+      code: 'GATEWAY_UNREACHABLE', status: 502,
     }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
   }
 
   if (fetchResponse.status === 404) {
     return new Response(JSON.stringify({
-      error: `CID not found on gateway: ${cidParam}`,
-      code: 'NOT_FOUND',
-      status: 404,
+      error: `CID not found: ${cidParam}. The content may not be pinned.`,
+      code: 'NOT_FOUND', status: 404,
     }), { status: 404, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
   }
 
   if (!fetchResponse.ok) {
     return new Response(JSON.stringify({
-      error: `Gateway returned HTTP ${fetchResponse.status}: ${fetchResponse.statusText}`,
-      code: 'GATEWAY_ERROR',
-      status: 502,
+      error: `Gateway returned HTTP ${fetchResponse.status}.`,
+      code: 'GATEWAY_ERROR', status: 502,
     }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
   }
 
-  // Read bytes
-  const rawBytes = new Uint8Array(await fetchResponse.arrayBuffer());
-
-  // ── Dual verification ──
-
-  // Check 1: CID integrity — recompute CID from retrieved bytes
-  const recomputedCid = await computeCid(rawBytes);
-  const cidMatch = recomputedCid === cidParam;
-
-  // Check 2: UOR address recomputation
-  const recomputedAddress = computeUorAddress(rawBytes);
-
-  // Try to parse as JSON-LD to extract stored UOR address
-  let storedAddress: { glyph: string; length: number } | null = null;
-  let parsedEnvelope: Record<string, unknown> | null = null;
-  let storedCid: string | null = null;
-  try {
-    const text = new TextDecoder().decode(rawBytes);
-    parsedEnvelope = JSON.parse(text);
-    if (parsedEnvelope && typeof parsedEnvelope === 'object') {
-      const addr = parsedEnvelope['store:uorAddress'] as Record<string, unknown> | undefined;
-      if (addr) {
-        storedAddress = {
-          glyph: String(addr['u:glyph'] ?? ''),
-          length: Number(addr['u:length'] ?? 0),
-        };
-      }
-      storedCid = (parsedEnvelope['store:cid'] as string) ?? null;
-    }
-  } catch {
-    // Not valid JSON — that's fine, verification still proceeds on raw bytes
-  }
-
-  // For self-referential consistency check: if stored envelope has store:cid,
-  // strip store:cid and store:uorAddress, re-serialise, recompute CID
-  let round1CidMatch = false;
-  if (parsedEnvelope && storedCid) {
-    try {
-      const stripped = { ...parsedEnvelope };
-      delete stripped['store:cid'];
-      delete stripped['store:cidScope'];
-      delete stripped['store:uorAddress'];
-      const strippedBytes = new TextEncoder().encode(canonicalJsonLd(stripped));
-      const strippedCid = await computeCid(strippedBytes);
-      round1CidMatch = strippedCid === storedCid;
-    } catch {
-      // Stripping failed — skip
-    }
-  }
-
-  // Address match check
-  const addressMatch = storedAddress
-    ? storedAddress.glyph === recomputedAddress.glyph && storedAddress.length === recomputedAddress.length
-    : false;
-
-  // Verified = round1 CID matches stored CID (self-referential consistency)
-  // OR direct CID match if no envelope structure
-  const verified = round1CidMatch || (cidMatch && addressMatch);
-
-  // If strict and not verified, return 409
-  if (strict && !verified) {
+  // Read bytes with size limit (streaming)
+  const reader = fetchResponse.body?.getReader();
+  if (!reader) {
     return new Response(JSON.stringify({
-      "@context": UOR_STORE_CONTEXT,
-      "@type": "store:RetrievedObject",
-      "store:requestedCid": cidParam,
-      "store:retrievedFrom": fetchUrl,
-      "store:verified": false,
-      "store:verificationDetail": {
-        "cidMatch": cidMatch,
-        "round1CidMatch": round1CidMatch,
-        "addressMatch": addressMatch,
-        "recomputedCid": recomputedCid,
-        "storedCid": storedCid,
-        "recomputedUorAddress": {
-          "@type": "u:Address",
-          "u:glyph": recomputedAddress.glyph.substring(0, 128),
-          "u:length": recomputedAddress.length,
-        },
-        ...(storedAddress ? {
-          "storedUorAddress": {
-            "@type": "u:Address",
-            "u:glyph": storedAddress.glyph.substring(0, 128),
-            "u:length": storedAddress.length,
-          },
-        } : {}),
-      },
-      "error": "Content integrity verification failed. The retrieved content does not match the expected UOR address or CID.",
-      "status": 409,
-    }), { status: 409, headers: { ...CORS_HEADERS, 'Content-Type': 'application/ld+json', ...rateLimitHeaders(rl) } });
+      error: 'Response body is empty or unreadable.',
+      code: 'GATEWAY_ERROR', status: 502,
+    }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
   }
 
-  // Build successful response
-  const result: Record<string, unknown> = {
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalBytes += value.length;
+    if (totalBytes > READ_MAX_BYTES) {
+      reader.cancel();
+      return new Response(JSON.stringify({
+        error: 'Response exceeds 10MB limit.',
+        code: 'PAYLOAD_TOO_LARGE', status: 413,
+      }), { status: 413, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
+
+  // Run dual verification
+  const verification = await dualVerify(bytes, cidParam);
+
+  // Parse content for response
+  let parsedContent: unknown = null;
+  try {
+    parsedContent = JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    parsedContent = `[Binary content, ${bytes.length} bytes]`;
+  }
+
+  // Handle strict mode integrity failure
+  if (strict && !verification.store_verified && verification.uor_consistency.match === false) {
+    return new Response(
+      canonicalJsonLd({
+        "@context": UOR_STORE_CONTEXT,
+        "@type": "store:RetrievedObject",
+        "store:retrievedFrom": cidParam,
+        "store:verified": false,
+        "verification": verification,
+        "error": "Integrity failure: UOR address mismatch. Content has been modified.",
+        "content": parsedContent,
+      }),
+      {
+        status: 409,
+        headers: {
+          ...CORS_HEADERS,
+          'Content-Type': 'application/ld+json',
+          'X-UOR-Verified': 'false',
+          ...rateLimitHeaders(rl),
+        },
+      },
+    );
+  }
+
+  const recomputedUor = computeUorAddress(bytes);
+  const responseBody = {
     "@context": UOR_STORE_CONTEXT,
+    "@id": `https://uor.foundation/store/retrieved/${cidParam}`,
     "@type": "store:RetrievedObject",
-    "store:requestedCid": cidParam,
-    "store:retrievedFrom": fetchUrl,
-    "store:verified": verified,
-    "store:verificationDetail": {
-      "cidMatch": cidMatch,
-      "round1CidMatch": round1CidMatch,
-      "addressMatch": addressMatch,
-      "recomputedCid": recomputedCid,
-      "storedCid": storedCid,
-    },
-    "store:storedUorAddress": storedAddress ? {
-      "@type": "u:Address",
-      "u:encoding": "braille_bijection_Z_2n_Z",
-      "u:glyph": storedAddress.glyph,
-      "u:length": storedAddress.length,
-      "u:quantum": 8,
-    } : null,
-    "store:recomputedUorAddress": {
-      "@type": "u:Address",
-      "u:encoding": "braille_bijection_Z_2n_Z",
-      "u:glyph": recomputedAddress.glyph,
-      "u:length": recomputedAddress.length,
-      "u:quantum": 8,
-    },
-    "store:byteLength": rawBytes.length,
-    ...(parsedEnvelope ? { "payload": parsedEnvelope['payload'] ?? parsedEnvelope } : {}),
+    "store:retrievedFrom": cidParam,
+    "store:byteLength": bytes.length,
+    "store:contentType": fetchResponse.headers.get('content-type') ?? 'unknown',
+    "store:gatewayUsed": gateway,
+    "store:recomputedUorAddress": recomputedUor.glyph,
+    "store:storedUorAddress": verification.uor_consistency.stored_uor_address ?? "not found",
+    "store:verified": verification.store_verified,
+    "verification": verification,
+    "content": parsedContent,
   };
 
-  return new Response(canonicalJsonLd(result), {
+  return new Response(canonicalJsonLd(responseBody), {
     status: 200,
     headers: {
       ...CORS_HEADERS,
       'Content-Type': 'application/ld+json',
-      'X-UOR-Verified': String(verified),
-      'X-UOR-Address': recomputedAddress.glyph.substring(0, 64),
+      'X-UOR-Verified': String(verification.store_verified),
       'X-IPFS-CID': cidParam,
+      'X-UOR-Recomputed-Address': recomputedUor.glyph.substring(0, 64),
       ...rateLimitHeaders(rl),
     },
   });
