@@ -52,7 +52,7 @@ const About = () => {
                 {
                   icon: BookOpen,
                   title: "The Framework",
-                  desc: "Every piece of data gets one permanent address, based on what it contains. Findable and verifiable across every system."
+                  desc: "The open specification for content-based addressing. Six layers from identity to transformation, fully documented."
                 },
                 {
                   icon: Microscope,
@@ -114,7 +114,7 @@ const About = () => {
           <div className="animate-fade-in-up" style={{ animationDelay: "0.45s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Our Governance</h2>
             <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
-              Everything the foundation produces is governed by a single transparent framework. It is built on six key principles.
+              One transparent framework governs everything we produce. Six principles.
             </p>
 
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -155,14 +155,9 @@ const About = () => {
           {/* Our Approach */}
           <div className="animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Our Approach</h2>
-            <div className="space-y-4 text-muted-foreground font-body text-base md:text-lg leading-relaxed">
-              <p>
-                There are many ways to solve problems in data, AI, and computation. We do not prescribe one. The foundation is a neutral space where different perspectives coexist, get tested, and are judged on their merits.
-              </p>
-              <p>
-                If your work benefits from permanent data identity, reliable data combination, or provable accuracy, there is a place for it here, regardless of your tools, language, or paradigm.
-              </p>
-            </div>
+            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed">
+              We do not prescribe one way to solve problems. The foundation is a neutral space where ideas coexist, get tested, and are judged on their merits. If your work benefits from permanent data identity, reliable data combination, or provable accuracy, bring it here.
+            </p>
           </div>
 
           <div className="rule" />
@@ -171,7 +166,7 @@ const About = () => {
           <div className="animate-fade-in-up" style={{ animationDelay: "0.55s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Get Involved</h2>
             <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
-              Explore the framework, contribute research, or build something new. There is a place for you here.
+              Explore the framework, contribute research, or build something new.
             </p>
             <div className="flex flex-col sm:flex-row flex-wrap gap-3">
               <a

@@ -135,10 +135,7 @@ const Donate = () => {
             className="mt-8 text-lg md:text-xl text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.25s" }}
           >
-            By donating to The UOR Foundation, you support the development of an open standard 
-            that gives every piece of data one permanent, verifiable address. No lock-in, no gatekeepers. 
-            We are a nonprofit organization building the infrastructure for reliable, 
-            trustworthy data across science, software, and emerging technologies.
+            Your donation funds an open standard that gives every piece of data one permanent, verifiable address. No lock-in, no gatekeepers. A nonprofit building infrastructure for science, software, and emerging technologies.
           </p>
           <div
             className="mt-10 flex flex-wrap gap-3 animate-fade-in-up opacity-0"

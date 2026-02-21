@@ -16,7 +16,7 @@ const Standard = () => {
             className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
             style={{ animationDelay: "0.15s" }}
           >
-            One address per object, derived from its content, verifiable across every system. Data referenced by what it is, not where it lives. One shared language for all of it.
+            One address per object, derived from its content, verifiable across every system. Data referenced by what it is, not where it lives.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
@@ -60,11 +60,8 @@ const Standard = () => {
       {/* Visual Diagram */}
       <section className="py-12 md:py-20 bg-background border-b border-border">
         <div className="container max-w-5xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-12">
             How It Works
-          </p>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
-            UOR gives every object a permanent address based on what it contains, not where it is stored. Here is how that works.
           </p>
           <UORDiagram />
         </div>
@@ -77,7 +74,7 @@ const Standard = () => {
             Where It Applies
           </p>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
-            A single, shared way to address data opens the door to breakthroughs across disciplines.
+            When every system shares one way to address data, new capabilities emerge.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
