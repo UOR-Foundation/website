@@ -6,7 +6,7 @@ const pillars = [
     icon: Globe,
     title: "UOR Framework",
     description:
-      "A universal coordinate system for information. One address per object, derived from content, verifiable across every system.",
+      "Every piece of data gets one permanent address, based on what it contains. Findable, verifiable, and reusable across every system, without translation layers or lock-in.",
     href: "/standard",
     cta: "Learn",
   },
@@ -14,7 +14,7 @@ const pillars = [
     icon: Users,
     title: "Our Community",
     description:
-      "Researchers, engineers, and builders working together across disciplines. Share your work, validate ideas, and move faster by building on what others have proven.",
+      "A global network of researchers, engineers, and builders. Test ideas across disciplines, validate results openly, and move faster by building on what others have proven.",
     href: "/research",
     cta: "Connect",
   },
@@ -22,7 +22,7 @@ const pillars = [
     icon: Rocket,
     title: "Your Projects",
     description:
-      "Turn your idea into production-ready software. The foundation provides a structured path, community support, and visibility to help open source projects grow.",
+      "A structured path from early idea to production-ready software. The foundation provides tooling, community review, and visibility to help open source projects ship and grow.",
     href: "/projects",
     cta: "Build",
   },
