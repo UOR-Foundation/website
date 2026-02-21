@@ -2264,10 +2264,26 @@ async function getStorachaClient() {
       'Generate via: storacha key create && storacha delegation create <did> --base64'
     )
   }
-  const principal = Signer.parse(STORACHA_KEY)
+  console.log('[storacha] KEY prefix:', STORACHA_KEY.substring(0, 8), 'length:', STORACHA_KEY.length)
+  console.log('[storacha] PROOF prefix:', STORACHA_PROOF.substring(0, 8), 'length:', STORACHA_PROOF.length)
+
+  let principal;
+  try {
+    principal = Signer.parse(STORACHA_KEY)
+  } catch (e) {
+    throw new Error(`STORACHA_KEY parse failed: ${e.message}. Key starts with "${STORACHA_KEY.substring(0, 4)}..." (length ${STORACHA_KEY.length}). Expected format: MgCa... (base64pad Ed25519 private key)`)
+  }
+
   const store = new StoreMemory()
   const client = await StorachaClient.create({ principal, store })
-  const proof = await StorachaProof.parse(STORACHA_PROOF)
+
+  let proof;
+  try {
+    proof = await StorachaProof.parse(STORACHA_PROOF)
+  } catch (e) {
+    throw new Error(`STORACHA_PROOF parse failed: ${e.message}. Proof starts with "${STORACHA_PROOF.substring(0, 8)}..." (length ${STORACHA_PROOF.length}). Expected: base64 UCAN delegation from 'storacha delegation create --base64'`)
+  }
+
   const space = await client.addSpace(proof)
   await client.setCurrentSpace(space.did())
   return client
