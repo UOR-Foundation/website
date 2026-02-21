@@ -3,6 +3,7 @@
  */
 export const routeTable = [
   { path: "/", label: "Home" },
+  { path: "/dashboard", label: "Developer Dashboard" },
   { path: "/about", label: "About" },
   { path: "/research", label: "Our Community" },
   { path: "/projects", label: "Your Projects" },
