@@ -378,6 +378,32 @@ function computeUorAddress(bytes: Uint8Array): { glyph: string; length: number }
 }
 
 /**
+ * Encode Braille glyph to ASCII-safe hex representation for HTTP headers.
+ * HTTP headers only accept ASCII (ByteString). Braille U+2800-U+28FF is not ASCII.
+ * Truncates to first 32 codepoints to keep headers reasonable.
+ */
+function glyphToHeaderSafe(glyph: string): string {
+  return [...glyph].slice(0, 32).map(c =>
+    'U+' + (c.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')
+  ).join('');
+}
+
+/**
+ * Strip self-referential fields from a stored JSON-LD envelope to reconstruct
+ * Round 1 bytes for verification. This is necessary because store:cid and
+ * store:uorAddress were computed from the envelope WITHOUT those fields.
+ */
+function stripSelfReferentialFields(parsed: Record<string, unknown>): Record<string, unknown> {
+  const round1 = { ...parsed };
+  delete round1["store:cid"];
+  delete round1["store:cidScope"];
+  delete round1["store:uorAddress"];
+  // Restore the placeholder @id that was used during Round 1 computation
+  round1["@id"] = "https://uor.foundation/store/object/pending";
+  return round1;
+}
+
+/**
  * Build a complete store:StoredObject envelope per spec 1.4.
  * The @id uses the UOR glyph address (URL-encoded) as the IRI fragment.
  */
@@ -2278,7 +2304,7 @@ async function storeResolve(url: URL, rl: RateLimitResult): Promise<Response> {
       ...CORS_HEADERS,
       ...rateLimitHeaders(rl),
       'Content-Type': 'application/ld+json',
-      'X-UOR-Address': uorAddress.glyph.substring(0, 64),
+      'X-UOR-Address': glyphToHeaderSafe(uorAddress.glyph),
       'X-UOR-Byte-Length': String(bytes.length),
       'X-UOR-Source-URL': targetUrl,
       'X-UOR-Space': 'user',
@@ -2333,17 +2359,22 @@ async function pinToIpfs(
 }
 
 async function pinToWeb3Storage(bytes: Uint8Array, ts: string): Promise<PinResult> {
+  const token = Deno.env.get("WEB3_STORAGE_TOKEN");
+  if (!token) {
+    throw new Error(
+      "web3.storage requires a WEB3_STORAGE_TOKEN secret. " +
+      "The legacy anonymous upload API has been sunset. " +
+      "Either configure WEB3_STORAGE_TOKEN or use gateway:'pinata' with PINATA_JWT instead."
+    );
+  }
+
   const formData = new FormData();
   const blob = new Blob([bytes], { type: "application/ld+json" });
   formData.append("file", blob, "uor-object.jsonld");
 
-  const token = Deno.env.get("WEB3_STORAGE_TOKEN");
-  const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-
   const response = await fetch("https://api.web3.storage/upload", {
     method: "POST",
-    headers,
+    headers: { "Authorization": `Bearer ${token}` },
     body: formData,
   });
 
@@ -2453,7 +2484,7 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
   }
 
   const shouldPin = body.pin !== false;
-  const gateway = (body.gateway as string) ?? (Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? 'web3.storage');
+  const gateway = (body.gateway as string) ?? (Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? 'pinata');
   const label = (body.label as string) ?? undefined;
 
   if (!GATEWAY_CONFIGS[gateway]) {
@@ -2571,7 +2602,7 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
     headers: {
       ...CORS_HEADERS,
       'Content-Type': 'application/ld+json',
-      'X-UOR-Address': uorAddress.glyph.substring(0, 64),
+      'X-UOR-Address': glyphToHeaderSafe(uorAddress.glyph),
       'X-IPFS-CID': ipfsCidHeader,
       'X-IPFS-Gateway-URL': ipfsGatewayHeader,
       'X-Store-Dry-Run': String(!shouldPin),
@@ -2635,39 +2666,56 @@ async function dualVerify(
   retrievedBytes: Uint8Array,
   requestedCid: string,
 ): Promise<DualVerificationResult> {
-  // Check 1: CID integrity
-  const recomputedCid = await computeCid(retrievedBytes);
-  const cidMatch = recomputedCid === requestedCid;
-
-  // Check 2: UOR address consistency
+  // Try to parse as JSON-LD to extract stored addresses and reconstruct Round 1
+  let parsed: Record<string, unknown> | null = null;
+  let storedCid: string | null = null;
   let storedUorGlyph: string | null = null;
+
   try {
     const text = new TextDecoder().decode(retrievedBytes);
-    const parsed = JSON.parse(text);
-    const uorAddr = parsed?.["store:uorAddress"] as Record<string, unknown> | undefined;
+    parsed = JSON.parse(text) as Record<string, unknown>;
+    storedCid = (parsed["store:cid"] as string) ?? null;
+    const uorAddr = parsed["store:uorAddress"] as Record<string, unknown> | undefined;
     storedUorGlyph = (uorAddr?.["u:glyph"] as string) ?? null;
   } catch {
-    // Not JSON-LD
+    // Not JSON-LD — fall through to raw verification
   }
 
-  const recomputedUor = computeUorAddress(retrievedBytes);
+  let recomputedCid: string;
+  let recomputedUor: { glyph: string; length: number };
+
+  if (parsed && storedCid) {
+    // This is a UOR StoredObject — strip self-referential fields to reconstruct Round 1
+    const round1 = stripSelfReferentialFields(parsed);
+    const round1Bytes = new TextEncoder().encode(canonicalJsonLd(round1));
+    recomputedCid = await computeCid(round1Bytes);
+    recomputedUor = computeUorAddress(round1Bytes);
+  } else {
+    // Raw content — compute directly from retrieved bytes
+    recomputedCid = await computeCid(retrievedBytes);
+    recomputedUor = computeUorAddress(retrievedBytes);
+  }
+
+  // Compare CID: for UOR objects, compare against the stored CID (which was computed from Round 1)
+  const expectedCid = storedCid ?? requestedCid;
+  const cidMatch = recomputedCid === expectedCid;
+
+  // Compare UOR address
   const uorMatch = storedUorGlyph !== null
     ? recomputedUor.glyph === storedUorGlyph
     : null;
 
-  const storeVerified = uorMatch === true;
+  const storeVerified = cidMatch && uorMatch === true;
 
   return {
     cid_integrity: {
       performed: true,
-      expected_cid: requestedCid,
+      expected_cid: expectedCid,
       computed_cid: recomputedCid,
       match: cidMatch,
       note: cidMatch
-        ? "CID integrity confirmed: retrieved bytes hash to the expected CID."
-        : "CID mismatch. This may indicate: (1) content was modified since storage, " +
-          "(2) the CID was computed from a different serialisation round. " +
-          "The UOR address check is the authoritative integrity signal.",
+        ? "CID integrity confirmed: Round 1 reconstruction matches stored CID."
+        : "CID mismatch. Content may have been modified since storage.",
     },
     uor_consistency: {
       performed: true,
@@ -2684,10 +2732,10 @@ async function dualVerify(
     },
     store_verified: storeVerified,
     verdict: storeVerified
-      ? "VERIFIED: Both UOR address and CID checks confirm content integrity."
+      ? "VERIFIED: Both CID and UOR address checks confirm content integrity."
       : uorMatch === null
       ? "INDETERMINATE: No stored UOR address found in retrieved content."
-      : "INTEGRITY FAILURE: UOR address mismatch. Do not trust this content.",
+      : "INTEGRITY FAILURE: Verification mismatch. Do not trust this content.",
   };
 }
 
@@ -2851,7 +2899,7 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
       'Content-Type': 'application/ld+json',
       'X-UOR-Verified': String(verification.store_verified),
       'X-IPFS-CID': cidParam,
-      'X-UOR-Recomputed-Address': recomputedUor.glyph.substring(0, 64),
+      'X-UOR-Recomputed-Address': glyphToHeaderSafe(recomputedUor.glyph),
       ...rateLimitHeaders(rl),
     },
   });
@@ -2883,7 +2931,7 @@ async function storeWriteContext(req: Request, rl: RateLimitResult): Promise<Res
   const name = (ctx['name'] as string) ?? `context-${Date.now()}`;
   const quantum = (ctx['quantum'] as number) ?? 8;
   const shouldPin = body['pin'] !== false;
-  const gateway = (body['gateway'] as string) ?? (Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? 'web3.storage');
+  const gateway = (body['gateway'] as string) ?? (Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? 'pinata');
   const rawBindings = (ctx['bindings'] as unknown[]) ?? [];
 
   if (!Array.isArray(rawBindings) || rawBindings.length === 0) {
@@ -3177,29 +3225,43 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
   let off = 0;
   for (const c of chunks) { bytes.set(c, off); off += c.length; }
 
-  // Check 1: CID integrity
-  const recomputedCid = await computeCid(bytes);
-  const cidMatch = recomputedCid === cidParam;
-
-  // Check 2: UOR address consistency
-  const recomputedUor = computeUorAddress(bytes);
-
-  // Priority: expected_uor param > stored address in JSON-LD
+  // Parse to detect UOR StoredObject and extract stored addresses
+  let parsed: Record<string, unknown> | null = null;
+  let storedCid: string | null = null;
   let storedUorGlyph: string | null = expectedUor;
-  if (!storedUorGlyph) {
-    try {
-      const parsed = JSON.parse(new TextDecoder().decode(bytes)) as Record<string, unknown>;
-      const uorAddr = parsed?.['store:uorAddress'] as Record<string, unknown> | undefined;
-      storedUorGlyph = (uorAddr?.['u:glyph'] as string) ?? null;
-    } catch {
-      storedUorGlyph = null;
+
+  try {
+    parsed = JSON.parse(new TextDecoder().decode(bytes)) as Record<string, unknown>;
+    storedCid = (parsed["store:cid"] as string) ?? null;
+    if (!storedUorGlyph) {
+      const uorAddr = parsed["store:uorAddress"] as Record<string, unknown> | undefined;
+      storedUorGlyph = (uorAddr?.["u:glyph"] as string) ?? null;
     }
+  } catch {
+    // Not JSON
   }
+
+  // Reconstruct Round 1 bytes for verification if this is a UOR StoredObject
+  let recomputedCid: string;
+  let recomputedUor: { glyph: string; length: number };
+
+  if (parsed && storedCid) {
+    const round1 = stripSelfReferentialFields(parsed);
+    const round1Bytes = new TextEncoder().encode(canonicalJsonLd(round1));
+    recomputedCid = await computeCid(round1Bytes);
+    recomputedUor = computeUorAddress(round1Bytes);
+  } else {
+    recomputedCid = await computeCid(bytes);
+    recomputedUor = computeUorAddress(bytes);
+  }
+
+  const expectedCidForCheck = storedCid ?? cidParam;
+  const cidMatch = recomputedCid === expectedCidForCheck;
 
   const uorMatch = storedUorGlyph !== null
     ? recomputedUor.glyph === storedUorGlyph
     : null;
-  const storeVerified = uorMatch === true;
+  const storeVerified = cidMatch && uorMatch === true;
 
   const verification = {
     cid_integrity: {
@@ -3369,7 +3431,7 @@ async function storeGateways(rl: RateLimitResult): Promise<Response> {
     "@type": "store:GatewayRegistry",
     "store:timestamp": ts,
     "store:defaultReadGateway": DEFAULT_READ_GATEWAY,
-    "store:defaultWriteGateway": Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? "web3.storage",
+    "store:defaultWriteGateway": Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? "pinata",
     "store:gateways": gatewaysWithHealth,
     "store:note":
       "All write operations use the IPFS Pinning Service API (PSA) spec. " +
