@@ -238,7 +238,7 @@ const Projects = () => {
                   {levelProjects.map((project, index) => (
                     <div
                       key={project.name}
-                      className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up"
+                      className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up flex flex-col"
                       style={{ animationDelay: `${index * 0.08}s` }}
                     >
                       {project.image && (
@@ -250,7 +250,7 @@ const Projects = () => {
                           />
                         </div>
                       )}
-                      <div className="p-7 md:p-9">
+                      <div className="p-7 md:p-9 flex flex-col flex-1">
                         <div className="flex items-center justify-between gap-2 mb-5">
                           <span className="text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
                             {project.category}
@@ -266,7 +266,7 @@ const Projects = () => {
                           {project.description}
                         </p>
                         {project.url && (
-                          <div className="mt-6 flex items-center gap-4">
+                          <div className="mt-auto pt-6 flex items-center gap-4">
                             {(project as any).slug && (
                               <Link to={`/projects/${(project as any).slug}`} className="flex items-center gap-2 text-primary text-base font-medium transition-opacity font-body cursor-pointer hover:underline">
                                 Learn more
