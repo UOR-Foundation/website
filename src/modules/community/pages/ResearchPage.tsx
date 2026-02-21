@@ -19,28 +19,8 @@ const coverMap: Record<string, string> = {
   frameworkLaunch: blogFrameworkLaunch,
 };
 
-const categoryResearch: Record<string, Array<{ title: string; authors: string; status: string; description: string; href: string }>> = {
-  mathematics: [
-    {
-      title: "Atlas Embeddings: Exceptional Lie Groups from a Single 96-Vertex Construct",
-      authors: "Alex Flom et al.",
-      status: "Published",
-      description: "Demonstrates that five of the most complex structures in mathematics all come from a single starting point, revealing a shared order beneath apparently unrelated systems.",
-      href: "/research/atlas-embeddings",
-    },
-  ],
-};
-
-const events = [
-  {
-    title: "UOR Community Call",
-    location: "Virtual",
-    date: "March 5, 2026",
-    type: "Community Call",
-    link: "https://discord.com/channels/1342910418754076732/1342910419370774532/1474210293386055772",
-    calendarDate: "20260305T210000Z/20260305T220000Z",
-  },
-];
+import { categoryResearch } from "@/data/research-papers";
+import { events } from "@/data/events";
 
 const tagStyles: Record<string, string> = {
   "Open Research": "bg-primary/10 text-primary",

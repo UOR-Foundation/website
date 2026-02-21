@@ -10,6 +10,7 @@ export interface UorCertificate {
   "@type": "cert:ModuleCertificate";
   "cert:subject": string;
   "cert:cid": string;
+  "cert:canonicalPayload": string;
   "store:uorAddress": { "u:glyph": string; "u:length": number };
   "cert:computedAt": string;
   "cert:specification": "1.0.0";
@@ -33,6 +34,7 @@ export async function generateCertificate(
     "@type": "cert:ModuleCertificate",
     "cert:subject": subject,
     "cert:cid": cid,
+    "cert:canonicalPayload": canonical,
     "store:uorAddress": uorAddress,
     "cert:computedAt": new Date().toISOString(),
     "cert:specification": "1.0.0",

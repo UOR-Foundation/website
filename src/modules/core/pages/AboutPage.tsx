@@ -3,8 +3,10 @@ import type { LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import Layout from "@/modules/core/components/Layout";
 import { governancePrinciples } from "@/data/governance";
+import { whatWeDoCards, ourPrinciplesCards } from "@/data/about-cards";
 
 const govIconMap: Record<string, LucideIcon> = { GitBranch, Shield, Undo2, CheckCircle, Eye, Users };
+const cardIconMap: Record<string, LucideIcon> = { BookOpen, Microscope, Rocket };
 
 const About = () => {
   return (
@@ -52,32 +54,19 @@ const About = () => {
           <div className="animate-fade-in-up" style={{ animationDelay: "0.35s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">What We Do</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                {
-                  icon: BookOpen,
-                  title: "The Framework",
-                  desc: "The open specification for content-based addressing. Six layers from identity to transformation, fully documented."
-                },
-                {
-                  icon: Microscope,
-                  title: "Open Research",
-                  desc: "Community-driven research across disciplines with full transparency and reproducibility."
-                },
-                {
-                  icon: Rocket,
-                  title: "Project Incubation",
-                  desc: "A structured path for open-source projects to grow from early ideas to production-ready tools."
-                },
-              ].map((item) => (
+              {whatWeDoCards.map((item) => {
+                const Icon = cardIconMap[item.iconKey];
+                return (
                 <div
                   key={item.title}
                   className="rounded-xl border border-border/60 bg-card/50 p-5 flex flex-col gap-3"
                 >
-                  <item.icon size={20} className="text-primary" />
+                  {Icon && <Icon size={20} className="text-primary" />}
                   <h3 className="font-display text-base font-semibold text-foreground">{item.title}</h3>
                   <p className="text-sm text-muted-foreground font-body leading-relaxed">{item.desc}</p>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -87,20 +76,7 @@ const About = () => {
           <div className="animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Our Principles</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                {
-                  title: "Transparency",
-                  desc: "Every decision, change, and rule is publicly documented. No closed doors."
-                },
-                {
-                  title: "Interoperability",
-                  desc: "Built for connection, not lock-in. Works with any system, format, or framework."
-                },
-                {
-                  title: "Trust",
-                  desc: "Earned through verifiable proof, not authority. Every claim can be independently checked."
-                },
-              ].map((item) => (
+              {ourPrinciplesCards.map((item) => (
                 <div
                   key={item.title}
                   className="rounded-xl border border-border/60 bg-card/50 p-5 flex flex-col gap-2"
