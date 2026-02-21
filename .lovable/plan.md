@@ -1,118 +1,129 @@
 
 
-# Complete UOR Self-Certification: Canonical Receipts with Rehydration
+# Structural Improvements: Less is More
 
-## Compliance Gaps Found
-
-### 1. Uncertified Data Objects (5 inline arrays still without proofs)
-
-| Data | Location | Status |
-|------|----------|--------|
-| Team members (15 people) | `CTASection.tsx` lines 1-107 | Inline, no certificate |
-| Upcoming events | `ResearchPage.tsx` lines 34-43 | Inline, no certificate |
-| Research papers per category | `ResearchPage.tsx` lines 22-32 | Inline, no certificate |
-| "What We Do" cards (3) | `AboutPage.tsx` lines 55-71 | Inline, no certificate |
-| "Our Principles" cards (3) | `AboutPage.tsx` lines 90-111 | Inline, no certificate |
-
-### 2. Certificates Are Not Objective (Cannot Rehydrate)
-
-The current `UorCertificate` interface stores only the CID and UOR address. It does **not** store the canonical JSON payload. This means you cannot decode the receipt back into the original object. To be truly objective and self-verifiable, each certificate must include the canonical representation so that anyone can:
-
-1. Parse the canonical payload to recover the original object
-2. Re-hash it to confirm the CID matches
-3. Confirm the object is authentic without needing the source code
+A thorough audit of the full repository. The architecture is already strong -- modular, content-addressed, well-typed. The findings below are targeted refinements that reduce redundancy, tighten coupling, and eliminate dead weight without changing any visual behavior.
 
 ---
 
-## What Changes
+## 1. Dead Code: NavLink Component (Remove)
 
-### A. Expand UorCertificate with Canonical Payload
+`src/modules/core/components/NavLink.tsx` is exported from `src/modules/core/index.ts` but **never imported anywhere** in the codebase. The Navbar uses standard `react-router-dom` `<Link>` directly. This is dead weight.
 
-Add a `cert:canonicalPayload` field (the deterministic JSON string) to the `UorCertificate` interface. This makes every certificate a self-contained proof: the payload is the data, the CID is the hash of that data, and anyone can verify one against the other.
-
-### B. Extract 5 Remaining Inline Data Arrays
-
-Create new data files:
-
-| New File | Contents |
-|----------|----------|
-| `src/data/team-members.ts` | 15 team member records (name, role, description, image, link) |
-| `src/data/events.ts` | Upcoming events array |
-| `src/data/research-papers.ts` | Research papers organized by category |
-| `src/data/about-cards.ts` | "What We Do" and "Our Principles" card data |
-
-### C. Register All New Data Objects in Content Registry
-
-Add 4 new entries to `CERTIFIABLE_CONTENT` in `uor-content-registry.ts`:
-
-- `content:team-members`
-- `content:events`
-- `content:research-papers`
-- `content:about-cards`
-
-This brings the total from 11 to 15 certified content objects.
-
-### D. Add Verification Function to Content Registry
-
-Add a `verifyContentCertificate(id)` function that:
-1. Retrieves the certificate for a given content ID
-2. Re-canonicalizes the current data
-3. Re-computes the CID
-4. Compares it to the stored CID
-5. Returns true/false
-
-This mirrors `verifyModule()` in the module registry and makes content certificates genuinely verifiable at runtime rather than just stamped as "verified: true" at creation time.
-
-### E. Update Components to Import from Data Files
-
-- `CTASection.tsx` imports `members` from `src/data/team-members.ts`
-- `ResearchPage.tsx` imports `events` and `categoryResearch` from their respective data files
-- `AboutPage.tsx` imports card data from `src/data/about-cards.ts`
-
-### F. Update Verification Dashboard
-
-Expand the UOR Verification panel to show all 15 content certificates (up from 11), and for each certificate display a truncated canonical payload preview so users can see that the receipt is decodable.
+**Action:** Delete `NavLink.tsx` and remove its export from `core/index.ts`.
 
 ---
 
-## Files to Create
+## 2. Redundant Alias in CTASection
 
-| File | Purpose |
-|------|---------|
-| `src/data/team-members.ts` | Serializable team member data |
-| `src/data/events.ts` | Serializable events data |
-| `src/data/research-papers.ts` | Serializable research papers by category |
-| `src/data/about-cards.ts` | Serializable "What We Do" and "Our Principles" cards |
+`CTASection.tsx` imports `teamMembers` then immediately aliases it to `const members = teamMembers`. This adds a line for no reason.
 
-## Files to Modify
+**Action:** Use `teamMembers` directly throughout the component. Remove the alias.
 
-| File | Changes |
-|------|---------|
-| `src/lib/uor-certificate.ts` | Add `cert:canonicalPayload` field to `UorCertificate` interface and populate it during generation |
-| `src/lib/uor-content-registry.ts` | Add 4 new certifiable content entries; add `verifyContentCertificate()` function |
-| `src/modules/landing/components/CTASection.tsx` | Import `members` from data file instead of inline |
-| `src/modules/community/pages/ResearchPage.tsx` | Import `events` and `categoryResearch` from data files |
-| `src/modules/core/pages/AboutPage.tsx` | Import card data from data file |
-| `src/modules/core/components/UorVerification.tsx` | Show canonical payload preview for each certificate |
-| `src/modules/core/components/UorMetadata.tsx` | Include canonical payloads in JSON-LD metadata |
+---
 
-## What Does Not Change
+## 3. Donate Page: Inline Data Not in Registry
 
-- Visual design, layout, animations, or styling
-- The UOR addressing library (`uor-address.ts`)
-- The module registry (`uor-registry.ts`)
-- Existing 11 content certificates (they gain the canonical payload field but keep the same CIDs)
-- Edge function code
-- Any user-facing behavior beyond the expanded verification panel
+`DonatePage.tsx` defines a `projects` array (3 donation initiatives with financials) inline. This is the only remaining page with significant inline data that is not extracted to `src/data/` and not registered in the content certificate registry.
 
-## Technical Detail: Rehydration Flow
+**Action:** Extract to `src/data/donation-projects.ts`, register as `content:donation-projects` in the content registry, and import from the data file. This completes full UOR compliance -- every data object on the site becomes certified.
 
-```text
-Certificate Receipt
-    |
-    +-- cert:canonicalPayload  -->  JSON.parse()  -->  Original Object
-    |
-    +-- cert:cid  -->  Compare against SHA-256(canonicalPayload)  -->  Verified (true/false)
+---
+
+## 4. Standard Page: Inline Application Cards
+
+`StandardPage.tsx` defines a 6-item "Where It Applies" array inline (Semantic Web, Proof Based Computation, etc.). This is uncertified.
+
+**Action:** Extract to `src/data/applications.ts`, register as `content:applications` in the content registry.
+
+---
+
+## 5. API Page: 1,257 Lines in One File
+
+`ApiPage.tsx` is the largest file in the codebase at 1,257 lines. It contains:
+- All layer/endpoint data definitions (~600 lines of constants)
+- Three reusable sub-components (`CopyButton`, `EndpointPanel`, `LayerSection`)
+- The main page component
+
+This violates the "less is more" principle. The data is already typed in `src/modules/api-explorer/types.ts` but the types are redeclared locally in the file instead of imported.
+
+**Action:**
+- Extract the layer/endpoint data constants into `src/data/api-layers.ts` and register as `content:api-layers` in the content registry
+- Import the existing types from `types.ts` instead of redeclaring them
+- Extract `CopyButton`, `EndpointPanel`, and `LayerSection` into `src/modules/api-explorer/components/`
+- The page file should drop to ~200 lines: imports, inline styles, and section layout
+
+---
+
+## 6. Duplicated Type Declarations
+
+Several module `types.ts` files define types that are also declared inline in their data files or components:
+
+- `MaturityLevel` is defined in both `src/modules/projects/types.ts` AND `src/data/projects.ts`
+- `Param`, `Endpoint`, `V2Stub`, `Layer`, `DiscoveryEndpoint` are defined in both `src/modules/api-explorer/types.ts` AND inline in `ApiPage.tsx`
+- `TagType` is exported from `src/data/highlights.ts` but a similar type exists in `src/modules/landing/types.ts`
+
+**Action:** Each type should live in exactly one place. The module `types.ts` files are the canonical source. Data files and components import from there. Remove all duplicate declarations.
+
+---
+
+## 7. Hardcoded External URLs
+
+The Discord invite URL `https://discord.gg/ZwuZaNyuve` appears **65 times** across 10 files. The GitHub org URL `https://github.com/UOR-Foundation` appears **111 times** across 12 files. If either changes, it requires a multi-file search-and-replace.
+
+**Action:** Create `src/data/external-links.ts` with named constants:
 ```
+export const DISCORD_URL = "https://discord.gg/ZwuZaNyuve";
+export const GITHUB_ORG_URL = "https://github.com/UOR-Foundation";
+export const GITHUB_GOVERNANCE_URL = "...";
+export const GITHUB_RESEARCH_URL = "...";
+export const DONORBOX_URL = "...";
+```
+Replace all hardcoded instances with imports. One source of truth for every external URL.
 
-This makes every certificate a self-contained, objective mathematical proof. The receipt IS the object, encoded canonically, with a deterministic hash proving it has not been altered. No external context is needed to verify it.
+---
+
+## 8. Barrel Export Bloat
+
+Module barrel files (`index.ts`) export internal components that are only used within the module itself. For example, `src/modules/landing/index.ts` exports `HeroSection`, `IntroSection`, `PillarsSection`, etc. -- but these are only imported by `IndexPage.tsx` within the same module. Only `IndexPage` is imported externally (by `App.tsx`).
+
+**Action:** Each barrel file should only export what is consumed outside the module. Internal components stay internal. This reduces the public API surface of each module and makes dependencies clearer. Specifically:
+
+- `landing/index.ts`: Keep only `IndexPage`
+- `framework/index.ts`: Keep only `StandardPage`
+- `community/index.ts`: Already correct (pages only)
+- `core/index.ts`: Keep `Layout`, `AboutPage`, `NotFoundPage`, UI primitives, hooks, and `UorVerification`/`UorMetadata`. Remove `Navbar`, `Footer`, `ScrollProgress`, `NavLink` (internal only)
+
+---
+
+## 9. Sidebar CSS Variables (Unused)
+
+`src/index.css` defines 7 sidebar CSS variables (`--sidebar-background`, `--sidebar-foreground`, etc.) in both light and dark themes. There is no sidebar component anywhere in the codebase. These are likely from the initial shadcn/ui scaffold.
+
+**Action:** Remove all `--sidebar-*` CSS variables from both `:root` and `.dark` blocks.
+
+---
+
+## 10. ProjectsPage: Client-Side Form Submission Bypass
+
+`ProjectsPage.tsx` still contains a client-side form submission using an image beacon hack to bypass CORS to a Google Apps Script URL with a hardcoded token (`uor-f0undati0n-s3cure-t0ken-2024x`). Meanwhile, a proper `project-submit` edge function already exists that handles validation, rate limiting, and secure token storage.
+
+**Action:** Update the form to POST to the `project-submit` edge function instead of using the image beacon hack. Remove the hardcoded token from the client bundle entirely.
+
+---
+
+## Summary of Changes
+
+| Category | Action | Impact |
+|----------|--------|--------|
+| Dead code | Remove `NavLink.tsx` | -28 lines |
+| Redundant alias | Clean `CTASection.tsx` | -1 line, clearer intent |
+| Uncertified data | Extract donate projects + application cards | +2 content certificates |
+| Giant file | Split `ApiPage.tsx` into data + components | -1000 lines from single file |
+| Duplicate types | Single source of truth per type | Fewer type declarations |
+| Hardcoded URLs | Centralize in `external-links.ts` | 176 replacements, 1 source |
+| Barrel bloat | Trim exports to public API only | Cleaner module boundaries |
+| Unused CSS | Remove sidebar variables | -14 lines of dead CSS |
+| Security | Use edge function for form submission | Remove hardcoded token |
+
+Total net effect: fewer files touched at refactor time, every data object certified, no dead code, no duplicate types, no hardcoded secrets in the client.
