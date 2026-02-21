@@ -2441,7 +2441,13 @@ async function pinToStoracha(
   )
 
   // uploadFile returns the CID of the UnixFS directory wrapping the file
-  const dirCid = await client.uploadFile(file)
+  let dirCid;
+  try {
+    dirCid = await client.uploadFile(file)
+  } catch (e) {
+    console.error('[storacha] uploadFile error:', e.message, e.cause ?? '')
+    throw new Error(`Storacha uploadFile failed: ${e.message}`)
+  }
   const cidStr = dirCid.toString()
 
   return {
