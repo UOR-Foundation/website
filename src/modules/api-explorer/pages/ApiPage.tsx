@@ -235,46 +235,7 @@ const Api = () => {
         </div>
       </section>
 
-      {/* Canonicalization: how inputs are normalized */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
-        <div className="container max-w-5xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
-            Normalization
-          </p>
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
-            Eight rules for consistency
-          </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-4">
-            Before the API processes any expression, it simplifies it into its cleanest form using eight rules. This means that different ways of writing the same thing always produce the same result. Two agents working independently will always agree.
-          </p>
-          <p className="text-sm text-muted-foreground/60 font-body leading-relaxed max-w-2xl mb-10">
-            This is what makes certificates deterministic: the same computation, run by anyone, always produces the same verifiable receipt.
-          </p>
-          <div className="space-y-3">
-            {canonicalizationRules.map((rule) => (
-              <div
-                key={rule.number}
-                className="rounded-2xl border border-border bg-card p-5 flex flex-col sm:flex-row sm:items-start gap-4"
-              >
-                <div className="shrink-0 flex items-center gap-3 sm:w-48">
-                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                    {rule.number}
-                  </span>
-                  <p className="font-display text-base font-bold text-foreground">{rule.name}</p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed">{rule.plain}</p>
-                  <div className="flex items-center gap-2 mt-2 font-mono text-xs">
-                    <span className="text-muted-foreground/60 bg-muted/50 px-2 py-1 rounded">{rule.before}</span>
-                    <ArrowRight size={11} className="text-muted-foreground/40 shrink-0" />
-                    <span className="text-primary/80 bg-primary/10 px-2 py-1 rounded border border-primary/20">{rule.after}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* Derivation Certificates */}
       <section className="py-12 md:py-20 bg-background border-b border-border">
