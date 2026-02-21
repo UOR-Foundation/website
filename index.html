@@ -41,7 +41,7 @@
          F3 FIXED: unsafe-inline removed from script-src (SPA script externalised)
          F4 OPEN:  unsafe-inline retained in style-src pending Tailwind CSS audit
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://donorbox.org; frame-src https://donorbox.org; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.uor.foundation; object-src 'none'; base-uri 'self'; form-action 'self' https://donorbox.org; frame-ancestors 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://donorbox.org; frame-src https://donorbox.org https://www.youtube.com https://www.youtube-nocookie.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.uor.foundation; object-src 'none'; base-uri 'self'; form-action 'self' https://donorbox.org; frame-ancestors 'self';">
 
     <!-- Donorbox widget — loaded as static script for Subresource Integrity eligibility -->
     <script src="https://donorbox.org/widgets.js" paypalExpress="false" defer></script>
