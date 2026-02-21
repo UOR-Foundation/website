@@ -19,7 +19,13 @@ import {
 
 /* ─────────────────────────── Constants ─────────────────────────── */
 
+/** Display URL used in curl snippets and documentation */
 const BASE = "https://api.uor.foundation/v1";
+
+/** Runtime URL used for actual fetch calls from the browser.
+ *  The custom domain api.uor.foundation may not resolve from all origins
+ *  (e.g. preview/localhost), so we route through the Supabase edge function URL. */
+const RUNTIME_BASE = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "erwfuxphwcvynxhfbvql"}.supabase.co/functions/v1/uor-api`;
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
@@ -637,6 +643,16 @@ function EndpointPanel({ ep }: { ep: Endpoint }) {
     return `${BASE}${ep.path}${qs ? `?${qs}` : ""}`;
   };
 
+  /** URL used for actual fetch calls (goes through Supabase edge function) */
+  const buildRuntimeUrl = () => {
+    const qp = ep.params
+      .filter(p => p.in === "query")
+      .map(p => [p.name, paramValues[p.name] ?? ""] as [string, string])
+      .filter(([, v]) => v !== "");
+    const qs = new URLSearchParams(qp).toString();
+    return `${RUNTIME_BASE}${ep.path}${qs ? `?${qs}` : ""}`;
+  };
+
   const curlCmd = ep.method === "GET"
     ? `curl "${buildUrl()}"`
     : `curl -X POST "${BASE}${ep.path}" \\\n  -H "Content-Type: application/json" \\\n  -d '${ep.defaultBody ?? "{}"}'`;
@@ -648,7 +664,7 @@ function EndpointPanel({ ep }: { ep: Endpoint }) {
     try {
       const opts: RequestInit = { method: ep.method, headers: { "Content-Type": "application/json" } };
       if (ep.method === "POST" && bodyValue) opts.body = bodyValue;
-      const res = await fetch(buildUrl(), opts);
+      const res = await fetch(buildRuntimeUrl(), opts);
       const json = await res.json();
       setResponse(JSON.stringify(json, null, 2));
     } catch (e: unknown) {
