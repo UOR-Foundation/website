@@ -67,6 +67,28 @@ export function computeUorAddress(bytes: Uint8Array): { glyph: string; length: n
   return { glyph, length: bytes.length };
 }
 
+/**
+ * Encode Braille glyph to ASCII-safe hex representation for HTTP headers.
+ */
+export function glyphToHeaderSafe(glyph: string): string {
+  return [...glyph].slice(0, 32).map(c =>
+    'U+' + (c.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')
+  ).join('');
+}
+
+/**
+ * Strip self-referential fields from a stored JSON-LD envelope to reconstruct
+ * Round 1 bytes for verification.
+ */
+export function stripSelfReferentialFields(parsed: Record<string, unknown>): Record<string, unknown> {
+  const round1 = { ...parsed };
+  delete round1["store:cid"];
+  delete round1["store:cidScope"];
+  delete round1["store:uorAddress"];
+  round1["@id"] = "https://uor.foundation/store/object/pending";
+  return round1;
+}
+
 // ── Canonical JSON-LD serialisation ─────────────────────────────────────────
 export function canonicalJsonLd(obj: unknown): string {
   if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
