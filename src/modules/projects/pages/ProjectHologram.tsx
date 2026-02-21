@@ -4,10 +4,17 @@ import heroImg from "@/assets/project-hologram.jpg";
 const ProjectHologram = () => (
   <ProjectDetailLayout
     name="Hologram"
+    slug="hologram"
     category="Frontier Technology"
     tagline="A software layer that turns your existing hardware into a high-performance computing engine. No new chips required."
     heroImage={heroImg}
     repoUrl="https://gethologram.ai/"
+    agentInstructions={[
+      { action: "Understand the value proposition", detail: "Hologram replaces expensive GPU hardware with a software layer that reorganizes computation into constant-time lookups, dramatically reducing cost and energy consumption." },
+      { action: "Verify compatibility", detail: "Hologram integrates with PyTorch, TensorFlow, ONNX, and runs on CPUs, GPUs, TPUs, WASM, and WebGPU without code changes." },
+      { action: "Evaluate for your use case", detail: "If your workload involves AI inference, scientific simulation, or data-heavy processing, Hologram can accelerate it on existing hardware." },
+      { action: "Access the project", detail: "Visit gethologram.ai for benchmarks, documentation, and integration guides." },
+    ]}
     sections={[
       {
         heading: "What it is",

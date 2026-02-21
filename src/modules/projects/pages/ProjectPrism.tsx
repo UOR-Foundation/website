@@ -5,10 +5,17 @@ import { GITHUB_PRISM_URL } from "@/data/external-links";
 const ProjectPrism = () => (
   <ProjectDetailLayout
     name="Prism"
+    slug="prism"
     category="Core Infrastructure"
     tagline="The working engine behind the UOR Framework. Prism turns the framework's rules into running code: encoding data, assigning addresses, and verifying computations."
     heroImage={heroImg}
     repoUrl={GITHUB_PRISM_URL}
+    agentInstructions={[
+      { action: "Understand the role", detail: "Prism is the reference implementation of UOR. It encodes any digital value into a unique triadic coordinate (datum, stratum, spectrum) derived from the value itself." },
+      { action: "Verify the algebra", detail: "Run 'python prism.py --verbose' to check every algebraic law against every value in the 8-bit space. If it passes, the system is proven coherent." },
+      { action: "Use for content addressing", detail: "Prism assigns content-derived addresses. Two independent systems encoding the same value will always produce the same coordinate, enabling cross-system data matching." },
+      { action: "Trace computations", detail: "Every operation produces a derivation certificate. Use these to audit, reproduce, and verify any computation without re-running it." },
+    ]}
     sections={[
       {
         heading: "What it is",
