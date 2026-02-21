@@ -240,6 +240,17 @@ const UOR_CONTEXT_URL = "https://uor.foundation/contexts/uor-v1.jsonld";
 // Imports:    u:, schema:, state:, cert:, proof:, derivation:
 // ════════════════════════════════════════════════════════════════════════════
 
+// ── Re-export shared store functions from lib/store.ts ──────────────────────
+// These are also used by the test suite at store/tests/store.test.ts
+import {
+  KERNEL_SPACE_TYPES as KERNEL_SPACE_TYPES_IMPORTED,
+  validateStorableType as validateStorableTypeImported,
+  UOR_JSONLD_CONTEXT as UOR_STORE_CONTEXT_IMPORTED,
+  computeUorAddress as computeUorAddressImported,
+  computeCid as computeCidImported,
+  canonicalJsonLd as canonicalJsonLdImported,
+} from "./lib/store.ts";
+
 // ── Kernel-space types: NEVER storable on IPFS ──────────────────────────────
 // These are compiled into the runtime and recomputed on demand — ROM.
 const KERNEL_SPACE_TYPES: ReadonlySet<string> = new Set([
