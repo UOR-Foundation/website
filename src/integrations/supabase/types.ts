@@ -53,6 +53,41 @@ export type Database = {
         }
         Relationships: []
       }
+      uor_bindings: {
+        Row: {
+          address: string
+          binding_type: string
+          content: string
+          context_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          address: string
+          binding_type?: string
+          content: string
+          context_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          address?: string
+          binding_type?: string
+          content?: string
+          context_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uor_bindings_context_id_fkey"
+            columns: ["context_id"]
+            isOneToOne: false
+            referencedRelation: "uor_contexts"
+            referencedColumns: ["context_id"]
+          },
+        ]
+      }
       uor_certificates: {
         Row: {
           cert_chain: Json | null
@@ -87,6 +122,30 @@ export type Database = {
             referencedColumns: ["derivation_id"]
           },
         ]
+      }
+      uor_contexts: {
+        Row: {
+          binding_count: number
+          capacity: number
+          context_id: string
+          created_at: string
+          quantum: number
+        }
+        Insert: {
+          binding_count?: number
+          capacity: number
+          context_id: string
+          created_at?: string
+          quantum: number
+        }
+        Update: {
+          binding_count?: number
+          capacity?: number
+          context_id?: string
+          created_at?: string
+          quantum?: number
+        }
+        Relationships: []
       }
       uor_datums: {
         Row: {
@@ -177,6 +236,38 @@ export type Database = {
           },
         ]
       }
+      uor_frames: {
+        Row: {
+          binding_count: number
+          bindings: Json
+          context_id: string
+          created_at: string
+          frame_id: string
+        }
+        Insert: {
+          binding_count?: number
+          bindings?: Json
+          context_id: string
+          created_at?: string
+          frame_id: string
+        }
+        Update: {
+          binding_count?: number
+          bindings?: Json
+          context_id?: string
+          created_at?: string
+          frame_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uor_frames_context_id_fkey"
+            columns: ["context_id"]
+            isOneToOne: false
+            referencedRelation: "uor_contexts"
+            referencedColumns: ["context_id"]
+          },
+        ]
+      }
       uor_receipts: {
         Row: {
           coherence_verified: boolean
@@ -248,6 +339,58 @@ export type Database = {
           value?: number
         }
         Relationships: []
+      }
+      uor_transitions: {
+        Row: {
+          added: number
+          context_id: string
+          created_at: string
+          from_frame: string
+          id: string
+          removed: number
+          to_frame: string
+        }
+        Insert: {
+          added?: number
+          context_id: string
+          created_at?: string
+          from_frame: string
+          id?: string
+          removed?: number
+          to_frame: string
+        }
+        Update: {
+          added?: number
+          context_id?: string
+          created_at?: string
+          from_frame?: string
+          id?: string
+          removed?: number
+          to_frame?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uor_transitions_context_id_fkey"
+            columns: ["context_id"]
+            isOneToOne: false
+            referencedRelation: "uor_contexts"
+            referencedColumns: ["context_id"]
+          },
+          {
+            foreignKeyName: "uor_transitions_from_frame_fkey"
+            columns: ["from_frame"]
+            isOneToOne: false
+            referencedRelation: "uor_frames"
+            referencedColumns: ["frame_id"]
+          },
+          {
+            foreignKeyName: "uor_transitions_to_frame_fkey"
+            columns: ["to_frame"]
+            isOneToOne: false
+            referencedRelation: "uor_frames"
+            referencedColumns: ["frame_id"]
+          },
+        ]
       }
       uor_triples: {
         Row: {
