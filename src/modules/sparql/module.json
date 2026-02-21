@@ -1,0 +1,20 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "sparql",
+  "version": "1.0.0",
+  "description": "SPARQL-like query interface over the UOR triple store, with epistemic grading and federation support.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["sparql:"],
+  "exports": [
+    "parseSparql",
+    "executeSparql",
+    "federatedQuery",
+    "SparqlEditorPage"
+  ],
+  "dependencies": {
+    "kg-store": "^1.0.0"
+  },
+  "routes": ["/sparql-editor"],
+  "assets": []
+}

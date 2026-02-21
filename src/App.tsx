@@ -18,6 +18,7 @@ import { ApiPage } from "@/modules/api-explorer";
 import { RingExplorerPage } from "@/modules/ring-core";
 import { DerivationLabPage } from "@/modules/derivation";
 import { KnowledgeGraphPage } from "@/modules/kg-store";
+import { SparqlEditorPage } from "@/modules/sparql";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => {
           <Route path="/ring-explorer" element={<RingExplorerPage />} />
           <Route path="/derivation-lab" element={<DerivationLabPage />} />
           <Route path="/knowledge-graph" element={<KnowledgeGraphPage />} />
+          <Route path="/sparql-editor" element={<SparqlEditorPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
