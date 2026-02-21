@@ -458,7 +458,7 @@ const LAYERS: Layer[] = [
     title: "Persistence",
     oneLiner: "Store objects to IPFS. Retrieve and verify them. Dual-address integrity.",
     whyItMatters:
-      "Every stored object carries two independent addresses: a UOR address (semantic identity) and an IPFS CID (storage identity). Verification checks both. Neither trusts the other. Neither trusts the gateway.",
+      "AI agents have no persistent, verifiable memory across sessions. UOR × IPFS gives every agent a decentralised, dual-verified, permanent store. Two write backends: Pinata (dedicated gateway, production) and Storacha (UCAN-based, Filecoin-backed, 5GB free tier, web3.storage successor). Every stored object carries two independent addresses — a UOR address (semantic identity) and an IPFS CID (storage identity). Verification checks both independently.",
     solves: "Value: Permanent, decentralised, verifiable storage. Agents can persist state across sessions and share verified artifacts.",
     endpoints: [
       {
@@ -491,7 +491,7 @@ const LAYERS: Layer[] = [
         params: [
           { name: "object", in: "body", type: "object (JSON-LD with @type)", required: true, description: "The UOR object to store. Must be User-space or Bridge-space." },
           { name: "pin", in: "body", type: "boolean", required: false, default: "true", description: "false = dry run (compute addresses only)." },
-          { name: "gateway", in: "body", type: "string", required: false, default: "pinata", enum: ["pinata"], description: "Write gateway. Pinata is the supported provider." },
+          { name: "gateway", in: "body", type: "string", required: false, default: "pinata", description: "Write gateway. 'pinata' = Pinata dedicated (requires PINATA_JWT). 'storacha' = Storacha Network, web3.storage successor (requires STORACHA_KEY + STORACHA_PROOF, 5GB free). 'web3.storage' = legacy/degraded." },
           { name: "label", in: "body", type: "string", required: false, description: "Optional human-readable label." },
         ],
         defaultBody: JSON.stringify({ object: { "@type": "cert:TransformCertificate", "cert:verified": true, "cert:quantum": 8 }, pin: false }, null, 2),
