@@ -1,7 +1,5 @@
 import { teamMembers } from "@/data/team-members";
 
-const members = teamMembers;
-
 const CTASection = () => {
   return (
     <section className="py-10 md:py-16 bg-background">
@@ -33,7 +31,7 @@ const CTASection = () => {
 
         {/* Members Grid */}
         <div className="mt-12 md:mt-16 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-8 md:gap-y-12">
-          {members.map((member, index) => (
+          {teamMembers.map((member, index) => (
             <a
               key={member.name}
               href={member.link}

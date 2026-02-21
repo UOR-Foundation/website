@@ -1,7 +1,12 @@
 import Layout from "@/modules/core/components/Layout";
+import { ExternalLink, Globe, ShieldCheck, Bot, Microscope, Layers, Rocket } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { applications } from "@/data/applications";
+import { GITHUB_FRAMEWORK_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
 import UORDiagram from "@/modules/framework/components/UORDiagram";
 import FrameworkLayers from "@/modules/framework/components/FrameworkLayers";
-import { ExternalLink, Globe, ShieldCheck, Bot, Microscope, Layers, Rocket } from "lucide-react";
+
+const iconMap: Record<string, LucideIcon> = { Globe, ShieldCheck, Bot, Microscope, Layers, Rocket };
 
 const Standard = () => {
   return (
@@ -23,7 +28,7 @@ const Standard = () => {
             style={{ animationDelay: "0.35s" }}
           >
             <a
-              href="https://uor-foundation.github.io/UOR-Framework/"
+              href={GITHUB_FRAMEWORK_DOCS_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary"
@@ -77,23 +82,19 @@ const Standard = () => {
             When every system shares one way to address data, new capabilities emerge.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { title: "Semantic Web", text: "Make data understandable by both people and machines, so systems can work together without custom translations.", icon: Globe },
-              { title: "Proof Based Computation", text: "Run a computation once and produce a receipt that anyone can check. No need to re-run it, no need to trust the person who ran it.", icon: ShieldCheck },
-              { title: "Agentic AI", text: "Give AI systems a single, reliable map of all available data so they can find, verify, and use information on their own.", icon: Bot },
-              { title: "Open Science", text: "Make research data findable, reproducible, and composable across institutions and fields.", icon: Microscope },
-              { title: "Cross Domain Unification", text: "Let different fields share data and ideas without losing meaning in translation. One shared system, many disciplines.", icon: Layers },
-              { title: "Frontier Technologies", text: "Provide a foundation for emerging fields like quantum computing and next-generation AI, where reliable data identity is essential.", icon: Rocket },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
-              >
-                <item.icon size={20} className="text-primary mb-4" />
-                <h3 className="font-display text-base md:text-lg font-bold text-foreground mb-2">{item.title}</h3>
-                <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed">{item.text}</p>
-              </div>
-            ))}
+            {applications.map((item) => {
+              const Icon = iconMap[item.iconKey];
+              return (
+                <div
+                  key={item.title}
+                  className="rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
+                >
+                  {Icon && <Icon size={20} className="text-primary mb-4" />}
+                  <h3 className="font-display text-base md:text-lg font-bold text-foreground mb-2">{item.title}</h3>
+                  <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed">{item.text}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -125,7 +126,7 @@ const Standard = () => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <a
-              href="https://uor-foundation.github.io/UOR-Framework/"
+              href={GITHUB_FRAMEWORK_DOCS_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out bg-primary text-primary-foreground hover:opacity-90 hover:shadow-lg inline-flex items-center justify-center gap-2"
@@ -134,7 +135,7 @@ const Standard = () => {
               <ExternalLink size={15} />
             </a>
             <a
-              href="https://github.com/UOR-Foundation/UOR-Framework"
+              href={GITHUB_FRAMEWORK_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"

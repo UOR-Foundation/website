@@ -22,6 +22,9 @@ import { teamMembers } from "@/data/team-members";
 import { events } from "@/data/events";
 import { categoryResearch } from "@/data/research-papers";
 import { whatWeDoCards, ourPrinciplesCards } from "@/data/about-cards";
+import { donationProjects } from "@/data/donation-projects";
+import { applications } from "@/data/applications";
+import { LAYERS, DISCOVERY_ENDPOINTS } from "@/data/api-layers";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -72,6 +75,9 @@ const CERTIFIABLE_CONTENT: Array<{
   { subjectId: "content:events", label: "Community Events", data: events },
   { subjectId: "content:research-papers", label: "Research Papers", data: categoryResearch },
   { subjectId: "content:about-cards", label: "About Page Cards", data: { whatWeDoCards, ourPrinciplesCards } },
+  { subjectId: "content:donation-projects", label: "Donation Projects", data: donationProjects },
+  { subjectId: "content:applications", label: "Application Domains", data: applications },
+  { subjectId: "content:api-layers", label: "API Layers", data: { layers: LAYERS, discovery: DISCOVERY_ENDPOINTS } },
 ];
 
 // ── Initialization ──────────────────────────────────────────────────────────
@@ -112,11 +118,6 @@ export async function initializeContentRegistry(): Promise<void> {
 
 // ── Verification ────────────────────────────────────────────────────────────
 
-/**
- * Verify a content certificate by rehydrating the canonical payload,
- * re-hashing it, and comparing the CID. This is a true objective proof:
- * the receipt contains the data, and the hash proves integrity.
- */
 export async function verifyContentCertificate(id: string): Promise<boolean> {
   const entry = contentCertificates.get(id);
   if (!entry) return false;
@@ -124,16 +125,12 @@ export async function verifyContentCertificate(id: string): Promise<boolean> {
   const storedPayload = entry.certificate["cert:canonicalPayload"];
   const storedCid = entry.certificate["cert:cid"];
 
-  // Re-hash the stored canonical payload
   const bytes = new TextEncoder().encode(storedPayload);
   const recomputedCid = await computeCid(bytes);
 
   return recomputedCid === storedCid;
 }
 
-/**
- * Verify ALL content certificates. Returns a map of subjectId → verified.
- */
 export async function verifyAllContentCertificates(): Promise<Map<string, boolean>> {
   const results = new Map<string, boolean>();
   const entries = Array.from(contentCertificates.keys());

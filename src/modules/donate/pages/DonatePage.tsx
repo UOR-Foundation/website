@@ -1,48 +1,8 @@
 import Layout from "@/modules/core/components/Layout";
 import { Heart, ExternalLink, ChevronDown } from "lucide-react";
 import { useState } from "react";
-
-const projects = [
-  {
-    title: "UOR Standard Development",
-    raised: 42000,
-    target: 200000,
-    description:
-      "Fund the core development and formalization of the Universal Object Reference standard, the foundational specification that gives every piece of data one permanent, verifiable address.",
-    highlights: [
-      "Formal specification and mathematical proofs",
-      "Reference implementations in multiple languages",
-      "Community review and governance tooling",
-    ],
-    donateUrl: "https://www.uor.foundation/donate",
-  },
-  {
-    title: "Open Science Infrastructure",
-    raised: 18500,
-    target: 150000,
-    description:
-      "Support open, reproducible research infrastructure built on UOR. Enable scientists worldwide to share, reference, and build upon each other's work with full provenance and transparency.",
-    highlights: [
-      "Reproducible research pipelines",
-      "Open dataset indexing and discovery",
-      "Cross-institutional collaboration tools",
-    ],
-    donateUrl: "https://www.uor.foundation/donate",
-  },
-  {
-    title: "Community & Education",
-    raised: 7200,
-    target: 50000,
-    description:
-      "Grow the UOR community through workshops, hackathons, documentation, and educational resources. Help developers and researchers adopt the standard and contribute back.",
-    highlights: [
-      "Developer workshops and hackathons",
-      "Comprehensive documentation and tutorials",
-      "Fellowship program for emerging contributors",
-    ],
-    donateUrl: "https://www.uor.foundation/donate",
-  },
-];
+import { donationProjects, type DonationProject } from "@/data/donation-projects";
+import { DONATE_URL, DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", {
@@ -52,7 +12,7 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
-const ProjectCard = ({ project }: { project: (typeof projects)[0] }) => {
+const ProjectCard = ({ project }: { project: DonationProject }) => {
   const [expanded, setExpanded] = useState(false);
   const progress = Math.min((project.raised / project.target) * 100, 100);
 
@@ -142,7 +102,7 @@ const Donate = () => {
             style={{ animationDelay: "0.4s" }}
           >
             <a
-              href="https://www.uor.foundation/donate"
+              href={DONATE_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary inline-flex items-center gap-2"
@@ -151,7 +111,7 @@ const Donate = () => {
               Donate Now
             </a>
             <a
-              href="https://github.com/UOR-Foundation"
+              href={GITHUB_ORG_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-outline inline-flex items-center gap-2"
@@ -172,7 +132,7 @@ const Donate = () => {
             Projects to support
           </h2>
           <div className="space-y-5">
-            {projects.map((project) => (
+            {donationProjects.map((project) => (
               <ProjectCard key={project.title} project={project} />
             ))}
           </div>
@@ -187,7 +147,7 @@ const Donate = () => {
           </h2>
           <div className="grid md:grid-cols-2 gap-5">
             <a
-              href="https://www.uor.foundation/donate"
+              href={DONATE_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="group block rounded-2xl border border-border/20 p-6 md:p-8 hover:border-primary/30 transition-all duration-300"
@@ -200,7 +160,7 @@ const Donate = () => {
               </p>
             </a>
             <a
-              href="https://discord.gg/ZwuZaNyuve"
+              href={DISCORD_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="group block rounded-2xl border border-border/20 p-6 md:p-8 hover:border-primary/30 transition-all duration-300"
