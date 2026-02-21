@@ -41,3 +41,24 @@ export interface ModuleRouteConfig {
 export interface LayoutProps {
   children: React.ReactNode;
 }
+
+/**
+ * UOR content-addressed identity embedded in module manifests.
+ */
+export interface ModuleIdentityFields {
+  "store:cid": string;
+  "store:uorAddress": { "u:glyph": string; "u:length": number };
+}
+
+/**
+ * UOR verification certificate for any describable component.
+ */
+export interface UorCertificateContract {
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld";
+  "@type": "cert:ModuleCertificate";
+  "cert:subject": string;
+  "cert:cid": string;
+  "store:uorAddress": { "u:glyph": string; "u:length": number };
+  "cert:computedAt": string;
+  "cert:specification": "1.0.0";
+}

@@ -20,5 +20,9 @@ export { useToast, toast } from "./hooks/use-toast";
 // Utilities
 export { cn } from "@/lib/utils";
 
+// UOR verification components
+export { default as UorVerification } from "./components/UorVerification";
+export { default as UorMetadata } from "./components/UorMetadata";
+
 // Types
-export type { ModuleManifest, NavItem, ModuleRouteConfig, LayoutProps } from "./types";
+export type { ModuleManifest, NavItem, ModuleRouteConfig, LayoutProps, ModuleIdentityFields, UorCertificateContract } from "./types";
