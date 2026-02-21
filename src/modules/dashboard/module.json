@@ -1,0 +1,9 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "schema:SoftwareModule",
+  "schema:name": "dashboard",
+  "schema:version": "1.0.0",
+  "schema:description": "Unified developer dashboard — the entry point for the UOR Semantic Web Infrastructure.",
+  "u:namespace": [],
+  "u:dependencies": ["ring-core", "kg-store", "self-verify", "epistemic", "agent-tools"]
+}

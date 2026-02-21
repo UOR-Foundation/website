@@ -23,6 +23,7 @@ import { ConformancePage } from "@/modules/shacl";
 import { CodeKnowledgeGraphPage } from "@/modules/code-kg";
 import { AgentConsolePage } from "@/modules/agent-tools";
 import AuditPage from "@/modules/self-verify/pages/AuditPage";
+import { DashboardPage } from "@/modules/dashboard";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<IndexPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/research" element={<ResearchPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
