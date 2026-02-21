@@ -204,7 +204,7 @@ const ProjectDetailLayout = ({
 
                         <button
                           onClick={() => setVerified(null)}
-                          className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline transition-colors cursor-pointer font-body mt-1"
+                          className="inline-flex items-center gap-1.5 text-sm text-section-dark-foreground underline underline-offset-2 hover:text-section-dark-foreground/80 transition-colors cursor-pointer font-body mt-1"
                         >
                           Reset verification
                         </button>
