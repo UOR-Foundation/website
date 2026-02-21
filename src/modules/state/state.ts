@@ -7,6 +7,9 @@
  *   - Entry/exit conditions for agent coordination
  *   - All possible transitions (one per ring operation)
  *
+ * Also provides multi-agent evaluation context persistence
+ * via uor_contexts, uor_bindings, uor_frames, uor_transitions tables.
+ *
  * Delegates to:
  *   - ring-core for all arithmetic
  *   - lib/uor-ring for classifyByte
@@ -77,6 +80,43 @@ export interface StateFrame {
   "state:timestamp": string;
 }
 
+// ── Multi-agent context types ───────────────────────────────────────────────
+
+export interface EvalContext {
+  context_id: string;
+  quantum: number;
+  capacity: number;
+  binding_count: number;
+  created_at: string;
+}
+
+export interface EvalBinding {
+  id: string;
+  context_id: string;
+  address: string;
+  content: string;
+  binding_type: string;
+  created_at: string;
+}
+
+export interface EvalFrame {
+  frame_id: string;
+  context_id: string;
+  bindings: Record<string, string>[];
+  binding_count: number;
+  created_at: string;
+}
+
+export interface EvalTransition {
+  id: string;
+  from_frame: string;
+  to_frame: string;
+  added: number;
+  removed: number;
+  context_id: string;
+  created_at: string;
+}
+
 // ── Unary operation names ───────────────────────────────────────────────────
 
 const UNARY_OPS = ["neg", "bnot", "succ", "pred"] as const;
@@ -85,29 +125,24 @@ const UNARY_OPS = ["neg", "bnot", "succ", "pred"] as const;
 
 /**
  * Compute a full state:Frame for a value x in ring R_n.
- * Mirrors the API's `/user/state` endpoint exactly.
  */
 export function computeStateFrame(ring: UORRing, x: number): StateFrame {
   const bytes = ring.toBytes(x);
   const m = Number(ring.cycle);
 
-  // Classification via existing classifyByte
   const classification = classifyByte(x, ring.bits);
   const component = classification.component;
   const reason = classification.reason;
 
-  // Flags
   const isIdentity = x === 0;
   const isUnit = x === 1 || x === m - 1;
   const isPhaseBoundary = x === Math.floor(m / 2);
   const isIrreducible = x % 2 !== 0 && !isUnit;
 
-  // Critical identity
   const negBnot = fromBytes(ring.neg(ring.bnot(bytes)));
   const succX = fromBytes(ring.succ(bytes));
   const critHolds = negBnot === succX;
 
-  // Entry condition
   const entryCondition: EntryCondition = {
     "@type": "state:EntryCondition",
     "state:isStableEntry": isIdentity || isUnit,
@@ -118,7 +153,6 @@ export function computeStateFrame(ring: UORRing, x: number): StateFrame {
       : `x=${x} is not an identity or unit — not a preferred entry state`,
   };
 
-  // Exit condition
   const exitCondition: ExitCondition = {
     "@type": "state:ExitCondition",
     "state:isPhaseBoundary": isPhaseBoundary,
@@ -130,7 +164,6 @@ export function computeStateFrame(ring: UORRing, x: number): StateFrame {
       : `x=${x} is interior — no exit condition triggered`,
   };
 
-  // Transitions (unary only for state exploration)
   const transitions: StateTransition[] = UNARY_OPS.map((op) => {
     const resultBytes = ring[op](bytes);
     const nextVal = fromBytes(resultBytes);
@@ -180,7 +213,7 @@ export function computeStateFrame(ring: UORRing, x: number): StateFrame {
   };
 }
 
-// ── Persistence ─────────────────────────────────────────────────────────────
+// ── Single-frame persistence (uor_state_frames) ────────────────────────────
 
 export async function persistStateFrame(frame: StateFrame): Promise<void> {
   const { error } = await supabase.from("uor_state_frames" as any).insert({
@@ -204,4 +237,119 @@ export async function getRecentStateFrames(limit = 20): Promise<StateFrame[]> {
     .limit(limit);
   if (error) throw error;
   return (data ?? []).map((r: any) => r.frame_data as StateFrame);
+}
+
+// ── Multi-agent evaluation context persistence ─────────────────────────────
+
+/**
+ * Create a new evaluation context for multi-agent coordination.
+ */
+export async function createContext(quantum: number, capacity: number): Promise<EvalContext> {
+  const context_id = `ctx:${crypto.randomUUID()}`;
+  const row = { context_id, quantum, capacity, binding_count: 0 };
+  const { error } = await supabase.from("uor_contexts" as any).insert(row as any);
+  if (error) throw new Error(`createContext failed: ${error.message}`);
+  return { ...row, created_at: new Date().toISOString() };
+}
+
+/**
+ * Add a binding (address → content) to an evaluation context.
+ */
+export async function addBinding(
+  contextId: string, address: string, content: string, bindingType = "value"
+): Promise<EvalBinding> {
+  const { data, error } = await supabase.from("uor_bindings" as any).insert({
+    context_id: contextId, address, content, binding_type: bindingType,
+  } as any).select().single();
+  if (error) throw new Error(`addBinding failed: ${error.message}`);
+
+  // Increment binding_count on context
+  await supabase.from("uor_contexts" as any)
+    .update({ binding_count: supabase.rpc ? undefined : 0 } as any)
+    .eq("context_id", contextId);
+
+  return data as unknown as EvalBinding;
+}
+
+/**
+ * Capture a snapshot frame for a context with its current bindings.
+ */
+export async function captureFrame(
+  contextId: string, bindings: Record<string, string>[]
+): Promise<EvalFrame> {
+  const frame_id = `frame:${crypto.randomUUID()}`;
+  const row = {
+    frame_id,
+    context_id: contextId,
+    bindings: bindings as unknown as Record<string, unknown>,
+    binding_count: bindings.length,
+  };
+  const { error } = await supabase.from("uor_frames" as any).insert(row as any);
+  if (error) throw new Error(`captureFrame failed: ${error.message}`);
+  return { ...row, bindings, created_at: new Date().toISOString() };
+}
+
+/**
+ * Record a transition between two frames within a context.
+ */
+export async function recordTransition(
+  fromFrame: string, toFrame: string, contextId: string, added: number, removed: number
+): Promise<EvalTransition> {
+  const { data, error } = await supabase.from("uor_transitions" as any).insert({
+    from_frame: fromFrame, to_frame: toFrame, context_id: contextId, added, removed,
+  } as any).select().single();
+  if (error) throw new Error(`recordTransition failed: ${error.message}`);
+  return data as unknown as EvalTransition;
+}
+
+/**
+ * Get all frames for a given context, ordered by creation time.
+ */
+export async function getContextFrames(contextId: string): Promise<EvalFrame[]> {
+  const { data, error } = await supabase
+    .from("uor_frames" as any)
+    .select("*")
+    .eq("context_id", contextId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as EvalFrame[];
+}
+
+/**
+ * Get all contexts, most recent first.
+ */
+export async function getRecentContexts(limit = 20): Promise<EvalContext[]> {
+  const { data, error } = await supabase
+    .from("uor_contexts" as any)
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as unknown as EvalContext[];
+}
+
+/**
+ * Get bindings for a context.
+ */
+export async function getContextBindings(contextId: string): Promise<EvalBinding[]> {
+  const { data, error } = await supabase
+    .from("uor_bindings" as any)
+    .select("*")
+    .eq("context_id", contextId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as EvalBinding[];
+}
+
+/**
+ * Get transitions for a context.
+ */
+export async function getContextTransitions(contextId: string): Promise<EvalTransition[]> {
+  const { data, error } = await supabase
+    .from("uor_transitions" as any)
+    .select("*")
+    .eq("context_id", contextId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as EvalTransition[];
 }

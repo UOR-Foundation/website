@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Activity, Atom, BookOpen, Brain, ChevronRight, Code2, Database,
   FlaskConical, GitBranch, Layers, LayoutDashboard, Network, Search,
-  Shield, ShieldCheck, Terminal, Zap,
+  Shield, ShieldCheck, Terminal, Zap, Clock,
 } from "lucide-react";
 import uorIcon from "@/assets/uor-icon-new.png";
 import { Q0 } from "@/modules/ring-core/ring";
@@ -16,6 +16,8 @@ import { uor_derive } from "@/modules/agent-tools/tools";
 import type { DeriveOutput } from "@/modules/agent-tools/tools";
 import { ALL_GRADES, gradeInfo } from "@/modules/epistemic/grading";
 import { EpistemicBadge } from "@/modules/epistemic";
+import { executeSparql } from "@/modules/sparql/executor";
+import type { SparqlResult } from "@/modules/sparql/executor";
 
 // ── Sidebar nav items ───────────────────────────────────────────────────────
 
@@ -29,6 +31,7 @@ const NAV_ITEMS = [
   { path: "/agent-console", label: "Agent Console", icon: Terminal },
   { path: "/conformance", label: "Conformance", icon: ShieldCheck },
   { path: "/audit", label: "Audit Trail", icon: Shield },
+  { path: "/sessions", label: "Sessions", icon: Clock },
 ];
 
 // ── Module list for health grid ─────────────────────────────────────────────
@@ -37,6 +40,7 @@ const MODULES = [
   "ring-core", "identity", "triad", "derivation", "kg-store", "sparql",
   "shacl", "resolver", "semantic-index", "code-kg", "agent-tools",
   "epistemic", "jsonld", "morphism", "self-verify", "framework", "community",
+  "state",
 ];
 
 // ── Page ────────────────────────────────────────────────────────────────────
@@ -73,6 +77,12 @@ const DashboardPage = () => {
   // Identity verifier
   const [identityX, setIdentityX] = useState("42");
   const [identityResult, setIdentityResult] = useState<string | null>(null);
+
+  // Quick query (SPARQL)
+  const [sparqlQuery, setSparqlQuery] = useState("SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 5");
+  const [sparqlResult, setSparqlResult] = useState<SparqlResult | null>(null);
+  const [sparqlLoading, setSparqlLoading] = useState(false);
+  const [sparqlError, setSparqlError] = useState<string | null>(null);
 
   // ── Boot sequence ───────────────────────────────────────────────────────
 
@@ -139,6 +149,17 @@ const DashboardPage = () => {
     const rhs = ring.fromBytes(succX);
     setIdentityResult(lhs === rhs ? `✓ neg(bnot(${x})) = ${lhs} = succ(${x}) — VERIFIED` : `✗ FAILED: ${lhs} ≠ ${rhs}`);
   }, [identityX]);
+
+  // ── Quick SPARQL ──────────────────────────────────────────────────────
+
+  const handleSparql = useCallback(async () => {
+    setSparqlLoading(true); setSparqlError(null); setSparqlResult(null);
+    try {
+      const r = await executeSparql(sparqlQuery);
+      setSparqlResult(r);
+    } catch (e) { setSparqlError(String(e)); }
+    finally { setSparqlLoading(false); }
+  }, [sparqlQuery]);
 
   // ── Epistemic distribution (simple estimate) ─────────────────────────
 
@@ -332,21 +353,35 @@ const DashboardPage = () => {
               )}
             </div>
 
-            {/* Quick nav */}
+            {/* Quick Query (SPARQL) */}
             <div className="rounded-xl border border-border bg-card p-5">
               <h2 className="text-sm font-display font-semibold mb-3 flex items-center gap-2">
-                <Network size={14} className="text-primary" /> Quick Navigation
+                <Search size={14} className="text-primary" /> Quick Query
               </h2>
-              <div className="grid grid-cols-2 gap-2">
-                {NAV_ITEMS.filter((n) => n.path !== "/dashboard").map((item) => (
-                  <Link key={item.path} to={item.path}
-                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/5 transition-all text-sm text-muted-foreground hover:text-foreground group">
-                    <item.icon size={14} />
-                    <span>{item.label}</span>
-                    <ChevronRight size={12} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
-                ))}
+              <div className="flex gap-2 mb-3">
+                <input value={sparqlQuery} onChange={(e) => setSparqlQuery(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-lg border border-border bg-muted/20 text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  placeholder="SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 5" />
+                <button onClick={handleSparql} disabled={sparqlLoading} className="btn-primary text-xs !py-2 disabled:opacity-50">
+                  {sparqlLoading ? "…" : "Query"}
+                </button>
               </div>
+              {sparqlError && <p className="text-xs text-destructive font-mono">{sparqlError}</p>}
+              {sparqlResult && sparqlResult.rows.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-muted-foreground mb-1">{sparqlResult.totalCount} results · {sparqlResult.executionTimeMs}ms</p>
+                  {sparqlResult.rows.slice(0, 5).map((row, i) => (
+                    <div key={i} className="flex items-center gap-2 py-1 border-b border-border/30 last:border-0">
+                      <EpistemicBadge grade={row.epistemic_grade} size="sm" />
+                      <span className="text-[10px] font-mono text-foreground truncate flex-1">{row.subject}</span>
+                      <span className="text-[10px] font-mono text-muted-foreground truncate">{row.predicate}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {sparqlResult && sparqlResult.rows.length === 0 && (
+                <p className="text-xs text-muted-foreground">No results. Ingest data via <Link to="/knowledge-graph" className="text-primary underline">Knowledge Graph</Link> first.</p>
+              )}
             </div>
           </div>
 
