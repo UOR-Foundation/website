@@ -33,6 +33,8 @@ import { computePartition } from "@/modules/resolver/partition";
 import type { PartitionResult, ClosureMode } from "@/modules/resolver/partition";
 import { parseTerm } from "./parser";
 import { serializeTerm } from "@/modules/ring-core/canonicalization";
+import { recordTrace } from "@/modules/trace";
+import type { TraceStep } from "@/modules/trace";
 
 // ── Shared helpers ──────────────────────────────────────────────────────────
 
@@ -86,6 +88,22 @@ export async function uor_derive(input: DeriveInput): Promise<DeriveOutput> {
 
   // Persist receipt
   try { await ingestReceipt(receipt); } catch { /* non-fatal */ }
+
+  // Stage 7: Record computation trace
+  const traceSteps: TraceStep[] = [
+    { index: 0, operation: "parse", input: input.term, output: serializeTerm(term), durationMs: 0 },
+    { index: 1, operation: "derive", input: serializeTerm(term), output: derivationResult.resultValue, durationMs: 0 },
+    { index: 2, operation: "verify", input: derivationResult.derivationId, output: receipt.selfVerified, durationMs: 0 },
+  ];
+  try {
+    await recordTrace(
+      derivationResult.derivationId,
+      `uor_derive:${input.term}`,
+      traceSteps,
+      ring.quantum,
+      receipt.receiptId
+    );
+  } catch { /* non-fatal */ }
 
   return {
     derivation_id: derivationResult.derivationId,

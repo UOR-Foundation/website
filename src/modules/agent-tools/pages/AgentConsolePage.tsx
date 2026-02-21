@@ -8,6 +8,7 @@ import {
   uor_partition,
 } from "../tools";
 import { crossQuantumTransform } from "@/modules/morphism";
+import { executeResolutionCycle } from "../resolution-cycle";
 import type {
   DeriveOutput,
   QueryOutput,
@@ -16,10 +17,11 @@ import type {
   PartitionOutput,
 } from "../tools";
 import type { CrossQuantumResult } from "@/modules/morphism";
+import type { ResolutionResult } from "../resolution-cycle";
 import { parseTerm } from "../parser";
 import { serializeTerm } from "@/modules/ring-core/canonicalization";
 
-type TabId = "derive" | "query" | "verify" | "correlate" | "partition" | "transform" | "chat";
+type TabId = "derive" | "query" | "verify" | "correlate" | "partition" | "transform" | "resolve" | "chat";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "derive", label: "Derive" },
@@ -28,6 +30,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "correlate", label: "Correlate" },
   { id: "partition", label: "Partition" },
   { id: "transform", label: "Transform" },
+  { id: "resolve", label: "Resolve" },
   { id: "chat", label: "Agent Chat" },
 ];
 
@@ -294,6 +297,58 @@ function TransformTab() {
   );
 }
 
+function ResolveTab() {
+  const [query, setQuery] = useState("42");
+  const [quantum, setQuantum] = useState(0);
+  const [result, setResult] = useState<ResolutionResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const execute = useCallback(async () => {
+    setLoading(true); setError(null);
+    try {
+      const r = await executeResolutionCycle(query, quantum);
+      setResult(r);
+    } catch (e) { setError(String(e)); }
+    finally { setLoading(false); }
+  }, [query, quantum]);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-muted-foreground mb-2">
+        Execute the full 8-stage agent resolution cycle: Context → Type → Entity → Partition → Fact → Certificate → Trace → Transform
+      </p>
+      <div className="flex gap-3">
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="42 or 'integer'" className="flex-1 px-4 py-2 rounded-lg border border-border bg-card text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+        <select value={quantum} onChange={(e) => setQuantum(Number(e.target.value))} className="px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm">
+          <option value={0}>Q0</option><option value={1}>Q1</option>
+        </select>
+        <button onClick={execute} disabled={loading} className="btn-primary text-sm disabled:opacity-50">{loading ? "…" : "Resolve"}</button>
+      </div>
+      {error && <p className="text-sm text-destructive font-mono">{error}</p>}
+      {result && (
+        <div>
+          <div className="flex items-center gap-3 mb-3">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-semibold ${result.selfVerified ? "bg-green-500/20 text-green-400" : "bg-amber-500/20 text-amber-400"}`}>
+              {result.selfVerified ? "✓ SELF-VERIFIED" : "⚠ PARTIAL"}
+            </span>
+            <span className="text-xs text-muted-foreground">{result.totalDurationMs}ms · {result.stages.length} stages</span>
+          </div>
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            {result.stages.map((s) => (
+              <div key={s.stage} className="rounded-lg border border-border bg-muted/30 p-2 text-center">
+                <p className="text-[10px] text-muted-foreground">{s.name}</p>
+                <p className="text-xs font-mono text-foreground">{s.durationMs}ms</p>
+              </div>
+            ))}
+          </div>
+          <ResultPanel data={result} label="Resolution Cycle Result" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ChatTab() {
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<{ role: "user" | "agent"; text: string }[]>([]);
@@ -398,7 +453,7 @@ const AgentConsolePage = () => {
             Agent Console
           </h1>
           <p className="text-muted-foreground mb-8 max-w-2xl">
-            The 5 canonical tool functions — the "system calls" of the Semantic Web.
+            The 5 canonical tool functions plus the 8-stage resolution cycle — the "system calls" of the Semantic Web.
             Each tool produces a self-verified canonical receipt.
           </p>
 
@@ -427,6 +482,7 @@ const AgentConsolePage = () => {
             {activeTab === "correlate" && <CorrelateTab />}
             {activeTab === "partition" && <PartitionTab />}
             {activeTab === "transform" && <TransformTab />}
+            {activeTab === "resolve" && <ResolveTab />}
             {activeTab === "chat" && <ChatTab />}
           </div>
         </div>

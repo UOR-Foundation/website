@@ -40,7 +40,7 @@ const MODULES = [
   "ring-core", "identity", "triad", "derivation", "kg-store", "sparql",
   "shacl", "resolver", "semantic-index", "code-kg", "agent-tools",
   "epistemic", "jsonld", "morphism", "self-verify", "framework", "community",
-  "state",
+  "state", "trace", "observable",
 ];
 
 // ── Page ────────────────────────────────────────────────────────────────────

@@ -1,0 +1,11 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "observable",
+  "version": "1.0.0",
+  "description": "Observable Facts — content-addressed data streams for fact retrieval",
+  "namespace": "observable:",
+  "dependencies": ["ring-core", "identity"],
+  "exports": ["recordObservable", "queryObservables"],
+  "tables": ["uor_observables"]
+}
