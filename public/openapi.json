@@ -1035,10 +1035,11 @@
                 "https://gateway.pinata.cloud",
                 "https://ipfs.io",
                 "https://w3s.link",
-                "https://cloudflare-ipfs.com"
+                "https://cloudflare-ipfs.com",
+                "https://storacha.link"
               ],
               "default": "https://uor.mypinata.cloud",
-              "description": "IPFS read gateway. Default is the dedicated Pinata gateway (fastest, most reliable). Use CIDv0 (Qm...) for reliable reads."
+              "description": "IPFS read gateway. Default is the dedicated Pinata gateway (fastest, most reliable). For Storacha-stored objects, use https://storacha.link with the directory CID and optional ?filename= parameter."
             }
           },
           {
@@ -1160,10 +1161,11 @@
                 "https://gateway.pinata.cloud",
                 "https://ipfs.io",
                 "https://w3s.link",
-                "https://cloudflare-ipfs.com"
+                "https://cloudflare-ipfs.com",
+                "https://storacha.link"
               ],
               "default": "https://uor.mypinata.cloud",
-              "description": "IPFS read gateway. Default is the dedicated Pinata gateway."
+              "description": "IPFS read gateway. Default is the dedicated Pinata gateway. For Storacha-stored objects, use https://storacha.link with the directory CID."
             }
           },
           {

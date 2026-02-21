@@ -2710,7 +2710,28 @@ function readVarint(buf: Uint8Array, pos: number): [number, number] {
   return [result, i];
 }
 
+// ── Gateway URL Builder ──────────────────────────────────────────────────────
+function buildGatewayFetchUrl(gateway: string, cid: string, filename?: string): string {
+  // Storacha subdomain format: https://{cid}.ipfs.storacha.link/{filename}
+  if (gateway.includes('storacha.link') || gateway.includes('ipfs.storacha.link')) {
+    const base = `https://${cid}.ipfs.storacha.link`;
+    return filename ? `${base}/${filename}` : base;
+  }
+  // Pinata dedicated gateway (existing)
+  if (gateway.includes('mypinata.cloud')) {
+    return `${gateway}/ipfs/${cid}`;
+  }
+  // Standard IPFS path gateway (ipfs.io, cloudflare, w3s.link)
+  return `${gateway}/ipfs/${cid}`;
+}
+
 function unwrapDagPbUnixFS(raw: Uint8Array): Uint8Array {
+  // Storacha subdomain gateway (https://{cid}.ipfs.storacha.link/{filename})
+  // serves unwrapped file content directly — no dag-pb unwrapping needed.
+  // Pinata dedicated gateway (https://uor.mypinata.cloud/ipfs/{cid})
+  // also serves unwrapped content.
+  // Public gateways (ipfs.io) may return dag-pb blocks — unwrapper handles this.
+
   // Try JSON.parse first — if it works, the content isn't dag-pb wrapped
   try {
     JSON.parse(new TextDecoder().decode(raw));
@@ -2878,9 +2899,10 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
     gateway = gatewayOverride;
   }
 
-  // Fetch from IPFS gateway — dedicated Pinata gateway serves unwrapped file content
-  // For the dedicated gateway, append pinataGatewayToken for authentication
-  let ipfsUrl = `${gateway}/ipfs/${cidParam}`;
+  // Fetch from IPFS gateway — use buildGatewayFetchUrl for correct URL format
+  // Storacha uses subdomain format, Pinata uses path format, others use standard path
+  const filenameHint = url.searchParams.get('filename') ?? undefined;
+  let ipfsUrl = buildGatewayFetchUrl(gateway, cidParam, filenameHint);
   const pinataDedicatedGw = PINATA_DEDICATED_GATEWAY;
   if (gateway === pinataDedicatedGw) {
     const gwToken = Deno.env.get("PINATA_GATEWAY_TOKEN") ?? "";
@@ -2900,6 +2922,7 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
     fetchResponse = await fetch(ipfsUrl, {
       signal: controller.signal,
       headers: {
+        'Accept': 'application/ld+json, application/json, application/octet-stream, */*',
         'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/read)',
       },
     });
@@ -3281,8 +3304,9 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
     gateway = gatewayOverride;
   }
 
-  // Fetch from IPFS gateway — dedicated Pinata gateway serves unwrapped file content
-  let ipfsUrl = `${gateway}/ipfs/${cidParam}`;
+  // Fetch from IPFS gateway — use buildGatewayFetchUrl for correct URL format
+  const filenameHint = url.searchParams.get('filename') ?? undefined;
+  let ipfsUrl = buildGatewayFetchUrl(gateway, cidParam, filenameHint);
   const pinataDedicatedGw = PINATA_DEDICATED_GATEWAY;
   if (gateway === pinataDedicatedGw) {
     const gwToken = Deno.env.get("PINATA_GATEWAY_TOKEN") ?? "";
@@ -3302,6 +3326,7 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
     fetchResponse = await fetch(ipfsUrl, {
       signal: controller.signal,
       headers: {
+        'Accept': 'application/ld+json, application/json, application/octet-stream, */*',
         'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/verify)',
       },
     });
