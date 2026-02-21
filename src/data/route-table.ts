@@ -18,4 +18,5 @@ export const routeTable = [
   { path: "/projects/atomic-language-model", label: "Project: Atomic Language Model" },
   { path: "/projects/prism", label: "Project: Prism" },
   { path: "/sparql-editor", label: "SPARQL Editor" },
+  { path: "/conformance", label: "Conformance Suite" },
 ];
