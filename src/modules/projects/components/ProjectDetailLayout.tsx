@@ -112,20 +112,20 @@ const ProjectDetailLayout = ({
                 {showCert ? "Hide certificate" : "View certificate"}
               </button>
               {showCert && (
-                <div className="mt-3 rounded-xl border border-primary/15 bg-section-dark px-5 py-4 animate-fade-in-up">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-primary font-body mb-1.5">
+                <div className="mt-3 rounded-xl border border-border bg-section-dark px-5 py-4 animate-fade-in-up">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-section-dark-foreground font-body mb-2">
                     UOR Content Certificate
                   </p>
-                  <p className="text-xs text-section-dark-foreground/70 font-mono break-all leading-relaxed">
-                    <span className="text-section-dark-foreground/40">cid:</span>{" "}
+                  <p className="text-sm text-section-dark-foreground/90 font-mono break-all leading-relaxed">
+                    <span className="text-section-dark-foreground/50">cid:</span>{" "}
                     {certificate["cert:cid"]}
                   </p>
-                  <p className="text-xs text-section-dark-foreground/70 font-mono mt-1">
-                    <span className="text-section-dark-foreground/40">addr:</span>{" "}
+                  <p className="text-sm text-section-dark-foreground/90 font-mono mt-1.5">
+                    <span className="text-section-dark-foreground/50">addr:</span>{" "}
                     <span className="tracking-widest">{certificate["store:uorAddress"]["u:glyph"].slice(0, 32)}…</span>
-                    <span className="text-section-dark-foreground/40 ml-2">({certificate["store:uorAddress"]["u:length"]} bytes)</span>
+                    <span className="text-section-dark-foreground/50 ml-2">({certificate["store:uorAddress"]["u:length"]} bytes)</span>
                   </p>
-                  <p className="text-xs text-section-dark-foreground/40 font-mono mt-1">
+                  <p className="text-sm text-section-dark-foreground/60 font-mono mt-1.5">
                     subject: {certificate["cert:subject"]} · spec {certificate["cert:specification"]}
                   </p>
 
