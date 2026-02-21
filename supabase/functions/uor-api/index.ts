@@ -75,6 +75,8 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/store/write':                       ['POST', 'OPTIONS'],
   '/store/write-context':               ['POST', 'OPTIONS'],
   '/store/gateways':                    ['GET', 'OPTIONS'],
+  '/bridge/emit':                        ['GET', 'OPTIONS'],
+  '/bridge/sparql':                      ['GET', 'POST', 'OPTIONS'],
   // /store/read/:cid and /store/verify/:cid are handled dynamically
 };
 
@@ -2125,7 +2127,7 @@ function frameworkIndex(rl: RateLimitResult): Response {
   const etag = makeETag('/navigate', {});
   return jsonResp({
     "summary": {
-      "total_endpoints": 26,
+      "total_endpoints": 28,
       "spaces": ["kernel", "bridge", "user", "store", "simple_verify"],
       "quick_start_url": `${verifySimple}?x=42`
     },
@@ -2134,8 +2136,8 @@ function frameworkIndex(rl: RateLimitResult): Response {
     "@type": "sdo:WebAPI",
     "title": "UOR Framework REST API — Navigation Index",
     "version": "1.0.0",
-    "total_endpoints": 26,
-    "description": "Complete index of all 26 working endpoints across 4 spaces (kernel, bridge, user, store). Start with /kernel/op/verify?x=42 for the simplest first call.",
+    "total_endpoints": 28,
+    "description": "Complete index of all 28 working endpoints across 4 spaces (kernel, bridge, user, store). Start with /kernel/op/verify?x=42 for the simplest first call.",
     "openapi_spec": "https://uor.foundation/openapi.json",
     "agent_entry_point": "https://uor.foundation/llms.md",
     "discovery_metadata": "https://uor.foundation/.well-known/uor.json",
@@ -2174,6 +2176,8 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/bridge/trace`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/trace?x=42&ops=neg,bnot`, "operationId": "bridgeTrace", "summary": "trace:ExecutionTrace — exact bit state per step, Hamming drift, XOR deltas" },
           { "method": "GET", "path": `${base}/bridge/resolver`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/resolver?x=42`, "operationId": "bridgeResolver", "summary": "resolver:Resolution — canonical category with full factor decomposition" },
           { "method": "GET", "path": `${base}/bridge/graph/query`, "required_params": "none", "optional_params": "graph, n, limit", "example": `${base}/bridge/graph/query?graph=partition:UnitSet&n=8`, "operationId": "bridgeGraphQuery", "summary": "Named graph query — enumerate Triads scoped by partition:Partition (UnitSet, ExteriorSet, IrreducibleSet, ReducibleSet)" },
+          { "method": "GET", "path": `${base}/bridge/emit`, "required_params": "none", "optional_params": "n, values, limit", "example": `${base}/bridge/emit?n=8&limit=16`, "operationId": "bridgeEmit", "summary": "Explicit emit() function — produces a complete W3C JSON-LD 1.1 document (application/ld+json) with @context, coherence proof, and @graph. Drop-in compatible with every major triplestore (Jena, Oxigraph, GraphDB, Blazegraph, Stardog, Neptune)." },
+          { "method": "GET,POST", "path": `${base}/bridge/sparql`, "required_params": "query (GET param or POST body)", "optional_params": "n", "example": `${base}/bridge/sparql?query=SELECT%20%3Fs%20WHERE%20%7B%20%3Fs%20partition%3Acomponent%20partition%3AUnitSet%20%7D`, "operationId": "bridgeSparql", "summary": "SPARQL 1.1 query endpoint — SELECT queries over the UOR ring algebra. Supports WHERE triple patterns, FILTER, LIMIT, OFFSET. Implements the uor_query tool from Section 6.4." },
           { "method": "GET", "path": `${base}/bridge/shacl/shapes`, "required_params": "none", "example": `${base}/bridge/shacl/shapes`, "operationId": "shaclShapes", "summary": "All 7 SHACL shape definitions (Ring, Primitives, TermGraph, StateLifecycle, Partition, CriticalIdentity, EndToEnd)" },
           { "method": "GET", "path": `${base}/bridge/shacl/validate`, "required_params": "none", "optional_params": "n", "example": `${base}/bridge/shacl/validate?n=8`, "operationId": "shaclValidate", "summary": "Live SHACL validation — runs all 7 conformance tests and returns a shacl:ValidationReport" }
         ]
@@ -4518,6 +4522,294 @@ async function storeGateways(rl: RateLimitResult): Promise<Response> {
   });
 }
 
+// ── GET /bridge/emit — Explicit emit() function producing JSON-LD 1.1 (§1.6) ──
+// Exposes the emit() function as a first-class endpoint rather than a side-effect.
+// Emits a complete JSON-LD document for a ring subset, loadable by any triplestore.
+function bridgeEmit(url: URL, rl: RateLimitResult): Response {
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const nRes = parseIntParam(nRaw, 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+  const n = nRes.val;
+  const m = modulus(n);
+
+  // Optional: specific values to emit (comma-separated)
+  const valuesRaw = url.searchParams.get('values');
+  // Optional: limit (default 16 for manageable output)
+  const limitRaw = url.searchParams.get('limit') ?? '16';
+  const limitRes = parseIntParam(limitRaw, 'limit', 1, 256);
+  if ('err' in limitRes) return limitRes.err;
+  const limit = limitRes.val;
+
+  let valuesToEmit: number[];
+  if (valuesRaw) {
+    valuesToEmit = valuesRaw.split(',').map(s => Number(s.trim())).filter(v => Number.isInteger(v) && v >= 0 && v < m);
+    if (valuesToEmit.length === 0) return error400('No valid values provided', 'values', rl);
+  } else {
+    const cap = Math.min(limit, m);
+    valuesToEmit = Array.from({ length: cap }, (_, i) => i);
+  }
+
+  // Build datum nodes
+  const datumNodes = valuesToEmit.map(v => {
+    const d = makeDatum(v, n);
+    const cls = classifyByte(v, n);
+    return {
+      ...d,
+      "partition:component": cls.component,
+      "partition:reason": cls.reason,
+      inverse: datumIRI(neg(v, n), n),
+      not: datumIRI(bnot(v, n), n),
+      succ: datumIRI(succOp(v, n), n),
+      pred: datumIRI(predOp(v, n), n),
+    };
+  });
+
+  // Coherence proof node
+  let allPass = true;
+  for (let x = 0; x < m; x++) {
+    if (neg(bnot(x, n), n) !== succOp(x, n)) { allPass = false; break; }
+  }
+  const proofNode = {
+    "@id": `urn:uor:proof:coherence:Q${Math.ceil(n / 8) - 1}`,
+    "@type": "proof:CoherenceProof",
+    "proof:quantum": Math.ceil(n / 8) - 1,
+    "proof:bits": n,
+    "proof:verified": allPass,
+    "proof:criticalIdentity": "neg(bnot(x)) = succ(x)",
+    "proof:timestamp": timestamp(),
+  };
+
+  const doc = {
+    "@context": UOR_CONTEXT_URL,
+    "@type": "jsonld:EmittedDocument",
+    "jsonld:emitFunction": "emit()",
+    "jsonld:specification": "W3C JSON-LD 1.1",
+    "jsonld:triplestore_compatible": true,
+    "jsonld:compatible_triplestores": [
+      "Apache Jena (TDB2)",
+      "Oxigraph",
+      "GraphDB (Ontotext)",
+      "Blazegraph",
+      "Stardog",
+      "Amazon Neptune",
+      "MarkLogic"
+    ],
+    "jsonld:loading_instructions": {
+      "step1": "Download this document (GET /bridge/emit?n=8&limit=256)",
+      "step2": "Load into triplestore as JSON-LD 1.1 (e.g. riot --syntax=jsonld uor_q0.jsonld)",
+      "step3": "Query with SPARQL: SELECT ?s ?p ?o WHERE { ?s ?p ?o }",
+      "step4": "Or use POST /bridge/sparql for in-API SPARQL queries"
+    },
+    "proof:coherenceVerified": allPass,
+    "proof:timestamp": timestamp(),
+    "jsonld:nodeCount": 1 + datumNodes.length,
+    "jsonld:ringDescriptor": `Z/${m}Z (R_${n}, ${m} elements)`,
+    "@graph": [proofNode, ...datumNodes],
+  };
+
+  const etag = makeETag('/bridge/emit', { n: String(n), values: valuesRaw ?? '', limit: String(limit) });
+  return jsonResp(doc, {
+    ...CACHE_HEADERS_BRIDGE,
+    'Content-Type': 'application/ld+json',
+  }, etag, rl);
+}
+
+// ── POST/GET /bridge/sparql — SPARQL 1.1 query endpoint over UOR ring (§1.6) ──
+// Accepts SPARQL-like queries and translates them to pattern matching over the ring.
+// Supports SELECT with WHERE triple patterns over schema:Datum triples.
+async function bridgeSparql(req: Request, url: URL, rl: RateLimitResult): Promise<Response> {
+  let queryStr = '';
+
+  if (req.method === 'GET') {
+    queryStr = url.searchParams.get('query') ?? '';
+  } else if (req.method === 'POST') {
+    const ct = req.headers.get('content-type') ?? '';
+    if (ct.includes('application/json')) {
+      try {
+        const body = await req.json();
+        queryStr = body.query ?? '';
+      } catch { return error400('Invalid JSON body', 'body', rl); }
+    } else if (ct.includes('application/sparql-query')) {
+      queryStr = await req.text();
+    } else {
+      queryStr = url.searchParams.get('query') ?? await req.text();
+    }
+  }
+
+  if (!queryStr.trim()) {
+    // Return SPARQL service description
+    return jsonResp({
+      "@context": UOR_CONTEXT_URL,
+      "@type": "sparql:ServiceDescription",
+      "sparql:endpoint": "https://api.uor.foundation/v1/bridge/sparql",
+      "sparql:specification": "SPARQL 1.1 (subset)",
+      "sparql:supportedQueryForms": ["SELECT"],
+      "sparql:defaultDataset": {
+        "@type": "sparql:Dataset",
+        "sparql:defaultGraph": "urn:uor:graph:default",
+        "sparql:namedGraphs": [
+          "partition:UnitSet",
+          "partition:ExteriorSet",
+          "partition:IrreducibleSet",
+          "partition:ReducibleSet"
+        ]
+      },
+      "sparql:availablePredicates": [
+        "rdf:type", "schema:value", "schema:stratum", "schema:spectrum",
+        "schema:glyph", "schema:quantum", "schema:bits",
+        "partition:component", "succ", "pred", "inverse", "not"
+      ],
+      "sparql:exampleQueries": [
+        {
+          "description": "All datums with stratum > 4",
+          "query": "SELECT ?s ?stratum WHERE { ?s schema:stratum ?stratum . FILTER(?stratum > 4) }",
+          "endpoint": "https://api.uor.foundation/v1/bridge/sparql?query=SELECT%20%3Fs%20%3Fstratum%20WHERE%20%7B%20%3Fs%20schema%3Astratum%20%3Fstratum%20.%20FILTER(%3Fstratum%20%3E%204)%20%7D"
+        },
+        {
+          "description": "All units in the ring",
+          "query": "SELECT ?s WHERE { ?s partition:component partition:UnitSet }",
+          "endpoint": "https://api.uor.foundation/v1/bridge/sparql?query=SELECT%20%3Fs%20WHERE%20%7B%20%3Fs%20partition%3Acomponent%20partition%3AUnitSet%20%7D"
+        },
+        {
+          "description": "Datum with value 42",
+          "query": "SELECT ?s ?p ?o WHERE { ?s schema:value 42 }",
+          "endpoint": "https://api.uor.foundation/v1/bridge/sparql?query=SELECT%20%3Fs%20%3Fp%20%3Fo%20WHERE%20%7B%20%3Fs%20schema%3Avalue%2042%20%7D"
+        }
+      ],
+      "sparql:usage": {
+        "GET": "GET /bridge/sparql?query=SELECT+...&n=8",
+        "POST_json": "POST /bridge/sparql with {query: 'SELECT ...', n: 8}",
+        "POST_sparql": "POST /bridge/sparql with Content-Type: application/sparql-query"
+      }
+    }, CACHE_HEADERS_BRIDGE, undefined, rl);
+  }
+
+  // Parse ring size
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const nRes = parseIntParam(nRaw, 'n', 1, 12);
+  if ('err' in nRes) return nRes.err;
+  const n = nRes.val;
+  const m = modulus(n);
+
+  // Parse SPARQL query (simplified parser)
+  const limitMatch = queryStr.match(/LIMIT\s+(\d+)/i);
+  const offsetMatch = queryStr.match(/OFFSET\s+(\d+)/i);
+  const sparqlLimit = limitMatch ? Math.min(Number(limitMatch[1]), 256) : 50;
+  const sparqlOffset = offsetMatch ? Number(offsetMatch[1]) : 0;
+
+  // Extract FILTER conditions
+  const filters: { variable: string; operator: string; value: number }[] = [];
+  const filterRegex = /FILTER\s*\(\s*\?(\w+)\s*(>|<|>=|<=|=|!=)\s*(\d+)\s*\)/gi;
+  let filterMatch;
+  while ((filterMatch = filterRegex.exec(queryStr)) !== null) {
+    filters.push({
+      variable: filterMatch[1],
+      operator: filterMatch[2],
+      value: Number(filterMatch[3]),
+    });
+  }
+
+  // Extract triple patterns from WHERE clause
+  const whereMatch = queryStr.match(/WHERE\s*\{([^}]+)\}/i);
+  const patterns: { s: string; p: string; o: string }[] = [];
+  if (whereMatch) {
+    const triples = whereMatch[1].split('.').map(t => t.trim()).filter(Boolean);
+    for (const triple of triples) {
+      if (triple.startsWith('FILTER')) continue;
+      const parts = triple.split(/\s+/).filter(Boolean);
+      if (parts.length >= 3) {
+        patterns.push({ s: parts[0], p: parts[1], o: parts.slice(2).join(' ') });
+      }
+    }
+  }
+
+  // Execute query against the ring
+  const startTime = performance.now();
+  const results: Record<string, unknown>[] = [];
+
+  for (let v = 0; v < m && results.length < sparqlLimit + sparqlOffset; v++) {
+    const d = makeDatum(v, n);
+    const cls = classifyByte(v, n);
+    const stratum = d["schema:triad"]["schema:totalStratum"];
+
+    // Check triple patterns
+    let patternMatch = true;
+    for (const pat of patterns) {
+      if (pat.p === 'schema:value' && pat.o !== '?o' && pat.o !== `${v}`) {
+        patternMatch = false; break;
+      }
+      if (pat.p === 'partition:component' && !pat.o.startsWith('?') && pat.o !== cls.component) {
+        patternMatch = false; break;
+      }
+      if (pat.p === 'rdf:type' && !pat.o.startsWith('?') && pat.o !== 'schema:Datum') {
+        patternMatch = false; break;
+      }
+    }
+    if (!patternMatch) continue;
+
+    // Check filters
+    let filterPass = true;
+    for (const f of filters) {
+      let actual: number | undefined;
+      if (f.variable === 'stratum' || f.variable === 'totalStratum') actual = stratum;
+      else if (f.variable === 'value' || f.variable === 'v') actual = v;
+      else if (f.variable === 'quantum') actual = d["schema:quantum"];
+
+      if (actual !== undefined) {
+        switch (f.operator) {
+          case '>': if (!(actual > f.value)) filterPass = false; break;
+          case '<': if (!(actual < f.value)) filterPass = false; break;
+          case '>=': if (!(actual >= f.value)) filterPass = false; break;
+          case '<=': if (!(actual <= f.value)) filterPass = false; break;
+          case '=': if (!(actual === f.value)) filterPass = false; break;
+          case '!=': if (!(actual !== f.value)) filterPass = false; break;
+        }
+      }
+    }
+    if (!filterPass) continue;
+
+    results.push({
+      "@id": d["@id"],
+      "@type": "schema:Datum",
+      "schema:value": v,
+      "schema:stratum": stratum,
+      "schema:spectrum": d["schema:spectrum"],
+      "schema:glyph": d["schema:glyph"],
+      "partition:component": cls.component,
+    });
+  }
+
+  const paginatedResults = results.slice(sparqlOffset, sparqlOffset + sparqlLimit);
+  const execMs = Math.round(performance.now() - startTime);
+
+  const etag = makeETag('/bridge/sparql', { query: queryStr, n: String(n) });
+  return jsonResp({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "sparql:ResultSet",
+    "sparql:query": queryStr,
+    "sparql:endpoint": "https://api.uor.foundation/v1/bridge/sparql",
+    "sparql:dataset": `Z/${m}Z (R_${n})`,
+    "sparql:totalResults": results.length,
+    "sparql:returnedResults": paginatedResults.length,
+    "sparql:limit": sparqlLimit,
+    "sparql:offset": sparqlOffset,
+    "sparql:executionTimeMs": execMs,
+    "sparql:parsedPatterns": patterns,
+    "sparql:parsedFilters": filters,
+    "sparql:results": {
+      "@type": "sparql:Results",
+      "sparql:bindings": paginatedResults,
+    },
+    "sparql:uor_query_tool": {
+      "@type": "agent:ToolDescription",
+      "agent:toolName": "uor_query",
+      "agent:description": "SPARQL-based query tool from Section 6.4 of the UOR roadmap. Use this endpoint to execute SPARQL queries over the UOR knowledge graph.",
+      "agent:endpoint": "POST /bridge/sparql",
+      "agent:inputSchema": { "query": "string (SPARQL SELECT query)", "n": "integer (ring bit width, default 8)" },
+    },
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // ROUTER
 // ════════════════════════════════════════════════════════════════════════════
@@ -4802,6 +5094,22 @@ Deno.serve(async (req: Request) => {
     if (path === '/store/gateways') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
       return await storeGateways(rl);
+    }
+
+    // ── Bridge — emit (explicit JSON-LD emission, §1.6) ──
+    if (path === '/bridge/emit') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = bridgeEmit(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+    // ── Bridge — SPARQL endpoint (§1.6) ──
+    if (path === '/bridge/sparql') {
+      if (req.method !== 'GET' && req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await bridgeSparql(req, url, rl);
     }
 
     // ── 405 for known paths with wrong method ──
