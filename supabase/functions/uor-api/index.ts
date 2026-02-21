@@ -2284,67 +2284,110 @@ function openapiSpec(): Response {
 }
 
 // ── IPFS Pinning Service API ────────────────────────────────────────────────
-const GATEWAY_CONFIGS: Record<string, { pinsApiUrl: string; readUrl: string }> = {
+interface PinResult {
+  cid: string;
+  gatewayUrl: string;
+  gatewayReadUrl: string;
+  status: "pinned" | "queued" | "failed";
+  timestamp: string;
+}
+
+const GATEWAY_CONFIGS: Record<string, { apiUrl: string; readUrl: string }> = {
   "web3.storage": {
-    pinsApiUrl: "https://api.web3.storage/pins",
+    apiUrl: "https://api.web3.storage",
     readUrl: "https://w3s.link/ipfs/",
   },
   "pinata": {
-    pinsApiUrl: "https://api.pinata.cloud/psa/pins",
+    apiUrl: "https://api.pinata.cloud",
     readUrl: "https://gateway.pinata.cloud/ipfs/",
   },
 };
 
 async function pinToIpfs(
-  finalBytes: Uint8Array,
-  cid: string,
+  bytes: Uint8Array,
   gateway: string,
-): Promise<{ success: boolean; gatewayUrl: string; error?: string }> {
-  const config = GATEWAY_CONFIGS[gateway];
-  if (!config) {
-    return { success: false, gatewayUrl: '', error: `Unknown gateway: ${gateway}` };
+): Promise<PinResult> {
+  const ts = timestamp();
+
+  if (gateway === "web3.storage" || gateway === "https://api.web3.storage") {
+    return await pinToWeb3Storage(bytes, ts);
+  }
+  if (gateway === "pinata" || gateway === "https://api.pinata.cloud") {
+    return await pinToPinata(bytes, ts);
+  }
+  throw new Error(`Unknown gateway: "${gateway}". Use GET /store/gateways for valid options.`);
+}
+
+async function pinToWeb3Storage(bytes: Uint8Array, ts: string): Promise<PinResult> {
+  const formData = new FormData();
+  const blob = new Blob([bytes], { type: "application/ld+json" });
+  formData.append("file", blob, "uor-object.jsonld");
+
+  const token = Deno.env.get("WEB3_STORAGE_TOKEN");
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const response = await fetch("https://api.web3.storage/upload", {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`web3.storage returned HTTP ${response.status}: ${body}`);
   }
 
-  const apiKey = gateway === 'web3.storage'
-    ? Deno.env.get('WEB3_STORAGE_API_KEY')
-    : Deno.env.get('PINATA_API_KEY');
-
-  if (!apiKey) {
-    return {
-      success: true,
-      gatewayUrl: config.pinsApiUrl,
-      error: `No ${gateway} API key configured. Pin simulated. Configure the secret to enable real IPFS pinning.`,
-    };
+  const result = await response.json();
+  const cid = result.cid ?? response.headers.get("x-ipfs-path")?.replace("/ipfs/", "");
+  if (!cid) {
+    throw new Error("web3.storage did not return a CID in response.");
   }
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30_000);
+  return {
+    cid,
+    gatewayUrl: "https://api.web3.storage",
+    gatewayReadUrl: `https://w3s.link/ipfs/${cid}`,
+    status: "pinned",
+    timestamp: ts,
+  };
+}
 
-    const pinResponse = await fetch(config.pinsApiUrl, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ cid, name: `uor-object-${Date.now()}` }),
-    });
+async function pinToPinata(bytes: Uint8Array, ts: string): Promise<PinResult> {
+  const jwt = Deno.env.get("PINATA_JWT");
+  if (!jwt) throw new Error("PINATA_JWT environment variable not set.");
 
-    clearTimeout(timeoutId);
+  const jsonContent = new TextDecoder().decode(bytes);
+  const response = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${jwt}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      pinataContent: JSON.parse(jsonContent),
+      pinataMetadata: { name: "uor-object" },
+    }),
+  });
 
-    if (!pinResponse.ok) {
-      const errText = await pinResponse.text().catch(() => 'unknown');
-      return { success: false, gatewayUrl: config.pinsApiUrl, error: `Gateway returned HTTP ${pinResponse.status}: ${errText}` };
-    }
-
-    return { success: true, gatewayUrl: config.pinsApiUrl };
-  } catch (e) {
-    if (e.name === 'AbortError') {
-      return { success: false, gatewayUrl: config.pinsApiUrl, error: 'Gateway request timed out (30s)' };
-    }
-    return { success: false, gatewayUrl: config.pinsApiUrl, error: e.message };
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Pinata returned HTTP ${response.status}: ${body}`);
   }
+
+  const result = await response.json();
+  const cid = result.IpfsHash;
+  if (!cid) {
+    throw new Error("Pinata did not return a CID (IpfsHash) in response.");
+  }
+
+  return {
+    cid,
+    gatewayUrl: "https://api.pinata.cloud",
+    gatewayReadUrl: `https://gateway.pinata.cloud/ipfs/${cid}`,
+    status: "pinned",
+    timestamp: ts,
+  };
 }
 
 // ── POST /store/write — Serialise UOR Object + Pin to IPFS ─────────────────
@@ -2388,7 +2431,7 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
   }
 
   const shouldPin = body.pin !== false;
-  const gateway = (body.gateway as string) ?? 'web3.storage';
+  const gateway = (body.gateway as string) ?? (Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? 'web3.storage');
   const label = (body.label as string) ?? undefined;
 
   if (!GATEWAY_CONFIGS[gateway]) {
@@ -2396,6 +2439,7 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
   }
 
   const ts = timestamp();
+  const gatewayConfig = GATEWAY_CONFIGS[gateway];
 
   // Resolve storedType to full IRI
   const storedType = objectType.includes(':') && !objectType.includes('://')
@@ -2407,18 +2451,18 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
     "@context": UOR_STORE_CONTEXT,
     "@id": "https://uor.foundation/store/object/pending",
     "@type": "store:StoredObject",
-    "store:pinnedAt": ts,
+    "store:pinnedAt": shouldPin ? ts : null,
     "store:pinRecord": {
       "@type": "store:PinRecord",
-      "store:gatewayUrl": GATEWAY_CONFIGS[gateway].pinsApiUrl,
+      "store:gatewayUrl": gatewayConfig.apiUrl,
       "store:pinCertificate": {
         "@type": "cert:TransformCertificate",
         "cert:quantum": 8,
         "cert:timestamp": ts,
         "cert:transformType": "uor-address-to-ipfs-cid",
-        "cert:verified": true,
+        "cert:verified": shouldPin, // false in dry run
       },
-      "store:pinnedAt": ts,
+      "store:pinnedAt": shouldPin ? ts : null, // null in dry run
     },
     "store:storedType": storedType,
     ...(label ? { "store:label": label } : {}),
@@ -2452,14 +2496,16 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
   const finalSerialised = canonicalJsonLd(completeEnvelope);
   const finalBytes = new TextEncoder().encode(finalSerialised);
 
-  // ── Step 8: Pin to IPFS ──
-  let pinResult: { success: boolean; gatewayUrl: string; error?: string } | null = null;
+  // ── Step 8: Pin to IPFS (skip if dry run) ──
+  let pinResult: PinResult | null = null;
   if (shouldPin) {
-    pinResult = await pinToIpfs(finalBytes, cid, gateway);
-    if (!pinResult.success && !pinResult.error?.includes('simulated')) {
-      const status = pinResult.error?.includes('timed out') ? 502 : 503;
+    try {
+      pinResult = await pinToIpfs(finalBytes, gateway);
+    } catch (e) {
+      const msg = e.message ?? String(e);
+      const status = msg.includes('timed out') || msg.includes('unreachable') ? 502 : 503;
       return new Response(JSON.stringify({
-        error: `IPFS pin failed: ${pinResult.error}`,
+        error: `IPFS pin failed: ${msg}`,
         code: status === 502 ? 'GATEWAY_UNREACHABLE' : 'GATEWAY_ERROR',
         status,
       }), { status, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
@@ -2467,20 +2513,34 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
   }
 
   // ── Step 9: Build response ──
-  const gatewayReadUrl = GATEWAY_CONFIGS[gateway].readUrl;
   const response: Record<string, unknown> = {
     ...completeEnvelope,
-    "summary": {
-      "uor_address": uorAddress.glyph,
-      "ipfs_cid": cid,
-      "retrievable_at": `${gatewayReadUrl}${cid}`,
-      "dry_run": !shouldPin,
-      "byte_length": finalBytes.length,
-      "how_to_retrieve": `GET /store/read/${cid}`,
-      "how_to_verify": `GET /store/verify/${cid}`,
-      ...(pinResult?.error ? { "pin_note": pinResult.error } : {}),
-    },
+    "summary": shouldPin
+      ? {
+          "uor_address": uorAddress.glyph,
+          "ipfs_cid": cid,
+          "retrievable_at": pinResult ? pinResult.gatewayReadUrl : `${gatewayConfig.readUrl}${cid}`,
+          "dry_run": false,
+          "byte_length": finalBytes.length,
+          "how_to_retrieve": `GET /store/read/${cid}`,
+          "how_to_verify": `GET /store/verify/${cid}`,
+        }
+      : {
+          "dry_run": true,
+          "uor_address": uorAddress.glyph,
+          "ipfs_cid": cid,
+          "retrievable_at": null,
+          "byte_length": finalBytes.length,
+          "note": "Dry run: addresses computed but content NOT pinned to IPFS. Set pin:true to store.",
+          "how_to_retrieve": `GET /store/read/${cid}`,
+          "how_to_verify": `GET /store/verify/${cid}`,
+        },
   };
+
+  const ipfsCidHeader = shouldPin ? cid : 'dry-run';
+  const ipfsGatewayHeader = shouldPin
+    ? (pinResult ? pinResult.gatewayReadUrl : gatewayConfig.readUrl)
+    : 'dry-run';
 
   return new Response(canonicalJsonLd(response), {
     status: 200,
@@ -2488,8 +2548,9 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
       ...CORS_HEADERS,
       'Content-Type': 'application/ld+json',
       'X-UOR-Address': uorAddress.glyph.substring(0, 64),
-      'X-UOR-CID': cid,
-      'X-UOR-Dry-Run': String(!shouldPin),
+      'X-IPFS-CID': ipfsCidHeader,
+      'X-IPFS-Gateway-URL': ipfsGatewayHeader,
+      'X-Store-Dry-Run': String(!shouldPin),
       ...rateLimitHeaders(rl),
     },
   });
