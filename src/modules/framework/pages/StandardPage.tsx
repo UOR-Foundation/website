@@ -5,7 +5,7 @@ import { applications } from "@/data/applications";
 import { quantumLevels } from "@/data/quantum-levels";
 import { closureModes } from "@/data/closure-modes";
 import { signatureOps } from "@/data/signature-ops";
-import { GITHUB_FRAMEWORK_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
+import { GITHUB_FRAMEWORK_URL, GITHUB_FRAMEWORK_DOCS_URL, GITHUB_PRISM_URL } from "@/data/external-links";
 import UORDiagram from "@/modules/framework/components/UORDiagram";
 import FrameworkLayers from "@/modules/framework/components/FrameworkLayers";
 
@@ -380,6 +380,15 @@ const Standard = () => {
               className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out bg-primary text-primary-foreground hover:opacity-90 hover:shadow-lg inline-flex items-center justify-center gap-2"
             >
               Browse the Ontology
+              <ExternalLink size={15} />
+            </a>
+            <a
+              href={GITHUB_PRISM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"
+            >
+              Reference Implementation
               <ExternalLink size={15} />
             </a>
             <a
