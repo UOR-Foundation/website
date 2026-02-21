@@ -2252,19 +2252,19 @@ async function pinToPinata(bytes: Uint8Array, ts: string): Promise<PinResult> {
   const jwt = Deno.env.get("PINATA_JWT");
   if (!jwt) throw new Error("PINATA_JWT environment variable not set.");
 
-  // pinJSONToIPFS stores JSON content directly (gateway-readable without dag-pb unwrapping).
-  // Logical losslessness is guaranteed because verification re-canonicalizes on read.
-  const jsonContent = new TextDecoder().decode(bytes);
-  const response = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
+  // pinFileToIPFS uploads raw bytes — Pinata stores them byte-exact in UnixFS.
+  // This is the ONLY way to guarantee byte-level lossless round-trips.
+  // pinJSONToIPFS would re-serialize our JSON, destroying canonical key ordering.
+  const formData = new FormData();
+  formData.append("file", new Blob([bytes], { type: "application/ld+json" }), "uor-object.jsonld");
+  formData.append("pinataMetadata", JSON.stringify({ name: "uor-object" }));
+
+  const response = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${jwt}`,
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      pinataContent: JSON.parse(jsonContent),
-      pinataMetadata: { name: "uor-object" },
-    }),
+    body: formData,
   });
 
   if (!response.ok) {
@@ -2278,10 +2278,11 @@ async function pinToPinata(bytes: Uint8Array, ts: string): Promise<PinResult> {
     throw new Error("Pinata did not return a CID (IpfsHash) in response.");
   }
 
+  const dedicatedGw = Deno.env.get("PINATA_GATEWAY_URL") ?? "https://gateway.pinata.cloud";
   return {
     cid,
     gatewayUrl: "https://api.pinata.cloud",
-    gatewayReadUrl: `https://gateway.pinata.cloud/ipfs/${cid}`,
+    gatewayReadUrl: `${dedicatedGw}/ipfs/${cid}`,
     status: "pinned",
     timestamp: ts,
   };
@@ -2665,13 +2666,15 @@ async function dualVerify(
 }
 
 // ── IPFS Read Gateways ──────────────────────────────────────────────────────
+const PINATA_DEDICATED_GATEWAY = Deno.env.get("PINATA_GATEWAY_URL") ?? "https://salmon-adorable-pheasant-856.mypinata.cloud";
 const ALLOWED_READ_GATEWAYS = [
+  PINATA_DEDICATED_GATEWAY,
   "https://gateway.pinata.cloud",
   "https://ipfs.io",
   "https://w3s.link",
   "https://cloudflare-ipfs.com",
 ];
-const DEFAULT_READ_GATEWAY = "https://gateway.pinata.cloud";
+const DEFAULT_READ_GATEWAY = PINATA_DEDICATED_GATEWAY;
 const READ_FETCH_TIMEOUT_MS = 20_000;
 const READ_MAX_BYTES = 10 * 1024 * 1024;
 
@@ -2697,8 +2700,14 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
     gateway = gatewayOverride;
   }
 
-  // Fetch from IPFS gateway (no ?format=raw — that returns dag-pb protobuf, not file content)
-  const ipfsUrl = `${gateway}/ipfs/${cidParam}`;
+  // Fetch from IPFS gateway — dedicated Pinata gateway serves unwrapped file content
+  // For the dedicated gateway, append pinataGatewayToken for authentication
+  let ipfsUrl = `${gateway}/ipfs/${cidParam}`;
+  const pinataDedicatedGw = PINATA_DEDICATED_GATEWAY;
+  if (gateway === pinataDedicatedGw) {
+    const gwToken = Deno.env.get("PINATA_GATEWAY_TOKEN") ?? Deno.env.get("PINATA_JWT") ?? "";
+    if (gwToken) ipfsUrl += `?pinataGatewayToken=${gwToken}`;
+  }
   let fetchResponse: Response;
   try {
     const controller = new AbortController();
@@ -2706,7 +2715,6 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
     fetchResponse = await fetch(ipfsUrl, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/read)',
         'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/read)',
       },
     });
@@ -3088,8 +3096,13 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
     gateway = gatewayOverride;
   }
 
-  // Fetch from IPFS gateway (no ?format=raw — use content negotiation for file content)
-  const ipfsUrl = `${gateway}/ipfs/${cidParam}`;
+  // Fetch from IPFS gateway — dedicated Pinata gateway serves unwrapped file content
+  let ipfsUrl = `${gateway}/ipfs/${cidParam}`;
+  const pinataDedicatedGw = PINATA_DEDICATED_GATEWAY;
+  if (gateway === pinataDedicatedGw) {
+    const gwToken = Deno.env.get("PINATA_GATEWAY_TOKEN") ?? Deno.env.get("PINATA_JWT") ?? "";
+    if (gwToken) ipfsUrl += `?pinataGatewayToken=${gwToken}`;
+  }
   let fetchResponse: Response;
   try {
     const controller = new AbortController();
@@ -3097,7 +3110,6 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
     fetchResponse = await fetch(ipfsUrl, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/verify)',
         'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/verify)',
       },
     });
@@ -3271,16 +3283,31 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
 const GATEWAY_REGISTRY = [
   {
     "@type": "store:GatewayConfig",
+    "store:id": "pinata-dedicated",
+    "store:provider": "Pinata (Dedicated Gateway)",
+    "store:gatewayReadUrl": PINATA_DEDICATED_GATEWAY,
+    "store:pinsApiUrl": "https://api.pinata.cloud/pinning/pinFileToIPFS",
+    "store:capabilities": ["read", "write"],
+    "store:defaultFor": ["read", "write"],
+    "store:authRequired": true,
+    "store:authNote":
+      "Requires PINATA_JWT for writes and PINATA_GATEWAY_TOKEN (or PINATA_JWT) for reads via ?pinataGatewayToken=.",
+    "store:note":
+      "Dedicated Pinata gateway for byte-level lossless round-trips. Uses pinFileToIPFS to store " +
+      "exact canonical bytes, and serves unwrapped file content on read (no dag-pb wrapping). " +
+      "This is the only gateway configuration that guarantees write_bytes === read_bytes.",
+  },
+  {
+    "@type": "store:GatewayConfig",
     "store:id": "ipfs-io",
     "store:provider": "Protocol Labs",
     "store:gatewayReadUrl": "https://ipfs.io",
     "store:pinsApiUrl": null,
     "store:capabilities": ["read"],
-    "store:defaultFor": ["read"],
+    "store:defaultFor": [],
     "store:authRequired": false,
     "store:note":
-      "Public read-only gateway. No API key required. " +
-      "Supports standard IPFS retrieval: GET /ipfs/{cid}",
+      "Public read-only gateway. May return raw dag-pb blocks; dag-pb unwrapper handles this.",
   },
   {
     "@type": "store:GatewayConfig",
@@ -3294,23 +3321,22 @@ const GATEWAY_REGISTRY = [
     "store:authNote":
       "Legacy API sunset. Requires WEB3_STORAGE_TOKEN (UCAN). Use Pinata for new deployments.",
     "store:note":
-      "Legacy write gateway. The old web3.storage upload API has been sunset. " +
-      "Read access via w3s.link remains functional. For writes, use Pinata.",
+      "Legacy write gateway. Read access via w3s.link remains functional. For writes, use Pinata.",
   },
   {
     "@type": "store:GatewayConfig",
-    "store:id": "pinata",
+    "store:id": "pinata-public",
     "store:provider": "Pinata",
     "store:gatewayReadUrl": "https://gateway.pinata.cloud",
-    "store:pinsApiUrl": "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+    "store:pinsApiUrl": "https://api.pinata.cloud/pinning/pinFileToIPFS",
     "store:capabilities": ["read", "write"],
-    "store:defaultFor": ["write"],
+    "store:defaultFor": [],
     "store:authRequired": true,
     "store:authNote":
-      "Requires PINATA_JWT environment variable. Free tier provides 1GB storage.",
+      "Requires PINATA_JWT. Public gateway returns dag-pb blocks; use dedicated gateway for lossless reads.",
     "store:note":
-      "Default write gateway. Uses pinJSONToIPFS with canonical re-serialization on read for logically lossless round-trips. " +
-      "Stable API, recommended for production and agent memory persistence. Requires API key.",
+      "Public Pinata gateway. Writes use pinFileToIPFS. Reads may return raw dag-pb blocks on this " +
+      "public gateway; prefer the dedicated gateway for byte-exact round-trips.",
   },
   {
     "@type": "store:GatewayConfig",
@@ -3367,8 +3393,9 @@ async function storeGateways(rl: RateLimitResult): Promise<Response> {
     "store:defaultWriteGateway": Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? "pinata",
     "store:gateways": gatewaysWithHealth,
     "store:note":
-      "All write operations use pinJSONToIPFS. Logical losslessness is guaranteed via canonical re-serialization on read (deterministic key sort). " +
-      "All read operations use standard IPFS gateway retrieval: GET /ipfs/{cid}. " +
+      "All write operations use pinFileToIPFS for byte-exact canonical storage. " +
+      "The default read gateway is the Pinata dedicated gateway, which serves unwrapped file content " +
+      "for true byte-level lossless round-trips (write_bytes === read_bytes). " +
       "Health is checked via the bafkqaaa identity probe (IPFS trustless gateway spec §7.1).",
     "store:ipfsSpecs": {
       "trustless_gateway": "https://specs.ipfs.tech/http-gateways/trustless-gateway/",
