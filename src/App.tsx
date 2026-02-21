@@ -22,6 +22,7 @@ import { SparqlEditorPage } from "@/modules/sparql";
 import { ConformancePage } from "@/modules/shacl";
 import { CodeKnowledgeGraphPage } from "@/modules/code-kg";
 import { AgentConsolePage } from "@/modules/agent-tools";
+import AuditPage from "@/modules/self-verify/pages/AuditPage";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => {
           <Route path="/conformance" element={<ConformancePage />} />
           <Route path="/code-knowledge-graph" element={<CodeKnowledgeGraphPage />} />
           <Route path="/agent-console" element={<AgentConsolePage />} />
+          <Route path="/audit" element={<AuditPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
