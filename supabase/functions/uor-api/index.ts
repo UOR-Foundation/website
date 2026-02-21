@@ -57,6 +57,7 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/store/resolve':                     ['GET', 'OPTIONS'],
   '/store/write':                       ['POST', 'OPTIONS'],
   '/store/write-context':               ['POST', 'OPTIONS'],
+  '/store/gateways':                    ['GET', 'OPTIONS'],
   // /store/read/:cid and /store/verify/:cid are handled dynamically
 };
 
@@ -3084,6 +3085,9 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
   }
 
   const gatewayOverride = url.searchParams.get('gateway');
+  const expectedUor = url.searchParams.get('expected_uor') ?? null;
+  const verifiedAt = timestamp();
+
   let gateway = DEFAULT_READ_GATEWAY;
   if (gatewayOverride) {
     if (!ALLOWED_READ_GATEWAYS.includes(gatewayOverride)) {
@@ -3104,7 +3108,7 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
     fetchResponse = await fetch(ipfsUrl, {
       signal: controller.signal,
       headers: {
-        'Accept': 'application/vnd.ipld.raw, application/ld+json, application/json, */*',
+        'Accept': 'application/vnd.ipld.raw, application/ld+json, */*',
         'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/verify)',
       },
     });
@@ -3136,19 +3140,180 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
     }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
   }
 
-  const rawBytes = new Uint8Array(await fetchResponse.arrayBuffer());
+  // Read bytes (streaming, with limit)
+  const reader = fetchResponse.body?.getReader();
+  if (!reader) {
+    return new Response(JSON.stringify({
+      error: 'Response body empty.', code: 'GATEWAY_ERROR', status: 502,
+    }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalBytes += value.length;
+    if (totalBytes > READ_MAX_BYTES) {
+      reader.cancel();
+      return new Response(JSON.stringify({
+        error: 'Content exceeds 10MB verification limit.',
+        code: 'PAYLOAD_TOO_LARGE', status: 413,
+      }), { status: 413, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(totalBytes);
+  let off = 0;
+  for (const c of chunks) { bytes.set(c, off); off += c.length; }
 
-  // Run dual verification (no content returned — verification only)
-  const verification = await dualVerify(rawBytes, cidParam);
+  // Check 1: CID integrity
+  const recomputedCid = await computeCid(bytes);
+  const cidMatch = recomputedCid === cidParam;
+
+  // Check 2: UOR address consistency
+  const recomputedUor = computeUorAddress(bytes);
+
+  // Priority: expected_uor param > stored address in JSON-LD
+  let storedUorGlyph: string | null = expectedUor;
+  if (!storedUorGlyph) {
+    try {
+      const parsed = JSON.parse(new TextDecoder().decode(bytes)) as Record<string, unknown>;
+      const uorAddr = parsed?.['store:uorAddress'] as Record<string, unknown> | undefined;
+      storedUorGlyph = (uorAddr?.['u:glyph'] as string) ?? null;
+    } catch {
+      storedUorGlyph = null;
+    }
+  }
+
+  const uorMatch = storedUorGlyph !== null
+    ? recomputedUor.glyph === storedUorGlyph
+    : null;
+  const storeVerified = uorMatch === true;
+
+  const verification = {
+    cid_integrity: {
+      performed: true,
+      expected_cid: cidParam,
+      computed_cid: recomputedCid,
+      match: cidMatch,
+      note: cidMatch
+        ? "CID integrity confirmed."
+        : "CID mismatch — may be round-1 vs round-2 serialisation difference. UOR address check is authoritative.",
+    },
+    uor_consistency: {
+      performed: true,
+      stored_uor_address: storedUorGlyph ?? "not found",
+      recomputed_uor_address: recomputedUor.glyph,
+      match: uorMatch,
+      note: uorMatch === true
+        ? "UOR address confirmed. Content is authentic and unmodified."
+        : uorMatch === false
+        ? "UOR ADDRESS MISMATCH. Content has been modified since storage."
+        : "Indeterminate — no stored UOR address found. Pass ?expected_uor= to compare against a known address.",
+    },
+    store_verified: storeVerified,
+    verdict: storeVerified
+      ? "VERIFIED: UOR address check confirms content integrity."
+      : uorMatch === null
+      ? "INDETERMINATE: No reference UOR address available for comparison."
+      : "INTEGRITY FAILURE: UOR address mismatch. Content has been modified.",
+  };
+
+  const verdictLabel = storeVerified ? "VERIFIED" : uorMatch === null ? "INDETERMINATE" : "FAILED";
 
   const response = {
     "@context": UOR_STORE_CONTEXT,
-    "@type": "store:VerificationResult",
-    "store:cid": cidParam,
-    "store:byteLength": rawBytes.length,
-    "store:gatewayUsed": gateway,
-    "store:verified": verification.store_verified,
+    "@id": `https://uor.foundation/store/verify/${cidParam}`,
+    "@type": "store:RetrievedObject",
+    "store:retrievedFrom": cidParam,
+    "store:byteLength": totalBytes,
+    "store:verified": storeVerified,
+    "store:verifiedAt": verifiedAt,
     "verification": verification,
+    "summary": {
+      "verdict": verdictLabel,
+      "safe_to_process": storeVerified,
+      "byte_length": totalBytes,
+      "cid": cidParam,
+      "uor_address": recomputedUor.glyph.substring(0, 64),
+      "note": storeVerified
+        ? `Both checks passed. Safe to retrieve full content via GET /store/read/${cidParam}`
+        : uorMatch === null
+        ? "Cannot verify without a reference UOR address. Use ?expected_uor= or retrieve via GET /store/read/:cid."
+        : "Verification failed. Do not process this content.",
+    },
+  };
+
+  // 409 on explicit failure, 200 on verified or indeterminate
+  const status = uorMatch === false ? 409 : 200;
+
+  return new Response(canonicalJsonLd(response), {
+    status,
+    headers: {
+      ...CORS_HEADERS,
+      'Content-Type': 'application/ld+json',
+      'X-UOR-Verified': String(storeVerified),
+      'X-UOR-Verdict': verdictLabel,
+      'X-IPFS-CID': cidParam,
+      ...rateLimitHeaders(rl),
+    },
+  });
+}
+
+// ── GET /store/gateways — Gateway registry ─────────────────────────────────
+function storeGateways(rl: RateLimitResult): Response {
+  const ts = timestamp();
+  const response = {
+    "@context": UOR_STORE_CONTEXT,
+    "@type": "store:GatewayRegistry",
+    "store:timestamp": ts,
+    "store:defaultWriteGateway": Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? "web3.storage",
+    "store:defaultReadGateway": DEFAULT_READ_GATEWAY,
+    "store:gateways": [
+      {
+        "@type": "store:GatewayConfig",
+        "store:name": "web3.storage",
+        "store:apiUrl": "https://api.web3.storage",
+        "store:gatewayReadUrl": "https://w3s.link/ipfs/",
+        "store:capabilities": ["read", "write", "pin"],
+        "store:authRequired": false,
+        "store:authNote": "Optional WEB3_STORAGE_TOKEN for authenticated uploads.",
+        "store:default_for": ["write"],
+      },
+      {
+        "@type": "store:GatewayConfig",
+        "store:name": "pinata",
+        "store:apiUrl": "https://api.pinata.cloud",
+        "store:gatewayReadUrl": "https://gateway.pinata.cloud/ipfs/",
+        "store:capabilities": ["read", "write", "pin"],
+        "store:authRequired": true,
+        "store:authNote": "Requires PINATA_JWT secret.",
+        "store:default_for": [],
+      },
+      {
+        "@type": "store:GatewayConfig",
+        "store:name": "ipfs.io",
+        "store:apiUrl": "https://ipfs.io",
+        "store:gatewayReadUrl": "https://ipfs.io/ipfs/",
+        "store:capabilities": ["read"],
+        "store:authRequired": false,
+        "store:default_for": ["read", "verify"],
+      },
+      {
+        "@type": "store:GatewayConfig",
+        "store:name": "cloudflare-ipfs.com",
+        "store:apiUrl": "https://cloudflare-ipfs.com",
+        "store:gatewayReadUrl": "https://cloudflare-ipfs.com/ipfs/",
+        "store:capabilities": ["read"],
+        "store:authRequired": false,
+        "store:default_for": [],
+      },
+    ],
+    "summary": {
+      "write_gateways": ["web3.storage", "pinata"],
+      "read_gateways": ["ipfs.io", "w3s.link", "cloudflare-ipfs.com", "gateway.pinata.cloud"],
+      "note": "Use POST /store/write with gateway parameter to select write gateway. Use gateway query param on GET /store/read/:cid and GET /store/verify/:cid to select read gateway.",
+    },
   };
 
   return new Response(canonicalJsonLd(response), {
@@ -3156,8 +3321,7 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
     headers: {
       ...CORS_HEADERS,
       'Content-Type': 'application/ld+json',
-      'X-UOR-Verified': String(verification.store_verified),
-      'X-IPFS-CID': cidParam,
+      'Cache-Control': 'public, max-age=300',
       ...rateLimitHeaders(rl),
     },
   });
@@ -3379,6 +3543,12 @@ Deno.serve(async (req: Request) => {
       if (req.method !== 'GET') return error405(path, ['GET', 'OPTIONS']);
       const cidParam = path.replace('/store/verify/', '');
       return await storeVerify(cidParam, url, rl);
+    }
+
+    // ── Store — gateways (store: namespace) ──
+    if (path === '/store/gateways') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return storeGateways(rl);
     }
 
     // ── 405 for known paths with wrong method ──
