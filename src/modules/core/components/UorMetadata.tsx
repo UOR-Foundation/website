@@ -46,6 +46,7 @@ const UorMetadata = () => {
         subjectId: entry.subjectId,
         label: entry.label,
         "cert:cid": entry.certificate["cert:cid"],
+        "cert:canonicalPayload": entry.certificate["cert:canonicalPayload"],
         "store:uorAddress": entry.certificate["store:uorAddress"],
         verified: entry.verified,
       });

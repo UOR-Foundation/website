@@ -10,6 +10,7 @@ import {
   getAllContentCertificates,
   isContentRegistryInitialized,
   onContentRegistryInitialized,
+  verifyAllContentCertificates,
   type ContentCertificateEntry,
 } from "@/lib/uor-content-registry";
 
@@ -18,6 +19,7 @@ interface VerificationResult {
   cid: string;
   uorGlyph: string;
   verified: boolean;
+  canonicalPreview?: string;
 }
 
 const UorVerification = () => {
@@ -55,16 +57,19 @@ const UorVerification = () => {
 
     setResults(output);
 
-    // Content certificates
+    // Content certificates — with real re-hash verification
     if (isContentRegistryInitialized()) {
       const certs = getAllContentCertificates();
+      const contentVerified = await verifyAllContentCertificates();
       const contentOutput: VerificationResult[] = [];
-      for (const [, entry] of certs) {
+      for (const [id, entry] of certs) {
+        const payload = entry.certificate["cert:canonicalPayload"];
         contentOutput.push({
           name: entry.label,
           cid: entry.certificate["cert:cid"],
           uorGlyph: entry.certificate["store:uorAddress"]["u:glyph"].slice(0, 12) + "…",
-          verified: entry.verified,
+          verified: contentVerified.get(id) ?? false,
+          canonicalPreview: payload ? payload.slice(0, 120) + (payload.length > 120 ? "…" : "") : undefined,
         });
       }
       setContentResults(contentOutput);
@@ -112,6 +117,12 @@ const UorVerification = () => {
               <span className="text-muted-foreground/50">UOR:</span>{" "}
               {r.uorGlyph}
             </p>
+            {r.canonicalPreview && (
+              <p className="text-[10px] font-mono text-muted-foreground/40 break-all leading-relaxed mt-1">
+                <span className="text-muted-foreground/30">Payload:</span>{" "}
+                {r.canonicalPreview}
+              </p>
+            )}
           </div>
         </div>
       ))}
@@ -181,7 +192,7 @@ const UorVerification = () => {
 
             <div className="p-4 border-t border-border">
               <p className="text-[11px] font-body text-muted-foreground/50 text-center">
-                Each object's CID is derived from its canonical JSON-LD via SHA-256 / CIDv1 / dag-json. UOR addresses use Braille bijection encoding.
+                Each certificate contains its canonical JSON-LD payload. Re-hash the payload with SHA-256/CIDv1/dag-json to independently verify the CID. UOR addresses use Braille bijection encoding.
               </p>
             </div>
           </div>

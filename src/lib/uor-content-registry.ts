@@ -4,6 +4,7 @@
  * making every significant content structure content-addressed and verifiable.
  */
 
+import { canonicalJsonLd, computeCid } from "./uor-address";
 import { generateCertificate, type UorCertificate } from "./uor-certificate";
 
 // Data imports
@@ -17,6 +18,10 @@ import { blogPosts } from "@/data/blog-posts";
 import { projects, maturityInfo } from "@/data/projects";
 import { governancePrinciples } from "@/data/governance";
 import { routeTable } from "@/data/route-table";
+import { teamMembers } from "@/data/team-members";
+import { events } from "@/data/events";
+import { categoryResearch } from "@/data/research-papers";
+import { whatWeDoCards, ourPrinciplesCards } from "@/data/about-cards";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -63,6 +68,10 @@ const CERTIFIABLE_CONTENT: Array<{
   { subjectId: "content:projects", label: "Project Catalog", data: projects },
   { subjectId: "content:maturity-model", label: "Maturity Model", data: maturityInfo },
   { subjectId: "content:governance-principles", label: "Governance Principles", data: governancePrinciples },
+  { subjectId: "content:team-members", label: "Team Members", data: teamMembers },
+  { subjectId: "content:events", label: "Community Events", data: events },
+  { subjectId: "content:research-papers", label: "Research Papers", data: categoryResearch },
+  { subjectId: "content:about-cards", label: "About Page Cards", data: { whatWeDoCards, ourPrinciplesCards } },
 ];
 
 // ── Initialization ──────────────────────────────────────────────────────────
@@ -99,6 +108,38 @@ export async function initializeContentRegistry(): Promise<void> {
   console.log(
     `[UOR Content Registry] Certified ${contentCertificates.size} content objects.`
   );
+}
+
+// ── Verification ────────────────────────────────────────────────────────────
+
+/**
+ * Verify a content certificate by rehydrating the canonical payload,
+ * re-hashing it, and comparing the CID. This is a true objective proof:
+ * the receipt contains the data, and the hash proves integrity.
+ */
+export async function verifyContentCertificate(id: string): Promise<boolean> {
+  const entry = contentCertificates.get(id);
+  if (!entry) return false;
+
+  const storedPayload = entry.certificate["cert:canonicalPayload"];
+  const storedCid = entry.certificate["cert:cid"];
+
+  // Re-hash the stored canonical payload
+  const bytes = new TextEncoder().encode(storedPayload);
+  const recomputedCid = await computeCid(bytes);
+
+  return recomputedCid === storedCid;
+}
+
+/**
+ * Verify ALL content certificates. Returns a map of subjectId → verified.
+ */
+export async function verifyAllContentCertificates(): Promise<Map<string, boolean>> {
+  const results = new Map<string, boolean>();
+  const entries = Array.from(contentCertificates.keys());
+  const verified = await Promise.all(entries.map((id) => verifyContentCertificate(id)));
+  entries.forEach((id, i) => results.set(id, verified[i]));
+  return results;
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────
