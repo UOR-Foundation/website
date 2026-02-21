@@ -12,18 +12,17 @@ const IntroSection = () => {
         >
           <p className="text-section-dark-foreground/75 font-body text-base md:text-lg leading-[1.85] md:leading-[1.9]">
             <span className="text-section-dark-foreground font-medium">
-              Universal Object Reference (UOR) is a universal, lossless coordinate system for information
-            </span>{" "}
-            that assigns every piece of digital content a unique and permanent identifier based on what it contains, not where it is stored.
+              Universal Object Reference (UOR) gives every piece of digital content a single, permanent address based on what it contains, not where it is stored.
+            </span>
           </p>
           <p className="mt-6 text-section-dark-foreground/75 font-body text-base md:text-lg leading-[1.85] md:leading-[1.9]">
-            When two systems hold the same content, they resolve to the same identifier, enabling direct verification and reliable reuse without broken references or translation layers.
+            This means data can be found, verified, and reused across any system without broken links, translation layers, or manual integration. The same content always resolves to the same address, no matter who holds it.
           </p>
           <p className="mt-6 text-section-dark-foreground/75 font-body text-base md:text-lg leading-[1.85] md:leading-[1.9]">
-            By replacing fragmented, location-based systems with shared, content-based identity, UOR reduces integration overhead and strengthens trust between systems.
+            Instead of every system inventing its own way to name and find data, UOR provides one shared method. This removes duplication, reduces cost, and makes it possible to trust data across organizational boundaries.
           </p>
           <p className="mt-8 text-section-dark-foreground/90 font-body text-base md:text-lg leading-[1.85] md:leading-[1.9] font-medium">
-            The UOR Foundation is developing this universal data standard to support the semantic web, open science, and frontier technologies.
+            The UOR Foundation is building this open standard to make reliable, verifiable data the default for science, software, and emerging technologies.
           </p>
           <a
             href="/about"

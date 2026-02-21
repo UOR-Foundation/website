@@ -14,7 +14,7 @@ const pillars = [
     icon: Users,
     title: "Our Community",
     description:
-      "Open research, cross pollination of ideas, and joint exploration across disciplines to accelerate scientific progress.",
+      "Researchers, engineers, and builders working together across disciplines. Share your work, validate ideas, and move faster by building on what others have proven.",
     href: "/research",
     cta: "Connect",
   },
@@ -22,7 +22,7 @@ const pillars = [
     icon: Rocket,
     title: "Your Projects",
     description:
-      "Build on UOR. Prototype, incubate, and graduate open source projects within the foundation's ecosystem.",
+      "Turn your idea into production-ready software. The foundation provides a structured path, community support, and visibility to help open source projects grow.",
     href: "/projects",
     cta: "Build",
   },

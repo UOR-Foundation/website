@@ -18,7 +18,7 @@ const Footer = () => {
               <span className="font-display text-base font-semibold">The UOR Foundation</span>
             </div>
             <p className="text-section-dark-foreground/55 font-body max-w-sm leading-relaxed text-base">
-              The open standard for universal data infrastructure.
+              One permanent address for every piece of data. Open source. Open standard.
             </p>
           </div>
 

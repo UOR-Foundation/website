@@ -4,10 +4,10 @@ import { Bot, ArrowRight, ArrowDown } from "lucide-react";
 const silos = ["APIs", "Databases", "Files", "AI Models", "Graphs", "Streams", "Ledgers", "Devices", "Protocols"];
 
 const capabilityDetails: Record<string, string> = {
-  Reason: "Agents traverse a unified semantic graph to draw inferences across formerly siloed data, with no custom connectors required.",
-  Verify: "Content-addressed identity lets any agent independently confirm data integrity and provenance without trusting a central authority.",
-  Compose: "Algebraic structure means objects combine into higher-order constructs while preserving referential integrity at every layer.",
-  Navigate: "A single coordinate system lets agents locate and access any object by what it is, not where it lives, across every system.",
+  Reason: "AI systems can find and connect information across different sources without needing custom adapters for each one.",
+  Verify: "Any system can independently confirm that data has not been altered and trace where it came from, without relying on a central authority.",
+  Compose: "Smaller pieces of data can be combined into larger ones, and broken apart again, without losing any information along the way.",
+  Navigate: "Any system can locate any piece of data by describing what it is, rather than knowing which server or database holds it.",
 };
 
 const capabilities = Object.keys(capabilityDetails);

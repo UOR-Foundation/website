@@ -9,10 +9,10 @@ import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 const researchCategories = [
   { icon: Calculator, label: "Mathematics", slug: "mathematics", description: "Formal methods, algebraic structures, and mathematical foundations of UOR.", active: true },
   { icon: Cpu, label: "Hardware & Robotics", slug: "hardware-robotics", description: "Embedded systems, robotics middleware, and UOR-native hardware interfaces.", active: false },
-  { icon: Shield, label: "Cybersecurity", slug: "cybersecurity", description: "Content-addressed security, zero-trust identity, and verifiable data provenance.", active: false },
-  { icon: TrendingUp, label: "Finance", slug: "finance", description: "Decentralized finance primitives, auditable ledgers, and semantic financial data.", active: false },
-  { icon: Bot, label: "Agentic AI", slug: "agentic-ai", description: "Autonomous agents, tool-use frameworks, and UOR-native AI architectures.", active: false },
-  { icon: Atom, label: "Quantum", slug: "quantum", description: "Quantum computing interfaces, post-quantum cryptography, and hybrid algorithms.", active: false },
+  { icon: Shield, label: "Cybersecurity", slug: "cybersecurity", description: "Security that is built into the data itself. Verify where information came from and confirm it has not been altered.", active: false },
+  { icon: TrendingUp, label: "Finance", slug: "finance", description: "Financial systems where every transaction is independently auditable and data flows reliably between institutions.", active: false },
+  { icon: Bot, label: "Agentic AI", slug: "agentic-ai", description: "Give AI systems a reliable, shared map of data so they can find, verify, and use information without custom integrations.", active: false },
+  { icon: Atom, label: "Quantum", slug: "quantum", description: "Preparing data systems for the next generation of computing, where today's security methods will need to be replaced.", active: false },
   { icon: BarChart3, label: "Data Science", slug: "data-science", description: "Semantic datasets, reproducible pipelines, and interoperable analytics.", active: false },
   { icon: HeartPulse, label: "Healthcare", slug: "healthcare", description: "Medical data interoperability, patient-centric identity, and open health standards.", active: false },
   { icon: Globe, label: "Web3", slug: "web3", description: "Decentralized protocols, on-chain identity, and content-addressed storage.", active: false },
@@ -94,7 +94,7 @@ const Research = () => {
             Our Community
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
-            The UOR community facilitates open research, cross pollination of ideas, and validation of existing work through joint research exploration to accelerate our scientific progress.
+            Researchers and builders working across disciplines to test ideas, validate results, and publish openly. Progress is faster when it is shared.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"

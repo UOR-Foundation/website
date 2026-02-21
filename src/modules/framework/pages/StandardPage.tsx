@@ -16,7 +16,7 @@ const Standard = () => {
             className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
             style={{ animationDelay: "0.15s" }}
           >
-            One address per object, derived from its content, verifiable across every system. Data referenced by what it is, not where it lives, unlocking a unified computational substrate.
+            One address per object, derived from its content, verifiable across every system. Data referenced by what it is, not where it lives. One shared language for all of it.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
@@ -64,7 +64,7 @@ const Standard = () => {
             How It Works
           </p>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
-            UOR encodes every object into a single coordinate space where identity is derived from content, not location.
+            UOR gives every object a permanent address based on what it contains, not where it is stored. Here is how that works.
           </p>
           <UORDiagram />
         </div>
@@ -77,16 +77,16 @@ const Standard = () => {
             Where It Applies
           </p>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
-            A single symbolic substrate opens the door to breakthroughs across disciplines.
+            A single, shared way to address data opens the door to breakthroughs across disciplines.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { title: "Semantic Web", text: "Give every piece of data a meaning machines can understand, making the web truly interoperable.", icon: Globe },
-              { title: "Proof Based Computation", text: "Zero knowledge verified AI: models run once, outputs reduce to compact proofs anchored to deterministic coordinates.", icon: ShieldCheck },
-              { title: "Agentic AI", text: "Enable autonomous agents to reason, verify, and act across all data sources within one unified space.", icon: Bot },
+              { title: "Semantic Web", text: "Make data understandable by both people and machines, so systems can work together without custom translations.", icon: Globe },
+              { title: "Proof Based Computation", text: "Run a computation once and produce a receipt that anyone can check. No need to re-run it, no need to trust the person who ran it.", icon: ShieldCheck },
+              { title: "Agentic AI", text: "Give AI systems a single, reliable map of all available data so they can find, verify, and use information on their own.", icon: Bot },
               { title: "Open Science", text: "Make research data findable, reproducible, and composable across institutions and fields.", icon: Microscope },
-              { title: "Cross Domain Unification", text: "Bridge ideas across disciplines with a shared coordinate system that preserves meaning.", icon: Layers },
-              { title: "Frontier Technologies", text: "Provide a foundational layer for emerging fields like topological quantum computing and neuro symbolic AI.", icon: Rocket },
+              { title: "Cross Domain Unification", text: "Let different fields share data and ideas without losing meaning in translation. One shared system, many disciplines.", icon: Layers },
+              { title: "Frontier Technologies", text: "Provide a foundation for emerging fields like quantum computing and next-generation AI, where reliable data identity is essential.", icon: Rocket },
             ].map((item) => (
               <div
                 key={item.title}
@@ -111,7 +111,7 @@ const Standard = () => {
             UOR Framework Architecture
           </h2>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-14 md:mb-16">
-            Six layers built on a shared foundation of geometric structure and symbolic representation. Each builds on the one below it.
+            Six layers, each building on the one below it. Together they form a complete system: from the ground rules, to naming, to finding, proving, and transforming data.
           </p>
           <FrameworkLayers />
         </div>
