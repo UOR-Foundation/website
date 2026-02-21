@@ -106,14 +106,14 @@ The roadmap requires every computation to produce a self-verifying receipt. The 
 
 ## Recommended Build Order
 
-1. **First**: Create `src/types/uor.ts` with shared types (zero risk, pure addition)
-2. **Second**: Build client-side ring engine in `src/lib/uor-ring.ts` (ports existing server functions)
-3. **Third**: Add canonical receipt wrapper around ring operations
-4. **Fourth**: Build in-memory triplestore with CID-based storage
-5. **Fifth**: Add semantic index layer on top of existing module registry
-6. **Sixth**: Build agent interface with tool functions and epistemic grading
+1. ✅ **DONE**: Created `src/types/uor.ts` — ByteTuple, Quantum, EpistemicGrade, RingConfig, Derivation, CanonicalReceipt, ModuleHealth, Datum, Triad, PartitionClassification
+2. ✅ **DONE**: Built client-side ring engine `src/lib/uor-ring.ts` — all 10 operations (neg, bnot, succ, pred, add, sub, mul, xor, and, or), makeDatum, classifyByte, verifyCriticalIdentity, verifyAllCriticalIdentity. 23 tests passing.
+3. ✅ **DONE**: Added canonical receipt system `src/lib/uor-receipt.ts` — withReceipt() wraps any ring operation with CID-hashed self-verifying receipts, verifyReceipt() for independent verification.
+4. **Next**: Build in-memory triplestore with CID-based storage
+5. **Then**: Add semantic index layer on top of existing module registry
+6. **Finally**: Build agent interface with tool functions and epistemic grading
 
-Each step builds on the previous one. No step requires UI changes. All steps use existing patterns.
+Steps 1–3 are complete. No UI changes were made. All steps use existing patterns.
 
 ---
 
