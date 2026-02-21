@@ -147,6 +147,23 @@ const LAYERS: Layer[] = [
         responseCodes: [200, 405, 429, 500],
         example: `${BASE}/kernel/op/verify/all?n=8`,
       },
+      {
+        operationId: "opCorrelate",
+        method: "GET",
+        path: "/kernel/op/correlate",
+        label: "Measure structural distance between two values",
+        explanation:
+          "Computes the Hamming distance and fidelity between two values in the ring. The XOR-stratum counts how many bits differ. Fidelity is 1 − (distance / ring size).\n\nHigh drift signals structural divergence — a formal, reproducible integrity metric.",
+        useCase:
+          "Compare an expected output with an actual output. Non-zero Hamming drift is a formal signal that something changed — useful for detecting prompt injection or data tampering.",
+        params: [
+          { name: "x", in: "query", type: "integer", required: true, default: "42", description: "First value." },
+          { name: "y", in: "query", type: "integer", required: true, default: "10", description: "Second value." },
+          { name: "n", in: "query", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
+        ],
+        responseCodes: [200, 400, 405, 429, 500],
+        example: `${BASE}/kernel/op/correlate?x=42&y=10`,
+      },
     ],
   },
   {
@@ -191,6 +208,23 @@ const LAYERS: Layer[] = [
         ],
         responseCodes: [200, 400, 405, 429, 500],
         example: `${BASE}/kernel/schema/datum?x=42`,
+      },
+      {
+        operationId: "kernelDerive",
+        method: "POST",
+        path: "/kernel/derive",
+        label: "Derive a content-addressed certificate from a term tree",
+        explanation:
+          "Submit an arbitrary syntax tree of operations (nested terms) and get back a step-by-step derivation trace with a content-addressed certificate. Each step records operation, inputs, and output.\n\nThe result is a portable, verifiable derivation anchored to a urn:uor:derivation address.",
+        useCase:
+          "Build a complex computation as a tree of operations. Get a single auditable receipt with a permanent address. Share the derivation — any peer replays and verifies independently.",
+        params: [
+          { name: "term", in: "body", type: "object", required: true, description: 'A term tree: { "op": "add", "args": [42, { "op": "neg", "args": [10] }] }' },
+          { name: "n", in: "body", type: "integer [1–16]", required: false, default: "8", description: "Ring size." },
+        ],
+        defaultBody: JSON.stringify({ term: { op: "add", args: [42, { op: "neg", args: [10] }] }, n: 8 }, null, 2),
+        responseCodes: [200, 400, 405, 415, 429, 500],
+        example: `${BASE}/kernel/derive`,
       },
     ],
   },
