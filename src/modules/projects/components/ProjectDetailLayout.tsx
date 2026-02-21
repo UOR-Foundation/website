@@ -196,17 +196,14 @@ const ProjectDetailLayout = ({
                                   </div>
                                 ));
                             })()}
-                            <p className="text-sm text-section-dark-foreground/50 font-body mt-3 leading-relaxed">
-                              The content above was reconstructed directly from the certificate's canonical payload. The fact that it matches the original content identifier (CID) proves that none of this information has been tampered with since the certificate was issued.
-                            </p>
                           </div>
                         )}
 
                         <button
                           onClick={() => setVerified(null)}
-                          className="inline-flex items-center gap-1.5 text-sm text-section-dark-foreground underline underline-offset-2 hover:text-section-dark-foreground/80 transition-colors cursor-pointer font-body mt-1"
+                          className="inline-flex items-center gap-1.5 text-sm text-section-dark-foreground/70 hover:text-section-dark-foreground transition-colors cursor-pointer font-body mt-2"
                         >
-                          Reset verification
+                          Reset
                         </button>
                       </div>
                     )}
