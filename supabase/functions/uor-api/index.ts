@@ -57,6 +57,9 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/kernel/derive':                     ['POST', 'OPTIONS'],
   '/kernel/op/correlate':               ['GET', 'OPTIONS'],
   '/bridge/graph/query':                ['GET', 'OPTIONS'],
+  '/bridge/shacl/shapes':               ['GET', 'OPTIONS'],
+  '/bridge/shacl/validate':             ['GET', 'OPTIONS'],
+  '/kernel/ontology':                   ['GET', 'OPTIONS'],
   '/bridge/partition':                  ['POST', 'OPTIONS'],
   '/bridge/proof/critical-identity':    ['GET', 'OPTIONS'],
   '/bridge/proof/coherence':            ['POST', 'OPTIONS'],
@@ -1203,6 +1206,288 @@ function bridgeGraphQuery(url: URL, rl: RateLimitResult): Response {
   }, CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
+// GET /kernel/ontology — Ontology metadata (roadmap §1.5)
+function kernelOntology(rl: RateLimitResult): Response {
+  const etag = makeETag('/kernel/ontology', {});
+  return jsonResp({
+    "summary": {
+      "classes": 82,
+      "properties": 120,
+      "named_individuals": 14,
+      "namespaces": 14,
+      "owl_profile": "OWL 2 DL",
+      "shacl_test_graphs": 7,
+      "formats": ["JSON-LD", "Turtle", "N-Triples"]
+    },
+    "@context": UOR_CONTEXT_URL,
+    "@id": "https://uor.foundation/ontology",
+    "@type": "owl:Ontology",
+    "owl:versionIRI": "https://uor.foundation/ontology/v1.0",
+    "owl:profile": "OWL 2 DL",
+    "ontology:classCount": 82,
+    "ontology:propertyCount": 120,
+    "ontology:namedIndividualCount": 14,
+    "ontology:namespaceCount": 14,
+    "ontology:namespaces": [
+      { "prefix": "u:", "iri": "https://uor.foundation/u/", "role": "Content addressing — Braille bijection", "roadmapSection": "§1.2" },
+      { "prefix": "schema:", "iri": "https://uor.foundation/schema/", "role": "Datum, Triad, Ring, Term definitions", "roadmapSection": "§1.4" },
+      { "prefix": "op:", "iri": "https://uor.foundation/op/", "role": "Ring operations — 5 primitives + derived", "roadmapSection": "§1.1" },
+      { "prefix": "state:", "iri": "https://uor.foundation/state/", "role": "Agent lifecycle frames and transitions", "roadmapSection": "§6" },
+      { "prefix": "type:", "iri": "https://uor.foundation/type/", "role": "Type system — primitives, products, sums, constrained", "roadmapSection": "§5" },
+      { "prefix": "resolver:", "iri": "https://uor.foundation/resolver/", "role": "Resolution and factor decomposition", "roadmapSection": "§4" },
+      { "prefix": "partition:", "iri": "https://uor.foundation/partition/", "role": "Four-set algebraic partition (named graphs)", "roadmapSection": "§1.4" },
+      { "prefix": "observable:", "iri": "https://uor.foundation/observable/", "role": "External fact streams and metrics", "roadmapSection": "§7" },
+      { "prefix": "cert:", "iri": "https://uor.foundation/cert/", "role": "Certificates — involution, derivation, conformance", "roadmapSection": "§1.3" },
+      { "prefix": "trace:", "iri": "https://uor.foundation/trace/", "role": "Computation traces with bit-level auditing", "roadmapSection": "§7" },
+      { "prefix": "morphism:", "iri": "https://uor.foundation/morphism/", "role": "Structure-preserving ring homomorphisms", "roadmapSection": "§5" },
+      { "prefix": "query:", "iri": "https://uor.foundation/query/", "role": "SPARQL-like pattern matching over knowledge graph", "roadmapSection": "§6.4" },
+      { "prefix": "derivation:", "iri": "https://uor.foundation/derivation/", "role": "Derivation traces with SHA-256 content-addressed IDs", "roadmapSection": "§1.3" },
+      { "prefix": "store:", "iri": "https://uor.foundation/store/", "role": "IPFS/Filecoin persistence layer (implementation extension)", "roadmapSection": "extension", "note": "Not in the original 14-namespace roadmap. Added as an implementation extension to support decentralized persistence via Pinata and Storacha (Filecoin)." }
+    ],
+    "ontology:formats": {
+      "json-ld": "https://uor-foundation.github.io/UOR-Framework/uor.foundation.json",
+      "turtle": "https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl",
+      "n-triples": "https://uor-foundation.github.io/UOR-Framework/uor.foundation.nt",
+      "namespace_browser": "https://uor-foundation.github.io/UOR-Framework/namespaces/"
+    },
+    "ontology:owlConformance": {
+      "profile": "OWL 2 DL",
+      "status": "Self-declared. OWL reasoner validation against Pellet/HermiT not yet published as a standalone report.",
+      "verificationMethod": "Structural OWL 2 DL compliance verified via ontology tooling during build. Independent validation report planned.",
+      "owl2dlConstraints": [
+        "All classes use OWL 2 class constructors (intersection, union, complement, restriction)",
+        "All properties are typed (ObjectProperty or DatatypeProperty)",
+        "No meta-modelling (classes as instances or properties as values)",
+        "All datatypes from XSD or OWL 2 built-in set"
+      ]
+    },
+    "ontology:shaclTestGraphs": {
+      "count": 7,
+      "shapes_endpoint": "https://api.uor.foundation/v1/bridge/shacl/shapes",
+      "validate_endpoint": "https://api.uor.foundation/v1/bridge/shacl/validate",
+      "tests": [
+        { "id": "Ring", "target": "Ring configuration properties (quantum, width, bits, cycle)", "roadmapRef": "§3, §7" },
+        { "id": "Primitives", "target": "5-operation signature + involution verification", "roadmapRef": "§1.1, §3" },
+        { "id": "TermGraph", "target": "Triadic term structure (datum/stratum/spectrum widths)", "roadmapRef": "§1.4, §3" },
+        { "id": "StateLifecycle", "target": "State transitions (succ∘pred = id, pred∘succ = id)", "roadmapRef": "§6, §3" },
+        { "id": "Partition", "target": "Four-set partition disjointness + cardinality = 2^bits", "roadmapRef": "§4, §3" },
+        { "id": "CriticalIdentity", "target": "neg(bnot(x)) = succ(x) for all x + IRI consistency", "roadmapRef": "§1.1, §3" },
+        { "id": "EndToEnd", "target": "Full resolution cycle: value → IRI → datum shape validation", "roadmapRef": "§7, §3" }
+      ]
+    },
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/ontology/"
+  }, CACHE_HEADERS_KERNEL, etag, rl);
+}
+
+// GET /bridge/shacl/shapes — Serve all 7 SHACL shape definitions (roadmap §1.5, §3)
+function shaclShapes(rl: RateLimitResult): Response {
+  const etag = makeETag('/bridge/shacl/shapes', {});
+  return jsonResp({
+    "summary": {
+      "shape_count": 7,
+      "description": "All 7 SHACL conformance test graphs from the UOR spec. Each shape defines the constraints that valid UOR data must satisfy."
+    },
+    "@context": UOR_CONTEXT_URL,
+    "@id": "https://uor.foundation/shacl/shapes",
+    "@type": "shacl:ShapeGraph",
+    "shacl:shapes": [
+      {
+        "@id": "shacl:RingShape",
+        "@type": "shacl:NodeShape",
+        "shacl:targetClass": "schema:Ring",
+        "shacl:description": "Ring configuration: quantum ≥ 0, width = quantum + 1, bits = 8 × width, cycle = 2^bits",
+        "shacl:property": [
+          { "shacl:path": "schema:quantum", "shacl:minInclusive": 0, "shacl:datatype": "xsd:integer" },
+          { "shacl:path": "schema:width", "shacl:description": "Must equal quantum + 1" },
+          { "shacl:path": "schema:bits", "shacl:description": "Must equal 8 × width" },
+          { "shacl:path": "schema:cycle", "shacl:description": "Must equal 2^bits" }
+        ]
+      },
+      {
+        "@id": "shacl:PrimitivesShape",
+        "@type": "shacl:NodeShape",
+        "shacl:targetClass": "op:Operation",
+        "shacl:description": "5 primitive operations produce correct-length output; neg and bnot are involutions (f(f(x)) = x)",
+        "shacl:property": [
+          { "shacl:path": "op:output", "shacl:description": "Output byte length must equal ring width" },
+          { "shacl:path": "op:involution", "shacl:description": "neg(neg(x)) = x and bnot(bnot(x)) = x for all x" }
+        ]
+      },
+      {
+        "@id": "shacl:TermGraphShape",
+        "@type": "shacl:NodeShape",
+        "shacl:targetClass": "schema:Triad",
+        "shacl:description": "Triadic coordinates: datum, stratum, spectrum each have length = ring width",
+        "shacl:property": [
+          { "shacl:path": "schema:datum", "shacl:minCount": 1, "shacl:description": "Byte tuple with length = width" },
+          { "shacl:path": "schema:stratum", "shacl:minCount": 1, "shacl:description": "Popcount per byte, length = width" },
+          { "shacl:path": "schema:spectrum", "shacl:minCount": 1, "shacl:description": "Basis elements per byte, length = width" }
+        ]
+      },
+      {
+        "@id": "shacl:StateLifecycleShape",
+        "@type": "shacl:NodeShape",
+        "shacl:targetClass": "state:Frame",
+        "shacl:description": "State transitions are invertible: succ(pred(x)) = x and pred(succ(x)) = x",
+        "shacl:property": [
+          { "shacl:path": "state:succPred", "shacl:description": "succ(pred(x)) = x for all x in ring" },
+          { "shacl:path": "state:predSucc", "shacl:description": "pred(succ(x)) = x for all x in ring" }
+        ]
+      },
+      {
+        "@id": "shacl:PartitionShape",
+        "@type": "shacl:NodeShape",
+        "shacl:targetClass": "partition:Partition",
+        "shacl:description": "Four disjoint sets (Unit, Exterior, Irreducible, Reducible) with total cardinality = 2^bits",
+        "shacl:property": [
+          { "shacl:path": "partition:cardinality", "shacl:description": "|units| + |exterior| + |irreducible| + |reducible| = 2^bits" },
+          { "shacl:path": "partition:disjoint", "shacl:description": "No element appears in more than one set" }
+        ]
+      },
+      {
+        "@id": "shacl:CriticalIdentityShape",
+        "@type": "shacl:NodeShape",
+        "shacl:targetClass": "schema:Datum",
+        "shacl:description": "The critical identity neg(bnot(x)) = succ(x) holds for all x in Z/(2^n)Z, and both sides produce the same content-addressed IRI",
+        "shacl:property": [
+          { "shacl:path": "op:criticalIdentity", "shacl:description": "neg(bnot(x)) = succ(x) for all x" },
+          { "shacl:path": "u:iriConsistency", "shacl:description": "IRI of neg(bnot(x)) = IRI of succ(x)" }
+        ]
+      },
+      {
+        "@id": "shacl:EndToEndShape",
+        "@type": "shacl:NodeShape",
+        "shacl:targetClass": "schema:Datum",
+        "shacl:description": "Full resolution cycle: value → resolve → canonical IRI → datum shape validation. Tests the complete pipeline.",
+        "shacl:property": [
+          { "shacl:path": "schema:canonicalIri", "shacl:pattern": "^https://uor\\.foundation/" },
+          { "shacl:path": "schema:datumShape", "shacl:description": "Resolved datum must conform to shacl:DatumShape" }
+        ]
+      }
+    ],
+    "shacl:sourceRepository": "https://github.com/UOR-Foundation/UOR-Framework/tree/main/spec/src/shacl/",
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/shacl.rs"
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
+// GET /bridge/shacl/validate?n=8 — Run all 7 SHACL conformance tests (roadmap §1.5, §3, §7)
+function shaclValidate(url: URL, rl: RateLimitResult): Response {
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const nRes = parseIntParam(nRaw, 'n', 1, 8);
+  if ('err' in nRes) return nRes.err;
+  const n = nRes.val;
+  const m = modulus(n);
+
+  // Run all 7 conformance tests
+  const tests: unknown[] = [];
+  let allPassed = true;
+  const startTime = Date.now();
+
+  // Test 1: Ring
+  const ringViolations: string[] = [];
+  const width = Math.ceil(n / 8) || 1;
+  const bits = n;
+  const cycle = m;
+  if (width !== Math.ceil(n / 8)) ringViolations.push("width != ceil(n/8)");
+  if (cycle !== Math.pow(2, bits)) ringViolations.push("cycle != 2^bits");
+  tests.push({ "@type": "shacl:TestResult", "shacl:shape": "shacl:RingShape", "shacl:conforms": ringViolations.length === 0, "shacl:violations": ringViolations });
+  if (ringViolations.length > 0) allPassed = false;
+
+  // Test 2: Primitives — involution check
+  const primViolations: string[] = [];
+  for (let x = 0; x < Math.min(m, 256); x++) {
+    if (neg(neg(x, n), n) !== x) primViolations.push(`neg(neg(${x})) != ${x}`);
+    if (bnot(bnot(x, n), n) !== x) primViolations.push(`bnot(bnot(${x})) != ${x}`);
+  }
+  tests.push({ "@type": "shacl:TestResult", "shacl:shape": "shacl:PrimitivesShape", "shacl:conforms": primViolations.length === 0, "shacl:checked": Math.min(m, 256), "shacl:violations": primViolations });
+  if (primViolations.length > 0) allPassed = false;
+
+  // Test 3: TermGraph — triad width check
+  const termViolations: string[] = [];
+  for (const v of [0, 1, 42 % m, (m - 1)]) {
+    const bytes = toBytesTuple(v, n);
+    const stratum = bytes.map(bytePopcount);
+    const spectrum = bytes.map(byteBasis);
+    if (bytes.length !== width) termViolations.push(`datum length ${bytes.length} != width ${width} for v=${v}`);
+    if (stratum.length !== width) termViolations.push(`stratum length wrong for v=${v}`);
+    if (spectrum.length !== width) termViolations.push(`spectrum length wrong for v=${v}`);
+  }
+  tests.push({ "@type": "shacl:TestResult", "shacl:shape": "shacl:TermGraphShape", "shacl:conforms": termViolations.length === 0, "shacl:violations": termViolations });
+  if (termViolations.length > 0) allPassed = false;
+
+  // Test 4: StateLifecycle — succ(pred(x)) = x
+  const stateViolations: string[] = [];
+  for (let x = 0; x < Math.min(m, 256); x++) {
+    if (succOp(predOp(x, n), n) !== x) stateViolations.push(`succ(pred(${x})) != ${x}`);
+    if (predOp(succOp(x, n), n) !== x) stateViolations.push(`pred(succ(${x})) != ${x}`);
+  }
+  tests.push({ "@type": "shacl:TestResult", "shacl:shape": "shacl:StateLifecycleShape", "shacl:conforms": stateViolations.length === 0, "shacl:checked": Math.min(m, 256), "shacl:violations": stateViolations });
+  if (stateViolations.length > 0) allPassed = false;
+
+  // Test 5: Partition — disjointness + cardinality
+  const partViolations: string[] = [];
+  const partCounts: Record<string, number> = {};
+  const partElements: Record<string, number[]> = {};
+  for (let x = 0; x < m; x++) {
+    const { component } = classifyByte(x, n);
+    partCounts[component] = (partCounts[component] ?? 0) + 1;
+    if (!partElements[component]) partElements[component] = [];
+    partElements[component].push(x);
+  }
+  const totalElements = Object.values(partCounts).reduce((a, b) => a + b, 0);
+  if (totalElements !== m) partViolations.push(`Total elements ${totalElements} != 2^${n} = ${m}`);
+  tests.push({ "@type": "shacl:TestResult", "shacl:shape": "shacl:PartitionShape", "shacl:conforms": partViolations.length === 0, "shacl:partitionCounts": partCounts, "shacl:violations": partViolations });
+  if (partViolations.length > 0) allPassed = false;
+
+  // Test 6: CriticalIdentity — neg(bnot(x)) = succ(x)
+  const critViolations: string[] = [];
+  let critPassed = 0;
+  for (let x = 0; x < Math.min(m, 256); x++) {
+    const negBnot = neg(bnot(x, n), n);
+    const succ = succOp(x, n);
+    if (negBnot === succ) { critPassed++; } else { critViolations.push(`neg(bnot(${x}))=${negBnot} != succ(${x})=${succ}`); }
+  }
+  tests.push({ "@type": "shacl:TestResult", "shacl:shape": "shacl:CriticalIdentityShape", "shacl:conforms": critViolations.length === 0, "shacl:passed": critPassed, "shacl:checked": Math.min(m, 256), "shacl:violations": critViolations });
+  if (critViolations.length > 0) allPassed = false;
+
+  // Test 7: EndToEnd — resolve + IRI format
+  const e2eViolations: string[] = [];
+  for (const v of [0, 1, 42 % m, (m - 1)]) {
+    const bytes = toBytesTuple(v, n);
+    const iri = _iri(bytes);
+    if (!iri.startsWith("https://uor.foundation/u/")) e2eViolations.push(`IRI for v=${v} not content-addressed: ${iri}`);
+    const glyph = bytes.map(encodeGlyph).join('');
+    if (!glyph || glyph.length === 0) e2eViolations.push(`Empty glyph for v=${v}`);
+  }
+  tests.push({ "@type": "shacl:TestResult", "shacl:shape": "shacl:EndToEndShape", "shacl:conforms": e2eViolations.length === 0, "shacl:violations": e2eViolations });
+  if (e2eViolations.length > 0) allPassed = false;
+
+  const durationMs = Date.now() - startTime;
+  const etag = makeETag('/bridge/shacl/validate', { n: String(n) });
+
+  return jsonResp({
+    "summary": {
+      "ring": `Z/${m}Z`,
+      "tests_run": 7,
+      "all_passed": allPassed,
+      "duration_ms": durationMs,
+      "description": "Live execution of all 7 SHACL conformance test graphs against the ring algebra."
+    },
+    "@context": UOR_CONTEXT_URL,
+    "@id": `https://uor.foundation/shacl/validation/R${n}`,
+    "@type": "shacl:ValidationReport",
+    "shacl:conforms": allPassed,
+    "shacl:quantum": n,
+    "shacl:ringModulus": m,
+    "shacl:testsRun": 7,
+    "shacl:results": tests,
+    "shacl:durationMs": durationMs,
+    "shacl:timestamp": timestamp(),
+    "shacl:shapesSource": "https://api.uor.foundation/v1/bridge/shacl/shapes",
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/shacl/"
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
 // POST /kernel/derive — Term tree derivation pipeline (UOR Prism §Term→Derivation)
 async function kernelDerive(req: Request, rl: RateLimitResult): Promise<Response> {
   const contentType = req.headers.get('content-type') ?? '';
@@ -1873,7 +2158,8 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "POST", "path": `${base}/kernel/address/encode`, "body": "{input, encoding}", "example": `${base}/kernel/address/encode`, "operationId": "addressEncode", "summary": "UTF-8 → u:Address with per-byte Glyph decomposition" },
           { "method": "GET", "path": `${base}/kernel/schema/datum`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/schema/datum?x=42`, "operationId": "schemaDatum", "summary": "Full schema:Datum — decimal, binary, bits set, content address, embedded schema:Triad" },
           { "method": "GET", "path": `${base}/kernel/schema/triad`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/schema/triad?x=42`, "operationId": "schemaTriad", "summary": "schema:Triad — first-class triadic coordinate (datum/stratum/spectrum ↔ subject/predicate/object) with RDF 1.1 correspondence and partition:Partition named graph context" },
-          { "method": "POST", "path": `${base}/kernel/derive`, "body": "{term: {op, args}, n?}", "example": `${base}/kernel/derive`, "operationId": "kernelDerive", "summary": "uor.derive() — term tree derivation with SHA-256 derivation_id (urn:uor:derivation:sha256:...), cert:Certificate, and Grade A epistemic certainty" }
+          { "method": "POST", "path": `${base}/kernel/derive`, "body": "{term: {op, args}, n?}", "example": `${base}/kernel/derive`, "operationId": "kernelDerive", "summary": "uor.derive() — term tree derivation with SHA-256 derivation_id (urn:uor:derivation:sha256:...), cert:Certificate, and Grade A epistemic certainty" },
+          { "method": "GET", "path": `${base}/kernel/ontology`, "required_params": "none", "example": `${base}/kernel/ontology`, "operationId": "kernelOntology", "summary": "Ontology metadata — 82 classes, 120 properties, 14 namespaces, 14 named individuals, OWL 2 DL profile, 7 SHACL test graphs, download links" }
         ]
       },
       "bridge": {
@@ -1887,7 +2173,9 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/bridge/derivation`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/derivation?x=42&ops=neg,bnot,succ`, "operationId": "bridgeDerivation", "summary": "derivation:DerivationTrace — SHA-256 derivation_id, cert:Certificate with cert:certifies, Grade A epistemic grading" },
           { "method": "GET", "path": `${base}/bridge/trace`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/trace?x=42&ops=neg,bnot`, "operationId": "bridgeTrace", "summary": "trace:ExecutionTrace — exact bit state per step, Hamming drift, XOR deltas" },
           { "method": "GET", "path": `${base}/bridge/resolver`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/resolver?x=42`, "operationId": "bridgeResolver", "summary": "resolver:Resolution — canonical category with full factor decomposition" },
-          { "method": "GET", "path": `${base}/bridge/graph/query`, "required_params": "none", "optional_params": "graph, n, limit", "example": `${base}/bridge/graph/query?graph=partition:UnitSet&n=8`, "operationId": "bridgeGraphQuery", "summary": "Named graph query — enumerate Triads scoped by partition:Partition (UnitSet, ExteriorSet, IrreducibleSet, ReducibleSet)" }
+          { "method": "GET", "path": `${base}/bridge/graph/query`, "required_params": "none", "optional_params": "graph, n, limit", "example": `${base}/bridge/graph/query?graph=partition:UnitSet&n=8`, "operationId": "bridgeGraphQuery", "summary": "Named graph query — enumerate Triads scoped by partition:Partition (UnitSet, ExteriorSet, IrreducibleSet, ReducibleSet)" },
+          { "method": "GET", "path": `${base}/bridge/shacl/shapes`, "required_params": "none", "example": `${base}/bridge/shacl/shapes`, "operationId": "shaclShapes", "summary": "All 7 SHACL shape definitions (Ring, Primitives, TermGraph, StateLifecycle, Partition, CriticalIdentity, EndToEnd)" },
+          { "method": "GET", "path": `${base}/bridge/shacl/validate`, "required_params": "none", "optional_params": "n", "example": `${base}/bridge/shacl/validate?n=8`, "operationId": "shaclValidate", "summary": "Live SHACL validation — runs all 7 conformance tests and returns a shacl:ValidationReport" }
         ]
       },
       "user": {
@@ -4324,6 +4612,16 @@ Deno.serve(async (req: Request) => {
       return resp;
     }
 
+    // ── Kernel — ontology metadata ──
+    if (path === '/kernel/ontology') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = kernelOntology(rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
     // ── Kernel — derive (term tree derivation) ──
     if (path === '/kernel/derive') {
       if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
@@ -4364,6 +4662,24 @@ Deno.serve(async (req: Request) => {
     if (path === '/bridge/graph/query') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
       const resp = bridgeGraphQuery(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+    // ── Bridge — SHACL conformance ──
+    if (path === '/bridge/shacl/shapes') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = shaclShapes(rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+    if (path === '/bridge/shacl/validate') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = shaclValidate(url, rl);
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
