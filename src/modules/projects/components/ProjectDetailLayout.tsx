@@ -1,5 +1,5 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, ArrowLeft, ShieldCheck, Bot, CheckCircle2, Loader2 } from "lucide-react";
+import { ExternalLink, ArrowLeft, ShieldCheck, Bot, CheckCircle2, Loader2, Copy, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { generateCertificate, type UorCertificate } from "@/lib/uor-certificate";
@@ -25,7 +25,25 @@ export interface ProjectDetailProps {
   sections: ProjectSection[];
   agentInstructions: AgentInstruction[];
 }
-
+const CopyRow = ({ label, value, display }: { label: string; value: string; display?: React.ReactNode }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <p className="text-sm text-section-dark-foreground/90 font-mono break-all leading-relaxed mt-1.5 flex items-start gap-2 group">
+      <span className="flex-1">
+        <span className="text-section-dark-foreground/50">{label}:</span>{" "}
+        {display || value}
+      </span>
+      <button onClick={handleCopy} className="shrink-0 mt-0.5 text-section-dark-foreground/40 hover:text-section-dark-foreground/80 transition-colors cursor-pointer" title={`Copy ${label}`}>
+        {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+      </button>
+    </p>
+  );
+};
 const ProjectDetailLayout = ({
   name,
   slug,
@@ -116,15 +134,11 @@ const ProjectDetailLayout = ({
                   <p className="text-xs font-semibold uppercase tracking-wider text-section-dark-foreground font-body mb-2">
                     UOR Content Certificate
                   </p>
-                  <p className="text-sm text-section-dark-foreground/90 font-mono break-all leading-relaxed">
-                    <span className="text-section-dark-foreground/50">cid:</span>{" "}
-                    {certificate["cert:cid"]}
-                  </p>
-                  <p className="text-sm text-section-dark-foreground/90 font-mono mt-1.5">
-                    <span className="text-section-dark-foreground/50">addr:</span>{" "}
-                    <span className="tracking-widest">{certificate["store:uorAddress"]["u:glyph"].slice(0, 32)}…</span>
-                    <span className="text-section-dark-foreground/50 ml-2">({certificate["store:uorAddress"]["u:length"]} bytes)</span>
-                  </p>
+                  <CopyRow label="cid" value={certificate["cert:cid"]} />
+                  <CopyRow label="addr" value={certificate["store:uorAddress"]["u:glyph"]} display={
+                    <><span className="tracking-widest">{certificate["store:uorAddress"]["u:glyph"].slice(0, 32)}…</span>
+                    <span className="text-section-dark-foreground/50 ml-2">({certificate["store:uorAddress"]["u:length"]} bytes)</span></>
+                  } />
                   <p className="text-sm text-section-dark-foreground/60 font-mono mt-1.5">
                     subject: {certificate["cert:subject"]} · spec {certificate["cert:specification"]}
                   </p>
