@@ -1,209 +1,180 @@
 
 
-# W3C Semantic Web Tower -- UOR Framework Alignment Plan
+# UOR Semantic Web Agentic Roadmap v3-3 — Gap Analysis
 
-## Objective
+## Current Coverage: ~92%
 
-Align the UOR implementation with the canonical W3C Semantic Web "layer cake" so that W3C practitioners immediately recognize the architecture, while the algebraic foundation (ring arithmetic) remains the grounding layer.
-
-The W3C tower has 7 layers plus the "P" (People) axis. Below is the layer-by-layer mapping and the gaps that need closing.
+The previous implementation rounds closed the major structural gaps (trace, observable, resolution cycle, type registry, W3C vocabulary, PROV-O alignment). What remains are completeness and precision gaps that prevent full roadmap compliance.
 
 ---
 
-## Layer-by-Layer Analysis
+## Gap 1: Observable Module Missing from Integrity Check
 
-### Layer 0: Unicode + URI -- COMPLETE, minor enrichment needed
+**Roadmap reference**: Section 7 — Observable is a registered component. Section 9.1 R4 requires verify() before emit() across ALL modules.
 
-**W3C standard**: Unicode for character encoding, URI/IRI for resource identification.
+**Current state**: `systemIntegrityCheck()` in `integrity-check.ts` checks ring-core, derivation, receipts, store, state, and trace — but NOT the observable module. This means the integrity report shows 7 checks but the observable table is unverified.
 
-**UOR mapping**: `identity/addressing.ts` provides Braille bijection (U+2800) and content-addressed IRIs (`https://uor.foundation/u/...`). Round-trip verified.
-
-**Gap**: The JSON-LD context (`context.ts` and `uor-v1.jsonld`) is missing standard W3C namespace prefixes that W3C practitioners expect to see:
-- `rdf:` (http://www.w3.org/1999/02/22-rdf-syntax-ns#)
-- `rdfs:` (http://www.w3.org/2000/01/rdf-schema#) -- present in `.jsonld` but missing from `emitContext()`
-- `owl:` (http://www.w3.org/2002/07/owl#) -- present in `.jsonld` but missing from `emitContext()`
-- `skos:` (http://www.w3.org/2004/02/skos/core#)
-- `dcterms:` (http://purl.org/dc/terms/)
-- `foaf:` (http://xmlns.com/foaf/0.1/)
-- `prov:` (http://www.w3.org/ns/prov#) -- critical for trace/provenance alignment
-
-**Fix**: Add these 7 W3C-standard prefixes to `emitContext()` in `context.ts` and to `uor-v1.jsonld`. This makes every UOR JSON-LD document immediately parseable by any W3C-compliant tool.
-
-### Layer 1: XML + Namespaces + XML Schema -- COMPLETE
-
-**W3C standard**: XML serialization with namespace-qualified elements.
-
-**UOR mapping**: JSON-LD 1.1 replaces XML as the serialization format (this is the modern W3C-endorsed approach). `xsd:` namespace already present for typed literals. 14 UOR namespaces registered.
-
-**No gaps.**
-
-### Layer 2: RDF + RDF Schema -- COMPLETE, alignment needed
-
-**W3C standard**: RDF triples (subject-predicate-object), `rdf:type`, `rdfs:Class`, `rdfs:subClassOf`, `rdfs:label`, `rdfs:comment`, `rdfs:domain`, `rdfs:range`.
-
-**UOR mapping**: `kg-store/store.ts` stores S/P/O triples in `uor_triples`. The emitter (`jsonld/emitter.ts`) already emits `rdf:type` triples.
-
-**Gap**: UOR types use custom `schema:Datum`, `derivation:Record`, etc. but never declare them as `rdfs:Class` with `rdfs:subClassOf` hierarchies. W3C practitioners expect a formal RDFS vocabulary where:
-- `schema:Datum rdfs:subClassOf rdfs:Resource`
-- `derivation:Record rdfs:subClassOf prov:Activity`
-- `cert:DerivationCertificate rdfs:subClassOf prov:Entity`
-- `trace:ComputationTrace rdfs:subClassOf prov:Activity`
-- Properties have `rdfs:domain` and `rdfs:range` declarations
-
-**Fix**: Create a new file `src/modules/jsonld/vocabulary.ts` that emits the formal RDFS/OWL vocabulary as a JSON-LD document. This is a **static ontology declaration** -- it maps every UOR type to its W3C equivalent. Add a function `emitVocabulary()` that returns the full class hierarchy and property definitions.
-
-### Layer 3: Ontology Vocabulary (OWL) -- PARTIAL, needs formal declaration
-
-**W3C standard**: OWL for class restrictions, property characteristics (functional, inverse, transitive), equivalences.
-
-**UOR mapping**: `shacl/shapes.ts` validates data shapes. `resolver/type-registry.ts` maps types. But there is no formal OWL ontology document.
-
-**Gap**: The UOR ontology is implicit in code but never emitted as an OWL document. Key OWL declarations needed:
-- `op:neg owl:inverseOf op:neg` (involution)
-- `op:bnot owl:inverseOf op:bnot` (involution)
-- `u:succ owl:equivalentProperty [chain of op:neg, op:bnot]`
-- `schema:Datum owl:disjointWith derivation:Record`
-- Partition classes are `owl:disjointUnionOf` the ring
-
-**Fix**: Add OWL class declarations to `vocabulary.ts`. These are static JSON-LD nodes that describe the algebraic structure in W3C-standard terms. No new logic needed -- just formal declarations of what already exists.
-
-### Layer 4: Logic -- COMPLETE (UOR's strongest layer)
-
-**W3C standard**: Rules, inference engines, first-order logic.
-
-**UOR mapping**: Ring arithmetic in Z/(2^n)Z IS the logic layer. The critical identity `neg(bnot(x)) = succ(x)` is the fundamental inference rule. `canonicalization.ts` applies 7 reduction rules. The ring IS a complete algebraic logic system.
-
-**No gaps.** This is where UOR exceeds W3C -- algebraic certainty rather than probabilistic inference.
-
-### Layer 5: Proof -- COMPLETE
-
-**W3C standard**: Formal proofs that conclusions follow from premises.
-
-**UOR mapping**: `trace/trace.ts` records step-by-step `ComputationTrace`. `self-verify/integrity-check.ts` runs 7 system-wide checks. `shacl/conformance.ts` runs 7 conformance tests. `derivation/derivation.ts` produces auditable derivation chains.
-
-**Gap**: Traces should declare themselves as `prov:Activity` (W3C PROV-O standard) for interoperability.
-
-**Fix**: Add `prov:` typed properties to `ComputationTrace` output:
-- `prov:wasGeneratedBy` linking trace to derivation
-- `prov:used` linking to input datum
-- `prov:wasAttributedTo` for the agent/ring that produced it
-
-### Layer 6: Digital Signature -- COMPLETE
-
-**W3C standard**: Cryptographic signatures for authenticity.
-
-**UOR mapping**: `derivation/certificate.ts` issues SHA-256 CID-based certificates. `derivation/receipt.ts` generates self-verifying receipts. Content-addressing provides tamper-evidence by construction.
-
-**No gaps.**
-
-### Layer 7: Trust -- COMPLETE
-
-**W3C standard**: Trust policies, reputation systems.
-
-**UOR mapping**: `epistemic/grading.ts` implements the 4-tier A/B/C/D grading system. Every SPARQL result carries an epistemic grade. The R1 enforcement trigger tags unverified claims as Grade D.
-
-**No gaps.**
-
-### The "P" Axis (People) -- COMPLETE
-
-**W3C insight**: Standards must be accessible to people, not just machines.
-
-**UOR mapping**: Dashboard, Ring Explorer, SPARQL Editor, Agent Console, Conformance page -- all provide human-facing interfaces to the algebraic stack.
-
-**No gaps.**
+**Fix**: Add `checkObservableIntegrity()` to `integrity-check.ts` that queries the `uor_observables` table count, matching the pattern of `checkTraceIntegrity()`. Register it in `systemIntegrityCheck()`. This brings the total to 8 integrity checks.
 
 ---
 
-## Implementation Plan
+## Gap 2: Vocabulary Severely Incomplete (17/82 classes, 16/120 properties)
 
-### File 1: `src/modules/jsonld/context.ts` -- Add W3C standard prefixes
+**Roadmap reference**: Section 3 Layer Cake and page 7 — "82 classes, 120 properties, 14 named individuals."
 
-Add 7 W3C-standard namespace prefixes to `emitContext()`:
-- `rdf`, `rdfs`, `owl`, `skos`, `dcterms`, `foaf`, `prov`
+**Current state**: `vocabulary.ts` declares 17 classes and 16 properties. The roadmap specifies a far richer ontology including:
 
-This is a ~10 line addition to the existing return object.
+Missing classes (selection of most critical):
+- `schema:Triad` — the atomic triadic coordinate
+- `schema:Term` — unevaluated syntax object (roadmap: `schema:Term owl:disjointWith schema:Datum`)
+- `type:PrimitiveType` — formal type class
+- `resolver:Resolver` — entity resolution agent
+- `proof:CoherenceProof` is declared but missing `proof:notClosedUnder` property
+- `state:Binding` — individual binding within a context
+- `cert:Receipt` is present but `cert:CertificateChain` is not
+- `op:XOR`, `op:AND`, `op:OR` — the 3 binary operations as formal properties
+- Named individuals: `op:zero`, `op:one`, `op:maxVal`, etc. (14 required)
 
-### File 2: `public/contexts/uor-v1.jsonld` -- Sync W3C prefixes
+Missing properties (selection):
+- `schema:stratum`, `schema:spectrum`, `schema:glyph`, `schema:codepoints`
+- `observable:value`, `observable:source`, `observable:stratum`
+- `state:quantum`, `state:capacity`, `state:bindingCount`
+- `resolver:strategy`, `resolver:fidelity`
+- `morphism:sourceQuantum`, `morphism:targetQuantum`
+- `proof:notClosedUnder`, `proof:criticalIdentity`
 
-Add the same 7 prefixes to the external context file so that externally-referenced contexts also include W3C namespaces. Also add `rdf` which is currently missing.
-
-### File 3: `src/modules/jsonld/vocabulary.ts` -- NEW: Formal W3C Vocabulary
-
-Create a new module that emits the UOR ontology as a proper RDFS/OWL document. This file:
-
-- Declares all UOR classes as `rdfs:Class` with `rdfs:subClassOf` chains
-- Maps UOR types to W3C equivalents (e.g., `trace:ComputationTrace` -> `prov:Activity`)
-- Declares OWL properties (involutions, equivalences, disjointness)
-- Declares `rdfs:domain` and `rdfs:range` for key properties
-- Exports `emitVocabulary()` returning a JSON-LD document
-
-Key class hierarchy:
-```
-rdfs:Resource
-  schema:Datum (ring element)
-  derivation:Record rdfs:subClassOf prov:Activity
-  cert:DerivationCertificate rdfs:subClassOf prov:Entity
-  trace:ComputationTrace rdfs:subClassOf prov:Activity
-  observable:Observable rdfs:subClassOf prov:Entity
-  morphism:Transform
-  partition:Set
-    partition:UnitSet
-    partition:ExteriorSet
-    partition:IrreducibleSet
-    partition:ReducibleSet
-  state:Context
-  state:Frame
-```
-
-### File 4: `src/modules/jsonld/index.ts` -- Export vocabulary
-
-Add `emitVocabulary` to barrel exports.
-
-### File 5: `src/modules/trace/trace.ts` -- Add PROV-O properties
-
-Enrich `ComputationTrace` with W3C PROV-O typed properties:
-- `prov:wasGeneratedBy` -> derivation ID
-- `prov:used` -> input data references
-- `prov:startedAtTime` -> timestamp
-- `prov:wasAttributedTo` -> "urn:uor:agent:ring-core"
-
-### File 6: `src/modules/jsonld/emitter.ts` -- Use PROV-O in emitted nodes
-
-Add `prov:wasGeneratedBy` to derivation nodes linking them to the ring coherence proof. Add `rdfs:label` and `rdfs:comment` to datum nodes for human readability.
-
-### File 7: `public/contexts/uor-vocabulary.jsonld` -- Static ontology file
-
-Publish the vocabulary as a static JSON-LD file at a well-known URL, enabling external tools to fetch and understand the UOR ontology.
-
-### File 8: `src/test/vocabulary.test.ts` -- Vocabulary self-verification
-
-Test that:
-- Every class declared in the vocabulary has a valid `rdfs:subClassOf`
-- Every property has `rdfs:domain` and `rdfs:range`
-- The vocabulary is valid JSON-LD
-- All UOR namespace prefixes resolve correctly
-- OWL involution declarations match ring arithmetic reality
+**Fix**: Expand `vocabulary.ts` with the missing class declarations, property declarations, and 14 named individuals. This is static ontology data — no logic changes. Target: 50+ classes, 60+ properties, 14 individuals (pragmatic coverage of everything referenced in the implementation, not padding to 82).
 
 ---
 
-## What Stays Unchanged
+## Gap 3: Type Registry Missing Q2+ Types
 
-- Ring arithmetic (Layer 0 foundation) -- untouched
-- Identity/addressing -- untouched
-- KG store, SPARQL, SHACL -- untouched
-- Agent tools, resolution cycle -- untouched
-- Epistemic grading, certificates, receipts -- untouched
-- All existing tests continue to pass
+**Roadmap reference**: Section 7 Strategic Enhancement — "Q1: 65,536 canonical entity types. Q3: 4.29B — full Wikidata coverage."
+
+**Current state**: `type-registry.ts` has only 4 types: uint8 (Q0), uint16 (Q1), bool (Q0), nibble (Q0). No Q2 or Q3 types.
+
+**Fix**: Add `uint32` (Q2, 32-bit, 4 bytes) and `uint64` (Q3, 64-bit, 8 bytes) to the registry. Also add `float32` (Q2) and `string` (Q1) as common developer-facing types. This aligns with the roadmap's mention of Q3 covering "full Wikidata coverage."
+
+---
+
+## Gap 4: SKOS Properties Not Emitted
+
+**Roadmap reference**: Section 3, SKOS row — "skos:exactMatch = derivation_id equality. skos:broader/narrower = stratum hierarchy."
+
+**Current state**: The `skos:` namespace is registered in context.ts but zero SKOS properties are emitted anywhere. No `skos:exactMatch`, `skos:broader`, or `skos:narrower` in the vocabulary or emitter.
+
+**Fix**: 
+1. Add SKOS property declarations to `vocabulary.ts`: `skos:exactMatch` mapped to derivation_id equality, `skos:broader`/`skos:narrower` mapped to stratum hierarchy
+2. In `emitter.ts`, add `skos:broader` links from higher-stratum datums to lower-stratum datums in the emitted graph (algebraically: lower stratum = broader concept)
+
+---
+
+## Gap 5: CoherenceProof Missing `notClosedUnder` Field
+
+**Roadmap reference**: Section 4, Bottleneck 3 Resolution — "The notClosedUnder field in every emitted CoherenceProof explicitly lists which operations the sampled graph is not closed under."
+
+**Current state**: `emitCoherenceProof()` in `emitter.ts` emits `proof:failures` but not `proof:notClosedUnder`. The roadmap explicitly requires this field.
+
+**Fix**: Add `proof:notClosedUnder` to `emitCoherenceProof()` output, populated from the ring verification failures filtered by closure-related checks. Also add `proof:notClosedUnder` property declaration to vocabulary.
+
+---
+
+## Gap 6: Resolution Cycle Stage 3 Missing Strategy Name
+
+**Roadmap reference**: Section 6.3, Stage 3 — "resolver:Resolver -- resolver:strategy = 'dihedral-factorization'"
+
+**Current state**: The resolution cycle calls `resolve()` but doesn't record or expose the strategy name. The roadmap explicitly requires `dihedral-factorization` as the strategy identifier.
+
+**Fix**: Add a `strategy` field to the `ResolverResult` type and set it to `"dihedral-factorization"` in `resolve()`. Update Stage 3 output in `resolution-cycle.ts` to include the strategy name.
+
+---
+
+## Gap 7: Federation Missing Partition Cardinality Planning
+
+**Roadmap reference**: Section 4, Bottleneck 7 — "Cardinality (computable from ring arithmetic) enables accurate join ordering."
+
+**Current state**: `federation.ts` dispatches to the UOR API but does not compute or use partition cardinality for join planning. The cardinality estimation is the key differentiator the roadmap claims over standard SPARQL federation.
+
+**Fix**: Before dispatching federated queries, compute the partition cardinality from ring arithmetic (`2^bits` for full ring, partition component sizes from `computePartition()`). Include `estimatedCardinality` in the `FederatedResult` type. Use cardinality to order endpoint queries (smallest first for nested loop optimization).
+
+---
+
+## Gap 8: Linked Data Principles Compliance Not Documented in Output
+
+**Roadmap reference**: Section 3, Linked Data Principles row — Berners-Lee's Four Rules must be structurally satisfied.
+
+**Current state**: The implementation satisfies all 4 rules but doesn't expose this compliance in any machine-readable form.
+
+**Fix**: Add a `LinkedDataCompliance` node to the vocabulary that formally declares compliance with each of the 4 Linked Data rules, mapping each to the UOR mechanism that implements it. This is a static vocabulary addition.
+
+---
+
+## What Is Already Complete (No Changes Needed)
+
+| Component | Status |
+|---|---|
+| Ring Arithmetic Engine (Q0/Q1) | Complete |
+| Content-Addressed IRI Layer | Complete |
+| Derivation Certificate System | Complete |
+| Triadic Coordinate System | Complete |
+| JSON-LD 1.1 Emission with W3C prefixes | Complete |
+| Coherence Verification | Complete |
+| 5 Agent Tool Functions | Complete |
+| 4-Tier Epistemic Grading | Complete |
+| SHACL Conformance Suite (7 tests) | Complete |
+| State Context with DB persistence | Complete |
+| Trace Module with PROV-O | Complete |
+| Observable Module | Complete |
+| 8-Stage Resolution Cycle | Complete |
+| Type Registry (Q0/Q1) | Complete (extending) |
+| SPARQL Federation (local + API) | Complete (enriching) |
+| W3C RDFS/OWL Vocabulary | Complete (expanding) |
+| R1 DB-level enforcement trigger | Complete |
+| R2 Canonical form before cert | Complete |
+| R3 Quantum consistency | Complete |
+| R4 verify() before emit() | Complete |
+| R5 IRI immutability | Complete |
+| R6 W3C standard compatibility | Complete |
+| Dashboard (20 modules) | Complete |
+
+---
+
+## Technical Implementation Details
+
+### Files to Modify
+
+1. **`src/modules/self-verify/integrity-check.ts`** — Add `checkObservableIntegrity()`, register in `systemIntegrityCheck()` (total: 8 checks)
+
+2. **`src/modules/jsonld/vocabulary.ts`** — Expand from 17 to 50+ classes, 16 to 60+ properties, add 14 named individuals. Add `schema:Term`, `schema:Triad`, `type:PrimitiveType`, `resolver:Resolver`, SKOS property mappings, `proof:notClosedUnder`, observable properties, state properties, morphism properties, binary operation properties, `LinkedDataCompliance` node
+
+3. **`src/modules/resolver/type-registry.ts`** — Add uint32 (Q2), uint64 (Q3), float32 (Q2), string (Q1) types
+
+4. **`src/modules/jsonld/emitter.ts`** — Add `proof:notClosedUnder` to `emitCoherenceProof()`, add `skos:broader` links to datum nodes based on stratum hierarchy
+
+5. **`src/modules/resolver/resolver.ts`** — Add `strategy: "dihedral-factorization"` to `ResolverResult`
+
+6. **`src/modules/sparql/federation.ts`** — Add `estimatedCardinality` computation using ring partition arithmetic, include in `FederatedResult`
+
+7. **`src/modules/agent-tools/resolution-cycle.ts`** — Include strategy name in Stage 3 output
+
+8. **`public/contexts/uor-vocabulary.jsonld`** — Sync with expanded vocabulary.ts
+
+9. **`src/test/vocabulary.test.ts`** — Update tests for expanded class/property counts
+
+### No New Files Required
+
+All changes are enrichments to existing files. Zero new modules needed.
+
+### Verification
+
+After implementation:
+- 8/8 integrity checks pass (adding observable)
+- Vocabulary declares 50+ classes, 60+ properties, 14 named individuals
+- All 7 SHACL conformance tests continue to pass
+- Type registry covers Q0 through Q3
+- SKOS alignment properties emitted in graph output
+- CoherenceProof includes `notClosedUnder` field
+- Federation includes cardinality estimates
 - All 20 dashboard modules remain healthy
-
-## Summary
-
-The UOR stack already fully replicates the W3C Semantic Web tower. The changes above add **formal W3C vocabulary declarations** (RDFS/OWL/PROV-O) so that:
-
-1. Any W3C tool can parse UOR JSON-LD documents with standard prefixes
-2. The ontology is formally declared using the exact same vocabulary W3C practitioners use
-3. Provenance traces align with W3C PROV-O for interoperability
-4. The algebraic grounding (ring arithmetic) remains the distinguishing innovation beneath the familiar W3C surface
-
-Total: ~3 new files, ~4 modified files. Zero changes to core arithmetic or verification logic.
+- **neg(bnot(x)) = succ(x) -- VERIFIED -- ALL SYSTEMS OPERATIONAL**
 
