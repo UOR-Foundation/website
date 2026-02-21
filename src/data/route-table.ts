@@ -17,4 +17,5 @@ export const routeTable = [
   { path: "/projects/atlas-embeddings", label: "Project: Atlas Embeddings" },
   { path: "/projects/atomic-language-model", label: "Project: Atomic Language Model" },
   { path: "/projects/prism", label: "Project: Prism" },
+  { path: "/sparql-editor", label: "SPARQL Editor" },
 ];
