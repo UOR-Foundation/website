@@ -1021,7 +1021,7 @@ const Api = () => {
               { problem: "Auth Exploits", solution: "Passwords and tokens get stolen. UOR proofs are mathematical — any recipient can verify them independently, with no server or middleman involved.", endpoint: "Layer 4", layerId: "layer-4", layerNum: 4 },
               { problem: "Prompt Injection", solution: "Hidden instructions can silently change what an AI does. UOR records every step of a computation — so any deviation from expected behaviour is immediately detectable.", endpoint: "Layer 4", layerId: "layer-4", layerNum: 4 },
               { problem: "Content Spam", solution: "AI spam filters are easy to fool with paraphrasing. UOR scores content using algebraic structure — a fixed mathematical property that cannot be gamed by rewording.", endpoint: "Layer 5", layerId: "layer-5", layerNum: 5 },
-              { problem: "Opaque Coordination", solution: "When AI agents share results, there is no standard way to check the work. Every UOR operation has a formal name and definition — any agent can verify any result.", endpoint: "Layer 2", layerId: "layer-2", layerNum: 2 },
+              
               { problem: "No Coherence Model", solution: "AI systems break down when they silently disagree on the meaning of data. UOR coherence proofs confirm that a data type behaves consistently — across every possible value.", endpoint: "Layer 4", layerId: "layer-4", layerNum: 4 },
               { problem: "No Persistent Memory", solution: "Agents lose state between sessions. UOR × IPFS stores agent memory as dual-verified, content-addressed objects — retrievable and verifiable by any agent, any time.", endpoint: "Layer 6", layerId: "layer-6", layerNum: 6 },
             ].map(item => (
