@@ -46,8 +46,8 @@ export const LAYERS: LayerData[] = [
     title: "The Foundation",
     oneLiner: "One mathematical rule. Provable in under 100ms. Everything above depends on it.",
     whyItMatters:
-      "Imagine flipping every switch in a row, then reversing the sign. You always land exactly one step forward. This isn't a design choice: it's a mathematical fact, like 2 + 2 = 4. Because anyone can check it instantly on any machine, two systems that have never met can independently confirm they are playing by the same rules. That single checkable fact is the bedrock. Every capability above (identity, verification, storage) inherits its trustworthiness from this one testable guarantee.",
-    solves: "Any two systems can verify they share the same rules without ever communicating. Trust comes from a checkable fact, not from an agreement.",
+      "There is one rule at the bottom of the system. You can test it on any number, on any machine, and you will always get the same answer. Because the rule is checkable, not promised, any two systems can independently confirm they are working from the same foundation without ever talking to each other.",
+    solves: "Trust between systems without prior contact. The proof is the math itself.",
     endpoints: [
       {
         operationId: "opVerifyCriticalIdentity",
