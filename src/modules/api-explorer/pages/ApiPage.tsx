@@ -25,7 +25,7 @@ const Api = () => {
             OpenAPI 3.1.0 · No account required
           </p>
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
-            One Shared System for Agentic AI
+            Unified Computation Substrate for Agentic AI
           </h1>
           <p
             className="mt-5 text-base md:text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
