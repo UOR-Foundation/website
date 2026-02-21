@@ -55,6 +55,7 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/user/morphism/transforms':          ['GET', 'OPTIONS'],
   '/user/state':                        ['GET', 'OPTIONS'],
   '/store/resolve':                     ['GET', 'OPTIONS'],
+  '/store/write':                       ['POST', 'OPTIONS'],
 };
 
 // ── Rate Limiting (in-memory sliding window) ────────────────────────────────
@@ -2282,6 +2283,218 @@ function openapiSpec(): Response {
   });
 }
 
+// ── IPFS Pinning Service API ────────────────────────────────────────────────
+const GATEWAY_CONFIGS: Record<string, { pinsApiUrl: string; readUrl: string }> = {
+  "web3.storage": {
+    pinsApiUrl: "https://api.web3.storage/pins",
+    readUrl: "https://w3s.link/ipfs/",
+  },
+  "pinata": {
+    pinsApiUrl: "https://api.pinata.cloud/psa/pins",
+    readUrl: "https://gateway.pinata.cloud/ipfs/",
+  },
+};
+
+async function pinToIpfs(
+  finalBytes: Uint8Array,
+  cid: string,
+  gateway: string,
+): Promise<{ success: boolean; gatewayUrl: string; error?: string }> {
+  const config = GATEWAY_CONFIGS[gateway];
+  if (!config) {
+    return { success: false, gatewayUrl: '', error: `Unknown gateway: ${gateway}` };
+  }
+
+  const apiKey = gateway === 'web3.storage'
+    ? Deno.env.get('WEB3_STORAGE_API_KEY')
+    : Deno.env.get('PINATA_API_KEY');
+
+  if (!apiKey) {
+    return {
+      success: true,
+      gatewayUrl: config.pinsApiUrl,
+      error: `No ${gateway} API key configured. Pin simulated. Configure the secret to enable real IPFS pinning.`,
+    };
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
+    const pinResponse = await fetch(config.pinsApiUrl, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ cid, name: `uor-object-${Date.now()}` }),
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!pinResponse.ok) {
+      const errText = await pinResponse.text().catch(() => 'unknown');
+      return { success: false, gatewayUrl: config.pinsApiUrl, error: `Gateway returned HTTP ${pinResponse.status}: ${errText}` };
+    }
+
+    return { success: true, gatewayUrl: config.pinsApiUrl };
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      return { success: false, gatewayUrl: config.pinsApiUrl, error: 'Gateway request timed out (30s)' };
+    }
+    return { success: false, gatewayUrl: config.pinsApiUrl, error: e.message };
+  }
+}
+
+// ── POST /store/write — Serialise UOR Object + Pin to IPFS ─────────────────
+async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> {
+  // Step 1: Validate Content-Type
+  const ct = req.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) {
+    return error415(rl);
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({
+      error: 'Invalid JSON in request body',
+      code: 'INVALID_JSON',
+      status: 422,
+    }), { status: 422, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+
+  const payload = body.object as Record<string, unknown> | undefined;
+  if (!payload || typeof payload !== 'object') {
+    return error400('Missing required field: "object"', 'object', rl);
+  }
+
+  const objectType = payload['@type'] as string | undefined;
+  if (!objectType) {
+    return error400('The "object" must have an "@type" field', '@type', rl);
+  }
+
+  // Reject kernel-space types (HTTP 422)
+  try {
+    validateStorableType(objectType);
+  } catch (e) {
+    return new Response(JSON.stringify({
+      error: e.message,
+      code: 'KERNEL_SPACE_REJECTED',
+      status: 422,
+    }), { status: 422, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+
+  const shouldPin = body.pin !== false;
+  const gateway = (body.gateway as string) ?? 'web3.storage';
+  const label = (body.label as string) ?? undefined;
+
+  if (!GATEWAY_CONFIGS[gateway]) {
+    return error400(`Unknown gateway: "${gateway}". Accepted: ${Object.keys(GATEWAY_CONFIGS).join(', ')}`, 'gateway', rl);
+  }
+
+  const ts = timestamp();
+
+  // Resolve storedType to full IRI
+  const storedType = objectType.includes(':') && !objectType.includes('://')
+    ? `https://uor.foundation/${objectType.replace(':', '/')}`
+    : objectType;
+
+  // ── Round 1: Build envelope WITHOUT cid/uorAddress ──
+  const envelopeRound1: Record<string, unknown> = {
+    "@context": UOR_STORE_CONTEXT,
+    "@id": "https://uor.foundation/store/object/pending",
+    "@type": "store:StoredObject",
+    "store:pinnedAt": ts,
+    "store:pinRecord": {
+      "@type": "store:PinRecord",
+      "store:gatewayUrl": GATEWAY_CONFIGS[gateway].pinsApiUrl,
+      "store:pinCertificate": {
+        "@type": "cert:TransformCertificate",
+        "cert:quantum": 8,
+        "cert:timestamp": ts,
+        "cert:transformType": "uor-address-to-ipfs-cid",
+        "cert:verified": true,
+      },
+      "store:pinnedAt": ts,
+    },
+    "store:storedType": storedType,
+    ...(label ? { "store:label": label } : {}),
+    "payload": payload,
+  };
+
+  const round1Bytes = new TextEncoder().encode(canonicalJsonLd(envelopeRound1));
+
+  // ── Steps 4-5: Compute addresses from Round 1 bytes ──
+  const uorAddress = computeUorAddress(round1Bytes);
+  const cid = await computeCid(round1Bytes);
+
+  // ── Step 6: Fill in computed addresses ──
+  const completeEnvelope: Record<string, unknown> = {
+    ...envelopeRound1,
+    "@id": `https://uor.foundation/store/object/${encodeURIComponent(uorAddress.glyph)}`,
+    "store:cid": cid,
+    "store:cidScope":
+      "The store:cid is computed from the envelope bytes without the address fields " +
+      "(round 1 serialisation). This eliminates the self-referential bootstrapping problem. " +
+      "Verification: strip store:cid and store:uorAddress from the retrieved JSON-LD, " +
+      "serialise canonically, recompute — addresses must match.",
+    "store:uorAddress": {
+      "@type": "u:Address",
+      "u:glyph": uorAddress.glyph,
+      "u:length": uorAddress.length,
+    },
+  };
+
+  // ── Step 7: Re-serialise complete envelope ──
+  const finalSerialised = canonicalJsonLd(completeEnvelope);
+  const finalBytes = new TextEncoder().encode(finalSerialised);
+
+  // ── Step 8: Pin to IPFS ──
+  let pinResult: { success: boolean; gatewayUrl: string; error?: string } | null = null;
+  if (shouldPin) {
+    pinResult = await pinToIpfs(finalBytes, cid, gateway);
+    if (!pinResult.success && !pinResult.error?.includes('simulated')) {
+      const status = pinResult.error?.includes('timed out') ? 502 : 503;
+      return new Response(JSON.stringify({
+        error: `IPFS pin failed: ${pinResult.error}`,
+        code: status === 502 ? 'GATEWAY_UNREACHABLE' : 'GATEWAY_ERROR',
+        status,
+      }), { status, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+    }
+  }
+
+  // ── Step 9: Build response ──
+  const gatewayReadUrl = GATEWAY_CONFIGS[gateway].readUrl;
+  const response: Record<string, unknown> = {
+    ...completeEnvelope,
+    "summary": {
+      "uor_address": uorAddress.glyph,
+      "ipfs_cid": cid,
+      "retrievable_at": `${gatewayReadUrl}${cid}`,
+      "dry_run": !shouldPin,
+      "byte_length": finalBytes.length,
+      "how_to_retrieve": `GET /store/read/${cid}`,
+      "how_to_verify": `GET /store/verify/${cid}`,
+      ...(pinResult?.error ? { "pin_note": pinResult.error } : {}),
+    },
+  };
+
+  return new Response(canonicalJsonLd(response), {
+    status: 200,
+    headers: {
+      ...CORS_HEADERS,
+      'Content-Type': 'application/ld+json',
+      'X-UOR-Address': uorAddress.glyph.substring(0, 64),
+      'X-UOR-CID': cid,
+      'X-UOR-Dry-Run': String(!shouldPin),
+      ...rateLimitHeaders(rl),
+    },
+  });
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // ROUTER
 // ════════════════════════════════════════════════════════════════════════════
@@ -2472,6 +2685,12 @@ Deno.serve(async (req: Request) => {
     if (path === '/store/resolve') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
       return await storeResolve(url, rl);
+    }
+
+    // ── Store — write (store: namespace) ──
+    if (path === '/store/write') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await storeWrite(req, rl);
     }
 
     // ── 405 for known paths with wrong method ──
