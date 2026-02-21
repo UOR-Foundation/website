@@ -1,0 +1,28 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "agent-tools",
+  "version": "1.0.0",
+  "description": "The 5 canonical agent tool functions — system calls of the Semantic Web: derive, query, verify, correlate, partition.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["tool:"],
+  "exports": [
+    "uor_derive",
+    "uor_query",
+    "uor_verify",
+    "uor_correlate",
+    "uor_partition",
+    "parseTerm",
+    "AgentConsolePage"
+  ],
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "derivation": "^1.0.0",
+    "kg-store": "^1.0.0",
+    "sparql": "^1.0.0",
+    "resolver": "^1.0.0",
+    "identity": "^1.0.0"
+  },
+  "routes": ["/agent-console"],
+  "assets": []
+}

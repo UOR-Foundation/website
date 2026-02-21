@@ -20,4 +20,5 @@ export const routeTable = [
   { path: "/sparql-editor", label: "SPARQL Editor" },
   { path: "/conformance", label: "Conformance Suite" },
   { path: "/code-knowledge-graph", label: "Code Knowledge Graph" },
+  { path: "/agent-console", label: "Agent Console" },
 ];
