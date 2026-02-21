@@ -2252,6 +2252,8 @@ async function pinToPinata(bytes: Uint8Array, ts: string): Promise<PinResult> {
   const jwt = Deno.env.get("PINATA_JWT");
   if (!jwt) throw new Error("PINATA_JWT environment variable not set.");
 
+  // pinJSONToIPFS stores JSON content directly (gateway-readable without dag-pb unwrapping).
+  // Logical losslessness is guaranteed because verification re-canonicalizes on read.
   const jsonContent = new TextDecoder().decode(bytes);
   const response = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
     method: "POST",
@@ -2516,6 +2518,75 @@ interface DualVerificationResult {
   verdict: string;
 }
 
+// ── dag-pb / UnixFS unwrapper ──────────────────────────────────────────────
+// IPFS gateways may return raw dag-pb blocks (application/vnd.ipld.raw).
+// For single-block UnixFS files, this extracts the original file bytes.
+function readVarint(buf: Uint8Array, pos: number): [number, number] {
+  let result = 0, shift = 0, i = pos;
+  while (i < buf.length) {
+    const b = buf[i++];
+    result |= (b & 0x7f) << shift;
+    if ((b & 0x80) === 0) return [result, i];
+    shift += 7;
+  }
+  return [result, i];
+}
+
+function unwrapDagPbUnixFS(raw: Uint8Array): Uint8Array {
+  // Try JSON.parse first — if it works, the content isn't dag-pb wrapped
+  try {
+    JSON.parse(new TextDecoder().decode(raw));
+    return raw; // Already unwrapped JSON
+  } catch { /* continue to dag-pb unwrap */ }
+
+  // Parse outer PBNode: look for field 1 (Data), wire type 2 (length-delimited)
+  let pos = 0;
+  let pbNodeData: Uint8Array | null = null;
+  while (pos < raw.length) {
+    const [tag, nextPos] = readVarint(raw, pos);
+    pos = nextPos;
+    const fieldNumber = tag >> 3;
+    const wireType = tag & 0x07;
+    if (wireType === 2) { // length-delimited
+      const [len, dataStart] = readVarint(raw, pos);
+      if (fieldNumber === 1) { // PBNode.Data
+        pbNodeData = raw.subarray(dataStart, dataStart + len);
+      }
+      pos = dataStart + len;
+    } else if (wireType === 0) { // varint
+      const [, next] = readVarint(raw, pos);
+      pos = next;
+    } else {
+      break; // unknown wire type
+    }
+  }
+
+  if (!pbNodeData) return raw; // Not dag-pb, return as-is
+
+  // Parse inner UnixFS Data: look for field 2 (Data), wire type 2
+  pos = 0;
+  while (pos < pbNodeData.length) {
+    const [tag, nextPos] = readVarint(pbNodeData, pos);
+    pos = nextPos;
+    const fieldNumber = tag >> 3;
+    const wireType = tag & 0x07;
+    if (wireType === 2) { // length-delimited
+      const [len, dataStart] = readVarint(pbNodeData, pos);
+      if (fieldNumber === 2) { // UnixFS.Data (the actual file bytes)
+        return pbNodeData.subarray(dataStart, dataStart + len);
+      }
+      pos = dataStart + len;
+    } else if (wireType === 0) { // varint
+      const [, next] = readVarint(pbNodeData, pos);
+      pos = next;
+    } else {
+      break;
+    }
+  }
+
+  return raw; // Couldn't unwrap, return as-is
+}
+
 async function dualVerify(
   retrievedBytes: Uint8Array,
   requestedCid: string,
@@ -2626,8 +2697,8 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
     gateway = gatewayOverride;
   }
 
-  // Fetch from IPFS trustless gateway
-  const ipfsUrl = `${gateway}/ipfs/${cidParam}?format=raw`;
+  // Fetch from IPFS gateway (no ?format=raw — that returns dag-pb protobuf, not file content)
+  const ipfsUrl = `${gateway}/ipfs/${cidParam}`;
   let fetchResponse: Response;
   try {
     const controller = new AbortController();
@@ -2635,7 +2706,7 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
     fetchResponse = await fetch(ipfsUrl, {
       signal: controller.signal,
       headers: {
-        'Accept': 'application/vnd.ipld.raw, application/ld+json, application/json, */*',
+        'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/read)',
         'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/read)',
       },
     });
@@ -2695,15 +2766,18 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
   let offset = 0;
   for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
 
-  // Run dual verification
-  const verification = await dualVerify(bytes, cidParam);
+  // Unwrap dag-pb/UnixFS if gateway returned raw IPLD block
+  const unwrappedBytes = unwrapDagPbUnixFS(bytes);
+
+  // Run dual verification on unwrapped content
+  const verification = await dualVerify(unwrappedBytes, cidParam);
 
   // Parse content for response
   let parsedContent: unknown = null;
   try {
-    parsedContent = JSON.parse(new TextDecoder().decode(bytes));
+    parsedContent = JSON.parse(new TextDecoder().decode(unwrappedBytes));
   } catch {
-    parsedContent = `[Binary content, ${bytes.length} bytes]`;
+    parsedContent = `[Binary content, ${unwrappedBytes.length} bytes]`;
   }
 
   // Handle strict mode integrity failure
@@ -2738,7 +2812,7 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
     "@id": `https://uor.foundation/store/retrieved/${cidParam}`,
     "@type": "store:RetrievedObject",
     "store:retrievedFrom": cidParam,
-    "store:byteLength": bytes.length,
+    "store:byteLength": unwrappedBytes.length,
     "store:contentType": fetchResponse.headers.get('content-type') ?? 'unknown',
     "store:gatewayUsed": gateway,
     "store:recomputedUorAddress": recomputedUorGlyph,
@@ -3014,8 +3088,8 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
     gateway = gatewayOverride;
   }
 
-  // Fetch from IPFS
-  const ipfsUrl = `${gateway}/ipfs/${cidParam}?format=raw`;
+  // Fetch from IPFS gateway (no ?format=raw — use content negotiation for file content)
+  const ipfsUrl = `${gateway}/ipfs/${cidParam}`;
   let fetchResponse: Response;
   try {
     const controller = new AbortController();
@@ -3023,7 +3097,7 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
     fetchResponse = await fetch(ipfsUrl, {
       signal: controller.signal,
       headers: {
-        'Accept': 'application/vnd.ipld.raw, application/ld+json, */*',
+        'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/verify)',
         'User-Agent': 'UOR-Framework/1.0 (https://uor.foundation; store/verify)',
       },
     });
@@ -3081,13 +3155,16 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
   let off = 0;
   for (const c of chunks) { bytes.set(c, off); off += c.length; }
 
+  // Unwrap dag-pb/UnixFS if gateway returned raw IPLD block
+  const unwrappedBytes = unwrapDagPbUnixFS(bytes);
+
   // Parse to detect UOR StoredObject and extract stored addresses
   let parsed: Record<string, unknown> | null = null;
   let storedCid: string | null = null;
   let storedUorGlyph: string | null = expectedUor;
 
   try {
-    parsed = JSON.parse(new TextDecoder().decode(bytes)) as Record<string, unknown>;
+    parsed = JSON.parse(new TextDecoder().decode(unwrappedBytes)) as Record<string, unknown>;
     storedCid = (parsed["store:cid"] as string) ?? null;
     if (!storedUorGlyph) {
       const uorAddr = parsed["store:uorAddress"] as Record<string, unknown> | undefined;
@@ -3107,8 +3184,8 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
     recomputedCid = await computeCid(round1Bytes);
     recomputedUor = computeUorAddress(round1Bytes);
   } else {
-    recomputedCid = await computeCid(bytes);
-    recomputedUor = computeUorAddress(bytes);
+    recomputedCid = await computeCid(unwrappedBytes);
+    recomputedUor = computeUorAddress(unwrappedBytes);
   }
 
   const expectedCidForCheck = storedCid ?? cidParam;
@@ -3155,7 +3232,7 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
     "@id": `https://uor.foundation/store/verify/${cidParam}`,
     "@type": "store:RetrievedObject",
     "store:retrievedFrom": cidParam,
-    "store:byteLength": totalBytes,
+    "store:byteLength": unwrappedBytes.length,
     "store:verified": storeVerified,
     "store:verifiedAt": verifiedAt,
     "verification": verification,
@@ -3203,7 +3280,7 @@ const GATEWAY_REGISTRY = [
     "store:authRequired": false,
     "store:note":
       "Public read-only gateway. No API key required. " +
-      "Supports trustless retrieval: GET /ipfs/{cid}?format=raw",
+      "Supports standard IPFS retrieval: GET /ipfs/{cid}",
   },
   {
     "@type": "store:GatewayConfig",
@@ -3232,8 +3309,8 @@ const GATEWAY_REGISTRY = [
     "store:authNote":
       "Requires PINATA_JWT environment variable. Free tier provides 1GB storage.",
     "store:note":
-      "Default write gateway. Stable API, recommended for production and agent memory persistence. " +
-      "Requires API key.",
+      "Default write gateway. Uses pinJSONToIPFS with canonical re-serialization on read for logically lossless round-trips. " +
+      "Stable API, recommended for production and agent memory persistence. Requires API key.",
   },
   {
     "@type": "store:GatewayConfig",
@@ -3290,8 +3367,8 @@ async function storeGateways(rl: RateLimitResult): Promise<Response> {
     "store:defaultWriteGateway": Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? "pinata",
     "store:gateways": gatewaysWithHealth,
     "store:note":
-      "All write operations use the IPFS Pinning Service API (PSA) spec. " +
-      "All read operations use the IPFS Trustless Gateway spec: GET /ipfs/{cid}?format=raw. " +
+      "All write operations use pinJSONToIPFS. Logical losslessness is guaranteed via canonical re-serialization on read (deterministic key sort). " +
+      "All read operations use standard IPFS gateway retrieval: GET /ipfs/{cid}. " +
       "Health is checked via the bafkqaaa identity probe (IPFS trustless gateway spec §7.1).",
     "store:ipfsSpecs": {
       "trustless_gateway": "https://specs.ipfs.tech/http-gateways/trustless-gateway/",
