@@ -3261,54 +3261,114 @@ async function storeVerify(cidParam: string, url: URL, rl: RateLimitResult): Pro
 }
 
 // ── GET /store/gateways — Gateway registry ─────────────────────────────────
-function storeGateways(rl: RateLimitResult): Response {
+
+const GATEWAY_REGISTRY = [
+  {
+    "@type": "store:GatewayConfig",
+    "store:id": "ipfs-io",
+    "store:provider": "Protocol Labs",
+    "store:gatewayReadUrl": "https://ipfs.io",
+    "store:pinsApiUrl": null,
+    "store:capabilities": ["read"],
+    "store:defaultFor": ["read"],
+    "store:authRequired": false,
+    "store:note":
+      "Public read-only gateway. No API key required. " +
+      "Supports trustless retrieval: GET /ipfs/{cid}?format=raw",
+  },
+  {
+    "@type": "store:GatewayConfig",
+    "store:id": "w3s-link",
+    "store:provider": "web3.storage",
+    "store:gatewayReadUrl": "https://w3s.link",
+    "store:pinsApiUrl": "https://api.web3.storage/upload",
+    "store:capabilities": ["read", "write"],
+    "store:defaultFor": ["write"],
+    "store:authRequired": false,
+    "store:authNote":
+      "Anonymous uploads accepted. Set WEB3_STORAGE_TOKEN env var for authenticated uploads with higher limits.",
+    "store:note":
+      "Default write gateway. Free tier. Supports anonymous multipart uploads. " +
+      "Returns CID in response body. No API key required for standard use.",
+  },
+  {
+    "@type": "store:GatewayConfig",
+    "store:id": "pinata",
+    "store:provider": "Pinata",
+    "store:gatewayReadUrl": "https://gateway.pinata.cloud",
+    "store:pinsApiUrl": "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+    "store:capabilities": ["read", "write"],
+    "store:defaultFor": [],
+    "store:authRequired": true,
+    "store:authNote":
+      "Requires PINATA_JWT environment variable. Request via api@uor.foundation.",
+    "store:note":
+      "Higher SLA than web3.storage. Recommended for production use cases. " +
+      "Requires API key.",
+  },
+  {
+    "@type": "store:GatewayConfig",
+    "store:id": "cloudflare-ipfs",
+    "store:provider": "Cloudflare",
+    "store:gatewayReadUrl": "https://cloudflare-ipfs.com",
+    "store:pinsApiUrl": null,
+    "store:capabilities": ["read"],
+    "store:defaultFor": [],
+    "store:authRequired": false,
+    "store:note": "Cloudflare public read gateway. Fast global CDN. Read-only.",
+  },
+];
+
+async function checkGatewayHealth(readUrl: string): Promise<"healthy" | "degraded" | "unreachable"> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(`${readUrl}/ipfs/bafkqaaa?format=raw`, {
+      signal: controller.signal,
+      headers: { "Accept": "application/vnd.ipld.raw" },
+    });
+    clearTimeout(timeoutId);
+    if (res.ok) return "healthy";
+    return "degraded";
+  } catch {
+    return "unreachable";
+  }
+}
+
+async function storeGateways(rl: RateLimitResult): Promise<Response> {
   const ts = timestamp();
+
+  // Run health checks in parallel
+  const healthChecks = await Promise.all(
+    GATEWAY_REGISTRY.map(async (gw) => {
+      const health = await checkGatewayHealth(gw["store:gatewayReadUrl"]);
+      return { id: gw["store:id"], health };
+    })
+  );
+  const healthMap = Object.fromEntries(healthChecks.map(h => [h.id, h.health]));
+
+  const gatewaysWithHealth = GATEWAY_REGISTRY.map(gw => ({
+    ...gw,
+    "store:health": healthMap[gw["store:id"]] ?? "unknown",
+  }));
+
   const response = {
     "@context": UOR_STORE_CONTEXT,
+    "@id": "https://uor.foundation/store/gateways",
     "@type": "store:GatewayRegistry",
     "store:timestamp": ts,
-    "store:defaultWriteGateway": Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? "web3.storage",
     "store:defaultReadGateway": DEFAULT_READ_GATEWAY,
-    "store:gateways": [
-      {
-        "@type": "store:GatewayConfig",
-        "store:name": "web3.storage",
-        "store:apiUrl": "https://api.web3.storage",
-        "store:gatewayReadUrl": "https://w3s.link/ipfs/",
-        "store:capabilities": ["read", "write", "pin"],
-        "store:authRequired": false,
-        "store:authNote": "Optional WEB3_STORAGE_TOKEN for authenticated uploads.",
-        "store:default_for": ["write"],
-      },
-      {
-        "@type": "store:GatewayConfig",
-        "store:name": "pinata",
-        "store:apiUrl": "https://api.pinata.cloud",
-        "store:gatewayReadUrl": "https://gateway.pinata.cloud/ipfs/",
-        "store:capabilities": ["read", "write", "pin"],
-        "store:authRequired": true,
-        "store:authNote": "Requires PINATA_JWT secret.",
-        "store:default_for": [],
-      },
-      {
-        "@type": "store:GatewayConfig",
-        "store:name": "ipfs.io",
-        "store:apiUrl": "https://ipfs.io",
-        "store:gatewayReadUrl": "https://ipfs.io/ipfs/",
-        "store:capabilities": ["read"],
-        "store:authRequired": false,
-        "store:default_for": ["read", "verify"],
-      },
-      {
-        "@type": "store:GatewayConfig",
-        "store:name": "cloudflare-ipfs.com",
-        "store:apiUrl": "https://cloudflare-ipfs.com",
-        "store:gatewayReadUrl": "https://cloudflare-ipfs.com/ipfs/",
-        "store:capabilities": ["read"],
-        "store:authRequired": false,
-        "store:default_for": [],
-      },
-    ],
+    "store:defaultWriteGateway": Deno.env.get('DEFAULT_WRITE_GATEWAY') ?? "web3.storage",
+    "store:gateways": gatewaysWithHealth,
+    "store:note":
+      "All write operations use the IPFS Pinning Service API (PSA) spec. " +
+      "All read operations use the IPFS Trustless Gateway spec: GET /ipfs/{cid}?format=raw. " +
+      "Health is checked via the bafkqaaa identity probe (IPFS trustless gateway spec §7.1).",
+    "store:ipfsSpecs": {
+      "trustless_gateway": "https://specs.ipfs.tech/http-gateways/trustless-gateway/",
+      "pinning_service_api": "https://ipfs.github.io/pinning-services-api-spec/",
+      "cid_spec": "https://github.com/multiformats/cid",
+    },
     "summary": {
       "write_gateways": ["web3.storage", "pinata"],
       "read_gateways": ["ipfs.io", "w3s.link", "cloudflare-ipfs.com", "gateway.pinata.cloud"],
@@ -3548,7 +3608,7 @@ Deno.serve(async (req: Request) => {
     // ── Store — gateways (store: namespace) ──
     if (path === '/store/gateways') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
-      return storeGateways(rl);
+      return await storeGateways(rl);
     }
 
     // ── 405 for known paths with wrong method ──
