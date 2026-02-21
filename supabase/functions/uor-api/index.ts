@@ -227,6 +227,205 @@ function jsonResp(body: unknown, extraHeaders: Record<string, string> = CACHE_HE
 const UOR_CONTEXT_URL = "https://uor.foundation/contexts/uor-v1.jsonld";
 
 // ════════════════════════════════════════════════════════════════════════════
+// STORE/ NAMESPACE — Foundation (Section 1 of 6)
+// Namespace:  store: → https://uor.foundation/store/
+// Space:      User (parallel to state/ and morphism/)
+// Imports:    u:, schema:, state:, cert:, proof:, derivation:
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── Kernel-space types: NEVER storable on IPFS ──────────────────────────────
+// These are compiled into the runtime and recomputed on demand — ROM.
+const KERNEL_FORBIDDEN_TYPES: ReadonlySet<string> = new Set([
+  'u:Address', 'u:Glyph',
+  'schema:Datum', 'schema:Ring', 'schema:Term',
+  'op:Operation', 'op:UnaryOp', 'op:BinaryOp', 'op:Involution',
+]);
+
+/**
+ * Guard: reject kernel-space types from storage.
+ * Returns an error string if the type is forbidden, or null if allowed.
+ */
+function validateStorableType(objectType: string | string[]): string | null {
+  const types = Array.isArray(objectType) ? objectType : [objectType];
+  for (const t of types) {
+    if (KERNEL_FORBIDDEN_TYPES.has(t)) {
+      return `Type '${t}' is kernel-space (ROM) and cannot be stored. Only user-space and bridge-space objects may be persisted to IPFS.`;
+    }
+  }
+  return null;
+}
+
+// ── Canonical JSON-LD serialisation ─────────────────────────────────────────
+// Deterministic: keys sorted recursively, no trailing whitespace, UTF-8.
+// This is the byte sequence from which both u:Address and store:Cid are derived.
+function canonicalSerialise(obj: unknown): string {
+  return JSON.stringify(obj, Object.keys(obj as Record<string, unknown>).sort(), 0);
+}
+
+// ── CID computation — CIDv1 / dag-json / sha2-256 / base32lower ────────────
+// Binary structure: <0x01><varint(0x0129)><0x12><0x20><sha256 digest>
+// String form: base32lower with 'b' prefix
+
+/** Encode an unsigned integer as a varint (LEB128). */
+function encodeVarint(value: number): Uint8Array {
+  const bytes: number[] = [];
+  while (value > 0x7f) {
+    bytes.push((value & 0x7f) | 0x80);
+    value >>>= 7;
+  }
+  bytes.push(value & 0x7f);
+  return new Uint8Array(bytes);
+}
+
+/** RFC 4648 base32 (lowercase, no padding) — the IPFS base32lower encoding. */
+function base32Lower(data: Uint8Array): string {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz234567';
+  let bits = 0, value = 0, output = '';
+  for (const byte of data) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      bits -= 5;
+      output += alphabet[(value >>> bits) & 0x1f];
+    }
+  }
+  if (bits > 0) {
+    output += alphabet[(value << (5 - bits)) & 0x1f];
+  }
+  return output;
+}
+
+/**
+ * Compute a CIDv1 string from canonical JSON-LD bytes.
+ *
+ * Steps:
+ *   1. SHA-256 digest of the canonical bytes
+ *   2. Multihash: <0x12 (sha2-256)><0x20 (32 bytes)><digest>
+ *   3. CID binary: <0x01 (CIDv1)><varint(0x0129) (dag-json)><multihash>
+ *   4. String: 'b' + base32lower(CID binary)
+ *
+ * @param canonicalBytes - The deterministic serialised JSON-LD as Uint8Array
+ * @returns CIDv1 string (e.g. "bafyrei...")
+ */
+async function computeCid(canonicalBytes: Uint8Array): Promise<string> {
+  // 1. SHA-256 digest
+  const digestBuffer = await crypto.subtle.digest('SHA-256', canonicalBytes);
+  const digest = new Uint8Array(digestBuffer);
+
+  // 2. Multihash: <hash-fn-code><digest-length><digest>
+  //    sha2-256 = 0x12, digest length = 0x20 (32)
+  const multihash = new Uint8Array(2 + digest.length);
+  multihash[0] = 0x12; // sha2-256
+  multihash[1] = 0x20; // 32 bytes
+  multihash.set(digest, 2);
+
+  // 3. CID binary: <version><codec><multihash>
+  //    version = 0x01, codec = 0x0129 (dag-json) as varint
+  const version = new Uint8Array([0x01]);
+  const codec = encodeVarint(0x0129);
+  const cidBinary = new Uint8Array(version.length + codec.length + multihash.length);
+  cidBinary.set(version, 0);
+  cidBinary.set(codec, version.length);
+  cidBinary.set(multihash, version.length + codec.length);
+
+  // 4. base32lower with 'b' multibase prefix
+  return 'b' + base32Lower(cidBinary);
+}
+
+/**
+ * Compute the u:Address (Braille bijection) from canonical bytes.
+ * Reuses the existing addressSimplified function.
+ */
+function computeUorAddress(canonicalBytes: Uint8Array): string {
+  return addressSimplified(canonicalBytes);
+}
+
+/**
+ * Build a store:StoredObject shell (without actually pinning to IPFS).
+ * Used by /store/write (Section 3) and /store/resolve (Section 2).
+ */
+async function buildStoredObject(payload: Record<string, unknown>): Promise<{
+  storedObject: Record<string, unknown>;
+  canonicalBytes: Uint8Array;
+  cid: string;
+  uorAddress: string;
+  serialisation: string;
+}> {
+  const serialisation = canonicalSerialise(payload);
+  const canonicalBytes = new TextEncoder().encode(serialisation);
+  const cid = await computeCid(canonicalBytes);
+  const uorAddress = computeUorAddress(canonicalBytes);
+
+  const storedObject = {
+    "@context": UOR_CONTEXT_URL,
+    "@id": `https://uor.foundation/store/object/${cid}`,
+    "@type": "store:StoredObject",
+    "store:uorAddress": uorAddress,
+    "store:cid": cid,
+    "store:storedType": payload["@type"] ?? "unknown",
+    "store:serialisation": serialisation,
+  };
+
+  return { storedObject, canonicalBytes, cid, uorAddress, serialisation };
+}
+
+// ── store/ namespace metadata (exposed via /navigate in Section 6) ──────────
+const STORE_NAMESPACE_META = {
+  "prefix": "store:",
+  "iri": "https://uor.foundation/store/",
+  "space": "user",
+  "api_group": "/store",
+  "label": "UOR Persistent Storage",
+  "imports": ["u:", "schema:", "state:", "cert:", "proof:", "derivation:"],
+  "classes": 6,
+  "properties": 14,
+  "class_definitions": [
+    {
+      "@id": "store:StoredObject",
+      "@type": "owl:Class",
+      "rdfs:label": "StoredObject",
+      "rdfs:comment": "A UOR object serialised to JSON-LD and persisted to IPFS. Carries both a u:Address (semantic identity) and a store:Cid (storage identity). Only user-space and bridge-space objects may be stored.",
+      "properties": ["store:uorAddress", "store:cid", "store:storedType", "store:serialisation", "store:pinRecord"]
+    },
+    {
+      "@id": "store:Cid",
+      "@type": "owl:Class",
+      "rdfs:label": "Cid",
+      "rdfs:comment": "An IPFS CIDv1 identifier. Binary: <0x01><varint(0x0129)><sha2-256 multihash>. String: base32lower with 'b' prefix. Codec: dag-json (0x0129) — ALWAYS."
+    },
+    {
+      "@id": "store:PinRecord",
+      "@type": "owl:Class",
+      "rdfs:label": "PinRecord",
+      "rdfs:comment": "Auditable record of a pin (write) operation. Contains timestamp, gateway URL, CID, and a cert:TransformCertificate binding u:Address to store:Cid.",
+      "properties": ["store:pinnedAt", "store:gatewayUrl", "store:cid", "store:pinCertificate"]
+    },
+    {
+      "@id": "store:StoreContext",
+      "@type": "owl:Class",
+      "rdfs:label": "StoreContext",
+      "rdfs:subClassOf": "state:Context",
+      "rdfs:comment": "A persisted state:Context whose bindings are serialised as an IPLD DAG on IPFS. store:rootCid points to the root IPLD node.",
+      "properties": ["store:rootCid", "store:ipnsKey"]
+    },
+    {
+      "@id": "store:RetrievedObject",
+      "@type": "owl:Class",
+      "rdfs:label": "RetrievedObject",
+      "rdfs:comment": "Result of reading from IPFS by CID. Contains stored and recomputed u:Addresses for dual verification. store:verified = false signals integrity failure.",
+      "properties": ["store:retrievedFrom", "store:storedUorAddress", "store:recomputedUorAddress", "store:verified"]
+    },
+    {
+      "@id": "store:GatewayConfig",
+      "@type": "owl:Class",
+      "rdfs:label": "GatewayConfig",
+      "rdfs:comment": "Configuration for an IPFS gateway — read URL for GET /ipfs/{cid} and Pinning Service API endpoint for POST /pins.",
+      "properties": ["store:gatewayReadUrl", "store:pinsApiUrl"]
+    }
+  ]
+};
+
+// ════════════════════════════════════════════════════════════════════════════
 // ENDPOINT HANDLERS
 // ════════════════════════════════════════════════════════════════════════════
 
