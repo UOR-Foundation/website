@@ -5,88 +5,21 @@ import projectHologramImg from "@/assets/project-hologram.jpg";
 import projectAtlasImg from "@/assets/project-atlas.png";
 import projectAtomicLangImg from "@/assets/project-atomic-lang.jpg";
 import projectPrismImg from "@/assets/project-prism.png";
+import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
 
-type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
+const imageMap: Record<string, string> = {
+  hologram: projectHologramImg,
+  atlas: projectAtlasImg,
+  atomicLang: projectAtomicLangImg,
+  prism: projectPrismImg,
+};
 
-interface Project {
-  name: string;
-  category: string;
-  description: string;
-  maturity: MaturityLevel;
-  url?: string;
-  image?: string;
-}
+type Project = ProjectData & { image?: string };
 
-const projects: Project[] = [
-  {
-    name: "Hologram",
-    category: "Frontier Technology",
-    description: "A new kind of computing infrastructure built from the ground up. Software-defined, high-performance, and designed for the next generation of applications.",
-    maturity: "Sandbox",
-    url: "https://gethologram.ai/",
-    image: projectHologramImg,
-  },
-  {
-    name: "Atlas Embeddings",
-    category: "Open Science",
-    description: "Research showing that five of the most complex structures in mathematics all come from a single, simple starting point, revealing a deeper shared order.",
-    maturity: "Sandbox",
-    url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
-    image: projectAtlasImg,
-  },
-  {
-    name: "Atomic Language Model",
-    category: "Frontier Technology",
-    description: "A language model built on formal grammar rules rather than statistical prediction. Every output is traceable to precise, well-defined operations.",
-    maturity: "Sandbox",
-    url: "https://github.com/dkypuros/atomic-lang-model",
-    image: projectAtomicLangImg,
-  },
-  {
-    name: "Prism",
-    category: "Open Science",
-    description: "The reference implementation of UOR. Prism turns the framework's ideas into working code: encoding, addressing, and navigating data in a single system.",
-    maturity: "Sandbox",
-    url: "https://github.com/UOR-Foundation/prism",
-    image: projectPrismImg,
-  },
-];
-
-const maturityInfo: { level: MaturityLevel; tagline: string; description: string; criteria: string[] }[] = [
-  {
-    level: "Sandbox",
-    tagline: "Early stage & experimental",
-    description: "New projects with high potential. Open to anyone with an idea that aligns with the UOR standard.",
-    criteria: [
-      "Aligns with the UOR Foundation mission",
-      "Has a clear problem statement",
-      "At least one committed maintainer",
-      "Open-source license (Apache 2.0 or MIT)",
-    ],
-  },
-  {
-    level: "Incubating",
-    tagline: "Growing adoption & active development",
-    description: "Projects with a clear roadmap, growing contributor base, and demonstrated value to the ecosystem.",
-    criteria: [
-      "Healthy contributor growth",
-      "Production use by at least 2 organizations",
-      "Clear governance model",
-      "Passing CI/CD and documentation standards",
-    ],
-  },
-  {
-    level: "Graduated",
-    tagline: "Production-ready & proven",
-    description: "Stable, widely adopted projects with mature governance and long-term sustainability.",
-    criteria: [
-      "Broad adoption across the ecosystem",
-      "Committer diversity from multiple organizations",
-      "Security audit completed",
-      "Stable release cadence with semantic versioning",
-    ],
-  },
-];
+const projects: Project[] = projectsData.map(p => ({
+  ...p,
+  image: p.imageKey ? imageMap[p.imageKey] : undefined,
+}));
 
 const maturityColors: Record<MaturityLevel, string> = {
   Graduated: "bg-primary/15 text-primary border-primary/20",

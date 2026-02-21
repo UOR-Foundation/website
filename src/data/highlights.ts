@@ -1,0 +1,29 @@
+/**
+ * Community highlights — serializable data for UOR certification.
+ * Image imports are mapped at the component level.
+ */
+export type TagType = "Research" | "Announcement" | "Event";
+
+export const highlights = [
+  {
+    tag: "Research" as TagType,
+    title: "UOR: Building the Internet's Knowledge Graph",
+    date: "December 21, 2023",
+    imageKey: "knowledgeGraph",
+    href: "/blog/building-the-internets-knowledge-graph",
+  },
+  {
+    tag: "Announcement" as TagType,
+    title: "Meet the UOR Framework",
+    date: "February 19, 2026",
+    imageKey: "frameworkLaunch",
+    href: "/blog/uor-framework-launch",
+  },
+  {
+    tag: "Event" as TagType,
+    title: "UOR Community Call",
+    date: "March 3, 2026",
+    imageKey: "communityCall",
+    href: "https://discord.com/channels/1342910418754076732/1342910419370774532/1474210293386055772",
+  },
+];

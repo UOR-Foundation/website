@@ -1,21 +1,26 @@
 import { useEffect, useState } from "react";
 import { getAllModules, isRegistryInitialized, onRegistryInitialized } from "@/lib/uor-registry";
+import {
+  getAllContentCertificates,
+  isContentRegistryInitialized,
+  onContentRegistryInitialized,
+} from "@/lib/uor-content-registry";
 
-/**
- * Injects a <script type="application/ld+json"> into the document head
- * containing the site's module graph and verification certificates.
- * Makes the site machine-readable and self-describing per UOR spec.
- */
 const UorMetadata = () => {
   const [injected, setInjected] = useState(false);
   const [ready, setReady] = useState(isRegistryInitialized());
+  const [contentReady, setContentReady] = useState(isContentRegistryInitialized());
 
   useEffect(() => {
     return onRegistryInitialized(() => setReady(true));
   }, []);
 
   useEffect(() => {
-    if (injected || !ready) return;
+    return onContentRegistryInitialized(() => setContentReady(true));
+  }, []);
+
+  useEffect(() => {
+    if (injected || !ready || !contentReady) return;
 
     const modules = getAllModules();
     const moduleGraph: Record<string, unknown>[] = [];
@@ -31,11 +36,27 @@ const UorMetadata = () => {
       });
     }
 
+    // Content certificates
+    const contentCerts = getAllContentCertificates();
+    const contentGraph: Record<string, unknown>[] = [];
+
+    for (const [, entry] of contentCerts) {
+      contentGraph.push({
+        "@type": "uor:ContentCertificate",
+        subjectId: entry.subjectId,
+        label: entry.label,
+        "cert:cid": entry.certificate["cert:cid"],
+        "store:uorAddress": entry.certificate["store:uorAddress"],
+        verified: entry.verified,
+      });
+    }
+
     const jsonLd = {
       "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
       "@type": "uor:ModuleGraph",
       "uor:specification": "1.0.0",
       modules: moduleGraph,
+      contentCertificates: contentGraph,
     };
 
     const script = document.createElement("script");
@@ -53,7 +74,7 @@ const UorMetadata = () => {
       const el = document.getElementById("uor-module-graph");
       if (el) el.remove();
     };
-  }, [injected, ready]);
+  }, [injected, ready, contentReady]);
 
   return null;
 };

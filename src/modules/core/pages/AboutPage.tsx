@@ -1,6 +1,10 @@
 import { Shield, GitBranch, Eye, CheckCircle, Undo2, Users, Heart, BookOpen, Microscope, Rocket } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import Layout from "@/modules/core/components/Layout";
+import { governancePrinciples } from "@/data/governance";
+
+const govIconMap: Record<string, LucideIcon> = { GitBranch, Shield, Undo2, CheckCircle, Eye, Users };
 
 const About = () => {
   return (
@@ -118,14 +122,9 @@ const About = () => {
             </p>
 
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {[
-                { icon: GitBranch, label: "Traceability", desc: "Every change is tied to a person and a documented reason." },
-                { icon: Shield, label: "Coherence", desc: "All projects follow one standard, forming a consistent whole." },
-                { icon: Undo2, label: "Reversibility", desc: "Any action can be rolled back without permanent data loss." },
-                { icon: CheckCircle, label: "Verification", desc: "Every correctness claim is proven, not asserted." },
-                { icon: Eye, label: "Openness", desc: "All governance rules and decisions are publicly documented." },
-                { icon: Users, label: "Accountability", desc: "Clear roles and responsibilities with defined escalation paths." },
-              ].map(({ icon: Icon, label, desc }) => (
+              {governancePrinciples.map(({ iconKey, label, desc }) => {
+                const Icon = govIconMap[iconKey];
+                return (
                 <div
                   key={label}
                   className="rounded-lg border border-border/60 bg-card/50 p-5 flex flex-col gap-2.5"
@@ -136,7 +135,8 @@ const About = () => {
                   </div>
                   <p className="text-muted-foreground font-body text-sm leading-relaxed">{desc}</p>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <a

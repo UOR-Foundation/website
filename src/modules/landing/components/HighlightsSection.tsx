@@ -2,8 +2,7 @@ import { ArrowRight } from "lucide-react";
 import highlightKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import highlightFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import highlightCommunityCall from "@/assets/highlight-community-call.jpg";
-
-type TagType = "Research" | "Announcement" | "Event";
+import { highlights, type TagType } from "@/data/highlights";
 
 const tagStyles: Record<TagType, string> = {
   Research: "bg-primary/10 text-primary",
@@ -11,29 +10,11 @@ const tagStyles: Record<TagType, string> = {
   Event: "bg-primary/8 text-primary/80 border border-primary/15",
 };
 
-const highlights = [
-  {
-    tag: "Research" as TagType,
-    title: "UOR: Building the Internet's Knowledge Graph",
-    date: "December 21, 2023",
-    image: highlightKnowledgeGraph,
-    href: "/blog/building-the-internets-knowledge-graph",
-  },
-  {
-    tag: "Announcement" as TagType,
-    title: "Meet the UOR Framework",
-    date: "February 19, 2026",
-    image: highlightFrameworkLaunch,
-    href: "/blog/uor-framework-launch",
-  },
-  {
-    tag: "Event" as TagType,
-    title: "UOR Community Call",
-    date: "March 3, 2026",
-    image: highlightCommunityCall,
-    href: "https://discord.com/channels/1342910418754076732/1342910419370774532/1474210293386055772",
-  },
-];
+const imageMap: Record<string, string> = {
+  knowledgeGraph: highlightKnowledgeGraph,
+  frameworkLaunch: highlightFrameworkLaunch,
+  communityCall: highlightCommunityCall,
+};
 
 const HighlightsSection = () => {
   return (
@@ -53,7 +34,7 @@ const HighlightsSection = () => {
             >
               <div className="relative aspect-[5/3] overflow-hidden">
                 <img
-                  src={item.image}
+                  src={imageMap[item.imageKey]}
                   alt={item.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"

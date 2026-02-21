@@ -6,6 +6,12 @@ import {
   isRegistryInitialized,
   onRegistryInitialized,
 } from "@/lib/uor-registry";
+import {
+  getAllContentCertificates,
+  isContentRegistryInitialized,
+  onContentRegistryInitialized,
+  type ContentCertificateEntry,
+} from "@/lib/uor-content-registry";
 
 interface VerificationResult {
   name: string;
@@ -14,19 +20,20 @@ interface VerificationResult {
   verified: boolean;
 }
 
-/**
- * Unobtrusive verification badge rendered in the footer.
- * When clicked, runs full verification on all registered modules
- * and displays CID, UOR address, and pass/fail status.
- */
 const UorVerification = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<VerificationResult[]>([]);
+  const [contentResults, setContentResults] = useState<VerificationResult[]>([]);
   const [ready, setReady] = useState(isRegistryInitialized());
+  const [contentReady, setContentReady] = useState(isContentRegistryInitialized());
 
   useEffect(() => {
     return onRegistryInitialized(() => setReady(true));
+  }, []);
+
+  useEffect(() => {
+    return onContentRegistryInitialized(() => setContentReady(true));
   }, []);
 
   const runVerification = useCallback(async () => {
@@ -47,6 +54,22 @@ const UorVerification = () => {
     }
 
     setResults(output);
+
+    // Content certificates
+    if (isContentRegistryInitialized()) {
+      const certs = getAllContentCertificates();
+      const contentOutput: VerificationResult[] = [];
+      for (const [, entry] of certs) {
+        contentOutput.push({
+          name: entry.label,
+          cid: entry.certificate["cert:cid"],
+          uorGlyph: entry.certificate["store:uorAddress"]["u:glyph"].slice(0, 12) + "…",
+          verified: entry.verified,
+        });
+      }
+      setContentResults(contentOutput);
+    }
+
     setLoading(false);
   }, []);
 
@@ -57,9 +80,46 @@ const UorVerification = () => {
 
   if (!ready) return null;
 
+  const renderResults = (items: VerificationResult[]) => (
+    <div className="space-y-3">
+      {items.map((r) => (
+        <div
+          key={r.name}
+          className="p-4 rounded-xl border border-border bg-muted/20"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-body font-semibold text-sm text-foreground">
+              {r.name}
+            </span>
+            {r.verified ? (
+              <span className="inline-flex items-center gap-1 text-xs font-body font-medium text-primary">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Verified
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs font-body font-medium text-destructive">
+                <XCircle className="w-3.5 h-3.5" />
+                Failed
+              </span>
+            )}
+          </div>
+          <div className="space-y-1">
+            <p className="text-[11px] font-mono text-muted-foreground break-all leading-relaxed">
+              <span className="text-muted-foreground/50">CID:</span>{" "}
+              {r.cid}
+            </p>
+            <p className="text-[11px] font-mono text-muted-foreground">
+              <span className="text-muted-foreground/50">UOR:</span>{" "}
+              {r.uorGlyph}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <>
-      {/* Badge trigger */}
       <button
         onClick={handleOpen}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-body font-medium border border-section-dark-foreground/10 text-section-dark-foreground/40 hover:text-section-dark-foreground/70 hover:border-section-dark-foreground/25 transition-colors duration-200 cursor-pointer"
@@ -69,7 +129,6 @@ const UorVerification = () => {
         UOR Verified
       </button>
 
-      {/* Verification panel */}
       {open && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
@@ -77,12 +136,11 @@ const UorVerification = () => {
             onClick={() => setOpen(false)}
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-fade-in-up">
-            {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-border">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-primary" />
                 <h3 className="font-display text-lg font-bold">
-                  UOR Module Verification
+                  UOR Integrity Dashboard
                 </h3>
               </div>
               <button
@@ -93,7 +151,6 @@ const UorVerification = () => {
               </button>
             </div>
 
-            {/* Content */}
             <div className="p-5 overflow-y-auto max-h-[60vh]">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
@@ -103,50 +160,28 @@ const UorVerification = () => {
                   </span>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {results.map((r) => (
-                    <div
-                      key={r.name}
-                      className="p-4 rounded-xl border border-border bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-body font-semibold text-sm text-foreground">
-                          {r.name}
-                        </span>
-                        {r.verified ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-body font-medium text-primary">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs font-body font-medium text-destructive">
-                            <XCircle className="w-3.5 h-3.5" />
-                            Failed
-                          </span>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[11px] font-mono text-muted-foreground break-all leading-relaxed">
-                          <span className="text-muted-foreground/50">CID:</span>{" "}
-                          {r.cid}
-                        </p>
-                        <p className="text-[11px] font-mono text-muted-foreground">
-                          <span className="text-muted-foreground/50">UOR:</span>{" "}
-                          {r.uorGlyph}
-                        </p>
-                      </div>
+                <div className="space-y-6">
+                  <div>
+                    <p className="text-xs font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-3">
+                      Module Certificates ({results.length})
+                    </p>
+                    {renderResults(results)}
+                  </div>
+                  {contentResults.length > 0 && (
+                    <div>
+                      <p className="text-xs font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-3">
+                        Content Certificates ({contentResults.length})
+                      </p>
+                      {renderResults(contentResults)}
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Footer */}
             <div className="p-4 border-t border-border">
               <p className="text-[11px] font-body text-muted-foreground/50 text-center">
-                Each module's CID is derived from its canonical JSON-LD manifest
-                via SHA-256 / CIDv1 / dag-json. UOR addresses use Braille
-                bijection encoding.
+                Each object's CID is derived from its canonical JSON-LD via SHA-256 / CIDv1 / dag-json. UOR addresses use Braille bijection encoding.
               </p>
             </div>
           </div>
