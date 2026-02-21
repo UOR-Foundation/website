@@ -40,8 +40,8 @@ export const projects: ProjectData[] = [
   },
   {
     name: "Prism",
-    category: "Open Science",
-    description: "The reference implementation of UOR. Prism turns the framework's ideas into working code: encoding, addressing, and navigating data in a single system.",
+    category: "Core Infrastructure",
+    description: "The computation engine for the UOR Framework. While the Framework defines the rules (what concepts exist and how they relate), Prism proves they work by running them: encoding data, generating addresses, verifying computations, and producing certificates. Same algebra, same coordinates, same guarantees.",
     maturity: "Sandbox",
     url: "https://github.com/UOR-Foundation/prism",
     imageKey: "prism",

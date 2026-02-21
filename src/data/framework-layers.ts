@@ -23,7 +23,7 @@ export const frameworkLayers: FrameworkLayerData[] = [
     title: "The Foundation",
     summary: "The ground rules that make everything else possible.",
     description:
-      "Everything in UOR rests on a small set of mathematical rules that can be verified by anyone, on any machine, in under a second. These rules guarantee that every operation in the system produces the same result no matter who runs it or where. Think of it as the bedrock: if the foundation holds, every layer above it is reliable. This is what makes UOR trustworthy by design, not by promise.",
+      "Everything in UOR rests on a small set of mathematical rules that can be verified by anyone, on any machine, in under a second. The key rule: applying two simple reversible operations in sequence always produces the next value. This single fact guarantees that every possible value is reachable, making the system complete. If the foundation holds, every layer above it is reliable. The UOR Framework defines these rules formally. Prism executes them.",
     namespaces: [
       { label: "Axioms", url: "https://uor-foundation.github.io/UOR-Framework/docs/overview.html" },
     ],
