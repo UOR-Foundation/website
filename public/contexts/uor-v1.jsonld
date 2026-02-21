@@ -14,9 +14,34 @@
     "cert": "https://uor.foundation/cert/",
     "morphism": "https://uor.foundation/morphism/",
     "state": "https://uor.foundation/state/",
+    "store": "https://uor.foundation/store/",
     "sdo": "https://schema.org/",
     "owl": "http://www.w3.org/2002/07/owl#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+
+    "store:StoredObject": {"@id": "store:StoredObject"},
+    "store:Cid": {"@id": "store:Cid"},
+    "store:PinRecord": {"@id": "store:PinRecord"},
+    "store:StoreContext": {"@id": "store:StoreContext"},
+    "store:RetrievedObject": {"@id": "store:RetrievedObject"},
+    "store:GatewayConfig": {"@id": "store:GatewayConfig"},
+
+    "store:uorAddress": {"@id": "store:uorAddress", "@type": "@id"},
+    "store:cid": {"@id": "store:cid", "@type": "xsd:string"},
+    "store:storedType": {"@id": "store:storedType", "@type": "@id"},
+    "store:serialisation": {"@id": "store:serialisation", "@type": "xsd:string"},
+    "store:pinRecord": {"@id": "store:pinRecord", "@type": "@id"},
+    "store:pinnedAt": {"@id": "store:pinnedAt", "@type": "xsd:dateTime"},
+    "store:gatewayUrl": {"@id": "store:gatewayUrl", "@type": "xsd:anyURI"},
+    "store:pinCertificate": {"@id": "store:pinCertificate", "@type": "@id"},
+    "store:retrievedFrom": {"@id": "store:retrievedFrom", "@type": "xsd:string"},
+    "store:storedUorAddress": {"@id": "store:storedUorAddress", "@type": "xsd:string"},
+    "store:recomputedUorAddress": {"@id": "store:recomputedUorAddress", "@type": "xsd:string"},
+    "store:verified": {"@id": "store:verified", "@type": "xsd:boolean"},
+    "store:rootCid": {"@id": "store:rootCid", "@type": "xsd:string"},
+    "store:ipnsKey": {"@id": "store:ipnsKey", "@type": "xsd:string"},
+    "store:gatewayReadUrl": {"@id": "store:gatewayReadUrl", "@type": "xsd:anyURI"},
+    "store:pinsApiUrl": {"@id": "store:pinsApiUrl", "@type": "xsd:anyURI"}
   }
 }
