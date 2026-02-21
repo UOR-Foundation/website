@@ -196,7 +196,7 @@ const ProjectDetailLayout = ({
                                   </div>
                                 ));
                             })()}
-                            <p className="text-xs text-section-dark-foreground/50 font-body mt-3 leading-relaxed">
+                            <p className="text-sm text-section-dark-foreground/50 font-body mt-3 leading-relaxed">
                               The content above was reconstructed directly from the certificate's canonical payload. The fact that it matches the original content identifier (CID) proves that none of this information has been tampered with since the certificate was issued.
                             </p>
                           </div>
@@ -204,7 +204,7 @@ const ProjectDetailLayout = ({
 
                         <button
                           onClick={() => setVerified(null)}
-                          className="text-xs text-section-dark-foreground/50 hover:text-section-dark-foreground/70 transition-colors cursor-pointer font-body"
+                          className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline transition-colors cursor-pointer font-body mt-1"
                         >
                           Reset verification
                         </button>
