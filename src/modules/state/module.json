@@ -1,0 +1,9 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "schema:SoftwareModule",
+  "schema:name": "state",
+  "schema:version": "1.0.0",
+  "schema:description": "State lifecycle management — evaluation contexts, bindings, frames, and transitions for the state: namespace.",
+  "u:namespace": ["state:"],
+  "u:dependencies": ["ring-core", "identity", "triad", "self-verify"]
+}

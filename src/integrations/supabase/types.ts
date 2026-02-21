@@ -210,6 +210,45 @@ export type Database = {
         }
         Relationships: []
       }
+      uor_state_frames: {
+        Row: {
+          component: string
+          created_at: string
+          critical_identity_holds: boolean
+          frame_data: Json
+          id: string
+          is_phase_boundary: boolean
+          is_stable_entry: boolean
+          quantum: number
+          transition_count: number
+          value: number
+        }
+        Insert: {
+          component: string
+          created_at?: string
+          critical_identity_holds?: boolean
+          frame_data: Json
+          id?: string
+          is_phase_boundary?: boolean
+          is_stable_entry?: boolean
+          quantum?: number
+          transition_count?: number
+          value: number
+        }
+        Update: {
+          component?: string
+          created_at?: string
+          critical_identity_holds?: boolean
+          frame_data?: Json
+          id?: string
+          is_phase_boundary?: boolean
+          is_stable_entry?: boolean
+          quantum?: number
+          transition_count?: number
+          value?: number
+        }
+        Relationships: []
+      }
       uor_triples: {
         Row: {
           created_at: string
