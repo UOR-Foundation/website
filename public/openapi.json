@@ -966,9 +966,9 @@
                   },
                   "gateway": {
                     "type": "string",
-                   "enum": ["pinata", "web3.storage"],
+                    "enum": ["web3.storage", "pinata", "storacha"],
                     "default": "pinata",
-                    "description": "IPFS gateway to use for pinning."
+                    "description": "Write gateway to use. 'pinata' = Pinata dedicated gateway (pinFileToIPFS, requires PINATA_JWT). 'storacha' = Storacha Network / web3.storage successor (uploadFile, requires STORACHA_KEY + STORACHA_PROOF, 5GB free tier). 'web3.storage' = legacy (degraded, use storacha instead)."
                   },
                   "label": {
                     "type": "string",
@@ -2008,11 +2008,15 @@
       },
       "StorePinRecord": {
         "type": "object",
+        "description": "Gateway-specific pin record. For Storacha: includes directoryCid, gatewayUrl, filename. For Pinata: includes IpfsHash, PinSize, Timestamp.",
         "properties": {
           "@type": { "type": "string", "const": "store:PinRecord" },
+          "store:provider": { "type": "string", "description": "Pin service provider name (e.g. 'pinata', 'storacha')." },
           "store:pinnedAt": { "type": "string", "format": "date-time" },
-          "store:gatewayUrl": { "type": "string", "format": "uri" },
-          "store:pinCertificate": { "$ref": "#/components/schemas/CertTransformCertificate" }
+          "store:gatewayUrl": { "type": "string", "format": "uri", "description": "Direct HTTPS URL to retrieve the stored file." },
+          "store:pinCertificate": { "$ref": "#/components/schemas/CertTransformCertificate" },
+          "store:directoryCid": { "type": "string", "description": "Storacha only. UnixFS directory CID (bafy...). Append filename to gateway URL for retrieval." },
+          "store:filename": { "type": "string", "description": "Filename used when uploading. Required for Storacha subdomain gateway reads." }
         }
       },
       "UorAddress": {
