@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { Toaster } from "@/modules/core/ui/toaster";
 import { Toaster as Sonner } from "@/modules/core/ui/sonner";
 import { TooltipProvider } from "@/modules/core/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { initializeRegistry } from "@/lib/uor-registry";
 
 // Module imports — each module exposes its pages through its barrel export
 import { IndexPage } from "@/modules/landing";
@@ -15,7 +17,12 @@ import { ApiPage } from "@/modules/api-explorer";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    initializeRegistry().catch(console.error);
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -38,6 +45,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
