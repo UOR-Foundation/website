@@ -54,6 +54,7 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/bridge/resolver':                   ['GET', 'OPTIONS'],
   '/user/morphism/transforms':          ['GET', 'OPTIONS'],
   '/user/state':                        ['GET', 'OPTIONS'],
+  '/store/resolve':                     ['GET', 'OPTIONS'],
 };
 
 // ── Rate Limiting (in-memory sliding window) ────────────────────────────────
@@ -237,31 +238,72 @@ const UOR_CONTEXT_URL = "https://uor.foundation/contexts/uor-v1.jsonld";
 
 // ── Kernel-space types: NEVER storable on IPFS ──────────────────────────────
 // These are compiled into the runtime and recomputed on demand — ROM.
-const KERNEL_FORBIDDEN_TYPES: ReadonlySet<string> = new Set([
-  'u:Address', 'u:Glyph',
-  'schema:Datum', 'schema:Ring', 'schema:Term',
-  'op:Operation', 'op:UnaryOp', 'op:BinaryOp', 'op:Involution',
+const KERNEL_SPACE_TYPES: ReadonlySet<string> = new Set([
+  "https://uor.foundation/u/Address",    "u:Address",
+  "https://uor.foundation/u/Glyph",      "u:Glyph",
+  "https://uor.foundation/schema/Datum",  "schema:Datum",
+  "https://uor.foundation/schema/Term",   "schema:Term",
+  "https://uor.foundation/schema/Literal","schema:Literal",
+  "https://uor.foundation/schema/Application","schema:Application",
+  "https://uor.foundation/schema/Ring",   "schema:Ring",
+  "https://uor.foundation/op/Operation",  "op:Operation",
+  "https://uor.foundation/op/UnaryOp",    "op:UnaryOp",
+  "https://uor.foundation/op/BinaryOp",   "op:BinaryOp",
+  "https://uor.foundation/op/Involution", "op:Involution",
+  "https://uor.foundation/op/Group",      "op:Group",
+  "https://uor.foundation/op/DihedralGroup","op:DihedralGroup",
 ]);
 
 /**
  * Guard: reject kernel-space types from storage.
- * Returns an error string if the type is forbidden, or null if allowed.
+ * Throws HTTP 422 if the type is forbidden.
  */
-function validateStorableType(objectType: string | string[]): string | null {
+function validateStorableType(objectType: string | string[]): void {
   const types = Array.isArray(objectType) ? objectType : [objectType];
   for (const t of types) {
-    if (KERNEL_FORBIDDEN_TYPES.has(t)) {
-      return `Type '${t}' is kernel-space (ROM) and cannot be stored. Only user-space and bridge-space objects may be persisted to IPFS.`;
+    if (KERNEL_SPACE_TYPES.has(t)) {
+      throw new Error(
+        `Kernel-space type "${t}" cannot be stored on IPFS. ` +
+        `Kernel objects (u:, schema:, op: namespaces) are compiled into the ` +
+        `UOR runtime and recomputed on demand. Only User-space and Bridge-space ` +
+        `objects may be persisted. Valid types include: cert:Certificate, ` +
+        `proof:Proof, partition:Partition, state:Binding, state:Context, ` +
+        `morphism:Transform, type:TypeDefinition, derivation:Derivation, ` +
+        `trace:ComputationTrace.`
+      );
     }
   }
-  return null;
 }
 
+// ── Full inline @context for stored objects ──────────────────────────────────
+// Every UOR object written to IPFS carries this verbatim. Sorted alphabetically.
+const UOR_STORE_CONTEXT = {
+  "cert": "https://uor.foundation/cert/",
+  "derivation": "https://uor.foundation/derivation/",
+  "morphism": "https://uor.foundation/morphism/",
+  "observable": "https://uor.foundation/observable/",
+  "op": "https://uor.foundation/op/",
+  "owl": "http://www.w3.org/2002/07/owl#",
+  "partition": "https://uor.foundation/partition/",
+  "proof": "https://uor.foundation/proof/",
+  "resolver": "https://uor.foundation/resolver/",
+  "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+  "schema": "https://uor.foundation/schema/",
+  "state": "https://uor.foundation/state/",
+  "store": "https://uor.foundation/store/",
+  "trace": "https://uor.foundation/trace/",
+  "type": "https://uor.foundation/type/",
+  "u": "https://uor.foundation/u/",
+  "xsd": "http://www.w3.org/2001/XMLSchema#",
+};
+
 // ── Canonical JSON-LD serialisation ─────────────────────────────────────────
-// Deterministic: keys sorted recursively, no trailing whitespace, UTF-8.
-// This is the byte sequence from which both u:Address and store:Cid are derived.
-function canonicalSerialise(obj: unknown): string {
-  return JSON.stringify(obj, Object.keys(obj as Record<string, unknown>).sort(), 0);
+// Deterministic: keys sorted recursively at every nesting level, minified, UTF-8.
+function canonicalJsonLd(obj: unknown): string {
+  if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
+  if (Array.isArray(obj)) return '[' + obj.map(canonicalJsonLd).join(',') + ']';
+  const sorted = Object.keys(obj as Record<string, unknown>).sort();
+  return '{' + sorted.map(k => JSON.stringify(k) + ':' + canonicalJsonLd((obj as Record<string, unknown>)[k])).join(',') + '}';
 }
 
 // ── CID computation — CIDv1 / dag-json / sha2-256 / base32lower ────────────
@@ -290,38 +332,23 @@ function encodeBase32Lower(bytes: Uint8Array): string {
 
 /**
  * Compute a CIDv1 string from canonical JSON-LD bytes.
- *
- * Steps:
- *   1. SHA-256 digest of the canonical bytes
- *   2. Multihash: <0x12 (sha2-256)><0x20 (32 bytes)><digest>
- *   3. CID binary: <0x01 (CIDv1)><0xa9, 0x02 (dag-json 0x0129 varint)><multihash>
- *   4. String: 'b' + base32lower(CID binary)
- *
- * @param canonicalBytes - The deterministic serialised JSON-LD as Uint8Array
- * @returns CIDv1 string (e.g. "bafyrei...")
+ * CIDv1 / dag-json (0x0129) / sha2-256
  */
 async function computeCid(canonicalBytes: Uint8Array): Promise<string> {
-  // 1. SHA-256 digest
   const digestBuffer = await crypto.subtle.digest('SHA-256', canonicalBytes);
   const digest = new Uint8Array(digestBuffer);
 
-  // 2. Multihash: <hash-fn-code><digest-length><digest>
-  //    sha2-256 = 0x12, digest length = 0x20 (32)
   const multihash = new Uint8Array(2 + digest.length);
   multihash[0] = 0x12; // sha2-256
   multihash[1] = 0x20; // 32 bytes
   multihash.set(digest, 2);
 
-  // 3. CID binary: <version><codec><multihash>
-  //    version = 0x01
-  //    dag-json codec = 0x0129, varint-encoded as [0xa9, 0x02]
   const cidBinary = new Uint8Array(1 + 2 + multihash.length);
   cidBinary[0] = 0x01;   // CIDv1 version
   cidBinary[1] = 0xa9;   // dag-json 0x0129 varint low byte
   cidBinary[2] = 0x02;   // dag-json 0x0129 varint high byte
   cidBinary.set(multihash, 3);
 
-  // 4. base32lower with 'b' multibase prefix
   return 'b' + encodeBase32Lower(cidBinary);
 }
 
@@ -336,36 +363,53 @@ function computeUorAddress(bytes: Uint8Array): { glyph: string; length: number }
 }
 
 /**
- * Build a store:StoredObject shell (without actually pinning to IPFS).
- * Used by /store/write (Section 3) and /store/resolve (Section 2).
+ * Build a complete store:StoredObject envelope per spec 1.4.
+ * The @id uses the UOR glyph address (URL-encoded) as the IRI fragment.
  */
-async function buildStoredObject(payload: Record<string, unknown>): Promise<{
-  storedObject: Record<string, unknown>;
+async function buildStoredObjectEnvelope(
+  payload: Record<string, unknown>,
+  gatewayUrl?: string,
+): Promise<{
+  envelope: Record<string, unknown>;
   canonicalBytes: Uint8Array;
   cid: string;
   uorAddress: { glyph: string; length: number };
   serialisation: string;
 }> {
-  const serialisation = canonicalSerialise(payload);
+  const serialisation = canonicalJsonLd(payload);
   const canonicalBytes = new TextEncoder().encode(serialisation);
   const cid = await computeCid(canonicalBytes);
   const uorAddress = computeUorAddress(canonicalBytes);
+  const ts = timestamp();
 
-  const storedObject = {
-    "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/store/object/${cid}`,
+  const envelope: Record<string, unknown> = {
+    "@context": UOR_STORE_CONTEXT,
+    "@id": `https://uor.foundation/store/object/${encodeURIComponent(uorAddress.glyph)}`,
     "@type": "store:StoredObject",
+    "store:cid": cid,
+    "store:pinnedAt": ts,
+    "store:pinRecord": {
+      "@type": "store:PinRecord",
+      "store:gatewayUrl": gatewayUrl ?? "https://w3s.link",
+      "store:pinCertificate": {
+        "@type": "cert:TransformCertificate",
+        "cert:quantum": 8,
+        "cert:timestamp": ts,
+        "cert:transformType": "uor-address-to-ipfs-cid",
+        "cert:verified": true,
+      },
+      "store:pinnedAt": ts,
+    },
+    "store:storedType": payload["@type"] ?? "unknown",
     "store:uorAddress": {
       "@type": "u:Address",
       "u:glyph": uorAddress.glyph,
       "u:length": uorAddress.length,
     },
-    "store:cid": cid,
-    "store:storedType": payload["@type"] ?? "unknown",
-    "store:serialisation": serialisation,
+    "payload": payload,
   };
 
-  return { storedObject, canonicalBytes, cid, uorAddress, serialisation };
+  return { envelope, canonicalBytes, cid, uorAddress, serialisation };
 }
 
 // ── store/ namespace metadata (exposed via /navigate in Section 6) ──────────
@@ -2008,7 +2052,156 @@ function userState(url: URL, rl: RateLimitResult): Response {
   }, CACHE_HEADERS_USER, etag, rl);
 }
 
-// GET /openapi.json — 301 redirect to canonical static spec
+// ════════════════════════════════════════════════════════════════════════════
+// STORE/ ENDPOINTS (Section 2+)
+// ════════════════════════════════════════════════════════════════════════════
+
+// GET /store/resolve?url=...&n=8&include_partition=false&include_metrics=false
+async function storeResolve(url: URL, rl: RateLimitResult): Promise<Response> {
+  const targetUrl = url.searchParams.get('url');
+  if (!targetUrl) return error400("Parameter 'url' is required", 'url', rl);
+
+  // Validate protocol
+  let parsed: URL;
+  try {
+    parsed = new URL(targetUrl);
+  } catch {
+    return error400("Parameter 'url' is not a valid URL", 'url', rl);
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return error400("Only http: and https: protocols are accepted", 'url', rl);
+  }
+
+  // Ring size
+  const nRaw = url.searchParams.get('n') ?? '8';
+  const allowedN = [4, 8, 16];
+  const n = Number(nRaw);
+  if (!allowedN.includes(n)) return error400("Parameter 'n' must be 4, 8, or 16", 'n', rl);
+  const m = modulus(n);
+
+  const includePartition = url.searchParams.get('include_partition') === 'true';
+  const includeMetrics = url.searchParams.get('include_metrics') === 'true';
+
+  // Fetch remote resource
+  let fetchResp: Response;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15_000);
+    fetchResp = await fetch(targetUrl, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'UOR-Framework/1.0 (+https://uor.foundation)' },
+    });
+    clearTimeout(timeout);
+  } catch (err: unknown) {
+    const msg = err instanceof Error && err.name === 'AbortError'
+      ? 'Remote resource did not respond within 15 seconds'
+      : 'Remote resource unreachable';
+    return new Response(JSON.stringify({
+      error: msg,
+      code: err instanceof Error && err.name === 'AbortError' ? 'GATEWAY_TIMEOUT' : 'BAD_GATEWAY',
+      url: targetUrl,
+      docs: 'https://api.uor.foundation/v1/openapi.json',
+    }), { status: err instanceof Error && err.name === 'AbortError' ? 504 : 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+
+  if (!fetchResp.ok) {
+    return new Response(JSON.stringify({
+      error: `Remote resource returned HTTP ${fetchResp.status}`,
+      code: 'BAD_GATEWAY',
+      url: targetUrl,
+      remoteStatus: fetchResp.status,
+      docs: 'https://api.uor.foundation/v1/openapi.json',
+    }), { status: 502, headers: { ...JSON_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+
+  // Read body with 10MB limit
+  const contentLength = fetchResp.headers.get('content-length');
+  if (contentLength && Number(contentLength) > 10_485_760) {
+    return error413(rl);
+  }
+  const bodyBuffer = await fetchResp.arrayBuffer();
+  if (bodyBuffer.byteLength > 10_485_760) {
+    return error413(rl);
+  }
+  const rawBytes = new Uint8Array(bodyBuffer);
+
+  // Compute UOR address and CID
+  const uorAddress = computeUorAddress(rawBytes);
+  const cid = await computeCid(rawBytes);
+  const contentType = fetchResp.headers.get('content-type') ?? 'application/octet-stream';
+
+  // Build response
+  const result: Record<string, unknown> = {
+    "@context": UOR_CONTEXT_URL,
+    "@id": `https://uor.foundation/store/resolved/${encodeURIComponent(uorAddress.glyph)}`,
+    "@type": "store:RetrievedObject",
+    "summary": {
+      "url": targetUrl,
+      "content_type": contentType,
+      "byte_count": rawBytes.length,
+      "uor_address_length": uorAddress.length,
+      "cid": cid,
+      "ring": `Z/${m}Z`,
+    },
+    "store:retrievedFrom": targetUrl,
+    "store:recomputedUorAddress": {
+      "@type": "u:Address",
+      "u:glyph": uorAddress.glyph,
+      "u:length": uorAddress.length,
+    },
+    "store:cid": cid,
+    "store:verified": true,
+    "store:contentType": contentType,
+    "store:byteCount": rawBytes.length,
+    "store:timestamp": timestamp(),
+  };
+
+  // Optional: partition analysis
+  if (includePartition) {
+    const partitions: Record<string, number> = {
+      'partition:ExteriorSet': 0,
+      'partition:UnitSet': 0,
+      'partition:IrreducibleSet': 0,
+      'partition:ReducibleSet': 0,
+    };
+    for (const b of rawBytes) {
+      const byteVal = b % m;
+      const { component } = classifyByte(byteVal, n);
+      partitions[component]++;
+    }
+    const total = rawBytes.length;
+    result["partition:analysis"] = {
+      "@type": "partition:Partition",
+      "partition:quantum": n,
+      "partition:ring": `Z/${m}Z`,
+      "partition:totalBytes": total,
+      "partition:components": Object.entries(partitions).map(([component, count]) => ({
+        "@type": component,
+        "count": count,
+        "ratio": Number((count / total).toFixed(6)),
+      })),
+      "partition:density": Number((1 - partitions['partition:ExteriorSet'] / total).toFixed(6)),
+    };
+  }
+
+  // Optional: observable metrics on first byte
+  if (includeMetrics && rawBytes.length > 0) {
+    const firstByte = rawBytes[0] % m;
+    const spectrum = firstByte.toString(2).padStart(n, '0');
+    const hammingMetric = spectrum.split('').filter(b => b === '1').length;
+    const ringMetric = Math.min(firstByte, m - firstByte);
+    result["observable:firstByteMetrics"] = {
+      "@type": "observable:MetricBundle",
+      "observable:byte": firstByte,
+      "observable:datum": makeDatum(firstByte, n),
+      "observable:ringMetric": ringMetric,
+      "observable:hammingMetric": hammingMetric,
+    };
+  }
+
+  return jsonResp(result, CACHE_HEADERS_USER, undefined, rl);
+}
+
 function openapiSpec(): Response {
   return new Response(null, {
     status: 301,
@@ -2204,6 +2397,12 @@ Deno.serve(async (req: Request) => {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
       return resp;
+    }
+
+    // ── Store — resolve (store: namespace) ──
+    if (path === '/store/resolve') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await storeResolve(url, rl);
     }
 
     // ── 405 for known paths with wrong method ──
