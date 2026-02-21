@@ -87,10 +87,10 @@ const ProjectDetailLayout = ({
           </Link>
 
           <div className="flex items-center gap-3 mb-5">
-            <span className="text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap">
+            <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap">
               {category}
             </span>
-            <span className="text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full border border-border text-muted-foreground font-body">
+            <span className="text-sm font-medium px-3 py-1 rounded-full border border-border text-muted-foreground font-body">
               Sandbox
             </span>
           </div>
@@ -106,9 +106,9 @@ const ProjectDetailLayout = ({
             <div className="mt-5 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
               <button
                 onClick={() => setShowCert(!showCert)}
-                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-body transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-body transition-colors cursor-pointer"
               >
-                <ShieldCheck size={13} />
+                <ShieldCheck size={15} />
                 {showCert ? "Hide certificate" : "View certificate"}
               </button>
               {showCert && (
@@ -146,16 +146,16 @@ const ProjectDetailLayout = ({
                     ) : (
                       <div className="space-y-3 animate-fade-in-up">
                         {/* Verification result */}
-                        <div className={`flex items-center gap-2 text-xs font-semibold font-body ${verified.match ? "text-green-400" : "text-red-400"}`}>
-                          <CheckCircle2 size={14} />
+                        <div className={`flex items-center gap-2 text-sm font-semibold font-body ${verified.match ? "text-green-400" : "text-red-400"}`}>
+                          <CheckCircle2 size={16} />
                           {verified.match
-                            ? "Certificate verified — content is authentic"
-                            : "Verification failed — content may have been altered"}
+                            ? "Certificate verified. Content is authentic."
+                            : "Verification failed. Content may have been altered."}
                         </div>
 
                         {verified.match && verified.decoded && Object.keys(verified.decoded).length > 0 && (
-                          <div className="rounded-lg border border-primary/10 bg-background/5 px-4 py-3 space-y-2">
-                            <p className="text-xs font-semibold text-section-dark-foreground/80 font-body">
+                          <div className="rounded-lg border border-primary/10 bg-background/5 px-4 py-3 space-y-2.5">
+                            <p className="text-sm font-semibold text-section-dark-foreground/90 font-body">
                               What this certificate confirms:
                             </p>
                             {(() => {
@@ -173,16 +173,16 @@ const ProjectDetailLayout = ({
                                 .filter(([key]) => key !== "@context")
                                 .map(([key, value]) => (
                                   <div key={key} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-2">
-                                    <span className="text-xs text-section-dark-foreground/50 font-body shrink-0">
+                                    <span className="text-sm text-section-dark-foreground/50 font-body shrink-0">
                                       {fieldLabels[key] || key.replace(/^uor:/, "").replace(/([A-Z])/g, " $1")}:
                                     </span>
-                                    <span className="text-xs text-section-dark-foreground/90 font-body break-all">
+                                    <span className="text-sm text-section-dark-foreground font-body break-all">
                                       {typeof value === "string" ? value : JSON.stringify(value)}
                                     </span>
                                   </div>
                                 ));
                             })()}
-                            <p className="text-[10px] text-section-dark-foreground/40 font-body mt-2 leading-relaxed">
+                            <p className="text-xs text-section-dark-foreground/50 font-body mt-3 leading-relaxed">
                               The content above was reconstructed directly from the certificate's canonical payload. The fact that it matches the original content identifier (CID) proves that none of this information has been tampered with since the certificate was issued.
                             </p>
                           </div>
@@ -190,7 +190,7 @@ const ProjectDetailLayout = ({
 
                         <button
                           onClick={() => setVerified(null)}
-                          className="text-[10px] text-section-dark-foreground/40 hover:text-section-dark-foreground/60 transition-colors cursor-pointer font-body"
+                          className="text-xs text-section-dark-foreground/50 hover:text-section-dark-foreground/70 transition-colors cursor-pointer font-body"
                         >
                           Reset verification
                         </button>
@@ -250,14 +250,14 @@ const ProjectDetailLayout = ({
           <div className="space-y-4">
             {agentInstructions.map((instruction, idx) => (
               <div key={idx} className="flex items-start gap-3">
-                <span className="text-sm font-bold text-primary font-mono mt-0.5 shrink-0 w-5">
+                <span className="text-base font-bold text-primary font-mono mt-0.5 shrink-0 w-6">
                   {idx + 1}.
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-foreground font-body">
+                  <p className="text-base font-semibold text-foreground font-body">
                     {instruction.action}
                   </p>
-                  <p className="text-sm text-muted-foreground font-body mt-0.5">
+                  <p className="text-base text-muted-foreground font-body mt-0.5">
                     {instruction.detail}
                   </p>
                 </div>
@@ -266,10 +266,10 @@ const ProjectDetailLayout = ({
           </div>
           {certificate && (
             <div className="mt-8 rounded-lg border border-border bg-card p-4">
-              <p className="text-xs text-muted-foreground font-mono mb-2">
+              <p className="text-sm text-muted-foreground font-mono mb-2">
                 # Machine-readable identity (JSON-LD)
               </p>
-              <pre className="text-xs text-foreground/80 font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
+              <pre className="text-sm text-foreground/80 font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
 {JSON.stringify({
   "@context": certificate["@context"],
   "@type": certificate["@type"],
@@ -290,7 +290,7 @@ const ProjectDetailLayout = ({
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-4">
             Get involved
           </h2>
-          <p className="text-section-dark-foreground/60 font-body mb-8 max-w-lg mx-auto">
+          <p className="text-base text-section-dark-foreground/70 font-body mb-8 max-w-lg mx-auto">
             {name} is open source and open to contributors. Explore the code, open an issue, or start building.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -298,14 +298,14 @@ const ProjectDetailLayout = ({
               href={repoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity font-body"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full bg-primary text-primary-foreground font-medium text-base hover:opacity-90 transition-opacity font-body"
             >
               View Repository
               <ExternalLink size={14} />
             </a>
             <Link
               to="/projects#submit"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full border border-section-dark-foreground/15 text-section-dark-foreground/70 font-medium text-sm hover:border-section-dark-foreground/30 transition-colors font-body"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full border border-section-dark-foreground/15 text-section-dark-foreground/70 font-medium text-base hover:border-section-dark-foreground/30 transition-colors font-body"
             >
               Submit Your Own Project
             </Link>
