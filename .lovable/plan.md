@@ -1,38 +1,23 @@
 
 
-# IPFS x UOR Integration — Current State
+# Fix: PINATA_GATEWAY_URL Secret Has Wrong Value
 
-## Completed Changes
+## Problem
+The `PINATA_GATEWAY_URL` secret is currently set to the gateway **token** (`IVT2jzIGIV...`) instead of the gateway **URL** (`https://uor.mypinata.cloud`). This causes all read/verify requests to fail with "Invalid URL" because the code constructs URLs like `IVT2jzI.../ipfs/<cid>` instead of `https://uor.mypinata.cloud/ipfs/<cid>`.
 
-### 1. Removed `?format=raw` from Read/Verify URLs
-Gateway fetch URLs no longer append `?format=raw`, which was returning raw IPLD blocks on trustless gateways.
+## Evidence
+- Write succeeded: CID `baguqeerafunvg4dngndilyhnowntiorrbvdybfrpkbzxxwvxolhssvpnm4fa` pinned
+- Read/Verify fail with: `Invalid URL: 'IVT2jzIGIVkk8BqsOavU.../ipfs/<cid>'`
+- The X-Ipfs-Gateway-Url header in the write response also shows the token being used as a URL
 
-### 2. Updated Gateway Registry Metadata
-All gateway notes now accurately describe the pinning method and read approach.
+## Fix (single change)
+Update the `PINATA_GATEWAY_URL` secret to the correct value: `https://uor.mypinata.cloud`
 
-### 3. Added dag-pb/UnixFS Unwrapper
-A `unwrapDagPbUnixFS()` function was added to handle gateways returning raw dag-pb blocks. It extracts the original file content from the protobuf wrapper.
+The `PINATA_GATEWAY_TOKEN` secret already holds the correct token value. No code changes needed.
 
-### 4. Kept `pinJSONToIPFS` for Writes
-After testing, `pinFileToIPFS` was found to produce CIDs that all tested public gateways serve as `application/vnd.ipld.raw` (raw dag-pb blocks), preventing direct JSON parsing. `pinJSONToIPFS` was retained as it stores content in a gateway-readable format.
+## Verification Plan
+After fixing the secret:
+1. **Read test**: `GET /store/read/baguqeerafunvg4dngndilyhnowntiorrbvdybfrpkbzxxwvxolhssvpnm4fa` -- should return the stored JSON-LD with dual verification
+2. **Verify test**: `GET /store/verify/baguqeerafunvg4dngndilyhnowntiorrbvdybfrpkbzxxwvxolhssvpnm4fa` -- should confirm CID and UOR address match
+3. **Full round-trip**: Compare retrieved payload against original to confirm `write_bytes === read_bytes`
 
-## Outstanding Issue: Gateway Returns Raw IPLD
-
-Both `gateway.pinata.cloud` and `ipfs.io` return `application/vnd.ipld.raw` content-type for all CIDs, regardless of Accept headers or `?format=raw` presence. The dag-pb unwrapper needs debugging — the protobuf field parsing may not match the actual dag-pb structure used by Pinata.
-
-### Potential Solutions (in order of pragmatism)
-1. **Pinata Dedicated Gateway** — Use Pinata's paid dedicated gateway (`<name>.mypinata.cloud`) which serves file content directly with proper MIME types
-2. **Pinata v2 Retrieve API** — Use `https://api.pinata.cloud/v3/files/{id}` with JWT auth for direct content retrieval
-3. **Fix dag-pb unwrapper** — Debug the protobuf parser to correctly extract UnixFS file data from raw blocks
-4. **pinFileToIPFS + dedicated gateway** — Combine raw byte upload with authenticated retrieval for true byte-level losslessness
-
-## Losslessness Architecture
-
-The UOR framework guarantees **logical losslessness** through:
-- `canonicalJsonLd()` — deterministic recursive key sort produces identical bytes from equivalent objects
-- `computeUorAddress()` — Braille bijection (byte→U+2800+byte) is mathematically invertible
-- `computeCid()` — CIDv1/dag-json/sha2-256 is deterministic
-- `stripSelfReferentialFields()` — reconstructs Round 1 from Round 2 for verification
-- `dualVerify()` — confirms both CID and UOR address match after re-canonicalization
-
-**Byte-level losslessness** (write_bytes === read_bytes) requires `pinFileToIPFS` + a dedicated gateway that serves unwrapped file content.
