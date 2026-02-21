@@ -1224,7 +1224,7 @@ function frameworkIndex(rl: RateLimitResult): Response {
     "title": "UOR Framework REST API — Navigation Index",
     "version": "1.0.0",
     "total_endpoints": 20,
-    "description": "Complete index of all 20 working endpoints. Start with uor-verify?x=42 for the simplest first call, or /kernel/op/verify?x=42 for the full proof.",
+    "description": "Complete index of all 20 working endpoints. Start with /kernel/op/verify?x=42 for the simplest first call.",
     "openapi_spec": "https://uor.foundation/openapi.json",
     "agent_entry_point": "https://uor.foundation/llms.md",
     "discovery_metadata": "https://uor.foundation/.well-known/uor.json",
