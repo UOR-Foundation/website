@@ -1,280 +1,245 @@
 
 
-# Modular Architecture Plan for UOR Foundation Website
+# Website Messaging Audit: Clarity, Trust, Impact
 
-## Vision
+## Guiding Principles
+- Every sentence must answer: What is it? What does it do? Why should I care?
+- No jargon. No assumed knowledge. But also no dumbing down: the language must respect a sharp, pragmatic reader.
+- Self-discipline in language: say less, mean more. Every word earns its place.
+- Em dashes are never used (per project conventions).
 
-Restructure the entire codebase into self-contained, independently extractable modules, each anchored to the UOR Framework specification. Every module will be self-describing (via a `module.json` manifest) and interoperable with every other module through a shared contract layer rooted in UOR namespaces.
+---
 
-## Current State
+## What Already Works Well
 
-The codebase is currently a monolithic single-repo application:
-- **Frontend**: 12 page components, 7 section components, 3 animation components, 6 layout components -- all tightly coupled via direct imports
-- **Backend**: One 3,953-line monolithic edge function (`uor-api/index.ts`) containing kernel math, content addressing, storage, rate limiting, and routing all in a single file
-- **Shared logic**: Only one extracted library (`lib/store.ts`); all other logic is inline
-- **No module contracts**: Components import each other freely with no defined boundaries or interfaces
+The **FrameworkLayers** descriptions (Layers 0-5) are the gold standard for the site. They are clear, self-descriptive, jargon-free, and answer "why should I care" in every paragraph. The **About page** library analogy is also strong. These are the benchmark.
 
-## Target Architecture
+---
 
-Seven self-contained modules, each mappable to a standalone repository:
+## Areas to Improve (by page/component)
 
-```text
-src/
-  modules/
-    core/           -- Design system, layout shell, shared types
-    framework/      -- UOR Framework page + FrameworkLayers component
-    community/      -- Research, blog, events (Our Community page)
-    projects/       -- Project maturity framework + submission
-    api-explorer/   -- Interactive API documentation page
-    donate/         -- Donation page + DonatePopup
-    landing/        -- Homepage sections (Hero, Intro, Pillars, Highlights, CTA)
+### 1. Homepage Hero (HeroSection.tsx)
 
-supabase/functions/
-    uor-api/
-      handlers/
-        kernel.ts     -- Layer 0-2: math, addressing, operations
-        bridge.ts     -- Layer 3-4: resolution, verification, proofs
-        user.ts       -- Layer 5: morphisms, state, types
-        store.ts      -- Storage: IPFS, Pinata, Storacha
-      lib/
-        store.ts      -- Pure functions (existing)
-        ring.ts       -- Ring arithmetic
-        addressing.ts -- Braille bijection, CID computation
-        http.ts       -- CORS, error responses, rate limiting
-      index.ts        -- Thin router only (under 200 lines)
-    project-submit/
-      index.ts        -- Unchanged (already self-contained)
-```
+**Current subtitle:**
+> "The UOR Foundation is dedicated to developing universal data standard for the semantic web, open science, and frontier technologies."
 
-## Module Design Principles
+**Problems:** Missing article ("a"), "semantic web" is jargon most people cannot define, and the sentence describes what the Foundation does, not why the audience should care.
 
-Each module follows these rules:
+**Proposed:**
+> "Every piece of data gets one permanent address, based on what it contains. Findable, verifiable, and reusable across every system."
 
-1. **Self-describing manifest** (`module.json`): declares name, version, UOR namespace anchors, exported components, required dependencies on other modules, and the UOR specification version it complies with.
+**Why:** Immediately tells the reader what UOR does and why it matters to them. No jargon. Mirrors the quality of the FrameworkLayers text.
 
-2. **Single entry point** (`index.ts`): re-exports everything the module offers. No reaching into internal files from outside.
+---
 
-3. **Explicit contract layer**: Each module defines its TypeScript interfaces in a `types.ts` file. Cross-module communication happens only through these interfaces.
+### 2. Homepage Intro (IntroSection.tsx)
 
-4. **UOR namespace anchoring**: Every module declares which UOR namespaces it implements or consumes (e.g., `store:`, `proof:`, `op:`), creating a formal link to the specification.
+**Current opening:**
+> "Universal Object Reference (UOR) is a universal, lossless coordinate system for information"
 
-5. **Zero circular dependencies**: The dependency graph is a strict DAG (directed acyclic graph) with `core` at the root.
+**Problems:** "Lossless coordinate system" is technically precise but opaque to most readers. The paragraphs explain the mechanism well but the "why should I care" only arrives at the end.
 
-## Module Dependency Graph
+**Proposed changes:**
+- Rewrite the bold lead to focus on the outcome first: what it means for the reader, then how it works.
+- Move the "why it matters" statement earlier.
+- Replace "lossless coordinate system" with plain language while keeping the meaning intact.
 
-```text
-core (design system, Layout, shared types)
-  |
-  +-- landing (homepage sections)
-  +-- framework (UOR Framework page)
-  +-- community (research, blog, events)
-  +-- projects (maturity framework, submission form)
-  +-- api-explorer (interactive API docs)
-  +-- donate (donation pages)
-```
+**Proposed opening:**
+> "Universal Object Reference (UOR) gives every piece of digital content a single, permanent address based on what it contains, not where it is stored."
 
-All modules depend on `core`. No module depends on another peer module.
+**Proposed "why it matters" (moved up):**
+> "This means data can be found, verified, and reused across any system without translation layers, broken links, or manual integration. The same content always resolves to the same address, no matter who holds it."
 
-## Detailed Module Breakdown
+---
 
-### 1. `core` -- Design System and Shell
+### 3. Homepage Pillars (PillarsSection.tsx)
 
-**Contents:**
-- `Layout.tsx`, `Navbar.tsx`, `Footer.tsx`, `ScrollProgress.tsx`, `NavLink.tsx`
-- All `ui/` components (dialog, toast, tooltip, sonner)
-- `index.css` (design tokens, theme variables)
-- Shared hooks (`use-toast.ts`)
-- `lib/utils.ts`
-- `types.ts`: `ModuleManifest`, `NavItem`, `LayoutProps` interfaces
+**Current "Our Community" description:**
+> "Open research, cross pollination of ideas, and joint exploration across disciplines to accelerate scientific progress."
 
-**UOR anchors:** None (infrastructure only)
+**Problem:** "Cross pollination of ideas" is abstract. Does not answer why someone should care.
 
-**Exports:** `Layout`, `Navbar`, `Footer`, all UI primitives, design tokens, utility functions
+**Proposed:**
+> "Researchers, engineers, and builders working together across disciplines. Share your work, validate ideas, and move faster by building on what others have proven."
 
-### 2. `framework` -- UOR Framework Page
+**Current "Your Projects" description:**
+> "Build on UOR. Prototype, incubate, and graduate open source projects within the foundation's ecosystem."
 
-**Contents:**
-- `Standard.tsx` (page)
-- `FrameworkLayers.tsx` (interactive layer accordion)
-- `UORDiagram.tsx` (visual diagram)
-- Layer data definitions (currently inline in components)
+**Problem:** "Incubate and graduate" is process language. Does not explain the value to the builder.
 
-**UOR anchors:** All 14 namespaces (this module IS the framework presentation)
+**Proposed:**
+> "Turn your idea into production-ready software. The foundation provides a structured path, community support, and visibility to help open source projects grow."
 
-**Exports:** `FrameworkPage`, `FrameworkLayers`, `UORDiagram`, layer data constants
+---
 
-### 3. `community` -- Research, Blog, Events
+### 4. Framework Page Hero (StandardPage.tsx)
 
-**Contents:**
-- `Research.tsx` (page)
-- `BlogPost1.tsx`, `BlogPost2.tsx`, `BlogPost3.tsx` (pages)
-- `ResearchPaperAtlasEmbeddings.tsx` (page)
-- Research category data, blog post data, event data
-- Related image assets
+**Current subtitle:**
+> "One address per object, derived from its content, verifiable across every system. Data referenced by what it is, not where it lives, unlocking a unified computational substrate."
 
-**UOR anchors:** `proof:`, `derivation:` (research outputs reference these)
+**Problem:** "Unified computational substrate" is heavy jargon. The first sentence is excellent. The second loses the reader.
 
-**Exports:** `CommunityPage`, `BlogPostPage`, blog/research data constants
+**Proposed:**
+> "One address per object, derived from its content, verifiable across every system. Data referenced by what it is, not where it lives. One shared language for all of it."
 
-### 4. `projects` -- Project Maturity Framework
+---
 
-**Contents:**
-- `Projects.tsx` (page)
-- `CollapsibleCategory` component (currently inline)
-- Project data, maturity level definitions
-- Submission form logic
-- Related image assets
+### 5. Framework Page "Where It Applies" Cards (StandardPage.tsx)
 
-**UOR anchors:** `cert:` (project certification/maturity)
+Several cards use jargon that breaks the clarity standard:
 
-**Exports:** `ProjectsPage`, project data, maturity level types
+| Card | Current Text | Problem |
+|------|-------------|---------|
+| Semantic Web | "Give every piece of data a meaning machines can understand, making the web truly interoperable." | "Interoperable" is jargon |
+| Proof Based Computation | "Zero knowledge verified AI: models run once, outputs reduce to compact proofs anchored to deterministic coordinates." | Almost entirely jargon |
+| Agentic AI | "Enable autonomous agents to reason, verify, and act across all data sources within one unified space." | "Autonomous agents" assumes knowledge |
+| Cross Domain Unification | "Bridge ideas across disciplines with a shared coordinate system that preserves meaning." | "Coordinate system" is insider language here |
+| Frontier Technologies | "...topological quantum computing and neuro symbolic AI." | Deep specialist jargon |
 
-### 5. `api-explorer` -- Interactive API Documentation
+**Proposed rewrites (all six cards):**
 
-**Contents:**
-- `Api.tsx` (page -- currently 1,224 lines)
-- Endpoint data definitions
-- Interactive "Try it" panel components
-- Layer/endpoint types
+- **Semantic Web:** "Make data understandable by both people and machines, so systems can work together without custom translations."
+- **Proof Based Computation:** "Run a computation once and produce a receipt that anyone can check. No need to re-run it, no need to trust the person who ran it."
+- **Agentic AI:** "Give AI systems a single, reliable map of all available data so they can find, verify, and use information on their own."
+- **Open Science:** "Make research data findable, reproducible, and composable across institutions and fields." (Already good, keep as is.)
+- **Cross Domain Unification:** "Let different fields share data and ideas without losing meaning in translation. One shared system, many disciplines."
+- **Frontier Technologies:** "Provide a foundation for emerging fields like quantum computing and next-generation AI, where reliable data identity is essential."
 
-**UOR anchors:** All 14 namespaces (documents the full API surface)
+---
 
-**Exports:** `ApiExplorerPage`, endpoint data, layer definitions
+### 6. Framework Page "How It Works" Subtitle
 
-### 6. `donate` -- Donation
+**Current:**
+> "UOR encodes every object into a single coordinate space where identity is derived from content, not location."
 
-**Contents:**
-- `Donate.tsx` (page)
-- `DonatePopup.tsx` (modal component)
-- Donation project data
+**Problem:** "Coordinate space" is jargon.
 
-**UOR anchors:** None (operational)
+**Proposed:**
+> "UOR gives every object a permanent address based on what it contains, not where it is stored. Here is how that works."
 
-**Exports:** `DonatePage`, `DonatePopup`
+---
 
-### 7. `landing` -- Homepage
+### 7. Framework Page Architecture Intro
 
-**Contents:**
-- `HeroSection.tsx`, `IntroSection.tsx`, `PillarsSection.tsx`
-- `HighlightsSection.tsx`, `ProjectsShowcase.tsx`, `CTASection.tsx`
-- `GalaxyAnimation.tsx` + `galaxy.css`
-- Related image assets
+**Current:**
+> "Six layers built on a shared foundation of geometric structure and symbolic representation. Each builds on the one below it."
 
-**UOR anchors:** `u:` (hero references content addressing)
-
-**Exports:** `HomePage`, all section components
+**Problem:** "Geometric structure and symbolic representation" is jargon.
 
-## Module Manifest Format
-
-Each module will contain a `module.json`:
+**Proposed:**
+> "Six layers, each building on the one below it. Together they form a complete system: from the ground rules, to naming, to finding, proving, and transforming data."
 
-```json
-{
-  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-  "@type": "uor:Module",
-  "name": "framework",
-  "version": "1.0.0",
-  "description": "UOR Framework presentation and interactive documentation",
-  "uor:specification": "1.0.0",
-  "uor:namespaces": ["u:", "schema:", "op:", "partition:", "proof:", "cert:"],
-  "exports": ["FrameworkPage", "FrameworkLayers", "UORDiagram"],
-  "dependencies": {
-    "core": "^1.0.0"
-  },
-  "routes": ["/standard"],
-  "assets": ["uor-diagram-data.ts"]
-}
-```
-
-This manifest is machine-readable, JSON-LD compatible, and anchored to the UOR context. When a module is extracted to its own repo, this manifest tells any consumer exactly what it provides and what it needs.
-
-## Backend Decomposition (Edge Function)
-
-The 3,953-line `uor-api/index.ts` will be split into focused handler files:
-
-### `handlers/kernel.ts` (~400 lines)
-- Ring arithmetic (`neg`, `bnot`, `succ`, `pred`, `add`, `sub`, `mul`, `xor`, `and`, `or`)
-- Content addressing (Braille bijection)
-- Datum construction
-- Routes: `/kernel/op/verify`, `/kernel/op/verify/all`, `/kernel/op/compute`, `/kernel/op/operations`, `/kernel/address/encode`, `/kernel/schema/datum`
-
-### `handlers/bridge.ts` (~500 lines)
-- Partition classification
-- Proof generation (critical identity, coherence)
-- Certificate generation (involution)
-- Derivation traces, execution traces
-- Resolver logic
-- Routes: `/bridge/*`
-
-### `handlers/user.ts` (~300 lines)
-- Type primitives
-- Morphism transforms
-- State/frame management
-- Observable metrics
-- Routes: `/user/*`
-
-### `handlers/store.ts` (~600 lines)
-- Pinata integration
-- Storacha integration
-- Store write/read/verify/resolve/gateways
-- Routes: `/store/*`
-
-### `lib/http.ts` (~100 lines)
-- CORS headers
-- Error response factories (`error400`, `error405`, `error415`, etc.)
-- Rate limiting
-- ETag computation
-- Rate limit header builder
-
-### `lib/ring.ts` (~50 lines)
-- Pure ring arithmetic functions extracted from inline definitions
-
-### `lib/addressing.ts` (~30 lines)
-- `encodeGlyph`, `addressSimplified`, `makeDatum`
-
-### `index.ts` (~150 lines)
-- Import all handlers
-- Route dispatch table
-- OpenAPI/navigate endpoint
-- CORS preflight handling
-
-## Implementation Steps
-
-### Phase 1: Create module directory structure
-- Create `src/modules/` with seven subdirectories
-- Add `module.json`, `index.ts`, and `types.ts` to each module
-- Move existing components into their respective modules
-- Update all import paths
-
-### Phase 2: Extract shared contracts
-- Define `ModuleManifest` TypeScript interface in `core/types.ts`
-- Define cross-module interfaces (e.g., `NavItem`, `RouteConfig`)
-- Create barrel exports (`index.ts`) for each module
-
-### Phase 3: Refactor App.tsx routing
-- Replace direct page imports with module-level imports
-- Each module exports its route configuration
-- `App.tsx` composes routes from all modules dynamically
-
-### Phase 4: Decompose the edge function
-- Extract `lib/http.ts`, `lib/ring.ts`, `lib/addressing.ts`
-- Extract `handlers/kernel.ts`, `handlers/bridge.ts`, `handlers/user.ts`, `handlers/store.ts`
-- Reduce `index.ts` to a thin router importing handlers
-- Run existing tests to verify no regressions
-
-### Phase 5: Asset co-location
-- Move images from `src/assets/` and `public/images/` into their owning modules
-- Each module owns its assets, making extraction to a separate repo self-contained
-
-### Phase 6: Clean up Storacha debug logging
-- Remove the try/catch debug wrapper added during integration debugging
-- Restore clean error propagation
-
-## Technical Notes
-
-- All module imports will use the `@/modules/<name>` path alias pattern
-- The existing `@/components/ui` path will be redirected to `@/modules/core/ui`
-- No new dependencies are required; this is purely a structural refactor
-- The `public/` directory files (llms.md, openapi.json, contexts/, .well-known/) remain at the project root as they are protocol-level assets, not module assets
-- The Lovable Cloud integration files (`src/integrations/supabase/`) remain untouched
+---
+
+### 8. UOR Diagram Capability Details (UORDiagram.tsx)
+
+**Current examples:**
+- Reason: "Agents traverse a unified semantic graph to draw inferences across formerly siloed data, with no custom connectors required."
+- Verify: "Content-addressed identity lets any agent independently confirm data integrity and provenance without trusting a central authority."
+- Compose: "Algebraic structure means objects combine into higher-order constructs while preserving referential integrity at every layer."
+
+**Problem:** Nearly every phrase uses specialist language.
+
+**Proposed rewrites:**
+- **Reason:** "AI systems can find and connect information across different sources without needing custom adapters for each one."
+- **Verify:** "Any system can independently confirm that data has not been altered and trace where it came from, without relying on a central authority."
+- **Compose:** "Smaller pieces of data can be combined into larger ones, and broken apart again, without losing any information along the way."
+- **Navigate:** "Any system can locate any piece of data by describing what it is, rather than knowing which server or database holds it."
+
+---
+
+### 9. Homepage Projects Showcase (ProjectsShowcase.tsx)
+
+**Current project descriptions:**
+- Hologram: "...fundamentally new geometric computing paradigm."
+- Atlas Embeddings: "...all five exceptional Lie groups emerge from a single initial object: the Atlas of Resonance Classes."
+- Atomic Language Model: "...Chomsky's Minimalist Grammar via formal Merge and Move transformations."
+
+**Problem:** These are written for domain experts. A general audience has no idea what a Lie group or Chomsky's Minimalist Grammar is.
+
+**Proposed rewrites:**
+- **Hologram:** "A new kind of computing infrastructure built from the ground up. Software-defined, high-performance, and designed for the next generation of applications."
+- **Atlas Embeddings:** "Research showing that five of the most complex structures in mathematics all come from a single, simple starting point, revealing a deeper shared order."
+- **Atomic Language Model:** "A language model built on formal grammar rules rather than statistical prediction. Every output is traceable to precise, well-defined operations."
+
+---
+
+### 10. Projects Page Descriptions (ProjectsPage.tsx)
+
+Same project descriptions as above, plus Prism:
+- **Prism current:** "A universal coordinate system for information. Prism provides a mathematically grounded framework for encoding, addressing, and navigating all forms of data."
+
+**Proposed:** "The reference implementation of UOR. Prism turns the framework's ideas into working code: encoding, addressing, and navigating data in a single system."
+
+---
+
+### 11. Research Page Hero (ResearchPage.tsx)
+
+**Current:**
+> "The UOR community facilitates open research, cross pollination of ideas, and validation of existing work through joint research exploration to accelerate our scientific progress."
+
+**Problem:** Wordy, abstract, and uses "cross pollination" again.
+
+**Proposed:**
+> "Researchers and builders working across disciplines to test ideas, validate results, and publish openly. Progress is faster when it is shared."
+
+---
+
+### 12. Research Category Descriptions (ResearchPage.tsx)
+
+Several use jargon:
+- "Content-addressed security, zero-trust identity, and verifiable data provenance."
+- "Decentralized finance primitives, auditable ledgers, and semantic financial data."
+- "Post-quantum cryptography"
+
+**Proposed rewrites for the most jargon-heavy ones:**
+- **Cybersecurity:** "Security that is built into the data itself. Verify where information came from and confirm it has not been altered."
+- **Finance:** "Financial systems where every transaction is independently auditable and data flows reliably between institutions."
+- **Quantum:** "Preparing data systems for the next generation of computing, where today's security methods will need to be replaced."
+
+---
+
+### 13. Donate Page (DonatePage.tsx)
+
+**Current subtitle:**
+> "...you support open standards and research that make data universally referenceable by what it is, not where it lives."
+
+**Problem:** "Universally referenceable" is jargon.
+
+**Proposed:**
+> "...you support the development of an open standard that gives every piece of data one permanent, verifiable address. No lock-in, no gatekeepers."
+
+---
+
+### 14. Footer Tagline (Footer.tsx)
+
+**Current:** "The open standard for universal data infrastructure."
+
+**Problem:** "Universal data infrastructure" is abstract.
+
+**Proposed:** "One permanent address for every piece of data. Open source. Open standard."
+
+---
+
+## Summary of Files to Edit
+
+| File | Changes |
+|------|---------|
+| `src/modules/landing/components/HeroSection.tsx` | Rewrite subtitle |
+| `src/modules/landing/components/IntroSection.tsx` | Rewrite opening and reorder paragraphs |
+| `src/modules/landing/components/PillarsSection.tsx` | Rewrite Community and Projects descriptions |
+| `src/modules/landing/components/ProjectsShowcase.tsx` | Rewrite all 3 project descriptions |
+| `src/modules/framework/pages/StandardPage.tsx` | Rewrite hero subtitle, "How It Works" subtitle, Architecture intro, and all 6 application cards |
+| `src/modules/framework/components/UORDiagram.tsx` | Rewrite all 4 capability descriptions |
+| `src/modules/projects/pages/ProjectsPage.tsx` | Rewrite all 4 project descriptions |
+| `src/modules/community/pages/ResearchPage.tsx` | Rewrite hero subtitle and jargon-heavy category descriptions |
+| `src/modules/donate/pages/DonatePage.tsx` | Rewrite hero subtitle |
+| `src/modules/core/components/Footer.tsx` | Rewrite tagline |
+
+## What Does Not Change
+- FrameworkLayers descriptions (already the gold standard)
+- About page (already strong)
+- Visual design, layout, and structure
+- All links, CTAs, and navigation
+- Technical accuracy (all rewrites preserve the correct meaning)
 
