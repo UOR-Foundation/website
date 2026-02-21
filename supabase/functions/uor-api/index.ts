@@ -127,24 +127,66 @@ function orOp(x: number, y: number): number { return x | y; }
 function encodeGlyph(b: number): string { return String.fromCodePoint(0x2800 + b); }
 function addressSimplified(bytes: Uint8Array): string { return Array.from(bytes).map(encodeGlyph).join(''); }
 
-// ── schema:Datum construction (schema.rs) ───────────────────────────────────
+// ── Byte-level helpers for Triad (UOR Prism v3 §Triadic Coordinates) ────────
+// Width = quantum + 1 bytes. API parameter n = bits = 8 × width.
+function toBytesTuple(value: number, n: number): number[] {
+  const width = Math.ceil(n / 8) || 1;
+  const bytes: number[] = [];
+  let v = value & (modulus(n) - 1);
+  for (let i = width - 1; i >= 0; i--) {
+    bytes[i] = v & 0xFF;
+    v = v >>> 8;
+  }
+  return bytes;
+}
+
+function bytePopcount(b: number): number {
+  let count = 0;
+  for (let i = 0; i < 8; i++) if (b & (1 << i)) count++;
+  return count;
+}
+
+function byteBasis(b: number): number[] {
+  const bits: number[] = [];
+  for (let i = 0; i < 8; i++) if (b & (1 << i)) bits.push(i);
+  return bits;
+}
+
+function byteDots(b: number): number[] {
+  return byteBasis(b).map(i => i + 1);
+}
+
+// ── schema:Datum construction (UOR Prism v3 §Triad) ────────────────────────
+// Triad = (datum, stratum, spectrum) where:
+//   datum:    Tuple[int, ...] — big-endian byte tuple
+//   stratum:  Tuple[int, ...] — popcount per byte position
+//   spectrum: Tuple[Tuple[int, ...], ...] — LSB-indexed basis elements per byte
 function makeDatum(value: number, n: number) {
-  const spectrumStr = value.toString(2).padStart(n, '0');
-  const stratumVal = spectrumStr.split('').filter(b => b === '1').length;
-  const glyph = encodeGlyph(value);
+  const bytes = toBytesTuple(value, n);
+  const stratumPerByte = bytes.map(bytePopcount);
+  const spectrumPerByte = bytes.map(byteBasis);
+  const totalStratum = stratumPerByte.reduce((a, b) => a + b, 0);
+  const glyph = bytes.map(encodeGlyph).join('');
+  const quantum = Math.ceil(n / 8) - 1; // Prism quantum level
+
   return {
     "@type": "schema:Datum",
     "schema:value": value,
-    "schema:quantum": n,
+    "schema:quantum": quantum,
+    "schema:width": bytes.length,
+    "schema:bits": n,
+    "schema:bytes": bytes,
     "schema:triad": {
       "@type": "schema:Triad",
-      "schema:datum": { "@type": "schema:DatumVector", "schema:elements": Array.from(spectrumStr).map(Number) },
-      "schema:stratum": { "@type": "schema:StratumVector", "schema:weight": stratumVal, "schema:level": stratumVal },
-      "schema:spectrum": { "@type": "schema:SpectrumVector", "schema:binary": spectrumStr, "schema:positions": Array.from(spectrumStr).map((b, i) => b === '1' ? i : -1).filter(i => i >= 0) }
+      "schema:datum": bytes,
+      "schema:stratum": stratumPerByte,
+      "schema:spectrum": spectrumPerByte,
+      "schema:totalStratum": totalStratum
     },
-    "schema:stratum": stratumVal,
-    "schema:spectrum": spectrumStr,
-    "schema:glyph": { "@type": "u:Address", "u:glyph": glyph, "u:length": 1 }
+    "schema:stratum": totalStratum,
+    "schema:spectrum": value.toString(2).padStart(n, '0'),
+    "schema:glyph": { "@type": "u:Address", "u:glyph": glyph, "u:length": bytes.length },
+    "schema:dots": bytes.map(byteDots)
   };
 }
 
@@ -919,26 +961,35 @@ function schemaDatum(url: URL, rl: RateLimitResult): Response {
     },
     "schema:canonicalization": {
       "@type": "schema:CanonicalizationRules",
+      "description": "8 normalization rules for deterministic term identity and structural comparison (UOR Prism v3 §Canonicalization Policy)",
       "rules": [
-        { "name": "involution_cancellation", "rule": "neg(neg(x)) → x, bnot(bnot(x)) → x", "description": "Self-inverse operations cancel when composed" },
-        { "name": "double_complement_elimination", "rule": "bnot(bnot(x)) → x", "description": "Double bitwise complement is identity" },
-        { "name": "ac_flatten_sort", "rule": "add(add(a,b),c) → add(a,b,c); sort operands", "description": "Flatten associative-commutative operations, sort operands for deterministic order" },
-        { "name": "identity_element_removal", "rule": "add(x, 0) → x, mul(x, 1) → x", "description": "Remove identity elements from operations" },
-        { "name": "zero_annihilation", "rule": "mul(x, 0) → 0", "description": "Multiplication by zero annihilates" },
-        { "name": "idempotent_collapse", "rule": "and(x, x) → x, or(x, x) → x", "description": "Idempotent operations collapse" },
-        { "name": "complement_fusion", "rule": "neg(bnot(x)) → succ(x), bnot(neg(x)) → pred(x)", "description": "The critical identity: composition of the two generators yields rotation" },
-        { "name": "modular_reduction", "rule": "x → x mod 2^n", "description": "All values are reduced modulo the ring modulus" }
+        { "name": "involution_cancellation", "rule": "f(f(x)) → x for f ∈ {neg, bnot}", "description": "Self-inverse operations cancel when composed" },
+        { "name": "derived_expansion", "rule": "succ(x) → neg(bnot(x)), pred(x) → bnot(neg(x))", "description": "Derived operations are expanded to their primitive composition" },
+        { "name": "constant_reduction", "rule": "integers reduced mod 2^bits", "description": "All integer constants reduced to canonical representative in Z/(2^bits)Z" },
+        { "name": "ac_flatten_sort", "rule": "xor/and/or flattened to n-ary, operands sorted", "description": "Associative-commutative operations flattened and operands canonically sorted" },
+        { "name": "identity_elimination", "rule": "x xor 0 → x, x and mask → x, x or 0 → x", "description": "Identity elements removed from operations" },
+        { "name": "annihilator_reduction", "rule": "x and 0 → 0, x or mask → mask", "description": "Annihilator elements collapse the operation" },
+        { "name": "self_cancellation", "rule": "x xor x → 0", "description": "XOR self-cancellation" },
+        { "name": "idempotence", "rule": "x and x → x, x or x → x", "description": "Idempotent operations collapse" }
       ]
     },
     "schema:closureSemantics": {
       "@type": "schema:ClosureClassification",
-      "description": "Each operation's long-run behaviour on a value falls into one of four closure modes",
+      "description": "Three graph computation modes defining how closure is computed for sampled subsets (UOR Prism v3 §Closure Semantics)",
       "modes": [
-        { "mode": "FIXED_POINT", "description": "f(x) = x. The value is stable under the operation.", "example": "neg(0) = 0 in any R_n" },
-        { "mode": "ABSORBING", "description": "Repeated application converges to a fixed absorber.", "example": "and(x, 0) = 0 for all x" },
-        { "mode": "CYCLIC", "description": "Repeated application produces a finite orbit.", "example": "neg and bnot are involutions (period 2)" },
-        { "mode": "CHAOTIC", "description": "No short periodic structure detectable.", "example": "Certain mul orbits in large rings" }
+        { "mode": "ONE_STEP", "value": "oneStep", "description": "S ∪ f(S) for each f in closure_ops, applied once from seed only. Closes under each involution individually, but f(g(x)) may escape. NOT full group closure." },
+        { "mode": "FIXED_POINT", "value": "fixedPoint", "description": "Iterate until no new nodes appear. For {neg, bnot} together, generates the full ring via the critical identity (succ). Guarded for large cycles." },
+        { "mode": "GRAPH_CLOSED", "value": "graphClosed", "description": "Fixed-point closure under closure_ops with verification that every edge lands in S. Full graph-closure under all edges requires full ring enumeration for any nonempty set." }
       ]
+    },
+    "schema:signature": {
+      "@type": "schema:AlgebraicSignature",
+      "description": "Signature Σ of the UOR algebra (UOR Prism v3 §Universal Algebra Formalization)",
+      "primitiveOperations": ["neg", "bnot", "xor", "and", "or"],
+      "primitiveInvolutions": ["neg", "bnot"],
+      "derivedOperations": { "succ": "neg(bnot(x))", "pred": "bnot(neg(x))" },
+      "criticalIdentity": "neg(bnot(x)) = succ(x) = x + 1 mod 2^bits",
+      "theorem": "No nonempty proper subset S ⊂ Z/(2^bits)Z can be graph-closed under both neg and bnot"
     },
     "named_individuals": {
       "schema:pi1": { "schema:value": 1, "schema:role": "generator", "note": "ring generator, value=1" },
@@ -976,6 +1027,17 @@ async function kernelDerive(req: Request, rl: RateLimitResult): Promise<Response
 
   interface TermNode { op: string; args: (number | TermNode)[] }
 
+  // Canonical serialization of a term tree (matches Prism v3 §Term.canonical_serialize)
+  function canonicalSerialize(t: number | TermNode, width: number): string {
+    if (typeof t === 'number') {
+      const hexDigits = width * 2;
+      const mask = Math.pow(2, width * 8) - 1;
+      return `0x${(t & mask).toString(16).padStart(hexDigits, '0')}`;
+    }
+    const args = (t.args || []).map(a => canonicalSerialize(a, width)).join(',');
+    return `${t.op}(${args})`;
+  }
+
   function evalTerm(t: number | TermNode, steps: unknown[], depth: number): number {
     if (depth > 20) throw new Error('Term tree exceeds maximum depth of 20');
     if (typeof t === 'number') {
@@ -1000,31 +1062,40 @@ async function kernelDerive(req: Request, rl: RateLimitResult): Promise<Response
     const steps: unknown[] = [];
     const result = evalTerm(term as TermNode, steps, 0);
     const resultDatum = makeDatum(result, n);
-    const resultBytes = new TextEncoder().encode(JSON.stringify({ term: body.term, result, n }));
-    const address = addressSimplified(resultBytes);
+    const width = Math.ceil(n / 8) || 1;
+    const resultBytes = toBytesTuple(result, n);
+    const resultIri = `https://uor.foundation/u/${resultBytes.map(b => `U${(0x2800 + b).toString(16).toUpperCase().padStart(4, '0')}`).join('')}`;
+
+    // SHA-256 content-addressed derivation ID (Prism v3 §Derivation)
+    const canonicalForm = canonicalSerialize(term as TermNode, width);
+    const contentForHash = `${canonicalForm}=${resultIri}`;
+    const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(contentForHash));
+    const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+    const derivationId = `urn:uor:derivation:sha256:${hashHex}`;
 
     return jsonResp({
       "@context": UOR_CONTEXT_URL,
-      "@id": `urn:uor:derivation:${encodeURIComponent(address)}`,
+      "@id": derivationId,
       "@type": ["derivation:DerivationTrace", "derivation:TermDerivation"],
       "summary": {
         "result": result,
         "steps": steps.length,
         "ring": `Z/${m}Z`,
-        "content_address": address
+        "derivation_id": derivationId
       },
-      "derivation:term": body.term,
-      "derivation:quantum": n,
+      "derivation:originalTerm": body.term,
+      "derivation:canonicalTerm": canonicalForm,
+      "derivation:quantum": Math.ceil(n / 8) - 1,
+      "derivation:width": width,
+      "derivation:bits": n,
       "derivation:steps": steps,
-      "derivation:result": resultDatum,
-      "derivation:contentAddress": {
-        "@type": "u:Address",
-        "u:glyph": address,
-        "u:length": resultBytes.length
+      "derivation:result": {
+        "@id": resultIri,
+        ...resultDatum
       },
       "derivation:canonicalizationApplied": [
-        "modular_reduction",
-        "complement_fusion"
+        "constant_reduction",
+        "derived_expansion"
       ],
       "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/derivation.rs"
     }, CACHE_HEADERS_KERNEL, undefined, rl);
@@ -1048,21 +1119,17 @@ function kernelCorrelate(url: URL, rl: RateLimitResult): Response {
   if (x >= m) return error400(`x must be in [0, ${m-1}] for n=${n}`, 'x', rl);
   if (y >= m) return error400(`y must be in [0, ${m-1}] for n=${n}`, 'y', rl);
 
-  // XOR-stratum: Hamming distance between binary representations
+  // XOR-stratum: Hamming distance (UOR Prism v3 §Correlation)
   const xorVal = xorOp(x, y);
-  const xorBinary = xorVal.toString(2).padStart(n, '0');
-  const hammingDistance = xorBinary.split('').filter(b => b === '1').length;
-  const fidelity = 1 - (hammingDistance / n);
+  const xorBytes = toBytesTuple(xorVal, n);
+  const differenceStratum = xorBytes.map(bytePopcount);
+  const totalDifference = differenceStratum.reduce((a, b) => a + b, 0);
+  const maxStratum = n; // total bits
+  const fidelity = 1 - (totalDifference / maxStratum);
 
-  // Per-bit diff
-  const xBin = x.toString(2).padStart(n, '0');
-  const yBin = y.toString(2).padStart(n, '0');
-  const bitDiffs = Array.from(xorBinary).map((b, i) => ({
-    bit: i,
-    x: Number(xBin[i]),
-    y: Number(yBin[i]),
-    differs: b === '1'
-  }));
+  // Per-byte glyph representations
+  const xBytes = toBytesTuple(x, n);
+  const yBytes = toBytesTuple(y, n);
 
   const etag = makeETag('/kernel/op/correlate', { x: String(x), y: String(y), n: String(n) });
 
@@ -1074,28 +1141,25 @@ function kernelCorrelate(url: URL, rl: RateLimitResult): Response {
       "x": x,
       "y": y,
       "ring": `Z/${m}Z`,
-      "hamming_distance": hammingDistance,
+      "hamming_distance": totalDifference,
       "fidelity": fidelity,
       "xor_stratum": xorVal,
       "identical": x === y
     },
-    "op:hammingDistance": hammingDistance,
+    "op:a": xBytes.map(encodeGlyph).join(''),
+    "op:b": yBytes.map(encodeGlyph).join(''),
+    "op:difference": xorBytes.map(encodeGlyph).join(''),
+    "op:differenceStratum": differenceStratum,
+    "op:totalDifference": totalDifference,
+    "op:maxDifference": maxStratum,
     "op:fidelity": fidelity,
-    "op:maxDistance": n,
-    "op:xorStratum": {
-      "@type": "schema:Datum",
-      "schema:value": xorVal,
-      "schema:spectrum": xorBinary,
-      "schema:stratum": hammingDistance
-    },
-    "op:bitComparison": bitDiffs,
-    "op:interpretation": hammingDistance === 0
+    "op:interpretation": totalDifference === 0
       ? "Identical: zero Hamming drift. Values are structurally equivalent."
-      : hammingDistance <= Math.ceil(n / 4)
-        ? `Low drift (${hammingDistance}/${n} bits differ). High structural fidelity.`
-        : hammingDistance <= Math.ceil(n / 2)
-          ? `Moderate drift (${hammingDistance}/${n} bits differ). Partial structural divergence.`
-          : `High drift (${hammingDistance}/${n} bits differ). Significant structural divergence — possible integrity violation.`,
+      : totalDifference <= Math.ceil(maxStratum / 4)
+        ? `Low drift (${totalDifference}/${maxStratum} bits differ). High structural fidelity.`
+        : totalDifference <= Math.ceil(maxStratum / 2)
+          ? `Moderate drift (${totalDifference}/${maxStratum} bits differ). Partial structural divergence.`
+          : `High drift (${totalDifference}/${maxStratum} bits differ). Significant structural divergence — possible integrity violation.`,
     "datum_x": makeDatum(x, n),
     "datum_y": makeDatum(y, n),
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/op.rs"
