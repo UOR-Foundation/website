@@ -287,7 +287,7 @@ const SemanticWebPage = () => {
             className="mt-6 text-base md:text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
             style={{ animationDelay: "0.15s" }}
           >
-            How the UOR Framework implements and extends every layer of the W3C Semantic Web architecture.
+            How the UOR Framework implements and extends every layer of the W3C Semantic Web architecture to power the era of trusted Agentic AI.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
