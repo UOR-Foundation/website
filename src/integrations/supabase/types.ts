@@ -53,6 +53,190 @@ export type Database = {
         }
         Relationships: []
       }
+      uor_certificates: {
+        Row: {
+          cert_chain: Json | null
+          certificate_id: string
+          certifies_iri: string
+          derivation_id: string | null
+          issued_at: string
+          valid: boolean
+        }
+        Insert: {
+          cert_chain?: Json | null
+          certificate_id: string
+          certifies_iri: string
+          derivation_id?: string | null
+          issued_at?: string
+          valid?: boolean
+        }
+        Update: {
+          cert_chain?: Json | null
+          certificate_id?: string
+          certifies_iri?: string
+          derivation_id?: string | null
+          issued_at?: string
+          valid?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uor_certificates_derivation_id_fkey"
+            columns: ["derivation_id"]
+            isOneToOne: false
+            referencedRelation: "uor_derivations"
+            referencedColumns: ["derivation_id"]
+          },
+        ]
+      }
+      uor_datums: {
+        Row: {
+          bytes: Json
+          created_at: string
+          glyph: string
+          inverse_iri: string
+          iri: string
+          not_iri: string
+          pred_iri: string
+          quantum: number
+          spectrum: Json
+          stratum: Json
+          succ_iri: string
+          total_stratum: number
+          value: number
+        }
+        Insert: {
+          bytes: Json
+          created_at?: string
+          glyph: string
+          inverse_iri: string
+          iri: string
+          not_iri: string
+          pred_iri: string
+          quantum: number
+          spectrum: Json
+          stratum: Json
+          succ_iri: string
+          total_stratum: number
+          value: number
+        }
+        Update: {
+          bytes?: Json
+          created_at?: string
+          glyph?: string
+          inverse_iri?: string
+          iri?: string
+          not_iri?: string
+          pred_iri?: string
+          quantum?: number
+          spectrum?: Json
+          stratum?: Json
+          succ_iri?: string
+          total_stratum?: number
+          value?: number
+        }
+        Relationships: []
+      }
+      uor_derivations: {
+        Row: {
+          canonical_term: string
+          created_at: string
+          derivation_id: string
+          epistemic_grade: string
+          metrics: Json
+          original_term: string
+          quantum: number
+          result_iri: string
+        }
+        Insert: {
+          canonical_term: string
+          created_at?: string
+          derivation_id: string
+          epistemic_grade: string
+          metrics: Json
+          original_term: string
+          quantum: number
+          result_iri: string
+        }
+        Update: {
+          canonical_term?: string
+          created_at?: string
+          derivation_id?: string
+          epistemic_grade?: string
+          metrics?: Json
+          original_term?: string
+          quantum?: number
+          result_iri?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uor_derivations_result_iri_fkey"
+            columns: ["result_iri"]
+            isOneToOne: false
+            referencedRelation: "uor_datums"
+            referencedColumns: ["iri"]
+          },
+        ]
+      }
+      uor_receipts: {
+        Row: {
+          coherence_verified: boolean
+          created_at: string
+          input_hash: string
+          module_id: string
+          operation: string
+          output_hash: string
+          receipt_id: string
+          self_verified: boolean
+        }
+        Insert: {
+          coherence_verified: boolean
+          created_at?: string
+          input_hash: string
+          module_id: string
+          operation: string
+          output_hash: string
+          receipt_id: string
+          self_verified: boolean
+        }
+        Update: {
+          coherence_verified?: boolean
+          created_at?: string
+          input_hash?: string
+          module_id?: string
+          operation?: string
+          output_hash?: string
+          receipt_id?: string
+          self_verified?: boolean
+        }
+        Relationships: []
+      }
+      uor_triples: {
+        Row: {
+          created_at: string
+          graph_iri: string
+          id: string
+          object: string
+          predicate: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          graph_iri?: string
+          id?: string
+          object: string
+          predicate: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          graph_iri?: string
+          id?: string
+          object?: string
+          predicate?: string
+          subject?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
