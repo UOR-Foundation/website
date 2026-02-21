@@ -92,6 +92,10 @@ export function emitDatum(
     basis: triad.spectrum
       .flat()
       .map((bitIdx) => `op:basis_${bitIdx}`),
+    // Gap 4: SKOS stratum hierarchy — lower stratum = broader concept
+    "skos:broader": triad.totalStratum > 0
+      ? contentAddress(ring, Math.max(0, value - 1))
+      : undefined,
   };
 
   if (derivationIds && derivationIds.length > 0) {
@@ -137,6 +141,12 @@ export function emitCoherenceProof(ring: UORRing): JsonLdNode {
     ? { verified: true, failures: [] as string[] }
     : ring.verify();
 
+  // Gap 5: Extract notClosedUnder operations from failures
+  const closureOps = ["neg", "bnot", "succ", "pred", "add", "mul"];
+  const notClosedUnder = closureOps.filter((op) =>
+    verifyResult.failures.some((f) => f.toLowerCase().includes(op))
+  );
+
   return {
     "@id": `urn:uor:proof:coherence:Q${ring.quantum}`,
     "@type": "proof:CoherenceProof",
@@ -144,6 +154,7 @@ export function emitCoherenceProof(ring: UORRing): JsonLdNode {
     "proof:bits": ring.bits,
     "proof:verified": verifyResult.verified,
     "proof:failures": verifyResult.failures,
+    "proof:notClosedUnder": notClosedUnder,
     "proof:criticalIdentity": "neg(bnot(x)) = succ(x)",
     "proof:timestamp": new Date().toISOString(),
   };

@@ -20,6 +20,7 @@
     "cert": "https://uor.foundation/cert/",
     "morphism": "https://uor.foundation/morphism/",
     "state": "https://uor.foundation/state/",
+    "agent": "https://uor.foundation/agent/",
     "u": "https://uor.foundation/u/"
   },
   "@id": "https://uor.foundation/ontology/uor-v1",
@@ -31,207 +32,125 @@
   "dcterms:issued": "2025-01-01",
   "owl:versionInfo": "1.0.0",
   "@graph": [
-    {
-      "@id": "schema:Datum",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "rdfs:Resource",
-      "rdfs:label": "Datum",
-      "rdfs:comment": "A ring element in Z/(2^n)Z. The atomic unit of the UOR algebraic substrate."
-    },
-    {
-      "@id": "derivation:Record",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "prov:Activity",
-      "rdfs:label": "Derivation Record",
-      "rdfs:comment": "A canonical derivation transforming a term into a ring element. Subclass of prov:Activity."
-    },
-    {
-      "@id": "cert:DerivationCertificate",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "prov:Entity",
-      "rdfs:label": "Derivation Certificate",
-      "rdfs:comment": "A SHA-256 CID-based certificate attesting derivation under ring coherence."
-    },
-    {
-      "@id": "trace:ComputationTrace",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "prov:Activity",
-      "rdfs:label": "Computation Trace",
-      "rdfs:comment": "Step-by-step record of ring operations. PROV-O compatible."
-    },
-    {
-      "@id": "observable:Observable",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "prov:Entity",
-      "rdfs:label": "Observable",
-      "rdfs:comment": "A fact observation anchored to a ring stratum."
-    },
-    {
-      "@id": "proof:CoherenceProof",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "rdfs:Resource",
-      "rdfs:label": "Coherence Proof",
-      "rdfs:comment": "Verification that neg(bnot(x)) = succ(x) holds for all ring elements."
-    },
-    {
-      "@id": "morphism:Transform",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "rdfs:Resource",
-      "rdfs:label": "Morphism Transform",
-      "rdfs:comment": "Property-preserving transformation between ring quanta."
-    },
-    {
-      "@id": "partition:Set",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "rdfs:Resource",
-      "rdfs:label": "Partition Set",
-      "rdfs:comment": "Base class for the four-fold ring partition."
-    },
-    {
-      "@id": "partition:UnitSet",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "partition:Set",
-      "rdfs:label": "Unit Set",
-      "owl:disjointWith": ["partition:ExteriorSet", "partition:IrreducibleSet", "partition:ReducibleSet"]
-    },
-    {
-      "@id": "partition:ExteriorSet",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "partition:Set",
-      "rdfs:label": "Exterior Set",
-      "owl:disjointWith": ["partition:UnitSet", "partition:IrreducibleSet", "partition:ReducibleSet"]
-    },
-    {
-      "@id": "partition:IrreducibleSet",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "partition:Set",
-      "rdfs:label": "Irreducible Set",
-      "owl:disjointWith": ["partition:UnitSet", "partition:ExteriorSet", "partition:ReducibleSet"]
-    },
-    {
-      "@id": "partition:ReducibleSet",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "partition:Set",
-      "rdfs:label": "Reducible Set",
-      "owl:disjointWith": ["partition:UnitSet", "partition:ExteriorSet", "partition:IrreducibleSet"]
-    },
-    {
-      "@id": "state:Context",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "rdfs:Resource",
-      "rdfs:label": "State Context"
-    },
-    {
-      "@id": "state:Frame",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "rdfs:Resource",
-      "rdfs:label": "State Frame"
-    },
-    {
-      "@id": "cert:Receipt",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "prov:Entity",
-      "rdfs:label": "Self-Verifying Receipt"
-    },
-    {
-      "@id": "cert:EpistemicGrade",
-      "@type": ["rdfs:Class", "owl:Class"],
-      "rdfs:subClassOf": "rdfs:Resource",
-      "rdfs:label": "Epistemic Grade"
-    },
-    {
-      "@id": "op:neg",
-      "@type": ["rdf:Property", "owl:ObjectProperty"],
-      "rdfs:domain": "schema:Datum",
-      "rdfs:range": "schema:Datum",
-      "rdfs:label": "Additive Negation",
-      "rdfs:comment": "neg(x) = 2^n - x. Involution: neg(neg(x)) = x.",
-      "owl:inverseOf": "op:neg"
-    },
-    {
-      "@id": "op:bnot",
-      "@type": ["rdf:Property", "owl:ObjectProperty"],
-      "rdfs:domain": "schema:Datum",
-      "rdfs:range": "schema:Datum",
-      "rdfs:label": "Bitwise NOT",
-      "rdfs:comment": "bnot(x) = ~x & mask. Involution: bnot(bnot(x)) = x.",
-      "owl:inverseOf": "op:bnot"
-    },
-    {
-      "@id": "u:succ",
-      "@type": ["rdf:Property", "owl:ObjectProperty", "owl:FunctionalProperty"],
-      "rdfs:domain": "schema:Datum",
-      "rdfs:range": "schema:Datum",
-      "rdfs:label": "Successor",
-      "rdfs:comment": "succ(x) = (x+1) mod 2^n. Critical identity: neg(bnot(x)) = succ(x).",
-      "owl:propertyChainAxiom": ["op:bnot", "op:neg"]
-    },
-    {
-      "@id": "u:pred",
-      "@type": ["rdf:Property", "owl:ObjectProperty", "owl:FunctionalProperty"],
-      "rdfs:domain": "schema:Datum",
-      "rdfs:range": "schema:Datum",
-      "rdfs:label": "Predecessor",
-      "owl:inverseOf": "u:succ"
-    },
-    {
-      "@id": "schema:value",
-      "@type": ["rdf:Property", "owl:DatatypeProperty", "owl:FunctionalProperty"],
-      "rdfs:domain": "schema:Datum",
-      "rdfs:range": "xsd:nonNegativeInteger"
-    },
-    {
-      "@id": "schema:quantum",
-      "@type": ["rdf:Property", "owl:DatatypeProperty", "owl:FunctionalProperty"],
-      "rdfs:domain": "schema:Datum",
-      "rdfs:range": "xsd:nonNegativeInteger"
-    },
-    {
-      "@id": "partition:component",
-      "@type": ["rdf:Property", "owl:ObjectProperty", "owl:FunctionalProperty"],
-      "rdfs:domain": "schema:Datum",
-      "rdfs:range": "partition:Set"
-    },
-    {
-      "@id": "derivation:derivedBy",
-      "@type": ["rdf:Property", "owl:ObjectProperty"],
-      "rdfs:domain": "schema:Datum",
-      "rdfs:range": "derivation:Record"
-    },
-    {
-      "@id": "derivation:epistemicGrade",
-      "@type": ["rdf:Property", "owl:DatatypeProperty", "owl:FunctionalProperty"],
-      "rdfs:domain": "derivation:Record",
-      "rdfs:range": "xsd:string"
-    },
-    {
-      "@id": "prov:wasGeneratedBy",
-      "@type": ["rdf:Property", "owl:ObjectProperty"],
-      "rdfs:domain": "prov:Entity",
-      "rdfs:range": "prov:Activity"
-    },
-    {
-      "@id": "prov:used",
-      "@type": ["rdf:Property", "owl:ObjectProperty"],
-      "rdfs:domain": "prov:Activity",
-      "rdfs:range": "prov:Entity"
-    },
-    {
-      "@id": "prov:wasAttributedTo",
-      "@type": ["rdf:Property", "owl:ObjectProperty"],
-      "rdfs:domain": "prov:Entity",
-      "rdfs:range": "prov:Agent"
-    },
-    {
-      "@id": "trace:certifiedBy",
-      "@type": ["rdf:Property", "owl:ObjectProperty"],
-      "rdfs:domain": "trace:ComputationTrace",
-      "rdfs:range": "cert:DerivationCertificate"
-    },
-    {
-      "@id": "_:datum-disjoint",
-      "@type": "owl:AllDisjointClasses",
-      "owl:members": ["schema:Datum", "derivation:Record", "trace:ComputationTrace"]
-    }
+    { "@id": "schema:Datum", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Datum" },
+    { "@id": "schema:Triad", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Triad" },
+    { "@id": "schema:Term", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Term", "owl:disjointWith": "schema:Datum" },
+    { "@id": "schema:Ring", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Ring" },
+    { "@id": "type:PrimitiveType", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Primitive Type" },
+    { "@id": "derivation:Record", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "prov:Activity", "rdfs:label": "Derivation Record" },
+    { "@id": "cert:DerivationCertificate", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "prov:Entity", "rdfs:label": "Derivation Certificate" },
+    { "@id": "cert:CertificateChain", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "prov:Entity", "rdfs:label": "Certificate Chain" },
+    { "@id": "trace:ComputationTrace", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "prov:Activity", "rdfs:label": "Computation Trace" },
+    { "@id": "trace:Step", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Trace Step" },
+    { "@id": "observable:Observable", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "prov:Entity", "rdfs:label": "Observable" },
+    { "@id": "proof:CoherenceProof", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Coherence Proof" },
+    { "@id": "morphism:Transform", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Morphism Transform" },
+    { "@id": "morphism:Map", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "morphism:Transform", "rdfs:label": "Morphism Map" },
+    { "@id": "resolver:Resolver", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Resolver" },
+    { "@id": "resolver:Correlation", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Correlation" },
+    { "@id": "partition:Set", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Partition Set" },
+    { "@id": "partition:UnitSet", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "partition:Set", "rdfs:label": "Unit Set", "owl:disjointWith": ["partition:ExteriorSet", "partition:IrreducibleSet", "partition:ReducibleSet"] },
+    { "@id": "partition:ExteriorSet", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "partition:Set", "rdfs:label": "Exterior Set", "owl:disjointWith": ["partition:UnitSet", "partition:IrreducibleSet", "partition:ReducibleSet"] },
+    { "@id": "partition:IrreducibleSet", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "partition:Set", "rdfs:label": "Irreducible Set", "owl:disjointWith": ["partition:UnitSet", "partition:ExteriorSet", "partition:ReducibleSet"] },
+    { "@id": "partition:ReducibleSet", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "partition:Set", "rdfs:label": "Reducible Set", "owl:disjointWith": ["partition:UnitSet", "partition:ExteriorSet", "partition:IrreducibleSet"] },
+    { "@id": "state:Context", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "State Context" },
+    { "@id": "state:Frame", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "State Frame" },
+    { "@id": "state:Binding", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "State Binding" },
+    { "@id": "state:Transition", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "State Transition" },
+    { "@id": "cert:Receipt", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "prov:Entity", "rdfs:label": "Self-Verifying Receipt" },
+    { "@id": "cert:EpistemicGrade", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Epistemic Grade" },
+    { "@id": "agent:ResolutionCycle", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "prov:Activity", "rdfs:label": "Resolution Cycle" },
+    { "@id": "agent:Tool", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Agent Tool" },
+    { "@id": "u:Triple", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdf:Statement", "rdfs:label": "Knowledge Graph Triple" },
+    { "@id": "u:NamedGraph", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Named Graph" },
+    { "@id": "u:Shape", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "SHACL Shape" },
+    { "@id": "u:CanonicalizationRule", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Canonicalization Rule" },
+    { "@id": "u:ClosureMode", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Closure Mode" },
+    { "@id": "u:SparqlQuery", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "SPARQL Query" },
+    { "@id": "u:FederationEndpoint", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Federation Endpoint" },
+    { "@id": "u:IndexEntry", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Semantic Index Entry" },
+    { "@id": "u:CodeEntity", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Code Entity" },
+    { "@id": "u:LinkedDataCompliance", "@type": ["rdfs:Class", "owl:Class"], "rdfs:subClassOf": "rdfs:Resource", "rdfs:label": "Linked Data Compliance" },
+
+    { "@id": "op:neg", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "schema:Datum", "rdfs:label": "Additive Negation", "owl:inverseOf": "op:neg" },
+    { "@id": "op:bnot", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "schema:Datum", "rdfs:label": "Bitwise NOT", "owl:inverseOf": "op:bnot" },
+    { "@id": "u:succ", "@type": ["rdf:Property", "owl:ObjectProperty", "owl:FunctionalProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "schema:Datum", "rdfs:label": "Successor", "owl:propertyChainAxiom": ["op:bnot", "op:neg"] },
+    { "@id": "u:pred", "@type": ["rdf:Property", "owl:ObjectProperty", "owl:FunctionalProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "schema:Datum", "rdfs:label": "Predecessor", "owl:inverseOf": "u:succ" },
+    { "@id": "op:xor", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "schema:Datum", "rdfs:label": "Bitwise XOR" },
+    { "@id": "op:and", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "schema:Datum", "rdfs:label": "Bitwise AND" },
+    { "@id": "op:or", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "schema:Datum", "rdfs:label": "Bitwise OR" },
+    { "@id": "op:add", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "schema:Datum", "rdfs:label": "Ring Addition" },
+    { "@id": "op:mul", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "schema:Datum", "rdfs:label": "Ring Multiplication" },
+    { "@id": "schema:value", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "schema:quantum", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "schema:width", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "schema:bits", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "schema:bytes", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:base64Binary" },
+    { "@id": "schema:stratum", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:string" },
+    { "@id": "schema:totalStratum", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "schema:spectrum", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:string" },
+    { "@id": "schema:glyph", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:string" },
+    { "@id": "schema:codepoints", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:string" },
+    { "@id": "schema:stratumLevel", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:decimal" },
+    { "@id": "schema:stratumDensity", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "xsd:decimal" },
+    { "@id": "partition:component", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "partition:Set" },
+    { "@id": "derivation:derivedBy", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "derivation:Record" },
+    { "@id": "derivation:originalTerm", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "derivation:Record", "rdfs:range": "xsd:string" },
+    { "@id": "derivation:canonicalTerm", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "derivation:Record", "rdfs:range": "xsd:string" },
+    { "@id": "derivation:resultValue", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "derivation:Record", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "derivation:resultIri", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "derivation:Record", "rdfs:range": "schema:Datum" },
+    { "@id": "derivation:epistemicGrade", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "derivation:Record", "rdfs:range": "xsd:string" },
+    { "@id": "derivation:originalComplexity", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "derivation:Record", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "derivation:canonicalComplexity", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "derivation:Record", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "derivation:reductionRatio", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "derivation:Record", "rdfs:range": "xsd:decimal" },
+    { "@id": "prov:wasGeneratedBy", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "prov:Entity", "rdfs:range": "prov:Activity" },
+    { "@id": "prov:used", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "prov:Activity", "rdfs:range": "prov:Entity" },
+    { "@id": "prov:wasAttributedTo", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "prov:Entity", "rdfs:range": "prov:Agent" },
+    { "@id": "prov:startedAtTime", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "prov:Activity", "rdfs:range": "xsd:dateTime" },
+    { "@id": "skos:exactMatch", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "derivation:Record", "rdfs:range": "derivation:Record" },
+    { "@id": "skos:broader", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "schema:Datum" },
+    { "@id": "skos:narrower", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "schema:Datum", "rdfs:range": "schema:Datum", "owl:inverseOf": "skos:broader" },
+    { "@id": "trace:certifiedBy", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "trace:ComputationTrace", "rdfs:range": "cert:DerivationCertificate" },
+    { "@id": "trace:operation", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "trace:ComputationTrace", "rdfs:range": "xsd:string" },
+    { "@id": "trace:stepCount", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "trace:ComputationTrace", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "cert:certifiesIri", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "cert:DerivationCertificate", "rdfs:range": "rdfs:Resource" },
+    { "@id": "cert:valid", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "cert:DerivationCertificate", "rdfs:range": "xsd:boolean" },
+    { "@id": "cert:issuedAt", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "cert:DerivationCertificate", "rdfs:range": "xsd:dateTime" },
+    { "@id": "observable:value", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "observable:Observable", "rdfs:range": "xsd:decimal" },
+    { "@id": "observable:source", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "observable:Observable", "rdfs:range": "xsd:string" },
+    { "@id": "observable:stratum", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "observable:Observable", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "observable:contextId", "@type": ["rdf:Property", "owl:ObjectProperty"], "rdfs:domain": "observable:Observable", "rdfs:range": "state:Context" },
+    { "@id": "state:quantum", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "state:Context", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "state:capacity", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "state:Context", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "state:bindingCount", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "state:Context", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "morphism:sourceQuantum", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "morphism:Transform", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "morphism:targetQuantum", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "morphism:Transform", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "morphism:preserves", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "morphism:Transform", "rdfs:range": "xsd:string" },
+    { "@id": "resolver:strategy", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "resolver:Resolver", "rdfs:range": "xsd:string" },
+    { "@id": "resolver:fidelity", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "resolver:Resolver", "rdfs:range": "xsd:decimal" },
+    { "@id": "proof:notClosedUnder", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "proof:CoherenceProof", "rdfs:range": "xsd:string" },
+    { "@id": "proof:criticalIdentity", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "proof:CoherenceProof", "rdfs:range": "xsd:string" },
+    { "@id": "proof:verified", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "proof:CoherenceProof", "rdfs:range": "xsd:boolean" },
+    { "@id": "type:bitWidth", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "type:PrimitiveType", "rdfs:range": "xsd:nonNegativeInteger" },
+    { "@id": "type:typeIri", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "type:PrimitiveType", "rdfs:range": "xsd:anyURI" },
+    { "@id": "cert:inputHash", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "cert:Receipt", "rdfs:range": "xsd:string" },
+    { "@id": "cert:outputHash", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "cert:Receipt", "rdfs:range": "xsd:string" },
+    { "@id": "cert:selfVerified", "@type": ["rdf:Property", "owl:DatatypeProperty"], "rdfs:domain": "cert:Receipt", "rdfs:range": "xsd:boolean" },
+    { "@id": "_:datum-disjoint", "@type": "owl:AllDisjointClasses", "owl:members": ["schema:Datum", "derivation:Record", "trace:ComputationTrace", "schema:Term"] },
+
+    { "@id": "op:zero", "@type": ["owl:NamedIndividual", "schema:Datum"], "rdfs:label": "Zero", "schema:value": 0 },
+    { "@id": "op:one", "@type": ["owl:NamedIndividual", "schema:Datum"], "rdfs:label": "One", "schema:value": 1 },
+    { "@id": "op:maxVal", "@type": ["owl:NamedIndividual", "schema:Datum"], "rdfs:label": "Max Value", "schema:value": 255 },
+    { "@id": "op:midpoint", "@type": ["owl:NamedIndividual", "schema:Datum"], "rdfs:label": "Midpoint", "schema:value": 128 },
+    { "@id": "cert:GradeA", "@type": ["owl:NamedIndividual", "cert:EpistemicGrade"], "rdfs:label": "Grade A: Ring-Verified" },
+    { "@id": "cert:GradeB", "@type": ["owl:NamedIndividual", "cert:EpistemicGrade"], "rdfs:label": "Grade B: Derivation-Certified" },
+    { "@id": "cert:GradeC", "@type": ["owl:NamedIndividual", "cert:EpistemicGrade"], "rdfs:label": "Grade C: Cross-Referenced" },
+    { "@id": "cert:GradeD", "@type": ["owl:NamedIndividual", "cert:EpistemicGrade"], "rdfs:label": "Grade D: Unverified" },
+    { "@id": "u:OneStep", "@type": ["owl:NamedIndividual", "u:ClosureMode"], "rdfs:label": "ONE_STEP" },
+    { "@id": "u:FixedPoint", "@type": ["owl:NamedIndividual", "u:ClosureMode"], "rdfs:label": "FIXED_POINT" },
+    { "@id": "u:GraphClosed", "@type": ["owl:NamedIndividual", "u:ClosureMode"], "rdfs:label": "GRAPH_CLOSED" },
+    { "@id": "resolver:DihedralFactorization", "@type": ["owl:NamedIndividual", "resolver:Resolver"], "rdfs:label": "Dihedral Factorization", "resolver:strategy": "dihedral-factorization" },
+    { "@id": "u:RingCoreAgent", "@type": ["owl:NamedIndividual", "prov:Agent"], "rdfs:label": "Ring Core Agent" },
+    { "@id": "u:LinkedDataComplianceDeclaration", "@type": ["owl:NamedIndividual", "u:LinkedDataCompliance"], "rdfs:label": "UOR Linked Data Compliance" }
   ]
 }

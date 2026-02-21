@@ -115,8 +115,12 @@ export async function executeResolutionCycle(
       resolverResult = resolve(effectiveRing, resolvedValue);
     }
   } catch { /* non-fatal */ }
-  stages.push({ stage: 3, name: "Entity Resolution", durationMs: Math.round(performance.now() - s3Start), output: resolverResult });
-  traceSteps.push({ index: 2, operation: "entity_resolve", input: query, output: resolverResult, durationMs: stages[2].durationMs });
+  // Gap 6: Include strategy name in Stage 3 output
+  const s3Output = resolverResult
+    ? { ...resolverResult, "resolver:strategy": resolverResult.strategy }
+    : null;
+  stages.push({ stage: 3, name: "Entity Resolution", durationMs: Math.round(performance.now() - s3Start), output: s3Output });
+  traceSteps.push({ index: 2, operation: "entity_resolve", input: query, output: s3Output, durationMs: stages[2].durationMs });
 
   // ── Stage 4: Partition Retrieval ──────────────────────────────────────
   const s4Start = performance.now();
