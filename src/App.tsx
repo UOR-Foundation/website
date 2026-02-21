@@ -12,7 +12,7 @@ import { IndexPage } from "@/modules/landing";
 import { AboutPage, NotFoundPage } from "@/modules/core";
 import { ResearchPage, BlogPost1, BlogPost2, BlogPost3, ResearchPaperAtlasEmbeddings } from "@/modules/community";
 import { ProjectsPage, ProjectHologram, ProjectAtlasEmbeddings, ProjectAtomicLang, ProjectPrism } from "@/modules/projects";
-import { StandardPage } from "@/modules/framework";
+import { StandardPage, SemanticWebPage } from "@/modules/framework";
 import { DonatePage } from "@/modules/donate";
 import { ApiPage } from "@/modules/api-explorer";
 import { RingExplorerPage } from "@/modules/ring-core";
@@ -51,6 +51,7 @@ const App = () => {
           <Route path="/projects/atomic-language-model" element={<ProjectAtomicLang />} />
           <Route path="/projects/prism" element={<ProjectPrism />} />
           <Route path="/standard" element={<StandardPage />} />
+          <Route path="/semantic-web" element={<SemanticWebPage />} />
           <Route path="/donate" element={<DonatePage />} />
           <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
           <Route path="/blog/universal-mathematical-language" element={<BlogPost2 />} />
