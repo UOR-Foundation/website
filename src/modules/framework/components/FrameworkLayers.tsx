@@ -21,9 +21,9 @@ const layers: Layer[] = [
     number: 0,
     icon: Diamond,
     title: "The Foundation",
-    summary: "The mathematical rules every object must obey.",
+    summary: "The ground rules that make everything else possible.",
     description:
-      "The absolute base layer. The formal signature Σ = {neg, bnot, xor, and, or} defines five primitive operations over the carrier set Z/(2^bits)Z. The two primitive involutions neg and bnot generate the dihedral group D_{2^n}. The critical identity neg(bnot(x)) = succ(x) means closure under both involutions implies closure under successor, generating the entire ring. Quantum scaling at 8 × (N+1) bits per value allows the framework to scale from 8-bit (256 states) to arbitrary precision. Three closure modes govern graph computation: ONE_STEP (single application), FIXED_POINT (iterate to convergence), and GRAPH_CLOSED (verified referential integrity). Without these constraints, higher-order structure cannot emerge. With them, every layer above is inevitable.",
+      "Everything in UOR rests on a small set of mathematical rules that can be verified by anyone, on any machine, in under a second. These rules guarantee that every operation in the system produces the same result no matter who runs it or where. Think of it as the bedrock: if the foundation holds, every layer above it is reliable. This is what makes UOR trustworthy by design, not by promise.",
     namespaces: [
       { label: "Axioms", url: "https://uor-foundation.github.io/UOR-Framework/docs/overview.html" },
     ],
@@ -32,9 +32,9 @@ const layers: Layer[] = [
     number: 1,
     icon: Hash,
     title: "Identity",
-    summary: "One permanent address per object, based on content.",
+    summary: "Every piece of data gets one permanent name, based on what it is.",
     description:
-      "Every object gets a permanent symbolic address based on what it contains, not where it is stored. The same content always resolves to the same address, no matter which system holds it. Identity is enforced through 8 canonicalization rules: (1) involution cancellation, (2) derived expansion (succ → neg∘bnot), (3) constant reduction mod 2^bits, (4) AC flatten+sort for xor/and/or, (5) identity elimination, (6) annihilator reduction, (7) self-cancellation (x xor x → 0), and (8) idempotence. Each object is structured as a formal Triad(stratum, spectrum, glyph) — the ring-layer index (popcount), the bit-pattern representation, and the Braille content address. A shared vocabulary of core data types ensures consistency across the entire space.",
+      "Today, the same file can have different names on different systems. UOR solves this by giving every piece of data a single, permanent address derived from its actual content. If two systems hold the same data, they automatically arrive at the same address, with no coordination needed. This means you can always verify that data has not been altered, and you never lose track of what something is, no matter where it moves.",
     namespaces: [
       { label: "Content Addressing", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/u/" },
       { label: "Schema", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/schema/" },
@@ -44,9 +44,9 @@ const layers: Layer[] = [
     number: 2,
     icon: Layers,
     title: "Structure",
-    summary: "How objects combine, decompose, and transform.",
+    summary: "How things combine and break apart without losing information.",
     description:
-      "Objects combine, decompose, and transform through precise geometric and algebraic rules. Every complex structure can be broken down into its simplest, irreducible parts, and rebuilt without loss. This guarantees that composition is always lossless and reversible.",
+      "Complex data can always be broken down into its simplest parts, and those parts can always be reassembled into the original, with nothing lost. This works the same way every time, regardless of the system. It means you can confidently split, merge, and transform data across tools and platforms, knowing the result will always be complete and accurate.",
     namespaces: [
       { label: "Operations", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/op/" },
       { label: "Partitions", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/partition/" },
@@ -56,9 +56,9 @@ const layers: Layer[] = [
     number: 3,
     icon: Search,
     title: "Resolution",
-    summary: "Find anything by what it is, not where it lives.",
+    summary: "Find anything by describing what you need.",
     description:
-      "Find any object by describing what you need, not by knowing where it lives. Type declarations define intent, resolvers locate the right data, and queries extract exactly the information required.",
+      "Instead of knowing where data is stored, you describe what you are looking for. The system finds the right data for you, no matter which database, server, or application holds it. This eliminates the need for manual lookups, custom connectors, or knowing the internal structure of someone else's system. You ask for what you need, and the framework resolves it.",
     namespaces: [
       { label: "Type System", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/type/" },
       { label: "Resolvers", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/resolver/" },
@@ -69,9 +69,9 @@ const layers: Layer[] = [
     number: 4,
     icon: ShieldCheck,
     title: "Verification",
-    summary: "Every operation is mathematically provable.",
+    summary: "Every claim is backed by proof, not promises.",
     description:
-      "Every operation is mathematically verifiable. Proofs confirm correctness, certificates attest to structural properties, derivations show each step of computation, and traces provide a complete audit trail. Trust is built into the system, not bolted on.",
+      "Every operation produces a verifiable receipt: a proof that shows exactly what was done, step by step. Anyone can check these proofs independently, without contacting the original system. This replaces trust in institutions or intermediaries with trust in mathematics. If someone claims a result, you can verify it yourself.",
     namespaces: [
       { label: "Proofs", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/proof/" },
       { label: "Certificates", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/cert/" },
@@ -83,9 +83,9 @@ const layers: Layer[] = [
     number: 5,
     icon: ArrowRightLeft,
     title: "Transformation",
-    summary: "Move between representations without losing meaning.",
+    summary: "Convert between formats without losing meaning.",
     description:
-      "Objects move between symbolic representations while preserving their essential geometric properties. Measurable quantities track structure. State management handles context, bindings, and lifecycle transitions across systems.",
+      "Data often needs to move between different systems, formats, or representations. This layer ensures that when data is converted from one form to another, its meaning and structure are fully preserved. Nothing is lost in translation. This is what makes true interoperability possible: systems that speak different languages can exchange data reliably, because the framework guarantees that the meaning stays intact.",
     namespaces: [
       { label: "Morphisms", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/morphism/" },
       { label: "Observables", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/observable/" },
