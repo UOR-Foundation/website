@@ -237,58 +237,7 @@ const Api = () => {
 
 
 
-      {/* Derivation Certificates */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
-        <div className="container max-w-5xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
-            Audit Trail
-          </p>
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
-            Every computation gets a receipt
-          </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-8">
-            When the API performs a computation, it produces a certificate: a record of what was asked, how it was simplified, what the result was, and a unique fingerprint for the whole thing. Anyone can check this receipt independently.
-          </p>
-          <div className="rounded-2xl border border-border bg-card p-6 md:p-8 max-w-2xl">
-            <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-5">How a certificate is built</p>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">1</span>
-                <div>
-                  <p className="text-base font-body font-medium text-foreground">You submit an expression</p>
-                  <p className="text-sm font-body text-muted-foreground">For example: "combine A, zero, and B".</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">2</span>
-                <div>
-                  <p className="text-base font-body font-medium text-foreground">The system normalizes it</p>
-                  <p className="text-sm font-body text-muted-foreground">The eight rules above simplify it to "combine A and B" (zero removed, sorted).</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">3</span>
-                <div>
-                  <p className="text-base font-body font-medium text-foreground">It computes the result</p>
-                  <p className="text-sm font-body text-muted-foreground">The normalized expression is evaluated to produce the answer.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">4</span>
-                <div>
-                  <p className="text-base font-body font-medium text-foreground">A unique fingerprint is generated</p>
-                  <p className="text-sm font-body text-muted-foreground">The normalized form plus the result produce a content-addressed ID. Same computation always gives the same ID.</p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 pt-5 border-t border-border">
-              <p className="text-sm font-body text-muted-foreground leading-relaxed">
-                <span className="text-foreground font-medium">The result:</span> a complete, verifiable proof that anyone can check. No login, no server, no trust required.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* For AI agents */}
       <section className="section-dark py-14 md:py-20">
