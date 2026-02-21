@@ -5,88 +5,74 @@ import { Link } from "react-router-dom";
 
 const W3C_REFERENCE_URL = "https://www.w3.org/RDF/Metalog/docs/sw-easy";
 
-/* ── Refined color palette ───────────────────────────────────────────────── */
+/* ── W3C-faithful color palette ──────────────────────────────────────────── */
 
 const TOWER_COLORS = {
-  unicode: "hsl(220, 15%, 25%)",       // charcoal
-  uri:     "hsl(220, 15%, 25%)",       // charcoal (matching)
-  xml:     "hsl(12, 80%, 52%)",        // warm red-orange
-  rdf:     "hsl(42, 92%, 55%)",        // amber gold
-  ontology:"hsl(100, 55%, 52%)",       // fresh green
-  logic:   "hsl(205, 65%, 52%)",       // clear blue
-  proof:   "hsl(240, 45%, 62%)",       // soft indigo
-  trust:   "hsl(290, 55%, 75%)",       // soft violet
-  sig:     "hsl(25, 45%, 38%)",        // warm brown
+  unicode: "hsl(220, 12%, 30%)",
+  uri:     "hsl(220, 12%, 30%)",
+  xml:     "hsl(14, 85%, 50%)",
+  rdf:     "hsl(42, 95%, 55%)",
+  ontology:"hsl(90, 60%, 48%)",
+  logic:   "hsl(210, 70%, 50%)",
+  proof:   "hsl(260, 40%, 60%)",
+  trust:   "hsl(300, 55%, 78%)",
+  sig:     "hsl(25, 40%, 38%)",
 };
 
 /*
- * Semantic Web Tower — exact reproduction of Berners-Lee's layer cake.
+ * Semantic Web Tower — faithful reproduction of Berners-Lee's layer cake.
  *
- * Key layout rules from the reference image:
- *   - All layers are RIGHT-ALIGNED
- *   - Layers get wider going down (Trust is narrowest, XML is widest)
- *   - Bottom: Unicode (left) | URI (right) as two separate boxes
- *   - Digital Signature: tall box on the far right, spanning Proof → RDF only
- *   - Trust and Logic sit to the LEFT of Digital Signature (no overlap)
- *   - There is a visible gap/background between layers
+ * Layout rules (from reference):
+ *   - All layers share the SAME right edge
+ *   - Layers get progressively wider going down
+ *   - Trust is narrowest (top-right), XML is widest
+ *   - Bottom: Unicode (left) | URI (right) — two boxes, right-aligned
+ *   - Digital Signature: tall box ADJACENT to the right of layers,
+ *     spanning Proof → RDF only (4 rows)
  */
 function SemanticWebTower() {
-  // right = right edge offset %, width = width %
-  // Digital Signature occupies ~18% on the far right, spanning Proof (row 5) to RDF (row 2)
-  const SIG_W = 18;
-  const SIG_GAP = 1; // gap between sig and layer boxes
+  const ROW_H = 44;
+  const GAP = 3;
 
-  // Rows top-to-bottom. "right" = % from right edge of container.
-  // Trust sits fully left of the Digital Signature area.
-  // Proof overlaps: its right edge aligns with the left edge of Digital Signature.
-  // Logic: same — left of sig.
-  // Ontology: extends under sig slightly per the reference.
-  // RDF: extends under sig.
-  // XML: full width, no sig at this level.
-  // Unicode/URI: full width, no sig.
+  // Digital Signature dimensions
+  const SIG_W_PX = 80;
+  const SIG_GAP_PX = 4;
+  const CONTAINER_W = 560;
 
-  const ROW_H = 42;
-  const GAP = 2;
+  // All main layers share the same right edge.
+  // Digital Signature sits to the RIGHT of the main layers.
+  // mainRight = the right-edge position of all main layers (in px from container left)
+  const mainRight = CONTAINER_W - SIG_W_PX - SIG_GAP_PX;
 
-  // Define layers from top (index 0) to bottom.
-  // width and right are in % of the container.
+  // Layers top→bottom. Width as % of mainRight area.
   const layers = [
-    // Trust — narrowest, right-aligned, NO overlap with sig
-    { id: 6, label: "Trust",                left: null as number | null, right: SIG_W + SIG_GAP, width: 34, color: TOWER_COLORS.trust,    dark: true  },
-    // Proof — right edge meets sig left edge
-    { id: 5, label: "Proof",                left: null, right: SIG_W + SIG_GAP, width: 40, color: TOWER_COLORS.proof,    dark: false },
-    // Logic — right edge meets sig left edge
-    { id: 4, label: "Logic",                left: null, right: SIG_W + SIG_GAP, width: 48, color: TOWER_COLORS.logic,    dark: false },
-    // Ontology — extends a bit, right edge at sig left
-    { id: 3, label: "Ontology vocabulary",  left: null, right: SIG_W + SIG_GAP, width: 56, color: TOWER_COLORS.ontology, dark: true  },
-    // RDF — wider, right edge at sig left
-    { id: 2, label: "RDF + rdfschema",      left: null, right: SIG_W + SIG_GAP, width: 64, color: TOWER_COLORS.rdf,      dark: true  },
-    // XML — full width minus nothing (sig doesn't reach here)
-    { id: 1, label: "XML + NS + xmlschema", left: null, right: 0, width: 80, color: TOWER_COLORS.xml,      dark: false },
+    { id: 6, label: "Trust",                widthPct: 38, color: TOWER_COLORS.trust,    darkText: true  },
+    { id: 5, label: "Proof",                widthPct: 46, color: TOWER_COLORS.proof,    darkText: false },
+    { id: 4, label: "Logic",                widthPct: 54, color: TOWER_COLORS.logic,    darkText: false },
+    { id: 3, label: "Ontology vocabulary",  widthPct: 64, color: TOWER_COLORS.ontology, darkText: true  },
+    { id: 2, label: "RDF + rdfschema",      widthPct: 74, color: TOWER_COLORS.rdf,      darkText: true  },
+    { id: 1, label: "XML + NS + xmlschema", widthPct: 88, color: TOWER_COLORS.xml,      darkText: false },
   ];
 
-  const TOTAL_ROWS = layers.length + 1; // +1 for Unicode/URI bottom
+  const TOTAL_ROWS = layers.length + 1; // +1 for Unicode/URI
   const CONTAINER_H = TOTAL_ROWS * (ROW_H + GAP);
 
-  // Digital Signature spans from Proof (index 1) to RDF (index 4)
-  const sigTopIndex = 1; // Proof
-  const sigBottomIndex = 4; // RDF
+  // Digital Signature spans Proof (index 1) through RDF (index 4)
+  const sigTopIndex = 1;
+  const sigBotIndex = 4;
   const sigTop = sigTopIndex * (ROW_H + GAP);
-  const sigBottom = (sigBottomIndex + 1) * (ROW_H + GAP) - GAP;
+  const sigBottom = (sigBotIndex + 1) * (ROW_H + GAP) - GAP;
 
   return (
     <div
       className="relative mx-auto select-none"
-      style={{ maxWidth: 540, height: CONTAINER_H }}
+      style={{ maxWidth: CONTAINER_W, height: CONTAINER_H }}
     >
-      {/* Main layers */}
+      {/* Main layers — all right-aligned to mainRight */}
       {layers.map((layer, i) => {
         const top = i * (ROW_H + GAP);
-        // Right-align: position from the right
-        const rightPct = layer.right;
-        const widthPct = layer.width;
-        // Calculate left from right + width: left = 100 - right - width
-        const leftPct = 100 - rightPct - widthPct;
+        const widthPx = (layer.widthPct / 100) * mainRight;
+        const leftPx = mainRight - widthPx;
         return (
           <a
             key={layer.id}
@@ -94,11 +80,11 @@ function SemanticWebTower() {
             className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
             style={{
               top,
-              left: `${leftPct}%`,
-              width: `${widthPct}%`,
+              left: leftPx,
+              width: widthPx,
               height: ROW_H,
               backgroundColor: layer.color,
-              color: layer.dark ? "hsl(220, 20%, 12%)" : "white",
+              color: layer.darkText ? "hsl(220, 20%, 12%)" : "white",
               borderRadius: 3,
             }}
             title={`Jump to: ${layer.label}`}
@@ -108,14 +94,15 @@ function SemanticWebTower() {
         );
       })}
 
-      {/* Bottom row: Unicode | URI — two boxes side by side, right-aligned */}
+      {/* Bottom row: Unicode | URI — right-aligned to mainRight */}
       {(() => {
         const top = layers.length * (ROW_H + GAP);
-        const totalW = 85; // total width %
-        const unicodeW = totalW * 0.55;
-        const uriW = totalW * 0.45;
-        const uriLeft = 100 - uriW;
-        const unicodeLeft = uriLeft - unicodeW - 0.5;
+        const totalW = (90 / 100) * mainRight;
+        const gap = 4;
+        const uriW = totalW * 0.42;
+        const unicodeW = totalW - uriW - gap;
+        const uriLeft = mainRight - uriW;
+        const unicodeLeft = uriLeft - unicodeW - gap;
         return (
           <>
             <a
@@ -123,14 +110,14 @@ function SemanticWebTower() {
               className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
               style={{
                 top,
-                left: `${unicodeLeft}%`,
-                width: `${unicodeW}%`,
+                left: unicodeLeft,
+                width: unicodeW,
                 height: ROW_H,
                 backgroundColor: TOWER_COLORS.unicode,
                 color: "white",
                 borderRadius: 3,
               }}
-              title="Jump to: Unicode + URI"
+              title="Jump to: Unicode"
             >
               Unicode
             </a>
@@ -139,14 +126,14 @@ function SemanticWebTower() {
               className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
               style={{
                 top,
-                left: `${uriLeft}%`,
-                width: `${uriW}%`,
+                left: uriLeft,
+                width: uriW,
                 height: ROW_H,
                 backgroundColor: TOWER_COLORS.uri,
                 color: "white",
                 borderRadius: 3,
               }}
-              title="Jump to: Unicode + URI"
+              title="Jump to: URI"
             >
               URI
             </a>
@@ -154,14 +141,14 @@ function SemanticWebTower() {
         );
       })()}
 
-      {/* Digital Signature — spans Proof to RDF on the far right */}
+      {/* Digital Signature — spans Proof (row 1) to RDF (row 4) only */}
       <a
         href="#layer-7"
         className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
         style={{
           top: sigTop,
-          right: 0,
-          width: `${SIG_W}%`,
+          left: mainRight + SIG_GAP_PX,
+          width: SIG_W_PX,
           height: sigBottom - sigTop,
           backgroundColor: TOWER_COLORS.sig,
           color: "hsl(0, 0%, 92%)",
