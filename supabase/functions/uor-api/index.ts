@@ -243,165 +243,15 @@ const UOR_CONTEXT_URL = "https://uor.foundation/contexts/uor-v1.jsonld";
 // ── Re-export shared store functions from lib/store.ts ──────────────────────
 // These are also used by the test suite at store/tests/store.test.ts
 import {
-  KERNEL_SPACE_TYPES as KERNEL_SPACE_TYPES_IMPORTED,
-  validateStorableType as validateStorableTypeImported,
-  UOR_JSONLD_CONTEXT as UOR_STORE_CONTEXT_IMPORTED,
-  computeUorAddress as computeUorAddressImported,
-  computeCid as computeCidImported,
-  canonicalJsonLd as canonicalJsonLdImported,
+  KERNEL_SPACE_TYPES,
+  validateStorableType,
+  UOR_JSONLD_CONTEXT as UOR_STORE_CONTEXT,
+  computeUorAddress,
+  computeCid,
+  canonicalJsonLd,
+  glyphToHeaderSafe,
+  stripSelfReferentialFields,
 } from "./lib/store.ts";
-
-// ── Kernel-space types: NEVER storable on IPFS ──────────────────────────────
-// These are compiled into the runtime and recomputed on demand — ROM.
-const KERNEL_SPACE_TYPES: ReadonlySet<string> = new Set([
-  "https://uor.foundation/u/Address",    "u:Address",
-  "https://uor.foundation/u/Glyph",      "u:Glyph",
-  "https://uor.foundation/schema/Datum",  "schema:Datum",
-  "https://uor.foundation/schema/Term",   "schema:Term",
-  "https://uor.foundation/schema/Literal","schema:Literal",
-  "https://uor.foundation/schema/Application","schema:Application",
-  "https://uor.foundation/schema/Ring",   "schema:Ring",
-  "https://uor.foundation/op/Operation",  "op:Operation",
-  "https://uor.foundation/op/UnaryOp",    "op:UnaryOp",
-  "https://uor.foundation/op/BinaryOp",   "op:BinaryOp",
-  "https://uor.foundation/op/Involution", "op:Involution",
-  "https://uor.foundation/op/Group",      "op:Group",
-  "https://uor.foundation/op/DihedralGroup","op:DihedralGroup",
-]);
-
-/**
- * Guard: reject kernel-space types from storage.
- * Throws HTTP 422 if the type is forbidden.
- */
-function validateStorableType(objectType: string | string[]): void {
-  const types = Array.isArray(objectType) ? objectType : [objectType];
-  for (const t of types) {
-    if (KERNEL_SPACE_TYPES.has(t)) {
-      throw new Error(
-        `Kernel-space type "${t}" cannot be stored on IPFS. ` +
-        `Kernel objects (u:, schema:, op: namespaces) are compiled into the ` +
-        `UOR runtime and recomputed on demand. Only User-space and Bridge-space ` +
-        `objects may be persisted. Valid types include: cert:Certificate, ` +
-        `proof:Proof, partition:Partition, state:Binding, state:Context, ` +
-        `morphism:Transform, type:TypeDefinition, derivation:Derivation, ` +
-        `trace:ComputationTrace.`
-      );
-    }
-  }
-}
-
-// ── Full inline @context for stored objects ──────────────────────────────────
-// Every UOR object written to IPFS carries this verbatim. Sorted alphabetically.
-const UOR_STORE_CONTEXT = {
-  "cert": "https://uor.foundation/cert/",
-  "derivation": "https://uor.foundation/derivation/",
-  "morphism": "https://uor.foundation/morphism/",
-  "observable": "https://uor.foundation/observable/",
-  "op": "https://uor.foundation/op/",
-  "owl": "http://www.w3.org/2002/07/owl#",
-  "partition": "https://uor.foundation/partition/",
-  "proof": "https://uor.foundation/proof/",
-  "resolver": "https://uor.foundation/resolver/",
-  "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-  "schema": "https://uor.foundation/schema/",
-  "state": "https://uor.foundation/state/",
-  "store": "https://uor.foundation/store/",
-  "trace": "https://uor.foundation/trace/",
-  "type": "https://uor.foundation/type/",
-  "u": "https://uor.foundation/u/",
-  "xsd": "http://www.w3.org/2001/XMLSchema#",
-};
-
-// ── Canonical JSON-LD serialisation ─────────────────────────────────────────
-// Deterministic: keys sorted recursively at every nesting level, minified, UTF-8.
-function canonicalJsonLd(obj: unknown): string {
-  if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
-  if (Array.isArray(obj)) return '[' + obj.map(canonicalJsonLd).join(',') + ']';
-  const sorted = Object.keys(obj as Record<string, unknown>).sort();
-  return '{' + sorted.map(k => JSON.stringify(k) + ':' + canonicalJsonLd((obj as Record<string, unknown>)[k])).join(',') + '}';
-}
-
-// ── CID computation — CIDv1 / dag-json / sha2-256 / base32lower ────────────
-// Binary structure: <0x01><0xa9, 0x02 (dag-json 0x0129 varint)><0x12><0x20><sha256 digest>
-// String form: 'b' + base32lower(CID binary)
-
-/** RFC 4648 base32 (lowercase, no padding) — the IPFS base32lower encoding. */
-function encodeBase32Lower(bytes: Uint8Array): string {
-  const alphabet = 'abcdefghijklmnopqrstuvwxyz234567';
-  let result = '';
-  let buffer = 0;
-  let bitsLeft = 0;
-  for (const byte of bytes) {
-    buffer = (buffer << 8) | byte;
-    bitsLeft += 8;
-    while (bitsLeft >= 5) {
-      bitsLeft -= 5;
-      result += alphabet[(buffer >> bitsLeft) & 31];
-    }
-  }
-  if (bitsLeft > 0) {
-    result += alphabet[(buffer << (5 - bitsLeft)) & 31];
-  }
-  return result;
-}
-
-/**
- * Compute a CIDv1 string from canonical JSON-LD bytes.
- * CIDv1 / dag-json (0x0129) / sha2-256
- */
-async function computeCid(canonicalBytes: Uint8Array): Promise<string> {
-  const digestBuffer = await crypto.subtle.digest('SHA-256', canonicalBytes);
-  const digest = new Uint8Array(digestBuffer);
-
-  const multihash = new Uint8Array(2 + digest.length);
-  multihash[0] = 0x12; // sha2-256
-  multihash[1] = 0x20; // 32 bytes
-  multihash.set(digest, 2);
-
-  const cidBinary = new Uint8Array(1 + 2 + multihash.length);
-  cidBinary[0] = 0x01;   // CIDv1 version
-  cidBinary[1] = 0xa9;   // dag-json 0x0129 varint low byte
-  cidBinary[2] = 0x02;   // dag-json 0x0129 varint high byte
-  cidBinary.set(multihash, 3);
-
-  return 'b' + encodeBase32Lower(cidBinary);
-}
-
-/**
- * Compute the u:Address (Braille bijection) from raw bytes.
- * Per u.rs: every byte maps to exactly one Braille cell (U+2800 + byte).
- * Lossless bijection — the glyph string has the same character count as the byte count.
- */
-function computeUorAddress(bytes: Uint8Array): { glyph: string; length: number } {
-  const glyph = addressSimplified(bytes);
-  return { glyph, length: bytes.length };
-}
-
-/**
- * Encode Braille glyph to ASCII-safe hex representation for HTTP headers.
- * HTTP headers only accept ASCII (ByteString). Braille U+2800-U+28FF is not ASCII.
- * Truncates to first 32 codepoints to keep headers reasonable.
- */
-function glyphToHeaderSafe(glyph: string): string {
-  return [...glyph].slice(0, 32).map(c =>
-    'U+' + (c.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')
-  ).join('');
-}
-
-/**
- * Strip self-referential fields from a stored JSON-LD envelope to reconstruct
- * Round 1 bytes for verification. This is necessary because store:cid and
- * store:uorAddress were computed from the envelope WITHOUT those fields.
- */
-function stripSelfReferentialFields(parsed: Record<string, unknown>): Record<string, unknown> {
-  const round1 = { ...parsed };
-  delete round1["store:cid"];
-  delete round1["store:cidScope"];
-  delete round1["store:uorAddress"];
-  // Restore the placeholder @id that was used during Round 1 computation
-  round1["@id"] = "https://uor.foundation/store/object/pending";
-  return round1;
-}
 
 /**
  * Build a complete store:StoredObject envelope per spec 1.4.
@@ -2630,7 +2480,7 @@ function validateCid(cid: string): { valid: boolean; version: 0 | 1; error?: str
   // CIDv1: multibase prefix b/B/z/f/F
   const cidv1Prefixes = ["b", "B", "z", "f", "F"];
   if (cidv1Prefixes.includes(cid[0])) {
-    if (cid.length < 10) {
+    if (cid.length < 8) {
       return { valid: false, version: 1, error: "CIDv1 is too short." };
     }
     return { valid: true, version: 1 };
@@ -2876,7 +2726,9 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
     );
   }
 
-  const recomputedUor = computeUorAddress(bytes);
+  // Use verification result's recomputed UOR address (from Round 1 reconstruction)
+  // instead of recomputing from Round 2 bytes, which would produce a different address
+  const recomputedUorGlyph = verification.uor_consistency.recomputed_uor_address;
   const responseBody = {
     "@context": UOR_STORE_CONTEXT,
     "@id": `https://uor.foundation/store/retrieved/${cidParam}`,
@@ -2885,7 +2737,7 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
     "store:byteLength": bytes.length,
     "store:contentType": fetchResponse.headers.get('content-type') ?? 'unknown',
     "store:gatewayUsed": gateway,
-    "store:recomputedUorAddress": recomputedUor.glyph,
+    "store:recomputedUorAddress": recomputedUorGlyph,
     "store:storedUorAddress": verification.uor_consistency.stored_uor_address ?? "not found",
     "store:verified": verification.store_verified,
     "verification": verification,
@@ -2899,7 +2751,7 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
       'Content-Type': 'application/ld+json',
       'X-UOR-Verified': String(verification.store_verified),
       'X-IPFS-CID': cidParam,
-      'X-UOR-Recomputed-Address': glyphToHeaderSafe(recomputedUor.glyph),
+      'X-UOR-Recomputed-Address': glyphToHeaderSafe(recomputedUorGlyph),
       ...rateLimitHeaders(rl),
     },
   });
@@ -3356,13 +3208,13 @@ const GATEWAY_REGISTRY = [
     "store:gatewayReadUrl": "https://w3s.link",
     "store:pinsApiUrl": "https://api.web3.storage/upload",
     "store:capabilities": ["read", "write"],
-    "store:defaultFor": ["write"],
-    "store:authRequired": false,
+    "store:defaultFor": [],
+    "store:authRequired": true,
     "store:authNote":
-      "Anonymous uploads accepted. Set WEB3_STORAGE_TOKEN env var for authenticated uploads with higher limits.",
+      "Legacy API sunset. Requires WEB3_STORAGE_TOKEN (UCAN). Use Pinata for new deployments.",
     "store:note":
-      "Default write gateway. Free tier. Supports anonymous multipart uploads. " +
-      "Returns CID in response body. No API key required for standard use.",
+      "Legacy write gateway. The old web3.storage upload API has been sunset. " +
+      "Read access via w3s.link remains functional. For writes, use Pinata.",
   },
   {
     "@type": "store:GatewayConfig",
@@ -3371,12 +3223,12 @@ const GATEWAY_REGISTRY = [
     "store:gatewayReadUrl": "https://gateway.pinata.cloud",
     "store:pinsApiUrl": "https://api.pinata.cloud/pinning/pinJSONToIPFS",
     "store:capabilities": ["read", "write"],
-    "store:defaultFor": [],
+    "store:defaultFor": ["write"],
     "store:authRequired": true,
     "store:authNote":
-      "Requires PINATA_JWT environment variable. Request via api@uor.foundation.",
+      "Requires PINATA_JWT environment variable. Free tier provides 1GB storage.",
     "store:note":
-      "Higher SLA than web3.storage. Recommended for production use cases. " +
+      "Default write gateway. Stable API, recommended for production and agent memory persistence. " +
       "Requires API key.",
   },
   {

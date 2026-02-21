@@ -966,8 +966,8 @@
                   },
                   "gateway": {
                     "type": "string",
-                    "enum": ["web3.storage", "pinata"],
-                    "default": "web3.storage",
+                   "enum": ["pinata", "web3.storage"],
+                    "default": "pinata",
                     "description": "IPFS gateway to use for pinning."
                   },
                   "label": {
@@ -1104,7 +1104,7 @@
                     }
                   },
                   "pin": { "type": "boolean", "default": true },
-                  "gateway": { "type": "string", "default": "web3.storage" }
+                  "gateway": { "type": "string", "default": "pinata" }
                 }
               },
               "example": {
