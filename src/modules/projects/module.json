@@ -1,0 +1,15 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "projects",
+  "version": "1.0.0",
+  "description": "Project maturity framework, project showcase, and submission form.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["cert:"],
+  "exports": ["ProjectsPage"],
+  "dependencies": {
+    "core": "^1.0.0"
+  },
+  "routes": ["/projects"],
+  "assets": []
+}
