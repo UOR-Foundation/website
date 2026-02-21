@@ -1,0 +1,27 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "kg-store",
+  "version": "1.0.0",
+  "description": "UOR Knowledge Graph Store — persistent dual-addressed storage with Supabase + UOR IRIs.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["schema:", "derivation:", "cert:", "receipt:", "partition:"],
+  "exports": [
+    "ingestDatum",
+    "ingestDatumBatch",
+    "ingestDerivation",
+    "ingestTriples",
+    "getDatum",
+    "getGraphStats",
+    "listGraphs"
+  ],
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "identity": "^1.0.0",
+    "triad": "^1.0.0",
+    "jsonld": "^1.0.0",
+    "derivation": "^1.0.0"
+  },
+  "routes": ["/knowledge-graph"],
+  "assets": []
+}
