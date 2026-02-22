@@ -428,7 +428,8 @@ Rules:
 5. The overall Grade is the LOWEST grade among all sources.
 6. Never skip the trust score. Every response gets one.
 7. Source links must be clickable markdown links: [Label](URL).
-8. The UOR Proof field contains a SHA-256 fingerprint that uniquely identifies this specific input-output pair. Anyone can independently verify it by recomputing the hash.`;
+8. The UOR Proof field contains a SHA-256 fingerprint that uniquely identifies this specific input-output pair. Anyone can independently verify it by recomputing the hash.
+9. NOTHING appears after the trust scorecard. The closing --- is the final line of your response. Do not add disclaimers, follow-ups, or commentary after the scorecard.`;
 
 const SERVER_INFO = {
   protocolVersion: "2025-03-26",
