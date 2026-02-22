@@ -1,219 +1,120 @@
 
+# Repo Coherence Overhaul: Discipline, Clarity, Trust
 
-# Modular Coherence Overhaul: Complete UOR Module Registry and Certificate System
+## Assessment Summary
 
-## Summary
-
-The codebase has 26 frontend modules in `src/modules/`, but only **7** are registered in the UOR Module Registry (`src/lib/uor-registry.ts`). This means **19 modules** lack UOR certificates, breaking the fundamental promise that every module is self-verifying, content-addressed, and interoperable. Additionally, several modules have inconsistent `module.json` schema formats (some use `u:dependencies` while others use `dependencies`), and the API endpoint structure in the edge function is a single 7,400-line monolith rather than a modular, auditable system.
-
-This plan delivers three things:
-1. Every module gets a UOR certificate (registered in the Module Registry)
-2. All `module.json` manifests follow a single canonical schema
-3. The `/navigate` API endpoint exposes a per-module endpoint map so any agent can discover which API endpoints belong to which module
+After a thorough audit, the repo is structurally sound at its core: 26 modules registered, UOR certificates computed, content-addressing working. But it has accumulated entropy in three areas that undermine the visceral feeling of self-discipline: **hardcoded URLs violating the single-source-of-truth principle**, **barrel-bypassing imports breaking encapsulation**, and **duplicated inline SVGs creating maintenance debt**. These are fixable with surgical precision.
 
 ---
 
-## Problem Analysis
+## Issue 1: Hardcoded URLs (violates `external-links.ts` centralization)
 
-### 1. Registry Gap: 7 of 26 modules registered
+The project defines a `src/data/external-links.ts` file as the single source of truth for all external URLs. Yet 8 components hardcode Discord, GitHub, and LinkedIn URLs directly.
 
-**Currently registered** (in `uor-registry.ts`):
-- core, landing, framework, community, projects, donate, api-explorer
+**Files with hardcoded URLs (should import from `external-links.ts`):**
+- `src/modules/core/components/Navbar.tsx` (Discord x2, GitHub x2, LinkedIn x2)
+- `src/modules/core/components/Footer.tsx` (GitHub, Discord, Governance)
+- `src/modules/landing/components/CTASection.tsx` (Discord, GitHub)
+- `src/modules/community/pages/BlogPost1.tsx`
+- `src/modules/community/pages/BlogPost2.tsx`
+- `src/modules/community/pages/BlogPost3.tsx`
+- `src/modules/community/pages/ResearchPaperAtlasEmbeddings.tsx`
+- `src/modules/core/pages/AboutPage.tsx`
 
-**Missing from registry** (19 modules with NO certificate):
-- ring-core, identity, triad, derivation, kg-store, epistemic, jsonld, shacl, sparql, resolver, semantic-index, morphism, observable, trace, state, self-verify, agent-tools, code-kg, dashboard
-
-### 2. Manifest Schema Inconsistency
-
-Two competing schemas exist across `module.json` files:
-
-**Schema A** (older modules: core, landing, community, projects, donate, api-explorer):
-```json
-{
-  "name": "...",
-  "exports": [...],
-  "dependencies": { "core": "^1.0.0" },
-  "routes": [...],
-  "assets": [...]
-}
-```
-
-**Schema B** (newer modules: morphism, dashboard, self-verify, state):
-```json
-{
-  "schema:name": "...",
-  "u:namespace": ["..."],
-  "u:dependencies": ["ring-core", "identity"]
-}
-```
-
-This inconsistency means the registry's `canonicalJsonLd()` produces different shapes for semantically identical declarations, breaking CID determinism across the system.
-
-### 3. API Endpoint-to-Module Mapping is Implicit
-
-The 7,400-line edge function has no formal mapping between API endpoints and modules. Agents (and humans) cannot programmatically determine which module owns which endpoint.
+**Fix:** Replace all hardcoded URLs with imports from `external-links.ts`. Every external link in the repo will trace to one file.
 
 ---
 
-## Implementation Plan
+## Issue 2: Barrel-bypassing imports (violates module encapsulation)
 
-### Phase 1: Standardize All Module Manifests
+The project enforces a rule: modules expose their public API through `index.ts` barrel exports. But `App.tsx` and `DashboardPage.tsx` both reach directly into module internals.
 
-Normalize all 26 `module.json` files to a single canonical schema (Schema A with UOR extensions). This is the foundation for deterministic CID computation.
-
-**Canonical schema:**
-```json
-{
-  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-  "@type": "uor:Module",
-  "name": "<module-name>",
-  "version": "1.0.0",
-  "description": "<one-line description>",
-  "uor:specification": "1.0.0",
-  "uor:namespaces": ["<prefix:>", ...],
-  "exports": ["<exported-symbol>", ...],
-  "dependencies": { "<module-name>": "^1.0.0", ... },
-  "routes": ["/path", ...],
-  "api_endpoints": ["/kernel/op/verify", ...],
-  "assets": []
-}
-```
-
-**Files to normalize** (6 modules using Schema B):
-- `src/modules/morphism/module.json`
-- `src/modules/dashboard/module.json`
-- `src/modules/self-verify/module.json`
-- `src/modules/state/module.json`
-- `src/modules/observable/module.json`
-- `src/modules/trace/module.json`
-
-Changes: rename `schema:name` to `name`, `u:dependencies` array to `dependencies` object, `u:namespace` to `uor:namespaces`, add `exports`/`routes`/`assets` fields.
-
-Additionally, add the new `api_endpoints` field to every module that owns API endpoints, creating the formal module-to-endpoint mapping:
-
-| Module | API Endpoints |
-|---|---|
-| ring-core | `/kernel/op/verify`, `/kernel/op/verify/all`, `/kernel/op/compute`, `/kernel/op/operations`, `/kernel/op/correlate` |
-| identity | `/kernel/address/encode`, `/kernel/schema/datum`, `/kernel/schema/triad` |
-| derivation | `/kernel/derive`, `/bridge/derivation`, `/tools/derive` |
-| triad | (consumed by identity/datum -- no standalone endpoint) |
-| kg-store | `/bridge/graph/query`, `/store/write`, `/store/resolve`, `/store/read/:cid`, `/store/verify/:cid`, `/store/write-context`, `/store/gateways` |
-| shacl | `/bridge/shacl/shapes`, `/bridge/shacl/validate` |
-| sparql | `/bridge/sparql`, `/sparql/federation-plan` |
-| resolver | `/bridge/resolver`, `/bridge/resolver/entity`, `/bridge/partition`, `/tools/partition`, `/tools/correlate` |
-| morphism | `/user/morphism/transforms`, `/bridge/morphism/transform`, `/bridge/morphism/isometry`, `/bridge/morphism/coerce`, `/bridge/gnn/graph`, `/bridge/gnn/ground` |
-| observable | `/bridge/observable/metrics`, `/bridge/observable/metric`, `/bridge/observable/stratum`, `/bridge/observable/path`, `/bridge/observable/curvature`, `/bridge/observable/holonomy`, `/bridge/observable/stream` |
-| state | `/user/state`, `/store/pod-context`, `/store/pod-write`, `/store/pod-read`, `/store/pod-list` |
-| self-verify | `/bridge/proof/critical-identity`, `/bridge/proof/coherence`, `/bridge/cert/involution`, `/cert/issue`, `/cert/portability` |
-| agent-tools | `/tools/derive`, `/tools/query`, `/tools/verify`, `/tools/correlate`, `/tools/partition` |
-| jsonld | `/bridge/emit`, `/schema-org/extend` |
-| epistemic | (grading is embedded in all responses -- no standalone endpoint) |
-| trace | `/bridge/trace` |
-| semantic-index | (consumed internally by resolver -- no standalone endpoint) |
-| code-kg | (frontend-only visualization) |
-| dashboard | (frontend-only -- no API endpoint) |
-| core | (frontend layout -- no API endpoint) |
-| landing | (frontend homepage -- no API endpoint) |
-| community | (frontend content -- no API endpoint) |
-| projects | (frontend content -- no API endpoint) |
-| donate | (frontend content -- no API endpoint) |
-| api-explorer | (frontend interactive docs -- no API endpoint) |
-
-### Phase 2: Register All 26 Modules in the Registry
-
-Update `src/lib/uor-registry.ts` to import and register all 26 module manifests.
-
-**Add 19 new imports:**
+**In `App.tsx` (lines 25, 27):**
 ```typescript
-import ringCoreManifest from "@/modules/ring-core/module.json";
-import identityManifest from "@/modules/identity/module.json";
-import triadManifest from "@/modules/triad/module.json";
-import derivationManifest from "@/modules/derivation/module.json";
-import kgStoreManifest from "@/modules/kg-store/module.json";
-import epistemicManifest from "@/modules/epistemic/module.json";
-import jsonldManifest from "@/modules/jsonld/module.json";
-import shaclManifest from "@/modules/shacl/module.json";
-import sparqlManifest from "@/modules/sparql/module.json";
-import resolverManifest from "@/modules/resolver/module.json";
-import semanticIndexManifest from "@/modules/semantic-index/module.json";
-import morphismManifest from "@/modules/morphism/module.json";
-import observableManifest from "@/modules/observable/module.json";
-import traceManifest from "@/modules/trace/module.json";
-import stateManifest from "@/modules/state/module.json";
-import selfVerifyManifest from "@/modules/self-verify/module.json";
-import agentToolsManifest from "@/modules/agent-tools/module.json";
-import codeKgManifest from "@/modules/code-kg/module.json";
-import dashboardManifest from "@/modules/dashboard/module.json";
+import AuditPage from "@/modules/self-verify/pages/AuditPage";  // bypasses barrel
+import SessionsPage from "@/modules/state/pages/SessionsPage";    // bypasses barrel
 ```
 
-**Add to `RAW_MANIFESTS` map** -- all 19 new entries alongside the existing 7 (total: 26).
-
-This ensures every module automatically gets:
-- A CIDv1 content hash (deterministic identity)
-- A UOR Braille address (algebraic identity)
-- A `cert:ModuleCertificate` (self-verification receipt)
-
-### Phase 3: Update UorMetadata to Emit Complete Module Graph
-
-The `UorMetadata` component already injects module certificates as JSON-LD into the document head. After Phase 2, it will automatically emit all 26 modules instead of just 7. No code changes needed in `UorMetadata.tsx` -- it reads from `getAllModules()` which will now return 26 entries.
-
-### Phase 4: Update the Verification Dashboard
-
-The footer verification badge (`UorVerification.tsx`) displays certificate counts. After registration, it will show "26 modules verified" instead of "7 modules verified". No code changes needed -- it reads from the same registry API.
-
-### Phase 5: Add Module Endpoint Map to `/navigate` API Response
-
-Update the edge function's `frameworkIndex()` handler to include a `module_registry` section that maps each module to its owned endpoints. This provides the programmatic discovery layer that enables any agent to find which module serves which capability.
-
-Add to the `/navigate` response:
-```json
-{
-  "module_registry": {
-    "ring-core": {
-      "description": "Ring arithmetic CPU -- Z/(2^n)Z",
-      "endpoints": ["/kernel/op/verify", "/kernel/op/compute", "..."]
-    },
-    "identity": {
-      "description": "Content-addressed identity via Braille bijection",
-      "endpoints": ["/kernel/address/encode", "/kernel/schema/datum", "..."]
-    }
-  }
-}
+**In `DashboardPage.tsx` (lines 9, 13-16, 17, 19-20):**
+```typescript
+import { Q0 } from "@/modules/ring-core/ring";                    // bypasses barrel
+import { getRecentReceipts } from "@/modules/self-verify/audit-trail"; // bypasses barrel
+import { uor_derive } from "@/modules/agent-tools/tools";         // bypasses barrel
+import type { DeriveOutput } from "@/modules/agent-tools/tools";  // bypasses barrel
+import { ALL_GRADES, gradeInfo } from "@/modules/epistemic/grading"; // bypasses barrel
+import { executeSparql } from "@/modules/sparql/executor";         // bypasses barrel
+import type { SparqlResult } from "@/modules/sparql/executor";     // bypasses barrel
 ```
 
-### Phase 6: Attribution Protocol Persistence
-
-Move the in-memory `attributionStore` array in the edge function to use the existing `uor_certificates` database table, so attribution records survive across function restarts.
+**Fix:**
+1. Add `AuditPage` export to `src/modules/self-verify/index.ts`
+2. Add `SessionsPage` export to `src/modules/state/index.ts`
+3. Update `App.tsx` to import from barrel exports
+4. Add any missing exports to barrel files (`Q0` in ring-core, `getRecentReceipts` in self-verify, `ALL_GRADES`/`gradeInfo` in epistemic, `executeSparql`/`SparqlResult` in sparql)
+5. Update `DashboardPage.tsx` to import exclusively from barrel exports
 
 ---
 
-## Technical Details
+## Issue 3: Duplicated Discord SVG icon
 
-### Files Modified
+The Discord SVG path (60+ characters of path data) is copy-pasted 4 times across Navbar.tsx (desktop + mobile). This is a maintenance risk and adds visual noise to the code.
 
-| File | Change |
-|---|---|
-| `src/modules/morphism/module.json` | Normalize to Schema A |
-| `src/modules/dashboard/module.json` | Normalize to Schema A |
-| `src/modules/self-verify/module.json` | Normalize to Schema A |
-| `src/modules/state/module.json` | Normalize to Schema A |
-| `src/modules/observable/module.json` | Normalize to Schema A |
-| `src/modules/trace/module.json` | Normalize to Schema A |
-| `src/lib/uor-registry.ts` | Import + register all 26 modules |
-| `supabase/functions/uor-api/index.ts` | Add `module_registry` to `/navigate`, persist attribution to DB |
-| `public/.well-known/uor.json` | Update `conformance.ring_elements` to reflect 26 registered modules |
+**Fix:** Extract a `DiscordIcon` component into `src/modules/core/components/icons/DiscordIcon.tsx` and import it where needed. One icon, one definition.
 
-### Files NOT Modified
-- `src/modules/core/components/UorMetadata.tsx` -- automatically picks up new modules
-- `src/modules/core/components/UorVerification.tsx` -- automatically picks up new modules
-- `src/lib/uor-certificate.ts` -- no changes needed
-- `src/lib/uor-address.ts` -- no changes needed
-- `src/lib/uor-content-registry.ts` -- content certificates are separate from module certificates
+---
 
-### Verification Criteria
-- After deployment, the footer verification badge should report **26 modules verified**
-- The JSON-LD in `document.head` should contain 26 module entries
-- `GET /v1/navigate` should return a `module_registry` block with all modules and their endpoints
-- Every `module.json` should follow the canonical schema (auditable by comparing keys)
-- Attribution records should persist across edge function cold starts
+## Implementation Sequence
 
+### Step 1: Create `DiscordIcon` component
+New file: `src/modules/core/components/icons/DiscordIcon.tsx`
+- Single, clean SVG component with configurable `size` prop
+
+### Step 2: Fix Navbar.tsx
+- Import `DISCORD_URL`, `GITHUB_ORG_URL`, `LINKEDIN_URL` from `external-links.ts`
+- Import `DiscordIcon` instead of inline SVG
+- Replace all 6 hardcoded URLs
+
+### Step 3: Fix Footer.tsx
+- Import `DISCORD_URL`, `GITHUB_ORG_URL`, `GITHUB_GOVERNANCE_URL`, `GITHUB_RESEARCH_URL` from `external-links.ts`
+- Replace all 4 hardcoded URLs
+
+### Step 4: Fix CTASection.tsx
+- Import `DISCORD_URL`, `GITHUB_ORG_URL` from `external-links.ts`
+- Replace 2 hardcoded URLs
+
+### Step 5: Fix BlogPost1.tsx, BlogPost2.tsx, BlogPost3.tsx, ResearchPaperAtlasEmbeddings.tsx, AboutPage.tsx
+- Import relevant URLs from `external-links.ts`
+- Replace all hardcoded URLs
+
+### Step 6: Fix barrel exports
+- Add `AuditPage` to `self-verify/index.ts`
+- Add `SessionsPage` to `state/index.ts`
+- Ensure `Q0`, `ALL_GRADES`, `gradeInfo`, `executeSparql`, `SparqlResult`, `getRecentReceipts`, `DerivationReceipt`, `uor_derive`, `DeriveOutput` are all available through their module barrel exports
+
+### Step 7: Fix App.tsx imports
+- Change `AuditPage` and `SessionsPage` imports to use barrel exports
+
+### Step 8: Fix DashboardPage.tsx imports
+- Change all 7 barrel-bypassing imports to use module barrel exports
+
+---
+
+## What This Does NOT Change
+
+- Module manifests (already normalized in prior session)
+- UOR Registry (already registers all 26 modules)
+- Edge function structure (already modular by endpoint)
+- UorMetadata / UorVerification (automatically reads from registry)
+- Any CSS, layout, or visual behavior
+- Any API endpoints or backend logic
+
+---
+
+## Verification
+
+After implementation:
+- `grep -r "discord.gg" src/` should return matches only in `external-links.ts`
+- `grep -r "github.com/UOR-Foundation" src/` should return matches only in `external-links.ts` and data files (`projects.ts`, `featured-projects.ts`) where URLs are content data
+- `grep -r "from.*@/modules/.*/pages/" src/App.tsx` should return zero matches
+- `grep -r "from.*@/modules/.*/[a-z]" src/modules/dashboard/` should show only barrel imports (from `index.ts` or `index`)
+- The site renders identically: zero visual changes
