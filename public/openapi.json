@@ -108,6 +108,14 @@
         "description": "UOR store/ namespace spec",
         "url": "https://github.com/UOR-Foundation/UOR-Framework"
       }
+    },
+    {
+      "name": "agent-tools",
+      "description": "**Five canonical agent tool functions** (§6.4) — uor_derive, uor_query, uor_verify, uor_correlate, uor_partition. All endpoints return epistemic_grade in every response. These are the primary system calls for agentic AI interaction with the UOR framework.",
+      "externalDocs": {
+        "description": "UOR Roadmap §6.4 — Agent Tool Functions",
+        "url": "https://github.com/UOR-Foundation/UOR-Framework"
+      }
     }
   ],
   "paths": {
@@ -1307,6 +1315,107 @@
               }
             }
           }
+        }
+      }
+    },
+    "/tools/derive": {
+      "get": {
+        "operationId": "toolDerive",
+        "tags": ["agent-tools"],
+        "summary": "uor_derive — evaluate ring-arithmetic expression",
+        "description": "Evaluate a ring-arithmetic expression with AC normalisation. Returns Grade A derivation certificate with SHA-256 derivation_id. Supports unary (neg, bnot, succ, pred), binary (xor, and, or, add, sub, mul), and literal (hex, decimal, binary) syntax.",
+        "parameters": [
+          { "name": "term", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Ring expression e.g. xor(0x55,0xaa), neg(bnot(42))" },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 }, "description": "Quantum level (0 = 8-bit ring Z/256Z)" }
+        ],
+        "responses": {
+          "200": { "description": "Derivation result with derivation_id and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/tools/query": {
+      "post": {
+        "operationId": "toolQuery",
+        "tags": ["agent-tools"],
+        "summary": "uor_query — SPARQL query with epistemic grading",
+        "description": "Execute a SPARQL query over the UOR knowledge graph. Each result node is annotated with derivation_id and epistemic_grade.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sparql": { "type": "string", "description": "SPARQL SELECT query" },
+                  "graph_uri": { "type": "string", "description": "Optional named graph URI" }
+                },
+                "required": ["sparql"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "JSON-LD @graph array with epistemic grading per node" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/tools/verify": {
+      "get": {
+        "operationId": "toolVerify",
+        "tags": ["agent-tools"],
+        "summary": "uor_verify — verify a derivation_id",
+        "description": "Verify a derivation_id against the knowledge graph. Returns verified:true (Grade A) or false (Grade D).",
+        "parameters": [
+          { "name": "derivation_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" }, "description": "SHA-256 derivation ID to verify" }
+        ],
+        "responses": {
+          "200": { "description": "Verification result with cert_chain and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/tools/correlate": {
+      "get": {
+        "operationId": "toolCorrelate",
+        "tags": ["agent-tools"],
+        "summary": "uor_correlate — algebraic fidelity between two elements",
+        "description": "Compute algebraic fidelity (0.0–1.0) between two ring elements using Hamming distance, XOR value, and ring distance.",
+        "parameters": [
+          { "name": "a", "in": "query", "required": true, "schema": { "type": "integer" }, "description": "First ring element" },
+          { "name": "b", "in": "query", "required": true, "schema": { "type": "integer" }, "description": "Second ring element" },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 }, "description": "Quantum level" }
+        ],
+        "responses": {
+          "200": { "description": "Correlation result with fidelity, Hamming distance, and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/tools/partition": {
+      "post": {
+        "operationId": "toolPartition",
+        "tags": ["agent-tools"],
+        "summary": "uor_partition — build ring partition from seed set",
+        "description": "Build a ring partition from a seed set with closure analysis. Supports GRAPH_CLOSED (no expansion) and FIXED_POINT (expand until closed under unary ops) modes.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "seed_set": { "type": "array", "items": { "type": "integer" }, "description": "Seed elements" },
+                  "closure_mode": { "type": "string", "enum": ["GRAPH_CLOSED", "FIXED_POINT"], "description": "Closure computation mode" },
+                  "quantum": { "type": "integer", "default": 0, "description": "Quantum level" }
+                },
+                "required": ["seed_set"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Partition result with cardinality, closure analysis, and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
         }
       }
     }

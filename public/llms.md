@@ -454,6 +454,63 @@ Shapes defined: DatumShape, DerivationShape (with derivationId regex), Certifica
 
 ---
 
+## LLM Tool Registration
+
+Five canonical agent tool functions (Section 6.4). All return `epistemic_grade` in every response.
+
+```json
+[
+  {
+    "name": "uor_derive",
+    "description": "Evaluate a ring-arithmetic expression. Returns Grade A derivation certificate with SHA-256 derivation_id.",
+    "parameters": {
+      "term":    { "type": "string", "description": "Five-op expression e.g. xor(0x55,0xaa)" },
+      "quantum": { "type": "integer", "default": 0 }
+    },
+    "endpoint": "GET https://api.uor.foundation/v1/tools/derive"
+  },
+  {
+    "name": "uor_query",
+    "description": "SPARQL query over UOR knowledge graph with automatic epistemic grading of each result.",
+    "parameters": {
+      "sparql":    { "type": "string" },
+      "graph_uri": { "type": "string", "required": false }
+    },
+    "endpoint": "POST https://api.uor.foundation/v1/tools/query"
+  },
+  {
+    "name": "uor_verify",
+    "description": "Verify a derivation_id against the knowledge graph. Returns verified:true (Grade A) or false (Grade D).",
+    "parameters": {
+      "derivation_id": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" }
+    },
+    "endpoint": "GET https://api.uor.foundation/v1/tools/verify"
+  },
+  {
+    "name": "uor_correlate",
+    "description": "Compute algebraic fidelity (0.0-1.0) between two ring elements using Hamming distance.",
+    "parameters": {
+      "a": { "type": "integer" },
+      "b": { "type": "integer" },
+      "quantum": { "type": "integer", "default": 0 }
+    },
+    "endpoint": "GET https://api.uor.foundation/v1/tools/correlate"
+  },
+  {
+    "name": "uor_partition",
+    "description": "Build a ring partition from a seed set. Returns cardinality and closure analysis.",
+    "parameters": {
+      "seed_set":     { "type": "array", "items": { "type": "integer" } },
+      "closure_mode": { "type": "string", "enum": ["GRAPH_CLOSED", "FIXED_POINT"] },
+      "quantum":      { "type": "integer", "default": 0 }
+    },
+    "endpoint": "POST https://api.uor.foundation/v1/tools/partition"
+  }
+]
+```
+
+---
+
 ## What Problems Does UOR Solve?
 
 | # | Problem | Agent Impact Today | UOR Solution | Key Namespace | Source |
