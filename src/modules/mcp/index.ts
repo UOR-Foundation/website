@@ -10,6 +10,8 @@ export type {
   CorrelateInput,
   PartitionInput,
   McpServerConfig,
+  InferenceProof,
+  ProofSource,
 } from "./types";
 
 export { MCP_RESOURCES, DEFAULT_MCP_CONFIG } from "./types";

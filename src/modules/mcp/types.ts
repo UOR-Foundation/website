@@ -42,6 +42,21 @@ export interface PartitionInput {
   quantum?: number;
 }
 
+// ── Proof cache types ───────────────────────────────────────────────────────
+
+export interface InferenceProof {
+  proof_id: string;
+  input_hash: string;
+  output_hash: string;
+  tool_name: string;
+  epistemic_grade: string;
+  hit_count: number;
+  created_at: string;
+  last_hit_at: string | null;
+}
+
+export type ProofSource = "cached" | "fresh";
+
 // ── MCP resource URIs ───────────────────────────────────────────────────────
 
 export const MCP_RESOURCES = {

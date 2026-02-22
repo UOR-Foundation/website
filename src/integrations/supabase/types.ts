@@ -268,6 +268,48 @@ export type Database = {
           },
         ]
       }
+      uor_inference_proofs: {
+        Row: {
+          created_at: string
+          epistemic_grade: string
+          hit_count: number
+          id: string
+          input_canonical: string
+          input_hash: string
+          last_hit_at: string | null
+          output_cached: string
+          output_hash: string
+          proof_id: string
+          tool_name: string
+        }
+        Insert: {
+          created_at?: string
+          epistemic_grade: string
+          hit_count?: number
+          id?: string
+          input_canonical: string
+          input_hash: string
+          last_hit_at?: string | null
+          output_cached: string
+          output_hash: string
+          proof_id: string
+          tool_name: string
+        }
+        Update: {
+          created_at?: string
+          epistemic_grade?: string
+          hit_count?: number
+          id?: string
+          input_canonical?: string
+          input_hash?: string
+          last_hit_at?: string | null
+          output_cached?: string
+          output_hash?: string
+          proof_id?: string
+          tool_name?: string
+        }
+        Relationships: []
+      }
       uor_observables: {
         Row: {
           context_id: string | null
