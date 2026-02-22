@@ -66,7 +66,7 @@ function SemanticWebTower() {
   return (
     <div
       className="relative mx-auto select-none"
-      style={{ maxWidth: CONTAINER_W, height: CONTAINER_H + 52 }}
+      style={{ maxWidth: CONTAINER_W, height: CONTAINER_H + 100 }}
     >
       {/* Main layers — all right-aligned to mainRight */}
       {layers.map((layer, i) => {
@@ -135,7 +135,7 @@ function SemanticWebTower() {
                }}
                title="Jump to: URI"
              >
-               URI<span className="text-yellow-300 ml-0.5">*</span>
+               URI<sup className="text-yellow-300 ml-0.5 text-[10px]">1</sup>
              </a>
            </>
          );
@@ -160,21 +160,27 @@ function SemanticWebTower() {
          }}
          title="Jump to: Digital Signature"
        >
-         Digital Signature
+         Digital Signature<sup className="text-[10px] ml-0.5" style={{ color: TOWER_COLORS.sig }}>2</sup>
        </a>
 
-       {/* URI asterisk footnote */}
-       <p
-         className="absolute font-body text-xs text-muted-foreground leading-snug"
+       {/* Footnotes */}
+       <div
+         className="absolute font-body text-sm text-muted-foreground leading-relaxed space-y-2"
          style={{
-           top: CONTAINER_H + 12,
+           top: CONTAINER_H + 16,
            left: 0,
            right: 0,
          }}
        >
-         <span className="text-yellow-500 font-bold">*</span>{" "}
-         UOR replaces location-based URIs with content-derived addresses. Identity comes from what the data is, not where it lives. Same content, same address, on every system, with no coordination required.
-       </p>
+         <p>
+           <span className="font-display font-bold text-foreground">¹ URI</span>{" "}
+           UOR replaces location-based URIs with content-derived addresses. Identity comes from what the data is, not where it lives. Same content, same address, on every system.
+         </p>
+         <p>
+           <span className="font-display font-bold text-foreground">² Digital Signature</span>{" "}
+           UOR certificates are content-addressed hashes built into every object. Any modification changes the address, making tampering self-evident. No external certificate authorities required.
+         </p>
+       </div>
      </div>
   );
 }
