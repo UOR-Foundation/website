@@ -73,7 +73,7 @@ Step 2 (5 minutes): Fetch and parse the ontology.
 
 ```
 GET https://uor-foundation.github.io/UOR-Framework/uor.foundation.json
-Confirm: 82 classes, 120 properties, 14 named individuals.
+Confirm: 82 classes, 124 properties, 14 named individuals.
 ```
 
 Step 3 (10 minutes): Read the end-to-end resolution cycle.
