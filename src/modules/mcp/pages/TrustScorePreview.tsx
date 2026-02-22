@@ -119,7 +119,7 @@ function TrustScoreCard({ example }: { example: typeof EXAMPLES[0] }) {
               <td className="py-2 text-foreground/90 font-mono text-xs">{example.verifiedVia}</td>
             </tr>
             <tr>
-              <td className="py-2 pr-4 text-muted-foreground font-medium">Receipt</td>
+              <td className="py-2 pr-4 text-muted-foreground font-medium">UOR Proof</td>
               <td className="py-2">
                 <code className="text-xs font-mono text-foreground/80 bg-white/5 px-1.5 py-0.5 rounded">{example.receipt}…</code>
                 <button
