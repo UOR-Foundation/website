@@ -33,7 +33,7 @@ const HeroSection = () => {
             className="mt-4 md:mt-10 text-sm md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.45s" }}
           >
-            Every piece of data gets one permanent address, based on what it contains. Findable, verifiable, and reusable across every system.
+            Every piece of data gets one permanent address, based on what it contains. Findable, verifiable, and reusable across every system — powering the Semantic Web, Open Science, and Frontier Technologies.
           </p>
           <div
             className="mt-6 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-2.5 animate-fade-in-up opacity-0"
