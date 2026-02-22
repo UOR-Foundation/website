@@ -333,20 +333,6 @@ const Standard = () => {
           </div>
         </div>
       </section>
-
-      {/* MCP Connection */}
-      <section className="py-14 md:py-20 bg-background border-b border-border">
-        <div className="container max-w-3xl">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
-            Ground your LLM
-          </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
-            Every response becomes content-addressed, verified, and auditable. Pick your client:
-          </p>
-
-          <McpClientCards />
-        </div>
-      </section>
     </Layout>
   );
 };

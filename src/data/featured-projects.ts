@@ -25,4 +25,11 @@ export const featuredProjects = [
     maturity: "Sandbox" as MaturityLevel,
     url: "https://github.com/dkypuros/atomic-lang-model",
   },
+  {
+    name: "UOR MCP",
+    category: "Developer Tools",
+    description: "A Model Context Protocol server that gives any LLM access to the UOR kernel. Every response becomes content-addressed, verified, and auditable.",
+    maturity: "Sandbox" as MaturityLevel,
+    url: "https://github.com/UOR-Foundation/uor-mcp",
+  },
 ];
