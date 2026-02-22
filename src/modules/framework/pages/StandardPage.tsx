@@ -370,6 +370,48 @@ const Standard = () => {
           </div>
         </div>
       </section>
+
+      {/* MCP Connection */}
+      <section className="py-14 md:py-20 bg-background border-b border-border">
+        <div className="container max-w-3xl">
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
+            Ground your LLM
+          </h2>
+          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8 max-w-2xl">
+            Connect any MCP-compatible client to UOR. Every response becomes content-addressed, algebraically verified, and auditable.
+          </p>
+
+          <div className="rounded-2xl border border-border bg-card p-6 md:p-8 mb-6">
+            <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-4">
+              Add to your config
+            </p>
+            <pre className="bg-muted/50 rounded-xl p-4 md:p-5 overflow-x-auto text-sm font-mono text-foreground leading-relaxed">
+{`{
+  "mcpServers": {
+    "uor": {
+      "url": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-mcp/mcp"
+    }
+  }
+}`}
+            </pre>
+            <p className="text-sm font-body text-muted-foreground mt-4 leading-relaxed">
+              Works with Claude Desktop, Cursor, and any MCP-compatible client.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-muted/30 p-5 md:p-6">
+            <p className="text-sm font-body text-foreground font-medium mb-2">Five tools, one guarantee</p>
+            <p className="text-sm font-body text-muted-foreground leading-relaxed">
+              <span className="text-foreground font-medium">derive</span> any ring expression.{" "}
+              <span className="text-foreground font-medium">verify</span> any prior result.{" "}
+              <span className="text-foreground font-medium">query</span> the knowledge graph.{" "}
+              <span className="text-foreground font-medium">correlate</span> two values.{" "}
+              <span className="text-foreground font-medium">partition</span> elements by structure.
+              Every output carries a derivation ID, an epistemic grade, and a content-addressed IRI.
+            </p>
+          </div>
+        </div>
+      </section>
     </Layout>
   );
 };
