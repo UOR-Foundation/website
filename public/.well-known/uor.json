@@ -75,12 +75,14 @@
     "C": "Graph-Present — datum in graph without certificate",
     "D": "LLM-Generated / Unverified — treat as hypothesis"
   },
+  "canonicalization_algorithm": "URDNA2015",
   "conformance": {
     "critical_identity_verified": true,
     "shacl_tests_passed": 8,
     "ring_elements": 256,
     "modules_registered": 26,
-    "w3c_standards": ["JSON-LD 1.1", "Turtle 1.1", "SPARQL 1.1", "OWL 2 DL", "SHACL"]
+    "w3c_standards": ["JSON-LD 1.1", "Turtle 1.1", "SPARQL 1.1", "OWL 2 DL", "SHACL"],
+    "gaps_closed": ["G1_URDNA2015", "G2_SchemaOrg_Bridge", "G3_UnionType_Canon", "G4_VerifyGate"]
   },
   "attribution_protocol": {
     "register": "POST https://api.uor.foundation/v1/attribution/register",
@@ -116,6 +118,7 @@
     "POST /v1/cert/issue",
     "GET /v1/cert/portability",
     "GET /v1/schema-org/extend",
+    "POST /v1/schema-org/extend",
     "POST /v1/schema-org/extend",
     "POST /v1/schema-org/coherence",
     "POST /v1/schema-org/pin-all",
