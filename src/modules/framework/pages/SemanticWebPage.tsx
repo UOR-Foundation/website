@@ -66,7 +66,7 @@ function SemanticWebTower() {
   return (
     <div
       className="relative mx-auto select-none"
-      style={{ maxWidth: CONTAINER_W, height: CONTAINER_H + 100 }}
+      style={{ maxWidth: CONTAINER_W, height: CONTAINER_H + 120 }}
     >
       {/* Main layers — all right-aligned to mainRight */}
       {layers.map((layer, i) => {
@@ -144,7 +144,7 @@ function SemanticWebTower() {
        {/* Digital Signature — outline only, spans Proof (row 1) to RDF (row 4) */}
        <a
          href="#layer-7"
-         className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
+         className="absolute flex flex-col items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
          style={{
            top: sigTop,
            left: mainRight + SIG_GAP_PX,
@@ -160,12 +160,13 @@ function SemanticWebTower() {
          }}
          title="Jump to: Digital Signature"
        >
-         Digital Signature<sup className="text-[10px] ml-0.5" style={{ color: TOWER_COLORS.sig }}>2</sup>
+         <span>Digital Signature</span>
+         <span className="text-[11px] font-bold mt-1" style={{ writingMode: "horizontal-tb" }}>²</span>
        </a>
 
        {/* Footnotes */}
        <div
-         className="absolute font-body text-sm text-muted-foreground leading-relaxed space-y-2"
+         className="absolute font-body text-base text-muted-foreground leading-relaxed space-y-2.5"
          style={{
            top: CONTAINER_H + 16,
            left: 0,
