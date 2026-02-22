@@ -74,7 +74,7 @@ export default function BulkPinPage() {
   const [catalog, setCatalog] = useState<SchemaType[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [batchSize, setBatchSize] = useState(25);
-  const [dryRun, setDryRun] = useState(true);
+  // dryRun removed — all pinning is live
   const [running, setRunning] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState("");
@@ -250,8 +250,7 @@ export default function BulkPinPage() {
         for (const item of batch) {
           if (stopRef.current) break;
           try {
-            const storeParam = dryRun ? "" : "&store=true";
-            const resp = await fetch(`${API_BASE}/schema-org/extend?type=${encodeURIComponent(item.name)}${storeParam}`, {
+            const resp = await fetch(`${API_BASE}/schema-org/extend?type=${encodeURIComponent(item.name)}&store=true`, {
               headers: { "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` },
             });
 
@@ -312,7 +311,7 @@ export default function BulkPinPage() {
     } finally {
       setRunning(false);
     }
-  }, [catalog, selectedTypes, batchSize, dryRun, addLog]);
+  }, [catalog, selectedTypes, batchSize, addLog]);
 
   // ── Pin all (legacy) ───────────────────────────────────────────────────
   const pinAll = useCallback(async () => {
@@ -326,11 +325,11 @@ export default function BulkPinPage() {
         setCatalog(prev => prev.map((t, i) =>
           i >= offset && i < offset + batchSize ? { ...t, pinStatus: "pinning" } : t
         ));
-        addLog(`Pinning batch offset=${offset} size=${batchSize} dryRun=${dryRun}...`);
+        addLog(`Pinning batch offset=${offset} size=${batchSize}...`);
         const resp = await fetch(`${API_BASE}/schema-org/pin-all`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` },
-          body: JSON.stringify({ batch_size: batchSize, offset, dry_run: dryRun }),
+          body: JSON.stringify({ batch_size: batchSize, offset, dry_run: false }),
         });
         if (!resp.ok) throw new Error(`API ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
         const data = await resp.json();
@@ -363,7 +362,7 @@ export default function BulkPinPage() {
     } finally {
       setRunning(false);
     }
-  }, [catalog.length, batchSize, dryRun, addLog]);
+  }, [catalog.length, batchSize, addLog]);
 
   const stop = useCallback(() => { stopRef.current = true; }, []);
 
@@ -463,10 +462,6 @@ export default function BulkPinPage() {
                 <input type="number" min={1} max={100} value={batchSize} onChange={e => setBatchSize(Math.min(100, Math.max(1, Number(e.target.value))))} disabled={running}
                   className="w-20 rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
               </div>
-              <label className="flex items-center gap-2 cursor-pointer pb-1">
-                <input type="checkbox" checked={dryRun} onChange={e => setDryRun(e.target.checked)} disabled={running} className="rounded" />
-                <span className="text-sm font-medium">Dry Run</span>
-              </label>
 
               {!running ? (
                 <div className="flex gap-2">
@@ -767,7 +762,7 @@ export default function BulkPinPage() {
                         <a href={`https://uor.mypinata.cloud/ipfs/${selectedDetail.result.pinataCid}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
                           {selectedDetail.result.pinataCid}
                         </a>
-                      ) : <span className="text-muted-foreground/60">not persisted (dry run)</span>}
+                      ) : <span className="text-muted-foreground/60">awaiting pin</span>}
                     </div>
                     <div>
                       <span className="text-muted-foreground">Storacha (cold/Filecoin):</span><br/>
@@ -775,7 +770,7 @@ export default function BulkPinPage() {
                         <a href={`https://${selectedDetail.result.storachaCid}.ipfs.storacha.link`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
                           {selectedDetail.result.storachaCid}
                         </a>
-                      ) : <span className="text-muted-foreground/60">not persisted (dry run)</span>}
+                      ) : <span className="text-muted-foreground/60">awaiting pin</span>}
                     </div>
                     {selectedDetail.result?.gatewayUrl && (
                       <div>
