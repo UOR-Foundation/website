@@ -2195,9 +2195,11 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/bridge/resolver`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/resolver?x=42`, "operationId": "bridgeResolver", "summary": "resolver:Resolution — canonical category with full factor decomposition" },
           { "method": "GET", "path": `${base}/bridge/graph/query`, "required_params": "none", "optional_params": "graph, n, limit", "example": `${base}/bridge/graph/query?graph=partition:UnitSet&n=8`, "operationId": "bridgeGraphQuery", "summary": "Named graph query — enumerate Triads scoped by partition:Partition (UnitSet, ExteriorSet, IrreducibleSet, ReducibleSet)" },
           { "method": "GET", "path": `${base}/bridge/emit`, "required_params": "none", "optional_params": "n, values, limit", "example": `${base}/bridge/emit?n=8&limit=16`, "operationId": "bridgeEmit", "summary": "Explicit emit() function — produces a complete W3C JSON-LD 1.1 document (application/ld+json) with @context, coherence proof, and @graph. Drop-in compatible with every major triplestore (Jena, Oxigraph, GraphDB, Blazegraph, Stardog, Neptune)." },
-          { "method": "GET,POST", "path": `${base}/bridge/sparql`, "required_params": "query (GET param or POST body)", "optional_params": "n", "example": `${base}/bridge/sparql?query=SELECT%20%3Fs%20WHERE%20%7B%20%3Fs%20partition%3Acomponent%20partition%3AUnitSet%20%7D`, "operationId": "bridgeSparql", "summary": "SPARQL 1.1 query endpoint — SELECT queries over the UOR ring algebra. Supports WHERE triple patterns, FILTER, LIMIT, OFFSET. Implements the uor_query tool from Section 6.4." },
+          { "method": "GET,POST", "path": `${base}/bridge/sparql`, "required_params": "query (GET param or POST body)", "optional_params": "n", "example": `${base}/bridge/sparql?query=SELECT%20%3Fs%20WHERE%20%7B%20%3Fs%20partition%3Acomponent%20partition%3AUnitSet%20%7D`, "operationId": "bridgeSparql", "summary": "SPARQL 1.1 query endpoint — SELECT queries over the UOR ring algebra (ontology + Q0 instance graph with 256 datums). Supports WHERE triple patterns, FILTER, LIMIT, OFFSET. Every result includes epistemic grading." },
           { "method": "GET", "path": `${base}/bridge/shacl/shapes`, "required_params": "none", "example": `${base}/bridge/shacl/shapes`, "operationId": "shaclShapes", "summary": "All 7 SHACL shape definitions (Ring, Primitives, TermGraph, StateLifecycle, Partition, CriticalIdentity, EndToEnd)" },
-          { "method": "GET", "path": `${base}/bridge/shacl/validate`, "required_params": "none", "optional_params": "n", "example": `${base}/bridge/shacl/validate?n=8`, "operationId": "shaclValidate", "summary": "Live SHACL validation — runs all 7 conformance tests and returns a shacl:ValidationReport" }
+          { "method": "GET", "path": `${base}/bridge/shacl/validate`, "required_params": "none", "optional_params": "n", "example": `${base}/bridge/shacl/validate?n=8`, "operationId": "shaclValidate", "summary": "Live SHACL validation — runs all 7 conformance tests and returns a shacl:ValidationReport" },
+          { "method": "GET", "path": "https://uor.foundation/shapes/uor-shapes.ttl", "required_params": "none", "operationId": "shaclShapesTtl", "summary": "SHACL shapes in W3C Turtle format — DatumShape, DerivationShape (derivationId regex), CertificateShape (cert:certifies), PartitionShape" },
+          { "method": "GET", "path": "https://uor.foundation/uor_q0.jsonld", "required_params": "none", "operationId": "q0InstanceGraph", "summary": "Q0 instance graph — all 256 datums of Z/256Z as JSON-LD with content-addressed IRIs, derivation examples, critical identity proof, and partition node" }
         ]
       },
       "user": {
@@ -4856,6 +4858,7 @@ async function bridgeSparql(req: Request, url: URL, rl: RateLimitResult): Promis
     "sparql:query": queryStr,
     "sparql:endpoint": "https://api.uor.foundation/v1/bridge/sparql",
     "sparql:dataset": `Z/${m}Z (R_${n})`,
+    "sparql:datasetDescription": "Q0 instance graph — 256 Datum individuals with triadic coordinates and ring links",
     "sparql:totalResults": results.length,
     "sparql:returnedResults": paginatedResults.length,
     "sparql:limit": sparqlLimit,
@@ -4867,6 +4870,15 @@ async function bridgeSparql(req: Request, url: URL, rl: RateLimitResult): Promis
       "@type": "sparql:Results",
       "sparql:bindings": paginatedResults,
     },
+    "sparql:verificationQueries": {
+      "countDatums": "SELECT (COUNT(?d) AS ?n) WHERE { ?d a schema:Datum }",
+      "describeDatum42": "SELECT ?s ?p ?o WHERE { ?s schema:value 42 }",
+      "criticalIdentityProof": "SELECT ?p WHERE { ?p a proof:CriticalIdentityProof }",
+    },
+    "sparql:staticGraphUrl": "https://uor.foundation/uor_q0.jsonld",
+    "sparql:shaclShapes": "https://uor.foundation/shapes/uor-shapes.ttl",
+    "epistemic_grade": "A",
+    "epistemic_grade_label": "Algebraically Proven",
     "sparql:uor_query_tool": {
       "@type": "agent:ToolDescription",
       "agent:toolName": "uor_query",

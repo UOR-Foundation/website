@@ -1,0 +1,121 @@
+/**
+ * SHACL TTL Exporter — generates Turtle serialisation of UOR SHACL shapes.
+ *
+ * Produces the canonical uor-shapes.ttl served at
+ * https://uor.foundation/shapes/uor-shapes.ttl
+ *
+ * Shapes defined:
+ *   - DatumShape
+ *   - DerivationShape (with derivationId regex pattern)
+ *   - CertificateShape (with cert:certifies constraint)
+ *   - PartitionShape
+ */
+
+export function exportShaclTtl(): string {
+  return `@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema:     <https://uor.foundation/schema/> .
+@prefix derivation: <https://uor.foundation/derivation/> .
+@prefix cert:       <https://uor.foundation/cert/> .
+@prefix partition:  <https://uor.foundation/partition/> .
+@prefix u:          <https://uor.foundation/u/> .
+@prefix uor-sh:     <https://uor.foundation/shapes/> .
+
+# ── DatumShape ──────────────────────────────────────────────────────────────
+
+uor-sh:DatumShape
+    a               sh:NodeShape ;
+    sh:targetClass  schema:Datum ;
+    rdfs:label      "DatumShape" ;
+    sh:property [
+        sh:path      schema:value ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:nonNegativeInteger ;
+    ] ;
+    sh:property [
+        sh:path      schema:stratum ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:nonNegativeInteger ;
+    ] ;
+    sh:property [
+        sh:path      schema:spectrum ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:string ;
+    ] ;
+    sh:property [
+        sh:path      schema:glyph ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:string ;
+    ] ;
+    sh:property [
+        sh:path      schema:succ ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+    ] ;
+    sh:property [
+        sh:path      schema:pred ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+    ] ;
+    sh:property [
+        sh:path      schema:neg ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+    ] ;
+    sh:property [
+        sh:path      schema:bnot ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+    ] .
+
+# ── DerivationShape ─────────────────────────────────────────────────────────
+
+uor-sh:DerivationShape
+    a               sh:NodeShape ;
+    sh:targetClass  derivation:Derivation ;
+    rdfs:label      "DerivationShape" ;
+    sh:property [
+        sh:path      derivation:derivationId ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:string ;
+        sh:pattern   "^urn:uor:derivation:sha256:[0-9a-f]{64}$" ;
+    ] ;
+    sh:property [
+        sh:path      derivation:resultIri ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:anyURI ;
+    ] .
+
+# ── CertificateShape ────────────────────────────────────────────────────────
+
+uor-sh:CertificateShape
+    a               sh:NodeShape ;
+    sh:targetClass  cert:Certificate ;
+    rdfs:label      "CertificateShape" ;
+    sh:property [
+        sh:path      cert:certifies ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+    ] .
+
+# ── PartitionShape ──────────────────────────────────────────────────────────
+
+uor-sh:PartitionShape
+    a               sh:NodeShape ;
+    sh:targetClass  partition:Partition ;
+    rdfs:label      "PartitionShape" ;
+    sh:property [
+        sh:path      partition:cardinality ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:nonNegativeInteger ;
+    ] .
+`;
+}

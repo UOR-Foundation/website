@@ -1196,6 +1196,119 @@
           }
         }
       }
+    },
+    "/bridge/sparql": {
+      "get": {
+        "operationId": "bridgeSparql",
+        "tags": ["bridge-sparql"],
+        "summary": "SPARQL 1.1 query endpoint",
+        "description": "SELECT, CONSTRUCT, or ASK over the UOR knowledge graph (ontology + Q0 instance graph with all 256 datums). Supports WHERE triple patterns, FILTER, LIMIT, OFFSET. Implements the uor_query tool from Section 6.4.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "URL-encoded SPARQL SELECT query",
+            "example": "SELECT ?s WHERE { ?s a schema:Datum . ?s schema:value 42 }"
+          },
+          {
+            "name": "n",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 8, "minimum": 1, "maximum": 12 },
+            "description": "Ring bit width (default 8 → Z/256Z)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "application/sparql-results+json — SPARQL result set with epistemic grading",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sparql:totalResults": { "type": "integer" },
+                    "sparql:returnedResults": { "type": "integer" },
+                    "sparql:executionTimeMs": { "type": "number" },
+                    "sparql:results": { "type": "object" },
+                    "epistemic_grade": { "type": "string", "enum": ["A", "B", "C", "D"] },
+                    "epistemic_grade_label": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      },
+      "post": {
+        "operationId": "bridgeSparqlPost",
+        "tags": ["bridge-sparql"],
+        "summary": "SPARQL 1.1 query (POST)",
+        "description": "POST variant — send SPARQL query as JSON body {query: '...'} or as raw text with Content-Type: application/sparql-query.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": { "type": "string" },
+                  "n": { "type": "integer", "default": 8 }
+                },
+                "required": ["query"]
+              }
+            },
+            "application/sparql-query": {
+              "schema": { "type": "string" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "application/sparql-results+json" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/shapes/uor-shapes.ttl": {
+      "get": {
+        "operationId": "shaclShapesTtl",
+        "tags": ["bridge-sparql"],
+        "summary": "SHACL shapes in Turtle format",
+        "description": "Returns the canonical SHACL shapes for UOR data validation in W3C Turtle syntax. These shapes define constraints for Datum, Derivation, Certificate, and Partition nodes.",
+        "responses": {
+          "200": {
+            "description": "text/turtle — SHACL shapes document",
+            "content": {
+              "text/turtle": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/q0/instance-graph": {
+      "get": {
+        "operationId": "q0InstanceGraph",
+        "tags": ["bridge-sparql"],
+        "summary": "Q0 instance graph — all 256 datums of Z/256Z as JSON-LD",
+        "description": "Returns the complete Q0 instance graph with 256 Datum individuals, 6 canonical derivation examples, a critical identity proof, and a partition node. Available as static file at https://uor.foundation/uor_q0.jsonld",
+        "responses": {
+          "200": {
+            "description": "application/ld+json — Q0 instance graph",
+            "content": {
+              "application/ld+json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
