@@ -5946,6 +5946,7 @@ async function toolDerive(url: URL, rl: RateLimitResult): Promise<Response> {
   const qRaw = url.searchParams.get('quantum') ?? '0';
   const quantum = parseInt(qRaw, 10);
   const n = (quantum + 1) * 8; // quantum 0 = 8 bits
+  const m = modulus(n);
 
   let parsed: TermNode | number;
   try { parsed = parseTermExpr(termStr); }
@@ -5964,24 +5965,34 @@ async function toolDerive(url: URL, rl: RateLimitResult): Promise<Response> {
   const bytes = toBytesTuple(result, n);
   const strat = bytes.reduce((s, b) => s + bytePopcount(b), 0);
   const spec = result.toString(2).padStart(n, '0');
-  const specBits: number[] = [];
-  for (let i = 0; i < n; i++) { if ((result >> i) & 1) specBits.push(i); }
+  const cls = classifyByte(result, n);
 
   const etag = makeETag('/tools/derive', { term: termStr, quantum: qRaw });
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
-    "@type": "derivation:Derivation",
+    "@type": ["derivation:Derivation", "uor:ToolResult"],
+    "tool": "uor_derive",
+    "term": termStr,
+    "quantum": quantum,
+    "ring": `Z/${m}Z`,
+    "result_value": result,
+    "canonical_form": `${canonicalForm} = ${result}`,
     "derivation:derivationId": derivId,
     "derivation:resultIri": resultIri,
-    "derivation:canonicalForm": canonicalForm,
-    "derivation:originalTerm": termStr,
-    "schema:ringQuantum": quantum,
-    "derivation:stepCount": 1,
-    "metrics": {
-      "stratum": strat,
-      "spectrum": specBits.join(','),
-      "hamming_weight": strat,
+    "schema:datum": {
+      "@id": resultIri,
+      "@type": "schema:Datum",
+      "schema:value": result,
+      "schema:quantum": n,
+      "schema:stratum": strat,
+      "schema:spectrum": spec,
     },
+    "metrics": {
+      "ring_distance_from_zero": result,
+      "hamming_weight": strat,
+      "partition_component": cls.component,
+    },
+    "verify_url": `https://api.uor.foundation/v1/tools/verify?derivation_id=${encodeURIComponent(derivId)}`,
   }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
@@ -5994,97 +6005,38 @@ async function toolQuery(req: Request, url: URL, rl: RateLimitResult): Promise<R
   const sparqlQuery = String(body.sparql ?? '');
   if (!sparqlQuery) return error400('Field "sparql" is required', 'sparql', rl);
   const graphUri = String(body.graph_uri ?? 'https://uor.foundation/graph/q0');
-  const n = 8; // Q0 fixed
-  const m = modulus(n);
 
-  // Reuse SPARQL parsing logic from bridgeSparql
-  const limitMatch = sparqlQuery.match(/LIMIT\s+(\d+)/i);
-  const offsetMatch = sparqlQuery.match(/OFFSET\s+(\d+)/i);
-  const sparqlLimit = limitMatch ? Math.min(Number(limitMatch[1]), 256) : 50;
-  const sparqlOffset = offsetMatch ? Number(offsetMatch[1]) : 0;
-
-  const filters: { variable: string; operator: string; value: number }[] = [];
-  const filterRegex = /FILTER\s*\(\s*\?(\w+)\s*(>|<|>=|<=|=|!=)\s*(\d+)\s*\)/gi;
-  let filterMatch;
-  while ((filterMatch = filterRegex.exec(sparqlQuery)) !== null) {
-    filters.push({ variable: filterMatch[1], operator: filterMatch[2], value: Number(filterMatch[3]) });
-  }
-
-  const whereMatch = sparqlQuery.match(/WHERE\s*\{([^}]+)\}/i);
-  const patterns: { s: string; p: string; o: string }[] = [];
-  if (whereMatch) {
-    const triples = whereMatch[1].split('.').map(t => t.trim()).filter(Boolean);
-    for (const triple of triples) {
-      if (triple.startsWith('FILTER')) continue;
-      const parts = triple.split(/\s+/).filter(Boolean);
-      if (parts.length >= 3) patterns.push({ s: parts[0], p: parts[1], o: parts.slice(2).join(' ') });
-    }
-  }
-
-  const results: Record<string, unknown>[] = [];
-  for (let v = 0; v < m && results.length < sparqlLimit + sparqlOffset; v++) {
-    const d = makeDatum(v, n);
-    const cls = classifyByte(v, n);
-    const stratum = d["schema:triad"]["schema:totalStratum"];
-
-    let patternMatch = true;
-    for (const pat of patterns) {
-      if (pat.p === 'schema:value' && pat.o !== '?o' && pat.o !== `${v}`) { patternMatch = false; break; }
-      if (pat.p === 'partition:component' && !pat.o.startsWith('?') && pat.o !== cls.component) { patternMatch = false; break; }
-      if (pat.p === 'rdf:type' && !pat.o.startsWith('?') && pat.o !== 'schema:Datum') { patternMatch = false; break; }
-    }
-    if (!patternMatch) continue;
-
-    let filterPass = true;
-    for (const f of filters) {
-      let actual: number | undefined;
-      if (f.variable === 'stratum' || f.variable === 'totalStratum') actual = stratum;
-      else if (f.variable === 'value' || f.variable === 'v') actual = v;
-      if (actual !== undefined) {
-        switch (f.operator) {
-          case '>': if (!(actual > f.value)) filterPass = false; break;
-          case '<': if (!(actual < f.value)) filterPass = false; break;
-          case '>=': if (!(actual >= f.value)) filterPass = false; break;
-          case '<=': if (!(actual <= f.value)) filterPass = false; break;
-          case '=': if (!(actual === f.value)) filterPass = false; break;
-          case '!=': if (!(actual !== f.value)) filterPass = false; break;
-        }
+  try {
+    const sparqlResults = await executeSparqlQuery(sparqlQuery);
+    const resultNodes = sparqlResults.results.bindings.map(b => {
+      const node: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(b)) {
+        node[k] = v.type === 'uri' ? { "@id": v.value } : (v.datatype?.includes('integer') ? Number(v.value) : v.value);
       }
-    }
-    if (!filterPass) continue;
-
-    // Compute derivation_id for each datum (identity derivation)
-    const canonForm = `identity(0x${v.toString(16)})`;
-    const idContent = `${canonForm}=${v}@R${n}`;
-    const idHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(idContent));
-    const idHex = Array.from(new Uint8Array(idHash)).map(b => b.toString(16).padStart(2, '0')).join('');
-
-    results.push({
-      "@id": d["@id"],
-      "@type": "schema:Datum",
-      "schema:value": v,
-      "schema:stratum": stratum,
-      "schema:spectrum": d["schema:spectrum"],
-      "derivation:derivationId": `urn:uor:derivation:sha256:${idHex}`,
-      "epistemic_grade": "A",
-      "epistemic_grade_label": "Algebraically Proven",
+      node["epistemic_grade"] = "A";
+      return node;
     });
+
+    return jsonResp(gradeResponse({
+      "@context": UOR_CONTEXT_URL,
+      "@type": "uor:ToolResult",
+      "tool": "uor_query",
+      "sparql": sparqlQuery,
+      "graph_uri": graphUri,
+      "result_count": resultNodes.length,
+      "results": { "@graph": resultNodes },
+      "note": "All results derived from Q0 algebraic graph — Grade A provenance",
+    }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
+  } catch (err) {
+    return new Response(JSON.stringify({
+      error: `SPARQL execution error: ${(err as Error).message}`,
+      code: 'SPARQL_ERROR',
+    }), { status: 400, headers: { ...JSON_HEADERS, ...CORS_HEADERS, ...rateLimitHeaders(rl) } });
   }
-
-  const paginatedResults = results.slice(sparqlOffset, sparqlOffset + sparqlLimit);
-
-  return jsonResp(gradeResponse({
-    "@context": UOR_CONTEXT_URL,
-    "@graph": paginatedResults,
-    "result_count": paginatedResults.length,
-    "total_count": results.length,
-    "graph_uri": graphUri,
-    "sparql:query": sparqlQuery,
-  }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
 }
 
 // ── GET /tools/verify — uor_verify ─────────────────────────────────────────
-function toolVerify(url: URL, rl: RateLimitResult): Response {
+async function toolVerify(url: URL, rl: RateLimitResult): Promise<Response> {
   const derivId = url.searchParams.get('derivation_id') ?? '';
   if (!derivId) return error400('Parameter "derivation_id" is required', 'derivation_id', rl);
 
@@ -6093,27 +6045,97 @@ function toolVerify(url: URL, rl: RateLimitResult): Response {
     return error400('derivation_id must match ^urn:uor:derivation:sha256:[0-9a-f]{64}$', 'derivation_id', rl);
   }
 
-  // Attempt to reverse-lookup: try all 256 Q0 values against identity derivation
-  const n = 8;
-  let found = false;
-  let foundValue = -1;
-  // For now, verify by checking if the hash corresponds to any ring element's identity derivation
-  // (Full graph lookup would require persistent store)
+  // Look up derivation ID in Q0 graph
+  const { graph } = await getQ0Graph();
+  const nodes = (graph as Record<string, unknown>)['@graph'] as Record<string, unknown>[];
+  let foundNode: Record<string, unknown> | null = null;
+  for (const node of nodes) {
+    if (node['derivation:derivationId'] === derivId) {
+      foundNode = node;
+      break;
+    }
+  }
 
   const etag = makeETag('/tools/verify', { derivation_id: derivId });
 
-  // Since we don't have a persistent SPARQL store, check the proof chain
-  // The derivation is considered verified if it follows the urn:uor:derivation format
-  // and the critical identity proof chain is valid
-  return jsonResp(gradeResponse({
+  if (foundNode) {
+    return jsonResp(gradeResponse({
+      "@context": UOR_CONTEXT_URL,
+      "@type": "uor:ToolResult",
+      "tool": "uor_verify",
+      "derivation_id": derivId,
+      "verified": true,
+      "cert_chain": ["https://uor.foundation/instance/q0/proof-critical-id"],
+      "result_iri": (foundNode['derivation:resultIri'] as Record<string, string>)?.['@id'] ?? foundNode['derivation:resultIri'],
+      "result_value": foundNode['derivation:resultValue'] ?? null,
+      "quantum": 0,
+      "trace_iri": foundNode['@id'],
+      "message": "Derivation ID verified. Result algebraically certified.",
+    }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+  }
+
+  // Also try re-deriving common terms to find the derivation
+  const n = 8;
+  const m = modulus(n);
+  // Try all unary ops on all 256 values, and common binary ops
+  const unaryTerms = ['neg', 'bnot', 'succ', 'pred'];
+  for (let v = 0; v < 256; v++) {
+    for (const op of unaryTerms) {
+      let result: number;
+      switch (op) {
+        case 'neg': result = neg(v, n); break;
+        case 'bnot': result = bnot(v, n); break;
+        case 'succ': result = succOp(v, n); break;
+        case 'pred': result = predOp(v, n); break;
+        default: continue;
+      }
+      // Also check composed: neg(bnot(v))
+      const terms = [`${op}(0x${v.toString(16)})`, `${op}(${v})`];
+      if (op === 'neg') {
+        const bnotV = bnot(v, n);
+        terms.push(`neg(bnot(0x${v.toString(16)}))`);
+        terms.push(`neg(bnot(${v}))`);
+      }
+      for (const tc of terms) {
+        const parsed = (() => { try { return parseTermExpr(tc); } catch { return null; } })();
+        if (!parsed) continue;
+        const canon = canonicaliseAC(parsed);
+        const evalResult = evaluateTermNode(parsed, n);
+        const content = `${canon}=${evalResult}@R${n}`;
+        const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
+        const hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+        if (`urn:uor:derivation:sha256:${hex}` === derivId) {
+          return jsonResp(gradeResponse({
+            "@context": UOR_CONTEXT_URL,
+            "@type": "uor:ToolResult",
+            "tool": "uor_verify",
+            "derivation_id": derivId,
+            "verified": true,
+            "cert_chain": ["https://uor.foundation/instance/q0/proof-critical-id"],
+            "result_iri": datumIRI(evalResult, n),
+            "result_value": evalResult,
+            "quantum": 0,
+            "trace_iri": `https://uor.foundation/instance/q0/derivation/${encodeURIComponent(tc)}`,
+            "message": "Derivation ID verified. Result algebraically certified.",
+          }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+        }
+      }
+    }
+  }
+
+  // Not found — Grade D
+  return jsonResp({
     "@context": UOR_CONTEXT_URL,
-    "@type": "derivation:VerificationResult",
-    "verified": true,
-    "derivation:derivationId": derivId,
-    "cert_chain": ["https://uor.foundation/instance/q0/proof-critical-id"],
-    "verification_method": "algebraic_derivation_chain",
-    "note": "derivation_id format is valid and anchored to Q0 critical identity proof",
-  }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+    "@type": "uor:ToolResult",
+    "tool": "uor_verify",
+    "derivation_id": derivId,
+    "verified": false,
+    "epistemic_grade": "D",
+    "epistemic_grade_label": "LLM-Generated (Unverified)",
+    "epistemic_grade_reason": "No derivation ID. No certificate. LLM-extracted — route to uor_derive() for verification.",
+    "message": "Derivation ID not found in knowledge graph. Cannot verify. Treat result as unverified.",
+    "suggestion": "POST /v1/tools/derive to compute and register a derivation.",
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
 // ── GET /tools/correlate — uor_correlate (enhanced with mode=full) ─────────
@@ -6137,7 +6159,7 @@ async function toolCorrelate(url: URL, rl: RateLimitResult): Promise<Response> {
   const xorVal = a ^ b;
   const hammingDist = bytePopcount(xorVal & 0xff);
   const fidelity = 1.0 - (hammingDist / n);
-  const ringDist = Math.abs(a - b);
+  const ringDist = Math.min(Math.abs(a - b), m - Math.abs(a - b));
   const diffBits: number[] = [];
   const sharedBits: number[] = [];
   for (let i = 0; i < n; i++) {
@@ -6145,66 +6167,55 @@ async function toolCorrelate(url: URL, rl: RateLimitResult): Promise<Response> {
     else if (((a >> i) & 1) === 1) sharedBits.push(i);
   }
 
+  // Derivation ID for correlation
+  const corrTerm = `correlate(${Math.min(a, b)},${Math.max(a, b)})`;
+  const corrContent = `${corrTerm}=fidelity:${fidelity.toFixed(4)}@R${n}`;
+  const corrHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(corrContent));
+  const corrHex = Array.from(new Uint8Array(corrHash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const corrDerivId = `urn:uor:derivation:sha256:${corrHex}`;
+
+  // Interpretation text
+  let interpLevel: string;
+  if (fidelity === 1.0) interpLevel = 'Identical elements';
+  else if (fidelity >= 0.875) interpLevel = 'High fidelity';
+  else if (fidelity >= 0.625) interpLevel = 'Moderate fidelity';
+  else if (fidelity >= 0.375) interpLevel = 'Low fidelity';
+  else interpLevel = 'Minimal fidelity';
+  const interpretation = `${interpLevel} (${fidelity.toFixed(4)}) — elements differ by ${hammingDist} bit${hammingDist !== 1 ? 's' : ''}. Hamming distance = ${hammingDist}. Ring distance = ${ringDist}.`;
+
   const etag = makeETag('/tools/correlate', { a: aRaw, b: bRaw, quantum: qRaw, mode });
 
   const base: Record<string, unknown> = {
     "@context": UOR_CONTEXT_URL,
-    "@type": "observable:Correlation",
+    "@type": "uor:ToolResult",
+    "tool": "uor_correlate",
     "a": a,
     "b": b,
-    "xor_value": xorVal,
-    "hamming_distance": hammingDist,
-    "ring_distance": ringDist,
-    "difference_stratum": diffBits,
+    "quantum": quantum,
     "fidelity": parseFloat(fidelity.toFixed(4)),
-    "schema:ringQuantum": quantum,
+    "ring_distance": ringDist,
+    "hamming_distance": hammingDist,
+    "difference_stratum": diffBits,
+    "total_difference": hammingDist,
+    "interpretation": interpretation,
+    "derivation:derivationId": corrDerivId,
+    "a_iri": datumIRI(a, n),
+    "b_iri": datumIRI(b, n),
   };
 
   if (mode === 'full') {
-    // SKOS recommendation
     let skosMatch: string;
-    let skosRationale: string;
-    if (fidelity === 1.0) {
-      skosMatch = 'skos:exactMatch';
-      skosRationale = 'fidelity 1.0 — identical derivation_id guaranteed';
-    } else if (fidelity >= 0.875) {
-      skosMatch = 'skos:closeMatch';
-      skosRationale = `fidelity ${fidelity.toFixed(4)} — close but not exact`;
-    } else if (fidelity >= 0.625) {
-      const aStrat = bytePopcount(a & 0xff);
-      const bStrat = bytePopcount(b & 0xff);
-      skosMatch = aStrat >= bStrat ? 'skos:broadMatch' : 'skos:narrowMatch';
-      skosRationale = `fidelity ${fidelity.toFixed(4)} — ${skosMatch === 'skos:broadMatch' ? 'broader concept (higher stratum)' : 'narrower concept (lower stratum)'}`;
-    } else {
-      skosMatch = 'skos:relatedMatch';
-      skosRationale = `fidelity ${fidelity.toFixed(4)} — weak alignment`;
-    }
+    if (fidelity === 1.0) skosMatch = 'skos:exactMatch';
+    else if (fidelity >= 0.75) skosMatch = 'skos:closeMatch';
+    else if (fidelity >= 0.5) skosMatch = 'skos:broadMatch';
+    else if (fidelity >= 0.25) skosMatch = 'skos:relatedMatch';
+    else skosMatch = 'none';
 
+    base["skos_recommendation"] = skosMatch;
     base["alignment_analysis"] = {
       "likely_same_concept": fidelity === 1.0,
       "shared_stratum_bits": sharedBits,
       "differing_bits": diffBits,
-      "skos_match_recommendation": skosMatch,
-      "skos_rationale": skosRationale,
-    };
-
-    // Derivation comparison
-    const aCanon = `identity(0x${a.toString(16)})`;
-    const bCanon = `identity(0x${b.toString(16)})`;
-    const aContent = `${aCanon}=${a}@R${n}`;
-    const bContent = `${bCanon}=${b}@R${n}`;
-    const aHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(aContent));
-    const bHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(bContent));
-    const aHex = Array.from(new Uint8Array(aHash)).map(b => b.toString(16).padStart(2, '0')).join('');
-    const bHex = Array.from(new Uint8Array(bHash)).map(b => b.toString(16).padStart(2, '0')).join('');
-    const aDerivId = `urn:uor:derivation:sha256:${aHex}`;
-    const bDerivId = `urn:uor:derivation:sha256:${bHex}`;
-
-    base["derivation_comparison"] = {
-      "a_derivation_id": aDerivId,
-      "b_derivation_id": bDerivId,
-      "ids_equal": aDerivId === bDerivId,
-      "exact_match": a === b,
     };
   }
 
@@ -6222,15 +6233,13 @@ async function toolPartition(req: Request, rl: RateLimitResult): Promise<Respons
     return error400('Field "seed_set" must be a non-empty array of integers', 'seed_set', rl);
   }
 
-  const closureMode = String(body.closure_mode ?? 'GRAPH_CLOSED');
-  if (closureMode !== 'GRAPH_CLOSED' && closureMode !== 'FIXED_POINT') {
-    return error400('closure_mode must be "GRAPH_CLOSED" or "FIXED_POINT"', 'closure_mode', rl);
-  }
-
+  const closureModeRaw = String(body.closure_mode ?? 'OPEN');
+  const closureMode = closureModeRaw.toUpperCase();
   const quantum = parseInt(String(body.quantum ?? '0'), 10);
   const n = (quantum + 1) * 8;
+  const m = modulus(n);
 
-  const elements = new Set(seedSet.map(s => ((s % modulus(n)) + modulus(n)) % modulus(n)));
+  const elements = new Set(seedSet.map(s => ((s % m) + m) % m));
   const initialSize = elements.size;
 
   const unaryOps: [string, (x: number) => number][] = [
@@ -6240,7 +6249,7 @@ async function toolPartition(req: Request, rl: RateLimitResult): Promise<Respons
     ['pred', (x: number) => predOp(x, n)],
   ];
 
-  if (closureMode === 'FIXED_POINT') {
+  if (closureMode === 'CLOSED' || closureMode === 'GRAPH_CLOSED' || closureMode === 'FIXED_POINT') {
     let changed = true;
     while (changed) {
       changed = false;
@@ -6255,8 +6264,22 @@ async function toolPartition(req: Request, rl: RateLimitResult): Promise<Respons
         toAdd.forEach(v => elements.add(v));
         changed = true;
       }
-      // Safety: break if we've reached full ring
-      if (elements.size >= modulus(n)) break;
+      if (elements.size >= m) break;
+    }
+  }
+
+  // Classify elements into partition components
+  const units: number[] = [];
+  const exterior: number[] = [];
+  const irreducibles: number[] = [];
+  const reducibles: number[] = [];
+  for (const el of elements) {
+    const cls = classifyByte(el, n);
+    switch (cls.component) {
+      case 'partition:UnitSet': units.push(el); break;
+      case 'partition:ExteriorSet': exterior.push(el); break;
+      case 'partition:IrreducibleSet': irreducibles.push(el); break;
+      case 'partition:ReducibleSet': reducibles.push(el); break;
     }
   }
 
@@ -6267,40 +6290,35 @@ async function toolPartition(req: Request, rl: RateLimitResult): Promise<Respons
       if (!elements.has(f(x))) { notClosedUnder.push(name); break; }
     }
   }
-  // Also check binary ops
-  const binaryOps: [string, (x: number, y: number) => number][] = [
-    ['add', (x, y) => addOp(x, y, n)],
-    ['mul', (x, y) => mulOp(x, y, n)],
-  ];
-  const elArr = [...elements];
-  for (const [name, f] of binaryOps) {
-    let closed = true;
-    outer: for (const x of elArr.slice(0, Math.min(elArr.length, 32))) {
-      for (const y of elArr.slice(0, Math.min(elArr.length, 32))) {
-        if (!elements.has(f(x, y))) { closed = false; break outer; }
-      }
-    }
-    if (!closed) notClosedUnder.push(name);
-  }
 
-  // Partition hash for IRI
+  // Partition hash for derivation ID
   const sortedEls = [...elements].sort((a, b) => a - b);
-  const partHashContent = sortedEls.join(',');
+  const partHashContent = `partition(${sortedEls.join(',')})@R${n}`;
   const partHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(partHashContent));
   const partHex = Array.from(new Uint8Array(partHash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const partDerivId = `urn:uor:derivation:sha256:${partHex}`;
 
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
-    "@type": "partition:Partition",
-    "partition_iri": `https://uor.foundation/instance/partition/${partHex}`,
-    "schema:ringQuantum": quantum,
-    "partition:cardinality": elements.size,
-    "closure_mode": closureMode,
+    "@type": "uor:ToolResult",
+    "tool": "uor_partition",
     "seed_set": seedSet,
-    "elements": sortedEls.slice(0, 50),  // truncate for response size
-    "elements_truncated": elements.size > 50,
+    "quantum": quantum,
+    "closure_mode": closureModeRaw,
+    "partition": {
+      "@id": `https://uor.foundation/instance/partition/seed-${seedSet.join('-')}`,
+      "@type": "partition:Partition",
+      "partition:quantum": n,
+      "partition:cardinality": elements.size,
+      "partition:irreducibles": { "partition:cardinality": irreducibles.length, "elements": irreducibles.sort((a, b) => a - b).slice(0, 50) },
+      "partition:reducibles":   { "partition:cardinality": reducibles.length, "elements": reducibles.sort((a, b) => a - b).slice(0, 50) },
+      "partition:units":        { "partition:cardinality": units.length, "elements": units.sort((a, b) => a - b) },
+      "partition:exterior":     { "partition:cardinality": exterior.length, "elements": exterior.sort((a, b) => a - b) },
+    },
     "not_closed_under": notClosedUnder,
     "closure_added": elements.size - initialSize,
+    "closure_complete": notClosedUnder.length === 0,
+    "derivation:derivationId": partDerivId,
   }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
 }
 
@@ -8365,7 +8383,7 @@ Deno.serve(async (req: Request) => {
     }
     if (path === '/tools/verify') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
-      const resp = toolVerify(url, rl);
+      const resp = await toolVerify(url, rl);
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
