@@ -126,10 +126,10 @@ export async function derive(
   const resultValue = evaluateTerm(canonical, ring);
   const resultIri = contentAddress(ring, resultValue);
 
-  // Derivation ID: SHA-256 of "{canonical}={iri}", first 16 hex chars
+  // Derivation ID: full SHA-256 of "{canonical}={iri}"
   const idInput = `${canonicalStr}=${resultIri}`;
   const hash = await sha256hex(idInput);
-  const derivationId = `urn:uor:derivation:sha256:${hash.slice(0, 16)}`;
+  const derivationId = `urn:uor:derivation:sha256:${hash}`;
 
   // Metrics
   const originalComplexity = termComplexity(term);
