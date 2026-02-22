@@ -6066,12 +6066,75 @@ function parseTermExpr(term: string): TermNode | number {
 }
 
 const COMMUTATIVE_OPS = new Set(['xor', 'and', 'or', 'add', 'mul']);
+const ASSOCIATIVE_OPS = new Set(['xor', 'and', 'or', 'add', 'mul']);
 
-function canonicaliseAC(node: TermNode | number): string {
-  if (typeof node === 'number') return `0x${(node & 0xff).toString(16)}`;
-  const canonArgs = node.args.map(a => canonicaliseAC(a));
-  if (COMMUTATIVE_OPS.has(node.op)) canonArgs.sort();
-  return `${node.op}(${canonArgs.join(',')})`;
+/**
+ * UOR-compliant canonicalization — matches frontend engine exactly.
+ * Applies: derived expansion, involution cancellation, constant folding,
+ * associative flattening, commutative sorting.
+ */
+function canonicaliseNode(node: TermNode | number, n: number): TermNode | number {
+  const m = modulus(n);
+  if (typeof node === 'number') return ((node % m) + m) % m;
+
+  // Canonicalize children first
+  let args = node.args.map(a => canonicaliseNode(a, n));
+  const op = node.op;
+
+  // Derived expansion: succ(x) → neg(bnot(x)), pred(x) → bnot(neg(x))
+  if (op === 'succ' && args.length === 1) {
+    return canonicaliseNode({ op: 'neg', args: [{ op: 'bnot', args: [args[0]] }] }, n);
+  }
+  if (op === 'pred' && args.length === 1) {
+    return canonicaliseNode({ op: 'bnot', args: [{ op: 'neg', args: [args[0]] }] }, n);
+  }
+
+  // Involution cancellation: f(f(x)) → x for f ∈ {neg, bnot}
+  if ((op === 'neg' || op === 'bnot') && args.length === 1) {
+    const inner = args[0];
+    if (typeof inner !== 'number' && inner.op === op && inner.args.length === 1) {
+      return canonicaliseNode(inner.args[0], n);
+    }
+  }
+
+  // Constant folding: if all args are numbers, evaluate
+  if (args.every(a => typeof a === 'number')) {
+    const vals = args as number[];
+    switch (op) {
+      case 'neg': return ((-vals[0]) % m + m) % m;
+      case 'bnot': return vals[0] ^ (m - 1);
+      case 'xor': return vals.reduce((a, b) => a ^ b, 0);
+      case 'and': return vals.reduce((a, b) => a & b, m - 1);
+      case 'or': return vals.reduce((a, b) => a | b, 0);
+      case 'add': return vals.reduce((a, b) => (a + b) % m);
+      case 'sub': return ((vals[0] - vals[1]) % m + m) % m;
+      case 'mul': return vals.reduce((a, b) => (a * b) % m);
+    }
+  }
+
+  // Associative flattening (only for associative ops)
+  if (ASSOCIATIVE_OPS.has(op)) {
+    const flattened: (TermNode | number)[] = [];
+    for (const arg of args) {
+      if (typeof arg !== 'number' && arg.op === op) flattened.push(...arg.args);
+      else flattened.push(arg);
+    }
+    args = flattened;
+  }
+
+  // Commutative sorting
+  if (COMMUTATIVE_OPS.has(op)) {
+    args = [...args].sort((a, b) => serialiseCanonical(a).localeCompare(serialiseCanonical(b)));
+  }
+
+  return { op, args };
+}
+
+/** Serialize a canonical node to UOR standard form — matches frontend serializeTerm. */
+function serialiseCanonical(node: TermNode | number): string {
+  if (typeof node === 'number') return `0x${node.toString(16)}`;
+  const parts = node.args.map(a => serialiseCanonical(a));
+  return `${node.op}(${parts.join(',')})`;
 }
 
 function evaluateTermNode(node: TermNode | number, n: number): number {
@@ -6106,12 +6169,14 @@ async function toolDerive(url: URL, rl: RateLimitResult): Promise<Response> {
   try { parsed = parseTermExpr(termStr); }
   catch (e) { return error400(`Invalid term: ${(e as Error).message}`, 'term', rl); }
 
-  const canonicalForm = canonicaliseAC(parsed);
-  const result = evaluateTermNode(parsed, n);
+  // UOR-compliant canonicalization (matches frontend engine)
+  const canonicalNode = canonicaliseNode(parsed, n);
+  const canonicalForm = serialiseCanonical(canonicalNode);
+  const result = typeof canonicalNode === 'number' ? canonicalNode : evaluateTermNode(parsed, n);
   const resultIri = datumIRI(result, n);
 
-  // SHA-256 derivation ID
-  const contentForHash = `${canonicalForm}=${result}@R${n}`;
+  // SHA-256 derivation ID — UOR canonical format: "{canonical}={resultIri}"
+  const contentForHash = `${canonicalForm}=${resultIri}`;
   const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(contentForHash));
   const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
   const derivId = `urn:uor:derivation:sha256:${hashHex}`;
@@ -6253,9 +6318,10 @@ async function toolVerify(url: URL, rl: RateLimitResult): Promise<Response> {
       for (const tc of terms) {
         const parsed = (() => { try { return parseTermExpr(tc); } catch { return null; } })();
         if (!parsed) continue;
-        const canon = canonicaliseAC(parsed);
-        const evalResult = evaluateTermNode(parsed, n);
-        const content = `${canon}=${evalResult}@R${n}`;
+        const canonNode = canonicaliseNode(parsed, n);
+        const canon = serialiseCanonical(canonNode);
+        const evalResult = typeof canonNode === 'number' ? canonNode : evaluateTermNode(parsed, n);
+        const content = `${canon}=${datumIRI(evalResult, n)}`;
         const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
         const hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
         if (`urn:uor:derivation:sha256:${hex}` === derivId) {
@@ -6529,9 +6595,10 @@ async function certIssue(req: Request, rl: RateLimitResult): Promise<Response> {
       for (const tc of terms) {
         try {
           const parsed = parseTermExpr(tc);
-          const canon = canonicaliseAC(parsed);
-          const result = evaluateTermNode(parsed, n);
-          const content = `${canon}=${result}@R${n}`;
+          const canonNode = canonicaliseNode(parsed, n);
+          const canon = serialiseCanonical(canonNode);
+          const result = typeof canonNode === 'number' ? canonNode : evaluateTermNode(parsed, n);
+          const content = `${canon}=${datumIRI(result, n)}`;
           const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
           const hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
           if (`urn:uor:derivation:sha256:${hex}` === derivId) {
@@ -6991,8 +7058,9 @@ async function bridgeMorphismTransform(req: Request, rl: RateLimitResult): Promi
   // Compute derivation ID
   const termStr = `${operation}(${value})`;
   const parsed = parseTermExpr(termStr);
-  const canon = canonicaliseAC(parsed);
-  const contentForHash = `${canon}=${result}@R${n}`;
+  const canonNode = canonicaliseNode(parsed, n);
+  const canon = serialiseCanonical(canonNode);
+  const contentForHash = `${canon}=${datumIRI(result, n)}`;
   const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(contentForHash));
   const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
   const derivId = `urn:uor:derivation:sha256:${hashHex}`;

@@ -150,25 +150,25 @@ describe("canonicalization", () => {
   it("(a) involution cancellation: neg(neg(x)) → x", () => {
     const term: Term = { kind: "unary", op: "neg", arg: { kind: "unary", op: "neg", arg: { kind: "var", name: "x" } } };
     const result = canonicalize(term, config);
-    expect(serializeTerm(result)).toBe("V(x)");
+    expect(serializeTerm(result)).toBe("x");
   });
 
   it("(a) involution cancellation: bnot(bnot(x)) → x", () => {
     const term: Term = { kind: "unary", op: "bnot", arg: { kind: "unary", op: "bnot", arg: { kind: "var", name: "x" } } };
     const result = canonicalize(term, config);
-    expect(serializeTerm(result)).toBe("V(x)");
+    expect(serializeTerm(result)).toBe("x");
   });
 
   it("(b) derived expansion: succ(x) → neg(bnot(x))", () => {
     const term: Term = { kind: "unary", op: "succ", arg: { kind: "var", name: "x" } };
     const result = canonicalize(term, config);
-    expect(serializeTerm(result)).toBe("neg(bnot(V(x)))");
+    expect(serializeTerm(result)).toBe("neg(bnot(x))");
   });
 
   it("(b) derived expansion: pred(x) → bnot(neg(x))", () => {
     const term: Term = { kind: "unary", op: "pred", arg: { kind: "var", name: "x" } };
     const result = canonicalize(term, config);
-    expect(serializeTerm(result)).toBe("bnot(neg(V(x)))");
+    expect(serializeTerm(result)).toBe("bnot(neg(x))");
   });
 
   it("(c) constant reduction: neg(42) → 214 in Q0", () => {
@@ -215,7 +215,7 @@ describe("canonicalization", () => {
       args: [{ kind: "var", name: "x" }, { kind: "const", value: 0 }],
     };
     const result = canonicalize(term, config);
-    expect(serializeTerm(result)).toBe("V(x)");
+    expect(serializeTerm(result)).toBe("x");
   });
 
   it("(f) identity elimination: x and 0xFF → x in Q0", () => {
@@ -224,7 +224,7 @@ describe("canonicalization", () => {
       args: [{ kind: "var", name: "x" }, { kind: "const", value: 255 }],
     };
     const result = canonicalize(term, config);
-    expect(serializeTerm(result)).toBe("V(x)");
+    expect(serializeTerm(result)).toBe("x");
   });
 
   it("(g) self-cancellation: x xor x → 0", () => {
@@ -242,7 +242,7 @@ describe("canonicalization", () => {
       args: [{ kind: "var", name: "x" }, { kind: "var", name: "x" }],
     };
     const result = canonicalize(term, config);
-    expect(serializeTerm(result)).toBe("V(x)");
+    expect(serializeTerm(result)).toBe("x");
   });
 
   it("(g) idempotence: x or x → x", () => {
@@ -251,6 +251,6 @@ describe("canonicalization", () => {
       args: [{ kind: "var", name: "x" }, { kind: "var", name: "x" }],
     };
     const result = canonicalize(term, config);
-    expect(serializeTerm(result)).toBe("V(x)");
+    expect(serializeTerm(result)).toBe("x");
   });
 });

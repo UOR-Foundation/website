@@ -26,14 +26,14 @@ export type Term =
   | { kind: "const"; value: number }
   | { kind: "var"; name: string }
   | { kind: "unary"; op: "neg" | "bnot" | "succ" | "pred"; arg: Term }
-  | { kind: "binary"; op: "xor" | "and" | "or"; args: Term[] };
+  | { kind: "binary"; op: "xor" | "and" | "or" | "add" | "sub" | "mul"; args: Term[] };
 
 // ── Serialization for comparison ────────────────────────────────────────────
 
 export function serializeTerm(t: Term): string {
   switch (t.kind) {
-    case "const": return `C(${t.value})`;
-    case "var": return `V(${t.name})`;
+    case "const": return `0x${t.value.toString(16)}`;
+    case "var": return `${t.name}`;
     case "unary": return `${t.op}(${serializeTerm(t.arg)})`;
     case "binary": return `${t.op}(${t.args.map(serializeTerm).join(",")})`;
   }
@@ -154,11 +154,16 @@ function ruleConstantReduction(t: Term, config: RingConfig): Term {
   // Evaluate fully constant binary expressions
   if (t.kind === "binary" && t.args.every((a) => a.kind === "const")) {
     const values = t.args.map((a) => (a as { kind: "const"; value: number }).value);
+    const m = modulus(config.bits);
     let result: number;
     switch (t.op) {
       case "xor": result = values.reduce((a, b) => a ^ b, 0); break;
-      case "and": result = values.reduce((a, b) => a & b, modulus(config.bits) - 1); break;
+      case "and": result = values.reduce((a, b) => a & b, m - 1); break;
       case "or": result = values.reduce((a, b) => a | b, 0); break;
+      case "add": result = values.reduce((a, b) => (a + b) % m); break;
+      case "sub": result = ((values[0] - values[1]) % m + m) % m; break;
+      case "mul": result = values.reduce((a, b) => (a * b) % m); break;
+      default: return t;
     }
     return { kind: "const", value: result };
   }
@@ -168,8 +173,11 @@ function ruleConstantReduction(t: Term, config: RingConfig): Term {
 
 // ── Rule (d): Associative flattening ────────────────────────────────────────
 
+const ASSOCIATIVE_OPS = new Set(["xor", "and", "or", "add", "mul"]);
+
 function ruleAssociativeFlatten(t: Term): Term {
   if (t.kind !== "binary") return t;
+  if (!ASSOCIATIVE_OPS.has(t.op)) return t; // sub is NOT associative
 
   const flattened: Term[] = [];
   for (const arg of t.args) {
@@ -185,8 +193,11 @@ function ruleAssociativeFlatten(t: Term): Term {
 
 // ── Rule (e): Commutative sorting ───────────────────────────────────────────
 
+const COMMUTATIVE_OPS = new Set(["xor", "and", "or", "add", "mul"]);
+
 function ruleCommutativeSort(t: Term): Term {
   if (t.kind !== "binary") return t;
+  if (!COMMUTATIVE_OPS.has(t.op)) return t; // sub is NOT commutative
 
   const sorted = [...t.args].sort((a, b) => {
     // Constants first
@@ -205,15 +216,27 @@ function ruleIdentityElimination(t: Term, config: RingConfig): Term {
   if (t.kind !== "binary") return t;
   const m = modulus(config.bits);
 
-  // Annihilator check: x AND 0 → 0, x OR mask → mask
+  // Annihilator checks: x AND 0 → 0, x OR mask → mask, x MUL 0 → 0
   if (t.op === "and" && t.args.some(a => a.kind === "const" && a.value === 0)) {
     return { kind: "const", value: 0 };
   }
   if (t.op === "or" && t.args.some(a => a.kind === "const" && a.value === m - 1)) {
     return { kind: "const", value: m - 1 };
   }
+  if (t.op === "mul" && t.args.some(a => a.kind === "const" && a.value === 0)) {
+    return { kind: "const", value: 0 };
+  }
 
-  const identity = t.op === "xor" ? 0 : t.op === "or" ? 0 : m - 1; // AND identity is all-1s mask
+  // Identity elements per operation
+  let identity: number;
+  switch (t.op) {
+    case "xor": identity = 0; break;
+    case "or":  identity = 0; break;
+    case "and": identity = m - 1; break;
+    case "add": identity = 0; break;
+    case "mul": identity = 1; break;
+    default: return t; // sub has no symmetric identity to eliminate
+  }
 
   const filtered = t.args.filter((a) => {
     if (a.kind === "const" && a.value === identity) return false;
