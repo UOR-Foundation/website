@@ -2148,6 +2148,14 @@ function observableMetrics(url: URL, rl: RateLimitResult): Response {
       "observable:value": 0,
       "description": "All ring operations commute at the element level (ring is commutative)"
     },
+    "_links": {
+      "detailed_metric":   "GET /bridge/observable/metric?a={x}&b={target}&type={ring|hamming|incompatibility}",
+      "stratum_analysis":  "GET /bridge/observable/stratum?value={x}&type={value|delta|trajectory}",
+      "path_analysis":     "POST /bridge/observable/path",
+      "curvature":         "GET /bridge/observable/curvature?x={x}&f={op}&g={op}",
+      "holonomy":          "POST /bridge/observable/holonomy",
+      "stream_analysis":   "POST /bridge/observable/stream"
+    },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/observable.rs"
   }, CACHE_HEADERS_BRIDGE, etag, rl);
 }
@@ -2212,22 +2220,23 @@ async function observableMetric(url: URL, rl: RateLimitResult): Promise<Response
   const etag = makeETag('/bridge/observable/metric', { a: String(a), b: String(b), type: metricType, q: String(quantum) });
 
   return jsonResp(gradeResponse({
+    "summary": { "a": a, "b": b, "metric_type": metricType, "distance": value },
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/observable/metric/${metricType}/a${a}_b${b}_q${quantum}`,
-    "@type": obsTypeMap[metricType],
+    "@id": `https://uor.foundation/instance/observable/${metricType}-metric/${a}-${b}`,
+    "@type": ["observable:Observable", "observable:MetricObservable", obsTypeMap[metricType]],
+    "observable:quantum": n,
     "observable:value": value,
     "observable:unit": unitMap[metricType],
-    "observable:source": { "@id": datumIRI(a, n) },
-    "observable:target": { "@id": datumIRI(b, n) },
+    "observable:source": { "@id": datumIRI(a, n), "schema:value": a },
+    "observable:target": { "@id": datumIRI(b, n), "schema:value": b },
     "formula": formulaMap[metricType],
-    "schema:ringQuantum": quantum,
-    "schema:modulus": m,
     "derivation:derivationId": derivId,
     "all_metrics": {
       "ring_distance": ringDist,
       "hamming_distance": hammingDist,
       "incompatibility": incomp
     },
+    "critical_identity_holds": neg(bnot(a, n), n) === succOp(a, n),
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/observable.rs"
   }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
 }
@@ -2256,12 +2265,14 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
     return jsonResp(gradeResponse({
       "@context": UOR_CONTEXT_URL,
       "@id": `https://uor.foundation/observable/stratum/value/${v}_q${quantum}`,
-      "@type": "observable:StratumValue",
+      "@type": ["observable:Observable", "observable:StratumObservable", "observable:StratumValue"],
+      "observable:quantum": n,
       "observable:value": stratum,
       "observable:unit": "stratum_index",
-      "observable:source": { "@id": datumIRI(v, n) },
-      "schema:ringQuantum": quantum,
+      "observable:source": { "@id": datumIRI(v, n), "schema:value": v },
+      "interpretation": `stratum = popcount(${v}) = popcount(${v.toString(2).padStart(n, '0')}) = ${stratum} set bits`,
       "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+      "critical_identity_holds": neg(bnot(v, n), n) === succOp(v, n),
     }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
   }
 
@@ -2279,14 +2290,14 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
     return jsonResp(gradeResponse({
       "@context": UOR_CONTEXT_URL,
       "@id": `https://uor.foundation/observable/stratum/delta/a${a}_b${b}_q${quantum}`,
-      "@type": "observable:StratumDelta",
+      "@type": ["observable:Observable", "observable:StratumObservable", "observable:StratumDelta"],
+      "observable:quantum": n,
       "observable:value": sb - sa,
       "observable:unit": "stratum_steps",
-      "observable:source": { "@id": datumIRI(a, n) },
-      "observable:target": { "@id": datumIRI(b, n) },
+      "observable:source": { "@id": datumIRI(a, n), "schema:value": a },
+      "observable:target": { "@id": datumIRI(b, n), "schema:value": b },
       "stratum_a": sa,
       "stratum_b": sb,
-      "schema:ringQuantum": quantum,
       "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
     }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
   }
@@ -2313,11 +2324,13 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/observable/stratum/trajectory/${start}_${opRaw}_${steps}_q${quantum}`,
-    "@type": "observable:StratumTrajectory",
+    "@type": ["observable:Observable", "observable:StratumObservable", "observable:StratumTrajectory"],
+    "observable:quantum": n,
     "observable:unit": "stratum_index",
-    "trajectory": trajectory,
     "observable:source": { "@id": datumIRI(start, n) },
-    "schema:ringQuantum": quantum,
+    "trajectory": trajectory,
+    "operation_applied": opRaw,
+    "critical_identity_holds": neg(bnot(start, n), n) === succOp(start, n),
     "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
   }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
 }
@@ -2359,15 +2372,17 @@ async function observablePath(req: Request, rl: RateLimitResult): Promise<Respon
   const hashHex = await makeSha256(`path_${pathType}_${path.join(',')}_q${quantum}`);
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/observable/path/${pathType}/${hashHex}`,
-    "@type": obsTypeMap[pathType],
+    "@id": `https://uor.foundation/observable/path/${pathType}/${hashHex.slice(0, 16)}`,
+    "@type": ["observable:Observable", "observable:PathObservable", obsTypeMap[pathType]],
+    "observable:quantum": n,
     "observable:value": valueMap[pathType],
     "observable:unit": unitMap[pathType],
+    "path_values": path,
+    "path_iris": path.map((v: number) => datumIRI(v, n)),
     "path_length": pathLen,
     "total_variation": totalVar,
     "winding_number": windingNum,
-    "path_elements": path.length,
-    "schema:ringQuantum": quantum,
+    "formula": pathType === 'winding_number' ? `W = Σ signed_step / |R_${n}| where signed_step uses shortest-path convention` : undefined,
     "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
   }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
 }
@@ -2398,19 +2413,22 @@ async function observableCurvature(url: URL, rl: RateLimitResult): Promise<Respo
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/observable/curvature/${x}_${f}_${g}_q${quantum}`,
-    "@type": "observable:Commutator",
+    "@type": ["observable:Observable", "observable:CurvatureObservable", "observable:Commutator"],
+    "observable:quantum": n,
     "observable:value": commValue,
-    "observable:unit": "ring_element",
+    "observable:unit": "dimensionless",
+    "observable:source": { "@id": datumIRI(x, n), "schema:value": x },
     "x": x,
     "f": f,
     "g": g,
-    "f_g_x": fg_x,
-    "g_f_x": gf_x,
-    "commutator": commValue,
+    "f_of_g_x": fg_x,
+    "g_of_f_x": gf_x,
+    "commutator_value": commValue,
     "is_commutative": commValue === 0,
     "formula": `[${f},${g}](${x}) = ${f}(${g}(${x})) - ${g}(${f}(${x})) = ${fg_x} - ${gf_x} = ${commValue} mod ${m}`,
-    "observable:source": { "@id": datumIRI(x, n) },
-    "schema:ringQuantum": quantum,
+    "geometric_interpretation": commValue === 0
+      ? `zero commutator — ${f} and ${g} commute at x=${x}`
+      : `non-zero commutator — ${f} and ${g} do not commute at x=${x}`,
     "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
   }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
 }
@@ -2434,15 +2452,17 @@ async function observableHolonomy(req: Request, rl: RateLimitResult): Promise<Re
   const hashHex = await makeSha256(`holonomy_${path.join(',')}_q${quantum}`);
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/observable/holonomy/${hashHex}`,
-    "@type": "observable:HolonomyObservable",
+    "@id": `https://uor.foundation/observable/holonomy/${hashHex.slice(0, 16)}`,
+    "@type": ["observable:Observable", "observable:HolonomyObservable"],
+    "observable:quantum": n,
     "observable:value": accum,
     "observable:unit": "ring_element",
     "path_length": path.length - 1,
     "accumulated_transform": accum,
     "is_closed": isClosed,
     "is_trivial": accum === 0,
-    "schema:ringQuantum": quantum,
+    "formula": "H = Σ (path[i+1] - path[i]) mod 256 for closed path",
+    "geometric_interpretation": accum === 0 ? "trivial holonomy — closed path with no net displacement" : `non-trivial holonomy — net displacement of ${accum}`,
     "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
   }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
 }
@@ -2469,17 +2489,21 @@ async function observableStream(req: Request, rl: RateLimitResult): Promise<Resp
     for (const mt of metrics) {
       if (mt === 'stratum') {
         const strata = w.map(v => hammingWeightFn(v));
+        const meanStratum = strata.reduce((a, b) => a + b, 0) / strata.length;
+        const variance = strata.reduce((s, v) => s + (v - meanStratum) ** 2, 0) / strata.length;
         windowMetrics.push({
           "@type": "observable:StratumTrajectory",
           "strata": strata,
-          "mean_stratum": strata.reduce((a, b) => a + b, 0) / strata.length
+          "mean_stratum": Math.round(meanStratum * 100) / 100,
+          "stratum_variance": Math.round(variance * 100) / 100
         });
       } else if (mt === 'hamming') {
         const dists = [];
         for (let j = 0; j < w.length - 1; j++) dists.push(hammingDistance(w[j], w[j + 1]));
         windowMetrics.push({
           "@type": "observable:HammingMetric",
-          "successive_distances": dists
+          "successive_distances": dists,
+          "total_hamming_drift": dists.reduce((a, b) => a + b, 0)
         });
       } else if (mt === 'curvature' || mt === 'ring') {
         const ringDists = [];
@@ -2491,9 +2515,10 @@ async function observableStream(req: Request, rl: RateLimitResult): Promise<Resp
           incompSum += Math.abs(rd - hd);
         }
         windowMetrics.push({
-          "@type": "observable:CurvatureFlux",
+          "@type": "observable:IncompatibilityMetric",
           "ring_distances": ringDists,
-          "incompatibility": incompSum
+          "hamming_distances": w.slice(0, -1).map((v, j) => hammingDistance(v, w[j + 1])),
+          "curvature_flux": incompSum
         });
       }
     }
@@ -2503,12 +2528,12 @@ async function observableStream(req: Request, rl: RateLimitResult): Promise<Resp
   const hashHex = await makeSha256(`stream_q${quantum}_${stream.length}`);
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/observable/stream/${hashHex}`,
+    "@id": `https://uor.foundation/observable/stream/${hashHex.slice(0, 16)}`,
     "@type": "observable:StreamAnalysis",
+    "observable:quantum": n,
     "total_values": stream.length,
     "window_size": windowSize,
     "windows_count": windows.length,
-    "schema:ringQuantum": quantum,
     "windows": windows,
     "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
   }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
