@@ -6,18 +6,17 @@ import {
   Shield, ShieldCheck, Terminal, Zap, Clock,
 } from "lucide-react";
 import uorIcon from "@/assets/uor-icon-new.png";
-import { Q0 } from "@/modules/ring-core/ring";
+import { Q0 } from "@/modules/ring-core";
 import { supabase } from "@/integrations/supabase/client";
-import { systemIntegrityCheck } from "@/modules/self-verify";
+import { systemIntegrityCheck, getRecentReceipts } from "@/modules/self-verify";
 import type { IntegrityReport } from "@/modules/self-verify";
-import { getRecentReceipts } from "@/modules/self-verify/audit-trail";
 import type { DerivationReceipt } from "@/modules/derivation/receipt";
-import { uor_derive } from "@/modules/agent-tools/tools";
-import type { DeriveOutput } from "@/modules/agent-tools/tools";
-import { ALL_GRADES, gradeInfo } from "@/modules/epistemic/grading";
+import { uor_derive } from "@/modules/agent-tools";
+import type { DeriveOutput } from "@/modules/agent-tools";
+import { ALL_GRADES, gradeInfo } from "@/modules/epistemic";
 import { EpistemicBadge } from "@/modules/epistemic";
-import { executeSparql } from "@/modules/sparql/executor";
-import type { SparqlResult } from "@/modules/sparql/executor";
+import { executeSparql } from "@/modules/sparql";
+import type { SparqlResult } from "@/modules/sparql";
 
 // ── Sidebar nav items ───────────────────────────────────────────────────────
 

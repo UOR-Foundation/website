@@ -2,6 +2,7 @@ import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Tag, ExternalLink, Globe, ShieldCheck, Bot, Microscope, Layers, Rocket } from "lucide-react";
 import coverImage from "@/assets/blog-uor-framework-launch.png";
+import { DISCORD_URL, GITHUB_FRAMEWORK_URL } from "@/data/external-links";
 
 const BlogPost3 = () => {
   return (
@@ -241,7 +242,7 @@ const BlogPost3 = () => {
                 The full specification, source code, and documentation are open, right now. Read it. Challenge it. Build on it.
               </p>
               <a
-                href="https://github.com/UOR-Foundation/UOR-Framework"
+                href={GITHUB_FRAMEWORK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-4 text-primary font-medium hover:underline"
@@ -261,7 +262,7 @@ const BlogPost3 = () => {
             </p>
             <div className="flex flex-wrap gap-3">
               <a
-                href="https://github.com/UOR-Foundation/UOR-Framework"
+                href={GITHUB_FRAMEWORK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary"
@@ -269,7 +270,7 @@ const BlogPost3 = () => {
                 View the Framework
               </a>
               <a
-                href="https://discord.gg/ZwuZaNyuve"
+                href={DISCORD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-outline"

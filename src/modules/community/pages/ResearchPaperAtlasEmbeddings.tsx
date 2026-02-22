@@ -1,6 +1,7 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ExternalLink, FileText, Users, Calendar, BookOpen, CheckCircle, FlaskConical, Lightbulb, Quote } from "lucide-react";
+import { GITHUB_ATLAS_URL, GITHUB_ATLAS_LEAN4_URL } from "@/data/external-links";
 
 const ResearchPaperAtlasEmbeddings = () => {
   return (
@@ -79,7 +80,7 @@ const ResearchPaperAtlasEmbeddings = () => {
             {/* Access links */}
             <div className="flex flex-wrap gap-3">
               <a
-                href="https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings"
+                href={GITHUB_ATLAS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:border-primary/30 hover:shadow-sm transition-all font-body"
@@ -88,7 +89,7 @@ const ResearchPaperAtlasEmbeddings = () => {
                 Source &amp; Documentation
               </a>
               <a
-                href="https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings/lean4"
+                href={GITHUB_ATLAS_LEAN4_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:border-primary/30 hover:shadow-sm transition-all font-body"
@@ -331,7 +332,7 @@ const ResearchPaperAtlasEmbeddings = () => {
               Back to Research
             </Link>
             <a
-              href="https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings"
+              href={GITHUB_ATLAS_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline font-body"

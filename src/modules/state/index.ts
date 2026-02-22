@@ -24,3 +24,4 @@ export type {
   EvalFrame,
   EvalTransition,
 } from "./state";
+export { default as SessionsPage } from "./pages/SessionsPage";

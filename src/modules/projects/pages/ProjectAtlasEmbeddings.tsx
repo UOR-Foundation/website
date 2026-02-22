@@ -1,6 +1,6 @@
 import ProjectDetailLayout from "../components/ProjectDetailLayout";
 import heroImg from "@/assets/project-atlas.png";
-import { GITHUB_ATLAS_URL } from "@/data/external-links";
+import { GITHUB_ATLAS_URL, GITHUB_ATLAS_LEAN4_URL } from "@/data/external-links";
 
 const ProjectAtlasEmbeddings = () => (
   <ProjectDetailLayout
@@ -89,7 +89,7 @@ const ProjectAtlasEmbeddings = () => (
             </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span>Explore the <a href="https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings/lean4" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Lean 4 formal verification</a> of the core claims.</span>
+              <span>Explore the <a href={GITHUB_ATLAS_LEAN4_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Lean 4 formal verification</a> of the core claims.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
