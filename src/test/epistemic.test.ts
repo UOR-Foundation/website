@@ -24,7 +24,7 @@ describe("epistemic grading", () => {
 
   it("gradeToLabel returns human labels", () => {
     expect(gradeToLabel("A")).toBe("Algebraically Proven");
-    expect(gradeToLabel("D")).toBe("Unverified");
+    expect(gradeToLabel("D")).toBe("LLM-Generated / Unverified");
   });
 
   it("gradeToStyles returns class strings", () => {
