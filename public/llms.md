@@ -511,6 +511,30 @@ Five canonical agent tool functions (Section 6.4). All return `epistemic_grade` 
 
 ---
 
+## Morphism Transform API (§5)
+
+Three endpoints expose the morphism: namespace for structure-preserving maps between rings:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/bridge/morphism/transform` | POST | Verify an embedding, isometry, or action between two quantum rings. Body: `{source_quantum, target_quantum, transform_type}` |
+| `/bridge/morphism/isometry` | GET | Verify neg or bnot as an involution/metric-preserving isometry. Params: `op=neg\|bnot`, `quantum` |
+| `/bridge/morphism/coerce` | GET | Cross-quantum value coercion (embed or project). Params: `value`, `from_q`, `to_q` |
+
+### Enhanced Correlate (mode=full)
+
+`GET /tools/correlate?a=85&b=170&mode=full` returns extended alignment analysis:
+- `alignment_analysis.skos_match_recommendation` — one of `skos:exactMatch`, `skos:closeMatch`, `skos:broadMatch`, `skos:narrowMatch`, `skos:relatedMatch`
+- `derivation_comparison` — compares derivation_ids of both values
+
+SKOS thresholds: fidelity == 1.0 → exactMatch, ≥ 0.875 → closeMatch, ≥ 0.625 → broadMatch/narrowMatch, < 0.625 → relatedMatch.
+
+### SHACL Shapes for Morphisms
+
+`TransformShape` and `IsometryShape` added to `https://uor.foundation/shapes/uor-shapes.ttl`.
+
+---
+
 ## What Problems Does UOR Solve?
 
 | # | Problem | Agent Impact Today | UOR Solution | Key Namespace | Source |
