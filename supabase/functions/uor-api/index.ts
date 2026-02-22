@@ -66,6 +66,12 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/bridge/proof/coherence':            ['POST', 'OPTIONS'],
   '/bridge/cert/involution':            ['GET', 'OPTIONS'],
   '/bridge/observable/metrics':         ['GET', 'OPTIONS'],
+  '/bridge/observable/metric':          ['GET', 'OPTIONS'],
+  '/bridge/observable/stratum':         ['GET', 'OPTIONS'],
+  '/bridge/observable/path':            ['POST', 'OPTIONS'],
+  '/bridge/observable/curvature':       ['GET', 'OPTIONS'],
+  '/bridge/observable/holonomy':        ['POST', 'OPTIONS'],
+  '/bridge/observable/stream':          ['POST', 'OPTIONS'],
   '/user/type/primitives':              ['GET', 'OPTIONS'],
   '/bridge/derivation':                 ['GET', 'OPTIONS'],
   '/bridge/trace':                      ['GET', 'OPTIONS'],
@@ -2137,6 +2143,368 @@ function observableMetrics(url: URL, rl: RateLimitResult): Response {
   }, CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
+// ── Observable helper functions ─────────────────────────────────────────────
+function ringDistance(a: number, b: number, n: number): number {
+  const m = modulus(n);
+  const fwd = ((b - a) % m + m) % m;
+  const bwd = ((a - b) % m + m) % m;
+  return Math.min(fwd, bwd);
+}
+
+function hammingDistance(a: number, b: number): number {
+  return hammingWeightFn(a ^ b);
+}
+
+async function makeSha256(input: string): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// GET /bridge/observable/metric?a=85&b=170&type=ring&quantum=0
+async function observableMetric(url: URL, rl: RateLimitResult): Promise<Response> {
+  const aRes = parseIntParam(url.searchParams.get('a'), 'a', 0, 65535);
+  if ('err' in aRes) return aRes.err;
+  const bRes = parseIntParam(url.searchParams.get('b'), 'b', 0, 65535);
+  if ('err' in bRes) return bRes.err;
+  const metricType = url.searchParams.get('type') ?? 'ring';
+  if (!['ring', 'hamming', 'incompatibility'].includes(metricType))
+    return error400('type must be ring, hamming, or incompatibility', 'type', rl);
+  const qRaw = url.searchParams.get('quantum') ?? '0';
+  const qRes = parseIntParam(qRaw, 'quantum', 0, 2);
+  if ('err' in qRes) return qRes.err;
+  const n = (qRes.val + 1) * 8;
+  const a = aRes.val, b = bRes.val;
+  const m = modulus(n);
+  if (a >= m) return error400(`a must be in [0, ${m-1}]`, 'a', rl);
+  if (b >= m) return error400(`b must be in [0, ${m-1}]`, 'b', rl);
+
+  const quantum = qRes.val;
+  const ringDist = ringDistance(a, b, n);
+  const hammingDist = hammingDistance(a, b);
+  const incomp = Math.abs(ringDist - hammingDist);
+
+  const obsTypeMap: Record<string, string> = {
+    ring: 'observable:RingMetric',
+    hamming: 'observable:HammingMetric',
+    incompatibility: 'observable:IncompatibilityMetric'
+  };
+  const unitMap: Record<string, string> = {
+    ring: 'ring_steps', hamming: 'bits', incompatibility: 'dimensionless'
+  };
+  const formulaMap: Record<string, string> = {
+    ring: `d_R(${a}, ${b}) = min(|${a}-${b}|, ${m}-|${a}-${b}|) = ${ringDist}`,
+    hamming: `d_H(${a}, ${b}) = popcount(${a} XOR ${b}) = ${hammingDist}`,
+    incompatibility: `kappa(${a}, ${b}) = |d_R - d_H| = |${ringDist} - ${hammingDist}| = ${incomp}`
+  };
+  const value = metricType === 'ring' ? ringDist : metricType === 'hamming' ? hammingDist : incomp;
+
+  const hashHex = (await makeSha256(`metric_${metricType}_${a}_${b}_q${quantum}`)).slice(0, 16);
+  const derivId = `urn:uor:derivation:sha256:${hashHex}`;
+  const etag = makeETag('/bridge/observable/metric', { a: String(a), b: String(b), type: metricType, q: String(quantum) });
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@id": `https://uor.foundation/observable/metric/${metricType}/a${a}_b${b}_q${quantum}`,
+    "@type": obsTypeMap[metricType],
+    "observable:value": value,
+    "observable:unit": unitMap[metricType],
+    "observable:source": { "@id": datumIRI(a, n) },
+    "observable:target": { "@id": datumIRI(b, n) },
+    "formula": formulaMap[metricType],
+    "schema:ringQuantum": quantum,
+    "schema:modulus": m,
+    "derivation:derivationId": derivId,
+    "all_metrics": {
+      "ring_distance": ringDist,
+      "hamming_distance": hammingDist,
+      "incompatibility": incomp
+    },
+    "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/observable.rs"
+  }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
+// GET /bridge/observable/stratum?value=42&type=value&quantum=0
+// Also: ?a=42&b=170&type=delta  or  ?start=1&op=succ&steps=8&type=trajectory
+async function observableStratum(url: URL, rl: RateLimitResult): Promise<Response> {
+  const stratumType = url.searchParams.get('type') ?? 'value';
+  if (!['value', 'delta', 'trajectory'].includes(stratumType))
+    return error400('type must be value, delta, or trajectory', 'type', rl);
+  const qRaw = url.searchParams.get('quantum') ?? '0';
+  const qRes = parseIntParam(qRaw, 'quantum', 0, 2);
+  if ('err' in qRes) return qRes.err;
+  const n = (qRes.val + 1) * 8;
+  const quantum = qRes.val;
+  const m = modulus(n);
+
+  if (stratumType === 'value') {
+    const vRes = parseIntParam(url.searchParams.get('value'), 'value', 0, 65535);
+    if ('err' in vRes) return vRes.err;
+    const v = vRes.val;
+    if (v >= m) return error400(`value must be in [0, ${m-1}]`, 'value', rl);
+    const stratum = hammingWeightFn(v);
+    const hashHex = (await makeSha256(`stratum_value_${v}_q${quantum}`)).slice(0, 16);
+    const etag = makeETag('/bridge/observable/stratum', { v: String(v), type: 'value', q: String(quantum) });
+    return jsonResp(gradeResponse({
+      "@context": UOR_CONTEXT_URL,
+      "@id": `https://uor.foundation/observable/stratum/value/${v}_q${quantum}`,
+      "@type": "observable:StratumValue",
+      "observable:value": stratum,
+      "observable:unit": "stratum_index",
+      "observable:source": { "@id": datumIRI(v, n) },
+      "schema:ringQuantum": quantum,
+      "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+    }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+  }
+
+  if (stratumType === 'delta') {
+    const aRes = parseIntParam(url.searchParams.get('a'), 'a', 0, 65535);
+    if ('err' in aRes) return aRes.err;
+    const bRes = parseIntParam(url.searchParams.get('b'), 'b', 0, 65535);
+    if ('err' in bRes) return bRes.err;
+    const a = aRes.val, b = bRes.val;
+    if (a >= m) return error400(`a must be in [0, ${m-1}]`, 'a', rl);
+    if (b >= m) return error400(`b must be in [0, ${m-1}]`, 'b', rl);
+    const sa = hammingWeightFn(a), sb = hammingWeightFn(b);
+    const hashHex = (await makeSha256(`stratum_delta_${a}_${b}_q${quantum}`)).slice(0, 16);
+    const etag = makeETag('/bridge/observable/stratum', { a: String(a), b: String(b), type: 'delta', q: String(quantum) });
+    return jsonResp(gradeResponse({
+      "@context": UOR_CONTEXT_URL,
+      "@id": `https://uor.foundation/observable/stratum/delta/a${a}_b${b}_q${quantum}`,
+      "@type": "observable:StratumDelta",
+      "observable:value": sb - sa,
+      "observable:unit": "stratum_steps",
+      "observable:source": { "@id": datumIRI(a, n) },
+      "observable:target": { "@id": datumIRI(b, n) },
+      "stratum_a": sa,
+      "stratum_b": sb,
+      "schema:ringQuantum": quantum,
+      "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+    }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+  }
+
+  // trajectory
+  const startRes = parseIntParam(url.searchParams.get('start'), 'start', 0, 65535);
+  if ('err' in startRes) return startRes.err;
+  const stepsRes = parseIntParam(url.searchParams.get('steps') ?? '8', 'steps', 1, 256);
+  if ('err' in stepsRes) return stepsRes.err;
+  const opRaw = url.searchParams.get('op') ?? 'succ';
+  if (!['neg', 'bnot', 'succ', 'pred'].includes(opRaw))
+    return error400('op must be neg, bnot, succ, or pred', 'op', rl);
+  const start = startRes.val, steps = stepsRes.val;
+  if (start >= m) return error400(`start must be in [0, ${m-1}]`, 'start', rl);
+
+  const trajectory: Array<{ step: number; value: number; datum_iri: string; stratum: number }> = [];
+  let current = start;
+  for (let i = 0; i <= steps; i++) {
+    trajectory.push({ step: i, value: current, datum_iri: datumIRI(current, n), stratum: hammingWeightFn(current) });
+    current = applyOp(current, opRaw as OpName, n);
+  }
+  const hashHex = (await makeSha256(`stratum_trajectory_${start}_${opRaw}_${steps}_q${quantum}`)).slice(0, 16);
+  const etag = makeETag('/bridge/observable/stratum', { start: String(start), op: opRaw, steps: String(steps), q: String(quantum) });
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@id": `https://uor.foundation/observable/stratum/trajectory/${start}_${opRaw}_${steps}_q${quantum}`,
+    "@type": "observable:StratumTrajectory",
+    "observable:unit": "stratum_index",
+    "trajectory": trajectory,
+    "observable:source": { "@id": datumIRI(start, n) },
+    "schema:ringQuantum": quantum,
+    "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+  }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
+// POST /bridge/observable/path  body: { path: [int,...], type: "length"|"total_variation"|"winding_number", quantum: 0 }
+async function observablePath(req: Request, rl: RateLimitResult): Promise<Response> {
+  let body: { path?: number[]; type?: string; quantum?: number };
+  try { body = await req.json(); } catch { return error400('Invalid JSON body', 'body', rl); }
+  const path = body.path;
+  if (!Array.isArray(path) || path.length < 2) return error400('path must be an array of at least 2 integers', 'path', rl);
+  const pathType = body.type ?? 'length';
+  if (!['length', 'total_variation', 'winding_number'].includes(pathType))
+    return error400('type must be length, total_variation, or winding_number', 'type', rl);
+  const quantum = body.quantum ?? 0;
+  const n = (quantum + 1) * 8;
+  const m = modulus(n);
+
+  const pathLen = path.length - 1;
+  const totalVar = path.slice(1).reduce((sum, v, i) => sum + ringDistance(path[i], v, n), 0);
+  // Winding number: total signed displacement / modulus
+  let totalDisp = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    let step = path[i + 1] - path[i];
+    if (Math.abs(step) > m / 2) step = step > 0 ? step - m : step + m;
+    totalDisp += step;
+  }
+  const windingNum = Math.floor(totalDisp / m);
+
+  const obsTypeMap: Record<string, string> = {
+    length: 'observable:PathLength', total_variation: 'observable:TotalVariation', winding_number: 'observable:WindingNumber'
+  };
+  const valueMap: Record<string, number> = {
+    length: pathLen, total_variation: totalVar, winding_number: windingNum
+  };
+  const unitMap: Record<string, string> = {
+    length: 'steps', total_variation: 'ring_steps', winding_number: 'laps'
+  };
+
+  const hashHex = (await makeSha256(`path_${pathType}_${path.join(',')}_q${quantum}`)).slice(0, 16);
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@id": `https://uor.foundation/observable/path/${pathType}/${hashHex}`,
+    "@type": obsTypeMap[pathType],
+    "observable:value": valueMap[pathType],
+    "observable:unit": unitMap[pathType],
+    "path_length": pathLen,
+    "total_variation": totalVar,
+    "winding_number": windingNum,
+    "path_elements": path.length,
+    "schema:ringQuantum": quantum,
+    "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+  }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// GET /bridge/observable/curvature?x=42&f=neg&g=bnot&quantum=0
+async function observableCurvature(url: URL, rl: RateLimitResult): Promise<Response> {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const f = url.searchParams.get('f') ?? 'neg';
+  const g = url.searchParams.get('g') ?? 'bnot';
+  if (!['neg', 'bnot', 'succ', 'pred'].includes(f)) return error400('f must be neg, bnot, succ, or pred', 'f', rl);
+  if (!['neg', 'bnot', 'succ', 'pred'].includes(g)) return error400('g must be neg, bnot, succ, or pred', 'g', rl);
+  const qRaw = url.searchParams.get('quantum') ?? '0';
+  const qRes = parseIntParam(qRaw, 'quantum', 0, 2);
+  if ('err' in qRes) return qRes.err;
+  const n = (qRes.val + 1) * 8;
+  const quantum = qRes.val;
+  const m = modulus(n);
+  const x = xRes.val;
+  if (x >= m) return error400(`x must be in [0, ${m-1}]`, 'x', rl);
+
+  const fg_x = applyOp(applyOp(x, g as OpName, n), f as OpName, n);
+  const gf_x = applyOp(applyOp(x, f as OpName, n), g as OpName, n);
+  const commValue = ((fg_x - gf_x) % m + m) % m;
+
+  const hashHex = (await makeSha256(`curvature_${x}_${f}_${g}_q${quantum}`)).slice(0, 16);
+  const etag = makeETag('/bridge/observable/curvature', { x: String(x), f, g, q: String(quantum) });
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@id": `https://uor.foundation/observable/curvature/${x}_${f}_${g}_q${quantum}`,
+    "@type": "observable:Commutator",
+    "observable:value": commValue,
+    "observable:unit": "ring_element",
+    "x": x,
+    "f": f,
+    "g": g,
+    "f_g_x": fg_x,
+    "g_f_x": gf_x,
+    "commutator": commValue,
+    "is_commutative": commValue === 0,
+    "formula": `[${f},${g}](${x}) = ${f}(${g}(${x})) - ${g}(${f}(${x})) = ${fg_x} - ${gf_x} = ${commValue} mod ${m}`,
+    "observable:source": { "@id": datumIRI(x, n) },
+    "schema:ringQuantum": quantum,
+    "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+  }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
+// POST /bridge/observable/holonomy  body: { path: [int,...], quantum: 0 }
+async function observableHolonomy(req: Request, rl: RateLimitResult): Promise<Response> {
+  let body: { path?: number[]; quantum?: number };
+  try { body = await req.json(); } catch { return error400('Invalid JSON body', 'body', rl); }
+  const path = body.path;
+  if (!Array.isArray(path) || path.length < 3) return error400('path must be an array of at least 3 integers', 'path', rl);
+  const quantum = body.quantum ?? 0;
+  const n = (quantum + 1) * 8;
+  const m = modulus(n);
+  const isClosed = path[0] === path[path.length - 1];
+
+  let accum = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    accum = ((accum + path[i + 1] - path[i]) % m + m) % m;
+  }
+
+  const hashHex = (await makeSha256(`holonomy_${path.join(',')}_q${quantum}`)).slice(0, 16);
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@id": `https://uor.foundation/observable/holonomy/${hashHex}`,
+    "@type": "observable:HolonomyObservable",
+    "observable:value": accum,
+    "observable:unit": "ring_element",
+    "path_length": path.length - 1,
+    "accumulated_transform": accum,
+    "is_closed": isClosed,
+    "is_trivial": accum === 0,
+    "schema:ringQuantum": quantum,
+    "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+  }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// POST /bridge/observable/stream  body: { stream: [int,...], window_size: 8, metrics: ["stratum","hamming","curvature"], quantum: 0 }
+async function observableStream(req: Request, rl: RateLimitResult): Promise<Response> {
+  let body: { stream?: number[]; window_size?: number; metrics?: string[]; quantum?: number };
+  try { body = await req.json(); } catch { return error400('Invalid JSON body', 'body', rl); }
+  const stream = body.stream;
+  if (!Array.isArray(stream) || stream.length < 2) return error400('stream must be an array of at least 2 integers', 'stream', rl);
+  if (stream.length > 10000) return error400('stream max length is 10000', 'stream', rl);
+  const windowSize = body.window_size ?? 8;
+  if (windowSize < 2 || windowSize > stream.length) return error400(`window_size must be 2-${stream.length}`, 'window_size', rl);
+  const metrics = body.metrics ?? ['stratum', 'hamming'];
+  const validMetrics = ['stratum', 'hamming', 'curvature', 'ring'];
+  for (const mt of metrics) { if (!validMetrics.includes(mt)) return error400(`unknown metric: ${mt}`, 'metrics', rl); }
+  const quantum = body.quantum ?? 0;
+  const n = (quantum + 1) * 8;
+
+  const windows: Array<Record<string, unknown>> = [];
+  for (let i = 0; i <= stream.length - windowSize; i++) {
+    const w = stream.slice(i, i + windowSize);
+    const windowMetrics: Array<Record<string, unknown>> = [];
+    for (const mt of metrics) {
+      if (mt === 'stratum') {
+        const strata = w.map(v => hammingWeightFn(v));
+        windowMetrics.push({
+          "@type": "observable:StratumTrajectory",
+          "strata": strata,
+          "mean_stratum": strata.reduce((a, b) => a + b, 0) / strata.length
+        });
+      } else if (mt === 'hamming') {
+        const dists = [];
+        for (let j = 0; j < w.length - 1; j++) dists.push(hammingDistance(w[j], w[j + 1]));
+        windowMetrics.push({
+          "@type": "observable:HammingMetric",
+          "successive_distances": dists
+        });
+      } else if (mt === 'curvature' || mt === 'ring') {
+        const ringDists = [];
+        let incompSum = 0;
+        for (let j = 0; j < w.length - 1; j++) {
+          const rd = ringDistance(w[j], w[j + 1], n);
+          const hd = hammingDistance(w[j], w[j + 1]);
+          ringDists.push(rd);
+          incompSum += Math.abs(rd - hd);
+        }
+        windowMetrics.push({
+          "@type": "observable:CurvatureFlux",
+          "ring_distances": ringDists,
+          "incompatibility": incompSum
+        });
+      }
+    }
+    windows.push({ window_index: i, values: w, metrics: windowMetrics });
+  }
+
+  const hashHex = (await makeSha256(`stream_q${quantum}_${stream.length}`)).slice(0, 16);
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@id": `https://uor.foundation/observable/stream/${hashHex}`,
+    "@type": "observable:StreamAnalysis",
+    "total_values": stream.length,
+    "window_size": windowSize,
+    "windows_count": windows.length,
+    "schema:ringQuantum": quantum,
+    "windows": windows,
+    "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+  }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
 // GET /user/type/primitives
 function typeList(rl: RateLimitResult): Response {
   const etag = makeETag('/user/type/primitives', {});
@@ -2260,7 +2628,13 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/bridge/proof/critical-identity`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/proof/critical-identity?x=42`, "operationId": "proofCriticalIdentity", "summary": "Shareable proof:CriticalIdentityProof — permanent address, all steps explicit" },
           { "method": "POST", "path": `${base}/bridge/proof/coherence`, "body": "{type_definition, n}", "example": `${base}/bridge/proof/coherence`, "operationId": "proofCoherence", "summary": "proof:CoherenceProof — 256/256 elements pass, holds_universally: true" },
           { "method": "GET", "path": `${base}/bridge/cert/involution`, "required_params": "operation", "optional_params": "n", "example": `${base}/bridge/cert/involution?operation=neg`, "operationId": "certInvolution", "summary": "cert:InvolutionCertificate — proves op undoes itself across all values" },
-          { "method": "GET", "path": `${base}/bridge/observable/metrics`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/observable/metrics?x=42`, "operationId": "observableMetrics", "summary": "RingMetric, HammingMetric, CascadeLength, CatastropheThreshold" },
+          { "method": "GET", "path": `${base}/bridge/observable/metrics`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/observable/metrics?x=42`, "operationId": "observableMetrics", "summary": "RingMetric, HammingMetric, CascadeLength, CatastropheThreshold (single-value bundle)" },
+          { "method": "GET", "path": `${base}/bridge/observable/metric`, "required_params": "a, b", "optional_params": "type (ring|hamming|incompatibility), quantum", "example": `${base}/bridge/observable/metric?a=85&b=170&type=ring`, "operationId": "observableMetric", "summary": "Pairwise metric — RingMetric, HammingMetric, or IncompatibilityMetric between two datums" },
+          { "method": "GET", "path": `${base}/bridge/observable/stratum`, "required_params": "value (or a,b for delta, or start,op,steps for trajectory)", "optional_params": "type (value|delta|trajectory), quantum", "example": `${base}/bridge/observable/stratum?value=42&type=value`, "operationId": "observableStratum", "summary": "StratumValue, StratumDelta, or StratumTrajectory — Hamming weight analysis" },
+          { "method": "POST", "path": `${base}/bridge/observable/path`, "body": "{ path: [int,...], type, quantum }", "example": `${base}/bridge/observable/path`, "operationId": "observablePath", "summary": "PathLength, TotalVariation, WindingNumber — path analysis over ring" },
+          { "method": "GET", "path": `${base}/bridge/observable/curvature`, "required_params": "x", "optional_params": "f, g, quantum", "example": `${base}/bridge/observable/curvature?x=42&f=neg&g=bnot`, "operationId": "observableCurvature", "summary": "Commutator [f,g](x) — measures non-commutativity of two operations" },
+          { "method": "POST", "path": `${base}/bridge/observable/holonomy`, "body": "{ path: [int,...], quantum }", "example": `${base}/bridge/observable/holonomy`, "operationId": "observableHolonomy", "summary": "Holonomy — accumulated ring element over a closed path" },
+          { "method": "POST", "path": `${base}/bridge/observable/stream`, "body": "{ stream: [int,...], window_size, metrics, quantum }", "example": `${base}/bridge/observable/stream`, "operationId": "observableStream", "summary": "Sliding-window IoT/scientific stream processing — stratum, hamming, curvature metrics" },
           { "method": "GET", "path": `${base}/bridge/derivation`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/derivation?x=42&ops=neg,bnot,succ`, "operationId": "bridgeDerivation", "summary": "derivation:DerivationTrace — SHA-256 derivation_id, cert:Certificate with cert:certifies, Grade A epistemic grading" },
           { "method": "GET", "path": `${base}/bridge/trace`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/trace?x=42&ops=neg,bnot`, "operationId": "bridgeTrace", "summary": "trace:ExecutionTrace — exact bit state per step, Hamming drift, XOR deltas" },
           { "method": "GET", "path": `${base}/bridge/resolver`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/resolver?x=42`, "operationId": "bridgeResolver", "summary": "resolver:Resolution — canonical category with full factor decomposition" },
@@ -6075,6 +6449,42 @@ Deno.serve(async (req: Request) => {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
       return resp;
+    }
+    if (path === '/bridge/observable/metric') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = await observableMetric(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+    if (path === '/bridge/observable/stratum') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = await observableStratum(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+    if (path === '/bridge/observable/path') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await observablePath(req, rl);
+    }
+    if (path === '/bridge/observable/curvature') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = await observableCurvature(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+    if (path === '/bridge/observable/holonomy') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await observableHolonomy(req, rl);
+    }
+    if (path === '/bridge/observable/stream') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await observableStream(req, rl);
     }
 
     // ── User — type ──
