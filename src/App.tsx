@@ -40,6 +40,7 @@ const SessionsPage = lazy(() => import("@/modules/state/pages/SessionsPage"));
 const VerifyPage = lazy(() => import("@/modules/verify/pages/VerifyPage"));
 const EpistemicPage = lazy(() => import("@/modules/epistemic/pages/EpistemicPage"));
 const CertificatesPage = lazy(() => import("@/modules/certificates/pages/CertificatesPage"));
+const SparqlPage = lazy(() => import("@/modules/sparql-ui/pages/SparqlPage"));
 
 const queryClient = new QueryClient();
 
@@ -93,6 +94,7 @@ const App = () => {
             <Route path="/verify" element={<VerifyPage />} />
             <Route path="/epistemic" element={<EpistemicPage />} />
             <Route path="/certificates" element={<CertificatesPage />} />
+            <Route path="/sparql" element={<SparqlPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
