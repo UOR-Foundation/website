@@ -101,6 +101,7 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/sparql/federation-plan':             ['GET', 'OPTIONS'],
   '/bridge/resolver/entity':             ['POST', 'OPTIONS'],
   '/schema-org/extend':                  ['GET', 'POST', 'OPTIONS'],
+  '/schema-org/coherence':               ['POST', 'OPTIONS'],
   '/test/e2e':                           ['GET', 'OPTIONS'],
   '/.well-known/void':                   ['GET', 'OPTIONS'],
   // Observer Theory (observer: namespace)
@@ -6970,9 +6971,9 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
     for (const b of identity.canonicalBytes) xorFold = (xorFold ^ b) & 0xff;
     const canonicalIri = datumIRI(xorFold, 8);
 
-    let storedCid: string | null = null;
+    let storageResult: DualCidResult | null = null;
     if (storeToPersistence) {
-      storedCid = await storeToIPFS(clean, identity);
+      storageResult = await storeToIPFSDualCid(clean, identity);
     }
 
     return jsonResp(gradeResponse({
@@ -6986,8 +6987,18 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
       "store:uorAddress": { "u:glyph": identity.uorAddress.glyph.slice(0, 32), "u:length": identity.uorAddress.length },
       "derivation:derivationId": derivationId,
       "u:canonicalIri": canonicalIri,
-      ...(storedCid ? { "sobridge:storedCid": storedCid, "sobridge:ipfsGateway": `https://uor.mypinata.cloud/ipfs/${storedCid}` } : {}),
+      ...(storageResult ? {
+        "store:uorCid": identity.cid,
+        "sobridge:pinataCid": storageResult.pinataCid,
+        "sobridge:storachaCid": storageResult.storachaCid,
+        "sobridge:storedCid": storageResult.pinataCid ?? storageResult.storachaCid,
+        "sobridge:ipfsGateway": storageResult.pinataCid
+          ? `https://uor.mypinata.cloud/ipfs/${storageResult.pinataCid}`
+          : storageResult.storachaGatewayUrl,
+        "sobridge:storachaGateway": storageResult.storachaGatewayUrl,
+      } : {}),
       "sobridge:verifyUrl": `https://api.uor.foundation/v1/tools/verify?derivation_id=${derivationId}`,
+    }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
     }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
   }
 
@@ -7058,6 +7069,13 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
 
   sobridgeType["sobridge:propertyCount"] = props.length;
 
+  // ── Action morphism bridge — detect Action types and map to morphism:Action
+  const isActionType = await isSchemaOrgAction(normalizedType, vocab);
+  if (isActionType) {
+    const actionMapping = buildActionMorphismMapping(normalizedType, props, vocab);
+    sobridgeType["sobridge:actionMapping"] = actionMapping;
+  }
+
   // Compute UOR identity
   const identity = await computeSobridgeIdentity(sobridgeType);
   const derivationId = `urn:uor:derivation:sha256:${identity.sha256}`;
@@ -7066,9 +7084,10 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
   let xorFold = 0;
   for (const b of identity.canonicalBytes) xorFold = (xorFold ^ b) & 0xff;
 
-  let storedCid: string | null = null;
+  // ── Dual-CID persistence: Pinata (hot) + Storacha (cold) ──
+  let storageResult: DualCidResult | null = null;
   if (storeToPersistence) {
-    storedCid = await storeToIPFS(sobridgeType, identity);
+    storageResult = await storeToIPFSDualCid(sobridgeType, identity);
   }
 
   return jsonResp(gradeResponse({
@@ -7077,13 +7096,119 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
     "store:uorAddress": { "u:glyph": identity.uorAddress.glyph.slice(0, 32), "u:length": identity.uorAddress.length },
     "derivation:derivationId": derivationId,
     "u:canonicalIri": datumIRI(xorFold, 8),
-    ...(storedCid ? { "sobridge:storedCid": storedCid, "sobridge:ipfsGateway": `https://uor.mypinata.cloud/ipfs/${storedCid}` } : {}),
+    ...(storageResult ? {
+      "store:uorCid": identity.cid,
+      "sobridge:pinataCid": storageResult.pinataCid,
+      "sobridge:storachaCid": storageResult.storachaCid,
+      "sobridge:storedCid": storageResult.pinataCid ?? storageResult.storachaCid,
+      "sobridge:ipfsGateway": storageResult.pinataCid
+        ? `https://uor.mypinata.cloud/ipfs/${storageResult.pinataCid}`
+        : storageResult.storachaGatewayUrl,
+      "sobridge:storachaGateway": storageResult.storachaGatewayUrl,
+      "store:dualCidNote": "store:uorCid is the universal algebraic CID (dag-json/sha2-256). sobridge:pinataCid and sobridge:storachaCid are provider-specific handles for physical retrieval.",
+    } : {}),
     "sobridge:verifyUrl": `https://api.uor.foundation/v1/tools/verify?derivation_id=${derivationId}`,
     "_sobridge_note": "This schema.org type definition has been content-addressed by the UOR kernel. The CID and Braille address are deterministic: same content → same identity, everywhere, forever.",
   }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
 }
 
-// Store canonical JSON-LD to IPFS via Pinata
+// ── Action morphism detection and mapping ────────────────────────────────────
+
+async function isSchemaOrgAction(typeName: string, vocab: Record<string, unknown>[]): Promise<boolean> {
+  // Walk superClassOf chain to see if this type descends from schema:Action
+  const visited = new Set<string>();
+  const queue = [typeName];
+  while (queue.length > 0) {
+    const current = queue.pop()!;
+    if (visited.has(current)) continue;
+    visited.add(current);
+    if (current === 'Action') return true;
+    const node = vocab.find(n => {
+      const id = String(n['@id'] ?? '');
+      return id === `schema:${current}` || id === `https://schema.org/${current}`;
+    });
+    if (!node) continue;
+    const sc = node['rdfs:subClassOf'];
+    if (!sc) continue;
+    const arr = Array.isArray(sc) ? sc : [sc];
+    for (const s of arr) {
+      const sid = typeof s === 'string' ? s : (typeof s === 'object' && s !== null && '@id' in (s as Record<string, unknown>)) ? (s as Record<string, string>)['@id'] : '';
+      const clean = sid.replace('https://schema.org/', '').replace('schema:', '');
+      if (clean) queue.push(clean);
+    }
+  }
+  return false;
+}
+
+function buildActionMorphismMapping(
+  typeName: string,
+  props: Record<string, unknown>[],
+  vocab: Record<string, unknown>[]
+): Record<string, unknown> {
+  // Map schema.org Action properties to morphism:Action semantics
+  const inputProps = props.filter(p => {
+    const pid = String(p['@id'] ?? '').replace('https://schema.org/', '').replace('schema:', '');
+    return pid === 'object' || pid === 'instrument' || pid === 'target' || pid.toLowerCase().includes('input');
+  });
+  const outputProps = props.filter(p => {
+    const pid = String(p['@id'] ?? '').replace('https://schema.org/', '').replace('schema:', '');
+    return pid === 'result' || pid === 'error' || pid.toLowerCase().includes('output');
+  });
+  const agentProps = props.filter(p => {
+    const pid = String(p['@id'] ?? '').replace('https://schema.org/', '').replace('schema:', '');
+    return pid === 'agent' || pid === 'participant';
+  });
+
+  return {
+    "@type": "morphism:Action",
+    "morphism:sourceType": `schema:${typeName}`,
+    "morphism:preservesMetric": "ring",
+    "sobridge:actionInput": inputProps.map(p => String(p['@id'] ?? '').replace('https://schema.org/', '')),
+    "sobridge:actionOutput": outputProps.map(p => String(p['@id'] ?? '').replace('https://schema.org/', '')),
+    "sobridge:actionAgent": agentProps.map(p => String(p['@id'] ?? '').replace('https://schema.org/', '')),
+    "sobridge:morphismType": inputProps.length > 0 && outputProps.length > 0
+      ? "morphism:Transform"
+      : "morphism:Embedding",
+    "_note": `schema:${typeName} maps to morphism:Action — its properties decompose into input (what is acted upon), output (the result), and agent (who performs the action). This enables UOR agents to verify that observed web actions match declared action schemas.`,
+  };
+}
+
+// ── Dual-CID persistence: Pinata (hot) + Storacha (cold) ───────────────────
+
+interface DualCidResult {
+  pinataCid: string | null;
+  storachaCid: string | null;
+  storachaGatewayUrl: string | null;
+}
+
+async function storeToIPFSDualCid(obj: Record<string, unknown>, identity: SobridgeIdentity): Promise<DualCidResult> {
+  const canonical = canonicalJsonLdLocal(obj);
+  const canonicalBytes = new TextEncoder().encode(canonical);
+
+  // Fire both storage operations in parallel
+  const [pinataCid, storachaResult] = await Promise.all([
+    storeToIPFS(obj, identity),
+    storeToStoracha(canonicalBytes, String(obj['rdfs:label'] ?? obj['@type'] ?? 'sobridge-object')),
+  ]);
+
+  return {
+    pinataCid,
+    storachaCid: storachaResult?.directoryCid ?? null,
+    storachaGatewayUrl: storachaResult?.gatewayUrl ?? null,
+  };
+}
+
+async function storeToStoracha(canonicalBytes: Uint8Array, label: string): Promise<StorachaPinResult | null> {
+  try {
+    if (!STORACHA_KEY || !STORACHA_PROOF) return null;
+    return await pinToStoracha(canonicalBytes, `sobridge-${label}`);
+  } catch (e) {
+    console.error('[sobridge] Storacha store failed (non-fatal):', e);
+    return null;
+  }
+}
+
+// Store canonical JSON-LD to IPFS via Pinata (hot storage)
 async function storeToIPFS(obj: Record<string, unknown>, identity: SobridgeIdentity): Promise<string | null> {
   try {
     const pinataJwt = Deno.env.get('PINATA_JWT');
@@ -7115,6 +7240,145 @@ async function storeToIPFS(obj: Record<string, unknown>, identity: SobridgeIdent
     console.error('IPFS store error:', e);
     return null;
   }
+}
+
+// ── POST /schema-org/coherence — Cross-reference coherence verification ─────
+// Validates that multiple schema.org instances that reference each other
+// form an internally consistent reference chain.
+
+async function schemaOrgCoherence(req: Request, rl: RateLimitResult): Promise<Response> {
+  const ct = req.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) return error415(rl);
+
+  let body: { instances: Record<string, unknown>[] };
+  try { body = await req.json(); }
+  catch { return error400('Invalid JSON body', 'body', rl); }
+
+  if (!Array.isArray(body.instances) || body.instances.length < 2) {
+    return error400('instances must be an array of at least 2 JSON-LD objects', 'instances', rl);
+  }
+  if (body.instances.length > 20) {
+    return error400('Maximum 20 instances per coherence check', 'instances', rl);
+  }
+
+  // Step 1: Canonicalize each instance and compute identity
+  const identities: Array<{
+    index: number;
+    type: string;
+    cid: string;
+    uorAddress: { glyph: string; length: number };
+    derivationId: string;
+    refs: string[];  // types this instance references
+    obj: Record<string, unknown>;
+  }> = [];
+
+  for (let i = 0; i < body.instances.length; i++) {
+    const inst = body.instances[i];
+    const instType = String(inst['@type'] ?? inst.type ?? 'Thing').replace('schema:', '').replace('https://schema.org/', '');
+    const clean: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(inst)) {
+      if (k === 'store') continue;
+      clean[k] = v;
+    }
+    if (!clean['@type']) clean['@type'] = `schema:${instType}`;
+    if (!clean['@context']) clean['@context'] = 'https://schema.org/';
+
+    const identity = await computeSobridgeIdentity(clean);
+    const derivationId = `urn:uor:derivation:sha256:${identity.sha256}`;
+
+    // Detect cross-references: values that look like schema.org types
+    const refs: string[] = [];
+    for (const [, v] of Object.entries(clean)) {
+      if (typeof v === 'object' && v !== null && '@type' in (v as Record<string, unknown>)) {
+        refs.push(String((v as Record<string, unknown>)['@type']).replace('schema:', '').replace('https://schema.org/', ''));
+      }
+    }
+
+    identities.push({
+      index: i,
+      type: instType,
+      cid: identity.cid,
+      uorAddress: identity.uorAddress,
+      derivationId,
+      refs,
+      obj: clean,
+    });
+  }
+
+  // Step 2: Build reference graph and check coherence
+  const typeMap = new Map(identities.map(id => [id.type, id]));
+  const edges: Array<{ from: string; to: string; resolved: boolean }> = [];
+  let allResolved = true;
+
+  for (const id of identities) {
+    for (const ref of id.refs) {
+      const target = typeMap.get(ref);
+      const resolved = !!target;
+      if (!resolved) allResolved = false;
+      edges.push({ from: id.type, to: ref, resolved });
+    }
+  }
+
+  // Step 3: Compute cross-instance XOR fidelity
+  const fidelities: Array<{ a: string; b: string; fidelity: number }> = [];
+  for (let i = 0; i < identities.length; i++) {
+    for (let j = i + 1; j < identities.length; j++) {
+      const bytesA = new TextEncoder().encode(canonicalJsonLdLocal(identities[i].obj));
+      const bytesB = new TextEncoder().encode(canonicalJsonLdLocal(identities[j].obj));
+      const minLen = Math.min(bytesA.length, bytesB.length);
+      let hammingDist = 0;
+      let totalBits = minLen * 8;
+      for (let k = 0; k < minLen; k++) {
+        hammingDist += bytePopcount((bytesA[k] ^ bytesB[k]) & 0xff);
+      }
+      // Add remaining bytes as full Hamming distance
+      const longer = bytesA.length > bytesB.length ? bytesA : bytesB;
+      for (let k = minLen; k < longer.length; k++) {
+        hammingDist += bytePopcount(longer[k] & 0xff);
+        totalBits += 8;
+      }
+      const fidelity = totalBits > 0 ? 1 - hammingDist / totalBits : 0;
+      fidelities.push({
+        a: identities[i].type,
+        b: identities[j].type,
+        fidelity: parseFloat(fidelity.toFixed(6)),
+      });
+    }
+  }
+
+  // Step 4: Compute coherence proof hash
+  const proofPayload = JSON.stringify({
+    instances: identities.map(id => ({ type: id.type, cid: id.cid })),
+    edges,
+    allResolved,
+    ts: new Date().toISOString(),
+  });
+  const proofHash = await makeSha256(proofPayload);
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "proof:CoherenceProof",
+    "proof:verified": allResolved,
+    "proof:proofId": `urn:uor:proof:sha256:${proofHash}`,
+    "proof:timestamp": new Date().toISOString(),
+    "sobridge:coherenceProof": {
+      "instanceCount": identities.length,
+      "referenceEdges": edges,
+      "allReferencesResolved": allResolved,
+      "unresolvedRefs": edges.filter(e => !e.resolved).map(e => e.to),
+      "crossFidelities": fidelities,
+    },
+    "instances": identities.map(id => ({
+      "@type": `schema:${id.type}`,
+      "store:cid": id.cid,
+      "store:uorAddress": { "u:glyph": id.uorAddress.glyph.slice(0, 16), "u:length": id.uorAddress.length },
+      "derivation:derivationId": id.derivationId,
+      "crossReferences": id.refs,
+    })),
+    "_note": allResolved
+      ? "All cross-references between instances are mutually consistent. Each referenced type has a corresponding instance in the set, and all have been independently content-addressed."
+      : `${edges.filter(e => !e.resolved).length} cross-reference(s) could not be resolved. The missing types are: ${edges.filter(e => !e.resolved).map(e => e.to).join(', ')}. Add instances for these types to achieve full coherence.`,
+  }, allResolved ? 'A' : 'C'), CACHE_HEADERS_BRIDGE, undefined, rl);
 }
 
 // ── GET /test/e2e — Full Phase 2 end-to-end integration test ──────────────
@@ -9419,6 +9683,10 @@ Deno.serve(async (req: Request) => {
         return await schemaOrgExtend(url, rl);
       }
       return await schemaOrgExtend(req, rl);
+    }
+    if (path === '/schema-org/coherence') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await schemaOrgCoherence(req, rl);
     }
     if (path === '/test/e2e') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);

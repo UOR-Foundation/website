@@ -411,6 +411,47 @@ export function schemaBridgeEpistemics(
       : hasCid
         ? `The schema.org "${schemaType}" type definition has been canonicalized with a permanent, content-derived identity. ${hasStoredCid ? "It has been pinned to IPFS for decentralized, permanent storage." : "It can be stored permanently by adding store=true."} Anyone can independently verify this by re-canonicalizing the same schema.org definition.`
         : "The schema.org type could not be canonicalized. The result is unverified.",
+};
+}
+
+/** Build epistemic metadata for a uor_schema_coherence result. */
+export function coherenceEpistemics(
+  data: Record<string, unknown>,
+  cached = false,
+): EpistemicMetadata {
+  const proof = data["sobridge:coherenceProof"] as Record<string, unknown> | undefined;
+  const allResolved = proof?.allReferencesResolved === true;
+  const verified = data["proof:verified"] === true;
+  const instanceCount = (proof?.instanceCount as number) ?? 0;
+  const grade: EpistemicGrade = verified ? "A" : allResolved ? "B" : "C";
+  const meta = GRADE_META[grade];
+
+  return {
+    grade,
+    grade_label: meta.label,
+    confidence: verified ? 0.98 : allResolved ? 0.85 : 0.55,
+    sources: [
+      { type: "user_input", label: `${instanceCount} schema.org instances submitted for coherence check` },
+      ...(verified
+        ? [{ type: "computation" as const, label: "All cross-references resolved — coherence proof generated", reference: String(data["proof:proofId"] ?? "") }]
+        : []),
+    ],
+    reasoning_chain: [
+      `1. Received ${instanceCount} schema.org instances for coherence verification.`,
+      "2. Content-addressed each instance independently via UOR kernel.",
+      "3. Built reference graph from embedded cross-references (@type references).",
+      verified
+        ? "4. All cross-references resolve to provided instances — reference chain is internally consistent."
+        : `4. ${(proof?.unresolvedRefs as string[])?.length ?? 0} cross-reference(s) could not be resolved.`,
+      verified
+        ? "5. Grade A assigned — coherence is algebraically verified across all instances."
+        : "5. Grade C assigned — partial coherence. Missing instances prevent full verification.",
+    ],
+    trust_summary: cached
+      ? "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed."
+      : verified
+        ? `All ${instanceCount} instances form a coherent, mutually consistent set. Every cross-reference resolves and each instance has an independent content-derived identity.`
+        : `The instance set is partially coherent. Some cross-references point to types not included in the set. Add the missing types to achieve full coherence.`,
   };
 }
 
