@@ -1,4 +1,5 @@
 import { teamMembers } from "@/data/team-members";
+import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
 
 const CTASection = () => {
   return (
@@ -12,7 +13,7 @@ const CTASection = () => {
         </p>
         <div className="mt-8 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
           <a
-            href="https://discord.gg/ZwuZaNyuve"
+            href={DISCORD_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary"
@@ -20,7 +21,7 @@ const CTASection = () => {
             Join Discord Community
           </a>
           <a
-            href="https://github.com/UOR-Foundation"
+            href={GITHUB_ORG_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-outline"

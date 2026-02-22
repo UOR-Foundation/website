@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import Layout from "@/modules/core/components/Layout";
 import { governancePrinciples } from "@/data/governance";
 import { whatWeDoCards, ourPrinciplesCards } from "@/data/about-cards";
+import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_DOTGITHUB_URL } from "@/data/external-links";
 
 const govIconMap: Record<string, LucideIcon> = { GitBranch, Shield, Undo2, CheckCircle, Eye, Users };
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Microscope, Rocket };
@@ -116,7 +117,7 @@ const About = () => {
             </div>
 
             <a
-              href="https://github.com/UOR-Foundation/.github"
+              href={GITHUB_DOTGITHUB_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-body text-base md:text-lg transition-colors group"
@@ -146,7 +147,7 @@ const About = () => {
             </p>
             <div className="flex flex-col sm:flex-row flex-wrap gap-3">
               <a
-                href="https://discord.gg/ZwuZaNyuve"
+                href={DISCORD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary"
@@ -154,7 +155,7 @@ const About = () => {
                 Join Our Discord
               </a>
               <a
-                href="https://github.com/UOR-Foundation"
+                href={GITHUB_ORG_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-outline"

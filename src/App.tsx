@@ -22,9 +22,9 @@ import { SparqlEditorPage } from "@/modules/sparql";
 import { ConformancePage } from "@/modules/shacl";
 import { CodeKnowledgeGraphPage } from "@/modules/code-kg";
 import { AgentConsolePage } from "@/modules/agent-tools";
-import AuditPage from "@/modules/self-verify/pages/AuditPage";
+import { AuditPage } from "@/modules/self-verify";
 import { DashboardPage } from "@/modules/dashboard";
-import SessionsPage from "@/modules/state/pages/SessionsPage";
+import { SessionsPage } from "@/modules/state";
 
 const queryClient = new QueryClient();
 

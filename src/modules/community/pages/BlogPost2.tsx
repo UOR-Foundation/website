@@ -2,6 +2,7 @@ import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Tag, ExternalLink } from "lucide-react";
 import coverImage from "@/assets/blog-golden-seed-vector.png";
+import { DISCORD_URL, GITHUB_ATLAS_URL } from "@/data/external-links";
 
 const BlogPost2 = () => {
   return (
@@ -149,7 +150,7 @@ const BlogPost2 = () => {
                 The proofs, code, and documentation are developed and maintained by the UOR Community and are available at:
               </p>
               <a
-                href="https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings"
+                href={GITHUB_ATLAS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-4 text-primary font-medium hover:underline"
@@ -174,7 +175,7 @@ const BlogPost2 = () => {
             </p>
             <div className="flex flex-wrap gap-3">
               <a
-                href="https://discord.gg/ZwuZaNyuve"
+                href={DISCORD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary"

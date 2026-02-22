@@ -1,6 +1,7 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Tag } from "lucide-react";
+import { DISCORD_URL } from "@/data/external-links";
 
 const BlogPost1 = () => {
   return (
@@ -236,7 +237,7 @@ const BlogPost1 = () => {
             </p>
             <div className="flex flex-wrap gap-3">
               <a
-                href="https://discord.gg/ZwuZaNyuve"
+                href={DISCORD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary"

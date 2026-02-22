@@ -8,6 +8,7 @@ import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import { researchCategories } from "@/data/research-categories";
 import { blogPosts } from "@/data/blog-posts";
+import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_RESEARCH_URL } from "@/data/external-links";
 
 const iconMap: Record<string, LucideIcon> = {
   Calculator, Cpu, Shield, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf,
@@ -72,7 +73,7 @@ const Research = () => {
           </h2>
           <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
             Find your discipline, validate ideas, and collaborate on{" "}
-            <a href="https://discord.gg/ZwuZaNyuve" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
+            <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
           </p>
 
           <div className="flex flex-wrap justify-center gap-3 mb-10">
@@ -139,7 +140,7 @@ const Research = () => {
 
               {/* Submit Research CTA Card */}
               <a
-                href="https://discord.gg/ZwuZaNyuve"
+                href={DISCORD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-primary/20 bg-primary/[0.03] p-6 hover:border-primary/40 hover:bg-primary/[0.06] transition-all duration-300 animate-fade-in-up opacity-0"
@@ -162,7 +163,7 @@ const Research = () => {
           )}
 
           <a
-            href="https://github.com/UOR-Foundation/research"
+            href={GITHUB_RESEARCH_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline font-body transition-colors"
@@ -296,7 +297,7 @@ const Research = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
-              href="https://discord.gg/ZwuZaNyuve"
+              href={DISCORD_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out bg-primary text-primary-foreground hover:opacity-90 hover:shadow-lg inline-flex items-center justify-center gap-2"
@@ -304,7 +305,7 @@ const Research = () => {
               Join Our Discord
             </a>
             <a
-              href="https://github.com/UOR-Foundation"
+              href={GITHUB_ORG_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"
