@@ -655,6 +655,133 @@
         }
       }
     },
+    "/bridge/observable/metric": {
+      "get": {
+        "operationId": "observableMetric",
+        "tags": ["bridge-observable"],
+        "summary": "Pairwise metric between two ring elements",
+        "description": "Compute RingMetric, HammingMetric, or IncompatibilityMetric between two datums.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "a", "in": "query", "required": true, "schema": { "type": "integer", "minimum": 0, "maximum": 65535 } },
+          { "name": "b", "in": "query", "required": true, "schema": { "type": "integer", "minimum": 0, "maximum": 65535 } },
+          { "name": "type", "in": "query", "required": true, "schema": { "type": "string", "enum": ["ring", "hamming", "incompatibility"] } },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": { "200": { "description": "Metric observable" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/bridge/observable/stratum": {
+      "get": {
+        "operationId": "observableStratum",
+        "tags": ["bridge-observable"],
+        "summary": "Stratum analysis — value, delta, or trajectory",
+        "description": "StratumValue (popcount), StratumDelta (difference), or StratumTrajectory (operation sequence).",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "value", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "For type=value" },
+          { "name": "a", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "For type=delta" },
+          { "name": "b", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "For type=delta" },
+          { "name": "start", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "For type=trajectory" },
+          { "name": "op", "in": "query", "required": false, "schema": { "type": "string", "enum": ["succ", "neg", "bnot", "pred"] } },
+          { "name": "steps", "in": "query", "required": false, "schema": { "type": "integer", "default": 8, "maximum": 256 } },
+          { "name": "type", "in": "query", "required": true, "schema": { "type": "string", "enum": ["value", "delta", "trajectory"] } },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": { "200": { "description": "Stratum observable" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/bridge/observable/path": {
+      "post": {
+        "operationId": "observablePath",
+        "tags": ["bridge-observable"],
+        "summary": "Path analysis — length, total variation, or winding number",
+        "description": "Analyse a path of ring elements for PathLength, TotalVariation, or WindingNumber.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": { "type": "array", "items": { "type": "integer" }, "minItems": 2 },
+                  "type": { "type": "string", "enum": ["length", "total_variation", "winding_number"], "default": "length" },
+                  "quantum": { "type": "integer", "default": 0 }
+                },
+                "required": ["path"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Path observable" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/bridge/observable/curvature": {
+      "get": {
+        "operationId": "observableCurvature",
+        "tags": ["bridge-observable"],
+        "summary": "Commutator [f,g](x) — measures non-commutativity",
+        "description": "Compute the commutator of two operations f and g at ring element x.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "name": "f", "in": "query", "required": false, "schema": { "type": "string", "enum": ["neg", "bnot", "succ", "pred"], "default": "neg" } },
+          { "name": "g", "in": "query", "required": false, "schema": { "type": "string", "enum": ["neg", "bnot", "succ", "pred"], "default": "bnot" } },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": { "200": { "description": "Commutator observable" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/bridge/observable/holonomy": {
+      "post": {
+        "operationId": "observableHolonomy",
+        "tags": ["bridge-observable"],
+        "summary": "Holonomy — accumulated ring element over a closed path",
+        "description": "Compute the accumulated transform over a closed path in the ring.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": { "type": "array", "items": { "type": "integer" }, "minItems": 3 },
+                  "quantum": { "type": "integer", "default": 0 }
+                },
+                "required": ["path"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Holonomy observable" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/bridge/observable/stream": {
+      "post": {
+        "operationId": "observableStream",
+        "tags": ["bridge-observable"],
+        "summary": "Sliding-window stream analysis",
+        "description": "Process a stream of ring values with sliding windows, computing stratum, hamming, and curvature metrics per window.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "stream": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 10000 },
+                  "window_size": { "type": "integer", "minimum": 2, "default": 8 },
+                  "metrics": { "type": "array", "items": { "type": "string", "enum": ["stratum", "hamming", "curvature", "ring"] }, "default": ["stratum", "hamming"] },
+                  "quantum": { "type": "integer", "default": 0 }
+                },
+                "required": ["stream"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Stream analysis with per-window metrics" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
     "/user/type/primitives": {
       "get": {
         "operationId": "typeList",
