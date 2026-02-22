@@ -1,0 +1,18 @@
+@prefix sh:        <http://www.w3.org/ns/shacl#> .
+@prefix trace:     <https://uor.foundation/trace/> .
+@prefix cert:      <https://uor.foundation/cert/> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+
+# §3.3 — "The trace references the certificate via trace:certifiedBy."
+
+trace:TraceCertifiedByShape
+  a sh:NodeShape ;
+  sh:targetClass trace:ComputationTrace ;
+  rdfs:comment "trace:ComputationTrace must have trace:certifiedBy pointing to a cert:Certificate (§3.3). This structural link is mandatory." ;
+  sh:property [
+    sh:path trace:certifiedBy ;
+    sh:class cert:Certificate ;
+    sh:minCount 1 ;
+    sh:message "trace:ComputationTrace must have at least one trace:certifiedBy linking to a cert:Certificate (§3.3)." ;
+  ] ;
+  sh:severity sh:Violation .

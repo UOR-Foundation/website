@@ -370,6 +370,158 @@ function jsonResp(body: unknown, extraHeaders: Record<string, string> = CACHE_HE
   return new Response(JSON.stringify(body, null, 2), { status: 200, headers });
 }
 
+// ── Content-Type Negotiation (Turtle / N-Triples / JSON-LD) ─────────────────
+const UOR_PREFIXES_TURTLE = `@prefix u:          <https://uor.foundation/u/> .
+@prefix schema:     <https://uor.foundation/schema/> .
+@prefix op:         <https://uor.foundation/op/> .
+@prefix type:       <https://uor.foundation/type/> .
+@prefix partition:  <https://uor.foundation/partition/> .
+@prefix cert:       <https://uor.foundation/cert/> .
+@prefix proof:      <https://uor.foundation/proof/> .
+@prefix derivation: <https://uor.foundation/derivation/> .
+@prefix trace:      <https://uor.foundation/trace/> .
+@prefix resolver:   <https://uor.foundation/resolver/> .
+@prefix observable: <https://uor.foundation/observable/> .
+@prefix query:      <https://uor.foundation/query/> .
+@prefix state:      <https://uor.foundation/state/> .
+@prefix morphism:   <https://uor.foundation/morphism/> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+`;
+
+const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
+const XSD = 'http://www.w3.org/2001/XMLSchema#';
+
+function flattenToTriples(obj: Record<string, unknown>, subject?: string): Array<{s: string; p: string; o: string}> {
+  const triples: Array<{s: string; p: string; o: string}> = [];
+  const subj = subject || (obj['@id'] as string) || 'https://uor.foundation/anon';
+  if (obj['@type']) {
+    const types = Array.isArray(obj['@type']) ? obj['@type'] : [obj['@type']];
+    for (const t of types) {
+      const typeIri = expandCurie(String(t));
+      triples.push({ s: subj, p: RDF_TYPE, o: typeIri });
+    }
+  }
+  for (const [key, val] of Object.entries(obj)) {
+    if (key === '@id' || key === '@type' || key === '@context') continue;
+    const pred = expandCurie(key);
+    if (pred === key && !key.startsWith('http')) continue; // skip non-IRI keys
+    if (val === null || val === undefined) continue;
+    if (typeof val === 'object' && !Array.isArray(val)) {
+      const nested = val as Record<string, unknown>;
+      if (nested['@id']) {
+        triples.push({ s: subj, p: pred, o: nested['@id'] as string });
+        triples.push(...flattenToTriples(nested));
+      }
+    } else if (Array.isArray(val)) {
+      // skip complex arrays
+    } else {
+      const lit = typeof val === 'number'
+        ? `"${val}"^^<${XSD}integer>`
+        : typeof val === 'boolean'
+        ? `"${val}"^^<${XSD}boolean>`
+        : `"${String(val)}"`;
+      triples.push({ s: subj, p: pred, o: lit });
+    }
+  }
+  return triples;
+}
+
+const CURIE_MAP: Record<string, string> = {
+  'schema:': 'https://uor.foundation/schema/',
+  'op:': 'https://uor.foundation/op/',
+  'u:': 'https://uor.foundation/u/',
+  'type:': 'https://uor.foundation/type/',
+  'partition:': 'https://uor.foundation/partition/',
+  'cert:': 'https://uor.foundation/cert/',
+  'proof:': 'https://uor.foundation/proof/',
+  'derivation:': 'https://uor.foundation/derivation/',
+  'trace:': 'https://uor.foundation/trace/',
+  'resolver:': 'https://uor.foundation/resolver/',
+  'observable:': 'https://uor.foundation/observable/',
+  'query:': 'https://uor.foundation/query/',
+  'state:': 'https://uor.foundation/state/',
+  'morphism:': 'https://uor.foundation/morphism/',
+};
+
+function expandCurie(curie: string): string {
+  for (const [prefix, ns] of Object.entries(CURIE_MAP)) {
+    if (curie.startsWith(prefix)) return ns + curie.slice(prefix.length);
+  }
+  return curie;
+}
+
+function contractIri(iri: string): string | null {
+  for (const [prefix, ns] of Object.entries(CURIE_MAP)) {
+    if (iri.startsWith(ns)) return prefix + iri.slice(ns.length);
+  }
+  if (iri.startsWith(RDF_TYPE.replace('#type', '#'))) return 'rdf:' + iri.split('#').pop();
+  return null;
+}
+
+function toTurtle(obj: Record<string, unknown>): string {
+  const triples = flattenToTriples(obj);
+  const grouped = new Map<string, Array<{p: string; o: string}>>();
+  for (const {s, p, o} of triples) {
+    if (!grouped.has(s)) grouped.set(s, []);
+    grouped.get(s)!.push({p, o});
+  }
+  let out = UOR_PREFIXES_TURTLE + '\n';
+  for (const [subj, pos] of grouped) {
+    out += `<${subj}>\n`;
+    for (let i = 0; i < pos.length; i++) {
+      const {p, o} = pos[i];
+      const pCompact = contractIri(p) || `<${p}>`;
+      const pStr = p === RDF_TYPE ? 'a' : pCompact.startsWith('<') ? pCompact : pCompact;
+      const oStr = o.startsWith('"') ? o : (contractIri(o) || `<${o}>`);
+      out += `  ${pStr} ${oStr}`;
+      out += i < pos.length - 1 ? ' ;\n' : ' .\n';
+    }
+    out += '\n';
+  }
+  return out;
+}
+
+function toNTriples(obj: Record<string, unknown>): string {
+  const triples = flattenToTriples(obj);
+  return triples.map(({s, p, o}) => {
+    const oStr = o.startsWith('"') ? o : `<${o}>`;
+    return `<${s}> <${p}> ${oStr} .`;
+  }).join('\n') + '\n';
+}
+
+const CONNEG_PATHS = new Set([
+  '/kernel/schema/datum', '/kernel/schema/triad', '/bridge/resolver',
+  '/bridge/trace', '/bridge/derivation', '/bridge/emit',
+]);
+
+async function negotiateResponse(req: Request, path: string, resp: Response): Promise<Response> {
+  if (!CONNEG_PATHS.has(path)) return resp;
+  const accept = req.headers.get('Accept') || '';
+  if (accept.includes('text/turtle')) {
+    try {
+      const body = await resp.clone().json();
+      return new Response(toTurtle(body), {
+        status: 200,
+        headers: { ...Object.fromEntries(resp.headers.entries()), 'Content-Type': 'text/turtle; charset=utf-8' },
+      });
+    } catch { return resp; }
+  }
+  if (accept.includes('application/n-triples')) {
+    try {
+      const body = await resp.clone().json();
+      return new Response(toNTriples(body), {
+        status: 200,
+        headers: { ...Object.fromEntries(resp.headers.entries()), 'Content-Type': 'application/n-triples; charset=utf-8' },
+      });
+    } catch { return resp; }
+  }
+  return resp;
+}
+
+
 // ── Epistemic Grading (spec §4-B) ────────────────────────────────────────────
 // Every API response includes epistemic_grade, epistemic_grade_label, and epistemic_grade_reason.
 // Grade A responses also include derivation:derivationId and derivation:resultIri.
@@ -8612,7 +8764,7 @@ Deno.serve(async (req: Request) => {
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
-      return resp;
+      return await negotiateResponse(req, path, resp);
     }
     if (path === '/kernel/schema/triad') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
@@ -8620,7 +8772,7 @@ Deno.serve(async (req: Request) => {
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
-      return resp;
+      return await negotiateResponse(req, path, resp);
     }
 
     // ── Kernel — ontology metadata ──
@@ -8770,7 +8922,7 @@ Deno.serve(async (req: Request) => {
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
-      return resp;
+      return await negotiateResponse(req, path, resp);
     }
 
     // ── Bridge — trace (trace: namespace) ──
@@ -8780,7 +8932,7 @@ Deno.serve(async (req: Request) => {
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
-      return resp;
+      return await negotiateResponse(req, path, resp);
     }
 
     // ── Bridge — resolver (resolver: namespace) ──
@@ -8790,7 +8942,7 @@ Deno.serve(async (req: Request) => {
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
-      return resp;
+      return await negotiateResponse(req, path, resp);
     }
 
     // ── User — morphism (morphism: namespace) ──
@@ -8904,7 +9056,7 @@ Deno.serve(async (req: Request) => {
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
-      return resp;
+      return await negotiateResponse(req, path, resp);
     }
 
     // ── Bridge — SPARQL endpoint (deprecated alias → 301 redirect to /sparql) ──

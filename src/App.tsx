@@ -43,6 +43,8 @@ const CertificatesPage = lazy(() => import("@/modules/certificates/pages/Certifi
 const SparqlPage = lazy(() => import("@/modules/sparql-ui/pages/SparqlPage"));
 const ToolRegistryPage = lazy(() => import("@/modules/agent-tools/pages/ToolRegistryPage"));
 const PrismPipelinePage = lazy(() => import("@/modules/projects/pages/PrismPipelinePage"));
+const ShaclIndexPage = lazy(() => import("@/modules/shacl/pages/ShaclIndexPage"));
+const FormatsPage = lazy(() => import("@/modules/shacl/pages/FormatsPage"));
 
 const queryClient = new QueryClient();
 
@@ -99,6 +101,8 @@ const App = () => {
             <Route path="/sparql" element={<SparqlPage />} />
             <Route path="/tools" element={<ToolRegistryPage />} />
             <Route path="/prism" element={<PrismPipelinePage />} />
+            <Route path="/shacl" element={<ShaclIndexPage />} />
+            <Route path="/formats" element={<FormatsPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
