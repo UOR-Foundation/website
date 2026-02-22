@@ -46,6 +46,7 @@ const PrismPipelinePage = lazy(() => import("@/modules/projects/pages/PrismPipel
 const ShaclIndexPage = lazy(() => import("@/modules/shacl/pages/ShaclIndexPage"));
 const FormatsPage = lazy(() => import("@/modules/shacl/pages/FormatsPage"));
 const ProjectUorMcp = lazy(() => import("@/modules/projects/pages/ProjectUorMcp"));
+const DatumPage = lazy(() => import("@/modules/datum/pages/DatumPage"));
 
 const queryClient = new QueryClient();
 
@@ -105,6 +106,7 @@ const App = () => {
             <Route path="/prism" element={<PrismPipelinePage />} />
             <Route path="/shacl" element={<ShaclIndexPage />} />
             <Route path="/formats" element={<FormatsPage />} />
+            <Route path="/u/:iri" element={<DatumPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
