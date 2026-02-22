@@ -559,11 +559,27 @@ function acNormalise(term: string): string {
 /**
  * Compute a content-addressed derivation ID from an AC-normalised canonical term string.
  * Returns: "urn:uor:derivation:sha256:<64 lowercase hex chars>"
+ *
+ * R2-compliant: wraps the algebraic term + result IRI as a JSON-LD object, then
+ * canonicalizes via URDNA2015 to ensure cross-agent determinism. The JSON-LD envelope
+ * matches the frontend's derive() in src/modules/derivation/derivation.ts:
+ *   { @type: derivation:Record, derivation:canonicalTerm, derivation:resultIri }
+ * Any agent wrapping the same AC-normalised term with the same context produces
+ * identical N-Quads and therefore an identical derivation_id.
  */
-async function computeDerivationId(term: string): Promise<string> {
+async function computeDerivationId(term: string, resultIri?: string): Promise<string> {
   const normalised = acNormalise(term);
-  const hash = await makeSha256(normalised);
-  return `urn:uor:derivation:sha256:${hash}`;
+  // Wrap as JSON-LD for URDNA2015 canonicalization — mirrors frontend derive()
+  const doc: Record<string, unknown> = {
+    "@context": { "derivation": "https://uor.foundation/derivation/" },
+    "@type": "derivation:Record",
+    "derivation:canonicalTerm": normalised,
+  };
+  if (resultIri) {
+    doc["derivation:resultIri"] = resultIri;
+  }
+  const result = await singleProofHashEdge(doc);
+  return result.derivationId;
 }
 
 // computeDatumIri removed — use datumIRI(value, n) directly
@@ -582,8 +598,8 @@ function gradeResponse(data: Record<string, unknown>, grade: EpistemicGradeType)
  * The term is AC-normalised before hashing.
  */
 async function gradeAResponse(data: Record<string, unknown>, term: string, resultValue: number, n: number = 8): Promise<Record<string, unknown>> {
-  const derivationId = await computeDerivationId(term);
   const resultIri = datumIRI(resultValue, n);
+  const derivationId = await computeDerivationId(term, resultIri);
   return {
     ...data,
     epistemic_grade: 'A' as EpistemicGradeType,
@@ -699,6 +715,8 @@ import {
   canonicalJsonLd,
   glyphToHeaderSafe,
   stripSelfReferentialFields,
+  singleProofHashEdge,
+  canonicalizeToNQuads,
 } from "./lib/store.ts";
 
 /**
@@ -1037,7 +1055,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "op:geometricCharacter": "ring_reflection",
         "formula": `neg(x) = (-x) mod ${m}`,
         "result": neg_x,
-        "derivation:derivationId": await computeDerivationId(`neg(${x})`),
+        "derivation:derivationId": await computeDerivationId(`neg(${x})`, datumIRI(neg_x, n)),
         "derivation:resultIri": datumIRI(neg_x, n),
       },
       "bnot": {
@@ -1047,7 +1065,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "op:geometricCharacter": "hypercube_reflection",
         "formula": `bnot(x) = x XOR ${m-1}`,
         "result": bnot_x,
-        "derivation:derivationId": await computeDerivationId(`bnot(${x})`),
+        "derivation:derivationId": await computeDerivationId(`bnot(${x})`, datumIRI(bnot_x, n)),
         "derivation:resultIri": datumIRI(bnot_x, n),
       },
       "succ": {
@@ -1058,7 +1076,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "op:composedOf": ["op:neg", "op:bnot"],
         "formula": `succ(x) = neg(bnot(x)) = (x+1) mod ${m}`,
         "result": succ_x,
-        "derivation:derivationId": await computeDerivationId(`succ(${x})`),
+        "derivation:derivationId": await computeDerivationId(`succ(${x})`, datumIRI(succ_x, n)),
         "derivation:resultIri": datumIRI(succ_x, n),
       },
       "pred": {
@@ -1069,7 +1087,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "op:composedOf": ["op:bnot", "op:neg"],
         "formula": `pred(x) = bnot(neg(x)) = (x-1) mod ${m}`,
         "result": pred_x,
-        "derivation:derivationId": await computeDerivationId(`pred(${x})`),
+        "derivation:derivationId": await computeDerivationId(`pred(${x})`, datumIRI(pred_x, n)),
         "derivation:resultIri": datumIRI(pred_x, n),
       }
     },
@@ -1085,7 +1103,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "op:geometricCharacter": "translation",
         "formula": `(x + y) mod ${m}`,
         "result": addOp(x, y, n),
-        "derivation:derivationId": await computeDerivationId(`add(${x},${y})`),
+        "derivation:derivationId": await computeDerivationId(`add(${x},${y})`, datumIRI(addOp(x, y, n), n)),
         "derivation:resultIri": datumIRI(addOp(x, y, n), n),
       },
       "sub": {
@@ -1097,7 +1115,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "op:geometricCharacter": "translation",
         "formula": `(x - y) mod ${m}`,
         "result": subOp(x, y, n),
-        "derivation:derivationId": await computeDerivationId(`sub(${x},${y})`),
+        "derivation:derivationId": await computeDerivationId(`sub(${x},${y})`, datumIRI(subOp(x, y, n), n)),
         "derivation:resultIri": datumIRI(subOp(x, y, n), n),
       },
       "mul": {
@@ -1110,7 +1128,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "op:geometricCharacter": "scaling",
         "formula": `(x * y) mod ${m}`,
         "result": mulOp(x, y, n),
-        "derivation:derivationId": await computeDerivationId(`mul(${x},${y})`),
+        "derivation:derivationId": await computeDerivationId(`mul(${x},${y})`, datumIRI(mulOp(x, y, n), n)),
         "derivation:resultIri": datumIRI(mulOp(x, y, n), n),
       },
       "xor": {
@@ -1123,7 +1141,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "op:geometricCharacter": "hypercube_translation",
         "formula": "x XOR y",
         "result": xorOp(x, y),
-        "derivation:derivationId": await computeDerivationId(`xor(${x},${y})`),
+        "derivation:derivationId": await computeDerivationId(`xor(${x},${y})`, datumIRI(xorOp(x, y), n)),
         "derivation:resultIri": datumIRI(xorOp(x, y), n),
       },
       "and": {
@@ -1135,7 +1153,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "op:geometricCharacter": "hypercube_projection",
         "formula": "x AND y",
         "result": andOp(x, y),
-        "derivation:derivationId": await computeDerivationId(`and(${x},${y})`),
+        "derivation:derivationId": await computeDerivationId(`and(${x},${y})`, datumIRI(andOp(x, y), n)),
         "derivation:resultIri": datumIRI(andOp(x, y), n),
       },
       "or": {
@@ -1147,7 +1165,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "op:geometricCharacter": "hypercube_join",
         "formula": "x OR y",
         "result": orOp(x, y),
-        "derivation:derivationId": await computeDerivationId(`or(${x},${y})`),
+        "derivation:derivationId": await computeDerivationId(`or(${x},${y})`, datumIRI(orOp(x, y), n)),
         "derivation:resultIri": datumIRI(orOp(x, y), n),
       }
     },
@@ -6944,31 +6962,29 @@ interface SobridgeIdentity {
 }
 
 // ── C1: Universal Content Addressing via URDNA2015 Single Proof Hashing ──────
-// The Single Proof Hashing Standard:
+// The Single Proof Hashing Standard (R2-compliant, W3C URDNA2015):
 //   nquads = URDNA2015(jsonld.canonize(obj))
 //   hash   = SHA-256(UTF-8(nquads))
 //   derivation_id = "urn:uor:derivation:sha256:" + hex(hash)
 //   store:uorCid  = CIDv1(dag-json, sha2-256, nquadsBytes)
 //   u:address     = toGlyph(hash[0..N])
 //
-// Falls back to sorted-key JSON canonicalization when URDNA2015 is unavailable
-// (edge function environment). The fallback is deterministic and reproducible.
-// When jsonld.js is available, URDNA2015 is the canonical path.
+// URDNA2015 is W3C standard and guarantees that semantically equivalent
+// JSON-LD documents (regardless of key order, whitespace, or context expansion)
+// produce identical canonical N-Quads, and therefore identical hashes.
+// This is the ONLY path. No fallback. No sorted-key JSON.
 
 async function computeSobridgeIdentity(obj: Record<string, unknown>): Promise<SobridgeIdentity> {
   // Ensure @context is present for proper JSON-LD processing
   const doc = obj['@context'] ? obj : { '@context': 'https://schema.org/', ...obj };
-  // Use sorted-key canonical JSON-LD (deterministic, reproducible by any agent)
-  const canonical = canonicalJsonLdLocal(doc);
-  const canonicalBytes = new TextEncoder().encode(canonical);
-  // SHA-256 is THE single hash — all three identity forms derived from it
-  const sha256 = await makeSha256(canonical);
-  const hashBytes = hexToBytes(sha256);
-  // CIDv1 from canonical bytes
-  const cid = await computeCidLocal(canonicalBytes);
-  // u:Address from hash bytes (Braille bijection)
-  const uorAddress = computeUorAddressLocal(hashBytes);
-  return { cid, uorAddress, canonicalBytes, sha256 };
+  // R2: URDNA2015 canonical N-Quads — THE single canonical form
+  const result = await singleProofHashEdge(doc);
+  return {
+    cid: result.cid,
+    uorAddress: result.uorAddress,
+    canonicalBytes: new TextEncoder().encode(result.nquads),
+    sha256: result.hashHex,
+  };
 }
 
 /** Convert hex string to Uint8Array */
@@ -7175,7 +7191,7 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
         { "sobridge": "https://uor.foundation/sobridge/", "derivation": "https://uor.foundation/derivation/", "store": "https://uor.foundation/store/", "u": "https://uor.foundation/u/", "morphism": "https://uor.foundation/morphism/" },
       ],
       ...finalObj,
-      "sobridge:canonicalPayload": canonicalJsonLdLocal(finalObj).slice(0, 256) + '…',
+      "sobridge:canonicalPayload": "(URDNA2015 N-Quads — see derivation:derivationId for identity verification)",
       "store:cid": identity.cid,
       "store:uorAddress": { "u:glyph": identity.uorAddress.glyph.slice(0, 32), "u:length": identity.uorAddress.length },
       "derivation:derivationId": derivationId,
@@ -7428,8 +7444,9 @@ interface DualCidResult {
 }
 
 async function storeToIPFSDualCid(obj: Record<string, unknown>, identity: SobridgeIdentity): Promise<DualCidResult> {
-  const canonical = canonicalJsonLdLocal(obj);
-  const canonicalBytes = new TextEncoder().encode(canonical);
+  // R2: Use URDNA2015 canonical N-Quads as THE bytes stored on IPFS
+  const nquads = await canonicalizeToNQuads(obj);
+  const canonicalBytes = new TextEncoder().encode(nquads);
 
   // Fire both storage operations in parallel
   const [pinataCid, storachaResult] = await Promise.all([
@@ -7460,8 +7477,9 @@ async function storeToIPFS(obj: Record<string, unknown>, identity: SobridgeIdent
     const pinataJwt = Deno.env.get('PINATA_JWT');
     if (!pinataJwt) return null;
 
-    const canonical = canonicalJsonLdLocal(obj);
-    const blob = new Blob([canonical], { type: 'application/ld+json' });
+    // R2: Store URDNA2015 canonical N-Quads (not sorted-key JSON)
+    const nquads = await canonicalizeToNQuads(obj);
+    const blob = new Blob([nquads], { type: 'application/n-quads' });
     const form = new FormData();
     form.append('file', blob, `sobridge-${identity.cid.slice(0, 16)}.jsonld`);
     form.append('pinataMetadata', JSON.stringify({
@@ -7625,8 +7643,9 @@ async function schemaOrgCoherence(req: Request, rl: RateLimitResult): Promise<Re
   const fidelities: Array<{ a: string; b: string; fidelity: number }> = [];
   for (let i = 0; i < identities.length; i++) {
     for (let j = i + 1; j < identities.length; j++) {
-      const bytesA = new TextEncoder().encode(canonicalJsonLdLocal(identities[i].obj));
-      const bytesB = new TextEncoder().encode(canonicalJsonLdLocal(identities[j].obj));
+      // R2: Use URDNA2015 N-Quads for structural comparison (cached from identity computation)
+      const bytesA = identities[i].identity.canonicalBytes;
+      const bytesB = identities[j].identity.canonicalBytes;
       const minLen = Math.min(bytesA.length, bytesB.length);
       let hammingDist = 0;
       let totalBits = minLen * 8;
