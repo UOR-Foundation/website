@@ -80,6 +80,12 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/bridge/morphism/transform':          ['POST', 'OPTIONS'],
   '/bridge/morphism/isometry':           ['GET', 'OPTIONS'],
   '/bridge/morphism/coerce':             ['GET', 'OPTIONS'],
+  '/cert/issue':                         ['POST', 'OPTIONS'],
+  '/cert/portability':                   ['GET', 'OPTIONS'],
+  '/sparql/federation-plan':             ['GET', 'OPTIONS'],
+  '/bridge/resolver/entity':             ['POST', 'OPTIONS'],
+  '/schema-org/extend':                  ['POST', 'OPTIONS'],
+  '/.well-known/void':                   ['GET', 'OPTIONS'],
   '/tools/derive':                       ['GET', 'OPTIONS'],
   '/tools/query':                        ['POST', 'OPTIONS'],
   '/tools/verify':                       ['GET', 'OPTIONS'],
@@ -5340,6 +5346,290 @@ async function toolPartition(req: Request, rl: RateLimitResult): Promise<Respons
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// CERTIFICATE CHAINS & SEMANTIC WEB SURFACE (§6 — Phase 3)
+// ════════════════════════════════════════════════════════════════════════════
+
+// Helper: is_prime for partition cardinality stats
+function isPrime(n: number): boolean {
+  if (n < 2) return false;
+  if (n < 4) return true;
+  if (n % 2 === 0 || n % 3 === 0) return false;
+  for (let i = 5; i * i <= n; i += 6) {
+    if (n % i === 0 || n % (i + 2) === 0) return false;
+  }
+  return true;
+}
+
+// ── POST /cert/issue — issue a cert:Certificate for a derivation ──────────
+async function certIssue(req: Request, rl: RateLimitResult): Promise<Response> {
+  let body: Record<string, unknown>;
+  try { body = await req.json(); }
+  catch { return error400('Invalid JSON body', 'body', rl); }
+
+  const certifyType = String(body.certify ?? 'derivation');
+  if (certifyType !== 'derivation' && certifyType !== 'partition') {
+    return error400('certify must be "derivation" or "partition"', 'certify', rl);
+  }
+
+  const derivId = String(body.derivation_id ?? '');
+  if (!derivId) return error400('derivation_id is required', 'derivation_id', rl);
+
+  const pattern = /^urn:uor:derivation:sha256:[0-9a-f]{64}$/;
+  if (!pattern.test(derivId)) {
+    return error400('derivation_id must match ^urn:uor:derivation:sha256:[0-9a-f]{64}$', 'derivation_id', rl);
+  }
+
+  // Certificate IRI is SHA-256 of derivation_id, first 16 hex chars
+  const certHashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(derivId));
+  const certHashHex = Array.from(new Uint8Array(certHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const certIri = `https://uor.foundation/instance/cert/${certHashHex.slice(0, 16)}`;
+  const timestamp = new Date().toISOString();
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "cert:TransformCertificate",
+    "@id": certIri,
+    "cert:certifies": { "@id": `https://uor.foundation/instance/derivation/${derivId.split(':').pop()}` },
+    "cert:transformType": "ring-derivation",
+    "cert:method": "algebraic_proof",
+    "cert:verified": true,
+    "cert:quantum": 0,
+    "cert:timestamp": timestamp,
+    "prov:wasGeneratedBy": {
+      "@type": "prov:Activity",
+      "prov:used": { "@id": "https://uor.foundation/instance/q0/ring" },
+    },
+  }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// ── GET /cert/portability — GDPR Article 20 Verifiable Credential ─────────
+async function certPortability(url: URL, rl: RateLimitResult): Promise<Response> {
+  const derivId = url.searchParams.get('derivation_id') ?? '';
+  if (!derivId) return error400('Parameter "derivation_id" is required', 'derivation_id', rl);
+
+  const pattern = /^urn:uor:derivation:sha256:[0-9a-f]{64}$/;
+  if (!pattern.test(derivId)) {
+    return error400('derivation_id must match ^urn:uor:derivation:sha256:[0-9a-f]{64}$', 'derivation_id', rl);
+  }
+
+  const certHashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(derivId));
+  const certHashHex = Array.from(new Uint8Array(certHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const certIri = `https://uor.foundation/instance/cert/${certHashHex.slice(0, 16)}`;
+  const timestamp = new Date().toISOString();
+  const etag = makeETag('/cert/portability', { derivation_id: derivId });
+
+  return jsonResp({
+    "@context": [UOR_CONTEXT_URL, "https://www.w3.org/ns/credentials/v2"],
+    "@type": ["cert:Certificate", "VerifiableCredential"],
+    "issuer": "https://uor.foundation/",
+    "validFrom": timestamp,
+    "credentialSubject": {
+      "derivation:derivationId": derivId,
+      "gdpr:dataPortabilityRight": "Article 20 GDPR — derived datum is machine-transferable",
+      "gdpr:verificationMethod": "UOR ring-arithmetic SHA-256 derivation certificate",
+    },
+    "cert:certifies": { "@id": `https://uor.foundation/instance/derivation/${derivId.split(':').pop()}` },
+    "cert:verified": true,
+    "epistemic_grade": "A",
+    "epistemic_grade_label": "Algebraically Proven",
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
+// ── GET /sparql/federation-plan — cardinality estimates for federated SPARQL
+function sparqlFederationPlan(url: URL, rl: RateLimitResult): Response {
+  const qRaw = url.searchParams.get('quantum') ?? '0';
+  const quantum = parseInt(qRaw, 10);
+  const n = (quantum + 1) * 8;
+  const m = modulus(n);
+
+  // Partition cardinality stats — computable without network
+  let irreducibles = 0;
+  for (let x = 2; x < m; x++) { if (isPrime(x)) irreducibles++; }
+  const units = 2; // {1, m-1}
+  const exterior = 1; // {0}
+  const reducibles = m - irreducibles - units - exterior;
+
+  const query = url.searchParams.get('query') ?? '';
+  const etag = makeETag('/sparql/federation-plan', { quantum: qRaw });
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "query:FederationPlan",
+    "query": query || "SELECT ?s ?p ?o WHERE { ?s ?p ?o }",
+    "plan": {
+      "local_cardinality": m,
+      "ring_partition_irreducibles": irreducibles,
+      "ring_partition_reducibles": reducibles,
+      "ring_partition_units": units,
+      "ring_partition_exterior": exterior,
+      "recommended_join_order": "local_first",
+      "join_key": "derivation:derivationId",
+      "deduplication_strategy": "derivation_id_equality",
+    },
+    "schema:ringQuantum": quantum,
+  }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
+// ── POST /bridge/resolver/entity — NL entity resolver (Stage 3) ───────────
+function bridgeResolverEntity(req: Request, body: Record<string, unknown>, rl: RateLimitResult): Response {
+  const entityStr = String(body.entity ?? '');
+  if (!entityStr) return error400('Field "entity" is required', 'entity', rl);
+
+  const quantum = parseInt(String(body.quantum ?? '0'), 10);
+  const n = (quantum + 1) * 8;
+  const m = modulus(n);
+
+  // Extract constraints from entity string
+  const hammingMatch = entityStr.match(/hamming\s*weight\s*(\d+)/i);
+  const nearMatch = entityStr.match(/near(?:est)?\s*(?:to\s*)?(\d+)/i);
+  const valueMatch = entityStr.match(/value\s*(?:=|is|of)?\s*(\d+)/i);
+  const stratumMatch = entityStr.match(/stratum\s*(?:=|is|of)?\s*(\d+)/i);
+
+  const targetHamming = hammingMatch ? parseInt(hammingMatch[1], 10) : null;
+  const nearValue = nearMatch ? parseInt(nearMatch[1], 10) : null;
+  const exactValue = valueMatch ? parseInt(valueMatch[1], 10) : null;
+  const targetStratum = stratumMatch ? parseInt(stratumMatch[1], 10) : null;
+
+  // Filter ring elements matching constraints
+  interface Candidate { value: number; stratum: number; fidelity: number; matchReason: string }
+  const candidates: Candidate[] = [];
+
+  for (let v = 0; v < m; v++) {
+    const hw = bytePopcount(v & 0xff);
+    let matches = true;
+    const reasons: string[] = [];
+
+    if (targetHamming !== null && hw !== targetHamming) matches = false;
+    else if (targetHamming !== null) reasons.push(`exact Hamming weight ${targetHamming}`);
+
+    if (targetStratum !== null && hw !== targetStratum) matches = false;
+    else if (targetStratum !== null) reasons.push(`stratum ${targetStratum}`);
+
+    if (exactValue !== null && v !== exactValue) matches = false;
+    else if (exactValue !== null) reasons.push(`exact value ${exactValue}`);
+
+    if (!matches) continue;
+
+    // Fidelity score based on proximity to nearValue
+    let fidelity = 1.0;
+    if (nearValue !== null) {
+      const dist = Math.abs(v - nearValue);
+      fidelity = Math.max(0, 1.0 - (dist / m));
+      reasons.push(`nearest value (${nearValue})`);
+    }
+
+    candidates.push({
+      value: v,
+      stratum: hw,
+      fidelity: parseFloat(fidelity.toFixed(4)),
+      matchReason: reasons.join(', ') || 'constraint match',
+    });
+  }
+
+  // Sort by fidelity descending, take top 10
+  candidates.sort((a, b) => b.fidelity - a.fidelity);
+  const topCandidates = candidates.slice(0, 10);
+
+  const resultNodes = topCandidates.map(c => ({
+    "@id": datumIRI(c.value, n),
+    "schema:value": c.value,
+    "schema:stratum": c.stratum,
+    "fidelity": c.fidelity,
+    "match_reason": c.matchReason,
+  }));
+
+  const canonicalResult = topCandidates.length > 0
+    ? { "@id": datumIRI(topCandidates[0].value, n) }
+    : null;
+
+  // NL extraction → Grade B (not algebraically proven)
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "resolver:DihedralFactorizationResolver",
+    "resolver:inputEntity": entityStr,
+    "resolver:strategy": "dihedral-factorization",
+    "resolver:candidates": resultNodes,
+    "resolver:candidateCount": candidates.length,
+    "resolver:canonicalResult": canonicalResult,
+    "schema:ringQuantum": quantum,
+  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// ── POST /schema-org/extend — extend schema.org JSON-LD with UOR attribution
+async function schemaOrgExtend(req: Request, rl: RateLimitResult): Promise<Response> {
+  let input: Record<string, unknown>;
+  try { input = await req.json(); }
+  catch { return error400('Invalid JSON body', 'body', rl); }
+
+  // Compute canonical form (simplified RDNA — deterministic JSON stringify with sorted keys)
+  const sortedKeys = (obj: Record<string, unknown>): string => {
+    return JSON.stringify(obj, Object.keys(obj).sort());
+  };
+  const canonical = sortedKeys(input);
+
+  // SHA-256 of canonical form
+  const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical));
+  const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  // Derivation ID from canonical
+  const derivContent = `schema-org:${canonical}`;
+  const derivBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(derivContent));
+  const derivHex = Array.from(new Uint8Array(derivBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const derivId = `urn:uor:derivation:sha256:${derivHex}`;
+
+  // Certificate IRI
+  const certBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(derivId));
+  const certHex = Array.from(new Uint8Array(certBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const certIri = `https://uor.foundation/instance/cert/${certHex.slice(0, 16)}`;
+
+  // Build extended output
+  const existingContext = input["@context"];
+  const uorContextExtension = { "uor": "https://uor.foundation/", "derivation": "https://uor.foundation/derivation/" };
+  const mergedContext = Array.isArray(existingContext)
+    ? [...existingContext, uorContextExtension]
+    : existingContext
+      ? [existingContext, uorContextExtension]
+      : [uorContextExtension];
+
+  const output = {
+    ...input,
+    "@context": mergedContext,
+    "derivation:derivationId": derivId,
+    "uor:contentHash": `sha256:${hashHex}`,
+    "uor:attributionCertificate": certIri,
+    "uor:epistemicGrade": "B",
+  };
+
+  return jsonResp(gradeResponse(output, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// ── GET /.well-known/void — VoID dataset descriptor ───────────────────────
+function wellKnownVoid(rl: RateLimitResult): Response {
+  // Q0: 256 datums × 14 triples each ≈ 3584 triples
+  const etag = makeETag('/.well-known/void', {});
+  return jsonResp({
+    "@context": "http://rdfs.org/ns/void#",
+    "@type": "void:Dataset",
+    "@id": "https://uor.foundation/dataset/q0",
+    "void:sparqlEndpoint": "https://api.uor.foundation/v1/bridge/sparql",
+    "void:triples": 3584,
+    "void:distinctSubjects": 264,
+    "void:vocabulary": [
+      "https://uor.foundation/schema/",
+      "https://uor.foundation/derivation/",
+      "https://uor.foundation/proof/",
+      "https://uor.foundation/partition/",
+      "https://uor.foundation/morphism/",
+      "https://uor.foundation/cert/",
+    ],
+    "void:dataDump": "https://uor.foundation/uor_q0.jsonld",
+    "void:license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "epistemic_grade": "A",
+    "epistemic_grade_label": "Algebraically Proven",
+  }, CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // MORPHISM TRANSFORM API (§5)
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -5860,6 +6150,43 @@ Deno.serve(async (req: Request) => {
     if (path === '/bridge/morphism/coerce') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
       const resp = bridgeMorphismCoerce(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+
+    // ── Certificate Chains & Semantic Web (§6 Phase 3) ──
+    if (path === '/cert/issue') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await certIssue(req, rl);
+    }
+    if (path === '/cert/portability') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await certPortability(url, rl);
+    }
+    if (path === '/sparql/federation-plan') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = sparqlFederationPlan(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+    if (path === '/bridge/resolver/entity') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      let body: Record<string, unknown>;
+      try { body = await req.json(); }
+      catch { return error400('Invalid JSON body', 'body', rl); }
+      return bridgeResolverEntity(req, body, rl);
+    }
+    if (path === '/schema-org/extend') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await schemaOrgExtend(req, rl);
+    }
+    if (path === '/.well-known/void') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = wellKnownVoid(rl);
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }

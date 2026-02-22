@@ -535,6 +535,32 @@ SKOS thresholds: fidelity == 1.0 → exactMatch, ≥ 0.875 → closeMatch, ≥ 0
 
 ---
 
+## Certificate Chains & Semantic Web Surface (Phase 3)
+
+Six endpoints complete the UOR Semantic Web deployment:
+
+| Endpoint | Method | Grade | Description |
+|----------|--------|-------|-------------|
+| `/cert/issue` | POST | A | Issue a `cert:TransformCertificate` for a derivation. Body: `{certify, derivation_id}` |
+| `/cert/portability` | GET | A | GDPR Article 20 W3C Verifiable Credential attestation. Param: `derivation_id` |
+| `/sparql/federation-plan` | GET | A | Partition cardinality estimates for federated SPARQL planning. Param: `quantum` |
+| `/bridge/resolver/entity` | POST | B | Natural-language entity resolver (Stage 3 of resolution cycle). Body: `{entity, quantum}` |
+| `/schema-org/extend` | POST | B | Extend schema.org JSON-LD with UOR derivation attribution |
+| `/.well-known/void` | GET | A | VoID dataset descriptor for Linked Open Data registration |
+
+### VoID Discovery
+
+The VoID descriptor at `/.well-known/void` enables LOD registration:
+- `void:sparqlEndpoint`: `https://api.uor.foundation/v1/bridge/sparql`
+- `void:dataDump`: `https://uor.foundation/uor_q0.jsonld`
+- `void:triples`: 3584 (256 datums × 14 properties each)
+
+### .well-known/uor.json
+
+Updated to include all tool endpoints, artifact URIs, epistemic grade definitions, and W3C conformance declaration.
+
+---
+
 ## What Problems Does UOR Solve?
 
 | # | Problem | Agent Impact Today | UOR Solution | Key Namespace | Source |

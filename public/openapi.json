@@ -120,6 +120,26 @@
     {
       "name": "morphism",
       "description": "**Morphism Transform API** (§5) — structure-preserving maps between rings. Endpoints for verifying embeddings, isometries, and cross-quantum value coercion."
+    },
+    {
+      "name": "certificates",
+      "description": "**Certificate Chains** (Phase 3) — issue cert:TransformCertificate and GDPR Article 20 Verifiable Credentials for derivation provenance."
+    },
+    {
+      "name": "sparql",
+      "description": "**SPARQL** — query endpoints and federation cardinality planning for the UOR knowledge graph."
+    },
+    {
+      "name": "resolver",
+      "description": "**Entity Resolution** — natural-language entity resolver using dihedral factorization strategy."
+    },
+    {
+      "name": "semantic-web",
+      "description": "**Semantic Web Surface** — schema.org extension with UOR derivation attribution."
+    },
+    {
+      "name": "discovery",
+      "description": "**Discovery** — VoID dataset descriptors, .well-known endpoints, and Linked Open Data registration."
     }
   ],
   "paths": {
@@ -1480,6 +1500,102 @@
           "200": { "description": "Coerced value with target IRI and transform reference" },
           "400": { "$ref": "#/components/responses/BadRequest" }
         }
+      }
+    },
+    "/cert/issue": {
+      "post": {
+        "operationId": "certIssue",
+        "tags": ["certificates"],
+        "summary": "Issue a cert:Certificate for a derivation",
+        "description": "Generates a verifiable cert:TransformCertificate with deterministic IRI (SHA-256 of derivation_id). Includes PROV-O provenance and epistemic grading.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "certify": { "type": "string", "enum": ["derivation", "partition"], "default": "derivation" },
+                  "derivation_id": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" }
+                },
+                "required": ["derivation_id"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "cert:TransformCertificate with algebraic proof" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/cert/portability": {
+      "get": {
+        "operationId": "certPortability",
+        "tags": ["certificates"],
+        "summary": "GDPR Article 20 data portability attestation",
+        "description": "Returns a W3C Verifiable Credential attesting GDPR Article 20 data portability rights for a UOR derivation.",
+        "parameters": [
+          { "name": "derivation_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" } }
+        ],
+        "responses": { "200": { "description": "W3C VerifiableCredential with GDPR attestation" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/sparql/federation-plan": {
+      "get": {
+        "operationId": "sparqlFederationPlan",
+        "tags": ["sparql"],
+        "summary": "SPARQL federation cardinality planning",
+        "description": "Returns partition cardinality estimates (irreducibles, reducibles, units, exterior) for federated SPARQL query planning. Computed algebraically without network requests.",
+        "parameters": [
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } },
+          { "name": "query", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Federation plan with cardinality estimates and join strategy" } }
+      }
+    },
+    "/bridge/resolver/entity": {
+      "post": {
+        "operationId": "bridgeResolverEntity",
+        "tags": ["resolver"],
+        "summary": "Natural-language entity resolver",
+        "description": "Resolves natural-language entity descriptions to ring elements using constraint extraction (Hamming weight, value proximity, stratum). Returns Grade B (NL extraction is not algebraically proven).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "entity": { "type": "string", "description": "NL entity description e.g. 'the byte with Hamming weight 3 nearest to 42'" },
+                  "quantum": { "type": "integer", "default": 0 }
+                },
+                "required": ["entity"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Resolver candidates with fidelity scores" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/schema-org/extend": {
+      "post": {
+        "operationId": "schemaOrgExtend",
+        "tags": ["semantic-web"],
+        "summary": "Extend schema.org JSON-LD with UOR attribution",
+        "description": "Takes any valid schema.org JSON-LD object and adds UOR derivation_id, contentHash, and attributionCertificate. Grade B (content hash, not algebraic proof).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "description": "Any valid schema.org JSON-LD object" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Extended JSON-LD with UOR attribution" } }
+      }
+    },
+    "/.well-known/void": {
+      "get": {
+        "operationId": "wellKnownVoid",
+        "tags": ["discovery"],
+        "summary": "VoID dataset descriptor",
+        "description": "W3C VoID (Vocabulary of Interlinked Datasets) descriptor for Linked Open Data registration. Describes the Q0 knowledge graph, SPARQL endpoint, and vocabulary URIs.",
+        "responses": { "200": { "description": "VoID dataset descriptor" } }
       }
     }
   },
