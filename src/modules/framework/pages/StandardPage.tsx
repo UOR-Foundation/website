@@ -21,25 +21,45 @@ const clients = [
     name: "Claude Desktop",
     file: "claude_desktop_config.json",
     docsUrl: "https://modelcontextprotocol.io/quickstart/user",
+    steps: [
+      "Open Claude Desktop → Settings → Developer → Edit Config",
+      "Paste the config below and save",
+      "Restart Claude Desktop",
+    ],
   },
   {
     name: "Cursor",
     file: ".cursor/mcp.json",
     docsUrl: "https://docs.cursor.com/context/model-context-protocol",
+    steps: [
+      "Open Cursor → Settings → MCP → Add new global MCP server",
+      "Paste the config below and save",
+      "The UOR tools appear automatically",
+    ],
   },
   {
     name: "Windsurf",
     file: "~/.codeium/windsurf/mcp_config.json",
     docsUrl: "https://docs.windsurf.com/windsurf/mcp",
+    steps: [
+      "Open Windsurf → Cascade → Click the hammer icon → Configure",
+      "Paste the config below and save",
+      "Restart Windsurf",
+    ],
   },
   {
-    name: "VS Code (Copilot)",
+    name: "VS Code",
     file: ".vscode/mcp.json",
     docsUrl: "https://code.visualstudio.com/docs/copilot/chat/mcp-servers",
+    steps: [
+      "Open Command Palette → MCP: Add Server → HTTP",
+      'Enter the URL below as the server URL, name it "uor"',
+      "The tools are available in Copilot Chat immediately",
+    ],
   },
 ] as const;
 
-function CopyBtn({ text }: { text: string }) {
+function CopyBtn({ text, label }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   const handle = useCallback(() => {
     navigator.clipboard.writeText(text);
@@ -47,8 +67,8 @@ function CopyBtn({ text }: { text: string }) {
     setTimeout(() => setCopied(false), 1500);
   }, [text]);
   return (
-    <button onClick={handle} className="shrink-0 rounded p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="Copy">
-      {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} />}
+    <button onClick={handle} className="inline-flex items-center gap-1.5 shrink-0 rounded-lg px-3 py-1.5 text-sm font-body font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors" aria-label="Copy">
+      {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> {label || "Copy"}</>}
     </button>
   );
 }
@@ -59,7 +79,7 @@ function McpClientCards() {
   return (
     <div>
       {/* Client tabs */}
-      <div className="flex flex-wrap gap-2 mb-5">
+      <div className="flex flex-wrap gap-2 mb-6">
         {clients.map((cl, i) => (
           <button
             key={cl.name}
@@ -75,25 +95,36 @@ function McpClientCards() {
         ))}
       </div>
 
-      {/* Config card */}
+      {/* Steps */}
       <div className="rounded-2xl border border-border bg-card p-5 md:p-7 mb-5">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60">
-            Paste into <code className="text-foreground/80">{c.file}</code>
-          </p>
-          <CopyBtn text={MCP_CONFIG} />
+        <ol className="space-y-3 mb-6">
+          {c.steps.map((step, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
+                {i + 1}
+              </span>
+              <p className="text-sm md:text-base font-body text-foreground leading-relaxed">{step}</p>
+            </li>
+          ))}
+        </ol>
+
+        {/* Config block */}
+        <div className="bg-muted/50 rounded-xl p-4 overflow-x-auto mb-4">
+          <pre className="text-sm font-mono text-foreground leading-relaxed">{MCP_CONFIG}</pre>
         </div>
-        <pre className="bg-muted/50 rounded-xl p-4 overflow-x-auto text-sm font-mono text-foreground leading-relaxed">
-          {MCP_CONFIG}
-        </pre>
-        <a
-          href={c.docsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 mt-4 text-sm font-body text-primary hover:underline"
-        >
-          {c.name} setup guide <ExternalLink size={13} />
-        </a>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <CopyBtn text={MCP_CONFIG} label="Copy config" />
+          <CopyBtn text={MCP_URL} label="Copy URL" />
+          <a
+            href={c.docsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-body text-primary hover:underline"
+          >
+            Full guide <ExternalLink size={13} />
+          </a>
+        </div>
       </div>
 
       {/* Tools summary */}
