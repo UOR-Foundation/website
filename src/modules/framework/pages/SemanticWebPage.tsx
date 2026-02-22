@@ -201,28 +201,28 @@ function LayerCard({ layer }: { layer: (typeof semanticWebLayers)[number] }) {
           color: layer.textDark ? "hsl(220, 20%, 12%)" : "white",
         }}
       >
-        <span className="font-mono text-xs font-bold opacity-60">
+        <span className="font-mono text-sm font-bold opacity-60">
           {layer.number === 7 ? "⧫" : `L${layer.number}`}
         </span>
-        <h3 className="font-display text-base sm:text-lg font-bold">{layer.title}</h3>
+        <h3 className="font-display text-lg sm:text-xl font-bold">{layer.title}</h3>
       </div>
 
       <div className="p-6 md:p-8">
         {/* Two-column: What / Why */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <p className="text-[11px] font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-2">
+            <p className="text-xs font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-2">
               What It Does
             </p>
-            <p className="text-sm font-body text-foreground leading-relaxed">
+            <p className="text-base font-body text-foreground leading-relaxed">
               {layer.what}
             </p>
           </div>
           <div>
-            <p className="text-[11px] font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-2">
+            <p className="text-xs font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-2">
               Why It Matters
             </p>
-            <p className="text-sm font-body text-muted-foreground leading-relaxed">
+            <p className="text-base font-body text-muted-foreground leading-relaxed">
               {layer.why}
             </p>
           </div>
@@ -230,10 +230,10 @@ function LayerCard({ layer }: { layer: (typeof semanticWebLayers)[number] }) {
 
         {/* UOR contribution */}
         <div className="rounded-xl bg-primary/5 border border-primary/10 p-5">
-          <p className="text-[11px] font-body font-semibold tracking-widest uppercase text-primary mb-2">
+          <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary mb-2">
             UOR Implementation
           </p>
-          <p className="text-sm font-body text-foreground leading-relaxed">
+          <p className="text-base font-body text-foreground leading-relaxed">
             {layer.uor}
           </p>
         </div>
