@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.uor-api]
 verify_jwt = false
+
+[functions.uor-mcp]
+verify_jwt = false
