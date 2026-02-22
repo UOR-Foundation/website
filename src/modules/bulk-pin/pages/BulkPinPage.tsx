@@ -701,7 +701,7 @@ export default function BulkPinPage() {
                                       )}
                                     </td>
                                     <td className="py-1.5 pr-3 hidden xl:table-cell">
-                                      {t.pinStatus === "pinned" && t.verifyStatus === "idle" ? (
+                                      {t.verifyStatus === "idle" && (t.pinStatus === "pinned" || t.result?.derivationId) ? (
                                         <button
                                           onClick={e => { e.stopPropagation(); verify(t.name); }}
                                           className="text-primary hover:underline text-[10px]"
