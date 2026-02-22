@@ -1,5 +1,8 @@
 {
   "uor_version": "1.0.0",
+  "phase": "2",
+  "phase_label": "KG Integration",
+  "phase2_status": "complete",
   "ring_quantum": 0,
   "registered_modules": 26,
   "sparql_endpoint": "https://api.uor.foundation/v1/sparql",
@@ -76,5 +79,25 @@
     "gdpr_article_20": true,
     "cert_type": "cert:AttributionCertificate",
     "attribution_anchor": "derivation:derivationId"
-  }
+  },
+  "phase2_endpoints": [
+    "GET /v1/graph/q0.jsonld",
+    "GET /v1/sparql",
+    "POST /v1/sparql",
+    "GET /v1/sparql/verify",
+    "GET /v1/sparql/federation-plan",
+    "GET /v1/tools/derive",
+    "POST /v1/tools/query",
+    "GET /v1/tools/verify",
+    "GET /v1/tools/correlate",
+    "POST /v1/tools/partition",
+    "POST /v1/bridge/morphism/transform",
+    "GET /v1/bridge/morphism/isometry",
+    "GET /v1/bridge/morphism/coerce",
+    "POST /v1/bridge/resolver/entity",
+    "POST /v1/cert/issue",
+    "GET /v1/cert/portability",
+    "GET /v1/schema-org/extend",
+    "GET /v1/test/e2e"
+  ]
 }

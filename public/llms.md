@@ -885,6 +885,50 @@ Solid Community Server (CSS), NSS, trinpod, inrupt.net
 
 ---
 
+## Phase 2 — Knowledge Graph Integration (Now Live)
+
+### New Endpoints Added in Phase 2
+
+| Group          | Endpoint                        | Method | Purpose                                    |
+|----------------|---------------------------------|--------|--------------------------------------------|
+| /v1/graph      | /graph/q0.jsonld                | GET    | Full 265-node Q0 instance graph (JSON-LD)  |
+| /v1/graph      | /graph/q0/datum/{value}         | GET    | Single datum node lookup                   |
+| /v1/sparql     | /sparql                         | GET/POST | SPARQL 1.1 query endpoint                 |
+| /v1/sparql     | /sparql/verify                  | GET    | Run 4 verification queries, return pass/fail |
+| /v1/sparql     | /sparql/federation-plan         | GET    | Cardinality planning for federated queries |
+| /v1/tools      | /tools/derive                   | GET    | Derive term → derivation_id + result_iri   |
+| /v1/tools      | /tools/query                    | POST   | SPARQL with per-node epistemic grades      |
+| /v1/tools      | /tools/verify                   | GET    | Verify derivation_id in knowledge graph    |
+| /v1/tools      | /tools/correlate                | GET    | Fidelity score between two ring elements   |
+| /v1/tools      | /tools/partition                | POST   | Partition closure of a seed set            |
+| /v1/bridge     | /bridge/morphism/transform      | POST   | Certified structure-preserving transform   |
+| /v1/bridge     | /bridge/morphism/isometry       | GET    | Isometry verification with certificate     |
+| /v1/bridge     | /bridge/morphism/coerce         | GET    | Cross-quantum value coercion               |
+| /v1/bridge     | /bridge/resolver/entity         | POST   | Natural language → canonical IRI           |
+| /v1/bridge     | /bridge/observable/metric       | GET    | RingMetric / HammingMetric / Incompatibility |
+| /v1/bridge     | /bridge/observable/stratum      | GET    | StratumValue / StratumDelta / Trajectory   |
+| /v1/bridge     | /bridge/observable/path         | POST   | PathLength / TotalVariation / WindingNumber |
+| /v1/bridge     | /bridge/observable/curvature    | GET    | Commutator — non-commutativity measure     |
+| /v1/bridge     | /bridge/observable/holonomy     | POST   | Holonomy of closed paths                   |
+| /v1/bridge     | /bridge/observable/stream       | POST   | Sliding-window IoT/time-series analysis    |
+| /v1/cert       | /cert/issue                     | POST   | Issue cert:TransformCertificate (Grade B)  |
+| /v1/cert       | /cert/portability               | GET    | GDPR Art. 20 W3C Verifiable Credential     |
+| /v1/schema-org | /schema-org/extend              | GET    | schema.org + UOR provenance extension      |
+| /v1/test       | /test/e2e                       | GET    | Full 8-stage integration test              |
+
+### Phase 2 Epistemic Grade Reference
+
+Every response now carries `epistemic_grade`. Grade A means you can cite with full confidence.
+
+| Grade | Label              | Trigger                                   | Agent behaviour              |
+|-------|--------------------|-------------------------------------------|------------------------------|
+| A     | Algebraically Proven | Ring arithmetic + SHA-256 derivation_id  | Cite with full confidence    |
+| B     | Graph-Certified    | cert:Certificate chain issued             | Cite with high confidence    |
+| C     | Graph-Present      | In graph, no certificate                  | Cite with moderate confidence|
+| D     | LLM-Generated      | No derivation_id, no cert                 | Flag as unverified hypothesis|
+
+---
+
 ## Navigation
 
 | Document | Purpose | Time |
