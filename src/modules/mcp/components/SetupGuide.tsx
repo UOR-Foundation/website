@@ -4,7 +4,7 @@ import CopyButton from "./CopyButton";
 import { MCP_CLIENTS, MCP_CONFIG, MCP_URL } from "../data/clients";
 
 const VALUE_STATEMENTS: Record<string, string> = {
-  "Claude Desktop": "One-click install. Deterministic, structured derivations inside Claude.",
+  "Claude Desktop": "Add verifiable, content-addressed computation to Claude.",
   Cursor: "Add UOR tools to Cursor for verifiable, content-addressed computation.",
   Windsurf: "Bring deterministic derivations into your Windsurf workflow.",
   "VS Code": "Connect VS Code Copilot to UOR for structured, traceable outputs.",
@@ -18,10 +18,8 @@ const TROUBLESHOOTING = [
 
 const SetupGuide = () => {
   const [active, setActive] = useState(0);
-  const [showManual, setShowManual] = useState(false);
   const [showTroubleshooting, setShowTroubleshooting] = useState(false);
   const c = MCP_CLIENTS[active];
-  const isClaude = active === 0;
 
   return (
     <div>
@@ -32,7 +30,6 @@ const SetupGuide = () => {
             key={cl.name}
             onClick={() => {
               setActive(i);
-              setShowManual(false);
               setShowTroubleshooting(false);
             }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border font-body ${
@@ -52,94 +49,35 @@ const SetupGuide = () => {
       </p>
 
       <div className="rounded-2xl border border-border bg-card p-5 md:p-7 space-y-5">
-        {/* ── Primary action ── */}
-        {isClaude && !showManual ? (
-          <div className="space-y-3">
-            <a
-              href={c.deepLink}
-              className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-body shadow-sm"
-            >
-              Install in Claude Desktop
-              <ExternalLink size={15} />
-            </a>
-            <p className="text-sm text-muted-foreground font-body">
-              Click Install, then restart Claude Desktop.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <ol className="space-y-2.5">
-              {c.steps.map((step, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
-                    {i + 1}
-                  </span>
-                  <p className="text-sm font-body text-foreground leading-relaxed">
-                    {step}
-                  </p>
-                </li>
-              ))}
-            </ol>
-
-            {/* Config block */}
-            <div className="relative bg-muted/50 rounded-xl p-4 overflow-x-auto">
-              <pre className="text-sm font-mono text-foreground leading-relaxed pr-20">
-                {MCP_CONFIG}
-              </pre>
-              <div className="absolute top-3 right-3">
-                <CopyButton text={MCP_CONFIG} label="Copy" />
-              </div>
-            </div>
-
-            {/* Config path */}
-            {c.configPath && (
-              <p className="text-xs text-muted-foreground font-mono bg-muted/30 rounded-lg px-3 py-2">
-                Save to: {c.configPath.mac}
+        {/* ── Steps ── */}
+        <ol className="space-y-2.5">
+          {c.steps.map((step, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
+                {i + 1}
+              </span>
+              <p className="text-sm font-body text-foreground leading-relaxed">
+                {step}
               </p>
-            )}
-          </div>
-        )}
+            </li>
+          ))}
+        </ol>
 
-        {/* ── Manual config toggle (Claude only) ── */}
-        {isClaude && (
-          <button
-            onClick={() => setShowManual((v) => !v)}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors font-body"
-          >
-            <ChevronDown
-              size={14}
-              className={`transition-transform ${showManual ? "rotate-180" : ""}`}
-            />
-            {showManual ? "Hide manual config" : "Configure manually"}
-          </button>
-        )}
-
-        {isClaude && showManual && (
-          <div className="space-y-3 pt-1">
-            <ol className="space-y-2.5">
-              {c.fallbackSteps!.map((step, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
-                    {i + 1}
-                  </span>
-                  <p className="text-sm font-body text-foreground leading-relaxed">
-                    {step}
-                  </p>
-                </li>
-              ))}
-            </ol>
-            <div className="relative bg-muted/50 rounded-xl p-4 overflow-x-auto">
-              <pre className="text-sm font-mono text-foreground leading-relaxed pr-20">
-                {MCP_CONFIG}
-              </pre>
-              <div className="absolute top-3 right-3">
-                <CopyButton text={MCP_CONFIG} label="Copy" />
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground font-mono bg-muted/30 rounded-lg px-3 py-2">
-              Save to: {c.configPath.mac}
-            </p>
+        {/* Config block */}
+        <div className="relative bg-muted/50 rounded-xl p-4 overflow-x-auto">
+          <pre className="text-sm font-mono text-foreground leading-relaxed pr-20">
+            {MCP_CONFIG}
+          </pre>
+          <div className="absolute top-3 right-3">
+            <CopyButton text={MCP_CONFIG} label="Copy" />
           </div>
+        </div>
+
+        {/* Config path */}
+        {c.configPath && (
+          <p className="text-xs text-muted-foreground font-mono bg-muted/30 rounded-lg px-3 py-2">
+            Save to: {c.configPath.mac}
+          </p>
         )}
 
         {/* ── Verify ── */}

@@ -31,10 +31,6 @@ export const MCP_CLIENTS: McpClientInfo[] = [
       win: "%APPDATA%\\Claude\\claude_desktop_config.json",
     },
     steps: [
-      "Click the button below — it opens Claude Desktop and installs automatically.",
-      "Restart Claude Desktop.",
-    ],
-    fallbackSteps: [
       "Open Settings → Developer → Edit Config.",
       "Paste the config below and save.",
       "Restart Claude Desktop.",
