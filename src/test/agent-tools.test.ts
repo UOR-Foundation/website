@@ -24,7 +24,7 @@ describe("agent-tools parser", () => {
 
   it("parses nested neg(bnot(42))", () => {
     const t = parseTerm("neg(bnot(42))");
-    expect(serializeTerm(t)).toBe("neg(bnot(C(42)))");
+    expect(serializeTerm(t)).toBe("neg(bnot(0x2a))");
   });
 
   it("parses binary xor(0x55, 0xAA)", () => {
@@ -39,7 +39,7 @@ describe("agent-tools parser", () => {
   it("parses deeply nested term", () => {
     const t = parseTerm("xor(neg(42), bnot(0xFF))");
     expect(t.kind).toBe("binary");
-    expect(serializeTerm(t)).toBe("xor(neg(C(42)),bnot(C(255)))");
+    expect(serializeTerm(t)).toBe("xor(neg(0x2a),bnot(0xff))");
   });
 
   it("throws on invalid input", () => {

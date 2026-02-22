@@ -72,7 +72,7 @@ function tokenize(input: string): Token[] {
 // ── Recursive descent parser ────────────────────────────────────────────────
 
 const UNARY_OPS = new Set(["neg", "bnot", "succ", "pred"]);
-const BINARY_OPS = new Set(["xor", "and", "or"]);
+const BINARY_OPS = new Set(["xor", "and", "or", "add", "sub", "mul"]);
 
 function parseExpr(tokens: Token[], pos: { i: number }): Term {
   const token = tokens[pos.i];

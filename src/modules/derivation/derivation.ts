@@ -84,7 +84,10 @@ function evaluateTerm(t: Term, ring: UORRing): number {
         switch (t.op) {
           case "xor": result = fromBytes(ring.xor(aBytes, bBytes)); break;
           case "and": result = fromBytes(ring.band(aBytes, bBytes)); break;
-          case "or": result = fromBytes(ring.bor(aBytes, bBytes)); break;
+          case "or":  result = fromBytes(ring.bor(aBytes, bBytes)); break;
+          case "add": result = fromBytes(ring.add(aBytes, bBytes)); break;
+          case "sub": result = fromBytes(ring.sub(aBytes, bBytes)); break;
+          case "mul": result = fromBytes(ring.mul(aBytes, bBytes)); break;
         }
       }
       return result;
