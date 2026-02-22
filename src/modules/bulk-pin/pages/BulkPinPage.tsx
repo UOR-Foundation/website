@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { Copy } from "lucide-react";
 import Layout from "@/modules/core/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -624,24 +625,42 @@ export default function BulkPinPage() {
                                       <StatusBadge status={t.pinStatus} />
                                     </td>
                                     <td className="py-1.5 pr-2 font-mono hidden md:table-cell" title={derivId}>
-                                      {derivId ? (
-                                        <span className="text-muted-foreground">{truncateId(derivId)}</span>
+                                     {derivId ? (
+                                        <span className="inline-flex items-center gap-1">
+                                          <span className="text-blue-500">{truncateId(derivId)}</span>
+                                          <button
+                                            onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(derivId); }}
+                                            className="text-blue-500 hover:text-blue-400 shrink-0"
+                                            title="Copy derivation_id"
+                                          >
+                                            <Copy className="w-3 h-3" />
+                                          </button>
+                                        </span>
                                       ) : (
                                         <span className="text-muted-foreground/50">—</span>
                                       )}
                                     </td>
                                     <td className="py-1.5 pr-2 font-mono hidden lg:table-cell">
                                       {cid ? (
-                                        ipfsLink ? (
-                                          <a href={ipfsLink} target="_blank" rel="noopener noreferrer"
-                                            className="text-primary hover:underline"
-                                            onClick={e => e.stopPropagation()}
-                                            title={cid}>
-                                            {truncateId(cid, 20)}
-                                          </a>
-                                        ) : (
-                                          <span className="text-muted-foreground" title={cid}>{truncateId(cid, 20)}</span>
-                                        )
+                                        <span className="inline-flex items-center gap-1">
+                                          {ipfsLink ? (
+                                            <a href={ipfsLink} target="_blank" rel="noopener noreferrer"
+                                              className="text-blue-500 hover:underline"
+                                              onClick={e => e.stopPropagation()}
+                                              title={cid}>
+                                              {truncateId(cid, 20)}
+                                            </a>
+                                          ) : (
+                                            <span className="text-blue-500" title={cid}>{truncateId(cid, 20)}</span>
+                                          )}
+                                          <button
+                                            onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(cid); }}
+                                            className="text-blue-500 hover:text-blue-400 shrink-0"
+                                            title="Copy IPFS CID"
+                                          >
+                                            <Copy className="w-3 h-3" />
+                                          </button>
+                                        </span>
                                       ) : (
                                         <span className="text-muted-foreground/50">—</span>
                                       )}
