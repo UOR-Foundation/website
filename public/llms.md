@@ -247,6 +247,40 @@ GET {BASE_URL}/store/gateways
 GET {BASE_URL}/user/type/primitives
 ```
 
+### Step 6 — Agent Tool Functions (LLM Function-Calling Interface)
+
+These five endpoints are designed for direct LLM function-calling tool registration.
+Each returns a single, structured result optimised for agent consumption.
+All return `epistemic_grade` in every response. All ring-arithmetic results are Grade A.
+
+| Tool           | Method | Endpoint                | Input                          | Key Output                      |
+|----------------|--------|-------------------------|--------------------------------|---------------------------------|
+| uor_derive     | GET    | /v1/tools/derive        | term=neg(bnot(42))             | derivation_id, result_iri, grade|
+| uor_query      | POST   | /v1/tools/query         | {sparql, graph_uri}            | @graph results with grades      |
+| uor_verify     | GET    | /v1/tools/verify        | derivation_id=urn:uor:...      | verified, cert_chain, grade     |
+| uor_correlate  | GET    | /v1/tools/correlate     | a=42&b=43                      | fidelity [0-1], grade           |
+| uor_partition  | POST   | /v1/tools/partition     | {seed_set, closure_mode}       | partition, not_closed_under     |
+
+```
+# Example: Derive neg(bnot(42))
+GET {BASE_URL}/tools/derive?term=neg(bnot(42))
+→ { "result_value": 43, "derivation:derivationId": "urn:uor:derivation:sha256:...",
+    "derivation:resultIri": "https://uor.foundation/u/U282B", "epistemic_grade": "A" }
+
+# Example: Verify a derivation ID
+GET {BASE_URL}/tools/verify?derivation_id=urn:uor:derivation:sha256:<64hex>
+→ { "verified": true, "cert_chain": ["https://uor.foundation/instance/q0/proof-critical-id"] }
+
+# Example: Correlate two values
+GET {BASE_URL}/tools/correlate?a=42&b=43&mode=full
+→ { "fidelity": 0.875, "hamming_distance": 1, "skos_recommendation": "skos:closeMatch" }
+
+# Example: Partition a seed set
+POST {BASE_URL}/tools/partition
+Body: {"seed_set":[42,43,44],"closure_mode":"OPEN","quantum":0}
+→ { "partition": { "partition:cardinality": 3, "partition:irreducibles": { "partition:cardinality": 2 } } }
+```
+
 ### API Summary
 
 | Group   | Namespaces                                                      | Auth       | Rate Limit          |
