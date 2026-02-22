@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import Layout from "@/modules/core/components/Layout";
+import { supabase } from "@/integrations/supabase/client";
 
 const API_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/uor-api/v1`;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -27,6 +28,7 @@ interface SchemaType {
   pinStatus: PinStatus;
   verifyStatus: VerifyStatus;
   result?: PinResult;
+  existingCert?: { certificateId: string; derivationId: string; certifiesIri: string; issuedAt: string };
 }
 
 // ── Top-level grouping based on schema.org hierarchy ────────────────────────
@@ -102,6 +104,40 @@ export default function BulkPinPage() {
         }
         setCatalog(allTypes);
         addLog(`✓ Loaded ${allTypes.length} schema.org types from vocabulary.`);
+
+        // ── Check for already-pinned schemas via certificates table ───────
+        addLog("Checking for previously pinned schemas...");
+        const { data: certs } = await supabase
+          .from("uor_certificates")
+          .select("certificate_id, certifies_iri, derivation_id, issued_at")
+          .like("certifies_iri", "https://uor.foundation/sobridge/%");
+        
+        if (certs && certs.length > 0) {
+          const certMap = new Map<string, typeof certs[0]>();
+          for (const c of certs) {
+            const typeName = c.certifies_iri.replace("https://uor.foundation/sobridge/", "");
+            certMap.set(typeName, c);
+          }
+          setCatalog(prev => prev.map(t => {
+            const cert = certMap.get(t.name);
+            if (cert) {
+              return {
+                ...t,
+                pinStatus: "pinned" as PinStatus,
+                existingCert: {
+                  certificateId: cert.certificate_id,
+                  derivationId: cert.derivation_id ?? "",
+                  certifiesIri: cert.certifies_iri,
+                  issuedAt: cert.issued_at,
+                },
+              };
+            }
+            return t;
+          }));
+          addLog(`✓ Found ${certMap.size} previously pinned schemas with certificates.`);
+        } else {
+          addLog("No previously pinned schemas found in certificate store.");
+        }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         setLoadError(msg);
@@ -227,6 +263,8 @@ export default function BulkPinPage() {
     }
   }, [catalog]);
 
+  const alreadyPinnedCount = catalog.filter(t => t.existingCert).length;
+
   // ── Stats ───────────────────────────────────────────────────────────────
   const pinnedCount = catalog.filter(t => t.pinStatus === "pinned").length;
   const failedCount = catalog.filter(t => t.pinStatus === "failed").length;
@@ -318,8 +356,66 @@ export default function BulkPinPage() {
             )}
           </div>
 
+          {/* Stats bar */}
+          {!loading && catalog.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+              <div className="rounded-lg border border-border bg-card p-3 text-center">
+                <p className="text-2xl font-bold text-foreground">{catalog.length}</p>
+                <p className="text-xs text-muted-foreground">Total Types</p>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-3 text-center">
+                <p className="text-2xl font-bold text-foreground">{alreadyPinnedCount}</p>
+                <p className="text-xs text-muted-foreground">Already Pinned</p>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-3 text-center">
+                <p className="text-2xl font-bold text-foreground">{catalog.length - pinnedCount}</p>
+                <p className="text-xs text-muted-foreground">Remaining</p>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-3 text-center">
+                <p className="text-2xl font-bold text-foreground">{verifiedCount}</p>
+                <p className="text-xs text-muted-foreground">Verified</p>
+              </div>
+            </div>
+          )}
+
           {loadError && (
             <div className="rounded-lg border border-destructive/50 bg-destructive/10 text-destructive p-4 mb-6 text-sm">{loadError}</div>
+          )}
+
+          {/* Already Pinned Summary */}
+          {alreadyPinnedCount > 0 && (
+            <div className="rounded-lg border border-border bg-card p-5 mb-6">
+              <h2 className="text-lg font-semibold mb-3">Previously Pinned Schemas ({alreadyPinnedCount})</h2>
+              <p className="text-xs text-muted-foreground mb-4">
+                These schema.org types have existing UOR certificates in the database with IPFS coordinates.
+              </p>
+              <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+                <table className="w-full text-xs">
+                  <thead className="sticky top-0 bg-card">
+                    <tr className="border-b border-border text-muted-foreground">
+                      <th className="py-2 pr-3 text-left">Type</th>
+                      <th className="py-2 pr-3 text-left">Certificate ID</th>
+                      <th className="py-2 pr-3 text-left">Derivation ID</th>
+                      <th className="py-2 pr-3 text-left">Pinned At</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {catalog.filter(t => t.existingCert).map(t => (
+                      <tr key={t.name} className="border-b border-border/30 hover:bg-muted/30 cursor-pointer" onClick={() => setSelectedDetail(t)}>
+                        <td className="py-1.5 pr-3">
+                          <a href={`https://schema.org/${t.name}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" onClick={e => e.stopPropagation()}>
+                            {t.name}
+                          </a>
+                        </td>
+                        <td className="py-1.5 pr-3 font-mono truncate max-w-[200px]" title={t.existingCert!.certificateId}>{t.existingCert!.certificateId}</td>
+                        <td className="py-1.5 pr-3 font-mono truncate max-w-[200px]" title={t.existingCert!.derivationId}>{t.existingCert!.derivationId}</td>
+                        <td className="py-1.5 pr-3 text-muted-foreground">{t.existingCert!.issuedAt.slice(0, 19)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
 
           {/* Catalog Browser */}
@@ -403,7 +499,7 @@ export default function BulkPinPage() {
           )}
 
           {/* Detail Panel */}
-          {selectedDetail && selectedDetail.result && (
+          {selectedDetail && (selectedDetail.result || selectedDetail.existingCert) && (
             <div className="rounded-lg border border-border bg-card p-5 mb-6">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold">
@@ -425,10 +521,13 @@ export default function BulkPinPage() {
                 <div>
                   <h3 className="font-semibold text-muted-foreground mb-1">UOR Identity</h3>
                   <div className="space-y-1 bg-muted/30 rounded-md p-3 font-mono">
-                    <div><span className="text-muted-foreground">derivation_id:</span> <span className="break-all">{selectedDetail.result.derivationId || "—"}</span></div>
-                    <div><span className="text-muted-foreground">store:cid:</span> <span className="break-all">{selectedDetail.result.cid || "—"}</span></div>
-                    <div><span className="text-muted-foreground">certificate_id:</span> <span className="break-all">{selectedDetail.result.certificateId || "—"}</span></div>
-                    <div><span className="text-muted-foreground">quantum_level:</span> {selectedDetail.result.quantumLevel}</div>
+                    <div><span className="text-muted-foreground">derivation_id:</span> <span className="break-all">{selectedDetail.result?.derivationId || selectedDetail.existingCert?.derivationId || "—"}</span></div>
+                    <div><span className="text-muted-foreground">store:cid:</span> <span className="break-all">{selectedDetail.result?.cid || "—"}</span></div>
+                    <div><span className="text-muted-foreground">certificate_id:</span> <span className="break-all">{selectedDetail.result?.certificateId || selectedDetail.existingCert?.certificateId || "—"}</span></div>
+                    <div><span className="text-muted-foreground">quantum_level:</span> {selectedDetail.result?.quantumLevel ?? 0}</div>
+                    {selectedDetail.existingCert && (
+                      <div><span className="text-muted-foreground">pinned_at:</span> <span>{selectedDetail.existingCert.issuedAt.slice(0, 19)}</span></div>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -436,7 +535,7 @@ export default function BulkPinPage() {
                   <div className="space-y-1 bg-muted/30 rounded-md p-3 font-mono">
                     <div>
                       <span className="text-muted-foreground">pinata:</span>{" "}
-                      {selectedDetail.result.pinataCid ? (
+                      {selectedDetail.result?.pinataCid ? (
                         <a href={`https://uor.mypinata.cloud/ipfs/${selectedDetail.result.pinataCid}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
                           {selectedDetail.result.pinataCid}
                         </a>
@@ -444,13 +543,13 @@ export default function BulkPinPage() {
                     </div>
                     <div>
                       <span className="text-muted-foreground">storacha:</span>{" "}
-                      {selectedDetail.result.storachaCid ? (
+                      {selectedDetail.result?.storachaCid ? (
                         <a href={`https://${selectedDetail.result.storachaCid}.ipfs.storacha.link`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
                           {selectedDetail.result.storachaCid}
                         </a>
                       ) : <span className="text-muted-foreground">not pinned (dry run)</span>}
                     </div>
-                    {selectedDetail.result.gatewayUrl && (
+                    {selectedDetail.result?.gatewayUrl && (
                       <div>
                         <span className="text-muted-foreground">gateway:</span>{" "}
                         <a href={selectedDetail.result.gatewayUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
@@ -469,20 +568,21 @@ export default function BulkPinPage() {
 {JSON.stringify({
   "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
   "@type": "cert:Certificate",
-  "@id": selectedDetail.result.certificateId,
+  "@id": selectedDetail.result?.certificateId ?? selectedDetail.existingCert?.certificateId ?? "",
   "cert:certifies": `https://schema.org/${selectedDetail.name}`,
   "cert:epistemicGrade": "B",
   "cert:method": "canonical_content_addressing",
   "cert:hashAlgorithm": "SHA-256",
   "cert:canonicalizationMethod": "sorted-key-json-ld",
-  "derivation:derivationId": selectedDetail.result.derivationId,
-  "store:cid": selectedDetail.result.cid,
-  "store:pinataCid": selectedDetail.result.pinataCid ?? null,
-  "store:storachaCid": selectedDetail.result.storachaCid ?? null,
+  "derivation:derivationId": selectedDetail.result?.derivationId ?? selectedDetail.existingCert?.derivationId ?? "",
+  "store:cid": selectedDetail.result?.cid ?? null,
+  "store:pinataCid": selectedDetail.result?.pinataCid ?? null,
+  "store:storachaCid": selectedDetail.result?.storachaCid ?? null,
   "sobridge:quantumLevel": 0,
   "sobridge:ringModulus": 256,
-  "cert:selfVerifyUrl": `https://api.uor.foundation/v1/tools/verify?derivation_id=${selectedDetail.result.derivationId}`,
+  "cert:selfVerifyUrl": `https://api.uor.foundation/v1/tools/verify?derivation_id=${selectedDetail.result?.derivationId ?? selectedDetail.existingCert?.derivationId ?? ""}`,
   "cert:status": selectedDetail.verifyStatus === "verified" ? "VERIFIED" : selectedDetail.pinStatus === "pinned" ? "PINNED_UNVERIFIED" : "PENDING",
+  ...(selectedDetail.existingCert ? { "cert:issuedAt": selectedDetail.existingCert.issuedAt } : {}),
 }, null, 2)}
                 </pre>
               </div>
