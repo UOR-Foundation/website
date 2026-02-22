@@ -42,6 +42,7 @@ const GRADE_META: Record<EpistemicGrade, { label: string; base_confidence: numbe
 export function deriveEpistemics(
   data: Record<string, unknown>,
   term: string,
+  cached = false,
 ): EpistemicMetadata {
   const hasDerivationId = !!data.derivation_id;
   const grade: EpistemicGrade = hasDerivationId ? "A" : "D";
@@ -74,9 +75,11 @@ export function deriveEpistemics(
         ? "5. Grade A assigned — algebraically proven, fully reproducible."
         : "5. Grade D assigned — treat as hypothesis.",
     ],
-    trust_summary: hasDerivationId
-      ? "This answer was produced by a direct mathematical computation. It will always give the same result, on any machine, at any time. Anyone can independently re-run the same calculation to confirm it."
-      : "This result could not be verified. No proof was generated. Treat it as a starting point, not a confirmed answer.",
+    trust_summary: cached
+      ? "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed."
+      : hasDerivationId
+        ? "This answer was produced by a direct mathematical computation. It will always give the same result, on any machine, at any time. Anyone can independently re-run the same calculation to confirm it."
+        : "This result could not be verified. No proof was generated. Treat it as a starting point, not a confirmed answer.",
   };
 }
 
@@ -84,6 +87,7 @@ export function deriveEpistemics(
 export function verifyEpistemics(
   data: Record<string, unknown>,
   derivationId: string,
+  cached = false,
 ): EpistemicMetadata {
   const verified = data.verified === true;
   const grade: EpistemicGrade = verified ? "A" : "D";
@@ -109,9 +113,11 @@ export function verifyEpistemics(
         ? "4. Grade A confirmed — this derivation is algebraically sound."
         : "4. Grade D assigned — derivation could not be verified.",
     ],
-    trust_summary: verified
-      ? "This previous computation has been confirmed. The original calculation was re-checked and matches the stored record exactly."
-      : "This record could not be found or does not match. The original claim cannot be confirmed from what is available. Consider re-running the computation.",
+    trust_summary: cached
+      ? "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed."
+      : verified
+        ? "This previous computation has been confirmed. The original calculation was re-checked and matches the stored record exactly."
+        : "This record could not be found or does not match. The original claim cannot be confirmed from what is available. Consider re-running the computation.",
   };
 }
 
@@ -119,6 +125,7 @@ export function verifyEpistemics(
 export function queryEpistemics(
   data: Record<string, unknown>,
   sparql: string,
+  cached = false,
 ): EpistemicMetadata {
   const results = Array.isArray((data as { results?: { bindings?: unknown[] } }).results?.bindings)
     ? (data as { results: { bindings: unknown[] } }).results.bindings
@@ -145,9 +152,11 @@ export function queryEpistemics(
         ? "5. Grade B assigned — results sourced from the certified knowledge graph."
         : "5. Grade C assigned — query executed but returned no bindings.",
     ],
-    trust_summary: hasResults
-      ? `${results.length} record(s) found in the UOR knowledge base. This data is structured and verified within the system, though it reflects stored information rather than a fresh computation.`
-      : "The query ran successfully but returned no matching records. This does not mean the information is false; it may simply not be in the knowledge base yet.",
+    trust_summary: cached
+      ? "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed."
+      : hasResults
+        ? `${results.length} record(s) found in the UOR knowledge base. This data is structured and verified within the system, though it reflects stored information rather than a fresh computation.`
+        : "The query ran successfully but returned no matching records. This does not mean the information is false; it may simply not be in the knowledge base yet.",
   };
 }
 
@@ -156,6 +165,7 @@ export function correlateEpistemics(
   data: Record<string, unknown>,
   a: number,
   b: number,
+  cached = false,
 ): EpistemicMetadata {
   const fidelity = typeof data.fidelity === "number" ? data.fidelity : null;
   const grade: EpistemicGrade = fidelity !== null ? "A" : "D";
@@ -182,9 +192,11 @@ export function correlateEpistemics(
         ? "5. Grade A assigned — result is algebraically determined."
         : "5. Grade D assigned — result could not be computed.",
     ],
-    trust_summary: fidelity !== null
-      ? `The similarity between these two values is ${(fidelity * 100).toFixed(1)}%. This was computed directly and will always produce the same result. It measures how structurally close the two inputs are.`
-      : "The comparison could not be completed. No similarity score was produced. The result is unverified.",
+    trust_summary: cached
+      ? "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed."
+      : fidelity !== null
+        ? `The similarity between these two values is ${(fidelity * 100).toFixed(1)}%. This was computed directly and will always produce the same result. It measures how structurally close the two inputs are.`
+        : "The comparison could not be completed. No similarity score was produced. The result is unverified.",
   };
 }
 
@@ -192,6 +204,7 @@ export function correlateEpistemics(
 export function partitionEpistemics(
   data: Record<string, unknown>,
   seedSet: number[],
+  cached = false,
 ): EpistemicMetadata {
   const hasPartition = !!(data as Record<string, unknown>).units ||
     !!(data as Record<string, unknown>).irreducible;
@@ -219,9 +232,11 @@ export function partitionEpistemics(
         ? "5. Grade A assigned — partition is a deterministic algebraic property."
         : "5. Grade D assigned — no partition produced.",
     ],
-    trust_summary: hasPartition
-      ? "Each element has been classified into its mathematical category. This classification is a proven property of the system and will always produce the same groupings for the same inputs."
-      : "The classification could not be completed. No groupings were produced. Treat this result as unverified.",
+    trust_summary: cached
+      ? "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed."
+      : hasPartition
+        ? "Each element has been classified into its mathematical category. This classification is a proven property of the system and will always produce the same groupings for the same inputs."
+        : "The classification could not be completed. No groupings were produced. Treat this result as unverified.",
   };
 }
 
@@ -249,7 +264,7 @@ async function generateReceiptHash(meta: EpistemicMetadata): Promise<string> {
 }
 
 /** Format epistemic metadata as a human-readable trust stamp for the MCP response. */
-export async function formatEpistemicBlock(meta: EpistemicMetadata): Promise<string> {
+export async function formatEpistemicBlock(meta: EpistemicMetadata, proofStatus?: string): Promise<string> {
   const pct = (meta.confidence * 100).toFixed(0);
   const icon = gradeIcon(meta.grade);
   const bar = confidenceBar(meta.confidence);
@@ -275,7 +290,8 @@ export async function formatEpistemicBlock(meta: EpistemicMetadata): Promise<str
     `| Grade | ${icon} ${meta.grade} — ${meta.grade_label} |`,
     `| Confidence | ${bar} ${pct}% |`,
     `| Verified via | ${meta.reasoning_chain.length > 1 ? meta.reasoning_chain[meta.reasoning_chain.length - 2].replace(/^\d+\.\s*/, "") : "UOR computation"} |`,
-    `| Receipt | \`${shortHash}…\` · [Full hash](${receiptUrn}) |`,
+    `| UOR Proof | \`${shortHash}…\` · [Full hash](${receiptUrn}) |`,
+    ...(proofStatus ? [`| Proof Status | ${proofStatus} |`] : []),
     "",
     "**Sources**",
     ...sourceLines,

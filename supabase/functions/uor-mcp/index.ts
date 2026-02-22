@@ -3,6 +3,7 @@
  *
  * Implements MCP 2025-03-26 Streamable HTTP transport.
  * Security: input validation, size limits, rate-limit headers, strict CORS.
+ * Proof cache: every tool result is fingerprinted; repeated queries served from cache.
  */
 
 import {
@@ -13,6 +14,13 @@ import {
   partitionEpistemics,
   formatEpistemicBlock,
 } from "./epistemics.ts";
+
+import {
+  canonicalizeInput,
+  hashInput,
+  lookupProof,
+  storeProof,
+} from "./proof-cache.ts";
 
 const UOR_API_BASE = `${Deno.env.get("SUPABASE_URL")}/functions/v1/uor-api`;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
@@ -169,9 +177,62 @@ async function runTool(name: string, args: Record<string, unknown>) {
     };
   }
 
+  // ── Proof cache: check for existing proof ──────────────────────────────
+  const canonicalInput = canonicalizeInput(name, args);
+  const inputHash = await hashInput(canonicalInput);
+
+  const cached = await lookupProof(inputHash);
+  if (cached) {
+    // Serve from proof cache — no recomputation needed
+    const cachedData = JSON.parse(cached.output_cached);
+    const proofStatus = `✅ Proven (served from cache · hit #${cached.hit_count + 1} · proof \`${cached.proof_id.slice(-16)}…\`)`;
+
+    // Rebuild epistemic block with cached=true
+    let epistemicBlock = "";
+    switch (name) {
+      case "uor_derive":
+        epistemicBlock = await formatEpistemicBlock(
+          deriveEpistemics(cachedData as Record<string, unknown>, String(args.term ?? ""), true),
+          proofStatus,
+        );
+        break;
+      case "uor_verify":
+        epistemicBlock = await formatEpistemicBlock(
+          verifyEpistemics(cachedData as Record<string, unknown>, String(args.derivation_id ?? ""), true),
+          proofStatus,
+        );
+        break;
+      case "uor_query":
+        epistemicBlock = await formatEpistemicBlock(
+          queryEpistemics(cachedData as Record<string, unknown>, String(args.sparql ?? ""), true),
+          proofStatus,
+        );
+        break;
+      case "uor_correlate":
+        epistemicBlock = await formatEpistemicBlock(
+          correlateEpistemics(cachedData as Record<string, unknown>, Number(args.a), Number(args.b), true),
+          proofStatus,
+        );
+        break;
+      case "uor_partition":
+        epistemicBlock = await formatEpistemicBlock(
+          partitionEpistemics(cachedData as Record<string, unknown>, (args.seed_set as number[]) ?? [], true),
+          proofStatus,
+        );
+        break;
+      default:
+        epistemicBlock = "";
+    }
+
+    const resultText = JSON.stringify(cachedData, null, 2) + epistemicBlock;
+    return { content: [{ type: "text", text: resultText }] };
+  }
+
+  // ── Cache miss: run tool fresh ─────────────────────────────────────────
   try {
     let data: unknown;
-    let epistemicBlock = "";
+    let epistemicMeta: Parameters<typeof formatEpistemicBlock>[0] | null = null;
+    let epistemicGrade = "D";
 
     switch (name) {
       case "uor_derive": {
@@ -180,9 +241,8 @@ async function runTool(name: string, args: Record<string, unknown>) {
           term,
           quantum: String(sanitiseNumber(args.quantum)),
         });
-        epistemicBlock = await formatEpistemicBlock(
-          deriveEpistemics(data as Record<string, unknown>, term),
-        );
+        epistemicMeta = deriveEpistemics(data as Record<string, unknown>, term);
+        epistemicGrade = epistemicMeta.grade;
         break;
       }
       case "uor_verify": {
@@ -190,17 +250,15 @@ async function runTool(name: string, args: Record<string, unknown>) {
         data = await callApi("GET", "/tools/verify", {
           derivation_id: derivationId,
         });
-        epistemicBlock = await formatEpistemicBlock(
-          verifyEpistemics(data as Record<string, unknown>, derivationId),
-        );
+        epistemicMeta = verifyEpistemics(data as Record<string, unknown>, derivationId);
+        epistemicGrade = epistemicMeta.grade;
         break;
       }
       case "uor_query": {
         const sparql = sanitiseString(args.sparql, 4096);
         data = await callApi("POST", "/tools/query", undefined, { sparql });
-        epistemicBlock = await formatEpistemicBlock(
-          queryEpistemics(data as Record<string, unknown>, sparql),
-        );
+        epistemicMeta = queryEpistemics(data as Record<string, unknown>, sparql);
+        epistemicGrade = epistemicMeta.grade;
         break;
       }
       case "uor_correlate": {
@@ -212,9 +270,8 @@ async function runTool(name: string, args: Record<string, unknown>) {
           quantum: String(sanitiseNumber(args.quantum)),
           mode: "full",
         });
-        epistemicBlock = await formatEpistemicBlock(
-          correlateEpistemics(data as Record<string, unknown>, a, b),
-        );
+        epistemicMeta = correlateEpistemics(data as Record<string, unknown>, a, b);
+        epistemicGrade = epistemicMeta.grade;
         break;
       }
       case "uor_partition": {
@@ -229,9 +286,8 @@ async function runTool(name: string, args: Record<string, unknown>) {
           ).toUpperCase(),
           quantum: sanitiseNumber(args.quantum),
         });
-        epistemicBlock = await formatEpistemicBlock(
-          partitionEpistemics(data as Record<string, unknown>, seedSet),
-        );
+        epistemicMeta = partitionEpistemics(data as Record<string, unknown>, seedSet);
+        epistemicGrade = epistemicMeta.grade;
         break;
       }
       case "uor_grade": {
@@ -260,7 +316,6 @@ async function runTool(name: string, args: Record<string, unknown>) {
             ? "This information comes from a named source. Click the link above to read and evaluate the original material yourself. It has not been independently verified by the UOR system."
             : `This answer has been ${grade === "A" ? "mathematically proven. It will always produce the same result and can be independently confirmed." : "retrieved from a verified knowledge base with built-in integrity checks."}`;
 
-        // Generate receipt hash
         const receiptPayload = JSON.stringify({ grade, confidence: confidences[grade], claim: claim.slice(0, 256), ts: new Date().toISOString() });
         const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(receiptPayload));
         const receiptHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, "0")).join("");
@@ -277,7 +332,8 @@ async function runTool(name: string, args: Record<string, unknown>) {
           `| Grade | ${icons[grade]} ${grade} — ${labels[grade]} |`,
           `| Confidence | ${bar} ${confidences[grade]}% |`,
           `| Verified via | ${verifiedBy} |`,
-          `| Receipt | \`${shortHash}…\` · [Full hash](${receiptUrn}) |`,
+          `| UOR Proof | \`${shortHash}…\` · [Full hash](${receiptUrn}) |`,
+          `| Proof Status | 🆕 Fresh computation (proof stored) |`,
           "",
           "**Sources**",
           `1. ${claim.slice(0, 120)}${claim.length > 120 ? "…" : ""} — ${srcDesc} · Grade ${grade}`,
@@ -288,10 +344,22 @@ async function runTool(name: string, args: Record<string, unknown>) {
         ].join("\n");
 
         data = { grade, label: labels[grade], confidence: confidences[grade], claim, source: srcDesc, receipt: receiptUrn };
-        epistemicBlock = "\n" + report;
-        break;
+        const epistemicBlock = "\n" + report;
+        const resultText = JSON.stringify(data, null, 2) + epistemicBlock;
+        return { content: [{ type: "text", text: resultText }] };
       }
     }
+
+    // Store proof for Grade A/B results (fire-and-forget)
+    const outputJson = JSON.stringify(data);
+    const proofId = await storeProof(name, canonicalInput, inputHash, outputJson, epistemicGrade);
+    const proofStatus = proofId
+      ? `🆕 Fresh computation (proof stored · \`${proofId.slice(-16)}…\`)`
+      : "🆕 Fresh computation";
+
+    const epistemicBlock = epistemicMeta
+      ? await formatEpistemicBlock(epistemicMeta, proofStatus)
+      : "";
 
     const resultText = JSON.stringify(data, null, 2) + epistemicBlock;
     return { content: [{ type: "text", text: resultText }] };

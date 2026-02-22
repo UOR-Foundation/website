@@ -11,11 +11,29 @@ const EXAMPLES = [
     verifiedVia: "Computed directly by the UOR system",
     receipt: "a3f8c1d902e6b74f",
     receiptFull: "a3f8c1d902e6b74f5e91d0c83a27b6e4f1d5a9c0e3b7f2d6a8c4e0b3f7d1a5e9",
+    proofStatus: "🆕 Fresh computation (proof stored · `a3f8c1d902e6b74f…`)",
     sources: [
       { claim: "neg(42) = 214 in ℤ/256ℤ", source: "UOR Ring Kernel", url: "https://uor.foundation/u/U00D6", grade: "A" },
       { claim: "Result fingerprint permanently recorded", source: "UOR Derivation Store", url: "urn:uor:derivation:sha256:a3f8c1d9…", grade: "A" },
     ],
     summary: "This answer was produced by a deterministic mathematical computation. It will always give the same result, on any machine, at any time. Anyone can independently re-run the same calculation to confirm it.",
+  },
+  {
+    title: "Grade A: Proven (Served from Cache)",
+    subtitle: "This identical computation was requested before. The stored proof was verified and the cached result returned — no recomputation needed.",
+    grade: "A",
+    icon: "🟢",
+    label: "Mathematically Proven",
+    confidence: 98,
+    verifiedVia: "Computed directly by the UOR system",
+    receipt: "a3f8c1d902e6b74f",
+    receiptFull: "a3f8c1d902e6b74f5e91d0c83a27b6e4f1d5a9c0e3b7f2d6a8c4e0b3f7d1a5e9",
+    proofStatus: "✅ Proven (served from cache · hit #7 · proof `a3f8c1d902e6b74f…`)",
+    sources: [
+      { claim: "neg(42) = 214 in ℤ/256ℤ", source: "UOR Ring Kernel", url: "https://uor.foundation/u/U00D6", grade: "A" },
+      { claim: "Result fingerprint permanently recorded", source: "UOR Derivation Store", url: "urn:uor:derivation:sha256:a3f8c1d9…", grade: "A" },
+    ],
+    summary: "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed.",
   },
   {
     title: "Grade B: Verified from the Knowledge Graph",
@@ -27,6 +45,7 @@ const EXAMPLES = [
     verifiedVia: "Retrieved from the UOR knowledge graph",
     receipt: "7b2e4f91c8a3d605",
     receiptFull: "7b2e4f91c8a3d6051e90f3b7a2c8d4e6f0b5a9d3c7e1f4a8b2d6e0c4f8a3b7d1",
+    proofStatus: "🆕 Fresh computation (proof stored · `7b2e4f91c8a3d605…`)",
     sources: [
       { claim: "Element 42 has stratum [0,1,0,1,0,1,0,0]", source: "UOR Q0 Knowledge Graph", url: "https://uor.foundation/u/U002A", grade: "B" },
       { claim: "3 matching records found", source: "UOR Q0 Knowledge Graph", url: null, grade: "B" },
@@ -43,6 +62,7 @@ const EXAMPLES = [
     verifiedVia: "Fetched from a third-party source during this session",
     receipt: "e4c9a1b73f28d506",
     receiptFull: "e4c9a1b73f28d5061a7f3e9b2c84d0f6a5e1b9c3d7f2a8e4b0c6d3f7a1b5e9c2",
+    proofStatus: null,
     sources: [
       { claim: "The Battle of Waterloo occurred on 18 June 1815", source: "Wikipedia", url: "https://en.wikipedia.org/wiki/Battle_of_Waterloo", grade: "C" },
       { claim: "Coalition forces were led by Wellington and Blücher", source: "Wikipedia", url: "https://en.wikipedia.org/wiki/Battle_of_Waterloo", grade: "C" },
@@ -60,6 +80,7 @@ const EXAMPLES = [
     verifiedVia: "None. Generated from the AI model's memory.",
     receipt: "1f0a3b7c9e2d4f68",
     receiptFull: "1f0a3b7c9e2d4f685c8a1e3b7d0f2a6c4e9b5d1f7a3c8e0b4d6f2a9c1e5b3d7",
+    proofStatus: null,
     sources: [
       { claim: "The Battle of Waterloo was a decisive Coalition victory", source: "AI training data", url: null, grade: "D" },
       { claim: "Approximately 40,000–50,000 casualties on the day", source: "AI training data", url: null, grade: "D" },
@@ -135,6 +156,12 @@ function TrustScoreCard({ example }: { example: typeof EXAMPLES[0] }) {
                 )}
               </td>
             </tr>
+            {example.proofStatus && (
+              <tr>
+                <td className="py-2 pr-4 text-muted-foreground font-medium">Proof Status</td>
+                <td className="py-2 text-foreground/90 text-sm">{example.proofStatus}</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
