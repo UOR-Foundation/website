@@ -240,27 +240,30 @@ export function formatEpistemicBlock(meta: EpistemicMetadata): string {
   const icon = gradeIcon(meta.grade);
   const bar = confidenceBar(meta.confidence);
 
-  const sourceLines = meta.sources.map((s) => {
-    const ref = s.reference ? ` (${s.reference.slice(0, 40)}${s.reference.length > 40 ? "…" : ""})` : "";
-    return `  • ${s.label}${ref}`;
+  const sourceLines = meta.sources.map((s, i) => {
+    const link = s.reference
+      ? `[${s.label}](${s.reference})`
+      : s.label;
+    return `${i + 1}. ${link} · Grade ${meta.grade}`;
   });
 
   const lines = [
     "",
-    "┌─────────────────────────────────────────┐",
-    `│  ${icon} UOR Trust Stamp: Grade ${meta.grade}`,
-    "├─────────────────────────────────────────┤",
-    `│  Trust Level:  ${meta.grade_label}`,
-    `│  Confidence:   ${bar} ${pct}%`,
-    "│",
-    "│  How this was verified:",
-    ...meta.reasoning_chain.slice(-2).map((step) => `│    ${step.replace(/^\d+\.\s*/, "→ ")}`),
-    "│",
-    "│  Information sources:",
-    ...sourceLines.map((l) => `│  ${l}`),
-    "│",
-    `│  ${meta.trust_summary}`,
-    "└─────────────────────────────────────────┘",
+    "---",
+    "**UOR PRISM Trust Score**",
+    "",
+    "| Field | Value |",
+    "|-------|-------|",
+    `| Grade | ${icon} ${meta.grade} — ${meta.grade_label} |`,
+    `| Confidence | ${bar} ${pct}% |`,
+    `| Verified via | ${meta.reasoning_chain.length > 1 ? meta.reasoning_chain[meta.reasoning_chain.length - 2].replace(/^\d+\.\s*/, "") : "UOR computation"} |`,
+    "",
+    "**Sources**",
+    ...sourceLines,
+    "",
+    `**Trust summary:** ${meta.trust_summary}`,
+    "",
+    "---",
   ];
   return lines.join("\n");
 }
