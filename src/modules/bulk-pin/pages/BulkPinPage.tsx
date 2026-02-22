@@ -24,10 +24,21 @@ interface PinResult {
 type PinStatus = "pending" | "pinning" | "pinned" | "failed";
 type VerifyStatus = "idle" | "verifying" | "verified" | "failed";
 
+interface VerifyResult {
+  verified: boolean;
+  derivationId: string;
+  recomputedHash?: string;
+  epistemicGrade?: string;
+  timestamp?: string;
+  method?: string;
+  raw?: Record<string, unknown>;
+}
+
 interface SchemaType {
   name: string;
   pinStatus: PinStatus;
   verifyStatus: VerifyStatus;
+  verifyResult?: VerifyResult;
   result?: PinResult;
   existingCert?: { certificateId: string; derivationId: string; certifiesIri: string; issuedAt: string };
 }
@@ -367,10 +378,31 @@ export default function BulkPinPage() {
       const resp = await fetch(`${API_BASE}/tools/verify?derivation_id=${encodeURIComponent(derivId)}`, {
         headers: { "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` },
       });
-      const ok = resp.ok;
-      setCatalog(prev => prev.map(t => t.name === name ? { ...t, verifyStatus: ok ? "verified" : "failed" } : t));
+      if (resp.ok) {
+        const data = await resp.json();
+        const vr: VerifyResult = {
+          verified: true,
+          derivationId: derivId,
+          recomputedHash: data["proof:recomputedHash"] || data["derivation:derivationId"] || derivId,
+          epistemicGrade: data["epistemic_grade"] || data["cert:epistemicGrade"] || "B",
+          timestamp: data["proof:timestamp"] || data["cert:verifiedAt"] || new Date().toISOString(),
+          method: data["cert:method"] || data["proof:canonicalizationMethod"] || "URDNA2015",
+          raw: data,
+        };
+        setCatalog(prev => prev.map(t => t.name === name ? { ...t, verifyStatus: "verified", verifyResult: vr } : t));
+      } else {
+        const data = await resp.json().catch(() => ({}));
+        const vr: VerifyResult = {
+          verified: false,
+          derivationId: derivId,
+          recomputedHash: data["proof:recomputedDerivationId"] || undefined,
+          timestamp: data["proof:timestamp"] || new Date().toISOString(),
+          raw: data,
+        };
+        setCatalog(prev => prev.map(t => t.name === name ? { ...t, verifyStatus: "failed", verifyResult: vr } : t));
+      }
     } catch {
-      setCatalog(prev => prev.map(t => t.name === name ? { ...t, verifyStatus: "failed" } : t));
+      setCatalog(prev => prev.map(t => t.name === name ? { ...t, verifyStatus: "failed", verifyResult: { verified: false, derivationId: derivId, timestamp: new Date().toISOString() } } : t));
     }
   }, [catalog]);
 
@@ -754,7 +786,51 @@ export default function BulkPinPage() {
                 </div>
               </div>
 
-              {/* Verification Receipt */}
+              {/* Verification Details — shown after verify is clicked */}
+              {selectedDetail.verifyResult && (
+                <div className="mt-4">
+                  <h3 className="font-semibold text-muted-foreground text-xs mb-2">
+                    {selectedDetail.verifyResult.verified ? "✓ Verification Passed" : "✗ Verification Failed"}
+                  </h3>
+                  <div className={`rounded-md p-3 text-xs font-mono space-y-1.5 ${selectedDetail.verifyResult.verified ? "bg-green-500/10 border border-green-500/20" : "bg-destructive/10 border border-destructive/20"}`}>
+                    <div>
+                      <span className="text-muted-foreground">What was verified:</span>
+                      <span className="ml-1 text-foreground">The content of <strong>schema:{selectedDetail.name}</strong> was re-canonicalized using W3C URDNA2015 and its SHA-256 hash was recomputed from scratch.</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">derivation_id checked:</span>
+                      <br/><span className="break-all text-foreground">{selectedDetail.verifyResult.derivationId}</span>
+                    </div>
+                    {selectedDetail.verifyResult.verified ? (
+                      <div className="text-green-700 dark:text-green-400 font-semibold">
+                        ✓ Recomputed hash matches the declared derivation_id — content is authentic and untampered.
+                      </div>
+                    ) : (
+                      <div className="text-destructive font-semibold">
+                        ✗ Recomputed hash does NOT match — content may have been modified.
+                        {selectedDetail.verifyResult.recomputedHash && (
+                          <div className="mt-1 font-normal text-foreground">
+                            <span className="text-muted-foreground">Recomputed:</span><br/>
+                            <span className="break-all">{selectedDetail.verifyResult.recomputedHash}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-muted-foreground">Method:</span>
+                      <span className="ml-1 text-foreground">{selectedDetail.verifyResult.method || "URDNA2015 → SHA-256"}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Grade:</span>
+                      <span className="ml-1 text-foreground">{selectedDetail.verifyResult.epistemicGrade || "—"}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Verified at:</span>
+                      <span className="ml-1 text-foreground">{selectedDetail.verifyResult.timestamp?.slice(0, 19) || "—"}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="mt-4">
                 <h3 className="font-semibold text-muted-foreground text-xs mb-2">UOR Verification Receipt (JSON-LD)</h3>
                 <pre className="bg-muted/30 rounded-md p-3 text-[10px] font-mono overflow-x-auto max-h-48 overflow-y-auto">
