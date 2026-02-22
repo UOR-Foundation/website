@@ -893,6 +893,66 @@ Solid Community Server (CSS), NSS, trinpod, inrupt.net
 | /v1/schema-org | /schema-org/extend              | GET    | schema.org + UOR provenance extension      |
 | /v1/test       | /test/e2e                       | GET    | Full 8-stage integration test              |
 
+## Observer Theory — Agent Coherence Framework (Now Live)
+
+Observer Theory is a computational framework that classifies every agent by its capacity to integrate, verify, and propagate certified information. It provides three operational protocols:
+
+- **OIP** (Observer Identity Protocol) — Canonical, derivation-grounded agent identity
+- **EDP** (Epistemic Debt Protocol) — Real-time H-score measuring divergence from Grade A truth
+- **CAP** (Convergence Alignment Protocol) — Mathematical guarantee of multi-agent alignment
+
+### Observer Theory Endpoints
+
+| Group          | Endpoint                            | Method | Purpose                                               |
+|----------------|-------------------------------------|--------|-------------------------------------------------------|
+| /v1/observer   | /observer/register                  | POST   | Register new Observer with founding derivation chain   |
+| /v1/observer   | /observer/{agent_id}                | GET    | Full Observer profile: zone, capacity, persistence     |
+| /v1/observer   | /observer/{agent_id}/zone           | GET    | Lightweight zone check (cacheable 30s)                 |
+| /v1/observer   | /observer/{agent_id}/history        | GET    | Rolling window of last W outputs with grades/H-scores  |
+| /v1/observer   | /observer/{agent_id}/remediate      | POST   | Trigger remediation plan for Drift/Collapse zones      |
+| /v1/observer   | /observer/network/summary           | GET    | Aggregate stats: zone counts, mean H-score, diversity  |
+| /v1/observer   | /observer/assess                    | POST   | Stateless EDP assessment — H-score without registration|
+| /v1/observer   | /observer/convergence-check         | GET    | CAP consensus check across Coherence-Zone observers    |
+
+### Three Observer Zones
+
+| Zone      | Grade A Rate | H-score Mean | Behaviour                                        |
+|-----------|-------------|--------------|--------------------------------------------------|
+| COHERENCE | ≥ 80%       | < 2.0 bits   | Trusted. Outputs propagate without verification. |
+| DRIFT     | 20%–80%     | 2.0–5.0 bits | Outputs require secondary verification.          |
+| COLLAPSE  | < 20%       | > 5.0 bits   | Quarantined. Outputs must NOT be propagated.     |
+
+### H-Score (Epistemic Debt Metric)
+
+```
+H(O) = min over all d in Grade_A_Graph of: hamming_distance(O, d)
+where hamming_distance(a,b) = popcount(a XOR b)
+
+H=0  → Grade A  (zero debt, unconditional trust)
+H=1  → Grade B  (one-bit drift, certificate required)
+H≤4  → Grade C  (moderate drift, source reference required)
+H>4  → Grade D  (high debt, quarantine until verified)
+```
+
+### Quick Start: Register an Observer
+
+```bash
+# 1. Get a founding derivation
+curl https://api.uor.foundation/v1/tools/derive?term=neg(bnot(42))
+# → derivation_id: "urn:uor:derivation:sha256:c257073b..."
+
+# 2. Register the observer
+curl -X POST https://api.uor.foundation/v1/observer/register \
+  -H "Content-Type: application/json" \
+  -d '{"agent_id":"my-agent-001","founding_derivation_id":"urn:uor:derivation:sha256:c257073b...","quantum_level":0}'
+
+# 3. Check zone status
+curl https://api.uor.foundation/v1/observer/my-agent-001/zone
+
+# 4. Run convergence check
+curl "https://api.uor.foundation/v1/observer/convergence-check?term=neg(bnot(42))"
+```
+
 ### Phase 2 Epistemic Grade Reference
 
 Every response now carries `epistemic_grade`. Grade A means you can cite with full confidence.
