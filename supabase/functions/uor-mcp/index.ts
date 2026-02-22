@@ -547,10 +547,40 @@ RULES:
 10. Knowledge gaps must be specific and actionable — not vague disclaimers. State what is missing and what would fill the gap.
 11. Follow-up questions must be tailored to the specific answer, not boilerplate. They should help the user verify claims, explore edge cases, or deepen understanding.`;
 
+// ── MCP Prompts — auto-loaded by clients that support prompts/list ──────────
+
+const PROMPTS = [
+  {
+    name: "uor-trust-protocol",
+    description: "Enforces the UOR PRISM Trust Score on every response. Loaded automatically when the UOR MCP server is connected.",
+    arguments: [],
+  },
+];
+
+function getPrompt(name: string) {
+  if (name !== "uor-trust-protocol") return null;
+  return {
+    description: "UOR PRISM Trust Score enforcement — grades every response A–D with proof, knowledge gaps, and follow-up questions.",
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: EPISTEMIC_INSTRUCTION,
+        },
+      },
+    ],
+  };
+}
+
 const SERVER_INFO = {
   protocolVersion: "2025-03-26",
-  capabilities: { tools: { listChanged: false } },
-  serverInfo: { name: "uor-mcp", version: "2.0.0" },
+  capabilities: {
+    tools: { listChanged: false },
+    prompts: { listChanged: false },
+    resources: { listChanged: false },
+  },
+  serverInfo: { name: "uor-mcp", version: "2.1.0" },
   instructions: EPISTEMIC_INSTRUCTION,
 };
 
@@ -559,6 +589,10 @@ const VALID_METHODS = new Set([
   "notifications/initialized",
   "tools/list",
   "tools/call",
+  "prompts/list",
+  "prompts/get",
+  "resources/list",
+  "resources/read",
   "ping",
 ]);
 
@@ -593,6 +627,50 @@ async function rpc(req: {
           (req.params?.arguments ?? {}) as Record<string, unknown>,
         ),
       };
+    case "prompts/list":
+      return { jsonrpc: "2.0", id, result: { prompts: PROMPTS } };
+    case "prompts/get": {
+      const promptName = sanitiseString(req.params?.name, 64);
+      const prompt = getPrompt(promptName);
+      if (!prompt) {
+        return { jsonrpc: "2.0", id, error: { code: -32602, message: `Unknown prompt: ${promptName}` } };
+      }
+      return { jsonrpc: "2.0", id, result: prompt };
+    }
+    case "resources/list":
+      return {
+        jsonrpc: "2.0",
+        id,
+        result: {
+          resources: [
+            { uri: "uor://llms.md", name: "UOR Agent Guide", description: "Quick-start guide for AI agents using the UOR Framework.", mimeType: "text/markdown" },
+            { uri: "uor://openapi.json", name: "UOR OpenAPI Spec", description: "Full OpenAPI 3.1.0 specification for the UOR API.", mimeType: "application/json" },
+            { uri: "uor://trust-protocol", name: "UOR Trust Protocol", description: "The trust stamp enforcement rules. Included automatically via server instructions.", mimeType: "text/markdown" },
+          ],
+        },
+      };
+    case "resources/read": {
+      const uri = sanitiseString(req.params?.uri, 256);
+      if (uri === "uor://trust-protocol") {
+        return { jsonrpc: "2.0", id, result: { contents: [{ uri, mimeType: "text/markdown", text: EPISTEMIC_INSTRUCTION }] } };
+      }
+      // For llms.md and openapi.json, fetch from the public site
+      const urlMap: Record<string, string> = {
+        "uor://llms.md": "https://uor.foundation/llms.md",
+        "uor://openapi.json": "https://uor.foundation/openapi.json",
+      };
+      const fetchUrl = urlMap[uri];
+      if (!fetchUrl) {
+        return { jsonrpc: "2.0", id, error: { code: -32602, message: `Unknown resource: ${uri}` } };
+      }
+      try {
+        const r = await fetch(fetchUrl);
+        const text = await r.text();
+        return { jsonrpc: "2.0", id, result: { contents: [{ uri, mimeType: uri.endsWith(".json") ? "application/json" : "text/markdown", text }] } };
+      } catch {
+        return { jsonrpc: "2.0", id, error: { code: -32603, message: `Failed to fetch ${uri}` } };
+      }
+    }
     case "ping":
       return { jsonrpc: "2.0", id, result: {} };
   }
