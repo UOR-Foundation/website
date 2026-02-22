@@ -363,66 +363,6 @@ const Standard = () => {
         </div>
       </section>
 
-      {/* Specification + Engine */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
-        <div className="container max-w-5xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
-            Two Repos, One System
-          </p>
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
-            The specification and the engine
-          </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-10">
-            UOR is split into two complementary parts. One defines the rules. The other proves they work. Together, they form a complete, verifiable system.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <a
-              href={GITHUB_FRAMEWORK_DOCS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-2xl border border-border bg-card p-6 md:p-8 transition-all duration-300 hover:border-primary/20 hover:shadow-lg group"
-            >
-              <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">The Map</p>
-              <h3 className="font-display text-xl font-bold text-foreground mb-3">UOR Framework</h3>
-              <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed mb-4">
-                The formal specification: 14 namespaces, 82 classes, 124 properties. Written in Rust, published as JSON-LD, Turtle, and N-Triples. It defines what every concept means, how they relate, and what rules they follow.
-              </p>
-              <p className="text-sm font-body text-muted-foreground leading-relaxed mb-4">
-                Think of it as the blueprint. It says: "A triadic coordinate has three parts. A derivation must include these fields. Closure has three modes." It does not run computations; it defines what valid computation looks like.
-              </p>
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary/70 group-hover:text-primary transition-colors duration-200">
-                Browse the ontology
-                <ExternalLink size={13} className="group-hover:translate-x-0.5 transition-transform duration-200" />
-              </span>
-            </a>
-            <a
-              href={GITHUB_PRISM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-2xl border border-border bg-card p-6 md:p-8 transition-all duration-300 hover:border-primary/20 hover:shadow-lg group"
-            >
-              <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">The Engine</p>
-              <h3 className="font-display text-xl font-bold text-foreground mb-3">Prism</h3>
-              <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed mb-4">
-                The computation engine that proves the Framework's claims. Written in Python, it takes any value, assigns its triadic coordinate, runs verified operations, and produces content-addressed certificates.
-              </p>
-              <p className="text-sm font-body text-muted-foreground leading-relaxed mb-4">
-                Think of it as the machine. It says: "Here is value 42. Its weight is 3. Its components are positions 1, 3, 5. Here is the proof." Same algebra, same rules, same results as the Framework defines, now executable.
-              </p>
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary/70 group-hover:text-primary transition-colors duration-200">
-                Explore the engine
-                <ExternalLink size={13} className="group-hover:translate-x-0.5 transition-transform duration-200" />
-              </span>
-            </a>
-          </div>
-          <div className="mt-6 rounded-2xl border border-border bg-muted/30 p-5 md:p-6 max-w-2xl">
-            <p className="text-sm font-body text-foreground font-medium mb-2">How they connect</p>
-            <p className="text-sm font-body text-muted-foreground leading-relaxed">
-              The Framework and Prism share the same mathematical foundation: the same five operations, the same triadic coordinates, the same critical identity, the same derivation certificates. A coordinate produced by Prism can be verified against the Framework's ontology. A class defined in the Framework can be instantiated by Prism. They are two views of one system.
-            </p>
-          </div>
-        </div>
-      </section>
 
       {/* CTA */}
       <section className="section-dark py-14 md:py-20">
