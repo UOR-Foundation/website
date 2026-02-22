@@ -2518,6 +2518,22 @@ async function makeSha256(input: string): Promise<string> {
   return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+/**
+ * URDNA2015-compliant derivation ID computation for observable/metric endpoints.
+ * Wraps the parameters as a JSON-LD document, canonicalizes via URDNA2015,
+ * then derives the derivation_id from the single proof hash.
+ * This ensures cross-agent determinism for ALL derivation IDs in the system.
+ */
+async function computeCanonicalDerivationId(type: string, params: Record<string, unknown>): Promise<string> {
+  const doc = {
+    "@context": { "observable": "https://uor.foundation/observable/", "derivation": "https://uor.foundation/derivation/" },
+    "@type": type,
+    ...Object.fromEntries(Object.entries(params).map(([k, v]) => [`observable:${k}`, v])),
+  };
+  const result = await singleProofHashEdge(doc);
+  return result.derivationId;
+}
+
 // GET /bridge/observable/metric?a=85&b=170&type=ring&quantum=0
 async function observableMetric(url: URL, rl: RateLimitResult): Promise<Response> {
   const aRes = parseIntParam(url.searchParams.get('a'), 'a', 0, 65535);
@@ -2556,8 +2572,7 @@ async function observableMetric(url: URL, rl: RateLimitResult): Promise<Response
   };
   const value = metricType === 'ring' ? ringDist : metricType === 'hamming' ? hammingDist : incomp;
 
-  const hashHex = await makeSha256(`metric_${metricType}_${a}_${b}_q${quantum}`);
-  const derivId = `urn:uor:derivation:sha256:${hashHex}`;
+  const derivId = await computeCanonicalDerivationId("observable:MetricObservable", { metricType, a, b, quantum });
   const etag = makeETag('/bridge/observable/metric', { a: String(a), b: String(b), type: metricType, q: String(quantum) });
 
   return jsonResp(gradeResponse({
@@ -2601,7 +2616,7 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
     const v = vRes.val;
     if (v >= m) return error400(`value must be in [0, ${m-1}]`, 'value', rl);
     const stratum = hammingWeightFn(v);
-    const hashHex = await makeSha256(`stratum_value_${v}_q${quantum}`);
+    const stratumDerivId = await computeCanonicalDerivationId("observable:StratumValue", { value: v, quantum });
     const etag = makeETag('/bridge/observable/stratum', { v: String(v), type: 'value', q: String(quantum) });
     return jsonResp(gradeResponse({
       "@context": UOR_CONTEXT_URL,
@@ -2612,7 +2627,7 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
       "observable:unit": "stratum_index",
       "observable:source": { "@id": datumIRI(v, n), "schema:value": v },
       "interpretation": `stratum = popcount(${v}) = popcount(${v.toString(2).padStart(n, '0')}) = ${stratum} set bits`,
-      "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+      "derivation:derivationId": stratumDerivId,
       "critical_identity_holds": neg(bnot(v, n), n) === succOp(v, n),
     }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
   }
@@ -2626,7 +2641,7 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
     if (a >= m) return error400(`a must be in [0, ${m-1}]`, 'a', rl);
     if (b >= m) return error400(`b must be in [0, ${m-1}]`, 'b', rl);
     const sa = hammingWeightFn(a), sb = hammingWeightFn(b);
-    const hashHex = await makeSha256(`stratum_delta_${a}_${b}_q${quantum}`);
+    const deltaDerivId = await computeCanonicalDerivationId("observable:StratumDelta", { a, b, quantum });
     const etag = makeETag('/bridge/observable/stratum', { a: String(a), b: String(b), type: 'delta', q: String(quantum) });
     return jsonResp(gradeResponse({
       "@context": UOR_CONTEXT_URL,
@@ -2639,7 +2654,7 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
       "observable:target": { "@id": datumIRI(b, n), "schema:value": b },
       "stratum_a": sa,
       "stratum_b": sb,
-      "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+      "derivation:derivationId": deltaDerivId,
     }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
   }
 
@@ -2660,7 +2675,7 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
     trajectory.push({ step: i, value: current, datum_iri: datumIRI(current, n), stratum: hammingWeightFn(current) });
     current = applyOp(current, opRaw as OpName, n);
   }
-  const hashHex = await makeSha256(`stratum_trajectory_${start}_${opRaw}_${steps}_q${quantum}`);
+  const trajDerivId = await computeCanonicalDerivationId("observable:StratumTrajectory", { start, op: opRaw, steps, quantum });
   const etag = makeETag('/bridge/observable/stratum', { start: String(start), op: opRaw, steps: String(steps), q: String(quantum) });
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
@@ -2672,7 +2687,7 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
     "trajectory": trajectory,
     "operation_applied": opRaw,
     "critical_identity_holds": neg(bnot(start, n), n) === succOp(start, n),
-    "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+    "derivation:derivationId": trajDerivId,
   }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
@@ -2710,10 +2725,11 @@ async function observablePath(req: Request, rl: RateLimitResult): Promise<Respon
     length: 'steps', total_variation: 'ring_steps', winding_number: 'laps'
   };
 
-  const hashHex = await makeSha256(`path_${pathType}_${path.join(',')}_q${quantum}`);
+  const pathDerivId = await computeCanonicalDerivationId("observable:PathObservable", { pathType, path, quantum });
+  const pathIdSlice = pathDerivId.slice(-16);
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/observable/path/${pathType}/${hashHex.slice(0, 16)}`,
+    "@id": `https://uor.foundation/observable/path/${pathType}/${pathIdSlice}`,
     "@type": ["observable:Observable", "observable:PathObservable", obsTypeMap[pathType]],
     "observable:quantum": n,
     "observable:value": valueMap[pathType],
@@ -2724,7 +2740,7 @@ async function observablePath(req: Request, rl: RateLimitResult): Promise<Respon
     "total_variation": totalVar,
     "winding_number": windingNum,
     "formula": pathType === 'winding_number' ? `W = Σ signed_step / |R_${n}| where signed_step uses shortest-path convention` : undefined,
-    "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+    "derivation:derivationId": pathDerivId,
   }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
 }
 
@@ -2749,7 +2765,7 @@ async function observableCurvature(url: URL, rl: RateLimitResult): Promise<Respo
   const gf_x = applyOp(applyOp(x, f as OpName, n), g as OpName, n);
   const commValue = ((fg_x - gf_x) % m + m) % m;
 
-  const hashHex = await makeSha256(`curvature_${x}_${f}_${g}_q${quantum}`);
+  const curvDerivId = await computeCanonicalDerivationId("observable:CurvatureObservable", { x, f, g, quantum });
   const etag = makeETag('/bridge/observable/curvature', { x: String(x), f, g, q: String(quantum) });
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
@@ -2790,10 +2806,11 @@ async function observableHolonomy(req: Request, rl: RateLimitResult): Promise<Re
     accum = ((accum + path[i + 1] - path[i]) % m + m) % m;
   }
 
-  const hashHex = await makeSha256(`holonomy_${path.join(',')}_q${quantum}`);
+  const holoDerivId = await computeCanonicalDerivationId("observable:HolonomyObservable", { path, quantum });
+  const holoIdSlice = holoDerivId.slice(-16);
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/observable/holonomy/${hashHex.slice(0, 16)}`,
+    "@id": `https://uor.foundation/observable/holonomy/${holoIdSlice}`,
     "@type": ["observable:Observable", "observable:HolonomyObservable"],
     "observable:quantum": n,
     "observable:value": accum,
@@ -2804,7 +2821,7 @@ async function observableHolonomy(req: Request, rl: RateLimitResult): Promise<Re
     "is_trivial": accum === 0,
     "formula": "H = Σ (path[i+1] - path[i]) mod 256 for closed path",
     "geometric_interpretation": accum === 0 ? "trivial holonomy — closed path with no net displacement" : `non-trivial holonomy — net displacement of ${accum}`,
-    "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+    "derivation:derivationId": holoDerivId,
   }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
 }
 
@@ -2866,17 +2883,18 @@ async function observableStream(req: Request, rl: RateLimitResult): Promise<Resp
     windows.push({ window_index: i, values: w, metrics: windowMetrics });
   }
 
-  const hashHex = await makeSha256(`stream_q${quantum}_${stream.length}`);
+  const streamDerivId = await computeCanonicalDerivationId("observable:StreamAnalysis", { quantum, streamLength: stream.length });
+  const streamIdSlice = streamDerivId.slice(-16);
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
-    "@id": `https://uor.foundation/observable/stream/${hashHex.slice(0, 16)}`,
+    "@id": `https://uor.foundation/observable/stream/${streamIdSlice}`,
     "@type": "observable:StreamAnalysis",
     "observable:quantum": n,
     "total_values": stream.length,
     "window_size": windowSize,
     "windows_count": windows.length,
     "windows": windows,
-    "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+    "derivation:derivationId": streamDerivId,
   }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
 }
 
@@ -5003,18 +5021,17 @@ async function storePodWrite(req: Request, rl: RateLimitResult): Promise<Respons
   }
   canonicalForm = `${op}(${args.join(',')})`;
 
-  // Step 2: Derive derivation_id — canonical formula: "{canonical_serialize}={result_iri}"
+  // Step 2: Derive derivation_id via URDNA2015 Single Proof Hash (R2-compliant)
   const sortedArgs = [...args].sort((a, b) => a - b);
   const normalizedTerm = ['xor', 'and', 'or'].includes(op)
     ? `${op}(${sortedArgs.join(',')})`
     : canonicalForm;
   const resultIri = datumIRI(result, n);
-  const derivHashHex = await makeSha256(`${normalizedTerm}=${resultIri}`);
-  const derivId = `urn:uor:derivation:sha256:${derivHashHex}`;
+  const derivId = await computeDerivationId(normalizedTerm, resultIri);
 
   // Step 3: Construct binding JSON-LD
   const ts = timestamp();
-  const bindingId = derivHashHex.slice(0, 16);
+  const bindingId = derivId.slice(-16);
   const bindingJsonLd = {
     "@context": {
       "state":      "https://uor.foundation/state/",
@@ -7666,15 +7683,16 @@ async function schemaOrgCoherence(req: Request, rl: RateLimitResult): Promise<Re
     }
   }
 
-  // Step 4: Compute coherence proof hash
-  const proofPayload = JSON.stringify({
-    instances: identities.map(id => ({ type: id.type, cid: id.cid, derivationId: id.derivationId })),
-    edges,
-    allResolved,
-    allDerivationsVerified,
-    ts: new Date().toISOString(),
-  });
-  const proofHash = await makeSha256(proofPayload);
+  // Step 4: Compute coherence proof hash via URDNA2015
+  const proofDoc = {
+    "@context": { "proof": "https://uor.foundation/proof/", "sobridge": "https://uor.foundation/sobridge/" },
+    "@type": "proof:CoherenceProofIdentity",
+    "proof:instances": identities.map(id => ({ type: id.type, cid: id.cid, derivationId: id.derivationId })),
+    "proof:allResolved": allResolved,
+    "proof:allDerivationsVerified": allDerivationsVerified,
+  };
+  const proofResult = await singleProofHashEdge(proofDoc);
+  const proofHash = proofResult.hashHex;
 
   // ── C5: Epistemic grading for coherence proofs ──────────────────────────
   // Grade A: ALL references resolve AND all derivation_id chains verified
@@ -7886,7 +7904,7 @@ async function schemaOrgPinAll(req: Request, rl: RateLimitResult): Promise<Respo
         "cert:timestamp": new Date().toISOString(),
         "cert:verifyUrl": `https://api.uor.foundation/v1/tools/verify?derivation_id=${derivationId}`,
         "cert:selfDescribing": true,
-        "cert:canonicalizationMethod": "sorted-key-json-ld",
+        "cert:canonicalizationMethod": "URDNA2015",
         "cert:hashAlgorithm": "SHA-256",
         "cert:identityForms": {
           "derivation:derivationId": derivationId,
