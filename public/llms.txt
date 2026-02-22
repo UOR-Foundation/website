@@ -25,7 +25,7 @@ Verify the mathematical foundation (no tooling required):
 
 Then fetch the critical identity proof from the live API:
 
-    GET https://api.uor.foundation/v1/kernel/proof/critical-identity?x=42
+    GET https://api.uor.foundation/v1/kernel/op/verify?x=42
 
 ## Community
 

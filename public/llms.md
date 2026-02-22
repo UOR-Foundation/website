@@ -385,7 +385,7 @@ Endpoint-to-grade mapping:
 | Endpoint | Grade |
 |----------|-------|
 | /kernel/op/* | A |
-| /kernel/proof/critical-identity | A |
+| /kernel/op/verify | A |
 | /kernel/op/verify | A |
 | /bridge/partition | A |
 | /bridge/resolver | A |
