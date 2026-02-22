@@ -1,22 +1,20 @@
 /**
  * UOR Certificate Engine — attestations binding derivations to identities.
  *
+ * Uses the Single Proof Hashing Standard (URDNA2015) for all identity computation.
  * A Certificate attests that a Derivation is valid by re-verifying it
  * and binding its identity to the UOR content-addressing system.
  *
  * Delegates to:
  *   - derivation.ts for re-verification
- *   - lib/uor-address.ts for CID computation
- *   - lib/uor-certificate.ts for the underlying certificate generation pattern
- *
- * Zero duplication of crypto or addressing logic.
+ *   - lib/uor-canonical.ts for URDNA2015 Single Proof Hashing
  */
 
 import type { Derivation } from "./derivation";
 import { verifyDerivation } from "./derivation";
 import type { UORRing } from "@/modules/ring-core/ring";
 import type { Term } from "@/modules/ring-core/canonicalization";
-import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
+import { singleProofHash } from "@/lib/uor-canonical";
 
 // ── Certificate type ────────────────────────────────────────────────────────
 
@@ -35,6 +33,7 @@ export interface Certificate {
 /**
  * Issue a certificate for a derivation by re-verifying it.
  * The certificate attests that the derivation is algebraically valid.
+ * Certificate ID is computed via URDNA2015 Single Proof Hash.
  */
 export async function issueCertificate(
   derivation: Derivation,
@@ -45,15 +44,15 @@ export async function issueCertificate(
   // Re-verify the derivation
   const valid = await verifyDerivation(ring, derivation, originalTerm);
 
-  // Certificate ID: CID of the derivation record
-  const canonical = canonicalJsonLd({
-    derivationId: derivation.derivationId,
-    resultIri: derivation.resultIri,
-    valid,
+  // Certificate ID via URDNA2015 Single Proof Hash
+  const proof = await singleProofHash({
+    "@context": { cert: "https://uor.foundation/cert/" },
+    "@type": "cert:DerivationCertificate",
+    "cert:derivationId": derivation.derivationId,
+    "cert:resultIri": derivation.resultIri,
+    "cert:valid": String(valid),
   });
-  const bytes = new TextEncoder().encode(canonical);
-  const cid = await computeCid(bytes);
-  const certificateId = `urn:uor:cert:${cid.slice(0, 24)}`;
+  const certificateId = `urn:uor:cert:${proof.cid.slice(0, 24)}`;
 
   return {
     "@type": "cert:DerivationCertificate",

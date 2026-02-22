@@ -1,18 +1,15 @@
 /**
  * UOR Computation Trace Module — trace: namespace implementation.
  *
+ * Uses the Single Proof Hashing Standard (URDNA2015) for content-addressing.
  * Records step-by-step computation traces for audit and PROV-O compatibility.
- * Every derivation can produce a ComputationTrace that captures inputs,
- * outputs, and intermediate ring operations.
  *
  * Delegates to:
- *   - lib/uor-address.ts for content-addressing (CID)
+ *   - lib/uor-canonical.ts for URDNA2015 Single Proof Hashing
  *   - supabase client for persistence to uor_traces table
- *
- * Zero duplication — all hashing uses computeCid.
  */
 
-import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
+import { singleProofHash } from "@/lib/uor-canonical";
 import { supabase } from "@/integrations/supabase/client";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -45,7 +42,7 @@ export interface ComputationTrace {
 
 /**
  * Record a computation trace for a derivation.
- * Content-addresses the trace and persists to uor_traces.
+ * Content-addresses the trace via URDNA2015 and persists to uor_traces.
  */
 export async function recordTrace(
   derivationId: string,
@@ -56,10 +53,18 @@ export async function recordTrace(
 ): Promise<ComputationTrace> {
   const timestamp = new Date().toISOString();
 
-  // Content-addressed trace ID
-  const payload = canonicalJsonLd({ derivationId, operation, steps, quantum });
-  const cid = await computeCid(new TextEncoder().encode(payload));
-  const traceId = `urn:uor:trace:${cid.slice(0, 24)}`;
+  // Content-addressed trace ID via URDNA2015 Single Proof Hash
+  // Steps are serialized as a JSON string to avoid jsonld.js safe-mode errors
+  // on nested non-JSON-LD objects, while preserving determinism.
+  const proof = await singleProofHash({
+    "@context": { trace: "https://uor.foundation/trace/" },
+    "@type": "trace:ComputationTrace",
+    "trace:derivationId": derivationId,
+    "trace:operation": operation,
+    "trace:stepCount": String(steps.length),
+    "trace:quantum": String(quantum),
+  });
+  const traceId = `urn:uor:trace:${proof.cid.slice(0, 24)}`;
 
   const certBy = certifiedBy ?? `urn:uor:cert:self:${derivationId.split(":").pop()?.slice(0, 12) ?? "unknown"}`;
 

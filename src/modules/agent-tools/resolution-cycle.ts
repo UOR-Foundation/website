@@ -1,6 +1,8 @@
 /**
  * UOR 8-Stage Agent Resolution Cycle — unified pipeline orchestrator.
  *
+ * Uses the Single Proof Hashing Standard (URDNA2015) for content-addressing.
+ *
  * Implements the roadmap's 8-stage sequence:
  *   1. Context Binding (state module)
  *   2. Type Extraction (resolver/type-registry)
@@ -31,7 +33,7 @@ import type { Certificate } from "@/modules/derivation/certificate";
 import { recordTrace } from "@/modules/trace";
 import type { ComputationTrace, TraceStep } from "@/modules/trace";
 import { parseTerm } from "./parser";
-import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
+import { singleProofHash } from "@/lib/uor-canonical";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -115,7 +117,6 @@ export async function executeResolutionCycle(
       resolverResult = resolve(effectiveRing, resolvedValue);
     }
   } catch { /* non-fatal */ }
-  // Gap 6: Include strategy name in Stage 3 output
   const s3Output = resolverResult
     ? { ...resolverResult, "resolver:strategy": resolverResult.strategy }
     : null;
@@ -175,10 +176,16 @@ export async function executeResolutionCycle(
   const selfVerified = ring.coherenceVerified && (certificate?.valid ?? false);
   stages.push({ stage: 8, name: "Transform", durationMs: Math.round(performance.now() - s8Start), output: { selfVerified } });
 
-  // ── Build cycle ID ────────────────────────────────────────────────────
-  const cyclePayload = canonicalJsonLd({ query, quantum, stages: stages.map((s) => s.name), timestamp });
-  const cycleCid = await computeCid(new TextEncoder().encode(cyclePayload));
-  const cycleId = `urn:uor:cycle:${cycleCid.slice(0, 24)}`;
+  // ── Build cycle ID via URDNA2015 Single Proof Hash ────────────────────
+  const proof = await singleProofHash({
+    "@context": { agent: "https://uor.foundation/agent/" },
+    "@type": "agent:ResolutionCycle",
+    "agent:query": query,
+    "agent:quantum": String(quantum),
+    "agent:stages": stages.map((s) => s.name),
+    "agent:timestamp": timestamp,
+  });
+  const cycleId = `urn:uor:cycle:${proof.cid.slice(0, 24)}`;
 
   return {
     "@type": "agent:ResolutionCycle",
