@@ -1,19 +1,18 @@
 import { ArrowRight } from "lucide-react";
 import highlightKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import highlightFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
-import highlightCommunityCall from "@/assets/highlight-community-call.jpg";
+import highlightSemanticWeb from "@/assets/highlight-semantic-web.jpg";
 import { highlights, type TagType } from "@/data/highlights";
 
 const tagStyles: Record<TagType, string> = {
   Research: "bg-primary/10 text-primary",
   Announcement: "bg-accent/10 text-accent",
-  Event: "bg-primary/8 text-primary/80 border border-primary/15",
 };
 
 const imageMap: Record<string, string> = {
   knowledgeGraph: highlightKnowledgeGraph,
   frameworkLaunch: highlightFrameworkLaunch,
-  communityCall: highlightCommunityCall,
+  semanticWeb: highlightSemanticWeb,
 };
 
 const HighlightsSection = () => {

@@ -2,7 +2,7 @@
  * Community highlights — serializable data for UOR certification.
  * Image imports are mapped at the component level.
  */
-export type TagType = "Research" | "Announcement" | "Event";
+export type TagType = "Research" | "Announcement";
 
 export const highlights = [
   {
@@ -20,10 +20,10 @@ export const highlights = [
     href: "/blog/uor-framework-launch",
   },
   {
-    tag: "Event" as TagType,
-    title: "UOR Community Call",
-    date: "March 3, 2026",
-    imageKey: "communityCall",
-    href: "https://discord.com/channels/1342910418754076732/1342910419370774532/1474210293386055772",
+    tag: "Announcement" as TagType,
+    title: "The Semantic Web for Agentic AI",
+    date: "February 22, 2026",
+    imageKey: "semanticWeb",
+    href: "/semantic-web",
   },
 ];
