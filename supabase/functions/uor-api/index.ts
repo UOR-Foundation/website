@@ -7406,28 +7406,22 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
     return true;
   });
 
+  // ── Attach FULL property definitions — every field from the raw schema.org node ──
+  // This ensures lossless fidelity: the encoded object IS the complete schema,
+  // identical to what schema.org publishes. Not a single field is dropped.
   sobridgeType["sobridge:properties"] = deduped.map(p => {
     const pid = String(p['@id'] ?? '').replace('https://schema.org/', '').replace('schema:', '');
-    const range = p['schema:rangeIncludes'] ?? p['rangeIncludes'];
-    const ranges = range ? (Array.isArray(range) ? range : [range]).map((r: unknown) => {
-      if (typeof r === 'string') return r;
-      if (typeof r === 'object' && r !== null && '@id' in (r as Record<string, unknown>)) return (r as Record<string, string>)['@id'];
-      return String(r);
-    }) : [];
-    // Track which ancestor type defines this property
-    const domain = p['schema:domainIncludes'] ?? p['domainIncludes'];
-    const domains = domain ? (Array.isArray(domain) ? domain : [domain]).map((d: unknown) => {
-      if (typeof d === 'string') return d;
-      if (typeof d === 'object' && d !== null && '@id' in (d as Record<string, unknown>)) return (d as Record<string, string>)['@id'];
-      return String(d);
-    }) : [];
-    return {
+    // Start with canonical @id and @type
+    const propEntry: Record<string, unknown> = {
       "@id": `https://schema.org/${pid}`,
-      "rdfs:label": pid,
-      "rdfs:comment": p['rdfs:comment'] ?? null,
-      "schema:rangeIncludes": ranges,
-      "schema:domainIncludes": domains,
+      "@type": p['@type'] ?? 'rdf:Property',
     };
+    // Copy every field from the raw schema.org vocabulary node — lossless
+    for (const [k, v] of Object.entries(p)) {
+      if (k === '@id' || k === '@type') continue;
+      propEntry[k] = v;
+    }
+    return propEntry;
   });
 
   sobridgeType["sobridge:propertyCount"] = deduped.length;
@@ -8036,6 +8030,21 @@ async function schemaOrgPinAll(req: Request, rl: RateLimitResult): Promise<Respo
         return true;
       });
 
+      // ── Attach FULL property definitions (complete schema.org fidelity) ──
+      sobridgeType["sobridge:properties"] = dedupedProps.map(p => {
+        const pid = String(p['@id'] ?? '').replace('https://schema.org/', '').replace('schema:', '');
+        // Capture ALL fields from the raw schema.org vocabulary node
+        const propEntry: Record<string, unknown> = {
+          "@id": `https://schema.org/${pid}`,
+          "@type": p['@type'] ?? 'rdf:Property',
+        };
+        // Copy every field from the raw node — lossless
+        for (const [k, v] of Object.entries(p)) {
+          if (k === '@id' || k === '@type') continue;
+          propEntry[k] = v;
+        }
+        return propEntry;
+      });
       sobridgeType["sobridge:propertyCount"] = dedupedProps.length;
       sobridgeType["sobridge:inheritanceChain"] = inheritanceChain;
       sobridgeType["sobridge:quantumLevel"] = 0;
