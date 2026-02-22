@@ -2,7 +2,20 @@
   "uor_version": "1.0.0",
   "ring_quantum": 0,
   "registered_modules": 26,
-  "sparql_endpoint": "https://api.uor.foundation/v1/bridge/sparql",
+  "sparql_endpoint": "https://api.uor.foundation/v1/sparql",
+  "named_graphs": {
+    "ontology": "https://uor.foundation/graph/ontology",
+    "q0": "https://uor.foundation/graph/q0"
+  },
+  "q0_graph": {
+    "status": "active",
+    "nodes": 265,
+    "datums": 256,
+    "triples_approx": 3584,
+    "quantum": 0,
+    "ring": "Z/256Z",
+    "dump_url": "https://api.uor.foundation/v1/graph/q0.jsonld"
+  },
   "tool_endpoints": {
     "uor_derive": "https://api.uor.foundation/v1/tools/derive",
     "uor_query": "https://api.uor.foundation/v1/tools/query",
