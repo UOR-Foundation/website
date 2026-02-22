@@ -7348,7 +7348,42 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
     })(),
   };
 
-  // Find properties that accept this type as domain
+  // ── Collect ALL properties including inherited from superclasses ─────────
+  // Walk the full superclass chain (Person → Thing) to capture every property
+  // exactly as shown on schema.org/Person — not just direct domain properties.
+  const allDomainTypes = new Set<string>();
+  allDomainTypes.add(`schema:${normalizedType}`);
+  allDomainTypes.add(`https://schema.org/${normalizedType}`);
+
+  // Walk superclass chain to collect all ancestor types
+  const visited = new Set<string>();
+  const queue = [normalizedType];
+  const inheritanceChain: string[] = [normalizedType];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (visited.has(current)) continue;
+    visited.add(current);
+    const node = vocab.find(n => {
+      const nid = String(n['@id'] ?? '');
+      return nid === `schema:${current}` || nid === `https://schema.org/${current}`;
+    });
+    if (!node) continue;
+    const sc = node['rdfs:subClassOf'];
+    if (!sc) continue;
+    const parents = Array.isArray(sc) ? sc : [sc];
+    for (const p of parents) {
+      const pid = typeof p === 'string' ? p : (typeof p === 'object' && p !== null && '@id' in (p as Record<string, unknown>)) ? (p as Record<string, string>)['@id'] : '';
+      const parentName = pid.replace('https://schema.org/', '').replace('schema:', '');
+      if (parentName && !visited.has(parentName)) {
+        queue.push(parentName);
+        inheritanceChain.push(parentName);
+        allDomainTypes.add(`schema:${parentName}`);
+        allDomainTypes.add(`https://schema.org/${parentName}`);
+      }
+    }
+  }
+
+  // Find ALL properties across the full inheritance chain
   const props = vocab.filter(n => {
     const t = n['@type'];
     const isProperty = t === 'rdf:Property' || (Array.isArray(t) && t.includes('rdf:Property'));
@@ -7358,11 +7393,20 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
     const domains = Array.isArray(domain) ? domain : [domain];
     return domains.some((d: unknown) => {
       const did = typeof d === 'string' ? d : (typeof d === 'object' && d !== null && '@id' in (d as Record<string, unknown>)) ? (d as Record<string, string>)['@id'] : '';
-      return did === `schema:${normalizedType}` || did === `https://schema.org/${normalizedType}`;
+      return allDomainTypes.has(did);
     });
   });
 
-  sobridgeType["sobridge:properties"] = props.map(p => {
+  // Deduplicate by property @id (in case multiple domains match)
+  const seenProps = new Set<string>();
+  const deduped = props.filter(p => {
+    const pid = String(p['@id'] ?? '');
+    if (seenProps.has(pid)) return false;
+    seenProps.add(pid);
+    return true;
+  });
+
+  sobridgeType["sobridge:properties"] = deduped.map(p => {
     const pid = String(p['@id'] ?? '').replace('https://schema.org/', '').replace('schema:', '');
     const range = p['schema:rangeIncludes'] ?? p['rangeIncludes'];
     const ranges = range ? (Array.isArray(range) ? range : [range]).map((r: unknown) => {
@@ -7370,15 +7414,24 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
       if (typeof r === 'object' && r !== null && '@id' in (r as Record<string, unknown>)) return (r as Record<string, string>)['@id'];
       return String(r);
     }) : [];
+    // Track which ancestor type defines this property
+    const domain = p['schema:domainIncludes'] ?? p['domainIncludes'];
+    const domains = domain ? (Array.isArray(domain) ? domain : [domain]).map((d: unknown) => {
+      if (typeof d === 'string') return d;
+      if (typeof d === 'object' && d !== null && '@id' in (d as Record<string, unknown>)) return (d as Record<string, string>)['@id'];
+      return String(d);
+    }) : [];
     return {
       "@id": `https://schema.org/${pid}`,
       "rdfs:label": pid,
       "rdfs:comment": p['rdfs:comment'] ?? null,
       "schema:rangeIncludes": ranges,
+      "schema:domainIncludes": domains,
     };
   });
 
-  sobridgeType["sobridge:propertyCount"] = props.length;
+  sobridgeType["sobridge:propertyCount"] = deduped.length;
+  sobridgeType["sobridge:inheritanceChain"] = inheritanceChain;
 
   // ── Action morphism bridge — detect Action types and map to morphism:Action
   const isActionType = await isSchemaOrgAction(normalizedType, vocab);
@@ -7928,7 +7981,39 @@ async function schemaOrgPinAll(req: Request, rl: RateLimitResult): Promise<Respo
         })(),
       };
 
-      // Find properties that accept this type as domain
+      // ── Collect ALL properties including inherited from superclasses ─────
+      const allDomainTypes = new Set<string>();
+      allDomainTypes.add(`schema:${typeName}`);
+      allDomainTypes.add(`https://schema.org/${typeName}`);
+
+      // Walk superclass chain
+      const chainVisited = new Set<string>();
+      const chainQueue = [typeName];
+      const inheritanceChain: string[] = [typeName];
+      while (chainQueue.length > 0) {
+        const cur = chainQueue.shift()!;
+        if (chainVisited.has(cur)) continue;
+        chainVisited.add(cur);
+        const curNode = vocab.find(n => {
+          const nid = String(n['@id'] ?? '');
+          return nid === `schema:${cur}` || nid === `https://schema.org/${cur}`;
+        });
+        if (!curNode) continue;
+        const sc2 = curNode['rdfs:subClassOf'];
+        if (!sc2) continue;
+        const parents2 = Array.isArray(sc2) ? sc2 : [sc2];
+        for (const p2 of parents2) {
+          const pid2 = typeof p2 === 'string' ? p2 : (typeof p2 === 'object' && p2 !== null && '@id' in (p2 as Record<string, unknown>)) ? (p2 as Record<string, string>)['@id'] : '';
+          const pn = pid2.replace('https://schema.org/', '').replace('schema:', '');
+          if (pn && !chainVisited.has(pn)) {
+            chainQueue.push(pn);
+            inheritanceChain.push(pn);
+            allDomainTypes.add(`schema:${pn}`);
+            allDomainTypes.add(`https://schema.org/${pn}`);
+          }
+        }
+      }
+
       const props = vocab.filter(n => {
         const t = n['@type'];
         const isProperty = t === 'rdf:Property' || (Array.isArray(t) && t.includes('rdf:Property'));
@@ -7938,11 +8023,21 @@ async function schemaOrgPinAll(req: Request, rl: RateLimitResult): Promise<Respo
         const domains = Array.isArray(domain) ? domain : [domain];
         return domains.some((d: unknown) => {
           const did = typeof d === 'string' ? d : (typeof d === 'object' && d !== null && '@id' in (d as Record<string, unknown>)) ? (d as Record<string, string>)['@id'] : '';
-          return did === `schema:${typeName}` || did === `https://schema.org/${typeName}`;
+          return allDomainTypes.has(did);
         });
       });
 
-      sobridgeType["sobridge:propertyCount"] = props.length;
+      // Deduplicate
+      const seenPropIds = new Set<string>();
+      const dedupedProps = props.filter(p => {
+        const pid = String(p['@id'] ?? '');
+        if (seenPropIds.has(pid)) return false;
+        seenPropIds.add(pid);
+        return true;
+      });
+
+      sobridgeType["sobridge:propertyCount"] = dedupedProps.length;
+      sobridgeType["sobridge:inheritanceChain"] = inheritanceChain;
       sobridgeType["sobridge:quantumLevel"] = 0;
       sobridgeType["sobridge:ringModulus"] = 256;
 
