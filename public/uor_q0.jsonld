@@ -1,0 +1,26 @@
+{
+  "@context": {
+    "proof": "https://uor.foundation/proof/",
+    "partition": "https://uor.foundation/partition/",
+    "cert": "https://uor.foundation/cert/",
+    "op": "https://uor.foundation/op/",
+    "schema": "https://uor.foundation/schema/"
+  },
+  "@id": "https://uor.foundation/uor_q0",
+  "@type": "proof:CoherenceProof",
+  "proof:pipelineName": "PRISM",
+  "proof:pipelineDefinition": "Polymorphic Resolution and Isometric Symmetry Machine",
+  "proof:quantumLevel": "Q0",
+  "proof:bitWidth": 8,
+  "proof:ring": "Z/(2^8)Z",
+  "proof:elements": 256,
+  "proof:criticalIdentity": "neg(bnot(x)) = succ(x) for all x in Z/256Z",
+  "proof:verified": true,
+  "proof:cardinalityInvariant": "|Irr| + |Red| + |Unit| + |Ext| = 256",
+  "proof:witnesses": [
+    {"proof:x": 0,   "proof:bnot_x": 255, "proof:neg_bnot_x": 1,   "proof:succ_x": 1,   "proof:holds": true},
+    {"proof:x": 42,  "proof:bnot_x": 213, "proof:neg_bnot_x": 43,  "proof:succ_x": 43,  "proof:holds": true},
+    {"proof:x": 127, "proof:bnot_x": 128, "proof:neg_bnot_x": 128, "proof:succ_x": 128, "proof:holds": true},
+    {"proof:x": 255, "proof:bnot_x": 0,   "proof:neg_bnot_x": 0,   "proof:succ_x": 0,   "proof:holds": true}
+  ]
+}
