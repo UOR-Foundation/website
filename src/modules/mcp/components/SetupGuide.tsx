@@ -149,9 +149,9 @@ const SetupGuide = () => {
           </p>
           <div className="flex items-center gap-2 mb-1.5">
             <code className="bg-muted px-2 py-1 rounded text-foreground font-mono text-sm">
-              What is 7 × 6? Derive the answer.
+              What is 6 × 7? Derive the answer.
             </code>
-            <CopyButton text="What is 7 × 6? Derive the answer." label="Copy" />
+            <CopyButton text="What is 6 × 7? Derive the answer." label="Copy" />
           </div>
           <p className="text-sm font-body text-muted-foreground leading-relaxed">
             You'll get{" "}
