@@ -47,6 +47,7 @@ const ShaclIndexPage = lazy(() => import("@/modules/shacl/pages/ShaclIndexPage")
 const FormatsPage = lazy(() => import("@/modules/shacl/pages/FormatsPage"));
 const ProjectUorMcp = lazy(() => import("@/modules/projects/pages/ProjectUorMcp"));
 const DatumPage = lazy(() => import("@/modules/datum/pages/DatumPage"));
+const TrustScorePreview = lazy(() => import("@/modules/mcp/pages/TrustScorePreview"));
 
 const queryClient = new QueryClient();
 
@@ -107,6 +108,7 @@ const App = () => {
             <Route path="/shacl" element={<ShaclIndexPage />} />
             <Route path="/formats" element={<FormatsPage />} />
             <Route path="/u/:iri" element={<DatumPage />} />
+            <Route path="/trust-score-preview" element={<TrustScorePreview />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
