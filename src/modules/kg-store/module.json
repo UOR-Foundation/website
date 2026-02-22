@@ -7,13 +7,8 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["schema:", "derivation:", "cert:", "receipt:", "partition:"],
   "exports": [
-    "ingestDatum",
-    "ingestDatumBatch",
-    "ingestDerivation",
-    "ingestTriples",
-    "getDatum",
-    "getGraphStats",
-    "listGraphs"
+    "ingestDatum", "ingestDatumBatch", "ingestDerivation",
+    "ingestTriples", "getDatum", "getGraphStats", "listGraphs"
   ],
   "dependencies": {
     "ring-core": "^1.0.0",
@@ -23,5 +18,14 @@
     "derivation": "^1.0.0"
   },
   "routes": ["/knowledge-graph"],
+  "api_endpoints": [
+    "/bridge/graph/query",
+    "/store/write",
+    "/store/resolve",
+    "/store/read/:cid",
+    "/store/verify/:cid",
+    "/store/write-context",
+    "/store/gateways"
+  ],
   "assets": []
 }

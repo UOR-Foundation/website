@@ -7,15 +7,13 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["schema:"],
   "exports": [
-    "computeTriad",
-    "popcount",
-    "basisElements",
-    "stratumLevel",
-    "stratumDensity"
+    "computeTriad", "popcount", "basisElements",
+    "stratumLevel", "stratumDensity"
   ],
   "dependencies": {
     "ring-core": "^1.0.0"
   },
   "routes": [],
+  "api_endpoints": [],
   "assets": []
 }

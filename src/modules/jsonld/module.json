@@ -7,12 +7,8 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["schema:", "op:", "proof:", "derivation:", "cert:", "partition:"],
   "exports": [
-    "emitContext",
-    "emitDatum",
-    "emitDerivation",
-    "emitCoherenceProof",
-    "emitGraph",
-    "validateJsonLd"
+    "emitContext", "emitDatum", "emitDerivation",
+    "emitCoherenceProof", "emitGraph", "validateJsonLd"
   ],
   "dependencies": {
     "ring-core": "^1.0.0",
@@ -20,5 +16,7 @@
     "triad": "^1.0.0",
     "derivation": "^1.0.0"
   },
+  "routes": [],
+  "api_endpoints": ["/bridge/emit", "/schema-org/extend"],
   "assets": []
 }

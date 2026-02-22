@@ -7,19 +7,18 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["u:", "schema:"],
   "exports": [
-    "bytesToCodepoint",
-    "bytesToGlyph",
-    "bytesToIRI",
-    "bytesToUPlus",
-    "iriToBytes",
-    "contentAddress",
-    "verifyDeterminism",
-    "verifyRoundTrip",
-    "datumApiUrl"
+    "bytesToCodepoint", "bytesToGlyph", "bytesToIRI",
+    "bytesToUPlus", "iriToBytes", "contentAddress",
+    "verifyDeterminism", "verifyRoundTrip", "datumApiUrl"
   ],
   "dependencies": {
     "ring-core": "^1.0.0"
   },
   "routes": [],
+  "api_endpoints": [
+    "/kernel/address/encode",
+    "/kernel/schema/datum",
+    "/kernel/schema/triad"
+  ],
   "assets": []
 }

@@ -3,9 +3,23 @@
   "@type": "uor:Module",
   "name": "observable",
   "version": "1.0.0",
-  "description": "Observable Facts — content-addressed data streams for fact retrieval",
-  "namespace": "observable:",
-  "dependencies": ["ring-core", "identity"],
+  "description": "Observable Facts — content-addressed data streams for fact retrieval.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["observable:"],
   "exports": ["recordObservable", "queryObservables"],
-  "tables": ["uor_observables"]
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "identity": "^1.0.0"
+  },
+  "routes": [],
+  "api_endpoints": [
+    "/bridge/observable/metrics",
+    "/bridge/observable/metric",
+    "/bridge/observable/stratum",
+    "/bridge/observable/path",
+    "/bridge/observable/curvature",
+    "/bridge/observable/holonomy",
+    "/bridge/observable/stream"
+  ],
+  "assets": []
 }
