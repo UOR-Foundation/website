@@ -2,42 +2,45 @@ import { useState } from "react";
 
 const EXAMPLES = [
   {
-    title: "Grade A — Algebraically Proven (UOR Tool Result)",
+    title: "Grade A: Mathematically Proven",
+    subtitle: "The highest level of trust. This result was computed and verified by the system itself, not retrieved from any external source.",
     grade: "A",
     icon: "🟢",
-    label: "Algebraically Proven",
+    label: "Mathematically Proven",
     confidence: 98,
-    verifiedVia: "uor_derive — ring evaluation over ℤ/256ℤ",
+    verifiedVia: "Computed directly by the UOR system",
     receipt: "a3f8c1d902e6b74f",
     receiptFull: "a3f8c1d902e6b74f5e91d0c83a27b6e4f1d5a9c0e3b7f2d6a8c4e0b3f7d1a5e9",
     sources: [
       { claim: "neg(42) = 214 in ℤ/256ℤ", source: "UOR Ring Kernel", url: "https://uor.foundation/u/U00D6", grade: "A" },
-      { claim: "SHA-256 derivation committed", source: "UOR Derivation Store", url: "urn:uor:derivation:sha256:a3f8c1d9…", grade: "A" },
+      { claim: "Result fingerprint permanently recorded", source: "UOR Derivation Store", url: "urn:uor:derivation:sha256:a3f8c1d9…", grade: "A" },
     ],
-    summary: "This result is algebraically proven with a SHA-256 derivation ID. It can be independently verified by any agent using uor_verify.",
+    summary: "This answer was produced by a deterministic mathematical computation. It will always give the same result, on any machine, at any time. Anyone can independently re-run the same calculation to confirm it.",
   },
   {
-    title: "Grade B — Graph-Certified (SPARQL Query)",
+    title: "Grade B: Verified from the Knowledge Graph",
+    subtitle: "Strong trust. This information comes directly from the UOR knowledge graph, a structured, curated dataset with built-in integrity checks.",
     grade: "B",
     icon: "🔵",
-    label: "Graph-Certified",
+    label: "Verified from Knowledge Graph",
     confidence: 85,
-    verifiedVia: "uor_query — SPARQL 1.1 over UOR knowledge graph",
+    verifiedVia: "Retrieved from the UOR knowledge graph",
     receipt: "7b2e4f91c8a3d605",
     receiptFull: "7b2e4f91c8a3d6051e90f3b7a2c8d4e6f0b5a9d3c7e1f4a8b2d6e0c4f8a3b7d1",
     sources: [
       { claim: "Element 42 has stratum [0,1,0,1,0,1,0,0]", source: "UOR Q0 Knowledge Graph", url: "https://uor.foundation/u/U002A", grade: "B" },
-      { claim: "3 result bindings returned", source: "UOR Q0 Knowledge Graph", url: null, grade: "B" },
+      { claim: "3 matching records found", source: "UOR Q0 Knowledge Graph", url: null, grade: "B" },
     ],
-    summary: "3 result(s) sourced directly from the UOR knowledge graph. Data is graph-certified.",
+    summary: "This information was retrieved from a structured knowledge base with verified records. The data is consistent and traceable, though it reflects what is stored rather than what was independently computed.",
   },
   {
-    title: "Grade C — External Source (Web Fetch)",
+    title: "Grade C: Sourced from an External Reference",
+    subtitle: "Moderate trust. The information was fetched from a named, linked source. You can click through to verify it yourself.",
     grade: "C",
     icon: "🟡",
-    label: "Graph-Present / External Source",
+    label: "Sourced from External Reference",
     confidence: 60,
-    verifiedVia: "mcp_web_fetch — content retrieved in-session",
+    verifiedVia: "Fetched from a third-party source during this session",
     receipt: "e4c9a1b73f28d506",
     receiptFull: "e4c9a1b73f28d5061a7f3e9b2c84d0f6a5e1b9c3d7f2a8e4b0c6d3f7a1b5e9c2",
     sources: [
@@ -45,22 +48,23 @@ const EXAMPLES = [
       { claim: "Coalition forces were led by Wellington and Blücher", source: "Wikipedia", url: "https://en.wikipedia.org/wiki/Battle_of_Waterloo", grade: "C" },
       { claim: "Napoleon was exiled to Saint Helena after defeat", source: "Wikipedia", url: "https://en.wikipedia.org/wiki/Battle_of_Waterloo", grade: "C" },
     ],
-    summary: "Source identified but not algebraically verified. Use uor_derive for Grade A.",
+    summary: "This answer is based on a specific, named source that was accessed during this conversation. The source link is provided so you can read and evaluate the original material directly. It has not been independently verified by the UOR system.",
   },
   {
-    title: "Grade D — LLM Training Data (Unverified)",
+    title: "Grade D: From AI Training Data (Unverified)",
+    subtitle: "Low trust. This answer comes from the AI model's training data. No external source was checked and no computation was performed.",
     grade: "D",
     icon: "🔴",
-    label: "LLM Training Data / Unverified",
+    label: "AI Training Data (Unverified)",
     confidence: 30,
-    verifiedVia: "None",
+    verifiedVia: "None. Generated from the AI model's memory.",
     receipt: "1f0a3b7c9e2d4f68",
     receiptFull: "1f0a3b7c9e2d4f685c8a1e3b7d0f2a6c4e9b5d1f7a3c8e0b4d6f2a9c1e5b3d7",
     sources: [
-      { claim: "The Battle of Waterloo was a decisive Coalition victory", source: "LLM training data", url: null, grade: "D" },
-      { claim: "Approximately 40,000–50,000 casualties on the day", source: "LLM training data", url: null, grade: "D" },
+      { claim: "The Battle of Waterloo was a decisive Coalition victory", source: "AI training data", url: null, grade: "D" },
+      { claim: "Approximately 40,000–50,000 casualties on the day", source: "AI training data", url: null, grade: "D" },
     ],
-    summary: "This claim is unverified. Use uor_derive to establish algebraic proof.",
+    summary: "This answer was generated entirely from the AI model's training data. No source was consulted and no verification was performed. The information may be accurate, but there is no way to confirm it from this response alone. Treat it as a starting point for further research.",
   },
 ];
 
@@ -89,6 +93,7 @@ function TrustScoreCard({ example }: { example: typeof EXAMPLES[0] }) {
   return (
     <div className={`rounded-lg border ${colors.border} ${colors.bg} p-5 space-y-4`}>
       <h3 className={`text-lg font-semibold ${colors.text}`}>{example.title}</h3>
+      <p className="text-sm text-foreground/60 mt-1">{example.subtitle}</p>
 
       <div className="border-t border-white/10 pt-4">
         <p className={`text-xs uppercase tracking-widest mb-3 ${colors.text} opacity-70`}>
