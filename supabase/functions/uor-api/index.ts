@@ -405,12 +405,7 @@ async function computeDerivationId(term: string): Promise<string> {
   return `urn:uor:derivation:sha256:${hash}`;
 }
 
-/**
- * Compute the content-addressed datum IRI for Q0 (n=0, Z/256Z) or higher quantum levels.
- */
-function computeDatumIri(value: number, n: number = 8): string {
-  return datumIRI(value, n);
-}
+// computeDatumIri removed — use datumIRI(value, n) directly
 
 function gradeResponse(data: Record<string, unknown>, grade: EpistemicGradeType): Record<string, unknown> {
   return {
@@ -427,7 +422,7 @@ function gradeResponse(data: Record<string, unknown>, grade: EpistemicGradeType)
  */
 async function gradeAResponse(data: Record<string, unknown>, term: string, resultValue: number, n: number = 8): Promise<Record<string, unknown>> {
   const derivationId = await computeDerivationId(term);
-  const resultIri = computeDatumIri(resultValue, n);
+  const resultIri = datumIRI(resultValue, n);
   return {
     ...data,
     epistemic_grade: 'A' as EpistemicGradeType,
@@ -799,7 +794,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "formula": `neg(x) = (-x) mod ${m}`,
         "result": neg_x,
         "derivation:derivationId": await computeDerivationId(`neg(${x})`),
-        "derivation:resultIri": computeDatumIri(neg_x, n),
+        "derivation:resultIri": datumIRI(neg_x, n),
       },
       "bnot": {
         "@id": "https://uor.foundation/op/bnot",
@@ -809,7 +804,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "formula": `bnot(x) = x XOR ${m-1}`,
         "result": bnot_x,
         "derivation:derivationId": await computeDerivationId(`bnot(${x})`),
-        "derivation:resultIri": computeDatumIri(bnot_x, n),
+        "derivation:resultIri": datumIRI(bnot_x, n),
       },
       "succ": {
         "@id": "https://uor.foundation/op/succ",
@@ -820,7 +815,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "formula": `succ(x) = neg(bnot(x)) = (x+1) mod ${m}`,
         "result": succ_x,
         "derivation:derivationId": await computeDerivationId(`succ(${x})`),
-        "derivation:resultIri": computeDatumIri(succ_x, n),
+        "derivation:resultIri": datumIRI(succ_x, n),
       },
       "pred": {
         "@id": "https://uor.foundation/op/pred",
@@ -831,7 +826,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "formula": `pred(x) = bnot(neg(x)) = (x-1) mod ${m}`,
         "result": pred_x,
         "derivation:derivationId": await computeDerivationId(`pred(${x})`),
-        "derivation:resultIri": computeDatumIri(pred_x, n),
+        "derivation:resultIri": datumIRI(pred_x, n),
       }
     },
     "binary_ops": {
@@ -847,7 +842,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "formula": `(x + y) mod ${m}`,
         "result": addOp(x, y, n),
         "derivation:derivationId": await computeDerivationId(`add(${x},${y})`),
-        "derivation:resultIri": computeDatumIri(addOp(x, y, n), n),
+        "derivation:resultIri": datumIRI(addOp(x, y, n), n),
       },
       "sub": {
         "@id": "https://uor.foundation/op/sub",
@@ -859,7 +854,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "formula": `(x - y) mod ${m}`,
         "result": subOp(x, y, n),
         "derivation:derivationId": await computeDerivationId(`sub(${x},${y})`),
-        "derivation:resultIri": computeDatumIri(subOp(x, y, n), n),
+        "derivation:resultIri": datumIRI(subOp(x, y, n), n),
       },
       "mul": {
         "@id": "https://uor.foundation/op/mul",
@@ -872,7 +867,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "formula": `(x * y) mod ${m}`,
         "result": mulOp(x, y, n),
         "derivation:derivationId": await computeDerivationId(`mul(${x},${y})`),
-        "derivation:resultIri": computeDatumIri(mulOp(x, y, n), n),
+        "derivation:resultIri": datumIRI(mulOp(x, y, n), n),
       },
       "xor": {
         "@id": "https://uor.foundation/op/xor",
@@ -885,7 +880,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "formula": "x XOR y",
         "result": xorOp(x, y),
         "derivation:derivationId": await computeDerivationId(`xor(${x},${y})`),
-        "derivation:resultIri": computeDatumIri(xorOp(x, y), n),
+        "derivation:resultIri": datumIRI(xorOp(x, y), n),
       },
       "and": {
         "@id": "https://uor.foundation/op/and",
@@ -897,7 +892,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "formula": "x AND y",
         "result": andOp(x, y),
         "derivation:derivationId": await computeDerivationId(`and(${x},${y})`),
-        "derivation:resultIri": computeDatumIri(andOp(x, y), n),
+        "derivation:resultIri": datumIRI(andOp(x, y), n),
       },
       "or": {
         "@id": "https://uor.foundation/op/or",
@@ -909,7 +904,7 @@ async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
         "formula": "x OR y",
         "result": orOp(x, y),
         "derivation:derivationId": await computeDerivationId(`or(${x},${y})`),
-        "derivation:resultIri": computeDatumIri(orOp(x, y), n),
+        "derivation:resultIri": datumIRI(orOp(x, y), n),
       }
     },
     "critical_identity": {
@@ -7510,19 +7505,7 @@ const Q0_CONTEXT = {
   "cert":       "https://uor.foundation/cert/"
 };
 
-function q0DatumIri(v: number): string {
-  return `https://uor.foundation/u/U${(0x2800 + (v & 0xff)).toString(16).toUpperCase().padStart(4, '0')}`;
-}
-
-function q0Stratum(v: number): number {
-  let n = v & 0xff; let c = 0;
-  while (n) { c += n & 1; n >>= 1; }
-  return c;
-}
-
-function q0Spectrum(v: number): string {
-  return v.toString(2).padStart(8, '0');
-}
+// q0DatumIri, q0Stratum, q0Spectrum removed — use datumIRI(v, 8), bytePopcount(v), v.toString(2).padStart(8, '0') directly
 
 function generateQ0DatumNode(v: number): Record<string, unknown> {
   const M = 256;
@@ -7531,19 +7514,19 @@ function generateQ0DatumNode(v: number): Record<string, unknown> {
   const succ_v = (v + 1) % M;
   const pred_v = (v - 1 + M) % M;
   return {
-    "@id":   q0DatumIri(v),
+    "@id":   datumIRI(v, 8),
     "@type": ["owl:NamedIndividual", "schema:Datum"],
     "schema:value":       v,
     "schema:quantum":     8,
     "schema:ringQuantum": 8,
-    "schema:stratum":     q0Stratum(v),
-    "schema:spectrum":    q0Spectrum(v),
-    "schema:succ":  { "@id": q0DatumIri(succ_v) },
-    "schema:pred":  { "@id": q0DatumIri(pred_v) },
-    "schema:neg":   { "@id": q0DatumIri(neg_v) },
-    "schema:bnot":  { "@id": q0DatumIri(bnot_v) },
+    "schema:stratum":     bytePopcount(v),
+    "schema:spectrum":    v.toString(2).padStart(8, '0'),
+    "schema:succ":  { "@id": datumIRI(succ_v, 8) },
+    "schema:pred":  { "@id": datumIRI(pred_v, 8) },
+    "schema:neg":   { "@id": datumIRI(neg_v, 8) },
+    "schema:bnot":  { "@id": datumIRI(bnot_v, 8) },
     "schema:glyph": String.fromCodePoint(0x2800 + v),
-    "u:canonicalIri": q0DatumIri(v),
+    "u:canonicalIri": datumIRI(v, 8),
   };
 }
 
@@ -7592,7 +7575,7 @@ async function getQ0Graph(): Promise<{ json: string; hash: string; graph: Record
       "derivation:inputValue":  d.input,
       "derivation:resultValue": d.result,
       "derivation:derivationId": dId,
-      "derivation:resultIri":   { "@id": q0DatumIri(d.result) },
+      "derivation:resultIri":   { "@id": datumIRI(d.result, 8) },
       "derivation:quantum":     8,
       "epistemic_grade":        "A"
     });
@@ -8551,10 +8534,10 @@ Deno.serve(async (req: Request) => {
       return resp;
     }
 
-    // ── Bridge — SPARQL endpoint (§1.6) ──
+    // ── Bridge — SPARQL endpoint (deprecated alias → 301 redirect to /sparql) ──
     if (path === '/bridge/sparql') {
-      if (req.method !== 'GET' && req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
-      return await bridgeSparql(req, url, rl);
+      const canonical = url.href.replace('/bridge/sparql', '/sparql');
+      return new Response(null, { status: 301, headers: { ...CORS_HEADERS, 'Location': canonical } });
     }
 
     // ── Bridge — Morphism (§5) ──

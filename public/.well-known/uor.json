@@ -53,7 +53,7 @@
   "artifacts": {
     "ontology_json_ld": "https://uor.foundation/uor.foundation.json",
     "ontology_turtle": "https://uor.foundation/uor.foundation.ttl",
-    "q0_instance_graph": "https://uor.foundation/uor_q0.jsonld",
+    "q0_instance_graph": "https://api.uor.foundation/v1/graph/q0.jsonld",
     "shacl_shapes": "https://uor.foundation/shapes/uor-shapes.ttl",
     "void_descriptor": "https://api.uor.foundation/v1/.well-known/void",
     "openapi": "https://uor.foundation/openapi.json"
@@ -82,6 +82,7 @@
   },
   "phase2_endpoints": [
     "GET /v1/graph/q0.jsonld",
+    "GET /v1/graph/q0/datum/{value}",
     "GET /v1/sparql",
     "POST /v1/sparql",
     "GET /v1/sparql/verify",
@@ -95,6 +96,12 @@
     "GET /v1/bridge/morphism/isometry",
     "GET /v1/bridge/morphism/coerce",
     "POST /v1/bridge/resolver/entity",
+    "GET /v1/bridge/observable/metric",
+    "GET /v1/bridge/observable/stratum",
+    "POST /v1/bridge/observable/path",
+    "GET /v1/bridge/observable/curvature",
+    "POST /v1/bridge/observable/holonomy",
+    "POST /v1/bridge/observable/stream",
     "POST /v1/cert/issue",
     "GET /v1/cert/portability",
     "GET /v1/schema-org/extend",
