@@ -106,7 +106,9 @@ export default function BulkPinPage() {
           const data = await resp.json();
           const results: PinResult[] = data["sobridge:results"] ?? [];
           for (const r of results) {
-            allTypes.push({ name: r.type, pinStatus: "pending", verifyStatus: "idle", result: r.success ? r : undefined });
+            // If the result has an IPFS CID (pinataCid or storachaCid), it was actually stored
+            const alreadyPinned = r.success && !!(r.pinataCid || r.storachaCid);
+            allTypes.push({ name: r.type, pinStatus: alreadyPinned ? "pinned" : "pending", verifyStatus: "idle", result: r.success ? r : undefined });
           }
           hasMore = data["sobridge:hasMore"] === true;
           offset += 100;
@@ -422,7 +424,7 @@ export default function BulkPinPage() {
       pinned: "bg-green-500/15 text-green-700 dark:text-green-400",
       failed: "bg-destructive/15 text-destructive",
     };
-    const labels: Record<PinStatus, string> = { pending: "PENDING", pinning: "⏳ PINNING", pinned: "✓ PINNED", failed: "✗ FAILED" };
+    const labels: Record<PinStatus, string> = { pending: "READY", pinning: "⏳ PINNING", pinned: "✓ PINNED", failed: "✗ FAILED" };
     return <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold tracking-wide ${styles[status]}`}>{labels[status]}</span>;
   };
 
@@ -618,8 +620,9 @@ export default function BulkPinPage() {
                             </thead>
                             <tbody>
                               {types.map(t => {
-                                const derivId = t.result?.derivationId || t.existingCert?.derivationId || "";
-                                const cid = t.result?.cid || "";
+                                const isPinned = t.pinStatus === "pinned" || t.pinStatus === "failed";
+                                const derivId = isPinned ? (t.result?.derivationId || t.existingCert?.derivationId || "") : "";
+                                const cid = isPinned ? (t.result?.cid || "") : "";
                                 const pinataCid = t.result?.pinataCid || "";
                                 const ipfsLink = pinataCid
                                   ? `https://uor.mypinata.cloud/ipfs/${pinataCid}`
