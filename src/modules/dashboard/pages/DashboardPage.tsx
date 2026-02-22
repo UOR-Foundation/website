@@ -413,7 +413,7 @@ const DashboardPage = () => {
         {/* Footer */}
         <footer className="border-t border-border px-6 py-4 text-center">
           <p className="text-[11px] text-muted-foreground">
-            UOR Foundation · uor.foundation · Apache-2.0 · Q0 Verified · 14 namespaces · 82 classes · 120 properties
+            UOR Foundation · uor.foundation · Apache-2.0 · Q0 Verified · 14 namespaces · 82 classes · 124 properties
           </p>
         </footer>
       </div>

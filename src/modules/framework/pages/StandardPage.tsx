@@ -385,7 +385,7 @@ const Standard = () => {
               <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">The Map</p>
               <h3 className="font-display text-xl font-bold text-foreground mb-3">UOR Framework</h3>
               <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed mb-4">
-                The formal specification: 14 namespaces, 82 classes, 120 properties. Written in Rust, published as JSON-LD, Turtle, and N-Triples. It defines what every concept means, how they relate, and what rules they follow.
+                The formal specification: 14 namespaces, 82 classes, 124 properties. Written in Rust, published as JSON-LD, Turtle, and N-Triples. It defines what every concept means, how they relate, and what rules they follow.
               </p>
               <p className="text-sm font-body text-muted-foreground leading-relaxed mb-4">
                 Think of it as the blueprint. It says: "A triadic coordinate has three parts. A derivation must include these fields. Closure has three modes." It does not run computations; it defines what valid computation looks like.
@@ -431,7 +431,7 @@ const Standard = () => {
             Explore the Full Specification
           </h2>
           <p className="text-section-dark-foreground/60 font-body text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-10">
-            14 namespaces · 82 classes · 120 properties · 14 named individuals. Open source and fully documented.
+            14 namespaces · 82 classes · 124 properties · 14 named individuals. Open source and fully documented.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <a

@@ -72,12 +72,15 @@ uor-sh:DerivationShape
         sh:maxCount  1 ;
         sh:datatype  xsd:string ;
         sh:pattern   "^urn:uor:derivation:sha256:[0-9a-f]{64}$" ;
+        sh:message   "derivation:derivationId must be a SHA-256 URN: urn:uor:derivation:sha256:<64 hex chars>" ;
     ] ;
     sh:property [
         sh:path      derivation:resultIri ;
         sh:minCount  1 ;
         sh:maxCount  1 ;
         sh:datatype  xsd:anyURI ;
+        sh:pattern   "^https://uor\\.foundation/u/" ;
+        sh:message   "derivation:resultIri must be a UOR content-addressed IRI" ;
     ] .
 
 # ── CertificateShape ────────────────────────────────────────────────────────
@@ -90,6 +93,7 @@ uor-sh:CertificateShape
         sh:path      cert:certifies ;
         sh:minCount  1 ;
         sh:maxCount  1 ;
+        sh:message   "Every cert:Certificate must certify exactly one resource via cert:certifies" ;
     ] .
 
 # ── PartitionShape ──────────────────────────────────────────────────────────
@@ -184,4 +188,19 @@ uor-sh:AttributionCertificateShape
         sh:minCount  1 ;
         sh:maxCount  1 ;
         sh:datatype  xsd:dateTime ;
+    ] .
+
+# ── AddressCanonicalIriShape ───────────────────────────────────────────────
+
+uor-sh:AddressCanonicalIriShape
+    a               sh:NodeShape ;
+    sh:targetClass  u:Address ;
+    rdfs:label      "AddressCanonicalIriShape" ;
+    sh:property [
+        sh:path      u:canonicalIri ;
+        sh:minCount  0 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:anyURI ;
+        sh:pattern   "^https://uor\\.foundation/u/U" ;
+        sh:message   "u:canonicalIri must match the UOR content-addressed IRI pattern" ;
     ] .

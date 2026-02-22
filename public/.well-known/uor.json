@@ -16,6 +16,24 @@
     "Q2": { "bit_width": 32, "modulus": 4294967296, "status": "defined", "elements_materialised": 0 },
     "Qn": { "bit_width": "8*2^n", "modulus": "2^(8*2^n)", "status": "defined" }
   },
+  "uor:ontology": {
+    "version": "1.0.0",
+    "namespaceCount": 14,
+    "classCount": 82,
+    "propertyCount": 124,
+    "individualCount": 14,
+    "artifacts": {
+      "jsonld": "https://uor-foundation.github.io/UOR-Framework/uor.foundation.json",
+      "turtle": "https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl",
+      "ntriples": "https://uor-foundation.github.io/UOR-Framework/uor.foundation.nt"
+    },
+    "new_properties_this_release": [
+      "cert:certifies",
+      "derivation:derivationId",
+      "derivation:resultIri",
+      "u:canonicalIri"
+    ]
+  },
   "artifacts": {
     "ontology_json_ld": "https://uor.foundation/uor.foundation.json",
     "ontology_turtle": "https://uor.foundation/uor.foundation.ttl",

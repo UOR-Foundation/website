@@ -1331,7 +1331,7 @@ function kernelOntology(rl: RateLimitResult): Response {
     "owl:versionIRI": "https://uor.foundation/ontology/v1.0",
     "owl:profile": "OWL 2 DL",
     "ontology:classCount": 82,
-    "ontology:propertyCount": 120,
+    "ontology:propertyCount": 124,
     "ontology:namedIndividualCount": 14,
     "ontology:namespaceCount": 14,
     "ontology:namespaces": [
@@ -2626,7 +2626,7 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/kernel/schema/datum`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/schema/datum?x=42`, "operationId": "schemaDatum", "summary": "Full schema:Datum — decimal, binary, bits set, content address, embedded schema:Triad" },
           { "method": "GET", "path": `${base}/kernel/schema/triad`, "required_params": "x", "optional_params": "n", "example": `${base}/kernel/schema/triad?x=42`, "operationId": "schemaTriad", "summary": "schema:Triad — first-class triadic coordinate (datum/stratum/spectrum ↔ subject/predicate/object) with RDF 1.1 correspondence and partition:Partition named graph context" },
           { "method": "POST", "path": `${base}/kernel/derive`, "body": "{term: {op, args}, n?}", "example": `${base}/kernel/derive`, "operationId": "kernelDerive", "summary": "uor.derive() — term tree derivation with SHA-256 derivation_id (urn:uor:derivation:sha256:...), cert:Certificate, and Grade A epistemic certainty" },
-          { "method": "GET", "path": `${base}/kernel/ontology`, "required_params": "none", "example": `${base}/kernel/ontology`, "operationId": "kernelOntology", "summary": "Ontology metadata — 82 classes, 120 properties, 14 namespaces, 14 named individuals, OWL 2 DL profile, 7 SHACL test graphs, download links" }
+          { "method": "GET", "path": `${base}/kernel/ontology`, "required_params": "none", "example": `${base}/kernel/ontology`, "operationId": "kernelOntology", "summary": "Ontology metadata — 82 classes, 124 properties, 14 namespaces, 14 named individuals, OWL 2 DL profile, 7 SHACL test graphs, download links" }
         ]
       },
       "bridge": {
