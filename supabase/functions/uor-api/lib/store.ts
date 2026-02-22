@@ -89,12 +89,84 @@ export function stripSelfReferentialFields(parsed: Record<string, unknown>): Rec
   return round1;
 }
 
-// ── Canonical JSON-LD serialisation ─────────────────────────────────────────
+// ── Canonical JSON-LD serialisation (legacy — sorted-key stringify) ──────────
 export function canonicalJsonLd(obj: unknown): string {
   if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
   if (Array.isArray(obj)) return '[' + obj.map(canonicalJsonLd).join(',') + ']';
   const sorted = Object.keys(obj as Record<string, unknown>).sort();
   return '{' + sorted.map(k => JSON.stringify(k) + ':' + canonicalJsonLd((obj as Record<string, unknown>)[k])).join(',') + '}';
+}
+
+// ── URDNA2015 Single Proof Hashing Standard ─────────────────────────────────
+// Lazy-loaded to avoid cold-start overhead for endpoints that don't need it.
+
+let _jsonld: any = null;
+async function getJsonld(): Promise<any> {
+  if (!_jsonld) {
+    _jsonld = (await import("https://esm.sh/jsonld@8.3.2")).default;
+  }
+  return _jsonld;
+}
+
+const UOR_WRAP_CONTEXT_EDGE: Record<string, unknown> = {
+  store: "https://uor.foundation/store/",
+  xsd: "http://www.w3.org/2001/XMLSchema#",
+  serialisation: {
+    "@id": "https://uor.foundation/store/serialisation",
+    "@type": "xsd:string",
+  },
+};
+
+function isJsonLdEdge(obj: unknown): boolean {
+  return (
+    obj !== null &&
+    typeof obj === 'object' &&
+    !Array.isArray(obj) &&
+    '@context' in (obj as Record<string, unknown>)
+  );
+}
+
+/**
+ * Canonicalize any object to W3C URDNA2015 N-Quads.
+ * Mirrors src/lib/uor-canonical.ts for the edge function runtime.
+ */
+export async function canonicalizeToNQuads(obj: unknown): Promise<string> {
+  const jld = await getJsonld();
+  const doc = isJsonLdEdge(obj)
+    ? obj
+    : {
+        "@context": UOR_WRAP_CONTEXT_EDGE,
+        "@type": "store:StoredObject",
+        serialisation: canonicalJsonLd(obj),
+      };
+  return jld.canonize(doc, {
+    algorithm: 'URDNA2015',
+    format: 'application/n-quads',
+  });
+}
+
+/**
+ * Single Proof Hash — URDNA2015 canonical form → SHA-256 → three identity forms.
+ * One input. One hash. Three derived forms.
+ */
+export async function singleProofHashEdge(obj: unknown): Promise<{
+  nquads: string;
+  hashHex: string;
+  derivationId: string;
+  cid: string;
+  uorAddress: { glyph: string; length: number };
+}> {
+  const nquads = await canonicalizeToNQuads(obj);
+  const canonicalBytes = new TextEncoder().encode(nquads);
+  const digestBuffer = await crypto.subtle.digest('SHA-256', canonicalBytes);
+  const hashBytes = new Uint8Array(digestBuffer);
+  const hashHex = Array.from(hashBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  const derivationId = `urn:uor:derivation:sha256:${hashHex}`;
+  const cid = await computeCid(canonicalBytes);
+  const uorAddress = computeUorAddress(hashBytes);
+
+  return { nquads, hashHex, derivationId, cid, uorAddress };
 }
 
 // ── CID computation — CIDv1 / dag-json / sha2-256 / base32lower ────────────

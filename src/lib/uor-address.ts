@@ -6,6 +6,9 @@
  * Pure functions, zero dependencies.
  */
 
+import { singleProofHash } from "./uor-canonical";
+export type { SingleProofResult } from "./uor-canonical";
+export { singleProofHash, canonicalizeToNQuads, verifySingleProof } from "./uor-canonical";
 // ── Canonical JSON-LD serialisation ─────────────────────────────────────────
 
 /** Deterministic JSON-LD serialization with recursively sorted keys. */
@@ -113,15 +116,19 @@ export interface ModuleIdentity {
 
 /**
  * Takes a manifest object, strips any existing identity fields,
- * canonicalizes it, and returns { cid, uorAddress, canonicalBytes }.
+ * canonicalizes it via URDNA2015, and returns { cid, uorAddress, canonicalBytes }.
+ *
+ * Uses the Single Proof Hashing Standard: one canonical form → one hash →
+ * three derived identity forms (CID, u:Address, derivation_id).
  */
 export async function computeModuleIdentity(
   manifest: Record<string, unknown>
 ): Promise<ModuleIdentity> {
   const clean = stripSelfReferentialFields(manifest);
-  const canonical = canonicalJsonLd(clean);
-  const canonicalBytes = new TextEncoder().encode(canonical);
-  const cid = await computeCid(canonicalBytes);
-  const uorAddress = computeUorAddress(canonicalBytes);
-  return { cid, uorAddress, canonicalBytes };
+  const proof = await singleProofHash(clean);
+  return {
+    cid: proof.cid,
+    uorAddress: proof.uorAddress,
+    canonicalBytes: proof.canonicalBytes,
+  };
 }

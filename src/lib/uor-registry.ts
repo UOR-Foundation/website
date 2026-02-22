@@ -12,10 +12,9 @@
 import {
   computeModuleIdentity,
   stripSelfReferentialFields,
-  canonicalJsonLd,
-  computeCid,
   type ModuleIdentity,
 } from "./uor-address";
+import { singleProofHash } from "./uor-canonical";
 import { generateCertificate, type UorCertificate } from "./uor-certificate";
 
 // ── Static manifest imports (all 26 modules) ───────────────────────────────
@@ -213,11 +212,9 @@ export async function verifyModule(name: string): Promise<boolean> {
   if (!mod) return false;
 
   const clean = stripSelfReferentialFields(mod.manifest);
-  const canonical = canonicalJsonLd(clean);
-  const bytes = new TextEncoder().encode(canonical);
-  const recomputedCid = await computeCid(bytes);
+  const proof = await singleProofHash(clean);
 
-  const verified = recomputedCid === mod.identity.cid;
+  const verified = proof.cid === mod.identity.cid;
   mod.verified = verified;
 
   return verified;

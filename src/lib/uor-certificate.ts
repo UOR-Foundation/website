@@ -3,7 +3,7 @@
  * Produces verification receipts for any JSON-LD-describable component.
  */
 
-import { canonicalJsonLd, computeCid, computeUorAddress } from "./uor-address";
+import { singleProofHash } from "./uor-canonical";
 
 export interface UorCertificate {
   "@context": "https://uor.foundation/contexts/uor-v1.jsonld";
@@ -24,18 +24,15 @@ export async function generateCertificate(
   subject: string,
   attributes: Record<string, unknown>
 ): Promise<UorCertificate> {
-  const canonical = canonicalJsonLd(attributes);
-  const bytes = new TextEncoder().encode(canonical);
-  const cid = await computeCid(bytes);
-  const uorAddress = computeUorAddress(bytes);
+  const proof = await singleProofHash(attributes);
 
   return {
     "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
     "@type": "cert:ModuleCertificate",
     "cert:subject": subject,
-    "cert:cid": cid,
-    "cert:canonicalPayload": canonical,
-    "store:uorAddress": uorAddress,
+    "cert:cid": proof.cid,
+    "cert:canonicalPayload": proof.nquads,
+    "store:uorAddress": proof.uorAddress,
     "cert:computedAt": new Date().toISOString(),
     "cert:specification": "1.0.0",
   };
