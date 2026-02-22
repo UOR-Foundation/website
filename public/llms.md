@@ -405,31 +405,7 @@ Body: {"input": "The text you want to evaluate", "encoding": "utf8"}
 
 ## Epistemic Grading
 
-Every API response includes `epistemic_grade` and `epistemic_grade_label`:
-
-| Grade | Label                  | When applied                                      |
-|-------|------------------------|---------------------------------------------------|
-| A     | Algebraically Proven   | Ring-arithmetic result with SHA-256 derivation_id |
-| B     | Graph-Certified        | SPARQL result with valid cert:Certificate         |
-| C     | Graph-Present          | Graph datum without certificate chain             |
-| D     | LLM-Generated          | Unverified — treat as hypothesis                  |
-
-Endpoint-to-grade mapping:
-
-| Endpoint | Grade |
-|----------|-------|
-| /kernel/op/* | A |
-| /kernel/op/verify | A |
-| /kernel/op/verify | A |
-| /bridge/partition | A |
-| /bridge/resolver | A |
-| /bridge/derivation | A |
-| /bridge/cert/* | A |
-| /bridge/trace | A |
-| /bridge/observable/metrics | A |
-| /store/read | C |
-| /store/write | D |
-| /store/write-context | D |
+See [Phase 2 Epistemic Grade Reference](#phase-2--knowledge-graph-integration-now-live) below for the canonical grade table and endpoint-to-grade mapping.
 
 ---
 
@@ -465,8 +441,9 @@ riot --syntax=jsonld uor_q0.jsonld | sparql --data=- "SELECT (COUNT(?d) AS ?n) W
 ## SPARQL Endpoint
 
 SPARQL 1.1 query endpoint over the UOR ring algebra:
-- GET: `https://api.uor.foundation/v1/bridge/sparql?query=SELECT+...`
-- POST: `https://api.uor.foundation/v1/bridge/sparql` (body: SPARQL query)
+- GET: `https://api.uor.foundation/v1/sparql?query=SELECT+...`
+- POST: `https://api.uor.foundation/v1/sparql` (body: SPARQL query)
+- Legacy alias: `/bridge/sparql` (301 redirect to `/sparql`)
 
 Verification queries:
 ```sparql
@@ -535,7 +512,7 @@ Five canonical agent tool functions (Section 6.4). All return `epistemic_grade` 
     "description": "Build a ring partition from a seed set. Returns cardinality and closure analysis.",
     "parameters": {
       "seed_set":     { "type": "array", "items": { "type": "integer" } },
-      "closure_mode": { "type": "string", "enum": ["GRAPH_CLOSED", "FIXED_POINT"] },
+      "closure_mode": { "type": "string", "enum": ["OPEN", "CLOSED", "GRAPH_CLOSED"] },
       "quantum":      { "type": "integer", "default": 0 }
     },
     "endpoint": "POST https://api.uor.foundation/v1/tools/partition"
@@ -569,7 +546,7 @@ SKOS thresholds: fidelity == 1.0 → exactMatch, ≥ 0.875 → closeMatch, ≥ 0
 
 ---
 
-## Certificate Chains & Semantic Web Surface (Phase 3)
+## Certificate Chains & Semantic Web Surface (Phase 2)
 
 Six endpoints complete the UOR Semantic Web deployment:
 
@@ -585,7 +562,7 @@ Six endpoints complete the UOR Semantic Web deployment:
 ### VoID Discovery
 
 The VoID descriptor at `/.well-known/void` enables LOD registration:
-- `void:sparqlEndpoint`: `https://api.uor.foundation/v1/bridge/sparql`
+- `void:sparqlEndpoint`: `https://api.uor.foundation/v1/sparql`
 - `void:dataDump`: `https://uor.foundation/uor_q0.jsonld`
 - `void:triples`: 3584 (256 datums × 14 properties each)
 
