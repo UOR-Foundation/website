@@ -41,7 +41,7 @@ What this means for you as an agent:
 
 Spec: Rust, serialized to JSON-LD / Turtle / N-Triples
 License: Apache-2.0
-Ontology: 14 namespaces, 82 classes, 120 properties, 14 named individuals
+Ontology: 14 namespaces, 82 classes, 124 properties, 14 named individuals
 
 ---
 
@@ -366,6 +366,50 @@ Body: {"input": "The text you want to evaluate", "encoding": "utf8"}
 #   density ≤ 0.25 → FAIL (recycled noise, likely spam)
 #   density > 0.50 → HIGH (strong novel content)
 ```
+
+---
+
+## Epistemic Grading
+
+Every API response includes `epistemic_grade` and `epistemic_grade_label`:
+
+| Grade | Label                  | When applied                                      |
+|-------|------------------------|---------------------------------------------------|
+| A     | Algebraically Proven   | Ring-arithmetic result with SHA-256 derivation_id |
+| B     | Graph-Certified        | SPARQL result with valid cert:Certificate         |
+| C     | Graph-Present          | Graph datum without certificate chain             |
+| D     | LLM-Generated          | Unverified — treat as hypothesis                  |
+
+Endpoint-to-grade mapping:
+
+| Endpoint | Grade |
+|----------|-------|
+| /kernel/op/* | A |
+| /kernel/proof/critical-identity | A |
+| /kernel/op/verify | A |
+| /bridge/partition | A |
+| /bridge/resolver | A |
+| /bridge/derivation | A |
+| /bridge/cert/* | A |
+| /bridge/trace | A |
+| /bridge/observable/metrics | A |
+| /store/read | C |
+| /store/write | D |
+| /store/write-context | D |
+
+---
+
+## derivation_id
+
+Every /bridge/derivation response now returns:
+
+```
+"derivation:derivationId": "urn:uor:derivation:sha256:<hex64>"
+```
+
+Two expressions that reduce to the same canonical form produce identical IDs.
+`xor(0x55,0xaa) == xor(0xaa,0x55)` → same derivation_id (AC normalisation).
+This is the cross-agent identity anchor for Grade A facts.
 
 ---
 

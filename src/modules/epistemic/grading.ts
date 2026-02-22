@@ -54,7 +54,7 @@ const GRADE_INFO: Record<EpistemicGrade, GradeInfo> = {
   },
   D: {
     grade: "D",
-    label: "Unverified",
+    label: "LLM-Generated / Unverified",
     description: "No derivation, no certificate. Hypothesis only.",
     agentBehavior: "Explicitly flag as unverified, route to derive() for verification.",
     colorClass: "text-red-400",

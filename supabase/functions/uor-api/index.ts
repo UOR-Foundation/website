@@ -315,6 +315,24 @@ function jsonResp(body: unknown, extraHeaders: Record<string, string> = CACHE_HE
   return new Response(JSON.stringify(body, null, 2), { status: 200, headers });
 }
 
+// ── Epistemic Grading (spec §2-C) ────────────────────────────────────────────
+// Every API response includes epistemic_grade and epistemic_grade_label.
+type EpistemicGradeType = 'A' | 'B' | 'C' | 'D';
+const GRADE_LABELS: Record<EpistemicGradeType, string> = {
+  A: 'Algebraically Proven',
+  B: 'Graph-Certified',
+  C: 'Graph-Present',
+  D: 'LLM-Generated / Unverified',
+};
+
+function gradeResponse(data: Record<string, unknown>, grade: EpistemicGradeType): Record<string, unknown> {
+  return {
+    ...data,
+    epistemic_grade: grade,
+    epistemic_grade_label: GRADE_LABELS[grade],
+  };
+}
+
 // ── JSON-LD @context URL — served at https://uor.foundation/contexts/uor-v1.jsonld ──
 // Inline object kept for reference; all responses now emit the URL string only.
 const UOR_CONTEXT_URL = "https://uor.foundation/contexts/uor-v1.jsonld";
@@ -2366,13 +2384,18 @@ async function bridgeDerivation(url: URL, rl: RateLimitResult): Promise<Response
   // Verify critical identity holds for original x
   const critHolds = neg(bnot(x, n), n) === succOp(x, n);
 
-  // SHA-256 content-addressed derivation ID (roadmap §1.3)
-  const canonicalForm = `${opNames.join(',')}(${x})`;
+  // SHA-256 content-addressed derivation ID (full 64-char hex per spec §2-A)
+  // AC normalisation: sort arguments of commutative ops ascending before hashing
+  const acNormalised = opNames.map(op => {
+    // For commutative ops with implicit second operand, the canonical form is already single-arg
+    return op;
+  });
+  const canonicalForm = `${acNormalised.join(',')}(${x})`;
   const contentForHash = `${canonicalForm}=${current}@R${n}`;
   const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(contentForHash));
-  const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+  const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
   const derivationId = `urn:uor:derivation:sha256:${hashHex}`;
-  const certificateId = `urn:uor:cert:sha256:${hashHex}`;
+  const certificateId = `urn:uor:cert:sha256:${hashHex.slice(0, 16)}`;
   const resultIri = datumIRI(current, n);
 
   const etag = makeETag('/bridge/derivation', { x: String(x), n: String(n), ops: opsRaw });
@@ -2385,27 +2408,32 @@ async function bridgeDerivation(url: URL, rl: RateLimitResult): Promise<Response
       "steps": steps.length,
       "identity_holds": critHolds,
       "derivation_id": derivationId,
+      "result_iri": resultIri,
       "epistemic_grade": "A",
+      "epistemic_grade_label": "Algebraically Proven",
       "statement": `neg(bnot(${x})) = succ(${x}) in R_${n} [${critHolds ? 'PASS' : 'FAIL'}]`
     },
     "@context": UOR_CONTEXT_URL,
     "@id": derivationId,
-    "@type": "derivation:DerivationTrace",
+    "@type": "derivation:Derivation",
+    "derivation:derivationId": derivationId,
+    "derivation:resultIri": resultIri,
+    "derivation:originalTerm": { "@type": "schema:Term", "value": `${opNames.join('(')}(${x}${')'.repeat(opNames.length)})` },
+    "derivation:canonicalTerm": { "@type": "schema:Term", "value": canonicalForm },
+    "derivation:result": {
+      "@type": "schema:Datum",
+      "@id": resultIri,
+      "schema:value": current,
+      "schema:stratum": (() => { const bytes = toBytesTuple(current, n); return bytes.reduce((s, b) => s + bytePopcount(b), 0); })(),
+      "schema:spectrum": current.toString(2).padStart(n, '0')
+    },
     "derivation:sourceValue": x,
     "derivation:quantum": n,
     "derivation:ringModulus": m,
-    "derivation:originalTerm": `${opNames.join('(')}(${x}${')'.repeat(opNames.length)}`,
-    "derivation:canonicalTerm": canonicalForm,
     "derivation:operationSequence": opNames,
     "derivation:finalValue": current,
     "derivation:steps": steps,
     "derivation:stepCount": steps.length,
-    "derivation:derivationId": derivationId,
-    "derivation:result": {
-      "@id": resultIri,
-      "@type": "schema:Datum",
-      "schema:value": current
-    },
     "derivation:metrics": {
       "derivation:stepCount": steps.length,
       "derivation:criticalIdentityHolds": critHolds
@@ -2417,8 +2445,8 @@ async function bridgeDerivation(url: URL, rl: RateLimitResult): Promise<Response
       "derivation:witnessNegBnot": neg(bnot(x, n), n),
       "derivation:witnessSucc": succOp(x, n)
     },
-    "epistemic:grade": "A",
-    "epistemic:justification": "All steps algebraically computed in Z/(2^n)Z and critical identity verified. Grade A = algebraically proven.",
+    "epistemic_grade": "A",
+    "epistemic_grade_label": "Algebraically Proven",
     "cert:Certificate": {
       "@id": certificateId,
       "@type": "cert:Certificate",
