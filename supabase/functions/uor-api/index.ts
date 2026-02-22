@@ -593,6 +593,89 @@ async function gradeAResponse(data: Record<string, unknown>, term: string, resul
   };
 }
 
+// ── R4 Shared Middleware Gate: verify() before emit() ───────────────────────
+// Every object emitted by the bridge MUST pass the R4 coherence boot check.
+// This is a single shared gate — not per-endpoint logic — applied at all emit paths:
+//   /bridge/emit, /schema-org/extend, /schema-org/coherence, action morphism emit.
+
+interface R4GateResult {
+  passed: boolean;
+  coherenceVerified: boolean;
+  verifyMs: number;
+  failures: { x: number; expected: number; actual: number }[];
+  proofNode: Record<string, unknown>;
+  blockedResponse?: Response;
+}
+
+/**
+ * R4 Gate: verify() before emit().
+ * Runs the exhaustive coherence check: neg(bnot(x)) ≡ succ(x) for ALL x in the ring.
+ * If the check fails, returns a blockedResponse that MUST be returned to the caller.
+ * If it passes, returns a proofNode to embed in the response.
+ *
+ * @param n  Bit width (default 8 for Q0)
+ * @param rl Rate limit result for error responses
+ */
+function r4VerifyGate(n: number, rl: RateLimitResult): R4GateResult {
+  const m = modulus(n);
+  const verifyStart = performance.now();
+  const failures: { x: number; expected: number; actual: number }[] = [];
+  for (let x = 0; x < m; x++) {
+    const actual = neg(bnot(x, n), n);
+    const expected = succOp(x, n);
+    if (actual !== expected) {
+      failures.push({ x, expected, actual });
+    }
+  }
+  const verifyMs = Math.round(performance.now() - verifyStart);
+  const coherenceVerified = failures.length === 0;
+  const quantum = Math.ceil(n / 8) - 1;
+  const ts = timestamp();
+
+  // Build the proof node (embedded in every emitted response)
+  const proofNode: Record<string, unknown> = {
+    "@type": "proof:R4Gate",
+    "proof:requirement": "Requirement R4: verify() MUST pass before emit()",
+    "proof:gateResult": coherenceVerified ? "PASSED" : "BLOCKED",
+    "proof:quantum": quantum,
+    "proof:bits": n,
+    "proof:ringModulus": m,
+    "proof:verified": coherenceVerified,
+    "proof:elementsTested": m,
+    "proof:failureCount": failures.length,
+    "proof:criticalIdentity": "neg(bnot(x)) = succ(x)",
+    "proof:universalStatement": `∀ x ∈ Z/${m}Z : neg(bnot(x)) = succ(x)`,
+    "proof:verificationTimeMs": verifyMs,
+    "proof:verifyCalledAt": ts,
+    "proof:timestamp": ts,
+  };
+
+  if (!coherenceVerified) {
+    return {
+      passed: false,
+      coherenceVerified: false,
+      verifyMs,
+      failures,
+      proofNode,
+      blockedResponse: jsonResp({
+        "@context": UOR_CONTEXT_URL,
+        "@type": "proof:CoherenceFailure",
+        "proof:r4_enforcement": "EMISSION BLOCKED — verify() failed. R4 requires coherence before emit().",
+        "proof:quantum": quantum,
+        "proof:bits": n,
+        "proof:verified": false,
+        "proof:failureCount": failures.length,
+        "proof:failures": failures.slice(0, 10),
+        "proof:criticalIdentity": "neg(bnot(x)) = succ(x)",
+        "proof:verificationTimeMs": verifyMs,
+        "proof:timestamp": ts,
+      }, { ...JSON_HEADERS, 'X-UOR-R4-Gate': 'BLOCKED' }, undefined, rl),
+    };
+  }
+
+  return { passed: true, coherenceVerified: true, verifyMs, failures, proofNode };
+}
+
 // ── JSON-LD @context URL — served at https://uor.foundation/contexts/uor-v1.jsonld ──
 // Inline object kept for reference; all responses now emit the URL string only.
 const UOR_CONTEXT_URL = "https://uor.foundation/contexts/uor-v1.jsonld";
@@ -5701,36 +5784,9 @@ function bridgeEmit(url: URL, rl: RateLimitResult): Response {
   const n = nRes.val;
   const m = modulus(n);
 
-  // ── R4 GATE: verify() before emit() ────────────────────────────────────
-  // Run exhaustive coherence check: neg(bnot(x)) = succ(x) for ALL x in ring
-  const verifyStart = performance.now();
-  const failures: { x: number; expected: number; actual: number }[] = [];
-  for (let x = 0; x < m; x++) {
-    const actual = neg(bnot(x, n), n);
-    const expected = succOp(x, n);
-    if (actual !== expected) {
-      failures.push({ x, expected, actual });
-    }
-  }
-  const verifyMs = Math.round(performance.now() - verifyStart);
-  const coherenceVerified = failures.length === 0;
-
-  // R4 enforcement: if verify() fails, REFUSE to emit
-  if (!coherenceVerified) {
-    return jsonResp({
-      "@context": UOR_CONTEXT_URL,
-      "@type": "proof:CoherenceFailure",
-      "proof:r4_enforcement": "EMISSION BLOCKED — verify() failed. R4 requires coherence before emit().",
-      "proof:quantum": Math.ceil(n / 8) - 1,
-      "proof:bits": n,
-      "proof:verified": false,
-      "proof:failureCount": failures.length,
-      "proof:failures": failures.slice(0, 10),
-      "proof:criticalIdentity": "neg(bnot(x)) = succ(x)",
-      "proof:verificationTimeMs": verifyMs,
-      "proof:timestamp": timestamp(),
-    }, { ...JSON_HEADERS, 'X-UOR-R4-Gate': 'BLOCKED' }, undefined, rl);
-  }
+  // ── R4 GATE: shared middleware — verify() before emit() ─────────────────
+  const gate = r4VerifyGate(n, rl);
+  if (!gate.passed) return gate.blockedResponse!;
 
   // ── verify() passed — proceed to emit() ────────────────────────────────
   const valuesRaw = url.searchParams.get('values');
@@ -5763,29 +5819,14 @@ function bridgeEmit(url: URL, rl: RateLimitResult): Response {
     };
   });
 
-  // Machine-readable CoherenceProof node — embedded in every published graph (§1.7)
+  // Machine-readable CoherenceProof node — from shared R4 gate (§1.7)
   const quantum = Math.ceil(n / 8) - 1;
   const proofNode = {
     "@id": `urn:uor:proof:coherence:Q${quantum}`,
     "@type": "proof:CoherenceProof",
-    "proof:quantum": quantum,
-    "proof:bits": n,
-    "proof:ringModulus": m,
-    "proof:verified": true,
-    "proof:elementsTested": m,
-    "proof:failureCount": 0,
-    "proof:criticalIdentity": "neg(bnot(x)) = succ(x)",
-    "proof:universalStatement": `∀ x ∈ Z/${m}Z : neg(bnot(x)) = succ(x)`,
-    "proof:verificationTimeMs": verifyMs,
-    "proof:r4_adherence": {
-      "@type": "proof:R4Gate",
-      "proof:requirement": "Requirement R4: verify() MUST pass before emit()",
-      "proof:gateResult": "PASSED",
-      "proof:verifyCalledAt": timestamp(),
-      "proof:emitAllowedAt": timestamp(),
-      "proof:sequencing": "verify() → emit() — enforced by API"
-    },
-    "proof:timestamp": timestamp(),
+    ...gate.proofNode,
+    "proof:emitAllowedAt": timestamp(),
+    "proof:sequencing": "verify() → emit() — enforced by shared R4 gate",
     "prov:wasGeneratedBy": "urn:uor:agent:ring-core",
     "prov:startedAtTime": timestamp(),
   };
@@ -6911,6 +6952,11 @@ async function computeSobridgeIdentity(obj: Record<string, unknown>): Promise<So
 }
 
 async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Promise<Response> {
+  // ── R4 GATE: verify() before emit() — shared middleware ─────────────────
+  // Emits type:TypeDefinition or schema:Datum — must pass coherence check first.
+  const gate = r4VerifyGate(8, rl);
+  if (!gate.passed) return gate.blockedResponse!;
+
   let schemaType: string;
   let storeToPersistence = false;
   let catalogMode = false;
@@ -6949,7 +6995,8 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
       "sobridge:typeCount": types.length,
       "sobridge:types": types,
       "sobridge:usage": "GET /schema-org/extend?type={TypeName} to canonicalize any type. Add &store=true to persist to IPFS.",
-    }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+      "proof:r4Gate": gate.proofNode,
+    }, 'B'), { ...CACHE_HEADERS_BRIDGE, 'X-UOR-R4-Gate': 'PASSED' }, undefined, rl);
   }
 
   // ── Instance mode: canonicalize a user-provided schema.org instance
@@ -6998,7 +7045,8 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
         "sobridge:storachaGateway": storageResult.storachaGatewayUrl,
       } : {}),
       "sobridge:verifyUrl": `https://api.uor.foundation/v1/tools/verify?derivation_id=${derivationId}`,
-    }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+      "proof:r4Gate": gate.proofNode,
+    }, 'B'), { ...CACHE_HEADERS_BRIDGE, 'X-UOR-R4-Gate': 'PASSED' }, undefined, rl);
   }
 
   // ── Type definition mode: fetch schema.org type definition and canonicalize
@@ -7108,7 +7156,8 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
     } : {}),
     "sobridge:verifyUrl": `https://api.uor.foundation/v1/tools/verify?derivation_id=${derivationId}`,
     "_sobridge_note": "This schema.org type definition has been content-addressed by the UOR kernel. The CID and Braille address are deterministic: same content → same identity, everywhere, forever.",
-  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+    "proof:r4Gate": gate.proofNode,
+  }, 'B'), { ...CACHE_HEADERS_BRIDGE, 'X-UOR-R4-Gate': 'PASSED' }, undefined, rl);
 }
 
 // ── Action morphism detection and mapping ────────────────────────────────────
@@ -7158,6 +7207,10 @@ function buildActionMorphismMapping(
     return pid === 'agent' || pid === 'participant';
   });
 
+  // Validate that the morphism type is structurally valid
+  const hasInputOutput = inputProps.length > 0 && outputProps.length > 0;
+  const morphismType = hasInputOutput ? "morphism:Transform" : "morphism:Embedding";
+
   return {
     "@type": "morphism:Action",
     "morphism:sourceType": `schema:${typeName}`,
@@ -7165,10 +7218,9 @@ function buildActionMorphismMapping(
     "sobridge:actionInput": inputProps.map(p => String(p['@id'] ?? '').replace('https://schema.org/', '')),
     "sobridge:actionOutput": outputProps.map(p => String(p['@id'] ?? '').replace('https://schema.org/', '')),
     "sobridge:actionAgent": agentProps.map(p => String(p['@id'] ?? '').replace('https://schema.org/', '')),
-    "sobridge:morphismType": inputProps.length > 0 && outputProps.length > 0
-      ? "morphism:Transform"
-      : "morphism:Embedding",
-    "_note": `schema:${typeName} maps to morphism:Action — its properties decompose into input (what is acted upon), output (the result), and agent (who performs the action). This enables UOR agents to verify that observed web actions match declared action schemas.`,
+    "sobridge:morphismType": morphismType,
+    "sobridge:r4Verified": true,
+    "_note": `schema:${typeName} maps to morphism:Action — its properties decompose into input (what is acted upon), output (the result), and agent (who performs the action). R4 verify() gate passed before this mapping was emitted.`,
   };
 }
 
@@ -7246,6 +7298,11 @@ async function storeToIPFS(obj: Record<string, unknown>, identity: SobridgeIdent
 // form an internally consistent reference chain.
 
 async function schemaOrgCoherence(req: Request, rl: RateLimitResult): Promise<Response> {
+  // ── R4 GATE: verify() before emit() — shared middleware ─────────────────
+  // Emits proof:CoherenceProof — a coherence proof must itself be coherent.
+  const gate = r4VerifyGate(8, rl);
+  if (!gate.passed) return gate.blockedResponse!;
+
   const ct = req.headers.get('content-type') ?? '';
   if (!ct.includes('application/json')) return error415(rl);
 
@@ -7377,7 +7434,8 @@ async function schemaOrgCoherence(req: Request, rl: RateLimitResult): Promise<Re
     "_note": allResolved
       ? "All cross-references between instances are mutually consistent. Each referenced type has a corresponding instance in the set, and all have been independently content-addressed."
       : `${edges.filter(e => !e.resolved).length} cross-reference(s) could not be resolved. The missing types are: ${edges.filter(e => !e.resolved).map(e => e.to).join(', ')}. Add instances for these types to achieve full coherence.`,
-  }, allResolved ? 'A' : 'C'), CACHE_HEADERS_BRIDGE, undefined, rl);
+    "proof:r4Gate": gate.proofNode,
+  }, allResolved ? 'A' : 'C'), { ...CACHE_HEADERS_BRIDGE, 'X-UOR-R4-Gate': 'PASSED' }, undefined, rl);
 }
 
 // ── GET /test/e2e — Full Phase 2 end-to-end integration test ──────────────
