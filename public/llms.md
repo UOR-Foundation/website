@@ -822,6 +822,35 @@ Example: `GET /v1/tools/derive?term=xor(0x0055,0x00aa)&quantum=1` returns Q1 der
 
 ---
 
+## Solid Pod Storage (state:PodContext)
+
+UOR supports decentralised storage of state:Bindings in Solid LDP Pods.
+This enables user-sovereign knowledge graphs under GDPR Article 20 / EU Data Act.
+
+### Quick start:
+1. `POST /v1/store/pod-context` with your pod URL to register a PodContext
+2. `POST /v1/store/pod-write` to derive + store ring computations in your pod (requires `Authorization: Bearer <solid_token>`)
+3. `GET /v1/store/pod-read` to retrieve bindings from your pod
+4. `GET /v1/store/pod-list` to list all bindings in a pod container
+
+### What gets stored:
+Each pod resource is a JSON-LD `state:Binding` with:
+- `derivation:derivationId` (SHA-256 URN — Grade A provenance)
+- `state:address` (content-addressed ring element IRI)
+- `state:datum` (the computed ring value)
+- `schema:ringQuantum` (quantum level)
+
+### Supported pod providers:
+Any Solid LDP 1.0 / LDP BasicContainer-compatible pod:
+Solid Community Server (CSS), NSS, trinpod, inrupt.net
+
+### Security:
+- The UOR server does NOT store pod credentials
+- Bearer tokens are passed through in the Authorization header
+- All pod-stored resources are valid JSON-LD 1.1 with the UOR @context
+
+---
+
 ## Navigation
 
 | Document | Purpose | Time |

@@ -135,3 +135,25 @@ uor-sh:IsometryShape
         sh:path      morphism:source ;
         sh:minCount  1 ;
     ] .
+
+# ── PodContextShape (§E3) ──────────────────────────────────────────────────
+
+@prefix state:      <https://uor.foundation/state/> .
+
+uor-sh:PodContextShape
+    a               sh:NodeShape ;
+    sh:targetClass  state:PodContext ;
+    rdfs:label      "PodContextShape" ;
+    sh:property [
+        sh:path      state:podUrl ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:anyURI ;
+        sh:pattern   "^https://" ;
+    ] ;
+    sh:property [
+        sh:path      state:podContainer ;
+        sh:minCount  0 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:anyURI ;
+    ] .
