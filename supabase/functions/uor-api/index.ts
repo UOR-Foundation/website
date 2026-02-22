@@ -358,21 +358,77 @@ function jsonResp(body: unknown, extraHeaders: Record<string, string> = CACHE_HE
   return new Response(JSON.stringify(body, null, 2), { status: 200, headers });
 }
 
-// ── Epistemic Grading (spec §2-C) ────────────────────────────────────────────
-// Every API response includes epistemic_grade and epistemic_grade_label.
+// ── Epistemic Grading (spec §4-B) ────────────────────────────────────────────
+// Every API response includes epistemic_grade, epistemic_grade_label, and epistemic_grade_reason.
+// Grade A responses also include derivation:derivationId and derivation:resultIri.
 type EpistemicGradeType = 'A' | 'B' | 'C' | 'D';
 const GRADE_LABELS: Record<EpistemicGradeType, string> = {
   A: 'Algebraically Proven',
   B: 'Graph-Certified',
   C: 'Graph-Present',
-  D: 'LLM-Generated / Unverified',
+  D: 'LLM-Generated (Unverified)',
 };
+const GRADE_REASONS: Record<EpistemicGradeType, string> = {
+  A: 'Result derived by ring arithmetic with SHA-256 content-addressed derivation ID. Independently verifiable.',
+  B: 'Result certified by cert:Certificate chain after resolver traversal and SHACL validation.',
+  C: 'Datum present in knowledge graph with source IRI but no derivation ID or certificate.',
+  D: 'No derivation ID. No certificate. LLM-extracted — route to uor_derive() for verification.',
+};
+
+/**
+ * AC-normalise a term: sort arguments of commutative operations (xor, and, or)
+ * into ascending numeric order. This ensures xor(42,10) and xor(10,42) produce the same derivation_id.
+ */
+function acNormalise(term: string): string {
+  return term.replace(
+    /\b(xor|and|or)\((\d+),(\d+)\)/g,
+    (_, op, a, b) => {
+      const [lo, hi] = [a, b].sort((x, y) => parseInt(x) - parseInt(y));
+      return `${op}(${lo},${hi})`;
+    }
+  );
+}
+
+/**
+ * Compute a content-addressed derivation ID from an AC-normalised canonical term string.
+ * Returns: "urn:uor:derivation:sha256:<64 lowercase hex chars>"
+ */
+async function computeDerivationId(term: string): Promise<string> {
+  const normalised = acNormalise(term);
+  const hash = await makeSha256(normalised);
+  return `urn:uor:derivation:sha256:${hash}`;
+}
+
+/**
+ * Compute the content-addressed datum IRI for Q0 (n=0, Z/256Z) or higher quantum levels.
+ */
+function computeDatumIri(value: number, n: number = 8): string {
+  return datumIRI(value, n);
+}
 
 function gradeResponse(data: Record<string, unknown>, grade: EpistemicGradeType): Record<string, unknown> {
   return {
     ...data,
     epistemic_grade: grade,
     epistemic_grade_label: GRADE_LABELS[grade],
+    epistemic_grade_reason: GRADE_REASONS[grade],
+  };
+}
+
+/**
+ * Build a Grade A response with derivation:derivationId and derivation:resultIri computed from a term string.
+ * The term is AC-normalised before hashing.
+ */
+async function gradeAResponse(data: Record<string, unknown>, term: string, resultValue: number, n: number = 8): Promise<Record<string, unknown>> {
+  const derivationId = await computeDerivationId(term);
+  const resultIri = computeDatumIri(resultValue, n);
+  return {
+    ...data,
+    epistemic_grade: 'A' as EpistemicGradeType,
+    epistemic_grade_label: GRADE_LABELS.A,
+    epistemic_grade_reason: GRADE_REASONS.A,
+    'derivation:derivationId': derivationId,
+    'derivation:resultIri': resultIri,
   };
 }
 
@@ -511,7 +567,7 @@ const STORE_NAMESPACE_META = {
 // ════════════════════════════════════════════════════════════════════════════
 
 // GET /kernel/op/verify?x=42&n=8  (also accepts ?quantum=0|1)
-function opVerifyCriticalIdentity(url: URL, rl: RateLimitResult): Response {
+async function opVerifyCriticalIdentity(url: URL, rl: RateLimitResult): Promise<Response> {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const quantumRaw = url.searchParams.get('quantum');
@@ -537,7 +593,7 @@ function opVerifyCriticalIdentity(url: URL, rl: RateLimitResult): Response {
   const holds = neg_bnot_x === succ_x;
   const etag = makeETag('/kernel/op/verify', { x: String(x), n: String(n) });
 
-  return jsonResp({
+  return jsonResp(await gradeAResponse({
     "summary": {
       "verified": holds,
       "x": x,
@@ -581,7 +637,7 @@ function opVerifyCriticalIdentity(url: URL, rl: RateLimitResult): Response {
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/op.rs",
     "conformance_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/conformance/src/tests/fixtures/test6_critical_identity.rs"
-  }, CACHE_HEADERS_KERNEL, etag, rl);
+  }, `neg(bnot(${x}))`, neg_bnot_x, n), CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // GET /kernel/op/verify/all?n=8&expand=false  (also accepts ?quantum=0|1)
@@ -674,7 +730,7 @@ function opVerifyAll(url: URL, rl: RateLimitResult): Response {
 }
 
 // GET /kernel/op/compute?x=42&n=8&y=10
-function opCompute(url: URL, rl: RateLimitResult): Response {
+async function opCompute(url: URL, rl: RateLimitResult): Promise<Response> {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const nRaw = url.searchParams.get('n') ?? '8';
@@ -701,7 +757,9 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
   const neg_bnot_x = neg(bnot_x, n);
   const etag = makeETag('/kernel/op/compute', { x: String(x), n: String(n), y: String(y) });
 
-  return jsonResp({
+  // The "primary" derivation term for the compute response is the critical identity
+  const primaryTerm = `neg(bnot(${x}))`;
+  return jsonResp(await gradeAResponse({
     "summary": {
       "x": x,
       "y": y,
@@ -733,7 +791,9 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:arity": 1,
         "op:geometricCharacter": "ring_reflection",
         "formula": `neg(x) = (-x) mod ${m}`,
-        "result": neg_x
+        "result": neg_x,
+        "derivation:derivationId": await computeDerivationId(`neg(${x})`),
+        "derivation:resultIri": computeDatumIri(neg_x, n),
       },
       "bnot": {
         "@id": "https://uor.foundation/op/bnot",
@@ -741,7 +801,9 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:arity": 1,
         "op:geometricCharacter": "hypercube_reflection",
         "formula": `bnot(x) = x XOR ${m-1}`,
-        "result": bnot_x
+        "result": bnot_x,
+        "derivation:derivationId": await computeDerivationId(`bnot(${x})`),
+        "derivation:resultIri": computeDatumIri(bnot_x, n),
       },
       "succ": {
         "@id": "https://uor.foundation/op/succ",
@@ -750,7 +812,9 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:geometricCharacter": "rotation",
         "op:composedOf": ["op:neg", "op:bnot"],
         "formula": `succ(x) = neg(bnot(x)) = (x+1) mod ${m}`,
-        "result": succ_x
+        "result": succ_x,
+        "derivation:derivationId": await computeDerivationId(`succ(${x})`),
+        "derivation:resultIri": computeDatumIri(succ_x, n),
       },
       "pred": {
         "@id": "https://uor.foundation/op/pred",
@@ -759,7 +823,9 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:geometricCharacter": "rotation_inverse",
         "op:composedOf": ["op:bnot", "op:neg"],
         "formula": `pred(x) = bnot(neg(x)) = (x-1) mod ${m}`,
-        "result": pred_x
+        "result": pred_x,
+        "derivation:derivationId": await computeDerivationId(`pred(${x})`),
+        "derivation:resultIri": computeDatumIri(pred_x, n),
       }
     },
     "binary_ops": {
@@ -773,7 +839,9 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:identity": 0,
         "op:geometricCharacter": "translation",
         "formula": `(x + y) mod ${m}`,
-        "result": addOp(x, y, n)
+        "result": addOp(x, y, n),
+        "derivation:derivationId": await computeDerivationId(`add(${x},${y})`),
+        "derivation:resultIri": computeDatumIri(addOp(x, y, n), n),
       },
       "sub": {
         "@id": "https://uor.foundation/op/sub",
@@ -783,7 +851,9 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:associative": false,
         "op:geometricCharacter": "translation",
         "formula": `(x - y) mod ${m}`,
-        "result": subOp(x, y, n)
+        "result": subOp(x, y, n),
+        "derivation:derivationId": await computeDerivationId(`sub(${x},${y})`),
+        "derivation:resultIri": computeDatumIri(subOp(x, y, n), n),
       },
       "mul": {
         "@id": "https://uor.foundation/op/mul",
@@ -794,7 +864,9 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:identity": 1,
         "op:geometricCharacter": "scaling",
         "formula": `(x * y) mod ${m}`,
-        "result": mulOp(x, y, n)
+        "result": mulOp(x, y, n),
+        "derivation:derivationId": await computeDerivationId(`mul(${x},${y})`),
+        "derivation:resultIri": computeDatumIri(mulOp(x, y, n), n),
       },
       "xor": {
         "@id": "https://uor.foundation/op/xor",
@@ -805,7 +877,9 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:identity": 0,
         "op:geometricCharacter": "hypercube_translation",
         "formula": "x XOR y",
-        "result": xorOp(x, y)
+        "result": xorOp(x, y),
+        "derivation:derivationId": await computeDerivationId(`xor(${x},${y})`),
+        "derivation:resultIri": computeDatumIri(xorOp(x, y), n),
       },
       "and": {
         "@id": "https://uor.foundation/op/and",
@@ -815,7 +889,9 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:associative": true,
         "op:geometricCharacter": "hypercube_projection",
         "formula": "x AND y",
-        "result": andOp(x, y)
+        "result": andOp(x, y),
+        "derivation:derivationId": await computeDerivationId(`and(${x},${y})`),
+        "derivation:resultIri": computeDatumIri(andOp(x, y), n),
       },
       "or": {
         "@id": "https://uor.foundation/op/or",
@@ -825,7 +901,9 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
         "op:associative": true,
         "op:geometricCharacter": "hypercube_join",
         "formula": "x OR y",
-        "result": orOp(x, y)
+        "result": orOp(x, y),
+        "derivation:derivationId": await computeDerivationId(`or(${x},${y})`),
+        "derivation:resultIri": computeDatumIri(orOp(x, y), n),
       }
     },
     "critical_identity": {
@@ -835,7 +913,7 @@ function opCompute(url: URL, rl: RateLimitResult): Response {
       "statement": `neg(bnot(${x})) = ${neg_bnot_x} = succ(${x}) [${neg_bnot_x === succ_x ? 'PASS' : 'FAIL'}]`
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/op.rs"
-  }, CACHE_HEADERS_KERNEL, etag, rl);
+  }, primaryTerm, neg_bnot_x, n), CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // GET /kernel/op/operations
@@ -1063,7 +1141,7 @@ async function addressEncode(req: Request, rl: RateLimitResult): Promise<Respons
 }
 
 // GET /kernel/schema/datum?x=42&n=8
-function schemaDatum(url: URL, rl: RateLimitResult): Response {
+async function schemaDatum(url: URL, rl: RateLimitResult): Promise<Response> {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const nRaw = url.searchParams.get('n') ?? '8';
@@ -1080,7 +1158,7 @@ function schemaDatum(url: URL, rl: RateLimitResult): Response {
   const { component } = classifyByte(x, n);
   const etag = makeETag('/kernel/schema/datum', { x: String(x), n: String(n) });
 
-  return jsonResp({
+  return jsonResp(await gradeAResponse({
     "summary": {
       "value": x,
       "quantum": n,
@@ -1141,7 +1219,7 @@ function schemaDatum(url: URL, rl: RateLimitResult): Response {
       "schema:zero": { "schema:value": 0, "schema:role": "additive_identity", "note": "additive identity, value=0" }
     },
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/schema.rs"
-  }, CACHE_HEADERS_KERNEL, etag, rl);
+  }, `datum(${x})`, x, n), CACHE_HEADERS_KERNEL, etag, rl);
 }
 
 // GET /kernel/schema/triad?x=42&n=8 — schema:Triad as first-class class (roadmap §1.4)
@@ -3085,6 +3163,7 @@ async function bridgeDerivation(url: URL, rl: RateLimitResult): Promise<Response
     },
     "epistemic_grade": "A",
     "epistemic_grade_label": "Algebraically Proven",
+    "epistemic_grade_reason": GRADE_REASONS.A,
     "cert:Certificate": {
       "@id": certificateId,
       "@type": "cert:Certificate",
@@ -3104,7 +3183,7 @@ async function bridgeDerivation(url: URL, rl: RateLimitResult): Promise<Response
 }
 
 // GET /bridge/trace?x=42&n=8&ops=neg,bnot
-function bridgeTrace(url: URL, rl: RateLimitResult): Response {
+async function bridgeTrace(url: URL, rl: RateLimitResult): Promise<Response> {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const nRaw = url.searchParams.get('n') ?? '8';
@@ -3157,7 +3236,8 @@ function bridgeTrace(url: URL, rl: RateLimitResult): Response {
   const injectionDetected = totalHammingDrift !== 0;
   const etag = makeETag('/bridge/trace', { x: String(x), n: String(n), ops: opsRaw });
 
-  return jsonResp({
+  const traceTerm = `trace(${opNames.join(',')},${x})`;
+  return jsonResp(await gradeAResponse({
     "summary": {
       "source_value": x,
       "operation_sequence": opNames,
@@ -3199,11 +3279,11 @@ function bridgeTrace(url: URL, rl: RateLimitResult): Response {
     "trace:totalHammingDrift": totalHammingDrift,
     "trace:timestamp": timestamp(),
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/trace.rs"
-  }, CACHE_HEADERS_BRIDGE, etag, rl);
+  }, traceTerm, current, n), CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
 // GET /bridge/resolver?x=42&n=8
-function bridgeResolver(url: URL, rl: RateLimitResult): Response {
+async function bridgeResolver(url: URL, rl: RateLimitResult): Promise<Response> {
   const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
   if ('err' in xRes) return xRes.err;
   const nRaw = url.searchParams.get('n') ?? '8';
@@ -3268,7 +3348,7 @@ function bridgeResolver(url: URL, rl: RateLimitResult): Response {
 
   const etag = makeETag('/bridge/resolver', { x: String(x), n: String(n) });
 
-  return jsonResp({
+  return jsonResp(await gradeAResponse({
     "summary": {
       "input": x,
       "component": component,
@@ -3295,7 +3375,7 @@ function bridgeResolver(url: URL, rl: RateLimitResult): Response {
     "resolver:datum": makeDatum(x, n),
     "resolver:timestamp": timestamp(),
     "ontology_ref": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/resolver.rs"
-  }, CACHE_HEADERS_BRIDGE, etag, rl);
+  }, `resolve(${x})`, x, n), CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
 // GET /user/morphism/transforms?x=42&from_n=8&to_n=16
@@ -7174,7 +7254,7 @@ Deno.serve(async (req: Request) => {
     }
     if (path === '/kernel/op/verify') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
-      const resp = opVerifyCriticalIdentity(url, rl);
+      const resp = await opVerifyCriticalIdentity(url, rl);
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
@@ -7182,7 +7262,7 @@ Deno.serve(async (req: Request) => {
     }
     if (path === '/kernel/op/compute') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
-      const resp = opCompute(url, rl);
+      const resp = await opCompute(url, rl);
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
@@ -7204,7 +7284,7 @@ Deno.serve(async (req: Request) => {
     }
     if (path === '/kernel/schema/datum') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
-      const resp = schemaDatum(url, rl);
+      const resp = await schemaDatum(url, rl);
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
@@ -7372,7 +7452,7 @@ Deno.serve(async (req: Request) => {
     // ── Bridge — trace (trace: namespace) ──
     if (path === '/bridge/trace') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
-      const resp = bridgeTrace(url, rl);
+      const resp = await bridgeTrace(url, rl);
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
@@ -7382,7 +7462,7 @@ Deno.serve(async (req: Request) => {
     // ── Bridge — resolver (resolver: namespace) ──
     if (path === '/bridge/resolver') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
-      const resp = bridgeResolver(url, rl);
+      const resp = await bridgeResolver(url, rl);
       if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }

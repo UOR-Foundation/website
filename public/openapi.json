@@ -1772,6 +1772,29 @@
       }
     },
     "schemas": {
+      "EpistemicGrading": {
+        "type": "object",
+        "description": "Every API response includes epistemic grading fields. Grade A responses also include derivation:derivationId and derivation:resultIri.",
+        "properties": {
+          "epistemic_grade": {
+            "type": "string",
+            "enum": ["A", "B", "C", "D"],
+            "description": "UOR epistemic grade. A=Algebraically Proven (ring arithmetic + derivation ID). B=Graph-Certified (cert chain). C=Graph-Present (no cert). D=LLM-Generated (unverified)."
+          },
+          "epistemic_grade_label": { "type": "string", "description": "Human-readable label for the epistemic grade." },
+          "epistemic_grade_reason": { "type": "string", "description": "Explanation of why this grade was assigned and what it means for agent citation." },
+          "derivation:derivationId": {
+            "type": "string",
+            "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$",
+            "description": "SHA-256 content-addressed derivation identifier. Present for Grade A responses only. AC-normalised: commutative ops (xor, and, or) have arguments sorted ascending before hashing."
+          },
+          "derivation:resultIri": {
+            "type": "string",
+            "format": "uri",
+            "description": "Content-addressed IRI of the result datum. Pattern: https://uor.foundation/u/U{hex} for Q0."
+          }
+        }
+      },
       "Datum": {
         "type": "object",
         "description": "schema:Datum — ring element with full algebraic metadata. Source: spec/src/namespaces/schema.rs. Property names use JSON-LD prefixed notation matching the @context in the response envelope — use string-key access in typed languages (e.g., obj[\"schema:value\"]).",
