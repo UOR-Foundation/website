@@ -286,39 +286,6 @@ const Standard = () => {
         </div>
       </section>
 
-      {/* Trust Levels (Closure Modes) */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
-        <div className="container max-w-5xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
-            Trust Levels
-          </p>
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
-            Choose how thorough you need to be
-          </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-10">
-            When exploring connected data, you can choose how deep to go. Each level gives you a stronger guarantee, at the cost of more computation.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {closureModes.map((mode, i) => (
-              <div
-                key={mode.name}
-                className="rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                    {i + 1}
-                  </span>
-                  <h3 className="font-display text-base font-bold text-foreground">{mode.label}</h3>
-                </div>
-                <p className="text-sm font-body text-muted-foreground leading-relaxed mb-3">{mode.description}</p>
-                <p className="text-xs font-body text-primary/70 font-medium leading-relaxed">
-                  Best for: {mode.useCase}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Applications */}
       <section className="py-12 md:py-20 bg-background border-b border-border">
