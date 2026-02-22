@@ -9,6 +9,12 @@
     "uor_correlate": "https://api.uor.foundation/v1/tools/correlate",
     "uor_partition": "https://api.uor.foundation/v1/tools/partition"
   },
+  "quantum_levels": {
+    "Q0": { "bit_width": 8, "modulus": 256, "status": "active", "elements_materialised": 256 },
+    "Q1": { "bit_width": 16, "modulus": 65536, "status": "active", "elements_materialised": 16 },
+    "Q2": { "bit_width": 32, "modulus": 4294967296, "status": "defined", "elements_materialised": 0 },
+    "Qn": { "bit_width": "8*2^n", "modulus": "2^(8*2^n)", "status": "defined" }
+  },
   "artifacts": {
     "ontology_json_ld": "https://uor.foundation/uor.foundation.json",
     "ontology_turtle": "https://uor.foundation/uor.foundation.ttl",

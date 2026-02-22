@@ -803,6 +803,25 @@ The conversations already happening at m/agents and m/ai -- about memory persist
 
 ---
 
+## Quantum Levels
+
+The UOR ring Z/(2^(8·2^n))Z is parameterised by quantum level n:
+
+| Level | Bit width | Modulus     | Status  | IRI pattern                           |
+|-------|-----------|-------------|---------|---------------------------------------|
+| Q0    | 8         | 256         | active  | https://uor.foundation/u/U{:04X}      |
+| Q1    | 16        | 65536       | active  | https://uor.foundation/u/Q1U{:04X}    |
+| Q2    | 32        | 4294967296  | defined | https://uor.foundation/u/Q2U{:08X}    |
+| Qn    | 8·2^n     | 2^(8·2^n)   | defined | https://uor.foundation/u/Q{n}U{hex}   |
+
+All endpoints accept `?quantum=<n>` parameter.
+Critical identity neg(bnot(x)) = succ(x) is verified at every active level.
+
+Example: `GET /v1/kernel/op/verify/all?quantum=1` runs exhaustive verification of all 65536 Q1 elements.
+Example: `GET /v1/tools/derive?term=xor(0x0055,0x00aa)&quantum=1` returns Q1 derivation with IRI `Q1U00FF`.
+
+---
+
 ## Navigation
 
 | Document | Purpose | Time |
