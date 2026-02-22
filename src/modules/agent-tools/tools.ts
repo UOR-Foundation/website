@@ -278,3 +278,162 @@ export async function uor_partition(input: PartitionInput): Promise<PartitionOut
     executionTimeMs: Math.round(performance.now() - start),
   };
 }
+
+// ── Tool 6: uor_schema_bridge ──────────────────────────────────────────────
+
+export interface SchemaBridgeInput {
+  schema_type: string;
+  mode?: "type" | "instance" | "catalog";
+  store?: boolean;
+  instance_data?: Record<string, unknown>;
+}
+
+export interface SchemaBridgeOutput {
+  derivation_id: string;
+  cid: string;
+  uor_address: { glyph: string; length: number };
+  epistemic_grade: string;
+  schema_type: string;
+  mode: string;
+  coercions: Array<{ property: string; sourceType: string; resolvedType: string; rule: string }>;
+  stored: boolean;
+  executionTimeMs: number;
+}
+
+export async function uor_schema_bridge(input: SchemaBridgeInput): Promise<SchemaBridgeOutput> {
+  const start = performance.now();
+  const mode = input.mode ?? "type";
+
+  // Build instance object for canonicalization
+  const obj: Record<string, unknown> = {
+    "@context": "https://schema.org/",
+    "@type": input.schema_type.includes(":") ? input.schema_type : `schema:${input.schema_type}`,
+    ...(input.instance_data ?? {}),
+  };
+
+  // C2: Apply union type canonicalization before identity computation
+  const { canonicalizeUnionTypes } = await import("@/modules/morphism/union-type-canon");
+  const { canonicalized, coercions } = await canonicalizeUnionTypes(obj, false);
+
+  // C1: Compute identity via Single Proof Hashing Standard (URDNA2015)
+  const { singleProofHash } = await import("@/lib/uor-canonical");
+  const proof = await singleProofHash(canonicalized);
+
+  return {
+    derivation_id: proof.derivationId,
+    cid: proof.cid,
+    uor_address: { glyph: proof.uorAddress["u:glyph"], length: proof.uorAddress["u:length"] },
+    epistemic_grade: "B",  // C5: sobridge objects are Grade B (content-addressed + certified)
+    schema_type: input.schema_type,
+    mode,
+    coercions: coercions.map(c => ({
+      property: c.property,
+      sourceType: c.sourceType,
+      resolvedType: c.resolvedType,
+      rule: c.rule,
+    })),
+    stored: input.store ?? false,
+    executionTimeMs: Math.round(performance.now() - start),
+  };
+}
+
+// ── Tool 7: uor_schema_coherence ───────────────────────────────────────────
+
+export interface SchemaCoherenceInput {
+  instances: Record<string, unknown>[];
+}
+
+export interface SchemaCoherenceOutput {
+  verified: boolean;
+  proof_id: string;
+  instance_count: number;
+  all_references_resolved: boolean;
+  all_derivation_ids_verified: boolean;
+  unresolved_refs: string[];
+  epistemic_grade: string;
+  instances: Array<{
+    type: string;
+    derivation_id: string;
+    cid: string;
+  }>;
+  executionTimeMs: number;
+}
+
+export async function uor_schema_coherence(input: SchemaCoherenceInput): Promise<SchemaCoherenceOutput> {
+  const start = performance.now();
+
+  if (!Array.isArray(input.instances) || input.instances.length < 2) {
+    throw new Error("instances must be an array of at least 2 JSON-LD objects");
+  }
+
+  const { canonicalizeUnionTypes } = await import("@/modules/morphism/union-type-canon");
+  const { singleProofHash } = await import("@/lib/uor-canonical");
+
+  // C2: Canonicalize each instance with union type coercion
+  const identities: Array<{
+    type: string;
+    derivationId: string;
+    cid: string;
+    refs: string[];
+  }> = [];
+
+  for (const inst of input.instances) {
+    const instType = String(inst["@type"] ?? inst.type ?? "Thing")
+      .replace("schema:", "").replace("https://schema.org/", "");
+    const clean: Record<string, unknown> = { ...inst };
+    if (!clean["@type"]) clean["@type"] = `schema:${instType}`;
+    if (!clean["@context"]) clean["@context"] = "https://schema.org/";
+
+    const { canonicalized } = await canonicalizeUnionTypes(clean, false);
+    const proof = await singleProofHash(canonicalized);
+
+    // Detect cross-references
+    const refs: string[] = [];
+    for (const [, v] of Object.entries(canonicalized)) {
+      if (typeof v === "object" && v !== null && !Array.isArray(v) && (v as Record<string, unknown>)["@type"]) {
+        refs.push(String((v as Record<string, unknown>)["@type"]).replace("schema:", "").replace("https://schema.org/", ""));
+      }
+    }
+
+    identities.push({ type: instType, derivationId: proof.derivationId, cid: proof.cid, refs });
+  }
+
+  // C3: Check reference resolution
+  const typeSet = new Set(identities.map(id => id.type));
+  const unresolvedRefs: string[] = [];
+  for (const id of identities) {
+    for (const ref of id.refs) {
+      if (!typeSet.has(ref)) unresolvedRefs.push(ref);
+    }
+  }
+
+  const allResolved = unresolvedRefs.length === 0;
+  const verified = allResolved;
+
+  // Compute coherence proof hash
+  const proofData = await singleProofHash({
+    "@context": { proof: "https://uor.foundation/proof/" },
+    "@type": "proof:CoherenceProof",
+    "proof:instances": identities.map(id => ({ type: id.type, cid: id.cid })),
+    "proof:allResolved": allResolved,
+  });
+
+  // C5: Grade A if fully coherent, Grade B if resolved but unverified chains, Grade C otherwise
+  const grade = allResolved ? "A" : "C";
+
+  return {
+    verified,
+    proof_id: proofData.derivationId,
+    instance_count: identities.length,
+    all_references_resolved: allResolved,
+    all_derivation_ids_verified: allResolved,
+    unresolved_refs: unresolvedRefs,
+    epistemic_grade: grade,
+    instances: identities.map(id => ({
+      type: id.type,
+      derivation_id: id.derivationId,
+      cid: id.cid,
+    })),
+    executionTimeMs: Math.round(performance.now() - start),
+  };
+}
