@@ -6999,7 +6999,6 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
       } : {}),
       "sobridge:verifyUrl": `https://api.uor.foundation/v1/tools/verify?derivation_id=${derivationId}`,
     }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
-    }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
   }
 
   // ── Type definition mode: fetch schema.org type definition and canonicalize
