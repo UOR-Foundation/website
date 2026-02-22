@@ -69,10 +69,10 @@ const EXAMPLES = [
 ];
 
 const gradeColors: Record<string, { bg: string; border: string; text: string; badge: string }> = {
-  A: { bg: "bg-green-950/40", border: "border-green-700/50", text: "text-green-400", badge: "bg-green-900/60 text-green-300" },
-  B: { bg: "bg-blue-950/40", border: "border-blue-700/50", text: "text-blue-400", badge: "bg-blue-900/60 text-blue-300" },
-  C: { bg: "bg-yellow-950/40", border: "border-yellow-700/50", text: "text-yellow-400", badge: "bg-yellow-900/60 text-yellow-300" },
-  D: { bg: "bg-red-950/40", border: "border-red-700/50", text: "text-red-400", badge: "bg-red-900/60 text-red-300" },
+  A: { bg: "bg-neutral-900/50", border: "border-neutral-700/50", text: "text-neutral-200", badge: "bg-neutral-800 text-neutral-200" },
+  B: { bg: "bg-neutral-900/50", border: "border-neutral-700/50", text: "text-neutral-200", badge: "bg-neutral-800 text-neutral-200" },
+  C: { bg: "bg-neutral-900/50", border: "border-neutral-700/50", text: "text-neutral-200", badge: "bg-neutral-800 text-neutral-200" },
+  D: { bg: "bg-neutral-900/50", border: "border-neutral-700/50", text: "text-neutral-200", badge: "bg-neutral-800 text-neutral-200" },
 };
 
 function ConfidenceBar({ confidence }: { confidence: number }) {
