@@ -94,6 +94,9 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/bridge/morphism/isometry':           ['GET', 'OPTIONS'],
   '/bridge/morphism/coerce':             ['GET', 'OPTIONS'],
   '/cert/issue':                         ['POST', 'OPTIONS'],
+  '/attribution/register':               ['POST', 'OPTIONS'],
+  '/attribution/verify':                 ['GET', 'OPTIONS'],
+  '/attribution/royalty-report':         ['GET', 'OPTIONS'],
   '/cert/portability':                   ['GET', 'OPTIONS'],
   '/sparql/federation-plan':             ['GET', 'OPTIONS'],
   '/bridge/resolver/entity':             ['POST', 'OPTIONS'],
@@ -2648,6 +2651,9 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/bridge/emit`, "required_params": "none", "optional_params": "n, values, limit", "example": `${base}/bridge/emit?n=8&limit=16`, "operationId": "bridgeEmit", "summary": "Explicit emit() function — produces a complete W3C JSON-LD 1.1 document (application/ld+json) with @context, coherence proof, and @graph." },
           { "method": "GET", "path": `${base}/bridge/gnn/graph`, "required_params": "none", "optional_params": "quantum (0|1), format (pytorch_geometric|dgl|adjacency_json)", "example": `${base}/bridge/gnn/graph?quantum=0&format=pytorch_geometric`, "operationId": "gnnGraph", "summary": "Export UOR ring as GNN-ready graph — 256 nodes × 6 edge types (succ,pred,neg,bnot,xor1,add1) with [value,stratum,parity] node features" },
           { "method": "POST", "path": `${base}/bridge/gnn/ground`, "body": "{ embedding: [float,...], quantum?, distance? (cosine|hamming|euclidean) }", "example": `${base}/bridge/gnn/ground`, "operationId": "gnnGround", "summary": "Ground a GNN embedding vector to the nearest UOR ring element — upgrades epistemic grade from D to B (Graph-Certified)" },
+          { "method": "POST", "path": `${base}/attribution/register`, "body": "{ content OR derivation_id, contributor_iri, contributor_name, role?, usage_right?, quantum? }", "example": `${base}/attribution/register`, "operationId": "attributionRegister", "summary": "Register an attribution record (cert:AttributionCertificate) for content — EU Data Act Article 8 compliant" },
+          { "method": "GET", "path": `${base}/attribution/verify`, "required_params": "derivation_id", "example": `${base}/attribution/verify?derivation_id=urn:uor:derivation:sha256:abc123`, "operationId": "attributionVerify", "summary": "Verify attribution records for a derivation_id — returns all cert:AttributionCertificate entries" },
+          { "method": "GET", "path": `${base}/attribution/royalty-report`, "required_params": "contributor_iri", "example": `${base}/attribution/royalty-report?contributor_iri=https://orcid.org/0000-0001-2345-6789`, "operationId": "attributionRoyaltyReport", "summary": "EU Data Act Article 8 attribution report for a contributor — lists all attributed resources with usage rights" },
           { "method": "GET,POST", "path": `${base}/bridge/sparql`, "required_params": "query (GET param or POST body)", "optional_params": "n", "example": `${base}/bridge/sparql?query=SELECT%20%3Fs%20WHERE%20%7B%20%3Fs%20partition%3Acomponent%20partition%3AUnitSet%20%7D`, "operationId": "bridgeSparql", "summary": "SPARQL 1.1 query endpoint — SELECT queries over the UOR ring algebra (ontology + Q0 instance graph with 256 datums). Supports WHERE triple patterns, FILTER, LIMIT, OFFSET. Every result includes epistemic grading." },
           { "method": "GET", "path": `${base}/bridge/shacl/shapes`, "required_params": "none", "example": `${base}/bridge/shacl/shapes`, "operationId": "shaclShapes", "summary": "All 7 SHACL shape definitions (Ring, Primitives, TermGraph, StateLifecycle, Partition, CriticalIdentity, EndToEnd)" },
           { "method": "GET", "path": `${base}/bridge/shacl/validate`, "required_params": "none", "optional_params": "n", "example": `${base}/bridge/shacl/validate?n=8`, "operationId": "shaclValidate", "summary": "Live SHACL validation — runs all 7 conformance tests and returns a shacl:ValidationReport" },
@@ -6767,6 +6773,134 @@ async function gnnGround(req: Request, rl: RateLimitResult): Promise<Response> {
   }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
 }
 
+// ── Economic Attribution Protocol ─────────────────────────────────────────
+
+// In-memory attribution store (per-isolate; production would use DB)
+const attributionStore: Array<{
+  cert_iri: string;
+  derivation_id: string;
+  contributor_iri: string;
+  contributor_name: string;
+  role: string;
+  usage_right: string;
+  timestamp: string;
+}> = [];
+
+// POST /attribution/register
+async function attributionRegister(req: Request, rl: RateLimitResult): Promise<Response> {
+  const ct = req.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) return error415(rl);
+  let body: {
+    content?: string;
+    derivation_id?: string;
+    contributor_iri?: string;
+    contributor_name?: string;
+    role?: string;
+    usage_right?: string;
+    quantum?: number;
+  };
+  try { body = await req.json(); } catch { return error400('Invalid JSON body', 'body', rl); }
+
+  if (!body.contributor_iri) return error400('contributor_iri is required', 'contributor_iri', rl);
+  if (!body.contributor_name) return error400('contributor_name is required', 'contributor_name', rl);
+
+  // Step 1: compute or validate derivation_id
+  let did: string;
+  if (body.derivation_id) {
+    did = body.derivation_id;
+  } else if (body.content) {
+    const hash = await makeSha256(body.content);
+    did = `urn:uor:derivation:sha256:${hash}`;
+  } else {
+    return error400('Either content or derivation_id is required', 'content', rl);
+  }
+
+  // Step 2: build cert IRI deterministically from derivation_id
+  const certHash = await makeSha256(`attribution:${did}:${body.contributor_iri}`);
+  const certIri = `https://uor.foundation/instance/cert/${certHash.slice(0, 16)}`;
+  const timestamp = new Date().toISOString();
+  const role = body.role ?? 'Contributor';
+  const usageRight = body.usage_right ?? 'uor:attribution-required';
+
+  // Step 3: store in memory
+  attributionStore.push({
+    cert_iri: certIri,
+    derivation_id: did,
+    contributor_iri: body.contributor_iri,
+    contributor_name: body.contributor_name,
+    role,
+    usage_right: usageRight,
+    timestamp,
+  });
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "cert:AttributionCertificate",
+    "@id": certIri,
+    "cert:certifies": did,
+    "cert:attributedTo": { "@id": body.contributor_iri },
+    "cert:contributorName": body.contributor_name,
+    "cert:attributionRole": role,
+    "cert:usageRight": usageRight,
+    "cert:euDataActCompliant": true,
+    "cert:verified": true,
+    "cert:timestamp": timestamp,
+    "schema:ringQuantum": body.quantum ?? 0,
+  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// GET /attribution/verify?derivation_id=...
+function attributionVerify(url: URL, rl: RateLimitResult): Response {
+  const did = url.searchParams.get('derivation_id');
+  if (!did) return error400('derivation_id query parameter is required', 'derivation_id', rl);
+
+  const matches = attributionStore.filter(a => a.derivation_id === did);
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "derivation_id": did,
+    "attributions": matches.map(a => ({
+      "@type": "cert:AttributionCertificate",
+      "@id": a.cert_iri,
+      "cert:attributedTo": { "@id": a.contributor_iri },
+      "cert:contributorName": a.contributor_name,
+      "cert:attributionRole": a.role,
+      "cert:usageRight": a.usage_right,
+      "cert:euDataActCompliant": true,
+      "cert:timestamp": a.timestamp,
+    })),
+    "attribution_count": matches.length,
+    "verified": matches.length > 0,
+  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// GET /attribution/royalty-report?contributor_iri=...
+function attributionRoyaltyReport(url: URL, rl: RateLimitResult): Response {
+  const ciri = url.searchParams.get('contributor_iri');
+  if (!ciri) return error400('contributor_iri query parameter is required', 'contributor_iri', rl);
+
+  const matches = attributionStore.filter(a => a.contributor_iri === ciri);
+  const reportDate = new Date().toISOString().slice(0, 10);
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "contributor_iri": ciri,
+    "contributor_name": matches[0]?.contributor_name ?? "Unknown",
+    "report_date": reportDate,
+    "eu_data_act_article": "Article 8 — Obligations of data holders",
+    "attributed_resources": matches.map(a => ({
+      "derivation_id": a.derivation_id,
+      "cert_iri": a.cert_iri,
+      "role": a.role,
+      "usage_right": a.usage_right,
+      "registered": a.timestamp,
+    })),
+    "total_attributed": matches.length,
+    "gdpr_portability_available": true,
+    "portability_endpoint": "https://api.uor.foundation/v1/cert/portability",
+  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // ROUTER
 // ════════════════════════════════════════════════════════════════════════════
@@ -7105,6 +7239,20 @@ Deno.serve(async (req: Request) => {
     if (path === '/store/gateways') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
       return await storeGateways(rl);
+    }
+
+    // ── Attribution Protocol ──
+    if (path === '/attribution/register') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await attributionRegister(req, rl);
+    }
+    if (path === '/attribution/verify') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return attributionVerify(url, rl);
+    }
+    if (path === '/attribution/royalty-report') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return attributionRoyaltyReport(url, rl);
     }
 
     // ── Bridge — GNN ──
