@@ -99,8 +99,8 @@ export function DerivationShape(data: Record<string, unknown>): ShapeResult {
 
   if (typeof data.derivation_id !== "string") {
     violations.push(violation(id, "derivation_id", "derivation_id must be a string"));
-  } else if (!(/^urn:uor:derivation:sha256:[0-9a-f]+$/.test(data.derivation_id as string))) {
-    violations.push(violation(id, "derivation_id", "derivation_id must match urn:uor:derivation:sha256:*"));
+  } else if (!(/^urn:uor:derivation:sha256:[0-9a-f]{64}$/.test(data.derivation_id as string))) {
+    violations.push(violation(id, "derivation_id", "derivation_id must match urn:uor:derivation:sha256:<64 hex chars>"));
   }
 
   if (!isUorIri(data.result_iri)) {
@@ -133,8 +133,8 @@ export function CertificateShape(data: Record<string, unknown>): ShapeResult {
     violations.push(violation(id, "certificate_id", "certificate_id must be a non-empty string"));
   }
 
-  if (typeof data.certifies_iri !== "string") {
-    violations.push(violation(id, "certifies_iri", "certifies_iri must be a string"));
+  if (typeof data.certifies_iri !== "string" && typeof data.certifies !== "string") {
+    violations.push(violation(id, "certifies", "Certificate must have cert:certifies or certifies_iri"));
   }
 
   if (typeof data.valid !== "boolean") {

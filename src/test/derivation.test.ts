@@ -18,7 +18,7 @@ describe("derive", () => {
   it("derivation ID starts with urn:uor:derivation:sha256:", async () => {
     const term: Term = { kind: "unary", op: "neg", arg: { kind: "const", value: 42 } };
     const d = await derive(ring, term);
-    expect(d.derivationId).toMatch(/^urn:uor:derivation:sha256:[0-9a-f]{16}$/);
+    expect(d.derivationId).toMatch(/^urn:uor:derivation:sha256:[0-9a-f]{64}$/);
   });
 
   it("evaluates neg(42) = 214 in Q0", async () => {

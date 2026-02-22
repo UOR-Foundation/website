@@ -5,8 +5,8 @@
  * standard W3C ontology vocabulary (rdfs:Class, rdfs:subClassOf, owl:inverseOf,
  * owl:disjointWith, rdfs:domain, rdfs:range, prov:Activity, prov:Entity).
  *
- * Roadmap target: 82 classes, 120 properties, 14 named individuals.
- * Current: 55+ classes, 65+ properties, 14 named individuals.
+ * Roadmap target: 82 classes, 124 properties, 14 named individuals.
+ * Current: 55+ classes, 68+ properties, 14 named individuals.
  *
  * The algebraic grounding (ring arithmetic in Z/(2^n)Z) is declared as
  * formal OWL property characteristics, making the critical identity
@@ -438,6 +438,22 @@ function emitClasses(): VocabularyNode[] {
       "rdfs:comment":
         "Formal declaration of compliance with Berners-Lee's Four Rules of Linked Data.",
     },
+
+    // ── Address — content-addressable identifier ──────────────────────
+    {
+      "@id": "u:Address",
+      "@type": ["rdfs:Class", "owl:Class"],
+      "rdfs:subClassOf": "rdfs:Resource",
+      "rdfs:label": "Address",
+      "rdfs:comment":
+        "A content-addressable identifier for a UOR ring element. " +
+        "The canonical IRI pattern for a datum with byte value v is: " +
+        "https://uor.foundation/u/U<HEX> where <HEX> is the uppercase " +
+        "hexadecimal encoding of (0x2800 + v) — the Unicode codepoint in the " +
+        "Braille block. Example: datum 0x55 → https://uor.foundation/u/U2855. " +
+        "The Braille glyph u:glyph property provides the human-readable " +
+        "encoding; the IRI itself encodes the address directly.",
+    },
   ];
 }
 
@@ -482,6 +498,21 @@ function emitProperties(): VocabularyNode[] {
       "rdfs:domain": "schema:Datum",
       "rdfs:range": "schema:Datum",
       "owl:inverseOf": "u:succ",
+    },
+
+    // ── Address properties ────────────────────────────────────────────
+    {
+      "@id": "u:canonicalIri",
+      "@type": ["rdf:Property", "owl:DatatypeProperty", "owl:FunctionalProperty"],
+      "rdfs:label": "Canonical IRI",
+      "rdfs:comment":
+        "The canonical HTTP IRI of this address, with form " +
+        "https://uor.foundation/u/U<HEX>. This IRI is the definitive " +
+        "content-addressed identifier for use in all RDF graphs, SPARQL " +
+        "queries, and derivation certificates. It is deterministically " +
+        "computable from the byte value without any external registry.",
+      "rdfs:domain": "u:Address",
+      "rdfs:range": "xsd:anyURI",
     },
 
     // ── Binary operations ─────────────────────────────────────────────
@@ -634,6 +665,21 @@ function emitProperties(): VocabularyNode[] {
 
     // ── Derivation properties ─────────────────────────────────────────
     {
+      "@id": "derivation:derivationId",
+      "@type": ["rdf:Property", "owl:DatatypeProperty", "owl:FunctionalProperty"],
+      "rdfs:label": "Derivation ID",
+      "rdfs:comment":
+        "A SHA-256 content-addressed URN uniquely identifying this derivation. " +
+        "The value MUST have the form urn:uor:derivation:sha256:<hex64> where " +
+        "<hex64> is the lowercase hex encoding of the SHA-256 digest of the " +
+        "canonical serialisation of the derivation's canonical term. " +
+        "Two derivations with identical canonical terms MUST produce identical " +
+        "derivationId values — this is the foundational trust anchor for Grade A " +
+        "epistemic certainty and cross-agent consensus.",
+      "rdfs:domain": "derivation:Record",
+      "rdfs:range": "xsd:string",
+    },
+    {
       "@id": "derivation:derivedBy",
       "@type": ["rdf:Property", "owl:ObjectProperty"],
       "rdfs:label": "Derived By",
@@ -667,11 +713,16 @@ function emitProperties(): VocabularyNode[] {
     },
     {
       "@id": "derivation:resultIri",
-      "@type": ["rdf:Property", "owl:ObjectProperty", "owl:FunctionalProperty"],
+      "@type": ["rdf:Property", "owl:DatatypeProperty", "owl:FunctionalProperty"],
       "rdfs:label": "Result IRI",
-      "rdfs:comment": "The content-addressed IRI of the result datum.",
+      "rdfs:comment":
+        "The content-addressed IRI of the Datum produced by evaluating the " +
+        "canonical term of this Derivation. The IRI has the form " +
+        "https://uor.foundation/u/U<HEX> where <HEX> encodes the byte value " +
+        "of the result datum in the ring Z/(2^n)Z. Two derivations that produce " +
+        "the same result datum MUST share the same resultIri.",
       "rdfs:domain": "derivation:Record",
-      "rdfs:range": "schema:Datum",
+      "rdfs:range": "xsd:anyURI",
     },
     {
       "@id": "derivation:epistemicGrade",
@@ -795,10 +846,22 @@ function emitProperties(): VocabularyNode[] {
 
     // ── Certificate properties ────────────────────────────────────────
     {
+      "@id": "cert:certifies",
+      "@type": ["rdf:Property", "owl:ObjectProperty", "owl:FunctionalProperty"],
+      "rdfs:label": "Certifies",
+      "rdfs:comment":
+        "The resource (Observable, Partition, Derivation, or Transform) " +
+        "attested by this Certificate. The cert:certifies property is the " +
+        "primary linking property between a Certificate and the thing it " +
+        "attests. A cert:Certificate without cert:certifies is ill-formed.",
+      "rdfs:domain": "cert:DerivationCertificate",
+      "rdfs:range": "owl:Thing",
+    },
+    {
       "@id": "cert:certifiesIri",
       "@type": ["rdf:Property", "owl:ObjectProperty"],
       "rdfs:label": "Certifies IRI",
-      "rdfs:comment": "The IRI of the datum or derivation that this certificate attests.",
+      "rdfs:comment": "The IRI of the datum or derivation that this certificate attests. Deprecated: prefer cert:certifies.",
       "rdfs:domain": "cert:DerivationCertificate",
       "rdfs:range": "rdfs:Resource",
     },
