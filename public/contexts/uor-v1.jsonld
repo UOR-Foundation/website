@@ -35,6 +35,13 @@
     "sobridge:superClasses": {"@id": "sobridge:superClasses", "@type": "@id"},
     "sobridge:canonicalPayload": {"@id": "sobridge:canonicalPayload", "@type": "xsd:string"},
     "sobridge:storedCid": {"@id": "sobridge:storedCid", "@type": "xsd:string"},
+    "sobridge:coherenceProof": {"@id": "sobridge:coherenceProof"},
+    "sobridge:actionMapping": {"@id": "sobridge:actionMapping"},
+    "sobridge:morphismType": {"@id": "sobridge:morphismType", "@type": "@id"},
+    "sobridge:actionInput": {"@id": "sobridge:actionInput"},
+    "sobridge:actionOutput": {"@id": "sobridge:actionOutput"},
+    "sobridge:storachaCid": {"@id": "sobridge:storachaCid", "@type": "xsd:string"},
+    "sobridge:pinataCid": {"@id": "sobridge:pinataCid", "@type": "xsd:string"},
 
     "store:StoredObject": {"@id": "store:StoredObject"},
     "store:Cid": {"@id": "store:Cid"},

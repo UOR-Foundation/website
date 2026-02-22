@@ -16,6 +16,7 @@ import {
   certifyEpistemics,
   traceEpistemics,
   schemaBridgeEpistemics,
+  coherenceEpistemics,
   formatEpistemicBlock,
 } from "./epistemics.ts";
 
@@ -229,13 +230,13 @@ const TOOLS = [
   {
     name: "uor_schema_bridge",
     description:
-      "Bridge schema.org types into the UOR framework. Fetches the official schema.org type definition, canonicalizes it via UOR (deterministic JSON-LD serialization), computes a permanent CIDv1 content address and Braille glyph, and optionally stores it on IPFS for permanent decentralized retrieval. Use this to give any schema.org type (Person, Event, Product, Article, etc.) a permanent, content-derived identity that survives URL changes. Modes: 'type' (canonicalize a type definition), 'instance' (canonicalize a specific instance), 'catalog' (list all ~800 schema.org types).",
+      "Bridge schema.org types into the UOR framework. Fetches the official schema.org type definition, canonicalizes it via UOR (deterministic JSON-LD serialization), computes a permanent CIDv1 content address and Braille glyph, and stores to both Pinata (hot) and Storacha/Filecoin (cold) for permanent decentralized retrieval. Action types (BuyAction, SearchAction, etc.) are automatically mapped to morphism:Action structures. Modes: 'type' (canonicalize a type definition), 'instance' (canonicalize a specific instance), 'catalog' (list all ~800 schema.org types).",
     inputSchema: {
       type: "object",
       properties: {
         schema_type: {
           type: "string",
-          description: "The schema.org type name (e.g., 'Person', 'Event', 'Product', 'Article'). Required for type and instance modes.",
+          description: "The schema.org type name (e.g., 'Person', 'Event', 'Product', 'BuyAction'). Required for type and instance modes.",
         },
         mode: {
           type: "string",
@@ -243,7 +244,7 @@ const TOOLS = [
         },
         store: {
           type: "boolean",
-          description: "If true, store the canonicalized object permanently on IPFS. Default: false.",
+          description: "If true, store permanently on both Pinata (hot) and Storacha/Filecoin (cold). Default: false.",
         },
         instance_data: {
           type: "object",
@@ -251,6 +252,22 @@ const TOOLS = [
         },
       },
       required: ["schema_type"],
+    },
+  },
+  {
+    name: "uor_schema_coherence",
+    description:
+      "Verify coherence across multiple schema.org instances that cross-reference each other. Given a set of instances (e.g., a Person at an Organization at a Place), this tool content-addresses each one independently and then verifies that all cross-references resolve — producing a proof:CoherenceProof. Use this to validate that a set of structured web data is internally consistent.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        instances: {
+          type: "array",
+          description: "Array of JSON-LD objects representing schema.org instances. Each must have an @type field. At least 2, max 20.",
+          items: { type: "object" },
+        },
+      },
+      required: ["instances"],
     },
   },
 ];
@@ -329,6 +346,12 @@ async function runTool(name: string, args: Record<string, unknown>) {
       case "uor_schema_bridge":
         epistemicBlock = await formatEpistemicBlock(
           schemaBridgeEpistemics(cachedData as Record<string, unknown>, String(args.schema_type ?? args.type ?? ""), String(args.mode ?? "type"), true),
+          proofStatus,
+        );
+        break;
+      case "uor_schema_coherence":
+        epistemicBlock = await formatEpistemicBlock(
+          coherenceEpistemics(cachedData as Record<string, unknown>, true),
           proofStatus,
         );
         break;
@@ -514,6 +537,13 @@ async function runTool(name: string, args: Record<string, unknown>) {
           });
         }
         epistemicMeta = schemaBridgeEpistemics(data as Record<string, unknown>, schemaType, mode);
+        epistemicGrade = epistemicMeta.grade;
+        break;
+      }
+      case "uor_schema_coherence": {
+        const instances = Array.isArray(args.instances) ? args.instances : [];
+        data = await callApi("POST", "/schema-org/coherence", undefined, { instances });
+        epistemicMeta = coherenceEpistemics(data as Record<string, unknown>);
         epistemicGrade = epistemicMeta.grade;
         break;
       }
