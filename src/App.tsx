@@ -38,6 +38,7 @@ const AuditPage = lazy(() => import("@/modules/self-verify/pages/AuditPage"));
 const DashboardPage = lazy(() => import("@/modules/dashboard/pages/DashboardPage"));
 const SessionsPage = lazy(() => import("@/modules/state/pages/SessionsPage"));
 const VerifyPage = lazy(() => import("@/modules/verify/pages/VerifyPage"));
+const EpistemicPage = lazy(() => import("@/modules/epistemic/pages/EpistemicPage"));
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,7 @@ const App = () => {
             <Route path="/audit" element={<AuditPage />} />
             <Route path="/sessions" element={<SessionsPage />} />
             <Route path="/verify" element={<VerifyPage />} />
+            <Route path="/epistemic" element={<EpistemicPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
