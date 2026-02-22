@@ -5,11 +5,11 @@
 
 export const MCP_URL = "https://mcp.uor.foundation";
 
-const CURSOR_CONFIG_B64 = btoa(JSON.stringify({ url: MCP_URL }));
+const CURSOR_CONFIG_B64 = btoa(JSON.stringify({ url: MCP_URL, type: "streamableHttp" }));
 export const CURSOR_DEEP_LINK = `cursor://anysphere.cursor-deeplink/mcp/install?name=uor&config=${CURSOR_CONFIG_B64}`;
 
 export const MCP_CONFIG = JSON.stringify(
-  { mcpServers: { uor: { url: MCP_URL } } },
+  { mcpServers: { uor: { url: MCP_URL, type: "streamableHttp" } } },
   null,
   2,
 );
