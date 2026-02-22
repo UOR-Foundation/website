@@ -387,7 +387,8 @@ FORMAT — use this exact structure:
 | Grade | [icon] [A/B/C/D] — [label] |
 | Confidence | [bar] [0–100]% |
 | Verified via | [plain-language description of how this was checked] |
-| Receipt | \`[first 16 hex chars]…\` · urn:uor:receipt:sha256:[full 64-char hash] |
+| UOR Proof | \`[first 16 hex chars]…\` · urn:uor:proof:sha256:[full 64-char hash] |
+| Proof Status | [✅ Proven (served from cache) OR 🆕 Fresh computation (proof stored)] |
 
 **Sources**
 1. [Claim or fact] — [Source name](URL) · Grade [X]
@@ -407,26 +408,32 @@ Grades (use the plain-language labels, not the technical ones):
   C (🟡 50–70%):  "Sourced from External Reference" — fetched from a named third-party source. Link provided for your review.
   D (🔴 20–40%):  "AI Training Data (Unverified)" — generated from the AI model's memory. No source consulted, no verification performed.
 
+Proof Status:
+  ✅ Proven — This result was previously computed, its proof stored, and served from cache. No recomputation was needed. The proof fingerprint was verified against its canonical coordinate.
+  🆕 Fresh — This result was just computed for the first time. If Grade A or B, a proof has been stored so future identical requests skip computation entirely.
+  (omit row) — Grade C/D results are not proven and not cached.
+
 Trust summary guidelines:
 - Write as if explaining to someone with no technical background.
 - State clearly: can the reader rely on this answer? Why or why not?
 - If Grade C or D, tell the reader what they can do to verify it (e.g., "click the source link" or "ask the system to compute it").
 - Avoid words like "algebraically", "deterministic", "canonical", "epistemic". Use "proven", "verified", "checked", "confirmed" instead.
+- If the result was served from cache (Proof Status = ✅ Proven), explain that this exact computation was performed before, its result proven correct, and verification confirmed the stored proof matches — no model needed to run again.
 
 Rules:
-1. If a UOR tool was called, relay its trust score verbatim.
-2. If you answered from training data alone, self-assign Grade D with 🔴.
-3. If you fetched from an external URL, assign Grade C and ALWAYS include the clickable link.
+1. If a UOR tool was called, relay its trust score verbatim — do not modify the proof hash, grade, or proof status.
+2. If you answered from training data alone, self-assign Grade D with 🔴. Omit the Proof Status row.
+3. If you fetched from an external URL, assign Grade C and ALWAYS include the clickable link. Omit the Proof Status row.
 4. Every distinct fact or claim in your answer MUST appear as a numbered source line with its own grade and link (if available).
 5. The overall Grade is the LOWEST grade among all sources.
 6. Never skip the trust score. Every response gets one.
 7. Source links must be clickable markdown links: [Label](URL).
-8. For the Receipt field: generate a SHA-256 hash of (grade + confidence + timestamp) and display the first 16 hex chars with the full URN. This is the unique fingerprint for this specific response.`;
+8. The UOR Proof field contains a SHA-256 fingerprint that uniquely identifies this specific input-output pair. Anyone can independently verify it by recomputing the hash.`;
 
 const SERVER_INFO = {
   protocolVersion: "2025-03-26",
   capabilities: { tools: { listChanged: false } },
-  serverInfo: { name: "uor-mcp", version: "1.1.0" },
+  serverInfo: { name: "uor-mcp", version: "2.0.0" },
   instructions: EPISTEMIC_INSTRUCTION,
 };
 
