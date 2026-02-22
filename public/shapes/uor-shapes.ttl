@@ -157,3 +157,31 @@ uor-sh:PodContextShape
         sh:maxCount  1 ;
         sh:datatype  xsd:anyURI ;
     ] .
+
+# ── AttributionCertificateShape ────────────────────────────────────────────
+
+uor-sh:AttributionCertificateShape
+    a               sh:NodeShape ;
+    sh:targetClass  cert:AttributionCertificate ;
+    rdfs:label      "AttributionCertificateShape" ;
+    sh:property [
+        sh:path      cert:certifies ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+    ] ;
+    sh:property [
+        sh:path      cert:attributedTo ;
+        sh:minCount  1 ;
+    ] ;
+    sh:property [
+        sh:path      cert:verified ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:boolean ;
+    ] ;
+    sh:property [
+        sh:path      cert:timestamp ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:dateTime ;
+    ] .

@@ -34,5 +34,14 @@
     "shacl_tests_passed": 7,
     "ring_elements": 256,
     "w3c_standards": ["JSON-LD 1.1", "Turtle 1.1", "SPARQL 1.1", "OWL 2 DL", "SHACL"]
+  },
+  "attribution_protocol": {
+    "register": "POST https://api.uor.foundation/v1/attribution/register",
+    "verify": "GET https://api.uor.foundation/v1/attribution/verify",
+    "royalty_report": "GET https://api.uor.foundation/v1/attribution/royalty-report",
+    "eu_data_act_compliant": true,
+    "gdpr_article_20": true,
+    "cert_type": "cert:AttributionCertificate",
+    "attribution_anchor": "derivation:derivationId"
   }
 }
