@@ -141,45 +141,44 @@ const SetupGuide = () => {
               )}
             </div>
 
-            {/* ── Trust Stamp Enforcement (all clients) ── */}
-            {CLIENT_RULES[c.name] && (
-              <div className="border-t border-border pt-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={16} className="text-primary" />
-                  <p className="text-sm font-body font-medium text-foreground">
-                    Enforce trust stamps on every response
-                  </p>
-                </div>
-                <p className="text-sm font-body text-muted-foreground leading-relaxed">
-                  By default, {c.name} may only show the UOR Trust Score when a UOR tool is called.
-                  To ensure <strong>every</strong> response ends with a trust scorecard:
-                </p>
-                <ol className="space-y-2">
-                  {CLIENT_RULES[c.name].instructions.map((step, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
-                      <p className="text-sm font-body text-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: step }} />
-                    </li>
-                  ))}
-                </ol>
-                {c.name !== "Claude Desktop" && (
-                  <div className="flex items-center gap-3">
-                    <a
-                      href={CLIENT_RULES[c.name].url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium bg-muted text-foreground hover:bg-muted/80 transition-colors border border-border"
-                    >
-                      Download {CLIENT_RULES[c.name].filename}
-                      <ExternalLink size={13} />
-                    </a>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground font-mono bg-muted/30 rounded-lg px-3 py-2">
-                  Install to: {CLIENT_RULES[c.name].installPath}
+            {/* ── Trust Stamp — automatic ── */}
+            <div className="border-t border-border pt-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={16} className="text-primary" />
+                <p className="text-sm font-body font-medium text-foreground">
+                  Trust stamps are enforced automatically
                 </p>
               </div>
-            )}
+              <p className="text-sm font-body text-muted-foreground leading-relaxed">
+                The UOR MCP server delivers trust enforcement instructions to your client on connection. Every response will include a trust scorecard, knowledge gap analysis, and follow-up questions. <strong>No extra files or configuration needed.</strong>
+              </p>
+              {CLIENT_RULES[c.name] && c.name !== "Claude Desktop" && (
+                <details className="text-sm font-body text-muted-foreground">
+                  <summary className="cursor-pointer hover:text-foreground transition-colors">
+                    Optional: stronger enforcement via project rule file
+                  </summary>
+                  <div className="mt-2 space-y-2 pl-1">
+                    <p className="leading-relaxed">
+                      If your client doesn't fully respect server instructions, you can add a rule file for stronger enforcement:
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <a
+                        href={CLIENT_RULES[c.name].url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium bg-muted text-foreground hover:bg-muted/80 transition-colors border border-border"
+                      >
+                        Download {CLIENT_RULES[c.name].filename}
+                        <ExternalLink size={13} />
+                      </a>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-mono bg-muted/30 rounded-lg px-3 py-2">
+                      Save to: {CLIENT_RULES[c.name].installPath}
+                    </p>
+                  </div>
+                </details>
+              )}
+            </div>
           </div>
         )}
 
@@ -215,45 +214,44 @@ const SetupGuide = () => {
             )}
 
 
-            {/* ── Trust Stamp Enforcement (non-deep-link clients) ── */}
-            {CLIENT_RULES[c.name] && (
-              <div className="border-t border-border pt-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={16} className="text-primary" />
-                  <p className="text-sm font-body font-medium text-foreground">
-                    Enforce trust stamps on every response
-                  </p>
-                </div>
-                <p className="text-sm font-body text-muted-foreground leading-relaxed">
-                  By default, {c.name} may only show the UOR Trust Score when a UOR tool is called.
-                  To ensure <strong>every</strong> response ends with a trust scorecard:
-                </p>
-                <ol className="space-y-2">
-                  {CLIENT_RULES[c.name].instructions.map((step, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
-                      <p className="text-sm font-body text-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: step }} />
-                    </li>
-                  ))}
-                </ol>
-                {c.name !== "Claude Desktop" && (
-                  <div className="flex items-center gap-3">
-                    <a
-                      href={CLIENT_RULES[c.name].url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium bg-muted text-foreground hover:bg-muted/80 transition-colors border border-border"
-                    >
-                      Download {CLIENT_RULES[c.name].filename}
-                      <ExternalLink size={13} />
-                    </a>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground font-mono bg-muted/30 rounded-lg px-3 py-2">
-                  Install to: {CLIENT_RULES[c.name].installPath}
+            {/* ── Trust Stamp — automatic ── */}
+            <div className="border-t border-border pt-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={16} className="text-primary" />
+                <p className="text-sm font-body font-medium text-foreground">
+                  Trust stamps are enforced automatically
                 </p>
               </div>
-            )}
+              <p className="text-sm font-body text-muted-foreground leading-relaxed">
+                The UOR MCP server delivers trust enforcement instructions to your client on connection. Every response will include a trust scorecard, knowledge gap analysis, and follow-up questions. <strong>No extra files or configuration needed.</strong>
+              </p>
+              {CLIENT_RULES[c.name] && c.name !== "Claude Desktop" && (
+                <details className="text-sm font-body text-muted-foreground">
+                  <summary className="cursor-pointer hover:text-foreground transition-colors">
+                    Optional: stronger enforcement via project rule file
+                  </summary>
+                  <div className="mt-2 space-y-2 pl-1">
+                    <p className="leading-relaxed">
+                      If your client doesn't fully respect server instructions, you can add a rule file for stronger enforcement:
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <a
+                        href={CLIENT_RULES[c.name].url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium bg-muted text-foreground hover:bg-muted/80 transition-colors border border-border"
+                      >
+                        Download {CLIENT_RULES[c.name].filename}
+                        <ExternalLink size={13} />
+                      </a>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-mono bg-muted/30 rounded-lg px-3 py-2">
+                      Save to: {CLIENT_RULES[c.name].installPath}
+                    </p>
+                  </div>
+                </details>
+              )}
+            </div>
           </>
         )}
 
@@ -322,7 +320,7 @@ const SetupGuide = () => {
       </div>
 
       <p className="text-sm font-body text-muted-foreground mt-4">
-        No API keys. No accounts. No setup files to manage.
+        No API keys. No accounts. No rule files required. Trust stamps, knowledge gaps, and follow-up questions are built into the server.
       </p>
     </div>
   );
