@@ -19,6 +19,7 @@ import { canonicalize, serializeTerm } from "@/modules/ring-core/canonicalizatio
 import type { Term } from "@/modules/ring-core/canonicalization";
 import { fromBytes } from "@/modules/ring-core/ring";
 import { contentAddress } from "@/modules/identity";
+import { singleProofHash } from "@/lib/uor-canonical";
 
 // ── Derivation type ─────────────────────────────────────────────────────────
 
@@ -129,10 +130,16 @@ export async function derive(
   const resultValue = evaluateTerm(canonical, ring);
   const resultIri = contentAddress(ring, resultValue);
 
-  // Derivation ID: full SHA-256 of "{canonical}={iri}"
-  const idInput = `${canonicalStr}=${resultIri}`;
-  const hash = await sha256hex(idInput);
-  const derivationId = `urn:uor:derivation:sha256:${hash}`;
+  // Derivation ID: URDNA2015 Single Proof Hash of the derivation identity record.
+  // Any agent can reconstruct this JSON-LD and reproduce the same derivation_id.
+  const derivationIdentity = {
+    "@context": { derivation: "https://uor.foundation/derivation/" },
+    "@type": "derivation:Record",
+    "derivation:canonicalTerm": canonicalStr,
+    "derivation:resultIri": resultIri,
+  };
+  const proof = await singleProofHash(derivationIdentity);
+  const derivationId = proof.derivationId;
 
   // Metrics
   const originalComplexity = termComplexity(term);

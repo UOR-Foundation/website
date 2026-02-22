@@ -4,7 +4,7 @@
  * making every significant content structure content-addressed and verifiable.
  */
 
-import { canonicalJsonLd, computeCid } from "./uor-address";
+import { singleProofHash } from "./uor-canonical";
 import { generateCertificate, type UorCertificate } from "./uor-certificate";
 
 // Data imports
@@ -133,6 +133,8 @@ export async function verifyContentCertificate(id: string): Promise<boolean> {
   const storedPayload = entry.certificate["cert:canonicalPayload"];
   const storedCid = entry.certificate["cert:cid"];
 
+  // Recompute CID from the stored canonical N-Quads payload
+  const { computeCid } = await import("./uor-address");
   const bytes = new TextEncoder().encode(storedPayload);
   const recomputedCid = await computeCid(bytes);
 
