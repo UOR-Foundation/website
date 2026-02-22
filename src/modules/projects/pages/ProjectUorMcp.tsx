@@ -7,7 +7,7 @@ const ProjectUorMcp = () => (
     name="UOR MCP"
     slug="uor-mcp"
     category="Developer Tools"
-    tagline="Know whether to trust your AI's answer. UOR MCP adds a verifiable proof trail to every response, so you never have to guess."
+    tagline="Ground every AI response in truth. Surface knowledge gaps honestly. Generate informed follow-up questions. UOR MCP turns any LLM into a transparent, verifiable reasoning partner."
     heroImage={heroImg}
     repoUrl="https://github.com/UOR-Foundation/uor-mcp"
     agentInstructions={[
@@ -57,6 +57,14 @@ const ProjectUorMcp = () => (
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
                 <span><strong className="text-foreground">The sources.</strong> Named, linked references showing exactly where the information came from.</span>
               </li>
+            <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                <span><strong className="text-foreground">Knowledge gaps.</strong> When the AI doesn't know something or made an assumption, it tells you explicitly. No hidden uncertainty.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                <span><strong className="text-foreground">Follow-up questions.</strong> Every response ends with 2–3 precise, informed questions that help you verify, challenge, or go deeper on the topic.</span>
+              </li>
             </ul>
           </>
         ),
@@ -69,10 +77,24 @@ const ProjectUorMcp = () => (
               AI is increasingly used to make decisions: in code, research, finance, and operations. But without a way to verify outputs, every answer carries hidden risk. Was the data real? Was the logic correct? Would you get the same answer tomorrow?
             </p>
             <p>
-              UOR MCP makes every answer checkable. If the AI computed something, you get a mathematical proof. If it pulled from a knowledge base, you get a link. If it guessed from training data, you know that too. No ambiguity. No hidden assumptions.
+              UOR MCP addresses this with three commitments:
             </p>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                <span><strong className="text-foreground">Truth grounding.</strong> If the AI computed something, you get a mathematical proof. If it pulled from a knowledge base, you get a link. If it guessed from training data, you know that too.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                <span><strong className="text-foreground">Honest uncertainty.</strong> Knowledge gaps are surfaced explicitly: what the AI assumed, what it doesn't know, and what would change the answer. No hidden confidence.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                <span><strong className="text-foreground">Guided exploration.</strong> Every response generates precise follow-up questions that help you verify claims, test edge cases, or deepen your understanding. The AI becomes a research partner, not just an answer machine.</span>
+              </li>
+            </ul>
             <p>
-              The result is simple: you can tell the difference between an answer you should act on and one you should verify further.
+              The result: you can tell the difference between an answer you should act on and one you should investigate further.
             </p>
           </>
         ),
