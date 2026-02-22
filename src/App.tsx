@@ -37,6 +37,7 @@ const AgentConsolePage = lazy(() => import("@/modules/agent-tools/pages/AgentCon
 const AuditPage = lazy(() => import("@/modules/self-verify/pages/AuditPage"));
 const DashboardPage = lazy(() => import("@/modules/dashboard/pages/DashboardPage"));
 const SessionsPage = lazy(() => import("@/modules/state/pages/SessionsPage"));
+const VerifyPage = lazy(() => import("@/modules/verify/pages/VerifyPage"));
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,7 @@ const App = () => {
             <Route path="/agent-console" element={<AgentConsolePage />} />
             <Route path="/audit" element={<AuditPage />} />
             <Route path="/sessions" element={<SessionsPage />} />
+            <Route path="/verify" element={<VerifyPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
