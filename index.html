@@ -201,7 +201,7 @@
         <li><strong><a href="https://uor.foundation/llms.md">llms.md</a></strong> — Agent Quick Card (start here, 15 min)</li>
         <li><a href="https://uor.foundation/llms-full.md">llms-full.md</a> — Complete Implementation Guide (45 min)</li>
         <li><a href="https://uor.foundation/agent-discovery.md">agent-discovery.md</a> — Agent Discovery Index</li>
-        <li><a href="https://uor.foundation/openapi.json">openapi.json</a> — OpenAPI 3.1 Specification (19 endpoints)</li>
+        <li><a href="https://uor.foundation/openapi.json">openapi.json</a> — OpenAPI 3.1 Specification (42 endpoints)</li>
         <li><a href="https://uor.foundation/.well-known/uor.json">/.well-known/uor.json</a> — Machine-Readable Discovery Metadata</li>
         <li><a href="https://uor.foundation/.well-known/ai-plugin.json">/.well-known/ai-plugin.json</a> — AI Plugin Manifest</li>
       </ol>
@@ -217,7 +217,7 @@
 
       <h2>Quick Verification</h2>
       <p>neg(bnot(42)) = neg(213) = 43 = succ(42) — this is the critical identity of the UOR Framework.</p>
-      <p>Try it: <a href="https://api.uor.foundation/v1/kernel/op/verify?x=42">GET /kernel/op/verify?x=42</a></p>
+      <p>Try it: <a href="https://api.uor.foundation/v1/kernel/op/verify?x=42">GET /kernel/op/verify?x=42</a> → {"proof:verified":true,"proof:witness":{"proof:neg_bnot_x":43,"proof:succ_x":43}}</p>
 
       <h2>Community</h2>
       <ul>
