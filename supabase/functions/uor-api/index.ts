@@ -363,13 +363,13 @@ function error501(rl?: RateLimitResult): Response {
   }), { status: 501, headers: { ...JSON_HEADERS, ...(rl ? rateLimitHeaders(rl) : {}) } });
 }
 
-function jsonResp(body: unknown, extraHeaders: Record<string, string> = CACHE_HEADERS_KERNEL, etag?: string, rl?: RateLimitResult): Response {
+function jsonResp(body: unknown, extraHeaders: Record<string, string> = CACHE_HEADERS_KERNEL, etag?: string, rl?: RateLimitResult, statusCode = 200): Response {
   const headers: Record<string, string> = {
     ...extraHeaders,
     ...(rl ? rateLimitHeaders(rl) : {}),
     ...(etag ? { 'ETag': etag } : {}),
   };
-  return new Response(JSON.stringify(body, null, 2), { status: 200, headers });
+  return new Response(JSON.stringify(body, null, 2), { status: statusCode, headers });
 }
 
 // ── Content-Type Negotiation (Turtle / N-Triples / JSON-LD) ─────────────────
@@ -686,11 +686,94 @@ function r4VerifyGate(n: number, rl: RateLimitResult): R4GateResult {
         "proof:criticalIdentity": "neg(bnot(x)) = succ(x)",
         "proof:verificationTimeMs": verifyMs,
         "proof:timestamp": ts,
-      }, { ...JSON_HEADERS, 'X-UOR-R4-Gate': 'BLOCKED' }, undefined, rl),
+      }, { ...JSON_HEADERS, 'X-UOR-R4-Gate': 'BLOCKED' }, undefined, rl, 422),
     };
   }
 
   return { passed: true, coherenceVerified: true, verifyMs, failures, proofNode };
+}
+
+// ── R4 Content-Hash Verification Gate ───────────────────────────────────────
+// G4: Before any sobridge object is emitted, recompute its derivation_id from
+// content and verify it matches the declared value. Also checks both schema:
+// and uor: contexts are present. Returns 422 on any failure.
+// This is a SHARED gate — not per-endpoint logic.
+
+interface R4ContentGateResult {
+  passed: boolean;
+  blockedResponse?: Response;
+}
+
+async function r4ContentVerifyGate(
+  emittedObj: Record<string, unknown>,
+  declaredDerivationId: string,
+  rl: RateLimitResult
+): Promise<R4ContentGateResult> {
+  const ts = timestamp();
+
+  // Check 1: derivation_id must be present
+  if (!declaredDerivationId || !declaredDerivationId.startsWith('urn:uor:derivation:sha256:')) {
+    return {
+      passed: false,
+      blockedResponse: jsonResp({
+        "@context": UOR_CONTEXT_URL,
+        "@type": "proof:ContentVerificationFailure",
+        "proof:r4_enforcement": "EMISSION BLOCKED — derivation_id is missing or malformed.",
+        "proof:expected": "urn:uor:derivation:sha256:<64 hex chars>",
+        "proof:actual": declaredDerivationId ?? null,
+        "proof:timestamp": ts,
+      }, { ...JSON_HEADERS, 'X-UOR-R4-Gate': 'BLOCKED' }, undefined, rl, 422),
+    };
+  }
+
+  // Check 2: Both schema: and uor: contexts must be present
+  const ctx = emittedObj['@context'];
+  const ctxStr = JSON.stringify(ctx ?? '');
+  const hasSchema = ctxStr.includes('schema.org');
+  const hasUor = ctxStr.includes('uor.foundation');
+  if (!hasSchema || !hasUor) {
+    return {
+      passed: false,
+      blockedResponse: jsonResp({
+        "@context": UOR_CONTEXT_URL,
+        "@type": "proof:ContentVerificationFailure",
+        "proof:r4_enforcement": "EMISSION BLOCKED — @context must include both schema.org and uor.foundation namespaces.",
+        "proof:hasSchemaContext": hasSchema,
+        "proof:hasUorContext": hasUor,
+        "proof:timestamp": ts,
+      }, { ...JSON_HEADERS, 'X-UOR-R4-Gate': 'BLOCKED' }, undefined, rl, 422),
+    };
+  }
+
+  // Check 3: Recompute derivation_id from content and verify match
+  // Strip sobridge/proof metadata to get the canonical content that was hashed
+  const contentObj: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(emittedObj)) {
+    // Skip bridge metadata and proof fields — hash only the content
+    if (k.startsWith('sobridge:') || k.startsWith('proof:') ||
+        k.startsWith('store:') || k.startsWith('u:') ||
+        k.startsWith('derivation:') || k === '_sobridge_note' ||
+        k === '_note') continue;
+    contentObj[k] = v;
+  }
+  const recomputed = await singleProofHashEdge(contentObj);
+  const recomputedId = recomputed.derivationId;
+
+  if (recomputedId !== declaredDerivationId) {
+    return {
+      passed: false,
+      blockedResponse: jsonResp({
+        "@context": UOR_CONTEXT_URL,
+        "@type": "proof:ContentVerificationFailure",
+        "proof:r4_enforcement": "EMISSION BLOCKED — recomputed derivation_id does not match declared value. Content integrity check failed.",
+        "proof:declaredDerivationId": declaredDerivationId,
+        "proof:recomputedDerivationId": recomputedId,
+        "proof:timestamp": ts,
+      }, { ...JSON_HEADERS, 'X-UOR-R4-Gate': 'BLOCKED' }, undefined, rl, 422),
+    };
+  }
+
+  return { passed: true };
 }
 
 // ── JSON-LD @context URL — served at https://uor.foundation/contexts/uor-v1.jsonld ──
@@ -7185,6 +7268,10 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
     // sobridge: objects get Grade B when they have: CID + R4 gate passed + derivation_id
     const epistemicGrade = (identity.cid && gate.passed && derivationId) ? 'B' : 'C';
 
+    // ── G4: R4 Content-Hash Verification Gate — verify derivation_id before emit ──
+    const contentGate = await r4ContentVerifyGate(finalObj, derivationId, rl);
+    if (!contentGate.passed) return contentGate.blockedResponse!;
+
     return jsonResp(gradeResponse({
       "@context": [
         "https://schema.org/",
@@ -7324,6 +7411,10 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
   if (storeToPersistence) {
     storageResult = await storeToIPFSDualCid(sobridgeType, identity);
   }
+
+  // ── G4: R4 Content-Hash Verification Gate — verify derivation_id before emit ──
+  const contentGate = await r4ContentVerifyGate(sobridgeType, derivationId, rl);
+  if (!contentGate.passed) return contentGate.blockedResponse!;
 
   return jsonResp(gradeResponse({
     ...sobridgeType,
@@ -7561,6 +7652,10 @@ async function schemaOrgCoherence(req: Request, rl: RateLimitResult): Promise<Re
     // ── C1: Compute identity via Single Proof Hashing Standard ────────────
     const identity = await computeSobridgeIdentity(finalObj);
     const derivationId = `urn:uor:derivation:sha256:${identity.sha256}`;
+
+    // ── G4: R4 Content-Hash Verification Gate — verify each instance before emit ──
+    const instanceContentGate = await r4ContentVerifyGate(finalObj, derivationId, rl);
+    if (!instanceContentGate.passed) return instanceContentGate.blockedResponse!;
 
     // ── C3: Detect cross-references with provenance links ─────────────────
     // Track property name, referenced type, and nested derivation_id if present
