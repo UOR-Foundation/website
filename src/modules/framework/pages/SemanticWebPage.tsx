@@ -135,7 +135,7 @@ function SemanticWebTower() {
                }}
                title="Jump to: URI"
              >
-               URI<sup className="text-yellow-300 ml-0.5 text-[10px]">1</sup>
+               URI
              </a>
            </>
          );
@@ -160,8 +160,7 @@ function SemanticWebTower() {
          }}
          title="Jump to: Digital Signature"
        >
-         <span>Digital Signature</span>
-         <span className="text-[11px] font-bold mt-1" style={{ writingMode: "horizontal-tb" }}>²</span>
+         Digital Signature
        </a>
 
        {/* Footnotes */}
@@ -174,11 +173,11 @@ function SemanticWebTower() {
          }}
        >
          <p>
-           <span className="font-display font-bold text-foreground">¹ URI</span>{" "}
+           <span className="font-display font-bold text-foreground">✱ URI:</span>{" "}
            UOR replaces location-based URIs with content-derived addresses. Identity comes from what the data is, not where it lives. Same content, same address, on every system.
          </p>
          <p>
-           <span className="font-display font-bold text-foreground">² Digital Signature</span>{" "}
+           <span className="font-display font-bold text-foreground">✱ Digital Signature:</span>{" "}
            UOR certificates are content-addressed hashes built into every object. Any modification changes the address, making tampering self-evident. No external certificate authorities required.
          </p>
        </div>
