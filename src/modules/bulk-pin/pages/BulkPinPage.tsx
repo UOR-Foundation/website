@@ -219,7 +219,7 @@ export default function BulkPinPage() {
     stopRef.current = false;
 
     try {
-      // Process in batches using the extend endpoint for each type
+      // Process in batches
       for (let i = 0; i < typesToPin.length; i += batchSize) {
         if (stopRef.current) { addLog("⏹ Stopped by user."); break; }
         const batch = typesToPin.slice(i, i + batchSize);
@@ -229,37 +229,67 @@ export default function BulkPinPage() {
         setCatalog(prev => prev.map(t => batchNames.has(t.name) ? { ...t, pinStatus: "pinning" as PinStatus } : t));
         addLog(`Pinning batch ${Math.floor(i / batchSize) + 1}: ${batch.map(t => t.name).join(", ")}...`);
 
-        // Use pin-all with the specific offset/batch that contains these types
-        const resp = await fetch(`${API_BASE}/schema-org/pin-all`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` },
-          body: JSON.stringify({ batch_size: batch.length, offset: i, dry_run: dryRun }),
-        });
+        let batchPinned = 0;
+        let batchFailed = 0;
 
-        if (!resp.ok) throw new Error(`API ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
-        const data = await resp.json();
-        const results: PinResult[] = data["sobridge:results"] ?? [];
+        // Pin each type individually via GET /schema-org/extend?type={name}&store=true
+        for (const item of batch) {
+          if (stopRef.current) break;
+          try {
+            const storeParam = dryRun ? "" : "&store=true";
+            const resp = await fetch(`${API_BASE}/schema-org/extend?type=${encodeURIComponent(item.name)}${storeParam}`, {
+              headers: { "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` },
+            });
 
-        setCatalog(prev => {
-          const updated = [...prev];
-          for (const r of results) {
-            const idx = updated.findIndex(t => t.name === r.type);
-            if (idx !== -1) {
-              updated[idx] = { ...updated[idx], pinStatus: r.success ? "pinned" : "failed", result: r };
+            if (!resp.ok) {
+              const errText = (await resp.text()).slice(0, 200);
+              setCatalog(prev => prev.map(t => t.name === item.name ? {
+                ...t, pinStatus: "failed" as PinStatus,
+                result: { type: item.name, cid: "", derivationId: "", certificateId: "", pinataCid: null, storachaCid: null, gatewayUrl: null, quantumLevel: 0, success: false, error: `HTTP ${resp.status}: ${errText}` }
+              } : t));
+              batchFailed++;
+              continue;
             }
-          }
-          return updated;
-        });
 
-        const cert = data["cert:Certificate"];
+            const data = await resp.json();
+            const derivationId = data["derivation:derivationId"] ?? "";
+            const cid = data["store:cid"] ?? "";
+            const pinataCid = data["sobridge:pinataCid"] ?? null;
+            const storachaCid = data["sobridge:storachaCid"] ?? null;
+            const gatewayUrl = data["sobridge:ipfsGateway"] ?? null;
+
+            const pinResult: PinResult = {
+              type: item.name,
+              cid,
+              derivationId,
+              certificateId: `urn:uor:cert:sha256:${derivationId.replace("urn:uor:derivation:sha256:", "")}`,
+              pinataCid,
+              storachaCid,
+              gatewayUrl,
+              quantumLevel: data["sobridge:quantumLevel"] ?? 0,
+              success: true,
+            };
+
+            setCatalog(prev => prev.map(t => t.name === item.name ? { ...t, pinStatus: "pinned" as PinStatus, result: pinResult } : t));
+            batchPinned++;
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            setCatalog(prev => prev.map(t => t.name === item.name ? {
+              ...t, pinStatus: "failed" as PinStatus,
+              result: { type: item.name, cid: "", derivationId: "", certificateId: "", pinataCid: null, storachaCid: null, gatewayUrl: null, quantumLevel: 0, success: false, error: msg }
+            } : t));
+            batchFailed++;
+          }
+        }
+
         setManifests(prev => [...prev, {
           offset: i,
-          derivationId: data["derivation:derivationId"] ?? "",
-          timestamp: cert?.["cert:timestamp"] ?? new Date().toISOString(),
-          pinned: data["sobridge:pinnedCount"] ?? 0,
-          failed: data["sobridge:failedCount"] ?? 0,
+          derivationId: `batch-${Math.floor(i / batchSize) + 1}`,
+          timestamp: new Date().toISOString(),
+          pinned: batchPinned,
+          failed: batchFailed,
         }]);
-        addLog(`✓ Batch ${Math.floor(i / batchSize) + 1}: ${data["sobridge:pinnedCount"]} pinned, ${data["sobridge:failedCount"]} failed`);
+        addLog(`✓ Batch ${Math.floor(i / batchSize) + 1}: ${batchPinned} pinned, ${batchFailed} failed`);
       }
       if (!stopRef.current) addLog("🏁 All selected types processed!");
     } catch (e) {
