@@ -1,0 +1,20 @@
+{
+  "name": "uor_resolve",
+  "morphism_type": "morphism:Isometry",
+  "description": "Execute the full PRISM pipeline (Polymorphic Resolution and Isometric Symmetry Machine, §4). Resolves a type declaration through all 8 stages: Type→Query→Resolve→Partition→Observe→Certify→Trace→State. Returns a certified Partition with four components summing to 2ⁿ.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "x": { "type": "integer", "minimum": 0, "maximum": 255 },
+      "resolver": {
+        "type": "string",
+        "enum": ["DihedralFactorizationResolver", "CanonicalFormResolver", "EvaluationResolver"],
+        "default": "CanonicalFormResolver"
+      },
+      "n": { "type": "integer", "default": 8 }
+    },
+    "required": ["x"]
+  },
+  "api_call": "GET https://api.uor.foundation/v1/bridge/resolver",
+  "returns": "resolver:Resolution with canonical_form and partition:Component"
+}
