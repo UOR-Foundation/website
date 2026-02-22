@@ -32,10 +32,10 @@ export interface EpistemicSource {
 }
 
 const GRADE_META: Record<EpistemicGrade, { label: string; base_confidence: number }> = {
-  A: { label: "Algebraically Proven", base_confidence: 1.0 },
-  B: { label: "Graph-Certified", base_confidence: 0.85 },
-  C: { label: "Graph-Present", base_confidence: 0.6 },
-  D: { label: "LLM-Generated / Unverified", base_confidence: 0.3 },
+  A: { label: "Mathematically Proven", base_confidence: 1.0 },
+  B: { label: "Verified from Knowledge Graph", base_confidence: 0.85 },
+  C: { label: "Sourced from External Reference", base_confidence: 0.6 },
+  D: { label: "AI Training Data (Unverified)", base_confidence: 0.3 },
 };
 
 /** Build epistemic metadata for a uor_derive result. */
@@ -75,8 +75,8 @@ export function deriveEpistemics(
         : "5. Grade D assigned — treat as hypothesis.",
     ],
     trust_summary: hasDerivationId
-      ? "This result is algebraically proven with a SHA-256 derivation ID. It can be independently verified by any agent using uor_verify."
-      : "This result could not be committed to a derivation. Treat as unverified.",
+      ? "This answer was produced by a direct mathematical computation. It will always give the same result, on any machine, at any time. Anyone can independently re-run the same calculation to confirm it."
+      : "This result could not be verified. No proof was generated. Treat it as a starting point, not a confirmed answer.",
   };
 }
 
@@ -110,8 +110,8 @@ export function verifyEpistemics(
         : "4. Grade D assigned — derivation could not be verified.",
     ],
     trust_summary: verified
-      ? "Derivation verified. The original computation is algebraically proven and reproducible."
-      : "Derivation not found or inconsistent. This claim cannot be trusted without re-derivation.",
+      ? "This previous computation has been confirmed. The original calculation was re-checked and matches the stored record exactly."
+      : "This record could not be found or does not match. The original claim cannot be confirmed from what is available. Consider re-running the computation.",
   };
 }
 
@@ -146,8 +146,8 @@ export function queryEpistemics(
         : "5. Grade C assigned — query executed but returned no bindings.",
     ],
     trust_summary: hasResults
-      ? `${results.length} result(s) sourced directly from the UOR knowledge graph. Data is graph-certified.`
-      : "Query returned no results. The absence of data does not constitute proof of absence.",
+      ? `${results.length} record(s) found in the UOR knowledge base. This data is structured and verified within the system, though it reflects stored information rather than a fresh computation.`
+      : "The query ran successfully but returned no matching records. This does not mean the information is false; it may simply not be in the knowledge base yet.",
   };
 }
 
@@ -183,8 +183,8 @@ export function correlateEpistemics(
         : "5. Grade D assigned — result could not be computed.",
     ],
     trust_summary: fidelity !== null
-      ? `Hamming fidelity of ${fidelity.toFixed(4)} computed algebraically. Fully deterministic and reproducible.`
-      : "Correlation could not be computed. Result is unverified.",
+      ? `The similarity between these two values is ${(fidelity * 100).toFixed(1)}%. This was computed directly and will always produce the same result. It measures how structurally close the two inputs are.`
+      : "The comparison could not be completed. No similarity score was produced. The result is unverified.",
   };
 }
 
@@ -220,8 +220,8 @@ export function partitionEpistemics(
         : "5. Grade D assigned — no partition produced.",
     ],
     trust_summary: hasPartition
-      ? "Partition classification is algebraically determined. Each element's category is a provable ring property."
-      : "Partition could not be computed. Treat result as unverified.",
+      ? "Each element has been classified into its mathematical category. This classification is a proven property of the system and will always produce the same groupings for the same inputs."
+      : "The classification could not be completed. No groupings were produced. Treat this result as unverified.",
   };
 }
 
