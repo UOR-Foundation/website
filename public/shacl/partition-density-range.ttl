@@ -1,0 +1,21 @@
+@prefix sh:        <http://www.w3.org/ns/shacl#> .
+@prefix partition: <https://uor.foundation/partition/> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
+
+# §4.1 — partition:Partition must have partition:density in [0.0, 1.0]
+
+partition:PartitionDensityRangeShape
+  a sh:NodeShape ;
+  sh:targetClass partition:Partition ;
+  rdfs:comment "partition:Partition must have partition:density in range [0.0, 1.0] (§4.1)." ;
+  sh:property [
+    sh:path partition:density ;
+    sh:datatype xsd:decimal ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:minInclusive 0.0 ;
+    sh:maxInclusive 1.0 ;
+    sh:message "partition:density must be a decimal in [0.0, 1.0] (§4.1)." ;
+  ] ;
+  sh:severity sh:Violation .

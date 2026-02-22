@@ -55,6 +55,17 @@
     "ontology_turtle": "https://uor.foundation/uor.foundation.ttl",
     "q0_instance_graph": "https://api.uor.foundation/v1/graph/q0.jsonld",
     "shacl_shapes": "https://uor.foundation/shapes/uor-shapes.ttl",
+    "shacl_shapes_individual": [
+      "https://uor.foundation/shacl/datum-term-disjoint.ttl",
+      "https://uor.foundation/shacl/succ-composition.ttl",
+      "https://uor.foundation/shacl/partition-cardinality.ttl",
+      "https://uor.foundation/shacl/cert-required-fields.ttl",
+      "https://uor.foundation/shacl/trace-certifiedby.ttl",
+      "https://uor.foundation/shacl/transition-frames.ttl",
+      "https://uor.foundation/shacl/critical-identity-proof.ttl",
+      "https://uor.foundation/shacl/derivation-id-format.ttl",
+      "https://uor.foundation/shacl/partition-density-range.ttl"
+    ],
     "void_descriptor": "https://api.uor.foundation/v1/.well-known/void",
     "openapi": "https://uor.foundation/openapi.json"
   },
