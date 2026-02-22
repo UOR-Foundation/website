@@ -270,36 +270,6 @@ const Standard = () => {
         </div>
       </section>
 
-      {/* Scaling */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
-        <div className="container max-w-5xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
-            Scale
-          </p>
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
-            From small to infinite
-          </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-10">
-            UOR starts with the simplest possible unit, one byte, and scales by adding more. Every level uses the same rules. What works at level 0 works at every level above it.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quantumLevels.map((q) => (
-              <div
-                key={q.quantum}
-                className="rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
-              >
-                <p className="font-mono text-xs font-semibold text-primary/60 mb-2">{q.label} · {q.bits}-bit</p>
-                <p className="font-display text-xl font-bold text-foreground mb-2">{q.states}</p>
-                <p className="text-sm font-body text-muted-foreground leading-relaxed">{q.description}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-sm text-muted-foreground/70 font-body leading-relaxed mt-6 max-w-2xl">
-            The pattern continues: Q4 is 40-bit, Q5 is 48-bit, and so on. There is no upper limit. The same guarantees hold at every level.
-          </p>
-        </div>
-      </section>
-
       {/* Operations */}
       <section className="py-12 md:py-20 bg-background border-b border-border">
         <div className="container max-w-5xl">
