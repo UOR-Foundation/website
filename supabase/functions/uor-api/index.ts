@@ -87,6 +87,8 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/store/pod-read':                     ['GET', 'OPTIONS'],
   '/store/pod-list':                     ['GET', 'OPTIONS'],
   '/bridge/emit':                        ['GET', 'OPTIONS'],
+  '/bridge/gnn/graph':                   ['GET', 'OPTIONS'],
+  '/bridge/gnn/ground':                  ['POST', 'OPTIONS'],
   '/bridge/sparql':                      ['GET', 'POST', 'OPTIONS'],
   '/bridge/morphism/transform':          ['POST', 'OPTIONS'],
   '/bridge/morphism/isometry':           ['GET', 'OPTIONS'],
@@ -2643,7 +2645,9 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/bridge/trace`, "required_params": "x", "optional_params": "n, ops", "example": `${base}/bridge/trace?x=42&ops=neg,bnot`, "operationId": "bridgeTrace", "summary": "trace:ExecutionTrace — exact bit state per step, Hamming drift, XOR deltas" },
           { "method": "GET", "path": `${base}/bridge/resolver`, "required_params": "x", "optional_params": "n", "example": `${base}/bridge/resolver?x=42`, "operationId": "bridgeResolver", "summary": "resolver:Resolution — canonical category with full factor decomposition" },
           { "method": "GET", "path": `${base}/bridge/graph/query`, "required_params": "none", "optional_params": "graph, n, limit", "example": `${base}/bridge/graph/query?graph=partition:UnitSet&n=8`, "operationId": "bridgeGraphQuery", "summary": "Named graph query — enumerate Triads scoped by partition:Partition (UnitSet, ExteriorSet, IrreducibleSet, ReducibleSet)" },
-          { "method": "GET", "path": `${base}/bridge/emit`, "required_params": "none", "optional_params": "n, values, limit", "example": `${base}/bridge/emit?n=8&limit=16`, "operationId": "bridgeEmit", "summary": "Explicit emit() function — produces a complete W3C JSON-LD 1.1 document (application/ld+json) with @context, coherence proof, and @graph. Drop-in compatible with every major triplestore (Jena, Oxigraph, GraphDB, Blazegraph, Stardog, Neptune)." },
+          { "method": "GET", "path": `${base}/bridge/emit`, "required_params": "none", "optional_params": "n, values, limit", "example": `${base}/bridge/emit?n=8&limit=16`, "operationId": "bridgeEmit", "summary": "Explicit emit() function — produces a complete W3C JSON-LD 1.1 document (application/ld+json) with @context, coherence proof, and @graph." },
+          { "method": "GET", "path": `${base}/bridge/gnn/graph`, "required_params": "none", "optional_params": "quantum (0|1), format (pytorch_geometric|dgl|adjacency_json)", "example": `${base}/bridge/gnn/graph?quantum=0&format=pytorch_geometric`, "operationId": "gnnGraph", "summary": "Export UOR ring as GNN-ready graph — 256 nodes × 6 edge types (succ,pred,neg,bnot,xor1,add1) with [value,stratum,parity] node features" },
+          { "method": "POST", "path": `${base}/bridge/gnn/ground`, "body": "{ embedding: [float,...], quantum?, distance? (cosine|hamming|euclidean) }", "example": `${base}/bridge/gnn/ground`, "operationId": "gnnGround", "summary": "Ground a GNN embedding vector to the nearest UOR ring element — upgrades epistemic grade from D to B (Graph-Certified)" },
           { "method": "GET,POST", "path": `${base}/bridge/sparql`, "required_params": "query (GET param or POST body)", "optional_params": "n", "example": `${base}/bridge/sparql?query=SELECT%20%3Fs%20WHERE%20%7B%20%3Fs%20partition%3Acomponent%20partition%3AUnitSet%20%7D`, "operationId": "bridgeSparql", "summary": "SPARQL 1.1 query endpoint — SELECT queries over the UOR ring algebra (ontology + Q0 instance graph with 256 datums). Supports WHERE triple patterns, FILTER, LIMIT, OFFSET. Every result includes epistemic grading." },
           { "method": "GET", "path": `${base}/bridge/shacl/shapes`, "required_params": "none", "example": `${base}/bridge/shacl/shapes`, "operationId": "shaclShapes", "summary": "All 7 SHACL shape definitions (Ring, Primitives, TermGraph, StateLifecycle, Partition, CriticalIdentity, EndToEnd)" },
           { "method": "GET", "path": `${base}/bridge/shacl/validate`, "required_params": "none", "optional_params": "n", "example": `${base}/bridge/shacl/validate?n=8`, "operationId": "shaclValidate", "summary": "Live SHACL validation — runs all 7 conformance tests and returns a shacl:ValidationReport" },
@@ -6535,6 +6539,234 @@ function bridgeMorphismCoerce(url: URL, rl: RateLimitResult): Response {
   }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
 }
 
+// ── GNN Bridge ─────────────────────────────────────────────────────────────
+
+function bytePopcountGnn(v: number): number {
+  let c = 0, x = v;
+  while (x) { c += x & 1; x >>>= 1; }
+  return c;
+}
+
+// GET /bridge/gnn/graph?quantum=0&format=pytorch_geometric
+function gnnGraph(url: URL, rl: RateLimitResult): Response {
+  const qRaw = url.searchParams.get('quantum') ?? '0';
+  const quantum = parseInt(qRaw, 10);
+  if (isNaN(quantum) || quantum < 0 || quantum > 1)
+    return error400('quantum must be 0 or 1 for GNN graph export', 'quantum', rl);
+  const n = (quantum + 1) * 8;
+  const m = modulus(n);
+  const format = url.searchParams.get('format') ?? 'pytorch_geometric';
+  if (!['pytorch_geometric', 'dgl', 'adjacency_json'].includes(format))
+    return error400('format must be pytorch_geometric, dgl, or adjacency_json', 'format', rl);
+
+  // Cap at Q0 for full graph (Q1 = 65536 nodes is too large for inline JSON)
+  if (m > 256) {
+    // For Q1, return a sampled graph (16 representative nodes + axioms)
+    return gnnGraphSampled(quantum, n, m, format, rl);
+  }
+
+  // Node features: [normalised_value, normalised_stratum, bit_0]
+  const nodeFeatures: number[][] = [];
+  for (let v = 0; v < m; v++) {
+    nodeFeatures.push([
+      v / (m - 1),                           // normalised ring value [0, 1]
+      bytePopcountGnn(v) / n,                // normalised stratum
+      v & 1                                   // parity bit
+    ]);
+  }
+
+  // Edge operations
+  const edgeTypeNames = ['succ', 'pred', 'neg', 'bnot', 'xor1', 'add1'];
+  const edgeOps: Array<(x: number) => number> = [
+    (x) => succOp(x, n),
+    (x) => predOp(x, n),
+    (x) => neg(x, n),
+    (x) => bnot(x, n),
+    (x) => (x ^ 1) % m,
+    (x) => (x + 1) % m,
+  ];
+
+  const srcNodes: number[] = [];
+  const dstNodes: number[] = [];
+  const edgeTypes: number[] = [];
+
+  for (let v = 0; v < m; v++) {
+    for (let ei = 0; ei < edgeOps.length; ei++) {
+      srcNodes.push(v);
+      dstNodes.push(edgeOps[ei](v));
+      edgeTypes.push(ei);
+    }
+  }
+
+  const numEdges = srcNodes.length;
+  const etag = makeETag('/bridge/gnn/graph', { q: qRaw, format });
+
+  if (format === 'adjacency_json') {
+    // Adjacency list format
+    const adjList: Record<number, Array<{ target: number; edge_type: string }>> = {};
+    for (let i = 0; i < numEdges; i++) {
+      if (!adjList[srcNodes[i]]) adjList[srcNodes[i]] = [];
+      adjList[srcNodes[i]].push({ target: dstNodes[i], edge_type: edgeTypeNames[edgeTypes[i]] });
+    }
+    return jsonResp(gradeResponse({
+      "@context": UOR_CONTEXT_URL,
+      "@type": "morphism:GNNGraph",
+      "schema:ringQuantum": quantum,
+      "num_nodes": m,
+      "num_edges": numEdges,
+      "edge_type_names": edgeTypeNames,
+      "format": "adjacency_json",
+      "adjacency_list": adjList,
+    }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+  }
+
+  // pytorch_geometric or dgl format (COO)
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "morphism:GNNGraph",
+    "schema:ringQuantum": quantum,
+    "num_nodes": m,
+    "num_edges": numEdges,
+    "node_features": {
+      "description": `Shape: [${m}, 3]. Columns: [normalised_value, normalised_stratum, bit_0]`,
+      "data": nodeFeatures
+    },
+    "edge_index": {
+      "description": `Shape: [2, ${numEdges}]. COO format: [src_nodes, dst_nodes]`,
+      "src": srcNodes,
+      "dst": dstNodes
+    },
+    "edge_attr": {
+      "description": `Shape: [${numEdges}]. Edge type index (0=succ,1=pred,2=neg,3=bnot,4=xor1,5=add1)`,
+      "data": edgeTypes
+    },
+    "edge_type_names": edgeTypeNames,
+    "format": format,
+    "python_usage": `import torch; from torch_geometric.data import Data; x = torch.tensor(g['node_features']['data'], dtype=torch.float); edge_index = torch.tensor([g['edge_index']['src'], g['edge_index']['dst']], dtype=torch.long); data = Data(x=x, edge_index=edge_index)`,
+  }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
+function gnnGraphSampled(quantum: number, n: number, m: number, format: string, rl: RateLimitResult): Response {
+  // For Q1+: return 16 sample nodes + ring axioms
+  const sampleNodes: number[][] = [];
+  const sampleValues: number[] = [];
+  for (let s = 0; s < 16; s++) {
+    // Lowest value with popcount = s
+    let v = 0;
+    for (let bit = 0; bit < s && bit < n; bit++) v |= (1 << bit);
+    sampleValues.push(v);
+    sampleNodes.push([v / (m - 1), bytePopcountGnn(v) / n, v & 1]);
+  }
+
+  const etag = makeETag('/bridge/gnn/graph', { q: String(quantum), format, sampled: 'true' });
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "morphism:GNNGraph",
+    "schema:ringQuantum": quantum,
+    "num_nodes_total": m,
+    "num_nodes_sampled": sampleValues.length,
+    "sampled": true,
+    "note": `Q${quantum} has ${m} nodes — full export is too large. Returning 16 representative samples.`,
+    "sample_nodes": sampleValues.map((v, i) => ({
+      value: v,
+      stratum: bytePopcountGnn(v),
+      features: sampleNodes[i],
+      iri: datumIRI(v, n),
+      succ: datumIRI(succOp(v, n), n),
+      neg: datumIRI(neg(v, n), n),
+      bnot: datumIRI(bnot(v, n), n),
+    })),
+    "edge_type_names": ['succ', 'pred', 'neg', 'bnot', 'xor1', 'add1'],
+    "format": format,
+  }, 'A'), CACHE_HEADERS_BRIDGE, etag, rl);
+}
+
+// POST /bridge/gnn/ground — ground a GNN embedding to a ring element
+async function gnnGround(req: Request, rl: RateLimitResult): Promise<Response> {
+  const ct = req.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) return error415(rl);
+  let body: { embedding?: number[]; quantum?: number; distance?: string };
+  try { body = await req.json(); } catch { return error400('Invalid JSON body', 'body', rl); }
+
+  const embedding = body.embedding;
+  if (!Array.isArray(embedding) || embedding.length === 0)
+    return error400('embedding must be a non-empty array of floats', 'embedding', rl);
+  if (embedding.length > 1024)
+    return error400('embedding dimension max is 1024', 'embedding', rl);
+
+  const quantum = body.quantum ?? 0;
+  if (quantum < 0 || quantum > 1) return error400('quantum must be 0 or 1', 'quantum', rl);
+  const n = (quantum + 1) * 8;
+  const m = modulus(n);
+  const distanceMetric = body.distance ?? 'cosine';
+  if (!['cosine', 'hamming', 'euclidean'].includes(distanceMetric))
+    return error400('distance must be cosine, hamming, or euclidean', 'distance', rl);
+
+  // Build node features for the ring
+  const nodeFeatures: number[][] = [];
+  for (let v = 0; v < m; v++) {
+    nodeFeatures.push([
+      v / (m - 1),
+      bytePopcountGnn(v) / n,
+      v & 1
+    ]);
+  }
+
+  // Find nearest ring element
+  let bestIdx = 0, bestDist = Infinity;
+  for (let i = 0; i < m; i++) {
+    const feat = nodeFeatures[i];
+    let dist: number;
+    if (distanceMetric === 'cosine') {
+      // Cosine distance using first min(dim, 3) features
+      let dotProd = 0, normA = 0, normB = 0;
+      for (let d = 0; d < Math.min(embedding.length, feat.length); d++) {
+        dotProd += embedding[d] * feat[d];
+        normA += embedding[d] * embedding[d];
+        normB += feat[d] * feat[d];
+      }
+      // Add remaining embedding dims to normA
+      for (let d = feat.length; d < embedding.length; d++) {
+        normA += embedding[d] * embedding[d];
+      }
+      const denom = Math.sqrt(normA) * Math.sqrt(normB);
+      dist = denom > 0 ? 1 - dotProd / denom : 1;
+    } else if (distanceMetric === 'hamming') {
+      // L1 distance on first 3 features
+      dist = 0;
+      for (let d = 0; d < Math.min(embedding.length, feat.length); d++) {
+        dist += Math.abs(embedding[d] - feat[d]);
+      }
+    } else {
+      // Euclidean
+      dist = 0;
+      for (let d = 0; d < Math.min(embedding.length, feat.length); d++) {
+        dist += (embedding[d] - feat[d]) ** 2;
+      }
+      dist = Math.sqrt(dist);
+    }
+    if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+  }
+
+  const groundedIri = datumIRI(bestIdx, n);
+  const hashHex = (await makeSha256(`gnn_ground_${bestIdx}_q${quantum}_${distanceMetric}`)).slice(0, 16);
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "morphism:GNNEmbedding",
+    "morphism:embeddingDimension": embedding.length,
+    "morphism:embeddingVector": embedding.slice(0, 8).map(v => v.toFixed(4)).join(', ') + (embedding.length > 8 ? ', ...' : ''),
+    "morphism:groundedTo": { "@id": groundedIri },
+    "grounded_value": bestIdx,
+    "grounded_stratum": bytePopcountGnn(bestIdx),
+    "grounding_distance": parseFloat(bestDist.toFixed(6)),
+    "grounding_distance_metric": distanceMetric,
+    "schema:ringQuantum": quantum,
+    "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+    "grounding_note": "GNN embedding grounded to nearest ring element — epistemic grade upgraded from D to B",
+  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // ROUTER
 // ════════════════════════════════════════════════════════════════════════════
@@ -6873,6 +7105,20 @@ Deno.serve(async (req: Request) => {
     if (path === '/store/gateways') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
       return await storeGateways(rl);
+    }
+
+    // ── Bridge — GNN ──
+    if (path === '/bridge/gnn/graph') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = gnnGraph(url, rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+    if (path === '/bridge/gnn/ground') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await gnnGround(req, rl);
     }
 
     // ── Bridge — emit (explicit JSON-LD emission, §1.6) ──
