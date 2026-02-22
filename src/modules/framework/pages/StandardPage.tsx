@@ -219,57 +219,6 @@ const Standard = () => {
         </div>
       </section>
 
-      {/* The Core Guarantee */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
-        <div className="container max-w-5xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
-            The Core Guarantee
-          </p>
-          <div className="max-w-3xl">
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
-              Why the system is complete
-            </h2>
-            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
-              UOR is built on two simple, reversible operations: flipping the sign and flipping the bits. A key discovery is that applying both in sequence always produces the next number in the sequence.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-6 md:p-8 max-w-2xl">
-            <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-4">Worked Example</p>
-            <div className="space-y-4">
-              <div className="flex items-baseline gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">1</span>
-                <p className="text-base font-body text-foreground leading-relaxed">
-                  Start with any number, say <span className="font-mono font-semibold">42</span>.
-                </p>
-              </div>
-              <div className="flex items-baseline gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">2</span>
-                <p className="text-base font-body text-foreground leading-relaxed">
-                  Flip every bit: <span className="font-mono font-semibold">42 → 213</span>.
-                </p>
-              </div>
-              <div className="flex items-baseline gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">3</span>
-                <p className="text-base font-body text-foreground leading-relaxed">
-                  Flip the sign: <span className="font-mono font-semibold">213 → 43</span>.
-                </p>
-              </div>
-              <div className="flex items-baseline gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">4</span>
-                <p className="text-base font-body text-foreground leading-relaxed">
-                  Result: <span className="font-mono font-semibold">43 = 42 + 1</span>. Always the next number.
-                </p>
-              </div>
-            </div>
-            <div className="mt-6 pt-6 border-t border-border">
-              <p className="text-sm font-body text-muted-foreground leading-relaxed">
-                <span className="text-foreground font-medium">Why this matters:</span> because these two operations always produce the next number, you can reach every possible value by repeating them. No value is unreachable, which means the system can represent anything.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Operations */}
       <section className="py-12 md:py-20 bg-background border-b border-border">
         <div className="container max-w-5xl">
