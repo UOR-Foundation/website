@@ -1,7 +1,15 @@
 import { useState } from "react";
-import { ExternalLink, ChevronDown } from "lucide-react";
+import { ExternalLink, ChevronDown, ShieldCheck } from "lucide-react";
 import CopyButton from "./CopyButton";
 import { MCP_CLIENTS, MCP_CONFIG, MCP_URL } from "../data/clients";
+
+const CURSOR_RULES_URL = "https://uor.foundation/cursor-rules/uor-trust-stamp.mdc";
+
+const CURSOR_RULES_SNIPPET = `# Add to your project's .cursor/rules directory
+# Download from: ${CURSOR_RULES_URL}
+#
+# This rule ensures every Cursor response includes a UOR PRISM Trust Score,
+# even when no UOR tool is called (self-assigns Grade D for training-data answers).`;
 
 const VALUE_STATEMENTS: Record<string, string> = {
   "Claude Desktop": "Add verifiable, content-addressed computation to Claude.",
@@ -95,6 +103,49 @@ const SetupGuide = () => {
                 </p>
               )}
             </div>
+
+            {/* ── Cursor Rules (Cursor only) ── */}
+            {c.name === "Cursor" && (
+              <div className="border-t border-border pt-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-primary" />
+                  <p className="text-sm font-body font-medium text-foreground">
+                    Enforce trust stamps on every response
+                  </p>
+                </div>
+                <p className="text-sm font-body text-muted-foreground leading-relaxed">
+                  By default, Cursor only appends the UOR Trust Score when it calls a UOR tool.
+                  To ensure <strong>every</strong> response gets a trust stamp — even plain-text answers —
+                  add this Cursor Rule to your project:
+                </p>
+                <ol className="space-y-2">
+                  <li className="flex items-start gap-3">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">1</span>
+                    <p className="text-sm font-body text-foreground leading-relaxed">
+                      Download the rule file: <a href={CURSOR_RULES_URL} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80">uor-trust-stamp.mdc</a>
+                    </p>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">2</span>
+                    <p className="text-sm font-body text-foreground leading-relaxed">
+                      Save it to <code className="bg-muted px-1 py-0.5 rounded font-mono text-xs">.cursor/rules/uor-trust-stamp.mdc</code> in your project.
+                    </p>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">3</span>
+                    <p className="text-sm font-body text-foreground leading-relaxed">
+                      Every response will now include a trust score — Grade D for unverified answers, Grade A for proven computations.
+                    </p>
+                  </li>
+                </ol>
+                <div className="relative bg-muted/50 rounded-xl p-4 overflow-x-auto">
+                  <pre className="text-sm font-mono text-foreground leading-relaxed pr-20">{CURSOR_RULES_SNIPPET}</pre>
+                  <div className="absolute top-3 right-3">
+                    <CopyButton text={CURSOR_RULES_SNIPPET} label="Copy" />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
