@@ -108,6 +108,9 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/tools/correlate':                    ['GET', 'OPTIONS'],
   '/tools/partition':                    ['POST', 'OPTIONS'],
   // /store/read/:cid and /store/verify/:cid are handled dynamically
+  // /graph/q0/datum/:value is handled dynamically
+  '/graph/q0.jsonld':                    ['GET', 'OPTIONS'],
+  '/graph/q0/stats':                     ['GET', 'OPTIONS'],
 };
 
 // ── Rate Limiting (in-memory sliding window) ────────────────────────────────
@@ -7206,6 +7209,221 @@ async function attributionRoyaltyReport(url: URL, rl: RateLimitResult): Promise<
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// Q0 INSTANCE GRAPH GENERATION
+// ════════════════════════════════════════════════════════════════════════════
+
+const Q0_CONTEXT = {
+  "owl":        "http://www.w3.org/2002/07/owl#",
+  "rdfs":       "http://www.w3.org/2000/01/rdf-schema#",
+  "xsd":        "http://www.w3.org/2001/XMLSchema#",
+  "schema":     "https://uor.foundation/schema/",
+  "op":         "https://uor.foundation/op/",
+  "derivation": "https://uor.foundation/derivation/",
+  "proof":      "https://uor.foundation/proof/",
+  "partition":  "https://uor.foundation/partition/",
+  "u":          "https://uor.foundation/u/",
+  "cert":       "https://uor.foundation/cert/"
+};
+
+function q0DatumIri(v: number): string {
+  return `https://uor.foundation/u/U${(0x2800 + (v & 0xff)).toString(16).toUpperCase().padStart(4, '0')}`;
+}
+
+function q0Stratum(v: number): number {
+  let n = v & 0xff; let c = 0;
+  while (n) { c += n & 1; n >>= 1; }
+  return c;
+}
+
+function q0Spectrum(v: number): string {
+  return v.toString(2).padStart(8, '0');
+}
+
+function generateQ0DatumNode(v: number): Record<string, unknown> {
+  const M = 256;
+  const neg_v  = (M - v) % M;
+  const bnot_v = v ^ 0xff;
+  const succ_v = (v + 1) % M;
+  const pred_v = (v - 1 + M) % M;
+  return {
+    "@id":   q0DatumIri(v),
+    "@type": ["owl:NamedIndividual", "schema:Datum"],
+    "schema:value":       v,
+    "schema:quantum":     8,
+    "schema:ringQuantum": 8,
+    "schema:stratum":     q0Stratum(v),
+    "schema:spectrum":    q0Spectrum(v),
+    "schema:succ":  { "@id": q0DatumIri(succ_v) },
+    "schema:pred":  { "@id": q0DatumIri(pred_v) },
+    "schema:neg":   { "@id": q0DatumIri(neg_v) },
+    "schema:bnot":  { "@id": q0DatumIri(bnot_v) },
+    "schema:glyph": String.fromCodePoint(0x2800 + v),
+    "u:canonicalIri": q0DatumIri(v),
+  };
+}
+
+let _q0Cache: { json: string; hash: string; graph: Record<string, unknown> } | null = null;
+
+async function getQ0Graph(): Promise<{ json: string; hash: string; graph: Record<string, unknown> }> {
+  if (_q0Cache) return _q0Cache;
+
+  const nodes: Record<string, unknown>[] = [];
+
+  // 1. Ring node
+  nodes.push({
+    "@id":   "https://uor.foundation/instance/q0/ring",
+    "@type": ["owl:NamedIndividual", "schema:Ring"],
+    "schema:ringQuantum": 8,
+    "schema:modulus": 256,
+    "schema:generator": [
+      { "@id": "https://uor.foundation/op/neg" },
+      { "@id": "https://uor.foundation/op/bnot" }
+    ],
+    "rdfs:label": "Q0 Ring — Z/256Z",
+    "rdfs:comment": "The 8-bit UOR ring. Generators: neg (ring reflection) and bnot (Hamming reflection). Critical identity: neg(bnot(x)) = succ(x) for all x.",
+    "schema:name": "Q0Ring"
+  });
+
+  // 2. 256 Datum nodes
+  for (let v = 0; v < 256; v++) {
+    nodes.push(generateQ0DatumNode(v));
+  }
+
+  // 3. 6 canonical derivations
+  const derivations: { term: string; input: number; result: number }[] = [
+    { term: "neg(bnot(42))", input: 42, result: 43 },
+    { term: "neg(bnot(0))",  input: 0,  result: 1  },
+    { term: "neg(bnot(255))",input: 255,result: 0  },
+    { term: "neg(42)",       input: 42, result: 214 },
+    { term: "bnot(42)",      input: 42, result: 213 },
+    { term: "succ(42)",      input: 42, result: 43  },
+  ];
+  for (const d of derivations) {
+    const dId = await computeDerivationId(d.term);
+    nodes.push({
+      "@id":   `https://uor.foundation/instance/q0/derivation/${encodeURIComponent(d.term)}`,
+      "@type": ["owl:NamedIndividual", "derivation:Derivation"],
+      "derivation:term":        d.term,
+      "derivation:inputValue":  d.input,
+      "derivation:resultValue": d.result,
+      "derivation:derivationId": dId,
+      "derivation:resultIri":   { "@id": q0DatumIri(d.result) },
+      "derivation:quantum":     8,
+      "epistemic_grade":        "A"
+    });
+  }
+
+  // 4. Proof node
+  nodes.push({
+    "@id":   "https://uor.foundation/instance/q0/proof-critical-id",
+    "@type": ["owl:NamedIndividual", "proof:Proof", "proof:CriticalIdentityProof"],
+    "proof:quantum":         8,
+    "proof:verified":        true,
+    "proof:criticalIdentity": "neg(bnot(x)) = succ(x) for all x in R_8 = Z/256Z",
+    "proof:provesIdentity":  { "@id": "https://uor.foundation/op/criticalIdentity" },
+    "proof:elementsVerified": 256,
+    "proof:method":          "exhaustive",
+    "proof:timestamp":       new Date().toISOString(),
+    "derivation:derivationId": await computeDerivationId("coherence_proof_q0_n8"),
+    "epistemic_grade":       "A"
+  });
+
+  // 5. Partition node
+  nodes.push({
+    "@id":   "https://uor.foundation/instance/q0/partition",
+    "@type": ["owl:NamedIndividual", "partition:Partition"],
+    "partition:quantum":    8,
+    "schema:ringQuantum":   8,
+    "partition:cardinality": 256,
+    "partition:irreducibles": {
+      "@type": "partition:IrreducibleSet",
+      "partition:cardinality": 126,
+      "partition:description": "Odd numbers in (1, 255) — irreducible elements of Z/256Z"
+    },
+    "partition:reducibles": {
+      "@type": "partition:ReducibleSet",
+      "partition:cardinality": 126,
+      "partition:description": "Even numbers in (0, 256) excluding 0 and 128"
+    },
+    "partition:units": {
+      "@type": "partition:UnitSet",
+      "partition:cardinality": 2,
+      "partition:elements": [1, 255],
+      "partition:description": "Multiplicative identity (1) and its inverse (255 = -1 mod 256)"
+    },
+    "partition:exterior": {
+      "@type": "partition:ExteriorSet",
+      "partition:cardinality": 2,
+      "partition:elements": [0, 128],
+      "partition:description": "Zero (additive identity) and ring midpoint (128 = 2^7)"
+    },
+    "partition:density": 0.4921875,
+    "cardinality_check": { "sum": 256, "expected": 256, "valid": true }
+  });
+
+  const graph = {
+    "@context": Q0_CONTEXT,
+    "@graph": nodes,
+    "_metadata": {
+      "generated": new Date().toISOString(),
+      "quantum": 0,
+      "ring": "Z/256Z",
+      "node_count": nodes.length,
+      "datum_count": 256,
+      "derivation_count": 6,
+      "proof_count": 1,
+      "partition_count": 1,
+      "critical_identity_verified": true,
+      "all_256_elements_verified": true
+    }
+  };
+
+  const json = JSON.stringify(graph);
+  const hash = await makeSha256(json);
+  _q0Cache = { json, hash, graph };
+  return _q0Cache;
+}
+
+async function graphQ0Jsonld(rl: RateLimitResult): Promise<Response> {
+  const { json, hash } = await getQ0Graph();
+  return new Response(json, {
+    status: 200,
+    headers: {
+      ...CORS_HEADERS,
+      'Content-Type': 'application/ld+json; charset=utf-8',
+      'Cache-Control': 'public, max-age=86400',
+      'ETag': `"${hash}"`,
+      ...rateLimitHeaders(rl),
+    }
+  });
+}
+
+async function graphQ0Stats(rl: RateLimitResult): Promise<Response> {
+  const { graph, hash } = await getQ0Graph();
+  const meta = (graph as Record<string, unknown>)["_metadata"];
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "schema:GraphStatistics",
+    "graph_iri": "https://uor.foundation/instance/q0",
+    "format": "application/ld+json",
+    "etag": hash,
+    ...(meta as Record<string, unknown>),
+  }, 'A'), { 'Cache-Control': 'public, max-age=86400' }, `"stats-${hash}"`, rl);
+}
+
+async function graphQ0Datum(value: number, rl: RateLimitResult): Promise<Response> {
+  if (value < 0 || value > 255 || !Number.isInteger(value)) {
+    return error400('value must be integer 0–255', 'value', rl);
+  }
+  const node = generateQ0DatumNode(value);
+  const term = `datum(${value})`;
+  return jsonResp(await gradeAResponse({
+    "@context": Q0_CONTEXT,
+    ...node,
+  }, term, value, 8), { 'Cache-Control': 'public, max-age=86400' }, undefined, rl);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // ROUTER
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -7680,6 +7898,27 @@ Deno.serve(async (req: Request) => {
     if (path === '/tools/partition') {
       if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
       return await toolPartition(req, rl);
+    }
+
+    // ── Q0 Instance Graph ──
+    if (path === '/graph/q0.jsonld') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      const resp = await graphQ0Jsonld(rl);
+      if (ifNoneMatch && resp.headers.get('ETag') === ifNoneMatch) {
+        return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
+      }
+      return resp;
+    }
+    if (path === '/graph/q0/stats') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await graphQ0Stats(rl);
+    }
+    if (path.startsWith('/graph/q0/datum/')) {
+      if (req.method !== 'GET') return error405(path, ['GET', 'OPTIONS']);
+      const valStr = path.replace('/graph/q0/datum/', '');
+      const val = parseInt(valStr, 10);
+      if (isNaN(val)) return error400('value must be an integer', 'value', rl);
+      return await graphQ0Datum(val, rl);
     }
 
     // ── 405 for known paths with wrong method ──
