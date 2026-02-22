@@ -5,6 +5,15 @@
  * Security: input validation, size limits, rate-limit headers, strict CORS.
  */
 
+import {
+  deriveEpistemics,
+  verifyEpistemics,
+  queryEpistemics,
+  correlateEpistemics,
+  partitionEpistemics,
+  formatEpistemicBlock,
+} from "./epistemics.ts";
+
 const UOR_API_BASE = `${Deno.env.get("SUPABASE_URL")}/functions/v1/uor-api`;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
@@ -129,31 +138,52 @@ async function runTool(name: string, args: Record<string, unknown>) {
 
   try {
     let data: unknown;
+    let epistemicBlock = "";
+
     switch (name) {
-      case "uor_derive":
+      case "uor_derive": {
+        const term = sanitiseString(args.term);
         data = await callApi("GET", "/tools/derive", {
-          term: sanitiseString(args.term),
+          term,
           quantum: String(sanitiseNumber(args.quantum)),
         });
+        epistemicBlock = formatEpistemicBlock(
+          deriveEpistemics(data as Record<string, unknown>, term),
+        );
         break;
-      case "uor_verify":
+      }
+      case "uor_verify": {
+        const derivationId = sanitiseString(args.derivation_id, 128);
         data = await callApi("GET", "/tools/verify", {
-          derivation_id: sanitiseString(args.derivation_id, 128),
+          derivation_id: derivationId,
         });
+        epistemicBlock = formatEpistemicBlock(
+          verifyEpistemics(data as Record<string, unknown>, derivationId),
+        );
         break;
-      case "uor_query":
-        data = await callApi("POST", "/tools/query", undefined, {
-          sparql: sanitiseString(args.sparql, 4096),
-        });
+      }
+      case "uor_query": {
+        const sparql = sanitiseString(args.sparql, 4096);
+        data = await callApi("POST", "/tools/query", undefined, { sparql });
+        epistemicBlock = formatEpistemicBlock(
+          queryEpistemics(data as Record<string, unknown>, sparql),
+        );
         break;
-      case "uor_correlate":
+      }
+      case "uor_correlate": {
+        const a = sanitiseNumber(args.a);
+        const b = sanitiseNumber(args.b);
         data = await callApi("GET", "/tools/correlate", {
-          a: String(sanitiseNumber(args.a)),
-          b: String(sanitiseNumber(args.b)),
+          a: String(a),
+          b: String(b),
           quantum: String(sanitiseNumber(args.quantum)),
           mode: "full",
         });
+        epistemicBlock = formatEpistemicBlock(
+          correlateEpistemics(data as Record<string, unknown>, a, b),
+        );
         break;
+      }
       case "uor_partition": {
         const seedSet = Array.isArray(args.seed_set)
           ? args.seed_set.map((v: unknown) => sanitiseNumber(v)).slice(0, 256)
@@ -166,10 +196,15 @@ async function runTool(name: string, args: Record<string, unknown>) {
           ).toUpperCase(),
           quantum: sanitiseNumber(args.quantum),
         });
+        epistemicBlock = formatEpistemicBlock(
+          partitionEpistemics(data as Record<string, unknown>, seedSet),
+        );
         break;
       }
     }
-    return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+
+    const resultText = JSON.stringify(data, null, 2) + epistemicBlock;
+    return { content: [{ type: "text", text: resultText }] };
   } catch (e) {
     return {
       content: [{ type: "text", text: `Error: ${(e as Error).message}` }],
