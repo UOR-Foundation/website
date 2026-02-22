@@ -82,6 +82,10 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/store/write':                       ['POST', 'OPTIONS'],
   '/store/write-context':               ['POST', 'OPTIONS'],
   '/store/gateways':                    ['GET', 'OPTIONS'],
+  '/store/pod-context':                  ['POST', 'OPTIONS'],
+  '/store/pod-write':                    ['POST', 'OPTIONS'],
+  '/store/pod-read':                     ['GET', 'OPTIONS'],
+  '/store/pod-list':                     ['GET', 'OPTIONS'],
   '/bridge/emit':                        ['GET', 'OPTIONS'],
   '/bridge/sparql':                      ['GET', 'POST', 'OPTIONS'],
   '/bridge/morphism/transform':          ['POST', 'OPTIONS'],
@@ -2675,7 +2679,13 @@ function frameworkIndex(rl: RateLimitResult): Response {
           { "method": "GET", "path": `${base}/store/resolve`, "required_params": "url", "optional_params": "none", "example": `${base}/store/resolve?url=https://example.com`, "operationId": "storeResolve", "summary": "Fetch remote content and compute its u:Address + CID without storing" },
           { "method": "GET", "path": `${base}/store/gateways`, "required_params": "none", "example": `${base}/store/gateways`, "operationId": "storeGateways", "summary": "List IPFS gateways with live health status" }
         ],
-        "cid_format_note": "Pinata returns CIDv0 (Qm...). Use the CID from the pinResult for subsequent reads, not the computed CIDv1 in the envelope."
+        "cid_format_note": "Pinata returns CIDv0 (Qm...). Use the CID from the pinResult for subsequent reads, not the computed CIDv1 in the envelope.",
+        "solid_pod_endpoints": [
+          { "method": "POST", "path": `${base}/store/pod-context`, "body": "{ pod_url, context_label?, quantum? }", "example": `${base}/store/pod-context`, "operationId": "storePodContext", "summary": "Register a Solid LDP Pod as a state:PodContext for decentralised binding storage" },
+          { "method": "POST", "path": `${base}/store/pod-write`, "body": "{ context_iri, pod_container, term, quantum? }", "headers": "Authorization: Bearer <solid_token>", "example": `${base}/store/pod-write`, "operationId": "storePodWrite", "summary": "Derive a term and write the binding as a JSON-LD resource to the user's Solid Pod" },
+          { "method": "GET", "path": `${base}/store/pod-read`, "required_params": "pod_container, resource", "headers": "Authorization: Bearer <solid_token>", "example": `${base}/store/pod-read?pod_container=https://pod.example/uor/bindings/&resource=abc123`, "operationId": "storePodRead", "summary": "Read a binding from the user's Solid Pod" },
+          { "method": "GET", "path": `${base}/store/pod-list`, "required_params": "pod_container", "headers": "Authorization: Bearer <solid_token>", "example": `${base}/store/pod-list?pod_container=https://pod.example/uor/bindings/`, "operationId": "storePodList", "summary": "List all binding resources in a Solid Pod container" }
+        ]
       },
       "simple_verify": {
         "description": "Standalone simple endpoint — no JSON-LD, flat JSON output. Best first call for agents.",
@@ -4379,6 +4389,268 @@ async function storeRead(cidParam: string, url: URL, rl: RateLimitResult): Promi
       ...rateLimitHeaders(rl),
     },
   });
+}
+
+// ── Solid/LDP Pod Integration (state:PodContext) ───────────────────────────
+// POST /store/pod-context — Register a PodContext (pod URL + label)
+async function storePodContext(req: Request, rl: RateLimitResult): Promise<Response> {
+  const ct = req.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) return error415(rl);
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch { return error400('Invalid JSON body.', 'body', rl); }
+
+  const podUrl = body['pod_url'] as string;
+  if (!podUrl || !podUrl.startsWith('https://')) return error400('pod_url must be an HTTPS URL', 'pod_url', rl);
+  const contextLabel = (body['context_label'] as string) ?? `uor-context-${Date.now()}`;
+  const quantum = (body['quantum'] as number) ?? 0;
+  const n = (quantum + 1) * 8;
+
+  // Derive a content-addressed context IRI from the pod URL
+  const hashHex = (await makeSha256(`pod_context_${podUrl}_${contextLabel}`)).slice(0, 16);
+  const contextIri = `https://uor.foundation/instance/context/${hashHex}`;
+  const containerUrl = podUrl.endsWith('/') ? `${podUrl}uor/bindings/` : `${podUrl}/uor/bindings/`;
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@id": contextIri,
+    "@type": ["state:PodContext", "state:Context"],
+    "state:podUrl": podUrl,
+    "state:podContainer": containerUrl,
+    "state:contextLabel": contextLabel,
+    "schema:ringQuantum": quantum,
+    "schema:modulus": modulus(n),
+    "state:capacity": "unlimited (pod-backed)",
+    "state:protocol": "Solid LDP 1.0",
+    "state:resourceFormat": "application/ld+json",
+    "usage": {
+      "write": `POST /v1/store/pod-write with Authorization: Bearer <solid_token>`,
+      "read":  `GET /v1/store/pod-read?context=${encodeURIComponent(contextIri)}&resource=<id>`,
+      "list":  `GET /v1/store/pod-list?context=${encodeURIComponent(contextIri)}`
+    },
+    "gdpr": {
+      "article_20": "Data portability — all bindings are stored in user-controlled pod",
+      "eu_data_act": "User-sovereign knowledge graph storage"
+    },
+    "derivation:derivationId": `urn:uor:derivation:sha256:${hashHex}`,
+  }, 'C'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// POST /store/pod-write — Derive a term and write the Binding to the pod
+async function storePodWrite(req: Request, rl: RateLimitResult): Promise<Response> {
+  const ct = req.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) return error415(rl);
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer '))
+    return error400('Missing Authorization: Bearer <solid_access_token> header', 'authorization', rl);
+  const accessToken = authHeader.slice(7);
+
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch { return error400('Invalid JSON body.', 'body', rl); }
+
+  const contextIri = body['context_iri'] as string;
+  if (!contextIri) return error400('Missing context_iri', 'context_iri', rl);
+  const podContainer = body['pod_container'] as string;
+  if (!podContainer || !podContainer.startsWith('https://'))
+    return error400('pod_container must be an HTTPS URL', 'pod_container', rl);
+  const term = body['term'] as string;
+  if (!term) return error400('Missing term (e.g. "xor(0x55,0xaa)")', 'term', rl);
+  const quantum = (body['quantum'] as number) ?? 0;
+  const n = (quantum + 1) * 8;
+  const m = modulus(n);
+
+  // Step 1: Evaluate term using same logic as /tools/derive
+  let result: number;
+  let canonicalForm: string;
+  const termLower = term.toLowerCase().trim();
+  const matchBinary = termLower.match(/^(neg|bnot|succ|pred|xor|and|or)\((.+)\)$/);
+  if (!matchBinary) return error400(`Cannot parse term: "${term}"`, 'term', rl);
+  const op = matchBinary[1];
+  const innerArgs = matchBinary[2];
+
+  // Parse arguments
+  const args = innerArgs.split(',').map(a => {
+    const trimmed = a.trim();
+    if (trimmed.startsWith('0x')) return parseInt(trimmed, 16);
+    return parseInt(trimmed, 10);
+  });
+
+  if (args.some(isNaN)) return error400('Invalid arguments in term', 'term', rl);
+
+  // Evaluate
+  switch (op) {
+    case 'neg':  result = neg(args[0], n); break;
+    case 'bnot': result = bnot(args[0], n); break;
+    case 'succ': result = succOp(args[0], n); break;
+    case 'pred': result = predOp(args[0], n); break;
+    case 'xor':  result = xorOp(args[0], args[1]) % m; break;
+    case 'and':  result = andOp(args[0], args[1]) % m; break;
+    case 'or':   result = orOp(args[0], args[1]) % m; break;
+    default: return error400(`Unknown op: ${op}`, 'term', rl);
+  }
+  canonicalForm = `${op}(${args.join(',')})`;
+
+  // Step 2: Derive derivation_id
+  const sortedArgs = [...args].sort((a, b) => a - b);
+  const normalizedTerm = ['xor', 'and', 'or'].includes(op)
+    ? `${op}(${sortedArgs.join(',')})`
+    : canonicalForm;
+  const derivHashHex = await makeSha256(`derive_${normalizedTerm}_q${quantum}`);
+  const derivId = `urn:uor:derivation:sha256:${derivHashHex.slice(0, 16)}`;
+  const resultIri = datumIRI(result, n);
+
+  // Step 3: Construct binding JSON-LD
+  const ts = timestamp();
+  const bindingId = derivHashHex.slice(0, 16);
+  const bindingJsonLd = {
+    "@context": {
+      "state":      "https://uor.foundation/state/",
+      "derivation": "https://uor.foundation/derivation/",
+      "schema":     "https://uor.foundation/schema/",
+      "xsd":        "http://www.w3.org/2001/XMLSchema#"
+    },
+    "@type": ["state:Binding"],
+    "@id": `urn:uor:binding:${bindingId}`,
+    "derivation:derivationId": derivId,
+    "state:address": { "@id": resultIri },
+    "state:datum": result,
+    "state:context": { "@id": contextIri },
+    "state:canonicalForm": canonicalForm,
+    "schema:ringQuantum": quantum,
+    "state:timestamp": ts
+  };
+
+  // Step 4: Write to pod via LDP PUT
+  const resourceUrl = `${podContainer.endsWith('/') ? podContainer : podContainer + '/'}${bindingId}`;
+  let podWriteResult: { success: boolean; status?: number; error?: string; url?: string };
+  try {
+    const putResp = await fetch(resourceUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/ld+json',
+        'Link': '<http://www.w3.org/ns/ldp#Resource>; rel="type"'
+      },
+      body: JSON.stringify(bindingJsonLd)
+    });
+    if (putResp.status >= 200 && putResp.status < 300) {
+      podWriteResult = { success: true, status: putResp.status, url: resourceUrl };
+    } else {
+      const errBody = await putResp.text().catch(() => '');
+      podWriteResult = { success: false, status: putResp.status, error: errBody };
+    }
+  } catch (e) {
+    podWriteResult = { success: false, error: `Network error: ${(e as Error).message}` };
+  }
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@id": `urn:uor:binding:${bindingId}`,
+    "@type": ["state:Binding"],
+    "derivation:derivationId": derivId,
+    "derivation:canonicalForm": canonicalForm,
+    "derivation:resultIri": resultIri,
+    "state:address": { "@id": resultIri },
+    "state:datum": result,
+    "state:context": { "@id": contextIri },
+    "schema:ringQuantum": quantum,
+    "pod_write": podWriteResult,
+    "pod_resource_url": podWriteResult.success ? resourceUrl : null,
+  }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// GET /store/pod-read?pod_container=<url>&resource=<id>
+async function storePodRead(req: Request, url: URL, rl: RateLimitResult): Promise<Response> {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer '))
+    return error400('Missing Authorization: Bearer <solid_access_token> header', 'authorization', rl);
+  const accessToken = authHeader.slice(7);
+
+  const podContainer = url.searchParams.get('pod_container');
+  if (!podContainer || !podContainer.startsWith('https://'))
+    return error400('pod_container must be an HTTPS URL', 'pod_container', rl);
+  const resource = url.searchParams.get('resource');
+  if (!resource) return error400('Missing resource param (binding ID)', 'resource', rl);
+
+  const resourceUrl = `${podContainer.endsWith('/') ? podContainer : podContainer + '/'}${resource}`;
+
+  try {
+    const getResp = await fetch(resourceUrl, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/ld+json'
+      }
+    });
+    if (getResp.status !== 200) {
+      return jsonResp({
+        "@context": UOR_CONTEXT_URL,
+        "error": `Pod returned HTTP ${getResp.status}`,
+        "resource_url": resourceUrl
+      }, CACHE_HEADERS_BRIDGE, undefined, rl);
+    }
+    const binding = await getResp.json();
+    return jsonResp(gradeResponse({
+      "@context": UOR_CONTEXT_URL,
+      "@type": "state:Binding",
+      "pod_resource_url": resourceUrl,
+      "binding": binding,
+    }, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
+  } catch (e) {
+    return jsonResp({
+      "@context": UOR_CONTEXT_URL,
+      "error": `Network error: ${(e as Error).message}`,
+      "resource_url": resourceUrl
+    }, CACHE_HEADERS_BRIDGE, undefined, rl);
+  }
+}
+
+// GET /store/pod-list?pod_container=<url>
+async function storePodList(req: Request, url: URL, rl: RateLimitResult): Promise<Response> {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer '))
+    return error400('Missing Authorization: Bearer <solid_access_token> header', 'authorization', rl);
+  const accessToken = authHeader.slice(7);
+
+  const podContainer = url.searchParams.get('pod_container');
+  if (!podContainer || !podContainer.startsWith('https://'))
+    return error400('pod_container must be an HTTPS URL', 'pod_container', rl);
+
+  try {
+    const listResp = await fetch(podContainer, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'text/turtle'
+      }
+    });
+    if (listResp.status !== 200) {
+      return jsonResp({
+        "@context": UOR_CONTEXT_URL,
+        "error": `Pod returned HTTP ${listResp.status}`,
+        "container_url": podContainer
+      }, CACHE_HEADERS_BRIDGE, undefined, rl);
+    }
+    const turtleBody = await listResp.text();
+    // Parse LDP BasicContainer listing — extract ldp:contains references
+    const containsMatches = [...turtleBody.matchAll(/ldp:contains\s+<([^>]+)>/g)];
+    const resources = containsMatches.map(m => m[1]);
+    // Also try matching <url> patterns after "contains"
+    const altMatches = [...turtleBody.matchAll(/<([^>]+)>\s+a\s+ldp:Resource/g)];
+    const altResources = altMatches.map(m => m[1]);
+    const allResources = [...new Set([...resources, ...altResources])];
+
+    return jsonResp(gradeResponse({
+      "@context": UOR_CONTEXT_URL,
+      "@type": "ldp:BasicContainer",
+      "container_url": podContainer,
+      "resources": allResources,
+      "resource_count": allResources.length,
+    }, 'C'), CACHE_HEADERS_BRIDGE, undefined, rl);
+  } catch (e) {
+    return jsonResp({
+      "@context": UOR_CONTEXT_URL,
+      "error": `Network error: ${(e as Error).message}`,
+      "container_url": podContainer
+    }, CACHE_HEADERS_BRIDGE, undefined, rl);
+  }
 }
 
 // ── POST /store/write-context — IPLD DAG for state:Context ─────────────────
@@ -6577,6 +6849,24 @@ Deno.serve(async (req: Request) => {
       if (req.method !== 'GET') return error405(path, ['GET', 'OPTIONS']);
       const cidParam = path.replace('/store/verify/', '');
       return await storeVerify(cidParam, url, rl);
+    }
+
+    // ── Store — pod-context (Solid/LDP) ──
+    if (path === '/store/pod-context') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await storePodContext(req, rl);
+    }
+    if (path === '/store/pod-write') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await storePodWrite(req, rl);
+    }
+    if (path === '/store/pod-read') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await storePodRead(req, url, rl);
+    }
+    if (path === '/store/pod-list') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await storePodList(req, url, rl);
     }
 
     // ── Store — gateways (store: namespace) ──
