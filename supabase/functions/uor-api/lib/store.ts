@@ -108,6 +108,50 @@ async function getJsonld(): Promise<any> {
   return _jsonld;
 }
 
+// ── Custom document loader for Deno (fetch-based, cached) ───────────────────
+
+const _contextCache = new Map<string, Record<string, unknown>>();
+
+function normalizeContextUrl(url: string): string {
+  return url.replace(/^http:/, 'https:').replace(/\/$/, '');
+}
+
+// Map well-known context URLs to their actual JSON-LD endpoints
+const CONTEXT_URL_MAP: Record<string, string> = {
+  'https://schema.org': 'https://schema.org/docs/jsonldcontext.jsonld',
+};
+
+async function customDocumentLoader(url: string): Promise<{
+  contextUrl: null;
+  documentUrl: string;
+  document: Record<string, unknown>;
+}> {
+  const key = normalizeContextUrl(url);
+
+  // Check cache first
+  const cached = _contextCache.get(key);
+  if (cached) {
+    return { contextUrl: null, documentUrl: url, document: cached };
+  }
+
+  // Fetch remote context via Deno's native fetch
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    // Resolve to actual JSON-LD endpoint if mapped
+    const fetchUrl = CONTEXT_URL_MAP[key] ?? url;
+    const resp = await fetch(fetchUrl, {
+      headers: { Accept: 'application/ld+json, application/json' },
+    });
+    if (!resp.ok) {
+      throw new Error(`Failed to fetch context ${url}: ${resp.status}`);
+    }
+    const doc = await resp.json();
+    _contextCache.set(key, doc);
+    return { contextUrl: null, documentUrl: url, document: doc };
+  }
+
+  throw new Error(`Cannot load non-HTTP context: ${url}`);
+}
+
 const UOR_WRAP_CONTEXT_EDGE: Record<string, unknown> = {
   store: "https://uor.foundation/store/",
   xsd: "http://www.w3.org/2001/XMLSchema#",
@@ -142,6 +186,7 @@ export async function canonicalizeToNQuads(obj: unknown): Promise<string> {
   return jld.canonize(doc, {
     algorithm: 'URDNA2015',
     format: 'application/n-quads',
+    documentLoader: customDocumentLoader,
   });
 }
 

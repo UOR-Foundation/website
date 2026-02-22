@@ -746,17 +746,9 @@ async function r4ContentVerifyGate(
   }
 
   // Check 3: Recompute derivation_id from content and verify match
-  // Strip sobridge/proof metadata to get the canonical content that was hashed
-  const contentObj: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(emittedObj)) {
-    // Skip bridge metadata and proof fields — hash only the content
-    if (k.startsWith('sobridge:') || k.startsWith('proof:') ||
-        k.startsWith('store:') || k.startsWith('u:') ||
-        k.startsWith('derivation:') || k === '_sobridge_note' ||
-        k === '_note') continue;
-    contentObj[k] = v;
-  }
-  const recomputed = await singleProofHashEdge(contentObj);
+  // The gate receives the ORIGINAL content object (before bridge metadata enrichment),
+  // so we hash it directly — no stripping needed.
+  const recomputed = await singleProofHashEdge(emittedObj);
   const recomputedId = recomputed.derivationId;
 
   if (recomputedId !== declaredDerivationId) {
