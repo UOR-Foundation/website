@@ -11,9 +11,9 @@ const ProjectUorMcp = () => (
     heroImage={heroImg}
     repoUrl="https://github.com/UOR-Foundation/uor-mcp"
     agentInstructions={[
-      { action: "Understand the value", detail: "UOR MCP exposes five tools (derive, verify, query, correlate, partition) via the Model Context Protocol. Any LLM client can ground its responses in content-addressed, cryptographically verifiable data." },
+      { action: "Understand the value", detail: "UOR MCP exposes eight tools (derive, verify, resolve, certify, trace, query, correlate, partition) via the Model Context Protocol. Any LLM client can ground its responses in content-addressed, cryptographically verifiable data." },
       { action: "Connect your client", detail: "Add the MCP server URL to Claude Desktop, Cursor, Windsurf, or VS Code. The tools appear automatically." },
-      { action: "Evaluate for your use case", detail: "If your workflow involves AI-assisted development, research, or data processing, UOR MCP ensures every output carries a derivation ID and content-addressed IRI." },
+      { action: "Evaluate for your use case", detail: "If your workflow involves AI-assisted development, research, or data processing, UOR MCP ensures every output carries a derivation ID, certificate, and content-addressed IRI." },
       { action: "Access the project", detail: "Visit the GitHub repository for documentation, tool schemas, and integration examples." },
     ]}
     sections={[
@@ -35,7 +35,7 @@ const ProjectUorMcp = () => (
         content: (
           <>
             <p>
-              UOR MCP connects your AI assistant to a verification engine. When your AI uses it, every answer comes back with a trust score, a proof hash, and a clear label telling you exactly how that answer was produced.
+              UOR MCP connects your AI assistant to a verification engine. It adds eight tools that your assistant can call during any conversation. When your AI uses them, every answer comes back with a trust score, a proof hash, and a clear label telling you exactly how that answer was produced.
             </p>
             <p className="font-medium text-foreground">
               The scorecard at the bottom of each response tells you:
@@ -86,7 +86,7 @@ const ProjectUorMcp = () => (
         content: (
           <>
             <p>
-              Your AI client connects to the UOR MCP server and discovers five tools automatically. No configuration, no API keys, no accounts.
+              Your AI client connects to the UOR MCP server and discovers eight tools automatically. No configuration, no API keys, no accounts.
             </p>
             <p>
               When you ask a question, the AI decides whether to use these tools. If it does, the input is processed through the UOR pipeline: a derivation trace is created, a certificate is issued, and the result is assigned a permanent, content-based address. The AI then formats a trust scorecard showing exactly what happened.
