@@ -116,6 +116,10 @@
         "description": "UOR Roadmap §6.4 — Agent Tool Functions",
         "url": "https://github.com/UOR-Foundation/UOR-Framework"
       }
+    },
+    {
+      "name": "morphism",
+      "description": "**Morphism Transform API** (§5) — structure-preserving maps between rings. Endpoints for verifying embeddings, isometries, and cross-quantum value coercion."
     }
   ],
   "paths": {
@@ -1415,6 +1419,65 @@
         },
         "responses": {
           "200": { "description": "Partition result with cardinality, closure analysis, and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/bridge/morphism/transform": {
+      "post": {
+        "operationId": "bridgeMorphismTransform",
+        "tags": ["morphism"],
+        "summary": "Verify a ring morphism (embedding, isometry, or action)",
+        "description": "Exhaustively verify a structure-preserving map between two quantum rings. Returns a TransformCertificate with verification result and computation trace.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "source_quantum": { "type": "integer", "default": 0, "description": "Source ring quantum level" },
+                  "target_quantum": { "type": "integer", "default": 1, "description": "Target ring quantum level" },
+                  "transform_type": { "type": "string", "enum": ["embedding", "isometry", "action"], "description": "Type of morphism to verify" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Transform verification result with certificate and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/bridge/morphism/isometry": {
+      "get": {
+        "operationId": "bridgeMorphismIsometry",
+        "tags": ["morphism"],
+        "summary": "Verify neg or bnot as a ring isometry",
+        "description": "Exhaustively verify that neg or bnot is an involution and metric-preserving isometry on the ring. Returns IsometryCertificate.",
+        "parameters": [
+          { "name": "op", "in": "query", "required": false, "schema": { "type": "string", "enum": ["neg", "bnot"], "default": "neg" }, "description": "Operation to verify as isometry" },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 }, "description": "Quantum level" }
+        ],
+        "responses": {
+          "200": { "description": "Isometry verification with involution check and metric preservation" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/bridge/morphism/coerce": {
+      "get": {
+        "operationId": "bridgeMorphismCoerce",
+        "tags": ["morphism"],
+        "summary": "Cross-quantum value coercion (embed or project)",
+        "description": "Coerce a value from one quantum ring to another. Embedding (lower→higher) is lossless; projection (higher→lower) may lose information.",
+        "parameters": [
+          { "name": "value", "in": "query", "required": true, "schema": { "type": "integer" }, "description": "Value to coerce" },
+          { "name": "from_q", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 }, "description": "Source quantum level" },
+          { "name": "to_q", "in": "query", "required": false, "schema": { "type": "integer", "default": 1 }, "description": "Target quantum level" }
+        ],
+        "responses": {
+          "200": { "description": "Coerced value with target IRI and transform reference" },
           "400": { "$ref": "#/components/responses/BadRequest" }
         }
       }
