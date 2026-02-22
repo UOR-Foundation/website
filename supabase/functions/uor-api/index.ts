@@ -1,6 +1,7 @@
 // UOR Framework REST API — Supabase Edge Function
 // OpenAPI 3.1.0 compliant router — all endpoints, no external dependencies
 // Every response is a valid JSON-LD object traceable to UOR ontology namespaces
+// Deployed: 2026-02-22T00:00:00Z — Parts 1-6 complete
 
 // ── Storacha (Filecoin-backed IPFS persistence) ────────────────────────────
 import * as StorachaClient from 'npm:@storacha/client'
