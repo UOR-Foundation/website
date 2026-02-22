@@ -31,7 +31,7 @@
   },
   "conformance": {
     "critical_identity_verified": true,
-    "shacl_tests_passed": 7,
+    "shacl_tests_passed": 8,
     "ring_elements": 256,
     "w3c_standards": ["JSON-LD 1.1", "Turtle 1.1", "SPARQL 1.1", "OWL 2 DL", "SHACL"]
   },

@@ -205,6 +205,14 @@ function ruleIdentityElimination(t: Term, config: RingConfig): Term {
   if (t.kind !== "binary") return t;
   const m = modulus(config.bits);
 
+  // Annihilator check: x AND 0 → 0, x OR mask → mask
+  if (t.op === "and" && t.args.some(a => a.kind === "const" && a.value === 0)) {
+    return { kind: "const", value: 0 };
+  }
+  if (t.op === "or" && t.args.some(a => a.kind === "const" && a.value === m - 1)) {
+    return { kind: "const", value: m - 1 };
+  }
+
   const identity = t.op === "xor" ? 0 : t.op === "or" ? 0 : m - 1; // AND identity is all-1s mask
 
   const filtered = t.args.filter((a) => {

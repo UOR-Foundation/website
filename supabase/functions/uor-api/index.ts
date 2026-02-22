@@ -149,8 +149,8 @@ function makeETag(path: string, params: Record<string, string>): string {
 function modulus(n: number): number { return Math.pow(2, n); }
 function neg(x: number, n = 8): number { const m = modulus(n); return ((-x) % m + m) % m; }
 function bnot(x: number, n = 8): number { return x ^ (modulus(n) - 1); }
-function succOp(x: number, n = 8): number { return (x + 1) % modulus(n); }
-function predOp(x: number, n = 8): number { return (x - 1 + modulus(n)) % modulus(n); }
+function succOp(x: number, n = 8): number { return neg(bnot(x, n), n); }
+function predOp(x: number, n = 8): number { return bnot(neg(x, n), n); }
 function addOp(x: number, y: number, n = 8): number { return (x + y) % modulus(n); }
 function subOp(x: number, y: number, n = 8): number { return ((x - y) % modulus(n) + modulus(n)) % modulus(n); }
 function mulOp(x: number, y: number, n = 8): number { return (x * y) % modulus(n); }
@@ -1665,7 +1665,7 @@ async function kernelDerive(req: Request, rl: RateLimitResult): Promise<Response
     const canonicalForm = canonicalSerialize(term as TermNode, width);
     const contentForHash = `${canonicalForm}=${resultIri}`;
     const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(contentForHash));
-    const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+    const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
     const derivationId = `urn:uor:derivation:sha256:${hashHex}`;
 
     // Build cert:Certificate with cert:certifies linking to the derived fact
@@ -2207,7 +2207,7 @@ async function observableMetric(url: URL, rl: RateLimitResult): Promise<Response
   };
   const value = metricType === 'ring' ? ringDist : metricType === 'hamming' ? hammingDist : incomp;
 
-  const hashHex = (await makeSha256(`metric_${metricType}_${a}_${b}_q${quantum}`)).slice(0, 16);
+  const hashHex = await makeSha256(`metric_${metricType}_${a}_${b}_q${quantum}`);
   const derivId = `urn:uor:derivation:sha256:${hashHex}`;
   const etag = makeETag('/bridge/observable/metric', { a: String(a), b: String(b), type: metricType, q: String(quantum) });
 
@@ -2251,7 +2251,7 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
     const v = vRes.val;
     if (v >= m) return error400(`value must be in [0, ${m-1}]`, 'value', rl);
     const stratum = hammingWeightFn(v);
-    const hashHex = (await makeSha256(`stratum_value_${v}_q${quantum}`)).slice(0, 16);
+    const hashHex = await makeSha256(`stratum_value_${v}_q${quantum}`);
     const etag = makeETag('/bridge/observable/stratum', { v: String(v), type: 'value', q: String(quantum) });
     return jsonResp(gradeResponse({
       "@context": UOR_CONTEXT_URL,
@@ -2274,7 +2274,7 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
     if (a >= m) return error400(`a must be in [0, ${m-1}]`, 'a', rl);
     if (b >= m) return error400(`b must be in [0, ${m-1}]`, 'b', rl);
     const sa = hammingWeightFn(a), sb = hammingWeightFn(b);
-    const hashHex = (await makeSha256(`stratum_delta_${a}_${b}_q${quantum}`)).slice(0, 16);
+    const hashHex = await makeSha256(`stratum_delta_${a}_${b}_q${quantum}`);
     const etag = makeETag('/bridge/observable/stratum', { a: String(a), b: String(b), type: 'delta', q: String(quantum) });
     return jsonResp(gradeResponse({
       "@context": UOR_CONTEXT_URL,
@@ -2308,7 +2308,7 @@ async function observableStratum(url: URL, rl: RateLimitResult): Promise<Respons
     trajectory.push({ step: i, value: current, datum_iri: datumIRI(current, n), stratum: hammingWeightFn(current) });
     current = applyOp(current, opRaw as OpName, n);
   }
-  const hashHex = (await makeSha256(`stratum_trajectory_${start}_${opRaw}_${steps}_q${quantum}`)).slice(0, 16);
+  const hashHex = await makeSha256(`stratum_trajectory_${start}_${opRaw}_${steps}_q${quantum}`);
   const etag = makeETag('/bridge/observable/stratum', { start: String(start), op: opRaw, steps: String(steps), q: String(quantum) });
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
@@ -2356,7 +2356,7 @@ async function observablePath(req: Request, rl: RateLimitResult): Promise<Respon
     length: 'steps', total_variation: 'ring_steps', winding_number: 'laps'
   };
 
-  const hashHex = (await makeSha256(`path_${pathType}_${path.join(',')}_q${quantum}`)).slice(0, 16);
+  const hashHex = await makeSha256(`path_${pathType}_${path.join(',')}_q${quantum}`);
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/observable/path/${pathType}/${hashHex}`,
@@ -2393,7 +2393,7 @@ async function observableCurvature(url: URL, rl: RateLimitResult): Promise<Respo
   const gf_x = applyOp(applyOp(x, f as OpName, n), g as OpName, n);
   const commValue = ((fg_x - gf_x) % m + m) % m;
 
-  const hashHex = (await makeSha256(`curvature_${x}_${f}_${g}_q${quantum}`)).slice(0, 16);
+  const hashHex = await makeSha256(`curvature_${x}_${f}_${g}_q${quantum}`);
   const etag = makeETag('/bridge/observable/curvature', { x: String(x), f, g, q: String(quantum) });
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
@@ -2431,7 +2431,7 @@ async function observableHolonomy(req: Request, rl: RateLimitResult): Promise<Re
     accum = ((accum + path[i + 1] - path[i]) % m + m) % m;
   }
 
-  const hashHex = (await makeSha256(`holonomy_${path.join(',')}_q${quantum}`)).slice(0, 16);
+  const hashHex = await makeSha256(`holonomy_${path.join(',')}_q${quantum}`);
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/observable/holonomy/${hashHex}`,
@@ -2500,7 +2500,7 @@ async function observableStream(req: Request, rl: RateLimitResult): Promise<Resp
     windows.push({ window_index: i, values: w, metrics: windowMetrics });
   }
 
-  const hashHex = (await makeSha256(`stream_q${quantum}_${stream.length}`)).slice(0, 16);
+  const hashHex = await makeSha256(`stream_q${quantum}_${stream.length}`);
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
     "@id": `https://uor.foundation/observable/stream/${hashHex}`,
@@ -2868,12 +2868,12 @@ async function bridgeDerivation(url: URL, rl: RateLimitResult): Promise<Response
     return op;
   });
   const canonicalForm = `${acNormalised.join(',')}(${x})`;
-  const contentForHash = `${canonicalForm}=${current}@R${n}`;
+  const resultIri = datumIRI(current, n);
+  const contentForHash = `${canonicalForm}=${resultIri}`;
   const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(contentForHash));
   const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
   const derivationId = `urn:uor:derivation:sha256:${hashHex}`;
-  const certificateId = `urn:uor:cert:sha256:${hashHex.slice(0, 16)}`;
-  const resultIri = datumIRI(current, n);
+  const certificateId = `urn:uor:cert:sha256:${hashHex}`;
 
   const etag = makeETag('/bridge/derivation', { x: String(x), n: String(n), ops: opsRaw });
 
@@ -4416,8 +4416,8 @@ async function storePodContext(req: Request, rl: RateLimitResult): Promise<Respo
   const n = (quantum + 1) * 8;
 
   // Derive a content-addressed context IRI from the pod URL
-  const hashHex = (await makeSha256(`pod_context_${podUrl}_${contextLabel}`)).slice(0, 16);
-  const contextIri = `https://uor.foundation/instance/context/${hashHex}`;
+  const hashHex = await makeSha256(`pod_context_${podUrl}_${contextLabel}`);
+  const contextIri = `https://uor.foundation/instance/context/${hashHex.slice(0, 32)}`;
   const containerUrl = podUrl.endsWith('/') ? `${podUrl}uor/bindings/` : `${podUrl}/uor/bindings/`;
 
   return jsonResp(gradeResponse({
@@ -4499,14 +4499,14 @@ async function storePodWrite(req: Request, rl: RateLimitResult): Promise<Respons
   }
   canonicalForm = `${op}(${args.join(',')})`;
 
-  // Step 2: Derive derivation_id
+  // Step 2: Derive derivation_id — canonical formula: "{canonical_serialize}={result_iri}"
   const sortedArgs = [...args].sort((a, b) => a - b);
   const normalizedTerm = ['xor', 'and', 'or'].includes(op)
     ? `${op}(${sortedArgs.join(',')})`
     : canonicalForm;
-  const derivHashHex = await makeSha256(`derive_${normalizedTerm}_q${quantum}`);
-  const derivId = `urn:uor:derivation:sha256:${derivHashHex.slice(0, 16)}`;
   const resultIri = datumIRI(result, n);
+  const derivHashHex = await makeSha256(`${normalizedTerm}=${resultIri}`);
+  const derivId = `urn:uor:derivation:sha256:${derivHashHex}`;
 
   // Step 3: Construct binding JSON-LD
   const ts = timestamp();
@@ -6041,7 +6041,7 @@ async function toolPartition(req: Request, rl: RateLimitResult): Promise<Respons
   const sortedEls = [...elements].sort((a, b) => a - b);
   const partHashContent = sortedEls.join(',');
   const partHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(partHashContent));
-  const partHex = Array.from(new Uint8Array(partHash)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+  const partHex = Array.from(new Uint8Array(partHash)).map(b => b.toString(16).padStart(2, '0')).join('');
 
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,

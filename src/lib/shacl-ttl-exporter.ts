@@ -4,11 +4,15 @@
  * Produces the canonical uor-shapes.ttl served at
  * https://uor.foundation/shapes/uor-shapes.ttl
  *
- * Shapes defined:
+ * Shapes defined (8 total):
  *   - DatumShape
  *   - DerivationShape (with derivationId regex pattern)
  *   - CertificateShape (with cert:certifies constraint)
  *   - PartitionShape
+ *   - TransformShape (§5 morphism)
+ *   - IsometryShape (§5 morphism)
+ *   - PodContextShape (§E3 Solid Pod)
+ *   - AttributionCertificateShape (§E5 Attribution Protocol)
  */
 
 export function exportShaclTtl(): string {
@@ -19,6 +23,7 @@ export function exportShaclTtl(): string {
 @prefix derivation: <https://uor.foundation/derivation/> .
 @prefix cert:       <https://uor.foundation/cert/> .
 @prefix partition:  <https://uor.foundation/partition/> .
+@prefix morphism:   <https://uor.foundation/morphism/> .
 @prefix u:          <https://uor.foundation/u/> .
 @prefix uor-sh:     <https://uor.foundation/shapes/> .
 
@@ -116,6 +121,87 @@ uor-sh:PartitionShape
         sh:minCount  1 ;
         sh:maxCount  1 ;
         sh:datatype  xsd:nonNegativeInteger ;
+    ] .
+
+# ── TransformShape (§5) ────────────────────────────────────────────────────
+
+uor-sh:TransformShape
+    a               sh:NodeShape ;
+    sh:targetClass  morphism:Transform ;
+    rdfs:label      "TransformShape" ;
+    sh:property [
+        sh:path      morphism:source ;
+        sh:minCount  1 ;
+    ] ;
+    sh:property [
+        sh:path      morphism:target ;
+        sh:minCount  1 ;
+    ] ;
+    sh:property [
+        sh:path      morphism:trace ;
+        sh:minCount  0 ;
+        sh:maxCount  1 ;
+    ] .
+
+# ── IsometryShape (§5) ─────────────────────────────────────────────────────
+
+uor-sh:IsometryShape
+    a               sh:NodeShape ;
+    sh:targetClass  morphism:Isometry ;
+    rdfs:label      "IsometryShape" ;
+    sh:property [
+        sh:path      morphism:source ;
+        sh:minCount  1 ;
+    ] .
+
+# ── PodContextShape (§E3) ──────────────────────────────────────────────────
+
+@prefix state:      <https://uor.foundation/state/> .
+
+uor-sh:PodContextShape
+    a               sh:NodeShape ;
+    sh:targetClass  state:PodContext ;
+    rdfs:label      "PodContextShape" ;
+    sh:property [
+        sh:path      state:podUrl ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:anyURI ;
+        sh:pattern   "^https://" ;
+    ] ;
+    sh:property [
+        sh:path      state:podContainer ;
+        sh:minCount  0 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:anyURI ;
+    ] .
+
+# ── AttributionCertificateShape ────────────────────────────────────────────
+
+uor-sh:AttributionCertificateShape
+    a               sh:NodeShape ;
+    sh:targetClass  cert:AttributionCertificate ;
+    rdfs:label      "AttributionCertificateShape" ;
+    sh:property [
+        sh:path      cert:certifies ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+    ] ;
+    sh:property [
+        sh:path      cert:attributedTo ;
+        sh:minCount  1 ;
+    ] ;
+    sh:property [
+        sh:path      cert:verified ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:boolean ;
+    ] ;
+    sh:property [
+        sh:path      cert:timestamp ;
+        sh:minCount  1 ;
+        sh:maxCount  1 ;
+        sh:datatype  xsd:dateTime ;
     ] .
 `;
 }
