@@ -1,135 +1,46 @@
 
 
-# UOR Proof-Based Inference Load Limitation
+## Fix: Schema.org Pinning Fails with "loading remote context failed"
 
-## Summary
+### Root Cause
 
-This plan implements a system where every AI inference result is assigned a UOR proof (a compact, verifiable fingerprint). Once a result has been proven, any future request for the same computation is served from the proof cache instead of re-running the expensive model. This is structural information compression: expensive AI runs once, its output is reduced to a deterministic coordinate in a bounded space, and all subsequent lookups verify against that coordinate rather than recomputing.
+The `jsonld` library's URDNA2015 canonicalization (`jld.canonize()`) needs to resolve `@context` URLs like `"https://schema.org/"`. In the Deno edge function runtime, the library's default `documentLoader` does **not** support fetching remote URLs, so every call to `canonicalizeToNQuads()` with a schema.org-contexted object throws:
 
-## How It Works (Plain Language)
-
-1. **First time an AI question is asked**: The expensive model runs, produces an answer, and the system generates a UOR proof -- a unique fingerprint for that exact input-output pair.
-
-2. **The proof is stored**: The fingerprint, the answer, and its trust grade are saved in a proof cache (a database table).
-
-3. **Next time the same question is asked**: Instead of running the model again, the system finds the stored proof, verifies it still matches (a fast check), and returns the cached answer with its original trust score.
-
-4. **The result**: Models run once per unique question. Verification is far cheaper than re-computation. Load drops dramatically for repeated or similar queries.
-
-## What Gets Built
-
-### 1. New Database Table: `uor_inference_proofs`
-
-A table to store proven inference results. Each row links a request fingerprint to its verified output.
-
-Columns:
-- `id` (UUID, auto-generated)
-- `proof_id` (text, unique) -- the UOR proof URN (e.g., `urn:uor:proof:sha256:...`)
-- `input_hash` (text) -- SHA-256 of the canonical input (tool name + arguments)
-- `output_hash` (text) -- SHA-256 of the canonical output
-- `tool_name` (text) -- which MCP tool produced this (e.g., `uor_derive`)
-- `input_canonical` (text) -- the canonical input for cache lookup
-- `output_cached` (text) -- the full JSON output to return on cache hit
-- `epistemic_grade` (text) -- the trust grade (A/B/C/D)
-- `hit_count` (integer, default 0) -- how many times this proof has been served from cache
-- `created_at` (timestamptz)
-- `last_hit_at` (timestamptz, nullable)
-
-Indexes on `input_hash` for fast lookup.
-
-### 2. Proof Generation Logic (in `uor-mcp/index.ts`)
-
-After every successful tool call, the system:
-1. Canonicalizes the input (tool name + sorted arguments) into a deterministic string
-2. Hashes it with SHA-256 to produce `input_hash`
-3. Hashes the output to produce `output_hash`
-4. Combines them into a `proof_id`: `urn:uor:proof:sha256:{hash(input_hash + output_hash)}`
-5. Stores the proof in `uor_inference_proofs`
-
-### 3. Cache-First Lookup (in `uor-mcp/index.ts`)
-
-Before running any tool, the system:
-1. Canonicalizes the incoming request
-2. Computes `input_hash`
-3. Looks up `uor_inference_proofs` by `input_hash`
-4. If found: increments `hit_count`, returns cached output with the original trust score and a `proof_source: "cached"` flag
-5. If not found: runs the tool normally, then stores the proof
-
-### 4. Updated Trust Score Block
-
-The trust report gains a new field:
-- **Proof Status**: `Proven (served from cache)` or `Fresh computation (proof stored)`
-- This tells the reader whether the answer was recomputed or served from a verified proof
-
-### 5. Updated `epistemics.ts`
-
-Each epistemic builder function gets a `cached` flag. When true, the trust summary explains: "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed."
-
-### 6. Rate Limit Integration
-
-The existing rate limiter benefits automatically: cached responses skip the expensive `callApi()` step entirely, so rate-limited users get faster responses for previously-proven queries.
-
-## Architecture
-
-```text
-  Incoming MCP Request
-         |
-         v
-  Canonicalize Input
-  (tool + args -> SHA-256)
-         |
-         v
-  Lookup input_hash in
-  uor_inference_proofs
-        / \
-       /   \
-    HIT     MISS
-     |        |
-     v        v
-  Verify    Run Tool
-  output    (callApi)
-  hash        |
-     |        v
-     v     Hash Output
-  Return   Store Proof
-  cached   Return fresh
-  result   result
+```
+jsonld.InvalidUrl: Dereferencing a URL did not result in a valid JSON-LD object.
+  code: "loading remote context failed", url: "https://schema.org/"
 ```
 
-## Files Changed
+This affects `GET /schema-org/extend?type=Person&store=true` because `computeSobridgeIdentity()` calls `singleProofHashEdge()` which calls `canonicalizeToNQuads()` with `@context: "https://schema.org/"`.
 
-1. **New migration**: Create `uor_inference_proofs` table with RLS (public read, service-role write)
-2. **`supabase/functions/uor-mcp/index.ts`**: Add proof cache lookup before `runTool`, proof storage after successful tool execution, and the `proof_source` field in responses
-3. **`supabase/functions/uor-mcp/epistemics.ts`**: Add `cached` parameter to `formatEpistemicBlock` and all builder functions; update trust summaries for cached results
-4. **`src/modules/mcp/pages/TrustScorePreview.tsx`**: Add a "Proof Status" row to the trust score card and show an example of a cached proof
-5. **`src/modules/mcp/types.ts`**: Add proof-related types
+### Fix (1 file)
 
-## Technical Details
+**`supabase/functions/uor-api/lib/store.ts`** -- Add a custom `documentLoader` that uses `fetch()` to retrieve remote JSON-LD contexts, with an in-memory cache for performance.
 
-### Canonical Input Formula
+1. Create a `customDocumentLoader` function that:
+   - Intercepts `https://schema.org/` (and its trailing-slash variant) and fetches the context via HTTP with `Accept: application/ld+json`
+   - Caches fetched contexts in a `Map` to avoid repeated network calls
+   - Falls back to the jsonld library's default node document loader for non-HTTP URLs
+2. Pass this loader to `jld.canonize()` in `canonicalizeToNQuads()` via the `documentLoader` option
+
+### Key code change
+
+In `canonicalizeToNQuads()`:
+
+```typescript
+return jld.canonize(doc, {
+  algorithm: 'URDNA2015',
+  format: 'application/n-quads',
+  documentLoader: customDocumentLoader,  // <-- add this
+});
 ```
-canonical_input = JSON.stringify({ tool: name, args: sortedArgs })
-input_hash = SHA-256(canonical_input)
-```
 
-### Proof ID Formula
-```
-proof_id = "urn:uor:proof:sha256:" + SHA-256(input_hash + "=" + output_hash)
-```
+The `customDocumentLoader` will handle schema.org and any other remote context by fetching via the standard `fetch()` API available in Deno, then returning the expected `{ document, documentUrl }` format the jsonld library requires.
 
-### Cache Bypass
-- Grade D results (unverified) are NOT cached, since they may change
-- Only Grade A and B results are stored as proofs
-- SPARQL queries (Grade B) are cached with a 1-hour TTL consideration via `last_hit_at`
+### Technical Details
 
-### RLS Policy
-- `SELECT`: allowed for all (proofs are public, verifiable records)
-- `INSERT/UPDATE`: service role only (only the MCP server writes proofs)
-
-### What This Achieves
-- Expensive AI model calls happen once per unique input
-- Repeated queries are served from compact, verified proofs
-- Every cached response carries the same trust grade as the original computation
-- The proof is independently verifiable: anyone can recompute the SHA-256 to confirm the cached result matches
-- Load scales with unique queries, not total queries
+- The cached context map prevents repeated 1MB+ fetches of the schema.org vocabulary during batch operations
+- The loader normalizes common URL variants (`https://schema.org`, `https://schema.org/`, `http://schema.org/`) to a single cache key
+- For non-remote contexts (inline objects), no loader is invoked -- existing behavior is preserved
+- No changes to the frontend `BulkPinPage.tsx` are needed; the fix is entirely backend
 
