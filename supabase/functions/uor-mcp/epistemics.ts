@@ -32,7 +32,7 @@ export interface EpistemicSource {
 }
 
 const GRADE_META: Record<EpistemicGrade, { label: string; base_confidence: number }> = {
-  A: { label: "Mathematically Proven", base_confidence: 1.0 },
+  A: { label: "Mathematically Proven", base_confidence: 0.98 },
   B: { label: "Verified from Knowledge Graph", base_confidence: 0.85 },
   C: { label: "Sourced from External Reference", base_confidence: 0.6 },
   D: { label: "AI Training Data (Unverified)", base_confidence: 0.3 },
@@ -270,15 +270,22 @@ export async function formatEpistemicBlock(meta: EpistemicMetadata, proofStatus?
   const bar = confidenceBar(meta.confidence);
   const receiptHash = await generateReceiptHash(meta);
 
-  const sourceLines = meta.sources.map((s, i) => {
-    const link = s.reference
-      ? `[${s.label}](${s.reference})`
-      : s.label;
-    return `${i + 1}. ${link} · Grade ${meta.grade}`;
-  });
-
   const shortHash = receiptHash.slice(0, 16);
   const receiptUrn = `urn:uor:receipt:sha256:${receiptHash}`;
+
+  const sourceLines = meta.sources.map((s, i) => {
+    const sourceRef = s.reference
+      ? `[${s.label}](${s.reference})`
+      : `*${s.label}*`;
+    return `${i + 1}. ${sourceRef} · Grade ${meta.grade}`;
+  });
+
+  // "Verified via" — matches preview page exactly
+  const verifiedVia =
+    meta.grade === "A" ? "Computed directly by the UOR system"
+    : meta.grade === "B" ? "Retrieved from the UOR knowledge graph"
+    : meta.grade === "C" ? "Fetched from a third-party source during this session"
+    : "None. Generated from the AI model's memory.";
 
   const lines = [
     "",
@@ -289,7 +296,7 @@ export async function formatEpistemicBlock(meta: EpistemicMetadata, proofStatus?
     "|-------|-------|",
     `| Grade | ${icon} ${meta.grade} — ${meta.grade_label} |`,
     `| Confidence | ${bar} ${pct}% |`,
-    `| Verified via | ${meta.reasoning_chain.length > 1 ? meta.reasoning_chain[meta.reasoning_chain.length - 2].replace(/^\d+\.\s*/, "") : "UOR computation"} |`,
+    `| Verified via | ${verifiedVia} |`,
     `| UOR Proof | \`${shortHash}…\` · [Full hash](${receiptUrn}) |`,
     ...(proofStatus ? [`| Proof Status | ${proofStatus} |`] : []),
     "",
