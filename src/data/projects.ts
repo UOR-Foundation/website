@@ -51,6 +51,15 @@ export const projects: ProjectData[] = [
     url: "https://github.com/UOR-Foundation/prism",
     imageKey: "prism",
   },
+  {
+    name: "UOR MCP",
+    slug: "uor-mcp",
+    category: "Developer Tools",
+    description: "A Model Context Protocol server that gives any LLM access to the UOR kernel. Every response becomes content-addressed, verified, and auditable.",
+    maturity: "Sandbox",
+    url: "https://github.com/UOR-Foundation/uor-mcp",
+    imageKey: "uorMcp",
+  },
 ];
 
 export const maturityInfo: { level: MaturityLevel; tagline: string; description: string; criteria: string[] }[] = [

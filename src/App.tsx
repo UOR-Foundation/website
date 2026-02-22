@@ -45,6 +45,7 @@ const ToolRegistryPage = lazy(() => import("@/modules/agent-tools/pages/ToolRegi
 const PrismPipelinePage = lazy(() => import("@/modules/projects/pages/PrismPipelinePage"));
 const ShaclIndexPage = lazy(() => import("@/modules/shacl/pages/ShaclIndexPage"));
 const FormatsPage = lazy(() => import("@/modules/shacl/pages/FormatsPage"));
+const ProjectUorMcp = lazy(() => import("@/modules/projects/pages/ProjectUorMcp"));
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ const App = () => {
             <Route path="/projects/atlas-embeddings" element={<ProjectAtlasEmbeddings />} />
             <Route path="/projects/atomic-language-model" element={<ProjectAtomicLang />} />
             <Route path="/projects/prism" element={<ProjectPrism />} />
+            <Route path="/projects/uor-mcp" element={<ProjectUorMcp />} />
             <Route path="/standard" element={<StandardPage />} />
             <Route path="/semantic-web" element={<SemanticWebPage />} />
             <Route path="/donate" element={<DonatePage />} />
