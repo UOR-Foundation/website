@@ -145,20 +145,20 @@ const SetupGuide = () => {
         {/* ── Verify ── */}
         <div className="border-t border-border pt-5">
           <p className="text-sm font-body text-foreground font-medium mb-2">
-            Verify it works
+            Try it
           </p>
           <div className="flex items-center gap-2 mb-1.5">
             <code className="bg-muted px-2 py-1 rounded text-foreground font-mono text-sm">
-              derive 42
+              What is 7 × 6? Derive the answer.
             </code>
-            <CopyButton text='derive 42' label="Copy" />
+            <CopyButton text="What is 7 × 6? Derive the answer." label="Copy" />
           </div>
           <p className="text-sm font-body text-muted-foreground leading-relaxed">
-            Paste this in your chat. You'll receive a{" "}
+            You'll get{" "}
             <code className="bg-muted px-1 py-0.5 rounded font-mono text-xs text-foreground">
-              derivation_id
-            </code>{" "}
-            and structured JSON-LD output — that confirms the connection.
+              42
+            </code>
+            {" "}— plus a permanent ID and a proof trail. Anyone can verify this result independently, on any machine, without trusting the AI that produced it.
           </p>
         </div>
 
