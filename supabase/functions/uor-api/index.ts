@@ -7153,6 +7153,12 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
     for (const b of identity.canonicalBytes) xorFold = (xorFold ^ b) & 0xff;
     const canonicalIri = datumIRI(xorFold, 8);
 
+    // ── R3: Explicit quantum level declaration ────────────────────────────
+    // All sobridge instances operate at Q0 (8-bit, Z/256Z) for canonical ring mapping.
+    // The XOR-fold from arbitrary-length canonical bytes to Q0 is itself a
+    // cross-quantum morphism:Transform (projection from content space to ring space).
+    const sobridgeQuantum = 0; // Q0 — declared, not implicit
+
     let storageResult: DualCidResult | null = null;
     if (storeToPersistence) {
       storageResult = await storeToIPFSDualCid(finalObj, identity);
@@ -7173,6 +7179,19 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
       "store:uorAddress": { "u:glyph": identity.uorAddress.glyph.slice(0, 32), "u:length": identity.uorAddress.length },
       "derivation:derivationId": derivationId,
       "u:canonicalIri": canonicalIri,
+      // ── R3: Explicit quantum level declaration ──────────────────────────
+      "sobridge:quantumLevel": sobridgeQuantum,
+      "sobridge:ringModulus": 256,
+      "sobridge:crossQuantumTransform": {
+        "@type": "morphism:Transform",
+        "morphism:source": `content:sha256:${identity.sha256.slice(0, 16)}…`,
+        "morphism:target": canonicalIri,
+        "morphism:sourceQuantum": "content-space",
+        "morphism:targetQuantum": sobridgeQuantum,
+        "morphism:operation": "xor-fold-projection",
+        "morphism:preservesMetric": "ring",
+        "_note": "Cross-quantum Transform from variable-length content space to Q0 ring element via XOR folding. R3 compliant.",
+      },
       // ── C2: Include coercion transforms for auditability ──
       ...(coercions.length > 0 ? {
         "sobridge:unionTypeCoercions": coercions.map(c => ({
@@ -7280,6 +7299,9 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
   let xorFold = 0;
   for (const b of identity.canonicalBytes) xorFold = (xorFold ^ b) & 0xff;
 
+  // ── R3: Explicit quantum level declaration for type definitions ────────
+  const typeQuantum = 0; // Type definitions canonicalized at Q0
+
   // ── Dual-CID persistence: Pinata (hot) + Storacha (cold) ──
   let storageResult: DualCidResult | null = null;
   if (storeToPersistence) {
@@ -7292,6 +7314,18 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
     "store:uorAddress": { "u:glyph": identity.uorAddress.glyph.slice(0, 32), "u:length": identity.uorAddress.length },
     "derivation:derivationId": derivationId,
     "u:canonicalIri": datumIRI(xorFold, 8),
+    // ── R3: Explicit quantum level declaration ──────────────────────────
+    "sobridge:quantumLevel": typeQuantum,
+    "sobridge:ringModulus": 256,
+    "sobridge:crossQuantumTransform": {
+      "@type": "morphism:Transform",
+      "morphism:source": `content:sha256:${identity.sha256.slice(0, 16)}…`,
+      "morphism:target": datumIRI(xorFold, 8),
+      "morphism:sourceQuantum": "content-space",
+      "morphism:targetQuantum": typeQuantum,
+      "morphism:operation": "xor-fold-projection",
+      "morphism:preservesMetric": "ring",
+    },
     ...(storageResult ? {
       "store:uorCid": identity.cid,
       "sobridge:pinataCid": storageResult.pinataCid,
@@ -7304,7 +7338,7 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
       "store:dualCidNote": "store:uorCid is the universal algebraic CID (dag-json/sha2-256). sobridge:pinataCid and sobridge:storachaCid are provider-specific handles for physical retrieval.",
     } : {}),
     "sobridge:verifyUrl": `https://api.uor.foundation/v1/tools/verify?derivation_id=${derivationId}`,
-    "_sobridge_note": "This schema.org type definition has been content-addressed by the UOR kernel. The CID and Braille address are deterministic: same content → same identity, everywhere, forever.",
+    "_sobridge_note": "This schema.org type definition has been content-addressed by the UOR kernel. The CID and Braille address are deterministic: same content → same identity, everywhere, forever. R3: Quantum level Q0 explicitly declared.",
     "proof:r4Gate": gate.proofNode,
   }, 'B'), { ...CACHE_HEADERS_BRIDGE, 'X-UOR-R4-Gate': 'PASSED' }, undefined, rl);
 }
