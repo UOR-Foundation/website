@@ -240,6 +240,134 @@ export function partitionEpistemics(
   };
 }
 
+/** Build epistemic metadata for a uor_resolve result. */
+export function resolveEpistemics(
+  data: Record<string, unknown>,
+  input: string,
+  cached = false,
+): EpistemicMetadata {
+  const hasIri = !!data["@id"];
+  const grade: EpistemicGrade = hasIri ? "A" : "D";
+  const meta = GRADE_META[grade];
+
+  return {
+    grade,
+    grade_label: meta.label,
+    confidence: meta.base_confidence,
+    sources: [
+      { type: "user_input", label: `Resolve input: "${input}"` },
+      ...(hasIri
+        ? [{ type: "algebraic_derivation" as const, label: `Content-addressed IRI: ${String(data["@id"])}`, reference: String(data["@id"]) }]
+        : []),
+    ],
+    reasoning_chain: [
+      `1. Received value or IRI "${input}" for resolution.`,
+      "2. Looked up the full datum in the UOR content-addressed registry.",
+      hasIri
+        ? `3. Resolved to IRI: ${String(data["@id"])}`
+        : "3. No matching datum found.",
+      hasIri
+        ? "4. Full triad (datum, stratum, spectrum) returned with content-based address."
+        : "4. Resolution failed — value not in the registry.",
+      hasIri
+        ? "5. Grade A assigned — identity is content-derived and deterministic."
+        : "5. Grade D assigned — could not resolve.",
+    ],
+    trust_summary: cached
+      ? "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed."
+      : hasIri
+        ? "This value has been resolved to its permanent, content-based identity. The address is derived from the content itself, not from where it is stored. Anyone can independently verify this mapping."
+        : "This value could not be resolved to a known identity in the system.",
+  };
+}
+
+/** Build epistemic metadata for a uor_certify result. */
+export function certifyEpistemics(
+  data: Record<string, unknown>,
+  derivationId: string,
+  cached = false,
+): EpistemicMetadata {
+  const hasCert = !!data["cert:certificateId"] || !!data.certificate_id;
+  const grade: EpistemicGrade = hasCert ? "A" : "D";
+  const meta = GRADE_META[grade];
+  const certId = String(data["cert:certificateId"] ?? data.certificate_id ?? "");
+
+  return {
+    grade,
+    grade_label: meta.label,
+    confidence: meta.base_confidence,
+    sources: [
+      { type: "user_input", label: `Derivation ID: ${derivationId.slice(0, 32)}…` },
+      ...(hasCert
+        ? [{ type: "certificate" as const, label: `Certificate issued: ${certId.slice(0, 24)}…`, reference: certId }]
+        : []),
+    ],
+    reasoning_chain: [
+      `1. Received derivation ID for certification.`,
+      "2. Verified the derivation exists in the UOR derivation store.",
+      hasCert
+        ? "3. Certificate issued — binds derivation ID to result IRI with a content hash."
+        : "3. Certification failed — derivation not found or invalid.",
+      hasCert
+        ? `4. Certificate ID: ${certId.slice(0, 24)}…`
+        : "4. No certificate produced.",
+      hasCert
+        ? "5. Grade A assigned — certificate is cryptographically bound to the derivation."
+        : "5. Grade D assigned — no certificate could be issued.",
+    ],
+    trust_summary: cached
+      ? "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed."
+      : hasCert
+        ? "A certificate has been issued for this computation. It permanently binds the input, the computation steps, and the result together. Anyone with the certificate ID can independently verify the entire chain."
+        : "No certificate could be issued. The derivation may not exist or may be invalid.",
+  };
+}
+
+/** Build epistemic metadata for a uor_trace result. */
+export function traceEpistemics(
+  data: Record<string, unknown>,
+  input: string,
+  ops: string,
+  cached = false,
+): EpistemicMetadata {
+  const hasTrace = Array.isArray((data as Record<string, unknown>)["trace:frames"]) ||
+    !!(data as Record<string, unknown>)["trace:totalHammingDrift"] !== undefined;
+  const drift = Number((data as Record<string, unknown>)["trace:totalHammingDrift"] ?? -1);
+  const isClean = drift === 0;
+  const grade: EpistemicGrade = hasTrace ? "A" : "D";
+  const meta = GRADE_META[grade];
+
+  return {
+    grade,
+    grade_label: meta.label,
+    confidence: meta.base_confidence,
+    sources: [
+      { type: "user_input", label: `Trace: x=${input}, ops=${ops}` },
+      ...(hasTrace
+        ? [{ type: "computation" as const, label: `Execution trace with Hamming drift = ${drift}` }]
+        : []),
+    ],
+    reasoning_chain: [
+      `1. Received value x=${input} with operations [${ops}].`,
+      "2. Executed each operation step-by-step, recording binary state.",
+      "3. Computed Hamming weight and XOR delta at each frame.",
+      hasTrace
+        ? `4. Total Hamming drift = ${drift}. ${isClean ? "No anomalous bit changes detected." : "Non-zero drift detected — possible injection or unexpected operation."}`
+        : "4. Trace computation failed.",
+      hasTrace
+        ? "5. Grade A assigned — trace is a deterministic record of execution."
+        : "5. Grade D assigned — no trace produced.",
+    ],
+    trust_summary: cached
+      ? "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed."
+      : hasTrace
+        ? isClean
+          ? "The operation sequence executed cleanly with no unexpected changes. Every step is recorded and independently verifiable. This is consistent with a legitimate computation."
+          : `The operation sequence shows a Hamming drift of ${drift}, indicating unexpected bit changes between steps. This may signal an anomalous or injected operation. Review the trace frames for details.`
+        : "The execution trace could not be generated. No step-by-step record is available.",
+  };
+}
+
 /** Emoji for each grade. */
 function gradeIcon(grade: EpistemicGrade): string {
   return { A: "🟢", B: "🔵", C: "🟡", D: "🔴" }[grade];

@@ -12,6 +12,9 @@ import {
   queryEpistemics,
   correlateEpistemics,
   partitionEpistemics,
+  resolveEpistemics,
+  certifyEpistemics,
+  traceEpistemics,
   formatEpistemicBlock,
 } from "./epistemics.ts";
 
@@ -165,6 +168,63 @@ const TOOLS = [
       required: ["claim"],
     },
   },
+  {
+    name: "uor_resolve",
+    description:
+      "Resolve a value or IRI to its full content-addressed datum. Returns the permanent identity (IRI, Braille address, triad coordinates) for any value in the ring. This is how UOR assigns every piece of data a unique, permanent address derived from its content.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        value: {
+          type: "number",
+          description: "The numeric value to resolve (0–255 for Q0).",
+        },
+        quantum: {
+          type: "number",
+          description: "Ring quantum level (default: 0 for ℤ/256ℤ).",
+        },
+      },
+      required: ["value"],
+    },
+  },
+  {
+    name: "uor_certify",
+    description:
+      "Issue a certificate for a derivation. Binds a derivation ID to its result IRI with a cryptographic content hash, creating a permanent, verifiable trust chain. Use after uor_derive to lock down a computation.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        derivation_id: {
+          type: "string",
+          description: "The SHA-256 derivation ID to certify (from uor_derive).",
+        },
+      },
+      required: ["derivation_id"],
+    },
+  },
+  {
+    name: "uor_trace",
+    description:
+      "Get a step-by-step execution trace for a sequence of operations on a value. Records the binary state after each step and computes Hamming drift. Non-zero drift signals an anomalous or injected operation. Use this for injection detection and audit trails.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        x: {
+          type: "number",
+          description: "The starting value.",
+        },
+        ops: {
+          type: "string",
+          description: "Comma-separated operation names (e.g., 'neg,bnot,succ').",
+        },
+        n: {
+          type: "number",
+          description: "Ring bit-width (default: 8 for ℤ/256ℤ).",
+        },
+      },
+      required: ["x", "ops"],
+    },
+  },
 ];
 
 const VALID_TOOL_NAMES = new Set(TOOLS.map((t) => t.name));
@@ -217,6 +277,24 @@ async function runTool(name: string, args: Record<string, unknown>) {
       case "uor_partition":
         epistemicBlock = await formatEpistemicBlock(
           partitionEpistemics(cachedData as Record<string, unknown>, (args.seed_set as number[]) ?? [], true),
+          proofStatus,
+        );
+        break;
+      case "uor_resolve":
+        epistemicBlock = await formatEpistemicBlock(
+          resolveEpistemics(cachedData as Record<string, unknown>, String(args.value ?? ""), true),
+          proofStatus,
+        );
+        break;
+      case "uor_certify":
+        epistemicBlock = await formatEpistemicBlock(
+          certifyEpistemics(cachedData as Record<string, unknown>, String(args.derivation_id ?? ""), true),
+          proofStatus,
+        );
+        break;
+      case "uor_trace":
+        epistemicBlock = await formatEpistemicBlock(
+          traceEpistemics(cachedData as Record<string, unknown>, String(args.x ?? ""), String(args.ops ?? ""), true),
           proofStatus,
         );
         break;
@@ -347,6 +425,39 @@ async function runTool(name: string, args: Record<string, unknown>) {
         const epistemicBlock = "\n" + report;
         const resultText = JSON.stringify(data, null, 2) + epistemicBlock;
         return { content: [{ type: "text", text: resultText }] };
+      }
+      case "uor_resolve": {
+        const value = sanitiseNumber(args.value);
+        const quantum = sanitiseNumber(args.quantum);
+        // Use the datum endpoint to get the full content-addressed datum
+        data = await callApi("GET", `/graph/q0/datum/${value}`, {
+          ...(quantum ? { n: String((quantum + 1) * 8) } : {}),
+        });
+        epistemicMeta = resolveEpistemics(data as Record<string, unknown>, String(value));
+        epistemicGrade = epistemicMeta.grade;
+        break;
+      }
+      case "uor_certify": {
+        const derivationId = sanitiseString(args.derivation_id, 128);
+        data = await callApi("POST", "/cert/issue", undefined, {
+          derivation_id: derivationId,
+        });
+        epistemicMeta = certifyEpistemics(data as Record<string, unknown>, derivationId);
+        epistemicGrade = epistemicMeta.grade;
+        break;
+      }
+      case "uor_trace": {
+        const x = sanitiseNumber(args.x);
+        const ops = sanitiseString(args.ops, 256);
+        const n = sanitiseNumber(args.n) || 8;
+        data = await callApi("GET", "/bridge/trace", {
+          x: String(x),
+          ops,
+          n: String(n),
+        });
+        epistemicMeta = traceEpistemics(data as Record<string, unknown>, String(x), ops);
+        epistemicGrade = epistemicMeta.grade;
+        break;
       }
     }
 
