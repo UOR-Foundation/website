@@ -2593,27 +2593,26 @@ function frameworkIndex(rl: RateLimitResult): Response {
   const etag = makeETag('/navigate', {});
   return jsonResp({
     "summary": {
-      "total_endpoints": 28,
-      "spaces": ["kernel", "bridge", "user", "store", "simple_verify"],
+      "total_endpoints": 42,
+      "spaces": ["kernel", "bridge", "user", "store", "tools"],
       "quick_start_url": `${verifySimple}?x=42`
     },
     "@context": UOR_CONTEXT_URL,
-    "@id": "https://uor.foundation/api/v1",
-    "@type": "sdo:WebAPI",
-    "title": "UOR Framework REST API — Navigation Index",
+    "@id": "https://uor.foundation/api/navigate",
+    "@type": "uor:NavigationIndex",
+    "title": "UOR Framework API — Navigation Index",
     "version": "1.0.0",
-    "total_endpoints": 28,
-    "description": "Complete index of all 28 working endpoints across 4 spaces (kernel, bridge, user, store). Start with /kernel/op/verify?x=42 for the simplest first call.",
+    "total_endpoints": 42,
+    "description": "Complete index of all 42 working endpoints across 5 spaces (kernel, bridge, user, store, tools). Start with /kernel/op/verify?x=42 for the simplest first call.",
     "openapi_spec": "https://uor.foundation/openapi.json",
+    "base_url": base,
     "agent_entry_point": "https://uor.foundation/llms.md",
     "discovery_metadata": "https://uor.foundation/.well-known/uor.json",
     "quick_start": {
-      "simplest_first_call": `${verifySimple}?x=42`,
-      "simplest_note": "Flat JSON, 5 fields, zero JSON-LD. Best entry point for agents new to UOR.",
-      "verify_critical_identity": `${base}/kernel/op/verify?x=42`,
-      "compute_all_ops": `${base}/kernel/op/compute?x=42&y=10`,
-      "encode_address": `${base}/kernel/address/encode (POST {input:"hello"})`,
-      "partition_content": `${base}/bridge/partition (POST {input:"hello"})`
+      "step_1": `GET /kernel/op/verify?x=42 — verify the critical identity neg(bnot(42))=succ(42)=43`,
+      "step_2": `GET /kernel/op/compute?x=42&y=10 — all ring operations`,
+      "step_3": `POST /bridge/partition {"input":"hello"} — content quality analysis`,
+      "step_4": `GET /bridge/trace?x=42&ops=neg,bnot — injection detection`
     },
     "spaces": {
       "kernel": {
