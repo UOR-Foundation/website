@@ -66,7 +66,7 @@ function SemanticWebTower() {
   return (
     <div
       className="relative mx-auto select-none"
-      style={{ maxWidth: CONTAINER_W, height: CONTAINER_H }}
+      style={{ maxWidth: CONTAINER_W, height: CONTAINER_H + 52 }}
     >
       {/* Main layers — all right-aligned to mainRight */}
       {layers.map((layer, i) => {
@@ -121,47 +121,61 @@ function SemanticWebTower() {
             >
               Unicode
             </a>
-            <a
-              href="#layer-0"
-              className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
-              style={{
-                top,
-                left: uriLeft,
-                width: uriW,
-                height: ROW_H,
-                backgroundColor: TOWER_COLORS.uri,
-                color: "white",
-                borderRadius: 3,
-              }}
-              title="Jump to: URI"
-            >
-              URI
-            </a>
-          </>
-        );
-      })()}
+             <a
+               href="#layer-0"
+               className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
+               style={{
+                 top,
+                 left: uriLeft,
+                 width: uriW,
+                 height: ROW_H,
+                 backgroundColor: TOWER_COLORS.uri,
+                 color: "white",
+                 borderRadius: 3,
+               }}
+               title="Jump to: URI"
+             >
+               URI<span className="text-yellow-300 ml-0.5">*</span>
+             </a>
+           </>
+         );
+       })()}
 
-      {/* Digital Signature — spans Proof (row 1) to RDF (row 4) only */}
-      <a
-        href="#layer-7"
-        className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
-        style={{
-          top: sigTop,
-          left: mainRight + SIG_GAP_PX,
-          width: SIG_W_PX,
-          height: sigBottom - sigTop,
-          backgroundColor: TOWER_COLORS.sig,
-          color: "hsl(0, 0%, 92%)",
-          borderRadius: 3,
-          writingMode: "vertical-rl",
-          textOrientation: "mixed",
-          letterSpacing: "0.05em",
-        }}
-        title="Jump to: Digital Signature"
-      >
-        Digital Signature
-      </a>
-    </div>
+       {/* Digital Signature — outline only, spans Proof (row 1) to RDF (row 4) */}
+       <a
+         href="#layer-7"
+         className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
+         style={{
+           top: sigTop,
+           left: mainRight + SIG_GAP_PX,
+           width: SIG_W_PX,
+           height: sigBottom - sigTop,
+           backgroundColor: "transparent",
+           border: `2px solid ${TOWER_COLORS.sig}`,
+           color: TOWER_COLORS.sig,
+           borderRadius: 3,
+           writingMode: "vertical-rl",
+           textOrientation: "mixed",
+           letterSpacing: "0.05em",
+         }}
+         title="Jump to: Digital Signature"
+       >
+         Digital Signature
+       </a>
+
+       {/* URI asterisk footnote */}
+       <p
+         className="absolute font-body text-xs text-muted-foreground leading-snug"
+         style={{
+           top: CONTAINER_H + 12,
+           left: 0,
+           right: 0,
+         }}
+       >
+         <span className="text-yellow-500 font-bold">*</span>{" "}
+         UOR replaces location-based URIs with content-derived addresses. Identity comes from what the data is, not where it lives. Same content, same address, on every system, with no coordination required.
+       </p>
+     </div>
   );
 }
 
