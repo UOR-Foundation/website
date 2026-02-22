@@ -301,6 +301,89 @@ export type Database = {
         }
         Relationships: []
       }
+      uor_observer_outputs: {
+        Row: {
+          agent_id: string
+          created_at: string
+          derivation_id: string | null
+          epistemic_grade: string
+          h_score: number
+          id: string
+          output_hash: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          derivation_id?: string | null
+          epistemic_grade?: string
+          h_score?: number
+          id?: string
+          output_hash: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          derivation_id?: string | null
+          epistemic_grade?: string
+          h_score?: number
+          id?: string
+          output_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uor_observer_outputs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "uor_observers"
+            referencedColumns: ["agent_id"]
+          },
+        ]
+      }
+      uor_observers: {
+        Row: {
+          agent_id: string
+          capacity: number
+          created_at: string
+          field_of_observation: string[]
+          founding_derivation_id: string
+          grade_a_rate: number
+          h_score_mean: number
+          persistence: number
+          quantum_level: number
+          updated_at: string
+          zone: string
+          zone_transition_at: string
+        }
+        Insert: {
+          agent_id: string
+          capacity?: number
+          created_at?: string
+          field_of_observation?: string[]
+          founding_derivation_id: string
+          grade_a_rate?: number
+          h_score_mean?: number
+          persistence?: number
+          quantum_level?: number
+          updated_at?: string
+          zone?: string
+          zone_transition_at?: string
+        }
+        Update: {
+          agent_id?: string
+          capacity?: number
+          created_at?: string
+          field_of_observation?: string[]
+          founding_derivation_id?: string
+          grade_a_rate?: number
+          h_score_mean?: number
+          persistence?: number
+          quantum_level?: number
+          updated_at?: string
+          zone?: string
+          zone_transition_at?: string
+        }
+        Relationships: []
+      }
       uor_receipts: {
         Row: {
           coherence_verified: boolean

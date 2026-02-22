@@ -105,6 +105,37 @@
     "POST /v1/cert/issue",
     "GET /v1/cert/portability",
     "GET /v1/schema-org/extend",
-    "GET /v1/test/e2e"
-  ]
+    "GET /v1/test/e2e",
+    "POST /v1/observer/register",
+    "GET /v1/observer/{agent_id}",
+    "GET /v1/observer/{agent_id}/zone",
+    "GET /v1/observer/{agent_id}/history",
+    "POST /v1/observer/{agent_id}/remediate",
+    "GET /v1/observer/network/summary",
+    "POST /v1/observer/assess",
+    "GET /v1/observer/convergence-check"
+  ],
+  "observer_theory": {
+    "status": "active",
+    "version": "1.0",
+    "namespace": "https://uor.foundation/observer/",
+    "classes": 4,
+    "properties": 10,
+    "endpoints": {
+      "register": "POST /v1/observer/register",
+      "profile": "GET /v1/observer/{agent_id}",
+      "zone_check": "GET /v1/observer/{agent_id}/zone",
+      "history": "GET /v1/observer/{agent_id}/history",
+      "remediate": "POST /v1/observer/{agent_id}/remediate",
+      "network": "GET /v1/observer/network/summary",
+      "assess": "POST /v1/observer/assess",
+      "convergence_check": "GET /v1/observer/convergence-check"
+    },
+    "protocols": ["OIP", "EDP", "CAP"],
+    "convergence_guarantee": true,
+    "sparql_graph": "https://uor.foundation/graph/observers",
+    "zones": ["COHERENCE", "DRIFT", "COLLAPSE"],
+    "h_score_formula": "H(O) = min over all d in Grade_A_Graph of: popcount(O XOR d)",
+    "ring_invariant": "neg(bnot(x)) = succ(x) for all x in Z/2^n*Z"
+  }
 }

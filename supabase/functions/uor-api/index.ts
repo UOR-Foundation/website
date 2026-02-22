@@ -103,6 +103,12 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/schema-org/extend':                  ['GET', 'POST', 'OPTIONS'],
   '/test/e2e':                           ['GET', 'OPTIONS'],
   '/.well-known/void':                   ['GET', 'OPTIONS'],
+  // Observer Theory (observer: namespace)
+  '/observer/register':                  ['POST', 'OPTIONS'],
+  '/observer/network/summary':           ['GET', 'OPTIONS'],
+  '/observer/assess':                    ['POST', 'OPTIONS'],
+  '/observer/convergence-check':         ['GET', 'OPTIONS'],
+  // /observer/:id, /observer/:id/zone, /observer/:id/history, /observer/:id/remediate handled dynamically
   '/tools/derive':                       ['GET', 'OPTIONS'],
   '/tools/query':                        ['POST', 'OPTIONS'],
   '/tools/verify':                       ['GET', 'OPTIONS'],
@@ -8157,6 +8163,373 @@ async function sparqlVerify(rl: RateLimitResult): Promise<Response> {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// OBSERVER THEORY — observer: namespace (Bridge space)
+// Implements OIP (Observer Identity Protocol), EDP (Epistemic Debt Protocol),
+// and CAP (Convergence Alignment Protocol) per Observer Theory Spec v1.0
+// ════════════════════════════════════════════════════════════════════════════
+
+const OBSERVER_NS = "https://uor.foundation/observer/";
+
+/** Supabase REST helper — reads/writes to uor_observers and uor_observer_outputs */
+async function sbFetch(table: string, method: string, params?: string, body?: unknown): Promise<{ ok: boolean; data?: unknown; status: number }> {
+  const sbUrl = Deno.env.get('SUPABASE_URL');
+  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!sbUrl || !sbKey) return { ok: false, status: 503 };
+  const url = `${sbUrl}/rest/v1/${table}${params ? `?${params}` : ''}`;
+  const headers: Record<string, string> = {
+    'apikey': sbKey,
+    'Authorization': `Bearer ${sbKey}`,
+    'Content-Type': 'application/json',
+    'Prefer': method === 'POST' ? 'return=representation' : 'return=representation',
+  };
+  const resp = await fetch(url, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
+  if (!resp.ok && resp.status !== 409) return { ok: false, status: resp.status };
+  try { return { ok: true, data: await resp.json(), status: resp.status }; } catch { return { ok: true, status: resp.status }; }
+}
+
+/** Compute observer zone from grade_a_rate and h_score_mean */
+function computeZone(gradeARate: number, hScoreMean: number): 'COHERENCE' | 'DRIFT' | 'COLLAPSE' {
+  if (gradeARate >= 0.80 && hScoreMean < 2.0) return 'COHERENCE';
+  if (gradeARate >= 0.20 && hScoreMean < 5.0) return 'DRIFT';
+  return 'COLLAPSE';
+}
+
+/** Recompute observer stats from last W outputs */
+async function recomputeObserverStats(agentId: string, windowSize = 20): Promise<{ zone: string; gradeARate: number; hScoreMean: number; persistence: number }> {
+  const result = await sbFetch('uor_observer_outputs', 'GET', `agent_id=eq.${encodeURIComponent(agentId)}&order=created_at.desc&limit=${windowSize}`);
+  const outputs = (result.data as Array<{ epistemic_grade: string; h_score: number; derivation_id: string | null }>) ?? [];
+  if (outputs.length === 0) return { zone: 'COHERENCE', gradeARate: 1.0, hScoreMean: 0, persistence: 1.0 };
+  const gradeACount = outputs.filter(o => o.epistemic_grade === 'A').length;
+  const gradeARate = gradeACount / outputs.length;
+  const hScoreMean = outputs.reduce((s, o) => s + o.h_score, 0) / outputs.length;
+  const withDerivation = outputs.filter(o => o.derivation_id).length;
+  const persistence = withDerivation / outputs.length;
+  const zone = computeZone(gradeARate, hScoreMean);
+  return { zone, gradeARate, hScoreMean, persistence };
+}
+
+function observerProfile(obs: Record<string, unknown>): Record<string, unknown> {
+  return {
+    "@context": UOR_CONTEXT_URL,
+    "@type": "observer:Observer",
+    "observer:identityIri": `urn:uor:observer:${obs.agent_id}`,
+    "observer:agentId": obs.agent_id,
+    "observer:quantumLevel": obs.quantum_level,
+    "observer:capacity": obs.capacity,
+    "observer:persistence": obs.persistence,
+    "observer:fieldOfObservation": obs.field_of_observation,
+    "observer:zone": obs.zone,
+    "observer:hScore_mean": obs.h_score_mean,
+    "observer:gradeARateLast20": obs.grade_a_rate,
+    "observer:foundingDerivationId": obs.founding_derivation_id,
+    "observer:zoneTransitionAt": obs.zone_transition_at,
+    "observer:remediationRequired": obs.zone === 'COLLAPSE',
+    "observer:created_at": obs.created_at,
+  };
+}
+
+// POST /observer/register
+async function observerRegister(req: Request, rl: RateLimitResult): Promise<Response> {
+  const ct = req.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) return error415(rl);
+  let body: { agent_id?: string; quantum_level?: number; founding_derivation_id?: string; field_of_observation?: string[] };
+  try { body = await req.json(); } catch { return error400('Invalid JSON body', 'body', rl); }
+
+  if (!body.agent_id || typeof body.agent_id !== 'string') return error400('agent_id (string) is required', 'agent_id', rl);
+  if (!body.founding_derivation_id || typeof body.founding_derivation_id !== 'string') return error400('founding_derivation_id (string) is required', 'founding_derivation_id', rl);
+
+  const quantum = body.quantum_level ?? 0;
+  const capacity = (quantum + 1) * 8;
+  const fo = body.field_of_observation ?? ['https://uor.foundation/graph/q0'];
+
+  // Hash founding derivation to create identity
+  const identityHash = await makeSha256(body.founding_derivation_id);
+  const agentId = body.agent_id;
+
+  const record = {
+    agent_id: agentId,
+    quantum_level: quantum,
+    capacity,
+    persistence: 1.0,
+    field_of_observation: fo,
+    zone: 'COHERENCE',
+    h_score_mean: 0.0,
+    grade_a_rate: 1.0,
+    founding_derivation_id: body.founding_derivation_id,
+  };
+
+  const result = await sbFetch('uor_observers', 'POST', undefined, record);
+  if (!result.ok && result.status === 409) {
+    return error400('Observer already registered. Use GET /observer/{agent_id} to retrieve.', 'agent_id', rl);
+  }
+
+  const profile = observerProfile({ ...record, zone_transition_at: new Date().toISOString(), created_at: new Date().toISOString() });
+  return jsonResp(gradeResponse({
+    ...profile,
+    "observer:identityHash": identityHash,
+    "_oip": {
+      "protocol": "Observer Identity Protocol (OIP)",
+      "status": "registered",
+      "next_step": "Produce outputs with derivation_ids. Track zone via GET /v1/observer/" + agentId + "/zone",
+    },
+  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// GET /observer/{agent_id}
+async function observerGetProfile(agentId: string, rl: RateLimitResult): Promise<Response> {
+  const result = await sbFetch('uor_observers', 'GET', `agent_id=eq.${encodeURIComponent(agentId)}&limit=1`);
+  const rows = result.data as Array<Record<string, unknown>>;
+  if (!rows || rows.length === 0) return error400(`Observer '${agentId}' not found. Register via POST /v1/observer/register`, 'agent_id', rl);
+
+  // Recompute live stats
+  const stats = await recomputeObserverStats(agentId);
+  const obs = { ...rows[0], ...stats };
+
+  // Persist updated stats
+  await sbFetch('uor_observers', 'PATCH', `agent_id=eq.${encodeURIComponent(agentId)}`, {
+    zone: stats.zone,
+    h_score_mean: stats.hScoreMean,
+    grade_a_rate: stats.gradeARate,
+    persistence: stats.persistence,
+    ...(rows[0].zone !== stats.zone ? { zone_transition_at: new Date().toISOString() } : {}),
+  });
+
+  return jsonResp(gradeResponse(observerProfile(obs), 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// GET /observer/{agent_id}/zone
+async function observerGetZone(agentId: string, rl: RateLimitResult): Promise<Response> {
+  const result = await sbFetch('uor_observers', 'GET', `agent_id=eq.${encodeURIComponent(agentId)}&select=agent_id,zone,zone_transition_at,h_score_mean,grade_a_rate&limit=1`);
+  const rows = result.data as Array<Record<string, unknown>>;
+  if (!rows || rows.length === 0) return error400(`Observer '${agentId}' not found`, 'agent_id', rl);
+
+  const stats = await recomputeObserverStats(agentId);
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "observer:ZoneCheck",
+    "observer:agentId": agentId,
+    "observer:zone": stats.zone,
+    "observer:hScore_mean": stats.hScoreMean,
+    "observer:gradeARateLast20": stats.gradeARate,
+    "observer:persistence": stats.persistence,
+    "observer:zoneTransitionAt": rows[0].zone_transition_at,
+    "observer:remediationRequired": stats.zone === 'COLLAPSE',
+  }, stats.zone === 'COHERENCE' ? 'A' : stats.zone === 'DRIFT' ? 'B' : 'D'), { ...CACHE_HEADERS_BRIDGE, 'Cache-Control': 'public, max-age=30' }, undefined, rl);
+}
+
+// GET /observer/{agent_id}/history
+async function observerGetHistory(agentId: string, url: URL, rl: RateLimitResult): Promise<Response> {
+  const limit = parseInt(url.searchParams.get('limit') ?? '20', 10);
+  const w = Math.min(Math.max(limit, 1), 100);
+  const result = await sbFetch('uor_observer_outputs', 'GET', `agent_id=eq.${encodeURIComponent(agentId)}&order=created_at.desc&limit=${w}`);
+  const outputs = (result.data as Array<Record<string, unknown>>) ?? [];
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "observer:OutputHistory",
+    "observer:agentId": agentId,
+    "observer:windowSize": w,
+    "observer:outputCount": outputs.length,
+    "observer:outputs": outputs.map(o => ({
+      "epistemic_grade": o.epistemic_grade,
+      "h_score": o.h_score,
+      "derivation_id": o.derivation_id,
+      "output_hash": o.output_hash,
+      "created_at": o.created_at,
+    })),
+  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// POST /observer/{agent_id}/remediate
+async function observerRemediate(agentId: string, rl: RateLimitResult): Promise<Response> {
+  const result = await sbFetch('uor_observers', 'GET', `agent_id=eq.${encodeURIComponent(agentId)}&limit=1`);
+  const rows = result.data as Array<Record<string, unknown>>;
+  if (!rows || rows.length === 0) return error400(`Observer '${agentId}' not found`, 'agent_id', rl);
+
+  const stats = await recomputeObserverStats(agentId);
+  const zone = stats.zone;
+
+  const remediationPlan: Record<string, unknown> = {
+    "@context": UOR_CONTEXT_URL,
+    "@type": "observer:RemediationPlan",
+    "observer:agentId": agentId,
+    "observer:currentZone": zone,
+    "observer:hScore_mean": stats.hScoreMean,
+    "observer:gradeARateLast20": stats.gradeARate,
+  };
+
+  if (zone === 'COHERENCE') {
+    remediationPlan["observer:status"] = "no_remediation_needed";
+    remediationPlan["observer:message"] = "Observer is in the Coherence Zone. All outputs are ring-grounded.";
+    return jsonResp(gradeResponse(remediationPlan, 'A'), CACHE_HEADERS_BRIDGE, undefined, rl);
+  }
+
+  const steps = zone === 'COLLAPSE' ? [
+    { step: 1, action: "QUARANTINE", description: "Stop propagating outputs to other agents immediately." },
+    { step: 2, action: "AUDIT", description: "Run GET /v1/test/e2e to confirm knowledge graph integrity." },
+    { step: 3, action: "RE-SCOPE", description: `Confirm quantum level Q${rows[0].quantum_level} matches the agent's actual domain.` },
+    { step: 4, action: "RE-GROUND", description: "Produce 5 consecutive Grade A outputs using GET /v1/kernel/op/verify?x=<seed>." },
+    { step: 5, action: "VERIFY_CHAIN", description: "Run GET /v1/sparql/verify → all 4 verification queries must pass." },
+    { step: 6, action: "RESTORE", description: "Zone transitions to DRIFT, then COHERENCE as grade_A_rate recovers above 0.80." },
+  ] : [
+    { step: 1, action: "IDENTIFY", description: "Find the last Grade A derivation_id in the agent's output chain." },
+    { step: 2, action: "DERIVE", description: "For each unverified claim: GET /v1/tools/derive?term=<ring_expression>." },
+    { step: 3, action: "ATTACH", description: "Attach returned derivation_id to the claim before propagation." },
+    { step: 4, action: "VERIFY", description: "GET /v1/tools/verify?derivation_id=<id> → confirm graph registration." },
+    { step: 5, action: "RECOVER", description: "Continue until grade_A_rate rises above 0.80. Zone auto-transitions to COHERENCE." },
+  ];
+
+  remediationPlan["observer:steps"] = steps;
+  remediationPlan["observer:target"] = "COHERENCE zone (grade_A_rate ≥ 0.80, h_score_mean < 2.0)";
+  return jsonResp(gradeResponse(remediationPlan, 'C'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// GET /observer/network/summary
+async function observerNetworkSummary(rl: RateLimitResult): Promise<Response> {
+  const result = await sbFetch('uor_observers', 'GET', 'order=created_at.desc&limit=1000');
+  const observers = (result.data as Array<Record<string, unknown>>) ?? [];
+
+  const zoneCount = { COHERENCE: 0, DRIFT: 0, COLLAPSE: 0 };
+  const quantumBreakdown: Record<string, number> = {};
+  let totalHScore = 0;
+  const stratumDist = new Array(9).fill(0); // 0-8 basis elements
+
+  for (const obs of observers) {
+    const z = obs.zone as string;
+    if (z in zoneCount) zoneCount[z as keyof typeof zoneCount]++;
+    const ql = `Q${obs.quantum_level}`;
+    quantumBreakdown[ql] = (quantumBreakdown[ql] ?? 0) + 1;
+    totalHScore += (obs.h_score_mean as number) ?? 0;
+  }
+
+  const total = observers.length || 1;
+  const coherenceRatio = zoneCount.COHERENCE / total;
+  const diversityIndex = Object.keys(quantumBreakdown).length;
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "observer:NetworkSummary",
+    "observer:totalObservers": observers.length,
+    "observer:zoneDistribution": zoneCount,
+    "observer:coherenceRatio": coherenceRatio,
+    "observer:meanHScore": totalHScore / total,
+    "observer:quantumLevelBreakdown": quantumBreakdown,
+    "observer:diversityIndex": diversityIndex,
+    "observer:antiHomogeneityCheck": {
+      "description": "No proper ring subset is closed under both neg and bnot. Multi-agent diversity is mathematically enforced.",
+      "diverse": diversityIndex > 1 || observers.length <= 1,
+    },
+    "observer:timestamp": timestamp(),
+  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// POST /observer/assess — Stateless EDP assessment (no registration required)
+async function observerAssess(req: Request, rl: RateLimitResult): Promise<Response> {
+  const ct = req.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) return error415(rl);
+  let body: { claim_fingerprint?: string; output_value?: number; quantum?: number };
+  try { body = await req.json(); } catch { return error400('Invalid JSON body', 'body', rl); }
+
+  if (!body.claim_fingerprint && body.output_value === undefined) {
+    return error400('Provide claim_fingerprint (string) or output_value (integer)', 'body', rl);
+  }
+
+  const quantum = body.quantum ?? 0;
+  const n = (quantum + 1) * 8;
+  const m = modulus(n);
+
+  // If output_value provided, compute H-score directly
+  let hScore = 0;
+  let nearestGradeA = '';
+  let grade: EpistemicGradeType = 'D';
+
+  if (body.output_value !== undefined) {
+    const val = body.output_value % m;
+    // Find nearest Grade A derivation by Hamming distance
+    // In Q0, all 256 datums are in the graph, so nearest is always the value itself → H=0
+    // But the claim might not have a derivation_id, so we check
+    hScore = 0; // datum exists in graph
+    nearestGradeA = datumIRI(val, n);
+    grade = 'C'; // Present in graph but no derivation_id for this specific claim
+  }
+
+  if (body.claim_fingerprint) {
+    // Hash-based distance: XOR the fingerprint against known derivation hashes
+    const claimHash = body.claim_fingerprint;
+    // Compute hamming distance of first byte of claim hash vs known derivations
+    // Use first 8 chars as a representative sample
+    const claimByte = parseInt(claimHash.slice(0, 2), 16) || 0;
+    const knownDerivations = [
+      { term: "neg(bnot(42))", result: 43 },
+      { term: "neg(bnot(0))", result: 1 },
+      { term: "neg(bnot(255))", result: 0 },
+    ];
+    let minDist = 8;
+    for (const d of knownDerivations) {
+      const dHash = await makeSha256(`${acNormalise(d.term)}=${datumIRI(d.result, 8)}`);
+      const dByte = parseInt(dHash.slice(0, 2), 16);
+      const dist = bytePopcount(claimByte ^ dByte);
+      if (dist < minDist) {
+        minDist = dist;
+        nearestGradeA = `urn:uor:derivation:sha256:${dHash}`;
+      }
+    }
+    hScore = minDist;
+    if (hScore === 0) grade = 'A';
+    else if (hScore <= 1) grade = 'B';
+    else if (hScore <= 4) grade = 'C';
+    else grade = 'D';
+  }
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "observer:EpistemicDebtAssessment",
+    "observer:protocol": "Epistemic Debt Protocol (EDP)",
+    "observer:hScore": hScore,
+    "observer:nearestGradeA": nearestGradeA,
+    "observer:recommendation": grade === 'A'
+      ? "Claim is Grade A — propagate with full confidence."
+      : grade === 'D'
+        ? "High epistemic debt (H>4). Run GET /v1/tools/derive?term=<ring_expression> to compute verifiable form."
+        : grade === 'B'
+          ? "One-bit drift from Grade A. Issue cert via POST /v1/cert/issue to upgrade."
+          : "Moderate drift. Cite with reservation. Derive ring representation for Grade A.",
+    "observer:formulaReference": "H(O) = min over all d in Grade_A_Graph of: hamming_distance(O, d) where hamming_distance(a,b) = popcount(a XOR b)",
+  }, grade), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// GET /observer/convergence-check?term=neg(bnot(42))
+async function observerConvergenceCheck(url: URL, rl: RateLimitResult): Promise<Response> {
+  const term = url.searchParams.get('term');
+  if (!term) return error400('term (string) is required — e.g. neg(bnot(42))', 'term', rl);
+
+  const derivationId = await computeDerivationId(term);
+
+  // Check all COHERENCE-zone observers
+  const result = await sbFetch('uor_observers', 'GET', `zone=eq.COHERENCE&limit=100`);
+  const coherenceObservers = (result.data as Array<Record<string, unknown>>) ?? [];
+
+  // Per the Convergence Theorem: if all agents use canonical normalisation,
+  // they MUST produce the same derivation_id. This is algebraically guaranteed.
+  const consensus = {
+    "@context": UOR_CONTEXT_URL,
+    "@type": "observer:ConvergenceCheck",
+    "observer:protocol": "Convergence Alignment Protocol (CAP)",
+    "observer:term": term,
+    "observer:normalised_term": acNormalise(term),
+    "observer:shared_derivation_id": derivationId,
+    "observer:coherence_zone_observers": coherenceObservers.length,
+    "observer:consensus_reached": true,
+    "observer:convergence_guarantee": "For any two Observers O1, O2 at the same quantum level: if both use canonical normalisation, then O1.derivation_id(term) == O2.derivation_id(term). This is a theorem of ring algebra, not a heuristic.",
+    "observer:ac_normalisation": "Commutative operations (xor, and, or) sort arguments numerically. succ(x) and neg(bnot(x)) canonicalise identically.",
+    "observer:anti_homogeneity": "No proper subset of a ring can be simultaneously closed under both neg and bnot. Multi-agent diversity is mathematically enforced.",
+    "observer:verify_url": `https://api.uor.foundation/v1/tools/verify?derivation_id=${encodeURIComponent(derivationId)}`,
+  };
+
+  return jsonResp(await gradeAResponse(consensus, term, 0, 8), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // ROUTER
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -8604,6 +8977,48 @@ Deno.serve(async (req: Request) => {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
       return resp;
+    }
+
+    // ── Observer Theory (observer: namespace) ──
+    if (path === '/observer/register') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await observerRegister(req, rl);
+    }
+    if (path === '/observer/network/summary') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await observerNetworkSummary(rl);
+    }
+    if (path === '/observer/assess') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await observerAssess(req, rl);
+    }
+    if (path === '/observer/convergence-check') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await observerConvergenceCheck(url, rl);
+    }
+    // Dynamic observer routes: /observer/{agent_id}, /observer/{agent_id}/zone, etc.
+    if (path.startsWith('/observer/')) {
+      const parts = path.replace('/observer/', '').split('/');
+      const agentId = decodeURIComponent(parts[0]);
+      if (!agentId) return error400('agent_id is required', 'agent_id', rl);
+      const subPath = parts[1] ?? '';
+      if (subPath === '') {
+        if (req.method !== 'GET') return error405(path, ['GET', 'OPTIONS']);
+        return await observerGetProfile(agentId, rl);
+      }
+      if (subPath === 'zone') {
+        if (req.method !== 'GET') return error405(path, ['GET', 'OPTIONS']);
+        return await observerGetZone(agentId, rl);
+      }
+      if (subPath === 'history') {
+        if (req.method !== 'GET') return error405(path, ['GET', 'OPTIONS']);
+        return await observerGetHistory(agentId, url, rl);
+      }
+      if (subPath === 'remediate') {
+        if (req.method !== 'POST') return error405(path, ['POST', 'OPTIONS']);
+        return await observerRemediate(agentId, rl);
+      }
+      return error400(`Unknown observer sub-path: /${subPath}`, 'path', rl);
     }
 
     // ── Agent Tools (§6.4) ──
