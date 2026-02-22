@@ -25,6 +25,16 @@
     "morphism": "https://uor.foundation/morphism/",
     "state": "https://uor.foundation/state/",
     "store": "https://uor.foundation/store/",
+    "sobridge": "https://uor.foundation/sobridge/",
+
+    "sobridge:SchemaOrgType": {"@id": "sobridge:SchemaOrgType"},
+    "sobridge:SchemaOrgInstance": {"@id": "sobridge:SchemaOrgInstance"},
+    "sobridge:sourceType": {"@id": "sobridge:sourceType", "@type": "@id"},
+    "sobridge:schemaOrgIri": {"@id": "sobridge:schemaOrgIri", "@type": "xsd:anyURI"},
+    "sobridge:properties": {"@id": "sobridge:properties"},
+    "sobridge:superClasses": {"@id": "sobridge:superClasses", "@type": "@id"},
+    "sobridge:canonicalPayload": {"@id": "sobridge:canonicalPayload", "@type": "xsd:string"},
+    "sobridge:storedCid": {"@id": "sobridge:storedCid", "@type": "xsd:string"},
 
     "store:StoredObject": {"@id": "store:StoredObject"},
     "store:Cid": {"@id": "store:Cid"},

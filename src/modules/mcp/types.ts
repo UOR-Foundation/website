@@ -16,7 +16,8 @@ export type McpToolName =
   | "uor_partition"
   | "uor_resolve"
   | "uor_certify"
-  | "uor_trace";
+  | "uor_trace"
+  | "uor_schema_bridge";
 
 // ── Tool input types ────────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ export const DEFAULT_MCP_CONFIG: McpServerConfig = {
     "uor_resolve",
     "uor_certify",
     "uor_trace",
+    "uor_schema_bridge",
   ],
   resources: ["uor://llms.md", "uor://openapi.json"],
 };

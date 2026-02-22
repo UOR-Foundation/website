@@ -368,6 +368,52 @@ export function traceEpistemics(
   };
 }
 
+/** Build epistemic metadata for a uor_schema_bridge result. */
+export function schemaBridgeEpistemics(
+  data: Record<string, unknown>,
+  schemaType: string,
+  mode: string,
+  cached = false,
+): EpistemicMetadata {
+  const hasCid = !!data["store:cid"];
+  const hasStoredCid = !!data["sobridge:storedCid"];
+  const grade: EpistemicGrade = hasCid ? "B" : "D";
+  const meta = GRADE_META[grade];
+
+  return {
+    grade,
+    grade_label: meta.label,
+    confidence: hasStoredCid ? 0.90 : meta.base_confidence,
+    sources: [
+      { type: "user_input", label: `Schema.org type: "${schemaType}" (mode: ${mode})` },
+      ...(hasCid
+        ? [{ type: "knowledge_graph" as const, label: `Content-addressed via UOR: CID ${String(data["store:cid"]).slice(0, 24)}…`, reference: String(data["store:cid"]) }]
+        : []),
+      ...(hasStoredCid
+        ? [{ type: "certificate" as const, label: `Pinned to IPFS: ${String(data["sobridge:storedCid"])}`, reference: String(data["sobridge:ipfsGateway"] ?? "") }]
+        : []),
+    ],
+    reasoning_chain: [
+      `1. Received schema.org type "${schemaType}" for ${mode} canonicalization.`,
+      "2. Fetched live type definition from schema.org official vocabulary.",
+      "3. Canonicalized via UOR kernel (deterministic key ordering, JSON-LD serialization).",
+      hasCid
+        ? `4. CIDv1 computed: ${String(data["store:cid"]).slice(0, 24)}… — same content always produces the same CID.`
+        : "4. Canonicalization failed — no CID produced.",
+      hasStoredCid
+        ? `5. Stored to IPFS for permanent, decentralized retrieval. Grade B — verified from structured source.`
+        : hasCid
+          ? "5. Not stored to IPFS (store=false). Grade B — content-addressed but not persisted."
+          : "5. Grade D — canonicalization failed.",
+    ],
+    trust_summary: cached
+      ? "This answer was previously computed and proven. The stored proof was verified against its original fingerprint. No recomputation was needed."
+      : hasCid
+        ? `The schema.org "${schemaType}" type definition has been canonicalized with a permanent, content-derived identity. ${hasStoredCid ? "It has been pinned to IPFS for decentralized, permanent storage." : "It can be stored permanently by adding store=true."} Anyone can independently verify this by re-canonicalizing the same schema.org definition.`
+        : "The schema.org type could not be canonicalized. The result is unverified.",
+  };
+}
+
 /** Emoji for each grade. */
 function gradeIcon(grade: EpistemicGrade): string {
   return { A: "🟢", B: "🔵", C: "🟡", D: "🔴" }[grade];

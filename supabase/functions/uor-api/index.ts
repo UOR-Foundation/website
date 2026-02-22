@@ -444,6 +444,7 @@ const CURIE_MAP: Record<string, string> = {
   'query:': 'https://uor.foundation/query/',
   'state:': 'https://uor.foundation/state/',
   'morphism:': 'https://uor.foundation/morphism/',
+  'sobridge:': 'https://uor.foundation/sobridge/',
 };
 
 function expandCurie(curie: string): string {
@@ -6823,64 +6824,297 @@ async function bridgeResolverEntity(_req: Request, body: Record<string, unknown>
   }, CACHE_HEADERS_BRIDGE, undefined, rl);
 }
 
-// ── GET /schema-org/extend — extend schema.org JSON-LD with UOR attribution
+// ── Schema.org × UOR Bridge — canonical content-addressing of schema.org types
+// GET  /schema-org/extend?type=Person           → fetch, canonicalize, return with UOR identity
+// GET  /schema-org/extend?type=Person&store=true → also store to IPFS
+// GET  /schema-org/extend?catalog=true           → list all available types
+// POST /schema-org/extend { "@type": "Person", ...instance } → canonicalize an instance
+
+// In-memory cache of fetched schema.org vocabulary
+let _schemaOrgVocab: Record<string, unknown>[] | null = null;
+
+async function fetchSchemaOrgVocab(): Promise<Record<string, unknown>[]> {
+  if (_schemaOrgVocab) return _schemaOrgVocab;
+  try {
+    const resp = await fetch('https://schema.org/version/latest/schemaorg-current-https.jsonld');
+    if (!resp.ok) throw new Error(`schema.org fetch failed: ${resp.status}`);
+    const data = await resp.json() as { "@graph"?: Record<string, unknown>[] };
+    _schemaOrgVocab = data["@graph"] ?? [];
+    return _schemaOrgVocab;
+  } catch (e) {
+    console.error('Failed to fetch schema.org vocabulary:', e);
+    return [];
+  }
+}
+
+function canonicalJsonLdLocal(obj: unknown): string {
+  if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
+  if (Array.isArray(obj)) return '[' + obj.map(canonicalJsonLdLocal).join(',') + ']';
+  const sorted = Object.keys(obj as Record<string, unknown>).sort();
+  return '{' + sorted.map(k => JSON.stringify(k) + ':' + canonicalJsonLdLocal((obj as Record<string, unknown>)[k])).join(',') + '}';
+}
+
+function encodeBase32LowerLocal(bytes: Uint8Array): string {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz234567';
+  let result = '';
+  let buffer = 0;
+  let bitsLeft = 0;
+  for (const byte of bytes) {
+    buffer = (buffer << 8) | byte;
+    bitsLeft += 8;
+    while (bitsLeft >= 5) {
+      bitsLeft -= 5;
+      result += alphabet[(buffer >> bitsLeft) & 31];
+    }
+  }
+  if (bitsLeft > 0) {
+    result += alphabet[(buffer << (5 - bitsLeft)) & 31];
+  }
+  return result;
+}
+
+async function computeCidLocal(canonicalBytes: Uint8Array): Promise<string> {
+  const digestBuffer = await crypto.subtle.digest('SHA-256', canonicalBytes);
+  const digest = new Uint8Array(digestBuffer);
+  const multihash = new Uint8Array(2 + digest.length);
+  multihash[0] = 0x12;
+  multihash[1] = 0x20;
+  multihash.set(digest, 2);
+  const cidBinary = new Uint8Array(1 + 2 + multihash.length);
+  cidBinary[0] = 0x01;
+  cidBinary[1] = 0xa9;
+  cidBinary[2] = 0x02;
+  cidBinary.set(multihash, 3);
+  return 'b' + encodeBase32LowerLocal(cidBinary);
+}
+
+function computeUorAddressLocal(bytes: Uint8Array): { glyph: string; length: number } {
+  const glyph = Array.from(bytes).map(b => String.fromCodePoint(0x2800 + b)).join('');
+  return { glyph, length: bytes.length };
+}
+
+interface SobridgeIdentity {
+  cid: string;
+  uorAddress: { glyph: string; length: number };
+  canonicalBytes: Uint8Array;
+  sha256: string;
+}
+
+async function computeSobridgeIdentity(obj: Record<string, unknown>): Promise<SobridgeIdentity> {
+  const canonical = canonicalJsonLdLocal(obj);
+  const canonicalBytes = new TextEncoder().encode(canonical);
+  const cid = await computeCidLocal(canonicalBytes);
+  const uorAddress = computeUorAddressLocal(canonicalBytes);
+  const sha256 = await makeSha256(canonical);
+  return { cid, uorAddress, canonicalBytes, sha256 };
+}
+
 async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Promise<Response> {
   let schemaType: string;
-  let name: string;
-  let derivationId: string | null;
+  let storeToPersistence = false;
+  let catalogMode = false;
+  let instancePayload: Record<string, unknown> | null = null;
 
   if (reqOrUrl instanceof URL) {
-    // GET mode
     schemaType = reqOrUrl.searchParams.get('type') ?? 'Thing';
-    name = reqOrUrl.searchParams.get('name') ?? '';
-    derivationId = reqOrUrl.searchParams.get('derivation_id');
+    storeToPersistence = reqOrUrl.searchParams.get('store') === 'true';
+    catalogMode = reqOrUrl.searchParams.get('catalog') === 'true';
   } else {
-    // POST mode (legacy)
     let input: Record<string, unknown>;
     try { input = await reqOrUrl.json(); }
     catch { return error400('Invalid JSON body', 'body', rl); }
     schemaType = String(input['@type'] ?? input.type ?? 'Thing');
-    name = String(input.name ?? '');
-    derivationId = input.derivation_id ? String(input.derivation_id) : null;
+    storeToPersistence = input.store === true;
+    instancePayload = input;
   }
 
-  // Compute derivation ID from name if not provided
-  if (!derivationId && name) {
-    const content = `schema-org:${schemaType}:${name}`;
-    const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
-    const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
-    derivationId = `urn:uor:derivation:sha256:${hashHex}`;
+  // ── Catalog mode: list available types
+  if (catalogMode) {
+    const vocab = await fetchSchemaOrgVocab();
+    const types = vocab
+      .filter(n => {
+        const t = n['@type'];
+        return t === 'rdfs:Class' || (Array.isArray(t) && t.includes('rdfs:Class'));
+      })
+      .map(n => String(n['@id'] ?? ''))
+      .filter(id => id.startsWith('schema:') || id.startsWith('https://schema.org/'))
+      .map(id => id.replace('https://schema.org/', '').replace('schema:', ''))
+      .sort();
+
+    return jsonResp(gradeResponse({
+      "@context": UOR_CONTEXT_URL,
+      "@type": "sobridge:TypeCatalog",
+      "sobridge:source": "https://schema.org/version/latest/schemaorg-current-https.jsonld",
+      "sobridge:typeCount": types.length,
+      "sobridge:types": types,
+      "sobridge:usage": "GET /schema-org/extend?type={TypeName} to canonicalize any type. Add &store=true to persist to IPFS.",
+    }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
   }
 
-  // XOR-fold name to get a canonical IRI
-  let xorFold = 0;
-  if (name) {
-    const nameBytes = Array.from(new TextEncoder().encode(name));
-    for (const b of nameBytes) xorFold = (xorFold ^ b) & 0xff;
-  }
-  const canonicalIri = datumIRI(xorFold, 8);
+  // ── Instance mode: canonicalize a user-provided schema.org instance
+  if (instancePayload) {
+    // Strip metadata fields, keep schema.org content
+    const clean: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(instancePayload)) {
+      if (k === 'store' || k === 'type') continue;
+      clean[k] = v;
+    }
+    if (!clean['@type']) clean['@type'] = schemaType.includes(':') ? schemaType : `schema:${schemaType}`;
+    if (!clean['@context']) clean['@context'] = 'https://schema.org/';
 
-  return jsonResp({
+    const identity = await computeSobridgeIdentity(clean);
+    const derivationId = `urn:uor:derivation:sha256:${identity.sha256}`;
+
+    // XOR-fold for canonical ring mapping
+    let xorFold = 0;
+    for (const b of identity.canonicalBytes) xorFold = (xorFold ^ b) & 0xff;
+    const canonicalIri = datumIRI(xorFold, 8);
+
+    let storedCid: string | null = null;
+    if (storeToPersistence) {
+      storedCid = await storeToIPFS(clean, identity);
+    }
+
+    return jsonResp(gradeResponse({
+      "@context": [
+        "https://schema.org/",
+        { "sobridge": "https://uor.foundation/sobridge/", "derivation": "https://uor.foundation/derivation/", "store": "https://uor.foundation/store/", "u": "https://uor.foundation/u/" },
+      ],
+      ...clean,
+      "sobridge:canonicalPayload": canonicalJsonLdLocal(clean).slice(0, 256) + '…',
+      "store:cid": identity.cid,
+      "store:uorAddress": { "u:glyph": identity.uorAddress.glyph.slice(0, 32), "u:length": identity.uorAddress.length },
+      "derivation:derivationId": derivationId,
+      "u:canonicalIri": canonicalIri,
+      ...(storedCid ? { "sobridge:storedCid": storedCid, "sobridge:ipfsGateway": `https://uor.mypinata.cloud/ipfs/${storedCid}` } : {}),
+      "sobridge:verifyUrl": `https://api.uor.foundation/v1/tools/verify?derivation_id=${derivationId}`,
+    }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+  }
+
+  // ── Type definition mode: fetch schema.org type definition and canonicalize
+  const vocab = await fetchSchemaOrgVocab();
+  const normalizedType = schemaType.replace('schema:', '').replace('https://schema.org/', '');
+  const typeNode = vocab.find(n => {
+    const id = String(n['@id'] ?? '');
+    return id === `schema:${normalizedType}` || id === `https://schema.org/${normalizedType}`;
+  });
+
+  if (!typeNode) {
+    return error400(`Schema.org type "${schemaType}" not found. Use ?catalog=true to list available types.`, 'type', rl);
+  }
+
+  // Build canonical UOR representation of this type definition
+  const sobridgeType: Record<string, unknown> = {
     "@context": [
       "https://schema.org/",
-      {
-        "derivation": "https://uor.foundation/derivation/",
-        "cert": "https://uor.foundation/cert/",
-        "uor": "https://uor.foundation/",
-      },
+      { "sobridge": "https://uor.foundation/sobridge/", "rdfs": "http://www.w3.org/2000/01/rdf-schema#" },
     ],
-    "@type": schemaType,
-    "name": name || undefined,
+    "@type": "sobridge:SchemaOrgType",
+    "@id": `https://uor.foundation/sobridge/${normalizedType}`,
+    "sobridge:schemaOrgIri": `https://schema.org/${normalizedType}`,
+    "rdfs:label": typeNode["rdfs:label"] ?? normalizedType,
+    "rdfs:comment": typeNode["rdfs:comment"] ?? null,
+    "sobridge:superClasses": (() => {
+      const sc = typeNode["rdfs:subClassOf"];
+      if (!sc) return [];
+      const arr = Array.isArray(sc) ? sc : [sc];
+      return arr.map((s: unknown) => {
+        if (typeof s === 'string') return s;
+        if (typeof s === 'object' && s !== null && '@id' in (s as Record<string, unknown>)) return (s as Record<string, string>)['@id'];
+        return String(s);
+      });
+    })(),
+  };
+
+  // Find properties that accept this type as domain
+  const props = vocab.filter(n => {
+    const t = n['@type'];
+    const isProperty = t === 'rdf:Property' || (Array.isArray(t) && t.includes('rdf:Property'));
+    if (!isProperty) return false;
+    const domain = n['schema:domainIncludes'] ?? n['domainIncludes'];
+    if (!domain) return false;
+    const domains = Array.isArray(domain) ? domain : [domain];
+    return domains.some((d: unknown) => {
+      const did = typeof d === 'string' ? d : (typeof d === 'object' && d !== null && '@id' in (d as Record<string, unknown>)) ? (d as Record<string, string>)['@id'] : '';
+      return did === `schema:${normalizedType}` || did === `https://schema.org/${normalizedType}`;
+    });
+  });
+
+  sobridgeType["sobridge:properties"] = props.map(p => {
+    const pid = String(p['@id'] ?? '').replace('https://schema.org/', '').replace('schema:', '');
+    const range = p['schema:rangeIncludes'] ?? p['rangeIncludes'];
+    const ranges = range ? (Array.isArray(range) ? range : [range]).map((r: unknown) => {
+      if (typeof r === 'string') return r;
+      if (typeof r === 'object' && r !== null && '@id' in (r as Record<string, unknown>)) return (r as Record<string, string>)['@id'];
+      return String(r);
+    }) : [];
+    return {
+      "@id": `https://schema.org/${pid}`,
+      "rdfs:label": pid,
+      "rdfs:comment": p['rdfs:comment'] ?? null,
+      "schema:rangeIncludes": ranges,
+    };
+  });
+
+  sobridgeType["sobridge:propertyCount"] = props.length;
+
+  // Compute UOR identity
+  const identity = await computeSobridgeIdentity(sobridgeType);
+  const derivationId = `urn:uor:derivation:sha256:${identity.sha256}`;
+
+  // XOR-fold
+  let xorFold = 0;
+  for (const b of identity.canonicalBytes) xorFold = (xorFold ^ b) & 0xff;
+
+  let storedCid: string | null = null;
+  if (storeToPersistence) {
+    storedCid = await storeToIPFS(sobridgeType, identity);
+  }
+
+  return jsonResp(gradeResponse({
+    ...sobridgeType,
+    "store:cid": identity.cid,
+    "store:uorAddress": { "u:glyph": identity.uorAddress.glyph.slice(0, 32), "u:length": identity.uorAddress.length },
     "derivation:derivationId": derivationId,
-    "uor:canonicalIri": canonicalIri,
-    "uor:epistemicGrade": "C",
-    "uor:epistemicGradeNote": "Content addressed but not ring-certified. Upgrade to Grade B with POST /v1/cert/issue.",
-    "uor:verifyUrl": derivationId ? `https://api.uor.foundation/v1/tools/verify?derivation_id=${derivationId}` : null,
-    "rdfs:seeAlso": "https://uor.foundation/",
-    "_uor_usage": "Add this JSON-LD block to any schema.org markup to attach UOR provenance. The derivation:derivationId is a content-addressed identifier that survives URL changes.",
-    "epistemic_grade": "C",
-    "epistemic_grade_label": "Graph-Present",
-  }, CACHE_HEADERS_BRIDGE, undefined, rl);
+    "u:canonicalIri": datumIRI(xorFold, 8),
+    ...(storedCid ? { "sobridge:storedCid": storedCid, "sobridge:ipfsGateway": `https://uor.mypinata.cloud/ipfs/${storedCid}` } : {}),
+    "sobridge:verifyUrl": `https://api.uor.foundation/v1/tools/verify?derivation_id=${derivationId}`,
+    "_sobridge_note": "This schema.org type definition has been content-addressed by the UOR kernel. The CID and Braille address are deterministic: same content → same identity, everywhere, forever.",
+  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// Store canonical JSON-LD to IPFS via Pinata
+async function storeToIPFS(obj: Record<string, unknown>, identity: SobridgeIdentity): Promise<string | null> {
+  try {
+    const pinataJwt = Deno.env.get('PINATA_JWT');
+    if (!pinataJwt) return null;
+
+    const canonical = canonicalJsonLdLocal(obj);
+    const blob = new Blob([canonical], { type: 'application/ld+json' });
+    const form = new FormData();
+    form.append('file', blob, `sobridge-${identity.cid.slice(0, 16)}.jsonld`);
+    form.append('pinataMetadata', JSON.stringify({
+      name: `sobridge:${(obj['rdfs:label'] ?? obj['@type'] ?? 'unknown')}`,
+      keyvalues: { uor_cid: identity.cid, framework: 'UOR', bridge: 'sobridge' },
+    }));
+
+    const resp = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${pinataJwt}` },
+      body: form,
+    });
+
+    if (!resp.ok) {
+      console.error('Pinata store failed:', resp.status, await resp.text());
+      return null;
+    }
+
+    const result = await resp.json() as { IpfsHash?: string };
+    return result.IpfsHash ?? null;
+  } catch (e) {
+    console.error('IPFS store error:', e);
+    return null;
+  }
 }
 
 // ── GET /test/e2e — Full Phase 2 end-to-end integration test ──────────────

@@ -15,6 +15,7 @@ import {
   resolveEpistemics,
   certifyEpistemics,
   traceEpistemics,
+  schemaBridgeEpistemics,
   formatEpistemicBlock,
 } from "./epistemics.ts";
 
@@ -225,6 +226,33 @@ const TOOLS = [
       required: ["x", "ops"],
     },
   },
+  {
+    name: "uor_schema_bridge",
+    description:
+      "Bridge schema.org types into the UOR framework. Fetches the official schema.org type definition, canonicalizes it via UOR (deterministic JSON-LD serialization), computes a permanent CIDv1 content address and Braille glyph, and optionally stores it on IPFS for permanent decentralized retrieval. Use this to give any schema.org type (Person, Event, Product, Article, etc.) a permanent, content-derived identity that survives URL changes. Modes: 'type' (canonicalize a type definition), 'instance' (canonicalize a specific instance), 'catalog' (list all ~800 schema.org types).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        schema_type: {
+          type: "string",
+          description: "The schema.org type name (e.g., 'Person', 'Event', 'Product', 'Article'). Required for type and instance modes.",
+        },
+        mode: {
+          type: "string",
+          description: "One of: 'type' (canonicalize a type definition), 'instance' (canonicalize a JSON-LD instance), 'catalog' (list all types). Default: 'type'.",
+        },
+        store: {
+          type: "boolean",
+          description: "If true, store the canonicalized object permanently on IPFS. Default: false.",
+        },
+        instance_data: {
+          type: "object",
+          description: "For mode='instance': the JSON-LD instance to canonicalize (e.g., {\"name\": \"John Doe\", \"jobTitle\": \"Engineer\"}).",
+        },
+      },
+      required: ["schema_type"],
+    },
+  },
 ];
 
 const VALID_TOOL_NAMES = new Set(TOOLS.map((t) => t.name));
@@ -295,6 +323,12 @@ async function runTool(name: string, args: Record<string, unknown>) {
       case "uor_trace":
         epistemicBlock = await formatEpistemicBlock(
           traceEpistemics(cachedData as Record<string, unknown>, String(args.x ?? ""), String(args.ops ?? ""), true),
+          proofStatus,
+        );
+        break;
+      case "uor_schema_bridge":
+        epistemicBlock = await formatEpistemicBlock(
+          schemaBridgeEpistemics(cachedData as Record<string, unknown>, String(args.schema_type ?? args.type ?? ""), String(args.mode ?? "type"), true),
           proofStatus,
         );
         break;
@@ -456,6 +490,30 @@ async function runTool(name: string, args: Record<string, unknown>) {
           n: String(n),
         });
         epistemicMeta = traceEpistemics(data as Record<string, unknown>, String(x), ops);
+        epistemicGrade = epistemicMeta.grade;
+        break;
+      }
+      case "uor_schema_bridge": {
+        const schemaType = sanitiseString(args.schema_type ?? args.type ?? "Thing", 128);
+        const mode = sanitiseString(args.mode ?? "type", 16);
+        const store = args.store === true;
+
+        if (mode === "catalog") {
+          data = await callApi("GET", "/schema-org/extend", { catalog: "true" });
+        } else if (mode === "instance" && args.instance_data) {
+          const instanceData = args.instance_data as Record<string, unknown>;
+          data = await callApi("POST", "/schema-org/extend", undefined, {
+            "@type": schemaType,
+            ...instanceData,
+            store,
+          });
+        } else {
+          data = await callApi("GET", "/schema-org/extend", {
+            type: schemaType,
+            ...(store ? { store: "true" } : {}),
+          });
+        }
+        epistemicMeta = schemaBridgeEpistemics(data as Record<string, unknown>, schemaType, mode);
         epistemicGrade = epistemicMeta.grade;
         break;
       }
