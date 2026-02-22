@@ -1,17 +1,15 @@
 /**
  * UOR Observable Module — observable: namespace implementation.
  *
- * Handles fact retrieval from external data streams (IoT, financial, scientific).
+ * Uses the Single Proof Hashing Standard (URDNA2015) for content-addressing.
  * Each observable is content-addressed and grounded in the ring algebra.
  *
  * Delegates to:
- *   - lib/uor-address.ts for content-addressing
+ *   - lib/uor-canonical.ts for URDNA2015 Single Proof Hashing
  *   - supabase client for persistence to uor_observables table
- *
- * Zero duplication.
  */
 
-import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
+import { singleProofHash } from "@/lib/uor-canonical";
 import { supabase } from "@/integrations/supabase/client";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -30,7 +28,7 @@ export interface Observable {
 // ── recordObservable ────────────────────────────────────────────────────────
 
 /**
- * Record an observable fact with a content-addressed IRI.
+ * Record an observable fact with a content-addressed IRI via URDNA2015.
  */
 export async function recordObservable(
   value: number,
@@ -41,10 +39,17 @@ export async function recordObservable(
 ): Promise<Observable> {
   const timestamp = new Date().toISOString();
 
-  // Content-addressed observable IRI
-  const payload = canonicalJsonLd({ value, source, quantum, stratum, timestamp });
-  const cid = await computeCid(new TextEncoder().encode(payload));
-  const observableIri = `urn:uor:observable:${cid.slice(0, 24)}`;
+  // Content-addressed observable IRI via URDNA2015 Single Proof Hash
+  const proof = await singleProofHash({
+    "@context": { observable: "https://uor.foundation/observable/" },
+    "@type": "observable:Observable",
+    "observable:value": String(value),
+    "observable:source": source,
+    "observable:quantum": String(quantum),
+    "observable:stratum": String(stratum),
+    "observable:timestamp": timestamp,
+  });
+  const observableIri = `urn:uor:observable:${proof.cid.slice(0, 24)}`;
 
   const observable: Observable = {
     "@type": "observable:Observable",

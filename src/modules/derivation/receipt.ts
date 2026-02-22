@@ -1,22 +1,20 @@
 /**
  * UOR Canonical Receipt — self-verifying computation proofs for Term-level ops.
  *
- * Extends the existing receipt system (src/lib/uor-receipt.ts) to work with
- * the Term-based derivation pipeline. Every receipt proves the operation was
- * computed correctly by recomputing from scratch and comparing.
+ * Uses the Single Proof Hashing Standard (URDNA2015) for all identity computation.
+ * Every receipt proves the operation was computed correctly by recomputing
+ * from scratch and comparing.
  *
  * Delegates to:
- *   - lib/uor-address.ts for canonical hashing (SHA-256 via SubtleCrypto)
+ *   - lib/uor-canonical.ts for URDNA2015 Single Proof Hashing
  *   - ring-core for evaluation
  *   - derivation.ts for the derive pipeline
- *
- * Zero duplication of crypto logic — all hashing uses computeCid.
  */
 
 import type { UORRing } from "@/modules/ring-core/ring";
 import type { Term } from "@/modules/ring-core/canonicalization";
 import { serializeTerm } from "@/modules/ring-core/canonicalization";
-import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
+import { singleProofHash } from "@/lib/uor-canonical";
 import { derive } from "./derivation";
 
 // ── Receipt type ────────────────────────────────────────────────────────────
@@ -34,12 +32,24 @@ export interface DerivationReceipt {
   timestamp: string;
 }
 
+// ── URDNA2015-compliant hashing helpers ─────────────────────────────────────
+
+async function hashPayload(namespace: string, type: string, data: Record<string, unknown>): Promise<string> {
+  const doc = {
+    "@context": { [namespace]: `https://uor.foundation/${namespace}/` },
+    "@type": `${namespace}:${type}`,
+    ...data,
+  };
+  const proof = await singleProofHash(doc);
+  return proof.cid;
+}
+
 // ── generateReceipt ─────────────────────────────────────────────────────────
 
 /**
  * Generate a self-verifying canonical receipt for a Term-level operation.
  *
- * 1. Hash input canonically (sorted JSON → SHA-256)
+ * 1. Hash input via URDNA2015 Single Proof Hash
  * 2. Derive to get the result
  * 3. Hash the output
  * 4. RECOMPUTE: derive again independently
@@ -54,37 +64,43 @@ export async function generateReceipt(
   const operation = serializeTerm(term);
   const timestamp = new Date().toISOString();
 
-  // Hash input
-  const inputPayload = canonicalJsonLd({ term: operation, quantum: ring.quantum });
-  const inputHash = await computeCid(new TextEncoder().encode(inputPayload));
+  // Hash input via URDNA2015
+  const inputHash = await hashPayload("receipt", "Input", {
+    "receipt:term": operation,
+    "receipt:quantum": String(ring.quantum),
+  });
 
   // Derive
   const derivationResult = await derive(ring, term);
 
-  // Hash output
-  const outputPayload = canonicalJsonLd({
-    derivationId: derivationResult.derivationId,
-    resultValue: derivationResult.resultValue,
-    resultIri: derivationResult.resultIri,
+  // Hash output via URDNA2015
+  const outputHash = await hashPayload("receipt", "Output", {
+    "receipt:derivationId": derivationResult.derivationId,
+    "receipt:resultValue": String(derivationResult.resultValue),
+    "receipt:resultIri": derivationResult.resultIri,
   });
-  const outputHash = await computeCid(new TextEncoder().encode(outputPayload));
 
   // RECOMPUTE independently
   const recomputed = await derive(ring, term);
-  const recomputePayload = canonicalJsonLd({
-    derivationId: recomputed.derivationId,
-    resultValue: recomputed.resultValue,
-    resultIri: recomputed.resultIri,
+  const recomputeHash = await hashPayload("receipt", "Output", {
+    "receipt:derivationId": recomputed.derivationId,
+    "receipt:resultValue": String(recomputed.resultValue),
+    "receipt:resultIri": recomputed.resultIri,
   });
-  const recomputeHash = await computeCid(new TextEncoder().encode(recomputePayload));
 
   // Self-verification
   const selfVerified = recomputeHash === outputHash;
   const coherenceVerified = ring.coherenceVerified;
 
-  // Receipt ID
-  const receiptIdPayload = `${moduleId}:${operation}:${timestamp}`;
-  const receiptId = `urn:uor:receipt:${(await computeCid(new TextEncoder().encode(receiptIdPayload))).slice(0, 24)}`;
+  // Receipt ID via URDNA2015
+  const receiptProof = await singleProofHash({
+    "@context": { receipt: "https://uor.foundation/receipt/" },
+    "@type": "receipt:ReceiptIdentity",
+    "receipt:moduleId": moduleId,
+    "receipt:operation": operation,
+    "receipt:timestamp": timestamp,
+  });
+  const receiptId = `urn:uor:receipt:${receiptProof.cid.slice(0, 24)}`;
 
   return {
     derivationResult,

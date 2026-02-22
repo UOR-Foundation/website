@@ -1,22 +1,18 @@
 /**
  * UOR Morphism: Transform — structure-preserving maps between ring values.
  *
- * From the UOR ontology (morphism: namespace):
- *   - Transform: general mapping with source, target, mapping rules
- *   - Every transform generates a certificate and canonical receipt
+ * Uses the Single Proof Hashing Standard (URDNA2015) for content-addressing.
  *
- * Uses ingestTriples from kg-store for persistence. Delegates to:
+ * Delegates to:
  *   - ring-core for arithmetic
  *   - identity for IRI computation
- *   - derivation for certificates and receipts
+ *   - lib/uor-canonical.ts for URDNA2015 Single Proof Hashing
  *   - kg-store for persistence
- *
- * Zero duplication — all crypto uses computeCid, all addressing uses identity.
  */
 
 import type { UORRing } from "@/modules/ring-core/ring";
 import { contentAddress } from "@/modules/identity";
-import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
+import { singleProofHash } from "@/lib/uor-canonical";
 import { ingestTriples } from "@/modules/kg-store/store";
 import { emitContext } from "@/modules/jsonld/context";
 
@@ -93,7 +89,7 @@ export function applyTransform(
 
 /**
  * Record a transform as a morphism:Transform in the knowledge graph.
- * Generates a content-addressed transform ID and persists as triples.
+ * Generates a content-addressed transform ID via URDNA2015 and persists as triples.
  */
 export async function recordTransform(
   sourceRing: UORRing,
@@ -110,15 +106,16 @@ export async function recordTransform(
   // Determine if fidelity is preserved (round-trip recovers original)
   const fidelityPreserved = kind === "Isometry" || kind === "Embedding";
 
-  // Content-addressed transform ID
-  const payload = canonicalJsonLd({
-    source: sourceIri,
-    target: targetIri,
-    kind,
-    rules,
+  // Content-addressed transform ID via URDNA2015 Single Proof Hash
+  const proof = await singleProofHash({
+    "@context": { morphism: "https://uor.foundation/morphism/" },
+    "@type": `morphism:${kind}`,
+    "morphism:source": sourceIri,
+    "morphism:target": targetIri,
+    "morphism:kind": kind,
+    "morphism:rules": rules,
   });
-  const cid = await computeCid(new TextEncoder().encode(payload));
-  const transformId = `urn:uor:morphism:${cid.slice(0, 24)}`;
+  const transformId = `urn:uor:morphism:${proof.cid.slice(0, 24)}`;
 
   const record: TransformRecord = {
     "@type": `morphism:${kind}`,

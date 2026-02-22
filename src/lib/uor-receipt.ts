@@ -1,36 +1,42 @@
 /**
  * UOR Canonical Receipt System — self-verifying computation proofs.
  *
- * Extends the existing certificate system (uor-certificate.ts) to cover
- * dynamic ring computations. Every operation wrapped with `withReceipt`
- * produces a CanonicalReceipt that can be independently verified.
+ * Uses the Single Proof Hashing Standard (URDNA2015) for all identity computation.
+ * Every operation wrapped with `withReceipt` produces a CanonicalReceipt
+ * that can be independently verified by any W3C-compliant agent.
  *
- * Depends on: uor-address.ts (CID computation), uor-ring.ts (ring ops).
+ * Depends on: lib/uor-canonical.ts (URDNA2015), uor-ring.ts (ring ops).
  */
 
 import type { CanonicalReceipt, ExtendedOperationName } from "@/types/uor";
-import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
+import { singleProofHash } from "@/lib/uor-canonical";
 import { compute } from "@/lib/uor-ring";
 
-/** Generate a receipt ID from the operation fingerprint. */
+/** Generate a receipt ID via URDNA2015 Single Proof Hash. */
 async function makeReceiptId(payload: string): Promise<string> {
-  const bytes = new TextEncoder().encode(payload);
-  const cid = await computeCid(bytes);
-  return `urn:uor:receipt:${cid.slice(0, 24)}`;
+  const proof = await singleProofHash({
+    "@context": { receipt: "https://uor.foundation/receipt/" },
+    "@type": "receipt:ReceiptIdentity",
+    "receipt:fingerprint": payload,
+  });
+  return `urn:uor:receipt:${proof.cid.slice(0, 24)}`;
 }
 
-/** Hash a value deterministically for receipt fields. */
+/** Hash a value deterministically via URDNA2015 Single Proof Hash. */
 async function hashValue(value: unknown): Promise<string> {
-  const canonical = canonicalJsonLd(value);
-  const bytes = new TextEncoder().encode(canonical);
-  return computeCid(bytes);
+  const proof = await singleProofHash({
+    "@context": { receipt: "https://uor.foundation/receipt/" },
+    "@type": "receipt:HashedValue",
+    "receipt:data": value,
+  });
+  return proof.cid;
 }
 
 /**
  * Execute a ring operation and produce a self-verifying canonical receipt.
  *
- * The receipt includes CID hashes of both input and output so that any
- * party can independently recompute and verify the result.
+ * The receipt includes URDNA2015-derived CID hashes of both input and output
+ * so that any party can independently recompute and verify the result.
  */
 export async function withReceipt(
   moduleId: string,
