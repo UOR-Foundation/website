@@ -180,7 +180,7 @@ async function runTool(name: string, args: Record<string, unknown>) {
           term,
           quantum: String(sanitiseNumber(args.quantum)),
         });
-        epistemicBlock = formatEpistemicBlock(
+        epistemicBlock = await formatEpistemicBlock(
           deriveEpistemics(data as Record<string, unknown>, term),
         );
         break;
@@ -190,7 +190,7 @@ async function runTool(name: string, args: Record<string, unknown>) {
         data = await callApi("GET", "/tools/verify", {
           derivation_id: derivationId,
         });
-        epistemicBlock = formatEpistemicBlock(
+        epistemicBlock = await formatEpistemicBlock(
           verifyEpistemics(data as Record<string, unknown>, derivationId),
         );
         break;
@@ -198,7 +198,7 @@ async function runTool(name: string, args: Record<string, unknown>) {
       case "uor_query": {
         const sparql = sanitiseString(args.sparql, 4096);
         data = await callApi("POST", "/tools/query", undefined, { sparql });
-        epistemicBlock = formatEpistemicBlock(
+        epistemicBlock = await formatEpistemicBlock(
           queryEpistemics(data as Record<string, unknown>, sparql),
         );
         break;
@@ -212,7 +212,7 @@ async function runTool(name: string, args: Record<string, unknown>) {
           quantum: String(sanitiseNumber(args.quantum)),
           mode: "full",
         });
-        epistemicBlock = formatEpistemicBlock(
+        epistemicBlock = await formatEpistemicBlock(
           correlateEpistemics(data as Record<string, unknown>, a, b),
         );
         break;
@@ -229,7 +229,7 @@ async function runTool(name: string, args: Record<string, unknown>) {
           ).toUpperCase(),
           quantum: sanitiseNumber(args.quantum),
         });
-        epistemicBlock = formatEpistemicBlock(
+        epistemicBlock = await formatEpistemicBlock(
           partitionEpistemics(data as Record<string, unknown>, seedSet),
         );
         break;
@@ -260,6 +260,13 @@ async function runTool(name: string, args: Record<string, unknown>) {
             ? "Source identified but not algebraically verified. Use uor_derive for Grade A."
             : `This claim is ${labels[grade].toLowerCase()}.`;
 
+        // Generate receipt hash
+        const receiptPayload = JSON.stringify({ grade, confidence: confidences[grade], claim: claim.slice(0, 256), ts: new Date().toISOString() });
+        const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(receiptPayload));
+        const receiptHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, "0")).join("");
+        const shortHash = receiptHash.slice(0, 16);
+        const receiptUrn = `urn:uor:receipt:sha256:${receiptHash}`;
+
         const report = [
           "",
           "---",
@@ -270,6 +277,7 @@ async function runTool(name: string, args: Record<string, unknown>) {
           `| Grade | ${icons[grade]} ${grade} — ${labels[grade]} |`,
           `| Confidence | ${bar} ${confidences[grade]}% |`,
           `| Verified via | ${verifiedBy} |`,
+          `| Receipt | \`${shortHash}…\` · [Full hash](${receiptUrn}) |`,
           "",
           "**Sources**",
           `1. ${claim.slice(0, 120)}${claim.length > 120 ? "…" : ""} — ${srcDesc} · Grade ${grade}`,
@@ -279,7 +287,7 @@ async function runTool(name: string, args: Record<string, unknown>) {
           "---",
         ].join("\n");
 
-        data = { grade, label: labels[grade], confidence: confidences[grade], claim, source: srcDesc };
+        data = { grade, label: labels[grade], confidence: confidences[grade], claim, source: srcDesc, receipt: receiptUrn };
         epistemicBlock = "\n" + report;
         break;
       }
@@ -309,6 +317,7 @@ FORMAT — use this exact structure:
 | Grade | [icon] [A/B/C/D] — [label] |
 | Confidence | [bar] [0–100]% |
 | Verified via | [method: UOR tool name, graph lookup, external fetch, or "None"] |
+| Receipt | \`[first 16 hex chars]…\` · urn:uor:receipt:sha256:[full 64-char hash] |
 
 **Sources**
 1. [Claim or fact] — [Source name](URL) · Grade [X]
@@ -335,7 +344,8 @@ Rules:
 4. Every distinct fact or claim in your answer MUST appear as a numbered source line with its own grade and link (if available).
 5. The overall Grade is the LOWEST grade among all sources.
 6. Never skip the trust score. Every response gets one.
-7. Source links must be clickable markdown links: [Label](URL).`;
+7. Source links must be clickable markdown links: [Label](URL).
+8. For the Receipt field: generate a SHA-256 hash of (grade + confidence + timestamp) and display the first 16 hex chars with the full URN urn:uor:receipt:sha256:[hash]. This is the canonical verification receipt for this specific inference instance.`;
 
 const SERVER_INFO = {
   protocolVersion: "2025-03-26",

@@ -20,6 +20,8 @@ export interface EpistemicMetadata {
   reasoning_chain: string[];
   /** Short natural-language trust summary for display. */
   trust_summary: string;
+  /** SHA-256 verification receipt hash for this inference instance. */
+  receipt_hash?: string;
 }
 
 export interface EpistemicSource {
@@ -234,11 +236,24 @@ function confidenceBar(confidence: number): string {
   return "█".repeat(filled) + "░".repeat(10 - filled);
 }
 
+/** Generate a SHA-256 receipt hash for this inference instance. */
+async function generateReceiptHash(meta: EpistemicMetadata): Promise<string> {
+  const payload = JSON.stringify({
+    grade: meta.grade,
+    confidence: meta.confidence,
+    sources: meta.sources.map(s => s.label),
+    ts: new Date().toISOString(),
+  });
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 /** Format epistemic metadata as a human-readable trust stamp for the MCP response. */
-export function formatEpistemicBlock(meta: EpistemicMetadata): string {
+export async function formatEpistemicBlock(meta: EpistemicMetadata): Promise<string> {
   const pct = (meta.confidence * 100).toFixed(0);
   const icon = gradeIcon(meta.grade);
   const bar = confidenceBar(meta.confidence);
+  const receiptHash = await generateReceiptHash(meta);
 
   const sourceLines = meta.sources.map((s, i) => {
     const link = s.reference
@@ -246,6 +261,9 @@ export function formatEpistemicBlock(meta: EpistemicMetadata): string {
       : s.label;
     return `${i + 1}. ${link} · Grade ${meta.grade}`;
   });
+
+  const shortHash = receiptHash.slice(0, 16);
+  const receiptUrn = `urn:uor:receipt:sha256:${receiptHash}`;
 
   const lines = [
     "",
@@ -257,6 +275,7 @@ export function formatEpistemicBlock(meta: EpistemicMetadata): string {
     `| Grade | ${icon} ${meta.grade} — ${meta.grade_label} |`,
     `| Confidence | ${bar} ${pct}% |`,
     `| Verified via | ${meta.reasoning_chain.length > 1 ? meta.reasoning_chain[meta.reasoning_chain.length - 2].replace(/^\d+\.\s*/, "") : "UOR computation"} |`,
+    `| Receipt | \`${shortHash}…\` · [Full hash](${receiptUrn}) |`,
     "",
     "**Sources**",
     ...sourceLines,
