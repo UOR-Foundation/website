@@ -77,7 +77,7 @@ function SemanticWebTower() {
           <a
             key={layer.id}
             href={`#layer-${layer.id}`}
-            className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
+            className="absolute flex items-center justify-center font-display font-bold text-sm sm:text-base transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
             style={{
               top,
               left: leftPx,
@@ -107,7 +107,7 @@ function SemanticWebTower() {
           <>
             <a
               href="#layer-0"
-              className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
+              className="absolute flex items-center justify-center font-display font-bold text-sm sm:text-base transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
               style={{
                 top,
                 left: unicodeLeft,
@@ -123,7 +123,7 @@ function SemanticWebTower() {
             </a>
              <a
                href="#layer-0"
-               className="absolute flex items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
+               className="absolute flex items-center justify-center font-display font-bold text-sm sm:text-base transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
                style={{
                  top,
                  left: uriLeft,
@@ -144,7 +144,7 @@ function SemanticWebTower() {
        {/* Digital Signature — outline only, spans Proof (row 1) to RDF (row 4) */}
        <a
          href="#layer-7"
-         className="absolute flex flex-col items-center justify-center font-display font-bold text-xs sm:text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
+         className="absolute flex flex-col items-center justify-center font-display font-bold text-sm sm:text-base transition-all duration-200 hover:brightness-110 hover:scale-[1.01]"
          style={{
            top: sigTop,
            left: mainRight + SIG_GAP_PX,
@@ -165,7 +165,7 @@ function SemanticWebTower() {
 
        {/* Footnotes */}
        <div
-         className="absolute font-body text-base text-muted-foreground leading-relaxed space-y-2.5"
+         className="absolute font-body text-sm text-muted-foreground leading-relaxed space-y-2"
          style={{
            top: CONTAINER_H + 16,
            left: 0,
@@ -173,11 +173,11 @@ function SemanticWebTower() {
          }}
        >
          <p>
-           <span className="font-display font-bold text-foreground">✱ URI:</span>{" "}
+           <span className="font-display font-bold text-foreground">* URI:</span>{" "}
            UOR replaces location-based URIs with content-derived addresses. Identity comes from what the data is, not where it lives. Same content, same address, on every system.
          </p>
          <p>
-           <span className="font-display font-bold text-foreground">✱ Digital Signature:</span>{" "}
+           <span className="font-display font-bold text-foreground">* Digital Signature:</span>{" "}
            UOR certificates are content-addressed hashes built into every object. Any modification changes the address, making tampering self-evident. No external certificate authorities required.
          </p>
        </div>
