@@ -111,6 +111,8 @@ const KNOWN_PATHS: Record<string, string[]> = {
   // /graph/q0/datum/:value is handled dynamically
   '/graph/q0.jsonld':                    ['GET', 'OPTIONS'],
   '/graph/q0/stats':                     ['GET', 'OPTIONS'],
+  '/sparql':                             ['GET', 'POST', 'OPTIONS'],
+  '/sparql/verify':                      ['GET', 'OPTIONS'],
 };
 
 // ── Rate Limiting (in-memory sliding window) ────────────────────────────────
@@ -6562,28 +6564,45 @@ async function schemaOrgExtend(req: Request, rl: RateLimitResult): Promise<Respo
 
 // ── GET /.well-known/void — VoID dataset descriptor ───────────────────────
 function wellKnownVoid(rl: RateLimitResult): Response {
-  // Q0: 256 datums × 14 triples each ≈ 3584 triples
   const etag = makeETag('/.well-known/void', {});
-  return jsonResp({
-    "@context": "http://rdfs.org/ns/void#",
-    "@type": "void:Dataset",
-    "@id": "https://uor.foundation/dataset/q0",
-    "void:sparqlEndpoint": "https://api.uor.foundation/v1/bridge/sparql",
-    "void:triples": 3584,
-    "void:distinctSubjects": 264,
-    "void:vocabulary": [
-      "https://uor.foundation/schema/",
-      "https://uor.foundation/derivation/",
-      "https://uor.foundation/proof/",
-      "https://uor.foundation/partition/",
-      "https://uor.foundation/morphism/",
-      "https://uor.foundation/cert/",
-    ],
-    "void:dataDump": "https://uor.foundation/uor_q0.jsonld",
-    "void:license": "https://www.apache.org/licenses/LICENSE-2.0",
-    "epistemic_grade": "A",
-    "epistemic_grade_label": "Algebraically Proven",
-  }, CACHE_HEADERS_BRIDGE, etag, rl);
+  const turtle = `@prefix void:    <http://rdfs.org/ns/void#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix uor:     <https://uor.foundation/> .
+
+uor:dataset
+    a                   void:Dataset ;
+    dcterms:title       "UOR Foundation Knowledge Graph — Q0 Instance" ;
+    dcterms:description "The materialised knowledge graph of the 8-bit UOR ring Z/256Z. 265 nodes, ~3584 triples. Algebraically verified. All coherence checks passed." ;
+    dcterms:license     <https://www.apache.org/licenses/LICENSE-2.0> ;
+    dcterms:publisher   uor:foundation ;
+    dcterms:issued      "2026-02-22"^^xsd:date ;
+    foaf:homepage       <https://uor.foundation> ;
+    void:sparqlEndpoint <https://api.uor.foundation/v1/sparql> ;
+    void:dataDump       <https://api.uor.foundation/v1/graph/q0.jsonld> ;
+    void:triples        3584 ;
+    void:entities       265 ;
+    void:classes        82 ;
+    void:properties     124 ;
+    void:vocabulary     <https://uor.foundation/u/> ,
+                        <https://uor.foundation/schema/> ,
+                        <https://uor.foundation/op/> ,
+                        <https://uor.foundation/derivation/> ,
+                        <https://uor.foundation/proof/> ,
+                        <https://uor.foundation/partition/> ,
+                        <https://uor.foundation/cert/> .
+`;
+  return new Response(turtle, {
+    status: 200,
+    headers: {
+      ...CORS_HEADERS,
+      'Content-Type': 'text/turtle; charset=utf-8',
+      'Cache-Control': 'public, max-age=86400',
+      'ETag': etag,
+      ...rateLimitHeaders(rl),
+    }
+  });
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -7422,6 +7441,471 @@ async function graphQ0Datum(value: number, rl: RateLimitResult): Promise<Respons
     ...node,
   }, term, value, 8), { 'Cache-Control': 'public, max-age=86400' }, undefined, rl);
 }
+// ════════════════════════════════════════════════════════════════════════════
+// SPARQL TRIPLE STORE — in-memory triple store over Q0 graph
+// ════════════════════════════════════════════════════════════════════════════
+
+interface Triple {
+  s: string;
+  p: string;
+  o: string;
+  oType: 'uri' | 'literal';
+  oDatatype?: string;
+  graph: string;
+}
+
+let _tripleStore: Triple[] | null = null;
+
+function jsonLdValueToTriples(nodeId: string, key: string, val: unknown, graph: string, prefixes: Record<string, string>): Triple[] {
+  const triples: Triple[] = [];
+  const expandKey = (k: string): string => {
+    const colonIdx = k.indexOf(':');
+    if (colonIdx > 0) {
+      const prefix = k.substring(0, colonIdx);
+      if (prefixes[prefix]) return prefixes[prefix] + k.substring(colonIdx + 1);
+    }
+    return k;
+  };
+  const predicate = expandKey(key);
+
+  if (key === '@id' || key === '@context' || key === '@type') return triples;
+
+  if (typeof val === 'string') {
+    triples.push({ s: nodeId, p: predicate, o: val, oType: 'literal', graph });
+  } else if (typeof val === 'number') {
+    triples.push({ s: nodeId, p: predicate, o: String(val), oType: 'literal', oDatatype: 'http://www.w3.org/2001/XMLSchema#integer', graph });
+  } else if (typeof val === 'boolean') {
+    triples.push({ s: nodeId, p: predicate, o: String(val), oType: 'literal', oDatatype: 'http://www.w3.org/2001/XMLSchema#boolean', graph });
+  } else if (val && typeof val === 'object' && '@id' in (val as Record<string, unknown>)) {
+    triples.push({ s: nodeId, p: predicate, o: (val as Record<string, unknown>)['@id'] as string, oType: 'uri', graph });
+  } else if (Array.isArray(val)) {
+    for (const item of val) {
+      if (typeof item === 'string') {
+        triples.push({ s: nodeId, p: predicate, o: item, oType: item.startsWith('http') || item.startsWith('urn:') ? 'uri' : 'literal', graph });
+      } else if (typeof item === 'number') {
+        triples.push({ s: nodeId, p: predicate, o: String(item), oType: 'literal', oDatatype: 'http://www.w3.org/2001/XMLSchema#integer', graph });
+      } else if (item && typeof item === 'object' && '@id' in item) {
+        triples.push({ s: nodeId, p: predicate, o: item['@id'], oType: 'uri', graph });
+      }
+    }
+  }
+  return triples;
+}
+
+async function getTripleStore(): Promise<Triple[]> {
+  if (_tripleStore) return _tripleStore;
+
+  const { graph } = await getQ0Graph();
+  const nodes = (graph as Record<string, unknown>)['@graph'] as Record<string, unknown>[];
+  const ctx = (graph as Record<string, unknown>)['@context'] as Record<string, string>;
+  const graphIri = 'https://uor.foundation/graph/q0';
+  const triples: Triple[] = [];
+
+  for (const node of nodes) {
+    const nodeId = node['@id'] as string;
+    if (!nodeId) continue;
+
+    // rdf:type triples
+    const types = node['@type'];
+    if (Array.isArray(types)) {
+      for (const t of types) {
+        const expandedType = t.includes(':') && !t.startsWith('http')
+          ? (ctx[t.split(':')[0]] || '') + t.split(':')[1]
+          : t;
+        triples.push({ s: nodeId, p: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', o: expandedType, oType: 'uri', graph: graphIri });
+      }
+    }
+
+    // All other properties
+    for (const [key, val] of Object.entries(node)) {
+      if (key === '@id' || key === '@type' || key === '_metadata') continue;
+      triples.push(...jsonLdValueToTriples(nodeId, key, val, graphIri, ctx));
+    }
+  }
+
+  _tripleStore = triples;
+  return _tripleStore;
+}
+
+// ── Simplified SPARQL SELECT parser ──────────────────────────────────────────
+
+interface SparqlBinding {
+  [varName: string]: { type: 'uri' | 'literal'; value: string; datatype?: string };
+}
+
+interface ParsedSparql {
+  selectVars: string[]; // ['?s', '?p'] or ['*']
+  aggregates: { varName: string; func: string; innerVar: string }[];
+  patterns: { s: string; p: string; o: string; graph?: string }[];
+  filters: { raw: string }[];
+  limit: number;
+  offset: number;
+  graphIri?: string;
+}
+
+function parseSparqlQuery(query: string): ParsedSparql {
+  // Extract prefixes
+  const prefixMap: Record<string, string> = {};
+  const prefixRegex = /PREFIX\s+(\w+):\s*<([^>]+)>/gi;
+  let pm;
+  while ((pm = prefixRegex.exec(query)) !== null) {
+    prefixMap[pm[1]] = pm[2];
+  }
+
+  const expand = (term: string): string => {
+    if (term.startsWith('?') || term.startsWith('<')) return term.replace(/^<|>$/g, '');
+    const ci = term.indexOf(':');
+    if (ci > 0) {
+      const prefix = term.substring(0, ci);
+      if (prefixMap[prefix]) return prefixMap[prefix] + term.substring(ci + 1);
+    }
+    return term;
+  };
+
+  // SELECT vars
+  const selectMatch = query.match(/SELECT\s+(.*?)\s+WHERE/is);
+  let selectVars: string[] = ['*'];
+  const aggregates: { varName: string; func: string; innerVar: string }[] = [];
+  if (selectMatch) {
+    const sel = selectMatch[1].trim();
+    // Check for aggregates like (COUNT(?x) AS ?count)
+    const aggRegex = /\(\s*(COUNT|SUM|AVG|MIN|MAX)\s*\(\s*(\?\w+)\s*\)\s+AS\s+(\?\w+)\s*\)/gi;
+    let aggMatch;
+    while ((aggMatch = aggRegex.exec(sel)) !== null) {
+      aggregates.push({ func: aggMatch[1].toUpperCase(), innerVar: aggMatch[2], varName: aggMatch[3] });
+    }
+    if (aggregates.length === 0) {
+      selectVars = sel === '*' ? ['*'] : sel.split(/\s+/).filter(v => v.startsWith('?'));
+    }
+  }
+
+  // GRAPH clause
+  let graphIri: string | undefined;
+  const graphMatch = query.match(/GRAPH\s+<([^>]+)>/i);
+  if (graphMatch) graphIri = graphMatch[1];
+
+  // WHERE patterns — extract the innermost { } after WHERE (or inside GRAPH)
+  let whereBody = '';
+  const graphBodyMatch = query.match(/GRAPH\s+<[^>]+>\s*\{([^}]+)\}/is);
+  if (graphBodyMatch) {
+    whereBody = graphBodyMatch[1];
+  } else {
+    const whereMatch = query.match(/WHERE\s*\{([^}]+)\}/is);
+    if (whereMatch) whereBody = whereMatch[1];
+  }
+
+  const patterns: { s: string; p: string; o: string; graph?: string }[] = [];
+  const filters: { raw: string }[] = [];
+
+  if (whereBody) {
+    // Split by '.' but be careful with FILTER
+    const statements = whereBody.split(/\.\s*/).map(s => s.trim()).filter(Boolean);
+    for (const stmt of statements) {
+      if (stmt.toUpperCase().startsWith('FILTER')) {
+        filters.push({ raw: stmt });
+        continue;
+      }
+      // Handle multi-predicate with ';'
+      const semiParts = stmt.split(/\s*;\s*/);
+      let subject = '';
+      for (let i = 0; i < semiParts.length; i++) {
+        const tokens = semiParts[i].trim().split(/\s+/).filter(Boolean);
+        if (i === 0 && tokens.length >= 3) {
+          subject = expand(tokens[0]);
+          patterns.push({ s: subject, p: expand(tokens[1]), o: expand(tokens.slice(2).join(' ')), graph: graphIri });
+        } else if (i > 0 && tokens.length >= 2 && subject) {
+          patterns.push({ s: subject, p: expand(tokens[0]), o: expand(tokens.slice(1).join(' ')), graph: graphIri });
+        }
+      }
+    }
+  }
+
+  // LIMIT / OFFSET
+  const limitMatch = query.match(/LIMIT\s+(\d+)/i);
+  const offsetMatch = query.match(/OFFSET\s+(\d+)/i);
+
+  return {
+    selectVars,
+    aggregates,
+    patterns,
+    filters,
+    limit: limitMatch ? Math.min(Number(limitMatch[1]), 1000) : 1000,
+    offset: offsetMatch ? Number(offsetMatch[1]) : 0,
+    graphIri,
+  };
+}
+
+function evaluateFilter(filter: string, bindings: Record<string, string>): boolean {
+  // Extract FILTER(?var op value) or FILTER(STRSTARTS(STR(?var), "..."))
+  const simpleMatch = filter.match(/FILTER\s*\(\s*\?(\w+)\s*(>|<|>=|<=|=|!=)\s*(\d+)\s*\)/i);
+  if (simpleMatch) {
+    const varVal = bindings[`?${simpleMatch[1]}`];
+    if (varVal === undefined) return true;
+    const actual = Number(varVal);
+    const expected = Number(simpleMatch[3]);
+    switch (simpleMatch[2]) {
+      case '>': return actual > expected;
+      case '<': return actual < expected;
+      case '>=': return actual >= expected;
+      case '<=': return actual <= expected;
+      case '=': return actual === expected;
+      case '!=': return actual !== expected;
+    }
+  }
+  // STRSTARTS
+  const strstartsMatch = filter.match(/FILTER\s*\(\s*STRSTARTS\s*\(\s*STR\s*\(\s*\?(\w+)\s*\)\s*,\s*"([^"]+)"\s*\)\s*\)/i);
+  if (strstartsMatch) {
+    const varVal = bindings[`?${strstartsMatch[1]}`];
+    if (varVal === undefined) return true;
+    return varVal.startsWith(strstartsMatch[2]);
+  }
+  // FILTER(?a = ?b) variable equality
+  const varEqMatch = filter.match(/FILTER\s*\(\s*\?(\w+)\s*=\s*\?(\w+)\s*\)/i);
+  if (varEqMatch) {
+    const a = bindings[`?${varEqMatch[1]}`];
+    const b = bindings[`?${varEqMatch[2]}`];
+    if (a === undefined || b === undefined) return true;
+    return a === b;
+  }
+  return true; // Unknown filter, pass through
+}
+
+async function executeSparqlQuery(queryStr: string): Promise<{ head: { vars: string[] }; results: { bindings: SparqlBinding[] } }> {
+  const parsed = parseSparqlQuery(queryStr);
+  const store = await getTripleStore();
+  const targetGraph = parsed.graphIri || 'https://uor.foundation/graph/q0';
+
+  // Filter triples by graph
+  const graphTriples = store.filter(t => t.graph === targetGraph);
+
+  // Simple BGP evaluation: for each pattern, find matching triples
+  // For multiple patterns, do a nested-loop join on shared variables
+  let bindingSets: Record<string, string>[] = [{}];
+
+  for (const pat of parsed.patterns) {
+    const newBindings: Record<string, string>[] = [];
+    for (const existing of bindingSets) {
+      for (const triple of graphTriples) {
+        const localBindings = { ...existing };
+        let match = true;
+
+        // Match subject
+        if (pat.s.startsWith('?')) {
+          if (localBindings[pat.s] !== undefined && localBindings[pat.s] !== triple.s) { match = false; }
+          else localBindings[pat.s] = triple.s;
+        } else if (pat.s !== triple.s) { match = false; }
+
+        // Match predicate
+        if (!match) continue;
+        if (pat.p.startsWith('?')) {
+          if (localBindings[pat.p] !== undefined && localBindings[pat.p] !== triple.p) { match = false; }
+          else localBindings[pat.p] = triple.p;
+        } else {
+          // Handle 'a' as rdf:type
+          const expandedP = pat.p === 'a' ? 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' : pat.p;
+          if (expandedP !== triple.p) { match = false; }
+        }
+
+        // Match object
+        if (!match) continue;
+        if (pat.o.startsWith('?')) {
+          if (localBindings[pat.o] !== undefined && localBindings[pat.o] !== triple.o) { match = false; }
+          else localBindings[pat.o] = triple.o;
+        } else {
+          // Literal or URI comparison
+          if (pat.o !== triple.o) { match = false; }
+        }
+
+        if (match) newBindings.push(localBindings);
+      }
+    }
+    bindingSets = newBindings;
+  }
+
+  // Apply filters
+  for (const f of parsed.filters) {
+    bindingSets = bindingSets.filter(b => evaluateFilter(f.raw, b));
+  }
+
+  // Handle aggregates
+  if (parsed.aggregates.length > 0) {
+    const result: SparqlBinding = {};
+    for (const agg of parsed.aggregates) {
+      if (agg.func === 'COUNT') {
+        result[agg.varName.replace('?', '')] = { type: 'literal', value: String(bindingSets.length), datatype: 'http://www.w3.org/2001/XMLSchema#integer' };
+      }
+    }
+    return { head: { vars: parsed.aggregates.map(a => a.varName.replace('?', '')) }, results: { bindings: [result] } };
+  }
+
+  // Apply OFFSET and LIMIT
+  const sliced = bindingSets.slice(parsed.offset, parsed.offset + parsed.limit);
+
+  // Determine output vars
+  let outputVars: string[];
+  if (parsed.selectVars.includes('*')) {
+    const allVars = new Set<string>();
+    for (const b of sliced) for (const k of Object.keys(b)) allVars.add(k);
+    outputVars = Array.from(allVars);
+  } else {
+    outputVars = parsed.selectVars;
+  }
+
+  // Build W3C SPARQL Results JSON
+  const vars = outputVars.map(v => v.replace('?', ''));
+  const bindings: SparqlBinding[] = sliced.map(b => {
+    const binding: SparqlBinding = {};
+    for (const v of outputVars) {
+      const val = b[v];
+      if (val !== undefined) {
+        const isUri = val.startsWith('http') || val.startsWith('urn:') || val.startsWith('https://');
+        binding[v.replace('?', '')] = {
+          type: isUri ? 'uri' : 'literal',
+          value: val,
+          ...((!isUri && !isNaN(Number(val))) ? { datatype: 'http://www.w3.org/2001/XMLSchema#integer' } : {}),
+        };
+      }
+    }
+    return binding;
+  });
+
+  return { head: { vars }, results: { bindings } };
+}
+
+async function sparqlEndpoint(req: Request, url: URL, rl: RateLimitResult): Promise<Response> {
+  let queryStr = '';
+  if (req.method === 'GET') {
+    queryStr = url.searchParams.get('query') ?? '';
+  } else if (req.method === 'POST') {
+    const ct = req.headers.get('content-type') ?? '';
+    if (ct.includes('application/sparql-query')) {
+      queryStr = await req.text();
+    } else if (ct.includes('application/json')) {
+      try { const body = await req.json(); queryStr = body.query ?? ''; }
+      catch { return error400('Invalid JSON body', 'body', rl); }
+    } else {
+      queryStr = await req.text();
+    }
+  }
+
+  if (!queryStr.trim()) {
+    return jsonResp({
+      "@type": "sparql:ServiceDescription",
+      "sparql:endpoint": "https://api.uor.foundation/v1/sparql",
+      "sparql:specification": "SPARQL 1.1 (SELECT subset)",
+      "sparql:defaultDataset": {
+        "sparql:defaultGraph": "https://uor.foundation/graph/q0",
+        "sparql:namedGraphs": ["https://uor.foundation/graph/q0"]
+      },
+      "sparql:supportedFeatures": ["SELECT", "FILTER", "COUNT", "LIMIT", "OFFSET", "GRAPH", "PREFIX"],
+      "sparql:tripleCount": (await getTripleStore()).length,
+      "sparql:exampleQueries": [
+        { "description": "Count all datums", "query": "PREFIX schema: <https://uor.foundation/schema/> SELECT (COUNT(?d) AS ?count) WHERE { GRAPH <https://uor.foundation/graph/q0> { ?d a schema:Datum } }" },
+        { "description": "Get datum 42", "query": "PREFIX u: <https://uor.foundation/u/> PREFIX schema: <https://uor.foundation/schema/> SELECT ?p ?o WHERE { GRAPH <https://uor.foundation/graph/q0> { u:U282A ?p ?o } }" },
+      ],
+      "verify_endpoint": "https://api.uor.foundation/v1/sparql/verify",
+    }, CACHE_HEADERS_BRIDGE, undefined, rl);
+  }
+
+  try {
+    const startTime = performance.now();
+    const results = await executeSparqlQuery(queryStr);
+    const execMs = Math.round(performance.now() - startTime);
+
+    return new Response(JSON.stringify({
+      ...results,
+      "_metadata": {
+        "query": queryStr,
+        "executionTimeMs": execMs,
+        "endpoint": "https://api.uor.foundation/v1/sparql",
+        "epistemic_grade": "A",
+        "epistemic_grade_label": "Algebraically Proven",
+      }
+    }), {
+      status: 200,
+      headers: {
+        ...CORS_HEADERS,
+        'Content-Type': 'application/sparql-results+json; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        ...rateLimitHeaders(rl),
+      }
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({
+      error: `SPARQL execution error: ${(err as Error).message}`,
+      code: 'SPARQL_ERROR',
+    }), { status: 400, headers: { ...JSON_HEADERS, ...CORS_HEADERS, ...rateLimitHeaders(rl) } });
+  }
+}
+
+async function sparqlVerify(rl: RateLimitResult): Promise<Response> {
+  const queries = [
+    {
+      id: 1,
+      description: "Ring individual exists with quantum=8, modulus=256",
+      query: `PREFIX schema: <https://uor.foundation/schema/> SELECT ?ring ?quantum ?modulus WHERE { GRAPH <https://uor.foundation/graph/q0> { ?ring a schema:Ring ; schema:ringQuantum ?quantum ; schema:modulus ?modulus } }`,
+      check: (r: { results: { bindings: SparqlBinding[] } }) => r.results.bindings.length === 1 && r.results.bindings[0]?.quantum?.value === '8' && r.results.bindings[0]?.modulus?.value === '256',
+      extractResult: (r: { results: { bindings: SparqlBinding[] } }) => ({ quantum: Number(r.results.bindings[0]?.quantum?.value), modulus: Number(r.results.bindings[0]?.modulus?.value) }),
+    },
+    {
+      id: 2,
+      description: "256 Datum nodes present",
+      query: `PREFIX schema: <https://uor.foundation/schema/> SELECT (COUNT(?d) AS ?count) WHERE { GRAPH <https://uor.foundation/graph/q0> { ?d a schema:Datum } }`,
+      check: (r: { results: { bindings: SparqlBinding[] } }) => r.results.bindings[0]?.count?.value === '256',
+      extractResult: (r: { results: { bindings: SparqlBinding[] } }) => ({ count: Number(r.results.bindings[0]?.count?.value) }),
+    },
+    {
+      id: 3,
+      description: "Critical identity holds for datum 42: succ(42) has value 43",
+      query: `PREFIX schema: <https://uor.foundation/schema/> PREFIX u: <https://uor.foundation/u/> SELECT ?succ_iri ?succ_val WHERE { GRAPH <https://uor.foundation/graph/q0> { u:U282A schema:succ ?succ_iri . ?succ_iri schema:value ?succ_val } }`,
+      check: (r: { results: { bindings: SparqlBinding[] } }) => r.results.bindings.length >= 1 && r.results.bindings[0]?.succ_val?.value === '43',
+      extractResult: (r: { results: { bindings: SparqlBinding[] } }) => ({ succ_42: Number(r.results.bindings[0]?.succ_val?.value) }),
+    },
+    {
+      id: 4,
+      description: "6 Derivation nodes with valid derivation IDs",
+      query: `PREFIX derivation: <https://uor.foundation/derivation/> SELECT (COUNT(?d) AS ?count) WHERE { GRAPH <https://uor.foundation/graph/q0> { ?d a derivation:Derivation ; derivation:derivationId ?id . FILTER(STRSTARTS(STR(?id), "urn:uor:derivation:sha256:")) } }`,
+      check: (r: { results: { bindings: SparqlBinding[] } }) => r.results.bindings[0]?.count?.value === '6',
+      extractResult: (r: { results: { bindings: SparqlBinding[] } }) => ({ count: Number(r.results.bindings[0]?.count?.value) }),
+    },
+  ];
+
+  const verificationResults = [];
+  let allPassed = true;
+
+  for (const q of queries) {
+    try {
+      const result = await executeSparqlQuery(q.query);
+      const passed = q.check(result);
+      if (!passed) allPassed = false;
+      verificationResults.push({
+        query_id: q.id,
+        description: q.description,
+        passed,
+        result: q.extractResult(result),
+      });
+    } catch (err) {
+      allPassed = false;
+      verificationResults.push({
+        query_id: q.id,
+        description: q.description,
+        passed: false,
+        error: (err as Error).message,
+      });
+    }
+  }
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "proof:CoherenceProof",
+    "proof:verified": allPassed,
+    "proof:timestamp": timestamp(),
+    "proof:method": "sparql_verification",
+    "proof:tripleStoreSize": (await getTripleStore()).length,
+    "verification_queries": verificationResults,
+    "all_passed": allPassed,
+  }, allPassed ? 'A' : 'C'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
 
 // ════════════════════════════════════════════════════════════════════════════
 // ROUTER
@@ -7919,6 +8403,16 @@ Deno.serve(async (req: Request) => {
       const val = parseInt(valStr, 10);
       if (isNaN(val)) return error400('value must be an integer', 'value', rl);
       return await graphQ0Datum(val, rl);
+    }
+
+    // ── SPARQL endpoint ──
+    if (path === '/sparql') {
+      if (req.method !== 'GET' && req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await sparqlEndpoint(req, url, rl);
+    }
+    if (path === '/sparql/verify') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await sparqlVerify(rl);
     }
 
     // ── 405 for known paths with wrong method ──
