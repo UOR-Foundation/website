@@ -39,6 +39,7 @@ const DashboardPage = lazy(() => import("@/modules/dashboard/pages/DashboardPage
 const SessionsPage = lazy(() => import("@/modules/state/pages/SessionsPage"));
 const VerifyPage = lazy(() => import("@/modules/verify/pages/VerifyPage"));
 const EpistemicPage = lazy(() => import("@/modules/epistemic/pages/EpistemicPage"));
+const CertificatesPage = lazy(() => import("@/modules/certificates/pages/CertificatesPage"));
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,7 @@ const App = () => {
             <Route path="/sessions" element={<SessionsPage />} />
             <Route path="/verify" element={<VerifyPage />} />
             <Route path="/epistemic" element={<EpistemicPage />} />
+            <Route path="/certificates" element={<CertificatesPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
