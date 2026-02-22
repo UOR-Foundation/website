@@ -1,6 +1,7 @@
 {
   "uor_version": "1.0.0",
   "ring_quantum": 0,
+  "registered_modules": 26,
   "sparql_endpoint": "https://api.uor.foundation/v1/bridge/sparql",
   "tool_endpoints": {
     "uor_derive": "https://api.uor.foundation/v1/tools/derive",
@@ -33,6 +34,7 @@
     "critical_identity_verified": true,
     "shacl_tests_passed": 8,
     "ring_elements": 256,
+    "modules_registered": 26,
     "w3c_standards": ["JSON-LD 1.1", "Turtle 1.1", "SPARQL 1.1", "OWL 2 DL", "SHACL"]
   },
   "attribution_protocol": {

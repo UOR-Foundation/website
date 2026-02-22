@@ -7,13 +7,9 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["tool:"],
   "exports": [
-    "uor_derive",
-    "uor_query",
-    "uor_verify",
-    "uor_correlate",
-    "uor_partition",
-    "parseTerm",
-    "AgentConsolePage"
+    "uor_derive", "uor_query", "uor_verify",
+    "uor_correlate", "uor_partition",
+    "parseTerm", "AgentConsolePage"
   ],
   "dependencies": {
     "ring-core": "^1.0.0",
@@ -24,5 +20,12 @@
     "identity": "^1.0.0"
   },
   "routes": ["/agent-console"],
+  "api_endpoints": [
+    "/tools/derive",
+    "/tools/query",
+    "/tools/verify",
+    "/tools/correlate",
+    "/tools/partition"
+  ],
   "assets": []
 }

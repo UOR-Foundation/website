@@ -6,10 +6,15 @@
   "description": "Homepage sections: Hero, Intro, Pillars, Highlights, Projects showcase, CTA, and galaxy animation.",
   "uor:specification": "1.0.0",
   "uor:namespaces": ["u:"],
-  "exports": ["IndexPage", "HeroSection", "IntroSection", "PillarsSection", "HighlightsSection", "ProjectsShowcase", "CTASection", "GalaxyAnimation"],
+  "exports": [
+    "IndexPage", "HeroSection", "IntroSection",
+    "PillarsSection", "HighlightsSection",
+    "ProjectsShowcase", "CTASection", "GalaxyAnimation"
+  ],
   "dependencies": {
     "core": "^1.0.0"
   },
   "routes": ["/"],
+  "api_endpoints": [],
   "assets": ["galaxy.css"]
 }

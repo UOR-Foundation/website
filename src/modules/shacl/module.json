@@ -7,10 +7,8 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["shacl:"],
   "exports": [
-    "validate",
-    "validateOnWrite",
-    "runConformanceSuite",
-    "ConformancePage"
+    "validate", "validateOnWrite",
+    "runConformanceSuite", "ConformancePage"
   ],
   "dependencies": {
     "ring-core": "^1.0.0",
@@ -19,5 +17,6 @@
     "triad": "^1.0.0"
   },
   "routes": ["/conformance"],
+  "api_endpoints": ["/bridge/shacl/shapes", "/bridge/shacl/validate"],
   "assets": []
 }

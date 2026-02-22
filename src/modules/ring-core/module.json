@@ -7,16 +7,20 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["u:", "schema:", "op:", "proof:", "partition:"],
   "exports": [
-    "UORRing",
-    "Q0", "Q1", "Q2", "Q3", "Q",
-    "verifyQ0Exhaustive",
-    "CoherenceError",
-    "canonicalize",
-    "RingExplorerPage"
+    "UORRing", "Q0", "Q1", "Q2", "Q3", "Q",
+    "verifyQ0Exhaustive", "CoherenceError",
+    "canonicalize", "RingExplorerPage"
   ],
   "dependencies": {
     "core": "^1.0.0"
   },
   "routes": ["/ring-explorer"],
+  "api_endpoints": [
+    "/kernel/op/verify",
+    "/kernel/op/verify/all",
+    "/kernel/op/compute",
+    "/kernel/op/operations",
+    "/kernel/op/correlate"
+  ],
   "assets": []
 }

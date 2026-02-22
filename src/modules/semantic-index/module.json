@@ -7,14 +7,14 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["semidx:"],
   "exports": [
-    "buildIndex",
-    "resolveEntity",
-    "deduplicateEntities"
+    "buildIndex", "resolveEntity", "deduplicateEntities"
   ],
   "dependencies": {
     "kg-store": "^1.0.0",
     "resolver": "^1.0.0",
     "identity": "^1.0.0"
   },
+  "routes": [],
+  "api_endpoints": [],
   "assets": []
 }

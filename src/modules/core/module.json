@@ -7,20 +7,12 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": [],
   "exports": [
-    "Layout",
-    "Navbar",
-    "Footer",
-    "ScrollProgress",
-    "NavLink",
-    "Dialog",
-    "Toast",
-    "Toaster",
-    "Sonner",
-    "Tooltip",
-    "useToast",
-    "cn"
+    "Layout", "Navbar", "Footer", "ScrollProgress",
+    "NavLink", "Dialog", "Toast", "Toaster",
+    "Sonner", "Tooltip", "useToast", "cn"
   ],
   "dependencies": {},
   "routes": ["/about"],
+  "api_endpoints": [],
   "assets": []
 }

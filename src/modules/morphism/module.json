@@ -1,9 +1,27 @@
 {
   "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-  "@type": "schema:SoftwareModule",
-  "schema:name": "morphism",
-  "schema:version": "1.0.0",
-  "schema:description": "Structure-preserving maps between different ring sizes and schema translations.",
-  "u:namespace": ["morphism:"],
-  "u:dependencies": ["ring-core", "identity", "derivation", "kg-store", "agent-tools"]
+  "@type": "uor:Module",
+  "name": "morphism",
+  "version": "1.0.0",
+  "description": "Structure-preserving maps between different ring sizes and schema translations.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["morphism:"],
+  "exports": ["crossQuantumMap", "transformSchema", "coerceRing"],
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "identity": "^1.0.0",
+    "derivation": "^1.0.0",
+    "kg-store": "^1.0.0",
+    "agent-tools": "^1.0.0"
+  },
+  "routes": [],
+  "api_endpoints": [
+    "/user/morphism/transforms",
+    "/bridge/morphism/transform",
+    "/bridge/morphism/isometry",
+    "/bridge/morphism/coerce",
+    "/bridge/gnn/graph",
+    "/bridge/gnn/ground"
+  ],
+  "assets": []
 }

@@ -7,14 +7,13 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["sparql:"],
   "exports": [
-    "parseSparql",
-    "executeSparql",
-    "federatedQuery",
-    "SparqlEditorPage"
+    "parseSparql", "executeSparql",
+    "federatedQuery", "SparqlEditorPage"
   ],
   "dependencies": {
     "kg-store": "^1.0.0"
   },
   "routes": ["/sparql-editor"],
+  "api_endpoints": ["/bridge/sparql", "/sparql/federation-plan"],
   "assets": []
 }

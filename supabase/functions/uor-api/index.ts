@@ -2766,6 +2766,143 @@ function frameworkIndex(rl: RateLimitResult): Response {
       "moltbook": "https://www.moltbook.com/m/uor",
       "discord": "https://discord.gg/ZwuZaNyuve",
       "github": "https://github.com/UOR-Foundation/UOR-Framework"
+    },
+    "module_registry": {
+      "@type": "uor:ModuleRegistry",
+      "total_modules": 26,
+      "certification": "Every module has a cert:ModuleCertificate with CIDv1 content hash and UOR Braille address",
+      "modules": {
+        "ring-core": {
+          "description": "Ring arithmetic CPU — Z/(2^n)Z algebraic foundation",
+          "layer": 0,
+          "endpoints": ["/kernel/op/verify", "/kernel/op/verify/all", "/kernel/op/compute", "/kernel/op/operations", "/kernel/op/correlate"]
+        },
+        "identity": {
+          "description": "Content-addressed identity via Braille bijection",
+          "layer": 0,
+          "endpoints": ["/kernel/address/encode", "/kernel/schema/datum", "/kernel/schema/triad"]
+        },
+        "triad": {
+          "description": "Triadic coordinate system — datum/stratum/spectrum",
+          "layer": 0,
+          "endpoints": []
+        },
+        "derivation": {
+          "description": "Derivation & certificate engine with SHA-256 receipts",
+          "layer": 1,
+          "endpoints": ["/kernel/derive", "/bridge/derivation", "/tools/derive"]
+        },
+        "kg-store": {
+          "description": "Knowledge graph store — dual-addressed IPFS + DB persistence",
+          "layer": 1,
+          "endpoints": ["/bridge/graph/query", "/store/write", "/store/resolve", "/store/read/:cid", "/store/verify/:cid", "/store/write-context", "/store/gateways"]
+        },
+        "jsonld": {
+          "description": "W3C JSON-LD 1.1 emission from ring data",
+          "layer": 1,
+          "endpoints": ["/bridge/emit", "/schema-org/extend"]
+        },
+        "epistemic": {
+          "description": "Trust grading system (A/B/C/D) for all knowledge",
+          "layer": 1,
+          "endpoints": []
+        },
+        "shacl": {
+          "description": "SHACL runtime validation with conformance suite",
+          "layer": 2,
+          "endpoints": ["/bridge/shacl/shapes", "/bridge/shacl/validate"]
+        },
+        "sparql": {
+          "description": "SPARQL 1.1 query interface with federation",
+          "layer": 2,
+          "endpoints": ["/bridge/sparql", "/sparql/federation-plan"]
+        },
+        "resolver": {
+          "description": "Entity resolution, partition engine, algebraic correlation",
+          "layer": 2,
+          "endpoints": ["/bridge/resolver", "/bridge/partition", "/tools/partition", "/tools/correlate"]
+        },
+        "semantic-index": {
+          "description": "Entity linking — text mentions to canonical IRIs",
+          "layer": 2,
+          "endpoints": []
+        },
+        "morphism": {
+          "description": "Structure-preserving maps between ring sizes",
+          "layer": 2,
+          "endpoints": ["/user/morphism/transforms", "/bridge/morphism/transform", "/bridge/morphism/isometry", "/bridge/morphism/coerce", "/bridge/gnn/graph", "/bridge/gnn/ground"]
+        },
+        "observable": {
+          "description": "Observable facts — metrics, curvature, holonomy, streams",
+          "layer": 3,
+          "endpoints": ["/bridge/observable/metrics", "/bridge/observable/metric", "/bridge/observable/stratum", "/bridge/observable/path", "/bridge/observable/curvature", "/bridge/observable/holonomy", "/bridge/observable/stream"]
+        },
+        "trace": {
+          "description": "PROV-O compatible computation traces",
+          "layer": 3,
+          "endpoints": ["/bridge/trace"]
+        },
+        "state": {
+          "description": "State lifecycle — contexts, bindings, frames, transitions",
+          "layer": 3,
+          "endpoints": ["/user/state", "/store/pod-context", "/store/pod-write", "/store/pod-read", "/store/pod-list"]
+        },
+        "self-verify": {
+          "description": "Self-verification receipts, coherence proofs, certificates",
+          "layer": 4,
+          "endpoints": ["/bridge/proof/critical-identity", "/bridge/proof/coherence", "/bridge/cert/involution", "/cert/issue", "/cert/portability"]
+        },
+        "agent-tools": {
+          "description": "5 canonical agent tools — derive, query, verify, correlate, partition",
+          "layer": 4,
+          "endpoints": ["/tools/derive", "/tools/query", "/tools/verify", "/tools/correlate", "/tools/partition"]
+        },
+        "code-kg": {
+          "description": "TypeScript-to-knowledge-graph bridge",
+          "layer": 4,
+          "endpoints": []
+        },
+        "dashboard": {
+          "description": "Unified developer dashboard",
+          "layer": 4,
+          "endpoints": []
+        },
+        "core": {
+          "description": "Design system, layout shell, UI primitives",
+          "layer": 5,
+          "endpoints": []
+        },
+        "landing": {
+          "description": "Homepage — Hero, Pillars, Highlights, CTA",
+          "layer": 5,
+          "endpoints": []
+        },
+        "framework": {
+          "description": "Framework documentation and layer architecture",
+          "layer": 5,
+          "endpoints": []
+        },
+        "community": {
+          "description": "Research, blog posts, events",
+          "layer": 5,
+          "endpoints": []
+        },
+        "projects": {
+          "description": "Project showcase and submission",
+          "layer": 5,
+          "endpoints": []
+        },
+        "donate": {
+          "description": "Donation page and popup",
+          "layer": 5,
+          "endpoints": []
+        },
+        "api-explorer": {
+          "description": "Interactive API documentation",
+          "layer": 5,
+          "endpoints": []
+        }
+      }
     }
   }, CACHE_HEADERS_KERNEL, etag, rl);
 }
@@ -6775,8 +6912,9 @@ async function gnnGround(req: Request, rl: RateLimitResult): Promise<Response> {
 
 // ── Economic Attribution Protocol ─────────────────────────────────────────
 
-// In-memory attribution store (per-isolate; production would use DB)
-const attributionStore: Array<{
+// Attribution store — persisted to uor_certificates table
+// Falls back to in-memory if DB write fails
+const attributionCache: Array<{
   cert_iri: string;
   derivation_id: string;
   contributor_iri: string;
@@ -6785,6 +6923,66 @@ const attributionStore: Array<{
   usage_right: string;
   timestamp: string;
 }> = [];
+
+async function persistAttribution(record: typeof attributionCache[0]): Promise<void> {
+  try {
+    const sbUrl = Deno.env.get('SUPABASE_URL');
+    const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!sbUrl || !sbKey) return;
+    await fetch(`${sbUrl}/rest/v1/uor_certificates`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': sbKey,
+        'Authorization': `Bearer ${sbKey}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        certificate_id: record.cert_iri,
+        certifies_iri: record.derivation_id,
+        valid: true,
+        issued_at: record.timestamp,
+        cert_chain: {
+          "@type": "cert:AttributionCertificate",
+          contributor_iri: record.contributor_iri,
+          contributor_name: record.contributor_name,
+          role: record.role,
+          usage_right: record.usage_right,
+        },
+      }),
+    });
+  } catch {
+    // Silently fall back to in-memory only
+  }
+}
+
+async function loadAttributions(filter: Record<string, string>): Promise<typeof attributionCache> {
+  try {
+    const sbUrl = Deno.env.get('SUPABASE_URL');
+    const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!sbUrl || !sbKey) return attributionCache.filter(a => Object.entries(filter).every(([k, v]) => (a as Record<string,string>)[k] === v));
+    const params = new URLSearchParams();
+    if (filter.derivation_id) params.set('certifies_iri', `eq.${filter.derivation_id}`);
+    if (filter.contributor_iri) params.set('cert_chain->>contributor_iri', `eq.${filter.contributor_iri}`);
+    params.set('cert_chain->>@type', 'eq.cert:AttributionCertificate');
+    const resp = await fetch(`${sbUrl}/rest/v1/uor_certificates?${params}`, {
+      headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` },
+    });
+    if (!resp.ok) throw new Error('DB read failed');
+    const rows = await resp.json() as Array<{ certificate_id: string; certifies_iri: string; issued_at: string; cert_chain: Record<string,string> }>;
+    return rows.map(r => ({
+      cert_iri: r.certificate_id,
+      derivation_id: r.certifies_iri,
+      contributor_iri: r.cert_chain?.contributor_iri ?? '',
+      contributor_name: r.cert_chain?.contributor_name ?? '',
+      role: r.cert_chain?.role ?? 'Contributor',
+      usage_right: r.cert_chain?.usage_right ?? 'uor:attribution-required',
+      timestamp: r.issued_at,
+    }));
+  } catch {
+    return attributionCache.filter(a => Object.entries(filter).every(([k, v]) => (a as Record<string,string>)[k] === v));
+  }
+}
 
 // POST /attribution/register
 async function attributionRegister(req: Request, rl: RateLimitResult): Promise<Response> {
@@ -6822,8 +7020,8 @@ async function attributionRegister(req: Request, rl: RateLimitResult): Promise<R
   const role = body.role ?? 'Contributor';
   const usageRight = body.usage_right ?? 'uor:attribution-required';
 
-  // Step 3: store in memory
-  attributionStore.push({
+  // Step 3: persist to DB + cache
+  const record = {
     cert_iri: certIri,
     derivation_id: did,
     contributor_iri: body.contributor_iri,
@@ -6831,7 +7029,9 @@ async function attributionRegister(req: Request, rl: RateLimitResult): Promise<R
     role,
     usage_right: usageRight,
     timestamp,
-  });
+  };
+  attributionCache.push(record);
+  await persistAttribution(record);
 
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
@@ -6850,11 +7050,11 @@ async function attributionRegister(req: Request, rl: RateLimitResult): Promise<R
 }
 
 // GET /attribution/verify?derivation_id=...
-function attributionVerify(url: URL, rl: RateLimitResult): Response {
+async function attributionVerify(url: URL, rl: RateLimitResult): Promise<Response> {
   const did = url.searchParams.get('derivation_id');
   if (!did) return error400('derivation_id query parameter is required', 'derivation_id', rl);
 
-  const matches = attributionStore.filter(a => a.derivation_id === did);
+  const matches = await loadAttributions({ derivation_id: did });
 
   return jsonResp(gradeResponse({
     "@context": UOR_CONTEXT_URL,
@@ -6875,11 +7075,11 @@ function attributionVerify(url: URL, rl: RateLimitResult): Response {
 }
 
 // GET /attribution/royalty-report?contributor_iri=...
-function attributionRoyaltyReport(url: URL, rl: RateLimitResult): Response {
+async function attributionRoyaltyReport(url: URL, rl: RateLimitResult): Promise<Response> {
   const ciri = url.searchParams.get('contributor_iri');
   if (!ciri) return error400('contributor_iri query parameter is required', 'contributor_iri', rl);
 
-  const matches = attributionStore.filter(a => a.contributor_iri === ciri);
+  const matches = await loadAttributions({ contributor_iri: ciri });
   const reportDate = new Date().toISOString().slice(0, 10);
 
   return jsonResp(gradeResponse({

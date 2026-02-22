@@ -3,9 +3,16 @@
   "@type": "uor:Module",
   "name": "trace",
   "version": "1.0.0",
-  "description": "Computation Trace — PROV-O compatible audit trail for ring operations",
-  "namespace": "trace:",
-  "dependencies": ["ring-core", "identity", "derivation"],
+  "description": "Computation Trace — PROV-O compatible audit trail for ring operations.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["trace:"],
   "exports": ["recordTrace", "getTrace", "getRecentTraces"],
-  "tables": ["uor_traces"]
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "identity": "^1.0.0",
+    "derivation": "^1.0.0"
+  },
+  "routes": [],
+  "api_endpoints": ["/bridge/trace"],
+  "assets": []
 }

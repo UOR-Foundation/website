@@ -7,10 +7,8 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["derivation:", "cert:", "receipt:", "proof:"],
   "exports": [
-    "derive",
-    "verifyDerivation",
-    "issueCertificate",
-    "verifyCertificate",
+    "derive", "verifyDerivation",
+    "issueCertificate", "verifyCertificate",
     "generateReceipt"
   ],
   "dependencies": {
@@ -18,5 +16,10 @@
     "identity": "^1.0.0"
   },
   "routes": ["/derivation-lab"],
+  "api_endpoints": [
+    "/kernel/derive",
+    "/bridge/derivation",
+    "/tools/derive"
+  ],
   "assets": []
 }

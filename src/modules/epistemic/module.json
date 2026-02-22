@@ -7,19 +7,16 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["epistemic:"],
   "exports": [
-    "computeGrade",
-    "gradeToLabel",
-    "gradeToStyles",
-    "gradeInfo",
-    "upgradeToA",
-    "upgradeToB",
-    "EpistemicBadge",
-    "EpistemicGradeLegend"
+    "computeGrade", "gradeToLabel", "gradeToStyles",
+    "gradeInfo", "upgradeToA", "upgradeToB",
+    "EpistemicBadge", "EpistemicGradeLegend"
   ],
   "dependencies": {
     "derivation": "^1.0.0",
     "kg-store": "^1.0.0",
     "ring-core": "^1.0.0"
   },
+  "routes": [],
+  "api_endpoints": [],
   "assets": []
 }

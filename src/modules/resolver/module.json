@@ -7,15 +7,21 @@
   "uor:specification": "1.0.0",
   "uor:namespaces": ["resolver:", "partition:"],
   "exports": [
-    "resolve",
-    "classifyElement",
-    "computePartition",
-    "correlate"
+    "resolve", "classifyElement",
+    "computePartition", "correlate"
   ],
   "dependencies": {
     "ring-core": "^1.0.0",
     "identity": "^1.0.0",
     "triad": "^1.0.0"
   },
+  "routes": [],
+  "api_endpoints": [
+    "/bridge/resolver",
+    "/bridge/resolver/entity",
+    "/bridge/partition",
+    "/tools/partition",
+    "/tools/correlate"
+  ],
   "assets": []
 }
