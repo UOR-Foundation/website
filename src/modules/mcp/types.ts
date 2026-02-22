@@ -62,8 +62,7 @@ export interface McpServerConfig {
 export const DEFAULT_MCP_CONFIG: McpServerConfig = {
   name: "uor-mcp",
   version: "1.0.0",
-  endpointUrl:
-    "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-mcp/mcp",
+  endpointUrl: "https://mcp.uor.foundation",
   tools: [
     "uor_derive",
     "uor_verify",

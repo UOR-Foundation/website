@@ -3,8 +3,7 @@
  * Each entry describes how to connect a specific LLM client to UOR MCP.
  */
 
-export const MCP_URL =
-  "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-mcp/mcp";
+export const MCP_URL = "https://mcp.uor.foundation";
 
 export const DEEP_LINK = `claude://install-mcp-server/uor?url=${encodeURIComponent(MCP_URL)}`;
 
