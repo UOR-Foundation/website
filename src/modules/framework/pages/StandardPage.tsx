@@ -1,5 +1,6 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, Globe, ShieldCheck, Bot, Microscope, Layers, Rocket } from "lucide-react";
+import { ExternalLink, Globe, ShieldCheck, Bot, Microscope, Layers, Rocket, Copy, Check } from "lucide-react";
+import { useState, useCallback } from "react";
 import type { LucideIcon } from "lucide-react";
 import { applications } from "@/data/applications";
 import { quantumLevels } from "@/data/quantum-levels";
@@ -10,6 +11,99 @@ import UORDiagram from "@/modules/framework/components/UORDiagram";
 import FrameworkLayers from "@/modules/framework/components/FrameworkLayers";
 
 const iconMap: Record<string, LucideIcon> = { Globe, ShieldCheck, Bot, Microscope, Layers, Rocket };
+
+const MCP_URL = "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-mcp/mcp";
+
+const MCP_CONFIG = JSON.stringify({ mcpServers: { uor: { url: MCP_URL } } }, null, 2);
+
+const clients = [
+  {
+    name: "Claude Desktop",
+    file: "claude_desktop_config.json",
+    docsUrl: "https://modelcontextprotocol.io/quickstart/user",
+  },
+  {
+    name: "Cursor",
+    file: ".cursor/mcp.json",
+    docsUrl: "https://docs.cursor.com/context/model-context-protocol",
+  },
+  {
+    name: "Windsurf",
+    file: "~/.codeium/windsurf/mcp_config.json",
+    docsUrl: "https://docs.windsurf.com/windsurf/mcp",
+  },
+  {
+    name: "VS Code (Copilot)",
+    file: ".vscode/mcp.json",
+    docsUrl: "https://code.visualstudio.com/docs/copilot/chat/mcp-servers",
+  },
+] as const;
+
+function CopyBtn({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handle = useCallback(() => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [text]);
+  return (
+    <button onClick={handle} className="shrink-0 rounded p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="Copy">
+      {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} />}
+    </button>
+  );
+}
+
+function McpClientCards() {
+  const [active, setActive] = useState(0);
+  const c = clients[active];
+  return (
+    <div>
+      {/* Client tabs */}
+      <div className="flex flex-wrap gap-2 mb-5">
+        {clients.map((cl, i) => (
+          <button
+            key={cl.name}
+            onClick={() => setActive(i)}
+            className={`px-4 py-2 rounded-full text-sm font-body font-medium transition-colors border ${
+              i === active
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-muted/40 text-muted-foreground border-border hover:border-primary/40"
+            }`}
+          >
+            {cl.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Config card */}
+      <div className="rounded-2xl border border-border bg-card p-5 md:p-7 mb-5">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60">
+            Paste into <code className="text-foreground/80">{c.file}</code>
+          </p>
+          <CopyBtn text={MCP_CONFIG} />
+        </div>
+        <pre className="bg-muted/50 rounded-xl p-4 overflow-x-auto text-sm font-mono text-foreground leading-relaxed">
+          {MCP_CONFIG}
+        </pre>
+        <a
+          href={c.docsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 mt-4 text-sm font-body text-primary hover:underline"
+        >
+          {c.name} setup guide <ExternalLink size={13} />
+        </a>
+      </div>
+
+      {/* Tools summary */}
+      <p className="text-sm font-body text-muted-foreground leading-relaxed">
+        <span className="text-foreground font-medium">Five tools:</span>{" "}
+        derive · verify · query · correlate · partition — every output carries a derivation ID and content-addressed IRI.
+      </p>
+    </div>
+  );
+}
 
 const Standard = () => {
   return (
@@ -374,42 +468,14 @@ const Standard = () => {
       {/* MCP Connection */}
       <section className="py-14 md:py-20 bg-background border-b border-border">
         <div className="container max-w-3xl">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
             Ground your LLM
           </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8 max-w-2xl">
-            Connect any MCP-compatible client to UOR. Every response becomes content-addressed, algebraically verified, and auditable.
+          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
+            Every response becomes content-addressed, verified, and auditable. Pick your client:
           </p>
 
-          <div className="rounded-2xl border border-border bg-card p-6 md:p-8 mb-6">
-            <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-4">
-              Add to your config
-            </p>
-            <pre className="bg-muted/50 rounded-xl p-4 md:p-5 overflow-x-auto text-sm font-mono text-foreground leading-relaxed">
-{`{
-  "mcpServers": {
-    "uor": {
-      "url": "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-mcp/mcp"
-    }
-  }
-}`}
-            </pre>
-            <p className="text-sm font-body text-muted-foreground mt-4 leading-relaxed">
-              Works with Claude Desktop, Cursor, and any MCP-compatible client.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-muted/30 p-5 md:p-6">
-            <p className="text-sm font-body text-foreground font-medium mb-2">Five tools, one guarantee</p>
-            <p className="text-sm font-body text-muted-foreground leading-relaxed">
-              <span className="text-foreground font-medium">derive</span> any ring expression.{" "}
-              <span className="text-foreground font-medium">verify</span> any prior result.{" "}
-              <span className="text-foreground font-medium">query</span> the knowledge graph.{" "}
-              <span className="text-foreground font-medium">correlate</span> two values.{" "}
-              <span className="text-foreground font-medium">partition</span> elements by structure.
-              Every output carries a derivation ID, an epistemic grade, and a content-addressed IRI.
-            </p>
-          </div>
+          <McpClientCards />
         </div>
       </section>
     </Layout>
