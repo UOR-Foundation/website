@@ -5,7 +5,8 @@
 
 export const MCP_URL = "https://mcp.uor.foundation";
 
-export const DEEP_LINK = `claude://install-mcp-server/uor?url=${encodeURIComponent(MCP_URL)}`;
+const CURSOR_CONFIG_B64 = btoa(JSON.stringify({ url: MCP_URL }));
+export const CURSOR_DEEP_LINK = `cursor://anysphere.cursor-deeplink/mcp/install?name=uor&config=${CURSOR_CONFIG_B64}`;
 
 export const MCP_CONFIG = JSON.stringify(
   { mcpServers: { uor: { url: MCP_URL } } },
@@ -16,16 +17,14 @@ export const MCP_CONFIG = JSON.stringify(
 export interface McpClientInfo {
   name: string;
   deepLink?: string;
-  configPath: { mac: string; win: string };
+  configPath?: { mac: string; win: string };
   steps: string[];
-  fallbackSteps?: string[];
   docsUrl: string;
 }
 
 export const MCP_CLIENTS: McpClientInfo[] = [
   {
     name: "Claude Desktop",
-    deepLink: DEEP_LINK,
     configPath: {
       mac: "~/.config/claude/claude_desktop_config.json",
       win: "%APPDATA%\\Claude\\claude_desktop_config.json",
@@ -39,6 +38,7 @@ export const MCP_CLIENTS: McpClientInfo[] = [
   },
   {
     name: "Cursor",
+    deepLink: CURSOR_DEEP_LINK,
     configPath: {
       mac: "~/.cursor/mcp.json",
       win: "%USERPROFILE%\\.cursor\\mcp.json",
