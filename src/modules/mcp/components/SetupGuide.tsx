@@ -3,13 +3,50 @@ import { ExternalLink, ChevronDown, ShieldCheck } from "lucide-react";
 import CopyButton from "./CopyButton";
 import { MCP_CLIENTS, MCP_CONFIG, MCP_URL } from "../data/clients";
 
-const CURSOR_RULES_URL = "https://uor.foundation/cursor-rules/uor-trust-stamp.mdc";
+const RULES_BASE = "https://uor.foundation";
 
-const CURSOR_RULES_SNIPPET = `# Add to your project's .cursor/rules directory
-# Download from: ${CURSOR_RULES_URL}
-#
-# This rule ensures every Cursor response includes a UOR PRISM Trust Score,
-# even when no UOR tool is called (self-assigns Grade D for training-data answers).`;
+const CLIENT_RULES: Record<string, { url: string; filename: string; installPath: string; instructions: string[] }> = {
+  "Cursor": {
+    url: `${RULES_BASE}/cursor-rules/uor-trust-stamp.mdc`,
+    filename: "uor-trust-stamp.mdc",
+    installPath: ".cursor/rules/uor-trust-stamp.mdc",
+    instructions: [
+      "Download the rule file below.",
+      "Save it to <code>.cursor/rules/uor-trust-stamp.mdc</code> in your project.",
+      "Every response will now include a trust score — Grade D for unverified answers, Grade A–B for proven computations.",
+    ],
+  },
+  "Windsurf": {
+    url: `${RULES_BASE}/rules/uor-trust-stamp-windsurf.md`,
+    filename: "uor-trust-stamp-windsurf.md",
+    installPath: ".windsurfrules (project root)",
+    instructions: [
+      "Download the rule file below.",
+      "Copy the contents into your project's <code>.windsurfrules</code> file at the root (create it if it doesn't exist).",
+      "Every Windsurf response will now include a trust score.",
+    ],
+  },
+  "VS Code": {
+    url: `${RULES_BASE}/rules/uor-trust-stamp-vscode.md`,
+    filename: "uor-trust-stamp-vscode.md",
+    installPath: ".github/copilot-instructions.md",
+    instructions: [
+      "Download the rule file below.",
+      "Copy the contents into <code>.github/copilot-instructions.md</code> in your project (create it if it doesn't exist).",
+      "VS Code Copilot Chat will now include a trust score on every response.",
+    ],
+  },
+  "Claude Desktop": {
+    url: `${RULES_BASE}/cursor-rules/uor-trust-stamp.mdc`,
+    filename: "uor-trust-stamp.mdc",
+    installPath: "Loaded automatically via MCP instructions",
+    instructions: [
+      "Claude Desktop reads the MCP server instructions automatically — <strong>no extra file needed</strong>.",
+      "If you don't see trust stamps, restart Claude Desktop after adding the UOR MCP server.",
+      "Every response will include a trust score as long as the UOR MCP server is connected.",
+    ],
+  },
+};
 
 const VALUE_STATEMENTS: Record<string, string> = {
   "Claude Desktop": "Add verifiable, content-addressed computation to Claude.",
@@ -104,8 +141,8 @@ const SetupGuide = () => {
               )}
             </div>
 
-            {/* ── Cursor Rules (Cursor only) ── */}
-            {c.name === "Cursor" && (
+            {/* ── Trust Stamp Enforcement (all clients) ── */}
+            {CLIENT_RULES[c.name] && (
               <div className="border-t border-border pt-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <ShieldCheck size={16} className="text-primary" />
@@ -114,36 +151,33 @@ const SetupGuide = () => {
                   </p>
                 </div>
                 <p className="text-sm font-body text-muted-foreground leading-relaxed">
-                  By default, Cursor only appends the UOR Trust Score when it calls a UOR tool.
-                  To ensure <strong>every</strong> response gets a trust stamp — even plain-text answers —
-                  add this Cursor Rule to your project:
+                  By default, {c.name} may only show the UOR Trust Score when a UOR tool is called.
+                  To ensure <strong>every</strong> response ends with a trust scorecard:
                 </p>
                 <ol className="space-y-2">
-                  <li className="flex items-start gap-3">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">1</span>
-                    <p className="text-sm font-body text-foreground leading-relaxed">
-                      Download the rule file: <a href={CURSOR_RULES_URL} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80">uor-trust-stamp.mdc</a>
-                    </p>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">2</span>
-                    <p className="text-sm font-body text-foreground leading-relaxed">
-                      Save it to <code className="bg-muted px-1 py-0.5 rounded font-mono text-xs">.cursor/rules/uor-trust-stamp.mdc</code> in your project.
-                    </p>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">3</span>
-                    <p className="text-sm font-body text-foreground leading-relaxed">
-                      Every response will now include a trust score — Grade D for unverified answers, Grade A for proven computations.
-                    </p>
-                  </li>
+                  {CLIENT_RULES[c.name].instructions.map((step, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                      <p className="text-sm font-body text-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: step }} />
+                    </li>
+                  ))}
                 </ol>
-                <div className="relative bg-muted/50 rounded-xl p-4 overflow-x-auto">
-                  <pre className="text-sm font-mono text-foreground leading-relaxed pr-20">{CURSOR_RULES_SNIPPET}</pre>
-                  <div className="absolute top-3 right-3">
-                    <CopyButton text={CURSOR_RULES_SNIPPET} label="Copy" />
+                {c.name !== "Claude Desktop" && (
+                  <div className="flex items-center gap-3">
+                    <a
+                      href={CLIENT_RULES[c.name].url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium bg-muted text-foreground hover:bg-muted/80 transition-colors border border-border"
+                    >
+                      Download {CLIENT_RULES[c.name].filename}
+                      <ExternalLink size={13} />
+                    </a>
                   </div>
-                </div>
+                )}
+                <p className="text-xs text-muted-foreground font-mono bg-muted/30 rounded-lg px-3 py-2">
+                  Install to: {CLIENT_RULES[c.name].installPath}
+                </p>
               </div>
             )}
           </div>
@@ -178,6 +212,47 @@ const SetupGuide = () => {
               <p className="text-xs text-muted-foreground font-mono bg-muted/30 rounded-lg px-3 py-2">
                 Save to: {c.configPath.mac}
               </p>
+            )}
+
+
+            {/* ── Trust Stamp Enforcement (non-deep-link clients) ── */}
+            {CLIENT_RULES[c.name] && (
+              <div className="border-t border-border pt-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-primary" />
+                  <p className="text-sm font-body font-medium text-foreground">
+                    Enforce trust stamps on every response
+                  </p>
+                </div>
+                <p className="text-sm font-body text-muted-foreground leading-relaxed">
+                  By default, {c.name} may only show the UOR Trust Score when a UOR tool is called.
+                  To ensure <strong>every</strong> response ends with a trust scorecard:
+                </p>
+                <ol className="space-y-2">
+                  {CLIENT_RULES[c.name].instructions.map((step, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                      <p className="text-sm font-body text-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: step }} />
+                    </li>
+                  ))}
+                </ol>
+                {c.name !== "Claude Desktop" && (
+                  <div className="flex items-center gap-3">
+                    <a
+                      href={CLIENT_RULES[c.name].url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium bg-muted text-foreground hover:bg-muted/80 transition-colors border border-border"
+                    >
+                      Download {CLIENT_RULES[c.name].filename}
+                      <ExternalLink size={13} />
+                    </a>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground font-mono bg-muted/30 rounded-lg px-3 py-2">
+                  Install to: {CLIENT_RULES[c.name].installPath}
+                </p>
+              </div>
             )}
           </>
         )}
