@@ -223,27 +223,44 @@ export function partitionEpistemics(
   };
 }
 
-/** Format epistemic metadata as a human-readable appendix for the MCP response. */
+/** Emoji for each grade. */
+function gradeIcon(grade: EpistemicGrade): string {
+  return { A: "🟢", B: "🔵", C: "🟡", D: "🔴" }[grade];
+}
+
+/** Confidence bar: filled/empty blocks for a quick visual read. */
+function confidenceBar(confidence: number): string {
+  const filled = Math.round(confidence * 10);
+  return "█".repeat(filled) + "░".repeat(10 - filled);
+}
+
+/** Format epistemic metadata as a human-readable trust stamp for the MCP response. */
 export function formatEpistemicBlock(meta: EpistemicMetadata): string {
+  const pct = (meta.confidence * 100).toFixed(0);
+  const icon = gradeIcon(meta.grade);
+  const bar = confidenceBar(meta.confidence);
+
+  const sourceLines = meta.sources.map((s) => {
+    const ref = s.reference ? ` (${s.reference.slice(0, 40)}${s.reference.length > 40 ? "…" : ""})` : "";
+    return `  • ${s.label}${ref}`;
+  });
+
   const lines = [
     "",
-    "───────────────────────────────────────",
-    "📊 EPISTEMIC TRUST REPORT",
-    "───────────────────────────────────────",
-    `Grade:       ${meta.grade} — ${meta.grade_label}`,
-    `Confidence:  ${(meta.confidence * 100).toFixed(0)}%`,
-    "",
-    "Sources:",
-    ...meta.sources.map(
-      (s, i) =>
-        `  ${i + 1}. [${s.type}] ${s.label}${s.reference ? ` → ${s.reference.slice(0, 48)}${s.reference.length > 48 ? "…" : ""}` : ""}`,
-    ),
-    "",
-    "Reasoning Chain:",
-    ...meta.reasoning_chain.map((step) => `  ${step}`),
-    "",
-    `Summary: ${meta.trust_summary}`,
-    "───────────────────────────────────────",
+    "┌─────────────────────────────────────────┐",
+    `│  ${icon} UOR Trust Stamp: Grade ${meta.grade}`,
+    "├─────────────────────────────────────────┤",
+    `│  Trust Level:  ${meta.grade_label}`,
+    `│  Confidence:   ${bar} ${pct}%`,
+    "│",
+    "│  How this was verified:",
+    ...meta.reasoning_chain.slice(-2).map((step) => `│    ${step.replace(/^\d+\.\s*/, "→ ")}`),
+    "│",
+    "│  Information sources:",
+    ...sourceLines.map((l) => `│  ${l}`),
+    "│",
+    `│  ${meta.trust_summary}`,
+    "└─────────────────────────────────────────┘",
   ];
   return lines.join("\n");
 }
