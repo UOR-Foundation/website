@@ -413,6 +413,45 @@ This is the cross-agent identity anchor for Grade A facts.
 
 ---
 
+## Q0 Instance Graph
+
+The Q0 instance graph materialises all 256 ring elements of Z/256Z as JSON-LD:
+- Static file: https://uor.foundation/uor_q0.jsonld
+- 256 Datum individuals with content-addressed IRIs, triadic coordinates, and ring links
+- 6 canonical derivation examples (including AC-normalised xor pairs)
+- Critical identity proof node
+- Partition cardinality node
+
+Load into any W3C-compliant triplestore:
+```
+riot --syntax=jsonld uor_q0.jsonld | sparql --data=- "SELECT (COUNT(?d) AS ?n) WHERE { ?d a schema:Datum }"
+# → 256
+```
+
+## SPARQL Endpoint
+
+SPARQL 1.1 query endpoint over the UOR ring algebra:
+- GET: `https://api.uor.foundation/v1/bridge/sparql?query=SELECT+...`
+- POST: `https://api.uor.foundation/v1/bridge/sparql` (body: SPARQL query)
+
+Verification queries:
+```sparql
+# Count all datums (expect 256):
+SELECT (COUNT(?d) AS ?n) WHERE { ?d a schema:Datum }
+
+# Retrieve datum 0x2A:
+SELECT ?s ?p ?o WHERE { ?s schema:value 42 }
+
+# Critical identity proof:
+SELECT ?p WHERE { ?p a proof:CriticalIdentityProof }
+```
+
+## SHACL Shapes
+
+SHACL shapes: https://uor.foundation/shapes/uor-shapes.ttl
+
+Shapes defined: DatumShape, DerivationShape (with derivationId regex), CertificateShape (with cert:certifies), PartitionShape.
+
 ---
 
 ## What Problems Does UOR Solve?
