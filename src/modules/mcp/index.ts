@@ -13,3 +13,9 @@ export type {
 } from "./types";
 
 export { MCP_RESOURCES, DEFAULT_MCP_CONFIG } from "./types";
+
+export type { McpClientInfo } from "./data/clients";
+export { MCP_URL, MCP_CLIENTS, MCP_CONFIG, DEEP_LINK } from "./data/clients";
+
+export { default as SetupGuide } from "./components/SetupGuide";
+export { default as CopyButton } from "./components/CopyButton";
