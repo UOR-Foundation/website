@@ -161,4 +161,19 @@ export const docSidebars: Record<string, DocSidebarSection> = {
       { label: "Trust Model", href: "/developers/concepts#trust" },
     ],
   },
+  fundamentals: {
+    serviceId: "fundamentals",
+    title: "Fundamentals",
+    icon: "Layers",
+    items: [
+      { label: "Overview", href: "/developers/fundamentals" },
+      { label: "What is UOR?", href: "/developers/fundamentals#what" },
+      { label: "How it works", href: "/developers/fundamentals#how" },
+      { label: "Why it matters", href: "/developers/fundamentals#why" },
+      { label: "Infrastructure", href: "/developers/fundamentals#infrastructure" },
+      { label: "For AI agents", href: "/developers/fundamentals#agents" },
+      { label: "Concepts", href: "/developers/concepts" },
+      { label: "Get started", href: "/developers/getting-started" },
+    ],
+  },
 };
