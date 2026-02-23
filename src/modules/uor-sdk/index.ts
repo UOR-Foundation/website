@@ -197,3 +197,13 @@ export type {
   CallAppResult,
   RevenueResult,
 } from "./app-sdk";
+
+// ── Free Tier & Revenue Share (P14 — structurally sustainable tiers) ────────
+export { FreeTierManager, TIERS } from "./free-tier";
+export type {
+  TierName,
+  TierConfig,
+  DeveloperAccount as FreeTierDeveloperAccount,
+  LimitCheckResult,
+  PayoutResult,
+} from "./free-tier";
