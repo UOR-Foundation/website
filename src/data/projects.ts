@@ -76,6 +76,14 @@ export const projects: ProjectData[] = [
     maturity: "Sandbox",
     imageKey: "qrCartridge",
   },
+  {
+    name: "Hologram SDK",
+    slug: "hologram-sdk",
+    category: "Developer Tools",
+    description: "Build, ship, and run applications with one identity, one gate, and one balance. The managed app platform for creative builders.",
+    maturity: "Sandbox",
+    imageKey: "hologramSdk",
+  },
 ];
 
 export const maturityInfo: { level: MaturityLevel; tagline: string; description: string; criteria: string[] }[] = [

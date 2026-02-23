@@ -78,9 +78,9 @@ export default function ConsoleLayout() {
           {!collapsed && (
             <div className="flex items-center gap-2">
               <div className="h-7 w-7 rounded-lg bg-primary/20 flex items-center justify-center">
-                <span className="text-primary text-sm font-bold">U</span>
+                <span className="text-primary text-sm font-bold">H</span>
               </div>
-              <span className="text-sm font-semibold tracking-tight">UOR Console</span>
+              <span className="text-sm font-semibold tracking-tight">Hologram Console</span>
             </div>
           )}
           <button
