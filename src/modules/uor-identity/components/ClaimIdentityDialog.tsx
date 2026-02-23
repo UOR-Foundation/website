@@ -349,7 +349,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                 </form>
               </div>
 
-               <p className="text-center text-sm text-foreground/70 font-body font-medium leading-relaxed">
+               <p className="text-center text-base md:text-lg text-foreground font-display font-semibold tracking-wide leading-relaxed">
                 Universal. Private. Yours.
               </p>
             </div>
