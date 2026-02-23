@@ -23,6 +23,7 @@ interface SpaceCardProps {
   className?: string;
   votes?: number;
   onVote?: () => void;
+  dragListeners?: Record<string, unknown>;
 }
 
 export const SpaceCard = ({
@@ -37,6 +38,7 @@ export const SpaceCard = ({
   className = "",
   votes = 0,
   onVote,
+  dragListeners,
 }: SpaceCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -121,7 +123,11 @@ export const SpaceCard = ({
               {isEditing ? <X size={14} /> : <Pencil size={14} />}
             </button>
           )}
-          <div className={`${iconBtn} p-1.5 cursor-grab active:cursor-grabbing transition-colors`} title="Drag to reorder">
+          <div
+            className={`${iconBtn} p-1.5 cursor-grab active:cursor-grabbing transition-colors`}
+            title="Drag to reorder"
+            {...(dragListeners || {})}
+          >
             <GripVertical size={14} />
           </div>
         </div>
