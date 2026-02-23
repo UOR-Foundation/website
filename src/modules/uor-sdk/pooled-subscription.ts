@@ -7,9 +7,9 @@
  *   1. User pays one monthly subscription (e.g., $9.99/month)
  *   2. Platform tracks usage across all apps (via UniversalIdentityManager)
  *   3. At billing cycle end, revenue is pooled and distributed:
- *      - Platform takes 20% (configurable)
- *      - Remaining 80% is divided proportionally by usage time
- *      - Developer of app used 60% of the time → gets 60% of the 80%
+ *      - Platform takes 0% (default, configurable)
+ *      - 100% of revenue minus fees is divided proportionally by usage time
+ *      - Developer of app used 60% of the time → gets 60% of the pool
  *
  * This makes monetization invisible to vibe coders:
  *   - No Stripe setup per app
@@ -209,7 +209,7 @@ export class PooledSubscriptionEngine {
    *
    * This is the YouTube Premium moment:
    *   1. Sum all subscription payments in this period
-   *   2. Platform takes its share (default 20%)
+   *   2. Platform takes its share (default 0%)
    *   3. Remaining pool is divided by weighted usage
    *   4. Each app creator receives their proportional share
    *

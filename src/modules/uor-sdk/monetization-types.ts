@@ -73,8 +73,8 @@ export interface RevenueSplit {
 }
 
 export const DEFAULT_REVENUE_SPLIT: RevenueSplit = {
-  developerShare: 0.80,
-  platformShare: 0.20,
+  developerShare: 1.00,
+  platformShare: 0.00,
 };
 
 // ── Access Certificate ──────────────────────────────────────────────────────

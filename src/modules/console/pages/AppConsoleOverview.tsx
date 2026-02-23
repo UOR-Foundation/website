@@ -65,7 +65,7 @@ export default function AppConsoleOverview() {
             </div>
           </div>
           <p className="text-3xl font-bold text-foreground">$2.8k</p>
-          <p className="text-[11px] text-muted-foreground">80/20 split</p>
+          <p className="text-[11px] text-muted-foreground">100% dev revenue</p>
         </div>
 
         <div className="rounded-2xl border border-border/40 bg-card/50 p-5 space-y-3">
