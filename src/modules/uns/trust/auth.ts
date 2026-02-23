@@ -33,6 +33,10 @@ export interface UnsSession {
   issuedAt: string;
   expiresAt: string;
   "cert:signature": SignatureBlock;
+  /** P22: Epistemic grade — 'A' for Dilithium-3 authenticated sessions. */
+  epistemic_grade: "A";
+  epistemic_grade_label: string;
+  "derivation:derivationId": string;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -198,6 +202,10 @@ export class UnsAuthServer {
         "cert:signerCanonicalId": this.serverKeypair.canonicalId,
         "cert:signedAt": now.toISOString(),
       },
+      // P22: Dilithium-3 authenticated session is Grade A
+      epistemic_grade: "A",
+      epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+      "derivation:derivationId": identity["u:canonicalId"],
     };
   }
 }

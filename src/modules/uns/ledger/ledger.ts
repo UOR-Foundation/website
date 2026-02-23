@@ -38,6 +38,10 @@ export interface QueryResult {
   rows: Record<string, unknown>[];
   rowCount: number;
   queryProof: SignedRecord<QueryProof>;
+  /** P22: Epistemic grade — 'A' for signed QueryProof with derivationId. */
+  epistemic_grade: "A";
+  epistemic_grade_label: string;
+  "derivation:derivationId": string;
 }
 
 /** State transition record for write operations. */
@@ -302,7 +306,15 @@ export class UnsLedger {
 
     const signedProof = await signRecord(proof, this.operatorKeypair);
 
-    return { rows, rowCount: rows.length, queryProof: signedProof };
+    // P22: Signed query proof is Grade A
+    return {
+      rows,
+      rowCount: rows.length,
+      queryProof: signedProof,
+      epistemic_grade: "A",
+      epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+      "derivation:derivationId": queryIdentity["u:canonicalId"],
+    };
   }
 
   /**

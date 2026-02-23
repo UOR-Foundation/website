@@ -185,6 +185,9 @@ describe("UNS Trust — Zero Trust Authentication & Authorization", () => {
         "cert:signerCanonicalId": serverKp.canonicalId,
         "cert:signedAt": new Date().toISOString(),
       },
+      epistemic_grade: "A",
+      epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+      "derivation:derivationId": "urn:uor:derivation:sha256:0000000000000000000000000000000000000000000000000000000000000000",
     };
 
     const result = await ac.evaluate(expiredSession, RESOURCE_ID, "read");
