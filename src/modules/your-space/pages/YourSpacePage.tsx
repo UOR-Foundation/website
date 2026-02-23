@@ -39,17 +39,13 @@ const YourSpacePage = () => {
   const userName = "Alex";
 
   return (
-    <div className={`min-h-screen flex flex-col relative transition-colors duration-300 ${isDark ? "bg-[hsl(220,18%,7%)] text-[hsl(210,15%,90%)]" : "bg-[hsl(210,30%,98%)] text-[hsl(220,20%,12%)]"}`}>
+    <div className={`min-h-screen flex flex-col relative transition-colors duration-300 ${isDark ? "dark bg-background text-foreground" : "bg-background text-foreground"}`}>
       <SpaceHeader userName={userName} isDark={isDark} />
 
       {/* Dark/Light mode toggle — page-scoped */}
       <button
         onClick={() => setIsDark(!isDark)}
-        className={`fixed top-6 right-[280px] z-[60] p-2.5 rounded-full border transition-all duration-200 ${
-          isDark
-            ? "bg-white/10 border-white/20 text-white hover:bg-white/20"
-            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 shadow-sm"
-        }`}
+        className="fixed top-6 right-[280px] z-[60] p-2.5 rounded-full border transition-all duration-200 bg-card border-border text-muted-foreground hover:text-foreground shadow-sm"
         title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
       >
         {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}

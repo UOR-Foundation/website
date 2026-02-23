@@ -1,6 +1,6 @@
 /**
  * Identity Security Roadmap — 3-phase progression
- * Clean, readable typography matching console aesthetic.
+ * Uses semantic tokens for theme compatibility.
  */
 
 import { useState, useEffect } from "react";
@@ -22,12 +22,6 @@ export const IdentitySecurityRoadmap = ({ isDark }: RoadmapProps) => {
   const [passkeyRegistering, setPasskeyRegistering] = useState(false);
   const [canonicalId, setCanonicalId] = useState<string | null>(null);
   const [sessionCid, setSessionCid] = useState<string | null>(null);
-
-  const text = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-gray-400" : "text-gray-500";
-  const activeBg = isDark ? "bg-emerald-500/10 border-emerald-500/30" : "bg-emerald-50 border-emerald-200";
-  const nextBg = isDark ? "bg-blue-500/10 border-blue-500/30" : "bg-blue-50 border-blue-200";
-  const futureBg = isDark ? "bg-white/[0.02] border-white/5" : "bg-gray-50/50 border-gray-100";
 
   useEffect(() => {
     (async () => {
@@ -89,7 +83,7 @@ export const IdentitySecurityRoadmap = ({ isDark }: RoadmapProps) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 size={20} className="animate-spin text-gray-400" />
+        <Loader2 size={20} className="animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -97,26 +91,26 @@ export const IdentitySecurityRoadmap = ({ isDark }: RoadmapProps) => {
   const phases = [
     {
       phase: 1 as Phase, icon: Mail, title: "Email Auth",
-      label: "NOW", labelColor: isDark ? "text-emerald-400" : "text-emerald-600",
+      label: "NOW", labelColor: "text-emerald-600 dark:text-emerald-400",
       description: "Sign in with email or Google. Zero friction.",
       status: currentPhase >= 1 ? "active" : "locked",
-      bg: activeBg,
+      bg: "bg-emerald-500/10 border-emerald-500/30",
     },
     {
       phase: 2 as Phase, icon: Fingerprint, title: "Biometric Passkey",
-      label: "SOON", labelColor: isDark ? "text-blue-400" : "text-blue-600",
+      label: "SOON", labelColor: "text-blue-600 dark:text-blue-400",
       description: "Add fingerprint or face recognition as primary login.",
       status: currentPhase >= 2 ? "active" : "next",
       action: currentPhase < 2 ? handleAddPasskey : undefined,
       actionLabel: "Add Passkey",
-      bg: currentPhase >= 2 ? activeBg : nextBg,
+      bg: currentPhase >= 2 ? "bg-emerald-500/10 border-emerald-500/30" : "bg-blue-500/10 border-blue-500/30",
     },
     {
       phase: 3 as Phase, icon: KeyRound, title: "Full Sovereignty",
-      label: "FUTURE", labelColor: textMuted,
+      label: "FUTURE", labelColor: "text-muted-foreground",
       description: "Detach email entirely. Passkey-only or identity transfer.",
       status: currentPhase >= 3 ? "active" : "locked",
-      bg: futureBg,
+      bg: "bg-muted/50 border-border",
     },
   ];
 
@@ -124,16 +118,16 @@ export const IdentitySecurityRoadmap = ({ isDark }: RoadmapProps) => {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Shield size={14} className={textMuted} />
-          <span className={`${textMuted} text-xs font-body font-medium uppercase tracking-wider`}>Security Progression</span>
+          <Shield size={14} className="text-muted-foreground" />
+          <span className="text-muted-foreground text-xs font-body font-medium uppercase tracking-wider">Security Progression</span>
         </div>
-        <span className={`text-sm font-body font-semibold ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
+        <span className="text-sm font-body font-semibold text-emerald-600 dark:text-emerald-400">
           Phase {currentPhase}/3
         </span>
       </div>
 
       {/* Progress bar */}
-      <div className={`h-1.5 rounded-full ${isDark ? "bg-white/5" : "bg-gray-200"} overflow-hidden`}>
+      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
         <div
           className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-blue-500 transition-all duration-500"
           style={{ width: `${(currentPhase / 3) * 100}%` }}
@@ -154,24 +148,24 @@ export const IdentitySecurityRoadmap = ({ isDark }: RoadmapProps) => {
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
                     {isActive ? (
-                      <CheckCircle2 size={16} className={isDark ? "text-emerald-400" : "text-emerald-600"} />
+                      <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
                     ) : isNext ? (
-                      <Circle size={16} className={isDark ? "text-blue-400" : "text-blue-600"} />
+                      <Circle size={16} className="text-blue-600 dark:text-blue-400" />
                     ) : (
-                      <Circle size={16} className={isDark ? "text-gray-600" : "text-gray-300"} />
+                      <Circle size={16} className="text-muted-foreground/40" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <Icon size={13} className={isActive ? (isDark ? "text-emerald-400" : "text-emerald-600") : isNext ? (isDark ? "text-blue-400" : "text-blue-600") : textMuted} />
-                      <span className={`text-sm font-body font-semibold ${isLocked ? textMuted : text}`}>
+                      <Icon size={13} className={isActive ? "text-emerald-600 dark:text-emerald-400" : isNext ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"} />
+                      <span className={`text-sm font-body font-semibold ${isLocked ? "text-muted-foreground" : "text-foreground"}`}>
                         {p.title}
                       </span>
                       <span className={`text-[10px] font-body font-bold uppercase tracking-widest ${p.labelColor}`}>
                         {p.label}
                       </span>
                     </div>
-                    <p className={`text-sm font-body ${isLocked ? (isDark ? "text-gray-600" : "text-gray-300") : textMuted}`}>
+                    <p className={`text-sm font-body ${isLocked ? "text-muted-foreground/40" : "text-muted-foreground"}`}>
                       {p.description}
                     </p>
                   </div>
@@ -179,11 +173,7 @@ export const IdentitySecurityRoadmap = ({ isDark }: RoadmapProps) => {
                     <button
                       onClick={p.action}
                       disabled={passkeyRegistering}
-                      className={`shrink-0 px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-all ${
-                        isDark
-                          ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30"
-                          : "bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200"
-                      } ${passkeyRegistering ? "opacity-50 cursor-wait" : ""}`}
+                      className={`shrink-0 px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-all bg-blue-500/15 text-blue-600 dark:text-blue-400 hover:bg-blue-500/25 border border-blue-500/30 ${passkeyRegistering ? "opacity-50 cursor-wait" : ""}`}
                     >
                       {passkeyRegistering ? (
                         <Loader2 size={12} className="animate-spin" />
@@ -198,7 +188,7 @@ export const IdentitySecurityRoadmap = ({ isDark }: RoadmapProps) => {
               </div>
               {i < phases.length - 1 && (
                 <div className="flex justify-start ml-[18px] py-0.5">
-                  <div className={`w-px h-2 ${isActive ? "bg-emerald-500/40" : (isDark ? "bg-white/5" : "bg-gray-200")}`} />
+                  <div className={`w-px h-2 ${isActive ? "bg-emerald-500/40" : "bg-border"}`} />
                 </div>
               )}
             </div>
@@ -207,9 +197,9 @@ export const IdentitySecurityRoadmap = ({ isDark }: RoadmapProps) => {
       </div>
 
       {canonicalId && (
-        <div className={`mt-2 p-3 rounded-lg border ${isDark ? "bg-white/[0.02] border-white/5" : "bg-gray-50 border-gray-200"}`}>
-          <p className={`text-xs font-body font-medium uppercase tracking-wider ${textMuted} mb-1`}>Identity Anchor</p>
-          <p className={`text-sm font-body ${text} break-all`}>{canonicalId}</p>
+        <div className="mt-2 p-3 rounded-lg border border-border bg-muted/50">
+          <p className="text-xs font-body font-medium uppercase tracking-wider text-muted-foreground mb-1">Identity Anchor</p>
+          <p className="text-sm font-body text-foreground break-all">{canonicalId}</p>
         </div>
       )}
     </div>
