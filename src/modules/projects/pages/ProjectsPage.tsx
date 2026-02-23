@@ -240,10 +240,13 @@ const Projects = () => {
           {(["Graduated", "Incubating", "Sandbox"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
             const hasProjects = levelProjects.length > 0;
+            const previewLimit = 4;
+            const displayProjects = levelProjects.slice(0, previewLimit);
+            const hasMore = levelProjects.length > previewLimit;
             return (
               <CollapsibleCategory key={level} level={level} count={levelProjects.length} dotColor={maturityDotColors[level]} disabled={!hasProjects}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                  {levelProjects.map((project, index) => (
+                  {displayProjects.map((project, index) => (
                     <Link
                       key={project.name}
                       to={`/projects/${project.slug}`}
@@ -283,6 +286,16 @@ const Projects = () => {
                     </Link>
                   ))}
                 </div>
+                {hasMore && (
+                  <div className="mt-8 text-center">
+                    <Link
+                      to="/sandbox"
+                      className="inline-flex items-center gap-2 text-primary text-base font-medium font-body hover:underline transition-colors"
+                    >
+                      View all {levelProjects.length} projects <ChevronRight size={16} />
+                    </Link>
+                  </div>
+                )}
               </CollapsibleCategory>
             );
           })}
