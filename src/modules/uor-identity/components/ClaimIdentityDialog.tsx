@@ -539,19 +539,19 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
               )}
 
               {/* How it works */}
-              <div className="bg-background border border-border rounded-2xl p-5 md:p-6 space-y-4">
-                <h4 className="font-display text-base font-semibold text-foreground">What happens next</h4>
-                <ol className="space-y-3 text-sm text-muted-foreground font-body">
+              <div className="bg-background border border-border rounded-2xl p-5 md:p-6 space-y-5">
+                <h4 className="font-display text-lg font-semibold text-foreground">What happens next</h4>
+                <ol className="space-y-4 text-base text-muted-foreground font-body leading-relaxed">
                   <li className="flex items-start gap-3">
-                    <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0 mt-0.5">1</span>
+                    <span className="flex items-center justify-center h-7 w-7 rounded-full bg-primary/15 text-primary text-sm font-bold shrink-0 mt-0.5">1</span>
                     <span><strong className="text-foreground">Keypair generation.</strong> A fresh cryptographic keypair is created in your browser. The private key never leaves your device.</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0 mt-0.5">2</span>
-                    <span><strong className="text-foreground">Founding derivation.</strong> Your first algebraic proof is executed: <code className="text-xs bg-muted px-1.5 py-0.5 rounded">neg(bnot(42)) = 43</code></span>
+                    <span className="flex items-center justify-center h-7 w-7 rounded-full bg-primary/15 text-primary text-sm font-bold shrink-0 mt-0.5">2</span>
+                    <span><strong className="text-foreground">Founding derivation.</strong> Your first algebraic proof is executed: <code className="text-sm bg-muted px-1.5 py-0.5 rounded">neg(bnot(42)) = 43</code></span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0 mt-0.5">3</span>
+                    <span className="flex items-center justify-center h-7 w-7 rounded-full bg-primary/15 text-primary text-sm font-bold shrink-0 mt-0.5">3</span>
                     <span><strong className="text-foreground">Identity minting.</strong> Your public key + founding trace → URDNA2015 → SHA-256 → permanent canonical ID.</span>
                   </li>
                 </ol>
@@ -565,8 +565,8 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                 Generate Agent Identity
               </button>
 
-              <p className="text-center text-xs text-muted-foreground/60 font-body leading-relaxed">
-                Your private key will be shown once. Save it — it's the only way to prove you are you.
+              <p className="text-center text-sm text-muted-foreground font-body leading-relaxed">
+                ⚠️ Your private key will be shown <strong className="text-foreground">once</strong>. Save it — it's the only way to prove you are you.
               </p>
             </div>
           )}
