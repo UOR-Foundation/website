@@ -1,8 +1,8 @@
 /**
- * App Console — Apps Page (Trust Wallet-inspired)
+ * App Console — Deploy & Apps Page
  *
- * Clean deployment cards with single-line deploy input,
- * spacious layout, and polished visual hierarchy.
+ * Developer-first entry point: paste a URL, deploy in one step.
+ * Shows deployed apps with key metrics below.
  */
 
 import { useState } from "react";
@@ -11,7 +11,11 @@ import {
   CanonicalIdBadge,
   ZoneBadge,
 } from "../components/ConsoleUI";
-import { ArrowRight, Loader2, Globe, Users, DollarSign, QrCode, Copy } from "lucide-react";
+import {
+  ArrowRight, Loader2, Globe, Users, DollarSign,
+  QrCode, Copy, Check, Rocket, ShieldCheck, Database as DbIcon,
+  GitBranch, Upload, Package,
+} from "lucide-react";
 import heroImage from "@/assets/console-deploy-hero.png";
 
 interface AppCard {
@@ -29,92 +33,164 @@ const MOCK_APPS: AppCard[] = [
   { name: "data-viz-tool", canonicalId: "urn:uor:derivation:sha256:0011223344556677889900aabbccddeeff00112233445566778899aabbccddeeff", zone: "COHERENCE", userCount: 4, revenue: 438.00, ipv6: "fd00:75:6f72:0011::1" },
 ];
 
+const DEPLOY_STEPS = [
+  { icon: Upload, label: "Import", desc: "Paste a URL or upload a ZIP" },
+  { icon: ShieldCheck, label: "Certify", desc: "Content-addressed identity" },
+  { icon: DbIcon, label: "Pin", desc: "Stored on IPFS permanently" },
+  { icon: Rocket, label: "Live", desc: "Streamed via WASM runtime" },
+];
+
+const SOURCES = [
+  { icon: GitBranch, label: "GitHub Repo" },
+  { icon: Globe, label: "Live URL" },
+  { icon: Package, label: "ZIP Upload" },
+];
+
 export default function AppConsoleApps() {
   const [importUrl, setImportUrl] = useState("");
   const [deploying, setDeploying] = useState(false);
-  const [deployPhase, setDeployPhase] = useState("");
+  const [deployStep, setDeployStep] = useState(0);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleDeploy = () => {
     if (!importUrl.trim()) return;
     setDeploying(true);
-    setDeployPhase("Computing canonical identity…");
-    setTimeout(() => setDeployPhase("Pinning to IPFS…"), 800);
-    setTimeout(() => setDeployPhase("Issuing certificate…"), 1600);
+    setDeployStep(0);
+    setTimeout(() => setDeployStep(1), 700);
+    setTimeout(() => setDeployStep(2), 1400);
+    setTimeout(() => setDeployStep(3), 2100);
     setTimeout(() => {
       setDeploying(false);
-      setDeployPhase("");
+      setDeployStep(0);
       setImportUrl("");
-    }, 2400);
+    }, 2800);
+  };
+
+  const handleCopy = (id: string) => {
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1500);
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-10">
       {/* ── Hero Deploy Section ───────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-        {/* Left: Hero illustration */}
-        <div className="shrink-0">
-          <img
-            src={heroImage}
-            alt="Deploy illustration"
-            className="w-40 h-40 lg:w-48 lg:h-48 object-contain drop-shadow-2xl"
-          />
-        </div>
+      <div className="rounded-2xl border border-border/40 bg-card/50 p-8">
+        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+          {/* Left: Hero illustration */}
+          <div className="shrink-0">
+            <img
+              src={heroImage}
+              alt="Deploy illustration"
+              className="w-36 h-36 lg:w-44 lg:h-44 object-contain drop-shadow-2xl"
+            />
+          </div>
 
-        {/* Right: Deploy prompt */}
-        <div className="flex-1 space-y-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Deploy in one line
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground leading-relaxed max-w-md">
-              Paste a URL — GitHub repo, ZIP, or live app. We compute the canonical identity,
-              pin to IPFS, and issue a content-addressed certificate. Your app is sovereign.
+          {/* Right: Deploy prompt */}
+          <div className="flex-1 space-y-5 w-full">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                Deploy your app
+              </h1>
+              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed max-w-lg">
+                Paste a GitHub repo, live URL, or upload a ZIP. We compute a content-addressed
+                identity, pin to IPFS, and issue a certificate. Your app is sovereign — deploy
+                once, run anywhere.
+              </p>
+            </div>
+
+            {/* Source type pills */}
+            <div className="flex gap-2">
+              {SOURCES.map((s) => (
+                <span
+                  key={s.label}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1 text-xs text-muted-foreground"
+                >
+                  <s.icon className="h-3 w-3" />
+                  {s.label}
+                </span>
+              ))}
+            </div>
+
+            {/* Deploy input */}
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                <input
+                  type="url"
+                  value={importUrl}
+                  onChange={(e) => setImportUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleDeploy()}
+                  placeholder="https://github.com/you/your-app"
+                  disabled={deploying}
+                  className="w-full rounded-xl border border-border/60 bg-muted/20 py-3.5 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all disabled:opacity-50"
+                />
+              </div>
+              <button
+                onClick={handleDeploy}
+                disabled={deploying || !importUrl.trim()}
+                className="rounded-xl bg-primary hover:bg-primary/90 px-7 py-3.5 text-sm font-semibold text-primary-foreground transition-all disabled:opacity-40 flex items-center gap-2 shrink-0 shadow-md shadow-primary/20"
+              >
+                {deploying ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Rocket className="h-4 w-4" />
+                )}
+                Deploy
+              </button>
+            </div>
+
+            {/* Deploy progress steps */}
+            {deploying && (
+              <div className="flex items-center gap-1">
+                {DEPLOY_STEPS.map((step, i) => (
+                  <div key={step.label} className="flex items-center gap-1">
+                    <div
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-300 ${
+                        i <= deployStep
+                          ? "bg-primary/15 text-primary"
+                          : "bg-muted/30 text-muted-foreground/40"
+                      }`}
+                    >
+                      <step.icon className="h-3.5 w-3.5" />
+                      {step.label}
+                    </div>
+                    {i < DEPLOY_STEPS.length - 1 && (
+                      <ArrowRight className={`h-3 w-3 transition-colors ${
+                        i < deployStep ? "text-primary/60" : "text-muted-foreground/20"
+                      }`} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── How It Works (for empty state / first-time users) ─────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        {DEPLOY_STEPS.map((step, i) => (
+          <div key={step.label} className="rounded-2xl border border-border/30 bg-card/30 p-5 space-y-2 text-center">
+            <div className="mx-auto h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <step.icon className="h-5 w-5 text-primary" />
+            </div>
+            <p className="text-xs font-semibold text-foreground">
+              <span className="text-primary mr-1">{i + 1}.</span>{step.label}
             </p>
+            <p className="text-[11px] text-muted-foreground leading-snug">{step.desc}</p>
           </div>
-
-          {/* Single-line deploy input */}
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-              <input
-                type="url"
-                value={importUrl}
-                onChange={(e) => setImportUrl(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleDeploy()}
-                placeholder="https://github.com/you/your-app"
-                disabled={deploying}
-                className="w-full rounded-xl border border-border/60 bg-muted/20 py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all disabled:opacity-50"
-              />
-            </div>
-            <button
-              onClick={handleDeploy}
-              disabled={deploying || !importUrl.trim()}
-              className="rounded-xl bg-primary/90 hover:bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all disabled:opacity-40 flex items-center gap-2 shrink-0"
-            >
-              {deploying ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ArrowRight className="h-4 w-4" />
-              )}
-              Deploy
-            </button>
-          </div>
-
-          {/* Deploy progress */}
-          {deploying && (
-            <div className="flex items-center gap-2 text-xs text-primary animate-in fade-in duration-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              {deployPhase}
-            </div>
-          )}
-        </div>
+        ))}
       </div>
 
       {/* ── Deployed Apps ─────────────────────────────────────────── */}
       <div className="space-y-4">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
-          Your Apps
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+            Your Apps
+          </h2>
+          <span className="text-xs text-muted-foreground">{MOCK_APPS.length} deployed</span>
+        </div>
 
         <div className="space-y-3">
           {MOCK_APPS.map((app) => (
@@ -170,12 +246,16 @@ export default function AppConsoleApps() {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
-                    navigator.clipboard.writeText(app.canonicalId);
+                    handleCopy(app.canonicalId);
                   }}
                   className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
                   title="Copy canonical ID"
                 >
-                  <Copy className="h-4 w-4 text-muted-foreground" />
+                  {copiedId === app.canonicalId ? (
+                    <Check className="h-4 w-4 text-primary" />
+                  ) : (
+                    <Copy className="h-4 w-4 text-muted-foreground" />
+                  )}
                 </button>
               </div>
             </NavLink>
@@ -183,16 +263,15 @@ export default function AppConsoleApps() {
         </div>
       </div>
 
-      {/* ── WASM Runtime Info ─────────────────────────────────────── */}
+      {/* ── Runtime Info ──────────────────────────────────────────── */}
       <div className="rounded-2xl border border-border/30 bg-muted/10 p-6 space-y-3">
         <h3 className="text-sm font-semibold text-foreground">
           Streamed Runtime
         </h3>
         <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
           Applications are rendered via WASM directly in the browser — compatible with desktop,
-          mobile, and any device. The UOR runtime streams application state using content-addressed
-          memory lookup, so your device accesses any application remotely without local processing overhead.
-          The processor is used only for memory lookup to resolve and render applications.
+          mobile, and any device. Your app is content-addressed and streamed on demand, so every
+          device resolves the same verified application without local installation.
         </p>
         <div className="flex items-center gap-4 text-[11px] text-muted-foreground/70 font-mono">
           <span>Runtime: WASM v1.0</span>
