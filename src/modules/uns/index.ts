@@ -61,11 +61,16 @@ export type { StoredObject, CacheStats } from "./store";
 export { UnsLedger } from "./ledger";
 export type { QueryProof, QueryResult, StateTransition, SchemaMigration } from "./ledger";
 
-// ── Trust — Zero Trust Identity & Access (Phase 4-A) ────────────────────────
-export { UnsAuthServer, signChallenge, UnsAccessControl, trustMiddleware } from "./trust";
+// ── Trust — Zero Trust Identity, Access & Conduit (Phase 4-A, 4-B) ──────────
+export {
+  UnsAuthServer, signChallenge, UnsAccessControl, trustMiddleware,
+  UnsConduit, ConduitRelay,
+  kyberKeygen, kyberEncapsulate, kyberDecapsulate, aesGcmEncrypt, aesGcmDecrypt,
+} from "./trust";
 export type {
   UnsChallenge, UnsSession,
   UnsAccessPolicy, UnsAccessRule, EvaluationResult, MiddlewareHandler,
+  ConduitConfig, TunnelInitMessage, TunnelReadyMessage, KyberKeypair,
 } from "./trust";
 
 // ── Types (re-export all for consumer modules) ──────────────────────────────
