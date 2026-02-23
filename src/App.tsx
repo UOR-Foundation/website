@@ -52,6 +52,14 @@ const TrustScorePreview = lazy(() => import("@/modules/mcp/pages/TrustScorePrevi
 const BulkPinPage = lazy(() => import("@/modules/bulk-pin/pages/BulkPinPage"));
 const OraclePage = lazy(() => import("@/modules/oracle/pages/OraclePage"));
 const UnsPage = lazy(() => import("@/modules/uns/pages/UnsPage"));
+const ConsoleLayout = lazy(() => import("@/modules/console/components/ConsoleLayout"));
+const ConsoleOverview = lazy(() => import("@/modules/console/pages/ConsoleOverview"));
+const ConsoleDns = lazy(() => import("@/modules/console/pages/ConsoleDns"));
+const ConsoleShield = lazy(() => import("@/modules/console/pages/ConsoleShield"));
+const ConsoleCompute = lazy(() => import("@/modules/console/pages/ConsoleCompute"));
+const ConsoleStore = lazy(() => import("@/modules/console/pages/ConsoleStore"));
+const ConsoleTrust = lazy(() => import("@/modules/console/pages/ConsoleTrust"));
+const ConsoleAgents = lazy(() => import("@/modules/console/pages/ConsoleAgents"));
 
 const queryClient = new QueryClient();
 
@@ -117,6 +125,15 @@ const App = () => {
             <Route path="/bulk-pin" element={<BulkPinPage />} />
             <Route path="/oracle" element={<OraclePage />} />
             <Route path="/uns" element={<UnsPage />} />
+            <Route path="/console" element={<ConsoleLayout />}>
+              <Route index element={<ConsoleOverview />} />
+              <Route path="dns" element={<ConsoleDns />} />
+              <Route path="shield" element={<ConsoleShield />} />
+              <Route path="compute" element={<ConsoleCompute />} />
+              <Route path="store" element={<ConsoleStore />} />
+              <Route path="trust" element={<ConsoleTrust />} />
+              <Route path="agents" element={<ConsoleAgents />} />
+            </Route>
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
