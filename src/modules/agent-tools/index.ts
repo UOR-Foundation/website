@@ -28,4 +28,14 @@ export type {
   SchemaCoherenceInput,
   SchemaCoherenceOutput,
 } from "./tools";
+// P33: Re-export fidelity engine types
+export type {
+  CorrelateResult,
+  SkosRelation,
+  NearDuplicatePair,
+} from "@/modules/resolver/correlate-engine";
+export {
+  FIDELITY_THRESHOLDS,
+  classifyFidelity,
+} from "@/modules/resolver/correlate-engine";
 export { default as AgentConsolePage } from "./pages/AgentConsolePage";

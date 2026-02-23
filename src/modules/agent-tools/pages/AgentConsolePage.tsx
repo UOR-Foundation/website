@@ -190,10 +190,10 @@ function CorrelateTab() {
       {result && (
         <div>
           <div className="flex items-center gap-4 mb-3">
-            <span className="text-2xl font-display font-bold text-primary">{(result.fidelity * 100).toFixed(1)}%</span>
+            <span className="text-2xl font-display font-bold text-primary">{((result.ring?.fidelity ?? result.fidelity?.fidelity ?? 0) * 100).toFixed(1)}%</span>
             <span className="text-sm text-muted-foreground">fidelity</span>
             <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
-              <div className="h-full bg-primary/60 rounded-full" style={{ width: `${result.fidelity * 100}%` }} />
+              <div className="h-full bg-primary/60 rounded-full" style={{ width: `${(result.ring?.fidelity ?? result.fidelity?.fidelity ?? 0) * 100}%` }} />
             </div>
           </div>
           <ResultPanel data={result} label="Correlate Result" />
@@ -375,7 +375,9 @@ function ChatTab() {
       } else if (mapped.tool === "correlate") {
         const [a, b] = mapped.input.split(",").map(Number);
         const r = await uor_correlate({ a, b });
-        resultText = `**uor_correlate(${a}, ${b})**\n\nFidelity: ${(r.fidelity * 100).toFixed(1)}%\nDifference: ${r.totalDifference} bits\nTime: ${r.executionTimeMs}ms`;
+        const fid = r.ring?.fidelity ?? 0;
+        const diff = r.ring?.totalDifference ?? 0;
+        resultText = `**uor_correlate(${a}, ${b})**\n\nFidelity: ${(fid * 100).toFixed(1)}%\nDifference: ${diff} bits\nTime: ${r.executionTimeMs}ms`;
       } else if (mapped.tool === "verify") {
         const r = await uor_verify({ derivation_id: mapped.input });
         resultText = `**uor_verify("${mapped.input}")**\n\n${r.verified ? "✓ VERIFIED" : "✗ FAILED"}\nCert chain: ${r.cert_chain.length} entries\nTime: ${r.executionTimeMs}ms`;
