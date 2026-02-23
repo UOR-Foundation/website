@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import heroImage from "@/assets/console-deploy-hero.png";
 import DeployLog from "../components/DeployLog";
+import DeployResultCard from "../components/DeployResultCard";
 import type { LogEntry } from "../components/DeployLog";
 
 interface AppCard {
@@ -242,8 +243,13 @@ export default function AppConsoleApps() {
         </div>
       </div>
 
-      {/* ── Deploy Log ────────────────────────────────────────────── */}
+      {/* ── Activity Log ─────────────────────────────────────────── */}
       <DeployLog logs={deployLogs} visible={showLog} onClose={() => setShowLog(false)} />
+
+      {/* ── Deploy Result ─────────────────────────────────────────── */}
+      {deployResult && (
+        <DeployResultCard result={deployResult} onDismiss={() => setDeployResult(null)} />
+      )}
 
       {/* ── How It Works ─────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
