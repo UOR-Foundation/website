@@ -84,6 +84,14 @@ export const projects: ProjectData[] = [
     maturity: "Sandbox",
     imageKey: "hologramSdk",
   },
+  {
+    name: "UOR Identity",
+    slug: "uor-identity",
+    category: "Core Infrastructure",
+    description: "A sovereign identity layer where who you are is derived from your relationships and behavior — not a username. One secure identity to build, interact, and transact across the entire Hologram ecosystem.",
+    maturity: "Sandbox",
+    imageKey: "uorIdentity",
+  },
 ];
 
 export const maturityInfo: { level: MaturityLevel; tagline: string; description: string; criteria: string[] }[] = [
