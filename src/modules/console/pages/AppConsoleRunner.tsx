@@ -38,6 +38,9 @@ export default function AppConsoleRunner() {
   useEffect(() => {
     if (!decodedId) return;
 
+    // Retrieve the source URL stored during deploy
+    const storedSourceUrl = sessionStorage.getItem(`uor:sourceUrl:${decodedId}`) || "";
+
     let cancelled = false;
     const boot = async () => {
       setLoading(true);
@@ -46,10 +49,14 @@ export default function AppConsoleRunner() {
       addConsoleLog("[runtime] Resolving image from registry...");
 
       try {
+        if (storedSourceUrl) {
+          addConsoleLog(`[runtime] Source URL: ${storedSourceUrl}`);
+        }
         addConsoleLog(`[runtime] Pulling image: ${decodedId.slice(0, 48)}...`);
 
         const inst = await runApp({
           imageRef: decodedId,
+          sourceUrl: storedSourceUrl || undefined,
           mountTarget: mountRef.current ?? undefined,
           tracing: true,
         });
@@ -112,10 +119,12 @@ export default function AppConsoleRunner() {
     setUptimeSeconds(0);
     setLoading(true);
     addConsoleLog("[runtime] Restarting...");
+    const storedSourceUrl = sessionStorage.getItem(`uor:sourceUrl:${decodedId}`) || "";
 
     try {
       const inst = await runApp({
         imageRef: decodedId,
+        sourceUrl: storedSourceUrl || undefined,
         mountTarget: mountRef.current ?? undefined,
         tracing: true,
       });
@@ -296,42 +305,12 @@ export default function AppConsoleRunner() {
         <div
           className={`absolute inset-0 ${activeTab === "preview" ? "block" : "hidden"}`}
         >
+          {/* The wasm-loader injects the iframe into this div */}
           <div
             ref={mountRef}
             className="w-full h-full min-h-[400px]"
             data-uor-sandbox="true"
-          >
-            {/* If no mount happened, show placeholder */}
-            {!loading && !error && instance && (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
-                <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Globe className="h-10 w-10 text-primary" />
-                </div>
-                <div className="text-center max-w-lg space-y-3">
-                  <h3 className="text-xl font-bold text-foreground">App Running</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Your application is executing in the WASM sandbox at{" "}
-                    <code className="text-xs font-mono text-primary">{instance.ipv6}</code>.
-                    The runtime is streaming content-addressed modules on demand.
-                  </p>
-                  <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                    <div className="rounded-lg bg-muted/30 border border-border/30 px-4 py-2">
-                      <span className="text-xs text-muted-foreground block">Instance</span>
-                      <code className="text-xs font-mono text-foreground">{instance.instanceId.slice(0, 24)}…</code>
-                    </div>
-                    <div className="rounded-lg bg-muted/30 border border-border/30 px-4 py-2">
-                      <span className="text-xs text-muted-foreground block">Image</span>
-                      <code className="text-xs font-mono text-foreground">{instance.imageCanonicalId.slice(0, 24)}…</code>
-                    </div>
-                    <div className="rounded-lg bg-muted/30 border border-border/30 px-4 py-2">
-                      <span className="text-xs text-muted-foreground block">Live URL</span>
-                      <code className="text-xs font-mono text-primary">{instance.liveUrl}</code>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          />
         </div>
 
         {/* Traces tab */}
