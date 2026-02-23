@@ -80,7 +80,7 @@ export default function AppConsoleApps() {
             <img
               src={heroImage}
               alt="Deploy illustration"
-              className="w-40 h-40 lg:w-48 lg:h-48 object-contain drop-shadow-2xl"
+              className="w-52 h-52 lg:w-60 lg:h-60 object-contain drop-shadow-2xl"
             />
           </div>
 
