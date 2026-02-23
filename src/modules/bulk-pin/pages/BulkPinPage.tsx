@@ -67,6 +67,38 @@ function categorize(name: string): string {
   return "Other";
 }
 
+// ── Persistent pin memory (localStorage) ────────────────────────────────────
+
+const PIN_MEMORY_KEY = "uor:pinned-schemas";
+
+interface PinnedMemoryEntry {
+  derivationId: string;
+  cid: string;
+  pinataCid: string | null;
+  storachaCid: string | null;
+  gatewayUrl: string | null;
+  pinnedAt: string;
+}
+
+function loadPinMemory(): Map<string, PinnedMemoryEntry> {
+  try {
+    const raw = localStorage.getItem(PIN_MEMORY_KEY);
+    if (!raw) return new Map();
+    const obj = JSON.parse(raw) as Record<string, PinnedMemoryEntry>;
+    return new Map(Object.entries(obj));
+  } catch { return new Map(); }
+}
+
+function savePinMemory(map: Map<string, PinnedMemoryEntry>) {
+  localStorage.setItem(PIN_MEMORY_KEY, JSON.stringify(Object.fromEntries(map)));
+}
+
+function recordPin(name: string, entry: PinnedMemoryEntry) {
+  const mem = loadPinMemory();
+  mem.set(name, entry);
+  savePinMemory(mem);
+}
+
 // ── Component ───────────────────────────────────────────────────────────────
 
 export default function BulkPinPage() {
@@ -74,7 +106,6 @@ export default function BulkPinPage() {
   const [catalog, setCatalog] = useState<SchemaType[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [batchSize, setBatchSize] = useState(25);
-  // dryRun removed — all pinning is live
   const [running, setRunning] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState("");
@@ -114,32 +145,56 @@ export default function BulkPinPage() {
           offset += 100;
           addLog(`  … loaded ${allTypes.length} types so far...`);
         }
+        // Immediately apply localStorage hot memory (instant recall)
+        const pinMemory = loadPinMemory();
+        if (pinMemory.size > 0) {
+          addLog(`Hot memory: restoring ${pinMemory.size} previously pinned schemas...`);
+          allTypes.forEach((t, i) => {
+            const mem = pinMemory.get(t.name);
+            if (mem) {
+              allTypes[i] = {
+                ...t,
+                pinStatus: "pinned" as PinStatus,
+                result: {
+                  type: t.name,
+                  cid: mem.cid,
+                  derivationId: mem.derivationId,
+                  certificateId: "",
+                  pinataCid: mem.pinataCid,
+                  storachaCid: mem.storachaCid,
+                  gatewayUrl: mem.gatewayUrl,
+                  quantumLevel: 0,
+                  success: true,
+                },
+              };
+            }
+          });
+        }
         setCatalog(allTypes);
-        addLog(`✓ Loaded ${allTypes.length} schema.org types from vocabulary.`);
+        addLog(`✓ Loaded ${allTypes.length} schema.org types. ${pinMemory.size} restored from hot memory.`);
 
-        addLog("Checking for previously pinned schemas (Oracle + Certificates)...");
-        
-        // Check Oracle entries for previously pinned types
+        // Cold memory: verify against Oracle DB (authoritative source)
+        addLog("Verifying against Oracle (cold memory)...");
+
         const { data: oracleEntries } = await supabase
           .from("uor_oracle_entries")
           .select("object_label, derivation_id, uor_cid, pinata_cid, storacha_cid, gateway_url, operation, created_at")
           .in("operation", ["sobridge-pin", "sobridge-canonicalize"])
           .not("object_label", "is", null);
 
-        const oracleMap = new Map<string, typeof oracleEntries extends (infer T)[] | null ? T : never>();
+        const oracleMap = new Map<string, NonNullable<typeof oracleEntries>[number]>();
         if (oracleEntries && oracleEntries.length > 0) {
           for (const e of oracleEntries) {
             if (e.object_label) oracleMap.set(e.object_label, e);
           }
         }
 
-        // Also check certificates as fallback
         const { data: certs } = await supabase
           .from("uor_certificates")
           .select("certificate_id, certifies_iri, derivation_id, issued_at")
           .like("certifies_iri", "https://uor.foundation/sobridge/%");
-        
-        const certMap = new Map<string, typeof certs extends (infer T)[] | null ? T : never>();
+
+        const certMap = new Map<string, NonNullable<typeof certs>[number]>();
         if (certs && certs.length > 0) {
           for (const c of certs) {
             const typeName = c.certifies_iri.replace("https://uor.foundation/sobridge/", "");
@@ -147,10 +202,24 @@ export default function BulkPinPage() {
           }
         }
 
+        // Sync oracle data into catalog and update localStorage hot memory
+        const updatedPinMemory = loadPinMemory();
+
         setCatalog(prev => prev.map(t => {
           const oracleEntry = oracleMap.get(t.name);
           const cert = certMap.get(t.name);
           if (oracleEntry || cert) {
+            // Also persist to hot memory for instant recall next time
+            if (!updatedPinMemory.has(t.name)) {
+              updatedPinMemory.set(t.name, {
+                derivationId: oracleEntry?.derivation_id ?? cert?.derivation_id ?? "",
+                cid: oracleEntry?.uor_cid ?? "",
+                pinataCid: oracleEntry?.pinata_cid ?? null,
+                storachaCid: oracleEntry?.storacha_cid ?? null,
+                gatewayUrl: oracleEntry?.gateway_url ?? null,
+                pinnedAt: oracleEntry?.created_at ?? cert?.issued_at ?? new Date().toISOString(),
+              });
+            }
             return {
               ...t,
               pinStatus: "pinned" as PinStatus,
@@ -181,11 +250,10 @@ export default function BulkPinPage() {
           return t;
         }));
 
-        const totalFound = oracleMap.size + certMap.size;
-        addLog(totalFound > 0
-          ? `✓ Found ${totalFound} previously pinned schemas (${oracleMap.size} from Oracle, ${certMap.size} from certificates).`
-          : "No previously pinned schemas found."
-        );
+        savePinMemory(updatedPinMemory);
+
+        const totalFound = Math.max(oracleMap.size, updatedPinMemory.size);
+        addLog(`✓ Cold memory: ${oracleMap.size} from Oracle, ${certMap.size} from certificates. Hot memory: ${updatedPinMemory.size} cached locally.`);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         setLoadError(msg);
@@ -321,6 +389,15 @@ export default function BulkPinPage() {
             };
 
             setCatalog(prev => prev.map(t => t.name === item.name ? { ...t, pinStatus: "pinned" as PinStatus, result: pinResult } : t));
+            // Persist to hot memory (localStorage) for instant recall on next visit
+            recordPin(item.name, {
+              derivationId,
+              cid,
+              pinataCid,
+              storachaCid,
+              gatewayUrl,
+              pinnedAt: new Date().toISOString(),
+            });
             batchPinned++;
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
