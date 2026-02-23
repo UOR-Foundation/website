@@ -154,6 +154,7 @@ export class UnsGraph {
   materializeQ0(): number {
     const g = Q0_GRAPH;
 
+    // ── 256 datum nodes ──────────────────────────────────────────────────
     for (let n = 0; n < 256; n++) {
       const id = `${UOR}datum/q0/${n}`;
       const partClass = classifyByteQ0(n);
@@ -183,7 +184,77 @@ export class UnsGraph {
       this.quads.push({ subject: witnessId, predicate: `${PROOF}verified`, object: String(holds), graph: g });
     }
 
-    return 256;
+    // ── 9 named individual nodes (P34) ───────────────────────────────────
+    // These bring the Q0 graph to 265 total nodes (256 datums + 9 individuals)
+
+    // 1. schema:pi1 — the ring generator (value=1)
+    const pi1 = `${SCHEMA}pi1`;
+    this.quads.push({ subject: pi1, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
+    this.quads.push({ subject: pi1, predicate: "rdf:type", object: `${SCHEMA}Datum`, graph: g });
+    this.quads.push({ subject: pi1, predicate: `${SCHEMA}value`, object: "1", graph: g });
+    this.quads.push({ subject: pi1, predicate: "rdfs:label", object: "pi1 — ring generator", graph: g });
+
+    // 2. schema:zero — the additive identity (value=0)
+    const zero = `${SCHEMA}zero`;
+    this.quads.push({ subject: zero, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
+    this.quads.push({ subject: zero, predicate: "rdf:type", object: `${SCHEMA}Datum`, graph: g });
+    this.quads.push({ subject: zero, predicate: `${SCHEMA}value`, object: "0", graph: g });
+    this.quads.push({ subject: zero, predicate: "rdfs:label", object: "zero — additive identity", graph: g });
+
+    // 3. op:neg — additive inverse operation
+    const opNeg = `${OP}negOp`;
+    this.quads.push({ subject: opNeg, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
+    this.quads.push({ subject: opNeg, predicate: "rdf:type", object: `${OP}Involution`, graph: g });
+    this.quads.push({ subject: opNeg, predicate: "rdf:type", object: `${OP}UnaryOp`, graph: g });
+    this.quads.push({ subject: opNeg, predicate: "rdf:type", object: `${OP}Operation`, graph: g });
+    this.quads.push({ subject: opNeg, predicate: "rdfs:label", object: "neg — additive inverse", graph: g });
+
+    // 4. op:bnot — bitwise complement operation
+    const opBnot = `${OP}bnotOp`;
+    this.quads.push({ subject: opBnot, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
+    this.quads.push({ subject: opBnot, predicate: "rdf:type", object: `${OP}Involution`, graph: g });
+    this.quads.push({ subject: opBnot, predicate: "rdf:type", object: `${OP}UnaryOp`, graph: g });
+    this.quads.push({ subject: opBnot, predicate: "rdf:type", object: `${OP}Operation`, graph: g });
+    this.quads.push({ subject: opBnot, predicate: "rdfs:label", object: "bnot — bitwise complement", graph: g });
+
+    // 5. op:succ — successor function
+    const opSucc = `${OP}succOp`;
+    this.quads.push({ subject: opSucc, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
+    this.quads.push({ subject: opSucc, predicate: "rdf:type", object: `${OP}UnaryOp`, graph: g });
+    this.quads.push({ subject: opSucc, predicate: "rdf:type", object: `${OP}Operation`, graph: g });
+    this.quads.push({ subject: opSucc, predicate: "rdfs:label", object: "succ — successor", graph: g });
+
+    // 6. op:pred — predecessor function
+    const opPred = `${OP}predOp`;
+    this.quads.push({ subject: opPred, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
+    this.quads.push({ subject: opPred, predicate: "rdf:type", object: `${OP}UnaryOp`, graph: g });
+    this.quads.push({ subject: opPred, predicate: "rdf:type", object: `${OP}Operation`, graph: g });
+    this.quads.push({ subject: opPred, predicate: "rdfs:label", object: "pred — predecessor", graph: g });
+
+    // 7. op:criticalIdentity — neg(bnot(x)) = succ(x)
+    const opCrit = `${OP}criticalIdentity`;
+    this.quads.push({ subject: opCrit, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
+    this.quads.push({ subject: opCrit, predicate: "rdf:type", object: `${OP}Identity`, graph: g });
+    this.quads.push({ subject: opCrit, predicate: `${OP}lhs`, object: `${OP}succOp`, graph: g });
+    this.quads.push({ subject: opCrit, predicate: `${OP}rhs`, object: `${OP}negOp`, graph: g });
+    this.quads.push({ subject: opCrit, predicate: `${OP}rhs`, object: `${OP}bnotOp`, graph: g });
+    this.quads.push({ subject: opCrit, predicate: `${OP}forAll`, object: "x ∈ R_8", graph: g });
+
+    // 8. op:D2n — the dihedral group D_{2^8}
+    const opD2n = `${OP}D2n`;
+    this.quads.push({ subject: opD2n, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
+    this.quads.push({ subject: opD2n, predicate: "rdf:type", object: `${OP}DihedralGroup`, graph: g });
+    this.quads.push({ subject: opD2n, predicate: "rdf:type", object: `${OP}Group`, graph: g });
+    this.quads.push({ subject: opD2n, predicate: "rdfs:label", object: "D_{2^8} — dihedral group", graph: g });
+
+    // 9. op:add — ring addition
+    const opAdd = `${OP}addOp`;
+    this.quads.push({ subject: opAdd, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
+    this.quads.push({ subject: opAdd, predicate: "rdf:type", object: `${OP}BinaryOp`, graph: g });
+    this.quads.push({ subject: opAdd, predicate: "rdf:type", object: `${OP}Operation`, graph: g });
+    this.quads.push({ subject: opAdd, predicate: "rdfs:label", object: "add — ring addition", graph: g });
+
+    return 265; // 256 datums + 9 named individuals
   }
 
   /**
@@ -260,14 +331,43 @@ export class UnsGraph {
   /**
    * Get triple counts by named graph.
    */
-  stats(): { ontologyTriples: number; q0Triples: number; totalTriples: number } {
+  stats(): {
+    ontologyTriples: number;
+    q0Triples: number;
+    totalTriples: number;
+    q0Nodes: number;
+    q0Datums: number;
+    q0NamedIndividuals: number;
+  } {
     let ontology = 0;
     let q0 = 0;
     for (const q of this.quads) {
       if (q.graph === ONTOLOGY_GRAPH) ontology++;
       else if (q.graph === Q0_GRAPH) q0++;
     }
-    return { ontologyTriples: ontology, q0Triples: q0, totalTriples: this.quads.length };
+
+    // Count unique Q0 subjects (nodes)
+    const q0Subjects = new Set<string>();
+    for (const q of this.quads) {
+      if (q.graph === Q0_GRAPH) q0Subjects.add(q.subject);
+    }
+
+    // Named individuals = subjects that have rdf:type owl:NamedIndividual
+    let namedIndividuals = 0;
+    for (const q of this.quads) {
+      if (q.graph === Q0_GRAPH && q.predicate === "rdf:type" && q.object === "owl:NamedIndividual") {
+        namedIndividuals++;
+      }
+    }
+
+    return {
+      ontologyTriples: ontology,
+      q0Triples: q0,
+      totalTriples: this.quads.length,
+      q0Nodes: q0Subjects.size,
+      q0Datums: 256,
+      q0NamedIndividuals: namedIndividuals,
+    };
   }
 
   /**
