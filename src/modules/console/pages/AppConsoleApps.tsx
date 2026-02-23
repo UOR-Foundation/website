@@ -5,8 +5,11 @@
  * Shows deployed apps with key metrics below.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { NavLink } from "react-router-dom";
+import { deployApp } from "@/modules/uor-sdk/deploy";
+import type { DeployStage, DeployResult } from "@/modules/uor-sdk/deploy";
+import type { ImportSource } from "@/modules/uor-sdk/import-adapter";
 import {
   CanonicalIdBadge,
   ZoneBadge,
@@ -50,19 +53,56 @@ export default function AppConsoleApps() {
   const [deploying, setDeploying] = useState(false);
   const [deployStep, setDeployStep] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deployResult, setDeployResult] = useState<DeployResult | null>(null);
+  const [deployError, setDeployError] = useState<string | null>(null);
 
-  const handleDeploy = () => {
+  const handleDeploy = useCallback(async () => {
     if (!importUrl.trim()) return;
     setDeploying(true);
     setDeployStep(0);
-    setTimeout(() => setDeployStep(1), 900);
-    setTimeout(() => setDeployStep(2), 1800);
-    setTimeout(() => {
+    setDeployError(null);
+    setDeployResult(null);
+
+    // Determine source type from URL
+    let source: ImportSource;
+    const trimmed = importUrl.trim();
+
+    if (trimmed.startsWith("zip://")) {
+      source = { type: "url", url: trimmed };
+    } else if (trimmed.includes("github.com/")) {
+      const match = trimmed.match(/github\.com\/([^/]+)\/([^/\s?#]+)/);
+      if (match) {
+        source = { type: "github", owner: match[1], repo: match[2] };
+      } else {
+        source = { type: "url", url: trimmed };
+      }
+    } else {
+      source = { type: "url", url: trimmed };
+    }
+
+    try {
+      const result = await deployApp({
+        source,
+        developerCanonicalId: "urn:uor:derivation:sha256:dev-session",
+        onProgress: (stage: DeployStage) => {
+          switch (stage) {
+            case "import": setDeployStep(0); break;
+            case "build": setDeployStep(0); break;
+            case "ship": setDeployStep(1); break;
+            case "run": setDeployStep(2); break;
+            case "complete": setDeployStep(3); break;
+          }
+        },
+      });
+      setDeployResult(result);
+    } catch (err) {
+      setDeployError(err instanceof Error ? err.message : "Deployment failed");
+    } finally {
       setDeploying(false);
       setDeployStep(0);
       setImportUrl("");
-    }, 2700);
-  };
+    }
+  }, [importUrl]);
 
   const handleCopy = (id: string) => {
     navigator.clipboard.writeText(id);
