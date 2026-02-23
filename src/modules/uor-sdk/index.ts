@@ -84,6 +84,16 @@ export type {
 } from "./monetization-types";
 export { DEFAULT_REVENUE_SPLIT } from "./monetization-types";
 
+// ── App Identity (P2 — canonical identity for every deployed app) ───────────
+export {
+  createManifest,
+  updateManifest,
+  verifyManifest,
+  buildVersionChain,
+  AppRegistry,
+} from "./app-identity";
+export type { AppManifest, ManifestInput } from "./app-identity";
+
 // ── App CLI (developer-facing command engine) ───────────────────────────────
 export { AppCli } from "./cli";
 export type {
