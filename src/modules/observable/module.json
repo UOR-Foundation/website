@@ -2,24 +2,29 @@
   "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
   "@type": "uor:Module",
   "name": "observable",
-  "version": "1.0.0",
-  "description": "Observable Facts — content-addressed data streams for fact retrieval.",
+  "version": "2.0.0",
+  "description": "Observable Geometry Layer — 7 ring metrics (RingMetric, HammingMetric, CascadeLength, CatastropheThreshold, Curvature, Holonomy, Commutator) plus content-addressed data streams.",
   "uor:specification": "1.0.0",
   "uor:namespaces": ["observable:"],
-  "exports": ["recordObservable", "queryObservables"],
+  "exports": [
+    "recordObservable", "queryObservables",
+    "ringMetric", "hammingMetric", "cascadeLength",
+    "CATASTROPHE_THRESHOLD", "curvature", "holonomy",
+    "commutator", "observablePath", "observableStream"
+  ],
   "dependencies": {
     "ring-core": "^1.0.0",
     "identity": "^1.0.0"
   },
   "routes": [],
   "api_endpoints": [
-    "/bridge/observable/metrics",
-    "/bridge/observable/metric",
-    "/bridge/observable/stratum",
-    "/bridge/observable/path",
-    "/bridge/observable/curvature",
-    "/bridge/observable/holonomy",
-    "/bridge/observable/stream"
+    "/uns/observable/metric",
+    "/uns/observable/stratum",
+    "/uns/observable/curvature",
+    "/uns/observable/path",
+    "/uns/observable/holonomy",
+    "/uns/observable/stream",
+    "/uns/observable/catastrophe"
   ],
   "assets": []
 }

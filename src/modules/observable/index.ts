@@ -15,3 +15,17 @@ export type {
   ObservationResult,
   RemediationRecord,
 } from "./observer";
+
+// ── P31: Observable Geometry Layer — 7 Ring Metrics ─────────────────────────
+export {
+  ringMetric,
+  hammingMetric,
+  cascadeLength,
+  CATASTROPHE_THRESHOLD,
+  curvature,
+  holonomy,
+  commutator,
+  observablePath,
+  observableStream,
+} from "./geometry";
+export type { ObservableResult } from "./geometry";
