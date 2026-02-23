@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { Eye, RefreshCw, Database, Activity, Clock, Shield } from "lucide-react";
+import { Eye, RefreshCw, Database, Activity, Clock, Shield, ExternalLink, Copy, Check } from "lucide-react";
 
 interface OracleEntry {
   id: string;
@@ -42,6 +42,13 @@ const GRADE_COLORS: Record<string, string> = {
   D: "bg-red-500/20 text-red-300 border-red-500/30",
 };
 
+const OP_COLORS: Record<string, string> = {
+  "sobridge-pin": "bg-violet-500/15 text-violet-300 border-violet-500/25",
+  "sobridge-canonicalize": "bg-cyan-500/15 text-cyan-300 border-cyan-500/25",
+  "store-write": "bg-teal-500/15 text-teal-300 border-teal-500/25",
+  "kernel-derive": "bg-amber-500/15 text-amber-300 border-amber-500/25",
+};
+
 const API_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/uor-api`;
 
 export default function OraclePage() {
@@ -49,12 +56,13 @@ export default function OraclePage() {
   const [stats, setStats] = useState<OracleStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [ledgerRes, statsRes] = await Promise.all([
-        fetch(`${API_BASE}/oracle/ledger?limit=100`),
+        fetch(`${API_BASE}/oracle/ledger?limit=200`),
         fetch(`${API_BASE}/oracle/stats`),
       ]);
       if (ledgerRes.ok) {
@@ -94,14 +102,14 @@ export default function OraclePage() {
           <div className="relative container mx-auto px-6 py-16 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary-foreground/80 text-xs font-medium tracking-wide mb-6">
               <Eye className="w-3.5 h-3.5" />
-              SINGLE SOURCE OF TRUTH
+              META-OBSERVER · SINGLE SOURCE OF TRUTH
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-[hsl(var(--section-dark-foreground))] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
               UOR Oracle
             </h1>
             <p className="text-lg text-[hsl(var(--section-dark-foreground))]/70 max-w-2xl mx-auto">
               Immutable ledger of every object encoded into UOR space.
-              Every encoding, every pin, every derivation — logged permanently.
+              Every encoding, every derivation, every pin — logged permanently with proof addresses.
             </p>
           </div>
         </section>
@@ -152,18 +160,9 @@ export default function OraclePage() {
               Refresh
             </button>
             <div className="flex gap-1 flex-wrap">
-              <FilterChip
-                active={filter === "all"}
-                onClick={() => setFilter("all")}
-                label="All"
-              />
+              <FilterChip active={filter === "all"} onClick={() => setFilter("all")} label="All" />
               {operations.map((op) => (
-                <FilterChip
-                  key={op}
-                  active={filter === op}
-                  onClick={() => setFilter(op)}
-                  label={op}
-                />
+                <FilterChip key={op} active={filter === op} onClick={() => setFilter(op)} label={op} />
               ))}
             </div>
           </div>
@@ -176,11 +175,11 @@ export default function OraclePage() {
                   <tr className="border-b border-border bg-muted/50">
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Timestamp</th>
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Operation</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Label</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Object</th>
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Grade</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">CIDs</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Bytes</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Derivation ID</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">UOR Proof Address</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">IPFS CIDs</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -194,57 +193,17 @@ export default function OraclePage() {
                   ) : filteredEntries.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
-                        No entries yet. Encode objects via <code className="text-primary">/store/write</code> or <code className="text-primary">/schema-org/extend?store=true</code> to populate the Oracle.
+                        No entries yet. Encode objects via <code className="text-primary">/store/write</code>, <code className="text-primary">/kernel/derive</code>, or <code className="text-primary">/schema-org/extend</code> to populate the Oracle.
                       </td>
                     </tr>
                   ) : (
                     filteredEntries.map((entry) => (
-                      <tr key={entry.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                          {new Date(entry.created_at).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="px-2 py-0.5 rounded text-xs font-mono bg-accent/10 text-accent border border-accent/20">
-                            {entry.operation}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs max-w-[200px] truncate" title={entry.object_type}>
-                          {entry.object_type}
-                        </td>
-                        <td className="px-4 py-3 text-xs max-w-[150px] truncate" title={entry.object_label ?? ""}>
-                          {entry.object_label ?? "—"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold border ${GRADE_COLORS[entry.epistemic_grade] ?? GRADE_COLORS.D}`}>
-                            {entry.epistemic_grade}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-col gap-0.5">
-                            {entry.pinata_cid && (
-                              <span className="text-xs font-mono text-muted-foreground" title={entry.pinata_cid}>
-                                📌 {entry.pinata_cid.slice(0, 12)}…
-                              </span>
-                            )}
-                            {entry.storacha_cid && (
-                              <span className="text-xs font-mono text-muted-foreground" title={entry.storacha_cid}>
-                                🗄️ {entry.storacha_cid.slice(0, 12)}…
-                              </span>
-                            )}
-                            {!entry.pinata_cid && !entry.storacha_cid && entry.uor_cid && (
-                              <span className="text-xs font-mono text-muted-foreground" title={entry.uor_cid}>
-                                🔗 {entry.uor_cid.slice(0, 12)}…
-                              </span>
-                            )}
-                            {!entry.pinata_cid && !entry.storacha_cid && !entry.uor_cid && (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground font-mono">
-                          {entry.byte_length ? `${entry.byte_length.toLocaleString()} B` : "—"}
-                        </td>
-                      </tr>
+                      <OracleRow
+                        key={entry.id}
+                        entry={entry}
+                        expanded={expanded === entry.id}
+                        onToggle={() => setExpanded(expanded === entry.id ? null : entry.id)}
+                      />
                     ))
                   )}
                 </tbody>
@@ -254,13 +213,201 @@ export default function OraclePage() {
 
           {/* Footer */}
           <p className="text-xs text-muted-foreground mt-4 text-center">
-            The UOR Oracle is an append-only ledger. Entries cannot be deleted or modified.
+            The UOR Oracle is an append-only meta-observer. Entries cannot be deleted or modified. Every encoding and derivation in UOR space is logged here.
           </p>
         </section>
 
         <div className="h-16" />
       </div>
     </Layout>
+  );
+}
+
+/* ── Sub-components ─────────────────────────────────────────────────────── */
+
+function OracleRow({ entry, expanded, onToggle }: { entry: OracleEntry; expanded: boolean; onToggle: () => void }) {
+  return (
+    <>
+      <tr
+        className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
+        onClick={onToggle}
+      >
+        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+          {new Date(entry.created_at).toLocaleString()}
+        </td>
+        <td className="px-4 py-3">
+          <span className={`px-2 py-0.5 rounded text-xs font-mono border ${OP_COLORS[entry.operation] ?? "bg-accent/10 text-accent border-accent/20"}`}>
+            {entry.operation}
+          </span>
+        </td>
+        <td className="px-4 py-3">
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-foreground max-w-[180px] truncate" title={entry.object_label ?? ""}>
+              {entry.object_label ?? "—"}
+            </span>
+            <span className="text-[10px] font-mono text-muted-foreground max-w-[180px] truncate" title={entry.object_type}>
+              {entry.object_type}
+            </span>
+          </div>
+        </td>
+        <td className="px-4 py-3">
+          <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold border ${GRADE_COLORS[entry.epistemic_grade] ?? GRADE_COLORS.D}`}>
+            {entry.epistemic_grade}
+          </span>
+        </td>
+        <td className="px-4 py-3">
+          {entry.derivation_id ? (
+            <CopyableHash value={entry.derivation_id} prefix="urn:uor:derivation:" />
+          ) : (
+            <span className="text-xs text-muted-foreground">—</span>
+          )}
+        </td>
+        <td className="px-4 py-3">
+          {entry.uor_cid ? (
+            <CopyableHash value={entry.uor_cid} prefix="" />
+          ) : (
+            <span className="text-xs text-muted-foreground">—</span>
+          )}
+        </td>
+        <td className="px-4 py-3">
+          <div className="flex flex-col gap-0.5">
+            {entry.pinata_cid && (
+              <CidBadge label="📌 Pinata" cid={entry.pinata_cid} gatewayUrl={`https://uor.mypinata.cloud/ipfs/${entry.pinata_cid}`} />
+            )}
+            {entry.storacha_cid && (
+              <CidBadge label="🗄️ Storacha" cid={entry.storacha_cid} gatewayUrl={entry.gateway_url} />
+            )}
+            {!entry.pinata_cid && !entry.storacha_cid && (
+              <span className="text-xs text-muted-foreground">—</span>
+            )}
+          </div>
+        </td>
+      </tr>
+      {expanded && (
+        <tr className="bg-muted/20">
+          <td colSpan={7} className="px-6 py-4">
+            <EntryDetail entry={entry} />
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+function EntryDetail({ entry }: { entry: OracleEntry }) {
+  const verifyUrl = entry.derivation_id
+    ? `${API_BASE}/tools/verify?derivation_id=${encodeURIComponent(entry.derivation_id)}`
+    : null;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+      <div className="space-y-2">
+        <DetailRow label="Entry ID" value={entry.entry_id} mono />
+        <DetailRow label="Operation" value={entry.operation} />
+        <DetailRow label="Object Type" value={entry.object_type} mono />
+        <DetailRow label="Object Label" value={entry.object_label ?? "—"} />
+        <DetailRow label="Source Endpoint" value={entry.source_endpoint} mono />
+        <DetailRow label="Encoding Format" value={entry.encoding_format} />
+        <DetailRow label="Quantum Level" value={`Q${entry.quantum_level}`} />
+        <DetailRow label="Byte Length" value={entry.byte_length ? `${entry.byte_length.toLocaleString()} bytes` : "—"} />
+      </div>
+      <div className="space-y-2">
+        <DetailRow label="Derivation ID" value={entry.derivation_id ?? "—"} mono copyable />
+        <DetailRow label="UOR CID (Proof Address)" value={entry.uor_cid ?? "—"} mono copyable />
+        <DetailRow label="SHA-256 Hash" value={entry.sha256_hash ?? "—"} mono copyable />
+        <DetailRow label="Pinata CID" value={entry.pinata_cid ?? "—"} mono copyable />
+        <DetailRow label="Storacha CID" value={entry.storacha_cid ?? "—"} mono copyable />
+        <DetailRow label="Gateway URL" value={entry.gateway_url ?? "—"} link />
+        {verifyUrl && (
+          <div className="pt-2">
+            <a
+              href={verifyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors border border-primary/20"
+            >
+              <Shield className="w-3 h-3" /> Verify Derivation
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        )}
+      </div>
+      {entry.metadata && Object.keys(entry.metadata).length > 0 && (
+        <div className="md:col-span-2">
+          <span className="text-muted-foreground font-medium">Metadata</span>
+          <pre className="mt-1 p-2 rounded bg-background border border-border text-[10px] font-mono text-muted-foreground overflow-x-auto">
+            {JSON.stringify(entry.metadata, null, 2)}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DetailRow({ label, value, mono, copyable, link }: { label: string; value: string; mono?: boolean; copyable?: boolean; link?: boolean }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <div className="flex items-start gap-2">
+      <span className="text-muted-foreground font-medium min-w-[120px] shrink-0">{label}</span>
+      {link && value !== "—" ? (
+        <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
+          {value} <ExternalLink className="w-3 h-3 inline" />
+        </a>
+      ) : (
+        <span className={`break-all ${mono ? "font-mono" : ""} text-foreground`}>{value}</span>
+      )}
+      {copyable && value !== "—" && (
+        <button onClick={handleCopy} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+          {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function CopyableHash({ value, prefix }: { value: string; prefix: string }) {
+  const [copied, setCopied] = useState(false);
+  const display = prefix ? value.replace(prefix, "") : value;
+  const truncated = display.length > 16 ? display.slice(0, 8) + "…" + display.slice(-6) : display;
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      className="inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors group"
+      title={value}
+    >
+      <span>{truncated}</span>
+      {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
+    </button>
+  );
+}
+
+function CidBadge({ label, cid, gatewayUrl }: { label: string; cid: string; gatewayUrl?: string | null }) {
+  return (
+    <span className="text-xs font-mono text-muted-foreground inline-flex items-center gap-1" title={cid}>
+      {label}: {cid.slice(0, 10)}…
+      {gatewayUrl && (
+        <a
+          href={gatewayUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="text-primary hover:text-primary/80"
+        >
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      )}
+    </span>
   );
 }
 
