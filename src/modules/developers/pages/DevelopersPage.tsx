@@ -1,6 +1,6 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { ArrowRight, Rocket, Layers, BookOpen, Globe, Cpu, Database, Key, ScrollText, Shield, Lock, Bot, FileJson, FlaskConical, Wrench, Newspaper, Code, GitGraph, Atom, FlaskRound, BookMarked, Network, Pen } from "lucide-react";
+import { ArrowRight, Rocket, Layers, BookOpen, Globe, Cpu, Database, Key, ScrollText, Shield, Lock, Bot, FileJson, FlaskConical, Wrench, Newspaper, Code, GitGraph, Atom, FlaskRound, BookMarked, Network, Pen, Cable, Terminal } from "lucide-react";
 import BuildWithUOR from "../components/BuildWithUOR";
 
 /* ── Nav link row ────────────────────────────────────────────── */
@@ -87,8 +87,8 @@ const DevelopersPage = () => (
 
             <SectionCard title="AI & Agents" viewAll={{ label: "View agent docs", href: "/developers/agents" }}>
               <NavRow title="Agent Gateway" href="/developers/agents" icon={Bot} />
-              <NavRow title="MCP Integration" href="/standard#mcp" />
-              <NavRow title="Agent Console" href="/agent-console" />
+              <NavRow title="MCP Integration" href="/standard#mcp" icon={Cable} />
+              <NavRow title="Agent Console" href="/agent-console" icon={Terminal} />
             </SectionCard>
           </div>
         </div>
