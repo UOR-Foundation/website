@@ -383,7 +383,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   </div>
                   <div className="flex-1">
                     <h3 className="font-display text-lg font-bold text-foreground mb-1">I'm a Human</h3>
-                    <p className="text-sm text-muted-foreground font-body leading-relaxed">
+                    <p className="text-base text-muted-foreground font-body leading-relaxed">
                       Verify with Google or Email. Your identity is derived from who you are.
                     </p>
                   </div>
@@ -402,7 +402,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   </div>
                   <div className="flex-1">
                     <h3 className="font-display text-lg font-bold text-foreground mb-1">I'm an Agent</h3>
-                    <p className="text-sm text-muted-foreground font-body leading-relaxed">
+                    <p className="text-base text-muted-foreground font-body leading-relaxed">
                       Generate a keypair and prove your first derivation. Identity earned through computation.
                     </p>
                   </div>
