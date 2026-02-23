@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/modules/core/ui/sonner";
 import { TooltipProvider } from "@/modules/core/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
+
 import { initializeRegistry } from "@/lib/uor-registry";
 import { initializeContentRegistry } from "@/lib/uor-content-registry";
 
@@ -99,7 +99,6 @@ const App = () => {
   }, []);
 
   return (
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -184,7 +183,6 @@ const App = () => {
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-  </ThemeProvider>
   );
 };
 
