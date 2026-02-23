@@ -83,3 +83,15 @@ export type {
   RevenueSplit,
 } from "./monetization-types";
 export { DEFAULT_REVENUE_SPLIT } from "./monetization-types";
+
+// ── App CLI (developer-facing command engine) ───────────────────────────────
+export { AppCli } from "./cli";
+export type {
+  AppCliResult,
+  DeployOptions,
+  UpdateOptions,
+  MonetizeOptions,
+  RollbackOptions,
+  AppRecord,
+  DeveloperIdentity,
+} from "./cli-types";
