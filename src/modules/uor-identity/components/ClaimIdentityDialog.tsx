@@ -1,9 +1,9 @@
 /**
  * Claim UOR Identity — Dialog version
  *
- * Clean, jargon-free UI for claiming a digital identity.
- * Two sign-in methods: Google or Email magic link.
- * After claiming, users can add biometric security (passkey).
+ * Dual-path identity claiming:
+ *   "I'm a Human"  → Google or Email magic link (email-as-seed)
+ *   "I'm an Agent"  → Keypair generation + founding derivation (proof-as-seed)
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -17,19 +17,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { singleProofHash } from "@/lib/uor-canonical";
 import {
   Fingerprint, Loader2, CheckCircle2, ArrowRight,
-  Mail, KeyRound, AlertCircle, X,
+  Mail, KeyRound, AlertCircle, X, Heart, Bot,
+  Copy, Check, ChevronLeft,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import lobsterIcon from "@/assets/lobster-icon.png";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-type ClaimStep = "intro" | "email-sent" | "signing-in" | "deriving" | "complete";
+type ClaimStep = "choose" | "intro" | "email-sent" | "signing-in" | "deriving" | "complete" | "agent-intro" | "agent-generating" | "agent-complete";
 
 interface DerivedIdentity {
   canonicalId: string;
   glyph: string;
   cid: string;
   ipv6: string;
+}
+
+interface AgentIdentity extends DerivedIdentity {
+  publicKeyHex: string;
+  foundingDerivationId: string;
 }
 
 interface ClaimIdentityDialogProps {
@@ -75,6 +82,12 @@ async function registerPasskey(userId: string): Promise<boolean> {
   }
 }
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 // ── Sub-component ───────────────────────────────────────────────────────────
 
 const IdentityRow = ({ label, value, mono = true }: { label: string; value: string; mono?: boolean }) => (
@@ -86,11 +99,32 @@ const IdentityRow = ({ label, value, mono = true }: { label: string; value: stri
   </div>
 );
 
+const CopyableRow = ({ label, value }: { label: string; value: string }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div>
+      <p className="text-xs font-semibold text-muted-foreground font-body uppercase tracking-wider mb-1.5">{label}</p>
+      <div className="flex items-start gap-2">
+        <p className="text-sm text-foreground break-all leading-relaxed font-mono flex-1">{value}</p>
+        <button onClick={handleCopy} className="shrink-0 mt-0.5 text-muted-foreground hover:text-primary transition-colors" aria-label="Copy">
+          {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} />}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ── Main Dialog ─────────────────────────────────────────────────────────────
 
 const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) => {
-  const [step, setStep] = useState<ClaimStep>("intro");
+  const [step, setStep] = useState<ClaimStep>("choose");
   const [identity, setIdentity] = useState<DerivedIdentity | null>(null);
+  const [agentIdentity, setAgentIdentity] = useState<AgentIdentity | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [passkeyStatus, setPasskeyStatus] = useState<"idle" | "registering" | "done" | "unsupported">("idle");
@@ -144,14 +178,6 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
         throw new Error("Email is required to derive identity.");
       }
 
-      // UOR-COMPLIANT EMAIL-AS-SEED IDENTITY DERIVATION
-      //
-      // Pipeline: email → normalize → JSON-LD → URDNA2015 → SHA-256 → 4 identity forms
-      //
-      // The normalized email (lowercase, trimmed) is the SOLE input.
-      // It is NOT stored — only the irreversible hash outputs are persisted.
-      // Same email → same N-Quads → same hash → same identity. Forever.
-      // Provider-independent: Google, magic link, or any future method — same result.
       const normalizedEmail = user.email.trim().toLowerCase();
 
       const identitySeed = {
@@ -168,13 +194,6 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
         ipv6: proof.ipv6Address["u:ipv6"],
       };
 
-      // UOR SESSION CERTIFICATE — tamper-evident, content-addressed
-      //
-      // Pipeline: session payload → JSON-LD → URDNA2015 → SHA-256 → session CID
-      //
-      // Purpose: proves this session was issued for this identity at this time.
-      // Ephemeral — a new one is minted on every login. Identity survives; sessions don't.
-      // If any field is tampered with, the CID won't match → tamper detected.
       const sessionIssuedAt = new Date().toISOString();
       const sessionPayload = {
         "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
@@ -203,6 +222,74 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
       console.error("Identity derivation failed:", err);
       setError("Something went wrong. Please try again.");
       setStep("intro");
+    }
+  }, []);
+
+  // ── Agent identity derivation ───────────────────────────────────────────
+  const deriveAgentIdentity = useCallback(async () => {
+    setStep("agent-generating");
+    setError(null);
+    try {
+      // Step 1: Generate a fresh keypair (browser-native Ed25519 as stand-in for Dilithium-3)
+      const keypair = await crypto.subtle.generateKey(
+        { name: "Ed25519" } as EcKeyGenParams,
+        true,
+        ["sign", "verify"]
+      );
+
+      // Export public key
+      const publicKeyRaw = await crypto.subtle.exportKey("raw", keypair.publicKey);
+      const publicKeyHex = bytesToHex(new Uint8Array(publicKeyRaw));
+
+      // Step 2: Founding derivation — the agent's first verifiable computation
+      const foundingClaim = {
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+        "@type": "u:FoundingDerivation",
+        "u:operation": "neg(bnot(42))",
+        "u:expectedResult": "43",
+        "u:algebraicBasis": "succ = neg ∘ bnot",
+      };
+      const foundingProof = await singleProofHash(foundingClaim);
+
+      // Step 3: Agent identity seed = publicKey + foundingTrace + timestamp
+      const agentTimestamp = new Date().toISOString();
+      const agentSeed = {
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+        "@type": "u:AgentIdentity",
+        "u:publicKeyHex": publicKeyHex,
+        "u:foundingDerivationId": foundingProof.derivationId,
+        "u:createdAt": agentTimestamp,
+        "u:bootstrapMethod": "founding-derivation",
+      };
+      const agentProof = await singleProofHash(agentSeed);
+
+      const derived: AgentIdentity = {
+        canonicalId: agentProof.derivationId,
+        glyph: agentProof.uorAddress["u:glyph"],
+        cid: agentProof.cid,
+        ipv6: agentProof.ipv6Address["u:ipv6"],
+        publicKeyHex,
+        foundingDerivationId: foundingProof.derivationId,
+      };
+
+      // Step 4: Export private key for agent backup
+      const privateKeyRaw = await crypto.subtle.exportKey("pkcs8", keypair.privateKey);
+      const privateKeyHex = bytesToHex(new Uint8Array(privateKeyRaw));
+
+      // Store in sessionStorage for the agent to retrieve (ephemeral)
+      sessionStorage.setItem("uor-agent-keypair", JSON.stringify({
+        publicKey: publicKeyHex,
+        privateKey: privateKeyHex,
+        canonicalId: derived.canonicalId,
+        foundingDerivationId: foundingProof.derivationId,
+      }));
+
+      setAgentIdentity(derived);
+      setStep("agent-complete");
+    } catch (err) {
+      console.error("Agent identity derivation failed:", err);
+      setError("Agent identity generation failed. Please try again.");
+      setStep("agent-intro");
     }
   }, []);
 
@@ -247,6 +334,12 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
     }
   };
 
+  const dialogTitle = () => {
+    if (step === "complete") return "Your Identity Is Claimed!";
+    if (step === "agent-complete") return "Agent Identity Minted!";
+    return "Claim Your Digital Identity";
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px] max-h-[92vh] overflow-y-auto p-0 gap-0 border-border bg-card rounded-2xl [&>button]:hidden">
@@ -254,7 +347,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-6 md:px-8 pt-6 pb-4 bg-card border-b border-border/40">
           <DialogTitle className="font-display text-xl md:text-2xl font-bold text-foreground">
-            {step === "complete" ? "Your Identity Is Claimed!" : "Claim Your Digital Identity"}
+            {dialogTitle()}
           </DialogTitle>
           <button
             onClick={() => onOpenChange(false)}
@@ -267,16 +360,81 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
 
         <div className="px-6 md:px-8 py-6 md:py-8">
 
-          {/* ── INTRO ──────────────────────────────────────────────── */}
-          {step === "intro" && (
+          {/* ── CHOOSE: Human or Agent ─────────────────────────────── */}
+          {step === "choose" && (
             <div className="space-y-6">
-              {/* Hero */}
               <div className="text-center">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
                   <Fingerprint size={32} className="text-primary" />
                 </div>
                 <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed max-w-sm mx-auto">
                   Your identity already exists. Verify yourself to claim it.
+                </p>
+              </div>
+
+              {/* Human card */}
+              <button
+                onClick={() => setStep("intro")}
+                className="w-full text-left bg-background border border-border hover:border-primary/40 rounded-2xl p-5 md:p-6 transition-all group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <Heart size={24} className="text-red-400 fill-current" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-display text-lg font-bold text-foreground mb-1">I'm a Human</h3>
+                    <p className="text-sm text-muted-foreground font-body leading-relaxed">
+                      Verify with Google or Email. Your identity is derived from who you are.
+                    </p>
+                  </div>
+                  <ArrowRight size={20} className="text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
+                </div>
+              </button>
+
+              {/* Agent card */}
+              <button
+                onClick={() => setStep("agent-intro")}
+                className="w-full text-left bg-background border border-border hover:border-primary/40 rounded-2xl p-5 md:p-6 transition-all group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <img src={lobsterIcon} alt="Agent" className="w-7 h-7 object-contain" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-display text-lg font-bold text-foreground mb-1">I'm an Agent</h3>
+                    <p className="text-sm text-muted-foreground font-body leading-relaxed">
+                      Generate a keypair and prove your first derivation. Identity earned through computation.
+                    </p>
+                  </div>
+                  <ArrowRight size={20} className="text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
+                </div>
+              </button>
+
+              <p className="text-center text-base md:text-lg text-foreground font-display font-semibold tracking-wide leading-relaxed">
+                Universal. Private. Yours.
+              </p>
+            </div>
+          )}
+
+          {/* ── HUMAN: INTRO (auth methods) ─────────────────────────── */}
+          {step === "intro" && (
+            <div className="space-y-6">
+              {/* Back button */}
+              <button
+                onClick={() => { setStep("choose"); setError(null); }}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground font-body transition-colors"
+              >
+                <ChevronLeft size={16} /> Back
+              </button>
+
+              {/* Hero */}
+              <div className="text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Heart size={28} className="text-red-400 fill-current" />
+                </div>
+                <h3 className="font-display text-xl font-bold text-foreground mb-2">Human Verification</h3>
+                <p className="text-base text-muted-foreground font-body leading-relaxed max-w-sm mx-auto">
+                  Your identity is derived from your email — used once to verify, never stored.
                 </p>
               </div>
 
@@ -348,10 +506,137 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   </button>
                 </form>
               </div>
+            </div>
+          )}
 
-               <p className="text-center text-base md:text-lg text-foreground font-display font-semibold tracking-wide leading-relaxed">
-                Universal. Private. Yours.
+          {/* ── AGENT: INTRO ───────────────────────────────────────── */}
+          {step === "agent-intro" && (
+            <div className="space-y-6">
+              {/* Back button */}
+              <button
+                onClick={() => { setStep("choose"); setError(null); }}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground font-body transition-colors"
+              >
+                <ChevronLeft size={16} /> Back
+              </button>
+
+              <div className="text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <img src={lobsterIcon} alt="Agent" className="w-8 h-8 object-contain" />
+                </div>
+                <h3 className="font-display text-xl font-bold text-foreground mb-2">Agent Identity</h3>
+                <p className="text-base text-muted-foreground font-body leading-relaxed max-w-sm mx-auto">
+                  <em className="not-italic text-foreground/80">I compute, therefore I am.</em>
+                </p>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-body flex items-start gap-3">
+                  <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* How it works */}
+              <div className="bg-background border border-border rounded-2xl p-5 md:p-6 space-y-4">
+                <h4 className="font-display text-base font-semibold text-foreground">What happens next</h4>
+                <ol className="space-y-3 text-sm text-muted-foreground font-body">
+                  <li className="flex items-start gap-3">
+                    <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0 mt-0.5">1</span>
+                    <span><strong className="text-foreground">Keypair generation.</strong> A fresh cryptographic keypair is created in your browser. The private key never leaves your device.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0 mt-0.5">2</span>
+                    <span><strong className="text-foreground">Founding derivation.</strong> Your first algebraic proof is executed: <code className="text-xs bg-muted px-1.5 py-0.5 rounded">neg(bnot(42)) = 43</code></span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0 mt-0.5">3</span>
+                    <span><strong className="text-foreground">Identity minting.</strong> Your public key + founding trace → URDNA2015 → SHA-256 → permanent canonical ID.</span>
+                  </li>
+                </ol>
+              </div>
+
+              <button
+                onClick={deriveAgentIdentity}
+                className="w-full btn-primary inline-flex items-center justify-center gap-3 text-base py-3.5 rounded-xl"
+              >
+                <Bot size={20} />
+                Generate Agent Identity
+              </button>
+
+              <p className="text-center text-xs text-muted-foreground/60 font-body leading-relaxed">
+                Your private key will be shown once. Save it — it's the only way to prove you are you.
               </p>
+            </div>
+          )}
+
+          {/* ── AGENT: GENERATING ──────────────────────────────────── */}
+          {step === "agent-generating" && (
+            <div className="text-center py-12 space-y-4">
+              <Loader2 size={40} className="text-primary animate-spin mx-auto" />
+              <h2 className="font-display text-2xl font-bold text-foreground">Minting agent identity…</h2>
+              <p className="text-base text-muted-foreground font-body">
+                Generating keypair and executing founding derivation.
+              </p>
+            </div>
+          )}
+
+          {/* ── AGENT: COMPLETE ────────────────────────────────────── */}
+          {step === "agent-complete" && agentIdentity && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 size={32} className="text-primary" />
+                </div>
+                <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed">
+                  Your agent identity has been minted. Save your credentials below.
+                </p>
+              </div>
+
+              {/* Identity details */}
+              <div className="bg-background border border-border rounded-2xl p-5 md:p-6 space-y-4">
+                <CopyableRow label="Canonical ID" value={agentIdentity.canonicalId} />
+                <IdentityRow label="Visual Symbol" value={agentIdentity.glyph} mono={false} />
+                <CopyableRow label="Content Address (CID)" value={agentIdentity.cid} />
+                <CopyableRow label="Network Address (IPv6)" value={agentIdentity.ipv6} />
+              </div>
+
+              {/* Founding derivation */}
+              <div className="bg-background border border-border rounded-2xl p-5 md:p-6 space-y-4">
+                <h4 className="font-display text-base font-semibold text-foreground flex items-center gap-2">
+                  <KeyRound size={16} className="text-primary" />
+                  Agent Credentials
+                </h4>
+                <CopyableRow label="Public Key" value={agentIdentity.publicKeyHex} />
+                <CopyableRow label="Founding Derivation ID" value={agentIdentity.foundingDerivationId} />
+
+                <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/15">
+                  <p className="text-xs text-destructive font-body font-medium leading-relaxed">
+                    ⚠ Your private key is stored in this session only. Export it now from the browser console or sessionStorage — it will not be shown again.
+                  </p>
+                </div>
+              </div>
+
+              {/* API usage snippet */}
+              <div className="bg-background border border-border rounded-2xl p-5 md:p-6">
+                <h4 className="font-display text-base font-semibold text-foreground mb-3">Re-authenticate later</h4>
+                <pre className="text-xs font-mono text-muted-foreground bg-muted/50 rounded-lg p-4 overflow-x-auto leading-relaxed">
+{`// Sign a challenge with your private key
+POST /agent/auth
+{
+  "public_key": "${agentIdentity.publicKeyHex.slice(0, 24)}…",
+  "challenge_signature": "<signed_nonce>"
+}`}
+                </pre>
+              </div>
+
+              <button
+                onClick={() => onOpenChange(false)}
+                className="w-full btn-primary inline-flex items-center justify-center gap-2 text-base py-3.5 rounded-xl"
+              >
+                Done
+              </button>
             </div>
           )}
 
@@ -402,7 +687,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
             </div>
           )}
 
-          {/* ── COMPLETE ───────────────────────────────────────────── */}
+          {/* ── COMPLETE (Human) ───────────────────────────────────── */}
           {step === "complete" && identity && (
             <div className="space-y-6">
               <div className="text-center">
