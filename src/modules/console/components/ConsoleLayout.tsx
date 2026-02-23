@@ -152,7 +152,7 @@ function ConsoleLayoutInner() {
                     {!collapsed && (
                       <div className="flex-1 min-w-0">
                         <span className="block">{item.label}</span>
-                        <span className="block text-xs text-muted-foreground/50 leading-tight">
+                        <span className="block text-sm text-muted-foreground leading-snug">
                           {item.hint}
                         </span>
                       </div>
