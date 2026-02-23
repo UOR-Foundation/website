@@ -19,6 +19,7 @@ import projectUnsImg from "@/assets/project-uns.jpg";
 import projectQrCartridgeImg from "@/assets/project-qr-cartridge.jpg";
 import projectHologramSdkImg from "@/assets/project-hologram-sdk.jpg";
 import projectUorIdentityImg from "@/assets/project-uor-identity.jpg";
+import projectUorTermsImg from "@/assets/project-uor-terms.jpg";
 
 const imageMap: Record<string, string> = {
   hologram: projectHologramImg,
@@ -30,6 +31,7 @@ const imageMap: Record<string, string> = {
   qrCartridge: projectQrCartridgeImg,
   hologramSdk: projectHologramSdkImg,
   uorIdentity: projectUorIdentityImg,
+  uorTerms: projectUorTermsImg,
 };
 
 type Project = ProjectData & { image?: string };
