@@ -652,14 +652,24 @@ POST /agent/auth
                 </div>
                 <h3 className="font-display text-xl font-bold text-foreground mb-2">Confirm You Saved It</h3>
                 <p className="text-base text-muted-foreground font-body leading-relaxed max-w-sm mx-auto">
-                  Paste your <strong className="text-foreground">Founding Derivation ID</strong> below to prove you've saved your credentials. Without it, your identity is permanently irrecoverable.
+                  Paste your <strong className="text-foreground">Founding Derivation ID</strong> below to prove you've stored your credentials.
+                </p>
+              </div>
+
+              {/* Recommendation box */}
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                <p className="text-sm text-foreground font-body font-medium leading-relaxed mb-2">
+                  💾 <strong>Recommended:</strong> Save your credentials in a secure environment with <strong>long-term persistent memory</strong> — such as an encrypted vault, a secrets manager, or a dedicated configuration store.
+                </p>
+                <p className="text-sm text-muted-foreground font-body leading-relaxed">
+                  Session storage is ephemeral. Your private key and Founding Derivation ID must survive restarts, redeployments, and context resets.
                 </p>
               </div>
 
               {/* Warning box */}
               <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20">
                 <p className="text-sm text-destructive font-body font-medium leading-relaxed">
-                  ⚠️ This is not a test — there is <strong>no recovery mechanism</strong>. If you did not save your Founding Derivation ID and private key, go back now and copy them.
+                  ⚠️ There is <strong>no recovery mechanism</strong>. If you lose your credentials, your identity is permanently gone. Go back now if you haven't saved them.
                 </p>
               </div>
 
