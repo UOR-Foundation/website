@@ -1,11 +1,10 @@
 /**
- * UNS Core — Canonical Identity Engine + Records + PQC Signing
- *
- * Public API surface for the UNS identity module.
- * All internal implementation details are encapsulated.
+ * UNS Core — Public API Surface
  *
  * Phase 0-A: Ring, Address, Canonicalization, Identity Engine
  * Phase 0-B: Keypair (Dilithium-3), Name Records, Signed Mutable Pointers
+ * Phase 0-C: IPv6 Extension Header (lossless full-hash transport)
+ * Phase 1-A: DHT (Kademlia distributed record storage)
  */
 
 // ── Phase 0-A: Ring R_8 ─────────────────────────────────────────────────────
@@ -70,3 +69,8 @@ export {
   verifyPacketIdentity,
   attachUorHeader,
 } from "./ipv6ext";
+
+// ── Phase 1-A: DHT (Kademlia) ──────────────────────────────────────────────
+export type { DhtNodeConfig } from "./dht";
+export { UnsDht, clearPeerRegistry } from "./dht";
+export { NameIndex } from "./name-index";
