@@ -148,6 +148,15 @@ export type {
   CertificateVerification,
 } from "./relationship";
 
+// ── Runtime Witness (P8 — execution tracing for live-coded apps) ────────────
+export { RuntimeWitness } from "./runtime-witness";
+export type {
+  ExecutionTrace,
+  WitnessRequest,
+  WitnessResponse,
+  WitnessHandler,
+} from "./runtime-witness";
+
 export type {
   AppCliResult,
   DeployOptions,
