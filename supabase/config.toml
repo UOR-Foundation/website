@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.uor-mcp]
 verify_jwt = false
+
+[functions.project-submit]
+verify_jwt = false
