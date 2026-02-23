@@ -140,16 +140,14 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
   const deriveIdentity = useCallback(async (user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) => {
     setStep("deriving");
     try {
-      // PRIVACY: The identity seed uses ONLY the opaque user ID (a UUID).
-      // No email, name, or other PII is included in or derivable from the hash.
-      // The email/OAuth was used solely to authenticate — it is never stored
-      // alongside the identity and cannot be reverse-engineered from the output.
+      // PRIVACY: Only the opaque user ID (UUID) feeds the hash.
+      // RECOVERY: No timestamp — same userId always produces the same identity.
+      // The email/OAuth was used solely to authenticate and is never stored.
       const identitySeed = {
         "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
         "@type": "uor:Identity",
         "uor:userId": user.id,
         "uor:bootstrapMethod": "authenticated",
-        "uor:claimedAt": new Date().toISOString(),
       };
       const proof = await singleProofHash(identitySeed);
       const derived: DerivedIdentity = {
