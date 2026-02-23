@@ -43,6 +43,16 @@ export type {
   ResolveQuery, QueryType,
 } from "./core";
 
+// ── Compute — Content-Addressed Edge Functions (Phase 3-A) ──────────────────
+export {
+  deployFunction, getFunction, listFunctions, clearRegistry,
+  invokeFunction, verifyExecution,
+} from "./compute";
+
+export type {
+  ComputeFunction, ComputationTrace, ExecutionResult,
+} from "./compute";
+
 // ── Types (re-export all for consumer modules) ──────────────────────────────
 export type {
   UnsRecordType,
