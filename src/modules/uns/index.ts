@@ -43,14 +43,16 @@ export type {
   ResolveQuery, QueryType,
 } from "./core";
 
-// ── Compute — Content-Addressed Edge Functions (Phase 3-A) ──────────────────
+// ── Compute — Edge Functions & Agent Gateway (Phase 3-A, 5-A) ───────────────
 export {
   deployFunction, getFunction, listFunctions, clearRegistry,
   invokeFunction, verifyExecution,
+  UnsAgentGateway, buildAgentMessage,
 } from "./compute";
 
 export type {
   ComputeFunction, ComputationTrace, ExecutionResult,
+  MorphismType, AgentMessage, AgentRegistration, RouteResult, InjectionAlert,
 } from "./compute";
 
 // ── Store + KV + Cache (Phase 3-B, 3-C) ────────────────────────────────────
