@@ -56,6 +56,7 @@ import selfVerifyManifest from "@/modules/self-verify/module.json";
 import agentToolsManifest from "@/modules/agent-tools/module.json";
 import codeKgManifest from "@/modules/code-kg/module.json";
 import dashboardManifest from "@/modules/dashboard/module.json";
+import unsManifest from "@/modules/uns/module.json";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -131,6 +132,7 @@ const RAW_MANIFESTS: Record<string, Record<string, unknown>> = {
   "agent-tools": agentToolsManifest as unknown as Record<string, unknown>,
   "code-kg": codeKgManifest as unknown as Record<string, unknown>,
   dashboard: dashboardManifest as unknown as Record<string, unknown>,
+  uns: unsManifest as unknown as Record<string, unknown>,
 };
 
 // ── Initialization ──────────────────────────────────────────────────────────
