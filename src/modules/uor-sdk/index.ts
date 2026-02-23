@@ -207,3 +207,23 @@ export type {
   LimitCheckResult,
   PayoutResult,
 } from "./free-tier";
+
+// ── Universal Identity (One Login, All Apps) ────────────────────────────────
+export { UniversalIdentityManager } from "./universal-identity";
+export type {
+  IdentityRecord,
+  UniversalSession,
+  UsageRecord,
+  AppSessionIndex,
+} from "./universal-identity";
+
+// ── Pooled Subscription (YouTube Premium Revenue Model) ─────────────────────
+export { PooledSubscriptionEngine } from "./pooled-subscription";
+export type {
+  PooledSubscription,
+  BillingPeriod,
+  AppPayout,
+  PooledDeveloperBalance,
+  SubscribeInput,
+  PeriodUsageData,
+} from "./pooled-subscription";
