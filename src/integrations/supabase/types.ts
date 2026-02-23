@@ -53,6 +53,45 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          claimed_at: string
+          display_name: string | null
+          id: string
+          uor_canonical_id: string | null
+          uor_cid: string | null
+          uor_glyph: string | null
+          uor_ipv6: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          claimed_at?: string
+          display_name?: string | null
+          id?: string
+          uor_canonical_id?: string | null
+          uor_cid?: string | null
+          uor_glyph?: string | null
+          uor_ipv6?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          claimed_at?: string
+          display_name?: string | null
+          id?: string
+          uor_canonical_id?: string | null
+          uor_cid?: string | null
+          uor_glyph?: string | null
+          uor_ipv6?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       project_submissions: {
         Row: {
           contact_email: string
