@@ -61,6 +61,13 @@ export type { StoredObject, CacheStats } from "./store";
 export { UnsLedger } from "./ledger";
 export type { QueryProof, QueryResult, StateTransition, SchemaMigration } from "./ledger";
 
+// ── Trust — Zero Trust Identity & Access (Phase 4-A) ────────────────────────
+export { UnsAuthServer, signChallenge, UnsAccessControl, trustMiddleware } from "./trust";
+export type {
+  UnsChallenge, UnsSession,
+  UnsAccessPolicy, UnsAccessRule, EvaluationResult, MiddlewareHandler,
+} from "./trust";
+
 // ── Types (re-export all for consumer modules) ──────────────────────────────
 export type {
   UnsRecordType,
