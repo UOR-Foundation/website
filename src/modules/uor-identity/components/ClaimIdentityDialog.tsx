@@ -222,7 +222,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-6 md:px-8 pt-6 pb-4 bg-card border-b border-border/40">
           <DialogTitle className="font-display text-xl md:text-2xl font-bold text-foreground">
-            {step === "complete" ? "You're All Set!" : "Get Your Digital Identity"}
+            {step === "complete" ? "Your Identity Is Claimed!" : "Claim Your Digital Identity"}
           </DialogTitle>
           <button
             onClick={() => onOpenChange(false)}
@@ -244,7 +244,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   <Fingerprint size={32} className="text-primary" />
                 </div>
                 <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed max-w-sm mx-auto">
-                  Create a unique digital identity that belongs to&nbsp;you — not to any app or company.
+                  This identity is <strong className="text-foreground">yours alone</strong> — fully private, owned by you, and transferable. Choose a method below to verify you're a unique person and claim it.
                 </p>
               </div>
 
@@ -268,8 +268,8 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Sign in with Google</h3>
-                    <p className="text-sm text-muted-foreground font-body">Quickest option — just one click</p>
+                    <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Verify with Google</h3>
+                    <p className="text-sm text-muted-foreground font-body">Quickest way to prove you're unique — your identity stays separate from Google</p>
                   </div>
                 </div>
                 <button
@@ -294,8 +294,8 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                     <Mail size={20} className="text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Sign in with Email</h3>
-                    <p className="text-sm text-muted-foreground font-body">No password needed — we'll send you a link</p>
+                    <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Verify with Email</h3>
+                    <p className="text-sm text-muted-foreground font-body">We only use your email to confirm you're real — your identity is independent of it</p>
                   </div>
                 </div>
                 <form onSubmit={handleEmailSignIn} className="space-y-3">
@@ -318,7 +318,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
               </div>
 
               <p className="text-center text-sm text-muted-foreground/70 font-body leading-relaxed">
-                Your identity is mathematically unique to you and cannot be controlled by any third party.
+                Your identity is mathematically unique, fully owned by you, and can be transferred at any time. No company — including us — can access or control it.
               </p>
             </div>
           )}
@@ -378,7 +378,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   <CheckCircle2 size={32} className="text-primary" />
                 </div>
                 <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed">
-                  Your unique digital identity has been created and saved.
+                  Your identity is now claimed and belongs entirely to you. It's private, transferable, and independent of any account you used to verify.
                 </p>
               </div>
 
