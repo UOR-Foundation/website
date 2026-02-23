@@ -61,7 +61,7 @@ export const projects: ProjectData[] = [
     imageKey: "uorMcp",
   },
   {
-    name: "UOR Name Service",
+    name: "UOR Name Service (UNS)",
     slug: "uns",
     category: "Core Infrastructure",
     description: "A complete network infrastructure platform where every resource is findable, verifiable, and protected. Trust is built into the address itself.",
