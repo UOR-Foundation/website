@@ -14,7 +14,7 @@ import {
 import {
   ArrowRight, Loader2, Globe,
   QrCode, Copy, Check, Rocket, ShieldCheck,
-  GitBranch, Upload, Package,
+  GitBranch, Upload, Package, Plus,
 } from "lucide-react";
 import heroImage from "@/assets/console-deploy-hero.png";
 
@@ -100,7 +100,7 @@ export default function AppConsoleApps() {
             </div>
 
             {/* Source type pills */}
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               {SOURCES.map((s) => (
                 <span
                   key={s.label}
@@ -110,6 +110,22 @@ export default function AppConsoleApps() {
                   {s.label}
                 </span>
               ))}
+              <button
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = ".zip,.tar.gz,.tgz";
+                  input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) setImportUrl(`zip://${file.name}`);
+                  };
+                  input.click();
+                }}
+                className="inline-flex items-center justify-center h-6 w-6 rounded-full border border-dashed border-border/60 text-muted-foreground/60 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all"
+                title="Upload ZIP file"
+              >
+                <Plus className="h-3 w-3" />
+              </button>
             </div>
 
             {/* Deploy input */}
