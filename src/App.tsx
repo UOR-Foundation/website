@@ -82,6 +82,7 @@ const ConceptsDocPage = lazy(() => import("@/modules/developers/pages/ConceptsDo
 const FundamentalsDocPage = lazy(() => import("@/modules/developers/pages/FundamentalsDocPage"));
 const DirectoryPage = lazy(() => import("@/modules/developers/pages/DirectoryPage"));
 const CartridgePage = lazy(() => import("@/modules/qr-cartridge/pages/CartridgePage"));
+const YourSpacePage = lazy(() => import("@/modules/your-space/pages/YourSpacePage"));
 
 const queryClient = new QueryClient();
 
@@ -177,6 +178,7 @@ const App = () => {
             <Route path="/developers/agents" element={<AgentsDocPage />} />
             <Route path="/developers/sdk" element={<SdkDocPage />} />
             <Route path="/cartridge" element={<CartridgePage />} />
+            <Route path="/your-space" element={<YourSpacePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

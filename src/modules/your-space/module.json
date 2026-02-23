@@ -1,0 +1,18 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "your-space",
+  "version": "1.0.0",
+  "description": "Personal Sovereign Data Dashboard — a user's UOR identity-bound space for managing data, activity, and experience controls.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["u:", "cert:", "store:", "observable:"],
+  "exports": ["YourSpacePage"],
+  "dependencies": {
+    "identity": "^1.0.0",
+    "uns": "^1.0.0",
+    "uor-sdk": "^1.0.0"
+  },
+  "routes": ["/your-space"],
+  "api_endpoints": [],
+  "assets": []
+}
