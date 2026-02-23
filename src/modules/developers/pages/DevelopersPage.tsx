@@ -54,7 +54,7 @@ const DevelopersPage = () => (
             Welcome to UOR Developer Portal
           </h1>
           <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl">
-            One address per object. Tamper-proof, interoperable, production-ready.
+            Explore guides and tutorials to start building with UOR framework.
           </p>
         </div>
       </section>
