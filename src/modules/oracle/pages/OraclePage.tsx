@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { Eye, RefreshCw, Database, Activity, Clock, Shield, ExternalLink, Copy, Check, ArrowRight } from "lucide-react";
+import {
+  Eye, RefreshCw, Database, Activity, Clock, Shield, ExternalLink,
+  Copy, Check, ArrowRight, Flame, Snowflake, HardDrive, Lock
+} from "lucide-react";
+
+/* ── Types ──────────────────────────────────────────────────────────────── */
 
 interface OracleEntry {
   id: string;
@@ -37,12 +42,7 @@ interface OracleStats {
   } | null;
 }
 
-const GRADE_COLORS: Record<string, string> = {
-  A: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-  B: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  C: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-  D: "bg-red-500/20 text-red-300 border-red-500/30",
-};
+/* ── Constants ──────────────────────────────────────────────────────────── */
 
 const OP_COLORS: Record<string, string> = {
   "sobridge-pin": "bg-violet-500/15 text-violet-300 border-violet-500/25",
@@ -57,6 +57,21 @@ const ENCODING_OPS = ["sobridge-pin", "sobridge-canonicalize", "store-write", "k
 const DECODING_OPS = ["store-read", "resolve", "decode"];
 
 const API_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/uor-api`;
+
+/* ── Helpers ────────────────────────────────────────────────────────────── */
+
+function classifyMemoryTier(entry: OracleEntry): "hot" | "cold" {
+  // Hot memory: entries with active IPFS gateway availability (Pinata).
+  // Cold memory: entries also persisted to Filecoin via Storacha for long-term archival.
+  if (entry.storacha_cid) return "cold";
+  return "hot";
+}
+
+function getMemoryLabel(tier: "hot" | "cold"): string {
+  return tier === "hot" ? "Hot (IPFS)" : "Cold (Filecoin)";
+}
+
+/* ── Main Component ─────────────────────────────────────────────────────── */
 
 export default function OraclePage() {
   const [entries, setEntries] = useState<OracleEntry[]>([]);
@@ -97,6 +112,9 @@ export default function OraclePage() {
     return true;
   });
 
+  const hotCount = entries.filter((e) => classifyMemoryTier(e) === "hot").length;
+  const coldCount = entries.filter((e) => classifyMemoryTier(e) === "cold").length;
+
   return (
     <Layout>
       <div className="min-h-screen bg-background">
@@ -109,26 +127,51 @@ export default function OraclePage() {
           <div className="relative container mx-auto px-6 pb-16 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary-foreground/80 text-xs font-medium tracking-wide mb-6">
               <Eye className="w-3.5 h-3.5" />
-              META-OBSERVER
+              PERSISTENT MEMORY
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-[hsl(var(--section-dark-foreground))] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
               UOR Oracle
             </h1>
-            <p className="text-base text-[hsl(var(--section-dark-foreground))]/70 max-w-2xl mx-auto">
-              Immutable ledger of every object encoded and decoded in UOR space.
-              Every transformation is logged with its proof address for instant verification.
+            <p className="text-base text-[hsl(var(--section-dark-foreground))]/70 max-w-2xl mx-auto leading-relaxed">
+              A persistent, append-only record of every object encoded or decoded across the UOR system.
+              Each entry is content-addressed and cryptographically verifiable,
+              stored across two memory tiers for both speed and permanence.
             </p>
           </div>
         </section>
 
-        {/* Stats */}
+        {/* What is this? Explainer */}
         <section className="container mx-auto px-6 -mt-8 relative z-10">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <StatCard icon={<Database className="w-5 h-5" />} label="Total Events" value={stats?.["oracle:totalEncodings"] ?? 0} />
+          <div className="rounded-xl border border-border bg-card p-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <ExplainerCard
+                icon={<Lock className="w-5 h-5 text-primary" />}
+                title="What is this?"
+                description="The Oracle is the system's memory. Every time an object is encoded (written to storage) or decoded (read from storage), it is recorded here with a cryptographic proof. Entries can never be deleted or changed."
+              />
+              <ExplainerCard
+                icon={<Flame className="w-5 h-5 text-orange-400" />}
+                title="Hot Memory (IPFS)"
+                description={`Fast-access storage on IPFS via Pinata. Objects are immediately retrievable through a gateway URL. Currently ${hotCount} ${hotCount === 1 ? "entry" : "entries"} in hot memory.`}
+              />
+              <ExplainerCard
+                icon={<Snowflake className="w-5 h-5 text-sky-400" />}
+                title="Cold Memory (Filecoin)"
+                description={`Long-term archival on Filecoin via Storacha. Objects are preserved permanently on a decentralized network, resistant to data loss. Currently ${coldCount} ${coldCount === 1 ? "entry" : "entries"} in cold memory.`}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Stats */}
+        <section className="container mx-auto px-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            <StatCard icon={<Database className="w-5 h-5" />} label="Total Records" value={stats?.["oracle:totalEncodings"] ?? 0} />
             <StatCard icon={<Activity className="w-5 h-5" />} label="Object Types" value={Object.keys(stats?.["oracle:byObjectType"] ?? {}).length} />
+            <StatCard icon={<Flame className="w-5 h-5 text-orange-400" />} label="Hot Memory" value={hotCount} />
             <StatCard
               icon={<Clock className="w-5 h-5" />}
-              label="Latest Event"
+              label="Latest Record"
               value={stats?.["oracle:latestEncoding"] ? new Date(stats["oracle:latestEncoding"]["oracle:timestamp"]).toLocaleDateString() : "—"}
               isText
             />
@@ -136,7 +179,7 @@ export default function OraclePage() {
         </section>
 
         {/* Controls */}
-        <section className="container mx-auto px-6 mt-10">
+        <section className="container mx-auto px-6">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="inline-flex rounded-lg border border-border bg-card overflow-hidden">
               {(["all", "encoding", "decoding"] as ViewMode[]).map((mode) => (
@@ -149,7 +192,7 @@ export default function OraclePage() {
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   }`}
                 >
-                  {mode === "all" ? "All Events" : mode}
+                  {mode === "all" ? "All Records" : mode}
                 </button>
               ))}
             </div>
@@ -172,9 +215,9 @@ export default function OraclePage() {
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Timestamp</th>
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Operation</th>
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Object</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Grade</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Source → Destination</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">UOR Proof Address</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Memory Tier</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Storage Path</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Proof Address</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -182,13 +225,13 @@ export default function OraclePage() {
                     <tr>
                       <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                         <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />
-                        Loading oracle ledger…
+                        Loading oracle memory…
                       </td>
                     </tr>
                   ) : filteredEntries.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                        No {viewMode !== "all" ? viewMode : ""} entries yet.
+                        No {viewMode !== "all" ? viewMode : ""} records yet. Encode an object to create a record.
                       </td>
                     </tr>
                   ) : (
@@ -206,9 +249,10 @@ export default function OraclePage() {
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground mt-4 text-center">
-            Append-only meta-observer — entries cannot be deleted or modified.
-          </p>
+          <div className="flex items-center justify-center gap-2 mt-5 text-sm text-muted-foreground">
+            <Lock className="w-3.5 h-3.5" />
+            <span>Append-only ledger. Records are immutable and cryptographically sealed.</span>
+          </div>
         </section>
 
         <div className="h-16" />
@@ -219,7 +263,21 @@ export default function OraclePage() {
 
 /* ── Sub-components ─────────────────────────────────────────────────────── */
 
+function ExplainerCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+  return (
+    <div className="flex gap-3">
+      <div className="shrink-0 mt-0.5">{icon}</div>
+      <div>
+        <h3 className="text-sm font-semibold text-foreground mb-1">{title}</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+      </div>
+    </div>
+  );
+}
+
 function OracleRow({ entry, expanded, onToggle }: { entry: OracleEntry; expanded: boolean; onToggle: () => void }) {
+  const tier = classifyMemoryTier(entry);
+
   return (
     <>
       <tr className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer" onClick={onToggle}>
@@ -242,9 +300,7 @@ function OracleRow({ entry, expanded, onToggle }: { entry: OracleEntry; expanded
           </div>
         </td>
         <td className="px-4 py-3">
-          <span className={`inline-block px-2.5 py-1 rounded text-xs font-bold border ${GRADE_COLORS[entry.epistemic_grade] ?? GRADE_COLORS.D}`}>
-            {entry.epistemic_grade}
-          </span>
+          <MemoryTierBadge tier={tier} />
         </td>
         <td className="px-4 py-3">
           {(entry.storage_source || entry.storage_destination) ? (
@@ -259,7 +315,7 @@ function OracleRow({ entry, expanded, onToggle }: { entry: OracleEntry; expanded
         </td>
         <td className="px-4 py-3">
           {entry.uor_cid ? (
-            <CopyableHash value={entry.uor_cid} prefix="" />
+            <CopyableHash value={entry.uor_cid} />
           ) : (
             <span className="text-sm text-muted-foreground">—</span>
           )}
@@ -276,10 +332,26 @@ function OracleRow({ entry, expanded, onToggle }: { entry: OracleEntry; expanded
   );
 }
 
+function MemoryTierBadge({ tier }: { tier: "hot" | "cold" }) {
+  if (tier === "cold") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-sky-500/15 text-sky-300 border border-sky-500/25" title="Persisted to Filecoin via Storacha for permanent archival">
+        <Snowflake className="w-3 h-3" /> Cold
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-orange-500/15 text-orange-300 border border-orange-500/25" title="Stored on IPFS via Pinata for fast retrieval">
+      <Flame className="w-3 h-3" /> Hot
+    </span>
+  );
+}
+
 function EntryDetail({ entry }: { entry: OracleEntry }) {
   const verifyUrl = entry.derivation_id
     ? `${API_BASE}/tools/verify?derivation_id=${encodeURIComponent(entry.derivation_id)}`
     : null;
+  const tier = classifyMemoryTier(entry);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -292,15 +364,14 @@ function EntryDetail({ entry }: { entry: OracleEntry }) {
         <DetailRow label="Format" value={entry.encoding_format} />
         <DetailRow label="Quantum" value={`Q${entry.quantum_level}`} />
         <DetailRow label="Size" value={entry.byte_length ? `${entry.byte_length.toLocaleString()} bytes` : "—"} />
-        <DetailRow label="Storage From" value={entry.storage_source ?? "—"} />
-        <DetailRow label="Storage To" value={entry.storage_destination ?? "—"} />
+        <DetailRow label="Memory Tier" value={getMemoryLabel(tier)} />
       </div>
       <div className="space-y-2">
         <DetailRow label="Derivation ID" value={entry.derivation_id ?? "—"} mono copyable />
         <DetailRow label="UOR CID" value={entry.uor_cid ?? "—"} mono copyable />
         <DetailRow label="SHA-256" value={entry.sha256_hash ?? "—"} mono copyable />
-        <DetailRow label="Pinata CID" value={entry.pinata_cid ?? "—"} mono copyable />
-        <DetailRow label="Storacha CID" value={entry.storacha_cid ?? "—"} mono copyable />
+        <DetailRow label="IPFS CID" value={entry.pinata_cid ?? "—"} mono copyable />
+        <DetailRow label="Filecoin CID" value={entry.storacha_cid ?? "—"} mono copyable />
         <DetailRow label="Gateway" value={entry.gateway_url ?? "—"} link />
         {verifyUrl && (
           <div className="pt-2">
@@ -354,10 +425,9 @@ function DetailRow({ label, value, mono, copyable, link }: { label: string; valu
   );
 }
 
-function CopyableHash({ value, prefix }: { value: string; prefix: string }) {
+function CopyableHash({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
-  const display = prefix ? value.replace(prefix, "") : value;
-  const truncated = display.length > 16 ? display.slice(0, 8) + "…" + display.slice(-6) : display;
+  const truncated = value.length > 16 ? value.slice(0, 8) + "…" + value.slice(-6) : value;
 
   return (
     <button
