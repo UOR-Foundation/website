@@ -74,3 +74,17 @@ export {
 export type { DhtNodeConfig } from "./dht";
 export { UnsDht, clearPeerRegistry } from "./dht";
 export { NameIndex } from "./name-index";
+
+// ── Phase 1-B: Resolver API ────────────────────────────────────────────────
+export type {
+  CoherenceProof,
+  CriticalIdentityCheck,
+  ResolutionResult,
+  VerificationResult,
+  ResolverInfo,
+  PublishResult,
+  ResolutionError,
+  ResolveQuery,
+  QueryType,
+} from "./resolver";
+export { UnsResolver } from "./resolver";

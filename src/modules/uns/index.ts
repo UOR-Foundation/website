@@ -26,6 +26,10 @@ export {
   UOR_OPTION_TYPE, UOR_OPTION_DATA_LEN,
   encodeDestOptHeader, decodeDestOptHeader,
   verifyPacketIdentity, attachUorHeader,
+  // DHT
+  UnsDht, clearPeerRegistry, NameIndex,
+  // Resolver API
+  UnsResolver,
 } from "./core";
 
 export type {
@@ -33,6 +37,10 @@ export type {
   UnsKeypair, PublicKeyObject, SignatureBlock, SignedRecord,
   UnsNameRecord, SignedUnsRecord, UnsTarget, UnsService, CreateRecordOpts,
   UorDestOptHeader,
+  DhtNodeConfig,
+  CoherenceProof, CriticalIdentityCheck, ResolutionResult,
+  VerificationResult, ResolverInfo, PublishResult, ResolutionError,
+  ResolveQuery, QueryType,
 } from "./core";
 
 // ── Types (re-export all for consumer modules) ──────────────────────────────
