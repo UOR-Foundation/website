@@ -27,4 +27,5 @@ export const routeTable = [
   { path: "/derivation-lab", label: "Derivation Lab" },
   { path: "/knowledge-graph", label: "Knowledge Graph" },
   { path: "/sessions", label: "State Explorer" },
+  { path: "/uns", label: "UoR Name Service" },
 ];

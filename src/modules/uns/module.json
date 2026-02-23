@@ -1,0 +1,37 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "uns",
+  "version": "0.1.0",
+  "description": "UoR Name Service (UNS) — decentralized name resolution via IPv6 content-addressing and UOR algebraic identity. Provides DNS-equivalent services (forward/reverse lookup, zone management, record certification) encoded within the UOR framework for secure, verifiable, location-independent routing.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["uns:", "u:", "cert:", "store:", "derivation:"],
+  "exports": [
+    "registerName",
+    "resolveName",
+    "reverseResolve",
+    "createZone",
+    "certifyRecord",
+    "verifyRecord",
+    "listRecords",
+    "revokeRecord"
+  ],
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "identity": "^1.0.0",
+    "derivation": "^1.0.0",
+    "resolver": "^1.0.0",
+    "self-verify": "^1.0.0"
+  },
+  "routes": ["/uns"],
+  "api_endpoints": [
+    "/uns/resolve",
+    "/uns/register",
+    "/uns/reverse",
+    "/uns/zones",
+    "/uns/records",
+    "/uns/certify",
+    "/uns/verify"
+  ],
+  "assets": []
+}
