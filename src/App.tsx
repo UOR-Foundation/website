@@ -61,6 +61,10 @@ const ConsoleCompute = lazy(() => import("@/modules/console/pages/ConsoleCompute
 const ConsoleStore = lazy(() => import("@/modules/console/pages/ConsoleStore"));
 const ConsoleTrust = lazy(() => import("@/modules/console/pages/ConsoleTrust"));
 const ConsoleAgents = lazy(() => import("@/modules/console/pages/ConsoleAgents"));
+const AppConsoleOverview = lazy(() => import("@/modules/console/pages/AppConsoleOverview"));
+const AppConsoleApps = lazy(() => import("@/modules/console/pages/AppConsoleApps"));
+const AppConsoleDetail = lazy(() => import("@/modules/console/pages/AppConsoleDetail"));
+const AppConsoleDiscovery = lazy(() => import("@/modules/console/pages/AppConsoleDiscovery"));
 const DevelopersPage = lazy(() => import("@/modules/developers/pages/DevelopersPage"));
 const DnsDocPage = lazy(() => import("@/modules/developers/pages/DnsDocPage"));
 const ComputeDocPage = lazy(() => import("@/modules/developers/pages/ComputeDocPage"));
@@ -150,6 +154,10 @@ const App = () => {
               <Route path="store" element={<ConsoleStore />} />
               <Route path="trust" element={<ConsoleTrust />} />
               <Route path="agents" element={<ConsoleAgents />} />
+              <Route path="app-overview" element={<AppConsoleOverview />} />
+              <Route path="apps" element={<AppConsoleApps />} />
+              <Route path="app-detail/:canonicalId" element={<AppConsoleDetail />} />
+              <Route path="discovery" element={<AppConsoleDiscovery />} />
             </Route>
             <Route path="/developers" element={<DevelopersPage />} />
             <Route path="/developers/directory" element={<DirectoryPage />} />
