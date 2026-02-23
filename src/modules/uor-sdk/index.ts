@@ -176,13 +176,42 @@ export type {
 
 export type {
   AppCliResult,
-  DeployOptions,
+  DeployOptions as CliDeployOptions,
   UpdateOptions,
   MonetizeOptions,
   RollbackOptions,
   AppRecord,
   DeveloperIdentity,
 } from "./cli-types";
+
+// ── Deploy Orchestrator (Build→Ship→Run pipeline) ───────────────────────────
+export { deployApp } from "./deploy";
+export type {
+  DeployOptions,
+  DeployResult,
+  DeployStage,
+  DeployProgressCallback,
+} from "./deploy";
+
+// ── Runtime (Image Builder + Registry Ship + WASM Loader) ───────────────────
+export {
+  buildAppImage,
+  shipApp,
+  runApp,
+  listInstances,
+  getInstance,
+  stopAll,
+  getRuntimeStatus,
+} from "./runtime";
+export type {
+  ImageBuildOptions,
+  ImageBuildResult,
+  ShipInput,
+  ShipResult,
+  WasmRuntimeConfig,
+  WasmAppInstance,
+  RuntimeStatus,
+} from "./runtime";
 
 // ── App SDK (P11 — five-function developer-facing SDK) ──────────────────────
 export { createUorAppClient, browserAutoInit } from "./app-sdk";
