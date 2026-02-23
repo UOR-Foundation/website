@@ -147,7 +147,7 @@ const DonatePopup = ({ open, onOpenChange }: DonatePopupProps) => {
                 className="flex items-start gap-4 p-4 rounded-xl border border-border/40 bg-card/50"
               >
                 {/* QR Code */}
-                <div className="shrink-0 w-[120px] h-[120px] rounded-lg overflow-hidden bg-background border border-border/30 p-1.5">
+                <div className="shrink-0 w-[160px] h-[160px] rounded-lg overflow-hidden bg-background border border-border/30 p-2">
                   <img
                     src={crypto.qr}
                     alt={`${crypto.name} QR code`}
