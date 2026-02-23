@@ -117,38 +117,75 @@ export default function BulkPinPage() {
         setCatalog(allTypes);
         addLog(`✓ Loaded ${allTypes.length} schema.org types from vocabulary.`);
 
-        addLog("Checking for previously pinned schemas...");
+        addLog("Checking for previously pinned schemas (Oracle + Certificates)...");
+        
+        // Check Oracle entries for previously pinned types
+        const { data: oracleEntries } = await supabase
+          .from("uor_oracle_entries")
+          .select("object_label, derivation_id, uor_cid, pinata_cid, storacha_cid, gateway_url, operation, created_at")
+          .in("operation", ["sobridge-pin", "sobridge-canonicalize"])
+          .not("object_label", "is", null);
+
+        const oracleMap = new Map<string, typeof oracleEntries extends (infer T)[] | null ? T : never>();
+        if (oracleEntries && oracleEntries.length > 0) {
+          for (const e of oracleEntries) {
+            if (e.object_label) oracleMap.set(e.object_label, e);
+          }
+        }
+
+        // Also check certificates as fallback
         const { data: certs } = await supabase
           .from("uor_certificates")
           .select("certificate_id, certifies_iri, derivation_id, issued_at")
           .like("certifies_iri", "https://uor.foundation/sobridge/%");
         
+        const certMap = new Map<string, typeof certs extends (infer T)[] | null ? T : never>();
         if (certs && certs.length > 0) {
-          const certMap = new Map<string, typeof certs[0]>();
           for (const c of certs) {
             const typeName = c.certifies_iri.replace("https://uor.foundation/sobridge/", "");
             certMap.set(typeName, c);
           }
-          setCatalog(prev => prev.map(t => {
-            const cert = certMap.get(t.name);
-            if (cert) {
-              return {
-                ...t,
-                pinStatus: "pinned" as PinStatus,
-                existingCert: {
-                  certificateId: cert.certificate_id,
-                  derivationId: cert.derivation_id ?? "",
-                  certifiesIri: cert.certifies_iri,
-                  issuedAt: cert.issued_at,
-                },
-              };
-            }
-            return t;
-          }));
-          addLog(`✓ Found ${certMap.size} previously pinned schemas with certificates.`);
-        } else {
-          addLog("No previously pinned schemas found in certificate store.");
         }
+
+        setCatalog(prev => prev.map(t => {
+          const oracleEntry = oracleMap.get(t.name);
+          const cert = certMap.get(t.name);
+          if (oracleEntry || cert) {
+            return {
+              ...t,
+              pinStatus: "pinned" as PinStatus,
+              existingCert: cert ? {
+                certificateId: cert.certificate_id,
+                derivationId: cert.derivation_id ?? "",
+                certifiesIri: cert.certifies_iri,
+                issuedAt: cert.issued_at,
+              } : oracleEntry ? {
+                certificateId: `oracle:${oracleEntry.operation}`,
+                derivationId: oracleEntry.derivation_id ?? "",
+                certifiesIri: `https://uor.foundation/sobridge/${t.name}`,
+                issuedAt: oracleEntry.created_at,
+              } : undefined,
+              result: oracleEntry ? {
+                type: t.name,
+                cid: oracleEntry.uor_cid ?? "",
+                derivationId: oracleEntry.derivation_id ?? "",
+                certificateId: "",
+                pinataCid: oracleEntry.pinata_cid ?? null,
+                storachaCid: oracleEntry.storacha_cid ?? null,
+                gatewayUrl: oracleEntry.gateway_url ?? null,
+                quantumLevel: 0,
+                success: true,
+              } : t.result,
+            };
+          }
+          return t;
+        }));
+
+        const totalFound = oracleMap.size + certMap.size;
+        addLog(totalFound > 0
+          ? `✓ Found ${totalFound} previously pinned schemas (${oracleMap.size} from Oracle, ${certMap.size} from certificates).`
+          : "No previously pinned schemas found."
+        );
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         setLoadError(msg);
@@ -408,7 +445,7 @@ export default function BulkPinPage() {
   }, [catalog]);
 
   // ── Stats ───────────────────────────────────────────────────────────────
-  const alreadyPinnedCount = catalog.filter(t => t.existingCert).length;
+  const alreadyPinnedCount = catalog.filter(t => t.existingCert || t.pinStatus === "pinned").length;
   const pinnedCount = catalog.filter(t => t.pinStatus === "pinned").length;
   const failedCount = catalog.filter(t => t.pinStatus === "failed").length;
   const pinningCount = catalog.filter(t => t.pinStatus === "pinning").length;

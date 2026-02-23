@@ -7664,7 +7664,7 @@ async function storeToIPFSDualCid(obj: Record<string, unknown>, identity: Sobrid
     operation: 'sobridge-pin',
     object_type: String(obj['@type'] ?? 'sobridge:SchemaOrgType'),
     object_label: String(obj['rdfs:label'] ?? obj['@type'] ?? 'unknown'),
-    derivation_id: identity.derivationId,
+    derivation_id: `urn:uor:derivation:sha256:${identity.sha256}`,
     uor_cid: identity.cid,
     pinata_cid: pinataCid,
     storacha_cid: result.storachaCid,
@@ -7684,6 +7684,40 @@ async function storeToIPFSDualCid(obj: Record<string, unknown>, identity: Sobrid
       has_storacha: !!result.storachaCid,
     },
   });
+
+  // ── Also write a certificate for provenance ──
+  const certId = `urn:uor:cert:sha256:${identity.sha256.slice(0, 16)}`;
+  const certIri = `https://uor.foundation/sobridge/${String(obj['rdfs:label'] ?? obj['@type'] ?? 'unknown')}`;
+  const sbUrl2 = Deno.env.get('SUPABASE_URL');
+  const sbKey2 = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY');
+  if (sbUrl2 && sbKey2) {
+    try {
+      await fetch(`${sbUrl2}/rest/v1/uor_certificates`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': sbKey2,
+          'Authorization': `Bearer ${sbKey2}`,
+          'Prefer': 'return=minimal',
+        },
+        body: JSON.stringify({
+          certificate_id: certId,
+          certifies_iri: certIri,
+          derivation_id: `urn:uor:derivation:sha256:${identity.sha256}`,
+          valid: true,
+          cert_chain: [{
+            '@type': 'cert:PinCertificate',
+            'cert:pinataCid': pinataCid,
+            'cert:storachaCid': result.storachaCid,
+            'cert:timestamp': new Date().toISOString(),
+          }],
+        }),
+      });
+      console.log(`[cert] ✓ issued ${certId} for ${certIri}`);
+    } catch (e) {
+      console.error('[cert] issue failed:', e);
+    }
+  }
 
   return result;
 }
