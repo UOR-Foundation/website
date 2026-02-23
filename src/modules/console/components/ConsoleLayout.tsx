@@ -10,8 +10,10 @@ import {
   LayoutDashboard, Globe, Shield, Cpu, Database,
   Lock, Bot, ChevronLeft, Rocket, Compass,
   Search, Plus, Circle, BarChart3, BookOpen,
+  Sun, Moon,
 } from "lucide-react";
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import { CanonicalIdBadge } from "./ConsoleUI";
 
 /* ── Navigation Items — Build · Ship · Run ────────────────────────────── */
@@ -57,6 +59,7 @@ export default function ConsoleLayout() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { theme, setTheme } = useTheme();
 
   const filteredApps = DEPLOYED_APPS.filter((app) =>
     app.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -235,6 +238,17 @@ export default function ConsoleLayout() {
         <header className="flex h-14 items-center justify-between border-b border-border/50 px-6">
           <div />
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+              title="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Moon className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
             <code className="text-xs text-muted-foreground/70 font-mono">
               fd00:0075:6f72:a1b2:c3d4::1
             </code>
