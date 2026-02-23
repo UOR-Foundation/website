@@ -73,6 +73,17 @@ export type {
   ConduitConfig, TunnelInitMessage, TunnelReadyMessage, KyberKeypair,
 } from "./trust";
 
+// ── Mesh — BGP Orbit Routing & Node Orchestrator (Phase 4-C) ────────────────
+export {
+  canonicalIdToOrbitPrefix, canonicalIdToBgpCommunity,
+  bgpCommunityToOrbitPrefix, buildRouteAnnouncements,
+  ANYCAST_RESOLVER, ANYCAST_DOH, ANYCAST_DHT_BOOTSTRAP,
+  UnsNode,
+} from "./mesh";
+export type {
+  OrbitRouteAnnouncement, UnsNodeConfig, ServiceStatus, HealthResponse,
+} from "./mesh";
+
 // ── Types (re-export all for consumer modules) ──────────────────────────────
 export type {
   UnsRecordType,
