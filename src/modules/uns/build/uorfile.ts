@@ -47,6 +47,7 @@ export type UorfileInstruction =
   | "USER"        // Run-as user
   | "STOPSIGNAL"  // Stop signal
   | "SHELL"       // Shell form
+  | "MAINTAINER"  // Deprecated but supported for backward compat
   // UOR extensions
   | "CANON"       // Declare canonical identity constraint
   | "TRUST"       // Require trust certificate
@@ -84,6 +85,8 @@ export interface UorfileBuildSpec {
   trustRequirements: string[];
   /** UOR shield level. */
   shieldLevel: "standard" | "strict" | "paranoid";
+  /** Maintainer (deprecated Docker directive, mapped to label). */
+  maintainer: string;
 }
 
 /** Base image reference — supports Docker, UOR, and scratch. */
@@ -155,7 +158,7 @@ export interface UorImageLayer {
 const VALID_INSTRUCTIONS = new Set<string>([
   "FROM", "COPY", "ADD", "RUN", "ENV", "ARG", "EXPOSE", "VOLUME",
   "ENTRYPOINT", "CMD", "HEALTHCHECK", "LABEL", "WORKDIR", "USER",
-  "STOPSIGNAL", "SHELL", "CANON", "TRUST", "SHIELD",
+  "STOPSIGNAL", "SHELL", "MAINTAINER", "CANON", "TRUST", "SHIELD",
 ]);
 
 /**
@@ -243,6 +246,7 @@ function buildSpecFromDirectives(directives: UorfileDirective[]): UorfileBuildSp
     runCommands: [],
     trustRequirements: [],
     shieldLevel: "standard",
+    maintainer: "",
   };
 
   for (const d of directives) {
@@ -317,6 +321,11 @@ function buildSpecFromDirectives(directives: UorfileDirective[]): UorfileBuildSp
         if (["standard", "strict", "paranoid"].includes(d.args.trim().toLowerCase())) {
           spec.shieldLevel = d.args.trim().toLowerCase() as "standard" | "strict" | "paranoid";
         }
+        break;
+      case "MAINTAINER":
+        spec.maintainer = d.args.trim();
+        // Docker convention: also set as label for OCI compatibility
+        spec.labels["maintainer"] = d.args.trim();
         break;
     }
   }
@@ -503,6 +512,10 @@ export function serializeUorfile(spec: UorfileBuildSpec): string {
     `FROM ${spec.from.type === "docker" ? "docker://" : spec.from.type === "uor" ? "uor://" : ""}${spec.from.reference}:${spec.from.tag}`,
     "",
   ];
+
+  if (spec.maintainer) {
+    lines.push(`MAINTAINER ${spec.maintainer}`);
+  }
 
   if (spec.workdir !== "/app") {
     lines.push(`WORKDIR ${spec.workdir}`);
