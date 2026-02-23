@@ -157,6 +157,14 @@ export type {
   WitnessHandler,
 } from "./runtime-witness";
 
+// ── Discovery Engine (P9 — observer theory & game-resistant reputation) ─────
+export { DiscoveryEngine } from "./discovery";
+export type {
+  AppObserverProfile,
+  ObserverZoneType,
+  NetworkSummary,
+} from "./discovery";
+
 export type {
   AppCliResult,
   DeployOptions,
