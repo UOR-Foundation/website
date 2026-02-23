@@ -85,6 +85,7 @@ const DirectoryPage = lazy(() => import("@/modules/developers/pages/DirectoryPag
 const CartridgePage = lazy(() => import("@/modules/qr-cartridge/pages/CartridgePage"));
 const YourSpacePage = lazy(() => import("@/modules/your-space/pages/YourSpacePage"));
 const SandboxPage = lazy(() => import("@/modules/projects/pages/SandboxPage"));
+const ClaimIdentityPage = lazy(() => import("@/modules/uor-identity/pages/ClaimIdentityPage"));
 
 const queryClient = new QueryClient();
 
@@ -183,6 +184,7 @@ const App = () => {
             <Route path="/cartridge" element={<CartridgePage />} />
             <Route path="/your-space" element={<YourSpacePage />} />
             <Route path="/sandbox" element={<SandboxPage />} />
+            <Route path="/claim-identity" element={<ClaimIdentityPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

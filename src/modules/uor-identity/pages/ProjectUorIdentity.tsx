@@ -114,7 +114,7 @@ const ProjectUorIdentity = () => (
               Your identity starts here. Claim it once — it's yours forever.
             </p>
             <Link
-              to="/your-space"
+              to="/claim-identity"
               className="btn-primary inline-flex items-center gap-2 text-base"
             >
               Claim UOR Identity
