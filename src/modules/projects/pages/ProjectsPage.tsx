@@ -9,6 +9,7 @@ import projectPrismImg from "@/assets/project-prism.png";
 import projectUorMcpImg from "@/assets/project-uor-mcp.jpg";
 import projectUnsImg from "@/assets/project-uns.jpg";
 import projectQrCartridgeImg from "@/assets/project-qr-cartridge.jpg";
+import projectHologramSdkImg from "@/assets/project-hologram-sdk.jpg";
 import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
 import { DISCORD_URL } from "@/data/external-links";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,7 @@ const imageMap: Record<string, string> = {
   uorMcp: projectUorMcpImg,
   uns: projectUnsImg,
   qrCartridge: projectQrCartridgeImg,
+  hologramSdk: projectHologramSdkImg,
 };
 
 type Project = ProjectData & { image?: string };
