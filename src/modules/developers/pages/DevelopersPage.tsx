@@ -71,7 +71,7 @@ const DevelopersPage = () => (
             </SectionCard>
 
             <SectionCard title="Platform Services" viewAll={{ label: "View all services", href: "/developers/directory" }}>
-              <NavRow title="Name Service (DNS)" href="/developers/dns" icon={Globe} />
+              <NavRow title="UNS (Name Service)" href="/developers/dns" icon={Globe} />
               <NavRow title="Compute" href="/developers/compute" icon={Cpu} />
               <NavRow title="Object Store" href="/developers/store" icon={Database} />
               <NavRow title="KV Store" href="/developers/kv" icon={Key} />

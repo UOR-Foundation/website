@@ -20,17 +20,17 @@ export interface DocSidebarSection {
 export const docSidebars: Record<string, DocSidebarSection> = {
   dns: {
     serviceId: "dns",
-    title: "Name Service",
+    title: "UNS (Name Service)",
     icon: "Globe",
     items: [
       { label: "Overview", href: "/developers/dns" },
+      { label: "The Problem", href: "/developers/dns#problem" },
+      { label: "What UNS Does", href: "/developers/dns#what-uns-does" },
+      { label: "How It Works", href: "/developers/dns#how-it-works" },
+      { label: "Platform Services", href: "/developers/dns#services" },
+      { label: "For AI Agents", href: "/developers/dns#agents" },
       { label: "Get Started", href: "/developers/dns#get-started" },
-      { label: "Concepts", href: "/developers/dns#concepts" },
-      { label: "Name Records", href: "/developers/dns#records" },
-      { label: "Resolution", href: "/developers/dns#resolution" },
-      { label: "Verification", href: "/developers/dns#verification" },
       { label: "API Reference", href: "/api" },
-      { label: "Changelog", href: "/developers/dns#changelog" },
     ],
   },
   compute: {
