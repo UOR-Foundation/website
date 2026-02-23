@@ -14,7 +14,7 @@ const ProjectUorIdentity = () => {
     name="UOR Identity"
     slug="uor-identity"
     category="Core Infrastructure"
-    tagline="The average person manages over 100 online accounts with dozens of forgotten passwords. Each one is a separate copy of you — owned by someone else, sold without your consent, and breached without your knowledge. UOR Identity replaces all of them with one permanent, private identity that you control."
+    tagline="You already have an identity. It's just scattered across multiple accounts — each one owned by someone else, sold without your consent, and exposed without your knowledge. UOR Identity gives you what was always yours: one permanent, private identity that no one can take, copy, or sell."
     heroImage={heroImg}
     repoUrl="https://github.com/UOR-Foundation"
     agentInstructions={[
