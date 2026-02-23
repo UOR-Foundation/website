@@ -6,7 +6,22 @@
  * re-exported here to enforce module encapsulation.
  */
 
-// Types (re-export all for consumer modules)
+// ── Core Identity Engine (Phase 0-A) ───────────────────────────────────────
+export {
+  // Ring R_8
+  neg, bnot, succ, pred, verifyCriticalIdentity,
+  // Address model
+  formatIpv6, ipv6ToContentBytes, verifyIpv6Routing, encodeGlyph,
+  computeCid, sha256, bytesToHex, buildIdentity,
+  // Canonicalization
+  canonicalizeToNQuads,
+  // Identity engine
+  singleProofHash, verifyCanonical,
+} from "./core";
+
+export type { UorCanonicalIdentity } from "./core";
+
+// ── Types (re-export all for consumer modules) ──────────────────────────────
 export type {
   UnsRecordType,
   UnsRecord,
