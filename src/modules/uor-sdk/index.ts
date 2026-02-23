@@ -67,3 +67,19 @@ export {
   computeModuleIdentity,
   canonicalJsonLd,
 } from "./canonical";
+
+// ── Monetization (payment-provider agnostic) ────────────────────────────────
+export { MonetizationEngine, createPaymentGateMiddleware } from "./monetization";
+export type {
+  MonetizationConfig,
+  PaymentProof,
+  PaymentRecord,
+  AccessCertificate,
+  DeveloperBalance,
+  AccessCheckResult,
+  BillingModel,
+  BillingInterval,
+  Currency,
+  RevenueSplit,
+} from "./monetization-types";
+export { DEFAULT_REVENUE_SPLIT } from "./monetization-types";
