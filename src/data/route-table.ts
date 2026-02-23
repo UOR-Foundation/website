@@ -29,4 +29,5 @@ export const routeTable = [
   { path: "/sessions", label: "State Explorer" },
   { path: "/uns", label: "UoR Name Service" },
   { path: "/developers", label: "Developers" },
+  { path: "/cartridge", label: "QR Cartridge" },
 ];
