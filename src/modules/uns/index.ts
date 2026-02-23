@@ -53,7 +53,10 @@ export type {
   ComputeFunction, ComputationTrace, ExecutionResult,
 } from "./compute";
 
-// ── Types (re-export all for consumer modules) ──────────────────────────────
+// ── Store — Content-Addressed Object Storage (Phase 3-B) ────────────────────
+export { UnsObjectStore } from "./store";
+export type { StoredObject } from "./store";
+
 export type {
   UnsRecordType,
   UnsRecord,
