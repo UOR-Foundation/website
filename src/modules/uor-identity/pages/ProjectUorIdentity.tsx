@@ -1,8 +1,15 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import ProjectDetailLayout from "@/modules/projects/components/ProjectDetailLayout";
 import heroImg from "@/assets/project-uor-identity.jpg";
+import ClaimIdentityDialog from "@/modules/uor-identity/components/ClaimIdentityDialog";
 
-const ProjectUorIdentity = () => (
+const ProjectUorIdentity = () => {
+  const [claimOpen, setClaimOpen] = useState(false);
+
+  return (
+  <>
+  <ClaimIdentityDialog open={claimOpen} onOpenChange={setClaimOpen} />
   <ProjectDetailLayout
     name="UOR Identity"
     slug="uor-identity"
@@ -113,12 +120,12 @@ const ProjectUorIdentity = () => (
             <p>
               Your identity starts here. Claim it once — it's yours forever.
             </p>
-            <Link
-              to="/claim-identity"
+            <button
+              onClick={() => setClaimOpen(true)}
               className="btn-primary inline-flex items-center gap-2 text-base"
             >
               Claim UOR Identity
-            </Link>
+            </button>
           </div>
         ),
       },
@@ -139,6 +146,8 @@ const ProjectUorIdentity = () => (
       },
     ]}
   />
-);
+  </>
+  );
+};
 
 export default ProjectUorIdentity;
