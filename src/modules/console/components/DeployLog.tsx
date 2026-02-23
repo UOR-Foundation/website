@@ -53,15 +53,15 @@ export default function DeployLog({ logs, visible, onClose }: DeployLogProps) {
     setTimeout(() => setCopied(false), 1500);
   }, [logs]);
 
-  if (!visible || logs.length === 0) return null;
+  if (!visible && logs.length === 0) return null;
 
   return (
     <div className="rounded-2xl border border-border/40 bg-card/50 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/30 bg-muted/20">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Terminal className="h-4 w-4 text-primary" />
-          Deploy Log
+          Activity Log
           <span className="text-xs text-muted-foreground font-normal ml-1">
             ({logs.length} {logs.length === 1 ? "entry" : "entries"})
           </span>
