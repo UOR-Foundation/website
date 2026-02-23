@@ -64,6 +64,10 @@ export interface ResolutionResult {
   "proof:coherenceProof": CoherenceProof;
   "uns:resolvedAt": string;
   "uns:resolverCanonicalId": string;
+  /** P22: Epistemic grade — always 'A' for ring-arithmetic resolution. */
+  epistemic_grade: "A";
+  epistemic_grade_label: string;
+  "derivation:derivationId": string;
 }
 
 /** Verification result for a single record. */
@@ -237,6 +241,13 @@ export class UnsResolver {
     // Generate coherence proof
     const proof = await generateCoherenceProof(record);
 
+    // P22: Derive Grade A identity for the resolution operation
+    const resolutionIdentity = await singleProofHash({
+      "@type": "derivation:Resolution",
+      "uns:name": record["uns:name"],
+      "u:canonicalId": record["uns:target"]["u:canonicalId"],
+    });
+
     return {
       "@context": "https://uor.foundation/contexts/uns-v1.jsonld",
       "@type": "uns:ResolutionResult",
@@ -248,6 +259,9 @@ export class UnsResolver {
       "proof:coherenceProof": proof,
       "uns:resolvedAt": new Date().toISOString(),
       "uns:resolverCanonicalId": this.resolverCanonicalId,
+      epistemic_grade: "A",
+      epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+      "derivation:derivationId": resolutionIdentity["u:canonicalId"],
     };
   }
 

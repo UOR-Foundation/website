@@ -44,6 +44,10 @@ export interface ExecutionResult {
   trace: ComputationTrace & { "cert:signature": SignatureBlock };
   /** Error message if execution failed. */
   error?: string;
+  /** P22: Epistemic grade — 'A' for signed traced computations. */
+  epistemic_grade: "A";
+  epistemic_grade_label: string;
+  "derivation:derivationId": string;
 }
 
 // ── Sandbox Execution ───────────────────────────────────────────────────────
@@ -168,15 +172,21 @@ export async function invokeFunction(
   // Sign trace with executor's Dilithium-3 key
   const signedTrace = await signRecord(trace, executorKeypair);
 
-  const result: ExecutionResult = {
+  // P22: Derive Grade A identity from the signed trace
+  const traceIdentity = await singleProofHash(trace);
+
+  const executionResult: ExecutionResult = {
     output,
     outputCanonicalId,
     trace: signedTrace,
+    epistemic_grade: "A",
+    epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+    "derivation:derivationId": traceIdentity["u:canonicalId"],
   };
 
-  if (error) result.error = error;
+  if (error) executionResult.error = error;
 
-  return result;
+  return executionResult;
 }
 
 /**

@@ -39,6 +39,12 @@ export interface StoredObject {
   partitionDensity: number;
   /** User-defined metadata. */
   metadata: Record<string, string>;
+  /** P22: Epistemic grade — 'A' for hash-verified stored content. */
+  epistemic_grade: "A";
+  /** P22: Grade label. */
+  epistemic_grade_label: string;
+  /** P22: Derivation ID — the canonical ID IS the derivation proof. */
+  "derivation:derivationId": string;
 }
 
 /** Internal storage entry: bytes + metadata. */
@@ -102,6 +108,10 @@ export class UnsObjectStore {
       storedAt: new Date().toISOString(),
       partitionDensity: partition.density,
       metadata,
+      // P22: Hash-verified storage is Grade A — the canonical ID is the derivation proof
+      epistemic_grade: "A",
+      epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+      "derivation:derivationId": canonicalId,
     };
 
     this.objects.set(canonicalId, { bytes: new Uint8Array(bytes), meta, deleted: false });
