@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/modules/core/ui/dialog";
 import { Heart, Copy, Check, Wallet, Bitcoin } from "lucide-react";
-import { toast } from "sonner";
 import qrBitcoin from "@/assets/qr-bitcoin.png";
 import qrEthereum from "@/assets/qr-ethereum.png";
 import qrSolana from "@/assets/qr-solana.png";
@@ -40,22 +39,33 @@ function CopyAddress({ address }: { address: string }) {
   const handle = useCallback(() => {
     navigator.clipboard.writeText(address);
     setCopied(true);
-    toast.success("Address copied to clipboard!");
-    setTimeout(() => setCopied(false), 1800);
+    setTimeout(() => setCopied(false), 2200);
   }, [address]);
 
   return (
-    <button
-      onClick={handle}
-      className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
-      aria-label="Copy address"
-    >
-      {copied ? (
-        <Check size={14} className="text-primary" />
-      ) : (
-        <Copy size={14} className="text-muted-foreground" />
+    <div className="min-w-0 flex-1">
+      <div className="flex items-center gap-1.5">
+        <code className="text-sm text-muted-foreground font-mono break-all leading-relaxed select-all">
+          {address}
+        </code>
+        <button
+          onClick={handle}
+          className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
+          aria-label="Copy address"
+        >
+          {copied ? (
+            <Check size={15} className="text-primary" />
+          ) : (
+            <Copy size={15} className="text-muted-foreground" />
+          )}
+        </button>
+      </div>
+      {copied && (
+        <p className="text-xs font-medium mt-1 animate-fade-in" style={{ color: "hsl(142, 71%, 45%)" }}>
+          ✓ Address copied to clipboard
+        </p>
       )}
-    </button>
+    </div>
   );
 }
 
@@ -156,12 +166,7 @@ const DonatePopup = ({ open, onOpenChange }: DonatePopupProps) => {
                       {crypto.name}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <code className="text-[13px] text-muted-foreground font-mono break-all leading-relaxed select-all">
-                      {crypto.address}
-                    </code>
-                    <CopyAddress address={crypto.address} />
-                  </div>
+                  <CopyAddress address={crypto.address} />
                 </div>
               </div>
             ))}
