@@ -107,13 +107,25 @@ const ProjectUorIdentity = () => (
         ),
       },
       {
+        heading: "Claim UOR Identity",
+        content: (
+          <div className="space-y-6">
+            <p>
+              Your identity starts here. Claim it once — it's yours forever.
+            </p>
+            <Link
+              to="/your-space"
+              className="btn-primary inline-flex items-center gap-2 text-base"
+            >
+              Claim UOR Identity
+            </Link>
+          </div>
+        ),
+      },
+      {
         heading: "Get started",
         content: (
           <ul className="space-y-3">
-            <li className="flex items-start gap-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span>Visit <Link to="/your-space" className="text-primary hover:underline">Your Space</Link> to create your sovereign identity and manage your data dashboard.</span>
-            </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
               <span>Explore the <Link to="/projects/hologram-sdk" className="text-primary hover:underline">Hologram SDK</Link> to build applications that leverage UOR Identity.</span>
