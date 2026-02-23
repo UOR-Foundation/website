@@ -53,9 +53,9 @@ export type {
   ComputeFunction, ComputationTrace, ExecutionResult,
 } from "./compute";
 
-// ── Store — Content-Addressed Object Storage (Phase 3-B) ────────────────────
-export { UnsObjectStore } from "./store";
-export type { StoredObject } from "./store";
+// ── Store + KV + Cache (Phase 3-B, 3-C) ────────────────────────────────────
+export { UnsObjectStore, UnsKv, UnsCache } from "./store";
+export type { StoredObject, CacheStats } from "./store";
 
 export type {
   UnsRecordType,
