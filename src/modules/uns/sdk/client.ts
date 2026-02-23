@@ -497,6 +497,83 @@ export class UnsClient {
     return singleProofHash(obj);
   }
 
+  // ── P32: Intent-Based Query ─────────────────────────────────────────────
+
+  /**
+   * Intent-based object resolution via the query: namespace.
+   *
+   * Decomposes intent text into ring elements, classifies by partition,
+   * and resolves matches via DihedralFactorizationResolver with epistemic grading.
+   */
+  async query(
+    intentText: string,
+    graphUri?: string
+  ): Promise<{
+    "@type": "query:Resolution";
+    totalMatches: number;
+    epistemic_grade: string;
+    matches: Array<{
+      object: string;
+      score: number;
+      hammingDist: number;
+      grade: string;
+    }>;
+  }> {
+    // Lazy import to avoid circular dependencies
+    const { UnsQuery: QueryEngine } = await import("@/modules/query/query");
+    const { UnsGraph: GraphEngine } = await import("@/modules/kg-store/uns-graph");
+
+    const graph = new GraphEngine();
+    graph.loadOntologyGraph();
+    graph.materializeQ0();
+
+    const engine = new QueryEngine(graph);
+    const result = await engine.query(intentText, graphUri);
+
+    return {
+      "@type": "query:Resolution",
+      totalMatches: result.totalMatches,
+      epistemic_grade: result.epistemic_grade,
+      matches: result["query:matches"].map((m) => ({
+        object: m["query:object"],
+        score: m["query:score"],
+        hammingDist: m["query:hammingDist"],
+        grade: m.epistemic_grade,
+      })),
+    };
+  }
+
+  /**
+   * SPARQL query with epistemic grading (Grade B — graph-certified).
+   */
+  async sparqlQuery(
+    sparql: string,
+    graphUri?: string
+  ): Promise<{
+    "@type": "query:SparqlResult";
+    "@graph": Array<Record<string, string>>;
+    epistemic_grade: "B";
+  }> {
+    const { UnsQuery: QueryEngine } = await import("@/modules/query/query");
+    const { UnsGraph: GraphEngine } = await import("@/modules/kg-store/uns-graph");
+
+    const graph = new GraphEngine();
+    graph.loadOntologyGraph();
+    graph.materializeQ0();
+
+    const engine = new QueryEngine(graph);
+    const result = await engine.sparqlQuery(
+      sparql,
+      graphUri ?? "https://uor.foundation/graph/q0"
+    );
+
+    return {
+      "@type": "query:SparqlResult",
+      "@graph": result["@graph"],
+      epistemic_grade: "B",
+    };
+  }
+
   // ── Internal ────────────────────────────────────────────────────────────
 
   private requireIdentity(method: string): UnsKeypair {

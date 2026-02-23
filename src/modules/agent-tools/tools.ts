@@ -119,30 +119,75 @@ export async function uor_derive(input: DeriveInput): Promise<DeriveOutput> {
 }
 
 // ── Tool 2: uor_query ──────────────────────────────────────────────────────
+// P32: Intent-based object resolution via query: namespace.
+// If body.intent → UnsQuery.query() (DihedralFactorizationResolver)
+// If body.sparql → UnsQuery.sparqlQuery() (SPARQL with epistemic grading)
+
+import { UnsQuery } from "@/modules/query/query";
+import type { QueryResult as IntentQueryResult, SparqlQueryResult, QueryIntent } from "@/modules/query/query";
+import { UnsGraph } from "@/modules/kg-store/uns-graph";
 
 export interface QueryInput {
-  sparql: string;
+  /** Natural-language intent for DihedralFactorization resolution. */
+  intent?: string;
+  /** SPARQL query for structure-based resolution. */
+  sparql?: string;
   graph_uri?: string;
 }
 
 export interface QueryOutput {
-  results: SparqlResult;
+  /** Intent-based resolution result (present if intent was provided). */
+  intentResult?: IntentQueryResult;
+  /** SPARQL result (present if sparql was provided). */
+  sparqlResult?: SparqlQueryResult;
+  /** Decomposed intent (present if intent was provided). */
+  queryIntent?: QueryIntent;
+  /** Legacy SPARQL-only result for backward compat. */
+  results?: SparqlResult;
   executionTimeMs: number;
 }
 
 export async function uor_query(input: QueryInput): Promise<QueryOutput> {
   const start = performance.now();
 
-  let query = input.sparql;
-  // If graph_uri specified, add a FILTER if not already present
-  if (input.graph_uri && !query.includes("GRAPH")) {
-    // Append graph filter — handled by executor
+  // Initialize graph for intent-based queries
+  const graph = new UnsGraph();
+  graph.loadOntologyGraph();
+  graph.materializeQ0();
+  const queryEngine = new UnsQuery(graph);
+
+  let intentResult: IntentQueryResult | undefined;
+  let sparqlResult: SparqlQueryResult | undefined;
+  let queryIntent: QueryIntent | undefined;
+  let legacyResults: SparqlResult | undefined;
+
+  // Intent-based resolution (P32: DihedralFactorizationResolver)
+  if (input.intent) {
+    queryIntent = queryEngine.buildIntent(input.intent);
+    intentResult = await queryEngine.resolve(queryIntent, input.graph_uri);
   }
 
-  const results = await executeSparql(query);
+  // SPARQL-based resolution
+  if (input.sparql) {
+    // Use in-memory graph SPARQL for epistemic grading
+    sparqlResult = await queryEngine.sparqlQuery(
+      input.sparql,
+      input.graph_uri ?? "https://uor.foundation/graph/q0"
+    );
+
+    // Also execute against Supabase for backward compat
+    try {
+      legacyResults = await executeSparql(input.sparql);
+    } catch {
+      // Non-fatal — in-memory result takes precedence
+    }
+  }
 
   return {
-    results,
+    intentResult,
+    sparqlResult,
+    queryIntent,
+    results: legacyResults,
     executionTimeMs: Math.round(performance.now() - start),
   };
 }
