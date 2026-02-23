@@ -1,15 +1,18 @@
 /**
  * Your Space — "Monitor Your Activity" Section
- * 
+ *
  * Three cards: DATA, SOCIAL, RESOURCES
  * Tied to UOR framework observables, trust scores, and compute metrics.
  * Uses pure CSS visualizations (no recharts dependency).
  */
 
-import { Database, Users, HardDrive, GripVertical, Edit, Wifi, Upload, Download, Cpu, Network } from "lucide-react";
+import { Database, Users, HardDrive, Wifi, Upload, Download, Cpu, Network } from "lucide-react";
+import { SpaceCard } from "./SpaceCard";
 
 interface MonitorSectionProps {
   isDark: boolean;
+  votes: Record<string, number>;
+  onVote: (slug: string) => void;
 }
 
 const socialData = [
@@ -29,7 +32,6 @@ const resourceBreakdown = [
   { name: "Storage", pct: 18, color: "#8B5CF6" },
 ];
 
-// Simple sparkline SVG from data points
 const Sparkline = ({ data, dataKey, color, maxVal }: { data: typeof socialData; dataKey: "connections" | "followers"; color: string; maxVal: number }) => {
   const w = 200;
   const h = 80;
@@ -39,41 +41,36 @@ const Sparkline = ({ data, dataKey, color, maxVal }: { data: typeof socialData; 
     return `${x},${y}`;
   }).join(" ");
   return (
-    <polyline
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      points={points}
-    />
+    <polyline fill="none" stroke={color} strokeWidth="2" points={points} />
   );
 };
 
-export const MonitorSection = ({ isDark }: MonitorSectionProps) => {
-  const card = isDark
-    ? "bg-gradient-to-br from-gray-900/40 to-gray-800/40 border-gray-700/50"
-    : "bg-white border-gray-200 shadow-sm";
+export const MonitorSection = ({ isDark, votes, onVote }: MonitorSectionProps) => {
   const text = isDark ? "text-white" : "text-gray-900";
   const textMuted = isDark ? "text-gray-400" : "text-gray-500";
-  const iconMuted = isDark ? "text-gray-400 hover:text-white" : "text-gray-400 hover:text-gray-700";
 
   return (
     <div className="mt-8">
       <h2 className={`${text} font-mono text-xl mb-6 tracking-wide`}>Monitor Your Activity</h2>
       <div className="grid grid-cols-3 gap-6">
         {/* DATA */}
-        <div className={`${card} border rounded-lg p-6 backdrop-blur-sm h-80 flex flex-col`}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex items-center gap-2">
-              <Database className={text} size={16} />
-              <h3 className={`${text} font-mono text-sm tracking-wide`}>DATA</h3>
+        <SpaceCard
+          title="Data"
+          icon={<Database className={text} size={16} />}
+          isDark={isDark}
+          moduleSlug="observable"
+          uorDescription="Live data flow metrics are UOR observables — each measurement is content-addressed and verifiable."
+          expandedContent={
+            <div className="space-y-3">
+              <h4 className={`${text} font-mono text-sm font-medium`}>Data Flow Details</h4>
+              <p className={`${textMuted} text-xs font-mono leading-relaxed`}>
+                Every data stream in your space is tracked as a UOR observable. You can see exactly which apps are reading or writing your data, how much is flowing, and verify that every access has a valid consent record.
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <GripVertical size={14} className={`${iconMuted} cursor-move transition-colors`} />
-              <Edit size={14} className={`${iconMuted} cursor-pointer transition-colors`} />
-            </div>
-          </div>
-          <div className="flex-1 flex">
-            {/* Data visualization */}
+          }
+          className="h-80"
+        >
+          <div className="flex-1 flex h-full">
             <div className="flex-1 relative overflow-hidden rounded-lg flex items-center justify-center">
               <div
                 className="absolute inset-0 opacity-60"
@@ -92,7 +89,6 @@ export const MonitorSection = ({ isDark }: MonitorSectionProps) => {
                 <span className={`${textMuted} text-xs font-mono`}>LIVE FLOW</span>
               </div>
             </div>
-            {/* Metrics */}
             <div className={`w-48 flex flex-col justify-center space-y-6 pl-4 border-l ${isDark ? "border-gray-700/30" : "border-gray-200"}`}>
               {[
                 { icon: Wifi, label: "APP CONNECTIONS", value: "12", color: "text-blue-400" },
@@ -109,21 +105,21 @@ export const MonitorSection = ({ isDark }: MonitorSectionProps) => {
               ))}
             </div>
           </div>
-        </div>
+        </SpaceCard>
 
-        {/* SOCIAL — CSS sparkline chart */}
-        <div className={`${card} border rounded-lg p-6 backdrop-blur-sm h-80 flex flex-col`}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex items-center gap-2">
-              <Users className={text} size={16} />
-              <h3 className={`${text} font-mono text-sm tracking-wide`}>SOCIAL</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <GripVertical size={14} className={`${iconMuted} cursor-move transition-colors`} />
-              <Edit size={14} className={`${iconMuted} cursor-pointer transition-colors`} />
-            </div>
-          </div>
-          <div className="flex-1 flex gap-4">
+        {/* SOCIAL */}
+        <SpaceCard
+          title="Social"
+          icon={<Users className={text} size={16} />}
+          isDark={isDark}
+          status="coming-soon"
+          moduleSlug="trust"
+          uorDescription="Social connections will be trust-scored through verified UOR interactions — not follower counts."
+          votes={votes["trust"] || 0}
+          onVote={() => onVote("trust")}
+          className="h-80"
+        >
+          <div className="flex-1 flex gap-4 h-full">
             <div className="flex-1 min-h-0 flex flex-col">
               <svg viewBox="0 0 200 80" className="w-full flex-1" preserveAspectRatio="none">
                 <Sparkline data={socialData} dataKey="connections" color="#3B82F6" maxVal={500} />
@@ -154,23 +150,27 @@ export const MonitorSection = ({ isDark }: MonitorSectionProps) => {
               ))}
             </div>
           </div>
-        </div>
+        </SpaceCard>
 
-        {/* RESOURCES — CSS donut */}
-        <div className={`${card} border rounded-lg p-6 backdrop-blur-sm h-80 flex flex-col`}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex items-center gap-2">
-              <HardDrive className={text} size={16} />
-              <h3 className={`${text} font-mono text-sm tracking-wide`}>RESOURCES</h3>
+        {/* RESOURCES */}
+        <SpaceCard
+          title="Resources"
+          icon={<HardDrive className={text} size={16} />}
+          isDark={isDark}
+          moduleSlug="compute"
+          uorDescription="Compute, bandwidth, and storage consumption — tracked as UOR observables with verifiable metrics."
+          expandedContent={
+            <div className="space-y-3">
+              <h4 className={`${text} font-mono text-sm font-medium`}>Resource Allocation</h4>
+              <p className={`${textMuted} text-xs font-mono leading-relaxed`}>
+                Every compute cycle, byte of storage, and bandwidth allocation is a measured UOR observable. This means resource consumption is verifiable and auditable — you can prove exactly what you used and what you were charged for.
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <GripVertical size={14} className={`${iconMuted} cursor-move transition-colors`} />
-              <Edit size={14} className={`${iconMuted} cursor-pointer transition-colors`} />
-            </div>
-          </div>
-          <div className="flex-1 flex gap-4">
+          }
+          className="h-80"
+        >
+          <div className="flex-1 flex gap-4 h-full">
             <div className="w-48 flex flex-col items-center justify-center">
-              {/* CSS Donut chart */}
               <div className="relative w-28 h-28">
                 <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                   {(() => {
@@ -236,7 +236,7 @@ export const MonitorSection = ({ isDark }: MonitorSectionProps) => {
               </div>
             </div>
           </div>
-        </div>
+        </SpaceCard>
       </div>
     </div>
   );

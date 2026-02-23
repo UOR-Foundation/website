@@ -10,7 +10,7 @@
  * Page-scoped dark/light mode — does not affect the rest of the site.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Moon, Sun } from "lucide-react";
 import { SpaceHeader } from "../components/SpaceHeader";
 import { OwnSection } from "../components/OwnSection";
@@ -18,9 +18,28 @@ import { MonitorSection } from "../components/MonitorSection";
 import { ControlSection } from "../components/ControlSection";
 import { SpaceBottomBar } from "../components/SpaceBottomBar";
 
+const VOTES_KEY = "uor-space-module-votes";
+
+const loadVotes = (): Record<string, number> => {
+  try {
+    return JSON.parse(localStorage.getItem(VOTES_KEY) || "{}");
+  } catch {
+    return {};
+  }
+};
+
 const YourSpacePage = () => {
   const [isDark, setIsDark] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [votes, setVotes] = useState<Record<string, number>>(loadVotes);
+
+  const handleVote = useCallback((slug: string) => {
+    setVotes(prev => {
+      const next = { ...prev, [slug]: (prev[slug] || 0) + 1 };
+      localStorage.setItem(VOTES_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
   // Default identity — in production this comes from UniversalIdentityManager.createIdentity()
   const userName = "Alex";
@@ -45,9 +64,9 @@ const YourSpacePage = () => {
       {/* Main Content */}
       <div className="flex-1 p-4 pt-56 pb-24">
         <div className="space-y-4 max-w-[1400px] mx-auto">
-          <OwnSection isDark={isDark} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-          <MonitorSection isDark={isDark} />
-          <ControlSection isDark={isDark} />
+          <OwnSection isDark={isDark} searchQuery={searchQuery} setSearchQuery={setSearchQuery} votes={votes} onVote={handleVote} />
+          <MonitorSection isDark={isDark} votes={votes} onVote={handleVote} />
+          <ControlSection isDark={isDark} votes={votes} onVote={handleVote} />
         </div>
       </div>
 
