@@ -225,7 +225,7 @@ function ConsoleLayoutInner() {
                 <span>Documentation</span>
               </NavLink>
               <NavLink
-                to="/your-space"
+                to="/console/your-space"
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200"
               >
                 <User className="h-4 w-4 shrink-0" />
