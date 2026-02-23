@@ -30,6 +30,7 @@ export default function DeployResultCard({ result, onDismiss }: DeployResultCard
   const appName = result.import.manifest["app:name"];
   const version = result.import.manifest["app:version"];
   const canonicalId = result.build.image.canonicalId;
+  const sourceUrl = result.instance?.sourceUrl ?? result.import.manifest["app:sourceUrl"] as string ?? "";
   const snapshotId = result.ship?.snapshot?.["u:canonicalId"] ?? canonicalId;
   const ipv6 = result.instance?.ipv6 ?? "fd00:75:6f72::1";
   const wasmStatus = result.instance?.status ?? "running";
@@ -142,7 +143,13 @@ export default function DeployResultCard({ result, onDismiss }: DeployResultCard
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-3 pt-1">
           <button
-            onClick={() => navigate(`/console/run/${encodeURIComponent(canonicalId)}`)}
+            onClick={() => {
+              // Store source URL so the runner can load the real app
+              if (sourceUrl) {
+                sessionStorage.setItem(`uor:sourceUrl:${canonicalId}`, sourceUrl);
+              }
+              navigate(`/console/run/${encodeURIComponent(canonicalId)}`);
+            }}
             className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors shadow-md shadow-primary/20"
           >
             <ExternalLink className="h-4 w-4" />

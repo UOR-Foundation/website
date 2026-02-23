@@ -36,6 +36,8 @@ import type { ExecutionTrace } from "../runtime-witness";
 export interface WasmRuntimeConfig {
   /** Canonical ID or tag of the image to run. */
   imageRef: string;
+  /** Original source URL to load in the sandbox iframe. */
+  sourceUrl?: string;
   /** Container element to mount the iframe into (CSS selector or Element). */
   mountTarget?: string | HTMLElement;
   /** Allowed network origins for the sandbox. */
@@ -52,6 +54,8 @@ export interface WasmAppInstance {
   instanceId: string;
   /** Image canonical ID being run. */
   imageCanonicalId: string;
+  /** Original source URL for the app. */
+  sourceUrl: string;
   /** IPv6 content address. */
   ipv6: string;
   /** Live URL for this instance. */
@@ -228,12 +232,22 @@ export async function runApp(
   ];
   const sandboxHtml = buildSandboxHtml(entryHtml, image.canonicalId, allowedOrigins);
 
-  // 5. Create iframe (if mount target provided)
+  // 5. Resolve the source URL for the iframe
+  const resolvedSourceUrl = config.sourceUrl || "";
+
+  // 6. Create iframe (if mount target provided)
   let frame: HTMLIFrameElement | null = null;
   if (typeof document !== "undefined" && config.mountTarget) {
     frame = document.createElement("iframe");
-    frame.srcdoc = sandboxHtml;
-    frame.sandbox.add("allow-scripts", "allow-same-origin", "allow-forms");
+
+    // If we have a real source URL, load it directly; otherwise use srcdoc
+    if (resolvedSourceUrl && resolvedSourceUrl.startsWith("http")) {
+      frame.src = resolvedSourceUrl;
+    } else {
+      frame.srcdoc = sandboxHtml;
+    }
+
+    frame.sandbox.add("allow-scripts", "allow-same-origin", "allow-forms", "allow-popups", "allow-modals");
     frame.style.width = "100%";
     frame.style.height = "100%";
     frame.style.border = "none";
@@ -260,6 +274,7 @@ export async function runApp(
   const instance: WasmAppInstance = {
     instanceId,
     imageCanonicalId: image.canonicalId,
+    sourceUrl: resolvedSourceUrl,
     ipv6: image.ipv6,
     liveUrl: `https://app.uor.app/${canonicalShort}`,
     status: "running",

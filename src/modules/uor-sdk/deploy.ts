@@ -149,6 +149,7 @@ export async function deployApp(opts: DeployOptions): Promise<DeployResult> {
 
   const instance = await runApp({
     imageRef: buildResult.image.canonicalId,
+    sourceUrl: importResult.manifest["app:sourceUrl"] as string,
     mountTarget: opts.mountTarget,
     tracing: true,
   });
