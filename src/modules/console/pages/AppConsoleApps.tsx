@@ -100,31 +100,34 @@ export default function AppConsoleApps() {
 
             {/* Source type pills */}
             <div className="flex items-center gap-2">
-              {SOURCES.map((s) => (
-                <span
-                  key={s.label}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1 text-xs text-muted-foreground"
-                >
-                  <s.icon className="h-3 w-3" />
-                  {s.label}
-                </span>
-              ))}
-              <button
-                onClick={() => {
-                  const input = document.createElement("input");
-                  input.type = "file";
-                  input.accept = ".zip,.tar.gz,.tgz";
-                  input.onchange = (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0];
-                    if (file) setImportUrl(`zip://${file.name}`);
-                  };
-                  input.click();
-                }}
-                className="inline-flex items-center justify-center h-6 w-6 rounded-full border border-dashed border-border/60 text-muted-foreground/60 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all"
-                title="Upload ZIP file"
-              >
-                <Plus className="h-3 w-3" />
-              </button>
+              {SOURCES.map((s) => {
+                const isZip = s.label === "ZIP Upload";
+                const pill = (
+                  <span
+                    key={s.label}
+                    onClick={isZip ? () => {
+                      const input = document.createElement("input");
+                      input.type = "file";
+                      input.accept = ".zip,.tar.gz,.tgz";
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        if (file) setImportUrl(`zip://${file.name}`);
+                      };
+                      input.click();
+                    } : undefined}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                      isZip
+                        ? "bg-primary/10 text-primary border border-primary/30 cursor-pointer hover:bg-primary/20 hover:border-primary/50"
+                        : "bg-muted/50 text-muted-foreground"
+                    }`}
+                  >
+                    <s.icon className="h-3.5 w-3.5" />
+                    {s.label}
+                    {isZip && <Upload className="h-3 w-3 ml-0.5" />}
+                  </span>
+                );
+                return pill;
+              })}
             </div>
 
             {/* Deploy input */}
