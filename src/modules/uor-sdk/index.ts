@@ -165,6 +165,15 @@ export type {
   NetworkSummary,
 } from "./discovery";
 
+// ── Morphism Router (P10 — app-to-app composition layer) ────────────────────
+export { MorphismRouter } from "./morphism-router";
+export type {
+  MorphismType,
+  MorphismInterface,
+  MorphismCall,
+  MorphismResult,
+} from "./morphism-router";
+
 export type {
   AppCliResult,
   DeployOptions,
