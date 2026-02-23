@@ -135,6 +135,19 @@ export type {
   GateResponse,
 } from "./security-gate";
 
+// ── Certified Developer-User Relationship (P6 — cert:TransformCertificate) ──
+export {
+  issueCertificate,
+  verifyCertificate,
+  revokeCertificate,
+  getCertificate,
+  exportCertificateChain,
+} from "./relationship";
+export type {
+  RelationshipCertificate,
+  CertificateVerification,
+} from "./relationship";
+
 export type {
   AppCliResult,
   DeployOptions,
