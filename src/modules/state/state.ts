@@ -21,6 +21,7 @@
 import { UORRing, fromBytes } from "@/modules/ring-core/ring";
 import { classifyByte } from "@/lib/uor-ring";
 import { supabase } from "@/integrations/supabase/client";
+import { requireAuth } from "@/lib/supabase-auth-guard";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -216,6 +217,7 @@ export function computeStateFrame(ring: UORRing, x: number): StateFrame {
 // ── Single-frame persistence (uor_state_frames) ────────────────────────────
 
 export async function persistStateFrame(frame: StateFrame): Promise<void> {
+  await requireAuth();
   const { error } = await supabase.from("uor_state_frames" as any).insert({
     value: frame.summary.value,
     quantum: frame["state:binding"]["state:quantum"],
@@ -245,6 +247,7 @@ export async function getRecentStateFrames(limit = 20): Promise<StateFrame[]> {
  * Create a new evaluation context for multi-agent coordination.
  */
 export async function createContext(quantum: number, capacity: number): Promise<EvalContext> {
+  await requireAuth();
   const context_id = `ctx:${crypto.randomUUID()}`;
   const row = { context_id, quantum, capacity, binding_count: 0 };
   const { error } = await supabase.from("uor_contexts" as any).insert(row as any);
@@ -258,6 +261,7 @@ export async function createContext(quantum: number, capacity: number): Promise<
 export async function addBinding(
   contextId: string, address: string, content: string, bindingType = "value"
 ): Promise<EvalBinding> {
+  await requireAuth();
   const { data, error } = await supabase.from("uor_bindings" as any).insert({
     context_id: contextId, address, content, binding_type: bindingType,
   } as any).select().single();
@@ -284,6 +288,7 @@ export async function captureFrame(
     bindings: bindings as unknown as Record<string, unknown>,
     binding_count: bindings.length,
   };
+  await requireAuth();
   const { error } = await supabase.from("uor_frames" as any).insert(row as any);
   if (error) throw new Error(`captureFrame failed: ${error.message}`);
   return { ...row, bindings, created_at: new Date().toISOString() };
@@ -295,6 +300,7 @@ export async function captureFrame(
 export async function recordTransition(
   fromFrame: string, toFrame: string, contextId: string, added: number, removed: number
 ): Promise<EvalTransition> {
+  await requireAuth();
   const { data, error } = await supabase.from("uor_transitions" as any).insert({
     from_frame: fromFrame, to_frame: toFrame, context_id: contextId, added, removed,
   } as any).select().single();

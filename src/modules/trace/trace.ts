@@ -11,6 +11,7 @@
 
 import { singleProofHash } from "@/lib/uor-canonical";
 import { supabase } from "@/integrations/supabase/client";
+import { requireAuth } from "@/lib/supabase-auth-guard";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -84,8 +85,9 @@ export async function recordTrace(
     "prov:wasAttributedTo": "urn:uor:agent:ring-core",
   };
 
-  // Persist
+  // Persist (requires authentication)
   try {
+    await requireAuth();
     await (supabase.from("uor_traces") as any).insert({
       trace_id: traceId,
       derivation_id: derivationId,

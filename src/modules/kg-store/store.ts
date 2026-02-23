@@ -14,6 +14,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { requireAuth } from "@/lib/supabase-auth-guard";
 import type { UORRing } from "@/modules/ring-core/ring";
 import { fromBytes } from "@/modules/ring-core/ring";
 import { contentAddress, bytesToGlyph } from "@/modules/identity";
@@ -33,6 +34,7 @@ export async function ingestDatum(
   ring: UORRing,
   value: number
 ): Promise<string> {
+  await requireAuth();
   const bytes = ring.toBytes(value);
   const iri = contentAddress(ring, value);
   const triad = computeTriad(bytes);
@@ -76,6 +78,7 @@ export async function ingestDatumBatch(
   values: number[],
   onProgress?: (done: number, total: number) => void
 ): Promise<number> {
+  await requireAuth();
   const BATCH_SIZE = 50;
   let ingested = 0;
 
@@ -123,6 +126,7 @@ export async function ingestDerivation(
   d: Derivation,
   quantum: number
 ): Promise<void> {
+  await requireAuth();
   const { error } = await supabase
     .from("uor_derivations")
     .upsert({
@@ -141,6 +145,7 @@ export async function ingestDerivation(
 // ── ingestCertificate ───────────────────────────────────────────────────────
 
 export async function ingestCertificate(cert: Certificate): Promise<void> {
+  await requireAuth();
   const { error } = await supabase
     .from("uor_certificates")
     .upsert({
@@ -158,6 +163,7 @@ export async function ingestCertificate(cert: Certificate): Promise<void> {
 // ── ingestReceipt ───────────────────────────────────────────────────────────
 
 export async function ingestReceipt(r: DerivationReceipt): Promise<void> {
+  await requireAuth();
   const { error } = await supabase
     .from("uor_receipts")
     .upsert({
@@ -183,6 +189,7 @@ export async function ingestTriples(
   doc: JsonLdDocument,
   graphIri: string = "urn:uor:default"
 ): Promise<number> {
+  await requireAuth();
   const triples: { subject: string; predicate: string; object: string; graph_iri: string }[] = [];
 
   for (const node of doc["@graph"]) {

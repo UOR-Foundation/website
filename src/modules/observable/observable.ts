@@ -11,6 +11,7 @@
 
 import { singleProofHash } from "@/lib/uor-canonical";
 import { supabase } from "@/integrations/supabase/client";
+import { requireAuth } from "@/lib/supabase-auth-guard";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -62,8 +63,9 @@ export async function recordObservable(
     timestamp,
   };
 
-  // Persist
+  // Persist (requires authentication)
   try {
+    await requireAuth();
     await (supabase.from("uor_observables") as any).insert({
       observable_iri: observableIri,
       value,
