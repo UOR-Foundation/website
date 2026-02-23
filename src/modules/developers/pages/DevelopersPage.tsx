@@ -1,30 +1,14 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { ArrowRight, Terminal, Copy, Check } from "lucide-react";
+import { ArrowRight, Terminal, Copy, Check, Rocket, Layers, BookOpen, Code, Globe, Cpu, Database, Key, ScrollText, Shield, Lock, Bot, FileJson, FlaskConical, Wrench, Newspaper } from "lucide-react";
 import { useState } from "react";
-import {
-  gettingStarted,
-  apiLayers,
-  platformCompute,
-  platformStorage,
-  platformNetworking,
-  agenticAi,
-  verificationTrust,
-  developerTools,
-  resources,
-  type ApiDirectoryCategory,
-} from "../data/api-directory";
 
-/* ── Inline copy button ──────────────────────────────────────── */
+/* ── Copy button ─────────────────────────────────────────────── */
 const CopyBtn = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
   return (
     <button
-      onClick={() => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      }}
+      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
       className="absolute top-3 right-3 p-1.5 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/40 transition-colors"
       aria-label="Copy"
     >
@@ -33,78 +17,38 @@ const CopyBtn = ({ text }: { text: string }) => {
   );
 };
 
-/* ── Link row (Cloudflare-style: simple text + arrow) ────────── */
-const LinkRow = ({ title, href }: { title: string; href: string }) => {
-  const isExternal = href.startsWith("http");
-  const Comp = isExternal ? "a" : Link;
-  const props = isExternal
-    ? { href, target: "_blank", rel: "noopener noreferrer" }
-    : { to: href };
-  return (
-    <Comp
-      {...(props as any)}
-      className="group flex items-center justify-between py-2 text-sm text-foreground/80 hover:text-primary transition-colors"
-    >
-      <span className="truncate">{title}</span>
-      <ArrowRight size={14} className="shrink-0 ml-2 text-muted-foreground/30 group-hover:text-primary transition-colors" />
-    </Comp>
-  );
-};
+/* ── Nav link row ────────────────────────────────────────────── */
+const NavRow = ({ title, href, icon: Icon }: { title: string; href: string; icon?: React.ElementType }) => (
+  <Link
+    to={href}
+    className="group flex items-center gap-2.5 py-2 text-sm text-foreground/80 hover:text-primary transition-colors"
+  >
+    {Icon && <Icon size={14} className="shrink-0 text-muted-foreground/50 group-hover:text-primary transition-colors" />}
+    <span className="truncate">{title}</span>
+    <ArrowRight size={12} className="shrink-0 ml-auto text-muted-foreground/20 group-hover:text-primary transition-colors" />
+  </Link>
+);
 
-/* ── Category card (Cloudflare-style) ────────────────────────── */
-const CategoryCard = ({
-  category,
-  viewAllLabel,
-  viewAllHref,
+/* ── Section card ────────────────────────────────────────────── */
+const SectionCard = ({
+  title,
+  children,
+  viewAll,
 }: {
-  category: ApiDirectoryCategory;
-  viewAllLabel?: string;
-  viewAllHref?: string;
+  title: string;
+  children: React.ReactNode;
+  viewAll?: { label: string; href: string };
 }) => (
   <div className="rounded-xl border border-border/40 bg-card/20 p-6 flex flex-col">
-    <h3 className="text-base font-bold text-foreground font-body mb-4">
-      {category.title}
-    </h3>
-    <div className="flex-1 space-y-0">
-      {category.entries.map((entry) => (
-        <LinkRow key={entry.id} title={entry.title} href={entry.href} />
-      ))}
-    </div>
-    {viewAllLabel && viewAllHref && (
-      <Link
-        to={viewAllHref}
-        className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
-      >
-        {viewAllLabel} <ArrowRight size={14} />
+    <h3 className="text-base font-bold text-foreground font-body mb-3">{title}</h3>
+    <div className="flex-1">{children}</div>
+    {viewAll && (
+      <Link to={viewAll.href} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+        {viewAll.label} <ArrowRight size={14} />
       </Link>
     )}
   </div>
 );
-
-/* ── Merge API layers into one summary card ──────────────────── */
-const apiHighlights: ApiDirectoryCategory = {
-  id: "api-reference",
-  title: "API Reference",
-  description: "7 live layers — 48 endpoints",
-  entries: [
-    { id: "foundation", title: "Foundation (Layer 0)", description: "", href: "/api#layer-0" },
-    { id: "identity", title: "Identity (Layer 1)", description: "", href: "/api#layer-1" },
-    { id: "structure", title: "Structure (Layer 2)", description: "", href: "/api#layer-2" },
-    { id: "verification", title: "Verification (Layer 4)", description: "", href: "/api#layer-4" },
-    { id: "persistence", title: "Persistence (Layer 6)", description: "", href: "/api#layer-6" },
-  ],
-};
-
-const platformHighlights: ApiDirectoryCategory = {
-  id: "platform",
-  title: "Platform Services",
-  description: "Compute, Storage, Networking",
-  entries: [
-    ...platformCompute.entries,
-    ...platformStorage.entries,
-    ...platformNetworking.entries,
-  ],
-};
 
 const curlCmd = `curl "https://api.uor.foundation/v1/kernel/op/verify?x=42"`;
 
@@ -112,65 +56,61 @@ const curlCmd = `curl "https://api.uor.foundation/v1/kernel/op/verify?x=42"`;
 const DevelopersPage = () => (
   <Layout>
     <div className="dark bg-section-dark text-section-dark-foreground min-h-screen">
+
       {/* ━━ Hero ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="pt-44 pb-8 md:pt-52 md:pb-12">
+      <section className="pt-44 pb-6 md:pt-52 md:pb-10">
         <div className="container max-w-6xl">
-          {/* Top nav anchors */}
           <nav className="flex items-center gap-5 text-sm mb-8">
-            <Link to="/developers/directory" className="text-foreground/70 hover:text-foreground underline underline-offset-4 decoration-border/60 transition-colors">
-              Directory
-            </Link>
-            <a href="#resources" className="text-foreground/70 hover:text-foreground underline underline-offset-4 decoration-border/60 transition-colors">
-              Resources
-            </a>
-            <Link to="/api" className="text-foreground/70 hover:text-foreground underline underline-offset-4 decoration-border/60 transition-colors">
-              API
-            </Link>
+            <Link to="/developers/directory" className="text-foreground/70 hover:text-foreground underline underline-offset-4 decoration-border/60 transition-colors">Directory</Link>
+            <Link to="/research" className="text-foreground/70 hover:text-foreground underline underline-offset-4 decoration-border/60 transition-colors">Resources</Link>
+            <Link to="/api" className="text-foreground/70 hover:text-foreground underline underline-offset-4 decoration-border/60 transition-colors">API</Link>
           </nav>
 
-          <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-foreground mb-4">
+          <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-foreground mb-3">
             UOR Developer Docs
           </h1>
-          <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl">
-            Explore guides and references to start building on UOR's content-addressed framework.
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl">
+            Guides and references for building on the UOR content-addressed framework.
           </p>
         </div>
       </section>
 
-      {/* ━━ Top card grid (Cloudflare-style) ━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="pb-14">
+      {/* ━━ Primary grid — 4 columns ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="pb-12">
         <div className="container max-w-6xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Featured / Getting Started */}
-            <CategoryCard
-              category={{
-                ...gettingStarted,
-                title: "Featured",
-              }}
-              viewAllLabel="View all docs"
-              viewAllHref="/developers/directory"
-            />
 
-            {/* API Reference summary */}
-            <CategoryCard
-              category={apiHighlights}
-              viewAllLabel="View all API layers"
-              viewAllHref="/api"
-            />
+            {/* Featured */}
+            <SectionCard title="Featured" viewAll={{ label: "View all docs", href: "/developers/directory" }}>
+              <NavRow title="Getting Started" href="/developers/getting-started" icon={Rocket} />
+              <NavRow title="What is UOR?" href="/developers/fundamentals" icon={Layers} />
+              <NavRow title="Core Concepts" href="/developers/concepts" icon={BookOpen} />
+              <NavRow title="TypeScript SDK" href="/developers/sdk" icon={Code} />
+            </SectionCard>
 
-            {/* Platform Services summary */}
-            <CategoryCard
-              category={platformHighlights}
-              viewAllLabel="View all services"
-              viewAllHref="/developers/directory"
-            />
+            {/* Platform Services */}
+            <SectionCard title="Platform Services" viewAll={{ label: "View all services", href: "/developers/directory" }}>
+              <NavRow title="Name Service (DNS)" href="/developers/dns" icon={Globe} />
+              <NavRow title="Compute" href="/developers/compute" icon={Cpu} />
+              <NavRow title="Object Store" href="/developers/store" icon={Database} />
+              <NavRow title="KV Store" href="/developers/kv" icon={Key} />
+              <NavRow title="Ledger (SQL)" href="/developers/ledger" icon={ScrollText} />
+            </SectionCard>
 
-            {/* Agentic AI */}
-            <CategoryCard
-              category={agenticAi}
-              viewAllLabel="View all AI tools"
-              viewAllHref="/developers/agents"
-            />
+            {/* Security & Trust */}
+            <SectionCard title="Security & Trust" viewAll={{ label: "View all security docs", href: "/developers/shield" }}>
+              <NavRow title="Shield (WAF)" href="/developers/shield" icon={Shield} />
+              <NavRow title="Trust & Auth" href="/developers/trust" icon={Lock} />
+              <NavRow title="Conformance Suite" href="/conformance" icon={FlaskConical} />
+              <NavRow title="System Audit" href="/audit" icon={Wrench} />
+            </SectionCard>
+
+            {/* AI & Agents */}
+            <SectionCard title="AI & Agents" viewAll={{ label: "View agent docs", href: "/developers/agents" }}>
+              <NavRow title="Agent Gateway" href="/developers/agents" icon={Bot} />
+              <NavRow title="MCP Integration" href="/standard#mcp" />
+              <NavRow title="Agent Console" href="/agent-console" />
+            </SectionCard>
           </div>
         </div>
       </section>
@@ -178,32 +118,23 @@ const DevelopersPage = () => (
       {/* ━━ Divider ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <div className="container max-w-6xl"><div className="h-px bg-border/30" /></div>
 
-      {/* ━━ Build with UOR — code snippet ━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="py-14">
+      {/* ━━ Code snippet ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="py-12">
         <div className="container max-w-6xl">
-          <h2 className="text-2xl font-display font-bold text-foreground mb-2">
-            Build with UOR
-          </h2>
-          <p className="text-sm text-muted-foreground mb-6 max-w-xl">
-            Make your first verifiable API call — no account, no API key required.
-          </p>
+          <h2 className="text-xl font-display font-bold text-foreground mb-1">Build with UOR</h2>
+          <p className="text-sm text-muted-foreground mb-5">No account, no API key — just curl.</p>
 
           <div className="relative rounded-lg border border-border/40 bg-card/10 overflow-hidden max-w-2xl">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/30 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 px-4 py-2 border-b border-border/30 text-xs text-muted-foreground">
               <Terminal size={12} className="text-primary" />
               <span className="font-mono">Try it now</span>
             </div>
             <CopyBtn text={curlCmd} />
-            <pre className="px-4 py-4 text-[13px] font-mono text-foreground/90 overflow-x-auto">
-              <code>{curlCmd}</code>
-            </pre>
+            <pre className="px-4 py-3 text-[13px] font-mono text-foreground/90 overflow-x-auto"><code>{curlCmd}</code></pre>
           </div>
-          <p className="mt-3 text-sm text-muted-foreground max-w-xl">
-            Every response includes a cryptographic receipt — proof the computation
-            is correct and tamper-evident.{" "}
-            <Link to="/api" className="text-primary hover:underline">
-              Full API reference →
-            </Link>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Every response includes a cryptographic receipt.{" "}
+            <Link to="/api" className="text-primary hover:underline">Full API reference →</Link>
           </p>
         </div>
       </section>
@@ -211,27 +142,38 @@ const DevelopersPage = () => (
       {/* ━━ Divider ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <div className="container max-w-6xl"><div className="h-px bg-border/30" /></div>
 
-      {/* ━━ Expanded sections — two-column layout ━━━━━━━━━━━━━━━ */}
-      <section className="py-14">
+      {/* ━━ Secondary grid — 3 columns ━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="py-12">
         <div className="container max-w-6xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <CategoryCard
-              category={verificationTrust}
-              viewAllLabel="View all verification tools"
-              viewAllHref="/conformance"
-            />
-            <CategoryCard
-              category={developerTools}
-              viewAllLabel="View all developer tools"
-              viewAllHref="/developers/directory"
-            />
-            <div id="resources">
-              <CategoryCard
-                category={resources}
-                viewAllLabel="View all resources"
-                viewAllHref="/research"
-              />
-            </div>
+
+            {/* API Reference */}
+            <SectionCard title="API Reference" viewAll={{ label: "Interactive API explorer", href: "/api" }}>
+              <NavRow title="Foundation (Layer 0)" href="/api#layer-0" />
+              <NavRow title="Identity (Layer 1)" href="/api#layer-1" />
+              <NavRow title="Structure (Layer 2)" href="/api#layer-2" />
+              <NavRow title="Verification (Layer 4)" href="/api#layer-4" />
+              <NavRow title="Persistence (Layer 6)" href="/api#layer-6" />
+              <NavRow title="OpenAPI 3.1 Spec" href="/openapi.json" />
+            </SectionCard>
+
+            {/* Developer Tools */}
+            <SectionCard title="Developer Tools" viewAll={{ label: "View all tools", href: "/developers/directory" }}>
+              <NavRow title="TypeScript SDK" href="/developers/sdk" icon={Code} />
+              <NavRow title="API Reference" href="/api" icon={FileJson} />
+              <NavRow title="SPARQL Editor" href="/sparql-editor" />
+              <NavRow title="Knowledge Graph" href="/knowledge-graph" />
+              <NavRow title="Ring Explorer" href="/ring-explorer" />
+              <NavRow title="Derivation Lab" href="/derivation-lab" />
+            </SectionCard>
+
+            {/* Resources */}
+            <SectionCard title="Resources" viewAll={{ label: "View all resources", href: "/research" }}>
+              <NavRow title="Atlas Embeddings" href="/research/atlas-embeddings" icon={Newspaper} />
+              <NavRow title="UOR Standard" href="/standard" />
+              <NavRow title="Semantic Web" href="/semantic-web" />
+              <NavRow title="Blog" href="/blog/uor-framework-launch" />
+            </SectionCard>
           </div>
         </div>
       </section>
@@ -239,8 +181,8 @@ const DevelopersPage = () => (
       {/* ━━ Divider ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <div className="container max-w-6xl"><div className="h-px bg-border/30" /></div>
 
-      {/* ━━ Bottom — Community & Open Source (Cloudflare-style) ━━ */}
-      <section className="py-14 pb-24">
+      {/* ━━ Footer links ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="py-12 pb-24">
         <div className="container max-w-6xl">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             <div>
@@ -259,9 +201,6 @@ const DevelopersPage = () => (
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground font-body mb-3">Get Started</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                Make your first verifiable API call in under 5 minutes.
-              </p>
               <Link
                 to="/developers/getting-started"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
