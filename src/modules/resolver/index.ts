@@ -18,3 +18,7 @@ export {
   FIDELITY_THRESHOLDS,
 } from "./correlate-engine";
 export type { CorrelateResult, SkosRelation, NearDuplicatePair } from "./correlate-engine";
+
+// P34: NL Entity Resolver via DihedralFactorizationResolver
+export { resolveEntity } from "./entity-resolver";
+export type { EntityResolution, DihedralFactor } from "./entity-resolver";
