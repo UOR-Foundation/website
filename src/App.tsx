@@ -83,6 +83,7 @@ const FundamentalsDocPage = lazy(() => import("@/modules/developers/pages/Fundam
 const DirectoryPage = lazy(() => import("@/modules/developers/pages/DirectoryPage"));
 const CartridgePage = lazy(() => import("@/modules/qr-cartridge/pages/CartridgePage"));
 const YourSpacePage = lazy(() => import("@/modules/your-space/pages/YourSpacePage"));
+const SandboxPage = lazy(() => import("@/modules/projects/pages/SandboxPage"));
 
 const queryClient = new QueryClient();
 
@@ -179,6 +180,7 @@ const App = () => {
             <Route path="/developers/sdk" element={<SdkDocPage />} />
             <Route path="/cartridge" element={<CartridgePage />} />
             <Route path="/your-space" element={<YourSpacePage />} />
+            <Route path="/sandbox" element={<SandboxPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

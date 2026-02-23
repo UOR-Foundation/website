@@ -22,7 +22,7 @@ const ProjectsShowcase = () => {
             </h2>
           </div>
           <Link
-            to="/projects"
+            to="/sandbox"
             className="group flex items-center gap-2 text-section-dark-foreground/70 hover:text-section-dark-foreground text-base font-medium transition-all duration-300 font-body"
           >
             View all projects{" "}
