@@ -10,6 +10,7 @@
 
 import { useState } from "react";
 import { Shield, User, Wallet, GripVertical, Edit, Eye, EyeOff, CornerDownLeft } from "lucide-react";
+import { IdentitySecurityRoadmap } from "./IdentitySecurityRoadmap";
 
 interface OwnSectionProps {
   isDark: boolean;
@@ -88,7 +89,7 @@ export const OwnSection = ({ isDark, searchQuery, setSearchQuery }: OwnSectionPr
           </button>
         </div>
 
-        {/* IDENTITY — UOR Universal Identity object */}
+        {/* IDENTITY — UOR Universal Identity + Security Progression */}
         <div className={`${card} border rounded-lg p-6 backdrop-blur-sm hover:border-opacity-80 transition-all duration-300 flex flex-col`}>
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-2">
@@ -100,23 +101,9 @@ export const OwnSection = ({ isDark, searchQuery, setSearchQuery }: OwnSectionPr
               <Edit size={14} className={`${iconMuted} cursor-pointer transition-colors`} />
             </div>
           </div>
-          <div className="space-y-4 flex-1">
-            {[
-              ["Type", "HUMAN"],
-              ["Location", "Denver, US"],
-              ["Privacy", "MAXIMUM"],
-              ["Mode", "Semi-Autonomous"],
-              ["Agents Deployed", "111"],
-            ].map(([label, value]) => (
-              <div key={label} className="flex items-center justify-between">
-                <span className={`${textMuted} text-sm font-mono`}>{label}</span>
-                <span className={`${text} font-mono text-sm`}>{value}</span>
-              </div>
-            ))}
+          <div className="flex-1">
+            <IdentitySecurityRoadmap isDark={isDark} />
           </div>
-          <button className={`w-full mt-6 px-4 py-3 ${btnBg} ${text} text-sm font-mono rounded border transition-all duration-200`}>
-            Manage
-          </button>
         </div>
 
         {/* ASSETS — UOR data objects, derivations, certificates */}
