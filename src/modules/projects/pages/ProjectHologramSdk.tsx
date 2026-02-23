@@ -86,7 +86,7 @@ const ProjectHologramSdk = () => (
             <ul className="space-y-3 mt-3">
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">80/20 split.</strong> 80% of subscription revenue goes to developers, 20% to the platform for hosting and payments.</span>
+                <span><strong className="text-foreground">100% dev revenue.</strong> 100% of subscription revenue goes to developers, minus any payment processing fees.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />

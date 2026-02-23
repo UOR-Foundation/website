@@ -135,13 +135,13 @@ export function RevenueCard({
   currency?: string;
 }) {
   const fmt = (v: number) => `$${v.toFixed(2)}`;
-  const splitPct = gross > 0 ? Math.round((net / gross) * 100) : 80;
+  const splitPct = gross > 0 ? Math.round((net / gross) * 100) : 100;
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
       <p className="text-xs font-medium text-muted-foreground">Revenue ({currency})</p>
       <div className="flex items-baseline gap-2">
         <span className="text-2xl font-semibold text-foreground">{fmt(net)}</span>
-        <span className="text-xs text-muted-foreground">net ({splitPct}/{100 - splitPct} split)</span>
+        <span className="text-xs text-muted-foreground">net ({splitPct}% to dev)</span>
       </div>
       <div className="grid grid-cols-3 gap-2 text-xs">
         <div>
@@ -149,12 +149,12 @@ export function RevenueCard({
           <p className="font-mono font-medium text-foreground">{fmt(gross)}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Platform Fee</p>
+          <p className="text-muted-foreground">Processing Fees</p>
           <p className="font-mono font-medium text-foreground">{fmt(platformFee)}</p>
         </div>
         <div>
           <p className="text-muted-foreground">Developer Net</p>
-          <p className="font-mono font-medium text-emerald-600 dark:text-emerald-400">{fmt(net)}</p>
+          <p className="font-mono font-medium text-primary">{fmt(net)}</p>
         </div>
       </div>
     </div>

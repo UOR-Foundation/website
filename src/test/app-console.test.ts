@@ -80,15 +80,15 @@ describe("App Console Dashboard (P13)", () => {
     expect(typeof appsModule.default).toBe("function");
   });
 
-  // Test 9: RevenueCard shows correct 80/20 split
-  it("RevenueCard exports and renders with 80/20 split values", async () => {
+  // Test 9: RevenueCard shows correct 100% split
+  it("RevenueCard exports and renders with 100% split values", async () => {
     const { RevenueCard } = await import("@/modules/console/components/ConsoleUI");
     expect(typeof RevenueCard).toBe("function");
-    // Verify it doesn't throw with standard 80/20 split values
+    // Verify it doesn't throw with standard 100/0 split values
     expect(() => RevenueCard({
       gross: 100,
-      net: 80,
-      platformFee: 20,
+      net: 100,
+      platformFee: 0,
       currency: "USD",
     })).not.toThrow();
   });

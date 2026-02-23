@@ -44,17 +44,17 @@ describe("Monetization — P7", () => {
   });
 
   // Test 2
-  it("2. processPayment() returns PaymentRecord with correct developerNet (80%)", async () => {
+  it("2. processPayment() returns PaymentRecord with correct developerNet (100%)", async () => {
     await engine.configureMonetization(CONFIG);
     const record = await engine.processPayment(APP_ID, USER_ID, 100, PAYMENT_PROOF);
-    expect(record.developerNet).toBe(80);
+    expect(record.developerNet).toBe(100);
   });
 
   // Test 3
-  it("3. processPayment() returns PaymentRecord with correct platformFee (20%)", async () => {
+  it("3. processPayment() returns PaymentRecord with correct platformFee (0%)", async () => {
     await engine.configureMonetization(CONFIG);
     const record = await engine.processPayment(APP_ID, USER_ID, 100, PAYMENT_PROOF);
-    expect(record.platformFee).toBe(20);
+    expect(record.platformFee).toBe(0);
   });
 
   // Test 4
@@ -101,8 +101,8 @@ describe("Monetization — P7", () => {
 
     const balance = await engine.getDeveloperBalance(APP_ID);
     expect(balance.gross).toBe(60);
-    expect(balance.platformFees).toBe(12);
-    expect(balance.net).toBe(48);
+    expect(balance.platformFees).toBe(0);
+    expect(balance.net).toBe(60);
     expect(balance.paymentCount).toBe(3);
   });
 
