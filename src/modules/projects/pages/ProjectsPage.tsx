@@ -271,8 +271,8 @@ const Projects = () => {
                           {project.description}
                         </p>
                         <div className="mt-auto pt-6">
-                          <span className="text-primary text-base font-medium font-body hover:underline">
-                            Learn more
+                          <span className="flex items-center gap-1.5 text-primary text-base font-medium font-body hover:underline">
+                            Learn more <ChevronRight size={16} />
                           </span>
                         </div>
                       </div>
