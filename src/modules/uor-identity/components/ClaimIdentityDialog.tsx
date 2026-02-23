@@ -140,14 +140,25 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
   const deriveIdentity = useCallback(async (user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) => {
     setStep("deriving");
     try {
-      // PRIVACY: Only the opaque user ID (UUID) feeds the hash.
-      // RECOVERY: No timestamp — same userId always produces the same identity.
-      // The email/OAuth was used solely to authenticate and is never stored.
+      if (!user.email) {
+        throw new Error("Email is required to derive identity.");
+      }
+
+      // UOR-COMPLIANT EMAIL-AS-SEED IDENTITY DERIVATION
+      //
+      // Pipeline: email → normalize → JSON-LD → URDNA2015 → SHA-256 → 4 identity forms
+      //
+      // The normalized email (lowercase, trimmed) is the SOLE input.
+      // It is NOT stored — only the irreversible hash outputs are persisted.
+      // Same email → same N-Quads → same hash → same identity. Forever.
+      // Provider-independent: Google, magic link, or any future method — same result.
+      const normalizedEmail = user.email.trim().toLowerCase();
+
       const identitySeed = {
         "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-        "@type": "uor:Identity",
-        "uor:userId": user.id,
-        "uor:bootstrapMethod": "authenticated",
+        "@type": "u:Identity",
+        "u:emailHash": normalizedEmail,
+        "u:bootstrapMethod": "email-verified",
       };
       const proof = await singleProofHash(identitySeed);
       const derived: DerivedIdentity = {
