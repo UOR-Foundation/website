@@ -35,8 +35,8 @@ export const overviewCategories: DocCategory[] = [
     title: "What is UOR?",
     description: "Permanent, content-derived addresses. Same content → same ID, everywhere.",
     icon: "Fingerprint",
-    href: "/developers/what-is-uor",
-    status: "coming-soon",
+    href: "/developers/fundamentals",
+    status: "available",
   },
   {
     id: "core-concepts",

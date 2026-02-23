@@ -73,6 +73,7 @@ const AgentsDocPage = lazy(() => import("@/modules/developers/pages/AgentsDocPag
 const SdkDocPage = lazy(() => import("@/modules/developers/pages/SdkDocPage"));
 const GettingStartedDocPage = lazy(() => import("@/modules/developers/pages/GettingStartedDocPage"));
 const ConceptsDocPage = lazy(() => import("@/modules/developers/pages/ConceptsDocPage"));
+const FundamentalsDocPage = lazy(() => import("@/modules/developers/pages/FundamentalsDocPage"));
 const CartridgePage = lazy(() => import("@/modules/qr-cartridge/pages/CartridgePage"));
 
 const queryClient = new QueryClient();
@@ -151,6 +152,7 @@ const App = () => {
             </Route>
             <Route path="/developers" element={<DevelopersPage />} />
             <Route path="/developers/getting-started" element={<GettingStartedDocPage />} />
+            <Route path="/developers/fundamentals" element={<FundamentalsDocPage />} />
             <Route path="/developers/concepts" element={<ConceptsDocPage />} />
             <Route path="/developers/dns" element={<DnsDocPage />} />
             <Route path="/developers/compute" element={<ComputeDocPage />} />
