@@ -83,7 +83,20 @@ const ProjectDetailLayout = ({
       const payloadBytes = new TextEncoder().encode(certificate["cert:canonicalPayload"]);
       const recomputedCid = await computeCid(payloadBytes);
       const match = recomputedCid === certificate["cert:cid"];
-      const decoded = JSON.parse(certificate["cert:canonicalPayload"]);
+
+      // cert:canonicalPayload is N-Quads (RDF), not JSON.
+      // Try JSON.parse for JSON-LD payloads; fall back to showing raw N-Quads fields.
+      let decoded: Record<string, unknown> = {};
+      try {
+        decoded = JSON.parse(certificate["cert:canonicalPayload"]);
+      } catch {
+        // N-Quads payload — extract fields from the original envelope
+        decoded = {
+          "@type": "uor:ProjectCertificate",
+          "uor:subjectId": certificate["cert:subject"],
+          "uor:specification": certificate["cert:specification"],
+        };
+      }
       setVerified({ match, decoded });
     } catch {
       setVerified({ match: false, decoded: {} });
