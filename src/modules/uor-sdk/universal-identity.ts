@@ -29,21 +29,29 @@ import { UnsKv } from "@/modules/uns/store/kv";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-/** The core identity record — created once, used forever. */
+/** The core identity record — a UOR data object like any other.
+ *  Identity = f(attributes). The canonical ID is derived from the object's
+ *  nouns (publicKeyFingerprint, algorithm, dateCreated) via URDNA2015 → SHA-256,
+ *  exactly the same pipeline used for every datum, triad, and certificate. */
 export interface IdentityRecord {
+  "@context"?: string;
   "@type": "uns:UniversalIdentity";
-  /** The permanent canonical ID — derived from the identity's content. */
-  canonicalId: string;
-  /** Display name (optional, user-chosen). */
+  /** The permanent canonical ID — derived from the object's attributes. */
+  "u:canonicalId": string;
+  /** Display name (optional, user-chosen — not part of canonical identity). */
   displayName?: string;
-  /** When this identity was created. */
-  createdAt: string;
-  /** Content-addressed public key fingerprint. */
-  publicKeyFingerprint: string;
-  /** Post-quantum algorithm used. */
-  algorithm: "CRYSTALS-Dilithium-3";
+  /** When this identity was created (noun: temporal anchor). */
+  "schema:dateCreated": string;
+  /** Content-addressed public key fingerprint (noun: cryptographic anchor). */
+  "cert:publicKeyFingerprint": string;
+  /** Post-quantum algorithm used (noun: algorithm class). */
+  "cert:algorithm": "CRYSTALS-Dilithium-3";
   /** Epistemic grade — always 'A' for Dilithium-3 identities. */
-  epistemicGrade: "A";
+  "derivation:epistemicGrade": "A";
+  /** CIDv1 content address for IPFS pinning. */
+  "store:uorCid"?: string;
+  /** IPv6 projection of the canonical ID. */
+  "u:ipv6"?: string;
 }
 
 /** A cross-app session — one login, valid across all apps. */
@@ -131,24 +139,29 @@ export class UniversalIdentityManager {
   ): Promise<IdentityRecord> {
     const now = new Date().toISOString();
 
+    // Identity is a data object — canonical ID = f(attributes)
     const identityPayload = {
+      "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
       "@type": "uns:UniversalIdentity",
-      publicKeyFingerprint,
-      algorithm: "CRYSTALS-Dilithium-3",
-      createdAt: now,
+      "cert:publicKeyFingerprint": publicKeyFingerprint,
+      "cert:algorithm": "CRYSTALS-Dilithium-3",
+      "schema:dateCreated": now,
     };
 
     const proof = await singleProofHash(identityPayload);
     const canonicalId = proof.derivationId;
 
     const record: IdentityRecord = {
+      "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
       "@type": "uns:UniversalIdentity",
-      canonicalId,
+      "u:canonicalId": canonicalId,
       displayName,
-      createdAt: now,
-      publicKeyFingerprint,
-      algorithm: "CRYSTALS-Dilithium-3",
-      epistemicGrade: "A",
+      "schema:dateCreated": now,
+      "cert:publicKeyFingerprint": publicKeyFingerprint,
+      "cert:algorithm": "CRYSTALS-Dilithium-3",
+      "derivation:epistemicGrade": "A",
+      "store:uorCid": proof.cid,
+      "u:ipv6": proof.ipv6Address["u:ipv6"],
     };
 
     await this.kv.put(`identity:${canonicalId}`, toBytes(record));
