@@ -22,6 +22,8 @@
  * @see src/lib/uor-ring.ts classifyByte — canonical classification logic
  */
 
+import { CATASTROPHE_THRESHOLD } from "@/modules/observable/geometry";
+
 // ── Types ───────────────────────────────────────────────────────────────────
 
 /** The four algebraic partition classes in R_8. */
@@ -48,6 +50,12 @@ export interface PartitionResult {
   action: ShieldAction;
   /** Per-byte classification (for audit). */
   perByte: PartitionClass[];
+  /** Cascade length to nearest irreducible element across payload bytes. */
+  cascadeLengthToNearestIrreducible: number;
+  /** Maximum discrete curvature K(x) across payload bytes. */
+  curvatureAtDensityPeak: number;
+  /** Net holonomy across the payload byte sequence. */
+  holonomyOfPayloadPath: number;
 }
 
 /** Lightweight analysis result (fast path — no per-byte array). */
@@ -91,19 +99,36 @@ for (let b = 0; b < 256; b++) {
 /**
  * Map density to shield action.
  *
- *   density >= 0.40  → PASS       (typical HTTPS: 0.40–0.65)
- *   density >= 0.25  → WARN       (low entropy — possible bot)
- *   density >= 0.15  → CHALLENGE  (ring PoW required)
- *   density <  0.15  → BLOCK      (flood/spam)
+ * BLOCK threshold is ring-derived from CATASTROPHE_THRESHOLD = 4/256 = 0.015625.
+ * Source: observable:CatastropheThreshold — (UnitSet + ExteriorSet) / 256.
+ *
+ *   density >= 0.40                      → PASS       (typical HTTPS: 0.40–0.65)
+ *   density >= 0.25                      → WARN       (low entropy — possible bot)
+ *   density >  CATASTROPHE_THRESHOLD     → CHALLENGE  (ring PoW required)
+ *   density <= CATASTROPHE_THRESHOLD     → BLOCK      (structural collapse — flood/spam)
  */
 function densityToAction(density: number): ShieldAction {
   if (density >= 0.40) return "PASS";
   if (density >= 0.25) return "WARN";
-  if (density >= 0.15) return "CHALLENGE";
-  return "BLOCK";
+  // Ring-derived BLOCK threshold: CATASTROPHE_THRESHOLD = 4/256 = 0.015625
+  if (density <= CATASTROPHE_THRESHOLD.value) return "BLOCK";
+  return "CHALLENGE";
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────
+
+/**
+ * Map PartitionClass to numeric ordinal for curvature computation.
+ * exterior→0, unit→1, reducible→1, irreducible→2
+ */
+function classOrdinalFromPartition(cls: PartitionClass): number {
+  switch (cls) {
+    case "EXTERIOR": return 0;
+    case "UNIT": return 1;
+    case "REDUCIBLE": return 1;
+    case "IRREDUCIBLE": return 2;
+  }
+}
 
 /**
  * Classify a single byte in R_8 = Z/256Z.
@@ -152,6 +177,51 @@ export function analyzePayload(payload: Uint8Array): PartitionResult {
   const total = payload.length;
   const density = total > 0 ? irreducible / total : 0;
 
+  // ── P31 Geometry: compute geometric observables across payload ──────────
+  let cascadeLengthToNearestIrreducible = 0;
+  let curvatureAtDensityPeak = 0;
+  let holonomyOfPayloadPath = 0;
+
+  if (total > 0) {
+    // Cascade to nearest irreducible: for non-irreducible bytes, measure succ-steps
+    for (let i = 0; i < payload.length; i++) {
+      if (perByte[i] !== "IRREDUCIBLE") {
+        // Find forward cascade to nearest irreducible
+        let steps = 0;
+        let probe = payload[i];
+        while (steps < 256) {
+          probe = (probe + 1) % 256;
+          steps++;
+          if (BYTE_CLASS[probe] === "IRREDUCIBLE") break;
+        }
+        if (steps < cascadeLengthToNearestIrreducible || cascadeLengthToNearestIrreducible === 0) {
+          cascadeLengthToNearestIrreducible = steps;
+        }
+      }
+    }
+
+    // Curvature: max |K(x)| across all payload bytes
+    for (let i = 0; i < payload.length; i++) {
+      const b = payload[i];
+      const succB = (b + 1) % 256;
+      const predB = (b + 255) % 256;
+      const classOfSucc = classOrdinalFromPartition(BYTE_CLASS[succB]);
+      const classOfX = classOrdinalFromPartition(BYTE_CLASS[b]);
+      const classOfPred = classOrdinalFromPartition(BYTE_CLASS[predB]);
+      const K = classOfSucc - 2 * classOfX + classOfPred;
+      if (Math.abs(K) > Math.abs(curvatureAtDensityPeak)) {
+        curvatureAtDensityPeak = K;
+      }
+    }
+
+    // Holonomy: net ring displacement across payload byte sequence
+    if (payload.length >= 2) {
+      const first = payload[0];
+      const last = payload[payload.length - 1];
+      holonomyOfPayloadPath = ((last - first) % 256 + 256) % 256;
+    }
+  }
+
   return {
     irreducible,
     reducible,
@@ -161,6 +231,9 @@ export function analyzePayload(payload: Uint8Array): PartitionResult {
     density,
     action: densityToAction(density),
     perByte,
+    cascadeLengthToNearestIrreducible,
+    curvatureAtDensityPeak,
+    holonomyOfPayloadPath,
   };
 }
 
