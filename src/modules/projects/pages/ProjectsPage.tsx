@@ -240,9 +240,10 @@ const Projects = () => {
               <CollapsibleCategory key={level} level={level} count={levelProjects.length} dotColor={maturityDotColors[level]} disabled={!hasProjects}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                   {levelProjects.map((project, index) => (
-                    <div
+                    <Link
                       key={project.name}
-                      className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up flex flex-col"
+                      to={`/projects/${project.slug}`}
+                      className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up flex flex-col cursor-pointer"
                       style={{ animationDelay: `${index * 0.08}s` }}
                     >
                       {project.image && (
@@ -269,20 +270,13 @@ const Projects = () => {
                         <p className="text-muted-foreground font-body text-base leading-relaxed">
                           {project.description}
                         </p>
-                        {project.url && (
-                          <div className="mt-auto pt-6 flex items-center gap-4">
-                            {(project as any).slug && (
-                              <Link to={`/projects/${(project as any).slug}`} className="flex items-center gap-2 text-primary text-base font-medium transition-opacity font-body cursor-pointer hover:underline">
-                                Learn more
-                              </Link>
-                            )}
-                            <a href={project.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground text-sm font-medium transition-opacity font-body cursor-pointer hover:text-foreground hover:underline">
-                              Repository <ExternalLink size={13} />
-                            </a>
-                          </div>
-                        )}
+                        <div className="mt-auto pt-6">
+                          <span className="text-primary text-base font-medium font-body hover:underline">
+                            Learn more
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </CollapsibleCategory>
