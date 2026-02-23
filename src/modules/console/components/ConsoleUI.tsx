@@ -104,6 +104,107 @@ export function DensityGauge({ value }: { value: number }) {
   );
 }
 
+// ── ZoneBadge ───────────────────────────────────────────────────────────────
+
+const ZONE_STYLES: Record<string, string> = {
+  COHERENCE: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+  DRIFT: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+  COLLAPSE: "bg-destructive/15 text-destructive",
+};
+
+export function ZoneBadge({ zone }: { zone: "COHERENCE" | "DRIFT" | "COLLAPSE" }) {
+  const style = ZONE_STYLES[zone] ?? ZONE_STYLES.DRIFT;
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${style}`}>
+      {zone}
+    </span>
+  );
+}
+
+// ── RevenueCard ─────────────────────────────────────────────────────────────
+
+export function RevenueCard({
+  gross,
+  net,
+  platformFee,
+  currency = "USD",
+}: {
+  gross: number;
+  net: number;
+  platformFee: number;
+  currency?: string;
+}) {
+  const fmt = (v: number) => `$${v.toFixed(2)}`;
+  const splitPct = gross > 0 ? Math.round((net / gross) * 100) : 80;
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+      <p className="text-xs font-medium text-muted-foreground">Revenue ({currency})</p>
+      <div className="flex items-baseline gap-2">
+        <span className="text-2xl font-semibold text-foreground">{fmt(net)}</span>
+        <span className="text-xs text-muted-foreground">net ({splitPct}/{100 - splitPct} split)</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div>
+          <p className="text-muted-foreground">Gross</p>
+          <p className="font-mono font-medium text-foreground">{fmt(gross)}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Platform Fee</p>
+          <p className="font-mono font-medium text-foreground">{fmt(platformFee)}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Developer Net</p>
+          <p className="font-mono font-medium text-emerald-600 dark:text-emerald-400">{fmt(net)}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ExecutionTraceRow ───────────────────────────────────────────────────────
+
+export function ExecutionTraceRow({ trace }: { trace: Record<string, unknown> }) {
+  const [open, setOpen] = useState(false);
+  const method = String(trace["trace:method"] ?? "GET");
+  const path = String(trace["trace:path"] ?? "/");
+  const status = Number(trace["trace:statusCode"] ?? 200);
+  const duration = Number(trace["trace:durationMs"] ?? 0);
+  const injection = Boolean(trace["trace:injectionDetected"]);
+  const density = Number(trace["trace:partitionDensity"] ?? 0);
+  const executedAt = String(trace["trace:executedAt"] ?? "");
+
+  return (
+    <div className="border-b border-border last:border-0">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center gap-3 px-3 py-2 text-xs hover:bg-muted/30 transition-colors"
+      >
+        <span className={`font-mono font-semibold ${status < 400 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
+          {status}
+        </span>
+        <span className="font-mono text-muted-foreground">{method}</span>
+        <span className="font-medium text-foreground flex-1 text-left">{path}</span>
+        <span className="font-mono text-muted-foreground">{duration}ms</span>
+        <DensityGauge value={density} />
+        {injection && (
+          <span className="rounded-full bg-destructive/15 text-destructive px-2 py-0.5 text-[10px] font-semibold">
+            INJECTION
+          </span>
+        )}
+        <span className="text-[10px] text-muted-foreground">
+          {executedAt ? new Date(executedAt).toLocaleTimeString() : ""}
+        </span>
+        <span className="text-muted-foreground">{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <pre className="max-h-48 overflow-auto bg-muted/50 p-3 text-xs font-mono text-foreground border-t border-border">
+          {JSON.stringify(trace, null, 2)}
+        </pre>
+      )}
+    </div>
+  );
+}
+
 // ── CoherenceProofPanel ─────────────────────────────────────────────────────
 
 export function CoherenceProofPanel({ proof }: { proof: object }) {

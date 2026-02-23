@@ -5,7 +5,7 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Globe, Shield, Cpu, Database,
-  Lock, Bot, ChevronLeft,
+  Lock, Bot, ChevronLeft, AppWindow, Compass,
 } from "lucide-react";
 import { CanonicalIdBadge } from "./ConsoleUI";
 import { useState } from "react";
@@ -18,6 +18,8 @@ const NAV = [
   { to: "/console/store",    icon: Database,         label: "Store" },
   { to: "/console/trust",    icon: Lock,            label: "Trust" },
   { to: "/console/agents",   icon: Bot,             label: "Agents" },
+  { to: "/console/apps",     icon: AppWindow,       label: "Apps" },
+  { to: "/console/discovery", icon: Compass,         label: "Discovery" },
 ];
 
 const MOCK_NODE_ID = "urn:uor:derivation:sha256:a1b2c3d4e5f60718293a4b5c6d7e8f9001122334";
