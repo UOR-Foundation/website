@@ -102,7 +102,23 @@ export type {
   AppFile,
 } from "./import-adapter";
 
-// ── App CLI (developer-facing command engine) ───────────────────────────────
+// ── Sovereign Data (P4 — Solid Pod user-owned storage) ──────────────────────
+export {
+  PodManager,
+  connectUser,
+  writeUserData,
+  readUserData,
+  getUserHistory,
+  exportUserData,
+} from "./sovereign-data";
+export type {
+  UserPodContext,
+  DataAccessEvent,
+  WriteResult,
+  ReadResult,
+  BindingCertificate,
+} from "./sovereign-data";
+
 export { AppCli } from "./cli";
 export type {
   AppCliResult,
