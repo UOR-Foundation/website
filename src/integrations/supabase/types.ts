@@ -445,6 +445,8 @@ export type Database = {
           sha256_hash: string | null
           source_endpoint: string
           storacha_cid: string | null
+          storage_destination: string | null
+          storage_source: string | null
           uor_cid: string | null
         }
         Insert: {
@@ -465,6 +467,8 @@ export type Database = {
           sha256_hash?: string | null
           source_endpoint: string
           storacha_cid?: string | null
+          storage_destination?: string | null
+          storage_source?: string | null
           uor_cid?: string | null
         }
         Update: {
@@ -485,6 +489,8 @@ export type Database = {
           sha256_hash?: string | null
           source_endpoint?: string
           storacha_cid?: string | null
+          storage_destination?: string | null
+          storage_source?: string | null
           uor_cid?: string | null
         }
         Relationships: []

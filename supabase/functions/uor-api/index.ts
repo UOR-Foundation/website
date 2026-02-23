@@ -608,7 +608,7 @@ async function gradeAResponse(data: Record<string, unknown>, term: string, resul
   // ── Oracle meta-observer: log every algebraic derivation ──
   const objectType = String(data['@type'] ?? data['summary']?.['operation'] ?? 'kernel:Derivation');
   const objectLabel = term.length > 80 ? term.slice(0, 77) + '…' : term;
-  logToOracle({
+  await logToOracle({
     entry_id: oracleEntryId('kernel-derive'),
     operation: 'kernel-derive',
     object_type: objectType,
@@ -619,6 +619,8 @@ async function gradeAResponse(data: Record<string, unknown>, term: string, resul
     source_endpoint: '/kernel/derive',
     quantum_level: Math.ceil(n / 8) - 1,
     encoding_format: 'ring-arithmetic',
+    storage_source: 'ring-algebra',
+    storage_destination: 'UOR address space',
     metadata: { term: acNormalise(term), result_value: resultValue, bits: n },
   });
 
@@ -4581,7 +4583,7 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
 
   // ── Oracle: log this encoding ──
   if (shouldPin) {
-    logToOracle({
+    await logToOracle({
       entry_id: oracleEntryId('store-write'),
       operation: 'store-write',
       object_type: objectType,
@@ -4595,6 +4597,8 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
       source_endpoint: '/store/write',
       quantum_level: 8,
       encoding_format: 'canonical-json-ld',
+      storage_source: 'JSON-LD input',
+      storage_destination: gateway === 'pinata' ? 'IPFS (Pinata)' : gateway === 'storacha' ? 'Filecoin (Storacha)' : 'IPFS',
       metadata: { gateway, dry_run: false },
     });
   }
@@ -7496,7 +7500,7 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
   // ── Oracle: log type definition encoding (even without store=true) ──
   // This ensures the Oracle captures ALL schema-org type canonicalizations
   if (!storeToPersistence) {
-    logToOracle({
+    await logToOracle({
       entry_id: oracleEntryId('sobridge-canonicalize'),
       operation: 'sobridge-canonicalize',
       object_type: 'sobridge:SchemaOrgType',
@@ -7509,6 +7513,8 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
       source_endpoint: '/schema-org/extend',
       quantum_level: 0,
       encoding_format: 'URDNA2015',
+      storage_source: 'schema.org vocabulary',
+      storage_destination: 'UOR address space (in-memory)',
       metadata: { store: false, property_count: deduped.length },
     });
   }
@@ -7653,7 +7659,7 @@ async function storeToIPFSDualCid(obj: Record<string, unknown>, identity: Sobrid
   };
 
   // ── Oracle: log sobridge dual-CID encoding ──
-  logToOracle({
+  await logToOracle({
     entry_id: oracleEntryId('sobridge-pin'),
     operation: 'sobridge-pin',
     object_type: String(obj['@type'] ?? 'sobridge:SchemaOrgType'),
@@ -7671,6 +7677,8 @@ async function storeToIPFSDualCid(obj: Record<string, unknown>, identity: Sobrid
     source_endpoint: '/schema-org/extend',
     quantum_level: 0,
     encoding_format: 'URDNA2015',
+    storage_source: 'schema.org vocabulary',
+    storage_destination: [pinataCid ? 'IPFS (Pinata)' : null, result.storachaCid ? 'Filecoin (Storacha)' : null].filter(Boolean).join(' + ') || 'IPFS',
     metadata: {
       has_pinata: !!pinataCid,
       has_storacha: !!result.storachaCid,
@@ -9800,11 +9808,13 @@ interface OracleEntry {
   quantum_level?: number;
   encoding_format?: string;
   metadata?: Record<string, unknown>;
+  storage_source?: string;
+  storage_destination?: string;
 }
 
-/** Fire-and-forget oracle log — never blocks the main response.
+/** Awaitable oracle log — MUST be awaited to ensure the insert completes before isolate shutdown.
  *  Falls back to anon key if service role key is unavailable (RLS allows anon inserts). */
-function logToOracle(entry: OracleEntry): void {
+async function logToOracle(entry: OracleEntry): Promise<void> {
   const sbUrl = Deno.env.get('SUPABASE_URL');
   const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY');
   if (!sbUrl || !sbKey) {
@@ -9829,20 +9839,30 @@ function logToOracle(entry: OracleEntry): void {
     quantum_level: entry.quantum_level ?? 0,
     encoding_format: entry.encoding_format ?? 'URDNA2015',
     metadata: entry.metadata ?? {},
+    storage_source: entry.storage_source ?? null,
+    storage_destination: entry.storage_destination ?? null,
   };
 
-  fetch(`${sbUrl}/rest/v1/uor_oracle_entries`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': sbKey,
-      'Authorization': `Bearer ${sbKey}`,
-      'Prefer': 'return=minimal',
-    },
-    body: JSON.stringify(row),
-  }).then(r => {
-    if (!r.ok) r.text().then(t => console.error(`[oracle] insert failed (${r.status}):`, t));
-  }).catch(e => console.error('[oracle] log failed:', e));
+  try {
+    const r = await fetch(`${sbUrl}/rest/v1/uor_oracle_entries`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': sbKey,
+        'Authorization': `Bearer ${sbKey}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify(row),
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      console.error(`[oracle] insert failed (${r.status}):`, t);
+    } else {
+      console.log(`[oracle] ✓ logged ${entry.operation}: ${entry.object_label ?? entry.object_type}`);
+    }
+  } catch (e) {
+    console.error('[oracle] log failed:', e);
+  }
 }
 
 /** Generate a unique oracle entry ID */

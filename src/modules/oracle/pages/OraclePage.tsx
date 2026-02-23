@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { Eye, RefreshCw, Database, Activity, Clock, Shield, ExternalLink, Copy, Check } from "lucide-react";
+import { Eye, RefreshCw, Database, Activity, Clock, Shield, ExternalLink, Copy, Check, ArrowRight } from "lucide-react";
 
 interface OracleEntry {
   id: string;
@@ -21,6 +21,8 @@ interface OracleEntry {
   encoding_format: string;
   metadata: Record<string, unknown>;
   created_at: string;
+  storage_source: string | null;
+  storage_destination: string | null;
 }
 
 interface OracleStats {
@@ -122,24 +124,12 @@ export default function OraclePage() {
         {/* Stats */}
         <section className="container mx-auto px-6 -mt-8 relative z-10">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <StatCard
-              icon={<Database className="w-5 h-5" />}
-              label="Total Events"
-              value={stats?.["oracle:totalEncodings"] ?? 0}
-            />
-            <StatCard
-              icon={<Activity className="w-5 h-5" />}
-              label="Object Types"
-              value={Object.keys(stats?.["oracle:byObjectType"] ?? {}).length}
-            />
+            <StatCard icon={<Database className="w-5 h-5" />} label="Total Events" value={stats?.["oracle:totalEncodings"] ?? 0} />
+            <StatCard icon={<Activity className="w-5 h-5" />} label="Object Types" value={Object.keys(stats?.["oracle:byObjectType"] ?? {}).length} />
             <StatCard
               icon={<Clock className="w-5 h-5" />}
               label="Latest Event"
-              value={
-                stats?.["oracle:latestEncoding"]
-                  ? new Date(stats["oracle:latestEncoding"]["oracle:timestamp"]).toLocaleDateString()
-                  : "—"
-              }
+              value={stats?.["oracle:latestEncoding"] ? new Date(stats["oracle:latestEncoding"]["oracle:timestamp"]).toLocaleDateString() : "—"}
               isText
             />
           </div>
@@ -148,7 +138,6 @@ export default function OraclePage() {
         {/* Controls */}
         <section className="container mx-auto px-6 mt-10">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            {/* View Mode Toggle */}
             <div className="inline-flex rounded-lg border border-border bg-card overflow-hidden">
               {(["all", "encoding", "decoding"] as ViewMode[]).map((mode) => (
                 <button
@@ -164,7 +153,6 @@ export default function OraclePage() {
                 </button>
               ))}
             </div>
-
             <button
               onClick={fetchData}
               disabled={loading}
@@ -185,7 +173,7 @@ export default function OraclePage() {
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Operation</th>
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Object</th>
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">Grade</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Derivation ID</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Source → Destination</th>
                     <th className="text-left px-4 py-3 font-medium text-muted-foreground">UOR Proof Address</th>
                   </tr>
                 </thead>
@@ -234,10 +222,7 @@ export default function OraclePage() {
 function OracleRow({ entry, expanded, onToggle }: { entry: OracleEntry; expanded: boolean; onToggle: () => void }) {
   return (
     <>
-      <tr
-        className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
-        onClick={onToggle}
-      >
+      <tr className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer" onClick={onToggle}>
         <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
           {new Date(entry.created_at).toLocaleString()}
         </td>
@@ -262,8 +247,12 @@ function OracleRow({ entry, expanded, onToggle }: { entry: OracleEntry; expanded
           </span>
         </td>
         <td className="px-4 py-3">
-          {entry.derivation_id ? (
-            <CopyableHash value={entry.derivation_id} prefix="urn:uor:derivation:" />
+          {(entry.storage_source || entry.storage_destination) ? (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="max-w-[100px] truncate" title={entry.storage_source ?? ""}>{entry.storage_source ?? "—"}</span>
+              <ArrowRight className="w-3 h-3 shrink-0 text-primary/60" />
+              <span className="max-w-[100px] truncate" title={entry.storage_destination ?? ""}>{entry.storage_destination ?? "—"}</span>
+            </div>
           ) : (
             <span className="text-sm text-muted-foreground">—</span>
           )}
@@ -303,6 +292,8 @@ function EntryDetail({ entry }: { entry: OracleEntry }) {
         <DetailRow label="Format" value={entry.encoding_format} />
         <DetailRow label="Quantum" value={`Q${entry.quantum_level}`} />
         <DetailRow label="Size" value={entry.byte_length ? `${entry.byte_length.toLocaleString()} bytes` : "—"} />
+        <DetailRow label="Storage From" value={entry.storage_source ?? "—"} />
+        <DetailRow label="Storage To" value={entry.storage_destination ?? "—"} />
       </div>
       <div className="space-y-2">
         <DetailRow label="Derivation ID" value={entry.derivation_id ?? "—"} mono copyable />
