@@ -1,21 +1,7 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { ArrowRight, Terminal, Copy, Check, Rocket, Layers, BookOpen, Code, Globe, Cpu, Database, Key, ScrollText, Shield, Lock, Bot, FileJson, FlaskConical, Wrench, Newspaper } from "lucide-react";
-import { useState } from "react";
-
-/* ── Copy button ─────────────────────────────────────────────── */
-const CopyBtn = ({ text }: { text: string }) => {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-      className="absolute top-3 right-3 p-1.5 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/40 transition-colors"
-      aria-label="Copy"
-    >
-      {copied ? <Check size={14} /> : <Copy size={14} />}
-    </button>
-  );
-};
+import { ArrowRight, Rocket, Layers, BookOpen, Globe, Cpu, Database, Key, ScrollText, Shield, Lock, Bot, FileJson, FlaskConical, Wrench, Newspaper } from "lucide-react";
+import BuildWithUOR from "../components/BuildWithUOR";
 
 /* ── Nav link row ────────────────────────────────────────────── */
 const NavRow = ({ title, href, icon: Icon }: { title: string; href: string; icon?: React.ElementType }) => (
@@ -50,8 +36,6 @@ const SectionCard = ({
   </div>
 );
 
-const curlCmd = `curl "https://api.uor.foundation/v1/kernel/op/verify?x=42"`;
-
 /* ── Page ─────────────────────────────────────────────────────── */
 const DevelopersPage = () => (
   <Layout>
@@ -79,8 +63,6 @@ const DevelopersPage = () => (
       <section className="pb-12">
         <div className="container max-w-6xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-            {/* Featured */}
             <SectionCard title="Featured" viewAll={{ label: "View all docs", href: "/developers/directory" }}>
               <NavRow title="Getting Started" href="/developers/getting-started" icon={Rocket} />
               <NavRow title="What is UOR?" href="/developers/fundamentals" icon={Layers} />
@@ -88,7 +70,6 @@ const DevelopersPage = () => (
               <NavRow title="API Reference" href="/api" icon={FileJson} />
             </SectionCard>
 
-            {/* Platform Services */}
             <SectionCard title="Platform Services" viewAll={{ label: "View all services", href: "/developers/directory" }}>
               <NavRow title="Name Service (DNS)" href="/developers/dns" icon={Globe} />
               <NavRow title="Compute" href="/developers/compute" icon={Cpu} />
@@ -97,7 +78,6 @@ const DevelopersPage = () => (
               <NavRow title="Ledger (SQL)" href="/developers/ledger" icon={ScrollText} />
             </SectionCard>
 
-            {/* Security & Trust */}
             <SectionCard title="Security & Trust" viewAll={{ label: "View all security docs", href: "/developers/shield" }}>
               <NavRow title="Shield (WAF)" href="/developers/shield" icon={Shield} />
               <NavRow title="Trust & Auth" href="/developers/trust" icon={Lock} />
@@ -105,7 +85,6 @@ const DevelopersPage = () => (
               <NavRow title="System Audit" href="/audit" icon={Wrench} />
             </SectionCard>
 
-            {/* AI & Agents */}
             <SectionCard title="AI & Agents" viewAll={{ label: "View agent docs", href: "/developers/agents" }}>
               <NavRow title="Agent Gateway" href="/developers/agents" icon={Bot} />
               <NavRow title="MCP Integration" href="/standard#mcp" />
@@ -118,55 +97,24 @@ const DevelopersPage = () => (
       {/* ━━ Divider ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <div className="container max-w-6xl"><div className="h-px bg-border/30" /></div>
 
-      {/* ━━ Code snippet ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="py-12">
-        <div className="container max-w-6xl">
-          <h2 className="text-xl font-display font-bold text-foreground mb-1">Build with UOR</h2>
-          <p className="text-sm text-muted-foreground mb-5">No account, no API key — just curl.</p>
-
-          <div className="relative rounded-lg border border-border/40 bg-card/10 overflow-hidden max-w-2xl">
-            <div className="flex items-center gap-2 px-4 py-2 border-b border-border/30 text-xs text-muted-foreground">
-              <Terminal size={12} className="text-primary" />
-              <span className="font-mono">Try it now</span>
-            </div>
-            <CopyBtn text={curlCmd} />
-            <pre className="px-4 py-3 text-[13px] font-mono text-foreground/90 overflow-x-auto"><code>{curlCmd}</code></pre>
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Every response includes a cryptographic receipt.{" "}
-            <Link to="/api" className="text-primary hover:underline">Full API reference →</Link>
-          </p>
-        </div>
-      </section>
+      {/* ━━ Build with UOR — tabbed code showcase ━━━━━━━━━━━━━━━ */}
+      <BuildWithUOR />
 
       {/* ━━ Divider ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <div className="container max-w-6xl"><div className="h-px bg-border/30" /></div>
 
-      {/* ━━ Secondary grid — 3 columns ━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      {/* ━━ Secondary grid — 2 columns ━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="py-12">
         <div className="container max-w-6xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-            {/* API Reference */}
-            <SectionCard title="API Reference" viewAll={{ label: "Interactive API explorer", href: "/api" }}>
-              <NavRow title="Foundation (Layer 0)" href="/api#layer-0" />
-              <NavRow title="Identity (Layer 1)" href="/api#layer-1" />
-              <NavRow title="Structure (Layer 2)" href="/api#layer-2" />
-              <NavRow title="Verification (Layer 4)" href="/api#layer-4" />
-              <NavRow title="Persistence (Layer 6)" href="/api#layer-6" />
-              <NavRow title="OpenAPI 3.1 Spec" href="/openapi.json" />
-            </SectionCard>
-
-            {/* Developer Tools */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SectionCard title="Developer Tools" viewAll={{ label: "View all tools", href: "/developers/directory" }}>
-              <NavRow title="API Reference" href="/api" icon={FileJson} />
+              <NavRow title="API Explorer" href="/api" icon={FileJson} />
               <NavRow title="SPARQL Editor" href="/sparql-editor" />
               <NavRow title="Knowledge Graph" href="/knowledge-graph" />
               <NavRow title="Ring Explorer" href="/ring-explorer" />
               <NavRow title="Derivation Lab" href="/derivation-lab" />
             </SectionCard>
 
-            {/* Resources */}
             <SectionCard title="Resources" viewAll={{ label: "View all resources", href: "/research" }}>
               <NavRow title="Atlas Embeddings" href="/research/atlas-embeddings" icon={Newspaper} />
               <NavRow title="UOR Standard" href="/standard" />
