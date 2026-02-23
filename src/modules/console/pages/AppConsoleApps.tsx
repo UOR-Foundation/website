@@ -5,7 +5,7 @@
  * Shows deployed apps with key metrics below.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import { deployApp } from "@/modules/uor-sdk/deploy";
 import type { DeployStage, DeployResult } from "@/modules/uor-sdk/deploy";
@@ -20,6 +20,8 @@ import {
   GitBranch, Upload, Package, Plus,
 } from "lucide-react";
 import heroImage from "@/assets/console-deploy-hero.png";
+import DeployLog from "../components/DeployLog";
+import type { LogEntry } from "../components/DeployLog";
 
 interface AppCard {
   name: string;
@@ -55,6 +57,8 @@ export default function AppConsoleApps() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deployResult, setDeployResult] = useState<DeployResult | null>(null);
   const [deployError, setDeployError] = useState<string | null>(null);
+  const [deployLogs, setDeployLogs] = useState<LogEntry[]>([]);
+  const [showLog, setShowLog] = useState(false);
 
   const handleDeploy = useCallback(async () => {
     if (!importUrl.trim()) return;
@@ -62,10 +66,18 @@ export default function AppConsoleApps() {
     setDeployStep(0);
     setDeployError(null);
     setDeployResult(null);
+    setDeployLogs([]);
+    setShowLog(true);
+
+    const addLog = (stage: string, message: string) => {
+      setDeployLogs((prev) => [...prev, { timestamp: Date.now(), stage, message }]);
+    };
 
     // Determine source type from URL
     let source: ImportSource;
     const trimmed = importUrl.trim();
+
+    addLog("import", `Starting deployment for: ${trimmed}`);
 
     if (trimmed.startsWith("zip://")) {
       source = { type: "url", url: trimmed };
@@ -84,7 +96,9 @@ export default function AppConsoleApps() {
       const result = await deployApp({
         source,
         developerCanonicalId: "urn:uor:derivation:sha256:dev-session",
-        onProgress: (stage: DeployStage) => {
+        onProgress: (stage: DeployStage, detail?: string) => {
+          const msg = detail || stage;
+          addLog(stage, typeof msg === "string" ? msg : stage);
           switch (stage) {
             case "import": setDeployStep(0); break;
             case "build": setDeployStep(0); break;
@@ -95,8 +109,11 @@ export default function AppConsoleApps() {
         },
       });
       setDeployResult(result);
+      addLog("complete", `Deploy finished in ${result.durationMs}ms — ${result.ship?.snapshot?.["u:canonicalId"] ?? "done"}`);
     } catch (err) {
-      setDeployError(err instanceof Error ? err.message : "Deployment failed");
+      const errMsg = err instanceof Error ? err.message : "Deployment failed";
+      addLog("error", errMsg);
+      setDeployError(errMsg);
     } finally {
       setDeploying(false);
       setDeployStep(0);
@@ -224,6 +241,9 @@ export default function AppConsoleApps() {
           </div>
         </div>
       </div>
+
+      {/* ── Deploy Log ────────────────────────────────────────────── */}
+      <DeployLog logs={deployLogs} visible={showLog} onClose={() => setShowLog(false)} />
 
       {/* ── How It Works ─────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
