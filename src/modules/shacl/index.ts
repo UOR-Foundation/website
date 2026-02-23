@@ -7,5 +7,7 @@ export type { Violation, ShapeResult } from "./shapes";
 export { validate, validateOnWrite } from "./validator";
 export type { ValidationReport } from "./validator";
 export { runConformanceSuite } from "./conformance";
-export type { ConformanceTest, ConformanceSuiteResult } from "./conformance";
+export type { ConformanceTest, ConformanceSuiteResult } from "./conformance-types";
+export type { ConformanceResult, ConformanceGroup } from "./conformance-types";
+export { CANONICAL_PARTITION } from "./conformance-partition";
 export { default as ConformancePage } from "./pages/ConformancePage";

@@ -31,11 +31,11 @@ describe("UNS Shield — Phase 2-A: Partition Analysis", () => {
     expect(classifyByte(253)).toBe("IRREDUCIBLE");
   });
 
-  // Test 4
-  it("4. classifyByte(4) === 'REDUCIBLE' (even, not 0)", () => {
+  // Test 4 — 128 is EXTERIOR (spec/src/namespaces/partition.rs — ExteriorSet = {0, m/2})
+  it("4. classifyByte(4) === 'REDUCIBLE' (even, not 0 or 128)", () => {
     expect(classifyByte(4)).toBe("REDUCIBLE");
     expect(classifyByte(2)).toBe("REDUCIBLE");
-    expect(classifyByte(128)).toBe("REDUCIBLE");
+    expect(classifyByte(128)).toBe("EXTERIOR"); // P21: 128 is exterior (maximal zero divisor)
     expect(classifyByte(254)).toBe("REDUCIBLE");
   });
 
@@ -112,7 +112,8 @@ describe("UNS Shield — Phase 2-A: Partition Analysis", () => {
   });
 
   // Test 12
-  it("12. Partition cardinality: 126 irreducible + 127 reducible + 2 unit + 1 exterior = 256", () => {
+  // P21: Canonical cardinalities (spec/src/namespaces/partition.rs)
+  it("12. Partition cardinality: 126 irreducible + 126 reducible + 2 unit + 2 exterior = 256", () => {
     let irr = 0, red = 0, uni = 0, ext = 0;
     for (let b = 0; b < 256; b++) {
       switch (classifyByte(b)) {
@@ -123,9 +124,9 @@ describe("UNS Shield — Phase 2-A: Partition Analysis", () => {
       }
     }
     expect(irr).toBe(126);
-    expect(red).toBe(127);
+    expect(red).toBe(126);  // P21: 128 moved from reducible to exterior
     expect(uni).toBe(2);
-    expect(ext).toBe(1);
+    expect(ext).toBe(2);    // P21: ExteriorSet = {0, 128}
     expect(irr + red + uni + ext).toBe(256);
   });
 });
