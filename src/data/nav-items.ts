@@ -7,4 +7,5 @@ export const navItems = [
   { label: "API", href: "/api" },
   { label: "Our Community", href: "/research" },
   { label: "Your Projects", href: "/projects" },
+  { label: "Developers", href: "/developers" },
 ];
