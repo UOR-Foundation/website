@@ -183,3 +183,17 @@ export type {
   AppRecord,
   DeveloperIdentity,
 } from "./cli-types";
+
+// ── App SDK (P11 — five-function developer-facing SDK) ──────────────────────
+export { createUorAppClient, browserAutoInit } from "./app-sdk";
+export type {
+  UorAppClientConfig,
+  AppClient,
+  ConnectUserResult,
+  WriteDataResult,
+  ReadDataResult,
+  PaymentGateResult,
+  VerifyAppResult,
+  CallAppResult,
+  RevenueResult,
+} from "./app-sdk";
