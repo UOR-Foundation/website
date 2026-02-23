@@ -167,6 +167,24 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
         cid: proof.cid,
         ipv6: proof.ipv6Address["u:ipv6"],
       };
+
+      // UOR SESSION CERTIFICATE — tamper-evident, content-addressed
+      //
+      // Pipeline: session payload → JSON-LD → URDNA2015 → SHA-256 → session CID
+      //
+      // Purpose: proves this session was issued for this identity at this time.
+      // Ephemeral — a new one is minted on every login. Identity survives; sessions don't.
+      // If any field is tampered with, the CID won't match → tamper detected.
+      const sessionIssuedAt = new Date().toISOString();
+      const sessionPayload = {
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+        "@type": "cert:SessionCertificate",
+        "cert:identityCanonicalId": derived.canonicalId,
+        "cert:issuedAt": sessionIssuedAt,
+        "cert:bootstrapMethod": "email-verified",
+      };
+      const sessionProof = await singleProofHash(sessionPayload);
+
       await supabase
         .from("profiles")
         .update({
@@ -174,6 +192,9 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
           uor_glyph: derived.glyph,
           uor_cid: derived.cid,
           uor_ipv6: derived.ipv6,
+          session_cid: sessionProof.cid,
+          session_derivation_id: sessionProof.derivationId,
+          session_issued_at: sessionIssuedAt,
         })
         .eq("user_id", user.id);
       setIdentity(derived);
