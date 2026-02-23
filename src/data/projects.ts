@@ -61,7 +61,7 @@ export const projects: ProjectData[] = [
     imageKey: "uorMcp",
   },
   {
-    name: "UoR Name Service",
+    name: "UOR Name Service",
     slug: "uns",
     category: "Core Infrastructure",
     description: "Decentralized name resolution powered by IPv6 content-addressing and UOR algebraic identity. DNS-equivalent services without centralised authority.",

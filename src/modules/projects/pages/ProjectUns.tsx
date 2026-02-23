@@ -3,7 +3,7 @@ import heroImg from "@/assets/project-uns.jpg";
 
 const ProjectUns = () => (
   <ProjectDetailLayout
-    name="UoR Name Service (UNS)"
+    name="UOR Name Service (UNS)"
     slug="uns"
     category="Core Infrastructure"
     tagline="Decentralized name resolution powered by IPv6 content-addressing and UOR algebraic identity. Every name maps to a verifiable, content-addressed identity — no central authority required."
