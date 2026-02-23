@@ -20,10 +20,13 @@ describe("Universal Identity — One Login, All Apps", () => {
 
     const identity = await mgr.createIdentity("pk-fingerprint-abc", "Alice");
 
-    expect(identity.canonicalId).toMatch(/^urn:uor:derivation:sha256:[0-9a-f]{64}$/);
-    expect(identity.algorithm).toBe("CRYSTALS-Dilithium-3");
-    expect(identity.epistemicGrade).toBe("A");
+    expect(identity["u:canonicalId"]).toMatch(/^urn:uor:derivation:sha256:[0-9a-f]{64}$/);
+    expect(identity["cert:algorithm"]).toBe("CRYSTALS-Dilithium-3");
+    expect(identity["derivation:epistemicGrade"]).toBe("A");
     expect(identity.displayName).toBe("Alice");
+    expect(identity["@context"]).toBe("https://uor.foundation/contexts/uor-v1.jsonld");
+    expect(identity["store:uorCid"]).toBeTruthy();
+    expect(identity["u:ipv6"]).toBeTruthy();
   });
 
   it("different fingerprints produce different canonical IDs", async () => {
@@ -33,7 +36,7 @@ describe("Universal Identity — One Login, All Apps", () => {
     const id1 = await mgr.createIdentity("pk-fingerprint-xyz");
     const id2 = await mgr.createIdentity("pk-fingerprint-abc");
 
-    expect(id1.canonicalId).not.toBe(id2.canonicalId);
+    expect(id1["u:canonicalId"]).not.toBe(id2["u:canonicalId"]);
   });
 
   it("persists and retrieves identity from KV", async () => {
@@ -41,10 +44,10 @@ describe("Universal Identity — One Login, All Apps", () => {
     const mgr = new UniversalIdentityManager(kv);
 
     const created = await mgr.createIdentity("pk-001", "Bob");
-    const retrieved = await mgr.getIdentity(created.canonicalId);
+    const retrieved = await mgr.getIdentity(created["u:canonicalId"]);
 
     expect(retrieved).not.toBeNull();
-    expect(retrieved!.canonicalId).toBe(created.canonicalId);
+    expect(retrieved!["u:canonicalId"]).toBe(created["u:canonicalId"]);
     expect(retrieved!.displayName).toBe("Bob");
   });
 
@@ -53,10 +56,10 @@ describe("Universal Identity — One Login, All Apps", () => {
     const mgr = new UniversalIdentityManager(kv);
 
     const identity = await mgr.createIdentity("pk-002");
-    const session = await mgr.authenticate(identity.canonicalId, "app-1");
+    const session = await mgr.authenticate(identity["u:canonicalId"], "app-1");
 
     expect(session["@type"]).toBe("cert:SessionCertificate");
-    expect(session.identityCanonicalId).toBe(identity.canonicalId);
+    expect(session.identityCanonicalId).toBe(identity["u:canonicalId"]);
     expect(session.authorizedApps).toBe("*");
     expect(session.sessionId).toMatch(/^urn:uor:derivation:sha256:/);
   });
@@ -66,8 +69,8 @@ describe("Universal Identity — One Login, All Apps", () => {
     const mgr = new UniversalIdentityManager(kv);
 
     const identity = await mgr.createIdentity("pk-003");
-    const s1 = await mgr.authenticate(identity.canonicalId, "app-1");
-    const s2 = await mgr.authenticate(identity.canonicalId, "app-2");
+    const s1 = await mgr.authenticate(identity["u:canonicalId"], "app-1");
+    const s2 = await mgr.authenticate(identity["u:canonicalId"], "app-2");
 
     // Same session reused (not expired)
     expect(s1.sessionId).toBe(s2.sessionId);
@@ -78,7 +81,7 @@ describe("Universal Identity — One Login, All Apps", () => {
     const mgr = new UniversalIdentityManager(kv);
 
     const identity = await mgr.createIdentity("pk-004");
-    const session = await mgr.authenticate(identity.canonicalId, "app-1");
+    const session = await mgr.authenticate(identity["u:canonicalId"], "app-1");
 
     expect(await mgr.verifySession(session.sessionId)).toBe(true);
   });
@@ -88,7 +91,7 @@ describe("Universal Identity — One Login, All Apps", () => {
     const mgr = new UniversalIdentityManager(kv);
 
     const identity = await mgr.createIdentity("pk-005");
-    const session = await mgr.authenticate(identity.canonicalId, "app-1");
+    const session = await mgr.authenticate(identity["u:canonicalId"], "app-1");
 
     await mgr.logout(session.sessionId);
     expect(await mgr.verifySession(session.sessionId)).toBe(false);
@@ -100,15 +103,15 @@ describe("Universal Identity — One Login, All Apps", () => {
 
     const identity = await mgr.createIdentity("pk-006");
 
-    await mgr.recordUsage(identity.canonicalId, "app-A", 3600);
-    await mgr.recordUsage(identity.canonicalId, "app-B", 1800);
-    await mgr.recordUsage(identity.canonicalId, "app-A", 600); // add more to app-A
+    await mgr.recordUsage(identity["u:canonicalId"], "app-A", 3600);
+    await mgr.recordUsage(identity["u:canonicalId"], "app-B", 1800);
+    await mgr.recordUsage(identity["u:canonicalId"], "app-A", 600);
 
-    const usage = await mgr.getUsageForIdentity(identity.canonicalId);
+    const usage = await mgr.getUsageForIdentity(identity["u:canonicalId"]);
     expect(usage).toHaveLength(2);
 
     const appA = usage.find((u) => u.appCanonicalId === "app-A");
-    expect(appA!.totalSeconds).toBe(4200); // 3600 + 600
+    expect(appA!.totalSeconds).toBe(4200);
     expect(appA!.sessionCount).toBe(2);
   });
 });
@@ -184,39 +187,26 @@ describe("Pooled Subscription — YouTube Premium Revenue Model", () => {
     const kv = new UnsKv();
     const engine = new PooledSubscriptionEngine(kv);
 
-    // 3 subscribers at $9.99/month = $29.97 total
     const subscriptions = [
       makeSub("user-A", 9.99),
       makeSub("user-B", 9.99),
       makeSub("user-C", 9.99),
     ];
 
-    // Usage data: app-X gets 60%, app-Y gets 30%, app-Z gets 10%
     const records: UsageRecord[] = [
-      // User A: 60min app-X, 30min app-Y
       { identityCanonicalId: "user-A", appCanonicalId: "app-X", totalSeconds: 3600, sessionCount: 5, lastActiveAt: "", periodStart: "" },
       { identityCanonicalId: "user-A", appCanonicalId: "app-Y", totalSeconds: 1800, sessionCount: 3, lastActiveAt: "", periodStart: "" },
-      // User B: 30min app-X, 30min app-Z
       { identityCanonicalId: "user-B", appCanonicalId: "app-X", totalSeconds: 1800, sessionCount: 2, lastActiveAt: "", periodStart: "" },
       { identityCanonicalId: "user-B", appCanonicalId: "app-Z", totalSeconds: 1800, sessionCount: 4, lastActiveAt: "", periodStart: "" },
-      // User C: 60min app-X only
       { identityCanonicalId: "user-C", appCanonicalId: "app-X", totalSeconds: 3600, sessionCount: 10, lastActiveAt: "", periodStart: "" },
     ];
 
     const period = await engine.closePeriod({ records, subscriptions });
 
-    // Total: $29.97
     expect(period.totalRevenue).toBe(29.97);
-
-    // Platform share: 20% of $29.97 = $5.99
     expect(period.platformShare).toBe(5.99);
-
-    // Developer pool: 80% = $23.98
     expect(period.developerPool).toBe(23.98);
 
-    // app-X: 3600+1800+3600 = 9000s out of 12600s total = ~71.4%
-    // app-Y: 1800s = ~14.3%
-    // app-Z: 1800s = ~14.3%
     const appX = period.payouts.find((p) => p.appCanonicalId === "app-X");
     const appY = period.payouts.find((p) => p.appCanonicalId === "app-Y");
     const appZ = period.payouts.find((p) => p.appCanonicalId === "app-Z");
@@ -225,21 +215,14 @@ describe("Pooled Subscription — YouTube Premium Revenue Model", () => {
     expect(appY).toBeDefined();
     expect(appZ).toBeDefined();
 
-    // app-X should get the most
     expect(appX!.payoutAmount).toBeGreaterThan(appY!.payoutAmount);
     expect(appX!.payoutAmount).toBeGreaterThan(appZ!.payoutAmount);
-
-    // app-Y and app-Z should get equal amounts (same usage)
     expect(appY!.payoutAmount).toBe(appZ!.payoutAmount);
 
-    // Total payouts should equal developer pool
     const totalPayouts = period.payouts.reduce((s, p) => s + p.payoutAmount, 0);
     expect(totalPayouts).toBeCloseTo(period.developerPool, 1);
 
-    // app-X had 3 unique users
     expect(appX!.uniqueUsers).toBe(3);
-
-    // app-Z had 1 unique user
     expect(appZ!.uniqueUsers).toBe(1);
   });
 
@@ -252,15 +235,13 @@ describe("Pooled Subscription — YouTube Premium Revenue Model", () => {
       { identityCanonicalId: "user-1", appCanonicalId: "my-app", totalSeconds: 3600, sessionCount: 1, lastActiveAt: "", periodStart: "" },
     ];
 
-    // Close two periods
     await engine.closePeriod({ records, subscriptions: subs });
     await engine.closePeriod({ records, subscriptions: subs });
 
     const balance = await engine.getDeveloperBalance("my-app");
     expect(balance.totalPeriods).toBe(2);
-    // Each period: $10 * 80% = $8, so 2 periods = $16
     expect(balance.totalEarned).toBe(16);
-    expect(balance.averageUsageShare).toBe(1); // only app
+    expect(balance.averageUsageShare).toBe(1);
   });
 
   it("period has a content-addressed canonical ID", async () => {
