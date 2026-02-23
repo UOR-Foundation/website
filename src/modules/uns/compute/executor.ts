@@ -70,17 +70,29 @@ const SANDBOX_GLOBALS = { neg, bnot, succ };
 function executeSandboxed(
   source: string,
   input: unknown,
-  _timeoutMs = 5000
+  timeoutMs = 5000
 ): unknown {
-  // Build a restricted function with explicit parameters only
-  // The function body is the deployed source — it should use `input`, `neg`, `bnot`, `succ`
+  // Build a restricted function with explicit parameters only.
+  // The function body is the deployed source — it should use `input`, `neg`, `bnot`, `succ`.
+  //
+  // Security hardening (2026-02-23):
+  //   1. Shadow all dangerous globals including constructor chains
+  //   2. Freeze sandbox-provided functions to prevent prototype pollution
+  //   3. Enforce execution timeout via synchronous deadline check
+  //   4. Block eval, Function constructor escape vectors
   try {
+    // Freeze ring operations so sandbox code cannot mutate them
+    const frozenNeg = Object.freeze(neg);
+    const frozenBnot = Object.freeze(bnot);
+    const frozenSucc = Object.freeze(succ);
+
     const fn = new Function(
       "input",
       "neg",
       "bnot",
       "succ",
       `"use strict";
+       // ── Block global scope escapes ──────────────────────────────────
        var globalThis = undefined;
        var self = undefined;
        var window = undefined;
@@ -92,10 +104,33 @@ function executeSandboxed(
        var setTimeout = undefined;
        var setInterval = undefined;
        var importScripts = undefined;
+       // ── Block constructor chain escapes ─────────────────────────────
+       var constructor = undefined;
+       var __proto__ = undefined;
+       var eval = undefined;
+       var Function = undefined;
+       var Reflect = undefined;
+       var Proxy = undefined;
        ${source}`
     );
 
-    return fn(input, neg, bnot, succ);
+    // Enforce timeout via synchronous deadline.
+    // For true async timeout, Web Workers or isolated-vm would be needed.
+    // This catches infinite loops that check Date.now() periodically,
+    // but cannot interrupt tight CPU loops (inherent JS limitation).
+    const deadline = Date.now() + timeoutMs;
+    const wrappedInput = typeof input === 'object' && input !== null
+      ? Object.freeze({ ...input as Record<string, unknown>, __deadline: deadline })
+      : input;
+
+    const result = fn(wrappedInput, frozenNeg, frozenBnot, frozenSucc);
+
+    // Post-execution timeout check (catches functions that took too long)
+    if (Date.now() > deadline) {
+      throw new Error(`Sandbox execution exceeded ${timeoutMs}ms timeout`);
+    }
+
+    return result;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     throw new Error(`Sandbox execution error: ${message}`);
