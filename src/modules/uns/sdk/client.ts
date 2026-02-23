@@ -574,6 +574,29 @@ export class UnsClient {
     };
   }
 
+  // ── P33: Fidelity Correlation ────────────────────────────────────────────
+
+  /**
+   * Compute fidelity between two canonical IDs using ring Hamming distance.
+   *
+   * Returns SKOS semantic recommendation (exactMatch/closeMatch/broadMatch/noMatch)
+   * with thresholds derived from partition cardinalities. Grade A — ring arithmetic.
+   */
+  async correlate(
+    canonicalIdA: string,
+    canonicalIdB: string
+  ): Promise<{
+    "@type": "observable:CorrelationMeasure";
+    fidelity: number;
+    hamming_distance: number;
+    skos_recommendation: string;
+    epistemic_grade: "A";
+    "derivation:derivationId": string;
+  }> {
+    const { correlateIds } = await import("@/modules/resolver/correlate-engine");
+    return correlateIds(canonicalIdA, canonicalIdB);
+  }
+
   // ── Internal ────────────────────────────────────────────────────────────
 
   private requireIdentity(method: string): UnsKeypair {

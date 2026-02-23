@@ -260,26 +260,54 @@ export async function uor_verify(input: VerifyInput): Promise<VerifyOutput> {
 }
 
 // ── Tool 4: uor_correlate ──────────────────────────────────────────────────
+// P33: Upgraded to fidelity engine with SKOS semantic recommendations.
+// Supports both ring-value correlation (legacy) and canonical-ID fidelity (P33).
+
+import {
+  correlateIds,
+  classifyFidelity,
+  FIDELITY_THRESHOLDS,
+  type CorrelateResult as FidelityResult,
+  type SkosRelation,
+} from "@/modules/resolver/correlate-engine";
 
 export interface CorrelateInput {
-  a: number;
-  b: number;
+  /** Ring value A (legacy mode). */
+  a?: number;
+  /** Ring value B (legacy mode). */
+  b?: number;
+  /** Canonical ID A (fidelity mode). */
+  canonicalIdA?: string;
+  /** Canonical ID B (fidelity mode). */
+  canonicalIdB?: string;
   quantum?: number;
 }
 
-export interface CorrelateOutput extends CorrelationResult {
+export interface CorrelateOutput {
+  /** Ring-level correlation (legacy). */
+  ring?: CorrelationResult;
+  /** Fidelity-level correlation (P33). */
+  fidelity?: FidelityResult;
   executionTimeMs: number;
 }
 
 export async function uor_correlate(input: CorrelateInput): Promise<CorrelateOutput> {
   const start = performance.now();
-  const ring = getRing(input.quantum);
-  const result = correlate(ring, input.a, input.b);
+  const result: CorrelateOutput = { executionTimeMs: 0 };
 
-  return {
-    ...result,
-    executionTimeMs: Math.round(performance.now() - start),
-  };
+  // Legacy ring-value correlation
+  if (input.a !== undefined && input.b !== undefined) {
+    const ring = getRing(input.quantum);
+    result.ring = correlate(ring, input.a, input.b);
+  }
+
+  // P33: Fidelity-based canonical ID correlation
+  if (input.canonicalIdA && input.canonicalIdB) {
+    result.fidelity = await correlateIds(input.canonicalIdA, input.canonicalIdB);
+  }
+
+  result.executionTimeMs = Math.round(performance.now() - start);
+  return result;
 }
 
 // ── Tool 5: uor_partition ──────────────────────────────────────────────────
