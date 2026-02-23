@@ -92,6 +92,15 @@ export const projects: ProjectData[] = [
     maturity: "Sandbox",
     imageKey: "uorIdentity",
   },
+  {
+    name: "UOR Terms",
+    slug: "uor-terms",
+    category: "Core Infrastructure",
+    description: "Define your own machine-readable terms and conditions. When any app or agent wants your data, they accept your rules — not the other way around. Privacy becomes programmable, enforceable, and content-addressed.",
+    maturity: "Sandbox",
+    url: "https://myterms.info/",
+    imageKey: "uorTerms",
+  },
 ];
 
 export const maturityInfo: { level: MaturityLevel; tagline: string; description: string; criteria: string[] }[] = [
