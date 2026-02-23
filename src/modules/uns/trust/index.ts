@@ -35,3 +35,12 @@ export type {
   TunnelReadyMessage,
   KyberKeypair,
 } from "./conduit";
+
+// ── P27: Attribution Protocol — cert:AttributionCertificate ─────────────────
+export { UnsAttribution } from "./attribution";
+export type {
+  AttributionCertificate,
+  AttributionVerifyResult,
+  GdprExport,
+  RoyaltyReport,
+} from "./attribution";
