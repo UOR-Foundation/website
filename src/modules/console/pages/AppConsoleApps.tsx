@@ -12,8 +12,8 @@ import {
   ZoneBadge,
 } from "../components/ConsoleUI";
 import {
-  ArrowRight, Loader2, Globe, Users, DollarSign,
-  QrCode, Copy, Check, Rocket, ShieldCheck, Database as DbIcon,
+  ArrowRight, Loader2, Globe,
+  QrCode, Copy, Check, Rocket, ShieldCheck,
   GitBranch, Upload, Package,
 } from "lucide-react";
 import heroImage from "@/assets/console-deploy-hero.png";
@@ -221,34 +221,35 @@ export default function AppConsoleApps() {
               </div>
 
               {/* Stats */}
-              <div className="hidden sm:flex items-center gap-6 text-xs text-muted-foreground shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5" />
+              <div className="hidden sm:flex items-center gap-6 text-xs shrink-0">
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Users</span>
                   <span className="font-medium text-foreground">{app.userCount}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <DollarSign className="h-3.5 w-3.5" />
-                  <span className="font-medium text-foreground">
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Revenue</span>
+                  <span className="font-medium text-green-500">
                     ${app.revenue.toFixed(0)}
                   </span>
                 </div>
               </div>
 
-              {/* Action icons */}
-              <div className="hidden sm:flex items-center gap-2 shrink-0">
+              {/* Actions */}
+              <div className="hidden sm:flex items-center gap-1 shrink-0">
                 <button
                   onClick={(e) => e.preventDefault()}
-                  className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex flex-col items-center gap-0.5 p-2 rounded-lg hover:bg-muted/50 transition-colors"
                   title="QR Cartridge"
                 >
                   <QrCode className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-[9px] text-muted-foreground/60">QR</span>
                 </button>
                 <button
                   onClick={(e) => {
                     e.preventDefault();
                     handleCopy(app.canonicalId);
                   }}
-                  className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex flex-col items-center gap-0.5 p-2 rounded-lg hover:bg-muted/50 transition-colors"
                   title="Copy canonical ID"
                 >
                   {copiedId === app.canonicalId ? (
@@ -256,6 +257,7 @@ export default function AppConsoleApps() {
                   ) : (
                     <Copy className="h-4 w-4 text-muted-foreground" />
                   )}
+                  <span className="text-[9px] text-muted-foreground/60">Copy</span>
                 </button>
               </div>
             </NavLink>
