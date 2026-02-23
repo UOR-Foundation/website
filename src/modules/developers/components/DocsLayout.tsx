@@ -15,7 +15,7 @@ const DocsLayout = ({ sidebar, breadcrumbs, tocItems, children }: DocsLayoutProp
   const currentPath = pathname + hash;
 
   return (
-    <div className="dark bg-section-dark text-section-dark-foreground min-h-screen pt-20">
+    <div className="dark bg-section-dark text-section-dark-foreground min-h-screen pt-28 md:pt-32">
       <div className="flex max-w-[1400px] mx-auto">
         {/* ── Left sidebar ──────────────────────────────────── */}
         <aside className="hidden lg:block w-64 shrink-0 border-r border-border/30 sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto">
