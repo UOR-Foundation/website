@@ -34,9 +34,9 @@ const MOCK_APPS: AppCard[] = [
 ];
 
 const DEPLOY_STEPS = [
-  { icon: Upload, label: "Build", desc: "Import & content-address your code" },
-  { icon: ShieldCheck, label: "Ship", desc: "Certify identity & pin to IPFS" },
-  { icon: Rocket, label: "Run", desc: "Stream via WASM to any device" },
+  { icon: Upload, label: "Build", desc: "Import your code and create a content-addressed image — like docker build" },
+  { icon: ShieldCheck, label: "Ship", desc: "Push to the UOR registry with a signed certificate — like docker push" },
+  { icon: Rocket, label: "Run", desc: "Execute via WASM on any device — like docker run" },
 ];
 
 const SOURCES = [
@@ -91,11 +91,10 @@ export default function AppConsoleApps() {
                 Build, Ship, Run
               </h1>
               <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed max-w-lg">
-                Import your web-coded app from GitHub, a live URL, or a ZIP. We
-                <strong className="text-foreground"> build</strong> a content-addressed identity,
-                <strong className="text-foreground"> ship</strong> it to IPFS with a certificate, and
-                <strong className="text-foreground"> run</strong> it via WASM — sovereign, verified,
-                on any device.
+                Paste a GitHub repo, live URL, or upload a ZIP — just like a Dockerfile.
+                We <strong className="text-foreground">build</strong> a content-addressed image,
+                <strong className="text-foreground"> push</strong> it to the UOR registry with a signed certificate, and
+                <strong className="text-foreground"> run</strong> it via WASM — deploy once, run anywhere.
               </p>
             </div>
 

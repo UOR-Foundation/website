@@ -16,24 +16,24 @@ import { useState } from "react";
 import { useTheme } from "next-themes";
 import { CanonicalIdBadge } from "./ConsoleUI";
 
-/* ── Navigation Items — Build · Ship · Run ────────────────────────────── */
+/* ── Navigation Items — Build · Ship · Run (Docker-aligned) ───────────── */
 
 const NAV_BUILD = [
-  { to: "/console",            icon: Rocket,    label: "Deploy",   end: true },
-  { to: "/console/compute",    icon: Cpu,       label: "Compute",  end: false },
-  { to: "/console/store",      icon: Database,  label: "Store",    end: false },
+  { to: "/console",            icon: Rocket,    label: "Images",    end: true,  hint: "Import & content-address code" },
+  { to: "/console/compute",    icon: Cpu,       label: "Compose",   end: false, hint: "Multi-service composition" },
+  { to: "/console/store",      icon: Database,  label: "Volumes",   end: false, hint: "Persistent storage & cache" },
 ];
 
 const NAV_SHIP = [
-  { to: "/console/dns",        icon: Globe,     label: "DNS" },
-  { to: "/console/trust",      icon: Lock,      label: "Trust" },
-  { to: "/console/discovery",  icon: Compass,   label: "Discovery" },
+  { to: "/console/discovery",  icon: Compass,   label: "Registry",  hint: "Publish & discover apps" },
+  { to: "/console/trust",      icon: Lock,      label: "Tags",      hint: "Certificates & versioning" },
+  { to: "/console/dns",        icon: Globe,     label: "Network",   hint: "DNS & routing" },
 ];
 
 const NAV_RUN = [
-  { to: "/console/overview",   icon: BarChart3, label: "Analytics" },
-  { to: "/console/shield",     icon: Shield,    label: "Shield" },
-  { to: "/console/agents",     icon: Bot,       label: "Agents" },
+  { to: "/console/overview",   icon: BarChart3, label: "Containers", hint: "Live instances & metrics" },
+  { to: "/console/shield",     icon: Shield,    label: "Logs",       hint: "Security & monitoring" },
+  { to: "/console/agents",     icon: Bot,       label: "Exec",       hint: "AI agents & orchestration" },
 ];
 
 /* ── Mock deployed apps (would come from SDK in production) ──────────── */
@@ -111,12 +111,12 @@ export default function ConsoleLayout() {
           </div>
         )}
 
-        {/* ── Build · Ship · Run Navigation ─────────────────────────── */}
+        {/* ── Build · Ship · Run Navigation (Docker-aligned) ──────── */}
         <nav className="px-2 pt-2 space-y-0.5">
           {[
-            { title: "Build", items: NAV_BUILD, desc: "Import, certify & compile" },
-            { title: "Ship", items: NAV_SHIP, desc: "Distribute & authenticate" },
-            { title: "Run", items: NAV_RUN, desc: "Monitor, protect & orchestrate" },
+            { title: "Build", items: NAV_BUILD },
+            { title: "Ship", items: NAV_SHIP },
+            { title: "Run", items: NAV_RUN },
           ].map((group) => (
             <div key={group.title} className="pb-2">
               {!collapsed && (
@@ -141,6 +141,7 @@ export default function ConsoleLayout() {
                     key={item.to}
                     to={item.to}
                     end={end || undefined}
+                    title={collapsed ? `${item.label} — ${item.hint}` : item.hint}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
                       active
                         ? "bg-primary/10 text-primary font-medium"
@@ -148,7 +149,14 @@ export default function ConsoleLayout() {
                     } ${collapsed ? "justify-center" : ""}`}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span>{item.label}</span>}
+                    {!collapsed && (
+                      <div className="flex-1 min-w-0">
+                        <span className="block">{item.label}</span>
+                        <span className="block text-[10px] text-muted-foreground/50 leading-tight">
+                          {item.hint}
+                        </span>
+                      </div>
+                    )}
                   </NavLink>
                 );
               })}
