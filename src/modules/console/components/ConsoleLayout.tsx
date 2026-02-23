@@ -13,7 +13,7 @@ import {
   Sun, Moon,
 } from "lucide-react";
 import { useState } from "react";
-import { useTheme } from "next-themes";
+import { ThemeProvider, useTheme } from "next-themes";
 import { CanonicalIdBadge } from "./ConsoleUI";
 
 /* ── Navigation Items — Build · Ship · Run (Docker-aligned) ───────────── */
@@ -55,7 +55,7 @@ const MOCK_NODE_ID = "urn:uor:derivation:sha256:a1b2c3d4e5f60718293a4b5c6d7e8f90
 
 /* ── Layout Component ────────────────────────────────────────────────── */
 
-export default function ConsoleLayout() {
+function ConsoleLayoutInner() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -273,5 +273,13 @@ export default function ConsoleLayout() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ConsoleLayout() {
+  return (
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+      <ConsoleLayoutInner />
+    </ThemeProvider>
   );
 }
