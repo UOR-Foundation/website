@@ -59,6 +59,9 @@ export type Database = {
           claimed_at: string
           display_name: string | null
           id: string
+          session_cid: string | null
+          session_derivation_id: string | null
+          session_issued_at: string | null
           uor_canonical_id: string | null
           uor_cid: string | null
           uor_glyph: string | null
@@ -71,6 +74,9 @@ export type Database = {
           claimed_at?: string
           display_name?: string | null
           id?: string
+          session_cid?: string | null
+          session_derivation_id?: string | null
+          session_issued_at?: string | null
           uor_canonical_id?: string | null
           uor_cid?: string | null
           uor_glyph?: string | null
@@ -83,6 +89,9 @@ export type Database = {
           claimed_at?: string
           display_name?: string | null
           id?: string
+          session_cid?: string | null
+          session_derivation_id?: string | null
+          session_issued_at?: string | null
           uor_canonical_id?: string | null
           uor_cid?: string | null
           uor_glyph?: string | null
