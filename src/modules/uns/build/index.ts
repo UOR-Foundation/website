@@ -103,3 +103,19 @@ export type {
   SecretValue,
   SecretWriteResult,
 } from "./secrets";
+
+// ── Deployment Snapshot (Unified Versioning Gate) ──────────────────────────
+export {
+  createSnapshot,
+  verifySnapshot,
+  diffSnapshots,
+  hashComponentBytes,
+  buildSnapshotChain,
+  SnapshotRegistry,
+} from "./snapshot";
+export type {
+  SnapshotComponent,
+  DeploymentSnapshot,
+  SnapshotInput,
+  SnapshotDiff,
+} from "./snapshot";
