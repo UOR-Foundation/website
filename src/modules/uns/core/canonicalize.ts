@@ -26,6 +26,7 @@ const UOR_WRAP_CONTEXT: Record<string, unknown> = {
 };
 
 const UOR_V1_CONTEXT_URL = "https://uor.foundation/contexts/uor-v1.jsonld";
+const UNS_V1_CONTEXT_URL = "https://uor.foundation/contexts/uns-v1.jsonld";
 
 const UOR_V1_INLINE_CONTEXT: Record<string, unknown> = {
   rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -55,6 +56,43 @@ const UOR_V1_INLINE_CONTEXT: Record<string, unknown> = {
   sobridge: "https://uor.foundation/sobridge/",
 };
 
+/** UNS v1 context — inlined for offline canonicalization. */
+const UNS_V1_INLINE_CONTEXT: Record<string, unknown> = {
+  uns: "https://uor.foundation/uns/",
+  u: "https://uor.foundation/u/",
+  cert: "https://uor.foundation/cert/",
+  proof: "https://uor.foundation/proof/",
+  partition: "https://uor.foundation/partition/",
+  morphism: "https://uor.foundation/morphism/",
+  state: "https://uor.foundation/state/",
+  derivation: "https://uor.foundation/derivation/",
+  trace: "https://uor.foundation/trace/",
+  xsd: "http://www.w3.org/2001/XMLSchema#",
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+  prov: "http://www.w3.org/ns/prov#",
+  "uns:name": { "@id": "https://uor.foundation/uns/name", "@type": "xsd:string" },
+  "uns:target": { "@id": "https://uor.foundation/uns/target", "@type": "@id" },
+  "uns:services": { "@id": "https://uor.foundation/uns/services", "@container": "@list" },
+  "uns:serviceType": { "@id": "https://uor.foundation/uns/serviceType", "@type": "xsd:string" },
+  "uns:port": { "@id": "https://uor.foundation/uns/port", "@type": "xsd:integer" },
+  "uns:priority": { "@id": "https://uor.foundation/uns/priority", "@type": "xsd:integer" },
+  "uns:validFrom": { "@id": "https://uor.foundation/uns/validFrom", "@type": "xsd:dateTime" },
+  "uns:validUntil": { "@id": "https://uor.foundation/uns/validUntil", "@type": "xsd:dateTime" },
+  "uns:signerCanonicalId": { "@id": "https://uor.foundation/uns/signerCanonicalId", "@type": "xsd:string" },
+  "uns:revoked": { "@id": "https://uor.foundation/uns/revoked", "@type": "xsd:boolean" },
+  "uns:successorKeyCanonicalId": { "@id": "https://uor.foundation/uns/successorKeyCanonicalId", "@type": "xsd:string" },
+  "u:canonicalId": { "@id": "https://uor.foundation/u/canonicalId", "@type": "xsd:string" },
+  "u:ipv6": { "@id": "https://uor.foundation/u/ipv6", "@type": "xsd:string" },
+  "u:cid": { "@id": "https://uor.foundation/u/cid", "@type": "xsd:string" },
+  "cert:algorithm": { "@id": "https://uor.foundation/cert/algorithm", "@type": "xsd:string" },
+  "cert:keyBytes": { "@id": "https://uor.foundation/cert/keyBytes", "@type": "xsd:base64Binary" },
+  "cert:signature": { "@id": "https://uor.foundation/cert/signature" },
+  "cert:signatureBytes": { "@id": "https://uor.foundation/cert/signatureBytes", "@type": "xsd:base64Binary" },
+  "cert:signerCanonicalId": { "@id": "https://uor.foundation/cert/signerCanonicalId", "@type": "xsd:string" },
+  "cert:signedAt": { "@id": "https://uor.foundation/cert/signedAt", "@type": "xsd:dateTime" },
+  "partition:irreducibleDensity": { "@id": "https://uor.foundation/partition/irreducibleDensity", "@type": "xsd:decimal" },
+};
+
 // ── Custom Document Loader ──────────────────────────────────────────────────
 
 function createDocumentLoader() {
@@ -72,6 +110,18 @@ function createDocumentLoader() {
         contextUrl: null,
         documentUrl: url,
         document: { "@context": UOR_V1_INLINE_CONTEXT },
+      };
+    }
+
+    // Serve UNS v1 context locally
+    if (
+      url === UNS_V1_CONTEXT_URL ||
+      url === UNS_V1_CONTEXT_URL.replace("https://", "http://")
+    ) {
+      return {
+        contextUrl: null,
+        documentUrl: url,
+        document: { "@context": UNS_V1_INLINE_CONTEXT },
       };
     }
 

@@ -6,7 +6,7 @@
  * re-exported here to enforce module encapsulation.
  */
 
-// ── Core Identity Engine (Phase 0-A) ───────────────────────────────────────
+// ── Core Identity Engine (Phase 0-A) + Records & Signing (Phase 0-B) ───────
 export {
   // Ring R_8
   neg, bnot, succ, pred, verifyCriticalIdentity,
@@ -17,9 +17,18 @@ export {
   canonicalizeToNQuads,
   // Identity engine
   singleProofHash, verifyCanonical,
+  // PQC Keypair & Signing
+  generateKeypair, signRecord, verifyRecord,
+  registerPublicKey, lookupPublicKey,
+  // Name Records
+  createRecord, publishRecord, resolveByName, clearRecordStore,
 } from "./core";
 
-export type { UorCanonicalIdentity } from "./core";
+export type {
+  UorCanonicalIdentity,
+  UnsKeypair, PublicKeyObject, SignatureBlock, SignedRecord,
+  UnsNameRecord, SignedUnsRecord, UnsTarget, UnsService, CreateRecordOpts,
+} from "./core";
 
 // ── Types (re-export all for consumer modules) ──────────────────────────────
 export type {

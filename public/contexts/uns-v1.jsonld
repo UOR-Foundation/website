@@ -1,0 +1,55 @@
+{
+  "@context": {
+    "uns": "https://uor.foundation/uns/",
+    "u": "https://uor.foundation/u/",
+    "cert": "https://uor.foundation/cert/",
+    "proof": "https://uor.foundation/proof/",
+    "partition": "https://uor.foundation/partition/",
+    "morphism": "https://uor.foundation/morphism/",
+    "state": "https://uor.foundation/state/",
+    "derivation": "https://uor.foundation/derivation/",
+    "trace": "https://uor.foundation/trace/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "prov": "http://www.w3.org/ns/prov#",
+
+    "uns:NameRecord": { "@id": "uns:NameRecord" },
+    "uns:IdentityObject": { "@id": "uns:IdentityObject" },
+    "uns:AccessPolicy": { "@id": "uns:AccessPolicy" },
+    "uns:AgentDescriptor": { "@id": "uns:AgentDescriptor" },
+    "uns:WafRuleSet": { "@id": "uns:WafRuleSet" },
+    "uns:SchemaMigration": { "@id": "uns:SchemaMigration" },
+    "uns:ResolutionResult": { "@id": "uns:ResolutionResult" },
+    "uns:InjectionAlert": { "@id": "uns:InjectionAlert" },
+    "uns:KeyRotation": { "@id": "uns:KeyRotation" },
+
+    "uns:name": { "@id": "uns:name", "@type": "xsd:string" },
+    "uns:target": { "@id": "uns:target", "@type": "@id" },
+    "uns:services": { "@id": "uns:services", "@container": "@list" },
+    "uns:serviceType": { "@id": "uns:serviceType", "@type": "xsd:string" },
+    "uns:port": { "@id": "uns:port", "@type": "xsd:integer" },
+    "uns:priority": { "@id": "uns:priority", "@type": "xsd:integer" },
+    "uns:validFrom": { "@id": "uns:validFrom", "@type": "xsd:dateTime" },
+    "uns:validUntil": { "@id": "uns:validUntil", "@type": "xsd:dateTime" },
+    "uns:signerCanonicalId": { "@id": "uns:signerCanonicalId", "@type": "xsd:string" },
+    "uns:revoked": { "@id": "uns:revoked", "@type": "xsd:boolean" },
+    "uns:successorKeyCanonicalId": { "@id": "uns:successorKeyCanonicalId", "@type": "xsd:string" },
+
+    "u:canonicalId": { "@id": "u:canonicalId", "@type": "xsd:string" },
+    "u:ipv6": { "@id": "u:ipv6", "@type": "xsd:string" },
+    "u:cid": { "@id": "u:cid", "@type": "xsd:string" },
+    "u:glyph": { "@id": "u:glyph", "@type": "xsd:string" },
+    "u:length": { "@id": "u:length", "@type": "xsd:integer" },
+    "u:ipv6PrefixLength": { "@id": "u:ipv6PrefixLength", "@type": "xsd:integer" },
+    "u:contentBits": { "@id": "u:contentBits", "@type": "xsd:integer" },
+    "u:lossWarning": { "@id": "u:lossWarning", "@type": "xsd:string" },
+
+    "cert:algorithm": { "@id": "cert:algorithm", "@type": "xsd:string" },
+    "cert:keyBytes": { "@id": "cert:keyBytes", "@type": "xsd:base64Binary" },
+    "cert:signature": { "@id": "cert:signature" },
+    "cert:signatureBytes": { "@id": "cert:signatureBytes", "@type": "xsd:base64Binary" },
+    "cert:signedAt": { "@id": "cert:signedAt", "@type": "xsd:dateTime" },
+
+    "partition:irreducibleDensity": { "@id": "partition:irreducibleDensity", "@type": "xsd:decimal" }
+  }
+}
