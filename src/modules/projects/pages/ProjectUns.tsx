@@ -6,7 +6,7 @@ const ProjectUns = () => (
     name="UOR Name Service (UNS)"
     slug="uns"
     category="Core Infrastructure"
-    tagline="A complete network infrastructure platform that makes every piece of data findable, verifiable, and protected. Names resolve to content, not locations. Trust is built into the address itself."
+    tagline="A complete network infrastructure platform built on IPv6 and the UOR Framework. Every resource gets a permanent, content-derived IPv6 address that makes it findable, verifiable, and protected across any network."
     heroImage={heroImg}
     repoUrl="/uns"
     agentInstructions={[
@@ -34,10 +34,10 @@ const ProjectUns = () => (
         content: (
           <>
             <p>
-              UNS is a complete network infrastructure platform where trust is built into the data itself. Instead of relying on external systems to verify names, identities, and content, UNS derives all of these from the content's own mathematical fingerprint. The address of any resource is a direct function of what it contains.
+              UNS combines the UOR Framework's content-addressing system with IPv6, the internet's native network protocol. The UOR Framework generates a unique mathematical fingerprint for any piece of content. UNS then projects that fingerprint into a standard IPv6 address, creating a direct link between what something is and where it can be found on the network.
             </p>
             <p>
-              This means: if the content changes, the address changes. If the address matches, the content is authentic. Verification is instant, automatic, and requires no third party.
+              This means every resource gets a real, routable IPv6 address that is derived from its content. If the content changes, the address changes. If the address matches, the content is authentic. No external directory or certificate is needed to verify the connection. The address itself is the proof.
             </p>
             <p>
               UNS provides eleven integrated services that together replace the patchwork of systems most infrastructure depends on today:
@@ -76,31 +76,28 @@ const ProjectUns = () => (
         content: (
           <>
             <p>
-              Every resource in UNS gets a permanent fingerprint derived from its content. This fingerprint produces four forms that work together:
+              UNS starts with the UOR Framework, which computes a unique fingerprint for any piece of content. That fingerprint is then mapped into four complementary forms:
             </p>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">A network address</strong> for routing traffic to the right destination.</span>
+                <span><strong className="text-foreground">An IPv6 address</strong> for routing traffic across real networks. UNS uses a dedicated IPv6 prefix (fd00:0075:6f72::/48) where every address is derived directly from content, not assigned by a registry.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">A content identifier</strong> for retrieving the exact data from any storage provider.</span>
+                <span><strong className="text-foreground">A content identifier</strong> for retrieving the exact data from any storage provider, ensuring you always get what you asked for.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">A verification key</strong> for confirming the data has not been altered.</span>
+                <span><strong className="text-foreground">A verification key</strong> for confirming the data has not been altered since it was published.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">A full identity</strong> for complete, lossless verification when it matters most.</span>
+                <span><strong className="text-foreground">A full identity</strong> (the complete UOR fingerprint) for lossless verification when maximum assurance is needed.</span>
               </li>
             </ul>
             <p>
-              These four forms are all derived from the same fingerprint, so they always agree. If any one of them fails to match, you know something has changed.
-            </p>
-            <p>
-              The platform also uses next-generation security that is designed to remain safe even against future quantum computers. This protection is embedded throughout the system, not bolted on as an afterthought.
+              The IPv6 address handles routing. The full UOR identity handles verification. Together, they give every resource a network presence that is both globally reachable and independently verifiable. The platform also uses next-generation cryptography designed to remain secure against future quantum computers.
             </p>
           </>
         ),
