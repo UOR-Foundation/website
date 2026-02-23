@@ -109,7 +109,7 @@ const DevelopersPage = () => (
     <div className="dark bg-section-dark text-section-dark-foreground min-h-screen">
 
       {/* ━━ Hero ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="pt-40 pb-10 md:pt-48 md:pb-14">
+      <section className="pt-48 pb-10 md:pt-56 md:pb-14">
         <div className="container max-w-5xl">
           {/* Top nav links */}
           <nav className="flex items-center gap-5 text-sm mb-10">
