@@ -111,7 +111,7 @@ const DonatePopup = ({ open, onOpenChange }: DonatePopupProps) => {
             onClick={() => setTab("crypto")}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium font-body transition-all ${
               tab === "crypto"
-                ? "bg-primary text-primary-foreground shadow-md"
+                ? "bg-[hsl(36,100%,50%)] text-white shadow-md"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
