@@ -1,13 +1,8 @@
 /**
  * Your Space — Personal Sovereign Data Dashboard
  * 
- * UOR Framework Compliance:
- * Every user is treated as a first-class identity object, derived from
- * their attributes via the URDNA2015 → SHA-256 → singleProofHash pipeline.
- * This page provides a personal dashboard for managing that identity,
- * its associated data, activity, and experience controls.
- * 
- * Page-scoped dark/light mode — does not affect the rest of the site.
+ * Page-scoped light/dark mode — does not affect the rest of the site.
+ * Starts in LIGHT mode for an approachable first impression.
  */
 
 import { useState, useCallback } from "react";
@@ -29,7 +24,7 @@ const loadVotes = (): Record<string, number> => {
 };
 
 const YourSpacePage = () => {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [votes, setVotes] = useState<Record<string, number>>(loadVotes);
 
@@ -41,20 +36,19 @@ const YourSpacePage = () => {
     });
   }, []);
 
-  // Default identity — in production this comes from UniversalIdentityManager.createIdentity()
   const userName = "Alex";
 
   return (
-    <div className={`min-h-screen font-mono flex flex-col relative transition-colors duration-300 ${isDark ? "bg-black text-white" : "bg-gray-50 text-gray-900"}`}>
+    <div className={`min-h-screen flex flex-col relative transition-colors duration-300 ${isDark ? "bg-[hsl(220,18%,7%)] text-[hsl(210,15%,90%)]" : "bg-[hsl(210,30%,98%)] text-[hsl(220,20%,12%)]"}`}>
       <SpaceHeader userName={userName} isDark={isDark} />
 
       {/* Dark/Light mode toggle — page-scoped */}
       <button
         onClick={() => setIsDark(!isDark)}
-        className={`fixed top-6 right-[280px] z-[60] p-2 rounded-full border transition-all duration-200 ${
+        className={`fixed top-6 right-[280px] z-[60] p-2.5 rounded-full border transition-all duration-200 ${
           isDark
             ? "bg-white/10 border-white/20 text-white hover:bg-white/20"
-            : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
+            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 shadow-sm"
         }`}
         title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
       >
@@ -62,8 +56,8 @@ const YourSpacePage = () => {
       </button>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 pt-56 pb-24">
-        <div className="space-y-4 max-w-[1400px] mx-auto">
+      <div className="flex-1 p-6 pt-56 pb-28">
+        <div className="space-y-10 max-w-[1400px] mx-auto">
           <OwnSection isDark={isDark} searchQuery={searchQuery} setSearchQuery={setSearchQuery} votes={votes} onVote={handleVote} />
           <MonitorSection isDark={isDark} votes={votes} onVote={handleVote} />
           <ControlSection isDark={isDark} votes={votes} onVote={handleVote} />
