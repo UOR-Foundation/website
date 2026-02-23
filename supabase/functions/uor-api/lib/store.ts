@@ -67,6 +67,35 @@ export function computeUorAddress(bytes: Uint8Array): { glyph: string; length: n
   return { glyph, length: bytes.length };
 }
 
+// ── Content Addressing — IPv6 ULA (UOR routable endpoint) ───────────────────
+
+/**
+ * Compute a UOR content-addressed IPv6 address from SHA-256 hash bytes.
+ * Uses fd00:0075:6f72::/48 ULA prefix (encoding "uor" in ASCII).
+ * First 80 bits (10 bytes) of SHA-256 fill the remaining 5 hextets.
+ */
+export function computeIpv6Address(hashBytes: Uint8Array): {
+  ipv6: string;
+  prefix: string;
+  prefixLength: number;
+  contentBits: number;
+} {
+  const contentBytes = hashBytes.slice(0, 10);
+  const hextets: string[] = [];
+  for (let i = 0; i < 10; i += 2) {
+    const hextet = ((contentBytes[i] << 8) | contentBytes[i + 1])
+      .toString(16).padStart(4, '0');
+    hextets.push(hextet);
+  }
+  const ipv6 = `fd00:0075:6f72:${hextets.join(':')}`;
+  return {
+    ipv6,
+    prefix: 'fd00:0075:6f72::/48',
+    prefixLength: 48,
+    contentBits: 80,
+  };
+}
+
 /**
  * Encode Braille glyph to ASCII-safe hex representation for HTTP headers.
  */
@@ -191,8 +220,8 @@ export async function canonicalizeToNQuads(obj: unknown): Promise<string> {
 }
 
 /**
- * Single Proof Hash — URDNA2015 canonical form → SHA-256 → three identity forms.
- * One input. One hash. Three derived forms.
+ * Single Proof Hash — URDNA2015 canonical form → SHA-256 → four identity forms.
+ * One input. One hash. Four derived forms. No DNS required.
  */
 export async function singleProofHashEdge(obj: unknown): Promise<{
   nquads: string;
@@ -200,6 +229,7 @@ export async function singleProofHashEdge(obj: unknown): Promise<{
   derivationId: string;
   cid: string;
   uorAddress: { glyph: string; length: number };
+  ipv6Address: { ipv6: string; prefix: string; prefixLength: number; contentBits: number };
 }> {
   const nquads = await canonicalizeToNQuads(obj);
   const canonicalBytes = new TextEncoder().encode(nquads);
@@ -210,8 +240,9 @@ export async function singleProofHashEdge(obj: unknown): Promise<{
   const derivationId = `urn:uor:derivation:sha256:${hashHex}`;
   const cid = await computeCid(canonicalBytes);
   const uorAddress = computeUorAddress(hashBytes);
+  const ipv6Address = computeIpv6Address(hashBytes);
 
-  return { nquads, hashHex, derivationId, cid, uorAddress };
+  return { nquads, hashHex, derivationId, cid, uorAddress, ipv6Address };
 }
 
 // ── CID computation — CIDv1 / dag-json / sha2-256 / base32lower ────────────

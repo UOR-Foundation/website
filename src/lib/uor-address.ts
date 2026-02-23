@@ -9,6 +9,7 @@
 import { singleProofHash } from "./uor-canonical";
 export type { SingleProofResult } from "./uor-canonical";
 export { singleProofHash, canonicalizeToNQuads, verifySingleProof } from "./uor-canonical";
+
 // ── Canonical JSON-LD serialisation ─────────────────────────────────────────
 
 /** Deterministic JSON-LD serialization with recursively sorted keys. */
@@ -93,6 +94,148 @@ export function computeUorAddress(bytes: Uint8Array): {
   return { "u:glyph": glyph, "u:length": bytes.length };
 }
 
+// ── IPv6 Content Address — UOR routable endpoint ────────────────────────────
+
+/**
+ * UOR IPv6 Prefix: fd00:75:6f72::/48
+ *
+ * Breakdown:
+ *   fd   — RFC 4193 Unique Local Address (ULA) prefix
+ *   00:75 — "u" in ASCII (0x75) padded to 16 bits → UOR namespace marker
+ *   6f72 — "or" in ASCII (0x6F 0x72) → completes "uor" identifier
+ *
+ * This allocates a /48 UOR network, leaving 80 bits (10 bytes) for
+ * content-derived addressing from the SHA-256 hash.
+ *
+ * The /48 boundary follows RFC 4193 §3.1 recommendations for site-level
+ * allocation within the fd00::/8 ULA space.
+ *
+ * Collision resistance: 80 content bits → 2^40 birthday bound.
+ * For the full 128-bit space, use computeIpv6Full() with /8 prefix.
+ */
+const UOR_IPV6_PREFIX_48 = "fd00:0075:6f72";
+
+/**
+ * Compute a UOR content-addressed IPv6 address from SHA-256 hash bytes.
+ *
+ * Uses the fd00:75:6f72::/48 ULA prefix with the first 80 bits (10 bytes)
+ * of the SHA-256 hash filling the remaining 5 hextets.
+ *
+ * Format: fd00:0075:6f72:XXXX:XXXX:XXXX:XXXX:XXXX
+ *
+ * @param hashBytes  The 32-byte SHA-256 digest from singleProofHash.
+ * @returns          RFC 5952-compliant IPv6 address string and metadata.
+ */
+export function computeIpv6Address(hashBytes: Uint8Array): {
+  "u:ipv6": string;
+  "u:ipv6Prefix": string;
+  "u:ipv6PrefixLength": number;
+  "u:contentBits": number;
+} {
+  // Take first 10 bytes (80 bits) of SHA-256 hash
+  const contentBytes = hashBytes.slice(0, 10);
+
+  // Format as 5 hextets (each 2 bytes = 4 hex chars)
+  const hextets: string[] = [];
+  for (let i = 0; i < 10; i += 2) {
+    const hextet = ((contentBytes[i] << 8) | contentBytes[i + 1])
+      .toString(16)
+      .padStart(4, "0");
+    hextets.push(hextet);
+  }
+
+  const ipv6 = `${UOR_IPV6_PREFIX_48}:${hextets.join(":")}`;
+
+  return {
+    "u:ipv6": ipv6,
+    "u:ipv6Prefix": `${UOR_IPV6_PREFIX_48}::/48`,
+    "u:ipv6PrefixLength": 48,
+    "u:contentBits": 80,
+  };
+}
+
+/**
+ * Compute a full-entropy UOR IPv6 address using minimal /8 prefix.
+ *
+ * Uses fd::/8 prefix with 120 content bits (15 bytes) from SHA-256.
+ * Collision resistance: 2^60 birthday bound — suitable for billions of objects.
+ *
+ * Format: fdXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX
+ * where XX... are the first 15 bytes of the SHA-256 hash.
+ *
+ * @param hashBytes  The 32-byte SHA-256 digest.
+ * @returns          Full-entropy IPv6 address string.
+ */
+export function computeIpv6Full(hashBytes: Uint8Array): string {
+  // fd prefix (8 bits) + 120 content bits from hash
+  const bytes = new Uint8Array(16);
+  bytes[0] = 0xfd;
+  bytes.set(hashBytes.slice(0, 15), 1);
+
+  const hextets: string[] = [];
+  for (let i = 0; i < 16; i += 2) {
+    hextets.push(((bytes[i] << 8) | bytes[i + 1]).toString(16).padStart(4, "0"));
+  }
+  return hextets.join(":");
+}
+
+/**
+ * Parse a UOR IPv6 address back to the content-derived hash bytes.
+ *
+ * Supports both /48 prefix (fd00:0075:6f72:...) and /8 prefix (fd...) formats.
+ * Returns the content bytes (excluding the prefix).
+ *
+ * @param ipv6  A UOR content-addressed IPv6 string.
+ * @returns     The content-derived bytes extracted from the address.
+ * @throws      If the address is not a valid UOR IPv6 address.
+ */
+export function ipv6ToContentBytes(ipv6: string): Uint8Array {
+  const parts = ipv6.split(":");
+  if (parts.length !== 8) {
+    throw new Error(`Invalid IPv6 address: expected 8 hextets, got ${parts.length}`);
+  }
+
+  // Parse all 16 bytes
+  const fullBytes = new Uint8Array(16);
+  for (let i = 0; i < 8; i++) {
+    const val = parseInt(parts[i], 16);
+    fullBytes[i * 2] = (val >> 8) & 0xff;
+    fullBytes[i * 2 + 1] = val & 0xff;
+  }
+
+  // Check for /48 UOR prefix: fd00:0075:6f72
+  if (fullBytes[0] === 0xfd && fullBytes[1] === 0x00 &&
+      fullBytes[2] === 0x00 && fullBytes[3] === 0x75 &&
+      fullBytes[4] === 0x6f && fullBytes[5] === 0x72) {
+    return fullBytes.slice(6); // 10 content bytes
+  }
+
+  // Check for /8 UOR prefix: fd
+  if (fullBytes[0] === 0xfd) {
+    return fullBytes.slice(1); // 15 content bytes
+  }
+
+  throw new Error(`Not a UOR IPv6 address: must start with fd00:0075:6f72 (/48) or fd (/8)`);
+}
+
+/**
+ * Verify that a UOR IPv6 address was derived from the given SHA-256 hash.
+ *
+ * @param ipv6       The IPv6 address to verify.
+ * @param hashBytes  The original 32-byte SHA-256 digest.
+ * @returns          True iff the content bytes in the IPv6 match the hash prefix.
+ */
+export function verifyIpv6Address(ipv6: string, hashBytes: Uint8Array): boolean {
+  try {
+    const contentBytes = ipv6ToContentBytes(ipv6);
+    const expectedPrefix = hashBytes.slice(0, contentBytes.length);
+    return contentBytes.length === expectedPrefix.length &&
+      contentBytes.every((b, i) => b === expectedPrefix[i]);
+  } catch {
+    return false;
+  }
+}
+
 // ── Self-referential field stripping ────────────────────────────────────────
 
 /** Strip identity fields before recomputing CID for verification. */
@@ -111,6 +254,7 @@ export function stripSelfReferentialFields(
 export interface ModuleIdentity {
   cid: string;
   uorAddress: { "u:glyph": string; "u:length": number };
+  ipv6Address: { "u:ipv6": string; "u:ipv6Prefix": string; "u:ipv6PrefixLength": number; "u:contentBits": number };
   canonicalBytes: Uint8Array;
 }
 
@@ -129,6 +273,7 @@ export async function computeModuleIdentity(
   return {
     cid: proof.cid,
     uorAddress: proof.uorAddress,
+    ipv6Address: proof.ipv6Address,
     canonicalBytes: proof.canonicalBytes,
   };
 }

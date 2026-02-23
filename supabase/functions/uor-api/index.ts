@@ -816,6 +816,7 @@ import {
   stripSelfReferentialFields,
   singleProofHashEdge,
   canonicalizeToNQuads,
+  computeIpv6Address,
 } from "./lib/store.ts";
 
 /**
@@ -7078,6 +7079,7 @@ function computeUorAddressLocal(bytes: Uint8Array): { glyph: string; length: num
 interface SobridgeIdentity {
   cid: string;
   uorAddress: { glyph: string; length: number };
+  ipv6Address: { ipv6: string; prefix: string; prefixLength: number; contentBits: number };
   canonicalBytes: Uint8Array;
   sha256: string;
 }
@@ -7089,11 +7091,12 @@ interface SobridgeIdentity {
 //   derivation_id = "urn:uor:derivation:sha256:" + hex(hash)
 //   store:uorCid  = CIDv1(dag-json, sha2-256, nquadsBytes)
 //   u:address     = toGlyph(hash[0..N])
+//   u:ipv6        = fd00:0075:6f72:{hash[0..10] as hextets}
 //
 // URDNA2015 is W3C standard and guarantees that semantically equivalent
 // JSON-LD documents (regardless of key order, whitespace, or context expansion)
 // produce identical canonical N-Quads, and therefore identical hashes.
-// This is the ONLY path. No fallback. No sorted-key JSON.
+// This is the ONLY path. No fallback. No sorted-key JSON. No DNS.
 
 async function computeSobridgeIdentity(obj: Record<string, unknown>): Promise<SobridgeIdentity> {
   // Ensure @context is present for proper JSON-LD processing
@@ -7103,6 +7106,7 @@ async function computeSobridgeIdentity(obj: Record<string, unknown>): Promise<So
   return {
     cid: result.cid,
     uorAddress: result.uorAddress,
+    ipv6Address: result.ipv6Address,
     canonicalBytes: new TextEncoder().encode(result.nquads),
     sha256: result.hashHex,
   };
