@@ -1,6 +1,8 @@
 import {
   Rocket, Globe, Cpu, Database, Shield, Lock, Bot, Key,
-  ScrollText, Code, Home, FileJson, type LucideProps,
+  ScrollText, Code, Home, FileJson, BookOpen, Fingerprint,
+  Server, HardDrive, Network, ChevronRight, Terminal, Zap,
+  type LucideProps,
 } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
 
@@ -8,7 +10,8 @@ type LucideIcon = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttrib
 
 const iconMap: Record<string, LucideIcon> = {
   Rocket, Globe, Cpu, Database, Shield, Lock, Bot, Key,
-  ScrollText, Code, Home, FileJson,
+  ScrollText, Code, Home, FileJson, BookOpen, Fingerprint,
+  Server, HardDrive, Network, ChevronRight, Terminal, Zap,
 };
 
 interface DocIconProps {

@@ -10,29 +10,32 @@ interface DocCategoryCardProps {
 const DocCategoryCard = ({ category }: DocCategoryCardProps) => (
   <Link
     to={category.href}
-    className={`group block rounded-2xl border border-border bg-card p-6 transition-all duration-200 hover:border-primary/30 hover:shadow-lg ${
-      category.status === "coming-soon" ? "opacity-75 pointer-events-none" : ""
+    className={`group flex items-start gap-4 rounded-xl border border-border/60 bg-card/50 p-5 transition-all duration-200 hover:border-primary/40 hover:bg-card ${
+      category.status === "coming-soon" ? "pointer-events-none" : ""
     }`}
   >
-    <div className="flex items-start justify-between mb-4">
-      <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-        <DocIcon name={category.icon} size={22} />
-      </div>
-      {category.status === "coming-soon" && (
-        <span className="text-xs font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
-          Coming soon
-        </span>
-      )}
+    <div className="shrink-0 mt-0.5 p-2 rounded-lg bg-primary/10 text-primary">
+      <DocIcon name={category.icon} size={18} />
     </div>
-    <h3 className="text-lg font-semibold font-display mb-2 text-card-foreground">
-      {category.title}
-    </h3>
-    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-      {category.description}
-    </p>
-    <span className="inline-flex items-center text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-      Explore docs <ChevronRight size={14} className="ml-1" />
-    </span>
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-2 mb-1">
+        <h3 className="text-sm font-semibold text-card-foreground font-body">
+          {category.title}
+        </h3>
+        {category.status === "coming-soon" && (
+          <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase tracking-wider">
+            Soon
+          </span>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+        {category.description}
+      </p>
+    </div>
+    <ChevronRight
+      size={14}
+      className="shrink-0 mt-1 text-muted-foreground/40 group-hover:text-primary transition-colors"
+    />
   </Link>
 );
 
