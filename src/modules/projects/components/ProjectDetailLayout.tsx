@@ -231,11 +231,11 @@ const ProjectDetailLayout = ({
       {/* Cover image */}
       <section className="border-b border-border">
         <div className="container max-w-4xl py-0">
-          <div className="rounded-2xl overflow-hidden border border-border project-card-glow">
+          <div className="rounded-2xl overflow-hidden border border-border project-card-glow max-w-2xl mx-auto">
             <img
               src={heroImage}
               alt={name}
-              className="w-full h-64 md:h-80 object-cover"
+              className="w-full h-48 md:h-64 object-cover"
               loading="eager"
             />
           </div>
