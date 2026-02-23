@@ -27,4 +27,23 @@ export type { Quad } from "./uns-graph";
 export { generateVoID, CANONICAL_QUERIES } from "./void-descriptor";
 export type { VoIDDescriptor } from "./void-descriptor";
 
+// ── P29: Schema.org Extension + Semantic Web Surface ────────────────────────
+export {
+  recordToSchemaOrg,
+  functionToSchemaOrg,
+  objectToSchemaOrg,
+  nodeToSchemaOrg,
+  negotiateFormat,
+  serializeSchemaOrg,
+  generateSitemap,
+  generateRobotsTxt,
+} from "./schema-org";
+export type {
+  SchemaOrgRecord,
+  SchemaOrgFunction,
+  SchemaOrgStoredObject,
+  SitemapEntry,
+  SerializationFormat,
+} from "./schema-org";
+
 export { default as KnowledgeGraphPage } from "./pages/KnowledgeGraphPage";
