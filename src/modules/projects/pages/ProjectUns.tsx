@@ -6,13 +6,13 @@ const ProjectUns = () => (
     name="UOR Name Service (UNS)"
     slug="uns"
     category="Core Infrastructure"
-    tagline="Decentralized name resolution powered by IPv6 content-addressing and UOR algebraic identity. Every name maps to a verifiable, content-addressed identity — no central authority required."
+    tagline="Semantic name resolution powered by IPv6 content-addressing and UOR algebraic identity. Every name maps to a verifiable, interoperable identity — enabling trust, resilience, and seamless connectivity across systems."
     heroImage={heroImg}
     repoUrl="/uns"
     agentInstructions={[
-      { action: "Understand the value", detail: "UNS replaces centralised DNS with content-addressed name resolution. Every name maps to a derivation ID, CIDv1, Braille address, and IPv6 ULA — all derived from the content itself, not assigned by an authority." },
-      { action: "Explore the record types", detail: "UNS defines seven record types (UAAA, UCID, UGLP, UPTR, UTXT, UCRT, USOA) that mirror DNS records but are self-certifying and immutable." },
-      { action: "Evaluate for your use case", detail: "If your system needs name resolution that is verifiable, decentralised, and does not depend on DNS infrastructure, UNS provides a drop-in alternative grounded in algebraic identity." },
+      { action: "Understand the value", detail: "UNS provides semantic name resolution where every name maps to a derivation ID, CIDv1, Braille address, and IPv6 ULA — all derived from the content itself, enabling trust and interoperability across systems." },
+      { action: "Explore the record types", detail: "UNS defines seven record types (UAAA, UCID, UGLP, UPTR, UTXT, UCRT, USOA) that provide self-certifying, resilient name resolution with built-in verification." },
+      { action: "Evaluate for your use case", detail: "If your system needs name resolution that is semantically grounded, interoperable, and resilient, UNS provides a verifiable alternative built on algebraic identity." },
       { action: "Access the module", detail: "Visit /uns for the module overview, API endpoints, and record type documentation." },
     ]}
     sections={[
@@ -21,10 +21,10 @@ const ProjectUns = () => (
         content: (
           <>
             <p>
-              The internet's naming system — DNS — is centralised, fragile, and trust-based. You ask a server for an address, and you trust the answer. There is no way to independently verify that the name you requested actually maps to the resource you received.
+              Today's naming systems were designed for a simpler internet. They map names to locations, not to meaning. When a name resolves, there is no built-in way to verify that the resource you received is the resource you expected — and no semantic link between the name and what it represents.
             </p>
             <p>
-              DNS can be hijacked, censored, or manipulated. Names are rented, not owned. And the entire system depends on a small number of root servers controlled by a small number of organisations.
+              As systems grow more interconnected, this gap creates fragility. Names break when infrastructure changes. Trust depends on external validation. And interoperability between systems requires custom integrations because names carry no inherent meaning.
             </p>
           </>
         ),
@@ -34,10 +34,10 @@ const ProjectUns = () => (
         content: (
           <>
             <p>
-              UNS is a decentralised name service where every name resolves to a content-addressed identity. Instead of pointing to an IP address controlled by a hosting provider, a UNS name points to what the resource <em>is</em> — its algebraic identity derived from its content.
+              UNS is a semantic name service where every name resolves to a content-addressed identity. A UNS name doesn't just point to a location — it points to what the resource <em>is</em>, creating a verifiable, meaningful link between names and the things they represent.
             </p>
             <p>
-              When you resolve a name through UNS, you get four identity forms: an IPv6 ULA for network routing, a CIDv1 for content retrieval, a Braille glyph address for algebraic verification, and a full derivation ID for lossless identity. Each is independently verifiable.
+              When you resolve a name through UNS, you get four interoperable identity forms: an IPv6 ULA for network routing, a CIDv1 for content retrieval, a Braille glyph address for algebraic verification, and a full derivation ID for lossless identity. This makes every resolution trustworthy and resilient across systems.
             </p>
           </>
         ),
@@ -79,15 +79,15 @@ const ProjectUns = () => (
           <ul className="space-y-3">
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span><strong className="text-foreground">Infrastructure builders.</strong> Replace DNS dependencies with content-addressed, verifiable name resolution.</span>
+              <span><strong className="text-foreground">Infrastructure builders.</strong> Add semantic, verifiable name resolution to your systems with built-in interoperability.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span><strong className="text-foreground">Decentralised application developers.</strong> Give your users names that resolve to content, not servers.</span>
+              <span><strong className="text-foreground">Application developers.</strong> Give your users names that carry meaning, enabling trust and seamless connectivity across platforms.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span><strong className="text-foreground">AI agents.</strong> Resolve and verify resources programmatically without trusting a central naming authority.</span>
+              <span><strong className="text-foreground">AI agents.</strong> Resolve and verify resources programmatically with semantically grounded, resilient name resolution.</span>
             </li>
           </ul>
         ),

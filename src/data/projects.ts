@@ -64,7 +64,7 @@ export const projects: ProjectData[] = [
     name: "UOR Name Service",
     slug: "uns",
     category: "Core Infrastructure",
-    description: "Decentralized name resolution powered by IPv6 content-addressing and UOR algebraic identity. DNS-equivalent services without centralised authority.",
+    description: "Semantic name resolution powered by IPv6 content-addressing and UOR algebraic identity. Enables trust, interoperability, and resilience across systems.",
     maturity: "Sandbox",
     imageKey: "uns",
   },
