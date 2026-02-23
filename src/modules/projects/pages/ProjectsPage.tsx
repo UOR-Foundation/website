@@ -7,6 +7,7 @@ import projectAtlasImg from "@/assets/project-atlas.png";
 import projectAtomicLangImg from "@/assets/project-atomic-lang.jpg";
 import projectPrismImg from "@/assets/project-prism.png";
 import projectUorMcpImg from "@/assets/project-uor-mcp.jpg";
+import projectUnsImg from "@/assets/project-uns.jpg";
 import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
 import { DISCORD_URL } from "@/data/external-links";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +18,7 @@ const imageMap: Record<string, string> = {
   atomicLang: projectAtomicLangImg,
   prism: projectPrismImg,
   uorMcp: projectUorMcpImg,
+  uns: projectUnsImg,
 };
 
 type Project = ProjectData & { image?: string };

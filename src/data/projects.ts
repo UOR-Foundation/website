@@ -60,6 +60,14 @@ export const projects: ProjectData[] = [
     url: "https://github.com/UOR-Foundation/uor-mcp",
     imageKey: "uorMcp",
   },
+  {
+    name: "UoR Name Service",
+    slug: "uns",
+    category: "Core Infrastructure",
+    description: "Decentralized name resolution powered by IPv6 content-addressing and UOR algebraic identity. DNS-equivalent services without centralised authority.",
+    maturity: "Sandbox",
+    imageKey: "uns",
+  },
 ];
 
 export const maturityInfo: { level: MaturityLevel; tagline: string; description: string; criteria: string[] }[] = [
