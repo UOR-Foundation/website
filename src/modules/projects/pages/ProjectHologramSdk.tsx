@@ -110,6 +110,10 @@ const ProjectHologramSdk = () => (
             </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+              <span>Visit <Link to="/your-space" className="text-primary hover:underline">Your Space</Link> to manage your sovereign data dashboard.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
               <span>Read the <Link to="/developers/sdk" className="text-primary hover:underline">SDK documentation</Link> for the full API reference.</span>
             </li>
             <li className="flex items-start gap-3">
