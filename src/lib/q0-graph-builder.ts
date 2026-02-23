@@ -7,8 +7,11 @@
  * Also includes 6 canonical derivation examples, a critical identity proof,
  * and a partition node.
  *
+ * Uses the Single Proof Hashing Standard (URDNA2015) for all derivation IDs.
  * Port of the Rust binary `uor-q0` (clients/src/bin/q0.rs) to TypeScript.
  */
+
+import { singleProofHash } from "./uor-canonical";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -32,14 +35,18 @@ function spectrum(v: number): string {
   return bits.join(",");
 }
 
-async function sha256hex(input: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function derivationId(canonicalTerm: string): Promise<string> {
-  const hash = await sha256hex(canonicalTerm);
-  return `urn:uor:derivation:sha256:${hash}`;
+/**
+ * Compute derivation ID via URDNA2015 Single Proof Hash.
+ * Mirrors the frontend derive() in src/modules/derivation/derivation.ts.
+ */
+async function derivationIdFromTerm(canonicalTerm: string, resultIri: string): Promise<string> {
+  const proof = await singleProofHash({
+    "@context": { derivation: "https://uor.foundation/derivation/" },
+    "@type": "derivation:Record",
+    "derivation:canonicalTerm": canonicalTerm,
+    "derivation:resultIri": resultIri,
+  });
+  return proof.derivationId;
 }
 
 function brailleGlyph(v: number): string {
@@ -107,7 +114,7 @@ export async function buildQ0Graph(): Promise<Q0Graph> {
       canonicalTerm = `xor(0x${sorted[0].toString(16)},0x${sorted[1].toString(16)})`;
     }
 
-    const dId = await derivationId(canonicalTerm);
+    const dId = await derivationIdFromTerm(canonicalTerm, datumIri(result));
     graph.push({
       "@id": `https://uor.foundation/instance/q0/derivation-${i}`,
       "@type": ["owl:NamedIndividual", "derivation:Derivation"],
