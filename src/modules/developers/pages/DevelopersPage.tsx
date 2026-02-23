@@ -51,10 +51,10 @@ const DevelopersPage = () => (
           </nav>
 
           <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-foreground mb-3">
-            UOR Developer Docs
+            Welcome to UOR Developer Portal
           </h1>
           <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl">
-            Guides and references for building on the UOR content-addressed framework.
+            Explore a content-addressed framework that gives every piece of data a unique, verifiable identity — so you can build protocols and applications that are tamper-proof, interoperable, and ready for production.
           </p>
         </div>
       </section>
