@@ -1,8 +1,9 @@
 /**
  * Claim UOR Identity — Dialog version
  *
- * Two bootstrap methods: Google OAuth or Email magic link.
- * After claiming, users can register a WebAuthn passkey for biometric access.
+ * Clean, jargon-free UI for claiming a digital identity.
+ * Two sign-in methods: Google or Email magic link.
+ * After claiming, users can add biometric security (passkey).
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -16,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { singleProofHash } from "@/lib/uor-canonical";
 import {
   Fingerprint, Loader2, CheckCircle2, ArrowRight,
-  Mail, KeyRound, ShieldCheck, AlertCircle, X,
+  Mail, KeyRound, AlertCircle, X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -46,7 +47,6 @@ async function registerPasskey(userId: string): Promise<boolean> {
   try {
     const challenge = crypto.getRandomValues(new Uint8Array(32));
     const userIdBytes = new TextEncoder().encode(userId);
-
     const credential = await navigator.credentials.create({
       publicKey: {
         challenge,
@@ -69,19 +69,18 @@ async function registerPasskey(userId: string): Promise<boolean> {
         attestation: "none",
       },
     });
-
     return !!credential;
   } catch {
     return false;
   }
 }
 
-// ── Sub-components ──────────────────────────────────────────────────────────
+// ── Sub-component ───────────────────────────────────────────────────────────
 
 const IdentityRow = ({ label, value, mono = true }: { label: string; value: string; mono?: boolean }) => (
   <div>
-    <p className="text-xs font-medium text-muted-foreground font-body uppercase tracking-wider mb-1">{label}</p>
-    <p className={`text-sm text-foreground break-all leading-relaxed ${mono ? "font-mono" : "font-body text-xl"}`}>
+    <p className="text-xs font-semibold text-muted-foreground font-body uppercase tracking-wider mb-1.5">{label}</p>
+    <p className={`text-base text-foreground break-all leading-relaxed ${mono ? "font-mono" : "font-body text-2xl"}`}>
       {value}
     </p>
   </div>
@@ -96,13 +95,11 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
   const [email, setEmail] = useState("");
   const [passkeyStatus, setPasskeyStatus] = useState<"idle" | "registering" | "done" | "unsupported">("idle");
 
-  // Reset on close
   useEffect(() => {
     if (!open) return;
     setError(null);
     if (!isWebAuthnSupported()) setPasskeyStatus("unsupported");
 
-    // Check existing identity
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -125,7 +122,6 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
     })();
   }, [open]);
 
-  // Auth state listener
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -153,16 +149,13 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
         "uor:bootstrapMethod": "authenticated",
         "uor:claimedAt": new Date().toISOString(),
       };
-
       const proof = await singleProofHash(identitySeed);
-
       const derived: DerivedIdentity = {
         canonicalId: proof.derivationId,
         glyph: proof.uorAddress["u:glyph"],
         cid: proof.cid,
         ipv6: proof.ipv6Address["u:ipv6"],
       };
-
       await supabase
         .from("profiles")
         .update({
@@ -172,17 +165,14 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
           uor_ipv6: derived.ipv6,
         })
         .eq("user_id", user.id);
-
       setIdentity(derived);
       setStep("complete");
     } catch (err) {
       console.error("Identity derivation failed:", err);
-      setError("Identity derivation failed. Please try again.");
+      setError("Something went wrong. Please try again.");
       setStep("intro");
     }
   }, []);
-
-  // ── Bootstrap: Google OAuth ─────────────────────────────────────────────
 
   const handleGoogleSignIn = async () => {
     setStep("signing-in");
@@ -191,31 +181,25 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
       redirect_uri: window.location.origin + "/claim-identity",
     });
     if (authError) {
-      setError(authError.message || "Authentication failed. Please try again.");
+      setError(authError.message || "Sign-in failed. Please try again.");
       setStep("intro");
     }
   };
-
-  // ── Bootstrap: Email Magic Link ─────────────────────────────────────────
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
     setError(null);
-
     const { error: authError } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: window.location.origin + "/claim-identity" },
     });
-
     if (authError) {
-      setError(authError.message || "Failed to send magic link.");
+      setError(authError.message || "Could not send the link. Please try again.");
       return;
     }
     setStep("email-sent");
   };
-
-  // ── Passkey Registration ────────────────────────────────────────────────
 
   const handlePasskeyRegister = async () => {
     setPasskeyStatus("registering");
@@ -227,238 +211,249 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
     const success = await registerPasskey(session.user.id);
     setPasskeyStatus(success ? "done" : "idle");
     if (!success) {
-      setError("Passkey registration was cancelled or failed. You can try again anytime.");
+      setError("Biometric setup was cancelled. You can try again anytime.");
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto p-0 gap-0 border-border bg-card rounded-2xl">
-        {/* Header bar */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-6 pt-5 pb-3 bg-card/95 backdrop-blur-sm border-b border-border/50">
-          <DialogTitle className="font-display text-lg font-semibold text-foreground">
-            {step === "complete" ? "Identity Claimed" : "Claim UOR Identity"}
+      <DialogContent className="sm:max-w-[480px] max-h-[92vh] overflow-y-auto p-0 gap-0 border-border bg-card rounded-2xl [&>button]:hidden">
+
+        {/* ── Header ─────────────────────────────────────────────── */}
+        <div className="sticky top-0 z-10 flex items-center justify-between px-6 md:px-8 pt-6 pb-4 bg-card border-b border-border/40">
+          <DialogTitle className="font-display text-xl md:text-2xl font-bold text-foreground">
+            {step === "complete" ? "You're All Set!" : "Get Your Digital Identity"}
           </DialogTitle>
           <button
             onClick={() => onOpenChange(false)}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            aria-label="Close"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
-        <div className="px-6 py-6">
+        <div className="px-6 md:px-8 py-6 md:py-8">
+
           {/* ── INTRO ──────────────────────────────────────────────── */}
           {step === "intro" && (
-            <div className="space-y-5">
+            <div className="space-y-6">
+              {/* Hero */}
               <div className="text-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Fingerprint size={28} className="text-primary" />
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+                  <Fingerprint size={32} className="text-primary" />
                 </div>
-                <p className="text-sm text-muted-foreground font-body leading-relaxed max-w-sm mx-auto">
-                  Create your permanent, private identity — derived from who you are, not from a username or password.
+                <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed max-w-sm mx-auto">
+                  Create a unique digital identity that belongs to&nbsp;you — not to any app or company.
                 </p>
               </div>
 
+              {/* Error */}
               {error && (
-                <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-body flex items-start gap-2.5">
-                  <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-body flex items-start gap-3">
+                  <AlertCircle size={18} className="shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>
               )}
 
-              {/* Google */}
-              <div className="bg-background border border-border rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <ShieldCheck size={16} className="text-primary" />
+              {/* Google sign-in */}
+              <div className="bg-background border border-border rounded-2xl p-5 md:p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="w-5 h-5">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
                   </div>
                   <div>
-                    <h3 className="font-display text-sm font-semibold text-foreground">Continue with Google</h3>
-                    <p className="text-[11px] text-muted-foreground font-body">One click, verified identity</p>
+                    <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Sign in with Google</h3>
+                    <p className="text-sm text-muted-foreground font-body">Quickest option — just one click</p>
                   </div>
                 </div>
                 <button
                   onClick={handleGoogleSignIn}
-                  className="w-full btn-primary inline-flex items-center justify-center gap-2.5 text-sm py-2.5"
+                  className="w-full btn-primary inline-flex items-center justify-center gap-3 text-base py-3.5 rounded-xl"
                 >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                  </svg>
                   Continue with Google
                 </button>
               </div>
 
               {/* Divider */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div className="flex-1 h-px bg-border" />
-                <span className="text-[11px] text-muted-foreground font-body uppercase tracking-wider">or</span>
+                <span className="text-sm text-muted-foreground font-body font-medium">or</span>
                 <div className="flex-1 h-px bg-border" />
               </div>
 
-              {/* Email */}
-              <div className="bg-background border border-border rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Mail size={16} className="text-primary" />
+              {/* Email sign-in */}
+              <div className="bg-background border border-border rounded-2xl p-5 md:p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Mail size={20} className="text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-display text-sm font-semibold text-foreground">Continue with Email</h3>
-                    <p className="text-[11px] text-muted-foreground font-body">Passwordless magic link</p>
+                    <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Sign in with Email</h3>
+                    <p className="text-sm text-muted-foreground font-body">No password needed — we'll send you a link</p>
                   </div>
                 </div>
-                <form onSubmit={handleEmailSignIn} className="flex flex-col sm:flex-row gap-2.5">
+                <form onSubmit={handleEmailSignIn} className="space-y-3">
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="flex-1 px-3.5 py-2.5 rounded-lg border border-border bg-card text-foreground font-body text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                    placeholder="your@email.com"
+                    className="w-full px-4 py-3.5 rounded-xl border border-border bg-card text-foreground font-body text-base placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
                   />
                   <button
                     type="submit"
-                    className="btn-outline inline-flex items-center justify-center gap-2 px-5 py-2.5 whitespace-nowrap text-sm"
+                    className="w-full btn-outline inline-flex items-center justify-center gap-2.5 py-3.5 text-base rounded-xl font-medium"
                   >
-                    <Mail size={14} />
-                    Send Link
+                    <Mail size={18} />
+                    Send me a sign-in link
                   </button>
                 </form>
               </div>
 
-              <p className="text-center text-[11px] text-muted-foreground/60 font-body">
-                Both methods are bootstrap anchors. Your identity is derived via URDNA2015 → SHA-256 — independent of any login provider.
+              <p className="text-center text-sm text-muted-foreground/70 font-body leading-relaxed">
+                Your identity is mathematically unique to you and cannot be controlled by any third party.
               </p>
             </div>
           )}
 
           {/* ── EMAIL SENT ─────────────────────────────────────────── */}
           {step === "email-sent" && (
-            <div className="text-center space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-                <Mail size={28} className="text-primary" />
+            <div className="text-center space-y-5 py-4">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+                <Mail size={32} className="text-primary" />
               </div>
               <div>
-                <h2 className="font-display text-xl font-bold text-foreground mb-2">Check your inbox</h2>
-                <p className="text-muted-foreground font-body text-sm">
-                  We sent a magic link to <strong className="text-foreground">{email}</strong>
+                <h2 className="font-display text-2xl font-bold text-foreground mb-3">
+                  Check your email
+                </h2>
+                <p className="text-base text-muted-foreground font-body leading-relaxed">
+                  We sent a sign-in link to<br />
+                  <strong className="text-foreground">{email}</strong>
                 </p>
               </div>
-              <p className="text-muted-foreground/70 font-body text-xs">
-                Click the link in your email to claim your identity. This dialog will update automatically.
+              <p className="text-sm text-muted-foreground/70 font-body leading-relaxed">
+                Click the link in your email to continue. This window will update automatically once you do.
               </p>
               <button
                 onClick={() => { setStep("intro"); setError(null); }}
-                className="text-xs text-primary font-body hover:underline"
+                className="text-sm text-primary font-body font-medium hover:underline"
               >
-                ← Use a different method
+                ← Go back
               </button>
             </div>
           )}
 
           {/* ── SIGNING IN ─────────────────────────────────────────── */}
           {step === "signing-in" && (
-            <div className="text-center py-8 space-y-3">
-              <Loader2 size={36} className="text-primary animate-spin mx-auto" />
-              <h2 className="font-display text-xl font-bold text-foreground">Authenticating…</h2>
-              <p className="text-muted-foreground font-body text-sm">Completing sign-in to bootstrap your identity.</p>
+            <div className="text-center py-12 space-y-4">
+              <Loader2 size={40} className="text-primary animate-spin mx-auto" />
+              <h2 className="font-display text-2xl font-bold text-foreground">Signing you in…</h2>
+              <p className="text-base text-muted-foreground font-body">This will only take a moment.</p>
             </div>
           )}
 
           {/* ── DERIVING ───────────────────────────────────────────── */}
           {step === "deriving" && (
-            <div className="text-center py-8 space-y-3">
-              <Loader2 size={36} className="text-primary animate-spin mx-auto" />
-              <h2 className="font-display text-xl font-bold text-foreground">Deriving your identity…</h2>
-              <p className="text-muted-foreground font-body text-sm">
-                Running URDNA2015 → SHA-256 pipeline to generate your permanent canonical ID.
+            <div className="text-center py-12 space-y-4">
+              <Loader2 size={40} className="text-primary animate-spin mx-auto" />
+              <h2 className="font-display text-2xl font-bold text-foreground">Creating your identity…</h2>
+              <p className="text-base text-muted-foreground font-body">
+                We're generating a unique digital fingerprint just for you.
               </p>
             </div>
           )}
 
           {/* ── COMPLETE ───────────────────────────────────────────── */}
           {step === "complete" && identity && (
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div className="text-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                  <CheckCircle2 size={28} className="text-primary" />
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 size={32} className="text-primary" />
                 </div>
-                <p className="text-sm text-muted-foreground font-body">
-                  Your permanent UOR Identity has been derived and stored.
+                <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed">
+                  Your unique digital identity has been created and saved.
                 </p>
               </div>
 
               {/* Identity details */}
-              <div className="bg-background border border-border rounded-xl p-5 space-y-4">
-                <IdentityRow label="Canonical ID" value={identity.canonicalId} />
-                <IdentityRow label="Braille Glyph" value={identity.glyph} mono={false} />
-                <IdentityRow label="CID (IPFS)" value={identity.cid} />
-                <IdentityRow label="IPv6 Address" value={identity.ipv6} />
+              <div className="bg-background border border-border rounded-2xl p-5 md:p-6 space-y-5">
+                <IdentityRow label="Your Unique ID" value={identity.canonicalId} />
+                <IdentityRow label="Visual Symbol" value={identity.glyph} mono={false} />
+                <IdentityRow label="Content Address" value={identity.cid} />
+                <IdentityRow label="Network Address" value={identity.ipv6} />
               </div>
 
               {/* Passkey upgrade */}
               {passkeyStatus !== "unsupported" && (
-                <div className="bg-background border border-border rounded-xl p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                      <KeyRound size={16} className="text-accent" />
+                <div className="bg-background border border-border rounded-2xl p-5 md:p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                      <KeyRound size={20} className="text-accent" />
                     </div>
                     <div>
-                      <h3 className="font-display text-sm font-semibold text-foreground">Add Biometric Security</h3>
-                      <p className="text-[11px] text-muted-foreground font-body">Fingerprint or face unlock</p>
+                      <h3 className="font-display text-base md:text-lg font-semibold text-foreground">
+                        Add Biometric Login
+                      </h3>
+                      <p className="text-sm text-muted-foreground font-body">
+                        Use fingerprint or face recognition
+                      </p>
                     </div>
                   </div>
 
                   {passkeyStatus === "idle" && (
                     <>
-                      <p className="text-xs text-muted-foreground font-body mb-3">
-                        Hardware-bound passkey using your device's biometric sensor. Works on desktop, Android, and Apple devices.
+                      <p className="text-sm text-muted-foreground font-body mb-4 leading-relaxed">
+                        Unlock your identity with your fingerprint, face, or device PIN. Works on phones, tablets, and computers.
                       </p>
                       <button
                         onClick={handlePasskeyRegister}
-                        className="btn-outline inline-flex items-center gap-2 text-sm"
+                        className="btn-outline inline-flex items-center gap-2.5 text-base py-3 px-5 rounded-xl"
                       >
-                        <Fingerprint size={14} />
-                        Register Passkey
+                        <Fingerprint size={18} />
+                        Set up biometrics
                       </button>
                     </>
                   )}
 
                   {passkeyStatus === "registering" && (
-                    <div className="flex items-center gap-2.5 text-muted-foreground font-body text-xs">
-                      <Loader2 size={14} className="animate-spin" />
-                      <span>Waiting for biometric verification…</span>
+                    <div className="flex items-center gap-3 text-muted-foreground font-body text-sm">
+                      <Loader2 size={18} className="animate-spin" />
+                      <span>Waiting for your device…</span>
                     </div>
                   )}
 
                   {passkeyStatus === "done" && (
-                    <div className="flex items-center gap-2.5 text-primary font-body text-xs">
-                      <CheckCircle2 size={14} />
-                      <span>Passkey registered — biometric access enabled</span>
+                    <div className="flex items-center gap-3 text-primary font-body text-base font-medium">
+                      <CheckCircle2 size={18} />
+                      <span>Biometric login enabled ✓</span>
                     </div>
                   )}
 
                   {error && passkeyStatus === "idle" && (
-                    <p className="mt-2 text-[11px] text-muted-foreground/70 font-body">{error}</p>
+                    <p className="mt-3 text-sm text-muted-foreground/70 font-body">{error}</p>
                   )}
                 </div>
               )}
 
-              {/* Navigation */}
-              <div className="flex flex-col sm:flex-row justify-center gap-3">
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Link
                   to="/your-space"
                   onClick={() => onOpenChange(false)}
-                  className="btn-primary inline-flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 btn-primary inline-flex items-center justify-center gap-2.5 text-base py-3.5 rounded-xl"
                 >
-                  Go to Your Space <ArrowRight size={14} />
+                  Go to Your Space <ArrowRight size={18} />
                 </Link>
                 <button
                   onClick={() => onOpenChange(false)}
-                  className="btn-outline inline-flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 btn-outline inline-flex items-center justify-center gap-2 text-base py-3.5 rounded-xl"
                 >
                   Close
                 </button>
