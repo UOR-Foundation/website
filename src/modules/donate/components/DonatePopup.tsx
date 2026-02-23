@@ -45,7 +45,7 @@ function CopyAddress({ address }: { address: string }) {
   return (
     <div className="min-w-0 flex-1">
       <div className="flex items-center gap-1.5">
-        <code className="text-sm text-muted-foreground font-mono break-all leading-relaxed select-all">
+        <code className="text-base text-muted-foreground font-mono break-all leading-relaxed select-all">
           {address}
         </code>
         <button
