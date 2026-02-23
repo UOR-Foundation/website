@@ -93,13 +93,13 @@ export const projects: ProjectData[] = [
     imageKey: "uorIdentity",
   },
   {
-    name: "UOR Terms",
-    slug: "uor-terms",
+    name: "UOR Privacy",
+    slug: "uor-privacy",
     category: "Core Infrastructure",
-    description: "Define your own machine-readable terms and conditions. When any app or agent wants your data, they accept your rules — not the other way around. Privacy becomes programmable, enforceable, and content-addressed.",
+    description: "Define your own privacy rules. When any app or agent wants your data, they accept your terms — not the other way around. Privacy becomes programmable, enforceable, and tamper-proof.",
     maturity: "Sandbox",
     url: "https://myterms.info/",
-    imageKey: "uorTerms",
+    imageKey: "uorPrivacy",
   },
 ];
 

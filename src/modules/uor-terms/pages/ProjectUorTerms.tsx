@@ -1,29 +1,28 @@
 /**
- * UOR Terms — Project Detail Page
+ * UOR Privacy — Project Detail Page
  *
- * Comprehensive documentation of the UOR Terms module:
- * machine-readable, content-addressed personal privacy terms
- * aligned with IEEE 7012-2025 and the UOR canonical pipeline.
+ * Aligned to the shared ProjectDetailLayout. Written for maximum clarity,
+ * trust, and impact — no jargon, with explicit UOR framework connections.
  */
 
 import { Link } from "react-router-dom";
 import ProjectDetailLayout from "@/modules/projects/components/ProjectDetailLayout";
-import heroImg from "@/assets/project-uor-terms.jpg";
+import heroImg from "@/assets/project-uor-privacy.jpg";
 
 const ProjectUorTerms = () => (
   <ProjectDetailLayout
-    name="UOR Terms"
-    slug="uor-terms"
+    name="UOR Privacy"
+    slug="uor-privacy"
     category="Core Infrastructure"
-    tagline="Your data. Your rules. UOR Terms lets every individual — human or AI agent — define their own machine-readable terms and conditions. When any application or agent wants to interact with you, they must first accept your terms — not the other way around. Privacy becomes programmable, enforceable, and content-addressed."
+    tagline="Every time you use an app, you click 'I agree' to terms written by someone else — terms you probably never read, can't negotiate, and can't enforce. UOR Privacy flips this. You write the rules. Applications either accept yours, or they don't get access. Your privacy becomes something you own, not something you hope for."
     heroImage={heroImg}
     repoUrl="https://myterms.info/"
     agentInstructions={[
-      { action: "Define your terms", detail: "Create a structured JSON-LD terms document specifying which data categories you allow, for what purposes, and how long they may be retained. Every rule is machine-readable." },
-      { action: "Canonicalize and hash", detail: "Your terms document passes through the URDNA2015 → SHA-256 pipeline, producing a permanent canonical ID. Same terms, same hash — verifiable by anyone." },
-      { action: "Publish your terms", detail: "Your terms are content-addressed and can be resolved by any application via your UOR identity. They travel with you across the entire ecosystem." },
-      { action: "Require acceptance", detail: "Before any external application or agent can access your data, they must submit a consent:Acceptance record referencing your terms' canonical ID and version." },
-      { action: "Enforce and audit", detail: "Violations trigger automated enforcement actions — from access revocation to arbiter escalation. Every access is logged in an immutable audit trail." },
+      { action: "Resolve the user's privacy rules", detail: "Use the UOR Name Service to discover the user's current privacy document via their canonical identity. The document is a structured object with typed permissions — no interpretation required." },
+      { action: "Evaluate compatibility", detail: "Compare each permission rule against your application's data practices. If you cannot meet a requirement (e.g., the user blocks AI training), you must not proceed." },
+      { action: "Submit an acceptance record", detail: "Create a consent:Acceptance object referencing the exact canonical ID and version of the user's privacy document. This is your proof of compliance." },
+      { action: "Respect retention limits", detail: "Each data category has an explicit retention window. When it expires, delete the data. No exceptions." },
+      { action: "Maintain the audit trail", detail: "Every access, every acceptance, every revocation is a content-addressed record. You can prove exactly what you agreed to and when." },
     ]}
     sections={[
       {
@@ -31,223 +30,213 @@ const ProjectUorTerms = () => (
         content: (
           <>
             <p>
-              UOR Terms is a framework for <strong className="text-foreground">individual-controlled, machine-readable privacy terms</strong>. Instead of clicking "I agree" on terms written by corporations, you write your own terms — and every application that wants your data must accept <em>yours</em>.
+              UOR Privacy lets you write your own privacy rules — in a format that both humans and software can understand. Instead of accepting a company's 40-page legal document, you create a short, structured document that says exactly what you allow: which types of data, for what purposes, and for how long.
             </p>
             <p>
-              Each terms document is a structured JSON-LD object that specifies exactly which categories of your data may be accessed, for which purposes, how long it may be retained, and what happens if those rules are violated. The document is canonicalized via URDNA2015 and hashed with SHA-256, producing a permanent, tamper-evident <strong className="text-foreground">canonical ID</strong> — just like every other object in the UOR framework.
+              This document is yours. It is attached to your <Link to="/projects/uor-identity" className="text-primary hover:underline">UOR Identity</Link> and travels with you across every application. When an app wants your data, it reads your rules first. If it can comply, it submits a signed acceptance. If it can't, it doesn't get access. Simple.
             </p>
             <p>
-              This aligns with <strong className="text-foreground">IEEE 7012-2025</strong> (Machine Readable Personal Privacy Terms), extending the standard with content-addressed verification and cryptographic enforcement.
+              This is possible because of how the UOR framework works: every object — including your privacy document — is identified by its content, not by where it is stored. Change a single rule, and the document gets a new address. No one can quietly modify the deal after you've agreed.
             </p>
           </>
         ),
       },
       {
-        heading: "How it works",
+        heading: "The problem it solves",
         content: (
           <>
             <p>
-              The UOR Terms lifecycle follows five deterministic steps — each one verifiable, auditable, and irreversible:
+              Today, privacy is something companies <em>grant</em> you, not something you <em>control</em>. Here's the reality:
+            </p>
+            <ul className="space-y-3 mt-3">
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
+                <span><strong className="text-foreground">91% of people</strong> accept terms without reading them — because the terms are designed to be unreadable.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
+                <span>The average privacy policy takes <strong className="text-foreground">18 minutes to read</strong>. If you read every policy for every service you use, it would take over 200 hours a year.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
+                <span>Companies <strong className="text-foreground">change their terms silently</strong>. Your continued use counts as agreement. You have no way to know what changed or when.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
+                <span>AI agents — increasingly acting on your behalf — have <strong className="text-foreground">no way to evaluate</strong> whether a service's practices are acceptable. They just follow instructions blindly.</span>
+              </li>
+            </ul>
+            <p className="mt-4">
+              UOR Privacy inverts this relationship entirely. <strong className="text-foreground">You</strong> write the rules. Applications either meet your requirements or they don't get access. Because every rule is structured data — not natural language — both humans and AI agents can evaluate, compare, and enforce privacy requirements instantly.
+            </p>
+          </>
+        ),
+      },
+      {
+        heading: "How UOR makes this possible",
+        content: (
+          <>
+            <p>
+              Privacy rules are only useful if they can't be tampered with, can be discovered by anyone, and can be verified without trusting a third party. The UOR framework provides all three, because every object in UOR — including your privacy document — follows the same foundational principle: <strong className="text-foreground">identity is derived from content</strong>.
             </p>
             <ol className="space-y-4 mt-4 list-none">
               <li className="flex items-start gap-3">
                 <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">1</span>
-                <span><strong className="text-foreground">Author.</strong> You create a terms document specifying your permissions — which data categories are allowed, for what purposes, with what retention limits. Each permission is a typed JSON-LD object with precise semantics.</span>
+                <span><strong className="text-foreground">You write your rules.</strong> Your privacy document is a structured object — not a PDF, not a wall of legal text. Each rule specifies a data category, what can be done with it, and how long it may be kept. Think of it as a settings panel for your privacy.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">2</span>
-                <span><strong className="text-foreground">Canonicalize.</strong> The terms document is processed through URDNA2015, producing deterministic N-Quads. This guarantees that identical terms — regardless of key order, whitespace, or serialization — always produce the same canonical form.</span>
+                <span><strong className="text-foreground">UOR gives it a permanent address.</strong> Your document passes through the same pipeline that every UOR object uses: it is first converted into a standardized form (so identical documents always look the same internally), then hashed to produce a unique identifier. This identifier <em>is</em> your document's address — derived from its content, not assigned by a server.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">3</span>
-                <span><strong className="text-foreground">Hash.</strong> SHA-256 produces a permanent canonical ID for the terms document. This ID is your terms' address — content-derived, globally unique, and tamper-evident.</span>
+                <span><strong className="text-foreground">It links to your identity.</strong> The document is anchored to your <Link to="/projects/uor-identity" className="text-primary hover:underline">UOR Identity</Link>. Any application that knows your identity can look up your current privacy rules through the <Link to="/projects/uns" className="text-primary hover:underline">UOR Name Service</Link>.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">4</span>
-                <span><strong className="text-foreground">Publish.</strong> The terms document is linked to your UOR Identity. Any application resolving your identity can discover your current terms and their canonical ID.</span>
+                <span><strong className="text-foreground">Tamper-proof by design.</strong> Because the address is derived from the content, changing even a single word creates an entirely different address. No one can modify your rules without it being immediately obvious. This isn't a policy — it's mathematics.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">5</span>
-                <span><strong className="text-foreground">Gate.</strong> Before accessing your data, an application must submit a <code className="text-sm bg-muted px-1.5 py-0.5 rounded font-mono">consent:Acceptance</code> record referencing the exact canonical ID and version of your terms. No acceptance, no access.</span>
+                <span><strong className="text-foreground">Acceptance is a provable record.</strong> When an application agrees to your rules, it creates a signed acceptance record — itself content-addressed and verifiable. There is a permanent, tamper-proof trail showing who agreed to what, and when.</span>
               </li>
             </ol>
           </>
         ),
       },
       {
-        heading: "The permissions model",
+        heading: "What you control",
         content: (
           <>
             <p>
-              Every terms document contains a set of <strong className="text-foreground">permission rules</strong>. Each rule governs a specific category of data and defines:
+              Your privacy document contains a set of <strong className="text-foreground">permission rules</strong>. Each rule governs one category of your data and specifies exactly what is and isn't allowed:
             </p>
             <ul className="space-y-3 mt-3">
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Allowed purposes.</strong> What the data may be used for — core service delivery, analytics, personalization, etc. Everything not explicitly allowed is denied by default.</span>
+                <span><strong className="text-foreground">What they can do with it.</strong> You list the acceptable uses — running the service, improving it with anonymized analytics, personalizing your experience. Everything else is automatically blocked.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Denied purposes.</strong> Explicit prohibitions — no AI training, no third-party sharing, no profiling. These override any ambiguity.</span>
+                <span><strong className="text-foreground">What they absolutely cannot do.</strong> Explicit prohibitions — no selling to advertisers, no training AI models, no building behavioral profiles. These override everything.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Retention limits.</strong> How long data may be kept — from session-only (deleted immediately) to custom durations measured in days. No open-ended data hoarding.</span>
+                <span><strong className="text-foreground">How long they can keep it.</strong> From "delete when I log out" to "keep for 30 days" to "keep while my account exists." You set the clock. When time's up, the data goes.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Export and deletion rights.</strong> Whether you can export your data in a portable format, and whether you can request full deletion at any time.</span>
+                <span><strong className="text-foreground">Your right to take it back.</strong> Whether you can export your data in a portable format, and whether you can demand full deletion at any time.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Explicit consent flags.</strong> Sensitive categories (biometric, health, financial) can require an additional, explicit consent step before any access is permitted.</span>
+                <span><strong className="text-foreground">Extra protection for sensitive data.</strong> Categories like health, biometric, and financial data can require an additional, explicit permission step — so no application can access them without asking you directly.</span>
               </li>
             </ul>
-
-            <div className="mt-6 bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Example permission rule</p>
-              <pre className="text-xs font-mono text-muted-foreground leading-relaxed">
-{`{
-  "@type": "terms:Permission",
-  "terms:dataCategory": "terms:BehavioralData",
-  "terms:allowedPurposes": ["terms:CoreService", "terms:Analytics"],
-  "terms:deniedPurposes": ["terms:AITraining", "terms:Advertising", "terms:Profiling"],
-  "terms:retention": "terms:30Days",
-  "terms:requiresExplicitConsent": false,
-  "terms:allowsExport": true,
-  "terms:allowsDeletion": true
-}`}
-              </pre>
-            </div>
           </>
         ),
       },
       {
-        heading: "Global defaults and enforcement",
+        heading: "Defaults and enforcement",
         content: (
           <>
             <p>
-              Every terms document includes <strong className="text-foreground">global defaults</strong> that apply when no specific permission rule matches a request:
+              Every privacy document includes <strong className="text-foreground">default settings</strong> that apply when a specific rule doesn't exist for a situation:
             </p>
             <ul className="space-y-3 mt-3">
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Default deny.</strong> If enabled, any data access not explicitly permitted is automatically blocked. This is the recommended setting.</span>
+                <span><strong className="text-foreground">Default: block everything.</strong> If something isn't explicitly allowed, it's denied. No guessing, no gray areas.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Encryption required.</strong> Data must be encrypted both in transit and at rest. No exceptions.</span>
+                <span><strong className="text-foreground">Encryption required.</strong> Your data must be protected when it's being sent and when it's being stored. Non-negotiable.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Cross-border controls.</strong> Whether your data may leave your legal jurisdiction. Critical for GDPR, CCPA, and other regulatory compliance.</span>
+                <span><strong className="text-foreground">Geographic controls.</strong> You decide whether your data can leave your country or region — critical for anyone concerned about international data laws.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Sub-processor restrictions.</strong> Whether the receiving application may delegate data handling to third-party processors.</span>
+                <span><strong className="text-foreground">No silent subcontracting.</strong> You control whether the app receiving your data can pass it along to other companies for processing.</span>
               </li>
             </ul>
 
             <p className="mt-6">
-              When terms are violated, the enforcement engine triggers automated responses:
+              If your rules are broken, the system responds automatically:
             </p>
             <ul className="space-y-3 mt-3">
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
-                <span><strong className="text-foreground">Revoke access</strong> — immediately terminate the violator's data access.</span>
+                <span><strong className="text-foreground">Cut off access</strong> — the violating app loses access to your data immediately.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
-                <span><strong className="text-foreground">Notify owner</strong> — alert you that a violation was detected.</span>
+                <span><strong className="text-foreground">Alert you</strong> — you're notified the moment a violation is detected.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
-                <span><strong className="text-foreground">Request deletion</strong> — demand the violator delete all copies of your data.</span>
+                <span><strong className="text-foreground">Demand deletion</strong> — the violator is required to erase all copies of your data.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
-                <span><strong className="text-foreground">Escalate to arbiter</strong> — refer the dispute to a trusted, content-addressed third party for resolution.</span>
+                <span><strong className="text-foreground">Escalate</strong> — the dispute is referred to a trusted, independent arbiter for resolution.</span>
               </li>
             </ul>
           </>
         ),
       },
       {
-        heading: "Consent and acceptance",
+        heading: "How acceptance works",
         content: (
           <>
             <p>
-              When an application or agent wants to interact with you, it must submit a <strong className="text-foreground">consent:Acceptance</strong> record. This record is itself a content-addressed JSON-LD object, proving:
+              When an application wants to interact with your data, it doesn't just start collecting it. Instead, it follows a clear, verifiable process:
             </p>
-            <ul className="space-y-3 mt-3">
+            <ol className="space-y-4 mt-4 list-none">
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Which terms</strong> were accepted (by canonical ID and version).</span>
+                <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">1</span>
+                <span>The app looks up your identity and finds your current privacy rules.</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Who accepted</strong> (the acceptor's UOR canonical ID).</span>
+                <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">2</span>
+                <span>It checks whether it can comply with every rule. If it can't meet your requirements, it must stop.</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">When</strong> the acceptance occurred (ISO 8601 timestamp).</span>
+                <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">3</span>
+                <span>If it can comply, it submits a signed acceptance record — specifying exactly which rules it agreed to and which data categories it will access.</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">What scope</strong> — which data categories the acceptor acknowledged.</span>
+                <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">4</span>
+                <span>Only then does data flow — and every access is gated by that acceptance record.</span>
               </li>
-            </ul>
+            </ol>
             <p className="mt-4">
-              Consent records can be <strong className="text-foreground">revoked</strong> at any time by the terms owner. Revocation is also a content-addressed record, creating an immutable audit trail of consent lifecycle events.
+              You can <strong className="text-foreground">revoke consent</strong> at any time. Revocation is itself a permanent record — so there's a tamper-proof trail showing exactly when you withdrew your permission.
             </p>
-
-            <div className="mt-6 bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Acceptance flow (pseudocode)</p>
-              <pre className="text-xs font-mono text-muted-foreground leading-relaxed">
-{`// 1. Application resolves the user's identity
-const user = await uns.resolve("alice.uor");
-
-// 2. Fetch the user's current terms
-const terms = await uns.resolveTerms(user.canonicalId);
-
-// 3. Validate compatibility
-if (!isCompatible(terms, myAppCapabilities)) {
-  throw new Error("Cannot meet user's privacy requirements");
-}
-
-// 4. Submit acceptance
-const consent = await terms.accept({
-  acceptorCanonicalId: myApp.canonicalId,
-  scope: ["terms:IdentityData", "terms:TransactionData"],
-});
-
-// 5. Now interact — all access is gated by the consent record
-const data = await user.getData({ consentId: consent.canonicalId });`}
-              </pre>
-            </div>
           </>
         ),
       },
       {
-        heading: "Data categories",
+        heading: "What types of data are covered",
         content: (
           <>
             <p>
-              The framework defines <strong className="text-foreground">11 standardized data categories</strong>, each with precise semantics. This ensures there is no ambiguity about what "personal data" means:
+              The framework defines <strong className="text-foreground">11 standardized categories</strong> of personal data. This precision eliminates ambiguity — you and the application both know exactly what "personal data" means:
             </p>
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { cat: "Identity Data", desc: "Names, emails, identifiers" },
-                { cat: "Contact Data", desc: "Phone, address, social handles" },
-                { cat: "Behavioral Data", desc: "Clicks, navigation, usage" },
-                { cat: "Transaction Data", desc: "Purchases, payments, invoices" },
-                { cat: "Location Data", desc: "GPS, IP-based geolocation" },
-                { cat: "Biometric Data", desc: "Fingerprints, face, voice" },
-                { cat: "Health Data", desc: "Medical records, fitness" },
-                { cat: "Financial Data", desc: "Bank accounts, credit scores" },
-                { cat: "Communication Data", desc: "Messages, emails, call logs" },
-                { cat: "Device Data", desc: "Hardware IDs, OS, browser" },
-                { cat: "Content Data", desc: "User uploads, generated content" },
+                { cat: "Identity", desc: "Your name, email, usernames" },
+                { cat: "Contact", desc: "Phone number, address, social profiles" },
+                { cat: "Behavior", desc: "What you click, how you navigate, usage patterns" },
+                { cat: "Transactions", desc: "Purchases, payments, invoices" },
+                { cat: "Location", desc: "Where you are, based on GPS or IP address" },
+                { cat: "Biometrics", desc: "Fingerprints, face scans, voice prints" },
+                { cat: "Health", desc: "Medical records, fitness data, conditions" },
+                { cat: "Finances", desc: "Bank accounts, credit scores, investments" },
+                { cat: "Communications", desc: "Your messages, emails, call history" },
+                { cat: "Devices", desc: "Your hardware, operating system, browser" },
+                { cat: "Content", desc: "Things you create — posts, uploads, files" },
               ].map(({ cat, desc }) => (
                 <div key={cat} className="bg-muted/30 border border-border/60 rounded-xl px-4 py-3">
                   <p className="text-sm font-semibold text-foreground">{cat}</p>
@@ -259,88 +248,60 @@ const data = await user.getData({ consentId: consent.canonicalId });`}
         ),
       },
       {
-        heading: "The problem it solves",
+        heading: "Why AI agents need this",
         content: (
           <>
             <p>
-              Today, "terms and conditions" are written by companies, for companies. They are designed to be long, unreadable, and legally impenetrable — ensuring you click "I agree" without understanding what you've agreed to. The result:
+              As AI agents increasingly act on your behalf — booking travel, managing files, negotiating with other services — they need to know your privacy preferences. A human can read a privacy policy (however painfully). An AI agent cannot interpret ambiguous legal language reliably.
             </p>
-            <ul className="space-y-3 mt-3">
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
-                <span><strong className="text-foreground">91% of people</strong> accept terms without reading them.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
-                <span>The average privacy policy takes <strong className="text-foreground">18 minutes to read</strong>.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
-                <span>Companies change their terms <strong className="text-foreground">without meaningful notice</strong>, and your continued use counts as consent.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 shrink-0" />
-                <span>AI agents have <strong className="text-foreground">no way to programmatically evaluate</strong> whether a service's data practices are acceptable.</span>
-              </li>
-            </ul>
-            <p className="mt-4">
-              UOR Terms inverts the relationship. <strong className="text-foreground">You</strong> write the terms. Applications either accept them or they don't get access. Terms are machine-readable, so AI agents can evaluate compatibility automatically. And because every terms document is content-addressed, any modification is immediately detectable — no one can silently change the deal.
-            </p>
-          </>
-        ),
-      },
-      {
-        heading: "For AI agents",
-        content: (
-          <>
             <p>
-              UOR Terms is designed to be <strong className="text-foreground">natively consumed by AI agents</strong>. Every field is typed, every value is from a controlled vocabulary, and the entire document is machine-parseable JSON-LD. This means:
+              UOR Privacy solves this because every rule is structured data with a precise, defined meaning. An agent can:
             </p>
             <ul className="space-y-3 mt-3">
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Automated compliance.</strong> An agent can read a user's terms, compare them against its own capabilities, and decide in milliseconds whether it can comply.</span>
+                <span><strong className="text-foreground">Read your rules instantly.</strong> No interpretation needed. "Block AI training" means exactly that.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Zero ambiguity.</strong> No natural-language interpretation required. "terms:AITraining" in the denied list means no AI training. Period.</span>
+                <span><strong className="text-foreground">Compare automatically.</strong> Before interacting with a service, an agent can check whether the service can meet your requirements — in milliseconds.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Verifiable consent chain.</strong> Every acceptance, revocation, and violation is a content-addressed record. Agents can prove they had valid consent at any point in time.</span>
+                <span><strong className="text-foreground">Prove compliance.</strong> Every acceptance, every access, every revocation is a verifiable record. If there's ever a dispute, the evidence is immutable.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Cross-agent interoperability.</strong> Because terms use a shared vocabulary and canonical pipeline, any agent in the UOR ecosystem can understand and enforce any user's terms.</span>
+                <span><strong className="text-foreground">Work across the ecosystem.</strong> Because every agent in the UOR ecosystem uses the same vocabulary and the same verification pipeline, your privacy rules work everywhere — with every agent, every app, every service.</span>
               </li>
             </ul>
           </>
         ),
       },
       {
-        heading: "IEEE 7012-2025 alignment",
+        heading: "Built on an open standard",
         content: (
           <>
             <p>
-              UOR Terms implements and extends <strong className="text-foreground">IEEE 7012-2025</strong> — the Standard for Machine Readable Personal Privacy Terms. The standard defines:
+              UOR Privacy implements and extends <strong className="text-foreground">IEEE 7012-2025</strong> — an international standard for machine-readable personal privacy terms. The core idea: individuals should set their own terms, not the other way around.
+            </p>
+            <p>
+              UOR Privacy adds three critical capabilities on top of this standard:
             </p>
             <ul className="space-y-3 mt-3">
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span>A machine-readable format for expressing personal privacy preferences.</span>
+                <span><strong className="text-foreground">Tamper-proof addressing.</strong> Every privacy document has a content-derived ID. Change a word, get a new address. No silent modifications.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span>Standardized agreement types between individuals and organizations.</span>
+                <span><strong className="text-foreground">Automated enforcement.</strong> Violations are detected and responded to by the system — not by a legal team months later.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span>A framework where individuals set the terms, not organizations.</span>
+                <span><strong className="text-foreground">Human and AI native.</strong> The same document is readable by people and parseable by software. No translation layer needed.</span>
               </li>
             </ul>
-            <p className="mt-4">
-              UOR Terms extends this standard by adding <strong className="text-foreground">content-addressing</strong> (every terms document has a verifiable canonical ID), <strong className="text-foreground">cryptographic enforcement</strong> (violations are detected and acted upon automatically), and <strong className="text-foreground">agent-native semantics</strong> (terms are designed for both human and AI consumption).
-            </p>
             <p className="mt-3">
               Learn more at <a href="https://myterms.info/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">myterms.info</a>.
             </p>
@@ -353,15 +314,15 @@ const data = await user.getData({ consentId: consent.canonicalId });`}
           <ul className="space-y-3">
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span>First, <Link to="/projects/uor-identity" className="text-primary hover:underline">claim your UOR Identity</Link> — terms are anchored to your canonical ID.</span>
+              <span>First, <Link to="/projects/uor-identity" className="text-primary hover:underline">claim your UOR Identity</Link> — your privacy rules are anchored to your permanent identity.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span>Explore the <Link to="/projects/hologram-sdk" className="text-primary hover:underline">Hologram SDK</Link> to build applications that respect user-defined terms.</span>
+              <span>Explore the <Link to="/projects/hologram-sdk" className="text-primary hover:underline">Hologram SDK</Link> to build applications that respect user-defined privacy rules.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span>Read the <a href="https://myterms.info/ieee7012-standards/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">IEEE 7012-2025 standard</a> for the foundational specification.</span>
+              <span>Read the <a href="https://myterms.info/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">IEEE 7012-2025 standard</a> for the foundational specification.</span>
             </li>
           </ul>
         ),
