@@ -53,6 +53,39 @@ export type Database = {
         }
         Relationships: []
       }
+      project_submissions: {
+        Row: {
+          contact_email: string
+          created_at: string
+          description: string
+          id: string
+          problem_statement: string
+          project_name: string
+          repo_url: string
+          status: string
+        }
+        Insert: {
+          contact_email: string
+          created_at?: string
+          description: string
+          id?: string
+          problem_statement: string
+          project_name: string
+          repo_url: string
+          status?: string
+        }
+        Update: {
+          contact_email?: string
+          created_at?: string
+          description?: string
+          id?: string
+          problem_statement?: string
+          project_name?: string
+          repo_url?: string
+          status?: string
+        }
+        Relationships: []
+      }
       uor_bindings: {
         Row: {
           address: string
