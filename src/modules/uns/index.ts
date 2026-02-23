@@ -57,6 +57,11 @@ export type {
 export { UnsObjectStore, UnsKv, UnsCache } from "./store";
 export type { StoredObject, CacheStats } from "./store";
 
+// ── Ledger — Verifiable SQL (Phase 3-D) ─────────────────────────────────────
+export { UnsLedger } from "./ledger";
+export type { QueryProof, QueryResult, StateTransition, SchemaMigration } from "./ledger";
+
+// ── Types (re-export all for consumer modules) ──────────────────────────────
 export type {
   UnsRecordType,
   UnsRecord,
