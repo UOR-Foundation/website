@@ -119,7 +119,22 @@ export type {
   BindingCertificate,
 } from "./sovereign-data";
 
-export { AppCli } from "./cli";
+// ── Security Gate (P5 — partition analysis + injection detection) ────────────
+export {
+  scanDeployment,
+  partitionGate,
+  checkInjection,
+  rateLimitCheck,
+  appSecurityCheck,
+} from "./security-gate";
+export type {
+  GateVerdict,
+  DeploymentScanResult,
+  InjectionCheckResult,
+  GateRequest,
+  GateResponse,
+} from "./security-gate";
+
 export type {
   AppCliResult,
   DeployOptions,
