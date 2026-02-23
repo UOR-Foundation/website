@@ -60,6 +60,7 @@ const ConsoleCompute = lazy(() => import("@/modules/console/pages/ConsoleCompute
 const ConsoleStore = lazy(() => import("@/modules/console/pages/ConsoleStore"));
 const ConsoleTrust = lazy(() => import("@/modules/console/pages/ConsoleTrust"));
 const ConsoleAgents = lazy(() => import("@/modules/console/pages/ConsoleAgents"));
+const DevelopersPage = lazy(() => import("@/modules/developers/pages/DevelopersPage"));
 
 const queryClient = new QueryClient();
 
@@ -134,6 +135,7 @@ const App = () => {
               <Route path="trust" element={<ConsoleTrust />} />
               <Route path="agents" element={<ConsoleAgents />} />
             </Route>
+            <Route path="/developers" element={<DevelopersPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

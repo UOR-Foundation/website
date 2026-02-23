@@ -28,4 +28,5 @@ export const routeTable = [
   { path: "/knowledge-graph", label: "Knowledge Graph" },
   { path: "/sessions", label: "State Explorer" },
   { path: "/uns", label: "UoR Name Service" },
+  { path: "/developers", label: "Developers" },
 ];

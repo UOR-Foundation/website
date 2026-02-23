@@ -1,0 +1,21 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "developers",
+  "version": "1.0.0",
+  "description": "Developer documentation hub — canonical namespace for UOR/UNS platform docs, SDK references, and service guides.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["u:", "cert:", "proof:", "derivation:", "trace:"],
+  "exports": ["DevelopersPage", "DevelopersLayout"],
+  "dependencies": {
+    "core": "^1.0.0"
+  },
+  "routes": ["/developers", "/developers/*"],
+  "api_endpoints": [],
+  "assets": [],
+  "uor:migrationTarget": {
+    "description": "This module is designed for future extraction into a standalone repository at developers.uor.foundation",
+    "currentMount": "/developers",
+    "canonicalDomain": "developers.uor.foundation"
+  }
+}
