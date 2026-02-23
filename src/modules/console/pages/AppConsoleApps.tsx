@@ -71,38 +71,38 @@ export default function AppConsoleApps() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-10">
+    <div className="max-w-5xl mx-auto space-y-12">
       {/* ── Hero Deploy Section ───────────────────────────────────── */}
-      <div className="rounded-2xl border border-border/40 bg-card/50 p-8">
-        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+      <div className="rounded-2xl border border-border/40 bg-card/50 p-10">
+        <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-14">
           {/* Left: Hero illustration */}
           <div className="shrink-0">
             <img
               src={heroImage}
               alt="Deploy illustration"
-              className="w-36 h-36 lg:w-44 lg:h-44 object-contain drop-shadow-2xl"
+              className="w-40 h-40 lg:w-48 lg:h-48 object-contain drop-shadow-2xl"
             />
           </div>
 
           {/* Right: Deploy prompt */}
-          <div className="flex-1 space-y-5 w-full">
+          <div className="flex-1 space-y-6 w-full">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">
                 Build, Ship, Run
               </h1>
-              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed max-w-lg">
-                Paste a GitHub repo, live URL, or upload a ZIP — just like a Dockerfile.
+              <p className="mt-2 text-base text-muted-foreground leading-relaxed max-w-lg">
+                Paste a GitHub repo, live URL, or upload a ZIP.
                 We <strong className="text-foreground">build</strong> a content-addressed image,
-                <strong className="text-foreground"> push</strong> it to the UOR registry with a signed certificate, and
+                <strong className="text-foreground"> push</strong> it to the UOR registry, and
                 <strong className="text-foreground"> run</strong> it via WASM — deploy once, run anywhere.
               </p>
             </div>
 
             {/* Source type pills */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {SOURCES.map((s) => {
                 const isZip = s.label === "ZIP Upload";
-                const pill = (
+                return (
                   <span
                     key={s.label}
                     onClick={isZip ? () => {
@@ -115,25 +115,24 @@ export default function AppConsoleApps() {
                       };
                       input.click();
                     } : undefined}
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
                       isZip
-                        ? "bg-primary/10 text-primary border border-primary/30 cursor-pointer hover:bg-primary/20 hover:border-primary/50"
+                        ? "bg-primary/10 text-primary border border-primary/30 cursor-pointer hover:bg-primary/20"
                         : "bg-muted/50 text-muted-foreground"
                     }`}
                   >
-                    <s.icon className="h-3.5 w-3.5" />
+                    <s.icon className="h-4 w-4" />
                     {s.label}
-                    {isZip && <Upload className="h-3 w-3 ml-0.5" />}
+                    {isZip && <Upload className="h-3.5 w-3.5 ml-0.5" />}
                   </span>
                 );
-                return pill;
               })}
             </div>
 
             {/* Deploy input */}
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <div className="flex-1 relative">
-                <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
                 <input
                   type="url"
                   value={importUrl}
@@ -141,18 +140,18 @@ export default function AppConsoleApps() {
                   onKeyDown={(e) => e.key === "Enter" && handleDeploy()}
                   placeholder="https://github.com/you/your-app"
                   disabled={deploying}
-                  className="w-full rounded-xl border border-border/60 bg-muted/20 py-3.5 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all disabled:opacity-50"
+                  className="w-full rounded-xl border border-border/60 bg-muted/20 py-4 pl-12 pr-4 text-base text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all disabled:opacity-50"
                 />
               </div>
               <button
                 onClick={handleDeploy}
                 disabled={deploying || !importUrl.trim()}
-                className="rounded-xl bg-primary hover:bg-primary/90 px-7 py-3.5 text-sm font-semibold text-primary-foreground transition-all disabled:opacity-40 flex items-center gap-2 shrink-0 shadow-md shadow-primary/20"
+                className="rounded-xl bg-primary hover:bg-primary/90 px-8 py-4 text-base font-semibold text-primary-foreground transition-all disabled:opacity-40 flex items-center gap-2.5 shrink-0 shadow-md shadow-primary/20"
               >
                 {deploying ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  <Rocket className="h-4 w-4" />
+                  <Rocket className="h-5 w-5" />
                 )}
                 Deploy
               </button>
@@ -160,21 +159,21 @@ export default function AppConsoleApps() {
 
             {/* Deploy progress steps */}
             {deploying && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 {DEPLOY_STEPS.map((step, i) => (
-                  <div key={step.label} className="flex items-center gap-1">
+                  <div key={step.label} className="flex items-center gap-2">
                     <div
-                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-300 ${
+                      className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300 ${
                         i <= deployStep
                           ? "bg-primary/15 text-primary"
                           : "bg-muted/30 text-muted-foreground/40"
                       }`}
                     >
-                      <step.icon className="h-3.5 w-3.5" />
+                      <step.icon className="h-4 w-4" />
                       {step.label}
                     </div>
                     {i < DEPLOY_STEPS.length - 1 && (
-                      <ArrowRight className={`h-3 w-3 transition-colors ${
+                      <ArrowRight className={`h-4 w-4 transition-colors ${
                         i < deployStep ? "text-primary/60" : "text-muted-foreground/20"
                       }`} />
                     )}
@@ -186,96 +185,96 @@ export default function AppConsoleApps() {
         </div>
       </div>
 
-      {/* ── How It Works (for empty state / first-time users) ─────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {DEPLOY_STEPS.map((step, i) => (
-          <div key={step.label} className="rounded-2xl border border-border/30 bg-card/30 p-6 space-y-2 text-center">
-            <div className="mx-auto h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <step.icon className="h-5 w-5 text-primary" />
+      {/* ── How It Works ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {DEPLOY_STEPS.map((step) => (
+          <div key={step.label} className="rounded-2xl border border-border/30 bg-card/30 p-8 space-y-3 text-center">
+            <div className="mx-auto h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <step.icon className="h-6 w-6 text-primary" />
             </div>
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-lg font-semibold text-foreground">
               {step.label}
             </p>
-            <p className="text-xs text-muted-foreground leading-snug">{step.desc}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
           </div>
         ))}
       </div>
 
       {/* ── Deployed Apps ─────────────────────────────────────────── */}
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
+          <h2 className="text-base font-semibold text-muted-foreground uppercase tracking-widest">
             Your Apps
           </h2>
-          <span className="text-xs text-muted-foreground">{MOCK_APPS.length} deployed</span>
+          <span className="text-sm text-muted-foreground">{MOCK_APPS.length} deployed</span>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {MOCK_APPS.map((app) => (
             <NavLink
               key={app.canonicalId}
               to={`/console/app-detail/${encodeURIComponent(app.canonicalId)}`}
-              className="group flex items-center gap-4 rounded-2xl border border-border/40 bg-card/50 p-5 hover:border-primary/30 hover:bg-card/80 transition-all duration-300"
+              className="group flex items-center gap-5 rounded-2xl border border-border/40 bg-card/50 p-6 hover:border-primary/30 hover:bg-card/80 transition-all duration-300"
             >
               {/* App icon */}
-              <div className="h-12 w-12 rounded-xl bg-muted/40 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                <Globe className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <div className="h-14 w-14 rounded-xl bg-muted/40 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+                <Globe className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
 
               {/* App info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
-                  <span className="text-base font-semibold text-foreground">
+                  <span className="text-lg font-semibold text-foreground">
                     {app.name}
                   </span>
                   <ZoneBadge zone={app.zone} />
                 </div>
-                <div className="mt-1 flex items-center gap-3">
+                <div className="mt-1.5 flex items-center gap-4">
                   <CanonicalIdBadge id={app.canonicalId} chars={24} />
-                  <code className="text-[11px] text-muted-foreground/60 font-mono">
+                  <code className="text-sm text-muted-foreground font-mono">
                     {app.ipv6}
                   </code>
                 </div>
               </div>
 
               {/* Stats */}
-              <div className="hidden sm:flex items-center gap-6 text-xs shrink-0">
-                <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Users</span>
-                  <span className="font-medium text-foreground">{app.userCount}</span>
+              <div className="hidden sm:flex items-center gap-8 shrink-0">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Users</span>
+                  <span className="text-lg font-semibold text-foreground">{app.userCount}</span>
                 </div>
-                <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Revenue</span>
-                  <span className="font-medium text-green-500">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Revenue</span>
+                  <span className="text-lg font-semibold text-primary">
                     ${app.revenue.toFixed(0)}
                   </span>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="hidden sm:flex items-center gap-1 shrink-0">
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
                 <button
                   onClick={(e) => e.preventDefault()}
-                  className="flex flex-col items-center gap-0.5 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex flex-col items-center gap-1 p-2.5 rounded-lg hover:bg-muted/50 transition-colors"
                   title="QR Cartridge"
                 >
-                  <QrCode className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[9px] text-muted-foreground/60">QR</span>
+                  <QrCode className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">QR</span>
                 </button>
                 <button
                   onClick={(e) => {
                     e.preventDefault();
                     handleCopy(app.canonicalId);
                   }}
-                  className="flex flex-col items-center gap-0.5 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex flex-col items-center gap-1 p-2.5 rounded-lg hover:bg-muted/50 transition-colors"
                   title="Copy canonical ID"
                 >
                   {copiedId === app.canonicalId ? (
-                    <Check className="h-4 w-4 text-primary" />
+                    <Check className="h-5 w-5 text-primary" />
                   ) : (
-                    <Copy className="h-4 w-4 text-muted-foreground" />
+                    <Copy className="h-5 w-5 text-muted-foreground" />
                   )}
-                  <span className="text-[9px] text-muted-foreground/60">Copy</span>
+                  <span className="text-xs text-muted-foreground">Copy</span>
                 </button>
               </div>
             </NavLink>
@@ -284,16 +283,16 @@ export default function AppConsoleApps() {
       </div>
 
       {/* ── Runtime Info ──────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-border/30 bg-muted/10 p-6 space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">
+      <div className="rounded-2xl border border-border/30 bg-muted/10 p-8 space-y-4">
+        <h3 className="text-lg font-semibold text-foreground">
           Streamed Runtime
         </h3>
-        <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
+        <p className="text-base text-muted-foreground leading-relaxed max-w-2xl">
           Applications are rendered via WASM directly in the browser — compatible with desktop,
           mobile, and any device. Your app is content-addressed and streamed on demand, so every
           device resolves the same verified application without local installation.
         </p>
-        <div className="flex items-center gap-4 text-[11px] text-muted-foreground/70 font-mono">
+        <div className="flex items-center gap-5 text-sm text-muted-foreground font-mono">
           <span>Runtime: WASM v1.0</span>
           <span>•</span>
           <span>Memory: Content-Addressed</span>
