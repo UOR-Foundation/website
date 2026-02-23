@@ -34,10 +34,9 @@ const MOCK_APPS: AppCard[] = [
 ];
 
 const DEPLOY_STEPS = [
-  { icon: Upload, label: "Import", desc: "Paste a URL or upload a ZIP" },
-  { icon: ShieldCheck, label: "Certify", desc: "Content-addressed identity" },
-  { icon: DbIcon, label: "Pin", desc: "Stored on IPFS permanently" },
-  { icon: Rocket, label: "Live", desc: "Streamed via WASM runtime" },
+  { icon: Upload, label: "Build", desc: "Import & content-address your code" },
+  { icon: ShieldCheck, label: "Ship", desc: "Certify identity & pin to IPFS" },
+  { icon: Rocket, label: "Run", desc: "Stream via WASM to any device" },
 ];
 
 const SOURCES = [
@@ -56,14 +55,13 @@ export default function AppConsoleApps() {
     if (!importUrl.trim()) return;
     setDeploying(true);
     setDeployStep(0);
-    setTimeout(() => setDeployStep(1), 700);
-    setTimeout(() => setDeployStep(2), 1400);
-    setTimeout(() => setDeployStep(3), 2100);
+    setTimeout(() => setDeployStep(1), 900);
+    setTimeout(() => setDeployStep(2), 1800);
     setTimeout(() => {
       setDeploying(false);
       setDeployStep(0);
       setImportUrl("");
-    }, 2800);
+    }, 2700);
   };
 
   const handleCopy = (id: string) => {
@@ -90,12 +88,14 @@ export default function AppConsoleApps() {
           <div className="flex-1 space-y-5 w-full">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                Deploy your app
+                Build, Ship, Run
               </h1>
               <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed max-w-lg">
-                Paste a GitHub repo, live URL, or upload a ZIP. We compute a content-addressed
-                identity, pin to IPFS, and issue a certificate. Your app is sovereign — deploy
-                once, run anywhere.
+                Import your web-coded app from GitHub, a live URL, or a ZIP. We
+                <strong className="text-foreground"> build</strong> a content-addressed identity,
+                <strong className="text-foreground"> ship</strong> it to IPFS with a certificate, and
+                <strong className="text-foreground"> run</strong> it via WASM — sovereign, verified,
+                on any device.
               </p>
             </div>
 
@@ -169,16 +169,16 @@ export default function AppConsoleApps() {
       </div>
 
       {/* ── How It Works (for empty state / first-time users) ─────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {DEPLOY_STEPS.map((step, i) => (
-          <div key={step.label} className="rounded-2xl border border-border/30 bg-card/30 p-5 space-y-2 text-center">
+          <div key={step.label} className="rounded-2xl border border-border/30 bg-card/30 p-6 space-y-2 text-center">
             <div className="mx-auto h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <step.icon className="h-5 w-5 text-primary" />
             </div>
-            <p className="text-xs font-semibold text-foreground">
-              <span className="text-primary mr-1">{i + 1}.</span>{step.label}
+            <p className="text-sm font-semibold text-foreground">
+              {step.label}
             </p>
-            <p className="text-[11px] text-muted-foreground leading-snug">{step.desc}</p>
+            <p className="text-xs text-muted-foreground leading-snug">{step.desc}</p>
           </div>
         ))}
       </div>
