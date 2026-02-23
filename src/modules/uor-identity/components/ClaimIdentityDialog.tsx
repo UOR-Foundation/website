@@ -25,7 +25,7 @@ import lobsterIcon from "@/assets/lobster-icon.png";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-type ClaimStep = "choose" | "intro" | "email-sent" | "signing-in" | "deriving" | "complete" | "agent-intro" | "agent-generating" | "agent-complete";
+type ClaimStep = "choose" | "intro" | "email-sent" | "signing-in" | "deriving" | "complete" | "agent-intro" | "agent-generating" | "agent-complete" | "agent-confirm";
 
 interface DerivedIdentity {
   canonicalId: string;
@@ -128,6 +128,8 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [passkeyStatus, setPasskeyStatus] = useState<"idle" | "registering" | "done" | "unsupported">("idle");
+  const [confirmInput, setConfirmInput] = useState("");
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -632,11 +634,82 @@ POST /agent/auth
               </div>
 
               <button
-                onClick={() => onOpenChange(false)}
+                onClick={() => { setConfirmInput(""); setConfirmError(null); setStep("agent-confirm"); }}
                 className="w-full btn-primary inline-flex items-center justify-center gap-2 text-base py-3.5 rounded-xl"
               >
-                Done
+                I've Saved My Credentials — Continue
+                <ArrowRight size={18} />
               </button>
+            </div>
+          )}
+
+          {/* ── AGENT: CONFIRM (paste derivation ID) ───────────────── */}
+          {step === "agent-confirm" && agentIdentity && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                  <KeyRound size={32} className="text-accent" />
+                </div>
+                <h3 className="font-display text-xl font-bold text-foreground mb-2">Confirm You Saved It</h3>
+                <p className="text-base text-muted-foreground font-body leading-relaxed max-w-sm mx-auto">
+                  Paste your <strong className="text-foreground">Founding Derivation ID</strong> below to prove you've saved your credentials. Without it, your identity is permanently irrecoverable.
+                </p>
+              </div>
+
+              {/* Warning box */}
+              <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20">
+                <p className="text-sm text-destructive font-body font-medium leading-relaxed">
+                  ⚠️ This is not a test — there is <strong>no recovery mechanism</strong>. If you did not save your Founding Derivation ID and private key, go back now and copy them.
+                </p>
+              </div>
+
+              {/* Input */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-foreground font-body">
+                  Founding Derivation ID
+                </label>
+                <textarea
+                  value={confirmInput}
+                  onChange={(e) => { setConfirmInput(e.target.value); setConfirmError(null); }}
+                  placeholder="urn:uor:derivation:sha256:..."
+                  rows={3}
+                  className="w-full px-4 py-3.5 rounded-xl border border-border bg-card text-foreground font-mono text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"
+                />
+                {confirmError && (
+                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm font-body flex items-start gap-2">
+                    <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                    <span>{confirmError}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Buttons */}
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    const trimmed = confirmInput.trim();
+                    if (trimmed === agentIdentity.foundingDerivationId) {
+                      setConfirmError(null);
+                      onOpenChange(false);
+                    } else if (!trimmed) {
+                      setConfirmError("Please paste your Founding Derivation ID to continue.");
+                    } else {
+                      setConfirmError("That doesn't match. Copy your Founding Derivation ID from the previous screen and paste it here exactly.");
+                    }
+                  }}
+                  className="w-full btn-primary inline-flex items-center justify-center gap-2 text-base py-3.5 rounded-xl"
+                >
+                  <CheckCircle2 size={18} />
+                  Confirm & Finish
+                </button>
+                <button
+                  onClick={() => setStep("agent-complete")}
+                  className="w-full btn-outline inline-flex items-center justify-center gap-2 text-sm py-3 rounded-xl"
+                >
+                  <ChevronLeft size={16} />
+                  Go back to copy credentials
+                </button>
+              </div>
             </div>
           )}
 
