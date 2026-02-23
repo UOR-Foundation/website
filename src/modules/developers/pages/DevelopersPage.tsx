@@ -14,10 +14,15 @@ import {
   Github,
   Copy,
   Check,
+  FolderTree,
+  FlaskConical,
+  ShieldCheck,
+  Layers,
+  ExternalLink,
 } from "lucide-react";
 import { useState } from "react";
 
-/* ── Copy button for code blocks ──────────────────────────────── */
+/* ── Copy button ──────────────────────────────────────────────── */
 const CopyBtn = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
@@ -54,6 +59,70 @@ const quickStartResponse = `{
   "epistemic_grade": "A"
 }`;
 
+/* ── Resource links ───────────────────────────────────────────── */
+const resourceLinks = [
+  {
+    title: "API Reference",
+    desc: "48 endpoints. Working curl examples. JSON-LD responses.",
+    href: "/api",
+    icon: "FileJson",
+  },
+  {
+    title: "Conformance Suite",
+    desc: "35 mathematical proofs. Verify the framework yourself.",
+    href: "/conformance",
+    icon: "Shield",
+  },
+  {
+    title: "Agent Console",
+    desc: "Register agents, route messages, detect injection.",
+    href: "/agent-console",
+    icon: "Bot",
+  },
+  {
+    title: "Ring Explorer",
+    desc: "Inspect the algebraic ring structure underlying all addresses.",
+    href: "/ring-explorer",
+    icon: "CircleDot",
+  },
+  {
+    title: "Knowledge Graph",
+    desc: "Browse the live triplestore of UOR-certified entities.",
+    href: "/knowledge-graph",
+    icon: "Share2",
+  },
+  {
+    title: "SPARQL Editor",
+    desc: "Run queries directly against the UOR knowledge graph.",
+    href: "/sparql-editor",
+    icon: "Search",
+  },
+];
+
+/* ── Research & papers ────────────────────────────────────────── */
+const researchLinks = [
+  {
+    title: "Atlas Embeddings",
+    desc: "Topological embedding theory for content-addressed spaces.",
+    href: "/research/atlas-embeddings",
+  },
+  {
+    title: "Building the Internet's Knowledge Graph",
+    desc: "How content-addressed identity enables a verifiable web of data.",
+    href: "/blog/building-the-internets-knowledge-graph",
+  },
+  {
+    title: "Universal Mathematical Language",
+    desc: "The algebraic foundations behind UOR's addressing scheme.",
+    href: "/blog/universal-mathematical-language",
+  },
+  {
+    title: "UOR Framework Launch",
+    desc: "Design rationale, architecture decisions, and the road ahead.",
+    href: "/blog/uor-framework-launch",
+  },
+];
+
 /* ── Page ─────────────────────────────────────────────────────── */
 const DevelopersPage = () => (
   <Layout>
@@ -74,13 +143,20 @@ const DevelopersPage = () => (
                 verifiable computation, and zero-trust networking. One SDK. Every service.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Link
                 to="/api"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
               >
                 <FileJson size={15} />
                 API Reference
+              </Link>
+              <Link
+                to="/developers/directory"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-card/60 transition-colors"
+              >
+                <FolderTree size={15} />
+                Docs Directory
               </Link>
               <a
                 href="https://github.com/UOR-Foundation"
@@ -110,10 +186,7 @@ const DevelopersPage = () => (
                 desc: "Any peer can verify that an address is correct, independently, with no shared state.",
               },
             ].map((item, i) => (
-              <div
-                key={i}
-                className="bg-card/30 p-6"
-              >
+              <div key={i} className="bg-card/30 p-6">
                 <h3 className="text-sm font-semibold text-foreground mb-2 font-body">
                   {item.title}
                 </h3>
@@ -140,7 +213,6 @@ const DevelopersPage = () => (
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Request */}
             <div className="relative rounded-xl border border-border/50 bg-section-dark overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/30 text-xs text-muted-foreground">
                 <span className="px-2 py-0.5 rounded bg-primary/15 text-primary font-mono font-medium text-[10px]">
@@ -154,7 +226,6 @@ const DevelopersPage = () => (
               </pre>
             </div>
 
-            {/* Response */}
             <div className="relative rounded-xl border border-border/50 bg-section-dark overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/30 text-xs text-muted-foreground">
                 <span className="px-2 py-0.5 rounded bg-green-500/15 text-green-400 font-mono font-medium text-[10px]">
@@ -235,9 +306,6 @@ const DevelopersPage = () => (
             <h2 className="text-sm font-semibold text-foreground font-body tracking-wide uppercase">
               TypeScript SDK
             </h2>
-            <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase tracking-wider ml-2">
-              Soon
-            </span>
           </div>
           <div className="relative rounded-xl border border-border/50 bg-section-dark overflow-hidden max-w-2xl">
             <CopyBtn text={`npm install @uns/sdk`} />
@@ -257,34 +325,110 @@ const DevelopersPage = () => (
               </code>
             </pre>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            <Link to="/developers/sdk" className="text-primary hover:underline">
+              Read the full SDK documentation →
+            </Link>
+          </p>
         </div>
       </section>
 
-      {/* ── Bottom nav links ───────────────────────────────────── */}
-      <section className="pb-24">
+      {/* ── Research & Papers ──────────────────────────────────── */}
+      <section className="pb-16 md:pb-20">
         <div className="container max-w-5xl">
-          <div className="h-px bg-border/30 mb-10" />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="flex items-center gap-2 mb-2">
+            <FlaskConical size={16} className="text-primary" />
+            <h2 className="text-sm font-semibold text-foreground font-body tracking-wide uppercase">
+              Research & Papers
+            </h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-6 max-w-lg">
+            Peer into the mathematical foundations. Every claim is backed by formal proofs and published research.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {researchLinks.map((r) => (
+              <Link
+                key={r.href}
+                to={r.href}
+                className="group flex items-start gap-3 rounded-xl border border-border/40 bg-card/20 p-5 hover:border-primary/30 hover:bg-card/40 transition-all"
+              >
+                <FlaskConical size={16} className="text-primary shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1 font-body flex items-center gap-1.5">
+                    {r.title}
+                    <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {r.desc}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <p className="mt-4 text-xs text-muted-foreground">
+            <Link to="/research" className="text-primary hover:underline">
+              Browse all research →
+            </Link>
+          </p>
+        </div>
+      </section>
+
+      {/* ── Verification & Trust ───────────────────────────────── */}
+      <section className="pb-16 md:pb-20">
+        <div className="container max-w-5xl">
+          <div className="flex items-center gap-2 mb-2">
+            <ShieldCheck size={16} className="text-primary" />
+            <h2 className="text-sm font-semibold text-foreground font-body tracking-wide uppercase">
+              Verification & Trust
+            </h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-6 max-w-lg">
+            Don't take our word for it — verify every claim independently using these tools.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              {
-                title: "API Reference",
-                desc: "48 endpoints. Working curl examples. JSON-LD responses.",
-                href: "/api",
-                icon: "FileJson",
-              },
-              {
-                title: "Conformance Suite",
-                desc: "35 mathematical proofs. Verify the framework yourself.",
-                href: "/conformance",
-                icon: "Shield",
-              },
-              {
-                title: "Agent Console",
-                desc: "Register agents, route messages, detect injection.",
-                href: "/agent-console",
-                icon: "Bot",
-              },
+              { title: "Conformance Suite", desc: "35 SHACL shapes and algebraic proofs. Run the test suite yourself.", href: "/conformance", icon: "Shield" },
+              { title: "System Audit", desc: "Live integrity checks, receipt verification, and coherence validation.", href: "/audit", icon: "ClipboardCheck" },
+              { title: "Certificates", desc: "Browse and inspect UOR certificates with full derivation chains.", href: "/certificates", icon: "Award" },
+              { title: "SHACL Shapes", desc: "Machine-readable constraint definitions for every UOR entity type.", href: "/shacl", icon: "Braces" },
+              { title: "Data Formats", desc: "JSON-LD contexts, Turtle, and N-Triples — all open and documented.", href: "/formats", icon: "FileText" },
+              { title: "Verify Address", desc: "Paste any UOR IRI and verify its mathematical correctness.", href: "/verify", icon: "CheckCircle" },
             ].map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className="group flex items-start gap-3 rounded-xl border border-border/40 bg-card/20 p-5 hover:border-primary/30 hover:bg-card/40 transition-all"
+              >
+                <DocIcon name={link.icon} size={16} className="text-primary shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1 font-body flex items-center gap-1.5">
+                    {link.title}
+                    <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {link.desc}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Interactive Tools ──────────────────────────────────── */}
+      <section className="pb-16 md:pb-20">
+        <div className="container max-w-5xl">
+          <div className="flex items-center gap-2 mb-2">
+            <Layers size={16} className="text-primary" />
+            <h2 className="text-sm font-semibold text-foreground font-body tracking-wide uppercase">
+              Interactive Tools
+            </h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-6 max-w-lg">
+            Hands-on explorers and labs. No setup required — everything runs in-browser.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {resourceLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
@@ -302,6 +446,74 @@ const DevelopersPage = () => (
                 </div>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Explore More ───────────────────────────────────────── */}
+      <section className="pb-16 md:pb-20">
+        <div className="container max-w-5xl">
+          <div className="flex items-center gap-2 mb-2">
+            <FolderTree size={16} className="text-primary" />
+            <h2 className="text-sm font-semibold text-foreground font-body tracking-wide uppercase">
+              Explore More
+            </h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-6 max-w-lg">
+            Every page, tool, and project in one searchable index.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[
+              { title: "Docs Directory", desc: "Full searchable index of all documentation pages.", href: "/developers/directory", icon: "FolderTree" },
+              { title: "Fundamentals", desc: "Content-identity, infrastructure pillars, and agentic AI.", href: "/developers/fundamentals", icon: "Fingerprint" },
+              { title: "Your Projects", desc: "Hologram, Prism, Atlas, Atomic Lang — explore or submit your own.", href: "/projects", icon: "Briefcase" },
+              { title: "UOR Standard", desc: "The complete framework specification and axiom set.", href: "/standard", icon: "BookOpen" },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className="group flex flex-col rounded-xl border border-border/40 bg-card/20 p-5 hover:border-primary/30 hover:bg-card/40 transition-all"
+              >
+                <DocIcon name={link.icon} size={18} className="text-primary mb-3" />
+                <h3 className="text-sm font-semibold text-foreground mb-1 font-body flex items-center gap-1.5">
+                  {link.title}
+                  <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {link.desc}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Bottom CTA ─────────────────────────────────────────── */}
+      <section className="pb-24">
+        <div className="container max-w-5xl">
+          <div className="h-px bg-border/30 mb-10" />
+          <div className="text-center max-w-lg mx-auto">
+            <h2 className="text-lg font-display font-bold text-foreground mb-3">
+              Ready to build?
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              Start with the Getting Started guide. Make your first verifiable API call in under 5 minutes — no account, no API key, no setup.
+            </p>
+            <div className="flex justify-center gap-3 flex-wrap">
+              <Link
+                to="/developers/getting-started"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                Get Started
+                <ArrowRight size={14} />
+              </Link>
+              <Link
+                to="/developers/fundamentals"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-card/60 transition-colors"
+              >
+                Read the Fundamentals
+              </Link>
+            </div>
           </div>
         </div>
       </section>
