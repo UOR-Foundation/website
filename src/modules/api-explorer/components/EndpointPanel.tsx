@@ -6,10 +6,19 @@ import { API_BASE_URL } from "@/data/api-layers";
 
 const RUNTIME_BASE = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "erwfuxphwcvynxhfbvql"}.supabase.co/functions/v1/uor-api`;
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function highlightJson(json: string): string {
-  return json
-    .replace(/("(?:[^"\\]|\\.)*")(\s*:)/g, '<span class="json-key">$1</span>$2')
-    .replace(/:\s*("(?:[^"\\]|\\.)*")/g, ': <span class="json-string">$1</span>')
+  const escaped = escapeHtml(json);
+  return escaped
+    .replace(/(&quot;(?:[^&]|&(?!quot;))*&quot;)(\s*:)/g, '<span class="json-key">$1</span>$2')
+    .replace(/:\s*(&quot;(?:[^&]|&(?!quot;))*&quot;)/g, ': <span class="json-string">$1</span>')
     .replace(/:\s*(\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
     .replace(/:\s*(true|false)/g, ': <span class="json-boolean">$1</span>')
     .replace(/:\s*(null)/g, ': <span class="json-null">$1</span>');
