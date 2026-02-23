@@ -88,7 +88,7 @@ export const projects: ProjectData[] = [
     name: "UOR Identity",
     slug: "uor-identity",
     category: "Core Infrastructure",
-    description: "A sovereign identity layer where who you are is derived from your relationships and behavior — not a username. One secure identity to build, interact, and transact across the entire Hologram ecosystem.",
+    description: "No more juggling dozens of logins, resetting forgotten passwords, or trusting platforms that sell your data. One permanent, private identity — derived from who you are, not which service you signed up for — that works everywhere and is controlled entirely by you.",
     maturity: "Sandbox",
     imageKey: "uorIdentity",
   },

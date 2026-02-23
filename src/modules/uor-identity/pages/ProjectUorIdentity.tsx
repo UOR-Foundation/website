@@ -7,7 +7,7 @@ const ProjectUorIdentity = () => (
     name="UOR Identity"
     slug="uor-identity"
     category="Core Infrastructure"
-    tagline="Create a secure, content-addressed identity derived from your relationships and behavior — one identity to build, interact, and transact across the entire Hologram ecosystem."
+    tagline="The average person manages over 100 online accounts with dozens of forgotten passwords. Each one is a separate copy of you — owned by someone else, sold without your consent, and breached without your knowledge. UOR Identity replaces all of them with one permanent, private identity that you control."
     heroImage={heroImg}
     repoUrl="https://github.com/UOR-Foundation"
     agentInstructions={[
@@ -23,10 +23,10 @@ const ProjectUorIdentity = () => (
         content: (
           <>
             <p>
-              UOR Identity is the sovereign identity layer for the Hologram ecosystem. It gives every user a single, permanent, content-addressed identity that is derived from <em>what they are</em> — their relationships, their behavior, their cryptographic attributes — not from where they signed up.
+              UOR Identity is a single, permanent digital identity that works across every application in the ecosystem. Instead of creating yet another account with yet another password, you create one identity — once — and it works everywhere.
             </p>
             <p>
-              Unlike traditional identity systems that assign arbitrary usernames or email-based accounts, UOR Identity treats every person as a data object in the universal graph. Your identity is mathematically determined by your connections to other objects (people, applications, organizations) and your behavioral footprint within the ecosystem.
+              Your identity is not a username stored in a company's database. It is a mathematically derived fingerprint of <em>who you are</em>: your relationships to people, applications, and organizations, combined with your behavioral patterns. No one assigns it to you. No one can take it away. And because it is derived from your own attributes, it is as unique and unforgeable as a real fingerprint.
             </p>
           </>
         ),
@@ -36,10 +36,16 @@ const ProjectUorIdentity = () => (
         content: (
           <>
             <p>
-              Today's internet forces users to create dozens of separate accounts across different services. Each account fragments your identity, scatters your data, and hands control to platform operators. Password resets, data breaches, and profile duplication are symptoms of a fundamentally broken model.
+              Right now, your digital identity is shattered across hundreds of platforms. Every service demands a separate signup — a new email, a new password, a new set of terms you never read. The result is predictable: forgotten passwords, recycled credentials, and a trail of personal data scattered across servers you don't control.
             </p>
             <p>
-              UOR Identity eliminates this entire class of problems. One identity. One login. One place to build your security posture, manage your relationships, and interact with every member and application in the ecosystem. Your identity travels with you because it is <em>you</em> — not a record in someone else's database.
+              When one of those servers is breached — and <strong className="text-foreground">billions of accounts are compromised every year</strong> — your data is exposed not because of something you did wrong, but because the system is structurally broken. Your identity shouldn't depend on a company's security budget.
+            </p>
+            <p>
+              And privacy? Every platform builds a profile of you — your habits, your interests, your social graph — and monetizes it. You are the product. You have no visibility into what is collected, no control over who buys it, and no way to delete it.
+            </p>
+            <p>
+              UOR Identity eliminates this entire class of problems. One identity. One login. No passwords to forget, no profiles to duplicate, no data to leak. Your identity lives with you — not on someone else's server — and you decide exactly what to share, with whom, and for how long.
             </p>
           </>
         ),
