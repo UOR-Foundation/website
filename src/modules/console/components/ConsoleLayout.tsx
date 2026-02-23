@@ -9,7 +9,7 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Globe, Shield, Cpu, Database,
   Lock, Bot, ChevronLeft, Rocket, Compass,
-  Search, Plus, Circle, BarChart3, BookOpen,
+  Search, Plus, Circle, BarChart3, BookOpen, User,
   Sun, Moon,
 } from "lucide-react";
 import { useState } from "react";
@@ -214,15 +214,22 @@ function ConsoleLayoutInner() {
             ))}
           </div>
 
-          {/* Docs link */}
+          {/* Docs & Space links */}
           {!collapsed && (
-            <div className="pt-4">
+            <div className="pt-4 space-y-1">
               <NavLink
                 to="/developers"
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200"
               >
                 <BookOpen className="h-4 w-4 shrink-0" />
                 <span>Documentation</span>
+              </NavLink>
+              <NavLink
+                to="/your-space"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200"
+              >
+                <User className="h-4 w-4 shrink-0" />
+                <span>Your Space</span>
               </NavLink>
             </div>
           )}
