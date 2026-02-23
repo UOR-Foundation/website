@@ -70,25 +70,25 @@ function ConsoleLayoutInner() {
       {/* ── Left Sidebar ──────────────────────────────────────────────── */}
       <aside
         className={`flex flex-col border-r border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 ${
-          collapsed ? "w-16" : "w-72"
+          collapsed ? "w-16" : "w-80"
         }`}
       >
         {/* Header */}
-        <div className="flex h-14 items-center justify-between border-b border-border/50 px-4">
+        <div className="flex h-16 items-center justify-between border-b border-border/50 px-5">
           {!collapsed && (
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-primary/20 flex items-center justify-center">
-                <span className="text-primary text-sm font-bold">H</span>
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                <span className="text-primary text-base font-bold">H</span>
               </div>
-              <span className="text-sm font-semibold tracking-tight">Hologram Console</span>
+              <span className="text-base font-semibold tracking-tight">Hologram Console</span>
             </div>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors"
+            className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
           >
             <ChevronLeft
-              className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${
+              className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${
                 collapsed ? "rotate-180" : ""
               }`}
             />
@@ -97,22 +97,22 @@ function ConsoleLayoutInner() {
 
         {/* Search (expanded only) */}
         {!collapsed && (
-          <div className="px-3 pt-4 pb-2">
+          <div className="px-4 pt-5 pb-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search apps & services…"
-                className="w-full rounded-lg border border-border/50 bg-muted/30 py-2 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                className="w-full rounded-lg border border-border/50 bg-muted/30 py-2.5 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
               />
             </div>
           </div>
         )}
 
         {/* ── Build · Ship · Run Navigation (Docker-aligned) ──────── */}
-        <nav className="px-2 pt-2 space-y-0.5">
+        <nav className="px-3 pt-2 space-y-1">
           {[
             { title: "Build", items: NAV_BUILD },
             { title: "Ship", items: NAV_SHIP },
@@ -120,13 +120,13 @@ function ConsoleLayoutInner() {
           ].map((group) => (
             <div key={group.title} className="pb-2">
               {!collapsed && (
-                <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-widest text-muted-foreground/60 font-medium">
+                <p className="px-3 pt-3 pb-1.5 text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
                   {group.title}
                 </p>
               )}
               {collapsed && (
                 <div className="flex justify-center py-1">
-                  <span className="text-[8px] uppercase tracking-widest text-muted-foreground/40 font-bold">
+                  <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 font-bold">
                     {group.title.charAt(0)}
                   </span>
                 </div>
@@ -142,17 +142,17 @@ function ConsoleLayoutInner() {
                     to={item.to}
                     end={end || undefined}
                     title={collapsed ? `${item.label} — ${item.hint}` : item.hint}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-base transition-all duration-200 ${
                       active
                         ? "bg-primary/10 text-primary font-medium"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                     } ${collapsed ? "justify-center" : ""}`}
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
+                    <item.icon className="h-5 w-5 shrink-0" />
                     {!collapsed && (
                       <div className="flex-1 min-w-0">
                         <span className="block">{item.label}</span>
-                        <span className="block text-[10px] text-muted-foreground/50 leading-tight">
+                        <span className="block text-xs text-muted-foreground/50 leading-tight">
                           {item.hint}
                         </span>
                       </div>
@@ -165,47 +165,47 @@ function ConsoleLayoutInner() {
         </nav>
 
         {/* ── Deployed Apps List ──────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto px-2 pt-2">
+        <div className="flex-1 overflow-y-auto px-3 pt-3">
           {!collapsed && (
             <div className="flex items-center justify-between px-3 pb-2">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-medium">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
                 Your Apps
               </p>
               <NavLink
                 to="/console"
-                className="p-1 rounded-md hover:bg-muted/50 transition-colors"
+                className="p-1.5 rounded-md hover:bg-muted/50 transition-colors"
                 title="Deploy new app"
               >
-                <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+                <Plus className="h-4 w-4 text-muted-foreground" />
               </NavLink>
             </div>
           )}
 
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {filteredApps.map((app) => (
               <NavLink
                 key={app.name}
                 to={`/console/app-detail/${encodeURIComponent(
                   `urn:uor:derivation:sha256:${app.address.replace(/[:.]/g, "")}`
                 )}`}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 hover:bg-muted/30 group ${
+                className={`flex items-center gap-3 rounded-lg px-3 py-3 text-base transition-all duration-200 hover:bg-muted/30 group ${
                   collapsed ? "justify-center" : ""
                 }`}
               >
-                <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center text-base shrink-0 group-hover:bg-muted/80 transition-colors">
+                <div className="h-9 w-9 rounded-full bg-muted/50 flex items-center justify-center text-lg shrink-0 group-hover:bg-muted/80 transition-colors">
                   {app.icon}
                 </div>
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-foreground truncate">
+                      <span className="text-base font-medium text-foreground truncate">
                         {app.name}
                       </span>
-                      <span className="inline-flex items-center rounded-full bg-muted/60 px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                      <span className="inline-flex items-center rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                         {app.network}
                       </span>
                     </div>
-                    <p className="text-[11px] text-muted-foreground/70 font-mono truncate">
+                    <p className="text-xs text-muted-foreground/70 font-mono truncate">
                       {app.address.slice(0, 18)}…
                     </p>
                   </div>
@@ -216,19 +216,23 @@ function ConsoleLayoutInner() {
 
           {/* Docs & Space links */}
           {!collapsed && (
-            <div className="pt-4 space-y-1">
+            <div className="pt-5 space-y-1">
               <NavLink
                 to="/developers"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200"
               >
-                <BookOpen className="h-4 w-4 shrink-0" />
+                <BookOpen className="h-5 w-5 shrink-0" />
                 <span>Documentation</span>
               </NavLink>
               <NavLink
                 to="/console/your-space"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200"
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-base transition-all duration-200 ${
+                  location.pathname === "/console/your-space"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                }`}
               >
-                <User className="h-4 w-4 shrink-0" />
+                <User className="h-5 w-5 shrink-0" />
                 <span>Your Space</span>
               </NavLink>
             </div>
@@ -237,9 +241,9 @@ function ConsoleLayoutInner() {
 
         {/* Footer — Status */}
         {!collapsed && (
-          <div className="border-t border-border/50 p-3 space-y-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
-              <Circle className="h-2 w-2 fill-primary text-primary" />
+          <div className="border-t border-border/50 p-4 space-y-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground/70">
+              <Circle className="h-2.5 w-2.5 fill-primary text-primary" />
               <span>Connected</span>
             </div>
             <CanonicalIdBadge id={MOCK_NODE_ID} chars={20} />
