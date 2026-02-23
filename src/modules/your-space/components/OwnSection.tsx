@@ -1,11 +1,6 @@
 /**
- * Your Space — "Own Your Data" Section
- *
- * Three cards: SECURITY, IDENTITY, ASSETS
- * All tied to UOR framework primitives:
- * - Security: Post-quantum crypto stack (Dilithium-3, Kyber-1024)
- * - Identity: UOR Universal Identity (content-addressed via singleProofHash)
- * - Assets: UOR derivations, certificates, and data objects
+ * Your Space — "Own" Section
+ * Clean, readable cards: Security, Identity, Assets
  */
 
 import { useState } from "react";
@@ -31,20 +26,17 @@ export const OwnSection = ({ isDark, searchQuery, setSearchQuery, votes, onVote 
 
   const text = isDark ? "text-white" : "text-gray-900";
   const textMuted = isDark ? "text-gray-400" : "text-gray-500";
-  const btnBg = isDark
-    ? "bg-white/5 border-gray-600/50 hover:bg-white/10 hover:border-gray-500/50"
-    : "bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300";
   const inputCls = isDark
-    ? "bg-gray-800/60 border-gray-700/50 text-white focus:border-gray-500"
-    : "bg-white border-gray-200 text-gray-900 focus:border-gray-400";
+    ? "bg-white/5 border-white/10 text-white focus:border-white/30"
+    : "bg-gray-50 border-gray-200 text-gray-900 focus:border-gray-400";
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className={`${text} font-mono text-xl tracking-wide`}>Own Your Data</h2>
-        <div className="relative w-[28rem]">
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isDark ? "text-white/60" : "text-gray-400"}>
+        <h2 className={`${text} font-body text-xl font-semibold`}>Own Your Data</h2>
+        <div className="relative w-80">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={textMuted}>
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
             </svg>
@@ -53,56 +45,53 @@ export const OwnSection = ({ isDark, searchQuery, setSearchQuery, votes, onVote 
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Discover new protocols for your space"
-            className={`w-full ${isDark ? "bg-gray-900/60 border-gray-700/50 text-white placeholder-gray-400 focus:border-gray-500/50 focus:bg-gray-800/60" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gray-400 focus:bg-white"} border rounded-lg py-3 pl-10 pr-12 font-mono text-sm focus:outline-none transition-all duration-200 backdrop-blur-sm`}
+            placeholder="Discover new protocols"
+            className={`w-full ${inputCls} border rounded-lg py-2.5 pl-10 pr-10 font-body text-sm focus:outline-none transition-all`}
           />
-          <button
-            className={`absolute right-2 top-1/2 transform -translate-y-1/2 w-7 h-7 rounded-full border ${isDark ? "border-gray-600/50" : "border-gray-300"} flex items-center justify-center transition-all duration-200 ${searchQuery.trim() ? `${isDark ? "bg-gray-700/50 text-white" : "bg-gray-200 text-gray-700"} cursor-pointer` : `bg-transparent ${isDark ? "text-gray-500" : "text-gray-300"} cursor-default`}`}
-          >
-            <CornerDownLeft className="w-3 h-3" />
-          </button>
+          {searchQuery.trim() && (
+            <button className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${textMuted}`}>
+              <CornerDownLeft className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* SECURITY */}
         <SpaceCard
           title="Security"
           icon={<Shield className={text} size={16} />}
           isDark={isDark}
           moduleSlug="shield"
-          uorDescription="Post-quantum cryptographic primitives protect your identity and data. All keys are content-addressed through the UOR pipeline."
           editPanel={
             <div className="space-y-3">
-              <p className={`${textMuted} text-xs font-mono mb-3`}>Configure your cryptographic preferences:</p>
+              <p className={`${textMuted} text-sm font-body`}>Configure your cryptographic preferences:</p>
               {[
                 { label: "Encryption", key: "encryption" as const, options: ["KYBER-1024", "KYBER-768", "AES-256-GCM"] },
                 { label: "Signature", key: "signature" as const, options: ["DILITHIUM-3", "DILITHIUM-2", "ED25519"] },
                 { label: "Key Exchange", key: "keyExchange" as const, options: ["NTRU-HRSS", "X25519", "SIKE"] },
               ].map((field) => (
                 <div key={field.key}>
-                  <label className={`${textMuted} text-xs font-mono block mb-1`}>{field.label}</label>
+                  <label className={`${textMuted} text-sm font-body block mb-1`}>{field.label}</label>
                   <select
                     value={securityEditing[field.key]}
                     onChange={(e) => setSecurityEditing(prev => ({ ...prev, [field.key]: e.target.value }))}
-                    className={`w-full ${inputCls} border rounded px-3 py-2 font-mono text-sm focus:outline-none transition-colors`}
+                    className={`w-full ${inputCls} border rounded-lg px-3 py-2 font-body text-sm focus:outline-none transition-colors`}
                   >
-                    {field.options.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
+                    {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </div>
               ))}
-              <button className={`w-full mt-2 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-mono rounded transition-all duration-200`}>
+              <button className="w-full mt-2 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-body font-medium rounded-lg transition-all">
                 Apply Changes
               </button>
             </div>
           }
           expandedContent={
             <div className="space-y-3">
-              <h4 className={`${text} font-mono text-sm font-medium`}>Full Security Audit</h4>
-              <p className={`${textMuted} text-xs font-mono leading-relaxed`}>
-                Your security configuration is content-addressed via UOR. Any change to your crypto settings produces a new canonical hash, ensuring a verifiable audit trail of your security posture over time.
+              <h4 className={`${text} font-body text-sm font-semibold`}>Security Audit</h4>
+              <p className={`${textMuted} text-sm font-body leading-relaxed`}>
+                Your security settings are content-addressed through UOR. Any change produces a new verifiable hash, creating a permanent audit trail.
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {[
@@ -111,26 +100,25 @@ export const OwnSection = ({ isDark, searchQuery, setSearchQuery, votes, onVote 
                   { label: "Last Audit", value: "Today" },
                   { label: "Compliance", value: "NIST-L5" },
                 ].map((item) => (
-                  <div key={item.label} className={`p-2.5 rounded border ${isDark ? "border-gray-700/30 bg-gray-800/30" : "border-gray-200 bg-gray-50"}`}>
-                    <p className={`${textMuted} text-[10px] font-mono`}>{item.label}</p>
-                    <p className={`${text} text-sm font-mono font-medium`}>{item.value}</p>
+                  <div key={item.label} className={`p-3 rounded-lg border ${isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-100 bg-gray-50"}`}>
+                    <p className={`${textMuted} text-xs font-body`}>{item.label}</p>
+                    <p className={`${text} text-base font-body font-semibold`}>{item.value}</p>
                   </div>
                 ))}
               </div>
             </div>
           }
         >
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {[
-              ["Status", <span key="s" className="text-green-400 font-mono text-sm px-2 py-1 bg-green-400/10 border border-green-400/20 rounded">QUANTUM-SAFE</span>],
+              ["Status", <span key="s" className="text-emerald-600 dark:text-emerald-400 font-body text-sm px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">QUANTUM-SAFE</span>],
               ["Encryption", securityEditing.encryption],
               ["Signature", securityEditing.signature],
               ["Key Exchange", securityEditing.keyExchange],
-              ["Quantum Resistance", "NIST-L5"],
             ].map(([label, value]) => (
               <div key={label as string} className="flex items-center justify-between">
-                <span className={`${textMuted} text-sm font-mono`}>{label}</span>
-                {typeof value === "string" ? <span className={`${text} font-mono text-sm`}>{value}</span> : value}
+                <span className={`${textMuted} text-sm font-body`}>{label}</span>
+                {typeof value === "string" ? <span className={`${text} font-body text-sm font-medium`}>{value}</span> : value}
               </div>
             ))}
           </div>
@@ -142,12 +130,11 @@ export const OwnSection = ({ isDark, searchQuery, setSearchQuery, votes, onVote 
           icon={<User className={text} size={16} />}
           isDark={isDark}
           moduleSlug="identity"
-          uorDescription="Your canonical identity is derived from your attributes, not assigned by a server. One identity, everywhere."
           expandedContent={
             <div className="space-y-3">
-              <h4 className={`${text} font-mono text-sm font-medium`}>Identity Graph</h4>
-              <p className={`${textMuted} text-xs font-mono leading-relaxed`}>
-                Your identity is a living graph of relationships — every connection to a person, app, or dataset is a content-addressed triple. The more verified interactions you have, the stronger your trust score becomes.
+              <h4 className={`${text} font-body text-sm font-semibold`}>Identity Graph</h4>
+              <p className={`${textMuted} text-sm font-body leading-relaxed`}>
+                Your identity is built from verified interactions — not assigned by a server. The more connections you verify, the stronger your trust score.
               </p>
             </div>
           }
@@ -161,70 +148,58 @@ export const OwnSection = ({ isDark, searchQuery, setSearchQuery, votes, onVote 
           icon={<Wallet className={text} size={16} />}
           isDark={isDark}
           moduleSlug="store"
-          uorDescription="Every asset is a content-addressed UOR object — derivations, certificates, and data entries with verifiable provenance."
           editPanel={
             <div className="space-y-3">
-              <p className={`${textMuted} text-xs font-mono mb-2`}>Configure portfolio display:</p>
-              <label className={`flex items-center gap-2 ${textMuted} text-xs font-mono cursor-pointer`}>
+              <p className={`${textMuted} text-sm font-body`}>Portfolio display settings:</p>
+              <label className={`flex items-center gap-2 ${textMuted} text-sm font-body cursor-pointer`}>
                 <input type="checkbox" checked={hideNumbers} onChange={() => setHideNumbers(!hideNumbers)} className="rounded" />
                 Hide all values
               </label>
-              <div className="space-y-2">
-                {["Fiat", "Digital", "Physical"].map((type) => (
-                  <label key={type} className={`flex items-center gap-2 ${textMuted} text-xs font-mono cursor-pointer`}>
-                    <input type="checkbox" defaultChecked className="rounded" />
-                    Show {type}
-                  </label>
-                ))}
-              </div>
-              <button className="w-full mt-2 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-mono rounded transition-all duration-200">
+              <button className="w-full mt-2 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-body font-medium rounded-lg transition-all">
                 Save Preferences
               </button>
             </div>
           }
           expandedContent={
             <div className="space-y-3">
-              <h4 className={`${text} font-mono text-sm font-medium`}>Asset Provenance</h4>
-              <p className={`${textMuted} text-xs font-mono leading-relaxed`}>
-                Every asset in your portfolio has a verifiable provenance chain. Because assets are UOR objects, you can trace every transfer, derivation, and certification back to its origin — with mathematical proof.
+              <h4 className={`${text} font-body text-sm font-semibold`}>Asset Provenance</h4>
+              <p className={`${textMuted} text-sm font-body leading-relaxed`}>
+                Every asset has a verifiable provenance chain. As UOR objects, you can trace every transfer back to its origin with mathematical proof.
               </p>
             </div>
           }
         >
           <div className="space-y-3">
-            <div className="flex justify-end mb-1">
-              <button onClick={() => setHideNumbers(!hideNumbers)} className={`${isDark ? "text-gray-400 hover:text-white" : "text-gray-400 hover:text-gray-700"} transition-colors`}>
+            <div className="flex justify-end">
+              <button onClick={() => setHideNumbers(!hideNumbers)} className={`${textMuted} hover:${text} transition-colors`}>
                 {hideNumbers ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
-            <div className={`grid grid-cols-5 gap-2 text-xs font-mono ${textMuted} pb-2 border-b ${isDark ? "border-gray-700/50" : "border-gray-200"}`}>
+            <div className={`grid grid-cols-4 gap-2 text-xs font-body font-medium ${textMuted} pb-2 border-b ${isDark ? "border-white/10" : "border-gray-200"}`}>
               <span>TYPE</span>
-              <span className="text-center">USD</span>
-              <span className="text-center">BTC</span>
-              <span className="text-center">GPU</span>
-              <span className="text-right">1M</span>
+              <span className="text-right">USD</span>
+              <span className="text-right">BTC</span>
+              <span className="text-right">CHANGE</span>
             </div>
             {[
-              { type: "Fiat", usd: "47,250", btc: "0.73", gpu: "31,833h", change: "+2.3%", positive: true },
-              { type: "Digital", usd: "12,835", btc: "0.20", gpu: "8,651h", change: "-5.7%", positive: false },
-              { type: "Physical", usd: "23,470", btc: "0.36", gpu: "15,813h", change: "+1.2%", positive: true },
+              { type: "Fiat", usd: "47,250", btc: "0.73", change: "+2.3%", positive: true },
+              { type: "Digital", usd: "12,835", btc: "0.20", change: "-5.7%", positive: false },
+              { type: "Physical", usd: "23,470", btc: "0.36", change: "+1.2%", positive: true },
             ].map((row) => (
-              <div key={row.type} className="grid grid-cols-5 gap-2 items-center text-sm font-mono">
+              <div key={row.type} className="grid grid-cols-4 gap-2 items-center font-body text-sm">
                 <span className={textMuted}>{row.type}</span>
-                <span className={`${text} text-center`}>{hideNumbers ? "•••••" : row.usd}</span>
-                <span className={`${text} text-center`}>{hideNumbers ? "••••" : row.btc}</span>
-                <span className={`${text} text-center`}>{hideNumbers ? "•••••" : row.gpu}</span>
-                <span className={`${row.positive ? "text-green-400" : "text-red-400"} text-right`}>
+                <span className={`${text} text-right font-medium`}>{hideNumbers ? "•••••" : row.usd}</span>
+                <span className={`${text} text-right`}>{hideNumbers ? "••••" : row.btc}</span>
+                <span className={`${row.positive ? "text-emerald-600" : "text-red-500"} text-right font-medium`}>
                   {hideNumbers ? "••••" : row.change}
                 </span>
               </div>
             ))}
-            <div className={`grid grid-cols-5 gap-2 items-center text-sm font-mono pt-2 border-t ${isDark ? "border-gray-700/50" : "border-gray-200"}`}>
-              <span className={text}>Total</span>
-              <span className={`${text} font-semibold text-center`}>{hideNumbers ? "•••••" : "83,555"}</span>
-              <span className={`${text} font-semibold text-center`}>{hideNumbers ? "••••" : "1.29"}</span>
-              <span className={`${text} font-semibold text-center`}>{hideNumbers ? "•••••" : "56,297h"}</span>
-              <span className="text-green-400 text-right">{hideNumbers ? "••••" : "+1.1%"}</span>
+            <div className={`grid grid-cols-4 gap-2 items-center font-body text-sm pt-2 border-t ${isDark ? "border-white/10" : "border-gray-200"}`}>
+              <span className={`${text} font-semibold`}>Total</span>
+              <span className={`${text} font-bold text-right`}>{hideNumbers ? "•••••" : "83,555"}</span>
+              <span className={`${text} font-bold text-right`}>{hideNumbers ? "••••" : "1.29"}</span>
+              <span className="text-emerald-600 text-right font-bold">{hideNumbers ? "••••" : "+1.1%"}</span>
             </div>
           </div>
         </SpaceCard>
