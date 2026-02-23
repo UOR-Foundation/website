@@ -18,7 +18,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore — jsonld v8 types may not resolve perfectly in all configurations
 import jsonld from "jsonld";
-import { computeCid, computeUorAddress, canonicalJsonLd } from "./uor-address";
+import { computeCid, computeUorAddress, canonicalJsonLd, computeIpv6Address } from "./uor-address";
 
 // ── UOR inline context for wrapping non-JSON-LD objects ─────────────────────
 // Inline to avoid network dependency — any agent can reproduce this locally.
@@ -182,19 +182,26 @@ export interface SingleProofResult {
   cid: string;
   /** UOR Braille bijection address — from hash bytes (32 bytes). */
   uorAddress: { "u:glyph": string; "u:length": number };
+  /** UOR content-addressed IPv6 (ULA fd00:75:6f72::/48) — from hash bytes. */
+  ipv6Address: {
+    "u:ipv6": string;
+    "u:ipv6Prefix": string;
+    "u:ipv6PrefixLength": number;
+    "u:contentBits": number;
+  };
 }
 
 /**
  * THE SINGLE PROOF HASH.
  *
  * Takes any object (JSON-LD or plain), canonicalizes via URDNA2015,
- * computes one SHA-256 hash, and derives all three identity forms.
+ * computes one SHA-256 hash, and derives all four identity forms.
  *
- * Same object → same nquads → same hash → same {derivation_id, cid, u:address}.
- * On every system. At any time. Forever. No registries.
+ * Same object → same nquads → same hash → same {derivation_id, cid, u:address, u:ipv6}.
+ * On every system. At any time. Forever. No registries. No DNS.
  *
  * @param obj  Any JSON-LD object or plain JavaScript object.
- * @returns    SingleProofResult with all three derived identity forms.
+ * @returns    SingleProofResult with all four derived identity forms.
  */
 export async function singleProofHash(
   obj: unknown
@@ -209,13 +216,15 @@ export async function singleProofHash(
   const hashBytes = await sha256(canonicalBytes);
   const hashHex = bytesToHex(hashBytes);
 
-  // Step 4: Derive all three identity forms from ONE hash
+  // Step 4: Derive all four identity forms from ONE hash
   //   derivation_id — from hex
   //   store:uorCid  — CIDv1 wrapping the SHA-256 of canonical bytes
   //   u:address     — Braille bijection of hash bytes
+  //   u:ipv6        — Content-addressed IPv6 ULA from hash bytes
   const derivationId = `urn:uor:derivation:sha256:${hashHex}`;
   const cid = await computeCid(canonicalBytes);
   const uorAddress = computeUorAddress(hashBytes);
+  const ipv6Address = computeIpv6Address(hashBytes);
 
   return {
     nquads,
@@ -225,6 +234,7 @@ export async function singleProofHash(
     derivationId,
     cid,
     uorAddress,
+    ipv6Address,
   };
 }
 

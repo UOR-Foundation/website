@@ -12,13 +12,14 @@ export interface UorCertificate {
   "cert:cid": string;
   "cert:canonicalPayload": string;
   "store:uorAddress": { "u:glyph": string; "u:length": number };
+  "store:ipv6Address": { "u:ipv6": string; "u:ipv6Prefix": string; "u:ipv6PrefixLength": number; "u:contentBits": number };
   "cert:computedAt": string;
   "cert:specification": "1.0.0";
 }
 
 /**
  * Generate a UOR verification certificate for any describable object.
- * The object is canonicalized, hashed, and addressed.
+ * The object is canonicalized, hashed, and addressed with all four identity forms.
  */
 export async function generateCertificate(
   subject: string,
@@ -33,6 +34,7 @@ export async function generateCertificate(
     "cert:cid": proof.cid,
     "cert:canonicalPayload": proof.nquads,
     "store:uorAddress": proof.uorAddress,
+    "store:ipv6Address": proof.ipv6Address,
     "cert:computedAt": new Date().toISOString(),
     "cert:specification": "1.0.0",
   };
