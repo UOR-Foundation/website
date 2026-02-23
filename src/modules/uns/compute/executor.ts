@@ -104,13 +104,6 @@ function executeSandboxed(
        var setTimeout = undefined;
        var setInterval = undefined;
        var importScripts = undefined;
-       // ── Block constructor chain escapes ─────────────────────────────
-       var constructor = undefined;
-       var __proto__ = undefined;
-       var eval = undefined;
-       var Function = undefined;
-       var Reflect = undefined;
-       var Proxy = undefined;
        ${source}`
     );
 
