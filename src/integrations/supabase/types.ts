@@ -426,6 +426,69 @@ export type Database = {
         }
         Relationships: []
       }
+      uor_oracle_entries: {
+        Row: {
+          byte_length: number | null
+          created_at: string
+          derivation_id: string | null
+          encoding_format: string | null
+          entry_id: string
+          epistemic_grade: string | null
+          gateway_url: string | null
+          id: string
+          metadata: Json | null
+          object_label: string | null
+          object_type: string
+          operation: string
+          pinata_cid: string | null
+          quantum_level: number | null
+          sha256_hash: string | null
+          source_endpoint: string
+          storacha_cid: string | null
+          uor_cid: string | null
+        }
+        Insert: {
+          byte_length?: number | null
+          created_at?: string
+          derivation_id?: string | null
+          encoding_format?: string | null
+          entry_id: string
+          epistemic_grade?: string | null
+          gateway_url?: string | null
+          id?: string
+          metadata?: Json | null
+          object_label?: string | null
+          object_type: string
+          operation: string
+          pinata_cid?: string | null
+          quantum_level?: number | null
+          sha256_hash?: string | null
+          source_endpoint: string
+          storacha_cid?: string | null
+          uor_cid?: string | null
+        }
+        Update: {
+          byte_length?: number | null
+          created_at?: string
+          derivation_id?: string | null
+          encoding_format?: string | null
+          entry_id?: string
+          epistemic_grade?: string | null
+          gateway_url?: string | null
+          id?: string
+          metadata?: Json | null
+          object_label?: string | null
+          object_type?: string
+          operation?: string
+          pinata_cid?: string | null
+          quantum_level?: number | null
+          sha256_hash?: string | null
+          source_endpoint?: string
+          storacha_cid?: string | null
+          uor_cid?: string | null
+        }
+        Relationships: []
+      }
       uor_receipts: {
         Row: {
           coherence_verified: boolean

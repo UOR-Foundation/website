@@ -49,6 +49,7 @@ const ProjectUorMcp = lazy(() => import("@/modules/projects/pages/ProjectUorMcp"
 const DatumPage = lazy(() => import("@/modules/datum/pages/DatumPage"));
 const TrustScorePreview = lazy(() => import("@/modules/mcp/pages/TrustScorePreview"));
 const BulkPinPage = lazy(() => import("@/modules/bulk-pin/pages/BulkPinPage"));
+const OraclePage = lazy(() => import("@/modules/oracle/pages/OraclePage"));
 
 const queryClient = new QueryClient();
 
@@ -111,6 +112,7 @@ const App = () => {
             <Route path="/u/:iri" element={<DatumPage />} />
             <Route path="/trust-score-preview" element={<TrustScorePreview />} />
             <Route path="/bulk-pin" element={<BulkPinPage />} />
+            <Route path="/oracle" element={<OraclePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

@@ -47,6 +47,9 @@ const CACHE_HEADERS_USER = {
 const KNOWN_PATHS: Record<string, string[]> = {
   '/':                                  ['GET', 'OPTIONS'],
   '/navigate':                          ['GET', 'OPTIONS'],
+  // Oracle (single source of truth)
+  '/oracle/ledger':                     ['GET', 'OPTIONS'],
+  '/oracle/stats':                      ['GET', 'OPTIONS'],
   '/openapi.json':                      ['GET', 'OPTIONS'],
   '/kernel/op/verify':                  ['GET', 'OPTIONS'],
   '/kernel/op/verify/all':              ['GET', 'OPTIONS'],
@@ -4557,6 +4560,26 @@ async function storeWrite(req: Request, rl: RateLimitResult): Promise<Response> 
         },
   };
 
+  // ── Oracle: log this encoding ──
+  if (shouldPin) {
+    logToOracle({
+      entry_id: oracleEntryId('store-write'),
+      operation: 'store-write',
+      object_type: objectType,
+      object_label: label ?? objectType,
+      uor_cid: cid,
+      pinata_cid: gateway === 'pinata' ? (pinResult?.cid ?? null) : null,
+      storacha_cid: gateway === 'storacha' ? (storachaDirectResult?.directoryCid ?? null) : null,
+      gateway_url: gatewayReadUrl,
+      byte_length: finalBytes.length,
+      epistemic_grade: 'B',
+      source_endpoint: '/store/write',
+      quantum_level: 8,
+      encoding_format: 'canonical-json-ld',
+      metadata: { gateway, dry_run: false },
+    });
+  }
+
   const ipfsCidHeader = shouldPin ? cid : 'dry-run';
   const ipfsGatewayHeader = shouldPin ? gatewayReadUrl : 'dry-run';
 
@@ -7584,11 +7607,38 @@ async function storeToIPFSDualCid(obj: Record<string, unknown>, identity: Sobrid
     storeToStoracha(canonicalBytes, String(obj['rdfs:label'] ?? obj['@type'] ?? 'sobridge-object')),
   ]);
 
-  return {
+  const result = {
     pinataCid,
     storachaCid: storachaResult?.directoryCid ?? null,
     storachaGatewayUrl: storachaResult?.gatewayUrl ?? null,
   };
+
+  // ── Oracle: log sobridge dual-CID encoding ──
+  logToOracle({
+    entry_id: oracleEntryId('sobridge-pin'),
+    operation: 'sobridge-pin',
+    object_type: String(obj['@type'] ?? 'sobridge:SchemaOrgType'),
+    object_label: String(obj['rdfs:label'] ?? obj['@type'] ?? 'unknown'),
+    derivation_id: identity.derivationId,
+    uor_cid: identity.cid,
+    pinata_cid: pinataCid,
+    storacha_cid: result.storachaCid,
+    gateway_url: pinataCid
+      ? `https://uor.mypinata.cloud/ipfs/${pinataCid}`
+      : result.storachaGatewayUrl ?? null,
+    sha256_hash: identity.sha256,
+    byte_length: canonicalBytes.length,
+    epistemic_grade: 'B',
+    source_endpoint: '/schema-org/extend',
+    quantum_level: 0,
+    encoding_format: 'URDNA2015',
+    metadata: {
+      has_pinata: !!pinataCid,
+      has_storacha: !!result.storachaCid,
+    },
+  });
+
+  return result;
 }
 
 async function storeToStoracha(canonicalBytes: Uint8Array, label: string): Promise<StorachaPinResult | null> {
@@ -9689,6 +9739,158 @@ async function sparqlVerify(rl: RateLimitResult): Promise<Response> {
 // and CAP (Convergence Alignment Protocol) per Observer Theory Spec v1.0
 // ════════════════════════════════════════════════════════════════════════════
 
+// ── UOR ORACLE — Single Source of Truth for All Encodings ═══════════════════
+// Every object encoded into UOR space is logged here for auditability.
+
+const ORACLE_NS = "https://uor.foundation/oracle/";
+
+interface OracleEntry {
+  entry_id: string;
+  operation: string;
+  object_type: string;
+  object_label?: string;
+  derivation_id?: string;
+  uor_cid?: string;
+  pinata_cid?: string;
+  storacha_cid?: string;
+  gateway_url?: string;
+  sha256_hash?: string;
+  byte_length?: number;
+  epistemic_grade?: string;
+  source_endpoint: string;
+  quantum_level?: number;
+  encoding_format?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/** Fire-and-forget oracle log — never blocks the main response */
+function logToOracle(entry: OracleEntry): void {
+  const sbUrl = Deno.env.get('SUPABASE_URL');
+  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!sbUrl || !sbKey) return;
+
+  const row = {
+    entry_id: entry.entry_id,
+    operation: entry.operation,
+    object_type: entry.object_type,
+    object_label: entry.object_label ?? null,
+    derivation_id: entry.derivation_id ?? null,
+    uor_cid: entry.uor_cid ?? null,
+    pinata_cid: entry.pinata_cid ?? null,
+    storacha_cid: entry.storacha_cid ?? null,
+    gateway_url: entry.gateway_url ?? null,
+    sha256_hash: entry.sha256_hash ?? null,
+    byte_length: entry.byte_length ?? null,
+    epistemic_grade: entry.epistemic_grade ?? 'D',
+    source_endpoint: entry.source_endpoint,
+    quantum_level: entry.quantum_level ?? 0,
+    encoding_format: entry.encoding_format ?? 'URDNA2015',
+    metadata: entry.metadata ?? {},
+  };
+
+  fetch(`${sbUrl}/rest/v1/uor_oracle_entries`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': sbKey,
+      'Authorization': `Bearer ${sbKey}`,
+      'Prefer': 'return=minimal',
+    },
+    body: JSON.stringify(row),
+  }).catch(e => console.error('[oracle] log failed:', e));
+}
+
+/** Generate a unique oracle entry ID */
+function oracleEntryId(operation: string): string {
+  return `oracle:${operation}:${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+// ── GET /oracle/ledger — Query the Oracle ledger ────────────────────────────
+
+async function oracleLedger(url: URL, rl: RateLimitResult): Promise<Response> {
+  const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '50', 10), 200);
+  const offset = parseInt(url.searchParams.get('offset') ?? '0', 10);
+  const objectType = url.searchParams.get('type');
+  const operation = url.searchParams.get('operation');
+
+  const sbUrl = Deno.env.get('SUPABASE_URL');
+  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!sbUrl || !sbKey) {
+    return jsonResp(gradeResponse({
+      "@context": UOR_CONTEXT_URL,
+      "@type": "oracle:Error",
+      "oracle:message": "Oracle database not configured",
+    }, 'D'), JSON_HEADERS, undefined, rl, 503);
+  }
+
+  let params = `select=*&order=created_at.desc&limit=${limit}&offset=${offset}`;
+  if (objectType) params += `&object_type=eq.${encodeURIComponent(objectType)}`;
+  if (operation) params += `&operation=eq.${encodeURIComponent(operation)}`;
+
+  const result = await sbFetch('uor_oracle_entries', 'GET', params);
+  const entries = (result.data ?? []) as Record<string, unknown>[];
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "oracle:Ledger",
+    "oracle:name": "UOR Oracle",
+    "oracle:purpose": "Single source of truth for every encoding into UOR space",
+    "oracle:entryCount": entries.length,
+    "oracle:limit": limit,
+    "oracle:offset": offset,
+    "oracle:entries": entries,
+  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// ── GET /oracle/stats — Oracle statistics summary ───────────────────────────
+
+async function oracleStats(rl: RateLimitResult): Promise<Response> {
+  const sbUrl = Deno.env.get('SUPABASE_URL');
+  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!sbUrl || !sbKey) {
+    return jsonResp(gradeResponse({
+      "@context": UOR_CONTEXT_URL,
+      "@type": "oracle:Error",
+      "oracle:message": "Oracle database not configured",
+    }, 'D'), JSON_HEADERS, undefined, rl, 503);
+  }
+
+  // Fetch all entries to compute stats
+  const result = await sbFetch('uor_oracle_entries', 'GET', 'select=operation,object_type,epistemic_grade,created_at&order=created_at.desc&limit=1000');
+  const entries = (result.data ?? []) as Record<string, unknown>[];
+
+  // Compute breakdowns
+  const byOperation: Record<string, number> = {};
+  const byType: Record<string, number> = {};
+  const byGrade: Record<string, number> = {};
+  for (const e of entries) {
+    const op = String(e.operation ?? 'unknown');
+    const typ = String(e.object_type ?? 'unknown');
+    const grade = String(e.epistemic_grade ?? 'D');
+    byOperation[op] = (byOperation[op] ?? 0) + 1;
+    byType[typ] = (byType[typ] ?? 0) + 1;
+    byGrade[grade] = (byGrade[grade] ?? 0) + 1;
+  }
+
+  const latestEntry = entries[0] ?? null;
+
+  return jsonResp(gradeResponse({
+    "@context": UOR_CONTEXT_URL,
+    "@type": "oracle:Statistics",
+    "oracle:name": "UOR Oracle",
+    "oracle:totalEncodings": entries.length,
+    "oracle:byOperation": byOperation,
+    "oracle:byObjectType": byType,
+    "oracle:byEpistemicGrade": byGrade,
+    "oracle:latestEncoding": latestEntry ? {
+      "oracle:type": latestEntry.object_type,
+      "oracle:operation": latestEntry.operation,
+      "oracle:timestamp": latestEntry.created_at,
+    } : null,
+    "oracle:note": "The UOR Oracle is the single source of truth. Every object encoded through the UOR framework is permanently logged here.",
+  }, 'B'), CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
 const OBSERVER_NS = "https://uor.foundation/observer/";
 
 /** Supabase REST helper — reads/writes to uor_observers and uor_observer_outputs */
@@ -10506,6 +10708,16 @@ Deno.serve(async (req: Request) => {
         return new Response(null, { status: 304, headers: { ...CORS_HEADERS, 'ETag': ifNoneMatch, ...rateLimitHeaders(rl) } });
       }
       return resp;
+    }
+
+    // ── UOR Oracle (oracle: namespace) ──
+    if (path === '/oracle/ledger') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await oracleLedger(url, rl);
+    }
+    if (path === '/oracle/stats') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await oracleStats(rl);
     }
 
     // ── Observer Theory (observer: namespace) ──
