@@ -1,0 +1,17 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "uor-identity",
+  "version": "1.0.0",
+  "description": "UOR Identity — content-addressed sovereign identity for users within the Hologram ecosystem. Identity is derived from relationships to objects and behavioral patterns via the URDNA2015 → SHA-256 pipeline.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["u:", "id:", "rel:"],
+  "exports": ["ProjectUorIdentity"],
+  "dependencies": {
+    "identity": "^1.0.0",
+    "uns": "^1.0.0"
+  },
+  "routes": ["/projects/uor-identity"],
+  "api_endpoints": [],
+  "assets": []
+}
