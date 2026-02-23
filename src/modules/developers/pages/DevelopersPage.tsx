@@ -1,6 +1,6 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { ArrowRight, Rocket, Layers, BookOpen, Globe, Cpu, Database, Key, ScrollText, Shield, Lock, Bot, FileJson, FlaskConical, Wrench, Newspaper } from "lucide-react";
+import { ArrowRight, Rocket, Layers, BookOpen, Globe, Cpu, Database, Key, ScrollText, Shield, Lock, Bot, FileJson, FlaskConical, Wrench, Newspaper, Code, GitGraph, Atom, FlaskRound, BookMarked, Network, Pen } from "lucide-react";
 import BuildWithUOR from "../components/BuildWithUOR";
 
 /* ── Nav link row ────────────────────────────────────────────── */
@@ -109,17 +109,17 @@ const DevelopersPage = () => (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SectionCard title="Developer Tools" viewAll={{ label: "View all tools", href: "/developers/directory" }}>
               <NavRow title="API Explorer" href="/api" icon={FileJson} />
-              <NavRow title="SPARQL Editor" href="/sparql-editor" />
-              <NavRow title="Knowledge Graph" href="/knowledge-graph" />
-              <NavRow title="Ring Explorer" href="/ring-explorer" />
-              <NavRow title="Derivation Lab" href="/derivation-lab" />
+              <NavRow title="SPARQL Editor" href="/sparql-editor" icon={Code} />
+              <NavRow title="Knowledge Graph" href="/knowledge-graph" icon={GitGraph} />
+              <NavRow title="Ring Explorer" href="/ring-explorer" icon={Atom} />
+              <NavRow title="Derivation Lab" href="/derivation-lab" icon={FlaskRound} />
             </SectionCard>
 
             <SectionCard title="Resources" viewAll={{ label: "View all resources", href: "/research" }}>
               <NavRow title="Atlas Embeddings" href="/research/atlas-embeddings" icon={Newspaper} />
-              <NavRow title="UOR Standard" href="/standard" />
-              <NavRow title="Semantic Web" href="/semantic-web" />
-              <NavRow title="Blog" href="/blog/uor-framework-launch" />
+              <NavRow title="UOR Standard" href="/standard" icon={BookMarked} />
+              <NavRow title="Semantic Web" href="/semantic-web" icon={Network} />
+              <NavRow title="Blog" href="/blog/uor-framework-launch" icon={Pen} />
             </SectionCard>
           </div>
         </div>
