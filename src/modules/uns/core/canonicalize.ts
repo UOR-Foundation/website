@@ -93,6 +93,28 @@ const UNS_V1_INLINE_CONTEXT: Record<string, unknown> = {
   "partition:irreducibleDensity": { "@id": "https://uor.foundation/partition/irreducibleDensity", "@type": "xsd:decimal" },
 };
 
+// ── Schema.org Inline Context (offline-first) ───────────────────────────────
+
+const SCHEMA_ORG_INLINE_CONTEXT: Record<string, unknown> = {
+  schema: "https://schema.org/",
+  name: "schema:name",
+  description: "schema:description",
+  url: "schema:url",
+  image: { "@id": "schema:image", "@type": "@id" },
+  author: { "@id": "schema:author", "@type": "@id" },
+  datePublished: "schema:datePublished",
+  dateCreated: "schema:dateCreated",
+  identifier: "schema:identifier",
+  keywords: "schema:keywords",
+  license: { "@id": "schema:license", "@type": "@id" },
+  version: "schema:version",
+  contentUrl: { "@id": "schema:contentUrl", "@type": "@id" },
+  encodingFormat: "schema:encodingFormat",
+  duration: "schema:duration",
+  genre: "schema:genre",
+  inLanguage: "schema:inLanguage",
+};
+
 // ── Custom Document Loader ──────────────────────────────────────────────────
 
 function createDocumentLoader() {
@@ -102,6 +124,7 @@ function createDocumentLoader() {
       : (jsonld as any).documentLoaders?.node?.();
 
   return async (url: string) => {
+    // UOR v1 context — served locally
     if (
       url === UOR_V1_CONTEXT_URL ||
       url === UOR_V1_CONTEXT_URL.replace("https://", "http://")
@@ -113,7 +136,7 @@ function createDocumentLoader() {
       };
     }
 
-    // Serve UNS v1 context locally
+    // UNS v1 context — served locally
     if (
       url === UNS_V1_CONTEXT_URL ||
       url === UNS_V1_CONTEXT_URL.replace("https://", "http://")
@@ -122,6 +145,20 @@ function createDocumentLoader() {
         contextUrl: null,
         documentUrl: url,
         document: { "@context": UNS_V1_INLINE_CONTEXT },
+      };
+    }
+
+    // Schema.org — served locally to avoid CORS failures in-browser
+    if (
+      url === "https://schema.org" ||
+      url === "https://schema.org/" ||
+      url === "http://schema.org" ||
+      url === "http://schema.org/"
+    ) {
+      return {
+        contextUrl: null,
+        documentUrl: url,
+        document: { "@context": SCHEMA_ORG_INLINE_CONTEXT },
       };
     }
 
@@ -190,6 +227,7 @@ export async function canonicalizeToNQuads(obj: unknown): Promise<string> {
     algorithm: "URDNA2015",
     format: "application/n-quads",
     documentLoader: createDocumentLoader(),
+    safe: false,
   });
   return nquads;
 }

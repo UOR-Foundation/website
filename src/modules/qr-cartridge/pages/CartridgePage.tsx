@@ -32,6 +32,7 @@ const MEDIA_TYPES: { value: CartridgeMediaType; label: string; icon: string }[] 
 
 const DEFAULT_INPUT = JSON.stringify(
   {
+    "@context": "https://schema.org",
     "@type": "VideoObject",
     name: "My First Movie",
     description: "A movie with a permanent, scannable address.",
@@ -112,7 +113,6 @@ const CartridgePage = () => {
       setCartridgeJson(serializeCartridge(cartridge));
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      // Provide a user-friendly error
       if (msg.includes("JSON")) {
         setError("Please enter valid JSON. Check for missing commas or brackets.");
       } else {
