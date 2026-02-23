@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import type { DeployResult } from "@/modules/uor-sdk/deploy";
 import {
   Check, Copy, ExternalLink, Globe, QrCode,
@@ -17,6 +18,7 @@ interface DeployResultCardProps {
 }
 
 export default function DeployResultCard({ result, onDismiss }: DeployResultCardProps) {
+  const navigate = useNavigate();
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const copyToClipboard = useCallback((value: string, field: string) => {
@@ -139,7 +141,10 @@ export default function DeployResultCard({ result, onDismiss }: DeployResultCard
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-3 pt-1">
-          <button className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors shadow-md shadow-primary/20">
+          <button
+            onClick={() => navigate(`/console/run/${encodeURIComponent(canonicalId)}`)}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors shadow-md shadow-primary/20"
+          >
             <ExternalLink className="h-4 w-4" />
             Open App
           </button>
@@ -147,7 +152,10 @@ export default function DeployResultCard({ result, onDismiss }: DeployResultCard
             <QrCode className="h-4 w-4" />
             QR Cartridge
           </button>
-          <button className="inline-flex items-center gap-2 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 px-5 py-2.5 text-sm font-medium text-foreground transition-colors">
+          <button
+            onClick={() => navigate(`/console/app-detail/${encodeURIComponent(canonicalId)}`)}
+            className="inline-flex items-center gap-2 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 px-5 py-2.5 text-sm font-medium text-foreground transition-colors"
+          >
             <Box className="h-4 w-4" />
             View in Console
           </button>

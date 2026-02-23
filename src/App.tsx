@@ -70,6 +70,7 @@ const AppConsoleApps = lazy(() => import("@/modules/console/pages/AppConsoleApps
 const AppConsoleDetail = lazy(() => import("@/modules/console/pages/AppConsoleDetail"));
 const AppConsoleDiscovery = lazy(() => import("@/modules/console/pages/AppConsoleDiscovery"));
 const ConsoleYourSpace = lazy(() => import("@/modules/console/pages/ConsoleYourSpace"));
+const AppConsoleRunner = lazy(() => import("@/modules/console/pages/AppConsoleRunner"));
 const DevelopersPage = lazy(() => import("@/modules/developers/pages/DevelopersPage"));
 const DnsDocPage = lazy(() => import("@/modules/developers/pages/DnsDocPage"));
 const ComputeDocPage = lazy(() => import("@/modules/developers/pages/ComputeDocPage"));
@@ -168,6 +169,7 @@ const App = () => {
               <Route path="agents" element={<ConsoleAgents />} />
               <Route path="apps" element={<AppConsoleApps />} />
               <Route path="app-detail/:canonicalId" element={<AppConsoleDetail />} />
+              <Route path="run/:canonicalId" element={<AppConsoleRunner />} />
               <Route path="discovery" element={<AppConsoleDiscovery />} />
               <Route path="your-space" element={<ConsoleYourSpace />} />
             </Route>
