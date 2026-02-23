@@ -7,11 +7,13 @@ import { navItems } from "@/data/nav-items";
 import { DISCORD_URL, GITHUB_ORG_URL, LINKEDIN_URL } from "@/data/external-links";
 import DiscordIcon from "@/modules/core/components/icons/DiscordIcon";
 
-const Navbar = () => {
+const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [donateOpen, setDonateOpen] = useState(false);
+
+  const isDark = propIsDark || location.pathname.startsWith('/developers');
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -26,6 +28,8 @@ const Navbar = () => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
+        isDark ? "dark" : ""
+      } ${
         scrolled
           ? "bg-background/25 backdrop-blur-2xl backdrop-saturate-150 border-b border-border/10"
           : "bg-transparent"
@@ -33,7 +37,11 @@ const Navbar = () => {
     >
       <div className="container flex items-center justify-between h-20 md:h-24">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <img src={uorIcon} alt="UOR Foundation" className="w-8 h-8 object-contain" />
+          <img 
+            src={uorIcon} 
+            alt="UOR Foundation" 
+            className={`w-8 h-8 object-contain transition-all duration-300 ${isDark ? "invert" : ""}`} 
+          />
           <span className="font-display text-base font-semibold tracking-tight">The UOR Foundation</span>
         </Link>
 
