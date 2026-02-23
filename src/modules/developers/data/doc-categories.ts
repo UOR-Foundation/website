@@ -28,7 +28,7 @@ export const overviewCategories: DocCategory[] = [
     description: "Make your first API call in under 5 minutes. No account required.",
     icon: "Rocket",
     href: "/developers/getting-started",
-    status: "coming-soon",
+    status: "available",
   },
   {
     id: "what-is-uor",
@@ -44,7 +44,7 @@ export const overviewCategories: DocCategory[] = [
     description: "Content addressing, verification grades, precision levels — no prior knowledge assumed.",
     icon: "BookOpen",
     href: "/developers/concepts",
-    status: "coming-soon",
+    status: "available",
   },
 ];
 
@@ -56,7 +56,7 @@ const computeCategories: DocCategory[] = [
     description: "Deploy sandboxed functions with deterministic execution traces. Every invocation is verifiable.",
     icon: "Cpu",
     href: "/developers/compute",
-    status: "coming-soon",
+    status: "available",
     "u:moduleRef": "uns/compute",
   },
   {
@@ -65,7 +65,7 @@ const computeCategories: DocCategory[] = [
     description: "Register AI agents, route typed messages, detect prompt injection — algebraically.",
     icon: "Bot",
     href: "/developers/agents",
-    status: "coming-soon",
+    status: "available",
     "u:moduleRef": "uns/compute/agent-gateway",
   },
 ];
@@ -78,7 +78,7 @@ const storageCategories: DocCategory[] = [
     description: "Content-addressed storage. Every object gets a permanent ID derived from its content.",
     icon: "Database",
     href: "/developers/store",
-    status: "coming-soon",
+    status: "available",
     "u:moduleRef": "uns/store",
   },
   {
@@ -87,7 +87,7 @@ const storageCategories: DocCategory[] = [
     description: "Key-value storage with content-addressed values. Every write produces a cryptographic receipt.",
     icon: "Key",
     href: "/developers/kv",
-    status: "coming-soon",
+    status: "available",
     "u:moduleRef": "uns/store/kv",
   },
   {
@@ -96,7 +96,7 @@ const storageCategories: DocCategory[] = [
     description: "Verifiable SQL. Every query returns a cryptographic proof of its result set.",
     icon: "ScrollText",
     href: "/developers/ledger",
-    status: "coming-soon",
+    status: "available",
     "u:moduleRef": "uns/ledger",
   },
 ];
@@ -109,7 +109,7 @@ const networkingCategories: DocCategory[] = [
     description: "Register, resolve, and verify content-addressed names. Your identity, your control.",
     icon: "Globe",
     href: "/developers/dns",
-    status: "coming-soon",
+    status: "available",
     "u:moduleRef": "uns/core",
   },
   {
@@ -118,7 +118,7 @@ const networkingCategories: DocCategory[] = [
     description: "Content analysis using prime factorization density. No signature databases required.",
     icon: "Shield",
     href: "/developers/shield",
-    status: "coming-soon",
+    status: "available",
     "u:moduleRef": "uns/shield",
   },
   {
@@ -127,7 +127,7 @@ const networkingCategories: DocCategory[] = [
     description: "Post-quantum authentication. Policy-based access control. Zero shared secrets.",
     icon: "Lock",
     href: "/developers/trust",
-    status: "coming-soon",
+    status: "available",
     "u:moduleRef": "uns/trust",
   },
 ];
@@ -166,7 +166,7 @@ export const docCategories: DocCategory[] = [
     description: "One UnsClient class wrapping all services with full type safety.",
     icon: "Code",
     href: "/developers/sdk",
-    status: "coming-soon",
+    status: "available",
     "u:moduleRef": "uns/sdk",
   },
 ];
