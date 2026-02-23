@@ -4,16 +4,22 @@
  * Classifies network traffic using the UOR ring R_8 = Z/256Z partition
  * structure. Every byte belongs to exactly one of four algebraic classes:
  *
- *   EXTERIOR    b === 0                         (1 value)
- *   UNIT        b === 1 || b === 255            (2 values)
- *   IRREDUCIBLE b is odd, b ∉ {1, 255}         (126 values)
- *   REDUCIBLE   b is even, b !== 0             (127 values)
+ *   EXTERIOR    b === 0 || b === 128             (2 values)
+ *   UNIT        b === 1 || b === 255             (2 values)
+ *   IRREDUCIBLE b is odd, b ∉ {1, 255}          (126 values)
+ *   REDUCIBLE   b is even, b ∉ {0, 128}         (126 values)
+ *
+ * CANONICAL SOURCE: spec/src/namespaces/partition.rs — ExteriorSet = {0, m/2}
+ *   128 is exterior because it is the unique fixed point of negation
+ *   (neg(128) = 128) and the maximal zero divisor (128 × 2 ≡ 0 mod 256).
+ *   It generates the unique maximal ideal ⟨128⟩ = {0, 128} in Z/256Z.
  *
  * Legitimate traffic (HTTPS, TLS) has high irreducible density (0.40–0.65).
  * Flood traffic (null bytes, repeated patterns) has near-zero density.
  * This enables sub-microsecond DDoS classification at the byte level.
  *
- * @see partition: namespace — UOR Framework spec/src/namespaces/partition.rs
+ * @see spec/src/namespaces/partition.rs — ExteriorSet definition
+ * @see src/lib/uor-ring.ts classifyByte — canonical classification logic
  */
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -28,11 +34,11 @@ export type ShieldAction = "PASS" | "WARN" | "CHALLENGE" | "BLOCK";
 export interface PartitionResult {
   /** Count of irreducible bytes (odd, not 1 or 255). */
   irreducible: number;
-  /** Count of reducible bytes (even, not 0). */
+  /** Count of reducible bytes (even, not 0 or 128). */
   reducible: number;
   /** Count of unit bytes (1 or 255). */
   unit: number;
-  /** Count of exterior bytes (0). */
+  /** Count of exterior bytes (0 or 128). */
   exterior: number;
   /** Total byte count. */
   total: number;
@@ -58,11 +64,18 @@ export interface PartitionResultFast {
  * 256-entry lookup table: byte value → partition class.
  *
  * Built once at module load. Enables O(1) classification per byte.
+ *
+ * Canonical cardinalities (spec/src/namespaces/partition.rs):
+ *   ExteriorSet:    2   ({0, 128})
+ *   UnitSet:        2   ({1, 255})
+ *   IrreducibleSet: 126 (odd, ∉ {1, 255})
+ *   ReducibleSet:   126 (even, ∉ {0, 128})
  */
 const BYTE_CLASS: PartitionClass[] = new Array(256);
 
 for (let b = 0; b < 256; b++) {
-  if (b === 0) {
+  if (b === 0 || b === 128) {
+    // spec/src/namespaces/partition.rs — ExteriorSet = {0, m/2}
     BYTE_CLASS[b] = "EXTERIOR";
   } else if (b === 1 || b === 255) {
     BYTE_CLASS[b] = "UNIT";
