@@ -145,7 +145,7 @@ const DonatePopup = ({ open, onOpenChange }: DonatePopupProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-border/50 bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl">
+      <DialogContent className="sm:max-w-[560px] p-0 overflow-hidden border-border/50 bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 text-center border-b border-border/30">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-3">
