@@ -599,10 +599,29 @@ function gradeResponse(data: Record<string, unknown>, grade: EpistemicGradeType)
 /**
  * Build a Grade A response with derivation:derivationId and derivation:resultIri computed from a term string.
  * The term is AC-normalised before hashing.
+ * Oracle: every Grade A derivation is automatically logged as meta-observer.
  */
 async function gradeAResponse(data: Record<string, unknown>, term: string, resultValue: number, n: number = 8): Promise<Record<string, unknown>> {
   const resultIri = datumIRI(resultValue, n);
   const derivationId = await computeDerivationId(term, resultIri);
+
+  // ── Oracle meta-observer: log every algebraic derivation ──
+  const objectType = String(data['@type'] ?? data['summary']?.['operation'] ?? 'kernel:Derivation');
+  const objectLabel = term.length > 80 ? term.slice(0, 77) + '…' : term;
+  logToOracle({
+    entry_id: oracleEntryId('kernel-derive'),
+    operation: 'kernel-derive',
+    object_type: objectType,
+    object_label: objectLabel,
+    derivation_id: derivationId,
+    uor_cid: resultIri,
+    epistemic_grade: 'A',
+    source_endpoint: '/kernel/derive',
+    quantum_level: Math.ceil(n / 8) - 1,
+    encoding_format: 'ring-arithmetic',
+    metadata: { term: acNormalise(term), result_value: resultValue, bits: n },
+  });
+
   return {
     ...data,
     epistemic_grade: 'A' as EpistemicGradeType,
@@ -7474,6 +7493,26 @@ async function schemaOrgExtend(reqOrUrl: Request | URL, rl: RateLimitResult): Pr
     storageResult = await storeToIPFSDualCid(sobridgeType, identity);
   }
 
+  // ── Oracle: log type definition encoding (even without store=true) ──
+  // This ensures the Oracle captures ALL schema-org type canonicalizations
+  if (!storeToPersistence) {
+    logToOracle({
+      entry_id: oracleEntryId('sobridge-canonicalize'),
+      operation: 'sobridge-canonicalize',
+      object_type: 'sobridge:SchemaOrgType',
+      object_label: normalizedType,
+      derivation_id: derivationId,
+      uor_cid: identity.cid,
+      sha256_hash: identity.sha256,
+      byte_length: identity.canonicalBytes.length,
+      epistemic_grade: 'B',
+      source_endpoint: '/schema-org/extend',
+      quantum_level: 0,
+      encoding_format: 'URDNA2015',
+      metadata: { store: false, property_count: deduped.length },
+    });
+  }
+
   // ── G4: R4 Content-Hash Verification Gate — verify derivation_id before emit ──
   const contentGate = await r4ContentVerifyGate(sobridgeType, derivationId, rl);
   if (!contentGate.passed) return contentGate.blockedResponse!;
@@ -9763,11 +9802,15 @@ interface OracleEntry {
   metadata?: Record<string, unknown>;
 }
 
-/** Fire-and-forget oracle log — never blocks the main response */
+/** Fire-and-forget oracle log — never blocks the main response.
+ *  Falls back to anon key if service role key is unavailable (RLS allows anon inserts). */
 function logToOracle(entry: OracleEntry): void {
   const sbUrl = Deno.env.get('SUPABASE_URL');
-  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!sbUrl || !sbKey) return;
+  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY');
+  if (!sbUrl || !sbKey) {
+    console.warn('[oracle] no SUPABASE_URL or key — skipping oracle log');
+    return;
+  }
 
   const row = {
     entry_id: entry.entry_id,
@@ -9797,6 +9840,8 @@ function logToOracle(entry: OracleEntry): void {
       'Prefer': 'return=minimal',
     },
     body: JSON.stringify(row),
+  }).then(r => {
+    if (!r.ok) r.text().then(t => console.error(`[oracle] insert failed (${r.status}):`, t));
   }).catch(e => console.error('[oracle] log failed:', e));
 }
 
@@ -9814,7 +9859,7 @@ async function oracleLedger(url: URL, rl: RateLimitResult): Promise<Response> {
   const operation = url.searchParams.get('operation');
 
   const sbUrl = Deno.env.get('SUPABASE_URL');
-  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY');
   if (!sbUrl || !sbKey) {
     return jsonResp(gradeResponse({
       "@context": UOR_CONTEXT_URL,
@@ -9846,7 +9891,7 @@ async function oracleLedger(url: URL, rl: RateLimitResult): Promise<Response> {
 
 async function oracleStats(rl: RateLimitResult): Promise<Response> {
   const sbUrl = Deno.env.get('SUPABASE_URL');
-  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY');
   if (!sbUrl || !sbKey) {
     return jsonResp(gradeResponse({
       "@context": UOR_CONTEXT_URL,
@@ -9896,7 +9941,7 @@ const OBSERVER_NS = "https://uor.foundation/observer/";
 /** Supabase REST helper — reads/writes to uor_observers and uor_observer_outputs */
 async function sbFetch(table: string, method: string, params?: string, body?: unknown): Promise<{ ok: boolean; data?: unknown; status: number }> {
   const sbUrl = Deno.env.get('SUPABASE_URL');
-  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY');
   if (!sbUrl || !sbKey) return { ok: false, status: 503 };
   const url = `${sbUrl}/rest/v1/${table}${params ? `?${params}` : ''}`;
   const headers: Record<string, string> = {
