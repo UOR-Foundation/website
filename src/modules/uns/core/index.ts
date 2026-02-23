@@ -59,3 +59,14 @@ export {
   resolveByName,
   clearRecordStore,
 } from "./record";
+
+// ── Phase 0-C: IPv6 Extension Header ───────────────────────────────────────
+export type { UorDestOptHeader } from "./ipv6ext";
+export {
+  UOR_OPTION_TYPE,
+  UOR_OPTION_DATA_LEN,
+  encodeDestOptHeader,
+  decodeDestOptHeader,
+  verifyPacketIdentity,
+  attachUorHeader,
+} from "./ipv6ext";

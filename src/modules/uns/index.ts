@@ -22,12 +22,17 @@ export {
   registerPublicKey, lookupPublicKey,
   // Name Records
   createRecord, publishRecord, resolveByName, clearRecordStore,
+  // IPv6 Extension Header
+  UOR_OPTION_TYPE, UOR_OPTION_DATA_LEN,
+  encodeDestOptHeader, decodeDestOptHeader,
+  verifyPacketIdentity, attachUorHeader,
 } from "./core";
 
 export type {
   UorCanonicalIdentity,
   UnsKeypair, PublicKeyObject, SignatureBlock, SignedRecord,
   UnsNameRecord, SignedUnsRecord, UnsTarget, UnsService, CreateRecordOpts,
+  UorDestOptHeader,
 } from "./core";
 
 // ── Types (re-export all for consumer modules) ──────────────────────────────
