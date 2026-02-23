@@ -19,3 +19,20 @@ export {
   UNION_TYPE_RANGES,
 } from "./union-type-canon";
 export type { CoercionResult, UnionCanonResult, CoercionRecord } from "./union-type-canon";
+
+// ── P23: Multi-Quantum Ring Engine ──────────────────────────────────────────
+export {
+  negQ, bnotQ, succQ, predQ,
+  verifyCriticalIdentityQ,
+  RINGS,
+} from "./quantum";
+export type { QuantumLevel, QuantumRingConfig } from "./quantum";
+
+// ── P23: Formal Morphisms with CommutativityWitness ─────────────────────────
+export {
+  project as projectFormal,
+  embed as embedFormal,
+  identity as identityFormal,
+  commutativityWitness,
+} from "./morphism-formal";
+export type { MorphismResult, MorphismType, CommutativityWitness } from "./morphism-formal";
