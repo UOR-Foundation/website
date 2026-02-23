@@ -119,6 +119,7 @@ const DevelopersPage = () => (
               <NavRow title="Atlas Embeddings" href="/research/atlas-embeddings" icon={Newspaper} />
               <NavRow title="UOR Standard" href="/standard" icon={BookMarked} />
               <NavRow title="Semantic Web" href="/semantic-web" icon={Network} />
+              <NavRow title="UOR Name Service (UNS)" href="/projects/uns" icon={Globe} />
               <NavRow title="Blog" href="/blog/uor-framework-launch" icon={Pen} />
             </SectionCard>
           </div>
