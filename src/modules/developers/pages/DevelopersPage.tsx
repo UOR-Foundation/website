@@ -85,7 +85,7 @@ const DevelopersPage = () => (
               <NavRow title="Getting Started" href="/developers/getting-started" icon={Rocket} />
               <NavRow title="What is UOR?" href="/developers/fundamentals" icon={Layers} />
               <NavRow title="Core Concepts" href="/developers/concepts" icon={BookOpen} />
-              <NavRow title="TypeScript SDK" href="/developers/sdk" icon={Code} />
+              <NavRow title="API Reference" href="/api" icon={FileJson} />
             </SectionCard>
 
             {/* Platform Services */}
@@ -159,7 +159,6 @@ const DevelopersPage = () => (
 
             {/* Developer Tools */}
             <SectionCard title="Developer Tools" viewAll={{ label: "View all tools", href: "/developers/directory" }}>
-              <NavRow title="TypeScript SDK" href="/developers/sdk" icon={Code} />
               <NavRow title="API Reference" href="/api" icon={FileJson} />
               <NavRow title="SPARQL Editor" href="/sparql-editor" />
               <NavRow title="Knowledge Graph" href="/knowledge-graph" />
