@@ -389,4 +389,19 @@ export class UnsDht {
   private localNameLookup(name: string): string[] {
     return this.nameIndex.lookup(name);
   }
+
+  // ── Public: All Records Query (including revoked) ────────────────────
+
+  /**
+   * Query all record IDs for a name, INCLUDING revoked records.
+   *
+   * Unlike queryByName() which filters revoked records, this method
+   * returns all canonical IDs — used by the resolver to distinguish
+   * 404 (never existed) from 410 (all revoked).
+   */
+  async queryAllByName(name: string): Promise<string[]> {
+    const localIds = this.nameIndex.lookup(name);
+    const peerIds = await this.queryPeerIndexes(name);
+    return [...new Set([...localIds, ...peerIds])];
+  }
 }
