@@ -92,7 +92,7 @@ const App = () => {
   useEffect(() => {
     const init = () => {
       initializeRegistry().catch(console.error);
-      initializeContentRegistry().catch(console.error);
+      initializeContentRegistry(true).catch(console.error);
     };
     if ("requestIdleCallback" in window) {
       (window as Window).requestIdleCallback(init);

@@ -90,8 +90,12 @@ const CERTIFIABLE_CONTENT: Array<{
 
 // ── Initialization ──────────────────────────────────────────────────────────
 
-export async function initializeContentRegistry(): Promise<void> {
-  if (initialized) return;
+export async function initializeContentRegistry(force = false): Promise<void> {
+  if (initialized && !force) return;
+  if (force) {
+    contentCertificates.clear();
+    initialized = false;
+  }
 
   const results = await Promise.all(
     CERTIFIABLE_CONTENT.map(async ({ subjectId, label, data }) => {
