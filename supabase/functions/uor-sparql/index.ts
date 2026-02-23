@@ -1,10 +1,33 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, accept, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+// ── Rate Limiting (sliding window per IP) ───────────────────────────────────
+const rateLimitMap = new Map<string, number[]>();
+const RATE_LIMIT_MAX = 30;           // 30 queries per minute
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const timestamps = (rateLimitMap.get(ip) ?? []).filter(t => now - t < RATE_LIMIT_WINDOW_MS);
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    return { allowed: false, remaining: 0 };
+  }
+  timestamps.push(now);
+  rateLimitMap.set(ip, timestamps);
+  return { allowed: true, remaining: RATE_LIMIT_MAX - timestamps.length };
+}
+
+function getIP(req: Request): string {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+}
+
+// ── Max query length ────────────────────────────────────────────────────────
+const MAX_QUERY_LENGTH = 4096;
 
 const UOR = "https://api.uor.foundation/v1";
 
@@ -164,7 +187,6 @@ async function handleRepresentation(query: string): Promise<{ vars: string[]; ro
 async function handleFiber(query: string): Promise<{ vars: string[]; rows: any[]; fiberSize: number; k: number }> {
   const k = extractStratumK(query);
   const expected = C(8, k);
-  // Generate all values with popcount = k
   const rows: any[] = [];
   for (let x = 0; x < 256; x++) {
     let pc = 0;
@@ -174,7 +196,7 @@ async function handleFiber(query: string): Promise<{ vars: string[]; rows: any[]
   return { vars: ["x", "value", "stratum", "binary"], rows, fiberSize: expected, k };
 }
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "POST required" }), {
@@ -182,11 +204,33 @@ serve(async (req: Request) => {
     });
   }
 
+  // ── Rate limit check ──────────────────────────────────────────────────
+  const clientIp = getIP(req);
+  const rl = checkRateLimit(clientIp);
+  const rlHeaders = {
+    'X-RateLimit-Limit': String(RATE_LIMIT_MAX),
+    'X-RateLimit-Remaining': String(rl.remaining),
+  };
+
+  if (!rl.allowed) {
+    return new Response(JSON.stringify({ error: "Rate limit exceeded. Max 30 queries per minute." }), {
+      status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60", ...rlHeaders },
+    });
+  }
+
   try {
     const body: SparqlReq = await req.json();
     if (!body.query) {
       return new Response(JSON.stringify({ error: "query required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json", ...rlHeaders },
+      });
+    }
+
+    // ── Query length check ────────────────────────────────────────────────
+    if (body.query.length > MAX_QUERY_LENGTH) {
+      return new Response(JSON.stringify({ error: `Query exceeds maximum length of ${MAX_QUERY_LENGTH} characters` }), {
+        status: 413, headers: { ...corsHeaders, "Content-Type": "application/json", ...rlHeaders },
       });
     }
 
@@ -256,11 +300,11 @@ serve(async (req: Request) => {
 
     return new Response(responseBody, {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": contentType },
+      headers: { ...corsHeaders, "Content-Type": contentType, ...rlHeaders },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ error: "Query execution failed" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json", ...rlHeaders },
     });
   }
 });
