@@ -1,34 +1,34 @@
 /**
- * UNS Console — Trust Wallet-Inspired Layout
+ * UOR Console — Developer-First Layout
  *
- * Clean dark sidebar on the left with app list, spacious main content area.
- * Designed for deployment management and running application viewing.
+ * Entry point for deploying, managing, and monetizing web-coded apps.
+ * Sidebar groups: Deploy first, Infrastructure second.
  */
 
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Globe, Shield, Cpu, Database,
-  Lock, Bot, ChevronLeft, AppWindow, Compass,
-  Search, Plus, Circle,
+  Lock, Bot, ChevronLeft, Rocket, Compass,
+  Search, Plus, Circle, BarChart3, BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import { CanonicalIdBadge } from "./ConsoleUI";
 
 /* ── Navigation Items ────────────────────────────────────────────────────── */
 
-const NAV_INFRA = [
-  { to: "/console",          icon: LayoutDashboard, label: "Overview" },
-  { to: "/console/dns",      icon: Globe,           label: "DNS" },
-  { to: "/console/shield",   icon: Shield,          label: "Shield" },
-  { to: "/console/compute",  icon: Cpu,             label: "Compute" },
-  { to: "/console/store",    icon: Database,         label: "Store" },
-  { to: "/console/trust",    icon: Lock,            label: "Trust" },
-  { to: "/console/agents",   icon: Bot,             label: "Agents" },
+const NAV_DEPLOY = [
+  { to: "/console",            icon: Rocket,         label: "Deploy",     end: true },
+  { to: "/console/discovery",  icon: Compass,        label: "Discovery",  end: false },
+  { to: "/console/overview",   icon: BarChart3,      label: "Analytics",  end: false },
 ];
 
-const NAV_APPS = [
-  { to: "/console/apps",      icon: AppWindow,  label: "Apps" },
-  { to: "/console/discovery", icon: Compass,    label: "Discovery" },
+const NAV_INFRA = [
+  { to: "/console/dns",      icon: Globe,     label: "DNS" },
+  { to: "/console/shield",   icon: Shield,    label: "Shield" },
+  { to: "/console/compute",  icon: Cpu,       label: "Compute" },
+  { to: "/console/store",    icon: Database,  label: "Store" },
+  { to: "/console/trust",    icon: Lock,      label: "Trust" },
+  { to: "/console/agents",   icon: Bot,       label: "Agents" },
 ];
 
 /* ── Mock deployed apps (would come from SDK in production) ──────────── */
@@ -105,22 +105,22 @@ export default function ConsoleLayout() {
           </div>
         )}
 
-        {/* Infrastructure Nav */}
+        {/* ── Deploy & Platform Nav (PRIMARY) ───────────────────────── */}
         <nav className="px-2 pt-2 space-y-0.5">
           {!collapsed && (
             <p className="px-3 pb-1 text-[10px] uppercase tracking-widest text-muted-foreground/60 font-medium">
-              Infrastructure
+              Platform
             </p>
           )}
-          {NAV_INFRA.map((item) => {
-            const active =
-              item.to === "/console"
-                ? location.pathname === "/console"
-                : location.pathname.startsWith(item.to);
+          {NAV_DEPLOY.map((item) => {
+            const active = item.end
+              ? location.pathname === item.to
+              : location.pathname.startsWith(item.to);
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
+                end={item.end}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
                   active
                     ? "bg-primary/10 text-primary font-medium"
@@ -134,15 +134,15 @@ export default function ConsoleLayout() {
           })}
         </nav>
 
-        {/* Deployed Apps List */}
+        {/* ── Deployed Apps List ──────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto px-2 pt-4">
           {!collapsed && (
             <div className="flex items-center justify-between px-3 pb-2">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-medium">
-                Deployed Apps
+                Your Apps
               </p>
               <NavLink
-                to="/console/apps"
+                to="/console"
                 className="p-1 rounded-md hover:bg-muted/50 transition-colors"
                 title="Deploy new app"
               >
@@ -155,7 +155,9 @@ export default function ConsoleLayout() {
             {filteredApps.map((app) => (
               <NavLink
                 key={app.name}
-                to={`/console/apps`}
+                to={`/console/app-detail/${encodeURIComponent(
+                  `urn:uor:derivation:sha256:${app.address.replace(/[:.]/g, "")}`
+                )}`}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 hover:bg-muted/30 group ${
                   collapsed ? "justify-center" : ""
                 }`}
@@ -182,14 +184,14 @@ export default function ConsoleLayout() {
             ))}
           </div>
 
-          {/* App Nav */}
+          {/* ── Infrastructure Nav (SECONDARY) ─────────────────────── */}
           <div className="pt-4 space-y-0.5">
             {!collapsed && (
               <p className="px-3 pb-1 text-[10px] uppercase tracking-widest text-muted-foreground/60 font-medium">
-                Platform
+                Infrastructure
               </p>
             )}
-            {NAV_APPS.map((item) => {
+            {NAV_INFRA.map((item) => {
               const active = location.pathname.startsWith(item.to);
               return (
                 <NavLink
@@ -207,9 +209,22 @@ export default function ConsoleLayout() {
               );
             })}
           </div>
+
+          {/* Docs link */}
+          {!collapsed && (
+            <div className="pt-4">
+              <NavLink
+                to="/developers"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200"
+              >
+                <BookOpen className="h-4 w-4 shrink-0" />
+                <span>Documentation</span>
+              </NavLink>
+            </div>
+          )}
         </div>
 
-        {/* Footer — Help */}
+        {/* Footer — Status */}
         {!collapsed && (
           <div className="border-t border-border/50 p-3 space-y-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
@@ -223,9 +238,9 @@ export default function ConsoleLayout() {
 
       {/* ── Main Content ──────────────────────────────────────────────── */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top bar (minimal) */}
+        {/* Top bar */}
         <header className="flex h-14 items-center justify-between border-b border-border/50 px-6">
-          <div /> {/* Spacer */}
+          <div />
           <div className="flex items-center gap-4">
             <code className="text-xs text-muted-foreground/70 font-mono">
               fd00:0075:6f72:a1b2:c3d4::1
@@ -237,7 +252,7 @@ export default function ConsoleLayout() {
           </div>
         </header>
 
-        {/* Page content — generous padding */}
+        {/* Page content */}
         <main className="flex-1 overflow-y-auto p-8">
           <Outlet />
         </main>

@@ -147,14 +147,14 @@ const App = () => {
             <Route path="/oracle" element={<OraclePage />} />
             <Route path="/uns" element={<UnsPage />} />
             <Route path="/console" element={<ConsoleLayout />}>
-              <Route index element={<ConsoleOverview />} />
+              <Route index element={<AppConsoleApps />} />
+              <Route path="overview" element={<ConsoleOverview />} />
               <Route path="dns" element={<ConsoleDns />} />
               <Route path="shield" element={<ConsoleShield />} />
               <Route path="compute" element={<ConsoleCompute />} />
               <Route path="store" element={<ConsoleStore />} />
               <Route path="trust" element={<ConsoleTrust />} />
               <Route path="agents" element={<ConsoleAgents />} />
-              <Route path="app-overview" element={<AppConsoleOverview />} />
               <Route path="apps" element={<AppConsoleApps />} />
               <Route path="app-detail/:canonicalId" element={<AppConsoleDetail />} />
               <Route path="discovery" element={<AppConsoleDiscovery />} />
