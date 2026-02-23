@@ -244,7 +244,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   <Fingerprint size={32} className="text-primary" />
                 </div>
                 <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed max-w-sm mx-auto">
-                  This identity is <strong className="text-foreground">yours alone</strong> — fully private, owned by you, and transferable. Choose a method below to verify you're a unique person and claim it.
+                  Your identity already exists. Verify yourself to claim it.
                 </p>
               </div>
 
@@ -269,7 +269,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   </div>
                   <div>
                     <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Verify with Google</h3>
-                    <p className="text-sm text-muted-foreground font-body">Quickest way to prove you're unique — your identity stays separate from Google</p>
+                    <p className="text-sm text-muted-foreground font-body">One click — your identity stays independent</p>
                   </div>
                 </div>
                 <button
@@ -295,7 +295,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   </div>
                   <div>
                     <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Verify with Email</h3>
-                    <p className="text-sm text-muted-foreground font-body">We only use your email to confirm you're real — your identity is independent of it</p>
+                    <p className="text-sm text-muted-foreground font-body">Used once to confirm — never stored or shared</p>
                   </div>
                 </div>
                 <form onSubmit={handleEmailSignIn} className="space-y-3">
@@ -312,13 +312,13 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                     className="w-full btn-outline inline-flex items-center justify-center gap-2.5 py-3.5 text-base rounded-xl font-medium"
                   >
                     <Mail size={18} />
-                    Send me a sign-in link
+                    Send verification link
                   </button>
                 </form>
               </div>
 
-              <p className="text-center text-sm text-muted-foreground/70 font-body leading-relaxed">
-                Your identity is mathematically unique, fully owned by you, and can be transferred at any time. No company — including us — can access or control it.
+              <p className="text-center text-xs text-muted-foreground/60 font-body leading-relaxed">
+                Private. Owned by you. Transferable. No one else can access or control it.
               </p>
             </div>
           )}
@@ -378,7 +378,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   <CheckCircle2 size={32} className="text-primary" />
                 </div>
                 <p className="text-base md:text-lg text-muted-foreground font-body leading-relaxed">
-                  Your identity is now claimed and belongs entirely to you. It's private, transferable, and independent of any account you used to verify.
+                  This identity is yours. Private, transferable, and fully under your control.
                 </p>
               </div>
 
