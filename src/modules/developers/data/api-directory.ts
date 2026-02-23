@@ -31,7 +31,7 @@ export const gettingStarted: ApiDirectoryCategory = {
     { id: "quickstart", title: "Quickstart", description: "First API call in under 5 minutes", href: "/developers/getting-started" },
     { id: "fundamentals", title: "What is UOR?", description: "Content-derived identity explained in plain language", href: "/developers/fundamentals" },
     { id: "concepts", title: "Core Concepts", description: "Addressing, verification grades, precision levels", href: "/developers/concepts" },
-    { id: "sdk", title: "TypeScript SDK", description: "One client class wrapping all services with full type safety", href: "/developers/sdk" },
+    { id: "api-ref", title: "API Reference", description: "48 endpoints with curl examples and JSON-LD responses", href: "/api" },
   ],
 };
 
@@ -189,9 +189,8 @@ export const verificationTrust: ApiDirectoryCategory = {
 export const developerTools: ApiDirectoryCategory = {
   id: "developer-tools",
   title: "Developer Tools",
-  description: "SDKs, explorers, and semantic web tooling",
+  description: "Explorers and semantic web tooling",
   entries: [
-    { id: "ts-sdk", title: "TypeScript SDK", description: "One UnsClient wrapping all services with full type safety", href: "/developers/sdk" },
     { id: "api-ref", title: "API Reference", description: "48 endpoints with curl examples and JSON-LD responses", href: "/api" },
     { id: "sparql-editor", title: "SPARQL Editor", description: "Write and execute queries against UOR's RDF triple store", href: "/sparql-editor" },
     { id: "knowledge-graph", title: "Knowledge Graph", description: "Browse and query the UOR knowledge graph", href: "/knowledge-graph" },
