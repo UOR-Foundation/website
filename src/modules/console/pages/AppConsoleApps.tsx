@@ -20,6 +20,9 @@ import {
   GitBranch, Upload, Package, Plus,
 } from "lucide-react";
 import heroImage from "@/assets/console-deploy-hero.png";
+import appSaasImg from "@/assets/app-my-saas.jpg";
+import appChatbotImg from "@/assets/app-ai-chatbot.jpg";
+import appDataVizImg from "@/assets/app-data-viz.jpg";
 import DeployLog from "../components/DeployLog";
 import DeployResultCard from "../components/DeployResultCard";
 import type { LogEntry } from "../components/DeployLog";
@@ -31,12 +34,13 @@ interface AppCard {
   userCount: number;
   revenue: number;
   ipv6: string;
+  image: string;
 }
 
 const MOCK_APPS: AppCard[] = [
-  { name: "my-saas-app", canonicalId: "urn:uor:derivation:sha256:a1b2c3d4e5f6071829abcdef01234567890abcdef01234567890abcdef012345", zone: "COHERENCE", userCount: 89, revenue: 1842.40, ipv6: "fd00:75:6f72:a1b2::1" },
-  { name: "ai-chatbot", canonicalId: "urn:uor:derivation:sha256:deadbeef00112233445566778899aabbccddeeff00112233445566778899aabb", zone: "DRIFT", userCount: 34, revenue: 567.20, ipv6: "fd00:75:6f72:dead::1" },
-  { name: "data-viz-tool", canonicalId: "urn:uor:derivation:sha256:0011223344556677889900aabbccddeeff00112233445566778899aabbccddeeff", zone: "COHERENCE", userCount: 4, revenue: 438.00, ipv6: "fd00:75:6f72:0011::1" },
+  { name: "my-saas-app", canonicalId: "urn:uor:derivation:sha256:a1b2c3d4e5f6071829abcdef01234567890abcdef01234567890abcdef012345", zone: "COHERENCE", userCount: 89, revenue: 1842.40, ipv6: "fd00:75:6f72:a1b2::1", image: appSaasImg },
+  { name: "ai-chatbot", canonicalId: "urn:uor:derivation:sha256:deadbeef00112233445566778899aabbccddeeff00112233445566778899aabb", zone: "DRIFT", userCount: 34, revenue: 567.20, ipv6: "fd00:75:6f72:dead::1", image: appChatbotImg },
+  { name: "data-viz-tool", canonicalId: "urn:uor:derivation:sha256:0011223344556677889900aabbccddeeff00112233445566778899aabbccddeeff", zone: "COHERENCE", userCount: 4, revenue: 438.00, ipv6: "fd00:75:6f72:0011::1", image: appDataVizImg },
 ];
 
 const DEPLOY_STEPS = [
@@ -283,8 +287,8 @@ export default function AppConsoleApps() {
               className="group flex items-center gap-5 rounded-2xl border border-border/40 bg-card/50 p-6 hover:border-primary/30 hover:bg-card/80 transition-all duration-300"
             >
               {/* App icon */}
-              <div className="h-14 w-14 rounded-xl bg-muted/40 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                <Globe className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+              <div className="h-14 w-14 rounded-xl overflow-hidden shrink-0 ring-1 ring-border/30 group-hover:ring-primary/30 transition-all">
+                <img src={app.image} alt={app.name} className="h-full w-full object-cover" />
               </div>
 
               {/* App info */}
