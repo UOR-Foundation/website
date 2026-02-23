@@ -378,8 +378,8 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                 className="w-full text-left bg-background border border-border hover:border-primary/40 rounded-2xl p-5 md:p-6 transition-all group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                    <Heart size={24} className="text-red-400 fill-current" />
+                  <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <Heart size={32} className="text-red-400 fill-current" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-display text-lg font-bold text-foreground mb-1">I'm a Human</h3>
@@ -397,8 +397,8 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                 className="w-full text-left bg-background border border-border hover:border-primary/40 rounded-2xl p-5 md:p-6 transition-all group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                    <img src={lobsterIcon} alt="Agent" className="w-7 h-7 object-contain" />
+                  <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <img src={lobsterIcon} alt="Agent" className="w-9 h-9 object-contain" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-display text-lg font-bold text-foreground mb-1">I'm an Agent</h3>
