@@ -248,14 +248,14 @@ export default function ConsoleLayout() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
-              title="Toggle theme"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/60 bg-muted/40 hover:bg-muted/70 transition-colors"
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <Moon className="h-4 w-4 text-muted-foreground" />
-              )}
+              <Sun className={`h-4 w-4 transition-colors ${theme === "dark" ? "text-muted-foreground/40" : "text-amber-500"}`} />
+              <div className={`relative h-5 w-9 rounded-full transition-colors ${theme === "dark" ? "bg-primary/30" : "bg-muted-foreground/20"}`}>
+                <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-foreground shadow-sm transition-transform duration-200 ${theme === "dark" ? "translate-x-4" : "translate-x-0.5"}`} />
+              </div>
+              <Moon className={`h-4 w-4 transition-colors ${theme === "dark" ? "text-primary" : "text-muted-foreground/40"}`} />
             </button>
             <code className="text-xs text-muted-foreground/70 font-mono">
               fd00:0075:6f72:a1b2:c3d4::1
