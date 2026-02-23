@@ -301,7 +301,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   </div>
                   <div>
                     <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Verify with Google</h3>
-                    <p className="text-sm text-muted-foreground font-body">One click — your identity stays independent</p>
+                    <p className="text-base text-muted-foreground font-body">One click — your identity stays independent</p>
                   </div>
                 </div>
                 <button
@@ -327,7 +327,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   </div>
                   <div>
                     <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Verify with Email</h3>
-                    <p className="text-sm text-muted-foreground font-body">Used once to confirm — never stored or shared</p>
+                    <p className="text-base text-muted-foreground font-body">Used once to confirm — never stored or shared</p>
                   </div>
                 </div>
                 <form onSubmit={handleEmailSignIn} className="space-y-3">
