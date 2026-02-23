@@ -94,6 +94,14 @@ export {
 } from "./app-identity";
 export type { AppManifest, ManifestInput } from "./app-identity";
 
+// ── Import Adapter (P3 — one-click deploy from any platform) ────────────────
+export { importApp, refreshApp } from "./import-adapter";
+export type {
+  ImportSource,
+  ImportResult,
+  AppFile,
+} from "./import-adapter";
+
 // ── App CLI (developer-facing command engine) ───────────────────────────────
 export { AppCli } from "./cli";
 export type {
