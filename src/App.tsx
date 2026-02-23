@@ -62,6 +62,17 @@ const ConsoleStore = lazy(() => import("@/modules/console/pages/ConsoleStore"));
 const ConsoleTrust = lazy(() => import("@/modules/console/pages/ConsoleTrust"));
 const ConsoleAgents = lazy(() => import("@/modules/console/pages/ConsoleAgents"));
 const DevelopersPage = lazy(() => import("@/modules/developers/pages/DevelopersPage"));
+const DnsDocPage = lazy(() => import("@/modules/developers/pages/DnsDocPage"));
+const ComputeDocPage = lazy(() => import("@/modules/developers/pages/ComputeDocPage"));
+const StoreDocPage = lazy(() => import("@/modules/developers/pages/StoreDocPage"));
+const KvDocPage = lazy(() => import("@/modules/developers/pages/KvDocPage"));
+const LedgerDocPage = lazy(() => import("@/modules/developers/pages/LedgerDocPage"));
+const ShieldDocPage = lazy(() => import("@/modules/developers/pages/ShieldDocPage"));
+const TrustDocPage = lazy(() => import("@/modules/developers/pages/TrustDocPage"));
+const AgentsDocPage = lazy(() => import("@/modules/developers/pages/AgentsDocPage"));
+const SdkDocPage = lazy(() => import("@/modules/developers/pages/SdkDocPage"));
+const GettingStartedDocPage = lazy(() => import("@/modules/developers/pages/GettingStartedDocPage"));
+const ConceptsDocPage = lazy(() => import("@/modules/developers/pages/ConceptsDocPage"));
 const CartridgePage = lazy(() => import("@/modules/qr-cartridge/pages/CartridgePage"));
 
 const queryClient = new QueryClient();
@@ -139,6 +150,17 @@ const App = () => {
               <Route path="agents" element={<ConsoleAgents />} />
             </Route>
             <Route path="/developers" element={<DevelopersPage />} />
+            <Route path="/developers/getting-started" element={<GettingStartedDocPage />} />
+            <Route path="/developers/concepts" element={<ConceptsDocPage />} />
+            <Route path="/developers/dns" element={<DnsDocPage />} />
+            <Route path="/developers/compute" element={<ComputeDocPage />} />
+            <Route path="/developers/store" element={<StoreDocPage />} />
+            <Route path="/developers/kv" element={<KvDocPage />} />
+            <Route path="/developers/ledger" element={<LedgerDocPage />} />
+            <Route path="/developers/shield" element={<ShieldDocPage />} />
+            <Route path="/developers/trust" element={<TrustDocPage />} />
+            <Route path="/developers/agents" element={<AgentsDocPage />} />
+            <Route path="/developers/sdk" element={<SdkDocPage />} />
             <Route path="/cartridge" element={<CartridgePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
