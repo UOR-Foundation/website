@@ -20,7 +20,7 @@ export interface DocSidebarSection {
 export const docSidebars: Record<string, DocSidebarSection> = {
   dns: {
     serviceId: "dns",
-    title: "UNS (Name Service)",
+    title: "Name Service (UNS)",
     icon: "Globe",
     items: [
       { label: "Overview", href: "/developers/dns" },

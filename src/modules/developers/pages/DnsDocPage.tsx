@@ -9,7 +9,7 @@ const DnsDocPage = () => (
     <Navbar />
     <DocsLayout
       sidebar={docSidebars.dns}
-      breadcrumbs={[{ label: "UNS (Name Service)" }]}
+      breadcrumbs={[{ label: "Name Service (UNS)" }]}
       tocItems={[
         { label: "Overview", id: "overview" },
         { label: "The Problem", id: "problem" },
@@ -24,7 +24,7 @@ const DnsDocPage = () => (
       {/* Hero */}
       <div id="overview" className="mb-10">
         <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-3">
-          UOR Name Service (UNS)
+          Name Service (UNS)
         </h1>
         <p className="text-base text-muted-foreground leading-relaxed max-w-xl mb-4">
           A complete network infrastructure platform built on IPv6 and the UOR Framework.
