@@ -48,6 +48,7 @@ const FormatsPage = lazy(() => import("@/modules/shacl/pages/FormatsPage"));
 const ProjectUorMcp = lazy(() => import("@/modules/projects/pages/ProjectUorMcp"));
 const DatumPage = lazy(() => import("@/modules/datum/pages/DatumPage"));
 const ProjectUns = lazy(() => import("@/modules/projects/pages/ProjectUns"));
+const ProjectQrCartridge = lazy(() => import("@/modules/projects/pages/ProjectQrCartridge"));
 const TrustScorePreview = lazy(() => import("@/modules/mcp/pages/TrustScorePreview"));
 const BulkPinPage = lazy(() => import("@/modules/bulk-pin/pages/BulkPinPage"));
 const OraclePage = lazy(() => import("@/modules/oracle/pages/OraclePage"));
@@ -97,6 +98,7 @@ const App = () => {
             <Route path="/projects/prism" element={<ProjectPrism />} />
             <Route path="/projects/uor-mcp" element={<ProjectUorMcp />} />
             <Route path="/projects/uns" element={<ProjectUns />} />
+            <Route path="/projects/qr-cartridge" element={<ProjectQrCartridge />} />
             <Route path="/standard" element={<StandardPage />} />
             <Route path="/semantic-web" element={<SemanticWebPage />} />
             <Route path="/donate" element={<DonatePage />} />

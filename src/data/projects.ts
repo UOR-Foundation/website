@@ -68,6 +68,14 @@ export const projects: ProjectData[] = [
     maturity: "Sandbox",
     imageKey: "uns",
   },
+  {
+    name: "QR Cartridge",
+    slug: "qr-cartridge",
+    category: "Developer Tools",
+    description: "Turn any content into a scannable QR code that carries its own verified identity. Movies, apps, music, websites — one scan to load, no trust required.",
+    maturity: "Sandbox",
+    imageKey: "qrCartridge",
+  },
 ];
 
 export const maturityInfo: { level: MaturityLevel; tagline: string; description: string; criteria: string[] }[] = [
