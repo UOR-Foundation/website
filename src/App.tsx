@@ -103,6 +103,7 @@ const RuliadPage = lazy(() => import("@/modules/ruliad/pages/RuliadPage"));
 const RulialMotionPage = lazy(() => import("@/modules/ruliad/pages/RulialMotionPage"));
 const RuliadPaperPage = lazy(() => import("@/modules/ruliad/pages/RuliadPaperPage"));
 const ConsciousnessPage = lazy(() => import("@/modules/consciousness/pages/ConsciousnessPage"));
+const GodConjecturePage = lazy(() => import("@/modules/consciousness/pages/GodConjecturePage"));
 
 const queryClient = new QueryClient();
 
@@ -219,6 +220,7 @@ const App = () => {
             <Route path="/ruliad/motion" element={<RulialMotionPage />} />
             <Route path="/ruliad/paper" element={<RuliadPaperPage />} />
             <Route path="/consciousness" element={<ConsciousnessPage />} />
+            <Route path="/consciousness/god-conjecture" element={<GodConjecturePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
