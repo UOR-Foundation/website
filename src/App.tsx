@@ -42,7 +42,7 @@ const SessionsPage = lazy(() => import("@/modules/state/pages/SessionsPage"));
 const VerifyPage = lazy(() => import("@/modules/verify/pages/VerifyPage"));
 const EpistemicPage = lazy(() => import("@/modules/epistemic/pages/EpistemicPage"));
 const CertificatesPage = lazy(() => import("@/modules/certificate/pages/CertificatesPage"));
-const SparqlPage = lazy(() => import("@/modules/sparql-ui/pages/SparqlPage"));
+const SparqlPage = lazy(() => import("@/modules/sparql/pages/SparqlPage"));
 const ToolRegistryPage = lazy(() => import("@/modules/agent-tools/pages/ToolRegistryPage"));
 const PrismPipelinePage = lazy(() => import("@/modules/projects/pages/PrismPipelinePage"));
 const ShaclIndexPage = lazy(() => import("@/modules/shacl/pages/ShaclIndexPage"));
