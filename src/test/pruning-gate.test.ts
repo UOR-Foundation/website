@@ -23,8 +23,8 @@ describe("Pruning Gate — System Hygiene", () => {
 
   // ── Complexity Budgets ──────────────────────────────────────────────
 
-  it("module count stays under 55", () => {
-    expect(report.metrics.totalModules).toBeLessThanOrEqual(55);
+  it("module count stays under 40", () => {
+    expect(report.metrics.totalModules).toBeLessThanOrEqual(40);
   });
 
   it("no 'prune' severity findings (nothing dead)", () => {
@@ -46,8 +46,8 @@ describe("Pruning Gate — System Hygiene", () => {
     expect(report.metrics.maxChainLength).toBeLessThanOrEqual(10);
   });
 
-  it("hygiene score above 50", () => {
-    expect(report.score).toBeGreaterThanOrEqual(50);
+  it("hygiene score above 90", () => {
+    expect(report.score).toBeGreaterThanOrEqual(90);
   });
 
   // ── Report Output ──────────────────────────────────────────────────

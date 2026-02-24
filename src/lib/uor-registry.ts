@@ -17,33 +17,28 @@ import {
 import { singleProofHash } from "./uor-canonical";
 import { generateCertificate, type UorCertificate } from "./uor-certificate";
 
-// ── Static manifest imports (all 26 modules) ───────────────────────────────
+// ── Static manifest imports (consolidated modules) ─────────────────────────
 
 // Layer 0: Presentation & Shell
 import coreManifest from "@/modules/core/module.json";
 import landingManifest from "@/modules/landing/module.json";
-import frameworkManifest from "@/modules/framework/module.json";
-import communityManifest from "@/modules/community/module.json";
+import frameworkManifest from "@/modules/framework/module.json";   // absorbs: ruliad, uor-terms
+import communityManifest from "@/modules/community/module.json";  // absorbs: donate
 import projectsManifest from "@/modules/projects/module.json";
-import donateManifest from "@/modules/donate/module.json";
 import apiExplorerManifest from "@/modules/api-explorer/module.json";
 
 // Layer 1: Algebraic CPU
-import ringCoreManifest from "@/modules/ring-core/module.json";
-import identityManifest from "@/modules/identity/module.json";
-import triadManifest from "@/modules/triad/module.json";
+import ringCoreManifest from "@/modules/ring-core/module.json";   // absorbs: triad
+import identityManifest from "@/modules/identity/module.json";    // absorbs: qr-cartridge
 
 // Layer 2: Derivation & KG
 import derivationManifest from "@/modules/derivation/module.json";
-import kgStoreManifest from "@/modules/kg-store/module.json";
-import jsonldManifest from "@/modules/jsonld/module.json";
+import kgStoreManifest from "@/modules/kg-store/module.json";     // absorbs: jsonld, semantic-index
 import epistemicManifest from "@/modules/epistemic/module.json";
 
 // Layer 3: Structure & Resolution
-import shaclManifest from "@/modules/shacl/module.json";
-import sparqlManifest from "@/modules/sparql/module.json";
+import sparqlManifest from "@/modules/sparql/module.json";        // absorbs: shacl
 import resolverManifest from "@/modules/resolver/module.json";
-import semanticIndexManifest from "@/modules/semantic-index/module.json";
 import morphismManifest from "@/modules/morphism/module.json";
 
 // Layer 4: Observability & State
@@ -95,39 +90,34 @@ export function onRegistryInitialized(cb: () => void): () => void {
 }
 
 const RAW_MANIFESTS: Record<string, Record<string, unknown>> = {
-  // Presentation & Shell
+  // Layer 0: Presentation & Shell
   core: coreManifest as unknown as Record<string, unknown>,
   landing: landingManifest as unknown as Record<string, unknown>,
-  framework: frameworkManifest as unknown as Record<string, unknown>,
-  community: communityManifest as unknown as Record<string, unknown>,
+  framework: frameworkManifest as unknown as Record<string, unknown>,   // absorbs: ruliad, uor-terms
+  community: communityManifest as unknown as Record<string, unknown>,  // absorbs: donate
   projects: projectsManifest as unknown as Record<string, unknown>,
-  donate: donateManifest as unknown as Record<string, unknown>,
   "api-explorer": apiExplorerManifest as unknown as Record<string, unknown>,
 
-  // Algebraic CPU
-  "ring-core": ringCoreManifest as unknown as Record<string, unknown>,
-  identity: identityManifest as unknown as Record<string, unknown>,
-  triad: triadManifest as unknown as Record<string, unknown>,
+  // Layer 1: Algebraic CPU
+  "ring-core": ringCoreManifest as unknown as Record<string, unknown>,  // absorbs: triad
+  identity: identityManifest as unknown as Record<string, unknown>,     // absorbs: qr-cartridge
 
-  // Derivation & KG
+  // Layer 2: Derivation & KG
   derivation: derivationManifest as unknown as Record<string, unknown>,
-  "kg-store": kgStoreManifest as unknown as Record<string, unknown>,
-  jsonld: jsonldManifest as unknown as Record<string, unknown>,
+  "kg-store": kgStoreManifest as unknown as Record<string, unknown>,    // absorbs: jsonld, semantic-index
   epistemic: epistemicManifest as unknown as Record<string, unknown>,
 
-  // Structure & Resolution
-  shacl: shaclManifest as unknown as Record<string, unknown>,
-  sparql: sparqlManifest as unknown as Record<string, unknown>,
+  // Layer 3: Structure & Resolution
+  sparql: sparqlManifest as unknown as Record<string, unknown>,         // absorbs: shacl
   resolver: resolverManifest as unknown as Record<string, unknown>,
-  "semantic-index": semanticIndexManifest as unknown as Record<string, unknown>,
   morphism: morphismManifest as unknown as Record<string, unknown>,
 
-  // Observability & State
+  // Layer 4: Observability & State
   observable: observableManifest as unknown as Record<string, unknown>,
   trace: traceManifest as unknown as Record<string, unknown>,
   state: stateManifest as unknown as Record<string, unknown>,
 
-  // Verification & Agent Tools
+  // Layer 5: Verification & Agent Tools
   "self-verify": selfVerifyManifest as unknown as Record<string, unknown>,
   "agent-tools": agentToolsManifest as unknown as Record<string, unknown>,
   "code-kg": codeKgManifest as unknown as Record<string, unknown>,

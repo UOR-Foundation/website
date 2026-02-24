@@ -68,17 +68,39 @@ export interface PruningReport {
 // ── Known module inventory (source of truth: src/modules/) ────────────────
 
 const KNOWN_MODULES = [
-  "agent-tools", "api-explorer", "bitcoin", "bulk-pin", "certificate",
-  "code-kg", "community", "consciousness", "console",
-  "core", "dashboard", "datum", "derivation", "developers", "donate",
-  "epistemic", "framework", "hologram-ui", "identity", "interoperability",
-  "jsonld", "kg-store", "landing", "mcp", "morphism", "observable",
-  "opportunities", "oracle", "projects", "qr-cartridge",
-  "resolver", "ring-core", "ruliad", "semantic-index",
-  "shacl", "sparql", "state", "trace", "triad",
-  "trust-graph", "uns", "uor-sdk", "uor-terms",
-  "verify", "your-space",
+  // Layer 0: Presentation & Shell
+  "core", "landing", "framework", "community", "api-explorer",
+  // Layer 1: Algebraic CPU
+  "ring-core", "identity",
+  // Layer 2: Derivation & KG
+  "derivation", "kg-store", "epistemic",
+  // Layer 3: Structure & Resolution
+  "sparql", "resolver", "morphism",
+  // Layer 4: Observability & State
+  "observable", "trace", "state",
+  // Layer 5: Verification & Agent Tools
+  "verify", "agent-tools", "code-kg", "dashboard", "uns",
+  // Layer 6: Features
+  "bitcoin", "certificate", "consciousness", "console", "datum",
+  "developers", "hologram-ui", "interoperability", "mcp",
+  "oracle", "projects", "trust-graph", "uor-sdk", "your-space",
 ] as const;
+
+// ── Consolidation Map (absorbed → parent) ─────────────────────────────────
+// These modules have been logically absorbed into their parent modules.
+// Their source files remain in place for backward compatibility.
+const CONSOLIDATION_MAP: Readonly<Record<string, string>> = {
+  "shacl":          "sparql",          // Semantic web validation → query engine
+  "semantic-index": "kg-store",        // Search indexing → knowledge graph store
+  "jsonld":         "kg-store",        // JSON-LD serialization → knowledge graph store
+  "bulk-pin":       "oracle",          // IPFS bulk pinning → oracle data pipeline
+  "donate":         "community",       // Donation UI → community module
+  "qr-cartridge":   "identity",        // QR encoding → identity presentation
+  "triad":          "ring-core",       // Triadic structure → algebraic core
+  "ruliad":         "framework",       // Ruliad theory → framework module
+  "uor-terms":      "framework",       // Terminology → framework module
+  "opportunities":  "hologram-ui",     // Opportunity explorer → hologram UI
+};
 
 // Modules that could potentially be consolidated
 const CONSOLIDATION_CANDIDATES: readonly [string, string, string][] = [
