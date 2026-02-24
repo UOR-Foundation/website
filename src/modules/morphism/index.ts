@@ -36,3 +36,6 @@ export {
   commutativityWitness,
 } from "./morphism-formal";
 export type { MorphismResult, MorphismType, CommutativityWitness } from "./morphism-formal";
+
+// UorModule lifecycle wrapper
+export { MorphismModule } from "./morphism-module";

@@ -8,3 +8,6 @@ export type { CoherenceResult } from "./coherence";
 export { canonicalize, serializeTerm } from "./canonicalization";
 export type { Term } from "./canonicalization";
 export { default as RingExplorerPage } from "./pages/RingExplorerPage";
+
+// UorModule lifecycle wrapper
+export { RingCoreModule } from "./ring-module";

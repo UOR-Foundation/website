@@ -22,3 +22,14 @@ export { default as UorMetadata } from "./components/UorMetadata";
 
 // Types
 export type { ModuleManifest, NavItem, ModuleRouteConfig, LayoutProps, ModuleIdentityFields, UorCertificateContract } from "./types";
+
+// UorModule<T> — Generic module lifecycle base
+export { UorModule } from "./uor-module";
+export type {
+  CoherenceZone as ModuleZone,
+  LogosClass as ModuleLogosClass,
+  OperationRecord,
+  ModuleCertificate,
+  RemediationResult,
+  ModuleHealth,
+} from "./uor-module";
