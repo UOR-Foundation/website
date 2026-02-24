@@ -108,23 +108,23 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
       <Dialog open={open} onOpenChange={handleOpen}>
         <DialogContent className="max-w-md p-0 overflow-hidden">
           {/* Header */}
-          <div className="border-b border-dashed border-border px-6 pt-6 pb-5 text-center">
-            <p className="text-xs uppercase tracking-[0.25em] text-foreground/50 font-semibold">
+          <div className="border-b border-dashed border-border px-6 pt-7 pb-5 text-center">
+            <p className="text-[11px] uppercase tracking-[0.25em] text-foreground/40 font-medium">
               Receipt of Authenticity
             </p>
-            <p className="mt-2 text-lg font-semibold text-foreground">{name}</p>
+            <p className="mt-2.5 text-xl font-semibold text-foreground">{name}</p>
           </div>
 
-          <div className="px-6 py-5 space-y-4">
+          <div className="px-6 py-6 space-y-5">
             {/* Coordinates */}
             {breakdown && (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">UOR Address</p>
+                  <p className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">Address</p>
                   <button
                     onClick={() => copyValue(`${breakdown.observer}.${breakdown.observable}.${breakdown.context}`)}
-                    className="text-foreground/40 hover:text-foreground transition-colors"
-                    title="Copy UOR address"
+                    className="text-foreground/30 hover:text-foreground transition-colors"
+                    title="Copy address"
                   >
                     {copied ? <Check size={13} className="text-primary" /> : <Copy size={13} />}
                   </button>
@@ -135,60 +135,60 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                   { key: "observable" as const, label: "Property" },
                   { key: "context" as const, label: "Frame" },
                 ]).map(({ key, label }) => (
-                  <div key={key} className="rounded-lg border border-border bg-card px-3 py-2.5 text-center">
-                    <p className="text-xs text-foreground/50">{label}</p>
-                    <p className="text-base font-bold capitalize text-foreground mt-0.5">{breakdown[key]}</p>
+                  <div key={key} className="rounded-lg border border-border bg-card px-3 py-3 text-center">
+                    <p className="text-xs text-foreground/40 mb-0.5">{label}</p>
+                    <p className="text-base font-bold capitalize text-foreground">{breakdown[key]}</p>
                   </div>
                 ))}
               </div>
               </div>
             )}
 
-            {/* Object details — verification-relevant canonical data */}
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">Details</p>
-              <div className="rounded-lg border border-border bg-card px-4 py-3 space-y-1.5">
-                <div className="flex justify-between text-sm">
-                  <span className="text-foreground/50">Subject</span>
-                  <span className="font-medium text-foreground font-mono text-xs">{certificate["cert:subject"]}</span>
+            {/* Details */}
+            <div className="space-y-2.5">
+              <p className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">Details</p>
+              <div className="rounded-lg border border-border bg-card px-4 py-3.5 space-y-2.5">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-foreground/50">Subject</span>
+                  <span className="text-sm font-medium text-foreground font-mono">{certificate["cert:subject"]}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-foreground/50">Issued</span>
-                  <span className="font-medium text-foreground font-mono text-xs">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-foreground/50">Issued</span>
+                  <span className="text-sm font-medium text-foreground font-mono">
                     {(() => { const d = new Date(certificate["cert:issuedAt"]); return d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) + "." + String(d.getMilliseconds()).padStart(3, "0"); })()}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-foreground/50">Source Hash</span>
-                  <span className="font-medium text-foreground font-mono text-xs">{certificate["cert:sourceHash"].slice(0, 16)}…</span>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-foreground/50">Fingerprint</span>
+                  <span className="text-sm font-medium text-foreground font-mono">{certificate["cert:sourceHash"].slice(0, 16)}…</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-foreground/50">Boundary</span>
-                  <span className="font-medium text-foreground font-mono text-xs">{certificate["cert:boundary"].fieldCount} fields · {certificate["cert:boundary"].keys.length} keys</span>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-foreground/50">Structure</span>
+                  <span className="text-sm font-medium text-foreground font-mono">{certificate["cert:boundary"].fieldCount} fields · {certificate["cert:boundary"].keys.length} keys</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-foreground/50">Payload</span>
-                  <span className="font-medium text-foreground font-mono text-xs">{new TextEncoder().encode(certificate["cert:canonicalPayload"]).byteLength} bytes (N-Quads)</span>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-foreground/50">Content size</span>
+                  <span className="text-sm font-medium text-foreground font-mono">{new TextEncoder().encode(certificate["cert:canonicalPayload"]).byteLength} bytes</span>
                 </div>
               </div>
             </div>
 
             {/* Unique ID */}
-            <div>
-              <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold mb-1.5">Unique ID</p>
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
-                <code className="flex-1 font-mono text-xs break-all text-foreground/80 leading-relaxed">{cid}</code>
-                <button onClick={() => copyValue(cid)} className="shrink-0 text-foreground/40 hover:text-foreground transition-colors">
+            <div className="space-y-2.5">
+              <p className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">Unique ID</p>
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3.5 py-3">
+                <code className="flex-1 font-mono text-sm break-all text-foreground/80 leading-relaxed">{cid}</code>
+                <button onClick={() => copyValue(cid)} className="shrink-0 text-foreground/30 hover:text-foreground transition-colors">
                   {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} />}
                 </button>
               </div>
             </div>
 
-            {/* Verification — compact */}
+            {/* Verification */}
             {status === "verifying" && (
-              <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-3">
-                <div className="h-3.5 w-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                <span className="text-sm text-foreground/60">Checking authenticity…</span>
+              <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-4 py-3.5">
+                <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <span className="text-sm text-foreground/50">Verifying…</span>
               </div>
             )}
             {status === "verified" && verifyResult && (() => {
@@ -206,26 +206,26 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                     </span>
                   </div>
 
-                  <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5 space-y-1">
+                  <div className="rounded-md border border-border bg-muted/30 px-3.5 py-3 space-y-1.5">
                     <code className={`block font-mono text-sm break-all leading-relaxed ${color}`}>
                       {verifyResult.recomputedCid}
                     </code>
-                    <p className={`text-xs font-medium ${color}`}>
-                      {match ? "✓ Match" : "✗ No match"}
+                    <p className={`text-sm font-medium ${color}`}>
+                      {match ? "✓ Match confirmed" : "✗ Does not match"}
                     </p>
                   </div>
 
-                  <p className="text-sm text-foreground/50 font-mono">
+                  <p className="text-sm text-foreground/40 font-mono">
                     {ts} · {verifyResult.elapsedMs}ms
                   </p>
                 </div>
               );
             })()}
             {status === "failed" && (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3.5">
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-4">
                 <span className="text-base font-semibold text-destructive">Could not confirm</span>
-                <p className="text-sm text-foreground/60 mt-1">
-                  {verifyResult?.summary || "The content may have been changed since this receipt was issued."}
+                <p className="text-sm text-foreground/50 mt-1.5">
+                  {verifyResult?.summary || "The content may have been modified since this receipt was issued."}
                 </p>
               </div>
             )}
@@ -234,15 +234,15 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
             <button
               onClick={runVerification}
               disabled={status === "verifying"}
-              className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors w-full disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors w-full disabled:opacity-50"
             >
               <RefreshCw size={14} className={status === "verifying" ? "animate-spin" : ""} />
-              {status === "verified" ? "Verify certificate" : status === "failed" ? "Try again" : "Verify certificate"}
+              Verify certificate
             </button>
           </div>
 
           <div className="bg-muted/30 border-t border-dashed border-border px-6 py-4 flex items-center justify-between">
-            <p className="text-sm text-foreground/60 font-medium">Content-addressed · Self-verifying</p>
+            <p className="text-sm text-foreground/50">Content-addressed · Self-verifying</p>
             <button onClick={() => copyValue(cid)} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-semibold">
               {copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy ID</>}
             </button>
