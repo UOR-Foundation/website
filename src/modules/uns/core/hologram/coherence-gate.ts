@@ -55,8 +55,45 @@ export interface CoherenceReport {
 
 // ── Classification ────────────────────────────────────────────────────────
 
+/** All registered language projection names for O(1) tier lookup. */
+const LANGUAGE_PROJECTION_NAMES = new Set([
+  // Tier 9 original
+  "python-module", "js-module", "java-class", "csharp-assembly", "cpp-unit",
+  "c-unit", "go-module", "rust-crate", "ts-module", "sql-schema",
+  // 9a Systems
+  "zig", "nim", "d-lang", "ada", "fortran", "pascal", "assembly",
+  // 9b JVM
+  "kotlin", "scala", "groovy", "clojure",
+  // 9c Functional
+  "haskell", "ocaml", "fsharp", "erlang", "elixir", "common-lisp", "scheme", "racket",
+  // 9d Scripting
+  "ruby", "php", "perl", "lua", "bash", "powershell", "raku", "tcl",
+  // 9e Mobile
+  "swift", "objective-c", "dart",
+  // 9f Data/Scientific
+  "r-lang", "julia", "matlab",
+  // 9g Web Platform
+  "html", "css", "wasm", "wgsl",
+  // 9h Query/Data
+  "graphql", "sparql", "xquery",
+  // 9i Smart Contract
+  "solidity", "vyper", "move", "cairo",
+  // 9j Hardware
+  "vhdl", "verilog", "systemverilog",
+  // 9k Formal Verification
+  "coq", "lean", "agda", "tlaplus",
+  // 9l IaC/Build
+  "hcl", "nix", "dockerfile", "makefile",
+  // 9m GPU/Shader
+  "cuda", "opencl", "glsl", "hlsl",
+  // 9n Niche
+  "apl", "forth", "prolog", "smalltalk", "crystal", "pony",
+]);
+
 /** Tier classification derived from spec URL patterns. */
 function classifyTier(name: string, spec: HologramSpec): string {
+  // Language projections checked FIRST — they may reference w3.org specs (CSS, WGSL, SPARQL)
+  if (LANGUAGE_PROJECTION_NAMES.has(name)) return "language";
   const s = spec.spec;
   if (s.includes("w3.org")) return "semantic-web";
   if (s.includes("rfc-editor") || name === "ipv6" || name === "braille") return "native";
@@ -65,7 +102,6 @@ function classifyTier(name: string, spec: HologramSpec): string {
   if (["bitcoin", "lightning", "nostr"].includes(name) || name.startsWith("zcash")) return "settlement";
   if (["erc8004", "x402", "a2a", "a2a-task", "mcp-tool", "mcp-context", "skill-md", "oasf", "onnx", "onnx-op", "nanda-index", "nanda-agentfacts", "nanda-resolver"].includes(name)) return "agentic";
   if (name === "activitypub" || name === "atproto") return "federation";
-  if (["python-module", "js-module", "java-class", "csharp-assembly", "cpp-unit", "c-unit", "go-module", "rust-crate", "ts-module", "sql-schema"].includes(name)) return "language";
   return "other";
 }
 
@@ -211,6 +247,74 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["sql-schema", "nanda-agentfacts", "SQL service → AgentFacts — databases become queryable agents"],
     ["sql-schema", "skill-md", "SQL schema → skill contract — database API self-describes"],
     ["python-module", "a2a", "Python AI agent → A2A AgentCard — ML agents become discoverable"],
+    // JVM compilation chains
+    ["kotlin", "java-class", "Kotlin source → JVM bytecode — cross-JVM provenance"],
+    ["scala", "java-class", "Scala source → JVM bytecode — functional→enterprise bridge"],
+    ["groovy", "java-class", "Groovy script → JVM bytecode — scripted enterprise provenance"],
+    ["clojure", "java-class", "Clojure form → JVM bytecode — Lisp→enterprise bridge"],
+    // CLR compilation chain
+    ["fsharp", "csharp-assembly", "F# source → CLR IL — functional .NET provenance"],
+    // Mobile → agent chains
+    ["swift", "a2a", "Swift app → A2A AgentCard — iOS agents self-describe"],
+    ["dart", "js-module", "Dart source → JS compilation — Flutter web provenance"],
+    ["kotlin", "a2a", "Kotlin Android → A2A AgentCard — mobile agents discoverable"],
+    // ML/Scientific → model chains
+    ["r-lang", "onnx", "R statistical model → ONNX — reproducible science provenance"],
+    ["julia", "onnx", "Julia model → ONNX — high-performance scientific provenance"],
+    ["matlab", "onnx", "MATLAB model → ONNX — engineering simulation provenance"],
+    ["fortran", "onnx", "Fortran numerical code → ONNX — legacy HPC provenance"],
+    // GPU → model chains
+    ["cuda", "onnx", "CUDA kernel → ONNX model execution — GPU compute provenance"],
+    ["opencl", "onnx", "OpenCL kernel → ONNX model execution — cross-platform GPU"],
+    ["wgsl", "wasm", "WebGPU shader → WASM compute — browser GPU provenance"],
+    ["glsl", "wgsl", "GLSL shader → WGSL shader — OpenGL→WebGPU migration"],
+    // Hardware → firmware chains
+    ["vhdl", "c-unit", "VHDL design → C firmware — hardware→software provenance"],
+    ["verilog", "c-unit", "Verilog design → C firmware — silicon→code provenance"],
+    ["systemverilog", "verilog", "SystemVerilog → Verilog — verification→synthesis chain"],
+    // Smart contract → on-chain identity chains
+    ["solidity", "erc8004", "Solidity contract → ERC-8004 on-chain identity"],
+    ["vyper", "erc8004", "Vyper contract → ERC-8004 on-chain identity"],
+    ["move", "erc8004", "Move contract → ERC-8004 on-chain identity"],
+    ["cairo", "erc8004", "Cairo program → ERC-8004 on-chain identity (StarkNet)"],
+    // Actor/agent model chains
+    ["erlang", "a2a", "Erlang actor → A2A AgentCard — OTP actors become agents"],
+    ["elixir", "a2a", "Elixir GenServer → A2A AgentCard — BEAM agents discoverable"],
+    ["elixir", "erlang", "Elixir source → BEAM bytecode — Elixir→Erlang compilation"],
+    // Scripting → tool chains
+    ["ruby", "mcp-tool", "Ruby script → MCP tool — scripted automation with provenance"],
+    ["php", "mcp-tool", "PHP script → MCP tool — web backend tool provenance"],
+    ["perl", "mcp-tool", "Perl script → MCP tool — text processing tool provenance"],
+    ["lua", "mcp-tool", "Lua script → MCP tool — embedded scripting tool provenance"],
+    ["bash", "mcp-tool", "Bash script → MCP tool — shell automation with provenance"],
+    ["powershell", "mcp-tool", "PowerShell → MCP tool — Windows automation provenance"],
+    // Formal verification → credential chains
+    ["coq", "vc", "Coq proof → VC — mathematical proof becomes verifiable credential"],
+    ["lean", "vc", "Lean proof → VC — formal verification becomes VC-certified"],
+    ["agda", "vc", "Agda proof → VC — dependent types become verifiable claims"],
+    ["tlaplus", "vc", "TLA+ spec → VC — system specification becomes VC-certified"],
+    ["ada", "vc", "Ada/SPARK → VC — safety-critical code gets provable credential"],
+    // IaC → container chains
+    ["hcl", "oci", "Terraform config → OCI container — infrastructure provenance"],
+    ["dockerfile", "oci", "Dockerfile → OCI image — build definition→artifact chain"],
+    ["nix", "oci", "Nix derivation → OCI image — reproducible build provenance"],
+    ["makefile", "c-unit", "Makefile → C compilation — build system→artifact chain"],
+    // Cross-era legacy chains
+    ["fortran", "cobol-program", "Fortran numerical + COBOL business — legacy HPC bridge"],
+    ["ada", "cobol-program", "Ada safety-critical + COBOL business — mission-critical bridge"],
+    ["pascal", "cobol-program", "Pascal structured → COBOL — structured programming era bridge"],
+    // API/query chains
+    ["graphql", "skill-md", "GraphQL schema → skill contract — API self-describes"],
+    ["graphql", "oasf", "GraphQL schema → OASF service descriptor — API→agent bridge"],
+    ["sparql", "sql-schema", "SPARQL query → SQL schema — semantic↔relational bridge"],
+    // WASM compilation targets
+    ["rust-crate", "wasm", "Rust crate → WASM module — systems→browser compilation"],
+    ["cpp-unit", "wasm", "C++ unit → WASM module — native→browser via Emscripten"],
+    // Niche → tool chains
+    ["prolog", "onnx", "Prolog logic program → ONNX — symbolic AI provenance"],
+    ["apl", "onnx", "APL array computation → ONNX — array programming provenance"],
+    ["crystal", "oci", "Crystal binary → OCI container — Ruby-speed→container chain"],
+    ["pony", "a2a", "Pony actor → A2A AgentCard — reference-capability agents"],
   ];
   for (const [a, b, insight] of chains) {
     emitIf(has, synergies, a, b, "provenance-chain", insight,
@@ -246,6 +350,27 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["sql-schema", "vc", "Schema identity + compliance: GDPR/SOX audit via VC", "Schema hash → VC — regulatory compliance becomes content-addressed"],
     ["sql-schema", "did", "Database gets a DID — schema identity survives migrations", "Schema hash IS the DID — database identity is permanent"],
     ["sql-schema", "cobol-copybook", "SQL schema + COBOL copybook: both describe DATA, different eras", "Same data structure, two projections — legacy↔modern bridge"],
+    // Extended language complementary pairs
+    ["solidity", "did", "Smart contract + identity: Solidity contract gets self-sovereign DID", "Contract hash IS the DID — immutable identity on any chain"],
+    ["swift", "did", "iOS app + identity: Swift module gets permanent DID", "App hash IS the DID — identity survives App Store updates"],
+    ["dart", "did", "Flutter app + identity: Dart module gets permanent DID", "Cross-platform app identity via content hash"],
+    ["wasm", "did", "WASM module + identity: browser compute unit gets DID", "WASM hash IS the DID — verified before execution"],
+    ["haskell", "vc", "Pure function + credential: referential transparency is VC-certifiable", "Haskell module hash → VC — purity becomes verifiable claim"],
+    ["r-lang", "vc", "Statistical analysis + credential: R script gets VC certification", "R analysis hash → VC — reproducible research is structural"],
+    ["julia", "vc", "Scientific computation + credential: Julia gets VC certification", "Julia computation hash → VC — scientific integrity verified"],
+    ["vhdl", "vc", "Hardware design + safety credential: VHDL gets VC certification", "VHDL design hash → VC — chip safety becomes verifiable"],
+    ["ada", "did", "Safety-critical code + identity: Ada gets permanent DID", "Ada module hash IS the DID — avionics identity is permanent"],
+    ["fortran", "did", "HPC code + identity: Fortran gets permanent DID", "Fortran module hash IS the DID — scientific code identity persists"],
+    ["assembly", "did", "Machine code + identity: Assembly gets permanent DID", "Assembly hash IS the DID — lowest-level code has identity"],
+    ["graphql", "oasf", "API schema + service: GraphQL IS the service descriptor", "GraphQL schema hash → OASF — API description is content-addressed"],
+    ["kotlin", "did", "Kotlin app + identity: Android/JVM code gets permanent DID", "Kotlin hash IS the DID — app identity survives platform changes"],
+    ["zig", "oci", "Zig binary + container: zero-overhead systems in OCI images", "Zig hash → OCI — systems programming meets cloud-native"],
+    ["nim", "oci", "Nim binary + container: meta-programming in OCI images", "Nim hash → OCI — efficient systems in containers"],
+    ["cuda", "vc", "GPU kernel + credential: CUDA code gets safety VC", "CUDA kernel hash → VC — GPU computation integrity verified"],
+    ["dockerfile", "did", "Container definition + identity: Dockerfile gets DID", "Dockerfile hash IS the DID — build recipe has permanent identity"],
+    ["nix", "did", "Reproducible build + identity: Nix derivation gets DID", "Nix hash IS the DID — reproducibility is structural identity"],
+    ["coq", "did", "Mathematical proof + identity: Coq proof gets permanent DID", "Coq proof hash IS the DID — theorems have identity"],
+    ["lean", "did", "Formal proof + identity: Lean proof gets permanent DID", "Lean proof hash IS the DID — mathematics gets content-addressed"],
   ];
   for (const [a, b, insight, impl] of pairs) {
     emitIf(has, synergies, a, b, "complementary-pair", insight,
@@ -350,18 +475,52 @@ function synthesizeOpportunities(synergies: readonly Synergy[]): string[] {
     );
   }
 
-  // Language-specific pipeline opportunity
+  // Language-specific pipeline opportunities
   const languageSynergies = synergies.filter(s =>
-    ["python-module", "js-module", "java-class", "csharp-assembly", "cpp-unit",
-     "c-unit", "go-module", "rust-crate", "ts-module", "sql-schema"]
-      .some(lang => s.projections.includes(lang))
+    [...LANGUAGE_PROJECTION_NAMES].some(lang => s.projections.includes(lang))
   );
   if (languageSynergies.length > 0) {
     opportunities.push(
-      "POLYGLOT SUPPLY CHAIN: Every language artifact (Python→ONNX→MCP, Go→OCI→NANDA, " +
-      "Rust→WASM→DID, TS→skill.md→A2A, SQL→VC→compliance) is content-addressed from source " +
-      "to deployment — one hash bridges 10 languages into a unified trust layer"
+      "POLYGLOT SUPPLY CHAIN: Every language artifact across 75 projections (Python→ONNX→MCP, " +
+      "Go→OCI→NANDA, Rust→WASM→DID, TS→skill.md→A2A, SQL→VC→compliance, Kotlin→Java→OASF, " +
+      "Solidity→ERC-8004, CUDA→ONNX, Coq→VC, Dockerfile→OCI) is content-addressed from " +
+      "source to deployment — one hash bridges every language into a unified trust layer"
     );
+
+    // Smart contract opportunity
+    const contractChains = synergies.filter(s =>
+      ["solidity", "vyper", "move", "cairo"].some(c => s.projections.includes(c))
+    );
+    if (contractChains.length > 0) {
+      opportunities.push(
+        "SMART CONTRACT INTEGRITY: Every smart contract (Solidity, Vyper, Move, Cairo) gets " +
+        "a content-addressed identity that bridges source code → bytecode → on-chain ERC-8004 " +
+        "registration — the audit trail is mathematical, not institutional"
+      );
+    }
+
+    // Formal verification opportunity
+    const formalChains = synergies.filter(s =>
+      ["coq", "lean", "agda", "tlaplus", "ada"].some(f => s.projections.includes(f))
+    );
+    if (formalChains.length > 0) {
+      opportunities.push(
+        "PROOF-CERTIFIED SOFTWARE: Formal proofs (Coq, Lean, Agda, TLA+, Ada/SPARK) become " +
+        "Verifiable Credentials — mathematical certainty is projectable into the trust layer"
+      );
+    }
+
+    // Hardware → software provenance
+    const hwChains = synergies.filter(s =>
+      ["vhdl", "verilog", "systemverilog"].some(h => s.projections.includes(h))
+    );
+    if (hwChains.length > 0) {
+      opportunities.push(
+        "SILICON-TO-CLOUD PROVENANCE: Hardware description (VHDL/Verilog) → firmware (C) → " +
+        "container (OCI) → agent (A2A) — the entire stack from transistor to agent is " +
+        "content-addressed with a single identity"
+      );
+    }
   }
 
   return opportunities;

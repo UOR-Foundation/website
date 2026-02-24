@@ -811,4 +811,450 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://www.iso.org/standard/76583.html",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9a — SYSTEMS & LOW-LEVEL LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["zig", {
+    project: ({ hex }) => `urn:uor:lang:zig:${hex}`,
+    fidelity: "lossless",
+    spec: "https://ziglang.org/documentation/",
+  }],
+
+  ["nim", {
+    project: ({ hex }) => `urn:uor:lang:nim:${hex}`,
+    fidelity: "lossless",
+    spec: "https://nim-lang.org/docs/manual.html",
+  }],
+
+  ["d-lang", {
+    project: ({ hex }) => `urn:uor:lang:d:${hex}`,
+    fidelity: "lossless",
+    spec: "https://dlang.org/spec/spec.html",
+  }],
+
+  ["ada", {
+    project: ({ hex }) => `urn:uor:lang:ada:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/69027.html",
+  }],
+
+  ["fortran", {
+    project: ({ hex }) => `urn:uor:lang:fortran:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/82170.html",
+  }],
+
+  ["pascal", {
+    project: ({ hex }) => `urn:uor:lang:pascal:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/18237.html",
+  }],
+
+  ["assembly", {
+    project: ({ hex }) => `urn:uor:lang:asm:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9b — JVM LANGUAGES (compile to Java bytecode)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["kotlin", {
+    project: ({ hex }) => `urn:uor:lang:kotlin:${hex}`,
+    fidelity: "lossless",
+    spec: "https://kotlinlang.org/spec/",
+  }],
+
+  ["scala", {
+    project: ({ hex }) => `urn:uor:lang:scala:${hex}`,
+    fidelity: "lossless",
+    spec: "https://scala-lang.org/files/archive/spec/3.3/",
+  }],
+
+  ["groovy", {
+    project: ({ hex }) => `urn:uor:lang:groovy:${hex}`,
+    fidelity: "lossless",
+    spec: "https://groovy-lang.org/documentation.html",
+  }],
+
+  ["clojure", {
+    project: ({ hex }) => `urn:uor:lang:clojure:${hex}`,
+    fidelity: "lossless",
+    spec: "https://clojure.org/reference/reader",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9c — FUNCTIONAL LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["haskell", {
+    project: ({ hex }) => `urn:uor:lang:haskell:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.haskell.org/onlinereport/haskell2010/",
+  }],
+
+  ["ocaml", {
+    project: ({ hex }) => `urn:uor:lang:ocaml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://v2.ocaml.org/manual/",
+  }],
+
+  ["fsharp", {
+    project: ({ hex }) => `urn:uor:lang:fsharp:${hex}`,
+    fidelity: "lossless",
+    spec: "https://fsharp.org/specs/language-spec/",
+  }],
+
+  ["erlang", {
+    project: ({ hex }) => `urn:uor:lang:erlang:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.erlang.org/doc/reference_manual/",
+  }],
+
+  ["elixir", {
+    project: ({ hex }) => `urn:uor:lang:elixir:${hex}`,
+    fidelity: "lossless",
+    spec: "https://hexdocs.pm/elixir/",
+  }],
+
+  ["common-lisp", {
+    project: ({ hex }) => `urn:uor:lang:lisp:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.lispworks.com/documentation/HyperSpec/Front/",
+  }],
+
+  ["scheme", {
+    project: ({ hex }) => `urn:uor:lang:scheme:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.r7rs.org/",
+  }],
+
+  ["racket", {
+    project: ({ hex }) => `urn:uor:lang:racket:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.racket-lang.org/reference/",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9d — SCRIPTING LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["ruby", {
+    project: ({ hex }) => `urn:uor:lang:ruby:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/59579.html",
+  }],
+
+  ["php", {
+    project: ({ hex }) => `urn:uor:lang:php:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.php.net/manual/en/langref.php",
+  }],
+
+  ["perl", {
+    project: ({ hex }) => `urn:uor:lang:perl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://perldoc.perl.org/perlref",
+  }],
+
+  ["lua", {
+    project: ({ hex }) => `urn:uor:lang:lua:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.lua.org/manual/5.4/",
+  }],
+
+  ["bash", {
+    project: ({ hex }) => `urn:uor:lang:bash:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.gnu.org/software/bash/manual/bash.html",
+  }],
+
+  ["powershell", {
+    project: ({ hex }) => `urn:uor:lang:powershell:${hex}`,
+    fidelity: "lossless",
+    spec: "https://learn.microsoft.com/en-us/powershell/scripting/lang-spec/chapter-01",
+  }],
+
+  ["raku", {
+    project: ({ hex }) => `urn:uor:lang:raku:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.raku.org/language",
+  }],
+
+  ["tcl", {
+    project: ({ hex }) => `urn:uor:lang:tcl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.tcl-lang.org/man/tcl/TclCmd/Tcl.htm",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9e — MOBILE LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["swift", {
+    project: ({ hex }) => `urn:uor:lang:swift:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/",
+  }],
+
+  ["objective-c", {
+    project: ({ hex }) => `urn:uor:lang:objc:${hex}`,
+    fidelity: "lossless",
+    spec: "https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/",
+  }],
+
+  ["dart", {
+    project: ({ hex }) => `urn:uor:lang:dart:${hex}`,
+    fidelity: "lossless",
+    spec: "https://dart.dev/language",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9f — DATA SCIENCE & SCIENTIFIC COMPUTING
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["r-lang", {
+    project: ({ hex }) => `urn:uor:lang:r:${hex}`,
+    fidelity: "lossless",
+    spec: "https://cran.r-project.org/doc/manuals/r-release/R-lang.html",
+  }],
+
+  ["julia", {
+    project: ({ hex }) => `urn:uor:lang:julia:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.julialang.org/en/v1/",
+  }],
+
+  ["matlab", {
+    project: ({ hex }) => `urn:uor:lang:matlab:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.mathworks.com/help/matlab/matlab_prog/matlab-programming-language.html",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9g — WEB PLATFORM LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["html", {
+    project: ({ hex }) => `urn:uor:lang:html:${hex}`,
+    fidelity: "lossless",
+    spec: "https://html.spec.whatwg.org/multipage/",
+  }],
+
+  ["css", {
+    project: ({ hex }) => `urn:uor:lang:css:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/Style/CSS/specs.en.html",
+  }],
+
+  ["wasm", {
+    project: ({ hex }) => `urn:uor:lang:wasm:${hex}`,
+    fidelity: "lossless",
+    spec: "https://webassembly.github.io/spec/core/",
+  }],
+
+  ["wgsl", {
+    project: ({ hex }) => `urn:uor:lang:wgsl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/WGSL/",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9h — QUERY & DATA TRANSFORMATION LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["graphql", {
+    project: ({ hex }) => `urn:uor:lang:graphql:${hex}`,
+    fidelity: "lossless",
+    spec: "https://spec.graphql.org/October2021/",
+  }],
+
+  ["sparql", {
+    project: ({ hex }) => `urn:uor:lang:sparql:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/sparql11-query/",
+  }],
+
+  ["xquery", {
+    project: ({ hex }) => `urn:uor:lang:xquery:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/xquery-31/",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9i — SMART CONTRACT LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["solidity", {
+    project: ({ hex }) => `urn:uor:lang:solidity:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.soliditylang.org/en/latest/",
+  }],
+
+  ["vyper", {
+    project: ({ hex }) => `urn:uor:lang:vyper:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.vyperlang.org/en/stable/",
+  }],
+
+  ["move", {
+    project: ({ hex }) => `urn:uor:lang:move:${hex}`,
+    fidelity: "lossless",
+    spec: "https://move-language.github.io/move/",
+  }],
+
+  ["cairo", {
+    project: ({ hex }) => `urn:uor:lang:cairo:${hex}`,
+    fidelity: "lossless",
+    spec: "https://book.cairo-lang.org/",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9j — HARDWARE DESCRIPTION LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["vhdl", {
+    project: ({ hex }) => `urn:uor:lang:vhdl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/69868.html",
+  }],
+
+  ["verilog", {
+    project: ({ hex }) => `urn:uor:lang:verilog:${hex}`,
+    fidelity: "lossless",
+    spec: "https://ieeexplore.ieee.org/document/1620780",
+  }],
+
+  ["systemverilog", {
+    project: ({ hex }) => `urn:uor:lang:systemverilog:${hex}`,
+    fidelity: "lossless",
+    spec: "https://ieeexplore.ieee.org/document/10458102",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9k — FORMAL VERIFICATION & PROOF LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["coq", {
+    project: ({ hex }) => `urn:uor:lang:coq:${hex}`,
+    fidelity: "lossless",
+    spec: "https://coq.inria.fr/doc/V8.19.0/refman/",
+  }],
+
+  ["lean", {
+    project: ({ hex }) => `urn:uor:lang:lean:${hex}`,
+    fidelity: "lossless",
+    spec: "https://lean-lang.org/lean4/doc/",
+  }],
+
+  ["agda", {
+    project: ({ hex }) => `urn:uor:lang:agda:${hex}`,
+    fidelity: "lossless",
+    spec: "https://agda.readthedocs.io/en/latest/",
+  }],
+
+  ["tlaplus", {
+    project: ({ hex }) => `urn:uor:lang:tlaplus:${hex}`,
+    fidelity: "lossless",
+    spec: "https://lamport.azurewebsites.net/tla/tla2-guide.pdf",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9l — INFRASTRUCTURE AS CODE & BUILD SYSTEMS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["hcl", {
+    project: ({ hex }) => `urn:uor:lang:hcl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://developer.hashicorp.com/terraform/language",
+  }],
+
+  ["nix", {
+    project: ({ hex }) => `urn:uor:lang:nix:${hex}`,
+    fidelity: "lossless",
+    spec: "https://nix.dev/manual/nix/latest/language/",
+  }],
+
+  ["dockerfile", {
+    project: ({ hex }) => `urn:uor:lang:dockerfile:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.docker.com/reference/dockerfile/",
+  }],
+
+  ["makefile", {
+    project: ({ hex }) => `urn:uor:lang:makefile:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.gnu.org/software/make/manual/make.html",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9m — GPU & SHADER LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["cuda", {
+    project: ({ hex }) => `urn:uor:lang:cuda:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.nvidia.com/cuda/cuda-c-programming-guide/",
+  }],
+
+  ["opencl", {
+    project: ({ hex }) => `urn:uor:lang:opencl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://registry.khronos.org/OpenCL/specs/3.0-unified/html/OpenCL_C.html",
+  }],
+
+  ["glsl", {
+    project: ({ hex }) => `urn:uor:lang:glsl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html",
+  }],
+
+  ["hlsl", {
+    project: ({ hex }) => `urn:uor:lang:hlsl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9n — NICHE & SPECIALIZED LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["apl", {
+    project: ({ hex }) => `urn:uor:lang:apl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/36363.html",
+  }],
+
+  ["forth", {
+    project: ({ hex }) => `urn:uor:lang:forth:${hex}`,
+    fidelity: "lossless",
+    spec: "https://forth-standard.org/",
+  }],
+
+  ["prolog", {
+    project: ({ hex }) => `urn:uor:lang:prolog:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/21413.html",
+  }],
+
+  ["smalltalk", {
+    project: ({ hex }) => `urn:uor:lang:smalltalk:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/36350.html",
+  }],
+
+  ["crystal", {
+    project: ({ hex }) => `urn:uor:lang:crystal:${hex}`,
+    fidelity: "lossless",
+    spec: "https://crystal-lang.org/reference/1.14/",
+  }],
+
+  ["pony", {
+    project: ({ hex }) => `urn:uor:lang:pony:${hex}`,
+    fidelity: "lossless",
+    spec: "https://tutorial.ponylang.io/",
+  }],
 ]);
