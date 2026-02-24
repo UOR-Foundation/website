@@ -1514,4 +1514,25 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://tabler.io/",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 10 — CODE STRUCTURE (Bevel Code-to-Knowledge-Graph projection)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Code KG — Source Code → Knowledge Graph ────────────────────────────
+  // Maps code entities (files, functions, classes, imports) into the
+  // UOR knowledge graph namespace. Each entity is content-addressed.
+  // Inspired by Bevel Software's Code-to-Knowledge-Graph (Kotlin/JVM).
+
+  ["code-kg", {
+    project: ({ hex }) => `urn:uor:code:entity:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/Bevel-Software/code-to-knowledge-graph",
+  }],
+
+  ["code-kg-relation", {
+    project: ({ hex }) => `urn:uor:code:relation:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/Bevel-Software/code-to-knowledge-graph",
+  }],
 ]);

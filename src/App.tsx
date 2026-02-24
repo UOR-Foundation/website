@@ -106,6 +106,7 @@ const ConsciousnessPage = lazy(() => import("@/modules/consciousness/pages/Consc
 const GodConjecturePage = lazy(() => import("@/modules/consciousness/pages/GodConjecturePage"));
 const TrustGraphPage = lazy(() => import("@/modules/trust-graph/pages/TrustGraphPage"));
 const HologramUiPage = lazy(() => import("@/modules/hologram-ui/pages/HologramUiPage"));
+const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
 
 const queryClient = new QueryClient();
 
@@ -225,6 +226,7 @@ const App = () => {
             <Route path="/consciousness/god-conjecture" element={<GodConjecturePage />} />
             <Route path="/trust-graph" element={<TrustGraphPage />} />
             <Route path="/hologram-ui" element={<HologramUiPage />} />
+            <Route path="/code-kg" element={<CodeKgPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
