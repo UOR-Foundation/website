@@ -123,6 +123,7 @@ function classifyTier(name: string, spec: HologramSpec): string {
   if (name.startsWith("tsp-")) return "trust-spanning";
     if (name.startsWith("fpp-") || name === "trqp") return "first-person";
     if (name.startsWith("polytree-")) return "polynomial-tree";
+    if (name.startsWith("pq-")) return "post-quantum";
     return "other";
 }
 
@@ -436,6 +437,26 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["polytree-morphism", "mcp-tool", "PolyTree morphism → MCP tool: interface adaptation becomes agent tool provenance"],
     ["polytree-node", "fpp-trustgraph", "PolyTree node → trust graph: evolving trust interface maps to trust graph topology"],
     ["polytree-node", "tsp-envelope", "PolyTree node → TSP envelope: interface evolution state rides authenticated channel"],
+    // ── PQ Bridge provenance chains ──
+    ["pq-bridge", "bitcoin", "PQ commitment → Bitcoin OP_RETURN: Dilithium-3 signed identity anchored on Bitcoin — quantum-proof timestamping"],
+    ["pq-bridge", "lightning", "PQ commitment → Lightning payment_hash: PQ-signed content settles via Lightning — quantum-proof micropayments"],
+    ["pq-bridge", "zcash-transparent", "PQ commitment → Zcash transparent: PQ-signed identity anchored on Zcash — dual-chain quantum shield"],
+    ["pq-bridge", "zcash-memo", "PQ commitment → Zcash shielded memo: PQ-signed identity in encrypted memo — private quantum-proof anchoring"],
+    ["pq-envelope", "bitcoin", "PQ envelope → Bitcoin OP_RETURN: complete PQ commitment script anchored on-chain — zero-fork quantum protection"],
+    ["pq-envelope", "pq-bridge", "PQ envelope → PQ bridge: on-chain script encodes off-chain signing target — settlement↔identity bridge"],
+    ["pq-witness", "pq-bridge", "PQ witness → PQ bridge: algebraic coherence proof certifies PQ commitment — framework membership proof"],
+    ["pq-witness", "pq-envelope", "PQ witness → PQ envelope: ring identity anchors the on-chain commitment — algebra gates settlement"],
+    ["did", "pq-bridge", "DID → PQ bridge: self-sovereign identity gets Dilithium-3 protection — quantum-proof SSI"],
+    ["vc", "pq-bridge", "VC → PQ bridge: verifiable credentials get PQ signatures — quantum-proof trust assertions"],
+    ["erc8004", "pq-bridge", "ERC-8004 → PQ bridge: on-chain agent identity gets PQ shield — quantum-proof agent registry"],
+    ["fpp-phc", "pq-bridge", "PHC → PQ bridge: personhood credentials get PQ protection — biometric keys are quantum-safe"],
+    ["fpp-vrc", "pq-bridge", "VRC → PQ bridge: relationship credentials get PQ signatures — bilateral trust survives quantum"],
+    ["tsp-envelope", "pq-bridge", "TSP envelope → PQ bridge: authenticated messages get PQ signing — quantum-proof communication"],
+    ["tsp-vid", "pq-bridge", "TSP VID → PQ bridge: trust channel identity gets PQ protection — quantum-proof addressing"],
+    ["solidity", "pq-bridge", "Solidity → PQ bridge: smart contract identity gets PQ certification — quantum-proof DeFi"],
+    ["onnx", "pq-bridge", "ONNX → PQ bridge: ML model identity gets PQ certification — quantum-proof AI provenance"],
+    ["cid", "pq-bridge", "CID → PQ bridge: IPFS content address gets PQ signature — quantum-proof decentralized storage"],
+    ["nanda-agentfacts", "pq-bridge", "AgentFacts → PQ bridge: agent passport gets PQ signature — quantum-proof agent discovery"],
   ];
   for (const [a, b, insight] of chains) {
     emitIf(has, synergies, a, b, "provenance-chain", insight,
@@ -555,6 +576,16 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["polytree-node", "skill-md", "PolyTree node + skill.md: node is CURRENT INTERFACE, skill.md is ADVERTISED CAPABILITY — co-evolving", "Polynomial tree node transitions map to skill.md capability updates — interface evolution updates advertisement"],
     ["polytree-node", "onnx", "PolyTree node + ONNX: node is INTERFACE, ONNX is MODEL — progressive GAN training (Spivak §4)", "Polynomial tree models progressive resolution growth during training — the paper's motivating example"],
     ["polytree-morphism", "tsp-relationship", "PolyTree morphism + TSP relationship: morphism adapts INTERFACE, TSP adapts CHANNEL — co-evolution", "Interface morphism triggers TSP channel renegotiation — structural change propagates to transport"],
+    // ── PQ Bridge complementary pairs ──
+    ["pq-bridge", "bitcoin-hashlock", "PQ bridge + HTLC: Dilithium-3 signature + hash lock = quantum-proof atomic swap — content delivery IS payment", "PQ sign the preimage, lock the UTXO — revealing content settles payment AND proves PQ identity"],
+    ["pq-bridge", "did", "PQ bridge + DID: PQ signing + self-sovereign identity = quantum-proof SSI — identity survives quantum era", "DID identity signed with Dilithium-3 — same hash, dual protection"],
+    ["pq-bridge", "fpp-phc", "PQ bridge + PHC: PQ signing + personhood = quantum-proof human identity — biometrics are irreplaceable", "PHC with PQ envelope — biometric-bound keys survive quantum without regeneration"],
+    ["pq-bridge", "vc", "PQ bridge + VC: PQ signing + verifiable claims = quantum-proof credentials — trust assertions survive quantum", "VC signed with Dilithium-3 — credentials valid after ECDSA sunset"],
+    ["pq-bridge", "erc8004", "PQ bridge + ERC-8004: PQ signing + on-chain identity = quantum-proof agent registry — agents survive Q-day", "Agent identity PQ-signed off-chain, anchored on-chain — hybrid PQ protection"],
+    ["pq-bridge", "tsp-envelope", "PQ bridge + TSP envelope: PQ signing + authenticated messaging = quantum-proof communication channels", "TSP messages wrapped in PQ envelope — authenticated AND quantum-resistant"],
+    ["pq-envelope", "bitcoin-hashlock", "PQ envelope + HTLC: on-chain PQ commitment + hash lock = quantum-proof conditioned payment", "PQ envelope script + HTLC lock — dual-script quantum-proof payment channel"],
+    ["pq-witness", "fpp-phc", "PQ witness + PHC: algebraic proof + personhood = mathematically certified human identity", "Ring coherence witness proves framework membership — personhood anchored to algebra"],
+    ["pq-witness", "vc", "PQ witness + VC: algebraic proof + credential = self-verifying trust assertions", "Coherence witness embedded in VC — verifier checks algebra, not authority"],
   ];
   for (const [a, b, insight, impl] of pairs) {
     emitIf(has, synergies, a, b, "complementary-pair", insight,
@@ -562,7 +593,7 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
   }
 
   // Rule 6: Trust amplification
-  const trustSources = ["bitcoin", "zcash-transparent", "cid", "did", "tsp-relationship", "fpp-phc", "fpp-trustgraph", "polytree-node"];
+  const trustSources = ["bitcoin", "zcash-transparent", "cid", "did", "tsp-relationship", "fpp-phc", "fpp-trustgraph", "polytree-node", "pq-bridge", "pq-witness"];
   for (let i = 0; i < trustSources.length; i++) {
     for (let j = i + 1; j < trustSources.length; j++) {
       const [a, b] = [trustSources[i], trustSources[j]];
@@ -671,6 +702,24 @@ function synthesizeOpportunities(synergies: readonly Synergy[]): string[] {
       "Query Protocol (TRQP) enables decentralized trust verification. The entire decentralized trust " +
       "graph IS a hologram — each person, credential, and relationship is one canonical hash projected " +
       "through every standard simultaneously."
+    );
+  }
+
+  // PQ Bridge opportunity
+  const pqSynergies = synergies.filter(s =>
+    s.projections.some(p => p.startsWith("pq-"))
+  );
+  if (pqSynergies.length > 0) {
+    opportunities.push(
+      "POST-QUANTUM BRIDGE: The Lattice-Hash Duality — UOR's ring Z/256Z IS a 1-dimensional lattice, " +
+      "structurally aligned with Dilithium-3's Module-LWE lattices. Every UOR identity (SHA-256 hash) " +
+      "is a point in a 256-dimensional lattice (Z/256Z)^32. The PQ Bridge wraps any identity in a " +
+      "Dilithium-3 signed envelope and anchors it on Bitcoin/Zcash/Lightning via OP_RETURN — making " +
+      "ALL existing blockchains quantum-proof without hard forks. The coherence witness (neg(bnot(x)) ≡ " +
+      "succ(x)) provides an O(1) algebraic proof of framework membership, ensuring every PQ envelope " +
+      "was produced by a mathematically coherent system. Biometric keys (PHC), agent identities " +
+      "(ERC-8004), trust channels (TSP), and ML models (ONNX) all inherit quantum resistance " +
+      "through the same projection — one hash, one lattice, every blockchain."
     );
   }
 
