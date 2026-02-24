@@ -37,8 +37,8 @@ const HEX = IDENTITY["u:canonicalId"].split(":").pop()!;
 // ── Core contract ───────────────────────────────────────────────────────────
 
 describe("Hologram Projection Registry", () => {
-  it("registers at least 25 projections", () => {
-    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(25);
+  it("registers at least 27 projections", () => {
+    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(27);
   });
 
   // ── Tier 0: Foundational Standards ──────────────────────────────────────
@@ -276,6 +276,53 @@ describe("Hologram Projection Registry", () => {
     const nostrId = project(IDENTITY, "nostr").value;
     const btcScript = project(IDENTITY, "bitcoin").value;
     expect(btcScript.slice(10)).toBe(nostrId);
+  });
+
+  // ── Zcash — Bitcoin-Compatible Privacy Duality ─────────────────────────
+
+  it("zcash-transparent produces identical script to bitcoin projection", () => {
+    const btc = project(IDENTITY, "bitcoin").value;
+    const zec = project(IDENTITY, "zcash-transparent").value;
+    // Zcash transparent IS Bitcoin script — outputs must be byte-identical
+    expect(zec).toBe(btc);
+    expect(project(IDENTITY, "zcash-transparent").fidelity).toBe("lossless");
+  });
+
+  it("zcash-memo produces valid ZIP-302 typed memo (512 bytes)", () => {
+    const p = project(IDENTITY, "zcash-memo");
+    // 512 bytes = 1024 hex chars
+    expect(p.value.length).toBe(1024);
+    // Header: f5 (no particular meaning), 01 (UOR v1), 01 (SHA-256 type)
+    expect(p.value.slice(0, 6)).toBe("f50101");
+    // Embedded hash matches source identity (bytes 3-34 = chars 6-70)
+    expect(p.value.slice(6, 70)).toBe(HEX);
+    // Remaining 477 bytes are zero-padded
+    expect(p.value.slice(70)).toBe("00".repeat(477));
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  it("zcash-transparent and zcash-memo embed the same 256-bit identity", () => {
+    const transparent = project(IDENTITY, "zcash-transparent").value;
+    const memo = project(IDENTITY, "zcash-memo").value;
+    // Extract hash from both projections
+    const hashFromTransparent = transparent.slice(10); // after 6a24554f52
+    const hashFromMemo = memo.slice(6, 70);            // after f50101
+    expect(hashFromTransparent).toBe(hashFromMemo);
+    expect(hashFromTransparent).toBe(HEX);
+  });
+
+  it("zcash-transparent matches bitcoin OP_RETURN — cross-chain identity proof", () => {
+    const btcHash = project(IDENTITY, "bitcoin").value.slice(10);
+    const zecHash = project(IDENTITY, "zcash-transparent").value.slice(10);
+    const nostrId = project(IDENTITY, "nostr").value;
+    // All three protocols see the same 256-bit identity
+    expect(btcHash).toBe(zecHash);
+    expect(btcHash).toBe(nostrId);
+  });
+
+  it("zcash projections are deterministic", () => {
+    expect(project(IDENTITY, "zcash-transparent").value).toBe(project(IDENTITY, "zcash-transparent").value);
+    expect(project(IDENTITY, "zcash-memo").value).toBe(project(IDENTITY, "zcash-memo").value);
   });
 
   it("lossy projections always carry a lossWarning", () => {
