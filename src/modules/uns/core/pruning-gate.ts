@@ -75,14 +75,13 @@ const KNOWN_MODULES = [
   "jsonld", "kg-store", "landing", "mcp", "morphism", "observable",
   "opportunities", "oracle", "projects", "qr-cartridge", "query",
   "resolver", "ring-core", "ruliad", "self-verify", "semantic-index",
-  "shacl", "sparql-ui", "sparql", "state", "trace", "triad",
+  "shacl", "sparql", "state", "trace", "triad",
   "trust-graph", "uns", "uor-identity", "uor-sdk", "uor-terms",
   "verify", "your-space",
 ] as const;
 
 // Modules that could potentially be consolidated
 const CONSOLIDATION_CANDIDATES: readonly [string, string, string][] = [
-  ["sparql", "sparql-ui", "Both handle SPARQL — merge UI into single module"],
   
   ["identity", "uor-identity", "Both handle identity — merge or clarify boundary"],
   ["verify", "self-verify", "Both handle verification — consolidate"],
