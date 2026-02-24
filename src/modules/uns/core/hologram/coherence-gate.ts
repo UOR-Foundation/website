@@ -79,8 +79,29 @@ function hashUsage(name: string, spec: HologramSpec): "hex" | "cid" | "bytes" | 
 
 // ── Synergy Discovery Engine ──────────────────────────────────────────────
 
+/** O(1) existence check — replaces ~30 linear scans. */
+function buildNameSet(entries: [string, HologramSpec][]): Set<string> {
+  return new Set(entries.map(([n]) => n));
+}
+
+/** Emit a synergy only if both projections exist in the registry. */
+function emitIf(
+  has: Set<string>,
+  synergies: Synergy[],
+  a: string, b: string,
+  type: SynergyType,
+  insight: string,
+  useCase: string,
+  implementation: string,
+): void {
+  if (has.has(a) && has.has(b)) {
+    synergies.push({ type, projections: [a, b], insight, useCase, implementation });
+  }
+}
+
 function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
   const synergies: Synergy[] = [];
+  const has = buildNameSet(entries);
   const tiers = new Map<string, string[]>();
 
   // Build tier index
@@ -91,16 +112,14 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
   }
 
   // Rule 1: Cross-tier identity equivalence
-  // When two lossless projections from different tiers share the full hash,
-  // they create a trustless bridge between ecosystems
-  const lossless = entries.filter(([, s]) => s.fidelity === "lossless");
+  const losslessSet = new Set(entries.filter(([, s]) => s.fidelity === "lossless").map(([n]) => n));
   const tierPairs = [...tiers.entries()];
   for (let i = 0; i < tierPairs.length; i++) {
     for (let j = i + 1; j < tierPairs.length; j++) {
       const [tierA, membersA] = tierPairs[i];
       const [tierB, membersB] = tierPairs[j];
-      const a = membersA.find(m => lossless.some(([n]) => n === m));
-      const b = membersB.find(m => lossless.some(([n]) => n === m));
+      const a = membersA.find(m => losslessSet.has(m));
+      const b = membersB.find(m => losslessSet.has(m));
       if (a && b) {
         synergies.push({
           type: "identity-equivalence",
@@ -114,15 +133,11 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
   }
 
   // Rule 2: Settlement bridges
-  // Any lossless projection paired with a settlement projection creates
-  // an immutable anchor point
   const settlementNames = tiers.get("settlement") || [];
-  for (const [name, spec] of entries) {
-    if (settlementNames.includes(name) || spec.fidelity === "lossy") continue;
-    const tier = classifyTier(name, spec);
-    if (tier === "settlement") continue;
-    const anchor = settlementNames[0];
-    if (anchor) {
+  const anchor = settlementNames[0];
+  if (anchor) {
+    for (const [name, spec] of entries) {
+      if (spec.fidelity === "lossy" || settlementNames.includes(name)) continue;
       synergies.push({
         type: "settlement-bridge",
         projections: [name, anchor],
@@ -134,27 +149,18 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
   }
 
   // Rule 3: Discovery channels
-  // Social/federation projections paired with identity projections
-  // enable cross-protocol discovery
   const discoveryNames = [...(tiers.get("federation") || []), ...(tiers.get("social-web") || [])];
-  const identityNames = ["did", "erc8004", "cid"];
   for (const d of discoveryNames) {
-    for (const id of identityNames) {
-      if (entries.some(([n]) => n === d) && entries.some(([n]) => n === id)) {
-        synergies.push({
-          type: "discovery-channel",
-          projections: [id, d],
-          insight: `${id} identity discoverable via ${d} social graph`,
-          useCase: `Search for UOR objects via ${d}, resolve to verified ${id} identity`,
-          implementation: `Publish ${d} projection with ${id} in metadata`,
-        });
-      }
+    for (const id of ["did", "erc8004", "cid"]) {
+      emitIf(has, synergies, id, d, "discovery-channel",
+        `${id} identity discoverable via ${d} social graph`,
+        `Search for UOR objects via ${d}, resolve to verified ${id} identity`,
+        `Publish ${d} projection with ${id} in metadata`);
     }
   }
 
-  // Rule 4: Provenance chains
-  // Agentic projections form natural provenance sequences
-  const provenancePairs: [string, string, string][] = [
+  // Rule 4: Provenance chains — declarative pairs
+  const chains: [string, string, string][] = [
     ["skill-md", "mcp-tool", "Skill definition → tool execution output"],
     ["mcp-tool", "mcp-context", "Tool output → context entry with provenance tag"],
     ["a2a", "a2a-task", "Agent identity → task execution receipt"],
@@ -171,20 +177,14 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["nanda-agentfacts", "oasf", "AgentFacts service descriptor → OASF service entry"],
     ["nanda-agentfacts", "mcp-tool", "AgentFacts endpoint → MCP tool registration"],
   ];
-  for (const [a, b, insight] of provenancePairs) {
-    if (entries.some(([n]) => n === a) && entries.some(([n]) => n === b)) {
-      synergies.push({
-        type: "provenance-chain",
-        projections: [a, b],
-        insight,
-        useCase: `Chain: ${a} → ${b} creates verifiable provenance link`,
-        implementation: `Both derive from same hash — link is structural, not asserted`,
-      });
-    }
+  for (const [a, b, insight] of chains) {
+    emitIf(has, synergies, a, b, "provenance-chain", insight,
+      `Chain: ${a} → ${b} creates verifiable provenance link`,
+      `Both derive from same hash — link is structural, not asserted`);
   }
 
   // Rule 5: Complementary pairs
-  const complementary: [string, string, string, string][] = [
+  const pairs: [string, string, string, string][] = [
     ["did", "vc", "Identity + credential: DID says WHO, VC says WHAT they're trusted for", "Issue VCs against DID — both from same UOR hash"],
     ["activitypub", "atproto", "Federation + protocol: discover via ActivityPub, resolve via AT Protocol", "Dual social presence from single identity"],
     ["onnx", "skill-md", "Model + interface: ONNX is the engine, skill.md is the API contract", "Verify both from one hash — model matches its advertised capabilities"],
@@ -193,33 +193,20 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["nanda-agentfacts", "vc", "Passport + credential: AgentFacts describes capabilities, VC certifies them", "AgentFacts capabilities become verifiable claims via VC projection"],
     ["nanda-resolver", "webfinger", "Agent resolution + web discovery: NANDA resolves agents, WebFinger resolves identities", "Both resolve names to typed links — convergent discovery protocols"],
   ];
-  for (const [a, b, insight, impl] of complementary) {
-    if (entries.some(([n]) => n === a) && entries.some(([n]) => n === b)) {
-      synergies.push({
-        type: "complementary-pair",
-        projections: [a, b],
-        insight,
-        useCase: `Combined: ${a} + ${b} is more powerful than either alone`,
-        implementation: impl,
-      });
-    }
+  for (const [a, b, insight, impl] of pairs) {
+    emitIf(has, synergies, a, b, "complementary-pair", insight,
+      `Combined: ${a} + ${b} is more powerful than either alone`, impl);
   }
 
   // Rule 6: Trust amplification
-  // Multiple independent verifications of the same hash
   const trustSources = ["bitcoin", "zcash-transparent", "cid", "did"];
   for (let i = 0; i < trustSources.length; i++) {
     for (let j = i + 1; j < trustSources.length; j++) {
       const [a, b] = [trustSources[i], trustSources[j]];
-      if (entries.some(([n]) => n === a) && entries.some(([n]) => n === b)) {
-        synergies.push({
-          type: "trust-amplification",
-          projections: [a, b],
-          insight: `${a} + ${b}: independent verification of same hash amplifies trust`,
-          useCase: `Verify via ${a}, cross-check via ${b} — two independent trust anchors`,
-          implementation: `Both projections emit same hash — comparison is trivial`,
-        });
-      }
+      emitIf(has, synergies, a, b, "trust-amplification",
+        `${a} + ${b}: independent verification of same hash amplifies trust`,
+        `Verify via ${a}, cross-check via ${b} — two independent trust anchors`,
+        `Both projections emit same hash — comparison is trivial`);
     }
   }
 
