@@ -1,16 +1,16 @@
 /**
- * Ecosystem Taxonomy — 10 Canonical Projection Domains
+ * Ecosystem Taxonomy — 12 Canonical Projection Domains
  * ═════════════════════════════════════════════════════
  *
- * Consolidates 356+ projections into 10 clean, UOR-aligned categories.
+ * Consolidates 356+ projections into 12 clean, UOR-aligned categories.
  * Each category maps to one or more UOR framework layers:
  *
  *   L1 Foundation  → UOR Foundation
  *   L2 Identity    → Identity & Trust
  *   L3 Structure   → Languages, Data & Encoding, Media & Creative
  *   L4 Resolution  → Federation & Social, Network & Cloud
- *   L5 Verification → Identity & Trust (blockchain, attestation)
- *   L6 Transformation → AI & Agents, Industry & Science
+ *   L5 Verification → Web3 & Blockchain, Identity & Trust
+ *   L6 Transformation → AI & Agents, Industry & Science, Geospatial
  *
  * @module interoperability/data/ecosystem-taxonomy
  */
@@ -39,7 +39,7 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
     id: "identity-trust",
     label: "Identity & Trust",
     description:
-      "Authentication, authorization, certificates, blockchain ledgers, and trust protocols — every mechanism that proves who, what, and when.",
+      "Authentication, authorization, certificates, and trust protocols — every mechanism that proves who, what, and when.",
     color: "hsl(152, 50%, 45%)",
     projections: [
       // Auth & credentials
@@ -51,28 +51,48 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
       "tsp-vid", "tsp-envelope", "tsp-relationship",
       "fpp-rdid", "fpp-mdid", "fpp-pdid", "fpp-phc", "fpp-vrc", "fpp-vec",
       "trqp", "scitt", "spdx-sbom",
-      // Blockchain & ledger
-      "bitcoin", "bitcoin-hashlock", "lightning", "pq-bridge", "pq-envelope",
-      "eth-commitment", "zcash-transparent", "zcash-memo", "zcash-zsa", "zcash-frost",
-      "erc8004", "x402",
     ],
   },
 
-  /* ─── 3. Federation & Social ────────────────────────────────────────── */
+  /* ─── 3. Web3 & Blockchain ──────────────────────────────────────────── */
+  {
+    id: "web3-blockchain",
+    label: "Web3 & Blockchain",
+    description:
+      "Decentralized ledgers, smart contracts, payment channels, privacy protocols, and on-chain identity — the trustless verification layer.",
+    color: "hsl(38, 75%, 50%)",
+    projections: [
+      // Bitcoin & Lightning
+      "bitcoin", "bitcoin-hashlock", "lightning",
+      // Zcash privacy
+      "zcash-transparent", "zcash-memo", "zcash-zsa", "zcash-frost",
+      // Ethereum & EVM
+      "eth-commitment", "erc8004", "x402",
+      // Post-quantum bridges
+      "pq-bridge", "pq-envelope",
+      // Smart contract languages
+      "solidity", "vyper", "move", "cairo",
+      // Decentralized identity
+      "ens",
+      // Decentralized social (Nostr)
+      "nostr", "nostr-note", "nostr-profile", "nostr-zap",
+    ],
+  },
+
+  /* ─── 4. Federation & Social ────────────────────────────────────────── */
   {
     id: "federation-social",
     label: "Federation & Social",
     description:
-      "Discovery and social protocols — how identities find, follow, and interact across decentralized networks.",
+      "Discovery and social protocols — how identities find, follow, and interact across decentralized and federated networks.",
     color: "hsl(280, 55%, 55%)",
     projections: [
       "webfinger", "activitypub", "atproto", "solid", "oidc", "schema-org",
-      "nostr", "nostr-note", "nostr-profile", "nostr-zap", "ens",
       "dnssd", "vcard",
     ],
   },
 
-  /* ─── 4. AI & Autonomous Agents ─────────────────────────────────────── */
+  /* ─── 5. AI & Autonomous Agents ─────────────────────────────────────── */
   {
     id: "ai-agents",
     label: "AI & Autonomous Agents",
@@ -88,7 +108,7 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
     ],
   },
 
-  /* ─── 5. Programming Languages ──────────────────────────────────────── */
+  /* ─── 6. Programming Languages ──────────────────────────────────────── */
   {
     id: "languages",
     label: "Programming Languages",
@@ -114,8 +134,6 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
       "zig", "nim", "d-lang", "ada", "fortran", "pascal", "assembly",
       // Web platform
       "html", "css", "wasm", "wgsl",
-      // Smart contracts
-      "solidity", "vyper", "move", "cairo",
       // GPU & shader
       "cuda", "opencl", "glsl", "hlsl",
       // HDL
@@ -127,7 +145,7 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
     ],
   },
 
-  /* ─── 6. Data & Encoding ────────────────────────────────────────────── */
+  /* ─── 7. Data & Encoding ────────────────────────────────────────────── */
   {
     id: "data-encoding",
     label: "Data & Encoding",
@@ -156,7 +174,7 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
     ],
   },
 
-  /* ─── 7. Media & Creative ───────────────────────────────────────────── */
+  /* ─── 8. Media & Creative ───────────────────────────────────────────── */
   {
     id: "media-creative",
     label: "Media & Creative",
@@ -183,7 +201,7 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
     ],
   },
 
-  /* ─── 8. Network & Cloud ────────────────────────────────────────────── */
+  /* ─── 9. Network & Cloud ────────────────────────────────────────────── */
   {
     id: "network-cloud",
     label: "Network & Cloud",
@@ -204,7 +222,7 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
     ],
   },
 
-  /* ─── 9. IoT & Hardware ─────────────────────────────────────────────── */
+  /* ─── 10. IoT & Hardware ────────────────────────────────────────────── */
   {
     id: "iot-hardware",
     label: "IoT & Hardware",
@@ -221,25 +239,38 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
     ],
   },
 
-  /* ─── 10. Industry & Science ────────────────────────────────────────── */
+  /* ─── 11. Geospatial & Earth Observation ────────────────────────────── */
+  {
+    id: "geospatial",
+    label: "Geospatial & Earth Observation",
+    description:
+      "Mapping, remote sensing, spatial analysis, and building information — location-aware data unified by content addressing.",
+    color: "hsl(160, 55%, 42%)",
+    projections: [
+      // Vector & raster
+      "geojson", "shapefile", "geopackage", "kml", "geotiff", "wkt", "mvt",
+      // BIM & construction
+      "ifc", "citygml", "las", "gbxml",
+      // Spatio-temporal
+      "stac",
+    ],
+  },
+
+  /* ─── 12. Industry & Science ────────────────────────────────────────── */
   {
     id: "industry-science",
     label: "Industry & Science",
     description:
-      "Automotive, aviation, healthcare, finance, geospatial, construction, and scientific data — domain-specific standards unified by content addressing.",
+      "Automotive, aviation, healthcare, finance, and scientific data — domain-specific standards unified by content addressing.",
     color: "hsl(170, 45%, 45%)",
     projections: [
       // Automotive & aviation
       "autosar", "can", "someip", "uds", "arinc429",
-      // BIM & construction
-      "ifc", "citygml", "las", "gbxml",
       // Financial & compliance
       "xbrl", "fix", "iso20022", "edi-x12", "edifact", "hl7v2",
       // Scientific
-      "fits", "cif", "smiles", "geojson", "hdf5", "dicom", "fhir",
+      "fits", "cif", "smiles", "hdf5", "dicom", "fhir",
       "pdb", "netcdf", "nifti", "sbml", "mzml", "fastq", "vcf",
-      // Geospatial
-      "shapefile", "geopackage", "kml", "geotiff", "wkt", "mvt",
     ],
   },
 ];

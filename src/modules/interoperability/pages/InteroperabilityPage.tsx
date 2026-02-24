@@ -1,7 +1,7 @@
 /**
  * /interoperability — Universal Interoperability Map
  *
- * 356+ projections across 10 canonical categories.
+ * 356+ projections across 12 canonical categories.
  * One hash. Every standard.
  */
 
