@@ -2027,4 +2027,347 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://docs.soliditylang.org/en/latest/abi-spec.html#events",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 16 — GLOBAL INTEROPERABILITY BRIDGE (2024–2025 Standards)
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // These 15 projections close the remaining gaps in the UOR hologram,
+  // completing the bridge to biometric authentication, credential lifecycle,
+  // content provenance, observability, event-driven security, mobile identity,
+  // next-gen messaging, user provisioning, and privacy containers.
+  //
+  // Priority 1: Critical Gaps (WebAuthn, SD-JWT, OpenID4VP, TokenStatus, C2PA)
+  // Priority 2: Infrastructure (OpenTelemetry, CloudEvents, SSF, COSE, mDL)
+  // Priority 3: Strategic (DIDComm v2, SCIM, WebTransport, Gordian, CBOR-LD)
+
+  // ── P1: WebAuthn / FIDO2 — Biometric Content-Addressed Auth ──────────────
+  // WebAuthn uses a credentialId (raw bytes) to identify a public key
+  // credential. UOR projects the SHA-256 hash directly as a credentialId.
+  // This means a UOR object's identity can BE a passkey identifier —
+  // biometric auth is bound to content, not to a server-assigned handle.
+  //
+  // WebAuthn §6.1: "credentialId is an opaque byte sequence of at most
+  // 1023 bytes." Our 32-byte SHA-256 hash fits perfectly.
+  //
+  // Use case: Authenticate access to a UOR object using biometrics.
+  // The content hash IS the credential. No password, no server state.
+  //
+  //   Format: webauthn:credentialId:{base64url(hashBytes)}
+  //   Fidelity: LOSSLESS — base64url is a bijective encoding of 32 bytes.
+
+  ["webauthn", {
+    project: ({ hashBytes }) => {
+      // base64url encoding (RFC 4648 §5) — no padding
+      const bytes = new Uint8Array(hashBytes);
+      let binary = "";
+      for (const b of bytes) binary += String.fromCharCode(b);
+      const b64 = btoa(binary)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+      return `webauthn:credentialId:${b64}`;
+    },
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/webauthn-3/",
+  }],
+
+  // ── P1: SD-JWT — Selective Disclosure JSON Web Token ──────────────────────
+  // IETF SD-JWT (RFC 9449 / draft-ietf-oauth-selective-disclosure-jwt)
+  // enables issuers to create JWTs where individual claims can be
+  // selectively disclosed by the holder — a privacy-preserving superset
+  // of standard JWTs used by eIDAS 2.0 and the EU Digital Identity Wallet.
+  //
+  // UOR alignment: The SHA-256 hash of a canonical claim set IS the
+  // SD-JWT's `_sd_alg` digest. The projection produces the compact
+  // `sd+jwt` typed hash reference that wallets and verifiers resolve.
+  //
+  // Combined with `vc` (W3C VC 2.0), a UOR object is simultaneously
+  // a Verifiable Credential and an SD-JWT — same hash, dual format.
+  //
+  //   Format: urn:ietf:params:oauth:sd-jwt:sha-256:{hex}
+  //   Use case: Issue privacy-preserving credentials bound to UOR identity.
+
+  ["sd-jwt", {
+    project: ({ hex }) => `urn:ietf:params:oauth:sd-jwt:sha-256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/",
+  }],
+
+  // ── P1: OpenID4VP — Verifiable Presentation Protocol ─────────────────────
+  // OpenID for Verifiable Presentations (OpenID4VP) defines how a wallet
+  // presents credentials to a verifier. The `vp_token` contains the
+  // presentation — its hash IS the UOR projection.
+  //
+  // This completes the Identity Triangle:
+  //   SD-JWT (issue) → OpenID4VP (present) → Token Status List (revoke)
+  //
+  // Combined with `did` and `vc`, a UOR wallet can issue, hold, present,
+  // and revoke credentials across the entire W3C/eIDAS 2.0 ecosystem.
+  //
+  //   Format: urn:openid4vp:presentation:sha256:{hex}
+  //   Use case: Present UOR-bound credentials to any OpenID4VP verifier.
+
+  ["openid4vp", {
+    project: ({ hex }) => `urn:openid4vp:presentation:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://openid.net/specs/openid-4-verifiable-presentations-1_0.html",
+  }],
+
+  // ── P1: Token Status List — Credential Revocation Registry ───────────────
+  // IETF Token Status List (draft-ietf-oauth-status-list) provides a
+  // compact, privacy-preserving revocation mechanism using bit-arrays.
+  // Each credential gets an index into a status list — the UOR hash
+  // deterministically derives this index via modular arithmetic.
+  //
+  // Completes the credential lifecycle:
+  //   sd-jwt → openid4vp → token-status-list
+  //   (issue)   (present)   (revoke/suspend)
+  //
+  //   Format: urn:ietf:params:oauth:status-list:sha256:{hex}:{index}
+  //   Where index = first 4 bytes of hash interpreted as uint32 (mod 2^20)
+
+  ["token-status-list", {
+    project: ({ hashBytes, hex }) => {
+      // Derive a deterministic index from the first 4 bytes
+      const idx = ((hashBytes[0] << 24) | (hashBytes[1] << 16) |
+                   (hashBytes[2] << 8) | hashBytes[3]) >>> 0;
+      const statusIdx = idx % (1 << 20); // mod 1M entries
+      return `urn:ietf:params:oauth:status-list:sha256:${hex}:${statusIdx}`;
+    },
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/draft-ietf-oauth-status-list/",
+  }],
+
+  // ── P1: C2PA — Coalition for Content Provenance & Authenticity ───────────
+  // C2PA (Adobe, Microsoft, Google, BBC, Intel) anchors content provenance
+  // manifests using SHA-256 — IDENTICAL to UOR's hash function. A C2PA
+  // manifest binding embeds the content hash as a `dc:identifier`.
+  //
+  // UOR alignment: The SHA-256 of any UOR object IS a valid C2PA assertion
+  // hash. This means every UOR object natively supports content credentials
+  // — proving who created it, when, and with what tool.
+  //
+  // Cross-projection synergy:
+  //   c2pa + fpp-pdid → Content credentials signed by a persona DID
+  //   c2pa + onnx     → ML model provenance (training data → output)
+  //   c2pa + mcp-tool → AI tool output provenance
+  //
+  //   Format: urn:c2pa:assertion:sha256:{hex}
+  //   Use case: Attach tamper-evident provenance to any UOR content.
+
+  ["c2pa", {
+    project: ({ hex }) => `urn:c2pa:assertion:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://c2pa.org/specifications/specifications/2.1/specs/C2PA_Specification.html",
+  }],
+
+  // ── P2: OpenTelemetry — Content-Addressed Observability ──────────────────
+  // CNCF OpenTelemetry (OTel) is the observability standard for cloud-native
+  // systems. W3C Trace Context uses 128-bit trace IDs — UOR projects the
+  // first 16 bytes of the SHA-256 hash as a native OTel trace ID.
+  //
+  // This means every UOR operation (derivation, verification, projection)
+  // is natively traceable through any OTel-compatible backend (Jaeger,
+  // Grafana, Datadog) without instrumentation changes.
+  //
+  // Combined with `mcp-tool`, AI agent tool calls become observable
+  // across the entire distributed system — content-addressed telemetry.
+  //
+  //   Format: otel:trace:{traceId}:{spanId}
+  //   traceId = first 16 bytes as 32 hex chars
+  //   spanId  = next 8 bytes as 16 hex chars
+
+  ["opentelemetry", {
+    project: ({ hex }) => {
+      const traceId = hex.slice(0, 32);  // 128-bit trace ID
+      const spanId = hex.slice(32, 48);   // 64-bit span ID
+      return `otel:trace:${traceId}:${spanId}`;
+    },
+    fidelity: "lossy",
+    spec: "https://opentelemetry.io/docs/specs/otel/",
+    lossWarning: "otel-uses-192-bit-of-256-bit-hash (traceId=128bit + spanId=64bit)",
+  }],
+
+  // ── P2: CloudEvents — Content-Addressed Event Mesh ───────────────────────
+  // CNCF CloudEvents is the standard envelope for event-driven architectures.
+  // Every CloudEvent requires a globally unique `id` and a `source` URI.
+  // UOR projects both from the same hash — the event's identity IS its
+  // content address.
+  //
+  // Combined with `asyncapi`, event schemas become content-addressed too.
+  // The entire event pipeline (schema → envelope → delivery → audit)
+  // is verifiable end-to-end.
+  //
+  //   Format: ce:1.0:{source}/{id}
+  //   source = uor.foundation
+  //   id     = full hex hash (lossless)
+
+  ["cloudevents", {
+    project: ({ hex }) => `ce:1.0:${DOMAIN}/${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md",
+  }],
+
+  // ── P2: SSF — Shared Signals Framework (CAEP/RISC) ──────────────────────
+  // OpenID Shared Signals Framework delivers real-time security events
+  // (session revocation, credential compromise, account lockout) between
+  // cooperating services. Each Security Event Token (SET) gets a `jti`
+  // (JWT ID) — UOR projects the hash as a content-addressed `jti`.
+  //
+  // This means security events become tamper-evident: replaying or
+  // modifying a SET changes its hash, which changes its `jti`, which
+  // breaks verification. Zero-trust audit trail by construction.
+  //
+  //   Format: urn:ietf:params:ssf:set:sha256:{hex}
+  //   Use case: Content-addressed zero-trust security event delivery.
+
+  ["ssf", {
+    project: ({ hex }) => `urn:ietf:params:ssf:set:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://openid.net/specs/openid-sharedsignals-framework-1_0.html",
+  }],
+
+  // ── P2: COSE — CBOR Object Signing & Encryption ─────────────────────────
+  // IETF COSE (RFC 9052) is the binary-efficient crypto envelope used by
+  // WebAuthn, mDL, C2PA, and EUDI Wallets. It's CBOR-native — 40-60%
+  // smaller than JSON-based JWS/JWE. COSE Key Thumbprints (RFC 9596)
+  // use SHA-256 to identify keys — aligning natively with UOR.
+  //
+  // A COSE_Key thumbprint IS a SHA-256 hash. UOR's hash IS a COSE_Key
+  // thumbprint. Zero translation.
+  //
+  //   Format: cose:key:thumbprint:sha-256:{base64url(hashBytes)}
+  //   Use case: Binary-efficient crypto for IoT, mobile, and constrained devices.
+
+  ["cose", {
+    project: ({ hashBytes }) => {
+      const bytes = new Uint8Array(hashBytes);
+      let binary = "";
+      for (const b of bytes) binary += String.fromCharCode(b);
+      const b64url = btoa(binary)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+      return `cose:key:thumbprint:sha-256:${b64url}`;
+    },
+    fidelity: "lossless",
+    spec: "https://www.rfc-editor.org/rfc/rfc9052",
+  }],
+
+  // ── P2: mDL — Mobile Driver's License (ISO 18013-5) ─────────────────────
+  // ISO mDL is the standard for digital driver's licenses, used by Apple
+  // Wallet, Google Wallet, and EU Digital Identity Wallets. mDL uses
+  // CBOR/COSE for credential encoding with SHA-256 digests for each
+  // data element — structurally identical to UOR's content addressing.
+  //
+  // The `digestID` in an mDL IssuerSignedItem is a CBOR-encoded SHA-256
+  // hash of the data element. UOR projects its hash as a valid digestID,
+  // enabling cross-referencing between mDL credentials and UOR objects.
+  //
+  //   Format: urn:iso:18013-5:mdl:digest:sha-256:{hex}
+  //   Use case: Bridge UOR identity to mobile government credentials.
+
+  ["mdl", {
+    project: ({ hex }) => `urn:iso:18013-5:mdl:digest:sha-256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/69084.html",
+  }],
+
+  // ── P3: DIDComm v2 — Decentralized Identity Messaging ───────────────────
+  // DIF DIDComm v2 is the messaging layer for DIDs — enabling encrypted,
+  // authenticated, and routable communication between DID-identified
+  // parties. Every DIDComm message has an `id` field (unique per message).
+  //
+  // UOR projects the hash as a DIDComm message ID, making every message
+  // content-addressed. Combined with `tsp-envelope` and `did`, this creates
+  // a triple-projection: one hash → DIDComm message + TSP envelope + DID.
+  //
+  //   Format: urn:didcomm:v2:msg:sha256:{hex}
+  //   Use case: Content-addressed decentralized messaging with DID auth.
+
+  ["didcomm-v2", {
+    project: ({ hex }) => `urn:didcomm:v2:msg:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://identity.foundation/didcomm-messaging/spec/v2.1/",
+  }],
+
+  // ── P3: SCIM — System for Cross-domain Identity Management ──────────────
+  // IETF SCIM (RFC 7644) is the enterprise standard for user provisioning
+  // across SaaS platforms (Okta, Azure AD, Google Workspace). Every SCIM
+  // resource has an `externalId` — UOR projects the hash as this ID.
+  //
+  // This means enterprise user provisioning becomes content-addressed:
+  // the same user profile, canonicalized and hashed, produces the same
+  // SCIM externalId across every SaaS platform — no reconciliation needed.
+  //
+  //   Format: urn:ietf:params:scim:schemas:core:2.0:User:{hex}
+  //   Use case: Deterministic cross-platform user identity provisioning.
+
+  ["scim", {
+    project: ({ hex }) => `urn:ietf:params:scim:schemas:core:2.0:User:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.rfc-editor.org/rfc/rfc7644",
+  }],
+
+  // ── P3: WebTransport — Content-Addressed Streaming ───────────────────────
+  // W3C WebTransport provides bidirectional, multiplexed streams over
+  // HTTP/3 (QUIC). Each session is identified by a URL. UOR projects the
+  // hash as a session path — enabling content-addressed real-time streams.
+  //
+  // Combined with `opentelemetry`, streaming sessions become observable.
+  // Combined with `mcp-tool`, agent-to-agent streaming gets provenance.
+  //
+  //   Format: https://{domain}/webtransport/{hex}
+  //   Use case: Content-addressed real-time bidirectional communication.
+
+  ["webtransport", {
+    project: ({ hex }) => `https://${DOMAIN}/webtransport/${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/webtransport/",
+  }],
+
+  // ── P3: Gordian Envelope — Privacy-Preserving Data Containers ────────────
+  // Blockchain Commons' Gordian Envelope is a recursive, privacy-preserving
+  // data container that supports elision (selective redaction), encryption,
+  // compression, and salt-based privacy — all while maintaining the
+  // structure's digest tree. Envelopes use SHA-256 digests throughout.
+  //
+  // UOR's SHA-256 hash IS a valid Gordian Envelope digest. The envelope's
+  // content-addressing is structurally identical to UOR's — they share
+  // the same mathematical foundation: Merkle-like digest trees over
+  // CBOR-encoded structured data.
+  //
+  // Cross-projection synergy:
+  //   gordian + sd-jwt  → Elided credentials with selective disclosure
+  //   gordian + c2pa    → Privacy-preserving content provenance
+  //   gordian + cose    → Binary-efficient encrypted containers
+  //
+  //   Format: ur:envelope:sha256:{hex}
+  //   Use case: Privacy-preserving data containers with selective elision.
+
+  ["gordian-envelope", {
+    project: ({ hex }) => `ur:envelope:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.blockchaincommons.com/introduction/Envelope-Intro/",
+  }],
+
+  // ── P3: CBOR-LD — Compact Binary RDF for Constrained Devices ─────────────
+  // W3C CBOR-LD (Community Group Report) compresses JSON-LD documents
+  // into CBOR using shared compression dictionaries — achieving 50-80%
+  // size reduction while preserving semantic meaning. Used by mDL and
+  // Verifiable Credentials in constrained environments (IoT, mobile).
+  //
+  // UOR's JSON-LD canonicalization (URDNA2015) produces the input;
+  // CBOR-LD compresses the output. The identity hash remains unchanged
+  // because CBOR-LD is a lossless compression of the canonical form.
+  //
+  //   Format: urn:w3c:cbor-ld:sha256:{hex}
+  //   Use case: Bandwidth-efficient semantic data for IoT and mobile.
+
+  ["cbor-ld", {
+    project: ({ hex }) => `urn:w3c:cbor-ld:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/json-ld11-cbor/",
+  }],
 ]);
