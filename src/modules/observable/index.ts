@@ -61,3 +61,7 @@ export type {
   ScaleLevel,
   ScaleObservation,
 } from "./multi-scale";
+
+// ── Stream Projection — Live Coherence Rendering Engine ───────────────────
+export { StreamProjection } from "./stream-projection";
+export type { StreamSnapshot, LevelSnapshot, StreamListener } from "./stream-projection";

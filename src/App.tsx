@@ -109,6 +109,7 @@ const HologramUiPage = lazy(() => import("@/modules/hologram-ui/pages/HologramUi
 const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
 const MetaObserverPage = lazy(() => import("@/modules/observable/pages/MetaObserverPage"));
 const MultiScalePage = lazy(() => import("@/modules/observable/pages/MultiScalePage"));
+const StreamProjectionPage = lazy(() => import("@/modules/observable/pages/StreamProjectionPage"));
 
 const queryClient = new QueryClient();
 
@@ -231,6 +232,7 @@ const App = () => {
             <Route path="/code-kg" element={<CodeKgPage />} />
             <Route path="/meta-observer" element={<MetaObserverPage />} />
             <Route path="/multi-scale" element={<MultiScalePage />} />
+            <Route path="/stream-projection" element={<StreamProjectionPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
