@@ -18,6 +18,9 @@ interface WidgetState {
   totalEvents: number;
 }
 
+// Zone → numeric value for sparkline (0=coherence, 1=drift, 2=collapse)
+const ZONE_VAL: Record<CoherenceZone, number> = { COHERENCE: 0, DRIFT: 1, COLLAPSE: 2 };
+
 const ZONE_DOT: Record<CoherenceZone, string> = {
   COHERENCE: "bg-emerald-400",
   DRIFT: "bg-amber-400",
@@ -30,6 +33,13 @@ const ZONE_BAR: Record<CoherenceZone, string> = {
   COLLAPSE: "bg-red-400",
 };
 
+const HISTORY_LEN = 60; // 60 samples × 500ms = 30 seconds
+const ZONE_STROKE: Record<number, string> = {
+  0: "rgb(52, 211, 153)",  // emerald-400
+  1: "rgb(251, 191, 36)",  // amber-400
+  2: "rgb(248, 113, 113)", // red-400
+};
+
 export function CoherenceWidget() {
   const [state, setState] = useState<WidgetState>({
     zone: "COHERENCE",
@@ -37,6 +47,7 @@ export function CoherenceWidget() {
     telosProgress: 1,
     totalEvents: 0,
   });
+  const [history, setHistory] = useState<number[]>(() => Array(HISTORY_LEN).fill(0));
   const metaRef = useRef<MetaObserver | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -44,12 +55,10 @@ export function CoherenceWidget() {
     const meta = new MetaObserver();
     metaRef.current = meta;
 
-    // Register lightweight probes for the three core subsystems
     meta.registerModule("ring-core", "Ring Core", 1);
     meta.registerModule("identity", "Identity", 2);
     meta.registerModule("hologram", "Hologram", 3);
 
-    // Listen to real system events and feed them into the meta-observer
     const unsub = SystemEventBus.subscribe((event) => {
       const moduleMap: Record<string, string> = {
         ring: "ring-core",
@@ -70,7 +79,6 @@ export function CoherenceWidget() {
       });
     });
 
-    // Periodically read telos state
     timerRef.current = setInterval(() => {
       const telos = meta.telosVector();
       const overallZone: CoherenceZone =
@@ -83,6 +91,8 @@ export function CoherenceWidget() {
         telosProgress: telos.progress,
         totalEvents: SystemEventBus.totalEvents,
       });
+
+      setHistory((prev) => [...prev.slice(1), ZONE_VAL[overallZone]]);
     }, 500);
 
     return () => {
@@ -111,18 +121,48 @@ export function CoherenceWidget() {
         {state.zone === "COHERENCE" ? "COH" : state.zone === "DRIFT" ? "DFT" : "COL"}
       </span>
 
-      {/* Telos progress bar */}
-      <div className="w-8 h-1 rounded-full bg-muted/50 overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-500 ${ZONE_BAR[state.zone]}`}
-          style={{ width: `${phiPercent}%` }}
-        />
-      </div>
+      {/* Zone history sparkline */}
+      <ZoneSparkline data={history} />
 
       {/* Phi value */}
       <span className="text-[9px] font-mono text-muted-foreground">
         {phiPercent}%
       </span>
     </Link>
+  );
+}
+
+/** Tiny SVG sparkline colored by zone value at each point. */
+function ZoneSparkline({ data }: { data: number[] }) {
+  const w = 40;
+  const h = 8;
+  const step = w / (data.length - 1 || 1);
+
+  // Build colored line segments
+  const segments: { x1: number; y1: number; x2: number; y2: number; color: string }[] = [];
+  for (let i = 0; i < data.length - 1; i++) {
+    const y1 = h - (data[i] / 2) * h;
+    const y2 = h - (data[i + 1] / 2) * h;
+    segments.push({
+      x1: i * step,
+      y1,
+      x2: (i + 1) * step,
+      y2,
+      color: ZONE_STROKE[data[i + 1]] ?? ZONE_STROKE[0],
+    });
+  }
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-10 h-2" preserveAspectRatio="none">
+      {segments.map((s, i) => (
+        <line
+          key={i}
+          x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2}
+          stroke={s.color}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      ))}
+    </svg>
   );
 }
