@@ -10,6 +10,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { runApp } from "@/modules/uor-sdk/runtime/wasm-loader";
 import type { WasmAppInstance } from "@/modules/uor-sdk/runtime/wasm-loader";
+import { canonicalToTriword, formatTriword } from "@/lib/uor-triword";
 import { CanonicalIdBadge } from "../components/ConsoleUI";
 import {
   ArrowLeft, Copy, Check, Cpu, Globe, ShieldCheck,
@@ -172,7 +173,10 @@ export default function AppConsoleRunner() {
 
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-foreground truncate">
+              <span className="text-sm font-semibold text-primary">
+                {formatTriword(canonicalToTriword(decodedId))}
+              </span>
+              <span className="text-xs text-muted-foreground">
                 {instance ? "Running" : loading ? "Starting…" : "Stopped"}
               </span>
               {instance?.status === "running" && (
@@ -183,7 +187,7 @@ export default function AppConsoleRunner() {
               )}
             </div>
             <div className="flex items-center gap-2 mt-0.5">
-              <code className="text-xs text-muted-foreground font-mono truncate max-w-[280px]">
+              <code className="text-[10px] text-muted-foreground font-mono truncate max-w-[280px]">
                 {decodedId.slice(0, 48)}…
               </code>
               <button onClick={handleCopyId} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
