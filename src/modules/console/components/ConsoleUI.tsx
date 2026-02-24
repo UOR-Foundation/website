@@ -59,13 +59,11 @@ export function CanonicalIdBadge({ id, chars = 16 }: { id: string; chars?: numbe
     .replace("0x", "");
 
   // ── Live verification: re-derive the triword from the hash ──
-  const runVerification = useCallback(async () => {
+  const runVerification = useCallback(() => {
     setStatus("verifying");
     const t0 = performance.now();
     try {
-      // The verification contract: re-computing the triword from the same
-      // hash must yield the same three words. This is the self-certification.
-      await new Promise((r) => setTimeout(r, 300)); // simulate canonical check
+      // Real verification: re-derive triword from the same hash
       const recomputed = canonicalToTriword(id);
       const elapsed = Math.round(performance.now() - t0);
       setVerifyTime(elapsed);
