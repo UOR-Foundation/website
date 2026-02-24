@@ -30,3 +30,17 @@ export {
   observableStream,
 } from "./geometry";
 export type { ObservableResult } from "./geometry";
+
+// ── MetaObserver — God Conjecture Semantic Meta-Layer ───────────────────────
+export {
+  MetaObserver,
+  createMetaObserver,
+  UOR_MODULES,
+} from "./meta-observer";
+export type {
+  ModuleObserverProfile,
+  ObservedOperation,
+  RemediationPrescription,
+  TelosVector,
+  LogosClass,
+} from "./meta-observer";
