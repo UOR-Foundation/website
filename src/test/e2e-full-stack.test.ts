@@ -254,7 +254,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
     };
     const record = await engine.processPayment(appId, userId, 10, proof);
     expect(record.paymentId).toBeDefined();
-    expect(record.developerNet).toBe(8); // 80% of $10
+    expect(record.developerNet).toBe(10); // 100% of $10 (default split: 0% platform fee)
 
     // Access granted after payment
     const granted = await engine.checkAccess(userId, appId, "premium");
