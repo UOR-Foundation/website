@@ -10,7 +10,7 @@ import {
   LayoutDashboard, Globe, Shield, Cpu, Database,
   Lock, Bot, ChevronLeft, Rocket, Compass,
   Search, Plus, Circle, BarChart3, BookOpen, User,
-  Sun, Moon, Eye,
+  Sun, Moon, Eye, Fingerprint,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeProvider, useTheme } from "next-themes";
@@ -35,6 +35,7 @@ const NAV_RUN = [
   { to: "/console/shield",     icon: Shield,    label: "Logs",       hint: "Security & monitoring" },
   { to: "/console/agents",     icon: Bot,       label: "Exec",       hint: "AI agents & orchestration" },
   { to: "/console/observer",   icon: Eye,       label: "Observer",   hint: "Live coherence monitoring" },
+  { to: "/console/fpp",        icon: Fingerprint, label: "FPP Trust", hint: "First Person trust flow" },
 ];
 
 /* ── Mock deployed apps (would come from SDK in production) ──────────── */

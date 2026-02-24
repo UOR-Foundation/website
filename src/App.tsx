@@ -111,6 +111,7 @@ const MetaObserverPage = lazy(() => import("@/modules/observable/pages/MetaObser
 const MultiScalePage = lazy(() => import("@/modules/observable/pages/MultiScalePage"));
 const StreamProjectionPage = lazy(() => import("@/modules/observable/pages/StreamProjectionPage"));
 const ObserverHubPage = lazy(() => import("@/modules/observable/pages/ObserverHubPage"));
+const ConsoleFpp = lazy(() => import("@/modules/console/pages/ConsoleFpp"));
 
 const queryClient = new QueryClient();
 
@@ -196,6 +197,7 @@ const App = () => {
               <Route path="run/:canonicalId" element={<AppConsoleRunner />} />
               <Route path="discovery" element={<AppConsoleDiscovery />} />
               <Route path="your-space" element={<ConsoleYourSpace />} />
+              <Route path="fpp" element={<ConsoleFpp />} />
             </Route>
             <Route path="/developers" element={<DevelopersPage />} />
             <Route path="/developers/directory" element={<DirectoryPage />} />
