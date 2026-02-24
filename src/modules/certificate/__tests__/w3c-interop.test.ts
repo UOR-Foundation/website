@@ -193,6 +193,11 @@ describe("W3C Interoperability", () => {
       const croissantService = doc.service.find(s => s.type === "CroissantDataset")!;
       expect(croissantService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/croissant\/[0-9a-f]{64}$/);
       expect(croissantService.id).toMatch(/#croissant$/);
+      // MLS — end-to-end encrypted group messaging
+      expect(types).toContain("MlsGroupId");
+      const mlsService = doc.service.find(s => s.type === "MlsGroupId")!;
+      expect(mlsService.serviceEndpoint).toMatch(/^urn:ietf:params:mls:group:[0-9a-f]{64}$/);
+      expect(mlsService.id).toMatch(/#mls$/);
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {
