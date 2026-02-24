@@ -18,6 +18,7 @@ import {
   FileText, Layers,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/modules/core/ui/tooltip";
+import BitcoinNav from "@/modules/bitcoin/components/BitcoinNav";
 import { buildOpReturnTx, type TxTemplateOutput, type TxField } from "../lib/tx-template";
 import { generateCertificate } from "@/modules/certificate/generate";
 
@@ -175,6 +176,8 @@ function TimestampPage() {
               an immutable, globally-timestamped proof of existence.
             </p>
           </div>
+
+          <BitcoinNav />
 
           {/* Input mode toggle */}
           <div className="flex justify-center gap-2 mb-6">
