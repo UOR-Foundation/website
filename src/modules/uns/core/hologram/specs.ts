@@ -1821,6 +1821,73 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9o — INFRASTRUCTURE AS CODE
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // IaC languages define infrastructure declaratively. Content-addressing
+  // build and deployment configurations creates reproducible infrastructure
+  // provenance from definition to running system.
+
+  // ── HCL — HashiCorp Configuration Language ──────────────────────────────
+  // HCL powers Terraform, the dominant infrastructure provisioning tool.
+  // Terraform state files and plan outputs are deterministic artifacts.
+  // Content-addressing HCL creates provenance from infrastructure definition
+  // to deployed resources — every cloud resource traces to its Terraform source.
+  //
+  //   Format: urn:uor:lang:hcl:{hex} (SHA-256 of canonical HCL module)
+  //   Canonical: module → parsed HCL → JSON-LD → URDNA2015 → SHA-256
+
+  ["hcl", {
+    project: ({ hex }) => `urn:uor:lang:hcl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md",
+  }],
+
+  // ── Nix — Reproducible Build System ─────────────────────────────────────
+  // Nix derivations are content-addressed by construction — the hash of
+  // all inputs (source, dependencies, build script) determines the output
+  // path. This is structurally identical to UOR's content-addressing.
+  // Nixpkgs (80k+ packages) is the largest reproducible package collection.
+  //
+  //   Format: urn:uor:lang:nix:{hex} (SHA-256 of canonical Nix expression)
+  //   Canonical: expression → evaluated derivation → JSON-LD → URDNA2015 → SHA-256
+
+  ["nix", {
+    project: ({ hex }) => `urn:uor:lang:nix:${hex}`,
+    fidelity: "lossless",
+    spec: "https://nixos.org/manual/nix/stable/language/",
+  }],
+
+  // ── Dockerfile — Container Build Specification ──────────────────────────
+  // Dockerfiles define reproducible container builds. Each instruction
+  // produces a content-addressed layer (via docker content trust).
+  // Content-addressing the Dockerfile creates a permanent identity for
+  // the build recipe, linking source to OCI image via the build chain.
+  //
+  //   Format: urn:uor:lang:dockerfile:{hex} (SHA-256 of canonical Dockerfile)
+  //   Canonical: Dockerfile → parsed instructions → JSON-LD → URDNA2015 → SHA-256
+
+  ["dockerfile", {
+    project: ({ hex }) => `urn:uor:lang:dockerfile:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.docker.com/reference/dockerfile/",
+  }],
+
+  // ── Makefile — Build Automation ─────────────────────────────────────────
+  // Make (1976) is the original build system — still used by Linux kernel,
+  // GNU projects, and countless C/C++ projects. Makefiles define
+  // deterministic dependency graphs with target → prerequisite → recipe rules.
+  //
+  //   Format: urn:uor:lang:makefile:{hex} (SHA-256 of canonical Makefile)
+  //   Canonical: Makefile → rule graph → JSON-LD → URDNA2015 → SHA-256
+
+  ["makefile", {
+    project: ({ hex }) => `urn:uor:lang:makefile:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.gnu.org/software/make/manual/make.html",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // TIER 10 — MARKUP, CONFIGURATION & DOCUMENTATION LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
@@ -2931,5 +2998,542 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     project: ({ hex }) => `urn:w3c:cbor-ld:sha256:${hex}`,
     fidelity: "lossless",
     spec: "https://www.w3.org/TR/json-ld11-cbor/",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 17 — SCIENTIFIC DATA FORMATS & STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Scientific data formats encode observations, measurements, and models
+  // from every domain of human inquiry — astronomy, chemistry, medicine,
+  // geospatial, and materials science. Content-addressing scientific data
+  // creates an immutable, reproducible research chain from raw observation
+  // to published finding. Every dataset, every spectrum, every crystal
+  // structure becomes a permanent, verifiable object.
+
+  // ── FITS — Flexible Image Transport System ──────────────────────────────
+  // FITS is the standard data format in astronomy and astrophysics since
+  // 1981 (IAU/NASA endorsed). Every Hubble, JWST, and ground-based
+  // telescope image is stored as FITS. A FITS file contains HDUs (Header
+  // Data Units) — structured keyword=value headers followed by binary
+  // data arrays (images, tables, spectra).
+  //
+  // FITS headers are ASCII text in 80-character records — deterministic
+  // and trivially canonicalizable. The binary data extensions (IMAGE,
+  // BINTABLE, ASCII_TABLE) are byte-exact representations of numerical
+  // arrays. Content-addressing FITS creates permanent identities for
+  // every astronomical observation ever recorded.
+  //
+  // Integration with Virtual Observatory (VO) standards enables federated
+  // astronomical data discovery via content-addressed FITS identities.
+  //
+  //   Format: urn:uor:sci:fits:{hex} (SHA-256 of canonical FITS HDU)
+  //   Canonical: primary HDU → header + data → SHA-256
+  //   Cross-projection: fits + hdf5 → large-survey pipeline provenance
+  //                     fits + geojson → sky-coordinate ground truth
+
+  ["fits", {
+    project: ({ hex }) => `urn:uor:sci:fits:${hex}`,
+    fidelity: "lossless",
+    spec: "https://fits.gsfc.nasa.gov/fits_standard.html",
+  }],
+
+  // ── CIF — Crystallographic Information Framework ────────────────────────
+  // CIF (IUCr standard) encodes crystal structures, diffraction data,
+  // and symmetry operations for the entire field of crystallography.
+  // Every entry in the Cambridge Structural Database (CSD, 1.2M+ structures)
+  // and the Protein Data Bank (PDB, 200k+ structures) uses CIF.
+  //
+  // CIF is a structured text format with data blocks, categories, and
+  // items — fully deterministic. The mmCIF (macromolecular CIF) extension
+  // handles proteins, nucleic acids, and complex biological assemblies.
+  //
+  // Content-addressing CIF creates permanent identities for crystal
+  // structures. Two independent measurements of the same crystal
+  // converge to the same UOR identity when they resolve to identical
+  // unit cell parameters and atomic coordinates.
+  //
+  //   Format: urn:uor:sci:cif:{hex} (SHA-256 of canonical CIF data block)
+  //   Canonical: data block → sorted items → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: cif + smiles → structure↔formula bridge
+  //                     cif + pdb → macromolecular structure identity
+
+  ["cif", {
+    project: ({ hex }) => `urn:uor:sci:cif:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iucr.org/resources/cif/spec/version1.1",
+  }],
+
+  // ── SMILES — Simplified Molecular-Input Line-Entry System ───────────────
+  // SMILES encodes molecular structure as a compact ASCII string.
+  // Canonical SMILES (via InChI or RDKit) produces a unique, deterministic
+  // string for each molecule. This makes SMILES a natural content-address:
+  // the same molecule always yields the same canonical string.
+  //
+  // SMILES covers organic chemistry, drug discovery (PubChem: 110M+
+  // compounds), materials science, and polymer chemistry. InChI
+  // (IUPAC International Chemical Identifier) provides the formal
+  // canonical form that UOR hashes.
+  //
+  // The canonical SMILES → InChI → SHA-256 pipeline means every molecule
+  // in existence has a permanent, verifiable UOR identity. Drug candidates,
+  // reaction products, and metabolites all become content-addressed.
+  //
+  //   Format: urn:uor:sci:smiles:{hex} (SHA-256 of canonical InChI string)
+  //   Canonical: SMILES → canonical InChI → SHA-256
+  //   Cross-projection: smiles + cif → molecule↔crystal bridge
+  //                     smiles + fhir → drug identity in clinical records
+
+  ["smiles", {
+    project: ({ hex }) => `urn:uor:sci:smiles:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.daylight.com/dayhtml/doc/theory/theory.smiles.html",
+  }],
+
+  // ── GeoJSON — Geospatial Data Interchange ───────────────────────────────
+  // GeoJSON (RFC 7946) encodes geographic features as JSON objects.
+  // Points, lines, polygons, and multi-geometries with properties.
+  // Used by every mapping platform (Mapbox, Leaflet, Google Maps),
+  // GIS system (QGIS, ArcGIS), and geospatial API.
+  //
+  // GeoJSON is JSON — canonicalizable via JSON-LD + URDNA2015.
+  // Content-addressing geospatial features creates permanent identities
+  // for boundaries, routes, regions, and points of interest.
+  //
+  // Combined with Schema.org Place type, GeoJSON features become
+  // semantically rich, content-addressed geographic entities that
+  // are discoverable, verifiable, and interoperable across all
+  // mapping and spatial analysis systems.
+  //
+  //   Format: urn:uor:sci:geojson:{hex} (SHA-256 of canonical GeoJSON feature)
+  //   Canonical: Feature → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: geojson + fits → sky-to-ground coordinate mapping
+  //                     geojson + dicom → patient location context
+
+  ["geojson", {
+    project: ({ hex }) => `urn:uor:sci:geojson:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc7946",
+  }],
+
+  // ── HDF5 — Hierarchical Data Format v5 ──────────────────────────────────
+  // HDF5 is the standard container for large-scale scientific data.
+  // Used by NASA (Earth Observation), CERN (particle physics), genomics
+  // (10x Genomics), climate science (CMIP6), and ML (model weights).
+  //
+  // HDF5 files contain hierarchical groups and datasets with metadata
+  // attributes. Each dataset is a typed, multidimensional array with
+  // optional chunking and compression. The internal B-tree structure
+  // is deterministic for given data.
+  //
+  // Content-addressing HDF5 creates permanent identities for scientific
+  // datasets regardless of their size — from kilobyte sensor readings
+  // to petabyte particle physics collision data. Checksums are native
+  // to HDF5 (Fletcher32); UOR extends to content-addressed identity.
+  //
+  //   Format: urn:uor:sci:hdf5:{hex} (SHA-256 of canonical HDF5 metadata tree)
+  //   Canonical: root group → attribute tree → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: hdf5 + fits → astronomical data pipeline
+  //                     hdf5 + onnx → ML model weight provenance
+
+  ["hdf5", {
+    project: ({ hex }) => `urn:uor:sci:hdf5:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.hdfgroup.org/solutions/hdf5/",
+  }],
+
+  // ── DICOM — Digital Imaging and Communications in Medicine ──────────────
+  // DICOM is the universal standard for medical imaging. Every CT scan,
+  // MRI, X-ray, ultrasound, and PET scan worldwide is stored as DICOM.
+  // 11 billion+ DICOM images are created annually.
+  //
+  // DICOM objects contain structured metadata (patient, study, series,
+  // instance UIDs) plus pixel data. UIDs are globally unique identifiers
+  // — UOR extends these to content-addressed identities, linking the
+  // image content to its metadata deterministically.
+  //
+  // Content-addressing DICOM enables:
+  //   - Reproducible medical image analysis pipelines
+  //   - Cross-institutional image identity without PACS dependencies
+  //   - AI model provenance (training data → model → diagnosis)
+  //   - Privacy-preserving image sharing (hash without pixel data)
+  //
+  //   Format: urn:uor:sci:dicom:{hex} (SHA-256 of canonical DICOM metadata)
+  //   Canonical: DICOM dataset → sorted tag-value pairs → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: dicom + fhir → imaging↔clinical record bridge
+  //                     dicom + hdf5 → research data pipeline
+
+  ["dicom", {
+    project: ({ hex }) => `urn:uor:sci:dicom:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.dicomstandard.org/current",
+  }],
+
+  // ── FHIR — Fast Healthcare Interoperability Resources ───────────────────
+  // HL7 FHIR (R4/R5) is the global standard for health data exchange.
+  // Used by every major EHR system (Epic, Cerner, Allscripts), Apple
+  // Health, Google Health, and government health systems worldwide.
+  //
+  // FHIR Resources are structured JSON objects with canonical URLs.
+  // Patient, Observation, Condition, MedicationRequest, DiagnosticReport
+  // — every clinical concept has a FHIR Resource type. Resources
+  // reference each other via canonical URLs, forming a clinical graph.
+  //
+  // Content-addressing FHIR Resources creates permanent, verifiable
+  // identities for clinical data. A lab result, prescription, or
+  // diagnosis becomes a content-addressed object that can be verified
+  // across any health system without centralized coordination.
+  //
+  //   Format: urn:uor:sci:fhir:{hex} (SHA-256 of canonical FHIR Resource)
+  //   Canonical: Resource → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: fhir + dicom → complete patient record identity
+  //                     fhir + smiles → drug↔prescription bridge
+
+  ["fhir", {
+    project: ({ hex }) => `urn:uor:sci:fhir:${hex}`,
+    fidelity: "lossless",
+    spec: "https://hl7.org/fhir/R5/",
+  }],
+
+  // ── PDB — Protein Data Bank Format ──────────────────────────────────────
+  // PDB format encodes 3D structures of biological macromolecules —
+  // proteins, nucleic acids, and complex assemblies. The worldwide
+  // Protein Data Bank (wwPDB) contains 200k+ experimentally determined
+  // structures, each with a unique PDB ID. AlphaFold has predicted
+  // 200M+ additional structures.
+  //
+  // PDB files contain ATOM/HETATM records with 3D coordinates, B-factors,
+  // and occupancies. The newer PDBx/mmCIF format provides richer metadata.
+  // Content-addressing structures enables provenance from experiment
+  // (diffraction/cryo-EM) to model to publication.
+  //
+  //   Format: urn:uor:sci:pdb:{hex} (SHA-256 of canonical structure record)
+  //   Canonical: ATOM records → sorted coordinate table → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: pdb + cif → experimental↔model structure bridge
+  //                     pdb + smiles → ligand binding identity
+
+  ["pdb", {
+    project: ({ hex }) => `urn:uor:sci:pdb:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html",
+  }],
+
+  // ── NetCDF — Network Common Data Form ───────────────────────────────────
+  // NetCDF is the standard for climate science, oceanography, and
+  // atmospheric research data. CMIP6 (climate model intercomparison),
+  // ERA5 (global reanalysis), and satellite remote sensing all use NetCDF.
+  //
+  // NetCDF files contain self-describing, machine-independent arrays
+  // with dimensions, variables, and attributes. NetCDF-4 is built on
+  // HDF5, sharing its hierarchical structure. CF Conventions provide
+  // standardized metadata for climate and forecast data.
+  //
+  //   Format: urn:uor:sci:netcdf:{hex} (SHA-256 of canonical NetCDF metadata)
+  //   Canonical: global attributes + dimensions → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: netcdf + hdf5 → scientific data container bridge
+  //                     netcdf + geojson → climate data spatial reference
+
+  ["netcdf", {
+    project: ({ hex }) => `urn:uor:sci:netcdf:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.unidata.ucar.edu/software/netcdf/",
+  }],
+
+  // ── NIfTI — Neuroimaging Informatics Technology Initiative ──────────────
+  // NIfTI (.nii) is the standard format for brain imaging data — fMRI,
+  // structural MRI, diffusion tensor imaging (DTI), and PET scans.
+  // Every neuroscience research dataset uses NIfTI. Brain atlases
+  // (MNI152, Talairach) and connectome projects all publish in NIfTI.
+  //
+  // NIfTI headers contain spatial transforms (qform/sform matrices),
+  // voxel dimensions, and data type information. Content-addressing
+  // brain scans enables reproducible neuroimaging analysis pipelines
+  // and cross-study brain atlas alignment verification.
+  //
+  //   Format: urn:uor:sci:nifti:{hex} (SHA-256 of canonical NIfTI header + data)
+  //   Canonical: header → spatial metadata → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: nifti + dicom → clinical↔research imaging bridge
+  //                     nifti + hdf5 → connectome data pipeline
+
+  ["nifti", {
+    project: ({ hex }) => `urn:uor:sci:nifti:${hex}`,
+    fidelity: "lossless",
+    spec: "https://nifti.nimh.nih.gov/nifti-2",
+  }],
+
+  // ── SBML — Systems Biology Markup Language ──────────────────────────────
+  // SBML encodes computational models of biological systems — metabolic
+  // networks, signaling pathways, gene regulatory networks, and
+  // pharmacokinetic models. BioModels database contains 1000+ curated
+  // SBML models. Used by COPASI, CellDesigner, and VCell.
+  //
+  // SBML models are structured XML with species, reactions, parameters,
+  // and mathematical rules (MathML). Content-addressing SBML creates
+  // permanent identities for biological models, enabling reproducible
+  // simulation pipelines and model composition verification.
+  //
+  //   Format: urn:uor:sci:sbml:{hex} (SHA-256 of canonical SBML model)
+  //   Canonical: model → sorted XML → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: sbml + smiles → pathway↔molecule bridge
+  //                     sbml + fhir → clinical model integration
+
+  ["sbml", {
+    project: ({ hex }) => `urn:uor:sci:sbml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://sbml.org/documents/specifications/",
+  }],
+
+  // ── MZML — Mass Spectrometry Data ───────────────────────────────────────
+  // mzML is the open standard for mass spectrometry data (proteomics,
+  // metabolomics, lipidomics). Endorsed by HUPO-PSI (Human Proteome
+  // Organization). Every mass spectrum, chromatogram, and ion mobility
+  // measurement uses mzML for interchange.
+  //
+  // mzML files contain spectra with m/z arrays, intensity arrays, and
+  // rich metadata (instrument configuration, data processing history).
+  // Content-addressing mass spec data creates verifiable provenance
+  // from raw acquisition to peptide/metabolite identification.
+  //
+  //   Format: urn:uor:sci:mzml:{hex} (SHA-256 of canonical mzML run)
+  //   Canonical: run → spectrum list → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: mzml + smiles → metabolite identification chain
+  //                     mzml + fhir → clinical lab data provenance
+
+  ["mzml", {
+    project: ({ hex }) => `urn:uor:sci:mzml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.psidev.info/mzml",
+  }],
+
+  // ── FASTQ — Genomic Sequence Data ───────────────────────────────────────
+  // FASTQ encodes raw DNA/RNA sequencing reads with per-base quality
+  // scores. Every genomics experiment — whole genome sequencing, RNA-seq,
+  // ChIP-seq, single-cell — produces FASTQ files. SRA (Sequence Read
+  // Archive) contains 70+ petabytes of FASTQ data.
+  //
+  // Each FASTQ record contains a sequence identifier, nucleotide sequence,
+  // and Phred quality scores. Content-addressing FASTQ creates permanent
+  // identities for sequencing runs, enabling reproducible bioinformatics
+  // pipelines from raw reads to variant calls to clinical reports.
+  //
+  //   Format: urn:uor:sci:fastq:{hex} (SHA-256 of canonical FASTQ file)
+  //   Canonical: read records → sorted by ID → SHA-256
+  //   Cross-projection: fastq + fhir → genomic↔clinical data bridge
+  //                     fastq + hdf5 → nanopore signal data pipeline
+
+  ["fastq", {
+    project: ({ hex }) => `urn:uor:sci:fastq:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.ncbi.nlm.nih.gov/sra/docs/submitformats/",
+  }],
+
+  // ── VCF — Variant Call Format ───────────────────────────────────────────
+  // VCF encodes genomic variants (SNPs, indels, structural variants)
+  // relative to a reference genome. Used by every variant calling pipeline
+  // (GATK, DeepVariant, Strelka2). ClinVar, gnomAD, and 1000 Genomes
+  // all publish in VCF.
+  //
+  // VCF is tab-delimited text with structured headers and genotype fields.
+  // Content-addressing VCF creates permanent identities for variant
+  // callsets — enabling reproducible genomic analysis and cross-study
+  // variant comparison without centralized databases.
+  //
+  //   Format: urn:uor:sci:vcf:{hex} (SHA-256 of canonical VCF header + records)
+  //   Canonical: sorted records → canonical header → SHA-256
+  //   Cross-projection: vcf + fastq → raw-to-variant provenance chain
+  //                     vcf + fhir → clinical genomics integration
+
+  ["vcf", {
+    project: ({ hex }) => `urn:uor:sci:vcf:${hex}`,
+    fidelity: "lossless",
+    spec: "https://samtools.github.io/hts-specs/VCFv4.3.pdf",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 18 — MUSIC & AUDIO STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Music and audio standards encode sound as structured data — from
+  // symbolic notation (MIDI, MusicXML) to waveform analysis (spectrograms)
+  // to production metadata (AES67, EBU). Content-addressing music creates
+  // permanent, verifiable identities for compositions, performances,
+  // recordings, and their relationships.
+
+  // ── MIDI — Musical Instrument Digital Interface ─────────────────────────
+  // MIDI is the universal protocol for digital music since 1983. MIDI
+  // messages encode note-on/off, velocity, pitch bend, control changes,
+  // and system exclusive data. MIDI 2.0 (2020) extends to 32-bit
+  // resolution with per-note articulation.
+  //
+  // Standard MIDI Files (.mid) are deterministic binary sequences of
+  // timestamped events. Content-addressing MIDI creates permanent
+  // identities for musical compositions independent of performance
+  // or rendering — the musical idea itself gets an identity.
+  //
+  // MIDI is used by every DAW (Ableton, Logic, FL Studio), hardware
+  // synthesizer, and music notation system. Content-addressing enables
+  // composition provenance, arrangement versioning, and plagiarism
+  // detection via structural similarity of MIDI event streams.
+  //
+  //   Format: urn:uor:music:midi:{hex} (SHA-256 of canonical MIDI file)
+  //   Canonical: SMF → sorted track chunks → SHA-256
+  //   Cross-projection: midi + musicxml → symbolic↔notated composition bridge
+  //                     midi + c2pa → composition provenance chain
+
+  ["midi", {
+    project: ({ hex }) => `urn:uor:music:midi:${hex}`,
+    fidelity: "lossless",
+    spec: "https://midi.org/specifications",
+  }],
+
+  // ── MusicXML — Digital Sheet Music ──────────────────────────────────────
+  // MusicXML is the universal format for digital sheet music interchange.
+  // Supported by 260+ music notation programs (Finale, Sibelius, MuseScore,
+  // Dorico). W3C Community Group standard.
+  //
+  // MusicXML encodes every aspect of Western music notation: pitch,
+  // duration, dynamics, articulation, lyrics, chord symbols, tablature,
+  // and page layout. Partwise and timewise representations provide
+  // different canonical views of the same musical content.
+  //
+  // Content-addressing MusicXML creates permanent identities for
+  // notated compositions. A Beethoven sonata and a new composition
+  // each get a unique, verifiable identity based on their musical content.
+  //
+  //   Format: urn:uor:music:musicxml:{hex} (SHA-256 of canonical MusicXML)
+  //   Canonical: partwise score → sorted parts → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: musicxml + midi → notation↔performance bridge
+  //                     musicxml + mei → scholarly music encoding bridge
+
+  ["musicxml", {
+    project: ({ hex }) => `urn:uor:music:musicxml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/2021/06/musicxml40/",
+  }],
+
+  // ── MEI — Music Encoding Initiative ─────────────────────────────────────
+  // MEI is a scholarly XML format for encoding music notation with
+  // full editorial, analytical, and critical apparatus. Used by digital
+  // musicology projects, music libraries, and computational musicology.
+  //
+  // MEI goes beyond MusicXML by encoding historical context, variant
+  // readings, editorial decisions, and analytical annotations. Each
+  // MEI document is a richly structured scholarly object — ideal for
+  // content-addressed musicological research chains.
+  //
+  //   Format: urn:uor:music:mei:{hex} (SHA-256 of canonical MEI document)
+  //   Canonical: MEI → sorted elements → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: mei + musicxml → scholarly↔practical notation bridge
+
+  ["mei", {
+    project: ({ hex }) => `urn:uor:music:mei:${hex}`,
+    fidelity: "lossless",
+    spec: "https://music-encoding.org/guidelines/v5/content/",
+  }],
+
+  // ── ABC Notation — Text-Based Music Notation ────────────────────────────
+  // ABC notation is a compact ASCII format for encoding music, widely
+  // used for folk, traditional, and Celtic music. Simple enough to
+  // type in email, yet capable of encoding complex multi-voice scores.
+  //
+  // ABC's text-based format is trivially canonicalizable — the notation
+  // IS the canonical form. The abc2midi and abc2ps toolchains convert
+  // to MIDI and PostScript respectively. Content-addressing ABC creates
+  // permanent identities for traditional tunes and folk melodies.
+  //
+  //   Format: urn:uor:music:abc:{hex} (SHA-256 of canonical ABC notation)
+  //   Canonical: ABC text → normalized header + body → SHA-256
+  //   Cross-projection: abc + midi → folk tune performance bridge
+  //                     abc + musicxml → traditional↔classical notation bridge
+
+  ["abc-notation", {
+    project: ({ hex }) => `urn:uor:music:abc:${hex}`,
+    fidelity: "lossless",
+    spec: "https://abcnotation.com/wiki/abc:standard:v2.1",
+  }],
+
+  // ── AES67 — Audio-over-IP Networking ────────────────────────────────────
+  // AES67 is the interoperability standard for professional audio-over-IP
+  // networking. Used in broadcast facilities, concert venues, recording
+  // studios, and live events worldwide. Bridges Dante, Ravenna, Livewire,
+  // and SMPTE ST 2110 audio streams.
+  //
+  // AES67 streams are identified by SDP (Session Description Protocol)
+  // descriptors — structured text documents containing codec, sample rate,
+  // channel count, and multicast address. Content-addressing AES67 stream
+  // descriptors creates permanent identities for audio network configurations.
+  //
+  //   Format: urn:uor:music:aes67:{hex} (SHA-256 of canonical SDP descriptor)
+  //   Canonical: SDP → sorted attributes → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: aes67 + midi → live performance control + audio bridge
+
+  ["aes67", {
+    project: ({ hex }) => `urn:uor:music:aes67:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.aes.org/publications/standards/search.cfm?docID=96",
+  }],
+
+  // ── MPEG-7 — Multimedia Content Description ─────────────────────────────
+  // MPEG-7 (ISO/IEC 15938) provides standardized descriptors for
+  // multimedia content — audio features (melody contour, timbre, rhythm),
+  // visual features (color, texture, shape), and structural metadata.
+  //
+  // For music, MPEG-7 Audio encodes melody contours, spectral features,
+  // and audio fingerprints as structured XML descriptors. Content-
+  // addressing these descriptors creates permanent identities for
+  // audio characteristics independent of encoding format.
+  //
+  //   Format: urn:uor:music:mpeg7:{hex} (SHA-256 of canonical MPEG-7 descriptor)
+  //   Canonical: descriptor → sorted elements → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: mpeg7 + midi → audio analysis↔symbolic bridge
+  //                     mpeg7 + c2pa → content provenance with audio fingerprint
+
+  ["mpeg7-audio", {
+    project: ({ hex }) => `urn:uor:music:mpeg7:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/75399.html",
+  }],
+
+  // ── JAMS — JSON Annotated Music Specification ───────────────────────────
+  // JAMS is a JSON format for music annotations — beat tracking, chord
+  // recognition, melody extraction, structural segmentation, and mood
+  // classification. Used by MIR (Music Information Retrieval) research
+  // community and computational musicology.
+  //
+  // JAMS documents contain typed annotations with time intervals,
+  // confidence scores, and provenance metadata. Content-addressing JAMS
+  // creates verifiable MIR analysis pipelines from audio to annotation.
+  //
+  //   Format: urn:uor:music:jams:{hex} (SHA-256 of canonical JAMS document)
+  //   Canonical: annotations → sorted by namespace + time → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: jams + mpeg7 → MIR analysis identity chain
+  //                     jams + midi → annotation↔composition bridge
+
+  ["jams", {
+    project: ({ hex }) => `urn:uor:music:jams:${hex}`,
+    fidelity: "lossless",
+    spec: "https://jams.readthedocs.io/en/stable/",
+  }],
+
+  // ── MPD — MPEG-DASH Media Presentation Description ──────────────────────
+  // MPD defines adaptive streaming manifests for audio and video delivery.
+  // Every major streaming platform (Spotify, YouTube Music, Apple Music)
+  // uses DASH or HLS manifests. MPD documents describe available
+  // bitrates, codecs, segment URLs, and DRM configuration.
+  //
+  // Content-addressing MPD creates permanent identities for streaming
+  // configurations — enabling verified delivery chain from master
+  // recording to listener's device. Combined with C2PA, this provides
+  // end-to-end music provenance.
+  //
+  //   Format: urn:uor:music:mpd:{hex} (SHA-256 of canonical MPD document)
+  //   Canonical: MPD → sorted elements → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: mpd + c2pa → streaming content provenance
+  //                     mpd + aes67 → broadcast↔streaming bridge
+
+  ["mpd", {
+    project: ({ hex }) => `urn:uor:music:mpd:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/79329.html",
   }],
 ]);

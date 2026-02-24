@@ -256,6 +256,26 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
       "webtransport", "gordian-envelope", "cbor-ld",
     ],
   },
+  {
+    id: "scientific",
+    label: "Scientific Data Formats",
+    description: "FITS, CIF, SMILES, GeoJSON, HDF5, DICOM, FHIR, PDB, NetCDF, NIfTI, SBML, mzML, FASTQ, VCF",
+    color: "hsl(290, 50%, 55%)",
+    projections: [
+      "fits", "cif", "smiles", "geojson", "hdf5", "dicom", "fhir",
+      "pdb", "netcdf", "nifti", "sbml", "mzml", "fastq", "vcf",
+    ],
+  },
+  {
+    id: "music",
+    label: "Music & Audio Standards",
+    description: "MIDI, MusicXML, MEI, ABC notation, AES67, MPEG-7, JAMS, MPD",
+    color: "hsl(320, 50%, 55%)",
+    projections: [
+      "midi", "musicxml", "mei", "abc-notation",
+      "aes67", "mpeg7-audio", "jams", "mpd",
+    ],
+  },
 ];
 
 /** Quick lookup: projection name → ecosystem id */
