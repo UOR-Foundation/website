@@ -124,6 +124,7 @@ function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
     ["activitypub", "ActivityPubObject"],
     ["atproto",     "AtProtocolRecord"],
     ["oidc",        "OpenIdConnectSubject"],
+    ["gs1",         "GS1DigitalLink"],
     ["solid",       "SolidWebID"],
     ["webfinger",   "WebFingerDiscovery"],
     ["dnssd",       "DnsServiceDiscovery"],

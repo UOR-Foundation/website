@@ -163,6 +163,11 @@ describe("W3C Interoperability", () => {
       const dnssdService = doc.service.find(s => s.type === "DnsServiceDiscovery")!;
       expect(dnssdService.serviceEndpoint).toMatch(/^_uor-[0-9a-f]{12}\._tcp\.local$/);
       expect(dnssdService.id).toMatch(/#dnssd$/);
+      // GS1 Digital Link — supply chain identity
+      expect(types).toContain("GS1DigitalLink");
+      const gs1Service = doc.service.find(s => s.type === "GS1DigitalLink")!;
+      expect(gs1Service.serviceEndpoint).toMatch(/^https:\/\/id\.gs1\.org\/8004\/[0-9a-f]{30}$/);
+      expect(gs1Service.id).toMatch(/#gs1$/);
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {
