@@ -205,12 +205,79 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
   },
   {
     id: "data-formats",
-    label: "Data Formats",
+    label: "Data Formats — Serialization & IDL",
     description: "Protobuf, Avro, Thrift, Cap'n Proto, FlatBuffers, MessagePack, CBOR, JSON Schema",
     color: "hsl(190, 45%, 48%)",
     projections: [
       "protobuf", "avro", "thrift", "capnproto", "flatbuffers",
       "msgpack", "cbor", "json-schema",
+    ],
+  },
+  {
+    id: "data-tabular",
+    label: "Data Formats — Tabular & Columnar",
+    description: "CSV, TSV, Parquet, Arrow, ORC, Iceberg, Delta Lake, Hudi, NDJSON",
+    color: "hsl(185, 50%, 46%)",
+    projections: [
+      "csv", "tsv", "parquet", "arrow", "orc", "iceberg", "delta", "hudi", "ndjson",
+    ],
+  },
+  {
+    id: "data-query",
+    label: "Data Formats — Query & Schema",
+    description: "GraphQL, SQL, CQL, Cypher — query languages and schema definitions",
+    color: "hsl(195, 42%, 50%)",
+    projections: ["graphql", "sql", "cql", "cypher"],
+  },
+  {
+    id: "data-encoding",
+    label: "Data Formats — Encoding & Binary",
+    description: "Base64, ASN.1/DER, BSON, Ion, Smile, UBJSON, Bencode, Pickle",
+    color: "hsl(180, 40%, 48%)",
+    projections: [
+      "base64", "asn1", "bson", "ion", "smile", "ubjson", "bencode", "pickle",
+    ],
+  },
+  {
+    id: "data-documents",
+    label: "Data Formats — Documents",
+    description: "PDF, OOXML, ODF, EPUB, RTF, DocBook, DITA",
+    color: "hsl(200, 44%, 50%)",
+    projections: ["pdf", "ooxml", "odf", "epub", "rtf", "docbook", "dita"],
+  },
+  {
+    id: "data-geospatial",
+    label: "Data Formats — Geospatial",
+    description: "Shapefile, GeoPackage, KML, GeoTIFF, WKT/WKB, MVT",
+    color: "hsl(170, 48%, 44%)",
+    projections: ["shapefile", "geopackage", "kml", "geotiff", "wkt", "mvt"],
+  },
+  {
+    id: "data-semantic",
+    label: "Data Formats — Semantic & RDF",
+    description: "N-Quads, Turtle, TriG, RDF/XML, SHACL, OWL",
+    color: "hsl(265, 42%, 52%)",
+    projections: ["nquads", "turtle", "trig", "rdfxml", "shacl", "owl"],
+  },
+  {
+    id: "data-media",
+    label: "Data Formats — Media & Image",
+    description: "JPEG, PNG, WebP, AVIF, TIFF, HEIF, FLAC, WAV, Ogg, MP4, WebM, MKV",
+    color: "hsl(340, 45%, 52%)",
+    projections: [
+      "jpeg", "png", "webp", "avif", "tiff", "heif",
+      "flac", "wav", "ogg", "mp4", "webm", "mkv",
+    ],
+  },
+  {
+    id: "data-3d-misc",
+    label: "Data Formats — 3D, Fonts & Archives",
+    description: "glTF, USD, FBX, OBJ, STL, 3MF, WOFF2, OpenType, ZIP, tar, SQLite, Zarr, Safetensors, GGUF",
+    color: "hsl(25, 50%, 50%)",
+    projections: [
+      "gltf", "usd", "fbx", "obj", "stl", "3mf",
+      "woff2", "opentype", "zip", "tar", "sqlite", "zarr",
+      "safetensors", "gguf",
     ],
   },
   {
