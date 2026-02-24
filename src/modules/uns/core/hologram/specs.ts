@@ -526,6 +526,19 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/google/A2A",
   }],
 
+  // ── A2A Task — Verifiable Inter-Agent Task Provenance ─────────────────
+  // Every A2A task gets a UOR receipt chain: who initiated it, what
+  // transformations occurred, and whether the output matches the request.
+  // The task hash IS the task's identity — enabling deterministic replay.
+  //
+  //   Format: urn:uor:a2a:task:{hex} (hash of canonical task object)
+
+  ["a2a-task", {
+    project: ({ hex }) => `urn:uor:a2a:task:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/google/A2A",
+  }],
+
   // ── OASF — Open Agent Service Framework ───────────────────────────────
   // Cisco's OASF provides off-chain service descriptors pinned on IPFS.
   // UOR's CIDv1 maps directly: the OASF descriptor's content hash IS

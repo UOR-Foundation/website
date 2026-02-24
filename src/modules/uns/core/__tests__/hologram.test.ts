@@ -37,8 +37,8 @@ const HEX = IDENTITY["u:canonicalId"].split(":").pop()!;
 // ── Core contract ───────────────────────────────────────────────────────────
 
 describe("Hologram Projection Registry", () => {
-  it("registers at least 34 projections", () => {
-    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(34);
+  it("registers at least 35 projections", () => {
+    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(35);
   });
 
   // ── Tier 0: Foundational Standards ──────────────────────────────────────
@@ -417,6 +417,18 @@ describe("Hologram Projection Registry", () => {
     expect(p.fidelity).toBe("lossless");
   });
 
+  it("a2a-task projection produces URN with full hash", () => {
+    const p = project(IDENTITY, "a2a-task");
+    expect(p.value).toBe(`urn:uor:a2a:task:${HEX}`);
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  it("a2a agent and task share the same identity hash", () => {
+    const agentHash = project(IDENTITY, "a2a").value.split(":").pop()!;
+    const taskHash = project(IDENTITY, "a2a-task").value.split(":").pop()!;
+    expect(agentHash).toBe(taskHash);
+  });
+
   // ── OASF — Open Agent Service Framework ──────────────────────────────
 
   it("oasf projection uses CID for native IPFS alignment", () => {
@@ -445,13 +457,13 @@ describe("Hologram Projection Registry", () => {
   });
 
   it("agent infrastructure projections are all deterministic", () => {
-    for (const name of ["erc8004", "x402", "mcp-tool", "mcp-context", "skill-md", "a2a", "oasf"]) {
+    for (const name of ["erc8004", "x402", "mcp-tool", "mcp-context", "skill-md", "a2a", "a2a-task", "oasf"]) {
       expect(project(IDENTITY, name).value).toBe(project(IDENTITY, name).value);
     }
   });
 
   it("all agent infrastructure projections are lossless", () => {
-    for (const name of ["erc8004", "x402", "mcp-tool", "mcp-context", "skill-md", "a2a", "oasf"]) {
+    for (const name of ["erc8004", "x402", "mcp-tool", "mcp-context", "skill-md", "a2a", "a2a-task", "oasf"]) {
       expect(project(IDENTITY, name).fidelity).toBe("lossless");
     }
   });
