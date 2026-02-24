@@ -75,20 +75,20 @@ export function InteroperabilityMap() {
   return (
     <div className="space-y-8">
       {/* ── Stats ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: "Projections", value: totalProjections, icon: Layers },
           { label: "Categories", value: ECOSYSTEMS.length, icon: Zap },
           { label: "Synergy Chains", value: totalChains, icon: Link2 },
           { label: "Shared Clusters", value: totalClusters, icon: Info },
         ].map(({ label, value, icon: Icon }) => (
-          <div key={label} className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Icon className="w-4 h-4 text-primary" />
+          <div key={label} className="bg-card border border-border rounded-xl p-5 flex items-center gap-4">
+            <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Icon className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <div className="text-xl font-bold text-foreground">{value}</div>
-              <div className="text-[11px] text-muted-foreground">{label}</div>
+              <div className="text-2xl font-bold text-foreground">{value}</div>
+              <div className="text-sm text-muted-foreground font-medium">{label}</div>
             </div>
           </div>
         ))}
@@ -173,7 +173,7 @@ export function InteroperabilityMap() {
       )}
 
       {/* ── Category Grid ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {ECOSYSTEMS.map(eco => {
           const isExpanded = expandedCategory === eco.id;
           const validProjections = eco.projections.filter(p => SPECS.has(p));
@@ -190,34 +190,34 @@ export function InteroperabilityMap() {
               {/* Header — always visible */}
               <button
                 onClick={() => setExpandedCategory(prev => prev === eco.id ? null : eco.id)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/30 transition-colors"
+                className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-secondary/30 transition-colors"
               >
                 <span
-                  className="w-3 h-3 rounded-full shrink-0"
+                  className="w-3.5 h-3.5 rounded-full shrink-0"
                   style={{ backgroundColor: eco.color }}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground">{eco.label}</span>
-                    <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] font-mono text-muted-foreground">
+                    <span className="text-base font-bold text-foreground">{eco.label}</span>
+                    <span className="px-2 py-0.5 rounded bg-secondary text-xs font-mono font-semibold text-muted-foreground">
                       {validProjections.length}
                     </span>
                   </div>
                   {!isExpanded && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{eco.description}</p>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{eco.description}</p>
                   )}
                 </div>
                 {isExpanded
-                  ? <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
-                  : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                  ? <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
+                  : <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                 }
               </button>
 
               {/* Expanded — projections */}
               {isExpanded && (
-                <div className="px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <p className="text-xs text-muted-foreground mb-3">{eco.description}</p>
-                  <div className="flex flex-wrap gap-1.5">
+                <div className="px-5 pb-5 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <p className="text-sm text-muted-foreground mb-4">{eco.description}</p>
+                  <div className="flex flex-wrap gap-2">
                     {validProjections.map(p => {
                       const isActive = activeProjection === p;
                       const isHighlighted = highlightedProjections.has(p);
@@ -229,7 +229,7 @@ export function InteroperabilityMap() {
                           key={p}
                           onClick={(e) => { e.stopPropagation(); handleProjectionClick(p); }}
                           className={`
-                            px-2.5 py-1.5 rounded-lg text-[11px] font-mono font-medium
+                            px-3 py-2 rounded-lg text-sm font-mono font-semibold
                             border transition-all duration-150
                             ${isActive
                               ? "bg-primary text-primary-foreground border-primary shadow-md scale-105"
@@ -244,7 +244,7 @@ export function InteroperabilityMap() {
                         >
                           {p}
                           {spec && (
-                            <span className={`ml-1 text-[9px] ${
+                            <span className={`ml-1.5 text-xs ${
                               isActive ? "text-primary-foreground/70" :
                               isHighlighted ? "text-primary/60" :
                               "text-muted-foreground/50"
@@ -256,7 +256,7 @@ export function InteroperabilityMap() {
                       );
                     })}
                     {pendingCount > 0 && (
-                      <span className="px-2.5 py-1.5 rounded-lg text-[10px] text-muted-foreground/40 italic">
+                      <span className="px-3 py-2 rounded-lg text-xs text-muted-foreground/40 italic">
                         +{pendingCount} pending
                       </span>
                     )}
@@ -272,20 +272,20 @@ export function InteroperabilityMap() {
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <button
           onClick={() => setShowAllChains(prev => !prev)}
-          className="w-full flex items-center gap-2 px-4 py-3.5 hover:bg-secondary/30 transition-colors"
+          className="w-full flex items-center gap-3 px-5 py-4 hover:bg-secondary/30 transition-colors"
         >
-          <Link2 className="w-4 h-4 text-primary shrink-0" />
-          <span className="text-sm font-semibold text-foreground">Synergy Chains</span>
-          <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] font-mono text-muted-foreground">
+          <Link2 className="w-5 h-5 text-primary shrink-0" />
+          <span className="text-base font-bold text-foreground">Synergy Chains</span>
+          <span className="px-2 py-0.5 rounded bg-secondary text-xs font-mono font-semibold text-muted-foreground">
             {totalChains}
           </span>
-          <span className="text-xs text-muted-foreground ml-1 hidden sm:inline">
+          <span className="text-sm text-muted-foreground ml-1 hidden sm:inline">
             — Cross-protocol relationships documented
           </span>
           <div className="flex-1" />
           {showAllChains
-            ? <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            : <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            ? <ChevronDown className="w-5 h-5 text-muted-foreground" />
+            : <ChevronRight className="w-5 h-5 text-muted-foreground" />
           }
         </button>
         {showAllChains && (
@@ -294,18 +294,18 @@ export function InteroperabilityMap() {
               <button
                 key={chain.name}
                 onClick={() => handleChainClick(chain)}
-                className={`w-full text-left px-4 py-3 transition-colors ${
+                className={`w-full text-left px-5 py-3.5 transition-colors ${
                   activeChain?.name === chain.name ? "bg-primary/5" : "hover:bg-secondary/30"
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <Link2 className={`w-3 h-3 shrink-0 ${
+                  <Link2 className={`w-4 h-4 shrink-0 ${
                     activeChain?.name === chain.name ? "text-primary" : "text-muted-foreground"
                   }`} />
-                  <span className="text-xs font-medium text-foreground">{chain.name}</span>
-                  <span className="text-[10px] text-muted-foreground ml-auto">{chain.projections.length} nodes</span>
+                  <span className="text-sm font-semibold text-foreground">{chain.name}</span>
+                  <span className="text-xs text-muted-foreground ml-auto">{chain.projections.length} nodes</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-0.5 ml-5 line-clamp-1">{chain.description}</p>
+                <p className="text-sm text-muted-foreground mt-1 ml-6 line-clamp-1">{chain.description}</p>
               </button>
             ))}
           </div>
@@ -316,33 +316,33 @@ export function InteroperabilityMap() {
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <button
           onClick={() => setShowClusters(prev => !prev)}
-          className="w-full flex items-center gap-2 px-4 py-3.5 hover:bg-secondary/30 transition-colors"
+          className="w-full flex items-center gap-3 px-5 py-4 hover:bg-secondary/30 transition-colors"
         >
-          <Info className="w-4 h-4 text-primary shrink-0" />
-          <span className="text-sm font-semibold text-foreground">Shared Clusters</span>
-          <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] font-mono text-muted-foreground">
+          <Info className="w-5 h-5 text-primary shrink-0" />
+          <span className="text-base font-bold text-foreground">Shared Clusters</span>
+          <span className="px-2 py-0.5 rounded bg-secondary text-xs font-mono font-semibold text-muted-foreground">
             {totalClusters}
           </span>
-          <span className="text-xs text-muted-foreground ml-1 hidden sm:inline">
+          <span className="text-sm text-muted-foreground ml-1 hidden sm:inline">
             — Standards sharing underlying identity components
           </span>
           <div className="flex-1" />
           {showClusters
-            ? <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            : <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            ? <ChevronDown className="w-5 h-5 text-muted-foreground" />
+            : <ChevronRight className="w-5 h-5 text-muted-foreground" />
           }
         </button>
         {showClusters && (
           <div className="border-t border-border divide-y divide-border max-h-[400px] overflow-y-auto">
             {Object.entries(CLUSTERS).map(([cluster, members]) => (
-              <div key={cluster} className="px-4 py-2.5">
-                <div className="text-[10px] font-semibold text-foreground/80 mb-1">{cluster}</div>
-                <div className="flex flex-wrap gap-1">
+              <div key={cluster} className="px-5 py-3.5">
+                <div className="text-sm font-semibold text-foreground mb-2">{cluster}</div>
+                <div className="flex flex-wrap gap-1.5">
                   {members.map(m => (
                     <span
                       key={m}
                       onClick={() => handleProjectionClick(m)}
-                      className="px-1.5 py-0.5 rounded bg-secondary text-[10px] font-mono text-muted-foreground cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors"
+                      className="px-2 py-1 rounded bg-secondary text-xs font-mono font-medium text-muted-foreground cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors"
                     >
                       {m}
                     </span>
