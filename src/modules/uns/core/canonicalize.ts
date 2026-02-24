@@ -165,6 +165,84 @@ const SCHEMA_ORG_INLINE_CONTEXT: Record<string, unknown> = {
   inLanguage: "schema:inLanguage",
 };
 
+// ── FPP v1 context (inlined for offline canonicalization) ───────────────────
+
+const FPP_V1_CONTEXT_URL = "https://www.firstperson.network/context/v1";
+
+const FPP_V1_INLINE_CONTEXT: Record<string, unknown> = {
+  fpp: "https://www.firstperson.network/ns/",
+  xsd: "http://www.w3.org/2001/XMLSchema#",
+  "fpp:PersonhoodCredential": { "@id": "fpp:PersonhoodCredential" },
+  "fpp:VerifiableRelationshipCredential": { "@id": "fpp:VerifiableRelationshipCredential" },
+  "fpp:VerifiableEndorsementCredential": { "@id": "fpp:VerifiableEndorsementCredential" },
+  "fpp:Persona": { "@id": "fpp:Persona" },
+  "fpp:RelationshipCard": { "@id": "fpp:RelationshipCard" },
+  "fpp:TrustGraphNode": { "@id": "fpp:TrustGraphNode" },
+  "fpp:VrcDelivery": { "@id": "fpp:VrcDelivery" },
+  "fpp:ecosystem": { "@id": "fpp:ecosystem", "@type": "xsd:string" },
+  "fpp:holder": { "@id": "fpp:holder", "@type": "xsd:string" },
+  "fpp:issuedAt": { "@id": "fpp:issuedAt", "@type": "xsd:dateTime" },
+  "fpp:expiresAt": { "@id": "fpp:expiresAt", "@type": "xsd:dateTime" },
+  "fpp:issuer": { "@id": "fpp:issuer", "@type": "xsd:string" },
+  "fpp:nonce": { "@id": "fpp:nonce", "@type": "xsd:string" },
+  "fpp:issuerRdid": { "@id": "fpp:issuerRdid", "@type": "xsd:string" },
+  "fpp:subjectRdid": { "@id": "fpp:subjectRdid", "@type": "xsd:string" },
+  "fpp:issuerPhcRef": { "@id": "fpp:issuerPhcRef", "@type": "xsd:string" },
+  "fpp:subjectPhcRef": { "@id": "fpp:subjectPhcRef", "@type": "xsd:string" },
+  "fpp:endorserPdid": { "@id": "fpp:endorserPdid", "@type": "xsd:string" },
+  "fpp:subjectPdid": { "@id": "fpp:subjectPdid", "@type": "xsd:string" },
+  "fpp:endorsements": { "@id": "fpp:endorsements" },
+  "fpp:context": { "@id": "fpp:context", "@type": "xsd:string" },
+  "fpp:type": { "@id": "fpp:type", "@type": "xsd:string" },
+  "fpp:label": { "@id": "fpp:label", "@type": "xsd:string" },
+  "fpp:contexts": { "@id": "fpp:contexts" },
+  "fpp:public": { "@id": "fpp:public", "@type": "xsd:boolean" },
+  "fpp:createdAt": { "@id": "fpp:createdAt", "@type": "xsd:dateTime" },
+  "fpp:personaDid": { "@id": "fpp:personaDid", "@type": "xsd:string" },
+  "fpp:displayName": { "@id": "fpp:displayName", "@type": "xsd:string" },
+  "fpp:title": { "@id": "fpp:title", "@type": "xsd:string" },
+  "fpp:organization": { "@id": "fpp:organization", "@type": "xsd:string" },
+  "fpp:endpoints": { "@id": "fpp:endpoints" },
+  "fpp:version": { "@id": "fpp:version", "@type": "xsd:integer" },
+  "fpp:updatedAt": { "@id": "fpp:updatedAt", "@type": "xsd:dateTime" },
+  "fpp:nodeDid": { "@id": "fpp:nodeDid", "@type": "xsd:string" },
+  "fpp:phcRefs": { "@id": "fpp:phcRefs" },
+  "fpp:vrcCount": { "@id": "fpp:vrcCount", "@type": "xsd:integer" },
+  "fpp:ecosystems": { "@id": "fpp:ecosystems" },
+  "fpp:snapshotAt": { "@id": "fpp:snapshotAt", "@type": "xsd:dateTime" },
+  "fpp:vrc": { "@id": "fpp:vrc", "@type": "xsd:string" },
+};
+
+// ── TSP v1 context (inlined for offline canonicalization) ───────────────────
+
+const TSP_V1_CONTEXT_URL = "https://trustoverip.github.io/tswg-tsp-specification/context/v1";
+
+const TSP_V1_INLINE_CONTEXT: Record<string, unknown> = {
+  tsp: "https://trustoverip.github.io/tswg-tsp-specification/ns/",
+  xsd: "http://www.w3.org/2001/XMLSchema#",
+  "tsp:Envelope": { "@id": "tsp:Envelope" },
+  "tsp:Relationship": { "@id": "tsp:Relationship" },
+  "tsp:Rfi": { "@id": "tsp:Rfi" },
+  "tsp:Rfa": { "@id": "tsp:Rfa" },
+  "tsp:sender": { "@id": "tsp:sender", "@type": "xsd:string" },
+  "tsp:receiver": { "@id": "tsp:receiver", "@type": "xsd:string" },
+  "tsp:messageType": { "@id": "tsp:messageType", "@type": "xsd:string" },
+  "tsp:payload": { "@id": "tsp:payload" },
+  "tsp:timestamp": { "@id": "tsp:timestamp", "@type": "xsd:dateTime" },
+  "tsp:nonce": { "@id": "tsp:nonce", "@type": "xsd:string" },
+  "tsp:rfi": { "@id": "tsp:rfi" },
+  "tsp:rfa": { "@id": "tsp:rfa" },
+  "tsp:requester": { "@id": "tsp:requester", "@type": "xsd:string" },
+  "tsp:responder": { "@id": "tsp:responder", "@type": "xsd:string" },
+  "tsp:purpose": { "@id": "tsp:purpose", "@type": "xsd:string" },
+  "tsp:accepted": { "@id": "tsp:accepted", "@type": "xsd:boolean" },
+  "tsp:acceptedAt": { "@id": "tsp:acceptedAt", "@type": "xsd:dateTime" },
+  "tsp:establishedAt": { "@id": "tsp:establishedAt", "@type": "xsd:dateTime" },
+  "tsp:channelId": { "@id": "tsp:channelId", "@type": "xsd:string" },
+  "tsp:route": { "@id": "tsp:route" },
+  "tsp:finalReceiver": { "@id": "tsp:finalReceiver", "@type": "xsd:string" },
+};
+
 // ── Custom Document Loader ──────────────────────────────────────────────────
 
 function createDocumentLoader() {
@@ -210,6 +288,16 @@ function createDocumentLoader() {
         documentUrl: url,
         document: { "@context": SCHEMA_ORG_INLINE_CONTEXT },
       };
+    }
+
+    // FPP v1 context — served locally
+    if (url === FPP_V1_CONTEXT_URL || url === FPP_V1_CONTEXT_URL.replace("https://", "http://")) {
+      return { contextUrl: null, documentUrl: url, document: { "@context": FPP_V1_INLINE_CONTEXT } };
+    }
+
+    // TSP v1 context — served locally
+    if (url === TSP_V1_CONTEXT_URL || url === TSP_V1_CONTEXT_URL.replace("https://", "http://")) {
+      return { contextUrl: null, documentUrl: url, document: { "@context": TSP_V1_INLINE_CONTEXT } };
     }
 
     if (defaultLoader) return defaultLoader(url);

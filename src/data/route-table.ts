@@ -30,4 +30,5 @@ export const routeTable = [
   { path: "/uns", label: "UoR Name Service" },
   { path: "/developers", label: "Developers" },
   { path: "/cartridge", label: "QR Cartridge" },
+  { path: "/console/fpp", label: "Console: FPP Trust Flow" },
 ];
