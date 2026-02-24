@@ -88,3 +88,19 @@ export { certificateToTriword, triwordBreakdown } from "./triword";
 export { enforceBoundary, type BoundaryManifest, type BoundaryResult } from "./boundary";
 export { deriveCoherenceWitness, verifyCoherenceWitness } from "./coherence";
 export { sha256hex, sourceObjectHash, toCompactBoundary } from "./utils";
+
+// ── W3C Interoperability Layer ─────────────────────────────────────────────
+export {
+  wrapAsVerifiableCredential,
+  verifyVerifiableCredential,
+  type VerifiableUorCredential,
+  type DataIntegrityProof,
+} from "./vc-envelope";
+
+export {
+  resolveDidDocument,
+  cidToDid,
+  didToCid,
+  isDidUor,
+  type UorDidDocument,
+} from "./did";

@@ -146,6 +146,7 @@ export async function canonicalizeToNQuads(obj: unknown): Promise<string> {
     algorithm: "URDNA2015",
     format: "application/n-quads",
     documentLoader: createDocumentLoader(),
+    safe: false,
   });
   return nquads;
 }
