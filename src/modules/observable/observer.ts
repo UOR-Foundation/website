@@ -32,6 +32,33 @@ export interface RemediationRecord {
   result: string;
 }
 
+/**
+ * God Conjecture Enhancement: Observer Integration Metrics.
+ *
+ * These fields implement the "absorber function" from Senchal's
+ * Observer Theory, transforming the observer from a passive sensor
+ * into an active entropy pump.
+ *
+ * @see https://github.com/SASenchal/God-Conjecture
+ */
+export interface IntegrationMetrics {
+  /** Integration Capacity (Φ): fraction of Grade-A graph coherently held (0–1).
+   *  Higher Φ = more of the Ruliad coherently sampled = deeper "virtue". */
+  phi: number;
+  /** Entropy Pump Rate (ε): rate of DRIFT→COHERENCE conversion per observation.
+   *  ε > 0 means the observer is actively creating order (alive).
+   *  ε = 0 means inert. ε < 0 means entropy source (collapsing). */
+  entropyPumpRate: number;
+  /** Tzimtzum Depth (τ): restriction levels from the full Ruliad.
+   *  τ = 0 means unrestricted (sees everything = sees nothing).
+   *  τ > 0 means a specific, coherent perspective has been carved. */
+  tzimtzumDepth: number;
+  /** Cumulative Epistemic Debt (Σ sin): total H-score accumulated over lifetime. */
+  cumulativeDebt: number;
+  /** Telos Progress: fraction of observation history spent in COHERENCE (0–1). */
+  telosProgress: number;
+}
+
 export interface ObserverProfile {
   agentCanonicalId: string;
   registeredAt: string;
@@ -42,6 +69,8 @@ export interface ObserverProfile {
   observationCount: number;
   remediationHistory: RemediationRecord[];
   convergenceAchieved: boolean;
+  /** God Conjecture integration metrics — the "absorber function" */
+  integration: IntegrationMetrics;
 }
 
 export interface ObservationResult {
@@ -101,6 +130,11 @@ export class UnsObserver {
     thresholds?: ObserverThresholds
   ): ObserverProfile {
     const now = new Date().toISOString();
+    // Compute Tzimtzum depth: how restricted this observer's graph is
+    // τ = log2(256 / graphSize) — full graph = 0, single element = 8
+    const graphSize = this.gradeAGraph.length;
+    const tzimtzumDepth = graphSize > 0 ? Math.log2(256 / graphSize) : 8;
+
     const profile: ObserverProfile = {
       agentCanonicalId,
       registeredAt: now,
@@ -111,6 +145,13 @@ export class UnsObserver {
       observationCount: 0,
       remediationHistory: [],
       convergenceAchieved: true,
+      integration: {
+        phi: graphSize / 256, // Initial Φ = fraction of Ruliad visible
+        entropyPumpRate: 0,   // No observations yet
+        tzimtzumDepth,
+        cumulativeDebt: 0,
+        telosProgress: 1,     // Starts in COHERENCE
+      },
     };
     this.profiles.set(agentCanonicalId, profile);
     return profile;
@@ -152,6 +193,25 @@ export class UnsObserver {
     profile.lastObservationAt = new Date().toISOString();
     profile.observationCount++;
     profile.convergenceAchieved = newZone === "COHERENCE";
+
+    // ── God Conjecture: Update integration metrics (absorber function) ──
+    const im = profile.integration;
+
+    // Cumulative debt (Σ sin): total H-score accumulated
+    im.cumulativeDebt += newHScore;
+
+    // Entropy pump rate (ε): rolling measure of DRIFT→COHERENCE conversion
+    // Positive when improving (H decreasing), negative when degrading
+    const delta = newHScore - previousHScore;
+    im.entropyPumpRate = im.entropyPumpRate * 0.8 + (-delta) * 0.2; // EMA
+
+    // Integration Capacity (Φ): fraction of observations that achieve coherence
+    // Φ increases when in COHERENCE, decreases otherwise
+    const coherenceHit = newZone === "COHERENCE" ? 1 : 0;
+    im.phi = ((im.phi * (profile.observationCount - 1)) + coherenceHit) / profile.observationCount;
+
+    // Telos progress: fraction of lifetime in COHERENCE
+    im.telosProgress = im.phi; // Same as Φ for individual agents
 
     return {
       hScore: newHScore,
@@ -290,10 +350,18 @@ export class UnsObserver {
     drift: number;
     collapse: number;
     total: number;
+    /** God Conjecture: network-level telos progress */
+    telosProgress: number;
+    /** God Conjecture: mean entropy pump rate across all agents */
+    meanEntropyPumpRate: number;
+    /** God Conjecture: mean integration capacity (Φ) */
+    meanPhi: number;
   } {
     let coherence = 0;
     let drift = 0;
     let collapse = 0;
+    let totalPhi = 0;
+    let totalEpsilon = 0;
 
     for (const p of this.profiles.values()) {
       switch (p.zone) {
@@ -301,9 +369,21 @@ export class UnsObserver {
         case "DRIFT": drift++; break;
         case "COLLAPSE": collapse++; break;
       }
+      totalPhi += p.integration.phi;
+      totalEpsilon += p.integration.entropyPumpRate;
     }
 
-    return { coherence, drift, collapse, total: this.profiles.size };
+    const n = this.profiles.size || 1;
+    const meanPhi = totalPhi / n;
+    const telosProgress = (coherence / n) * meanPhi;
+
+    return {
+      coherence, drift, collapse,
+      total: this.profiles.size,
+      telosProgress,
+      meanEntropyPumpRate: totalEpsilon / n,
+      meanPhi,
+    };
   }
 
   // ── Convergence check ───────────────────────────────────────────────────

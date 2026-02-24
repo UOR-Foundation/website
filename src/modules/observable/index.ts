@@ -14,6 +14,7 @@ export type {
   ObserverThresholds,
   ObservationResult,
   RemediationRecord,
+  IntegrationMetrics,
 } from "./observer";
 
 // ── P31: Observable Geometry Layer — 7 Ring Metrics ─────────────────────────

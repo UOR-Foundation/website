@@ -216,6 +216,14 @@ export default function ConsciousnessPage() {
             where every theory is a content-addressed datum, every category is a context, and every
             connection is a morphism in a 5-dimensional factor space.
           </p>
+          <Link
+            to="/consciousness/god-conjecture"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+          >
+            <span className="text-base">צ</span>
+            God Conjecture × UOR — The Tzimtzum Discovery
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
         </section>
 
         {/* Category Filter */}
