@@ -175,7 +175,7 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
 
             {/* Unique ID */}
             <div>
-              <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold mb-1.5">Unique Identifier</p>
+              <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold mb-1.5">Unique ID</p>
               <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
                 <code className="flex-1 font-mono text-xs break-all text-foreground/80 leading-relaxed">{cid}</code>
                 <button onClick={() => copyValue(cid)} className="shrink-0 text-foreground/40 hover:text-foreground transition-colors">
