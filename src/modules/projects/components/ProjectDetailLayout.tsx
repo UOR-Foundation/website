@@ -144,6 +144,27 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
               </div>
             )}
 
+            {/* Object details */}
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">Details</p>
+              <div className="rounded-lg border border-border bg-card px-4 py-3 space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-foreground/50">Name</span>
+                  <span className="font-medium text-foreground">{name}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-foreground/50">Issued</span>
+                  <span className="font-medium text-foreground">
+                    {(() => { const d = new Date(certificate["cert:issuedAt"]); return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }); })()}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-foreground/50">Category</span>
+                  <span className="font-medium text-foreground">{certificate["cert:subject"].replace("project:", "").replace(/^\w/, c => c.toUpperCase())}</span>
+                </div>
+              </div>
+            </div>
+
             {/* Unique ID */}
             <div>
               <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold mb-1.5">Unique Identifier</p>
