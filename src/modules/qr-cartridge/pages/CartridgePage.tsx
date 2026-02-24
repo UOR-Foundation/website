@@ -142,7 +142,7 @@ const CartridgePage = () => {
       <div className="min-h-screen bg-background">
 
         {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <section className="relative pt-32 pb-16 md:pt-40 md:pb-20 overflow-hidden">
+        <section className="relative pt-40 pb-16 md:pt-52 md:pb-20 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-2xl mx-auto text-center space-y-5">

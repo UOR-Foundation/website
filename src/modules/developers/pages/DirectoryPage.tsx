@@ -251,7 +251,7 @@ const DirectoryPage = () => {
       <Navbar />
       <div className="dark bg-section-dark text-section-dark-foreground min-h-screen">
         {/* Hero */}
-        <section className="pt-32 pb-10 md:pt-40 md:pb-14">
+        <section className="pt-40 pb-10 md:pt-52 md:pb-14">
           <div className="container max-w-6xl">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-foreground mb-3">
               Docs directory
