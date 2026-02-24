@@ -198,7 +198,7 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
       // Cloud & DevOps
       "k8s", "helm", "tfstate", "prometheus", "compose", "gha",
       // Observability
-      "opentelemetry", "cloudevents",
+      "opentelemetry", "cloudevents", "grafana-dashboard",
       // Container
       "oci", "gs1",
     ],
