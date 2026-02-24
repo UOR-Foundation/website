@@ -37,8 +37,8 @@ const HEX = IDENTITY["u:canonicalId"].split(":").pop()!;
 // ── Core contract ───────────────────────────────────────────────────────────
 
 describe("Hologram Projection Registry", () => {
-  it("registers at least 27 projections", () => {
-    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(27);
+  it("registers at least 33 projections", () => {
+    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(33);
   });
 
   // ── Tier 0: Foundational Standards ──────────────────────────────────────
@@ -340,6 +340,108 @@ describe("Hologram Projection Registry", () => {
       if (p.fidelity === "lossless") {
         expect(p.lossWarning).toBeUndefined();
       }
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 7 — AGENTIC AI INFRASTRUCTURE (Moltbook Agent Stack)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── ERC-8004 — On-Chain Agent Identity ────────────────────────────────
+
+  it("erc8004 projection embeds full hex as on-chain tokenId", () => {
+    const p = project(IDENTITY, "erc8004");
+    expect(p.value).toBe(`erc8004:1:agent-registry:${HEX}`);
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  it("erc8004 identity matches bitcoin OP_RETURN — cross-ledger proof", () => {
+    const erc = project(IDENTITY, "erc8004").value.split(":").pop()!;
+    const btc = project(IDENTITY, "bitcoin").value.slice(10);
+    expect(erc).toBe(btc);
+  });
+
+  // ── x402 — Agent Payment Protocol ────────────────────────────────────
+
+  it("x402 projection produces payment hash with full identity", () => {
+    const p = project(IDENTITY, "x402");
+    expect(p.value).toBe(`x402:sha256:${HEX}`);
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  it("x402 payment hash enables content-gated commerce via bitcoin-hashlock", () => {
+    const x402Hash = project(IDENTITY, "x402").value.split(":").pop()!;
+    const hashlockHash = project(IDENTITY, "bitcoin-hashlock").value.slice(4, 68);
+    // Same identity gates the payment and identifies the service
+    expect(x402Hash).toBe(hashlockHash);
+  });
+
+  // ── MCP Tool Provenance ──────────────────────────────────────────────
+
+  it("mcp-tool projection produces URN with full hash", () => {
+    const p = project(IDENTITY, "mcp-tool");
+    expect(p.value).toBe(`urn:uor:mcp:tool:${HEX}`);
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  // ── skill.md — Supply Chain Integrity ────────────────────────────────
+
+  it("skill-md projection produces URN with full hash", () => {
+    const p = project(IDENTITY, "skill-md");
+    expect(p.value).toBe(`urn:uor:skill:${HEX}`);
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  it("skill-md hash can be verified via bitcoin timestamp", () => {
+    const skillHash = project(IDENTITY, "skill-md").value.split(":").pop()!;
+    const btcEmbedded = project(IDENTITY, "bitcoin").value.slice(10);
+    expect(skillHash).toBe(btcEmbedded);
+  });
+
+  // ── A2A — Agent-to-Agent Communication ───────────────────────────────
+
+  it("a2a projection produces URN with full hash", () => {
+    const p = project(IDENTITY, "a2a");
+    expect(p.value).toBe(`urn:uor:a2a:agent:${HEX}`);
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  // ── OASF — Open Agent Service Framework ──────────────────────────────
+
+  it("oasf projection uses CID for native IPFS alignment", () => {
+    const p = project(IDENTITY, "oasf");
+    expect(p.value).toBe(`urn:uor:oasf:bafyreitest123`);
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  // ── Cross-Framework Identity Equivalence ─────────────────────────────
+
+  it("all agent infrastructure projections share the same 256-bit identity", () => {
+    const erc = project(IDENTITY, "erc8004").value.split(":").pop()!;
+    const x402 = project(IDENTITY, "x402").value.split(":").pop()!;
+    const mcp = project(IDENTITY, "mcp-tool").value.split(":").pop()!;
+    const skill = project(IDENTITY, "skill-md").value.split(":").pop()!;
+    const a2a = project(IDENTITY, "a2a").value.split(":").pop()!;
+    const nostr = project(IDENTITY, "nostr").value;
+    const btc = project(IDENTITY, "bitcoin").value.slice(10);
+    // One hash, seven protocols
+    expect(erc).toBe(x402);
+    expect(x402).toBe(mcp);
+    expect(mcp).toBe(skill);
+    expect(skill).toBe(a2a);
+    expect(a2a).toBe(nostr);
+    expect(nostr).toBe(btc);
+  });
+
+  it("agent infrastructure projections are all deterministic", () => {
+    for (const name of ["erc8004", "x402", "mcp-tool", "skill-md", "a2a", "oasf"]) {
+      expect(project(IDENTITY, name).value).toBe(project(IDENTITY, name).value);
+    }
+  });
+
+  it("all agent infrastructure projections are lossless", () => {
+    for (const name of ["erc8004", "x402", "mcp-tool", "skill-md", "a2a", "oasf"]) {
+      expect(project(IDENTITY, name).fidelity).toBe("lossless");
     }
   });
 });

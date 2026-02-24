@@ -420,4 +420,107 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://github.com/nostr-protocol/nips/blob/master/19.md",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 7 — AGENTIC AI INFRASTRUCTURE (Moltbook Agent Stack)
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // The emerging agent stack: Identity (ERC-8004) + Payments (x402) +
+  // Communication (MCP/A2A) + Skills (skill.md) + Services (OASF).
+  // UOR provides the content-addressed trust layer beneath all of them.
+
+  // ── ERC-8004 — On-Chain Agent Identity Registry ────────────────────────
+  // ERC-8004 (backed by Coinbase, Google, MetaMask) assigns ERC-721 tokens
+  // as agent identities. UOR projects into the tokenId space by casting
+  // the SHA-256 hash to uint256 — the agent's content-derived identity
+  // becomes its on-chain identity. Same hash, different ledger.
+  //
+  // This solves ERC-8004's transferability gap: a UOR identity is bound
+  // to what the agent computes (founding derivation), not what token it
+  // holds. Even if the NFT transfers, the canonical ID remains.
+  //
+  //   Format: erc8004:1:{contractAddr}:{uint256(sha256)}
+  //   Chain:  1 = Ethereum mainnet (default registry)
+
+  ["erc8004", {
+    project: ({ hex }) => `erc8004:1:agent-registry:${hex}`,
+    fidelity: "lossless",
+    spec: "https://eips.ethereum.org/EIPS/eip-8004",
+  }],
+
+  // ── x402 — Agent Payment Protocol ─────────────────────────────────────
+  // Coinbase's x402 uses HTTP 402 responses with payment requirements.
+  // A UOR projection turns any service contract into a content-addressed
+  // payment hash: the SHA-256 of the canonical service descriptor.
+  //
+  // Combined with bitcoin-hashlock, this enables content-gated commerce:
+  // the UOR canonical bytes ARE the preimage — revealing the object
+  // settles the payment. Content delivery IS payment settlement.
+  //
+  //   Format: x402:sha256:{hex} (payment requirement hash)
+
+  ["x402", {
+    project: ({ hex }) => `x402:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.x402.org/",
+  }],
+
+  // ── MCP Tool Provenance — Content-Addressed Tool Outputs ──────────────
+  // Anthropic's Model Context Protocol lacks provenance tracking — once
+  // untrusted content enters an agent's context, its origin is lost.
+  //
+  // UOR solves this: every MCP tool call (input→output) gets a content
+  // address. Agents can verify that a tool output hasn't been tampered
+  // with by re-computing the hash. This is the "context_block" extension
+  // proposed by Subhadip Mitra, implemented as content addressing.
+  //
+  //   Format: urn:uor:mcp:tool:{hex} (hash of tool input+output)
+
+  ["mcp-tool", {
+    project: ({ hex }) => `urn:uor:mcp:tool:${hex}`,
+    fidelity: "lossless",
+    spec: "https://modelcontextprotocol.io/specification",
+  }],
+
+  // ── skill.md — Content-Addressed Agent Skills ─────────────────────────
+  // Moltbook's skill.md convention — the "simplest API contract" — has
+  // a critical supply-chain attack surface: malicious modifications.
+  //
+  // UOR provides cryptographic integrity: hash the canonical skill
+  // descriptor, publish the hash on Bitcoin/Zcash, and any agent can
+  // verify a skill.md hasn't been tampered with before executing it.
+  //
+  //   Format: urn:uor:skill:{hex} (hash of canonical skill descriptor)
+
+  ["skill-md", {
+    project: ({ hex }) => `urn:uor:skill:${hex}`,
+    fidelity: "lossless",
+    spec: "https://moltbook.com/m/skills",
+  }],
+
+  // ── A2A — Agent-to-Agent Communication ────────────────────────────────
+  // Google's A2A protocol uses AgentCards for discovery and tasks for
+  // orchestration. UOR projects into both: the AgentCard becomes a
+  // content-addressed identity, and each task gets a verifiable hash.
+  //
+  //   Format: urn:uor:a2a:agent:{hex} (hash of canonical AgentCard)
+
+  ["a2a", {
+    project: ({ hex }) => `urn:uor:a2a:agent:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/google/A2A",
+  }],
+
+  // ── OASF — Open Agent Service Framework ───────────────────────────────
+  // Cisco's OASF provides off-chain service descriptors pinned on IPFS.
+  // UOR's CIDv1 maps directly: the OASF descriptor's content hash IS
+  // the UOR identity. Zero translation — native CID alignment.
+  //
+  //   Format: urn:uor:oasf:{cid} (CID of canonical service descriptor)
+
+  ["oasf", {
+    project: ({ cid }) => `urn:uor:oasf:${cid}`,
+    fidelity: "lossless",
+    spec: "https://github.com/agntcy/oasf",
+  }],
 ]);
