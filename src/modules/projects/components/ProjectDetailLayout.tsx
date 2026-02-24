@@ -103,20 +103,20 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
       </button>
 
       <Dialog open={open} onOpenChange={handleOpen}>
-        <DialogContent className="max-w-md p-0 overflow-hidden">
+        <DialogContent className="max-w-lg p-0 overflow-hidden">
           {/* Receipt header */}
-          <div className="border-b border-dashed border-border px-6 pt-7 pb-6 text-center">
-            <p className="text-xs uppercase tracking-[0.25em] text-foreground/60 font-semibold">
+          <div className="border-b border-dashed border-border px-8 pt-8 pb-7 text-center">
+            <p className="text-sm uppercase tracking-[0.25em] text-foreground/60 font-semibold">
               Receipt of Authenticity
             </p>
-            <p className="mt-3 text-3xl font-bold tracking-wide text-foreground">
+            <p className="mt-3 text-4xl font-bold tracking-wide text-foreground">
               {displayTriword}
             </p>
-            <p className="mt-1.5 text-base text-foreground/60">{name}</p>
+            <p className="mt-2 text-lg text-foreground/60">{name}</p>
           </div>
 
-          <div className="px-6 py-6 space-y-5">
-            <p className="text-base text-foreground/80 leading-relaxed">
+          <div className="px-8 py-7 space-y-6">
+            <p className="text-lg text-foreground/80 leading-relaxed">
               Identity derived from content. Verified by mathematics.
             </p>
 
@@ -124,16 +124,16 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
 
             {breakdown && (
               <div className="space-y-3">
-                <p className="text-xs uppercase tracking-widest text-foreground/60 font-semibold">Coordinates</p>
+                <p className="text-sm uppercase tracking-widest text-foreground/60 font-semibold">Coordinates</p>
                 <div className="grid grid-cols-3 gap-3">
                   {([
                     { key: "observer" as const, label: "Entity" },
                     { key: "observable" as const, label: "Property" },
                     { key: "context" as const, label: "Frame" },
                   ]).map(({ key, label }) => (
-                    <div key={key} className="rounded-lg border border-border bg-card p-3 text-center">
-                      <p className="text-xs text-foreground/60">{label}</p>
-                      <p className="text-lg font-bold capitalize text-foreground mt-1">{breakdown[key]}</p>
+                    <div key={key} className="rounded-lg border border-border bg-card p-4 text-center">
+                      <p className="text-sm text-foreground/60">{label}</p>
+                      <p className="text-xl font-bold capitalize text-foreground mt-1">{breakdown[key]}</p>
                     </div>
                   ))}
                 </div>
@@ -143,9 +143,9 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
             <div className="border-t border-dashed border-border" />
 
             <div className="space-y-2">
-              <p className="text-xs uppercase tracking-widest text-foreground/60 font-semibold">Fingerprint</p>
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3">
-                <code className="flex-1 font-mono text-sm break-all text-foreground/90">{cid}</code>
+              <p className="text-sm uppercase tracking-widest text-foreground/60 font-semibold">Fingerprint</p>
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3.5">
+                <code className="flex-1 font-mono text-sm break-all text-foreground/90 leading-relaxed">{cid}</code>
                 <button onClick={() => copyValue(cid)} className="shrink-0 text-foreground/50 hover:text-foreground transition-colors">
                   {copied ? <Check size={15} className="text-primary" /> : <Copy size={15} />}
                 </button>
@@ -165,19 +165,19 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                 </div>
               )}
               {status === "verified" && verifyResult && (
-                <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck size={20} className="text-primary" />
-                    <span className="text-lg font-bold text-primary">Authentic</span>
+                <div className="rounded-lg border border-primary/30 bg-primary/5 px-5 py-5 space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <ShieldCheck size={22} className="text-primary" />
+                    <span className="text-xl font-bold text-primary">Authentic</span>
                   </div>
-                  <p className="text-sm text-foreground/70">
+                  <p className="text-base text-foreground/70 leading-relaxed">
                     Full re-derivation complete. Source object re-canonicalized via URDNA2015, re-hashed with SHA-256.
                     Recomputed fingerprint matches the stored CID. Content is untampered.
                   </p>
                   {/* Boundary + Byte-level comparison details */}
-                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2.5">
-                    <p className="text-xs font-semibold text-foreground/60 uppercase tracking-widest">Object Boundary</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs font-mono">
+                  <div className="rounded-md border border-border bg-muted/30 p-4 space-y-3">
+                    <p className="text-sm font-semibold text-foreground/60 uppercase tracking-widest">Object Boundary</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm font-mono">
                       <span className="text-foreground/50">Type:</span>
                       <span className="text-foreground/80">{verifyResult.recomputedBoundary.declaredType}</span>
                       <span className="text-foreground/50">Fields:</span>
@@ -198,8 +198,8 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
 
                     <div className="border-t border-border/50 my-1" />
 
-                    <p className="text-xs font-semibold text-foreground/60 uppercase tracking-widest">Byte-Level Comparison</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs font-mono">
+                    <p className="text-sm font-semibold text-foreground/60 uppercase tracking-widest">Byte-Level Comparison</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm font-mono">
                       <span className="text-foreground/50">Payload bytes:</span>
                       <span className="text-foreground/80">{verifyResult.recomputedByteLength} B</span>
                       <span className="text-foreground/50">Payload match:</span>
@@ -214,7 +214,7 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                       <span className="text-foreground/80 break-all">{verifyResult.recomputedHashHex.slice(0, 16)}…</span>
                     </div>
                   </div>
-                  <p className="text-xs text-foreground/50 font-mono">
+                  <p className="text-sm text-foreground/60 font-mono">
                     Verified in {verifyResult.elapsedMs}ms · {(() => { const d = new Date(verifyResult.verifiedAt); return d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) + "." + String(d.getMilliseconds()).padStart(3, "0"); })()}
                   </p>
                 </div>
@@ -245,10 +245,10 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
             </div>
           </div>
 
-          <div className="bg-muted/30 border-t border-dashed border-border px-6 py-4 flex items-center justify-between">
-            <p className="text-xs text-foreground/60 font-medium">UOR · Content-Addressed · Self-Verifying</p>
-            <button onClick={() => copyValue(cid)} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-semibold">
-              {copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy ID</>}
+          <div className="bg-muted/30 border-t border-dashed border-border px-8 py-5 flex items-center justify-between">
+            <p className="text-sm text-foreground/60 font-medium">UOR · Content-Addressed · Self-Verifying</p>
+            <button onClick={() => copyValue(cid)} className="inline-flex items-center gap-1.5 text-base text-primary hover:underline font-semibold">
+              {copied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy ID</>}
             </button>
           </div>
         </DialogContent>
