@@ -112,6 +112,7 @@ const MultiScalePage = lazy(() => import("@/modules/observable/pages/MultiScaleP
 const StreamProjectionPage = lazy(() => import("@/modules/observable/pages/StreamProjectionPage"));
 const ObserverHubPage = lazy(() => import("@/modules/observable/pages/ObserverHubPage"));
 const ConsoleFpp = lazy(() => import("@/modules/console/pages/ConsoleFpp"));
+const ConsolePqBridge = lazy(() => import("@/modules/console/pages/ConsolePqBridge"));
 
 const queryClient = new QueryClient();
 
@@ -198,6 +199,7 @@ const App = () => {
               <Route path="discovery" element={<AppConsoleDiscovery />} />
               <Route path="your-space" element={<ConsoleYourSpace />} />
               <Route path="fpp" element={<ConsoleFpp />} />
+              <Route path="pq-bridge" element={<ConsolePqBridge />} />
             </Route>
             <Route path="/developers" element={<DevelopersPage />} />
             <Route path="/developers/directory" element={<DirectoryPage />} />
