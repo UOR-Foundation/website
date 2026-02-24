@@ -10,6 +10,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StreamProjection, type StreamSnapshot, type LevelSnapshot } from "../stream-projection";
+import { SourceBreakdownPanel } from "../components/SourceBreakdownPanel";
 import { SystemEventBus } from "../system-event-bus";
 import { PageShell } from "@/modules/hologram-ui";
 import { Q0 } from "@/modules/ring-core/ring";
@@ -235,6 +236,9 @@ export default function StreamProjectionPage() {
             ))}
           </div>
         )}
+
+        {/* ── Source Breakdown ──────────────────────────────────────────── */}
+        <SourceBreakdownPanel />
       </div>
     </PageShell>
   );
