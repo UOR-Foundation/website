@@ -137,6 +137,7 @@ function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
     ["crdt",        "CrdtDocumentId"],
     ["bitcoin",     "BitcoinOpReturn"],
     ["bitcoin-hashlock", "BitcoinHashLock"],
+    ["lightning",   "LightningPaymentHash"],
   ];
 
   for (const [name, type] of endpointMap) {
@@ -147,6 +148,7 @@ function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
         : name === "glyph" ? "urn:uor:address:"
         : name === "bitcoin" ? "bitcoin:script:"
         : name === "bitcoin-hashlock" ? "bitcoin:script:"
+        : name === "lightning" ? "lightning:bolt11:"
         : "";
       services.push({
         id: `${did}#${name}`,

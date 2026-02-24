@@ -5,7 +5,7 @@
  * via src/lib/uor-address.ts (thin re-export layer).
  *
  * The hologram is the implementation of the UOR framework:
- *   Object → URDNA2015 → SHA-256 → UorCanonicalIdentity → Hologram (22 projections)
+ *   Object → URDNA2015 → SHA-256 → UorCanonicalIdentity → Hologram (23 projections)
  */
 
 export {
