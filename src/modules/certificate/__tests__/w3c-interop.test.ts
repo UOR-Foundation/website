@@ -173,6 +173,11 @@ describe("W3C Interoperability", () => {
       const obService = doc.service.find(s => s.type === "OpenBadgeCredential")!;
       expect(obService.serviceEndpoint).toMatch(/^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$/);
       expect(obService.id).toMatch(/#openbadges$/);
+      // OCI — container image digest
+      expect(types).toContain("OciImageDigest");
+      const ociService = doc.service.find(s => s.type === "OciImageDigest")!;
+      expect(ociService.serviceEndpoint).toMatch(/^sha256:[0-9a-f]{64}$/);
+      expect(ociService.id).toMatch(/#oci$/);
       // CRDT / Automerge — offline-first collaboration
       expect(types).toContain("CrdtDocumentId");
       const crdtService = doc.service.find(s => s.type === "CrdtDocumentId")!;

@@ -125,6 +125,7 @@ function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
     ["atproto",     "AtProtocolRecord"],
     ["oidc",        "OpenIdConnectSubject"],
     ["gs1",         "GS1DigitalLink"],
+    ["oci",         "OciImageDigest"],
     ["openbadges",  "OpenBadgeCredential"],
     ["solid",       "SolidWebID"],
     ["webfinger",   "WebFingerDiscovery"],
