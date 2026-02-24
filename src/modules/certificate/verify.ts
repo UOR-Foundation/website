@@ -2,27 +2,22 @@
  * Certificate Verification
  * ════════════════════════
  *
- * Independently verifies that a UOR certificate is authentic,
- * its boundaries are intact, and algebraic coherence holds.
+ * Three verification layers — all must pass:
  *
- * THREE VERIFICATION LAYERS:
- *
- *   1. CONTENT — Re-hash canonical payload, compare CID
- *   2. BOUNDARY — Re-enforce boundaries, compare boundary hash
+ *   1. CONTENT   — Re-hash canonical payload → compare CID
+ *   2. BOUNDARY  — Re-enforce boundaries → compare boundary hash
  *   3. COHERENCE — Re-verify neg(bnot(x)) ≡ succ(x) on witness
  *
- * All three must pass for the certificate to be considered authentic.
+ * Even a single bit difference will produce a different result.
  */
 
 import { computeCid } from "@/lib/uor-address";
 import { singleProofHash } from "@/lib/uor-canonical";
 import { enforceBoundary } from "./boundary";
 import { verifyCoherenceWitness } from "./coherence";
+import { sourceObjectHash, toCompactBoundary } from "./utils";
 import type { UorCertificate, CompactBoundary } from "./types";
 
-/**
- * Result of a certificate verification.
- */
 export interface VerificationResult {
   authentic: boolean;
   storedCid: string;
@@ -32,9 +27,6 @@ export interface VerificationResult {
   summary: string;
 }
 
-/**
- * Result of a FULL re-derivation verification.
- */
 export interface FullVerificationResult extends VerificationResult {
   mode: "full-re-derivation";
   recomputedNQuads: string;
@@ -44,19 +36,15 @@ export interface FullVerificationResult extends VerificationResult {
   storedByteLength: number;
   recomputedHashHex: string;
   recomputedDerivationId: string;
-  /** Compact boundary from the re-enforced source */
   recomputedBoundary: CompactBoundary;
-  /** Compact boundary stored in the certificate */
   storedBoundary: CompactBoundary;
   boundaryMatch: boolean;
-  /** Whether algebraic coherence was verified */
   coherenceVerified: boolean;
-  /** Whether the source hash matches (if source object was provided) */
   sourceHashMatch: boolean | null;
 }
 
 /**
- * Quick verify: re-hash the stored canonical payload + check coherence.
+ * Quick verify: re-hash stored canonical payload + coherence check.
  */
 export async function verifyCertificate(
   certificate: UorCertificate
@@ -65,25 +53,17 @@ export async function verifyCertificate(
   const storedCid = certificate["cert:cid"];
 
   try {
-    const payloadBytes = new TextEncoder().encode(
-      certificate["cert:canonicalPayload"]
-    );
+    const payloadBytes = new TextEncoder().encode(certificate["cert:canonicalPayload"]);
     const recomputedCid = await computeCid(payloadBytes);
     const cidMatch = recomputedCid === storedCid;
-
-    // Check algebraic coherence
-    const coherenceOk = certificate["cert:coherence"]
-      ? verifyCoherenceWitness(certificate["cert:coherence"])
-      : true;
-
+    const coherenceOk = verifyCoherenceWitness(certificate["cert:coherence"]);
     const authentic = cidMatch && coherenceOk;
-    const elapsedMs = Math.round(performance.now() - t0);
 
     return {
       authentic,
       storedCid,
       recomputedCid,
-      elapsedMs,
+      elapsedMs: Math.round(performance.now() - t0),
       verifiedAt: new Date().toISOString(),
       summary: authentic
         ? "Content verified. Coherence confirmed."
@@ -92,12 +72,11 @@ export async function verifyCertificate(
           : "Algebraic coherence check failed.",
     };
   } catch (error) {
-    const elapsedMs = Math.round(performance.now() - t0);
     return {
       authentic: false,
       storedCid,
       recomputedCid: "error",
-      elapsedMs,
+      elapsedMs: Math.round(performance.now() - t0),
       verifiedAt: new Date().toISOString(),
       summary: `Verification failed: ${error instanceof Error ? error.message : "unknown error"}`,
     };
@@ -105,19 +84,7 @@ export async function verifyCertificate(
 }
 
 /**
- * SHA-256 hex of a raw source object (same logic as generation).
- */
-async function sourceObjectHash(obj: Record<string, unknown>): Promise<string> {
-  const json = JSON.stringify(obj, Object.keys(obj).sort());
-  const bytes = new TextEncoder().encode(json);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-/**
- * FULL RE-DERIVATION with boundary + coherence + source hash verification.
+ * Full re-derivation: boundary + content + coherence + source hash.
  */
 export async function verifyCertificateFull(
   sourceObject: Record<string, unknown>,
@@ -129,45 +96,27 @@ export async function verifyCertificateFull(
   const storedBoundary = certificate["cert:boundary"];
 
   try {
-    // Layer 1: Re-enforce boundaries
+    // Layer 1: Boundary
     const boundary = await enforceBoundary(sourceObject);
-    if (!boundary.valid) {
-      throw new Error(`Boundary enforcement failed: ${boundary.error}`);
-    }
+    if (!boundary.valid) throw new Error(`Boundary failed: ${boundary.error}`);
 
-    // Layer 2: Canonicalize and hash
+    // Layer 2: Content
     const proof = await singleProofHash(boundary.boundedObject);
 
-    // Layer 3: Algebraic coherence
-    const coherenceVerified = certificate["cert:coherence"]
-      ? verifyCoherenceWitness(certificate["cert:coherence"])
-      : true;
+    // Layer 3: Coherence
+    const coherenceVerified = verifyCoherenceWitness(certificate["cert:coherence"]);
 
-    // Source hash check
-    let sourceHashMatch: boolean | null = null;
-    if (certificate["cert:sourceHash"]) {
-      const srcHash = await sourceObjectHash(sourceObject);
-      sourceHashMatch = srcHash === certificate["cert:sourceHash"];
-    }
+    // Source hash
+    const srcHash = await sourceObjectHash(sourceObject);
+    const sourceHashMatch = certificate["cert:sourceHash"]
+      ? srcHash === certificate["cert:sourceHash"]
+      : null;
 
-    // Compare
-    const storedBytes = new TextEncoder().encode(storedNQuads);
+    const recomputedCompact = toCompactBoundary(boundary.manifest);
     const payloadMatch = proof.nquads === storedNQuads;
     const cidMatch = proof.cid === storedCid;
-
-    const recomputedCompact: CompactBoundary = {
-      boundaryHash: boundary.manifest.boundaryHash,
-      keys: boundary.manifest.boundaryKeys,
-      declaredType: boundary.manifest.declaredType,
-      fieldCount: boundary.manifest.totalFields,
-    };
-
-    const boundaryMatch = storedBoundary
-      ? recomputedCompact.boundaryHash === storedBoundary.boundaryHash
-      : true;
-
+    const boundaryMatch = recomputedCompact.boundaryHash === storedBoundary.boundaryHash;
     const authentic = cidMatch && boundaryMatch && coherenceVerified;
-    const elapsedMs = Math.round(performance.now() - t0);
 
     return {
       authentic,
@@ -178,31 +127,27 @@ export async function verifyCertificateFull(
       storedNQuads,
       payloadMatch,
       recomputedByteLength: proof.canonicalBytes.byteLength,
-      storedByteLength: storedBytes.byteLength,
+      storedByteLength: new TextEncoder().encode(storedNQuads).byteLength,
       recomputedHashHex: proof.hashHex,
       recomputedDerivationId: proof.derivationId,
       recomputedBoundary: recomputedCompact,
-      storedBoundary: storedBoundary || recomputedCompact,
+      storedBoundary,
       boundaryMatch,
       coherenceVerified,
       sourceHashMatch,
-      elapsedMs,
+      elapsedMs: Math.round(performance.now() - t0),
       verifiedAt: new Date().toISOString(),
       summary: authentic
-        ? `Authentic. Content, boundary, and algebraic coherence all verified.`
+        ? "Authentic. Content, boundary, and algebraic coherence all verified."
         : !cidMatch
-          ? `Content fingerprint mismatch.`
+          ? "Content fingerprint mismatch."
           : !boundaryMatch
-            ? `Object boundary has shifted since certification.`
-            : `Algebraic coherence failed.`,
+            ? "Object boundary has shifted since certification."
+            : "Algebraic coherence failed.",
     };
   } catch (error) {
-    const elapsedMs = Math.round(performance.now() - t0);
     const emptyCompact: CompactBoundary = {
-      boundaryHash: "",
-      keys: [],
-      declaredType: "(error)",
-      fieldCount: 0,
+      boundaryHash: "", keys: [], declaredType: "(error)", fieldCount: 0,
     };
     return {
       authentic: false,
@@ -221,7 +166,7 @@ export async function verifyCertificateFull(
       boundaryMatch: false,
       coherenceVerified: false,
       sourceHashMatch: null,
-      elapsedMs,
+      elapsedMs: Math.round(performance.now() - t0),
       verifiedAt: new Date().toISOString(),
       summary: `Verification failed: ${error instanceof Error ? error.message : "unknown error"}`,
     };
