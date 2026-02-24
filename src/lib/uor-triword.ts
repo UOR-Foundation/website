@@ -350,45 +350,78 @@ export function isGenesisVerified(): boolean {
 
 // ── Core Encoding Functions ─────────────────────────────────────────────────
 
+// Base32-lower decoding (RFC 4648, lowercase)
+const B32 = "abcdefghijklmnopqrstuvwxyz234567";
+function decodeBase32Lower(str: string): Uint8Array {
+  const out: number[] = [];
+  let buffer = 0;
+  let bitsLeft = 0;
+  for (const ch of str) {
+    const val = B32.indexOf(ch);
+    if (val === -1) continue;
+    buffer = (buffer << 5) | val;
+    bitsLeft += 5;
+    if (bitsLeft >= 8) {
+      bitsLeft -= 8;
+      out.push((buffer >> bitsLeft) & 0xff);
+    }
+  }
+  return new Uint8Array(out);
+}
+
 /**
- * Extract the raw hex hash from a canonical ID.
+ * Extract 3 bytes for triword encoding from any UOR identity string.
  *
- * Handles both full URN form and bare hex strings:
- *   "urn:uor:derivation:sha256:a1b2c3…" → "a1b2c3…"
- *   "0xa1b2c3…" → "a1b2c3…"
- *   "a1b2c3…" → "a1b2c3…"
+ * Supports:
+ *   1. CIDv1 base32 strings ("baguqeera…") → decode base32, skip 5-byte header, use SHA-256 digest bytes
+ *   2. URN derivation IDs ("urn:uor:derivation:sha256:a1b2…") → parse hex
+ *   3. Hex hashes with/without "0x" prefix → parse hex
+ *
+ * This ensures each unique identity produces unique triword coordinates.
  */
-function extractHex(canonicalId: string): string {
-  return canonicalId
+function extractTriwordBytes(canonicalId: string): [number, number, number] {
+  // CIDv1 base32lower: starts with "b" followed by base32 chars
+  if (/^b[a-z2-7]{10,}$/.test(canonicalId)) {
+    // Decode base32 (skip leading 'b' which is the multibase prefix)
+    const decoded = decodeBase32Lower(canonicalId.slice(1));
+    // CIDv1 binary: [version(1)] [codec varint(2)] [hash-fn(1)] [hash-len(1)] [digest(32)]
+    // SHA-256 digest starts at byte 5
+    const digestOffset = 5;
+    return [
+      decoded[digestOffset] ?? 0,
+      decoded[digestOffset + 1] ?? 0,
+      decoded[digestOffset + 2] ?? 0,
+    ];
+  }
+
+  // Hex-based: strip known prefixes and parse
+  const hex = canonicalId
     .replace("urn:uor:derivation:sha256:", "")
     .replace("0x", "")
     .toLowerCase();
+
+  return [
+    parseInt(hex.slice(0, 2), 16) || 0,
+    parseInt(hex.slice(2, 4), 16) || 0,
+    parseInt(hex.slice(4, 6), 16) || 0,
+  ];
 }
 
 /**
  * Convert a UOR canonical ID to a three-word label.
  *
- * Deterministically maps the first 24 bits of the SHA-256 hash
+ * Deterministically maps the first 3 bytes of the SHA-256 digest
  * to three words from the triality-aligned wordlists:
  *
- *   Byte 0 (bits 0-7)   → Observer dimension
- *   Byte 1 (bits 8-15)  → Observable dimension
- *   Byte 2 (bits 16-23) → Context dimension
+ *   Byte 0 → Observer dimension
+ *   Byte 1 → Observable dimension
+ *   Byte 2 → Context dimension
  *
- * @param canonicalId — Full canonical ID or hex hash
+ * @param canonicalId — CID, derivation ID, or hex hash
  * @returns Dot-separated triword: "observer.observable.context"
- *
- * @example
- *   canonicalToTriword("urn:uor:derivation:sha256:a1b2c3d4e5…")
- *   // => "meadow.bold.canyon"
  */
 export function canonicalToTriword(canonicalId: string): string {
-  const hex = extractHex(canonicalId);
-
-  // Extract first 3 bytes = 24 bits → 3 × 8-bit indices
-  const byte0 = parseInt(hex.slice(0, 2), 16) || 0;
-  const byte1 = parseInt(hex.slice(2, 4), 16) || 0;
-  const byte2 = parseInt(hex.slice(4, 6), 16) || 0;
+  const [byte0, byte1, byte2] = extractTriwordBytes(canonicalId);
 
   const observer = OBSERVERS[byte0 % OBSERVERS.length];
   const observable = OBSERVABLES[byte1 % OBSERVABLES.length];
