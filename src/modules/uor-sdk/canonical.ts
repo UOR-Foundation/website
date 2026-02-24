@@ -81,6 +81,8 @@ export {
   verifyPhc,
   verifyVrc,
   verifyTrustTriangle,
+  issueAgentDelegation,
+  verifyAgentDelegation,
 } from "@/modules/uns/core/fpp";
 
 export type {
@@ -97,6 +99,9 @@ export type {
   SealedRcard,
   TrustGraphNode,
   SealedTrustGraphNode,
+  AgentDelegationCredential,
+  SealedAgentDelegation,
+  AgentDelegationCheck,
 } from "@/modules/uns/core/fpp";
 
 // ── Polynomial Trees (Coinductive Interface Evolution) ────────────────────

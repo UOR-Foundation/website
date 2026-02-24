@@ -421,6 +421,13 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["fpp-phc", "fpp-pdid", "PHC → P-DID: personhood credential enables public persona DID creation"],
     ["fpp-rcard", "fpp-pdid", "R-card → P-DID: digital business card references public persona identity"],
     ["trqp", "mcp-tool", "TRQP → MCP tool: trust registry query becomes agent tool — AI verifies human trust"],
+    // ── FPP Agent Delegation provenance chains ──
+    ["fpp-vrc", "a2a", "VRC → A2A: delegation VRC projects into A2A Agent Card — human-certified agent discovery"],
+    ["fpp-vrc", "mcp-tool", "VRC → MCP tool: delegation VRC projects into MCP tool identity — human-certified agent capabilities"],
+    ["fpp-phc", "a2a", "PHC → A2A: personhood credential anchors agent delegation chain — Sybil-resistant AI agents"],
+    ["fpp-phc", "mcp-tool", "PHC → MCP tool: human personhood anchors agent tool provenance — certified tool endpoints"],
+    ["fpp-trustgraph", "a2a", "Trust graph → A2A: trust graph position informs agent discovery ranking"],
+    ["fpp-trustgraph", "mcp-tool", "Trust graph → MCP tool: trust graph position gates tool capability advertisement"],
     // ── Polynomial Tree provenance chains ──
     ["polytree-node", "polytree-morphism", "Node → morphism: polynomial tree node identity certifies morphism source/target"],
     ["polytree-morphism", "polytree-tensor", "Morphism → tensor: morphism output certifies tensor product component"],

@@ -124,6 +124,7 @@ const FPP_V1_INLINE_CONTEXT: Record<string, unknown> = {
   "fpp:PersonhoodCredential": { "@id": "fpp:PersonhoodCredential" },
   "fpp:VerifiableRelationshipCredential": { "@id": "fpp:VerifiableRelationshipCredential" },
   "fpp:VerifiableEndorsementCredential": { "@id": "fpp:VerifiableEndorsementCredential" },
+  "fpp:AgentDelegationCredential": { "@id": "fpp:AgentDelegationCredential" },
   "fpp:Persona": { "@id": "fpp:Persona" },
   "fpp:RelationshipCard": { "@id": "fpp:RelationshipCard" },
   "fpp:TrustGraphNode": { "@id": "fpp:TrustGraphNode" },
@@ -160,6 +161,13 @@ const FPP_V1_INLINE_CONTEXT: Record<string, unknown> = {
   "fpp:ecosystems": { "@id": "fpp:ecosystems" },
   "fpp:snapshotAt": { "@id": "fpp:snapshotAt", "@type": "xsd:dateTime" },
   "fpp:vrc": { "@id": "fpp:vrc", "@type": "xsd:string" },
+  "fpp:delegatorRdid": { "@id": "fpp:delegatorRdid", "@type": "xsd:string" },
+  "fpp:agentDid": { "@id": "fpp:agentDid", "@type": "xsd:string" },
+  "fpp:delegatorPhcRef": { "@id": "fpp:delegatorPhcRef", "@type": "xsd:string" },
+  "fpp:delegationVrcRef": { "@id": "fpp:delegationVrcRef", "@type": "xsd:string" },
+  "fpp:delegatedCapabilities": { "@id": "fpp:delegatedCapabilities" },
+  "fpp:agentModelUri": { "@id": "fpp:agentModelUri", "@type": "xsd:string" },
+  "fpp:mcpEndpoint": { "@id": "fpp:mcpEndpoint", "@type": "xsd:string" },
 };
 
 // ── TSP v1 context (inlined for offline canonicalization) ───────────────────

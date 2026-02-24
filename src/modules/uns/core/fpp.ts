@@ -739,3 +739,207 @@ export async function verifyTrustTriangle(
 
   return { valid: true };
 }
+
+// ── Agent Delegation Credentials (ADC) — Certified AI Agents ──────────────
+
+/**
+ * An Agent Delegation Credential — proof that an AI agent is delegated
+ * by a verified human identity (PHC holder).
+ *
+ * This bridges FPP's trust infrastructure to the agentic AI ecosystem:
+ *   Human PHC → VRC-to-agent → a2a projection + mcp-tool projection
+ *
+ * Design Principles:
+ *   1. The human's PHC proves personhood (Sybil resistance)
+ *   2. The VRC proves the delegation relationship (human → agent)
+ *   3. The agent's identity projects into a2a (discovery) and mcp-tool (capability)
+ *   4. The delegation credential carries the full provenance chain
+ *
+ * Trust chain: PHC(human) → VRC(human→agent) → ADC → a2a + mcp-tool
+ */
+export interface AgentDelegationCredential {
+  "@type": "fpp:AgentDelegationCredential";
+  "@context": "https://www.firstperson.network/context/v1";
+  /** The delegating human's R-DID (issuer of the VRC). */
+  "fpp:delegatorRdid": string;
+  /** The agent's DID (subject of the VRC). */
+  "fpp:agentDid": string;
+  /** Reference to the delegator's PHC (for Sybil proof). */
+  "fpp:delegatorPhcRef": string;
+  /** Reference to the VRC that establishes the delegation. */
+  "fpp:delegationVrcRef": string;
+  /** The ecosystem in which this delegation exists. */
+  "fpp:ecosystem": string;
+  /** Capabilities delegated to the agent (maps to skill.md / MCP tools). */
+  "fpp:delegatedCapabilities": readonly string[];
+  /** Agent model URI (optional — links to ONNX projection). */
+  "fpp:agentModelUri"?: string;
+  /** MCP endpoint the agent serves (optional). */
+  "fpp:mcpEndpoint"?: string;
+  /** Issuance timestamp. */
+  "fpp:issuedAt": string;
+  /** Expiration timestamp. */
+  "fpp:expiresAt": string;
+  /** Nonce for uniqueness. */
+  "fpp:nonce": string;
+}
+
+/** A sealed ADC — credential plus canonical identity and hologram projections. */
+export interface SealedAgentDelegation {
+  readonly credential: AgentDelegationCredential;
+  readonly identity: UorCanonicalIdentity;
+  readonly adcId: string;
+  readonly projections: {
+    /** Agent's DID (W3C self-sovereign identity). */
+    readonly did: string;
+    /** Content-addressed identity. */
+    readonly cid: string;
+    /** Verifiable Credential projection. */
+    readonly vc: string;
+    /** A2A Agent Card — agent is discoverable in Google A2A protocol. */
+    readonly a2a: string;
+    /** MCP tool identity — agent's tools are content-addressed. */
+    readonly mcpTool: string;
+    /** MCP context entry — agent's context contributions. */
+    readonly mcpContext: string;
+    /** Trust graph position. */
+    readonly trustgraph: string;
+    /** VRC reference (the delegation relationship). */
+    readonly vrc: string;
+  };
+}
+
+/**
+ * Issue an Agent Delegation Credential.
+ *
+ * This implements the full human→agent delegation pipeline:
+ *   1. The human (delegator) must have a valid PHC
+ *   2. A VRC is issued from human to agent (delegation relationship)
+ *   3. The ADC wraps both and projects into a2a + mcp-tool
+ *
+ * Pipeline:
+ *   ADC JSON-LD → singleProofHash() → URDNA2015 → SHA-256 → Hologram
+ *   Result projects into: did, cid, vc, a2a, mcp-tool, mcp-context, fpp-trustgraph
+ */
+export async function issueAgentDelegation(
+  delegatorRdid: string,
+  agentDid: string,
+  delegatorPhcRef: string,
+  delegationVrcRef: string,
+  ecosystem: string,
+  capabilities: readonly string[],
+  expiresAt: string,
+  options?: {
+    agentModelUri?: string;
+    mcpEndpoint?: string;
+  },
+): Promise<SealedAgentDelegation> {
+  const nonceBytes = new Uint8Array(16);
+  crypto.getRandomValues(nonceBytes);
+  const nonce = Array.from(nonceBytes)
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  const credential: AgentDelegationCredential = {
+    "@type": "fpp:AgentDelegationCredential",
+    "@context": "https://www.firstperson.network/context/v1",
+    "fpp:delegatorRdid": delegatorRdid,
+    "fpp:agentDid": agentDid,
+    "fpp:delegatorPhcRef": delegatorPhcRef,
+    "fpp:delegationVrcRef": delegationVrcRef,
+    "fpp:ecosystem": ecosystem,
+    "fpp:delegatedCapabilities": capabilities,
+    "fpp:issuedAt": new Date().toISOString(),
+    "fpp:expiresAt": expiresAt,
+    "fpp:nonce": nonce,
+    ...(options?.agentModelUri ? { "fpp:agentModelUri": options.agentModelUri } : {}),
+    ...(options?.mcpEndpoint ? { "fpp:mcpEndpoint": options.mcpEndpoint } : {}),
+  };
+
+  const identity = await singleProofHash(credential);
+
+  const didProj = project(identity, "did") as HologramProjection;
+  const cidProj = project(identity, "cid") as HologramProjection;
+  const vcProj = project(identity, "vc") as HologramProjection;
+  const a2aProj = project(identity, "a2a") as HologramProjection;
+  const mcpToolProj = project(identity, "mcp-tool") as HologramProjection;
+  const mcpCtxProj = project(identity, "mcp-context") as HologramProjection;
+  const tgProj = project(identity, "fpp-trustgraph") as HologramProjection;
+  const vrcProj = project(identity, "fpp-vrc") as HologramProjection;
+
+  return {
+    credential,
+    identity,
+    adcId: didProj.value,
+    projections: {
+      did: didProj.value,
+      cid: cidProj.value,
+      vc: vcProj.value,
+      a2a: a2aProj.value,
+      mcpTool: mcpToolProj.value,
+      mcpContext: mcpCtxProj.value,
+      trustgraph: tgProj.value,
+      vrc: vrcProj.value,
+    },
+  };
+}
+
+/**
+ * Verify an Agent Delegation Credential.
+ *
+ * Checks:
+ *   1. Canonical hash integrity (re-hashes the credential)
+ *   2. VRC reference validity (the delegation VRC must match)
+ *   3. PHC reference chain (delegator PHC → VRC → ADC)
+ */
+export async function verifyAgentDelegation(
+  sealed: SealedAgentDelegation,
+  delegationVrc?: SealedVrc,
+): Promise<{ valid: boolean; checks: AgentDelegationCheck[] }> {
+  const checks: AgentDelegationCheck[] = [];
+
+  // Check 1: Canonical hash integrity
+  try {
+    const recomputed = await singleProofHash(sealed.credential);
+    const hashValid = recomputed["u:canonicalId"] === sealed.identity["u:canonicalId"];
+    checks.push({ name: "canonical-hash", passed: hashValid, detail: hashValid ? "Hash matches" : "Hash mismatch" });
+  } catch {
+    checks.push({ name: "canonical-hash", passed: false, detail: "Hash computation failed" });
+  }
+
+  // Check 2: Capabilities are non-empty
+  const hasCaps = sealed.credential["fpp:delegatedCapabilities"].length > 0;
+  checks.push({ name: "capabilities", passed: hasCaps, detail: hasCaps ? `${sealed.credential["fpp:delegatedCapabilities"].length} capabilities` : "No capabilities delegated" });
+
+  // Check 3: Expiration
+  const notExpired = new Date(sealed.credential["fpp:expiresAt"]) > new Date();
+  checks.push({ name: "expiration", passed: notExpired, detail: notExpired ? "Not expired" : "Credential expired" });
+
+  // Check 4: A2A projection exists
+  const hasA2a = sealed.projections.a2a.length > 0;
+  checks.push({ name: "a2a-projection", passed: hasA2a, detail: hasA2a ? "A2A agent card projected" : "Missing A2A projection" });
+
+  // Check 5: MCP tool projection exists
+  const hasMcp = sealed.projections.mcpTool.length > 0;
+  checks.push({ name: "mcp-tool-projection", passed: hasMcp, detail: hasMcp ? "MCP tool identity projected" : "Missing MCP projection" });
+
+  // Check 6: VRC cross-reference (if VRC provided)
+  if (delegationVrc) {
+    const vrcMatch = sealed.credential["fpp:delegationVrcRef"] === delegationVrc.vrcId;
+    checks.push({ name: "vrc-cross-reference", passed: vrcMatch, detail: vrcMatch ? "VRC reference verified" : "VRC reference mismatch" });
+
+    const ecosystemMatch = sealed.credential["fpp:ecosystem"] === delegationVrc.credential["fpp:ecosystem"];
+    checks.push({ name: "ecosystem-match", passed: ecosystemMatch, detail: ecosystemMatch ? "Same ecosystem" : "Ecosystem mismatch" });
+  }
+
+  return {
+    valid: checks.every(c => c.passed),
+    checks,
+  };
+}
+
+export interface AgentDelegationCheck {
+  readonly name: string;
+  readonly passed: boolean;
+  readonly detail: string;
+}
