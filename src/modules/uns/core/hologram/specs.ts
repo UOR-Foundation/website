@@ -1865,4 +1865,30 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://schema.org/",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 14 — POLYNOMIAL TREES (Coinductive Interface Evolution)
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Based on Spivak's PolyTr category (arXiv:2602.17917v1).
+  // These projections address polynomial tree structures themselves.
+
+  ["polytree-node", {
+    project: ({ hex }) => `urn:polytree:node:${hex}`,
+    fidelity: "lossless",
+    spec: "https://arxiv.org/abs/2602.17917",
+  }],
+
+  ["polytree-morphism", {
+    project: ({ hex }) => `urn:polytree:morphism:${hex.slice(0, 32)}:${hex.slice(32)}`,
+    fidelity: "lossless",
+    spec: "https://arxiv.org/abs/2602.17917",
+  }],
+
+  ["polytree-tensor", {
+    project: ({ hex }) => `urn:polytree:tensor:${hex.slice(0, 16)}⊗${hex.slice(16, 32)}`,
+    fidelity: "lossy",
+    lossWarning: "Tensor product projection truncates operand hashes to 16 chars each",
+    spec: "https://arxiv.org/abs/2602.17917",
+  }],
 ]);
