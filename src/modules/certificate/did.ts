@@ -132,6 +132,7 @@ function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
     ["dnssd",       "DnsServiceDiscovery"],
     ["stac",        "StacCatalogItem"],
     ["croissant",   "CroissantDataset"],
+    ["mls",         "MlsGroupId"],
     ["crdt",        "CrdtDocumentId"],
   ];
 
