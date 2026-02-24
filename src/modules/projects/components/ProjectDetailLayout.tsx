@@ -215,7 +215,7 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                     </div>
                   </div>
                   <p className="text-xs text-foreground/50 font-mono">
-                    Verified in {verifyResult.elapsedMs}ms · {verifyResult.verifiedAt}
+                    Verified in {verifyResult.elapsedMs}ms · {(() => { const d = new Date(verifyResult.verifiedAt); return d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) + "." + String(d.getMilliseconds()).padStart(3, "0"); })()}
                   </p>
                 </div>
               )}
