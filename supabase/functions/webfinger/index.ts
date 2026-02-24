@@ -30,34 +30,56 @@ const corsHeaders = {
 type LinkSpec = [rel: string, type: string, href: (hex: string) => string];
 
 const LINKS: LinkSpec[] = [
-  // W3C JSON-LD / RDF (Tier 0)
+  // ═══ TIER 0 — FOUNDATIONAL STANDARDS ═══
+  // IPFS CID — content-addressed retrieval
+  ["self", "application/vnd.ipfs.car",
+    (h) => `https://w3s.link/ipfs/${h}`],
+  // W3C JSON-LD / RDF — canonical URN
   ["canonical", "application/ld+json",
     (h) => `urn:uor:derivation:sha256:${h}`],
-  // W3C DID (Tier 0)
+  // W3C DID — self-sovereign identity
   ["self", "application/did+ld+json",
     (h) => `https://${DOMAIN}/.well-known/did.json?id=did:uor:${h}`],
-  // W3C VC 2.0 (Tier 0)
+  // W3C VC 2.0 — verifiable credential
   ["describedby", "application/vc+ld+json",
     (h) => `urn:uor:vc:${h}`],
-  // IPFS CID (Tier 0)
-  ["describedby", "application/json",
-    (h) => `https://w3s.link/ipfs/${h}`],
-  // ActivityPub
+
+  // ═══ TIER 2 — FEDERATION & DISCOVERY ═══
+  // ActivityPub — federated social objects
   ["self", "application/activity+json",
     (h) => `https://${DOMAIN}/ap/objects/${h}`],
-  // AT Protocol (Bluesky) — uses did:uor authority + lexicon + rkey prefix
+  // AT Protocol (Bluesky) — AT URI with rkey
   ["self", "application/json",
     (h) => `at://did:uor:${h}/app.uor.object/${h.slice(0, 13)}`],
-  // Solid WebID
+
+  // ═══ TIER 3 — ENTERPRISE & INDUSTRY ═══
+  // OpenID Connect — subject identifier
+  ["http://openid.net/specs/connect/1.0/issuer", "application/json",
+    (h) => `urn:uor:oidc:${h}`],
+  // GS1 Digital Link — supply chain
+  ["describedby", "application/json",
+    (h) => `https://id.gs1.org/8004/${h.slice(0, 30)}`],
+  // OCI — container image digest
+  ["describedby", "application/vnd.oci.image.manifest.v1+json",
+    (h) => `sha256:${h}`],
+  // Solid WebID — decentralized data
   ["http://webid.info/spec/identity", "text/turtle",
     (h) => `https://${DOMAIN}/profile/${h}#me`],
-  // OpenID Connect
-  ["http://openid.net/specs/connect/1.0/issuer", "application/json",
-    (h) => `https://${DOMAIN}/.well-known/openid-configuration`],
-  // STAC
+  // Open Badges 3.0 — verifiable achievements
+  ["describedby", "application/ld+json",
+    (h) => `urn:uuid:${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`],
+
+  // ═══ TIER 4 — INFRASTRUCTURE & EMERGING ═══
+  // SCITT — supply chain transparency
+  ["describedby", "application/json",
+    (h) => `urn:ietf:params:scitt:statement:sha256:${h}`],
+  // MLS — encrypted messaging group
+  ["describedby", "application/json",
+    (h) => `urn:ietf:params:mls:group:${h}`],
+  // STAC — geospatial catalog
   ["describedby", "application/geo+json",
     (h) => `https://${DOMAIN}/stac/items/${h}`],
-  // Croissant ML
+  // Croissant ML — dataset metadata
   ["describedby", "application/ld+json",
     (h) => `https://${DOMAIN}/croissant/${h}`],
 ];
