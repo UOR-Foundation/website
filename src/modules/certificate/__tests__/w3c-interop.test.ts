@@ -140,11 +140,15 @@ describe("W3C Interoperability", () => {
       const cert = await generateCertificate(TEST_SUBJECT, TEST_ATTRIBUTES);
       const doc = resolveDidDocument(cert);
 
-      expect(doc.service.length).toBeGreaterThanOrEqual(2);
-      // Must include IPv6 and Braille at minimum
+      expect(doc.service.length).toBeGreaterThanOrEqual(3);
       const types = doc.service.map(s => s.type);
       expect(types).toContain("UorContentAddress");
       expect(types).toContain("UorBrailleAddress");
+      // ActivityPub — W3C federated object endpoint
+      expect(types).toContain("ActivityPubObject");
+      const apService = doc.service.find(s => s.type === "ActivityPubObject")!;
+      expect(apService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/ap\/objects\/[0-9a-f]{64}$/);
+      expect(apService.id).toMatch(/#activitypub$/);
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {
