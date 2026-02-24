@@ -17,6 +17,7 @@ import {
   Bitcoin, Eye, EyeOff, Copy, Check, ArrowRight,
   Hash, Shield, Lock, Unlock, Info, Loader2, Braces,
 } from "lucide-react";
+import BitcoinNav from "@/modules/bitcoin/components/BitcoinNav";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/modules/core/ui/tooltip";
 import { project } from "@/modules/uns/core/hologram";
 import type { ProjectionInput } from "@/modules/uns/core/hologram";
@@ -146,6 +147,8 @@ function ZcashDualityPage() {
               Zcash's encrypted memo field — identity doesn't change, only visibility does.
             </p>
           </div>
+
+          <BitcoinNav />
 
           {/* Mode tabs */}
           <div className="flex gap-2 mb-4">

@@ -17,6 +17,7 @@ import {
   Sparkles, Globe, Radio,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/modules/core/ui/tooltip";
+import BitcoinNav from "@/modules/bitcoin/components/BitcoinNav";
 import { generateCertificate } from "@/modules/certificate/generate";
 import { project } from "@/modules/uns/core/hologram";
 import type { ProjectionInput } from "@/modules/uns/core/hologram";
@@ -168,6 +169,8 @@ function DemoPage() {
               the canonical form settles a Lightning payment.
             </p>
           </div>
+
+          <BitcoinNav />
 
           {/* Step 1: Input */}
           <Card className="mb-2">

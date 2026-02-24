@@ -14,6 +14,7 @@
 import { useState, useCallback, useMemo } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { Bitcoin, Copy, Check, Info, Zap, Lock, FileText, ArrowRight, Hash, ChevronDown, ChevronUp, Braces, Loader2 } from "lucide-react";
+import BitcoinNav from "@/modules/bitcoin/components/BitcoinNav";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/modules/core/ui/tooltip";
 import { project, PROJECTIONS } from "@/modules/uns/core/hologram";
 import type { ProjectionInput } from "@/modules/uns/core/hologram";
@@ -277,6 +278,8 @@ function BitcoinScriptPage() {
               opcode by opcode.
             </p>
           </div>
+
+          <BitcoinNav />
 
           {/* Mode tabs */}
           <div className="flex gap-2 mb-4">
