@@ -51,6 +51,15 @@ const AGENT_PROTOCOLS = [
     desc: "Content-addressed tool outputs — provenance tracking for context",
   },
   {
+    key: "mcp-context",
+    label: "MCP Context",
+    sublabel: "Provenance Tags",
+    icon: Wrench,
+    color: "text-purple-300",
+    tier: "Communication",
+    desc: "Context-block provenance — distinguishes trusted from untrusted content entries",
+  },
+  {
     key: "skill-md",
     label: "skill.md",
     sublabel: "Skill Integrity",

@@ -482,6 +482,21 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://modelcontextprotocol.io/specification",
   }],
 
+  // ── MCP Context Block — Provenance-Tagged Context Entries ──────────────
+  // Solves the "Mitra gap": when untrusted content (e.g., a Moltbook post)
+  // enters an agent's MCP context, its origin is lost. UOR's context block
+  // projection gives every context entry a content-addressed provenance tag
+  // with source, trust level, and chain-of-custody — enabling agents to
+  // distinguish Grade A (self-derived) from Grade D (LLM-generated) content.
+  //
+  //   Format: urn:uor:mcp:context:{hex} (hash of context entry + metadata)
+
+  ["mcp-context", {
+    project: ({ hex }) => `urn:uor:mcp:context:${hex}`,
+    fidelity: "lossless",
+    spec: "https://modelcontextprotocol.io/specification",
+  }],
+
   // ── skill.md — Content-Addressed Agent Skills ─────────────────────────
   // Moltbook's skill.md convention — the "simplest API contract" — has
   // a critical supply-chain attack surface: malicious modifications.
