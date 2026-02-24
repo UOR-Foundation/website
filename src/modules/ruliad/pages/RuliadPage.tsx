@@ -7,9 +7,11 @@
  * category filtering, and a synthesis panel.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ChevronDown, ChevronRight, ExternalLink, Zap } from "lucide-react";
+
+const MultiwayGraph = lazy(() => import("../components/MultiwayGraph"));
 import {
   RULIAD_CORRESPONDENCE,
   CATEGORIES,
@@ -267,6 +269,11 @@ export default function RuliadPage() {
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent transition-colors" />
         </Link>
+
+        {/* Multiway Graph Visualization */}
+        <Suspense fallback={<div className="h-64 bg-card border border-border rounded-2xl animate-pulse" />}>
+          <MultiwayGraph />
+        </Suspense>
 
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
