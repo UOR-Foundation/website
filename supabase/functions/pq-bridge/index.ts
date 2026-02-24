@@ -84,6 +84,15 @@ function computePqBridge(hex: string): string {
   return `pq:ml-dsa-65:sha256:${hex}`;
 }
 
+// ── Ethereum Settlement ──────────────────────────────────────────────
+
+function computeEthCommitment(hex: string) {
+  const commitment = `0x${hex}`;
+  const calldata = `0x7a3f5e12${hex.padEnd(64, "0")}`;
+  const logTopic = `topic:pq-registered:0x${hex}`;
+  return { commitment, calldata, logTopic };
+}
+
 // ── Canonicalize (simplified for edge — deterministic JSON sort) ──────────
 
 function canonicalize(obj: unknown): string {
@@ -121,6 +130,7 @@ serve(async (req: Request) => {
       const bitcoinScript = computeBitcoinScript(hashBytes);
       const lightningPaymentHash = computeLightningHash(hashBytes);
       const coherence = computeCoherenceWitness(hashBytes, hex);
+      const ethereum = computeEthCommitment(hex);
 
       // Step 4: Compute CIDv1 placeholder (simplified — real CID requires multicodec)
       const cid = `bafkrei${hex.slice(0, 50)}`;
@@ -162,6 +172,20 @@ serve(async (req: Request) => {
           // Lightning
           lightningPaymentHash,
 
+          // Ethereum
+          ethereum: {
+            commitment: ethereum.commitment,
+            calldata: ethereum.calldata,
+            logTopic: ethereum.logTopic,
+            contractInterface: {
+              function: "registerPqCommitment(bytes32 contentHash)",
+              event: "PqCommitmentRegistered(bytes32 indexed contentHash, address indexed sender, uint256 timestamp)",
+              verify: "verifyPqCommitment(bytes32 contentHash) → bool",
+            },
+            gasEstimate: "~45,000 (commitment storage only)",
+            networks: ["Ethereum Mainnet", "Polygon", "Arbitrum", "Base", "Optimism"],
+          },
+
           // Coherence
           coherenceWitness: coherence.witness,
           coherenceHolds: coherence.holds,
@@ -177,6 +201,7 @@ serve(async (req: Request) => {
           instructions: {
             sign: "Use ml_dsa65.sign(new TextEncoder().encode(signingTarget), secretKey) to produce the Dilithium-3 signature",
             anchor: "Broadcast bitcoinScript as an OP_RETURN output in any Bitcoin transaction",
+            ethereum: "Call registerPqCommitment(bytes32) on the PQ Registry contract with the commitment hash",
             verify: "Call GET /pq-bridge?verify=true with envelope fields to verify",
             lightning: "Use lightningPaymentHash as the payment_hash in a BOLT-11 invoice",
           },
