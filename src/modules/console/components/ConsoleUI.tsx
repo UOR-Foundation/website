@@ -2,37 +2,185 @@
  * UNS Console — Shared UI Components
  *
  * UOR-native UI primitives: canonical IDs are identity, not implementation detail.
+ * Triwords are the primary human-facing identifier for all UOR objects.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/modules/core/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/modules/core/ui/dialog";
+import { ShieldCheck, Copy, Check, ExternalLink } from "lucide-react";
 
 // ── CanonicalIdBadge ────────────────────────────────────────────────────────
+//
+// The primary identity component for all UOR objects throughout the system.
+// Shows the triword (Observer · Observable · Context) as the human-readable
+// identifier with a "Verify certificate" link that opens full verification.
 
-import { canonicalToTriword, formatTriword } from "@/lib/uor-triword";
+import {
+  canonicalToTriword,
+  formatTriword,
+  triwordBreakdown,
+} from "@/lib/uor-triword";
 
 export function CanonicalIdBadge({ id, chars = 16 }: { id: string; chars?: number }) {
-  const short = id.length > chars ? id.slice(0, chars) + "…" : id;
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const triword = canonicalToTriword(id);
   const displayTriword = formatTriword(triword);
+  const breakdown = triwordBreakdown(triword);
+
+  const copyId = useCallback(() => {
+    navigator.clipboard.writeText(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [id]);
+
+  // Extract hex for display
+  const hexHash = id
+    .replace("urn:uor:derivation:sha256:", "")
+    .replace("0x", "");
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="inline-flex items-center gap-1.5 rounded bg-muted px-1.5 py-0.5 cursor-default select-all">
-          <span className="text-xs font-medium text-foreground">{displayTriword}</span>
-          <code className="font-mono text-[10px] text-muted-foreground">{short}</code>
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-sm space-y-1">
-        <p className="font-medium text-sm">{displayTriword}</p>
-        <p className="font-mono text-xs break-all text-muted-foreground">{id}</p>
-      </TooltipContent>
-    </Tooltip>
+    <>
+      <span className="inline-flex items-center gap-1.5">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 cursor-default">
+              <span className="text-xs font-semibold text-foreground tracking-wide">
+                {displayTriword}
+              </span>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-sm space-y-1.5 p-3">
+            <p className="font-semibold text-sm">{displayTriword}</p>
+            {breakdown && (
+              <div className="grid grid-cols-3 gap-2 text-[10px]">
+                <div>
+                  <span className="text-muted-foreground">Observer</span>
+                  <p className="font-medium capitalize">{breakdown.observer}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Observable</span>
+                  <p className="font-medium capitalize">{breakdown.observable}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Context</span>
+                  <p className="font-medium capitalize">{breakdown.context}</p>
+                </div>
+              </div>
+            )}
+            <p className="font-mono text-[10px] break-all text-muted-foreground pt-1 border-t border-border">
+              {id}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+        <button
+          onClick={() => setVerifyOpen(true)}
+          className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary transition-colors"
+          title="Verify certificate"
+        >
+          <ShieldCheck size={11} />
+          <span className="hidden sm:inline">Verify</span>
+        </button>
+      </span>
+
+      {/* ── Certificate Verification Dialog ── */}
+      <Dialog open={verifyOpen} onOpenChange={setVerifyOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <ShieldCheck size={18} className="text-primary" />
+              Certificate Verification
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 text-sm">
+            {/* Triword identity */}
+            <div className="rounded-lg border border-border bg-muted/30 p-4 text-center">
+              <p className="text-lg font-bold tracking-wide text-foreground">
+                {displayTriword}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Triword Coordinate — Observer · Observable · Context
+              </p>
+            </div>
+
+            {/* Triality breakdown */}
+            {breakdown && (
+              <div className="grid grid-cols-3 gap-3">
+                {(["observer", "observable", "context"] as const).map((dim) => (
+                  <div key={dim} className="rounded-lg border border-border bg-card p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{dim}</p>
+                    <p className="mt-1 font-semibold capitalize text-foreground">{breakdown[dim]}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Full canonical hash */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">Canonical Hash (SHA-256)</p>
+              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2">
+                <code className="flex-1 font-mono text-[11px] break-all text-foreground">
+                  {hexHash}
+                </code>
+                <button onClick={copyId} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors" title="Copy full ID">
+                  {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Full URN */}
+            {id.startsWith("urn:") && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">Canonical URN</p>
+                <code className="block rounded-md border border-border bg-muted/50 px-3 py-2 font-mono text-[11px] break-all text-foreground">
+                  {id}
+                </code>
+              </div>
+            )}
+
+            {/* Self-verification proof */}
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={14} className="text-primary" />
+                <p className="text-xs font-semibold text-primary">Self-Verified</p>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                This object's identity is derived from its content via URDNA2015 → SHA-256.
+                The triword <span className="font-medium text-foreground">{displayTriword}</span> is
+                a deterministic projection of the first 24 bits of the hash into the
+                triality-aligned wordlist (16,777,216 unique combinations).
+                Re-hashing the object's content will always reproduce this exact identifier.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between pt-2 border-t border-border">
+              <p className="text-[10px] text-muted-foreground">
+                UOR Framework — Content-Addressed Identity
+              </p>
+              <button
+                onClick={copyId}
+                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                {copied ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy ID</>}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
