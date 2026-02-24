@@ -101,6 +101,50 @@ const ProjectHologramSdk = () => (
         ),
       },
       {
+        heading: "Hologram Projection Registry",
+        content: (
+          <>
+            <p>
+              Every UOR object is a hologram — one canonical identity projected into every standard on the internet. Just as a hologram encodes a 3D scene into interference patterns viewable from any angle, the UOR hash encodes one identity viewable through any protocol.
+            </p>
+            <p className="mt-3">
+              The Hologram Registry maps the single SHA-256 hash to <strong className="text-foreground">17 protocol-native identifiers</strong> — each a deterministic, pure function:
+            </p>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+              {[
+                ["CID", "IPFS Multiformats", "lossless"],
+                ["IPv6", "RFC 4193 ULA", "lossy"],
+                ["Glyph", "UOR Braille", "lossless"],
+                ["DID", "W3C DID Core", "lossless"],
+                ["WebFinger", "RFC 7033", "lossy"],
+                ["ActivityPub", "W3C Federation", "lossless"],
+                ["AT Protocol", "Bluesky", "lossy"],
+                ["OIDC", "OpenID Connect", "lossless"],
+                ["GS1", "Supply Chain", "lossy"],
+                ["OCI", "Containers", "lossless"],
+                ["Solid", "W3C WebID", "lossless"],
+                ["Open Badges", "1EdTech 3.0", "lossy"],
+                ["SCITT", "IETF Supply Chain", "lossless"],
+                ["MLS", "RFC 9420", "lossless"],
+                ["DNS-SD", "RFC 6763", "lossy"],
+                ["STAC", "Geospatial", "lossless"],
+                ["Croissant", "MLCommons", "lossless"],
+              ].map(([name, standard, fidelity]) => (
+                <div key={name} className="flex items-center gap-2 py-1">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${fidelity === "lossless" ? "bg-primary" : "bg-accent"}`} />
+                  <span className="text-sm"><strong className="text-foreground">{name}</strong> <span className="text-muted-foreground">— {standard}</span></span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary inline-block" /> Lossless (full 256-bit hash preserved)</span>
+              {" · "}
+              <span className="inline-flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-accent inline-block" /> Lossy (truncated for protocol constraints)</span>
+            </p>
+          </>
+        ),
+      },
+      {
         heading: "Get started",
         content: (
           <ul className="space-y-3">

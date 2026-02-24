@@ -122,6 +122,29 @@ const examples: Example[] = [
 # Algebraic proximity, not embeddings.
 # Deterministic, explainable, reproducible.`,
   },
+  {
+    id: "hologram",
+    label: "Hologram",
+    tagline: "One object, one hash, every standard on earth — each a viewing angle of the same identity.",
+    code: `# Every UOR object is a hologram: 17 projections from one SHA-256 hash.
+
+curl "https://api.uor.foundation/v1/webfinger\\
+  ?resource=acct:a1b2c3d4e5f67890@uor.foundation"
+
+# Response (RFC 7033 JRD):
+# {
+#   "subject": "acct:a1b2c3d4e5f67890@uor.foundation",
+#   "links": [
+#     { "rel": "self",      "type": "application/did+ld+json",  "href": "did:uor:bafyrei..." },
+#     { "rel": "self",      "type": "application/activity+json","href": "https://.../ap/objects/a1b2..." },
+#     { "rel": "self",      "type": "application/json",         "href": "at://did:uor:.../app.uor.object" },
+#     { "rel": "canonical", "type": "application/ld+json",      "href": "urn:uor:derivation:sha256:..." }
+#   ]
+# }
+#
+# DID, ActivityPub, AT Protocol, Solid, OIDC, GS1, OCI,
+# SCITT, MLS, DNS-SD, STAC, Croissant — all from one hash.`,
+  },
 ];
 
 /* ── Copy button ─────────────────────────────────────────────── */
