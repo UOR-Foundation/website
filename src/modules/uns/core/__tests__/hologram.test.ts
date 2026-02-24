@@ -37,8 +37,8 @@ const HEX = IDENTITY["u:canonicalId"].split(":").pop()!;
 // ── Core contract ───────────────────────────────────────────────────────────
 
 describe("Hologram Projection Registry", () => {
-  it("registers at least 22 projections", () => {
-    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(22);
+  it("registers at least 23 projections", () => {
+    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(23);
   });
 
   // ── Tier 0: Foundational Standards ──────────────────────────────────────
@@ -198,6 +198,49 @@ describe("Hologram Projection Registry", () => {
     // Both are lossless
     expect(opreturn.fidelity).toBe("lossless");
     expect(hashlock.fidelity).toBe("lossless");
+  });
+
+  // ── Lightning BOLT-11 — Payment Hash Projection ───────────────────────
+
+  it("lightning projection produces valid BOLT-11 p tagged field", () => {
+    const p = project(IDENTITY, "lightning");
+    // pp5 prefix (tag=1, length=52) + 52 bech32 chars
+    expect(p.value).toMatch(/^pp5[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{52}$/);
+    expect(p.value.length).toBe(3 + 52); // "pp5" + 52 data chars
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  it("lightning projection is deterministic", () => {
+    const a = project(IDENTITY, "lightning").value;
+    const b = project(IDENTITY, "lightning").value;
+    expect(a).toBe(b);
+  });
+
+  it("lightning payment_hash encodes the same identity as bitcoin projections", () => {
+    const ln = project(IDENTITY, "lightning");
+    const btc = project(IDENTITY, "bitcoin");
+    // Both are lossless projections of the same 256-bit identity
+    expect(ln.fidelity).toBe("lossless");
+    expect(btc.fidelity).toBe("lossless");
+    // Decode the bech32 data back to verify round-trip integrity
+    const A = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+    const data5bit = ln.value.slice(3).split("").map(c => A.indexOf(c));
+    // Convert 5-bit groups back to 8-bit bytes
+    let bits = 0, value = 0;
+    const bytes: number[] = [];
+    for (const group of data5bit) {
+      value = (value << 5) | group;
+      bits += 5;
+      while (bits >= 8) {
+        bits -= 8;
+        bytes.push((value >> bits) & 0xff);
+      }
+    }
+    // The decoded bytes should match the original hashBytes (first 32)
+    expect(bytes.length).toBe(32);
+    for (let i = 0; i < 32; i++) {
+      expect(bytes[i]).toBe(i); // Our test fixture uses 0x00..0x1f
+    }
   });
 
   it("lossy projections always carry a lossWarning", () => {

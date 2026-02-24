@@ -232,4 +232,45 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://github.com/bitcoin/bips/blob/master/bip-0199.mediawiki",
   }],
+
+  // ── Lightning BOLT-11 — Content-Gated Micropayments ─────────────────
+  // Produces the BOLT-11 `p` tagged field: the payment_hash component
+  // of a Lightning Network invoice in its native bech32 wire encoding.
+  //
+  // BOLT-11 §Tagged Fields: "p (1): The 256-bit SHA256 payment_hash."
+  //
+  // The UOR canonical bytes ARE the Lightning preimage. Revealing the
+  // URDNA2015 form of an object settles the payment — content delivery
+  // IS payment settlement. One hash, two protocols, zero translation.
+  //
+  //   Tag type:    1       → bech32 'p'
+  //   Data length: 52      → bech32 'p5' (1×32 + 20)
+  //   Data:        256-bit → 52 bech32 chars (8-to-5-bit conversion)
+  //   Output:      pp5{52 bech32 chars}
+
+  ["lightning", {
+    project: ({ hashBytes }) => {
+      // BOLT-11 bech32 alphabet (same as BIP-173)
+      const A = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+      // 8-bit to 5-bit conversion: 32 bytes (256 bits) → 52 groups (260 bits)
+      let bits = 0;
+      let value = 0;
+      let data = "";
+      for (const byte of hashBytes) {
+        value = (value << 8) | byte;
+        bits += 8;
+        while (bits >= 5) {
+          bits -= 5;
+          data += A[(value >> bits) & 31];
+        }
+      }
+      if (bits > 0) {
+        data += A[(value << (5 - bits)) & 31];
+      }
+      // Tag 'p' (type=1) + length 'p5' (52) + 52 bech32 data chars
+      return `pp5${data}`;
+    },
+    fidelity: "lossless",
+    spec: "https://github.com/lightning/bolts/blob/master/11-payment-encoding.md",
+  }],
 ]);
