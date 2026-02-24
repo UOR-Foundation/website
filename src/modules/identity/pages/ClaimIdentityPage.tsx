@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import Layout from "@/modules/core/components/Layout";
-import ClaimIdentityDialog from "@/modules/uor-identity/components/ClaimIdentityDialog";
+import ClaimIdentityDialog from "@/modules/identity/components/ClaimIdentityDialog";
 
 const ClaimIdentityPage = () => {
   const [open, setOpen] = useState(true);

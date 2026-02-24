@@ -1,5 +1,5 @@
 /**
- * identity module barrel export.
+ * identity module barrel export (merged from identity + uor-identity).
  */
 
 export {
@@ -13,3 +13,5 @@ export {
   verifyRoundTrip,
   datumApiUrl,
 } from "./addressing";
+
+export { default as ProjectUorIdentity } from "./pages/ProjectUorIdentity";

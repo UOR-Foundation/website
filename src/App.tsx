@@ -52,7 +52,7 @@ const DatumPage = lazy(() => import("@/modules/datum/pages/DatumPage"));
 const ProjectUns = lazy(() => import("@/modules/projects/pages/ProjectUns"));
 const ProjectQrCartridge = lazy(() => import("@/modules/projects/pages/ProjectQrCartridge"));
 const ProjectHologramSdk = lazy(() => import("@/modules/projects/pages/ProjectHologramSdk"));
-const ProjectUorIdentity = lazy(() => import("@/modules/uor-identity/pages/ProjectUorIdentity"));
+const ProjectUorIdentity = lazy(() => import("@/modules/identity/pages/ProjectUorIdentity"));
 const ProjectUorPrivacy = lazy(() => import("@/modules/uor-terms/pages/ProjectUorTerms"));
 const ProjectCertificate = lazy(() => import("@/modules/projects/pages/ProjectCertificate"));
 const TrustScorePreview = lazy(() => import("@/modules/mcp/pages/TrustScorePreview"));
@@ -90,7 +90,7 @@ const DirectoryPage = lazy(() => import("@/modules/developers/pages/DirectoryPag
 const CartridgePage = lazy(() => import("@/modules/qr-cartridge/pages/CartridgePage"));
 const YourSpacePage = lazy(() => import("@/modules/your-space/pages/YourSpacePage"));
 const SandboxPage = lazy(() => import("@/modules/projects/pages/SandboxPage"));
-const ClaimIdentityPage = lazy(() => import("@/modules/uor-identity/pages/ClaimIdentityPage"));
+const ClaimIdentityPage = lazy(() => import("@/modules/identity/pages/ClaimIdentityPage"));
 const BitcoinScriptPage = lazy(() => import("@/modules/bitcoin/pages/BitcoinScriptPage"));
 const TimestampPage = lazy(() => import("@/modules/bitcoin/pages/TimestampPage"));
 const BitcoinDemoPage = lazy(() => import("@/modules/bitcoin/pages/DemoPage"));
