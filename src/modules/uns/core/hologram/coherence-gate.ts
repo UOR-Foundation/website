@@ -65,6 +65,7 @@ function classifyTier(name: string, spec: HologramSpec): string {
   if (["bitcoin", "lightning", "nostr"].includes(name) || name.startsWith("zcash")) return "settlement";
   if (["erc8004", "x402", "a2a", "a2a-task", "mcp-tool", "mcp-context", "skill-md", "oasf", "onnx", "onnx-op", "nanda-index", "nanda-agentfacts", "nanda-resolver"].includes(name)) return "agentic";
   if (name === "activitypub" || name === "atproto") return "federation";
+  if (["python-module", "js-module", "java-class", "csharp-assembly", "cpp-unit", "c-unit", "go-module", "rust-crate", "ts-module", "sql-schema"].includes(name)) return "language";
   return "other";
 }
 
@@ -180,6 +181,36 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["cobol-program", "onnx", "COBOL business rules → ONNX model provenance chain"],
     ["cobol-program", "a2a", "COBOL transaction processor → A2A discoverable agent"],
     ["cobol-copybook", "nanda-agentfacts", "COBOL service → AgentFacts passport for agent discovery"],
+    // Language projection provenance chains
+    ["python-module", "onnx", "Training script → ONNX model — proves WHICH code produced WHICH weights"],
+    ["python-module", "skill-md", "Python function → skill contract — advertises what the code does"],
+    ["python-module", "mcp-tool", "Python tool implementation → MCP tool output provenance"],
+    ["js-module", "mcp-tool", "JS function → MCP tool output with browser-native provenance"],
+    ["js-module", "a2a", "JS agent code → A2A AgentCard — browser agents self-describe"],
+    ["ts-module", "js-module", "TypeScript source → compiled JS — type-checked provenance chain"],
+    ["ts-module", "skill-md", ".d.ts type declarations ARE skill contracts — same structure"],
+    ["ts-module", "mcp-tool", "TS function → MCP tool — the Virtual OS's native tool format"],
+    ["ts-module", "a2a", "TS agent → A2A card — browser agents are TypeScript-native"],
+    ["java-class", "oasf", "Java microservice → OASF service descriptor — enterprise services become agent-accessible"],
+    ["java-class", "cobol-copybook", "COBOL modernization: Java replacement proves behavioral equivalence"],
+    ["java-class", "a2a", "Java service → A2A AgentCard — enterprise agent discovery"],
+    ["csharp-assembly", "onnx", "Unity ML-Agents → ONNX model — game AI provenance"],
+    ["csharp-assembly", "skill-md", ".NET API → skill contract — microservices self-describe"],
+    ["csharp-assembly", "oasf", ".NET service → OASF descriptor — enterprise services registered"],
+    ["cpp-unit", "onnx", "C++ inference engine → ONNX runtime — execution provenance"],
+    ["cpp-unit", "cobol-program", "C++ replacement of COBOL — hash proves behavioral equivalence"],
+    ["c-unit", "oci", "C binary → OCI container image — OS to container provenance"],
+    ["c-unit", "cobol-program", "C replacement of COBOL — mainframe modernization provenance"],
+    ["go-module", "oci", "Go binary → OCI container — cloud-native provenance chain"],
+    ["go-module", "a2a", "Go service → A2A AgentCard — Kubernetes services self-describe"],
+    ["go-module", "mcp-tool", "Go CLI tool → MCP tool registration — DevOps enters agent ecosystem"],
+    ["go-module", "nanda-agentfacts", "Go microservice → NANDA passport — cloud services become agents"],
+    ["rust-crate", "oci", "Rust WASM → OCI image — browser-native secure compute"],
+    ["rust-crate", "onnx", "Rust inference runtime → ONNX model execution provenance"],
+    ["rust-crate", "mcp-tool", "Rust tool → MCP tool — systems-level agent tooling"],
+    ["sql-schema", "nanda-agentfacts", "SQL service → AgentFacts — databases become queryable agents"],
+    ["sql-schema", "skill-md", "SQL schema → skill contract — database API self-describes"],
+    ["python-module", "a2a", "Python AI agent → A2A AgentCard — ML agents become discoverable"],
   ];
   for (const [a, b, insight] of chains) {
     emitIf(has, synergies, a, b, "provenance-chain", insight,
@@ -198,6 +229,23 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["nanda-resolver", "webfinger", "Agent resolution + web discovery: NANDA resolves agents, WebFinger resolves identities", "Both resolve names to typed links — convergent discovery protocols"],
     ["cobol-copybook", "vc", "Legacy data + credential: copybook defines DATA structure, VC certifies its INTEGRITY", "Hash copybook, issue VC against same identity — compliance becomes structural"],
     ["cobol-program", "did", "Legacy program + identity: COBOL program gets a self-sovereign DID — permanent, portable", "Program hash IS the DID — identity survives platform migrations"],
+    // Language projection complementary pairs
+    ["python-module", "nanda-agentfacts", "Python agent + discovery passport: AI agents become NANDA-discoverable", "Python agent hash → AgentFacts passport — ML agents enter agent network"],
+    ["python-module", "vc", "Code identity + credential: VC certifies the code passed audit/review", "Hash module, issue VC — reproducible research gets cryptographic proof"],
+    ["js-module", "cid", "npm package + content address: npm package CID = UOR CID = IPFS CID", "npm supply chain integrity via native content addressing"],
+    ["java-class", "vc", "Enterprise JAR + compliance credential: VC certifies the build", "Java artifact hash → VC — enterprise audit trail becomes structural"],
+    ["java-class", "erc8004", "Java service + on-chain identity: enterprise meets blockchain", "Java service hash → ERC-8004 token — enterprise identity on-chain"],
+    ["csharp-assembly", "did", "Assembly gets permanent DID — survives .NET version migrations", "Assembly hash IS the DID — identity portable across .NET versions"],
+    ["csharp-assembly", "x402", ".NET service + payment: content-gated APIs via x402", ".NET service hash → x402 payment requirement — monetized APIs"],
+    ["cpp-unit", "vc", "Firmware binary + safety credential: VC certifies build passed tests", "C++ binary hash → VC — safety certification becomes content-addressed"],
+    ["c-unit", "did", "Embedded firmware gets self-sovereign DID — IoT devices get identity", "Firmware hash IS the DID — IoT identity survives vendor changes"],
+    ["go-module", "did", "Go service + permanent identity: DID survives Kubernetes redeployments", "Go module hash → DID — cloud service identity is content-derived"],
+    ["rust-crate", "did", "WASM module gets DID — browser compute units get self-sovereign identity", "Crate hash IS the DID — identity verified before execution"],
+    ["rust-crate", "vc", "Crate + credential: VC certifies memory-safety audit", "Rust crate hash → VC — safety guarantees become verifiable claims"],
+    ["ts-module", "cid", "TypeScript module = content-addressed npm artifact", "TS module hash → CID — Virtual OS modules are IPFS-native"],
+    ["sql-schema", "vc", "Schema identity + compliance: GDPR/SOX audit via VC", "Schema hash → VC — regulatory compliance becomes content-addressed"],
+    ["sql-schema", "did", "Database gets a DID — schema identity survives migrations", "Schema hash IS the DID — database identity is permanent"],
+    ["sql-schema", "cobol-copybook", "SQL schema + COBOL copybook: both describe DATA, different eras", "Same data structure, two projections — legacy↔modern bridge"],
   ];
   for (const [a, b, insight, impl] of pairs) {
     emitIf(has, synergies, a, b, "complementary-pair", insight,
@@ -299,6 +347,20 @@ function synthesizeOpportunities(synergies: readonly Synergy[]): string[] {
     opportunities.push(
       "UNIVERSAL NOTARIZATION: Any projection (DID, VC, ONNX model, skill.md, AgentCard) can be " +
       "notarized on Bitcoin with zero additional code — the settlement bridge is structural"
+    );
+  }
+
+  // Language-specific pipeline opportunity
+  const languageSynergies = synergies.filter(s =>
+    ["python-module", "js-module", "java-class", "csharp-assembly", "cpp-unit",
+     "c-unit", "go-module", "rust-crate", "ts-module", "sql-schema"]
+      .some(lang => s.projections.includes(lang))
+  );
+  if (languageSynergies.length > 0) {
+    opportunities.push(
+      "POLYGLOT SUPPLY CHAIN: Every language artifact (Python→ONNX→MCP, Go→OCI→NANDA, " +
+      "Rust→WASM→DID, TS→skill.md→A2A, SQL→VC→compliance) is content-addressed from source " +
+      "to deployment — one hash bridges 10 languages into a unified trust layer"
     );
   }
 

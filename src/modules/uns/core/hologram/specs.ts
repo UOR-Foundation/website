@@ -661,4 +661,154 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://www.iso.org/standard/74527.html",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9 — PROGRAMMING LANGUAGE PROJECTIONS
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Every programming language artifact (source file, AST, compiled binary,
+  // query plan) is serializable structured data — canonicalizable via
+  // URDNA2015, hashable to SHA-256, and projectable into all hologram
+  // protocols. The projection format is universal:
+  //
+  //   Source/AST/Binary → JSON-LD → URDNA2015 → SHA-256 → UOR Identity
+  //
+  // This enables content-addressed supply chain integrity, reproducible
+  // builds, ML pipeline provenance, and cross-language interoperability
+  // within the UOR Virtual OS.
+
+  // ── Python Module — AI/ML Pipeline Provenance ─────────────────────────
+  // Python's ast.parse() produces a deterministic, serializable AST.
+  // Dominance in AI/ML creates a direct provenance chain:
+  //   training script → ONNX model → MCP tool output
+  // The entire ML pipeline becomes content-addressed.
+  //
+  //   Format: urn:uor:lang:python:{hex} (SHA-256 of canonical module AST)
+
+  ["python-module", {
+    project: ({ hex }) => `urn:uor:lang:python:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.python.org/3/library/ast.html",
+  }],
+
+  // ── JavaScript Module — Browser-Native Supply Chain ───────────────────
+  // JS IS the browser — and the UOR Virtual OS runs in the browser.
+  // npm packages are tarballs with package.json (structured data →
+  // trivially canonicalizable). UOR fixes the npm supply chain attack
+  // surface with cryptographic content-addressing.
+  //
+  //   Format: urn:uor:lang:js:{hex} (SHA-256 of canonical JS module)
+
+  ["js-module", {
+    project: ({ hex }) => `urn:uor:lang:js:${hex}`,
+    fidelity: "lossless",
+    spec: "https://tc39.es/ecma262/",
+  }],
+
+  // ── Java Class — Enterprise Bytecode Identity ─────────────────────────
+  // Java .class files are deterministic bytecode — perfect for content-
+  // addressing. Maven Central already uses SHA-1; UOR upgrades to SHA-256.
+  // Enables COBOL-to-Java migration verification via shared hash identity.
+  //
+  //   Format: urn:uor:lang:java:{hex} (SHA-256 of canonical class descriptor)
+
+  ["java-class", {
+    project: ({ hex }) => `urn:uor:lang:java:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html",
+  }],
+
+  // ── C# Assembly — .NET/Unity Verifiable Identity ──────────────────────
+  // .NET assemblies are structured IL bytecode with rich metadata.
+  // NuGet packages are already signed — UOR adds content-addressing.
+  // Unity game assets become cryptographically verifiable.
+  //
+  //   Format: urn:uor:lang:csharp:{hex} (SHA-256 of canonical assembly descriptor)
+
+  ["csharp-assembly", {
+    project: ({ hex }) => `urn:uor:lang:csharp:${hex}`,
+    fidelity: "lossless",
+    spec: "https://ecma-international.org/publications-and-standards/standards/ecma-335/",
+  }],
+
+  // ── C++ Compilation Unit — High-Performance Audit Trail ───────────────
+  // C++ compilation units produce deterministic object files with
+  // reproducible builds. Game engines (Unreal), HFT systems, and
+  // robotics firmware all become content-addressable.
+  //
+  //   Format: urn:uor:lang:cpp:{hex} (SHA-256 of canonical compilation unit)
+
+  ["cpp-unit", {
+    project: ({ hex }) => `urn:uor:lang:cpp:${hex}`,
+    fidelity: "lossless",
+    spec: "https://isocpp.org/std/the-standard",
+  }],
+
+  // ── C Translation Unit — OS/Firmware Foundation ───────────────────────
+  // C is the foundation — Linux kernel, compilers, embedded systems.
+  // Reproducible builds (Debian, NixOS) already aim for deterministic
+  // output — UOR provides the identity layer.
+  //
+  //   Format: urn:uor:lang:c:{hex} (SHA-256 of canonical translation unit)
+
+  ["c-unit", {
+    project: ({ hex }) => `urn:uor:lang:c:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/82075.html",
+  }],
+
+  // ── Go Module — Cloud-Native Provenance ───────────────────────────────
+  // Go modules already use content-addressed checksums (go.sum) and a
+  // transparency log (Go Module Mirror). UOR extends this to cross-
+  // protocol identity — a Go module hash becomes a DID, a Bitcoin
+  // anchor, a NANDA-discoverable service.
+  //
+  //   Format: urn:uor:lang:go:{hex} (SHA-256 of canonical Go module)
+
+  ["go-module", {
+    project: ({ hex }) => `urn:uor:lang:go:${hex}`,
+    fidelity: "lossless",
+    spec: "https://go.dev/ref/mod",
+  }],
+
+  // ── Rust Crate — Secure Systems Identity ──────────────────────────────
+  // Rust's cargo already uses SHA-256 checksums for crate verification.
+  // Memory safety + cryptographic integrity = the most secure projection.
+  // WASM compilation makes Rust ideal for browser-based Virtual OS.
+  //
+  //   Format: urn:uor:lang:rust:{hex} (SHA-256 of canonical crate descriptor)
+
+  ["rust-crate", {
+    project: ({ hex }) => `urn:uor:lang:rust:${hex}`,
+    fidelity: "lossless",
+    spec: "https://doc.rust-lang.org/cargo/reference/registries.html",
+  }],
+
+  // ── TypeScript Module — Virtual OS Native Execution ───────────────────
+  // TypeScript IS the UOR framework's implementation language. .d.ts
+  // declaration files are pure type descriptions — perfectly structured
+  // for JSON-LD canonicalization. The type system provides structural
+  // guarantees that enhance canonicalization.
+  //
+  //   Format: urn:uor:lang:ts:{hex} (SHA-256 of canonical TS module)
+
+  ["ts-module", {
+    project: ({ hex }) => `urn:uor:lang:ts:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html",
+  }],
+
+  // ── SQL Schema — Database Structure Identity ──────────────────────────
+  // SQL schemas are pure structural declarations (CREATE TABLE, constraints,
+  // indexes). They're the most naturally canonicalizable of all languages.
+  // Database migrations become content-addressed — every schema version
+  // gets a permanent identity.
+  //
+  //   Format: urn:uor:lang:sql:{hex} (SHA-256 of canonical schema descriptor)
+
+  ["sql-schema", {
+    project: ({ hex }) => `urn:uor:lang:sql:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/76583.html",
+  }],
 ]);
