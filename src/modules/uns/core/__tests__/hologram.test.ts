@@ -37,8 +37,8 @@ const HEX = IDENTITY["u:canonicalId"].split(":").pop()!;
 // ── Core contract ───────────────────────────────────────────────────────────
 
 describe("Hologram Projection Registry", () => {
-  it("registers at least 19 projections", () => {
-    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(19);
+  it("registers at least 20 projections", () => {
+    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(20);
   });
 
   // ── Tier 0: Foundational Standards ──────────────────────────────────────
@@ -163,6 +163,10 @@ describe("Hologram Projection Registry", () => {
     expect(project(IDENTITY, "croissant").value).toBe(`https://uor.foundation/croissant/${HEX}`);
   });
 
+  it("crdt uses deterministic Automerge document ID with full hex", () => {
+    expect(project(IDENTITY, "crdt").value).toBe(`crdt:automerge:${HEX}`);
+    expect(project(IDENTITY, "crdt").fidelity).toBe("lossless");
+  });
 
   it("lossy projections always carry a lossWarning", () => {
     const hologram = project(IDENTITY);
