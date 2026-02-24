@@ -119,7 +119,16 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
             {/* Coordinates */}
             {breakdown && (
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">UOR Address</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">UOR Address</p>
+                  <button
+                    onClick={() => copyValue(`${breakdown.observer} · ${breakdown.observable} · ${breakdown.context}`)}
+                    className="text-foreground/40 hover:text-foreground transition-colors"
+                    title="Copy UOR address"
+                  >
+                    {copied ? <Check size={13} className="text-primary" /> : <Copy size={13} />}
+                  </button>
+                </div>
                 <div className="grid grid-cols-3 gap-2">
                 {([
                   { key: "observer" as const, label: "Entity" },
