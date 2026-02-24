@@ -23,6 +23,7 @@
 
 import type { UorCertificate } from "./types";
 import { sha256hex } from "@/lib/crypto";
+import { project } from "@/modules/uns/core/hologram";
 
 // ── W3C VC 2.0 Context ─────────────────────────────────────────────────────
 // Per VC DM 2.0 §4.3: The v2 context includes Data Integrity terms.
@@ -118,6 +119,21 @@ function fromMultibaseHex(multibase: string): string {
   return multibase.slice(1).toLowerCase();
 }
 
+// ── Certificate → ProjectionInput ───────────────────────────────────────────
+
+/**
+ * Build a ProjectionInput from a certificate's identity fields.
+ * This bridges the certificate layer to the hologram projection layer.
+ */
+function certToProjectionInput(certificate: UorCertificate) {
+  const hex = certificate["cert:sourceHash"];
+  const hashBytes = new Uint8Array(32);
+  for (let i = 0; i < 64; i += 2) {
+    hashBytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  }
+  return { hashBytes, cid: certificate["cert:cid"], hex };
+}
+
 // ── Envelope Generation ─────────────────────────────────────────────────────
 
 /**
@@ -136,8 +152,11 @@ function fromMultibaseHex(multibase: string): string {
 export async function wrapAsVerifiableCredential(
   certificate: UorCertificate
 ): Promise<VerifiableUorCredential> {
-  const cid = certificate["cert:cid"];
-  const subjectDid = `did:uor:${cid}`;
+  // Derive identifiers from the hologram projection registry.
+  // The DID and VC URN are projections of the same canonical identity.
+  const input = certToProjectionInput(certificate);
+  const subjectDid = project(input, "did").value;
+  const vcUrn = project(input, "vc").value;
   const issuerDid = "did:uor:foundation";
 
   // Compute proof value from canonical payload, then multibase-encode
@@ -158,7 +177,7 @@ export async function wrapAsVerifiableCredential(
   return {
     "@context": [VC_CONTEXT, UOR_CONTEXT] as const,
     type: ["VerifiableCredential", "UorCertificate"] as const,
-    id: `urn:uor:vc:${cid}`,
+    id: vcUrn,
     issuer: {
       id: issuerDid,
       name: "UOR Foundation",

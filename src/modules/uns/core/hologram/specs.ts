@@ -5,6 +5,10 @@
  * Each spec is a pure 3-5 line projection from hash → protocol-native ID.
  * Adding a new standard = adding one Map entry. Nothing else changes.
  *
+ * The four foundational layers (JSON-LD, DID, VC, CID) are listed first —
+ * they form the bedrock of the semantic web stack. Every other projection
+ * is a viewing angle of the same identity through a different protocol lens.
+ *
  * @module uns/core/hologram/specs
  */
 
@@ -17,13 +21,50 @@ const DOMAIN = "uor.foundation";
  */
 export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, HologramSpec>([
 
-  // ── Native UOR Projections (already in UorCanonicalIdentity) ────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 0 — FOUNDATIONAL STANDARDS (the semantic web bedrock)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── IPFS / CIDv1 / Multiformats — Content-Addressed Distribution ───────
+  // The atomic identity. Everything else is a projection of this.
 
   ["cid", {
     project: ({ cid }) => cid,
     fidelity: "lossless",
     spec: "https://github.com/multiformats/cid",
   }],
+
+  // ── W3C JSON-LD / RDF — Semantic Data Model ───────────────────────────
+  // The canonical URN. Triplestores, SPARQL endpoints, and JSON-LD
+  // processors all resolve through this identifier.
+
+  ["jsonld", {
+    project: ({ hex }) => `urn:uor:derivation:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/json-ld11/",
+  }],
+
+  // ── W3C DIDs (did:uor) — Self-Sovereign Identity ─────────────────────
+  // Ceramic, ION, Spruce — every DID-capable system can resolve this.
+
+  ["did", {
+    project: ({ cid }) => `did:uor:${cid}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/did-core/",
+  }],
+
+  // ── W3C Verifiable Credentials 2.0 — Trust Layer ─────────────────────
+  // Wallets, issuers, verifiers — the VC ecosystem speaks this URN.
+
+  ["vc", {
+    project: ({ cid }) => `urn:uor:vc:${cid}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/vc-data-model-2.0/",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 1 — UOR NATIVE PROJECTIONS (derived directly from the hash)
+  // ═══════════════════════════════════════════════════════════════════════════
 
   ["ipv6", {
     project: ({ hashBytes }) => {
@@ -43,15 +84,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://uor.foundation/spec/braille-bijection",
   }],
 
-  // ── W3C DID (already implemented in certificate/did.ts) ─────────────────
-
-  ["did", {
-    project: ({ cid }) => `did:uor:${cid}`,
-    fidelity: "lossless",
-    spec: "https://www.w3.org/TR/did-core/",
-  }],
-
-  // ── WebFinger (RFC 7033) — Universal Discovery ──────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 2 — FEDERATION & DISCOVERY PROTOCOLS
+  // ═══════════════════════════════════════════════════════════════════════════
 
   ["webfinger", {
     project: ({ hex }) => `acct:${hex.slice(0, 16)}@${DOMAIN}`,
@@ -60,15 +95,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     lossWarning: "webfinger-uses-64-bit-prefix (collision-resistant for discovery, not identity)",
   }],
 
-  // ── ActivityPub (W3C) — Federated Social Web ───────────────────────────
-
   ["activitypub", {
     project: ({ hex }) => `https://${DOMAIN}/ap/objects/${hex}`,
     fidelity: "lossless",
     spec: "https://www.w3.org/TR/activitypub/",
   }],
-
-  // ── AT Protocol (Bluesky) — Authenticated Transfer ─────────────────────
 
   ["atproto", {
     project: ({ cid, hex }) => `at://did:uor:${cid}/app.uor.object/${hex.slice(0, 13)}`,
@@ -77,15 +108,15 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     lossWarning: "atproto-rkey-uses-52-bit-prefix (AT record key length constraint)",
   }],
 
-  // ── OpenID Connect — Enterprise Identity ───────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 3 — ENTERPRISE & INDUSTRY STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
 
   ["oidc", {
     project: ({ hex }) => `urn:uor:oidc:${hex}`,
     fidelity: "lossless",
     spec: "https://openid.net/specs/openid-connect-core-1_0.html",
   }],
-
-  // ── GS1 Digital Link — Supply Chain ────────────────────────────────────
 
   ["gs1", {
     project: ({ hex }) => `https://id.gs1.org/8004/${hex.slice(0, 30)}`,
@@ -94,23 +125,17 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     lossWarning: "gs1-uses-120-bit-prefix (GIAI serial reference length constraint)",
   }],
 
-  // ── OCI (Open Container Initiative) — Container Identity ──────────────
-
   ["oci", {
     project: ({ hex }) => `sha256:${hex}`,
     fidelity: "lossless",
     spec: "https://github.com/opencontainers/image-spec",
   }],
 
-  // ── Solid WebID — Decentralized Personal Data ─────────────────────────
-
   ["solid", {
     project: ({ hex }) => `https://${DOMAIN}/profile/${hex}#me`,
     fidelity: "lossless",
     spec: "https://www.w3.org/TR/webid/",
   }],
-
-  // ── Open Badges 3.0 (1EdTech) — Verifiable Credentials for Education ─
 
   ["openbadges", {
     project: ({ hex }) => `urn:uuid:${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`,
@@ -119,7 +144,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     lossWarning: "openbadges-uses-128-bit-uuid (truncated to UUIDv4 format)",
   }],
 
-  // ── SCITT (IETF) — Supply Chain Integrity & Transparency ──────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 4 — INFRASTRUCTURE & EMERGING PROTOCOLS
+  // ═══════════════════════════════════════════════════════════════════════════
 
   ["scitt", {
     project: ({ hex }) => `urn:ietf:params:scitt:statement:sha256:${hex}`,
@@ -127,15 +154,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/draft-ietf-scitt-architecture/",
   }],
 
-  // ── MLS (RFC 9420) — Messaging Layer Security ─────────────────────────
-
   ["mls", {
     project: ({ hex }) => `urn:ietf:params:mls:group:${hex}`,
     fidelity: "lossless",
     spec: "https://www.rfc-editor.org/rfc/rfc9420",
   }],
-
-  // ── DNS-SD (RFC 6763) — Service Discovery ─────────────────────────────
 
   ["dnssd", {
     project: ({ hex }) => `_uor-${hex.slice(0, 12)}._tcp.local`,
@@ -144,15 +167,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     lossWarning: "dnssd-uses-48-bit-prefix (mDNS service name length constraint)",
   }],
 
-  // ── STAC — SpatioTemporal Asset Catalog ───────────────────────────────
-
   ["stac", {
     project: ({ hex }) => `https://${DOMAIN}/stac/items/${hex}`,
     fidelity: "lossless",
     spec: "https://stacspec.org/",
   }],
-
-  // ── Croissant — ML Dataset & Model Identity ──────────────────────────
 
   ["croissant", {
     project: ({ hex }) => `https://${DOMAIN}/croissant/${hex}`,

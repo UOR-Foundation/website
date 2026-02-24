@@ -73,10 +73,19 @@ export const PROJECTIONS: ReadonlyMap<string, HologramSpec> = SPECS;
 
 // ── Projection Function ────────────────────────────────────────────────────
 
+/** Input type: either a full canonical identity or a raw projection input. */
+type ProjectionSource = UorCanonicalIdentity | ProjectionInput;
+
 /**
- * Extract ProjectionInput from a UorCanonicalIdentity.
+ * Normalize any source into a ProjectionInput.
  */
-function toInput(identity: UorCanonicalIdentity): ProjectionInput {
+function toInput(source: ProjectionSource): ProjectionInput {
+  // If it already has `hex`, it's a ProjectionInput
+  if ("hex" in source && "cid" in source && "hashBytes" in source) {
+    return source as ProjectionInput;
+  }
+  // Otherwise it's a UorCanonicalIdentity
+  const identity = source as UorCanonicalIdentity;
   const hex = identity["u:canonicalId"].split(":").pop()!;
   return { hashBytes: identity.hashBytes, cid: identity["u:cid"], hex };
 }
@@ -84,17 +93,21 @@ function toInput(identity: UorCanonicalIdentity): ProjectionInput {
 /**
  * Project a UOR identity through all registered standards.
  *
- * @param identity  Output of singleProofHash() or buildIdentity().
- * @param target    Optional — project only one standard by name.
- * @returns         The complete hologram, or a single projection if target specified.
+ * Accepts either a UorCanonicalIdentity (from singleProofHash) or a raw
+ * ProjectionInput (from certificate fields). This allows both the identity
+ * pipeline and the certificate/DID/VC layers to use the same projection engine.
+ *
+ * @param source  UorCanonicalIdentity or ProjectionInput.
+ * @param target  Optional — project only one standard by name.
+ * @returns       The complete hologram, or a single projection if target specified.
  */
-export function project(identity: UorCanonicalIdentity): Hologram;
-export function project(identity: UorCanonicalIdentity, target: string): HologramProjection;
+export function project(source: ProjectionSource): Hologram;
+export function project(source: ProjectionSource, target: string): HologramProjection;
 export function project(
-  identity: UorCanonicalIdentity,
+  source: ProjectionSource,
   target?: string,
 ): Hologram | HologramProjection {
-  const input = toInput(identity);
+  const input = toInput(source);
 
   if (target) {
     const spec = PROJECTIONS.get(target);
