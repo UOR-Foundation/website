@@ -333,7 +333,7 @@ export async function importApp(
     (source.type === "github"
       ? source.repo
       : source.type === "url"
-        ? new URL(source.url).hostname.split(".")[0]
+        ? (() => { try { return new URL(source.url).hostname.split(".")[0]; } catch { return "imported-app"; } })()
         : "imported-app");
 
   // 7. Create manifest
