@@ -91,6 +91,7 @@ const CartridgePage = lazy(() => import("@/modules/qr-cartridge/pages/CartridgeP
 const YourSpacePage = lazy(() => import("@/modules/your-space/pages/YourSpacePage"));
 const SandboxPage = lazy(() => import("@/modules/projects/pages/SandboxPage"));
 const ClaimIdentityPage = lazy(() => import("@/modules/uor-identity/pages/ClaimIdentityPage"));
+const BitcoinScriptPage = lazy(() => import("@/modules/bitcoin/pages/BitcoinScriptPage"));
 
 const queryClient = new QueryClient();
 
@@ -195,6 +196,7 @@ const App = () => {
             <Route path="/your-space" element={<YourSpacePage />} />
             <Route path="/sandbox" element={<SandboxPage />} />
             <Route path="/claim-identity" element={<ClaimIdentityPage />} />
+            <Route path="/bitcoin" element={<BitcoinScriptPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
