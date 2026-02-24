@@ -98,18 +98,13 @@ const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate
 
   return (
     <div className="mt-5 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-      <div className="inline-flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-2.5">
-        <span className="text-sm font-semibold text-foreground tracking-wide">
-          {displayTriword}
-        </span>
-        <button
-          onClick={() => handleOpen(true)}
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          <ShieldCheck size={13} />
-          Verify certificate
-        </button>
-      </div>
+      <button
+        onClick={() => handleOpen(true)}
+        className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+      >
+        <ShieldCheck size={15} />
+        View certificate
+      </button>
 
       <Dialog open={open} onOpenChange={handleOpen}>
         <DialogContent className="max-w-md p-0 overflow-hidden">
