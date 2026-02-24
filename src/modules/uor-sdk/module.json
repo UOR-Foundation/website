@@ -9,7 +9,7 @@
     "u:", "schema:", "op:", "kernel:",
     "partition:", "trace:", "observable:",
     "derivation:", "cert:", "morphism:",
-    "store:", "proof:", "state:"
+    "store:", "proof:", "state:", "tsp:"
   ],
   "exports": [
     "createUorClient",
@@ -17,7 +17,13 @@
     "neg", "bnot", "succ",
     "verifyCriticalIdentity",
     "singleProofHash",
-    "computeModuleIdentity"
+    "computeModuleIdentity",
+    "resolveVid",
+    "sealEnvelope",
+    "createRfi",
+    "acceptRfi",
+    "verifyEnvelope",
+    "verifyRelationship"
   ],
   "dependencies": {
     "core": "^1.0.0"

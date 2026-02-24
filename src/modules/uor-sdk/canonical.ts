@@ -42,3 +42,27 @@ export type {
   UnifiedProjectionResult,
   ProjectionCoherence,
 } from "@/modules/uns/core/hologram";
+
+// ── Trust Spanning Protocol (TSP) ─────────────────────────────────────────
+// Authenticated messaging, relationship forming, and trust channels.
+
+export {
+  resolveVid,
+  sealEnvelope,
+  createRfi,
+  acceptRfi,
+  createRoutedEnvelope,
+  verifyEnvelope,
+  verifyRelationship,
+} from "@/modules/uns/core/tsp";
+
+export type {
+  TspMessageType,
+  TspVid,
+  TspEnvelope,
+  SealedTspEnvelope,
+  TspRfi,
+  TspRfa,
+  TspRelationship,
+  RoutedTspEnvelope,
+} from "@/modules/uns/core/tsp";
