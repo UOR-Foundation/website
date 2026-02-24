@@ -14,6 +14,177 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_compression_witnesses: {
+        Row: {
+          agent_id: string
+          compressed_to_cid: string
+          created_at: string
+          id: string
+          information_loss_ratio: number
+          morphism_type: string
+          original_memory_cids: string[]
+          preserved_properties: Json
+          witness_cid: string
+        }
+        Insert: {
+          agent_id: string
+          compressed_to_cid: string
+          created_at?: string
+          id?: string
+          information_loss_ratio?: number
+          morphism_type?: string
+          original_memory_cids?: string[]
+          preserved_properties?: Json
+          witness_cid: string
+        }
+        Update: {
+          agent_id?: string
+          compressed_to_cid?: string
+          created_at?: string
+          id?: string
+          information_loss_ratio?: number
+          morphism_type?: string
+          original_memory_cids?: string[]
+          preserved_properties?: Json
+          witness_cid?: string
+        }
+        Relationships: []
+      }
+      agent_memories: {
+        Row: {
+          access_count: number
+          agent_id: string
+          compressed: boolean
+          compression_witness_cid: string | null
+          content: Json
+          created_at: string
+          epistemic_grade: string
+          id: string
+          importance: number
+          last_accessed_at: string | null
+          memory_cid: string
+          memory_type: string
+          session_cid: string | null
+          storage_tier: string
+          summary: string | null
+        }
+        Insert: {
+          access_count?: number
+          agent_id: string
+          compressed?: boolean
+          compression_witness_cid?: string | null
+          content?: Json
+          created_at?: string
+          epistemic_grade?: string
+          id?: string
+          importance?: number
+          last_accessed_at?: string | null
+          memory_cid: string
+          memory_type?: string
+          session_cid?: string | null
+          storage_tier?: string
+          summary?: string | null
+        }
+        Update: {
+          access_count?: number
+          agent_id?: string
+          compressed?: boolean
+          compression_witness_cid?: string | null
+          content?: Json
+          created_at?: string
+          epistemic_grade?: string
+          id?: string
+          importance?: number
+          last_accessed_at?: string | null
+          memory_cid?: string
+          memory_type?: string
+          session_cid?: string | null
+          storage_tier?: string
+          summary?: string | null
+        }
+        Relationships: []
+      }
+      agent_relationships: {
+        Row: {
+          agent_id: string
+          context: Json
+          created_at: string
+          id: string
+          interaction_count: number
+          last_interaction_at: string | null
+          relationship_cid: string
+          relationship_type: string
+          target_id: string
+          trust_score: number
+        }
+        Insert: {
+          agent_id: string
+          context?: Json
+          created_at?: string
+          id?: string
+          interaction_count?: number
+          last_interaction_at?: string | null
+          relationship_cid: string
+          relationship_type?: string
+          target_id: string
+          trust_score?: number
+        }
+        Update: {
+          agent_id?: string
+          context?: Json
+          created_at?: string
+          id?: string
+          interaction_count?: number
+          last_interaction_at?: string | null
+          relationship_cid?: string
+          relationship_type?: string
+          target_id?: string
+          trust_score?: number
+        }
+        Relationships: []
+      }
+      agent_session_chains: {
+        Row: {
+          agent_id: string
+          created_at: string
+          h_score: number
+          id: string
+          memory_count: number
+          observer_phi: number
+          parent_cid: string | null
+          sequence_num: number
+          session_cid: string
+          state_snapshot: Json
+          zone: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          h_score?: number
+          id?: string
+          memory_count?: number
+          observer_phi?: number
+          parent_cid?: string | null
+          sequence_num?: number
+          session_cid: string
+          state_snapshot?: Json
+          zone?: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          h_score?: number
+          id?: string
+          memory_count?: number
+          observer_phi?: number
+          parent_cid?: string | null
+          sequence_num?: number
+          session_cid?: string
+          state_snapshot?: Json
+          zone?: string
+        }
+        Relationships: []
+      }
       app_asset_registry: {
         Row: {
           app_name: string
