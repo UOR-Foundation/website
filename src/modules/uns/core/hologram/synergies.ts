@@ -726,6 +726,91 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
     ],
     capability: "BEAM VM ecosystem (Elixir/Erlang) + Lisp family (Scheme/CL/Racket) — distributed systems and metaprogramming unified",
   },
+
+  // ─── Chain 43: Certificate Automation Pipeline (x509 + ACME) ──────────
+  {
+    name: "Certificate Automation Pipeline",
+    description: "PKI lifecycle: X.509 certificate issuance → ACME automated renewal → TLS termination → mTLS service mesh",
+    projections: ["x509", "acme", "oidc", "webauthn", "tsp-key"],
+    bridges: [
+      { type: "protocol", description: "X.509 certificate subject hash binds to ACME order identity", sharedComponent: "SHA-256 certificate fingerprint" },
+      { type: "lifecycle", description: "ACME challenge tokens prove domain control via content-addressed challenge", sharedComponent: "challenge token hash" },
+      { type: "protocol", description: "ACME-issued certificates authenticate OIDC token endpoints", sharedComponent: "TLS certificate chain hash" },
+      { type: "protocol", description: "WebAuthn attestation certificates chain to the same X.509 root", sharedComponent: "attestation CA hash" },
+    ],
+    capability: "Automated PKI: X.509 certificates issued via ACME, binding TLS identity to OIDC authentication and WebAuthn attestation — one hash across the entire certificate lifecycle",
+  },
+
+  // ─── Chain 44: RPC Pipeline (gRPC + Protobuf) ─────────────────────────
+  {
+    name: "RPC Pipeline",
+    description: "Schema-first RPC: Protobuf IDL → gRPC service → OpenTelemetry trace → API gateway",
+    projections: ["protobuf", "grpc", "opentelemetry", "openapi", "cloudevents"],
+    bridges: [
+      { type: "encoding", description: "Protobuf schema hash defines the gRPC service contract", sharedComponent: "IDL schema hash" },
+      { type: "protocol", description: "gRPC calls carry OpenTelemetry trace context metadata", sharedComponent: "W3C Trace Context" },
+      { type: "protocol", description: "gRPC service definitions generate OpenAPI gateway specs", sharedComponent: "service descriptor hash" },
+      { type: "protocol", description: "gRPC server-sent events map to CloudEvents envelopes", sharedComponent: "event payload hash" },
+    ],
+    capability: "Schema-first microservices: Protobuf IDL → gRPC transport → OpenTelemetry observability → OpenAPI documentation → CloudEvents streaming — all content-addressed",
+  },
+
+  // ─── Chain 45: Cloud-Native Stack (k8s + Helm + OCI) ──────────────────
+  {
+    name: "Cloud-Native Stack",
+    description: "Container orchestration: OCI image → Helm chart → Kubernetes manifest → service mesh → observability",
+    projections: ["oci", "helm", "k8s", "opentelemetry", "grpc", "scitt"],
+    bridges: [
+      { type: "hash", description: "OCI image digest is the content-addressed deployment unit", sharedComponent: "sha256:{hex}" },
+      { type: "stack", description: "Helm charts package OCI images with configuration templates", sharedComponent: "chart content hash" },
+      { type: "stack", description: "Kubernetes manifests reference Helm-rendered OCI digests", sharedComponent: "manifest content hash" },
+      { type: "protocol", description: "K8s services communicate via gRPC with content-addressed IDL", sharedComponent: "service mesh hash" },
+      { type: "protocol", description: "All deployments emit OpenTelemetry traces for observability", sharedComponent: "trace ID from hash" },
+    ],
+    capability: "Complete cloud-native pipeline: OCI image → Helm packaging → K8s deployment → gRPC service mesh → SCITT transparency — every artifact content-addressed",
+  },
+
+  // ─── Chain 46: Automotive Bus Stack (AUTOSAR + CAN + SOME/IP) ─────────
+  {
+    name: "Automotive Bus Stack",
+    description: "Vehicle ECU lifecycle: AUTOSAR component → CAN bus message → SOME/IP service → OTA update verification",
+    projections: ["autosar", "can", "someip", "scitt", "c2pa"],
+    bridges: [
+      { type: "stack", description: "AUTOSAR SWC descriptor hash identifies the ECU software component", sharedComponent: "component descriptor hash" },
+      { type: "protocol", description: "CAN frame arbitration IDs derived from AUTOSAR signal mapping", sharedComponent: "signal identity hash" },
+      { type: "protocol", description: "SOME/IP service discovery advertises content-addressed ECU services", sharedComponent: "service offering hash" },
+      { type: "protocol", description: "SCITT transparency logs audit OTA firmware updates", sharedComponent: "firmware statement hash" },
+    ],
+    capability: "Automotive ECU lifecycle: AUTOSAR design → CAN bus communication → SOME/IP service discovery → SCITT-audited OTA updates — vehicle software integrity from design to deployment",
+  },
+
+  // ─── Chain 47: BIM-to-City Bridge (IFC + CityGML) ────────────────────
+  {
+    name: "BIM-to-City Bridge",
+    description: "Built environment: IFC building model → CityGML urban context → GeoPackage spatial data → digital twin",
+    projections: ["ifc", "citygml", "geopackage", "geotiff", "jsonld"],
+    bridges: [
+      { type: "protocol", description: "IFC building elements export to CityGML LoD2+ city models", sharedComponent: "building geometry hash" },
+      { type: "protocol", description: "CityGML objects stored as content-addressed GeoPackage features", sharedComponent: "spatial feature hash" },
+      { type: "protocol", description: "GeoPackage raster tiles link to GeoTIFF terrain data", sharedComponent: "raster content hash" },
+      { type: "protocol", description: "All BIM/GIS objects expressed as JSON-LD for semantic web integration", sharedComponent: "semantic object hash" },
+    ],
+    capability: "Built environment digital twin: IFC building design → CityGML urban model → GeoPackage spatial storage → GeoTIFF terrain — all content-addressed for smart city infrastructure",
+  },
+
+  // ─── Chain 48: Financial Reporting Pipeline (XBRL + ISO 20022) ────────
+  {
+    name: "Financial Reporting Pipeline",
+    description: "Regulatory reporting: XBRL financial statements → ISO 20022 payment messages → audit trail → compliance verification",
+    projections: ["xbrl", "iso20022", "jsonld", "scitt", "x509"],
+    bridges: [
+      { type: "protocol", description: "XBRL instance documents hash financial facts for tamper-proof reporting", sharedComponent: "financial fact hash" },
+      { type: "protocol", description: "ISO 20022 payment messages reference XBRL-reported entities", sharedComponent: "entity identity hash" },
+      { type: "protocol", description: "Both XBRL and ISO 20022 map to JSON-LD for semantic interoperability", sharedComponent: "financial ontology hash" },
+      { type: "protocol", description: "SCITT transparency logs provide regulatory audit trails", sharedComponent: "compliance statement hash" },
+    ],
+    capability: "End-to-end financial compliance: XBRL reporting → ISO 20022 payments → SCITT audit trail → X.509 signing — tamper-proof regulatory pipeline from filing to settlement",
+  },
 ];
 
 // ── Cluster Definitions (projections grouped by shared component) ──────────
@@ -798,6 +883,14 @@ export const CLUSTERS: Readonly<Record<string, readonly string[]>> = {
   "UOR native projections": ["ipv6", "glyph", "cid", "did"],
   ".NET ecosystem": ["csharp-assembly", "fsharp"],
   "Polytree structures": ["polytree-node", "polytree-morphism", "polytree-tensor"],
+
+  // ── NEW: Cross-ecosystem synergy clusters ─────────────────────────────
+  "Certificate & PKI": ["x509", "acme", "tsp-key"],
+  "RPC & transport": ["grpc", "protobuf", "openapi"],
+  "Cloud-native orchestration": ["k8s", "helm", "oci", "dockerfile"],
+  "Automotive bus": ["autosar", "can", "someip"],
+  "Built environment (BIM/GIS)": ["ifc", "citygml", "geopackage", "geotiff"],
+  "Financial compliance": ["xbrl", "iso20022"],
 };
 
 // ── Synergy Verification Engine ────────────────────────────────────────────
