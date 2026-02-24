@@ -4,7 +4,7 @@
  */
 
 import { Link, useLocation } from "react-router-dom";
-import { FileText, Clock, Zap, Shield, Bot } from "lucide-react";
+import { FileText, Clock, Zap, Shield, Bot, Search } from "lucide-react";
 
 const LINKS = [
   { path: "/bitcoin", label: "Script Inspector", icon: FileText },
@@ -12,6 +12,7 @@ const LINKS = [
   { path: "/bitcoin/demo", label: "E2E Demo", icon: Zap },
   { path: "/bitcoin/zcash", label: "Zcash Duality", icon: Shield },
   { path: "/bitcoin/agents", label: "Agent Stack", icon: Bot },
+  { path: "/bitcoin/coherence", label: "Coherence Gate", icon: Search },
 ] as const;
 
 export default function BitcoinNav() {

@@ -96,6 +96,7 @@ const TimestampPage = lazy(() => import("@/modules/bitcoin/pages/TimestampPage")
 const BitcoinDemoPage = lazy(() => import("@/modules/bitcoin/pages/DemoPage"));
 const ZcashDualityPage = lazy(() => import("@/modules/bitcoin/pages/ZcashDualityPage"));
 const AgentStackPage = lazy(() => import("@/modules/bitcoin/pages/AgentStackPage"));
+const CoherenceGatePage = lazy(() => import("@/modules/bitcoin/pages/CoherenceGatePage"));
 
 const queryClient = new QueryClient();
 
@@ -205,6 +206,7 @@ const App = () => {
             <Route path="/bitcoin/demo" element={<BitcoinDemoPage />} />
             <Route path="/bitcoin/zcash" element={<ZcashDualityPage />} />
             <Route path="/bitcoin/agents" element={<AgentStackPage />} />
+            <Route path="/bitcoin/coherence" element={<CoherenceGatePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
