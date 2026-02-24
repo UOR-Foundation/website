@@ -276,6 +276,26 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
       "aes67", "mpeg7-audio", "jams", "mpd",
     ],
   },
+  {
+    id: "hardware",
+    label: "Hardware Design & Fabrication",
+    description: "GDSII, Gerber, SPDX SBOM, Matter, LEF/DEF, Liberty, EDIF, SPICE, STEP, IPC-2581, JTAG, UCIe, CXL, ST 2110",
+    color: "hsl(0, 55%, 50%)",
+    projections: [
+      "gdsii", "gerber", "spdx-sbom", "matter", "lefdef", "liberty",
+      "edif", "spice", "step-cad", "ipc2581", "jtag", "ucie", "cxl", "st2110",
+    ],
+  },
+  {
+    id: "iot",
+    label: "IoT Protocols & Standards",
+    description: "LwM2M, CoAP, MQTT, SenML, WoT TD, OPC UA, IPSO, Thread, Zigbee, BLE GATT, LoRaWAN, DTDL, ECHONET",
+    color: "hsl(10, 60%, 52%)",
+    projections: [
+      "lwm2m", "coap", "mqtt", "senml", "wot-td", "opcua", "ipso",
+      "thread", "zigbee", "ble-gatt", "lorawan", "dtdl", "echonet",
+    ],
+  },
 ];
 
 /** Quick lookup: projection name → ecosystem id */
