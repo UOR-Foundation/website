@@ -5200,4 +5200,807 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://github.com/ggerganov/ggml/blob/master/docs/gguf.md",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 29 — NETWORKING & TRANSPORT PROTOCOLS
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Network protocols define how data moves between systems. Content-
+  // addressing protocol specifications and session descriptors creates
+  // verifiable network configuration identities — enabling reproducible
+  // infrastructure and tamper-evident network policy management.
+
+  // ── gRPC — Remote Procedure Calls ──────────────────────────────────────
+  // gRPC (Google) is the dominant high-performance RPC framework. Uses
+  // HTTP/2 + Protobuf for strongly-typed, bi-directional streaming RPCs.
+  // Used by Kubernetes, Envoy, etcd, CockroachDB, and microservices.
+  // gRPC service definitions (.proto with service/rpc) are deterministic.
+  //
+  //   Format: urn:uor:net:grpc:{hex} (SHA-256 of canonical gRPC service definition)
+  //   Canonical: .proto service → sorted methods → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: grpc + protobuf → RPC↔serialization bridge
+  //                     grpc + openapi → gRPC↔REST API bridge
+
+  ["grpc", {
+    project: ({ hex }) => `urn:uor:net:grpc:${hex}`,
+    fidelity: "lossless",
+    spec: "https://grpc.io/docs/what-is-grpc/core-concepts/",
+  }],
+
+  // ── QUIC — UDP-Based Transport (RFC 9000) ──────────────────────────────
+  // QUIC is the multiplexed, encrypted transport protocol underlying
+  // HTTP/3. Built into Chrome, Firefox, Safari, and curl. Provides
+  // 0-RTT connection establishment, connection migration, and built-in
+  // TLS 1.3. QUIC transport parameters are deterministic.
+  //
+  //   Format: urn:uor:net:quic:{hex} (SHA-256 of canonical QUIC transport parameters)
+  //   Canonical: transport params → sorted → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: quic + webtransport → transport↔application bridge
+
+  ["quic", {
+    project: ({ hex }) => `urn:uor:net:quic:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc9000",
+  }],
+
+  // ── WebSocket — Full-Duplex Communication ──────────────────────────────
+  // WebSocket (RFC 6455) enables persistent, full-duplex communication
+  // between browsers and servers. Foundation for real-time apps — chat,
+  // gaming, trading, collaboration. WebSocket subprotocols define
+  // application-level semantics.
+  //
+  //   Format: urn:uor:net:websocket:{hex} (SHA-256 of canonical WebSocket subprotocol spec)
+  //   Canonical: subprotocol → message schema → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: websocket + mqtt → real-time↔pub-sub bridge
+
+  ["websocket", {
+    project: ({ hex }) => `urn:uor:net:websocket:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc6455",
+  }],
+
+  // ── SIP — Session Initiation Protocol ──────────────────────────────────
+  // SIP (RFC 3261) is the signaling protocol for VoIP, video conferencing,
+  // and instant messaging. Used by every phone system, Offen/Offen, Offen/
+  // Offen, Offen/Offen, Offen/Offen, Offen/Offen, Offen/Offen, Offen/
+  // Every PBX (Asterisk, FreeSWITCH), IMS (4G/5G voice), and UC platform.
+  //
+  //   Format: urn:uor:net:sip:{hex} (SHA-256 of canonical SIP dialog descriptor)
+  //   Canonical: SIP headers → sorted → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: sip + aes67 → VoIP↔professional audio bridge
+
+  ["sip", {
+    project: ({ hex }) => `urn:uor:net:sip:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc3261",
+  }],
+
+  // ── RTP — Real-time Transport Protocol ─────────────────────────────────
+  // RTP (RFC 3550) carries real-time audio and video over IP. Used by
+  // WebRTC, VoIP, IPTV, and video conferencing. RTP profiles define
+  // codec parameters and payload types.
+  //
+  //   Format: urn:uor:net:rtp:{hex} (SHA-256 of canonical RTP session descriptor)
+  //   Canonical: SDP media description → sorted → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: rtp + sip → media↔signaling bridge
+  //                     rtp + st2110 → consumer↔broadcast media bridge
+
+  ["rtp", {
+    project: ({ hex }) => `urn:uor:net:rtp:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc3550",
+  }],
+
+  // ── DNS — Domain Name System ───────────────────────────────────────────
+  // DNS (RFC 1035) is the internet's naming system. DNSSEC (RFC 4033)
+  // adds cryptographic signatures. DNS zone files are deterministic
+  // text records. Content-addressing DNS zones enables tamper-evident
+  // DNS configuration management.
+  //
+  //   Format: urn:uor:net:dns:{hex} (SHA-256 of canonical DNS zone)
+  //   Canonical: zone file → sorted records → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: dns + did → DNS↔DID resolution bridge
+
+  ["dns", {
+    project: ({ hex }) => `urn:uor:net:dns:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc1035",
+  }],
+
+  // ── BGP — Border Gateway Protocol ──────────────────────────────────────
+  // BGP (RFC 4271) is the routing protocol of the internet. Every ISP,
+  // cloud provider, and CDN uses BGP to exchange routing information.
+  // RPKI (RFC 6480) adds cryptographic origin validation. Content-
+  // addressing BGP route announcements enables verifiable routing policy.
+  //
+  //   Format: urn:uor:net:bgp:{hex} (SHA-256 of canonical BGP route object)
+  //   Canonical: route → prefix + AS path → JSON-LD → URDNA2015 → SHA-256
+
+  ["bgp", {
+    project: ({ hex }) => `urn:uor:net:bgp:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc4271",
+  }],
+
+  // ── SNMP — Simple Network Management Protocol ─────────────────────────
+  // SNMP (RFC 3411-3418) manages network devices — routers, switches,
+  // servers, printers. MIB (Management Information Base) defines device
+  // object hierarchies using ASN.1. Every enterprise network uses SNMP.
+  //
+  //   Format: urn:uor:net:snmp:{hex} (SHA-256 of canonical MIB module)
+  //   Canonical: MIB → sorted OIDs → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: snmp + asn1 → network management↔encoding bridge
+
+  ["snmp", {
+    project: ({ hex }) => `urn:uor:net:snmp:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc3411",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 30 — SECURITY & CRYPTOGRAPHIC STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Security standards define how identity, authentication, authorization,
+  // and encryption work across the internet. Content-addressing security
+  // artifacts creates permanent, verifiable identities for certificates,
+  // keys, and policies.
+
+  // ── X.509 — Public Key Certificates ────────────────────────────────────
+  // X.509 (ITU-T, RFC 5280) is the universal PKI certificate format.
+  // Used by TLS/HTTPS, S/MIME, code signing, document signing, and
+  // VPN authentication. DER-encoded X.509 certificates are inherently
+  // canonical — identical certificates always produce identical bytes.
+  //
+  //   Format: urn:uor:sec:x509:{hex} (SHA-256 of DER-encoded certificate)
+  //   Canonical: X.509 → DER encoding → raw bytes → SHA-256
+  //   Cross-projection: x509 + asn1 → certificate↔encoding bridge
+  //                     x509 + did → PKI↔decentralized identity bridge
+
+  ["x509", {
+    project: ({ hex }) => `urn:uor:sec:x509:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc5280",
+  }],
+
+  // ── JWK/JWS/JWE/JWT — JOSE Standards ──────────────────────────────────
+  // The JOSE (JSON Object Signing and Encryption) family defines how
+  // JSON payloads are signed (JWS, RFC 7515), encrypted (JWE, RFC 7516),
+  // key-represented (JWK, RFC 7517), and tokened (JWT, RFC 7519).
+  // Foundation of OAuth 2.0, OpenID Connect, and modern API auth.
+  //
+  //   Format: urn:uor:sec:jose:{hex} (SHA-256 of canonical JOSE object)
+  //   Canonical: JOSE → sorted claims → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: jose + oidc → token↔identity bridge
+  //                     jose + sd-jwt → standard↔selective disclosure bridge
+
+  ["jose", {
+    project: ({ hex }) => `urn:uor:sec:jose:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc7519",
+  }],
+
+  // ── OAuth 2.0 — Authorization Framework ────────────────────────────────
+  // OAuth 2.0 (RFC 6749) and OAuth 2.1 (draft) define authorization
+  // flows for API access. Used by every major platform (Google, GitHub,
+  // Azure AD, Okta). Grant types, scopes, and client registrations are
+  // structured, deterministic metadata.
+  //
+  //   Format: urn:uor:sec:oauth2:{hex} (SHA-256 of canonical OAuth client metadata)
+  //   Canonical: client metadata → sorted → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: oauth2 + oidc → authorization↔authentication bridge
+  //                     oauth2 + jose → OAuth↔token bridge
+
+  ["oauth2", {
+    project: ({ hex }) => `urn:uor:sec:oauth2:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc6749",
+  }],
+
+  // ── SAML — Security Assertion Markup Language ──────────────────────────
+  // SAML 2.0 (OASIS) is the enterprise SSO standard. Used by Active
+  // Directory Federation Services, Okta, Ping Identity, and every
+  // enterprise IdP. SAML assertions are signed XML documents with
+  // canonical XML (C14N) signatures.
+  //
+  //   Format: urn:uor:sec:saml:{hex} (SHA-256 of C14N SAML assertion)
+  //   Canonical: SAML XML → C14N exclusive → SHA-256
+  //   Cross-projection: saml + oidc → enterprise↔modern SSO bridge
+  //                     saml + x509 → assertion↔certificate bridge
+
+  ["saml", {
+    project: ({ hex }) => `urn:uor:sec:saml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf",
+  }],
+
+  // ── PGP/GPG — Pretty Good Privacy ─────────────────────────────────────
+  // OpenPGP (RFC 9580) defines message encryption, signing, and key
+  // management. Used for email encryption (GPG), software signing
+  // (Linux package repos, Git commit signing), and file encryption.
+  // OpenPGP keys and signatures are deterministic binary structures.
+  //
+  //   Format: urn:uor:sec:pgp:{hex} (SHA-256 of canonical OpenPGP packet)
+  //   Canonical: OpenPGP packet → binary → raw bytes → SHA-256
+  //   Cross-projection: pgp + x509 → decentralized↔hierarchical PKI bridge
+
+  ["pgp", {
+    project: ({ hex }) => `urn:uor:sec:pgp:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc9580",
+  }],
+
+  // ── PKCS — Public Key Cryptography Standards ───────────────────────────
+  // PKCS standards (RSA Security/IETF) define key formats (PKCS#1, #8),
+  // certificate requests (PKCS#10), and token interfaces (PKCS#11).
+  // Every HSM, smart card, and crypto library implements PKCS.
+  // DER-encoded PKCS structures are inherently canonical.
+  //
+  //   Format: urn:uor:sec:pkcs:{hex} (SHA-256 of DER-encoded PKCS structure)
+  //   Canonical: PKCS → DER → raw bytes → SHA-256
+  //   Cross-projection: pkcs + x509 → key↔certificate bridge
+
+  ["pkcs", {
+    project: ({ hex }) => `urn:uor:sec:pkcs:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc8017",
+  }],
+
+  // ── Kerberos — Network Authentication ──────────────────────────────────
+  // Kerberos (RFC 4120) is the authentication protocol for Active
+  // Directory, every Windows domain, MIT campus networks, and Hadoop.
+  // Kerberos tickets are ASN.1/DER-encoded — inherently canonical.
+  //
+  //   Format: urn:uor:sec:kerberos:{hex} (SHA-256 of canonical Kerberos principal)
+  //   Canonical: principal → realm + name → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: kerberos + saml → network↔web SSO bridge
+
+  ["kerberos", {
+    project: ({ hex }) => `urn:uor:sec:kerberos:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc4120",
+  }],
+
+  // ── ACME — Automatic Certificate Management ───────────────────────────
+  // ACME (RFC 8555) automates TLS certificate issuance. Used by Let's
+  // Encrypt (3B+ certificates issued), Cloudflare, AWS Certificate
+  // Manager, and ZeroSSL. ACME orders and authorizations are JSON.
+  //
+  //   Format: urn:uor:sec:acme:{hex} (SHA-256 of canonical ACME order)
+  //   Canonical: order → sorted identifiers → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: acme + x509 → automation↔certificate bridge
+
+  ["acme", {
+    project: ({ hex }) => `urn:uor:sec:acme:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc8555",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 31 — EMAIL, CALENDAR & PERSONAL INFORMATION MANAGEMENT
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── MIME — Email Message Format ────────────────────────────────────────
+  // MIME (RFC 2045-2049) defines the structure of email messages —
+  // multipart bodies, character encoding, content types, and attachments.
+  // Every email sent uses MIME. S/MIME adds encryption and signing.
+  //
+  //   Format: urn:uor:pim:mime:{hex} (SHA-256 of canonical MIME structure)
+  //   Canonical: MIME → sorted headers → canonical body → SHA-256
+  //   Cross-projection: mime + pgp → encrypted email identity
+
+  ["mime", {
+    project: ({ hex }) => `urn:uor:pim:mime:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc2045",
+  }],
+
+  // ── vCard — Contact Information ────────────────────────────────────────
+  // vCard (RFC 6350) is the standard for electronic business cards.
+  // Used by every phone, email client, and CRM system. vCard 4.0
+  // properties include name, address, phone, email, photo, and
+  // social media handles.
+  //
+  //   Format: urn:uor:pim:vcard:{hex} (SHA-256 of canonical vCard)
+  //   Canonical: vCard → sorted properties → SHA-256
+  //   Cross-projection: vcard + did → contact↔decentralized identity bridge
+
+  ["vcard", {
+    project: ({ hex }) => `urn:uor:pim:vcard:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc6350",
+  }],
+
+  // ── iCalendar — Calendar Events ────────────────────────────────────────
+  // iCalendar (RFC 5545) defines calendar events, to-dos, journal
+  // entries, and free/busy information. Used by Google Calendar, Apple
+  // Calendar, Outlook, and every calendar application. VEVENT, VTODO,
+  // and VJOURNAL components are structured text.
+  //
+  //   Format: urn:uor:pim:icalendar:{hex} (SHA-256 of canonical iCalendar)
+  //   Canonical: iCal → sorted properties → SHA-256
+  //   Cross-projection: icalendar + vcard → event↔contact bridge
+
+  ["icalendar", {
+    project: ({ hex }) => `urn:uor:pim:icalendar:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc5545",
+  }],
+
+  // ── JMAP — JSON Meta Application Protocol ──────────────────────────────
+  // JMAP (RFC 8620) is the modern replacement for IMAP. JSON-based
+  // protocol for email, contacts, and calendars. Used by Fastmail,
+  // Stalwart, and Apache James. JMAP objects are structured JSON.
+  //
+  //   Format: urn:uor:pim:jmap:{hex} (SHA-256 of canonical JMAP method call)
+  //   Canonical: method → sorted args → JSON-LD → URDNA2015 → SHA-256
+
+  ["jmap", {
+    project: ({ hex }) => `urn:uor:pim:jmap:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc8620",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 32 — AUTOMOTIVE & INDUSTRIAL VEHICLE STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── AUTOSAR — Automotive Open System Architecture ──────────────────────
+  // AUTOSAR defines the software architecture for automotive ECUs.
+  // Classic AUTOSAR for hard real-time (engine, brakes, airbags) and
+  // Adaptive AUTOSAR for high-performance computing (ADAS, infotainment).
+  // ARXML (AUTOSAR XML) defines the entire system model.
+  //
+  //   Format: urn:uor:auto:autosar:{hex} (SHA-256 of canonical ARXML)
+  //   Canonical: ARXML → C14N → SHA-256
+  //   Cross-projection: autosar + can → software↔bus architecture bridge
+
+  ["autosar", {
+    project: ({ hex }) => `urn:uor:auto:autosar:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.autosar.org/standards",
+  }],
+
+  // ── CAN/DBC — Controller Area Network ──────────────────────────────────
+  // CAN (ISO 11898) is the vehicle bus protocol — every car, truck,
+  // and industrial machine uses CAN. DBC files define message IDs,
+  // signals, bit positions, and scaling factors. J1939 extends CAN
+  // for heavy-duty vehicles. CAN FD adds flexible data rate.
+  //
+  //   Format: urn:uor:auto:can:{hex} (SHA-256 of canonical DBC database)
+  //   Canonical: DBC → sorted messages/signals → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: can + autosar → bus↔software architecture bridge
+  //                     can + opcua → vehicle↔industrial automation bridge
+
+  ["can", {
+    project: ({ hex }) => `urn:uor:auto:can:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/63648.html",
+  }],
+
+  // ── SOME/IP — Scalable Service-Oriented Middleware ─────────────────────
+  // SOME/IP (AUTOSAR) is the service-oriented communication protocol
+  // for automotive Ethernet. Replaces CAN for high-bandwidth use cases
+  // (cameras, LiDAR, infotainment). Used by BMW, VW, and Tier-1 suppliers.
+  //
+  //   Format: urn:uor:auto:someip:{hex} (SHA-256 of canonical SOME/IP service descriptor)
+  //   Canonical: service → sorted methods/events → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: someip + grpc → automotive↔cloud RPC bridge
+
+  ["someip", {
+    project: ({ hex }) => `urn:uor:auto:someip:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.autosar.org/standards/foundation",
+  }],
+
+  // ── UDS — Unified Diagnostic Services ──────────────────────────────────
+  // UDS (ISO 14229) is the standard for vehicle diagnostics — OBD-II
+  // scanner protocols, ECU firmware updates, and fault code management.
+  // Every modern vehicle implements UDS for dealer diagnostics.
+  //
+  //   Format: urn:uor:auto:uds:{hex} (SHA-256 of canonical UDS session descriptor)
+  //   Canonical: diagnostic services → sorted SIDs → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: uds + can → diagnostics↔bus protocol bridge
+
+  ["uds", {
+    project: ({ hex }) => `urn:uor:auto:uds:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/72439.html",
+  }],
+
+  // ── ARINC 429 — Avionics Data Bus ─────────────────────────────────────
+  // ARINC 429 is the dominant avionics data bus standard. Used on every
+  // commercial aircraft (Boeing, Airbus) for flight instruments, FMS,
+  // autopilot, and navigation systems. Defines label/SDI/data/SSM words.
+  //
+  //   Format: urn:uor:auto:arinc429:{hex} (SHA-256 of canonical ARINC 429 label set)
+  //   Canonical: label table → sorted labels → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: arinc429 + can → aviation↔automotive bus bridge
+
+  ["arinc429", {
+    project: ({ hex }) => `urn:uor:auto:arinc429:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.sae.org/standards/content/as6011/",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 33 — BIM, CONSTRUCTION & ARCHITECTURE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── IFC — Industry Foundation Classes ──────────────────────────────────
+  // IFC (ISO 16739-1:2018, buildingSMART) is the open standard for BIM
+  // (Building Information Modeling). Contains building geometry, spatial
+  // structure, materials, MEP systems, and quantities. Used by Revit,
+  // ArchiCAD, Tekla, and every BIM platform.
+  //
+  //   Format: urn:uor:bim:ifc:{hex} (SHA-256 of canonical IFC-SPF file)
+  //   Canonical: IFC → sorted entities → STEP Physical File → SHA-256
+  //   Cross-projection: ifc + step-cad → BIM↔CAD engineering bridge
+  //                     ifc + geojson → building↔geospatial bridge
+
+  ["ifc", {
+    project: ({ hex }) => `urn:uor:bim:ifc:${hex}`,
+    fidelity: "lossless",
+    spec: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/",
+  }],
+
+  // ── CityGML — 3D City Models ───────────────────────────────────────────
+  // CityGML (OGC) defines 3D city models with semantic structure — buildings,
+  // roads, vegetation, terrain, water bodies, and city furniture. Used for
+  // urban planning, simulation, and digital twins of cities.
+  //
+  //   Format: urn:uor:bim:citygml:{hex} (SHA-256 of canonical CityGML)
+  //   Canonical: CityGML → sorted features → GML C14N → SHA-256
+  //   Cross-projection: citygml + ifc → city↔building model bridge
+  //                     citygml + geojson → 3D↔2D geospatial bridge
+
+  ["citygml", {
+    project: ({ hex }) => `urn:uor:bim:citygml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.ogc.org/standard/citygml/",
+  }],
+
+  // ── LAS/LAZ — LiDAR Point Cloud ───────────────────────────────────────
+  // LAS (ASPRS) is the standard for LiDAR point cloud data. LAZ is the
+  // lossless compressed variant. Used for terrain mapping, forestry,
+  // autonomous vehicles, and construction surveying. Contains XYZ
+  // coordinates, intensity, classification, and RGB color.
+  //
+  //   Format: urn:uor:bim:las:{hex} (SHA-256 of LAS/LAZ file bytes)
+  //   Canonical: LAS → raw bytes → SHA-256
+  //   Cross-projection: las + geotiff → point cloud↔raster bridge
+  //                     las + ifc → survey↔BIM bridge
+
+  ["las", {
+    project: ({ hex }) => `urn:uor:bim:las:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.asprs.org/divisions-committees/lidar-division/laser-las-file-format-exchange-activities",
+  }],
+
+  // ── gbXML — Green Building XML ─────────────────────────────────────────
+  // gbXML enables energy analysis by transferring building geometry and
+  // HVAC data between BIM and energy simulation tools (EnergyPlus,
+  // eQUEST, IES VE). Used for LEED certification and building energy codes.
+  //
+  //   Format: urn:uor:bim:gbxml:{hex} (SHA-256 of canonical gbXML)
+  //   Canonical: gbXML → C14N → SHA-256
+  //   Cross-projection: gbxml + ifc → energy↔BIM bridge
+
+  ["gbxml", {
+    project: ({ hex }) => `urn:uor:bim:gbxml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.gbxml.org/schema_doc/6.01/GreenBuildingXML_Ver6.01.html",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 34 — COMPLIANCE, FINANCIAL & LEGAL STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── XBRL — eXtensible Business Reporting Language ──────────────────────
+  // XBRL is the global standard for digital financial reporting.
+  // Required by SEC (US), ESMA (EU), and 60+ regulators worldwide.
+  // Inline XBRL (iXBRL) embeds structured data in HTML documents.
+  // XBRL taxonomies define financial concepts and relationships.
+  //
+  //   Format: urn:uor:fin:xbrl:{hex} (SHA-256 of canonical XBRL instance)
+  //   Canonical: XBRL → sorted facts → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: xbrl + pdf → structured↔document financial bridge
+
+  ["xbrl", {
+    project: ({ hex }) => `urn:uor:fin:xbrl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://specifications.xbrl.org/spec-group-index-group-xbrl-2.1.html",
+  }],
+
+  // ── FIX — Financial Information eXchange ───────────────────────────────
+  // FIX Protocol is the standard for electronic trading — equities,
+  // fixed income, FX, and derivatives. Used by NYSE, NASDAQ, CME,
+  // and every major exchange. FIX messages are deterministic tag=value pairs.
+  //
+  //   Format: urn:uor:fin:fix:{hex} (SHA-256 of canonical FIX message type definition)
+  //   Canonical: message def → sorted tags → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: fix + xbrl → trading↔reporting bridge
+
+  ["fix", {
+    project: ({ hex }) => `urn:uor:fin:fix:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.fixtrading.org/standards/",
+  }],
+
+  // ── ISO 20022 — Financial Messaging ────────────────────────────────────
+  // ISO 20022 is the universal financial messaging standard replacing
+  // SWIFT MT messages. XML-based messages for payments (pain/pacs),
+  // securities (sese/semt), and trade (trad). Adopted by SWIFT,
+  // TARGET2, Fedwire, and every major payment system globally.
+  //
+  //   Format: urn:uor:fin:iso20022:{hex} (SHA-256 of canonical ISO 20022 message)
+  //   Canonical: message → C14N → SHA-256
+  //   Cross-projection: iso20022 + xbrl → payment↔reporting bridge
+
+  ["iso20022", {
+    project: ({ hex }) => `urn:uor:fin:iso20022:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso20022.org/",
+  }],
+
+  // ── EDI/X12 — Electronic Data Interchange ──────────────────────────────
+  // EDI X12 (ANSI ASC X12) is the standard for business-to-business
+  // electronic transactions — purchase orders (850), invoices (810),
+  // shipping notices (856), and healthcare claims (837). Used by
+  // Walmart, Amazon, UPS, and US healthcare (HIPAA).
+  //
+  //   Format: urn:uor:fin:edi-x12:{hex} (SHA-256 of canonical EDI transaction set)
+  //   Canonical: segments → sorted → SHA-256
+  //   Cross-projection: edi-x12 + iso20022 → legacy↔modern B2B bridge
+
+  ["edi-x12", {
+    project: ({ hex }) => `urn:uor:fin:edi-x12:${hex}`,
+    fidelity: "lossless",
+    spec: "https://x12.org/",
+  }],
+
+  // ── EDIFACT — UN Electronic Data Interchange ──────────────────────────
+  // UN/EDIFACT is the international EDI standard used for customs
+  // declarations, shipping, banking, and trade. Dominant in Europe,
+  // Asia, and international trade. EDIFACT messages are structured
+  // text with segments, data elements, and qualifiers.
+  //
+  //   Format: urn:uor:fin:edifact:{hex} (SHA-256 of canonical EDIFACT message)
+  //   Canonical: segments → sorted → SHA-256
+  //   Cross-projection: edifact + edi-x12 → international↔US EDI bridge
+
+  ["edifact", {
+    project: ({ hex }) => `urn:uor:fin:edifact:${hex}`,
+    fidelity: "lossless",
+    spec: "https://unece.org/trade/uncefact/introducing-unedifact",
+  }],
+
+  // ── HL7 v2 — Healthcare Messaging ─────────────────────────────────────
+  // HL7 v2 is the legacy healthcare messaging standard — used by 95%
+  // of US hospitals for ADT (admit/discharge/transfer), lab results (ORU),
+  // orders (ORM), and scheduling. Pipe-delimited message format.
+  // (Note: HL7 FHIR is already registered in Scientific Data Formats)
+  //
+  //   Format: urn:uor:fin:hl7v2:{hex} (SHA-256 of canonical HL7 v2 message)
+  //   Canonical: segments → sorted fields → SHA-256
+  //   Cross-projection: hl7v2 + fhir → legacy↔modern healthcare bridge
+
+  ["hl7v2", {
+    project: ({ hex }) => `urn:uor:fin:hl7v2:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.hl7.org/implement/standards/product_brief.cfm?product_id=185",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 35 — CLOUD-NATIVE & DEVOPS STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Kubernetes Manifests — Container Orchestration ─────────────────────
+  // Kubernetes manifests (YAML/JSON) define Deployments, Services,
+  // ConfigMaps, Secrets, Ingress, CRDs, and the entire cluster state.
+  // Used by every cloud platform (GKE, EKS, AKS, OpenShift).
+  //
+  //   Format: urn:uor:cloud:k8s:{hex} (SHA-256 of canonical K8s manifest)
+  //   Canonical: manifest → sorted fields → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: k8s + oci → orchestration↔container bridge
+  //                     k8s + hcl → K8s↔Terraform infrastructure bridge
+
+  ["k8s", {
+    project: ({ hex }) => `urn:uor:cloud:k8s:${hex}`,
+    fidelity: "lossless",
+    spec: "https://kubernetes.io/docs/reference/kubernetes-api/",
+  }],
+
+  // ── Helm Charts — Kubernetes Package Manager ──────────────────────────
+  // Helm charts package Kubernetes manifests with templating and
+  // dependency management. Used by 90%+ of Kubernetes deployments.
+  // Chart.yaml + templates + values.yaml define a complete application.
+  //
+  //   Format: urn:uor:cloud:helm:{hex} (SHA-256 of canonical Helm chart)
+  //   Canonical: Chart.yaml → sorted → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: helm + k8s → packaging↔deployment bridge
+  //                     helm + oci → Helm OCI registry identity
+
+  ["helm", {
+    project: ({ hex }) => `urn:uor:cloud:helm:${hex}`,
+    fidelity: "lossless",
+    spec: "https://helm.sh/docs/topics/charts/",
+  }],
+
+  // ── Terraform State — Infrastructure State ─────────────────────────────
+  // Terraform state files (JSON) record the current state of managed
+  // infrastructure. Contains resource addresses, attributes, dependencies,
+  // and provider metadata. Content-addressing state enables infrastructure
+  // version control and drift detection.
+  //
+  //   Format: urn:uor:cloud:tfstate:{hex} (SHA-256 of canonical Terraform state)
+  //   Canonical: state → sorted resources → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: tfstate + hcl → state↔configuration bridge
+  //                     tfstate + k8s → infrastructure↔orchestration bridge
+
+  ["tfstate", {
+    project: ({ hex }) => `urn:uor:cloud:tfstate:${hex}`,
+    fidelity: "lossless",
+    spec: "https://developer.hashicorp.com/terraform/language/state",
+  }],
+
+  // ── Prometheus — Metrics & Monitoring ──────────────────────────────────
+  // Prometheus exposition format (OpenMetrics, IETF draft) defines how
+  // metrics are exposed by applications. Used by Kubernetes, Grafana,
+  // and every cloud-native monitoring stack. Metric types: counter,
+  // gauge, histogram, summary.
+  //
+  //   Format: urn:uor:cloud:prometheus:{hex} (SHA-256 of canonical metric descriptor)
+  //   Canonical: metric → sorted labels → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: prometheus + opentelemetry → metrics↔observability bridge
+
+  ["prometheus", {
+    project: ({ hex }) => `urn:uor:cloud:prometheus:${hex}`,
+    fidelity: "lossless",
+    spec: "https://prometheus.io/docs/instrumenting/exposition_formats/",
+  }],
+
+  // ── Docker Compose — Multi-Container Applications ─────────────────────
+  // Docker Compose (YAML) defines multi-container application stacks.
+  // Services, networks, volumes, and dependencies in a single file.
+  // Used for local development, CI/CD, and simple deployments.
+  //
+  //   Format: urn:uor:cloud:compose:{hex} (SHA-256 of canonical Compose file)
+  //   Canonical: compose YAML → sorted services → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: compose + dockerfile → orchestration↔build bridge
+  //                     compose + k8s → local↔production deployment bridge
+
+  ["compose", {
+    project: ({ hex }) => `urn:uor:cloud:compose:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.docker.com/reference/compose-file/",
+  }],
+
+  // ── GitHub Actions — CI/CD Workflows ───────────────────────────────────
+  // GitHub Actions workflows (YAML) define CI/CD pipelines — build, test,
+  // deploy, and automate. Used by millions of repositories. Workflow
+  // definitions are structured, deterministic YAML documents.
+  //
+  //   Format: urn:uor:cloud:gha:{hex} (SHA-256 of canonical workflow definition)
+  //   Canonical: workflow YAML → sorted jobs/steps → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: gha + oci → CI/CD↔container build bridge
+  //                     gha + spdx-sbom → pipeline↔supply chain bridge
+
+  ["gha", {
+    project: ({ hex }) => `urn:uor:cloud:gha:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 36 — MACHINE LEARNING MODEL FORMATS & STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── TensorFlow SavedModel — TF Model Format ────────────────────────────
+  // TensorFlow SavedModel is the standard serialization for TF models.
+  // Contains computation graph (GraphDef protobuf), variable checkpoints,
+  // signatures, and assets. Used by TensorFlow Serving, TFLite, TF.js.
+  //
+  //   Format: urn:uor:ml:tf-savedmodel:{hex} (SHA-256 of SavedModel directory hash)
+  //   Canonical: saved_model.pb + variables → deterministic hash → SHA-256
+  //   Cross-projection: tf-savedmodel + onnx → TF↔portable model bridge
+
+  ["tf-savedmodel", {
+    project: ({ hex }) => `urn:uor:ml:tf-savedmodel:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.tensorflow.org/guide/saved_model",
+  }],
+
+  // ── TFLite — TensorFlow Lite ───────────────────────────────────────────
+  // TFLite is the optimized model format for mobile and edge inference.
+  // FlatBuffers-based schema. Used on 4B+ Android devices, Coral Edge
+  // TPU, and microcontrollers (TFLite Micro).
+  //
+  //   Format: urn:uor:ml:tflite:{hex} (SHA-256 of TFLite model file)
+  //   Canonical: .tflite → raw bytes → SHA-256
+  //   Cross-projection: tflite + tf-savedmodel → edge↔cloud model bridge
+
+  ["tflite", {
+    project: ({ hex }) => `urn:uor:ml:tflite:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.tensorflow.org/lite/guide",
+  }],
+
+  // ── TorchScript — PyTorch JIT Format ───────────────────────────────────
+  // TorchScript serializes PyTorch models as self-contained archives
+  // (.pt files) with JIT-compiled computation graphs. Used for
+  // production deployment independent of Python runtime.
+  //
+  //   Format: urn:uor:ml:torchscript:{hex} (SHA-256 of .pt file)
+  //   Canonical: .pt → raw bytes → SHA-256
+  //   Cross-projection: torchscript + onnx → PyTorch↔portable bridge
+  //                     torchscript + safetensors → graph↔weights bridge
+
+  ["torchscript", {
+    project: ({ hex }) => `urn:uor:ml:torchscript:${hex}`,
+    fidelity: "lossless",
+    spec: "https://pytorch.org/docs/stable/jit.html",
+  }],
+
+  // ── MLflow Model — ML Experiment Tracking ──────────────────────────────
+  // MLflow Model format wraps any ML model with metadata — flavor
+  // (sklearn, pytorch, tf), conda/pip environment, signature (input/
+  // output schema), and run provenance. Used by Databricks, Azure ML.
+  //
+  //   Format: urn:uor:ml:mlflow:{hex} (SHA-256 of canonical MLmodel descriptor)
+  //   Canonical: MLmodel → sorted keys → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: mlflow + onnx → experiment↔model bridge
+
+  ["mlflow", {
+    project: ({ hex }) => `urn:uor:ml:mlflow:${hex}`,
+    fidelity: "lossless",
+    spec: "https://mlflow.org/docs/latest/models.html",
+  }],
+
+  // ── CoreML — Apple ML Model Format ─────────────────────────────────────
+  // CoreML (.mlmodel/.mlpackage) is Apple's on-device ML format.
+  // Runs on Neural Engine, GPU, and CPU across iPhone, iPad, Mac,
+  // Apple Watch, and Apple Vision Pro. Protobuf-based specification.
+  //
+  //   Format: urn:uor:ml:coreml:{hex} (SHA-256 of CoreML model file)
+  //   Canonical: .mlmodel → raw bytes → SHA-256
+  //   Cross-projection: coreml + onnx → Apple↔portable model bridge
+  //                     coreml + tflite → iOS↔Android model bridge
+
+  ["coreml", {
+    project: ({ hex }) => `urn:uor:ml:coreml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://apple.github.io/coremltools/mlmodel/index.html",
+  }],
+
+  // ── PMML — Predictive Model Markup Language ────────────────────────────
+  // PMML (DMG) is the XML standard for representing predictive models —
+  // decision trees, neural networks, regression, clustering, and scoring.
+  // Used by SAS, SPSS, RapidMiner, and enterprise analytics platforms.
+  //
+  //   Format: urn:uor:ml:pmml:{hex} (SHA-256 of canonical PMML XML)
+  //   Canonical: PMML → C14N → SHA-256
+  //   Cross-projection: pmml + onnx → legacy↔modern ML model bridge
+
+  ["pmml", {
+    project: ({ hex }) => `urn:uor:ml:pmml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://dmg.org/pmml/v4-4-1/GeneralStructure.html",
+  }],
+
+  // ── Model Card — ML Model Documentation ───────────────────────────────
+  // Model Cards (Google/Hugging Face) standardize ML model documentation —
+  // intended use, performance metrics, limitations, ethical considerations,
+  // and training data description. Required by EU AI Act for high-risk systems.
+  //
+  //   Format: urn:uor:ml:modelcard:{hex} (SHA-256 of canonical model card)
+  //   Canonical: model card → sorted fields → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: modelcard + spdx-sbom → model↔BOM provenance
+  //                     modelcard + c2pa → model↔content provenance bridge
+
+  ["modelcard", {
+    project: ({ hex }) => `urn:uor:ml:modelcard:${hex}`,
+    fidelity: "lossless",
+    spec: "https://huggingface.co/docs/hub/model-cards",
+  }],
 ]);

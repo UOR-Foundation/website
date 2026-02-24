@@ -363,6 +363,68 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
       "thread", "zigbee", "ble-gatt", "lorawan", "dtdl", "echonet",
     ],
   },
+  {
+    id: "networking",
+    label: "Networking & Transport",
+    description: "gRPC, QUIC, WebSocket, SIP, RTP, DNS, BGP, SNMP — network protocols",
+    color: "hsl(220, 50%, 48%)",
+    projections: [
+      "grpc", "quic", "websocket", "sip", "rtp", "dns", "bgp", "snmp",
+    ],
+  },
+  {
+    id: "security",
+    label: "Security & Cryptographic",
+    description: "X.509, JOSE/JWT, OAuth 2.0, SAML, PGP, PKCS, Kerberos, ACME",
+    color: "hsl(0, 60%, 45%)",
+    projections: [
+      "x509", "jose", "oauth2", "saml", "pgp", "pkcs", "kerberos", "acme",
+    ],
+  },
+  {
+    id: "pim",
+    label: "Email, Calendar & PIM",
+    description: "MIME, vCard, iCalendar, JMAP — personal information management",
+    color: "hsl(45, 55%, 48%)",
+    projections: ["mime", "vcard", "icalendar", "jmap"],
+  },
+  {
+    id: "automotive",
+    label: "Automotive & Aviation",
+    description: "AUTOSAR, CAN/DBC, SOME/IP, UDS, ARINC 429 — vehicle & avionics",
+    color: "hsl(30, 65%, 48%)",
+    projections: ["autosar", "can", "someip", "uds", "arinc429"],
+  },
+  {
+    id: "bim",
+    label: "BIM & Construction",
+    description: "IFC, CityGML, LAS/LAZ, gbXML — building & geospatial modeling",
+    color: "hsl(140, 40%, 45%)",
+    projections: ["ifc", "citygml", "las", "gbxml"],
+  },
+  {
+    id: "financial",
+    label: "Compliance & Financial",
+    description: "XBRL, FIX, ISO 20022, EDI/X12, EDIFACT, HL7 v2 — regulated data exchange",
+    color: "hsl(50, 50%, 44%)",
+    projections: ["xbrl", "fix", "iso20022", "edi-x12", "edifact", "hl7v2"],
+  },
+  {
+    id: "cloud-native",
+    label: "Cloud-Native & DevOps",
+    description: "Kubernetes, Helm, Terraform State, Prometheus, Docker Compose, GitHub Actions",
+    color: "hsl(210, 55%, 50%)",
+    projections: ["k8s", "helm", "tfstate", "prometheus", "compose", "gha"],
+  },
+  {
+    id: "ml-models",
+    label: "ML Model Formats",
+    description: "TF SavedModel, TFLite, TorchScript, MLflow, CoreML, PMML, Model Card",
+    color: "hsl(280, 50%, 48%)",
+    projections: [
+      "tf-savedmodel", "tflite", "torchscript", "mlflow", "coreml", "pmml", "modelcard",
+    ],
+  },
 ];
 
 /** Quick lookup: projection name → ecosystem id */
