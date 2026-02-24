@@ -108,7 +108,7 @@ const ProjectHologramSdk = () => (
               Every UOR object is a hologram — one canonical identity projected into every standard on the internet. Just as a hologram encodes a 3D scene into interference patterns viewable from any angle, the UOR hash encodes one identity viewable through any protocol.
             </p>
             <p className="mt-3">
-              The Hologram Registry maps the single SHA-256 hash to <strong className="text-foreground">19 protocol-native identifiers</strong> — each a deterministic, pure function:
+              The Hologram Registry maps the single SHA-256 hash to <strong className="text-foreground">20 protocol-native identifiers</strong> — each a deterministic, pure function:
             </p>
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
               {[
@@ -131,6 +131,7 @@ const ProjectHologramSdk = () => (
                 ["DNS-SD", "RFC 6763", "lossy"],
                 ["STAC", "Geospatial", "lossless"],
                 ["Croissant", "MLCommons", "lossless"],
+                ["CRDT", "Automerge/Yjs", "lossless"],
               ].map(([name, standard, fidelity]) => (
                 <div key={name} className="flex items-center gap-2 py-1">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${fidelity === "lossless" ? "bg-primary" : "bg-accent"}`} />

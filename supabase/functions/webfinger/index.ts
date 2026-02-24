@@ -85,6 +85,9 @@ const LINKS: LinkSpec[] = [
   // Croissant ML — dataset metadata
   ["describedby", "application/ld+json",
     (h) => `https://${DOMAIN}/croissant/${h}`],
+  // CRDT / Automerge — offline-first collaboration document ID
+  ["describedby", "application/json",
+    (h) => `crdt:automerge:${h}`],
 ];
 
 // ── Handler ─────────────────────────────────────────────────────────────────

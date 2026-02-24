@@ -178,4 +178,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://github.com/mlcommons/croissant",
   }],
+
+  // ── CRDT / Automerge — Offline-First Collaboration ───────────────────
+  // UOR's deterministic content hash IS the CRDT document ID.
+  // Identical content → identical ID → trivial merge across replicas.
+
+  ["crdt", {
+    project: ({ hex }) => `crdt:automerge:${hex}`,
+    fidelity: "lossless",
+    spec: "https://automerge.org/automerge/stable/",
+  }],
 ]);

@@ -129,6 +129,7 @@ function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
     ["solid",       "SolidWebID"],
     ["webfinger",   "WebFingerDiscovery"],
     ["dnssd",       "DnsServiceDiscovery"],
+    ["crdt",        "CrdtDocumentId"],
   ];
 
   for (const [name, type] of endpointMap) {
