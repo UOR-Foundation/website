@@ -1,5 +1,6 @@
 {
   "openapi": "3.1.0",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
   "info": {
     "title": "UOR Framework Agent API",
     "version": "1.0.0",
@@ -12,6 +13,7 @@
     },
     "license": {
       "name": "Apache 2.0",
+      "identifier": "Apache-2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0"
     },
     "x-agent-entry-point": "https://uor.foundation/llms.md",
@@ -68,32 +70,50 @@
     },
     {
       "name": "bridge-derivation",
-      "description": "**`derivation/` namespace** — Auditable step-by-step operation records.\nSource: `spec/src/namespaces/derivation.rs`\nClasses: `DerivationTrace`, `DerivationStep`, `OperationRecord`.\nReturns a `derivation:DerivationTrace` with input, output, formula, and ontology reference for each step. Use for execution audit trails and injection detection.",
+      "description": "**`derivation/` namespace** — Auditable step-by-step operation records.\nSource: `spec/src/namespaces/derivation.rs`",
       "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/derivation.rs", "description": "derivation.rs — ontology source" }
     },
     {
       "name": "bridge-trace",
-      "description": "**`trace/` namespace** — Bit-level execution traces for injection detection.\nSource: `spec/src/namespaces/trace.rs`\nClasses: `ExecutionTrace`, `TraceFrame`, `HammingDrift`.\nReturns exact binary state after each operation — Hamming weight, XOR delta, bits flipped. Non-zero `trace:totalHammingDrift` signals anomalous operation sequences.\n\n**Injection detection:** Compare `trace:totalHammingDrift` between a declared and executed operation sequence. `GET /bridge/trace?x=42&ops=neg,bnot` → drift=0 (canonical). `GET /bridge/trace?x=42&ops=neg,bnot,succ` → drift≠0 (anomalous). Non-zero drift = possible injection signal.",
+      "description": "**`trace/` namespace** — Bit-level execution traces for injection detection.\nSource: `spec/src/namespaces/trace.rs`",
       "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/trace.rs", "description": "trace.rs — ontology source" }
     },
     {
       "name": "bridge-resolver",
-      "description": "**`resolver/` namespace** — Canonical form classification of ring elements.\nSource: `spec/src/namespaces/resolver.rs`\nClasses: `Resolution`, `CanonicalFormResolver`, `DihedralFactorizationResolver`.\nSorts any value into one of four canonical categories: IrreducibleSet, ReducibleSet, UnitSet, ExteriorSet. Returns full factor decomposition for reducible values.",
+      "description": "**`resolver/` namespace** — Canonical form classification of ring elements.\nSource: `spec/src/namespaces/resolver.rs`",
       "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/resolver.rs", "description": "resolver.rs — ontology source" }
     },
     {
+      "name": "bridge-sparql",
+      "description": "**SPARQL 1.1** — query and federation endpoints over the UOR knowledge graph.",
+      "externalDocs": { "url": "https://www.w3.org/TR/sparql11-query/", "description": "W3C SPARQL 1.1 Query Language" }
+    },
+    {
+      "name": "bridge-shacl",
+      "description": "**SHACL** — W3C Shapes Constraint Language validation over the UOR ontology graph.",
+      "externalDocs": { "url": "https://www.w3.org/TR/shacl/", "description": "W3C SHACL specification" }
+    },
+    {
+      "name": "bridge-emit",
+      "description": "**JSON-LD emission** — emit UOR datums, derivations, and coherence proofs as valid W3C JSON-LD 1.1 documents."
+    },
+    {
+      "name": "bridge-gnn",
+      "description": "**Graph Neural Network** — export the UOR knowledge graph in GNN-ready formats for ML pipelines."
+    },
+    {
       "name": "user-type",
-      "description": "**`type/` namespace** — Runtime type declarations.\nSource: `spec/src/namespaces/type_.rs`\nClasses: `PrimitiveType`, `ProductType`, `SumType`, `ConstrainedType`.",
+      "description": "**`type/` namespace** — Runtime type declarations.\nSource: `spec/src/namespaces/type_.rs`",
       "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/type_.rs", "description": "type_.rs — ontology source" }
     },
     {
       "name": "user-morphism",
-      "description": "**`morphism/` namespace** — Structure-preserving maps between ring sizes.\nSource: `spec/src/namespaces/morphism.rs`\nClasses: `RingHomomorphism`, `ProjectionHomomorphism`, `InclusionHomomorphism`, `IdentityHomomorphism`.\nReturns the mapped value, preserved properties, injectivity and surjectivity flags, and a `morphism:CommutativityWitness`.",
+      "description": "**`morphism/` namespace** — Structure-preserving maps between ring sizes.\nSource: `spec/src/namespaces/morphism.rs`",
       "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/morphism.rs", "description": "morphism.rs — ontology source" }
     },
     {
       "name": "user-state",
-      "description": "**`state/` namespace** — Agent lifecycle state binding.\nSource: `spec/src/namespaces/state.rs`\nClasses: `Frame`, `StateBinding`, `Transition`, `EntryCondition`, `ExitCondition`.\nReturns the formal lifecycle state for a value: category, entry/exit conditions, and all 4 operation transitions showing where each operation leads and whether the component class changes.",
+      "description": "**`state/` namespace** — Agent lifecycle state binding.\nSource: `spec/src/namespaces/state.rs`",
       "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/state.rs", "description": "state.rs — ontology source" }
     },
     {
@@ -103,27 +123,25 @@
     },
     {
       "name": "store",
-      "description": "UOR × IPFS persistent storage. Serialises UOR objects to JSON-LD, computes dual addresses (u:Address via Braille bijection + CIDv1 via sha2-256 multihash), and stores to IPFS. Only User-space and Bridge-space objects may be stored. Kernel-space objects (u:, schema:, op:) are never stored.",
-      "externalDocs": {
-        "description": "UOR store/ namespace spec",
-        "url": "https://github.com/UOR-Foundation/UOR-Framework"
-      }
+      "description": "UOR × IPFS persistent storage. Serialises UOR objects to JSON-LD, computes dual addresses (u:Address via Braille bijection + CIDv1 via sha2-256 multihash), and stores to IPFS.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework", "description": "UOR store/ namespace spec" }
+    },
+    {
+      "name": "pod-storage",
+      "description": "**Personal Object Data (POD)** — agent-scoped persistent key-value store backed by UOR content-addressing. Contexts, bindings, and frames."
     },
     {
       "name": "agent-tools",
-      "description": "**Five canonical agent tool functions** (§6.4) — uor_derive, uor_query, uor_verify, uor_correlate, uor_partition. All endpoints return epistemic_grade in every response. These are the primary system calls for agentic AI interaction with the UOR framework.",
-      "externalDocs": {
-        "description": "UOR Roadmap §6.4 — Agent Tool Functions",
-        "url": "https://github.com/UOR-Foundation/UOR-Framework"
-      }
+      "description": "**Five canonical agent tool functions** (§6.4) — uor_derive, uor_query, uor_verify, uor_correlate, uor_partition. All endpoints return epistemic_grade.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework", "description": "UOR Roadmap §6.4" }
     },
     {
       "name": "morphism",
-      "description": "**Morphism Transform API** (§5) — structure-preserving maps between rings. Endpoints for verifying embeddings, isometries, and cross-quantum value coercion."
+      "description": "**Morphism Transform API** (§5) — structure-preserving maps between rings."
     },
     {
       "name": "certificates",
-      "description": "**Certificate Chains** (Phase 3) — issue cert:TransformCertificate and GDPR Article 20 Verifiable Credentials for derivation provenance."
+      "description": "**Certificate Chains** — issue cert:TransformCertificate and GDPR Article 20 Verifiable Credentials."
     },
     {
       "name": "sparql",
@@ -140,6 +158,31 @@
     {
       "name": "discovery",
       "description": "**Discovery** — VoID dataset descriptors, .well-known endpoints, and Linked Open Data registration."
+    },
+    {
+      "name": "oracle",
+      "description": "**Oracle Ledger** — immutable audit log of all UOR store operations with single-source-of-truth guarantees."
+    },
+    {
+      "name": "observer",
+      "description": "**Observer Theory** — agent registration, zone classification (COHERENCE/DRIFT/COLLAPSE), and network convergence analysis.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework", "description": "Observer namespace spec" }
+    },
+    {
+      "name": "graph",
+      "description": "**Knowledge Graph** — pre-computed Q0 instance graph with all 2^n datums, SPARQL verification, and per-datum lookup."
+    },
+    {
+      "name": "attribution",
+      "description": "**Attribution** — register derivation provenance, verify attribution chains, and compute royalty reports."
+    },
+    {
+      "name": "ontology",
+      "description": "**Ontology** — full OWL/RDFS ontology export for the UOR framework."
+    },
+    {
+      "name": "test",
+      "description": "**End-to-end tests** — runtime conformance verification endpoint."
     }
   ],
   "paths": {
@@ -181,15 +224,12 @@
         "description": "Returns the OpenAPI 3.1.0 specification for this API. The full static spec is also available at https://uor.foundation/openapi.json",
         "security": [{}, {"AgentKey": []}],
         "responses": {
-          "200": {
-            "description": "OpenAPI 3.1.0 specification document",
-            "content": {
-              "application/json": {
-                "schema": { "type": "object" }
-              }
+          "301": {
+            "description": "Permanent redirect to canonical static spec at https://uor.foundation/openapi.json",
+            "headers": {
+              "Location": { "schema": { "type": "string", "format": "uri" }, "description": "https://uor.foundation/openapi.json" }
             }
           },
-          "302": { "description": "Redirect to canonical static spec at https://uor.foundation/openapi.json" },
           "405": { "$ref": "#/components/responses/MethodNotAllowed" },
           "500": { "$ref": "#/components/responses/InternalServerError" },
           "default": { "$ref": "#/components/responses/InternalServerError" }
@@ -1716,13 +1756,622 @@
         "responses": { "200": { "description": "Extended JSON-LD with UOR attribution" } }
       }
     },
+    "/": {
+      "get": {
+        "operationId": "apiRoot",
+        "tags": ["navigate"],
+        "summary": "API root — redirect to /navigate",
+        "description": "Returns the same navigation index as /navigate. Convenience alias for the root path.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": { "description": "Navigation index", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NavigationIndex" } } } },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/oracle/ledger": {
+      "get": {
+        "operationId": "oracleLedger",
+        "tags": ["oracle"],
+        "summary": "Query the oracle ledger — immutable audit log of all store operations",
+        "description": "Returns paginated oracle ledger entries. Each entry records a store operation with derivation ID, CIDs, epistemic grade, and timestamps.",
+        "parameters": [
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 50, "maximum": 200 } },
+          { "name": "offset", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } },
+          { "name": "operation", "in": "query", "required": false, "schema": { "type": "string", "enum": ["write", "read", "verify", "write-context"] } },
+          { "name": "object_type", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated oracle ledger entries with total count" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/oracle/stats": {
+      "get": {
+        "operationId": "oracleStats",
+        "tags": ["oracle"],
+        "summary": "Oracle ledger statistics — aggregate counts and metrics",
+        "description": "Returns aggregate statistics: total operations, operations by type, objects by type, storage distribution, and time-series data.",
+        "responses": {
+          "200": { "description": "Aggregate oracle statistics" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/kernel/op/correlate": {
+      "get": {
+        "operationId": "opCorrelate",
+        "tags": ["kernel-op"],
+        "summary": "Algebraic correlation between two ring elements",
+        "description": "Compute fidelity (0.0–1.0) between two ring elements using Hamming distance, XOR value, and ring distance. Equivalent to /tools/correlate.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "a", "in": "query", "required": true, "schema": { "type": "integer", "minimum": 0, "maximum": 65535 } },
+          { "name": "b", "in": "query", "required": true, "schema": { "type": "integer", "minimum": 0, "maximum": 65535 } },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "Correlation result with fidelity, Hamming distance, XOR value, ring distance, and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/kernel/derive": {
+      "post": {
+        "operationId": "kernelDerive",
+        "tags": ["kernel-schema"],
+        "summary": "Derive a canonical content-addressed identity for arbitrary input",
+        "description": "Accepts any JSON object or string, canonicalises it via URDNA2015, computes SHA-256, and returns the full UOR identity (derivation_id, CIDv1, Braille address, IPv6 ULA).",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "properties": { "input": { "description": "Any JSON value to derive" } }, "required": ["input"] }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "UOR identity with derivation_id, CID, Braille address, and IPv6" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/kernel/ontology": {
+      "get": {
+        "operationId": "kernelOntology",
+        "tags": ["ontology"],
+        "summary": "Export the full UOR ontology as OWL/RDFS JSON-LD",
+        "description": "Returns the complete UOR ontology: all classes, properties, individuals, and axioms expressed as W3C OWL 2 / RDFS. Includes all 14 namespaces.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": { "description": "OWL/RDFS ontology in JSON-LD format", "content": { "application/ld+json": { "schema": { "type": "object" } } } },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/shacl/shapes": {
+      "get": {
+        "operationId": "shaclShapes",
+        "tags": ["bridge-shacl"],
+        "summary": "List all SHACL shapes for UOR ontology validation",
+        "description": "Returns the catalogue of W3C SHACL shapes used to validate UOR data graphs. Each shape constrains a specific UOR type (schema:Datum, derivation:DerivationTrace, etc.).",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": { "description": "SHACL shapes graph in JSON-LD", "content": { "application/ld+json": { "schema": { "type": "object" } } } },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/shacl/validate": {
+      "get": {
+        "operationId": "shaclValidate",
+        "tags": ["bridge-shacl"],
+        "summary": "Validate a UOR object against SHACL shapes",
+        "description": "Validates a ring element's datum representation against all applicable SHACL shapes. Returns a W3C SHACL validation report.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": { "description": "SHACL validation report (sh:ValidationReport)", "content": { "application/ld+json": { "schema": { "type": "object" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/emit": {
+      "get": {
+        "operationId": "bridgeEmit",
+        "tags": ["bridge-emit"],
+        "summary": "Emit a UOR datum as W3C JSON-LD 1.1",
+        "description": "Emits a fully expanded JSON-LD 1.1 document for a ring element. Includes all algebraic metadata, @context, @id, and ontology references.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" },
+          { "name": "type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["datum", "derivation", "coherence-proof", "graph"], "default": "datum" } }
+        ],
+        "responses": {
+          "200": { "description": "JSON-LD 1.1 document", "content": { "application/ld+json": { "schema": { "type": "object" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/gnn/graph": {
+      "get": {
+        "operationId": "gnnGraph",
+        "tags": ["bridge-gnn"],
+        "summary": "Export UOR knowledge graph in GNN-ready format",
+        "description": "Returns the knowledge graph as a node-edge-feature structure suitable for Graph Neural Network ingestion.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/n" },
+          { "name": "format", "in": "query", "required": false, "schema": { "type": "string", "enum": ["adjacency", "edge_list", "coo"], "default": "adjacency" } }
+        ],
+        "responses": {
+          "200": { "description": "GNN graph with node features, adjacency structure, and edge types" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/gnn/ground": {
+      "post": {
+        "operationId": "gnnGround",
+        "tags": ["bridge-gnn"],
+        "summary": "Ground a GNN embedding back to ring elements",
+        "description": "Maps a floating-point embedding vector to the nearest ring elements via Hamming distance minimization.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "embedding": { "type": "array", "items": { "type": "number" } },
+                  "top_k": { "type": "integer", "default": 5 },
+                  "quantum": { "type": "integer", "default": 0 }
+                },
+                "required": ["embedding"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Grounded ring elements with similarity scores" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/store/pod-context": {
+      "post": {
+        "operationId": "storePodContext",
+        "tags": ["pod-storage"],
+        "summary": "Create or retrieve a POD context for agent-scoped storage",
+        "description": "Creates an evaluation context with a given capacity and quantum level. Returns context_id for subsequent bindings.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "capacity": { "type": "integer", "minimum": 1, "maximum": 256 },
+                  "quantum": { "type": "integer", "enum": [4, 8, 16], "default": 8 }
+                },
+                "required": ["capacity"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Context created or retrieved" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/store/pod-write": {
+      "post": {
+        "operationId": "storePodWrite",
+        "tags": ["pod-storage"],
+        "summary": "Write a binding into a POD context",
+        "description": "Stores a content-addressed binding (address → value) in the given context.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "context_id": { "type": "string" },
+                  "address": { "type": "string" },
+                  "content": { "type": "string" }
+                },
+                "required": ["context_id", "address", "content"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Binding stored" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/store/pod-read": {
+      "get": {
+        "operationId": "storePodRead",
+        "tags": ["pod-storage"],
+        "summary": "Read a binding from a POD context",
+        "description": "Retrieves a specific binding by context_id and address.",
+        "parameters": [
+          { "name": "context_id", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Binding content" },
+          "404": { "description": "Binding not found" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/store/pod-list": {
+      "get": {
+        "operationId": "storePodList",
+        "tags": ["pod-storage"],
+        "summary": "List all bindings in a POD context",
+        "description": "Returns all bindings for the given context_id with their addresses, content, and timestamps.",
+        "parameters": [
+          { "name": "context_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Array of bindings" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/graph/q0.jsonld": {
+      "get": {
+        "operationId": "graphQ0Jsonld",
+        "tags": ["graph"],
+        "summary": "Full Q0 knowledge graph as JSON-LD @graph",
+        "description": "Returns the complete pre-computed Q0 instance graph (all 2^n datums) as a JSON-LD @graph array with full algebraic metadata per datum.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": { "description": "JSON-LD @graph array of all datums", "content": { "application/ld+json": { "schema": { "type": "object" } } } },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/graph/q0/stats": {
+      "get": {
+        "operationId": "graphQ0Stats",
+        "tags": ["graph"],
+        "summary": "Q0 knowledge graph statistics",
+        "description": "Returns aggregate statistics for the Q0 instance graph: datum count, triple count, partition distribution, and namespace usage.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": { "description": "Graph statistics" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/graph/q0/datum/{value}": {
+      "get": {
+        "operationId": "graphQ0Datum",
+        "tags": ["graph"],
+        "summary": "Lookup a single datum in the Q0 knowledge graph",
+        "description": "Returns the full schema:Datum for a specific value in the Q0 instance graph, including all algebraic properties and linked triples.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "value", "in": "path", "required": true, "schema": { "type": "integer", "minimum": 0 }, "description": "The datum value to look up" }
+        ],
+        "responses": {
+          "200": { "description": "Full datum with algebraic metadata", "content": { "application/ld+json": { "schema": { "$ref": "#/components/schemas/Datum" } } } },
+          "404": { "description": "Datum value not found in the graph" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/observer/register": {
+      "post": {
+        "operationId": "observerRegister",
+        "tags": ["observer"],
+        "summary": "Register an observer agent",
+        "description": "Registers an agent as an observer in the observer network. Assigns initial zone (COHERENCE) and records founding derivation.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "agent_id": { "type": "string" },
+                  "founding_derivation_id": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" }
+                },
+                "required": ["agent_id", "founding_derivation_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Observer registered with zone assignment" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/observer/network/summary": {
+      "get": {
+        "operationId": "observerNetworkSummary",
+        "tags": ["observer"],
+        "summary": "Observer network summary — zone distribution and convergence metrics",
+        "description": "Returns aggregate network statistics: observer counts per zone, mean h-scores, convergence indicators.",
+        "responses": {
+          "200": { "description": "Network summary with zone distribution" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/observer/assess": {
+      "post": {
+        "operationId": "observerAssess",
+        "tags": ["observer"],
+        "summary": "Assess an observer output for epistemic grading",
+        "description": "Submits an output hash for epistemic assessment. Computes h-score, updates observer persistence, and may trigger zone transitions.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "agent_id": { "type": "string" },
+                  "output_hash": { "type": "string" },
+                  "derivation_id": { "type": "string" }
+                },
+                "required": ["agent_id", "output_hash"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Assessment result with h-score and zone status" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/observer/convergence-check": {
+      "get": {
+        "operationId": "observerConvergenceCheck",
+        "tags": ["observer"],
+        "summary": "Check network convergence status",
+        "description": "Determines whether the observer network has reached convergence based on zone stability thresholds.",
+        "responses": {
+          "200": { "description": "Convergence status with metrics" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/observer/{id}": {
+      "get": {
+        "operationId": "observerGet",
+        "tags": ["observer"],
+        "summary": "Get observer details by agent ID",
+        "description": "Returns full observer profile: zone, h-score mean, persistence, grade A rate, founding derivation, and field of observation.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Observer agent_id" }
+        ],
+        "responses": {
+          "200": { "description": "Observer profile" },
+          "404": { "description": "Observer not found" }
+        }
+      }
+    },
+    "/tools/derive": {
+      "get": {
+        "operationId": "toolDerive",
+        "tags": ["agent-tools"],
+        "summary": "uor_derive — derive content-addressed identity from any input",
+        "description": "Core agent tool function. Takes any string or JSON input, canonicalises via URDNA2015, and returns the full UOR identity.",
+        "parameters": [
+          { "name": "input", "in": "query", "required": true, "schema": { "type": "string", "maxLength": 1000 }, "description": "Input string to derive" }
+        ],
+        "responses": {
+          "200": { "description": "UOR identity with derivation_id, CID, Braille address, IPv6, and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/tools/query": {
+      "post": {
+        "operationId": "toolQuery",
+        "tags": ["agent-tools"],
+        "summary": "uor_query — query the UOR knowledge graph",
+        "description": "Agent tool for SPARQL queries over the knowledge graph with epistemic grading per result node.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sparql": { "type": "string", "description": "SPARQL SELECT query" },
+                  "graph_uri": { "type": "string", "description": "Optional named graph URI" }
+                },
+                "required": ["sparql"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "JSON-LD @graph array with epistemic grading per node" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/attribution/register": {
+      "post": {
+        "operationId": "attributionRegister",
+        "tags": ["attribution"],
+        "summary": "Register derivation attribution — provenance chain for content",
+        "description": "Records the provenance of a derivation: who created it, when, and what it derives from. Returns an attribution certificate.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "derivation_id": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" },
+                  "creator": { "type": "string" },
+                  "source_derivation_ids": { "type": "array", "items": { "type": "string" } }
+                },
+                "required": ["derivation_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Attribution certificate" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/attribution/verify": {
+      "get": {
+        "operationId": "attributionVerify",
+        "tags": ["attribution"],
+        "summary": "Verify an attribution chain",
+        "description": "Verifies the attribution chain for a derivation, checking certificate validity and provenance integrity.",
+        "parameters": [
+          { "name": "derivation_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" } }
+        ],
+        "responses": {
+          "200": { "description": "Verification result with chain status" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/attribution/royalty-report": {
+      "get": {
+        "operationId": "attributionRoyaltyReport",
+        "tags": ["attribution"],
+        "summary": "Generate royalty/revenue attribution report",
+        "description": "Computes revenue attribution based on derivation provenance chains.",
+        "parameters": [
+          { "name": "derivation_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Royalty report with attribution splits" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/schema-org/coherence": {
+      "post": {
+        "operationId": "schemaOrgCoherence",
+        "tags": ["semantic-web"],
+        "summary": "Verify schema.org ↔ UOR coherence",
+        "description": "Validates that a schema.org JSON-LD object's UOR attribution is consistent and the derivation chain is intact.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "description": "Schema.org JSON-LD object with UOR attribution" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Coherence verification result" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/schema-org/pin-all": {
+      "post": {
+        "operationId": "schemaOrgPinAll",
+        "tags": ["semantic-web"],
+        "summary": "Batch pin schema.org objects to IPFS with UOR attribution",
+        "description": "Extends and pins multiple schema.org objects in a single request.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "objects": { "type": "array", "items": { "type": "object" }, "maxItems": 50 },
+                  "gateway": { "type": "string", "default": "pinata" }
+                },
+                "required": ["objects"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Batch pin results with per-object CIDs and derivation IDs" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/sparql/verify": {
+      "get": {
+        "operationId": "sparqlVerify",
+        "tags": ["bridge-sparql"],
+        "summary": "Verify a SPARQL query result against the knowledge graph",
+        "description": "Replays a SPARQL query and verifies each result node's derivation_id. Returns epistemic grading per node.",
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "n", "in": "query", "required": false, "schema": { "type": "integer", "default": 8 } }
+        ],
+        "responses": {
+          "200": { "description": "Verification result with per-node grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/test/e2e": {
+      "get": {
+        "operationId": "testE2e",
+        "tags": ["test"],
+        "summary": "End-to-end conformance test",
+        "description": "Runs the full UOR conformance test suite (test7_end_to_end.rs equivalent) against the live API and returns pass/fail per test.",
+        "responses": {
+          "200": { "description": "Test results with pass/fail per test case" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
     "/.well-known/void": {
       "get": {
         "operationId": "wellKnownVoid",
         "tags": ["discovery"],
         "summary": "VoID dataset descriptor",
         "description": "W3C VoID (Vocabulary of Interlinked Datasets) descriptor for Linked Open Data registration. Describes the Q0 knowledge graph, SPARQL endpoint, and vocabulary URIs.",
-        "responses": { "200": { "description": "VoID dataset descriptor" } }
+        "responses": {
+          "200": {
+            "description": "VoID dataset descriptor in Turtle or JSON-LD",
+            "content": {
+              "application/ld+json": { "schema": { "type": "object" } }
+            }
+          }
+        }
       }
     }
   },
@@ -2515,7 +3164,7 @@
           "error": { "type": "string", "description": "Human-readable error description" },
           "code": {
             "type": "string",
-            "enum": ["INVALID_PARAMETER", "RATE_LIMITED", "PAYLOAD_TOO_LARGE", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_IMPLEMENTED", "UNSUPPORTED_MEDIA_TYPE", "INTERNAL_ERROR"]
+            "enum": ["INVALID_PARAMETER", "RATE_LIMITED", "PAYLOAD_TOO_LARGE", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_IMPLEMENTED", "UNSUPPORTED_MEDIA_TYPE", "INTERNAL_ERROR", "GATEWAY_TIMEOUT", "BAD_GATEWAY", "GATEWAY_AUTH_MISSING", "CONFLICT"]
           },
           "param": { "type": "string", "description": "The parameter that caused the error (for 400 responses)" },
           "docs": { "type": "string", "format": "uri", "description": "URL to this OpenAPI specification" }
