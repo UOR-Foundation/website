@@ -192,14 +192,32 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
               </div>
             )}
             {status === "verified" && verifyResult && (
-              <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3.5 space-y-2">
+              <div className={`rounded-lg border px-4 py-3.5 space-y-2.5 ${verifyResult.authentic ? 'border-primary/30 bg-primary/5' : 'border-destructive/30 bg-destructive/5'}`}>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 size={18} className="text-primary" />
-                  <span className="text-base font-semibold text-primary">Authentic</span>
+                  <CheckCircle2 size={18} className={verifyResult.authentic ? "text-primary" : "text-destructive"} />
+                  <span className={`text-base font-semibold ${verifyResult.authentic ? "text-primary" : "text-destructive"}`}>
+                    {verifyResult.authentic ? "Authentic" : "Mismatch"}
+                  </span>
                 </div>
                 <p className="text-sm text-foreground/60 leading-relaxed">
                   Content, boundary, and algebraic coherence independently verified.
                 </p>
+                {/* Cross-check: show re-derived CID vs stored CID */}
+                <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5 space-y-1.5">
+                  <p className="text-[10px] uppercase tracking-widest text-foreground/40 font-semibold">Re-derived Identifier</p>
+                  <code className={`block font-mono text-xs break-all leading-relaxed ${
+                    verifyResult.recomputedCid === verifyResult.storedCid ? "text-primary" : "text-destructive"
+                  }`}>
+                    {verifyResult.recomputedCid}
+                  </code>
+                  <p className={`text-[10px] font-medium ${
+                    verifyResult.recomputedCid === verifyResult.storedCid ? "text-primary" : "text-destructive"
+                  }`}>
+                    {verifyResult.recomputedCid === verifyResult.storedCid
+                      ? "✓ Matches stored CID — content is untampered"
+                      : "✗ Does not match stored CID — content may have changed"}
+                  </p>
+                </div>
                 {'coherenceVerified' in verifyResult && (
                   <div className="flex items-center gap-1.5 text-xs text-foreground/40">
                     <CheckCircle2 size={11} className="text-primary" />
