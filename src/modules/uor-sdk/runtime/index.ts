@@ -33,3 +33,23 @@ export type {
   WasmAppInstance,
   RuntimeStatus,
 } from "./wasm-loader";
+
+// ── WebGPU Compute ──────────────────────────────────────────────────────────
+export {
+  initWebGpu,
+  gpuHash,
+  gpuHashString,
+  gpuHashBatch,
+  computeHammingDistance,
+  batchVerify,
+  isGpuAvailable,
+  getGpuCapabilities,
+  getComputeSummary,
+  IntegrityMonitor,
+} from "./webgpu-compute";
+export type {
+  GpuCapabilities,
+  GpuHashResult,
+  HammingResult,
+  BatchVerifyResult,
+} from "./webgpu-compute";
