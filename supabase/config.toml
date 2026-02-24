@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.serve-app]
 verify_jwt = false
+
+[functions.webfinger]
+verify_jwt = false
