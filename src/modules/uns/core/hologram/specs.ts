@@ -6003,4 +6003,40 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://huggingface.co/docs/hub/model-cards",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 37 — OBSERVABILITY & DASHBOARD STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Grafana Dashboard — Observability Visualization ────────────────────
+  // Grafana dashboard JSON model defines panels, data sources, queries,
+  // variables, and layouts for observability visualization. Dashboard JSON
+  // is the canonical source of truth for Grafana's Scenes-powered renderer.
+  // Dashboards are deterministic documents: same JSON → same visualization.
+  //
+  // Integration assessment:
+  //   ✓ Dashboard JSON model is fully deterministic and serializable
+  //   ✓ Panel definitions map cleanly to UOR projection algebra
+  //   ✓ Data source queries (PromQL, LogQL, TraceQL) are canonical strings
+  //   ✓ Template variables provide parameterized projection composition
+  //   ✗ @grafana/scenes requires Grafana runtime — NOT embeddable standalone
+  //   ✗ @grafana/ui components depend on Grafana plugin context
+  //   → Best path: dashboard JSON as canonical format, not React embedding
+  //
+  // Canonical pipeline:
+  //   Dashboard JSON → sorted panels/targets → JSON-LD → URDNA2015 → SHA-256
+  //
+  // Cross-projection bridges:
+  //   grafana-dashboard + prometheus → visualization↔metrics bridge
+  //   grafana-dashboard + opentelemetry → dashboard↔tracing bridge
+  //   grafana-dashboard + k8s → dashboard↔infrastructure bridge
+  //
+  //   Format: urn:uor:cloud:grafana-dashboard:{hex}
+  //   Fidelity: lossless (dashboard JSON is the complete specification)
+
+  ["grafana-dashboard", {
+    project: ({ hex }) => `urn:uor:cloud:grafana-dashboard:${hex}`,
+    fidelity: "lossless",
+    spec: "https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/view-dashboard-json-model/",
+  }],
 ]);
