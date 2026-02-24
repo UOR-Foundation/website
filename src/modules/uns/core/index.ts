@@ -88,3 +88,7 @@ export type {
   QueryType,
 } from "./resolver";
 export { UnsResolver } from "./resolver";
+
+// ── Phase 2: Hologram Projection Registry ──────────────────────────────────
+export type { Hologram, HologramProjection, HologramSpec, Fidelity, ProjectionInput } from "./hologram";
+export { project, PROJECTIONS } from "./hologram";
