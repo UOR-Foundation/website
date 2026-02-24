@@ -39,10 +39,14 @@ function stageColor(stage: string): string {
 
 export default function DeployLog({ logs, visible, onClose }: DeployLogProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Scroll only within the log container, not the whole page
+    if (scrollContainerRef.current && bottomRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
   }, [logs.length]);
 
   const handleCopy = useCallback(() => {
@@ -98,7 +102,7 @@ export default function DeployLog({ logs, visible, onClose }: DeployLogProps) {
       </div>
 
       {/* Log entries */}
-      <div className="max-h-64 overflow-y-auto font-mono text-sm p-4 space-y-1 bg-background/40">
+      <div ref={scrollContainerRef} className="max-h-64 overflow-y-auto font-mono text-sm p-4 space-y-1 bg-background/40">
         {logs.map((entry, i) => (
           <div key={i} className="flex gap-3 leading-relaxed">
             <span className="text-muted-foreground/60 shrink-0 text-xs tabular-nums pt-0.5">
