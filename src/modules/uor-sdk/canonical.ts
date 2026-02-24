@@ -31,11 +31,14 @@ export type { ModuleIdentity } from "@/lib/uor-address";
 // ── Hologram Projection Registry ───────────────────────────────────────────
 // The hologram IS the UOR implementation — one hash, every standard.
 
-export { project, PROJECTIONS } from "@/modules/uns/core/hologram";
+export { project, PROJECTIONS, unifiedProject, assessByteCoherence } from "@/modules/uns/core/hologram";
 export type {
   Hologram,
   HologramProjection,
   HologramSpec,
   Fidelity,
   ProjectionInput,
+  UnifiedHologram,
+  UnifiedProjectionResult,
+  ProjectionCoherence,
 } from "@/modules/uns/core/hologram";
