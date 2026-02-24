@@ -216,7 +216,14 @@ export function InteroperabilityMap() {
               {/* Expanded — projections */}
               {isExpanded && (
                 <div className="px-5 pb-5 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <p className="text-sm text-muted-foreground mb-4">{eco.description}</p>
+                  <p className="text-sm text-foreground leading-relaxed mb-2">{eco.description}</p>
+                  <div className="bg-secondary/50 border border-border rounded-lg p-3 mb-4">
+                    <div className="text-xs font-bold text-foreground uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                      <Info className="w-3.5 h-3.5 text-primary" />
+                      UOR Expression
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{eco.uorExpression}</p>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {validProjections.map(p => {
                       const isActive = activeProjection === p;

@@ -585,36 +585,59 @@ export function KnowledgeGraph() {
                 </p>
               </div>
             )}
-            {selectedNode.type === "projection" && (
-              <div className="space-y-2">
-                <p className="text-sm text-foreground leading-relaxed">
-                  <strong>{selectedNode.label}</strong> is a {selectedNode.fidelity === "lossless" ? "lossless" : "lossy"} projection of its UOR canonical hash.
-                </p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  This means <strong className="text-foreground">{selectedNode.label}</strong>'s identity is derived from its content attributes — not from any registry, server, or namespace.
-                  Any system that computes the same canonical encoding will arrive at the same UOR identity, enabling <strong className="text-foreground">trustless verification</strong> and seamless cross-protocol interoperability.
-                </p>
-                {(() => {
-                  const spec = SPECS.get(selectedNode.id);
-                  return spec ? (
-                    <p className="text-xs text-muted-foreground/80 italic mt-1">
-                      Fidelity: {spec.fidelity}
+            {selectedNode.type === "projection" && (() => {
+              const cat = getCategoryForNode(selectedNode);
+              const spec = SPECS.get(selectedNode.id);
+              return (
+                <div className="space-y-3">
+                  <p className="text-sm text-foreground leading-relaxed">
+                    <strong>{selectedNode.label}</strong> is a {selectedNode.fidelity === "lossless" ? "lossless" : "lossy"} projection of its UOR canonical hash.
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    This means <strong className="text-foreground">{selectedNode.label}</strong>'s identity is derived from its content attributes — not from any registry, server, or namespace.
+                    Any system that computes the same canonical encoding will arrive at the same UOR identity, enabling <strong className="text-foreground">trustless verification</strong> and seamless cross-protocol interoperability.
+                  </p>
+                  {cat && (
+                    <div className="bg-secondary/50 border border-border rounded-lg p-3">
+                      <div className="text-xs font-bold text-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <Info className="w-3.5 h-3.5 text-primary" />
+                        {cat.label} — UOR Expression
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {cat.uorExpression}
+                      </p>
+                    </div>
+                  )}
+                  {spec && (
+                    <p className="text-xs text-muted-foreground/80 italic">
+                      Fidelity: {spec.fidelity}{spec.spec ? ` · ${spec.spec}` : ""}
                     </p>
-                  ) : null;
-                })()}
-              </div>
-            )}
-            {selectedNode.type === "category" && (
-              <div className="space-y-2">
-                <p className="text-sm text-foreground leading-relaxed font-medium">
-                  {getCategoryForNode(selectedNode)?.description}
-                </p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Every standard within this domain connects back to UOR through a canonical encoding chain.
-                  Click individual projections to see their specific derivation path.
-                </p>
-              </div>
-            )}
+                  )}
+                </div>
+              );
+            })()}
+            {selectedNode.type === "category" && (() => {
+              const cat = getCategoryForNode(selectedNode);
+              return cat ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-foreground leading-relaxed">
+                    {cat.description}
+                  </p>
+                  <div className="bg-secondary/50 border border-border rounded-lg p-3">
+                    <div className="text-xs font-bold text-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <Info className="w-3.5 h-3.5 text-primary" />
+                      UOR Expression
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {cat.uorExpression}
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground italic">
+                    Click individual projections within this domain to see their specific canonical derivation path back to UOR.
+                  </p>
+                </div>
+              ) : null;
+            })()}
           </div>
 
           {/* ── Synergy Chains ──────────────────────────────────── */}
