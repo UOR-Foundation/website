@@ -82,6 +82,6 @@
 
 export { generateCertificate, generateCertificates } from "./generate";
 export type { UorCertificate } from "./types";
-export { verifyCertificate, type VerificationResult } from "./verify";
+export { verifyCertificate, verifyCertificateFull, type VerificationResult, type FullVerificationResult } from "./verify";
 export { decodeCertificate, type DecodedCertificate } from "./decode";
 export { certificateToTriword, triwordBreakdown } from "./triword";

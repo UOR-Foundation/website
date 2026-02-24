@@ -1,9 +1,10 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, ArrowLeft, ShieldCheck, Bot, CheckCircle2, Loader2, Copy, Check } from "lucide-react";
+import { ExternalLink, ArrowLeft, ShieldCheck, Bot, CheckCircle2, Loader2, Copy, Check, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { generateCertificate, type UorCertificate } from "@/lib/uor-certificate";
 import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
+import { verifyCertificateFull, type FullVerificationResult } from "@/modules/certificate/verify";
 import { canonicalToTriword, formatTriword, triwordBreakdown } from "@/lib/uor-triword";
 import {
   Dialog,
@@ -56,11 +57,10 @@ const CopyRow = ({ label, value, display }: { label: string; value: string; disp
  * CertificateReceipt — Triword-based Receipt of Authenticity
  * Used on every project page. Same format as the ConsoleUI CanonicalIdBadge verify dialog.
  */
-const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate; name: string }) => {
+const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: UorCertificate; name: string; sourceObject: Record<string, unknown> }) => {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "verifying" | "verified" | "failed">("idle");
-  const [verifyTime, setVerifyTime] = useState<number | null>(null);
-  const [verifyTimestamp, setVerifyTimestamp] = useState<string | null>(null);
+  const [verifyResult, setVerifyResult] = useState<FullVerificationResult | null>(null);
   const [copied, setCopied] = useState(false);
 
   const cid = certificate["cert:cid"];
@@ -76,20 +76,16 @@ const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate
 
   const runVerification = useCallback(async () => {
     setStatus("verifying");
-    const t0 = performance.now();
     try {
-      const payloadBytes = new TextEncoder().encode(certificate["cert:canonicalPayload"]);
-      const recomputedCid = await computeCid(payloadBytes);
-      const match = recomputedCid === cid;
-      setVerifyTime(Math.round(performance.now() - t0));
-      setVerifyTimestamp(new Date().toISOString());
-      setStatus(match ? "verified" : "failed");
+      // FULL RE-DERIVATION: re-canonicalize source object via URDNA2015,
+      // re-hash with SHA-256, generate fresh CID, compare byte-level.
+      const result = await verifyCertificateFull(sourceObject, certificate);
+      setVerifyResult(result);
+      setStatus(result.authentic ? "verified" : "failed");
     } catch {
-      setVerifyTime(Math.round(performance.now() - t0));
-      setVerifyTimestamp(new Date().toISOString());
       setStatus("failed");
     }
-  }, [certificate, cid]);
+  }, [certificate, sourceObject]);
 
   const handleOpen = useCallback((o: boolean) => {
     setOpen(o);
@@ -162,37 +158,66 @@ const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate
               {status === "verifying" && (
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-4">
                   <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                  <span className="text-base text-foreground/70">Verifying…</span>
+                  <div>
+                    <span className="text-base text-foreground/70">Re-deriving from source…</span>
+                    <p className="text-xs text-foreground/50 mt-0.5">Object → URDNA2015 → SHA-256 → CID</p>
+                  </div>
                 </div>
               )}
-              {status === "verified" && (
-                <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-4 space-y-2">
+              {status === "verified" && verifyResult && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <ShieldCheck size={20} className="text-primary" />
                     <span className="text-lg font-bold text-primary">Authentic</span>
                   </div>
                   <p className="text-sm text-foreground/70">
-                    Original content re-hashed with SHA-256. Recomputed fingerprint matches the stored CID. Content is untampered.
+                    Full re-derivation complete. Source object re-canonicalized via URDNA2015, re-hashed with SHA-256.
+                    Recomputed fingerprint matches the stored CID. Content is untampered.
                   </p>
-                  {verifyTime !== null && (
-                    <p className="text-xs text-foreground/50 font-mono">
-                      Verified in {verifyTime}ms · {verifyTimestamp}
-                    </p>
-                  )}
+                  {/* Byte-level comparison details */}
+                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1.5">
+                    <p className="text-xs font-semibold text-foreground/60 uppercase tracking-widest">Byte-Level Comparison</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs font-mono">
+                      <span className="text-foreground/50">Payload bytes:</span>
+                      <span className="text-foreground/80">{verifyResult.recomputedByteLength} B</span>
+                      <span className="text-foreground/50">Payload match:</span>
+                      <span className={verifyResult.payloadMatch ? "text-primary" : "text-destructive"}>
+                        {verifyResult.payloadMatch ? "✓ Exact" : "✗ Mismatch"}
+                      </span>
+                      <span className="text-foreground/50">CID match:</span>
+                      <span className="text-primary">✓ Exact</span>
+                      <span className="text-foreground/50">SHA-256:</span>
+                      <span className="text-foreground/80 break-all">{verifyResult.recomputedHashHex.slice(0, 16)}…</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-foreground/50 font-mono">
+                    Verified in {verifyResult.elapsedMs}ms · {verifyResult.verifiedAt}
+                  </p>
                 </div>
               )}
               {status === "failed" && (
                 <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-4">
                   <span className="text-lg font-bold text-destructive">⚠ Verification Failed</span>
-                  <p className="text-sm text-foreground/70 mt-1">Content may have been modified.</p>
+                  <p className="text-sm text-foreground/70 mt-1">
+                    {verifyResult?.summary || "Content may have been modified. Even a single bit change produces a different CID."}
+                  </p>
+                  {verifyResult && (
+                    <div className="rounded-md border border-border bg-muted/30 p-3 mt-3 space-y-1 text-xs font-mono">
+                      <p><span className="text-foreground/50">Stored CID:</span> <span className="text-foreground/70 break-all">{verifyResult.storedCid}</span></p>
+                      <p><span className="text-foreground/50">Recomputed:</span> <span className="text-destructive break-all">{verifyResult.recomputedCid}</span></p>
+                    </div>
+                  )}
                 </div>
               )}
-              {status === "idle" && (
-                <button onClick={runVerification} className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-base font-medium text-foreground hover:bg-muted/50 transition-colors w-full">
-                  <ShieldCheck size={18} />
-                  Verify
-                </button>
-              )}
+              {/* Verify Certificate button — always visible for re-verification */}
+              <button
+                onClick={runVerification}
+                disabled={status === "verifying"}
+                className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-base font-medium text-foreground hover:bg-muted/50 transition-colors w-full disabled:opacity-50"
+              >
+                <RefreshCw size={16} className={status === "verifying" ? "animate-spin" : ""} />
+                {status === "idle" ? "Verify Certificate" : "Re-verify Certificate"}
+              </button>
             </div>
           </div>
 
@@ -218,6 +243,7 @@ const ProjectDetailLayout = ({
   agentInstructions,
 }: ProjectDetailProps) => {
   const [certificate, setCertificate] = useState<UorCertificate | null>(null);
+  const [sourceEnvelope, setSourceEnvelope] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     const envelope: Record<string, unknown> = {
@@ -230,6 +256,7 @@ const ProjectDetailLayout = ({
       "uor:repository": repoUrl,
       "uor:maturity": "Sandbox",
     };
+    setSourceEnvelope(envelope);
     generateCertificate(`project:${slug}`, envelope).then(setCertificate);
   }, [slug, name, category, tagline, repoUrl]);
 
@@ -262,7 +289,7 @@ const ProjectDetailLayout = ({
             {tagline}
           </p>
 
-          {certificate && <CertificateReceipt certificate={certificate} name={name} />}
+          {certificate && sourceEnvelope && <CertificateReceipt certificate={certificate} name={name} sourceObject={sourceEnvelope} />}
         </div>
       </section>
 
