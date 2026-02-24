@@ -29,6 +29,7 @@ function stageColor(stage: string): string {
     case "import": return "text-blue-400";
     case "build": return "text-amber-400";
     case "ship": return "text-violet-400";
+    case "ingest": return "text-cyan-400";
     case "run": return "text-emerald-400";
     case "complete": return "text-primary";
     case "error": return "text-destructive";

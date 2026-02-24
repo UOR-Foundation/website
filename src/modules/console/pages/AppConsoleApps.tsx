@@ -44,6 +44,7 @@ const MOCK_APPS: AppCard[] = [
 const DEPLOY_STEPS = [
   { icon: Upload, label: "Build", desc: "Import your code and create a content-addressed image — like docker build" },
   { icon: ShieldCheck, label: "Ship", desc: "Push to the UOR registry with a signed certificate — like docker push" },
+  { icon: Package, label: "Ingest", desc: "Store assets in content-addressed storage for self-hosted serving" },
   { icon: Rocket, label: "Run", desc: "Execute via WASM on any device — like docker run" },
 ];
 
@@ -106,8 +107,9 @@ export default function AppConsoleApps() {
             case "import": setDeployStep(0); break;
             case "build": setDeployStep(0); break;
             case "ship": setDeployStep(1); break;
-            case "run": setDeployStep(2); break;
-            case "complete": setDeployStep(3); break;
+            case "ingest": setDeployStep(2); break;
+            case "run": setDeployStep(3); break;
+            case "complete": setDeployStep(4); break;
           }
         },
       });

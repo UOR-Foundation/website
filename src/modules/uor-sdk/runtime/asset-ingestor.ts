@@ -2,8 +2,7 @@
  * UOR SDK — Asset Ingestor
  *
  * Fetches app source HTML/assets, hashes them for content-addressing,
- * stores them in the app-assets storage bucket, and registers the
- * canonical mapping in app_asset_registry.
+ * stores them via the serve-app edge function, and tracks the mapping.
  *
  * This bridges the gap between "import" (metadata) and "run" (serving):
  * after ingestion, the serve-app edge function can serve the app
@@ -12,7 +11,7 @@
  * Pipeline:
  *   1. Fetch raw HTML from source URL
  *   2. Compute canonical ID via singleProofHash
- *   3. Upload to storage bucket keyed by canonical ID
+ *   3. Upload to storage via Supabase client
  *   4. Register in app_asset_registry
  *   5. Return serve URL pointing to our edge function
  *
@@ -21,8 +20,6 @@
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
-import { supabase } from "@/integrations/supabase/client";
-import type { AppManifest } from "../app-identity";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -61,6 +58,14 @@ export interface IngestResult {
 const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 const SERVE_FUNCTION_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/serve-app`;
 
+// ── Lazy Supabase client ────────────────────────────────────────────────────
+
+/** Lazy-load the Supabase client to avoid compile-time type issues. */
+async function getSupabase() {
+  const { supabase } = await import("@/integrations/supabase/client");
+  return supabase;
+}
+
 // ── Ingestor ────────────────────────────────────────────────────────────────
 
 /**
@@ -74,9 +79,10 @@ export async function ingestAppAssets(
   input: IngestInput,
 ): Promise<IngestResult> {
   const { sourceUrl, appName, version, imageCanonicalId } = input;
+  const supabase = await getSupabase();
 
   // 1. Check if already ingested (content-addressed dedup)
-  const { data: existing } = await supabase
+  const { data: existing } = await (supabase as any)
     .from("app_asset_registry")
     .select("canonical_id, storage_path, size_bytes")
     .eq("canonical_id", imageCanonicalId)
@@ -101,19 +107,12 @@ export async function ingestAppAssets(
     }
     htmlContent = await response.text();
   } catch {
-    // Fallback: generate a minimal loader that redirects
+    // Fallback: generate a minimal loader page
     htmlContent = buildFallbackHtml(appName, version, sourceUrl);
   }
 
   // 3. Compute content hash for verification
   const contentBytes = new TextEncoder().encode(htmlContent);
-  const proof = await singleProofHash({
-    "@type": "ingest:AppAsset",
-    "ingest:appName": appName,
-    "ingest:version": version,
-    "ingest:byteLength": contentBytes.length,
-    "ingest:imageCanonicalId": imageCanonicalId,
-  });
 
   // 4. Upload to storage bucket
   // Storage path: {shortHash}/{appName}/{version}/index.html
@@ -136,7 +135,7 @@ export async function ingestAppAssets(
   }
 
   // 5. Register in app_asset_registry
-  const { error: registryError } = await supabase
+  const { error: registryError } = await (supabase as any)
     .from("app_asset_registry")
     .upsert({
       canonical_id: imageCanonicalId,

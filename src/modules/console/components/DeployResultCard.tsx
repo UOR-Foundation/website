@@ -1,6 +1,6 @@
 /**
  * DeployResultCard — Post-deploy summary with canonical ID, runtime info,
- * snapshot chain, and actionable next steps.
+ * snapshot chain, self-hosted serve URL, and actionable next steps.
  */
 
 import { useState, useCallback } from "react";
@@ -30,7 +30,8 @@ export default function DeployResultCard({ result, onDismiss }: DeployResultCard
   const appName = result.import.manifest["app:name"];
   const version = result.import.manifest["app:version"];
   const canonicalId = result.build.image.canonicalId;
-  const sourceUrl = result.instance?.sourceUrl ?? result.import.manifest["app:sourceUrl"] as string ?? "";
+  const serveUrl = result.ingest?.serveUrl ?? "";
+  const sourceUrl = serveUrl || result.instance?.sourceUrl ?? result.import.manifest["app:sourceUrl"] as string ?? "";
   const snapshotId = result.ship?.snapshot?.["u:canonicalId"] ?? canonicalId;
   const ipv6 = result.instance?.ipv6 ?? "fd00:75:6f72::1";
   const wasmStatus = result.instance?.status ?? "running";
@@ -135,7 +136,9 @@ export default function DeployResultCard({ result, onDismiss }: DeployResultCard
         <div className="flex items-center gap-2 rounded-xl bg-muted/20 border border-border/30 px-4 py-3">
           <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
           <span className="text-sm text-muted-foreground">
-            Content-addressed and signed — verified via deployment snapshot chain
+            {result.ingest?.deduplicated
+              ? "Content-addressed and deduplicated — serving from self-hosted infrastructure"
+              : "Content-addressed, signed, and ingested — serving from self-hosted infrastructure"}
           </span>
           <CopyBtn value={snapshotId} field="verification" />
         </div>

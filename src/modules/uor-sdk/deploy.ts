@@ -78,7 +78,7 @@ export interface DeployResult {
   /** Stage 3: Ship result (push + snapshot). */
   ship: ShipResult;
   /** Stage 3.5: Ingestion result (asset storage). */
-  ingest: IngestResult;
+  ingest?: IngestResult;
   /** Stage 4: Running instance. */
   instance: WasmAppInstance;
   /** Total pipeline duration in ms. */
