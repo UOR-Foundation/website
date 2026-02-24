@@ -4094,4 +4094,1110 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://www.smpte.org/standards/st2110",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 21 — DATA FORMATS: TABULAR, COLUMNAR & STRUCTURED DATA
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Data formats are the lingua franca of information exchange — from simple
+  // CSV tables exchanged by spreadsheets to columnar Parquet files powering
+  // petabyte-scale analytics. Content-addressing data formats creates
+  // permanent, verifiable identities for datasets regardless of where they
+  // are stored or how they are transmitted. Every row, every schema, every
+  // query result becomes a tamper-evident, content-addressed artifact.
+
+  // ── CSV — Comma-Separated Values ───────────────────────────────────────
+  // CSV (RFC 4180) is the most widely used tabular data interchange format.
+  // Despite its simplicity, CSV ambiguity (delimiters, quoting, encoding)
+  // makes canonical representation essential. UOR CSV canonicalization
+  // normalizes encoding to UTF-8, line endings to LF, applies deterministic
+  // quoting rules, and sorts header columns lexicographically.
+  //
+  //   Format: urn:uor:data:csv:{hex} (SHA-256 of canonical CSV)
+  //   Canonical: CSV → UTF-8 normalize → LF line endings → sorted headers → SHA-256
+  //   Cross-projection: csv + parquet → tabular↔columnar bridge
+  //                     csv + json-schema → CSV validation schema identity
+
+  ["csv", {
+    project: ({ hex }) => `urn:uor:data:csv:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc4180",
+  }],
+
+  // ── TSV — Tab-Separated Values ─────────────────────────────────────────
+  // TSV is the standard tabular format for bioinformatics (BED, GFF, VCF
+  // headers), linguistics corpora, and UNIX tool pipelines. Tab delimiters
+  // eliminate quoting ambiguity inherent in CSV. IANA type: text/tab-separated-values.
+  //
+  //   Format: urn:uor:data:tsv:{hex} (SHA-256 of canonical TSV)
+  //   Canonical: TSV → UTF-8 normalize → LF → sorted columns → SHA-256
+  //   Cross-projection: tsv + csv → delimiter-agnostic tabular identity
+  //                     tsv + fastq → bioinformatics pipeline data bridge
+
+  ["tsv", {
+    project: ({ hex }) => `urn:uor:data:tsv:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iana.org/assignments/media-types/text/tab-separated-values",
+  }],
+
+  // ── Apache Parquet — Columnar Storage ──────────────────────────────────
+  // Parquet is the dominant columnar storage format for big data analytics.
+  // Used by Apache Spark, Databricks, Snowflake, BigQuery, Athena, and
+  // every major data lake. Parquet files contain self-describing schemas,
+  // row groups, column chunks, and page-level statistics — all binary and
+  // deterministic. Parquet's footer metadata is a Thrift-encoded schema.
+  //
+  // Content-addressing Parquet files creates permanent identities for
+  // analytical datasets — each partition, each table version, each query
+  // result becomes a verifiable, content-addressed artifact.
+  //
+  //   Format: urn:uor:data:parquet:{hex} (SHA-256 of Parquet file bytes)
+  //   Canonical: Parquet binary → raw bytes → SHA-256
+  //   Cross-projection: parquet + avro → columnar↔row-based data bridge
+  //                     parquet + csv → analytics↔interchange bridge
+  //                     parquet + arrow → columnar storage↔in-memory bridge
+
+  ["parquet", {
+    project: ({ hex }) => `urn:uor:data:parquet:${hex}`,
+    fidelity: "lossless",
+    spec: "https://parquet.apache.org/docs/file-format/",
+  }],
+
+  // ── Apache Arrow / IPC — In-Memory Columnar ────────────────────────────
+  // Arrow is the universal in-memory columnar format — zero-copy reads
+  // across languages (Python, R, Java, Rust, C++, JS). Arrow IPC
+  // (Feather v2) provides file-level persistence. Used by Pandas 2.0,
+  // Polars, DuckDB, DataFusion, and Velox.
+  //
+  // Arrow IPC files have deterministic binary layout with schema metadata,
+  // record batches, and dictionary encodings. Content-addressing Arrow
+  // creates permanent identities for in-memory datasets.
+  //
+  //   Format: urn:uor:data:arrow:{hex} (SHA-256 of Arrow IPC file)
+  //   Canonical: Arrow IPC binary → raw bytes → SHA-256
+  //   Cross-projection: arrow + parquet → memory↔storage columnar bridge
+  //                     arrow + csv → in-memory↔interchange bridge
+
+  ["arrow", {
+    project: ({ hex }) => `urn:uor:data:arrow:${hex}`,
+    fidelity: "lossless",
+    spec: "https://arrow.apache.org/docs/format/Columnar.html",
+  }],
+
+  // ── ORC — Optimized Row Columnar ───────────────────────────────────────
+  // ORC is the columnar format optimized for Apache Hive and the Hadoop
+  // ecosystem. Features ACID transaction support, predicate pushdown,
+  // bloom filters, and lightweight compression. Used by Hive, Presto,
+  // Trino, and Spark for Hadoop-native workloads.
+  //
+  //   Format: urn:uor:data:orc:{hex} (SHA-256 of ORC file bytes)
+  //   Canonical: ORC binary → raw bytes → SHA-256
+  //   Cross-projection: orc + parquet → Hadoop↔Spark columnar bridge
+  //                     orc + avro → ORC↔Avro schema evolution bridge
+
+  ["orc", {
+    project: ({ hex }) => `urn:uor:data:orc:${hex}`,
+    fidelity: "lossless",
+    spec: "https://orc.apache.org/specification/ORCv2/",
+  }],
+
+  // ── Apache Iceberg — Table Format ──────────────────────────────────────
+  // Iceberg is the open table format for huge analytic datasets. Provides
+  // ACID transactions, schema evolution, partition evolution, time travel,
+  // and hidden partitioning. Used by Netflix, Apple, Snowflake, Databricks,
+  // and AWS (Athena, Glue). Iceberg metadata is JSON manifests pointing
+  // to data files (Parquet/ORC/Avro).
+  //
+  //   Format: urn:uor:data:iceberg:{hex} (SHA-256 of Iceberg metadata snapshot)
+  //   Canonical: metadata.json → sorted snapshots → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: iceberg + parquet → table format↔storage bridge
+  //                     iceberg + delta → Iceberg↔Delta Lake interop identity
+
+  ["iceberg", {
+    project: ({ hex }) => `urn:uor:data:iceberg:${hex}`,
+    fidelity: "lossless",
+    spec: "https://iceberg.apache.org/spec/",
+  }],
+
+  // ── Delta Lake — Versioned Table Format ────────────────────────────────
+  // Delta Lake (Linux Foundation) provides ACID transactions on top of
+  // Parquet. Transaction log (_delta_log/) records every change as
+  // JSON action files. Used by Databricks, Azure Synapse, and Spark.
+  // UniForm enables Delta↔Iceberg↔Hudi interoperability.
+  //
+  //   Format: urn:uor:data:delta:{hex} (SHA-256 of Delta transaction log snapshot)
+  //   Canonical: _delta_log → sorted actions → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: delta + parquet → transaction↔storage bridge
+  //                     delta + iceberg → Delta↔Iceberg UniForm identity
+
+  ["delta", {
+    project: ({ hex }) => `urn:uor:data:delta:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/delta-io/delta/blob/master/PROTOCOL.md",
+  }],
+
+  // ── Apache Hudi — Incremental Data Lake ────────────────────────────────
+  // Hudi (Hadoop Upserts Deletes Incrementals) supports record-level
+  // upserts, deletes, and incremental processing on data lakes. Used for
+  // CDC (Change Data Capture) pipelines. Hudi timelines track every
+  // commit as structured metadata.
+  //
+  //   Format: urn:uor:data:hudi:{hex} (SHA-256 of Hudi commit metadata)
+  //   Canonical: timeline → sorted commits → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: hudi + delta → CDC pipeline format bridge
+  //                     hudi + parquet → upsert↔storage identity
+
+  ["hudi", {
+    project: ({ hex }) => `urn:uor:data:hudi:${hex}`,
+    fidelity: "lossless",
+    spec: "https://hudi.apache.org/docs/next/technical_spec",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 22 — DATA FORMATS: QUERY LANGUAGES & SCHEMA DEFINITIONS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── GraphQL — API Query Language ───────────────────────────────────────
+  // GraphQL is the dominant API query language for modern web applications.
+  // A GraphQL schema (SDL) defines types, fields, queries, mutations, and
+  // subscriptions. GraphQL operations (queries/mutations) are deterministic
+  // ASTs. Used by GitHub, Shopify, Stripe, Meta, and millions of apps.
+  //
+  // Content-addressing GraphQL schemas creates permanent, verifiable API
+  // contracts. Each schema version gets a unique hash — enabling API
+  // evolution tracking and contract testing verification.
+  //
+  //   Format: urn:uor:data:graphql:{hex} (SHA-256 of canonical GraphQL SDL)
+  //   Canonical: SDL → sorted types/fields → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: graphql + openapi → GraphQL↔REST API bridge
+  //                     graphql + json-schema → GraphQL↔JSON Schema bridge
+  //                     graphql + protobuf → GraphQL↔gRPC bridge
+
+  ["graphql", {
+    project: ({ hex }) => `urn:uor:data:graphql:${hex}`,
+    fidelity: "lossless",
+    spec: "https://spec.graphql.org/October2021/",
+  }],
+
+  // ── SQL/DDL — Structured Query Language ────────────────────────────────
+  // SQL (ISO/IEC 9075) is the universal language for relational databases.
+  // DDL (Data Definition Language) statements define schemas — tables,
+  // columns, constraints, indexes, views. Content-addressing DDL creates
+  // permanent identities for database schemas — enabling schema version
+  // control and migration verification.
+  //
+  //   Format: urn:uor:data:sql:{hex} (SHA-256 of canonical DDL)
+  //   Canonical: DDL → sorted tables/columns → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: sql + graphql → relational↔graph API bridge
+  //                     sql + json-schema → SQL↔JSON Schema bridge
+
+  ["sql", {
+    project: ({ hex }) => `urn:uor:data:sql:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/76583.html",
+  }],
+
+  // ── CQL — Cassandra Query Language ─────────────────────────────────────
+  // CQL defines schemas and queries for Apache Cassandra and ScyllaDB —
+  // the dominant wide-column distributed databases. CQL DDL defines
+  // keyspaces, tables, materialized views, and UDTs.
+  //
+  //   Format: urn:uor:data:cql:{hex} (SHA-256 of canonical CQL schema)
+  //   Canonical: CQL DDL → sorted keyspaces/tables → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: cql + sql → NoSQL↔SQL schema bridge
+
+  ["cql", {
+    project: ({ hex }) => `urn:uor:data:cql:${hex}`,
+    fidelity: "lossless",
+    spec: "https://cassandra.apache.org/doc/latest/cassandra/cql/",
+  }],
+
+  // ── Cypher — Graph Query Language ──────────────────────────────────────
+  // Cypher is the declarative graph query language for Neo4j and the
+  // upcoming ISO GQL standard (ISO/IEC 39075). Defines nodes, relationships,
+  // properties, and pattern matching. Used by Neo4j, Amazon Neptune,
+  // and Memgraph.
+  //
+  //   Format: urn:uor:data:cypher:{hex} (SHA-256 of canonical Cypher schema)
+  //   Canonical: schema → sorted node/relationship types → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: cypher + graphql → graph DB↔API bridge
+  //                     cypher + sparql → property graph↔RDF bridge
+
+  ["cypher", {
+    project: ({ hex }) => `urn:uor:data:cypher:${hex}`,
+    fidelity: "lossless",
+    spec: "https://opencypher.org/resources/",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 23 — DATA FORMATS: ENCODING & COMPRESSION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Base64 — Binary-to-Text Encoding ───────────────────────────────────
+  // Base64 (RFC 4648) is the standard binary-to-text encoding used in
+  // email (MIME), data URIs, JWT tokens, and API payloads. Content-
+  // addressing Base64 data creates verifiable identities for encoded
+  // binary payloads independent of transport.
+  //
+  //   Format: urn:uor:data:base64:{hex} (SHA-256 of decoded binary)
+  //   Canonical: Base64 → decode → raw bytes → SHA-256
+  //   Cross-projection: base64 + cbor → encoded CBOR identity
+
+  ["base64", {
+    project: ({ hex }) => `urn:uor:data:base64:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc4648",
+  }],
+
+  // ── ASN.1 / DER — Abstract Syntax Notation ─────────────────────────────
+  // ASN.1 (ITU-T X.680) with DER (Distinguished Encoding Rules) is the
+  // encoding used for X.509 certificates, CRLs, OCSP responses, LDAP,
+  // SNMP MIBs, and telecom signaling (SS7, LTE, 5G NR). DER provides
+  // canonical binary encoding — every valid DER encoding is unique.
+  //
+  // DER is inherently canonical — identical structures always produce
+  // identical bytes. This makes DER the ideal encoding for content-
+  // addressing cryptographic objects.
+  //
+  //   Format: urn:uor:data:asn1:{hex} (SHA-256 of DER-encoded structure)
+  //   Canonical: ASN.1 → DER encoding → raw bytes → SHA-256
+  //   Cross-projection: asn1 + x509 → certificate identity
+  //                     asn1 + protobuf → telecom↔web serialization bridge
+
+  ["asn1", {
+    project: ({ hex }) => `urn:uor:data:asn1:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.itu.int/rec/T-REC-X.690-202102-I/en",
+  }],
+
+  // ── BSON — Binary JSON ─────────────────────────────────────────────────
+  // BSON (Binary JSON) is the binary-encoded serialization format used by
+  // MongoDB. Extends JSON with additional types (ObjectId, Date, Binary,
+  // Decimal128, Regex). Every MongoDB document is stored as BSON.
+  //
+  //   Format: urn:uor:data:bson:{hex} (SHA-256 of canonical BSON)
+  //   Canonical: BSON → sorted keys → canonical BSON bytes → SHA-256
+  //   Cross-projection: bson + json-schema → MongoDB↔JSON Schema bridge
+  //                     bson + cbor → binary JSON variant bridge
+
+  ["bson", {
+    project: ({ hex }) => `urn:uor:data:bson:${hex}`,
+    fidelity: "lossless",
+    spec: "https://bsonspec.org/spec.html",
+  }],
+
+  // ── Ion — Amazon's Self-Describing Format ──────────────────────────────
+  // Amazon Ion is a richly-typed, self-describing data format supporting
+  // both text and binary encodings. Used internally at Amazon for
+  // DynamoDB, QLDB (quantum ledger), and S3 Select. Ion provides
+  // deterministic binary encoding and hash-based data integrity.
+  //
+  //   Format: urn:uor:data:ion:{hex} (SHA-256 of canonical Ion binary)
+  //   Canonical: Ion → binary encoding → raw bytes → SHA-256
+  //   Cross-projection: ion + parquet → Amazon analytics pipeline identity
+  //                     ion + cbor → self-describing binary bridge
+
+  ["ion", {
+    project: ({ hex }) => `urn:uor:data:ion:${hex}`,
+    fidelity: "lossless",
+    spec: "https://amazon-ion.github.io/ion-docs/docs/spec.html",
+  }],
+
+  // ── Smile — Binary JSON (Jackson) ──────────────────────────────────────
+  // Smile is a binary JSON encoding from Jackson (Java). Used in
+  // Elasticsearch internal transport, Solr, and Java microservices.
+  // Provides 1:1 mapping to JSON with smaller size and faster parsing.
+  //
+  //   Format: urn:uor:data:smile:{hex} (SHA-256 of Smile binary)
+  //   Canonical: Smile → sorted keys → canonical bytes → SHA-256
+  //   Cross-projection: smile + bson → binary JSON variant bridge
+
+  ["smile", {
+    project: ({ hex }) => `urn:uor:data:smile:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/FasterXML/smile-format-specification",
+  }],
+
+  // ── UBJSON — Universal Binary JSON ─────────────────────────────────────
+  // UBJSON provides 1:1 compatibility with JSON using binary encoding.
+  // Used for embedded systems and IoT where JSON parsing overhead is
+  // prohibitive but JSON compatibility is required.
+  //
+  //   Format: urn:uor:data:ubjson:{hex} (SHA-256 of UBJSON binary)
+  //   Canonical: UBJSON → sorted keys → canonical bytes → SHA-256
+
+  ["ubjson", {
+    project: ({ hex }) => `urn:uor:data:ubjson:${hex}`,
+    fidelity: "lossless",
+    spec: "https://ubjson.org/",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 24 — DATA FORMATS: DOCUMENT & RICH TEXT
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── PDF — Portable Document Format ─────────────────────────────────────
+  // PDF (ISO 32000-2:2020) is the universal document format. 2.5 trillion
+  // PDF documents exist worldwide. PDF/A (ISO 19005) is the archival
+  // variant used for legal, government, and scientific records. PDF
+  // contains structured content streams, fonts, images, and metadata.
+  //
+  // Content-addressing PDF creates permanent identities for documents —
+  // contracts, papers, invoices, and regulations become tamper-evident.
+  //
+  //   Format: urn:uor:data:pdf:{hex} (SHA-256 of PDF file bytes)
+  //   Canonical: PDF → raw bytes → SHA-256
+  //   Cross-projection: pdf + c2pa → document provenance
+  //                     pdf + latex → source↔rendered document bridge
+
+  ["pdf", {
+    project: ({ hex }) => `urn:uor:data:pdf:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/75839.html",
+  }],
+
+  // ── OOXML — Office Open XML ────────────────────────────────────────────
+  // OOXML (ISO/IEC 29500) is the format behind .docx, .xlsx, .pptx.
+  // Used by Microsoft Office, Google Docs (export), and LibreOffice.
+  // OOXML files are ZIP archives containing XML parts with relationships.
+  //
+  //   Format: urn:uor:data:ooxml:{hex} (SHA-256 of canonical OOXML parts)
+  //   Canonical: ZIP → sorted XML parts → canonical XML → SHA-256
+  //   Cross-projection: ooxml + odf → Microsoft↔LibreOffice bridge
+  //                     ooxml + pdf → editable↔archival document bridge
+
+  ["ooxml", {
+    project: ({ hex }) => `urn:uor:data:ooxml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/71691.html",
+  }],
+
+  // ── ODF — Open Document Format ─────────────────────────────────────────
+  // ODF (ISO/IEC 26300) is the open standard for office documents (.odt,
+  // .ods, .odp). Default format for LibreOffice. ODF files are ZIP
+  // archives containing XML content and styles.
+  //
+  //   Format: urn:uor:data:odf:{hex} (SHA-256 of canonical ODF parts)
+  //   Canonical: ZIP → sorted XML parts → canonical XML → SHA-256
+  //   Cross-projection: odf + ooxml → open↔proprietary office bridge
+
+  ["odf", {
+    project: ({ hex }) => `urn:uor:data:odf:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/66363.html",
+  }],
+
+  // ── EPUB — Electronic Publication ──────────────────────────────────────
+  // EPUB (ISO/IEC TS 22424) is the standard for reflowable e-books.
+  // Used by Apple Books, Kobo, Google Play Books, and Kindle (via
+  // conversion). EPUB 3.3 supports XHTML5, CSS, SVG, MathML, and
+  // media overlays. An EPUB is a ZIP container with OPF metadata.
+  //
+  //   Format: urn:uor:data:epub:{hex} (SHA-256 of canonical EPUB)
+  //   Canonical: ZIP → sorted content documents → canonical XHTML → SHA-256
+  //   Cross-projection: epub + pdf → reflowable↔fixed layout bridge
+  //                     epub + markdown → e-book↔source text bridge
+
+  ["epub", {
+    project: ({ hex }) => `urn:uor:data:epub:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/epub-33/",
+  }],
+
+  // ── RTF — Rich Text Format ─────────────────────────────────────────────
+  // RTF is Microsoft's legacy rich text interchange format. Still widely
+  // used for clipboard interchange, email composition, and legal
+  // documents. Deterministic text-based format with control words.
+  //
+  //   Format: urn:uor:data:rtf:{hex} (SHA-256 of RTF file)
+  //   Canonical: RTF → normalized control words → SHA-256
+
+  ["rtf", {
+    project: ({ hex }) => `urn:uor:data:rtf:${hex}`,
+    fidelity: "lossless",
+    spec: "https://interoperability.blob.core.windows.net/files/Archive_References/[MSFT-RTF].pdf",
+  }],
+
+  // ── DocBook — Technical Documentation XML ──────────────────────────────
+  // DocBook is the XML vocabulary for technical documentation. Used by
+  // Linux kernel docs, FreeBSD handbook, GNOME/KDE documentation, and
+  // O'Reilly publications. DocBook 5.1 uses RELAX NG schemas.
+  //
+  //   Format: urn:uor:data:docbook:{hex} (SHA-256 of canonical DocBook XML)
+  //   Canonical: DocBook XML → C14N → SHA-256
+  //   Cross-projection: docbook + latex → technical doc↔typesetting bridge
+  //                     docbook + markdown → structured↔lightweight markup
+
+  ["docbook", {
+    project: ({ hex }) => `urn:uor:data:docbook:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docbook.org/specs/docbook-v5.1-os.html",
+  }],
+
+  // ── DITA — Darwin Information Typing Architecture ──────────────────────
+  // DITA (OASIS) is the XML standard for topic-based technical authoring.
+  // Used by IBM, Microsoft, SAP, Cisco, and enterprise documentation
+  // teams. DITA maps organize topics into publications. Specialization
+  // enables domain-specific extensions.
+  //
+  //   Format: urn:uor:data:dita:{hex} (SHA-256 of canonical DITA map + topics)
+  //   Canonical: DITA map → resolved topicrefs → C14N → SHA-256
+  //   Cross-projection: dita + docbook → topic↔book documentation bridge
+
+  ["dita", {
+    project: ({ hex }) => `urn:uor:data:dita:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.oasis-open.org/dita/dita/v1.3/dita-v1.3-part0-overview.html",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 25 — DATA FORMATS: GEOSPATIAL & MAPPING
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Shapefile — Esri Vector Data ───────────────────────────────────────
+  // Shapefile (Esri) is the most widely used geospatial vector format.
+  // Contains geometry (.shp), attributes (.dbf), and index (.shx).
+  // Despite being proprietary, it's the de facto standard for GIS data
+  // exchange — every GIS system reads/writes shapefiles.
+  //
+  //   Format: urn:uor:data:shapefile:{hex} (SHA-256 of canonical shapefile set)
+  //   Canonical: .shp + .dbf + .shx → sorted records → SHA-256
+  //   Cross-projection: shapefile + geojson → Esri↔web geospatial bridge
+
+  ["shapefile", {
+    project: ({ hex }) => `urn:uor:data:shapefile:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.esri.com/content/dam/esrisites/sitecore-archive/Files/Pdfs/library/whitepapers/pdfs/shapefile.pdf",
+  }],
+
+  // ── GeoPackage — OGC Geospatial Container ──────────────────────────────
+  // GeoPackage (OGC) is the SQLite-based container for geospatial vector
+  // and raster data. Replaces shapefile with support for multiple layers,
+  // coordinate systems, and metadata — all in a single portable file.
+  //
+  //   Format: urn:uor:data:geopackage:{hex} (SHA-256 of GeoPackage file)
+  //   Canonical: SQLite → sorted tables → SHA-256
+  //   Cross-projection: geopackage + geojson → OGC↔web geospatial bridge
+  //                     geopackage + shapefile → modern↔legacy GIS bridge
+
+  ["geopackage", {
+    project: ({ hex }) => `urn:uor:data:geopackage:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.geopackage.org/spec131/",
+  }],
+
+  // ── KML — Keyhole Markup Language ──────────────────────────────────────
+  // KML (OGC, originally Google) is the XML format for geographic
+  // visualization. Used by Google Earth, Google Maps, and geospatial
+  // web applications. KML defines placemarks, polygons, overlays,
+  // network links, and 3D models.
+  //
+  //   Format: urn:uor:data:kml:{hex} (SHA-256 of canonical KML)
+  //   Canonical: KML XML → C14N → SHA-256
+  //   Cross-projection: kml + geojson → Google Earth↔web mapping bridge
+
+  ["kml", {
+    project: ({ hex }) => `urn:uor:data:kml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.ogc.org/standard/kml/",
+  }],
+
+  // ── GeoTIFF — Georeferenced Raster ─────────────────────────────────────
+  // GeoTIFF embeds geographic metadata (coordinate system, projection,
+  // tie points) in standard TIFF images. Used for satellite imagery,
+  // aerial photography, elevation models (DEM), and land cover maps.
+  // Cloud-Optimized GeoTIFF (COG) enables efficient HTTP range requests.
+  //
+  //   Format: urn:uor:data:geotiff:{hex} (SHA-256 of GeoTIFF file)
+  //   Canonical: GeoTIFF → raw bytes → SHA-256
+  //   Cross-projection: geotiff + netcdf → raster↔scientific data bridge
+
+  ["geotiff", {
+    project: ({ hex }) => `urn:uor:data:geotiff:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.ogc.org/standard/geotiff/",
+  }],
+
+  // ── WKT/WKB — Well-Known Text/Binary ───────────────────────────────────
+  // WKT (ISO 13249 SQL/MM) and WKB are the standard text and binary
+  // representations for geometry objects — used by PostGIS, MySQL Spatial,
+  // SQL Server, and every spatial database. WKB is the wire format for
+  // geometry exchange between databases and applications.
+  //
+  //   Format: urn:uor:data:wkt:{hex} (SHA-256 of canonical WKT/WKB)
+  //   Canonical: geometry → WKB canonical form → SHA-256
+  //   Cross-projection: wkt + geojson → database↔web geometry bridge
+
+  ["wkt", {
+    project: ({ hex }) => `urn:uor:data:wkt:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/60343.html",
+  }],
+
+  // ── MVT — Mapbox Vector Tiles ──────────────────────────────────────────
+  // MVT (Mapbox Vector Tile, OGC Community Standard) is the protobuf-
+  // encoded format for serving vector map data as tiles. Used by Mapbox,
+  // MapLibre, OpenMapTiles, and every modern web mapping platform.
+  //
+  //   Format: urn:uor:data:mvt:{hex} (SHA-256 of MVT protobuf)
+  //   Canonical: MVT → protobuf binary → SHA-256
+  //   Cross-projection: mvt + geojson → tiled↔full-resolution vector bridge
+  //                     mvt + protobuf → map tiles↔serialization bridge
+
+  ["mvt", {
+    project: ({ hex }) => `urn:uor:data:mvt:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/mapbox/vector-tile-spec",
+  }],
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TIER 26 — DATA FORMATS: SEMANTIC & KNOWLEDGE GRAPHS
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── N-Triples / N-Quads — RDF Serialization ────────────────────────────
+  // N-Triples (W3C) is the line-based RDF serialization — one triple per
+  // line, unambiguous, streamable. N-Quads extends with named graphs.
+  // Used as the canonical serialization for URDNA2015 (RDF Dataset
+  // Normalization) — the very algorithm UOR itself uses for identity.
+  //
+  //   Format: urn:uor:data:nquads:{hex} (SHA-256 of canonical N-Quads)
+  //   Canonical: N-Quads → sort lines → SHA-256
+  //   Cross-projection: nquads + jsonld → RDF line↔JSON-LD bridge
+
+  ["nquads", {
+    project: ({ hex }) => `urn:uor:data:nquads:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/n-quads/",
+  }],
+
+  // ── Turtle — Terse RDF Triple Language ─────────────────────────────────
+  // Turtle (W3C) is the human-friendly RDF serialization with prefix
+  // declarations, blank nodes, and collections. Most common format for
+  // hand-authored ontologies and SHACL shapes.
+  //
+  //   Format: urn:uor:data:turtle:{hex} (SHA-256 of canonical Turtle)
+  //   Canonical: Turtle → expand prefixes → N-Quads → sort → SHA-256
+  //   Cross-projection: turtle + nquads → compact↔canonical RDF bridge
+
+  ["turtle", {
+    project: ({ hex }) => `urn:uor:data:turtle:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/turtle/",
+  }],
+
+  // ── TriG — Named Graph Serialization ───────────────────────────────────
+  // TriG (W3C) extends Turtle with named graph syntax for serializing
+  // RDF datasets. Used for provenance tracking, access control, and
+  // multi-source knowledge graphs.
+  //
+  //   Format: urn:uor:data:trig:{hex} (SHA-256 of canonical TriG)
+  //   Canonical: TriG → expand → N-Quads → sort → SHA-256
+  //   Cross-projection: trig + turtle → dataset↔graph RDF bridge
+
+  ["trig", {
+    project: ({ hex }) => `urn:uor:data:trig:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/trig/",
+  }],
+
+  // ── RDF/XML — Original RDF Serialization ───────────────────────────────
+  // RDF/XML (W3C) was the original RDF serialization format. Still used
+  // by legacy systems, OWL ontologies, and Dublin Core metadata. While
+  // verbose, it's the most widely deployed RDF format in existing systems.
+  //
+  //   Format: urn:uor:data:rdfxml:{hex} (SHA-256 of canonical RDF/XML)
+  //   Canonical: RDF/XML → parse → N-Quads → sort → SHA-256
+  //   Cross-projection: rdfxml + turtle → verbose↔compact RDF bridge
+
+  ["rdfxml", {
+    project: ({ hex }) => `urn:uor:data:rdfxml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/rdf-syntax-grammar/",
+  }],
+
+  // ── SHACL — Shapes Constraint Language ─────────────────────────────────
+  // SHACL (W3C) defines shapes for validating RDF graphs — constraints
+  // on node types, property paths, cardinality, value ranges, and
+  // patterns. Used for data quality enforcement in knowledge graphs.
+  //
+  //   Format: urn:uor:data:shacl:{hex} (SHA-256 of canonical SHACL shapes)
+  //   Canonical: SHACL Turtle → N-Quads → URDNA2015 → SHA-256
+  //   Cross-projection: shacl + json-schema → RDF↔JSON validation bridge
+
+  ["shacl", {
+    project: ({ hex }) => `urn:uor:data:shacl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/shacl/",
+  }],
+
+  // ── OWL — Web Ontology Language ────────────────────────────────────────
+  // OWL 2 (W3C, ISO/IEC 23765:2022) defines formal ontologies with
+  // classes, properties, individuals, and axioms. Three profiles (EL, QL,
+  // RL) trade expressivity for computational tractability. Powers
+  // biomedical ontologies (SNOMED CT, Gene Ontology), enterprise
+  // knowledge graphs, and semantic web reasoning.
+  //
+  //   Format: urn:uor:data:owl:{hex} (SHA-256 of canonical OWL ontology)
+  //   Canonical: OWL → functional syntax → N-Quads → URDNA2015 → SHA-256
+  //   Cross-projection: owl + shacl → ontology↔validation bridge
+  //                     owl + json-schema → semantic↔structural schema bridge
+
+  ["owl", {
+    project: ({ hex }) => `urn:uor:data:owl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/owl2-overview/",
+  }],
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TIER 27 — DATA FORMATS: MEDIA & IMAGE FORMATS
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── JPEG — Joint Photographic Experts Group ────────────────────────────
+  // JPEG (ISO/IEC 10918) is the most widely used lossy image format.
+  // Content-addressing JPEG files (by raw bytes, not pixel content)
+  // creates permanent identities for specific encoded images.
+  //
+  //   Format: urn:uor:data:jpeg:{hex} (SHA-256 of JPEG file bytes)
+  //   Canonical: JPEG → raw bytes → SHA-256
+  //   Cross-projection: jpeg + c2pa → image provenance identity
+
+  ["jpeg", {
+    project: ({ hex }) => `urn:uor:data:jpeg:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/18902.html",
+  }],
+
+  // ── PNG — Portable Network Graphics ────────────────────────────────────
+  // PNG (ISO/IEC 15948, W3C) is the lossless compressed raster format.
+  // Used for web graphics, screenshots, UI assets, and scientific
+  // visualization. PNG chunks contain metadata, color profiles, and text.
+  //
+  //   Format: urn:uor:data:png:{hex} (SHA-256 of PNG file bytes)
+  //   Canonical: PNG → raw bytes → SHA-256
+  //   Cross-projection: png + c2pa → lossless image provenance
+
+  ["png", {
+    project: ({ hex }) => `urn:uor:data:png:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/png-3/",
+  }],
+
+  // ── WebP — Modern Web Image Format ─────────────────────────────────────
+  // WebP (Google) supports both lossy and lossless compression, alpha
+  // transparency, and animation. Smaller than JPEG/PNG at equivalent
+  // quality. Supported by all modern browsers.
+  //
+  //   Format: urn:uor:data:webp:{hex} (SHA-256 of WebP file bytes)
+  //   Canonical: WebP → raw bytes → SHA-256
+
+  ["webp", {
+    project: ({ hex }) => `urn:uor:data:webp:${hex}`,
+    fidelity: "lossless",
+    spec: "https://developers.google.com/speed/webp/docs/riff_container",
+  }],
+
+  // ── AVIF — AV1 Image File Format ───────────────────────────────────────
+  // AVIF uses AV1 video codec for still images — superior compression
+  // to JPEG and WebP. Supports HDR, wide color gamut, and film grain
+  // synthesis. Adopted by Netflix, Google, and Apple.
+  //
+  //   Format: urn:uor:data:avif:{hex} (SHA-256 of AVIF file bytes)
+  //   Canonical: AVIF → raw bytes → SHA-256
+
+  ["avif", {
+    project: ({ hex }) => `urn:uor:data:avif:${hex}`,
+    fidelity: "lossless",
+    spec: "https://aomediacodec.github.io/av1-avif/",
+  }],
+
+  // ── TIFF — Tagged Image File Format ────────────────────────────────────
+  // TIFF is the professional imaging format for photography, scanning,
+  // printing, and medical/scientific imaging. Supports multiple pages,
+  // layers, 16/32-bit depth, and various compression methods.
+  //
+  //   Format: urn:uor:data:tiff:{hex} (SHA-256 of TIFF file bytes)
+  //   Canonical: TIFF → raw bytes → SHA-256
+  //   Cross-projection: tiff + dicom → medical imaging bridge
+  //                     tiff + geotiff → standard↔georeferenced raster
+
+  ["tiff", {
+    project: ({ hex }) => `urn:uor:data:tiff:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf",
+  }],
+
+  // ── HEIF/HEIC — High Efficiency Image Format ──────────────────────────
+  // HEIF (ISO/IEC 23008-12) uses HEVC/H.265 for image compression.
+  // Default format for Apple iPhone photos. Supports burst photos,
+  // live photos, depth maps, and HDR. HEIC is the HEVC-coded variant.
+  //
+  //   Format: urn:uor:data:heif:{hex} (SHA-256 of HEIF file bytes)
+  //   Canonical: HEIF → raw bytes → SHA-256
+
+  ["heif", {
+    project: ({ hex }) => `urn:uor:data:heif:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/83650.html",
+  }],
+
+  // ── FLAC — Free Lossless Audio Codec ───────────────────────────────────
+  // FLAC is the dominant lossless audio format. Used by Tidal, Amazon
+  // Music HD, Deezer HiFi, and audiophiles worldwide. FLAC metadata
+  // includes Vorbis comments, cue sheets, and album art.
+  //
+  //   Format: urn:uor:data:flac:{hex} (SHA-256 of FLAC file bytes)
+  //   Canonical: FLAC → raw bytes → SHA-256
+  //   Cross-projection: flac + midi → audio recording↔notation bridge
+
+  ["flac", {
+    project: ({ hex }) => `urn:uor:data:flac:${hex}`,
+    fidelity: "lossless",
+    spec: "https://xiph.org/flac/format.html",
+  }],
+
+  // ── WAV — Waveform Audio ───────────────────────────────────────────────
+  // WAV (RIFF/WAVE) is the standard uncompressed audio format. Used for
+  // professional audio production, sound effects, and archival. WAV
+  // files contain PCM samples with deterministic header structure.
+  //
+  //   Format: urn:uor:data:wav:{hex} (SHA-256 of WAV file bytes)
+  //   Canonical: WAV → raw bytes → SHA-256
+
+  ["wav", {
+    project: ({ hex }) => `urn:uor:data:wav:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html",
+  }],
+
+  // ── Ogg/Vorbis/Opus — Open Audio Containers ───────────────────────────
+  // Ogg is the open container format from Xiph.org. Opus (RFC 6716) is
+  // the state-of-the-art lossy audio codec — superior to MP3, AAC, and
+  // Vorbis at all bitrates. Used by Discord, WhatsApp, and WebRTC.
+  //
+  //   Format: urn:uor:data:ogg:{hex} (SHA-256 of Ogg container bytes)
+  //   Canonical: Ogg → raw bytes → SHA-256
+
+  ["ogg", {
+    project: ({ hex }) => `urn:uor:data:ogg:${hex}`,
+    fidelity: "lossless",
+    spec: "https://xiph.org/ogg/doc/rfc3533.txt",
+  }],
+
+  // ── MP4/ISOBMFF — ISO Base Media File Format ──────────────────────────
+  // ISOBMFF (ISO/IEC 14496-12) is the container format for MP4, MOV,
+  // 3GP, HEIF, and AVIF. Contains video (H.264/H.265/AV1), audio
+  // (AAC/Opus), subtitles, and metadata in a box-based structure.
+  //
+  //   Format: urn:uor:data:mp4:{hex} (SHA-256 of MP4 file bytes)
+  //   Canonical: MP4 → raw bytes → SHA-256
+  //   Cross-projection: mp4 + c2pa → video content provenance
+
+  ["mp4", {
+    project: ({ hex }) => `urn:uor:data:mp4:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/83102.html",
+  }],
+
+  // ── WebM — Open Web Video ─────────────────────────────────────────────
+  // WebM is the open video container format using VP8/VP9/AV1 video
+  // and Vorbis/Opus audio. Default format for YouTube, supported by
+  // all modern browsers.
+  //
+  //   Format: urn:uor:data:webm:{hex} (SHA-256 of WebM file bytes)
+  //   Canonical: WebM → raw bytes → SHA-256
+
+  ["webm", {
+    project: ({ hex }) => `urn:uor:data:webm:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.webmproject.org/docs/container/",
+  }],
+
+  // ── MKV — Matroska Container ───────────────────────────────────────────
+  // Matroska (MKV/MKA/MKS) is the universal multimedia container using
+  // EBML (Extensible Binary Meta Language). Supports unlimited tracks,
+  // chapters, tags, and attachments. Used by HandBrake, VLC, and Plex.
+  //
+  //   Format: urn:uor:data:mkv:{hex} (SHA-256 of MKV file bytes)
+  //   Canonical: MKV → raw bytes → SHA-256
+
+  ["mkv", {
+    project: ({ hex }) => `urn:uor:data:mkv:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.matroska.org/technical/elements.html",
+  }],
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TIER 28 — DATA FORMATS: 3D, FONTS & ARCHIVES
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── glTF — GL Transmission Format ──────────────────────────────────────
+  // glTF (Khronos) is the "JPEG of 3D" — the universal 3D asset format.
+  // Used by Three.js, Unity, Unreal, Blender, Sketchfab, and every
+  // major 3D platform. JSON manifest + binary buffers + textures.
+  //
+  //   Format: urn:uor:data:gltf:{hex} (SHA-256 of canonical glTF)
+  //   Canonical: glTF JSON → sorted keys → SHA-256
+  //   Cross-projection: gltf + step-cad → web 3D↔engineering CAD bridge
+
+  ["gltf", {
+    project: ({ hex }) => `urn:uor:data:gltf:${hex}`,
+    fidelity: "lossless",
+    spec: "https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html",
+  }],
+
+  // ── USD — Universal Scene Description ──────────────────────────────────
+  // USD (Pixar/Apple) is the interchange format for 3D scenes, used in
+  // film production (Pixar, ILM, Weta), Apple Vision Pro (visionOS),
+  // and NVIDIA Omniverse. Supports composition arcs, variants, and
+  // asset resolution for massive scenes.
+  //
+  //   Format: urn:uor:data:usd:{hex} (SHA-256 of canonical USD)
+  //   Canonical: USD → usda text → sorted prims → SHA-256
+  //   Cross-projection: usd + gltf → film↔web 3D bridge
+
+  ["usd", {
+    project: ({ hex }) => `urn:uor:data:usd:${hex}`,
+    fidelity: "lossless",
+    spec: "https://openusd.org/release/spec.html",
+  }],
+
+  // ── FBX — Filmbox Exchange ─────────────────────────────────────────────
+  // FBX (Autodesk) is the dominant interchange format for 3D animation
+  // and game development. Supports meshes, skeletons, blend shapes,
+  // animation curves, and materials. Used by Maya, 3ds Max, Unity,
+  // Unreal Engine, and Blender.
+  //
+  //   Format: urn:uor:data:fbx:{hex} (SHA-256 of FBX file bytes)
+  //   Canonical: FBX → binary → raw bytes → SHA-256
+  //   Cross-projection: fbx + gltf → DCC↔web 3D bridge
+
+  ["fbx", {
+    project: ({ hex }) => `urn:uor:data:fbx:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.autodesk.com/products/fbx/overview",
+  }],
+
+  // ── OBJ/MTL — Wavefront 3D ────────────────────────────────────────────
+  // OBJ is the simplest widely-used 3D mesh format — ASCII text with
+  // vertices, faces, normals, and texture coordinates. MTL defines
+  // materials. Used for 3D printing, scientific visualization, and
+  // simple asset exchange.
+  //
+  //   Format: urn:uor:data:obj:{hex} (SHA-256 of canonical OBJ + MTL)
+  //   Canonical: OBJ → sorted vertices/faces → SHA-256
+
+  ["obj", {
+    project: ({ hex }) => `urn:uor:data:obj:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  }],
+
+  // ── STL — Stereolithography ────────────────────────────────────────────
+  // STL is the universal format for 3D printing — defines triangle
+  // meshes for additive manufacturing. Every 3D printer accepts STL.
+  // Both ASCII and binary variants exist; binary is standard.
+  //
+  //   Format: urn:uor:data:stl:{hex} (SHA-256 of STL file bytes)
+  //   Canonical: STL binary → raw bytes → SHA-256
+  //   Cross-projection: stl + step-cad → 3D print↔engineering bridge
+
+  ["stl", {
+    project: ({ hex }) => `urn:uor:data:stl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.loc.gov/preservation/digital/formats/fdd/fdd000504.shtml",
+  }],
+
+  // ── 3MF — 3D Manufacturing Format ─────────────────────────────────────
+  // 3MF (3MF Consortium: Microsoft, HP, Stratasys) replaces STL for 3D
+  // printing with support for color, materials, lattices, and beam
+  // structures. XML-based ZIP package with OPC conventions.
+  //
+  //   Format: urn:uor:data:3mf:{hex} (SHA-256 of canonical 3MF)
+  //   Canonical: ZIP → sorted XML parts → C14N → SHA-256
+  //   Cross-projection: 3mf + stl → modern↔legacy 3D printing bridge
+
+  ["3mf", {
+    project: ({ hex }) => `urn:uor:data:3mf:${hex}`,
+    fidelity: "lossless",
+    spec: "https://3mf.io/specification/",
+  }],
+
+  // ── WOFF2 — Web Open Font Format ───────────────────────────────────────
+  // WOFF2 (W3C) is the compressed font format for the web. Uses Brotli
+  // compression for 30% smaller files than WOFF. Wraps OpenType/TrueType
+  // fonts for web delivery. Used by Google Fonts and every modern website.
+  //
+  //   Format: urn:uor:data:woff2:{hex} (SHA-256 of WOFF2 file bytes)
+  //   Canonical: WOFF2 → raw bytes → SHA-256
+
+  ["woff2", {
+    project: ({ hex }) => `urn:uor:data:woff2:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/WOFF2/",
+  }],
+
+  // ── OpenType/TrueType — Font Formats ───────────────────────────────────
+  // OpenType (ISO/IEC 14496-22, Microsoft/Adobe) is the universal font
+  // format. Supports CFF/CFF2 outlines, TrueType outlines, variable
+  // fonts, color fonts (COLR, SVG, CBDT), and OpenType Layout features.
+  //
+  //   Format: urn:uor:data:opentype:{hex} (SHA-256 of font file bytes)
+  //   Canonical: OTF/TTF → raw bytes → SHA-256
+  //   Cross-projection: opentype + woff2 → desktop↔web font bridge
+
+  ["opentype", {
+    project: ({ hex }) => `urn:uor:data:opentype:${hex}`,
+    fidelity: "lossless",
+    spec: "https://learn.microsoft.com/en-us/typography/opentype/spec/",
+  }],
+
+  // ── ZIP — Archive Container ────────────────────────────────────────────
+  // ZIP (ISO/IEC 21320-1) is the most widely used archive format. Used
+  // as container for OOXML, ODF, EPUB, JAR, APK, IPA, and many more.
+  // ZIP's central directory provides deterministic file listing.
+  //
+  //   Format: urn:uor:data:zip:{hex} (SHA-256 of ZIP file bytes)
+  //   Canonical: ZIP → raw bytes → SHA-256
+
+  ["zip", {
+    project: ({ hex }) => `urn:uor:data:zip:${hex}`,
+    fidelity: "lossless",
+    spec: "https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT",
+  }],
+
+  // ── tar — Tape Archive ────────────────────────────────────────────────
+  // tar is the UNIX standard for combining files into a single stream.
+  // Foundation for distribution (.tar.gz, .tar.xz, .tar.zst). Used by
+  // every Linux distribution, container images (OCI layers), and
+  // software distribution.
+  //
+  //   Format: urn:uor:data:tar:{hex} (SHA-256 of tar archive bytes)
+  //   Canonical: tar → raw bytes → SHA-256
+  //   Cross-projection: tar + oci → container layer identity
+
+  ["tar", {
+    project: ({ hex }) => `urn:uor:data:tar:${hex}`,
+    fidelity: "lossless",
+    spec: "https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html",
+  }],
+
+  // ── SQLite — Embedded Database Format ──────────────────────────────────
+  // SQLite is the most deployed database engine in the world — embedded
+  // in every smartphone, browser, and operating system. The file format
+  // is a stable, cross-platform, backward-compatible binary.
+  // Recommended by the Library of Congress for archival storage.
+  //
+  //   Format: urn:uor:data:sqlite:{hex} (SHA-256 of SQLite database file)
+  //   Canonical: SQLite → raw bytes → SHA-256
+  //   Cross-projection: sqlite + geopackage → engine↔geospatial bridge
+  //                     sqlite + sql → embedded↔server database bridge
+
+  ["sqlite", {
+    project: ({ hex }) => `urn:uor:data:sqlite:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.sqlite.org/fileformat2.html",
+  }],
+
+  // ── Zarr — Chunked Array Storage ───────────────────────────────────────
+  // Zarr is the chunked, compressed array storage format for large
+  // multi-dimensional datasets. Used in climate science, genomics,
+  // microscopy, and satellite imagery. Zarr v3 supports cloud-native
+  // storage backends (S3, GCS, Azure).
+  //
+  //   Format: urn:uor:data:zarr:{hex} (SHA-256 of Zarr metadata + chunks)
+  //   Canonical: .zarray + .zattrs → sorted keys → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: zarr + netcdf → cloud-native↔legacy scientific data
+  //                     zarr + hdf5 → chunked↔hierarchical array bridge
+
+  ["zarr", {
+    project: ({ hex }) => `urn:uor:data:zarr:${hex}`,
+    fidelity: "lossless",
+    spec: "https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html",
+  }],
+
+  // ── NDJSON — Newline Delimited JSON ────────────────────────────────────
+  // NDJSON (JSON Lines) is the standard for streaming JSON records —
+  // one JSON object per line. Used by Elasticsearch bulk API, BigQuery
+  // exports, log aggregation (Datadog, Splunk), and data pipelines.
+  //
+  //   Format: urn:uor:data:ndjson:{hex} (SHA-256 of canonical NDJSON)
+  //   Canonical: NDJSON → sorted keys per line → SHA-256
+  //   Cross-projection: ndjson + csv → streaming↔tabular bridge
+  //                     ndjson + parquet → streaming↔columnar bridge
+
+  ["ndjson", {
+    project: ({ hex }) => `urn:uor:data:ndjson:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/ndjson/ndjson-spec",
+  }],
+
+  // ── MessagePack Ext — Binary Extensions ────────────────────────────────
+  // While base MessagePack is already registered (msgpack), this covers
+  // the extension type system used by Redis serialization (RESP3),
+  // Fluentd event streams, and embedded systems. Ext types enable
+  // custom binary encodings within MessagePack containers.
+  //
+  // (Note: base msgpack already registered in Tier 10c)
+
+  // ── Bencode — BitTorrent Encoding ──────────────────────────────────────
+  // Bencode is the encoding used by BitTorrent for .torrent files and
+  // DHT messages. Deterministic by specification — integers, strings,
+  // lists, and dictionaries with sorted keys. Used by all BitTorrent
+  // clients and the Mainline DHT.
+  //
+  //   Format: urn:uor:data:bencode:{hex} (SHA-256 of bencoded data)
+  //   Canonical: bencode → already deterministic → SHA-256
+
+  ["bencode", {
+    project: ({ hex }) => `urn:uor:data:bencode:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.bittorrent.org/beps/bep_0003.html",
+  }],
+
+  // ── Pickle — Python Serialization ──────────────────────────────────────
+  // Pickle is Python's native object serialization protocol. While not
+  // deterministic by default, Protocol 5 (PEP 574) with out-of-band
+  // buffers provides stable serialization for NumPy arrays and ML
+  // model weights. Used by PyTorch, scikit-learn, and joblib.
+  //
+  //   Format: urn:uor:data:pickle:{hex} (SHA-256 of pickle bytes)
+  //   Canonical: pickle → raw bytes → SHA-256
+  //   Cross-projection: pickle + onnx → Python ML↔portable model bridge
+
+  ["pickle", {
+    project: ({ hex }) => `urn:uor:data:pickle:${hex}`,
+    fidelity: "lossy",
+    spec: "https://docs.python.org/3/library/pickle.html",
+  }],
+
+  // ── Safetensors — ML Model Weights ─────────────────────────────────────
+  // Safetensors (Hugging Face) is the safe, fast tensor serialization
+  // format replacing pickle for ML model weights. Zero-copy deserialization,
+  // no arbitrary code execution, deterministic format. Used by Hugging
+  // Face Hub, Stable Diffusion, and LLM distributions.
+  //
+  //   Format: urn:uor:data:safetensors:{hex} (SHA-256 of safetensors file)
+  //   Canonical: safetensors → raw bytes → SHA-256
+  //   Cross-projection: safetensors + onnx → weights↔inference model bridge
+
+  ["safetensors", {
+    project: ({ hex }) => `urn:uor:data:safetensors:${hex}`,
+    fidelity: "lossless",
+    spec: "https://huggingface.co/docs/safetensors/index",
+  }],
+
+  // ── GGUF — GPT-Generated Unified Format ───────────────────────────────
+  // GGUF (llama.cpp) is the quantized model format for local LLM inference.
+  // Contains model architecture, tokenizer, and quantized weights in a
+  // single file. Used by llama.cpp, Ollama, LM Studio, and GPT4All.
+  //
+  //   Format: urn:uor:data:gguf:{hex} (SHA-256 of GGUF file bytes)
+  //   Canonical: GGUF → raw bytes → SHA-256
+  //   Cross-projection: gguf + safetensors → quantized↔full precision bridge
+
+  ["gguf", {
+    project: ({ hex }) => `urn:uor:data:gguf:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/ggerganov/ggml/blob/master/docs/gguf.md",
+  }],
 ]);
