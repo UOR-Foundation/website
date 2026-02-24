@@ -41,7 +41,7 @@ const DashboardPage = lazy(() => import("@/modules/dashboard/pages/DashboardPage
 const SessionsPage = lazy(() => import("@/modules/state/pages/SessionsPage"));
 const VerifyPage = lazy(() => import("@/modules/verify/pages/VerifyPage"));
 const EpistemicPage = lazy(() => import("@/modules/epistemic/pages/EpistemicPage"));
-const CertificatesPage = lazy(() => import("@/modules/certificates/pages/CertificatesPage"));
+const CertificatesPage = lazy(() => import("@/modules/certificate/pages/CertificatesPage"));
 const SparqlPage = lazy(() => import("@/modules/sparql-ui/pages/SparqlPage"));
 const ToolRegistryPage = lazy(() => import("@/modules/agent-tools/pages/ToolRegistryPage"));
 const PrismPipelinePage = lazy(() => import("@/modules/projects/pages/PrismPipelinePage"));

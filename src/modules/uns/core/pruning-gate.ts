@@ -69,7 +69,7 @@ export interface PruningReport {
 
 const KNOWN_MODULES = [
   "agent-tools", "api-explorer", "bitcoin", "bulk-pin", "certificate",
-  "certificates", "code-kg", "community", "consciousness", "console",
+  "code-kg", "community", "consciousness", "console",
   "core", "dashboard", "datum", "derivation", "developers", "donate",
   "epistemic", "framework", "hologram-ui", "identity", "interoperability",
   "jsonld", "kg-store", "landing", "mcp", "morphism", "observable",
@@ -83,7 +83,7 @@ const KNOWN_MODULES = [
 // Modules that could potentially be consolidated
 const CONSOLIDATION_CANDIDATES: readonly [string, string, string][] = [
   ["sparql", "sparql-ui", "Both handle SPARQL — merge UI into single module"],
-  ["certificate", "certificates", "Naming collision — consolidate into one"],
+  
   ["identity", "uor-identity", "Both handle identity — merge or clarify boundary"],
   ["verify", "self-verify", "Both handle verification — consolidate"],
   ["query", "sparql", "Query is generic; SPARQL is specific — merge into sparql"],
