@@ -55,7 +55,7 @@ export interface IngestResult {
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co`;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const SERVE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/serve-app`;
 
