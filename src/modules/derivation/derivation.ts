@@ -97,15 +97,8 @@ function evaluateTerm(t: Term, ring: UORRing): number {
   throw new Error(`Unexpected term kind`);
 }
 
-// ── SHA-256 hex helper (SubtleCrypto) ───────────────────────────────────────
-
-async function sha256hex(input: string): Promise<string> {
-  const bytes = new TextEncoder().encode(input);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+// SHA-256 — canonical single implementation
+import { sha256hex } from "@/lib/crypto";
 
 // ── derive ──────────────────────────────────────────────────────────────────
 
