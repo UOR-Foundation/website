@@ -130,3 +130,13 @@ function resolve(spec: HologramSpec, input: ProjectionInput): HologramProjection
     ...(spec.lossWarning ? { lossWarning: spec.lossWarning } : {}),
   };
 }
+
+// ── Unified Projection (Identity + Coherence merged) ───────────────────────
+// Re-export the unified API — the canonical way to project with coherence.
+
+export { unifiedProject, assessByteCoherence } from "./unified";
+export type {
+  UnifiedHologram,
+  UnifiedProjectionResult,
+  ProjectionCoherence,
+} from "./unified";
