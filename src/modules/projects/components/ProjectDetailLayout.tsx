@@ -89,8 +89,7 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
 
   const handleOpen = useCallback((o: boolean) => {
     setOpen(o);
-    if (o && status === "idle") runVerification();
-  }, [status, runVerification]);
+  }, []);
 
   return (
     <div className="mt-5 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
@@ -103,152 +102,88 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
       </button>
 
       <Dialog open={open} onOpenChange={handleOpen}>
-        <DialogContent className="max-w-lg p-0 overflow-hidden">
-          {/* Receipt header */}
-          <div className="border-b border-dashed border-border px-8 pt-8 pb-7 text-center">
-            <p className="text-sm uppercase tracking-[0.25em] text-foreground/60 font-semibold">
+        <DialogContent className="max-w-md p-0 overflow-hidden">
+          {/* Header */}
+          <div className="border-b border-dashed border-border px-6 pt-6 pb-5 text-center">
+            <p className="text-xs uppercase tracking-[0.25em] text-foreground/50 font-semibold">
               Receipt of Authenticity
             </p>
-            <p className="mt-3 text-4xl font-bold tracking-wide text-foreground">
-              {displayTriword}
-            </p>
-            <p className="mt-2 text-lg text-foreground/60">{name}</p>
+            <p className="mt-2 text-lg font-semibold text-foreground">{name}</p>
           </div>
 
-          <div className="px-8 py-7 space-y-6">
-            <p className="text-lg text-foreground/80 leading-relaxed">
-              Identity derived from content. Verified by mathematics.
-            </p>
-
-            <div className="border-t border-dashed border-border" />
-
+          <div className="px-6 py-5 space-y-4">
+            {/* Coordinates */}
             {breakdown && (
-              <div className="space-y-3">
-                <p className="text-sm uppercase tracking-widest text-foreground/60 font-semibold">Coordinates</p>
-                <div className="grid grid-cols-3 gap-3">
-                  {([
-                    { key: "observer" as const, label: "Entity" },
-                    { key: "observable" as const, label: "Property" },
-                    { key: "context" as const, label: "Frame" },
-                  ]).map(({ key, label }) => (
-                    <div key={key} className="rounded-lg border border-border bg-card p-4 text-center">
-                      <p className="text-sm text-foreground/60">{label}</p>
-                      <p className="text-xl font-bold capitalize text-foreground mt-1">{breakdown[key]}</p>
-                    </div>
-                  ))}
-                </div>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { key: "observer" as const, label: "Entity" },
+                  { key: "observable" as const, label: "Property" },
+                  { key: "context" as const, label: "Frame" },
+                ]).map(({ key, label }) => (
+                  <div key={key} className="rounded-lg border border-border bg-card px-3 py-2.5 text-center">
+                    <p className="text-xs text-foreground/50">{label}</p>
+                    <p className="text-base font-bold capitalize text-foreground mt-0.5">{breakdown[key]}</p>
+                  </div>
+                ))}
               </div>
             )}
 
-            <div className="border-t border-dashed border-border" />
-
-            <div className="space-y-2">
-              <p className="text-sm uppercase tracking-widest text-foreground/60 font-semibold">Fingerprint</p>
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3.5">
-                <code className="flex-1 font-mono text-sm break-all text-foreground/90 leading-relaxed">{cid}</code>
-                <button onClick={() => copyValue(cid)} className="shrink-0 text-foreground/50 hover:text-foreground transition-colors">
-                  {copied ? <Check size={15} className="text-primary" /> : <Copy size={15} />}
+            {/* Unique ID */}
+            <div>
+              <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold mb-1.5">Unique Identifier</p>
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+                <code className="flex-1 font-mono text-xs break-all text-foreground/80 leading-relaxed">{cid}</code>
+                <button onClick={() => copyValue(cid)} className="shrink-0 text-foreground/40 hover:text-foreground transition-colors">
+                  {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} />}
                 </button>
               </div>
             </div>
 
-            <div className="border-t border-dashed border-border" />
-
-            <div className="space-y-3">
-              {status === "verifying" && (
-                <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-4">
-                  <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                  <div>
-                    <span className="text-base text-foreground/70">Re-deriving from source…</span>
-                    <p className="text-xs text-foreground/50 mt-0.5">Object → URDNA2015 → SHA-256 → CID</p>
-                  </div>
+            {/* Verification — compact */}
+            {status === "verifying" && (
+              <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-3">
+                <div className="h-3.5 w-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <span className="text-sm text-foreground/60">Checking authenticity…</span>
+              </div>
+            )}
+            {status === "verified" && verifyResult && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3.5">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={18} className="text-primary" />
+                  <span className="text-base font-semibold text-primary">Authentic</span>
                 </div>
-              )}
-              {status === "verified" && verifyResult && (
-                <div className="rounded-lg border border-primary/30 bg-primary/5 px-5 py-5 space-y-4">
-                  <div className="flex items-center gap-2.5">
-                    <ShieldCheck size={22} className="text-primary" />
-                    <span className="text-xl font-bold text-primary">Authentic</span>
-                  </div>
-                  <p className="text-base text-foreground/70 leading-relaxed">
-                    Full re-derivation complete. Source object re-canonicalized via URDNA2015, re-hashed with SHA-256.
-                    Recomputed fingerprint matches the stored CID. Content is untampered.
-                  </p>
-                  {/* Boundary + Byte-level comparison details */}
-                  <div className="rounded-md border border-border bg-muted/30 p-4 space-y-3">
-                    <p className="text-sm font-semibold text-foreground/60 uppercase tracking-widest">Object Boundary</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm font-mono">
-                      <span className="text-foreground/50">Type:</span>
-                      <span className="text-foreground/80">{verifyResult.recomputedBoundary.declaredType}</span>
-                      <span className="text-foreground/50">Fields:</span>
-                      <span className="text-foreground/80">{verifyResult.recomputedBoundary.topLevelFields} top / {verifyResult.recomputedBoundary.totalFields} total</span>
-                      <span className="text-foreground/50">Depth:</span>
-                      <span className="text-foreground/80">{verifyResult.recomputedBoundary.maxDepthObserved} / {verifyResult.recomputedBoundary.maxDepthAllowed} max</span>
-                      <span className="text-foreground/50">Boundary match:</span>
-                      <span className={verifyResult.boundaryMatch ? "text-primary" : "text-destructive"}>
-                        {verifyResult.boundaryMatch ? "✓ Exact" : "✗ Shifted"}
-                      </span>
-                      {verifyResult.recomputedBoundary.strippedFields.length > 0 && (
-                        <>
-                          <span className="text-foreground/50">Stripped:</span>
-                          <span className="text-foreground/80">{verifyResult.recomputedBoundary.strippedFields.length} fields</span>
-                        </>
-                      )}
-                    </div>
+                <p className="text-sm text-foreground/60 mt-1.5 leading-relaxed">
+                  This content has been independently re-checked and confirmed untampered.
+                </p>
+                <p className="text-xs text-foreground/40 mt-2 font-mono">
+                  {(() => { const d = new Date(verifyResult.verifiedAt); return d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) + "." + String(d.getMilliseconds()).padStart(3, "0"); })()} · {verifyResult.elapsedMs}ms
+                </p>
+              </div>
+            )}
+            {status === "failed" && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3.5">
+                <span className="text-base font-semibold text-destructive">Could not confirm</span>
+                <p className="text-sm text-foreground/60 mt-1">
+                  {verifyResult?.summary || "The content may have been changed since this receipt was issued."}
+                </p>
+              </div>
+            )}
 
-                    <div className="border-t border-border/50 my-1" />
-
-                    <p className="text-sm font-semibold text-foreground/60 uppercase tracking-widest">Byte-Level Comparison</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm font-mono">
-                      <span className="text-foreground/50">Payload bytes:</span>
-                      <span className="text-foreground/80">{verifyResult.recomputedByteLength} B</span>
-                      <span className="text-foreground/50">Payload match:</span>
-                      <span className={verifyResult.payloadMatch ? "text-primary" : "text-destructive"}>
-                        {verifyResult.payloadMatch ? "✓ Exact" : "✗ Mismatch"}
-                      </span>
-                      <span className="text-foreground/50">CID match:</span>
-                      <span className={verifyResult.authentic ? "text-primary" : "text-destructive"}>
-                        {verifyResult.authentic ? "✓ Exact" : "✗ Mismatch"}
-                      </span>
-                      <span className="text-foreground/50">SHA-256:</span>
-                      <span className="text-foreground/80 break-all">{verifyResult.recomputedHashHex.slice(0, 16)}…</span>
-                    </div>
-                  </div>
-                  <p className="text-sm text-foreground/60 font-mono">
-                    Verified in {verifyResult.elapsedMs}ms · {(() => { const d = new Date(verifyResult.verifiedAt); return d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) + "." + String(d.getMilliseconds()).padStart(3, "0"); })()}
-                  </p>
-                </div>
-              )}
-              {status === "failed" && (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-4">
-                  <span className="text-lg font-bold text-destructive">⚠ Verification Failed</span>
-                  <p className="text-sm text-foreground/70 mt-1">
-                    {verifyResult?.summary || "Content may have been modified. Even a single bit change produces a different CID."}
-                  </p>
-                  {verifyResult && (
-                    <div className="rounded-md border border-border bg-muted/30 p-3 mt-3 space-y-1 text-xs font-mono">
-                      <p><span className="text-foreground/50">Stored CID:</span> <span className="text-foreground/70 break-all">{verifyResult.storedCid}</span></p>
-                      <p><span className="text-foreground/50">Recomputed:</span> <span className="text-destructive break-all">{verifyResult.recomputedCid}</span></p>
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* Verify Certificate button — always visible for re-verification */}
-              <button
-                onClick={runVerification}
-                disabled={status === "verifying"}
-                className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-base font-medium text-foreground hover:bg-muted/50 transition-colors w-full disabled:opacity-50"
-              >
-                <RefreshCw size={16} className={status === "verifying" ? "animate-spin" : ""} />
-                {status === "idle" ? "Verify Certificate" : "Re-verify Certificate"}
-              </button>
-            </div>
+            {/* Verify button */}
+            <button
+              onClick={runVerification}
+              disabled={status === "verifying"}
+              className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors w-full disabled:opacity-50"
+            >
+              <RefreshCw size={14} className={status === "verifying" ? "animate-spin" : ""} />
+              {status === "idle" ? "Verify authenticity" : status === "verified" ? "Re-verify" : "Try again"}
+            </button>
           </div>
 
-          <div className="bg-muted/30 border-t border-dashed border-border px-8 py-5 flex items-center justify-between">
-            <p className="text-sm text-foreground/60 font-medium">UOR · Content-Addressed · Self-Verifying</p>
-            <button onClick={() => copyValue(cid)} className="inline-flex items-center gap-1.5 text-base text-primary hover:underline font-semibold">
-              {copied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy ID</>}
+          <div className="bg-muted/30 border-t border-dashed border-border px-6 py-3.5 flex items-center justify-between">
+            <p className="text-xs text-foreground/50 font-medium">Content-addressed · Self-verifying</p>
+            <button onClick={() => copyValue(cid)} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-semibold">
+              {copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy ID</>}
             </button>
           </div>
         </DialogContent>
