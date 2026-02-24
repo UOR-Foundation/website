@@ -68,11 +68,13 @@ export {
   UnsAuthServer, signChallenge, UnsAccessControl, trustMiddleware,
   UnsConduit, ConduitRelay,
   kyberKeygen, kyberEncapsulate, kyberDecapsulate, aesGcmEncrypt, aesGcmDecrypt,
+  UnsTrustGraph,
 } from "./trust";
 export type {
   UnsChallenge, UnsSession,
   UnsAccessPolicy, UnsAccessRule, EvaluationResult, MiddlewareHandler,
   ConduitConfig, TunnelInitMessage, TunnelReadyMessage, KyberKeypair,
+  TrustAttestation, TrustNetwork, TrustWeights, TrustScore, TrustMember,
 } from "./trust";
 
 // ── Mesh — BGP Orbit Routing & Node Orchestrator (Phase 4-C) ────────────────
