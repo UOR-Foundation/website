@@ -7,8 +7,11 @@
  * headers, CSP, and the UOR session shim injected.
  *
  * Routes:
- *   GET /serve-app?id=<canonicalId>   → serve by canonical ID
- *   GET /serve-app?app=<name>&v=<ver> → serve by app name + version
+ *   GET /serve-app?id=<canonicalId>       → serve by canonical ID (stored)
+ *   GET /serve-app?app=<name>&v=<ver>     → serve by app name + version
+ *   GET /serve-app?proxy=<url>            → live proxy (bypass X-Frame-Options)
+ *   GET /serve-app?proxy=<url>&cid=<cid>  → live proxy with canonical tagging
+ *   POST /serve-app                       → ingest assets
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
@@ -22,30 +25,31 @@ const corsHeaders = {
 const UOR_SHIM_CDN = "https://cdn.uor.foundation/app-sdk.min.js";
 
 /**
- * Inject UOR session shim + CSP into served HTML.
+ * Inject UOR session shim into served HTML.
+ * Strips any X-Frame-Options directives from meta tags.
  */
 function instrumentHtml(
   html: string,
   canonicalId: string,
+  baseUrl?: string,
 ): string {
   const shimTag = `<script src="${UOR_SHIM_CDN}" data-uor-app-canonical="${canonicalId}"></script>`;
 
-  // Permissive CSP — allow the app's own origins to load all resources
-  const csp = [
-    "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:",
-    "script-src * 'unsafe-inline' 'unsafe-eval'",
-    "style-src * 'unsafe-inline'",
-    "img-src * data: blob:",
-    "font-src * data:",
-    "connect-src *",
-    "frame-src *",
-  ].join("; ");
+  // Inject <base> tag so relative URLs resolve correctly against the original origin
+  const baseTag = baseUrl ? `<base href="${baseUrl}">` : "";
 
-  const cspMeta = `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
+  // Remove any meta X-Frame-Options that might block embedding
+  let processed = html.replace(
+    /<meta\s+http-equiv=["']X-Frame-Options["'][^>]*>/gi,
+    "",
+  );
 
   // Inject before </head> if present
-  if (html.includes("</head>")) {
-    return html.replace("</head>", `${shimTag}\n</head>`);
+  if (processed.includes("</head>")) {
+    return processed.replace(
+      "</head>",
+      `${baseTag}\n${shimTag}\n</head>`,
+    );
   }
 
   // Wrap in minimal document
@@ -54,12 +58,27 @@ function instrumentHtml(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${baseTag}
 ${shimTag}
 </head>
 <body>
-${html}
+${processed}
 </body>
 </html>`;
+}
+
+/**
+ * Compute the base URL from a full URL (origin + path up to last /).
+ */
+function getBaseUrl(sourceUrl: string): string {
+  try {
+    const u = new URL(sourceUrl);
+    const pathParts = u.pathname.split("/");
+    pathParts.pop(); // remove filename
+    return `${u.origin}${pathParts.join("/")}/`;
+  } catch {
+    return "";
+  }
 }
 
 Deno.serve(async (req) => {
@@ -73,7 +92,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // ── POST: Ingest assets (called by client-side asset-ingestor) ──
+    // ── POST: Ingest assets ──
     if (req.method === "POST") {
       const body = await req.json();
       const { sourceUrl, appName, version, imageCanonicalId, snapshotId, ingestedBy } = body;
@@ -108,7 +127,9 @@ Deno.serve(async (req) => {
       // Fetch source HTML
       let htmlContent: string;
       try {
-        const resp = await fetch(sourceUrl);
+        const resp = await fetch(sourceUrl, {
+          headers: { "User-Agent": "UOR-Hologram/1.0 (content-addressed-proxy)" },
+        });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         htmlContent = await resp.text();
       } catch {
@@ -164,14 +185,88 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ── GET: Serve assets ──
+    // ── GET: Proxy mode — fetch live content, strip X-Frame-Options ──
+    const proxyUrl = url.searchParams.get("proxy");
+    if (proxyUrl) {
+      const cid = url.searchParams.get("cid") || "unknown";
+
+      try {
+        const proxyResp = await fetch(proxyUrl, {
+          headers: {
+            "User-Agent": "UOR-Hologram/1.0 (content-addressed-proxy)",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+          },
+          redirect: "follow",
+        });
+
+        if (!proxyResp.ok) {
+          return new Response(
+            `<html><body><h1>Proxy Error</h1><p>Failed to fetch: HTTP ${proxyResp.status}</p><p>${proxyUrl}</p></body></html>`,
+            {
+              status: 502,
+              headers: { ...corsHeaders, "Content-Type": "text/html" },
+            },
+          );
+        }
+
+        const contentType = proxyResp.headers.get("content-type") || "text/html";
+
+        // For HTML content, instrument with UOR shim and fix relative URLs
+        if (contentType.includes("html")) {
+          let html = await proxyResp.text();
+          const baseUrl = getBaseUrl(proxyUrl);
+          html = instrumentHtml(html, cid, baseUrl);
+
+          return new Response(html, {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "text/html; charset=utf-8",
+              "Cache-Control": "public, max-age=300",
+              "X-UOR-Proxy-Source": proxyUrl,
+              "X-UOR-Canonical-Id": cid,
+              // Explicitly NO X-Frame-Options header — we want embedding
+            },
+          });
+        }
+
+        // For non-HTML (CSS, JS, images, fonts), pass through directly
+        const body = await proxyResp.arrayBuffer();
+        return new Response(body, {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": contentType,
+            "Cache-Control": "public, max-age=86400",
+          },
+        });
+      } catch (err) {
+        return new Response(
+          `<html><body><h1>Proxy Error</h1><p>${err.message}</p><p>Target: ${proxyUrl}</p></body></html>`,
+          {
+            status: 502,
+            headers: { ...corsHeaders, "Content-Type": "text/html" },
+          },
+        );
+      }
+    }
+
+    // ── GET: Serve stored assets by canonical ID or app name ──
     const canonicalId = url.searchParams.get("id");
     const appName = url.searchParams.get("app");
     const version = url.searchParams.get("v") || "latest";
 
     if (!canonicalId && !appName) {
       return new Response(
-        JSON.stringify({ error: "Provide ?id=<canonicalId> or ?app=<name>" }),
+        JSON.stringify({
+          error: "Provide ?id=<canonicalId>, ?app=<name>, or ?proxy=<url>",
+          routes: {
+            stored: "?id=<canonicalId> or ?app=<name>&v=<version>",
+            proxy: "?proxy=<sourceUrl>&cid=<canonicalId>",
+            ingest: "POST with {sourceUrl, appName, version, imageCanonicalId}",
+          },
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -216,6 +311,45 @@ Deno.serve(async (req) => {
       );
     }
 
+    // If the asset has a source_url, use proxy mode to serve live content
+    // This ensures the app always loads with all its original resources
+    if (asset.source_url && asset.source_url.startsWith("http")) {
+      try {
+        const proxyResp = await fetch(asset.source_url, {
+          headers: {
+            "User-Agent": "UOR-Hologram/1.0 (content-addressed-proxy)",
+            "Accept": "text/html,application/xhtml+xml,*/*;q=0.8",
+          },
+          redirect: "follow",
+        });
+
+        if (proxyResp.ok) {
+          const contentType = proxyResp.headers.get("content-type") || "text/html";
+          if (contentType.includes("html")) {
+            let html = await proxyResp.text();
+            const baseUrl = getBaseUrl(asset.source_url);
+            html = instrumentHtml(html, resolvedCanonicalId!, baseUrl);
+
+            return new Response(html, {
+              status: 200,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "text/html; charset=utf-8",
+                "Cache-Control": "public, max-age=300",
+                "X-UOR-Canonical-Id": resolvedCanonicalId!,
+                "X-UOR-App": asset.app_name,
+                "X-UOR-Version": asset.version,
+                "X-UOR-Source": "live-proxy",
+              },
+            });
+          }
+        }
+      } catch {
+        // Fall through to stored version
+      }
+    }
+
+    // Fallback: serve from stored content
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("app-assets")
       .download(asset.storage_path);
@@ -232,7 +366,8 @@ Deno.serve(async (req) => {
 
     if (contentType.includes("html")) {
       const rawHtml = await fileData.text();
-      const instrumented = instrumentHtml(rawHtml, resolvedCanonicalId!);
+      const baseUrl = asset.source_url ? getBaseUrl(asset.source_url) : undefined;
+      const instrumented = instrumentHtml(rawHtml, resolvedCanonicalId!, baseUrl);
       body = instrumented;
     }
 
@@ -245,6 +380,7 @@ Deno.serve(async (req) => {
         "X-UOR-Canonical-Id": resolvedCanonicalId!,
         "X-UOR-App": asset.app_name,
         "X-UOR-Version": asset.version,
+        "X-UOR-Source": "content-addressed-storage",
       },
     });
   } catch (err) {

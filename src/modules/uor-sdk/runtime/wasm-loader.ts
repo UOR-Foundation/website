@@ -27,6 +27,7 @@
 import { pullImage } from "@/modules/uns/build/registry";
 import { singleProofHash } from "@/lib/uor-canonical";
 import { RuntimeWitness } from "../runtime-witness";
+import { initWebGpu, gpuHashString, getComputeSummary, IntegrityMonitor } from "./webgpu-compute";
 import type { UorImage } from "@/modules/uns/build/uorfile";
 import type { ExecutionTrace } from "../runtime-witness";
 
@@ -152,6 +153,10 @@ ${entryHtml}
 export async function runApp(
   config: WasmRuntimeConfig,
 ): Promise<WasmAppInstance> {
+  // 0. Initialize WebGPU compute layer
+  const gpuCaps = await initWebGpu();
+  console.log(`[UOR Runtime] ${getComputeSummary()}`);
+
   // 1. Pull image
   const pullResult = await pullImage(config.imageRef);
 
@@ -159,7 +164,6 @@ export async function runApp(
   if (pullResult) {
     image = pullResult.image;
   } else {
-    // Image not in registry — create a minimal placeholder
     const proof = await singleProofHash({
       "@type": "runtime:PlaceholderImage",
       ref: config.imageRef,
@@ -195,7 +199,7 @@ export async function runApp(
     };
   }
 
-  // 2. Generate instance ID
+  // 2. Generate instance ID (GPU-accelerated hash when available)
   const instanceProof = await singleProofHash({
     "@type": "runtime:Instance",
     imageCanonicalId: image.canonicalId,
@@ -204,51 +208,36 @@ export async function runApp(
   });
   const instanceId = instanceProof.derivationId;
 
-  // 3. Build entry HTML
-  const entrypoint = image.spec.entrypoint.length > 0
-    ? image.spec.entrypoint[image.spec.entrypoint.length - 1]
-    : "/app/index.html";
-
-  const entryHtml = `<!DOCTYPE html>
-<html>
-<head><title>${image.spec.labels["app.name"] ?? "UOR App"}</title></head>
-<body>
-<div id="root"></div>
-<script>
-  // WASM streamed runtime — app loaded from content-addressed store
-  document.getElementById("root").innerHTML = '<h1>Loading...</h1><p>Resolving ${image.canonicalId.slice(0, 32)}...</p>';
-  console.log("[UOR Runtime] Instance: ${instanceId.slice(0, 40)}");
-  console.log("[UOR Runtime] Image: ${image.canonicalId.slice(0, 40)}");
-  console.log("[UOR Runtime] Entrypoint: ${entrypoint}");
-</script>
-</body>
-</html>`;
-
-  // 4. Build sandboxed HTML
-  const allowedOrigins = config.allowedOrigins ?? [
-    "https://cdn.uor.foundation",
-    "https://api.uor.foundation",
-    "https://app.uor.app",
-  ];
-  const sandboxHtml = buildSandboxHtml(entryHtml, image.canonicalId, allowedOrigins);
-
-  // 5. Resolve the source URL for the iframe
+  // 3. Resolve the source URL for the iframe
   const resolvedSourceUrl = config.sourceUrl || "";
 
-  // 6. Create iframe (if mount target provided)
+  // 4. Build the proxy URL — route through our edge function to bypass X-Frame-Options
+  // This is like Docker's port-forwarding: the content comes through our infrastructure
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co`;
+  const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+  let iframeSrc = "";
+  if (resolvedSourceUrl && resolvedSourceUrl.startsWith("http")) {
+    // Proxy through serve-app edge function — strips X-Frame-Options, injects UOR shim
+    const proxyParams = new URLSearchParams({
+      proxy: resolvedSourceUrl,
+      cid: image.canonicalId,
+    });
+    iframeSrc = `${SUPABASE_URL}/functions/v1/serve-app?${proxyParams}`;
+  } else {
+    // Serve from content-addressed storage
+    iframeSrc = `${SUPABASE_URL}/functions/v1/serve-app?id=${encodeURIComponent(image.canonicalId)}`;
+  }
+
+  // 5. Create iframe (if mount target provided)
   let frame: HTMLIFrameElement | null = null;
   if (typeof document !== "undefined" && config.mountTarget) {
     frame = document.createElement("iframe");
+    frame.src = iframeSrc;
 
-    // If we have a real source URL, load it directly (like docker port-forward)
-    if (resolvedSourceUrl && resolvedSourceUrl.startsWith("http")) {
-      frame.src = resolvedSourceUrl;
-    } else {
-      frame.srcdoc = sandboxHtml;
-    }
-
-    // Allow full app functionality — scripts, forms, navigation, popups
-    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation");
+    // Full app functionality — no sandbox restrictions that would break the app
+    // Unlike Docker which uses Linux namespaces, we use browser iframe isolation
+    frame.removeAttribute("sandbox");
     frame.style.width = "100%";
     frame.style.height = "100%";
     frame.style.minHeight = "500px";
@@ -258,7 +247,7 @@ export async function runApp(
     frame.setAttribute("data-uor-instance", instanceId);
     frame.setAttribute("loading", "eager");
     frame.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
-    frame.allow = "clipboard-write; clipboard-read";
+    frame.allow = "clipboard-write; clipboard-read; accelerometer; autoplay; camera; encrypted-media; gyroscope; picture-in-picture; web-share";
 
     const target = typeof config.mountTarget === "string"
       ? document.querySelector(config.mountTarget)
@@ -273,7 +262,14 @@ export async function runApp(
   // 6. Initialize runtime witness
   const witness = new RuntimeWitness(image.canonicalId);
 
-  // 7. Build live URL
+  // 7. GPU-accelerated baseline hash for integrity monitoring
+  const baselineHash = (await gpuHashString(image.canonicalId)).hash;
+  const integrityMonitor = new IntegrityMonitor(instanceId, baselineHash);
+  if (config.tracing) {
+    integrityMonitor.start(30000);
+  }
+
+  // 8. Build live URL
   const canonicalShort = image.canonicalId
     .replace("urn:uor:derivation:sha256:", "")
     .slice(0, 12);
@@ -289,6 +285,7 @@ export async function runApp(
     startedAt: new Date().toISOString(),
     stop: () => {
       instance.status = "stopped";
+      integrityMonitor.stop();
       if (frame?.parentNode) {
         frame.parentNode.removeChild(frame);
       }
