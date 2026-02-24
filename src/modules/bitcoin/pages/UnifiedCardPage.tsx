@@ -12,7 +12,7 @@ import BitcoinNav from "@/modules/bitcoin/components/BitcoinNav";
 import { createUnifiedCard, verifyModelSkillCoherence, type UnifiedCard } from "@/modules/uns/core/unified-agent-card";
 import {
   Bot, Copy, Check, Hash, Loader2, ShieldCheck,
-  Fingerprint, Award, Cpu, FileCode, Server, Wallet, Globe, Link2,
+  Fingerprint, Award, Cpu, FileCode, Server, Wallet, Globe, Link2, Search, Database, Radio,
 } from "lucide-react";
 
 const ECOSYSTEM_META = [
@@ -25,6 +25,9 @@ const ECOSYSTEM_META = [
   { key: "payment" as const, label: "x402", sublabel: "Payment Hash", icon: Wallet, color: "text-green-400" },
   { key: "discovery" as const, label: "ActivityPub", sublabel: "Social Discovery", icon: Globe, color: "text-purple-400" },
   { key: "settlement" as const, label: "Bitcoin", sublabel: "Settlement Anchor", icon: Hash, color: "text-yellow-400" },
+  { key: "nandaIndex" as const, label: "NANDA Index", sublabel: "Agent Discovery", icon: Search, color: "text-cyan-400" },
+  { key: "nandaFacts" as const, label: "AgentFacts", sublabel: "Agent Passport", icon: Database, color: "text-teal-400" },
+  { key: "nandaResolve" as const, label: "NANDA Resolver", sublabel: "Name Resolution", icon: Radio, color: "text-lime-400" },
 ] as const;
 
 const DEFAULT_AGENT = JSON.stringify({
@@ -71,11 +74,11 @@ export default function UnifiedCardPage() {
               UNIFIED AGENT CARD
             </div>
             <h1 className="text-3xl font-bold mb-3">
-              One Descriptor. One Hash. Nine Ecosystems.
+              One Descriptor. One Hash. Twelve Ecosystems.
             </h1>
             <p className="text-muted-foreground text-sm max-w-xl mx-auto">
               A single canonical JSON-LD object that holographically projects
-              into DID, VC, ERC-8004, ONNX, skill.md, OASF, x402, ActivityPub, and Bitcoin.
+              into DID, VC, ERC-8004, ONNX, skill.md, OASF, x402, ActivityPub, Bitcoin, and NANDA.
             </p>
           </div>
 
@@ -117,7 +120,7 @@ export default function UnifiedCardPage() {
               {/* Nine Ecosystems */}
               <div className="mb-8">
                 <h2 className="text-sm font-bold mb-4">
-                  9 Ecosystem Projections — One Registration
+                  12 Ecosystem Projections — One Registration
                 </h2>
                 <div className="grid gap-3">
                   {ECOSYSTEM_META.map(({ key, label, sublabel, icon: Icon, color }) => {

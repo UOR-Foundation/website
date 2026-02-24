@@ -63,7 +63,7 @@ function classifyTier(name: string, spec: HologramSpec): string {
   if (s.includes("schema.org") || s.includes("solidproject") || name === "webfinger") return "social-web";
   if (name.startsWith("gs1") || name === "oci" || name === "doi") return "industry";
   if (["bitcoin", "lightning", "nostr"].includes(name) || name.startsWith("zcash")) return "settlement";
-  if (["erc8004", "x402", "a2a", "a2a-task", "mcp-tool", "mcp-context", "skill-md", "oasf", "onnx", "onnx-op"].includes(name)) return "agentic";
+  if (["erc8004", "x402", "a2a", "a2a-task", "mcp-tool", "mcp-context", "skill-md", "oasf", "onnx", "onnx-op", "nanda-index", "nanda-agentfacts", "nanda-resolver"].includes(name)) return "agentic";
   if (name === "activitypub" || name === "atproto") return "federation";
   return "other";
 }
@@ -164,6 +164,12 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["erc8004", "x402", "Agent identity → payment authorization"],
     ["x402", "oasf", "Payment receipt → service descriptor fulfillment"],
     ["skill-md", "onnx", "What agent CAN do → HOW it does it (model)"],
+    ["nanda-index", "nanda-agentfacts", "Index lookup → full AgentFacts passport retrieval"],
+    ["nanda-agentfacts", "a2a", "AgentFacts passport → A2A Agent Card (superset)"],
+    ["nanda-agentfacts", "skill-md", "AgentFacts capabilities[] → skill.md contracts"],
+    ["nanda-index", "nanda-resolver", "Index entry → recursive resolution endpoint"],
+    ["nanda-agentfacts", "oasf", "AgentFacts service descriptor → OASF service entry"],
+    ["nanda-agentfacts", "mcp-tool", "AgentFacts endpoint → MCP tool registration"],
   ];
   for (const [a, b, insight] of provenancePairs) {
     if (entries.some(([n]) => n === a) && entries.some(([n]) => n === b)) {
@@ -183,6 +189,9 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["activitypub", "atproto", "Federation + protocol: discover via ActivityPub, resolve via AT Protocol", "Dual social presence from single identity"],
     ["onnx", "skill-md", "Model + interface: ONNX is the engine, skill.md is the API contract", "Verify both from one hash — model matches its advertised capabilities"],
     ["erc8004", "oasf", "On-chain identity + off-chain descriptor: ERC-8004 proves ownership, OASF describes capability", "Register agent on-chain, publish descriptor off-chain, same hash"],
+    ["nanda-index", "did", "Discovery + identity: NANDA finds the agent, DID proves who it is", "NANDA Index resolves to DID — agent discovery with self-sovereign identity"],
+    ["nanda-agentfacts", "vc", "Passport + credential: AgentFacts describes capabilities, VC certifies them", "AgentFacts capabilities become verifiable claims via VC projection"],
+    ["nanda-resolver", "webfinger", "Agent resolution + web discovery: NANDA resolves agents, WebFinger resolves identities", "Both resolve names to typed links — convergent discovery protocols"],
   ];
   for (const [a, b, insight, impl] of complementary) {
     if (entries.some(([n]) => n === a) && entries.some(([n]) => n === b)) {

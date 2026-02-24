@@ -582,4 +582,46 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://onnx.ai/onnx/operators/",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 4 — AGENTIC INFRASTRUCTURE (discovery, registry, coordination)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── NANDA Index — Agent Discovery Registry ────────────────────────────
+  // The "DNS for AI Agents" (MIT). Maps content-addressed agent identity
+  // to a lean index entry for global discovery and resolution.
+  //
+  //   Format: nanda:index:{hex} (lookup key in the NANDA quilt)
+
+  ["nanda-index", {
+    project: ({ hex }) => `nanda:index:${hex}`,
+    fidelity: "lossless",
+    spec: "https://arxiv.org/abs/2507.14263",
+  }],
+
+  // ── NANDA AgentFacts — Cryptographic Agent Passport ───────────────────
+  // JSON-LD "passport" containing capabilities, endpoints, auth, and
+  // telemetry. Because AgentFacts IS JSON-LD, canonicalizing it via
+  // URDNA2015 makes every AgentFacts document a UOR object natively.
+  //
+  //   Format: https://index.projectnanda.org/agentfacts/{hex}
+
+  ["nanda-agentfacts", {
+    project: ({ hex }) => `https://index.projectnanda.org/agentfacts/${hex}`,
+    fidelity: "lossless",
+    spec: "https://spec.projectnanda.org/schemas/agentfacts-1.2.0.json",
+  }],
+
+  // ── NANDA Adaptive Resolver — Agent Name Resolution ───────────────────
+  // Recursive resolution microservice for agent handle → address lookup.
+  // Privacy-preserving split-horizon queries via the NANDA resolver.
+  //
+  //   Format: nanda:resolve:{hex16} (16-char prefix for fast lookup)
+
+  ["nanda-resolver", {
+    project: ({ hex }) => `nanda:resolve:${hex.slice(0, 16)}`,
+    fidelity: "lossy",
+    spec: "https://arxiv.org/abs/2508.03113",
+    lossWarning: "resolver-uses-64-bit-prefix-for-fast-lookup (64 of 256 bits)",
+  }],
 ]);
