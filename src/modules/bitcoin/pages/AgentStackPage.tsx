@@ -95,6 +95,24 @@ const AGENT_PROTOCOLS = [
     tier: "Services",
     desc: "Native CID alignment for off-chain service descriptors",
   },
+  {
+    key: "onnx",
+    label: "ONNX",
+    sublabel: "Model Identity",
+    icon: Bot,
+    color: "text-orange-400",
+    tier: "AI Models",
+    desc: "Content-addressed model integrity — if a single weight changes, the hash changes",
+  },
+  {
+    key: "onnx-op",
+    label: "ONNX Op",
+    sublabel: "Operator Provenance",
+    icon: Bot,
+    color: "text-orange-300",
+    tier: "AI Models",
+    desc: "Operator-level identity — verifiable reuse tracking across models",
+  },
 ] as const;
 
 // Cross-chain protocols that share the same hash
