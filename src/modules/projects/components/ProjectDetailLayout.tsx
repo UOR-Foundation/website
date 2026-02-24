@@ -144,13 +144,13 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
               </div>
             )}
 
-            {/* Object details */}
+            {/* Object details — verification-relevant canonical data */}
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">Details</p>
               <div className="rounded-lg border border-border bg-card px-4 py-3 space-y-1.5">
                 <div className="flex justify-between text-sm">
-                  <span className="text-foreground/50">Name</span>
-                  <span className="font-medium text-foreground">{name}</span>
+                  <span className="text-foreground/50">Subject</span>
+                  <span className="font-medium text-foreground font-mono text-xs">{certificate["cert:subject"]}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-foreground/50">Issued</span>
@@ -159,8 +159,16 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-foreground/50">Category</span>
-                  <span className="font-medium text-foreground">{certificate["cert:subject"].replace("project:", "").replace(/^\w/, c => c.toUpperCase())}</span>
+                  <span className="text-foreground/50">Source Hash</span>
+                  <span className="font-medium text-foreground font-mono text-xs">{certificate["cert:sourceHash"].slice(0, 16)}…</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-foreground/50">Boundary</span>
+                  <span className="font-medium text-foreground font-mono text-xs">{certificate["cert:boundary"].fieldCount} fields · {certificate["cert:boundary"].keys.length} keys</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-foreground/50">Payload</span>
+                  <span className="font-medium text-foreground font-mono text-xs">{new TextEncoder().encode(certificate["cert:canonicalPayload"]).byteLength} bytes (N-Quads)</span>
                 </div>
               </div>
             </div>
