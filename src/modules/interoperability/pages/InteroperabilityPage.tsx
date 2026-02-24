@@ -1,8 +1,8 @@
 /**
  * /interoperability — Universal Interoperability Map
  *
- * Shows all 145+ hologram projections organized by ecosystem
- * with synergy chain connections and shared component clusters.
+ * 356+ projections across 10 canonical categories.
+ * One hash. Every standard.
  */
 
 import Layout from "@/modules/core/components/Layout";
@@ -12,23 +12,20 @@ export default function InteroperabilityPage() {
   return (
     <Layout>
       <div className="min-h-screen">
-        {/* Hero */}
+        {/* Hero — minimal, high-impact */}
         <section className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-            <div className="max-w-3xl">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-mono font-medium">
-                  One Hash · Every Standard
-                </span>
-              </div>
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-18">
+            <div className="max-w-2xl">
+              <span className="inline-block px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-mono font-medium mb-4">
+                One Hash · Every Standard
+              </span>
               <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
                 Universal Interoperability Map
               </h1>
-              <p className="mt-3 text-base text-muted-foreground leading-relaxed max-w-2xl">
-                Every external standard is a deterministic projection of a single UOR canonical hash.
-                This map reveals how 145+ projections across 15 ecosystems compose into
-                functional synergy chains — proving that one identity bridges every protocol on earth.
+              <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+                Every external standard is a deterministic projection of a single UOR identity.
+                Explore how they compose into cross-protocol synergy chains.
               </p>
             </div>
           </div>
