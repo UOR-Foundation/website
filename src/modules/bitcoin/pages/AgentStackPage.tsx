@@ -248,28 +248,31 @@ export default function AgentStackPage() {
                   Cross-Protocol Identity Equivalence
                 </h3>
                 <div className="text-[10px] font-mono text-muted-foreground space-y-1">
-                  {[
-                    ["ERC-8004 tokenId", projections.agent[0].projection.value.split(":").pop()!],
-                    ["x402 payment hash", projections.agent[1].projection.value.split(":").pop()!],
-                    ["MCP tool hash", projections.agent[2].projection.value.split(":").pop()!],
-                    ["skill.md integrity", projections.agent[3].projection.value.split(":").pop()!],
-                    ["A2A agent hash", projections.agent[4].projection.value.split(":").pop()!],
-                    ["Bitcoin OP_RETURN", projections.settlement[0].projection.value.slice(10)],
-                    ["Nostr event ID", projections.settlement[3].projection.value],
-                  ].map(([label, hash], i, arr) => (
-                    <div key={label} className="flex items-center gap-2">
-                      <span className="w-28 text-right text-foreground/50">{label}</span>
-                      <span className={`font-mono ${hash === arr[0][1] ? "text-green-500/80" : "text-red-500/80"}`}>
-                        {hash.slice(0, 16)}…{hash.slice(-8)}
-                      </span>
-                      {i > 0 && hash === arr[0][1] && (
-                        <Check size={10} className="text-green-500" />
-                      )}
-                    </div>
-                  ))}
+                  {(() => {
+                    const byKey = (k: string) => projections.agent.find(a => a.key === k)!.projection.value.split(":").pop()!;
+                    const rows: [string, string][] = [
+                      ["ERC-8004 tokenId", byKey("erc8004")],
+                      ["x402 payment hash", byKey("x402")],
+                      ["MCP tool hash", byKey("mcp-tool")],
+                      ["MCP context tag", byKey("mcp-context")],
+                      ["skill.md integrity", byKey("skill-md")],
+                      ["A2A agent hash", byKey("a2a")],
+                      ["Bitcoin OP_RETURN", projections.settlement[0].projection.value.slice(10)],
+                      ["Nostr event ID", projections.settlement[3].projection.value],
+                    ];
+                    return rows.map(([label, hash], i) => (
+                      <div key={label} className="flex items-center gap-2">
+                        <span className="w-28 text-right text-foreground/50">{label}</span>
+                        <span className={`font-mono ${hash === rows[0][1] ? "text-green-500/80" : "text-red-500/80"}`}>
+                          {hash.slice(0, 16)}…{hash.slice(-8)}
+                        </span>
+                        {i > 0 && hash === rows[0][1] && <Check size={10} className="text-green-500" />}
+                      </div>
+                    ));
+                  })()}
                 </div>
                 <div className="mt-3 text-[10px] text-green-500/70 font-mono">
-                  ✓ All 7 protocols resolve to the same 256-bit identity
+                  ✓ All 8 protocols resolve to the same 256-bit identity
                 </div>
               </div>
 
