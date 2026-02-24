@@ -71,11 +71,20 @@ const AGENT_PROTOCOLS = [
   {
     key: "a2a",
     label: "A2A",
-    sublabel: "Agent Communication",
+    sublabel: "Agent Discovery",
     icon: MessageSquare,
     color: "text-cyan-400",
     tier: "Communication",
     desc: "Content-addressed AgentCard for verifiable agent discovery",
+  },
+  {
+    key: "a2a-task",
+    label: "A2A Task",
+    sublabel: "Task Provenance",
+    icon: MessageSquare,
+    color: "text-cyan-300",
+    tier: "Communication",
+    desc: "Verifiable task chain — who initiated, what transformed, whether output matches request",
   },
   {
     key: "oasf",
