@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { project, PROJECTIONS } from "../hologram";
-import { whatIf } from "../hologram/coherence-gate";
+import { coherenceGate } from "../hologram/coherence-gate";
 
 const MOCK_INPUT = {
   hashBytes: new Uint8Array(32).fill(0xab),
@@ -44,11 +44,9 @@ describe("NANDA Hologram Projections", () => {
   // ── Coherence Gate: What-If for NANDA ─────────────────────────────────
 
   it("coherence gate discovers NANDA synergies with existing projections", () => {
-    // NANDA is already registered, so run full gate and check
-    const { coherenceGate } = require("../hologram/coherence-gate");
     const report = coherenceGate();
     const nandaSynergies = report.synergies.filter(
-      (s: any) => s.projections.includes("nanda-index") ||
+      (s) => s.projections.includes("nanda-index") ||
                    s.projections.includes("nanda-agentfacts") ||
                    s.projections.includes("nanda-resolver"),
     );
