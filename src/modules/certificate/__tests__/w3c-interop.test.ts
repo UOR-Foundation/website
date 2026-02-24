@@ -188,6 +188,11 @@ describe("W3C Interoperability", () => {
       const stacService = doc.service.find(s => s.type === "StacCatalogItem")!;
       expect(stacService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/stac\/items\/[0-9a-f]{64}$/);
       expect(stacService.id).toMatch(/#stac$/);
+      // Croissant — ML dataset metadata
+      expect(types).toContain("CroissantDataset");
+      const croissantService = doc.service.find(s => s.type === "CroissantDataset")!;
+      expect(croissantService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/croissant\/[0-9a-f]{64}$/);
+      expect(croissantService.id).toMatch(/#croissant$/);
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {
