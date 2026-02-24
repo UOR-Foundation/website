@@ -10,7 +10,7 @@ import {
   LayoutDashboard, Globe, Shield, Cpu, Database,
   Lock, Bot, ChevronLeft, Rocket, Compass,
   Search, Plus, Circle, BarChart3, BookOpen, User,
-  Sun, Moon, Eye, Fingerprint, Atom,
+  Sun, Moon, Eye, Fingerprint, Atom, Hexagon,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeProvider, useTheme } from "next-themes";
@@ -37,6 +37,7 @@ const NAV_RUN = [
   { to: "/console/observer",   icon: Eye,       label: "Observer",   hint: "Live coherence monitoring" },
   { to: "/console/fpp",        icon: Fingerprint, label: "FPP Trust", hint: "First Person trust flow" },
   { to: "/console/pq-bridge",  icon: Atom,        label: "PQ Bridge", hint: "Post-quantum blockchain shield" },
+  { to: "/console/ethereum",   icon: Hexagon,     label: "Ethereum",  hint: "Lean Data layer integration" },
 ];
 
 /* ── Mock deployed apps (would come from SDK in production) ──────────── */
