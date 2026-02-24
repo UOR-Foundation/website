@@ -61,8 +61,8 @@ describe("T0: Synergy Structure", () => {
     }
   });
 
-  it("42 synergy chains are defined", () => {
-    expect(SYNERGY_CHAINS.length).toBe(42);
+  it("48 synergy chains are defined", () => {
+    expect(SYNERGY_CHAINS.length).toBe(48);
   });
 
   it("clusters cover all major ecosystems", () => {
@@ -352,7 +352,7 @@ describe("T3: Synergy Analysis Engine", () => {
   it("analyzeSynergies reports correct chain count", async () => {
     await setup();
     const analysis = analyzeSynergies(testInput);
-    expect(analysis.stats.totalChains).toBe(42);
+    expect(analysis.stats.totalChains).toBe(48);
   });
 
   it("synergy coverage exceeds 30% of all projections", async () => {
