@@ -13,17 +13,24 @@ import {
 
 // ── CanonicalIdBadge ────────────────────────────────────────────────────────
 
+import { canonicalToTriword, formatTriword } from "@/lib/uor-triword";
+
 export function CanonicalIdBadge({ id, chars = 16 }: { id: string; chars?: number }) {
   const short = id.length > chars ? id.slice(0, chars) + "…" : id;
+  const triword = canonicalToTriword(id);
+  const displayTriword = formatTriword(triword);
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <code className="inline-block rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground cursor-default select-all">
-          {short}
-        </code>
+        <span className="inline-flex items-center gap-1.5 rounded bg-muted px-1.5 py-0.5 cursor-default select-all">
+          <span className="text-xs font-medium text-foreground">{displayTriword}</span>
+          <code className="font-mono text-[10px] text-muted-foreground">{short}</code>
+        </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-sm break-all font-mono text-xs">
-        {id}
+      <TooltipContent side="top" className="max-w-sm space-y-1">
+        <p className="font-medium text-sm">{displayTriword}</p>
+        <p className="font-mono text-xs break-all text-muted-foreground">{id}</p>
       </TooltipContent>
     </Tooltip>
   );

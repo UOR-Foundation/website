@@ -6,6 +6,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import type { DeployResult } from "@/modules/uor-sdk/deploy";
+import { canonicalToTriword, formatTriword } from "@/lib/uor-triword";
 import {
   Check, Copy, ExternalLink, Globe, QrCode,
   ShieldCheck, Cpu, Clock, Layers, Link2, Box,
@@ -64,7 +65,7 @@ export default function DeployResultCard({ result, onDismiss }: DeployResultCard
               Deploy Successful
             </h3>
             <p className="text-sm text-muted-foreground">
-              {appName}:{version} — {result.durationMs}ms
+              {appName}:{version} — <span className="text-primary font-medium">{formatTriword(canonicalToTriword(canonicalId))}</span> — {result.durationMs}ms
             </p>
           </div>
         </div>
