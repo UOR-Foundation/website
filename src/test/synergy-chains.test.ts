@@ -61,8 +61,8 @@ describe("T0: Synergy Structure", () => {
     }
   });
 
-  it("83 synergy chains are defined", () => {
-    expect(SYNERGY_CHAINS.length).toBe(83);
+  it("84 synergy chains are defined", () => {
+    expect(SYNERGY_CHAINS.length).toBe(84);
   });
 
   it("clusters cover all major ecosystems", () => {
@@ -352,7 +352,7 @@ describe("T3: Synergy Analysis Engine", () => {
   it("analyzeSynergies reports correct chain count", async () => {
     await setup();
     const analysis = analyzeSynergies(testInput);
-    expect(analysis.stats.totalChains).toBe(83);
+    expect(analysis.stats.totalChains).toBe(84);
   });
 
   it("synergy coverage exceeds 30% of all projections", async () => {
@@ -485,5 +485,13 @@ describe("T4: Tier 16 Projection Output Verification", () => {
     await setup();
     const p = project(testInput, "cbor-ld");
     expect(p.value).toMatch(/^urn:w3c:cbor-ld:sha256:[0-9a-f]{64}$/);
+  });
+
+  it("grafana-dashboard produces valid cloud URN with full hex", async () => {
+    await setup();
+    const p = project(testInput, "grafana-dashboard");
+    expect(p.value).toMatch(/^urn:uor:cloud:grafana-dashboard:[0-9a-f]{64}$/);
+    expect(p.fidelity).toBe("lossless");
+    expect(p.value).toContain(testInput.hex);
   });
 });
