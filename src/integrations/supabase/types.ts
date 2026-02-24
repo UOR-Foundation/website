@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_asset_registry: {
+        Row: {
+          app_name: string
+          canonical_id: string
+          content_type: string
+          id: string
+          ingested_at: string
+          ingested_by: string | null
+          size_bytes: number
+          snapshot_id: string | null
+          source_url: string | null
+          storage_path: string
+          version: string
+        }
+        Insert: {
+          app_name: string
+          canonical_id: string
+          content_type?: string
+          id?: string
+          ingested_at?: string
+          ingested_by?: string | null
+          size_bytes?: number
+          snapshot_id?: string | null
+          source_url?: string | null
+          storage_path: string
+          version: string
+        }
+        Update: {
+          app_name?: string
+          canonical_id?: string
+          content_type?: string
+          id?: string
+          ingested_at?: string
+          ingested_by?: string | null
+          size_bytes?: number
+          snapshot_id?: string | null
+          source_url?: string | null
+          storage_path?: string
+          version?: string
+        }
+        Relationships: []
+      }
       discord_events: {
         Row: {
           calendar_date: string | null

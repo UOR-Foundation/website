@@ -16,6 +16,10 @@ export type { ImageBuildOptions, ImageBuildResult } from "./image-builder";
 export { shipApp } from "./registry-ship";
 export type { ShipInput, ShipResult } from "./registry-ship";
 
+// ── Ingest ──────────────────────────────────────────────────────────────────
+export { ingestAppAssets, getServeUrl, getServeUrlByName } from "./asset-ingestor";
+export type { IngestInput, IngestResult } from "./asset-ingestor";
+
 // ── Run ─────────────────────────────────────────────────────────────────────
 export {
   runApp,

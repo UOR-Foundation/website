@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.project-submit]
 verify_jwt = false
+
+[functions.serve-app]
+verify_jwt = false
