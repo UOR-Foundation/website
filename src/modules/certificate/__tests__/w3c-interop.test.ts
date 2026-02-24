@@ -168,6 +168,11 @@ describe("W3C Interoperability", () => {
       const gs1Service = doc.service.find(s => s.type === "GS1DigitalLink")!;
       expect(gs1Service.serviceEndpoint).toMatch(/^https:\/\/id\.gs1\.org\/8004\/[0-9a-f]{30}$/);
       expect(gs1Service.id).toMatch(/#gs1$/);
+      // Open Badges 3.0 — education credentials
+      expect(types).toContain("OpenBadgeCredential");
+      const obService = doc.service.find(s => s.type === "OpenBadgeCredential")!;
+      expect(obService.serviceEndpoint).toMatch(/^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+      expect(obService.id).toMatch(/#openbadges$/);
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {
