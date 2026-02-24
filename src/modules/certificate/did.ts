@@ -123,6 +123,7 @@ function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
     ["glyph",       "UorBrailleAddress"],
     ["activitypub", "ActivityPubObject"],
     ["atproto",     "AtProtocolRecord"],
+    ["oidc",        "OpenIdConnectSubject"],
     ["solid",       "SolidWebID"],
     ["webfinger",   "WebFingerDiscovery"],
   ];
