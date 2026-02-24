@@ -101,4 +101,62 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://github.com/opencontainers/image-spec",
   }],
+
+  // ── Solid WebID — Decentralized Personal Data ─────────────────────────
+
+  ["solid", {
+    project: ({ hex }) => `https://${DOMAIN}/profile/${hex}#me`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/webid/",
+  }],
+
+  // ── Open Badges 3.0 (1EdTech) — Verifiable Credentials for Education ─
+
+  ["openbadges", {
+    project: ({ hex }) => `urn:uuid:${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`,
+    fidelity: "lossy",
+    spec: "https://www.imsglobal.org/spec/ob/v3p0/",
+    lossWarning: "openbadges-uses-128-bit-uuid (truncated to UUIDv4 format)",
+  }],
+
+  // ── SCITT (IETF) — Supply Chain Integrity & Transparency ──────────────
+
+  ["scitt", {
+    project: ({ hex }) => `urn:ietf:params:scitt:statement:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/draft-ietf-scitt-architecture/",
+  }],
+
+  // ── MLS (RFC 9420) — Messaging Layer Security ─────────────────────────
+
+  ["mls", {
+    project: ({ hex }) => `urn:ietf:params:mls:group:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.rfc-editor.org/rfc/rfc9420",
+  }],
+
+  // ── DNS-SD (RFC 6763) — Service Discovery ─────────────────────────────
+
+  ["dnssd", {
+    project: ({ hex }) => `_uor-${hex.slice(0, 12)}._tcp.local`,
+    fidelity: "lossy",
+    spec: "https://www.rfc-editor.org/rfc/rfc6763",
+    lossWarning: "dnssd-uses-48-bit-prefix (mDNS service name length constraint)",
+  }],
+
+  // ── STAC — SpatioTemporal Asset Catalog ───────────────────────────────
+
+  ["stac", {
+    project: ({ hex }) => `https://${DOMAIN}/stac/items/${hex}`,
+    fidelity: "lossless",
+    spec: "https://stacspec.org/",
+  }],
+
+  // ── Croissant — ML Dataset & Model Identity ──────────────────────────
+
+  ["croissant", {
+    project: ({ hex }) => `https://${DOMAIN}/croissant/${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/mlcommons/croissant",
+  }],
 ]);
