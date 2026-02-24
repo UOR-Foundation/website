@@ -1842,4 +1842,27 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://trustoverip.github.io/tswg-trust-registry-tf/",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 13 — SOCIAL INFRASTRUCTURE STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["ens", {
+    project: ({ hex }) => `${hex.slice(0, 12)}.uor.eth`,
+    fidelity: "lossy",
+    lossWarning: "ENS names are truncated to 12 hex chars — lossy but human-readable",
+    spec: "https://docs.ens.domains/",
+  }],
+
+  ["vcard", {
+    project: ({ hex }) => `BEGIN:VCARD\nVERSION:4.0\nUID:urn:uor:${hex}\nEND:VCARD`,
+    fidelity: "lossless",
+    spec: "https://www.rfc-editor.org/rfc/rfc6350",
+  }],
+
+  ["schema-org", {
+    project: ({ hex }) => `https://schema.org/Thing#urn:uor:${hex}`,
+    fidelity: "lossless",
+    spec: "https://schema.org/",
+  }],
 ]);
