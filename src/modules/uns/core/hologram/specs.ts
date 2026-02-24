@@ -815,6 +815,20 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // ═══════════════════════════════════════════════════════════════════════════
   // TIER 9a — SYSTEMS & LOW-LEVEL LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Systems languages compile to native machine code. Their canonical form
+  // is the deterministic compilation unit — the AST or object file that
+  // a reproducible build would produce. Content-addressing these artifacts
+  // enables supply-chain integrity from source to binary.
+
+  // ── Zig — Comptime-Evaluated Systems Language ────────────────────────────
+  // Zig's comptime evaluation produces deterministic output at compile time.
+  // No hidden allocations, no undefined behavior — ideal for content-addressing.
+  // Cross-compilation to 30+ targets from a single source makes Zig a
+  // universal systems projection.
+  //
+  //   Format: urn:uor:lang:zig:{hex} (SHA-256 of canonical Zig module AST)
+  //   Canonical: source → Zig AST → JSON-LD → URDNA2015 → SHA-256
 
   ["zig", {
     project: ({ hex }) => `urn:uor:lang:zig:${hex}`,
@@ -822,11 +836,27 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://ziglang.org/documentation/",
   }],
 
+  // ── Nim — Metaprogramming Systems Language ───────────────────────────────
+  // Nim's macro system operates on a typed AST — the AST IS the canonical form.
+  // Compiles to C/C++/JS, making it a multi-target projection bridge.
+  // Nimble packages use SHA-1 checksums; UOR upgrades to SHA-256.
+  //
+  //   Format: urn:uor:lang:nim:{hex} (SHA-256 of canonical Nim module AST)
+  //   Canonical: source → typed AST → JSON-LD → URDNA2015 → SHA-256
+
   ["nim", {
     project: ({ hex }) => `urn:uor:lang:nim:${hex}`,
     fidelity: "lossless",
     spec: "https://nim-lang.org/docs/manual.html",
   }],
+
+  // ── D — Systems Language with GC Option ──────────────────────────────────
+  // D combines C-level control with high-level features. DUB packages
+  // are content-addressable via their dub.selections.json lockfiles.
+  // Deterministic compilation with -betterC flag enables bare-metal provenance.
+  //
+  //   Format: urn:uor:lang:d:{hex} (SHA-256 of canonical D module AST)
+  //   Canonical: source → D AST → JSON-LD → URDNA2015 → SHA-256
 
   ["d-lang", {
     project: ({ hex }) => `urn:uor:lang:d:${hex}`,
@@ -834,11 +864,29 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://dlang.org/spec/spec.html",
   }],
 
+  // ── Ada — Safety-Critical Certified Systems ──────────────────────────────
+  // Ada is mandated for avionics (DO-178C), railway (EN 50128), and defense.
+  // SPARK subset provides formal verification proofs that map directly to
+  // UOR derivation chains. GNAT compiler produces reproducible builds.
+  // Ada packages (Alire) get content-addressed certification chains.
+  //
+  //   Format: urn:uor:lang:ada:{hex} (SHA-256 of canonical Ada package spec)
+  //   Canonical: package spec → ALI descriptor → JSON-LD → URDNA2015 → SHA-256
+
   ["ada", {
     project: ({ hex }) => `urn:uor:lang:ada:${hex}`,
     fidelity: "lossless",
     spec: "https://www.iso.org/standard/69027.html",
   }],
+
+  // ── Fortran — Scientific Computing Foundation ────────────────────────────
+  // Fortran dominates HPC: weather modeling, fluid dynamics, nuclear simulation.
+  // Modern Fortran (2023) modules are deterministic compilation units.
+  // fpm (Fortran Package Manager) packages become content-addressed,
+  // enabling reproducible scientific computation chains.
+  //
+  //   Format: urn:uor:lang:fortran:{hex} (SHA-256 of canonical Fortran module)
+  //   Canonical: module → interface block → JSON-LD → URDNA2015 → SHA-256
 
   ["fortran", {
     project: ({ hex }) => `urn:uor:lang:fortran:${hex}`,
@@ -846,11 +894,28 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/82170.html",
   }],
 
+  // ── Pascal — Educational & Legacy Systems Bridge ─────────────────────────
+  // Pascal's strict type system and block structure make it trivially
+  // canonicalizable. Free Pascal compiler produces deterministic output.
+  // Bridges educational computing to production via content-addressing.
+  //
+  //   Format: urn:uor:lang:pascal:{hex} (SHA-256 of canonical Pascal unit)
+  //   Canonical: unit → interface section → JSON-LD → URDNA2015 → SHA-256
+
   ["pascal", {
     project: ({ hex }) => `urn:uor:lang:pascal:${hex}`,
     fidelity: "lossless",
     spec: "https://www.iso.org/standard/18237.html",
   }],
+
+  // ── Assembly — Instruction-Level Provenance ──────────────────────────────
+  // Assembly is the final human-readable layer before machine code.
+  // Instruction sequences are fully deterministic — each mnemonic maps
+  // to exact bytes. Content-addressing assembly enables firmware integrity
+  // verification from source to silicon.
+  //
+  //   Format: urn:uor:lang:asm:{hex} (SHA-256 of canonical instruction listing)
+  //   Canonical: listing → instruction table → JSON-LD → URDNA2015 → SHA-256
 
   ["assembly", {
     project: ({ hex }) => `urn:uor:lang:asm:${hex}`,
@@ -861,6 +926,20 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // ═══════════════════════════════════════════════════════════════════════════
   // TIER 9b — JVM LANGUAGES (compile to Java bytecode)
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // All JVM languages compile to the same bytecode format (.class files).
+  // This creates a natural content-addressing bridge: Kotlin, Scala, Groovy,
+  // and Clojure source all converge to the same JVM bytecode hash when
+  // they produce identical behavior. The bytecode IS the canonical form.
+
+  // ── Kotlin — Android & Server-Side JVM ───────────────────────────────────
+  // Kotlin is Android's primary language and a major server-side JVM choice.
+  // Kotlin Multiplatform (KMP) targets JVM, JS, Native, and WASM —
+  // content-addressing each target produces a multi-platform identity chain.
+  // Gradle build scripts (Kotlin DSL) are themselves canonicalizable.
+  //
+  //   Format: urn:uor:lang:kotlin:{hex} (SHA-256 of canonical Kotlin module descriptor)
+  //   Canonical: source → KIR → JSON-LD → URDNA2015 → SHA-256
 
   ["kotlin", {
     project: ({ hex }) => `urn:uor:lang:kotlin:${hex}`,
@@ -868,17 +947,44 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://kotlinlang.org/spec/",
   }],
 
+  // ── Scala — Functional JVM with Type-Level Computing ─────────────────────
+  // Scala 3's TASTy (Typed Abstract Syntax Trees) format is a rich,
+  // deterministic intermediate representation — perfect for canonical hashing.
+  // sbt builds with lockfiles enable reproducible dependency resolution.
+  // Spark (big data) pipelines become content-addressed end-to-end.
+  //
+  //   Format: urn:uor:lang:scala:{hex} (SHA-256 of canonical TASTy descriptor)
+  //   Canonical: source → TASTy IR → JSON-LD → URDNA2015 → SHA-256
+
   ["scala", {
     project: ({ hex }) => `urn:uor:lang:scala:${hex}`,
     fidelity: "lossless",
     spec: "https://scala-lang.org/files/archive/spec/3.3/",
   }],
 
+  // ── Groovy — JVM Build & Scripting ───────────────────────────────────────
+  // Groovy powers Gradle (Android/JVM build system) and Jenkins pipelines.
+  // Build scripts are executable code — content-addressing Groovy scripts
+  // means content-addressing the entire build pipeline. @CompileStatic
+  // mode produces deterministic bytecode identical to Java.
+  //
+  //   Format: urn:uor:lang:groovy:{hex} (SHA-256 of canonical Groovy AST)
+  //   Canonical: source → Groovy AST → JSON-LD → URDNA2015 → SHA-256
+
   ["groovy", {
     project: ({ hex }) => `urn:uor:lang:groovy:${hex}`,
     fidelity: "lossless",
     spec: "https://groovy-lang.org/documentation.html",
   }],
+
+  // ── Clojure — Persistent Data Structures on JVM ──────────────────────────
+  // Clojure's immutable, persistent data structures are inherently
+  // content-addressable — the value IS the identity. EDN (Extensible Data
+  // Notation) is a canonical serialization format. Rich Hickey's vision
+  // of "values don't change" aligns perfectly with UOR's philosophy.
+  //
+  //   Format: urn:uor:lang:clojure:{hex} (SHA-256 of canonical EDN form)
+  //   Canonical: form → EDN → JSON-LD → URDNA2015 → SHA-256
 
   ["clojure", {
     project: ({ hex }) => `urn:uor:lang:clojure:${hex}`,
@@ -887,8 +993,23 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9c — FUNCTIONAL LANGUAGES
+  // TIER 9c — FUNCTIONAL & PROOF LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Functional languages treat computation as mathematical function evaluation.
+  // Their referential transparency means identical expressions always produce
+  // identical results — the purest form of content-addressability.
+  // Proof languages add machine-checked mathematical proofs that map
+  // directly to UOR derivation chains.
+
+  // ── Haskell — Pure Functional Reference Language ─────────────────────────
+  // Haskell's purity guarantee (no side effects) means every expression
+  // is deterministic by construction. Cabal packages use SHA-256 hashes.
+  // GHC's Core intermediate language is a typed lambda calculus —
+  // the most mathematically precise canonical form of any language.
+  //
+  //   Format: urn:uor:lang:haskell:{hex} (SHA-256 of canonical Core IR)
+  //   Canonical: source → GHC Core → JSON-LD → URDNA2015 → SHA-256
 
   ["haskell", {
     project: ({ hex }) => `urn:uor:lang:haskell:${hex}`,
@@ -896,11 +1017,28 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.haskell.org/onlinereport/haskell2010/",
   }],
 
+  // ── OCaml — Industrial Functional Language ───────────────────────────────
+  // OCaml's type inference engine produces typed ASTs that are fully
+  // deterministic. Used in formal verification (Coq is written in OCaml),
+  // financial systems (Jane Street), and system tools (opam package manager).
+  // opam packages use checksums; UOR extends to content-addressed identity.
+  //
+  //   Format: urn:uor:lang:ocaml:{hex} (SHA-256 of canonical typed AST)
+  //   Canonical: source → Typedtree → JSON-LD → URDNA2015 → SHA-256
+
   ["ocaml", {
     project: ({ hex }) => `urn:uor:lang:ocaml:${hex}`,
     fidelity: "lossless",
     spec: "https://v2.ocaml.org/manual/",
   }],
+
+  // ── F# — .NET Functional Language ────────────────────────────────────────
+  // F# bridges the functional world with .NET enterprise infrastructure.
+  // Shares OCaml's ML core type system, compiles to .NET IL bytecode.
+  // NuGet packages + F# type providers = content-addressed data access layers.
+  //
+  //   Format: urn:uor:lang:fsharp:{hex} (SHA-256 of canonical F# typed AST)
+  //   Canonical: source → typed AST → JSON-LD → URDNA2015 → SHA-256
 
   ["fsharp", {
     project: ({ hex }) => `urn:uor:lang:fsharp:${hex}`,
@@ -908,11 +1046,29 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://fsharp.org/specs/language-spec/",
   }],
 
+  // ── Erlang — Fault-Tolerant Distributed Systems ──────────────────────────
+  // Erlang/OTP supervision trees are deterministic state machines.
+  // BEAM bytecode (.beam files) are content-addressable compilation units.
+  // Hot code loading means multiple versions coexist — each version gets
+  // its own UOR identity. Hex packages use SHA-256 checksums natively.
+  //
+  //   Format: urn:uor:lang:erlang:{hex} (SHA-256 of canonical BEAM module)
+  //   Canonical: source → BEAM bytecode → JSON-LD → URDNA2015 → SHA-256
+
   ["erlang", {
     project: ({ hex }) => `urn:uor:lang:erlang:${hex}`,
     fidelity: "lossless",
     spec: "https://www.erlang.org/doc/reference_manual/",
   }],
+
+  // ── Elixir — Modern BEAM Ecosystem ───────────────────────────────────────
+  // Elixir compiles to Erlang BEAM bytecode, sharing the fault-tolerance
+  // infrastructure. Phoenix LiveView, Nx (numerical computing), and
+  // Livebook (literate programming) all produce content-addressable outputs.
+  // Mix.lock files are already content-addressed dependency manifests.
+  //
+  //   Format: urn:uor:lang:elixir:{hex} (SHA-256 of canonical Elixir module)
+  //   Canonical: source → expanded AST → JSON-LD → URDNA2015 → SHA-256
 
   ["elixir", {
     project: ({ hex }) => `urn:uor:lang:elixir:${hex}`,
@@ -920,11 +1076,28 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://hexdocs.pm/elixir/",
   }],
 
+  // ── Common Lisp — Homoiconic Metaprogramming ─────────────────────────────
+  // Lisp's code-as-data (homoiconicity) means the AST IS the source code.
+  // S-expressions are the original canonical data format — predating JSON
+  // by 40 years. ASDF system definitions are declarative package manifests.
+  // Macros transform S-expressions to S-expressions — fully traceable.
+  //
+  //   Format: urn:uor:lang:lisp:{hex} (SHA-256 of canonical S-expression)
+  //   Canonical: form → S-expression → JSON-LD → URDNA2015 → SHA-256
+
   ["common-lisp", {
     project: ({ hex }) => `urn:uor:lang:lisp:${hex}`,
     fidelity: "lossless",
     spec: "https://www.lispworks.com/documentation/HyperSpec/Front/",
   }],
+
+  // ── Scheme — Minimal Homoiconic Language ──────────────────────────────────
+  // Scheme's R7RS standard defines one of the smallest complete languages.
+  // Hygienic macros produce deterministic transformations. Libraries
+  // defined via (define-library ...) are structured, canonicalizable units.
+  //
+  //   Format: urn:uor:lang:scheme:{hex} (SHA-256 of canonical library form)
+  //   Canonical: library → S-expression → JSON-LD → URDNA2015 → SHA-256
 
   ["scheme", {
     project: ({ hex }) => `urn:uor:lang:scheme:${hex}`,
@@ -932,15 +1105,98 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.r7rs.org/",
   }],
 
+  // ── Racket — Language-Oriented Programming ───────────────────────────────
+  // Racket's #lang system means each file can define its own language.
+  // Module system with exact imports and phase-separated compilation
+  // produces deterministic expansion results. Racket packages use
+  // content-hashed catalogs for integrity verification.
+  //
+  //   Format: urn:uor:lang:racket:{hex} (SHA-256 of canonical module form)
+  //   Canonical: module → fully-expanded form → JSON-LD → URDNA2015 → SHA-256
+
   ["racket", {
     project: ({ hex }) => `urn:uor:lang:racket:${hex}`,
     fidelity: "lossless",
     spec: "https://docs.racket-lang.org/reference/",
   }],
 
+  // ── Coq — Machine-Checked Proofs ─────────────────────────────────────────
+  // Coq proof terms are deterministic mathematical objects. The Calculus
+  // of Inductive Constructions provides a type-theoretic foundation.
+  // Proof certificates (`.vo` files) are content-addressable verification
+  // artifacts. Used for CompCert (verified C compiler) and mathematical proofs.
+  //
+  //   Format: urn:uor:lang:coq:{hex} (SHA-256 of canonical proof term)
+  //   Canonical: proof → Gallina term → JSON-LD → URDNA2015 → SHA-256
+
+  ["coq", {
+    project: ({ hex }) => `urn:uor:lang:coq:${hex}`,
+    fidelity: "lossless",
+    spec: "https://coq.inria.fr/doc/V8.19.0/refman/",
+  }],
+
+  // ── Lean — Modern Theorem Prover ─────────────────────────────────────────
+  // Lean 4 combines theorem proving with general programming. Its elaborator
+  // produces typed terms that are deterministic proof objects. Mathlib
+  // (200k+ theorems) is the largest formalized math library — each theorem
+  // gets a content-addressed identity via its proof term hash.
+  //
+  //   Format: urn:uor:lang:lean:{hex} (SHA-256 of canonical Lean declaration)
+  //   Canonical: declaration → kernel term → JSON-LD → URDNA2015 → SHA-256
+
+  ["lean", {
+    project: ({ hex }) => `urn:uor:lang:lean:${hex}`,
+    fidelity: "lossless",
+    spec: "https://lean-lang.org/lean4/doc/",
+  }],
+
+  // ── Agda — Dependently Typed Proof Language ──────────────────────────────
+  // Agda's dependent types allow types to depend on values, enabling
+  // proofs about programs within the type system itself. Agda code is
+  // simultaneously a program and its correctness proof — the ultimate
+  // self-verifying artifact for UOR derivation chains.
+  //
+  //   Format: urn:uor:lang:agda:{hex} (SHA-256 of canonical Agda module)
+  //   Canonical: module → internal syntax → JSON-LD → URDNA2015 → SHA-256
+
+  ["agda", {
+    project: ({ hex }) => `urn:uor:lang:agda:${hex}`,
+    fidelity: "lossless",
+    spec: "https://agda.readthedocs.io/en/latest/",
+  }],
+
+  // ── TLA+ — Formal Specification Language ─────────────────────────────────
+  // TLA+ specifies distributed system behavior via temporal logic.
+  // Model checking (TLC) exhaustively verifies all reachable states.
+  // Amazon uses TLA+ for DynamoDB, S3, and EBS — each specification
+  // gets a content-addressed identity, linking spec to implementation.
+  //
+  //   Format: urn:uor:lang:tlaplus:{hex} (SHA-256 of canonical TLA+ spec)
+  //   Canonical: spec → AST → JSON-LD → URDNA2015 → SHA-256
+
+  ["tlaplus", {
+    project: ({ hex }) => `urn:uor:lang:tlaplus:${hex}`,
+    fidelity: "lossless",
+    spec: "https://lamport.azurewebsites.net/tla/tla2-guide.pdf",
+  }],
+
   // ═══════════════════════════════════════════════════════════════════════════
   // TIER 9d — SCRIPTING LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Scripting languages power automation, web backends, DevOps, and
+  // data processing. Their package ecosystems (gems, pip, npm, CPAN)
+  // are massive software supply chains. Content-addressing every package
+  // creates a universal integrity layer across all scripting ecosystems.
+
+  // ── Ruby — Web Frameworks & DevOps Automation ────────────────────────────
+  // Ruby gems are packaged with checksums on rubygems.org. RubyGems already
+  // uses SHA-256 for gem integrity; UOR extends to cross-protocol identity.
+  // Rails migrations are deterministic schema transformations — each migration
+  // becomes a content-addressed database evolution step.
+  //
+  //   Format: urn:uor:lang:ruby:{hex} (SHA-256 of canonical gem specification)
+  //   Canonical: gemspec → JSON-LD → URDNA2015 → SHA-256
 
   ["ruby", {
     project: ({ hex }) => `urn:uor:lang:ruby:${hex}`,
@@ -948,11 +1204,28 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/59579.html",
   }],
 
+  // ── PHP — Server-Side Web Backbone ───────────────────────────────────────
+  // PHP powers 77% of web backends (WordPress, Laravel, Symfony).
+  // Composer packages use SHA-256 content hashes in composer.lock.
+  // PHP 8.x AST (via php-parser) is a structured, canonicalizable tree.
+  //
+  //   Format: urn:uor:lang:php:{hex} (SHA-256 of canonical PHP AST)
+  //   Canonical: source → PHP AST → JSON-LD → URDNA2015 → SHA-256
+
   ["php", {
     project: ({ hex }) => `urn:uor:lang:php:${hex}`,
     fidelity: "lossless",
     spec: "https://www.php.net/manual/en/langref.php",
   }],
+
+  // ── Perl — Text Processing & Bioinformatics ──────────────────────────────
+  // Perl's CPAN is one of the oldest software repositories (since 1995).
+  // PAUSE (Perl Authors Upload Server) maintains content-addressed distributions.
+  // BioPerl powers genomic analysis pipelines — content-addressing enables
+  // reproducible bioinformatics workflows.
+  //
+  //   Format: urn:uor:lang:perl:{hex} (SHA-256 of canonical distribution manifest)
+  //   Canonical: META.json → JSON-LD → URDNA2015 → SHA-256
 
   ["perl", {
     project: ({ hex }) => `urn:uor:lang:perl:${hex}`,
@@ -960,11 +1233,28 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://perldoc.perl.org/perlref",
   }],
 
+  // ── Lua — Embedded Scripting & Game Engines ──────────────────────────────
+  // Lua is embedded in Redis, Nginx, game engines (Roblox, WoW), and IoT.
+  // Its bytecode (luac) is deterministic. LuaRocks packages are
+  // content-addressable via rockspec files (structured Lua tables).
+  // Lua's simplicity (8 types, ~25 keywords) makes it trivially canonicalizable.
+  //
+  //   Format: urn:uor:lang:lua:{hex} (SHA-256 of canonical Lua chunk)
+  //   Canonical: chunk → bytecode → JSON-LD → URDNA2015 → SHA-256
+
   ["lua", {
     project: ({ hex }) => `urn:uor:lang:lua:${hex}`,
     fidelity: "lossless",
     spec: "https://www.lua.org/manual/5.4/",
   }],
+
+  // ── Bash — Unix Shell & Infrastructure ───────────────────────────────────
+  // Bash scripts automate CI/CD, server provisioning, and data pipelines.
+  // ShellCheck provides static analysis that produces structured, canonical
+  // ASTs. Content-addressing shell scripts prevents infrastructure tampering.
+  //
+  //   Format: urn:uor:lang:bash:{hex} (SHA-256 of canonical shell script)
+  //   Canonical: script → parsed AST → JSON-LD → URDNA2015 → SHA-256
 
   ["bash", {
     project: ({ hex }) => `urn:uor:lang:bash:${hex}`,
@@ -972,17 +1262,43 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.gnu.org/software/bash/manual/bash.html",
   }],
 
+  // ── PowerShell — Windows & Azure Automation ──────────────────────────────
+  // PowerShell's AST (System.Management.Automation.Language) is a typed,
+  // structured tree — ideal for canonical hashing. PowerShell Gallery
+  // modules are versioned packages. Azure Automation runbooks become
+  // content-addressed infrastructure operations.
+  //
+  //   Format: urn:uor:lang:powershell:{hex} (SHA-256 of canonical PS module)
+  //   Canonical: script → PowerShell AST → JSON-LD → URDNA2015 → SHA-256
+
   ["powershell", {
     project: ({ hex }) => `urn:uor:lang:powershell:${hex}`,
     fidelity: "lossless",
     spec: "https://learn.microsoft.com/en-us/powershell/scripting/lang-spec/chapter-01",
   }],
 
+  // ── Raku (Perl 6) — Grammar-First Language ───────────────────────────────
+  // Raku's grammar system treats parsing as first-class. Grammar definitions
+  // are canonicalizable pattern specifications. Zef packages provide
+  // content-addressed distribution. Raku's hyperoperators produce
+  // deterministic parallel transformations.
+  //
+  //   Format: urn:uor:lang:raku:{hex} (SHA-256 of canonical Raku module)
+  //   Canonical: module → AST → JSON-LD → URDNA2015 → SHA-256
+
   ["raku", {
     project: ({ hex }) => `urn:uor:lang:raku:${hex}`,
     fidelity: "lossless",
     spec: "https://docs.raku.org/language",
   }],
+
+  // ── Tcl — Tool Command Language ──────────────────────────────────────────
+  // Tcl's "everything is a string" philosophy means every program is
+  // trivially serializable. Tcl packages (teapot) and Tk GUI definitions
+  // are structured command sequences — canonicalizable by default.
+  //
+  //   Format: urn:uor:lang:tcl:{hex} (SHA-256 of canonical Tcl package)
+  //   Canonical: package → command list → JSON-LD → URDNA2015 → SHA-256
 
   ["tcl", {
     project: ({ hex }) => `urn:uor:lang:tcl:${hex}`,
@@ -993,6 +1309,20 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // ═══════════════════════════════════════════════════════════════════════════
   // TIER 9e — MOBILE LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Mobile languages target iOS, Android, and cross-platform runtimes.
+  // App bundles (.ipa, .apk, .aab) are content-addressable artifacts.
+  // Content-addressing mobile code creates app integrity chains from
+  // source to app store to device.
+
+  // ── Swift — iOS/macOS Native Development ─────────────────────────────────
+  // Swift's SIL (Swift Intermediate Language) is a typed, deterministic IR.
+  // Swift Package Manager uses content-addressed dependencies via Package.resolved.
+  // SwiftUI view hierarchies are declarative, canonicalizable trees.
+  // Apple's App Attest already uses content hashing — UOR extends to identity.
+  //
+  //   Format: urn:uor:lang:swift:{hex} (SHA-256 of canonical Swift module interface)
+  //   Canonical: module → .swiftinterface → JSON-LD → URDNA2015 → SHA-256
 
   ["swift", {
     project: ({ hex }) => `urn:uor:lang:swift:${hex}`,
@@ -1000,11 +1330,28 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/",
   }],
 
+  // ── Objective-C — Legacy iOS/macOS Bridge ────────────────────────────────
+  // Objective-C's message-passing model produces structured runtime metadata.
+  // Header files (.h) are pure interface declarations — canonicalizable.
+  // Bridging headers connect to Swift, creating cross-language identity links.
+  //
+  //   Format: urn:uor:lang:objc:{hex} (SHA-256 of canonical ObjC interface)
+  //   Canonical: @interface → parsed AST → JSON-LD → URDNA2015 → SHA-256
+
   ["objective-c", {
     project: ({ hex }) => `urn:uor:lang:objc:${hex}`,
     fidelity: "lossless",
     spec: "https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/",
   }],
+
+  // ── Dart — Flutter Cross-Platform ────────────────────────────────────────
+  // Dart powers Flutter (iOS, Android, Web, Desktop from single codebase).
+  // Dart's AOT compilation produces deterministic native code. pub.dev
+  // packages use SHA-256 content hashes. Widget trees are declarative,
+  // canonicalizable UI descriptions — each screen gets a content-addressed identity.
+  //
+  //   Format: urn:uor:lang:dart:{hex} (SHA-256 of canonical Dart library)
+  //   Canonical: library → Kernel AST → JSON-LD → URDNA2015 → SHA-256
 
   ["dart", {
     project: ({ hex }) => `urn:uor:lang:dart:${hex}`,
@@ -1015,6 +1362,19 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // ═══════════════════════════════════════════════════════════════════════════
   // TIER 9f — DATA SCIENCE & SCIENTIFIC COMPUTING
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Scientific computing demands reproducibility. Content-addressing
+  // computation pipelines (data → analysis → model → publication)
+  // creates verifiable, reproducible research chains.
+
+  // ── R — Statistical Computing & Bioinformatics ───────────────────────────
+  // R's CRAN repository is one of the most curated package ecosystems.
+  // DESCRIPTION files are structured package manifests. R Markdown / Quarto
+  // notebooks are reproducible analysis documents — each rendered output
+  // gets a content-addressed identity proving computational reproducibility.
+  //
+  //   Format: urn:uor:lang:r:{hex} (SHA-256 of canonical R package DESCRIPTION)
+  //   Canonical: DESCRIPTION → JSON-LD → URDNA2015 → SHA-256
 
   ["r-lang", {
     project: ({ hex }) => `urn:uor:lang:r:${hex}`,
@@ -1022,11 +1382,29 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://cran.r-project.org/doc/manuals/r-release/R-lang.html",
   }],
 
+  // ── Julia — High-Performance Scientific Computing ────────────────────────
+  // Julia's multiple dispatch and type system produce JIT-compiled code
+  // that's deterministic for given types. Pkg.jl uses content-addressed
+  // artifacts (Artifacts.toml with SHA-256). Julia's metaprogramming
+  // (like Lisp) makes ASTs first-class canonicalizable objects.
+  //
+  //   Format: urn:uor:lang:julia:{hex} (SHA-256 of canonical Julia module)
+  //   Canonical: module → lowered IR → JSON-LD → URDNA2015 → SHA-256
+
   ["julia", {
     project: ({ hex }) => `urn:uor:lang:julia:${hex}`,
     fidelity: "lossless",
     spec: "https://docs.julialang.org/en/v1/",
   }],
+
+  // ── MATLAB — Engineering & Signal Processing ─────────────────────────────
+  // MATLAB dominates control systems, signal processing, and engineering
+  // simulation. MATLAB toolboxes are structured function libraries.
+  // Simulink models are block diagrams stored as structured XML — trivially
+  // canonicalizable. Each simulation configuration gets a permanent identity.
+  //
+  //   Format: urn:uor:lang:matlab:{hex} (SHA-256 of canonical MATLAB toolbox)
+  //   Canonical: toolbox → Contents.m → JSON-LD → URDNA2015 → SHA-256
 
   ["matlab", {
     project: ({ hex }) => `urn:uor:lang:matlab:${hex}`,
@@ -1037,6 +1415,19 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // ═══════════════════════════════════════════════════════════════════════════
   // TIER 9g — WEB PLATFORM LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // The web platform is the UOR Virtual OS's native execution environment.
+  // Every layer — document (HTML), style (CSS), logic (JS/TS/WASM),
+  // and GPU (WGSL) — is content-addressable via Subresource Integrity (SRI).
+
+  // ── HTML — Universal Document Format ─────────────────────────────────────
+  // HTML documents are the web's fundamental unit. W3C's DOM serialization
+  // produces canonical markup. Subresource Integrity (SRI) already uses
+  // SHA-256/384/512 hashes for embedded resources. Content-addressing
+  // HTML creates immutable document identities.
+  //
+  //   Format: urn:uor:lang:html:{hex} (SHA-256 of canonical HTML document)
+  //   Canonical: DOM → serialize → URDNA2015 → SHA-256
 
   ["html", {
     project: ({ hex }) => `urn:uor:lang:html:${hex}`,
@@ -1044,17 +1435,44 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://html.spec.whatwg.org/multipage/",
   }],
 
+  // ── CSS — Deterministic Style Declarations ───────────────────────────────
+  // CSS is a pure declarative language — no side effects, no state.
+  // CSSOM provides a structured, canonical representation. CSS custom
+  // properties (design tokens) are content-addressable configuration.
+  // PostCSS AST enables deterministic stylesheet canonicalization.
+  //
+  //   Format: urn:uor:lang:css:{hex} (SHA-256 of canonical stylesheet)
+  //   Canonical: stylesheet → CSSOM → JSON-LD → URDNA2015 → SHA-256
+
   ["css", {
     project: ({ hex }) => `urn:uor:lang:css:${hex}`,
     fidelity: "lossless",
     spec: "https://www.w3.org/Style/CSS/specs.en.html",
   }],
 
+  // ── WebAssembly — Portable Binary Execution ──────────────────────────────
+  // WASM modules are deterministic binary instruction streams. The WASM
+  // spec guarantees bit-exact execution across all platforms. Every WASM
+  // module already has a content-addressable hash by construction.
+  // WASI (WebAssembly System Interface) extends to server-side execution.
+  //
+  //   Format: urn:uor:lang:wasm:{hex} (SHA-256 of canonical WASM module)
+  //   Canonical: .wasm binary → SHA-256
+
   ["wasm", {
     project: ({ hex }) => `urn:uor:lang:wasm:${hex}`,
     fidelity: "lossless",
     spec: "https://webassembly.github.io/spec/core/",
   }],
+
+  // ── WGSL — WebGPU Shading Language ───────────────────────────────────────
+  // WGSL is the W3C standard for WebGPU shader programming. Shader source
+  // is deterministic text that compiles to GPU instructions. Content-
+  // addressing shaders enables verified GPU compute pipelines for
+  // ML inference, rendering, and scientific simulation in the browser.
+  //
+  //   Format: urn:uor:lang:wgsl:{hex} (SHA-256 of canonical WGSL source)
+  //   Canonical: source → WGSL AST → JSON-LD → URDNA2015 → SHA-256
 
   ["wgsl", {
     project: ({ hex }) => `urn:uor:lang:wgsl:${hex}`,
@@ -1065,6 +1483,19 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // ═══════════════════════════════════════════════════════════════════════════
   // TIER 9h — QUERY & DATA TRANSFORMATION LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Query languages define data access patterns. Content-addressing queries
+  // enables query caching, result verification, and access auditing across
+  // all data systems — relational, graph, document, and XML.
+
+  // ── GraphQL — API Query Language ─────────────────────────────────────────
+  // GraphQL schemas are strongly typed, introspectable type systems.
+  // Schema Definition Language (SDL) is deterministic text. Persisted
+  // queries (content-addressed query strings) are already industry practice.
+  // UOR extends to full schema + operation identity.
+  //
+  //   Format: urn:uor:lang:graphql:{hex} (SHA-256 of canonical SDL)
+  //   Canonical: SDL → AST → JSON-LD → URDNA2015 → SHA-256
 
   ["graphql", {
     project: ({ hex }) => `urn:uor:lang:graphql:${hex}`,
@@ -1072,11 +1503,29 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://spec.graphql.org/October2021/",
   }],
 
+  // ── SPARQL — Semantic Web Query Language ──────────────────────────────────
+  // SPARQL queries operate over RDF graphs — the native UOR data model.
+  // SPARQL Algebra provides a canonical normal form for any query.
+  // Content-addressing queries enables federated query verification —
+  // proving that identical queries produce identical results across endpoints.
+  //
+  //   Format: urn:uor:lang:sparql:{hex} (SHA-256 of canonical SPARQL algebra)
+  //   Canonical: query → SPARQL algebra → JSON-LD → URDNA2015 → SHA-256
+
   ["sparql", {
     project: ({ hex }) => `urn:uor:lang:sparql:${hex}`,
     fidelity: "lossless",
     spec: "https://www.w3.org/TR/sparql11-query/",
   }],
+
+  // ── XQuery — XML Query Language ──────────────────────────────────────────
+  // XQuery operates over XML documents with full XPath navigation.
+  // XQuery expressions are deterministic transformations of XML trees.
+  // Content-addressing enables verified document transformations for
+  // XSLT pipelines and XML database queries.
+  //
+  //   Format: urn:uor:lang:xquery:{hex} (SHA-256 of canonical XQuery expression)
+  //   Canonical: expression → AST → JSON-LD → URDNA2015 → SHA-256
 
   ["xquery", {
     project: ({ hex }) => `urn:uor:lang:xquery:${hex}`,
@@ -1087,6 +1536,19 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // ═══════════════════════════════════════════════════════════════════════════
   // TIER 9i — SMART CONTRACT LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Smart contracts execute on blockchains — inherently content-addressed
+  // environments. Contract source compiles to VM bytecode that is deployed
+  // at a content-derived address. UOR bridges source-to-deployment identity.
+
+  // ── Solidity — Ethereum Smart Contracts ──────────────────────────────────
+  // Solidity compiles to EVM bytecode deployed at content-derived addresses.
+  // Etherscan verified source is already source↔bytecode mapping.
+  // UOR creates a complete chain: source hash → bytecode hash → deployment
+  // address → event logs — full contract provenance.
+  //
+  //   Format: urn:uor:lang:solidity:{hex} (SHA-256 of canonical Solidity AST)
+  //   Canonical: source → Solidity AST → JSON-LD → URDNA2015 → SHA-256
 
   ["solidity", {
     project: ({ hex }) => `urn:uor:lang:solidity:${hex}`,
@@ -1094,17 +1556,44 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.soliditylang.org/en/latest/",
   }],
 
+  // ── Vyper — Pythonic Ethereum Contracts ───────────────────────────────────
+  // Vyper prioritizes security and auditability over expressiveness.
+  // No inheritance, no operator overloading — the AST is minimal and
+  // deterministic. Ideal for formal verification pipelines where
+  // content-addressed source maps to verified bytecode.
+  //
+  //   Format: urn:uor:lang:vyper:{hex} (SHA-256 of canonical Vyper AST)
+  //   Canonical: source → Vyper AST → JSON-LD → URDNA2015 → SHA-256
+
   ["vyper", {
     project: ({ hex }) => `urn:uor:lang:vyper:${hex}`,
     fidelity: "lossless",
     spec: "https://docs.vyperlang.org/en/stable/",
   }],
 
+  // ── Move — Resource-Oriented Smart Contracts ─────────────────────────────
+  // Move (Aptos, Sui) treats digital assets as linear types — resources
+  // cannot be copied or discarded, only moved. This aligns perfectly with
+  // UOR's principle that identity follows content, not location.
+  // Move bytecode modules are deterministic, verifiable artifacts.
+  //
+  //   Format: urn:uor:lang:move:{hex} (SHA-256 of canonical Move module)
+  //   Canonical: module → Move bytecode → JSON-LD → URDNA2015 → SHA-256
+
   ["move", {
     project: ({ hex }) => `urn:uor:lang:move:${hex}`,
     fidelity: "lossless",
     spec: "https://move-language.github.io/move/",
   }],
+
+  // ── Cairo — ZK-STARK Smart Contracts ─────────────────────────────────────
+  // Cairo compiles to the STARK VM for zero-knowledge proof generation.
+  // Every Cairo program execution produces a cryptographic proof of
+  // correct computation — the most natural content-addressed execution
+  // model. StarkNet contracts are verified by mathematics, not trust.
+  //
+  //   Format: urn:uor:lang:cairo:{hex} (SHA-256 of canonical Cairo Sierra IR)
+  //   Canonical: source → Sierra IR → JSON-LD → URDNA2015 → SHA-256
 
   ["cairo", {
     project: ({ hex }) => `urn:uor:lang:cairo:${hex}`,
@@ -1115,6 +1604,19 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // ═══════════════════════════════════════════════════════════════════════════
   // TIER 9j — HARDWARE DESCRIPTION LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // HDLs describe digital circuits at the register-transfer level (RTL).
+  // Synthesis produces deterministic gate-level netlists. Content-addressing
+  // hardware designs enables IP provenance from RTL to silicon.
+
+  // ── VHDL — FPGA & ASIC Design ───────────────────────────────────────────
+  // VHDL entity/architecture pairs are deterministic hardware descriptions.
+  // IEEE 1076 standardized since 1987. VHDL libraries are structured
+  // compilation units — each design unit gets a content-addressed identity
+  // tracking its evolution from simulation through synthesis to silicon.
+  //
+  //   Format: urn:uor:lang:vhdl:{hex} (SHA-256 of canonical VHDL design unit)
+  //   Canonical: entity+architecture → AST → JSON-LD → URDNA2015 → SHA-256
 
   ["vhdl", {
     project: ({ hex }) => `urn:uor:lang:vhdl:${hex}`,
@@ -1122,11 +1624,29 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/69868.html",
   }],
 
+  // ── Verilog — Digital Logic Design ───────────────────────────────────────
+  // Verilog modules are the industry standard for ASIC design. Gate-level
+  // netlists are deterministic — identical RTL always synthesizes to
+  // identical gates. Content-addressing enables hardware IP provenance
+  // and design reuse verification.
+  //
+  //   Format: urn:uor:lang:verilog:{hex} (SHA-256 of canonical Verilog module)
+  //   Canonical: module → parsed AST → JSON-LD → URDNA2015 → SHA-256
+
   ["verilog", {
     project: ({ hex }) => `urn:uor:lang:verilog:${hex}`,
     fidelity: "lossless",
     spec: "https://ieeexplore.ieee.org/document/1620780",
   }],
+
+  // ── SystemVerilog — Verification & Design ────────────────────────────────
+  // SystemVerilog extends Verilog with OOP-based verification (UVM).
+  // Constrained random testing, functional coverage, and assertions
+  // produce structured verification results — content-addressable
+  // proof artifacts that silicon is correct.
+  //
+  //   Format: urn:uor:lang:systemverilog:{hex} (SHA-256 of canonical SV module)
+  //   Canonical: module → AST → JSON-LD → URDNA2015 → SHA-256
 
   ["systemverilog", {
     project: ({ hex }) => `urn:uor:lang:systemverilog:${hex}`,
@@ -1135,64 +1655,22 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9k — FORMAL VERIFICATION & PROOF LANGUAGES
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  ["coq", {
-    project: ({ hex }) => `urn:uor:lang:coq:${hex}`,
-    fidelity: "lossless",
-    spec: "https://coq.inria.fr/doc/V8.19.0/refman/",
-  }],
-
-  ["lean", {
-    project: ({ hex }) => `urn:uor:lang:lean:${hex}`,
-    fidelity: "lossless",
-    spec: "https://lean-lang.org/lean4/doc/",
-  }],
-
-  ["agda", {
-    project: ({ hex }) => `urn:uor:lang:agda:${hex}`,
-    fidelity: "lossless",
-    spec: "https://agda.readthedocs.io/en/latest/",
-  }],
-
-  ["tlaplus", {
-    project: ({ hex }) => `urn:uor:lang:tlaplus:${hex}`,
-    fidelity: "lossless",
-    spec: "https://lamport.azurewebsites.net/tla/tla2-guide.pdf",
-  }],
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9l — INFRASTRUCTURE AS CODE & BUILD SYSTEMS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  ["hcl", {
-    project: ({ hex }) => `urn:uor:lang:hcl:${hex}`,
-    fidelity: "lossless",
-    spec: "https://developer.hashicorp.com/terraform/language",
-  }],
-
-  ["nix", {
-    project: ({ hex }) => `urn:uor:lang:nix:${hex}`,
-    fidelity: "lossless",
-    spec: "https://nix.dev/manual/nix/latest/language/",
-  }],
-
-  ["dockerfile", {
-    project: ({ hex }) => `urn:uor:lang:dockerfile:${hex}`,
-    fidelity: "lossless",
-    spec: "https://docs.docker.com/reference/dockerfile/",
-  }],
-
-  ["makefile", {
-    project: ({ hex }) => `urn:uor:lang:makefile:${hex}`,
-    fidelity: "lossless",
-    spec: "https://www.gnu.org/software/make/manual/make.html",
-  }],
-
-  // ═══════════════════════════════════════════════════════════════════════════
   // TIER 9m — GPU & SHADER LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // GPU languages describe massively parallel computation. Shader/kernel
+  // source is deterministic — identical source produces identical GPU
+  // instructions. Content-addressing enables ML training provenance
+  // from shader kernel to model weights.
+
+  // ── CUDA — NVIDIA GPU Computing ──────────────────────────────────────────
+  // CUDA kernels define parallel computation on NVIDIA GPUs. PTX
+  // (Parallel Thread Execution) intermediate code is deterministic.
+  // ML training pipelines (PyTorch, TensorFlow) use CUDA — content-
+  // addressing kernels creates training provenance chains.
+  //
+  //   Format: urn:uor:lang:cuda:{hex} (SHA-256 of canonical CUDA kernel)
+  //   Canonical: kernel → PTX IR → JSON-LD → URDNA2015 → SHA-256
 
   ["cuda", {
     project: ({ hex }) => `urn:uor:lang:cuda:${hex}`,
@@ -1200,17 +1678,42 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.nvidia.com/cuda/cuda-c-programming-guide/",
   }],
 
+  // ── OpenCL — Cross-Platform GPU Computing ────────────────────────────────
+  // OpenCL runs on GPUs, CPUs, FPGAs, and DSPs from any vendor.
+  // OpenCL C kernel source is deterministic text. SPIR-V intermediate
+  // representation provides a vendor-neutral binary format.
+  //
+  //   Format: urn:uor:lang:opencl:{hex} (SHA-256 of canonical OpenCL kernel)
+  //   Canonical: kernel → SPIR-V → JSON-LD → URDNA2015 → SHA-256
+
   ["opencl", {
     project: ({ hex }) => `urn:uor:lang:opencl:${hex}`,
     fidelity: "lossless",
     spec: "https://registry.khronos.org/OpenCL/specs/3.0-unified/html/OpenCL_C.html",
   }],
 
+  // ── GLSL — OpenGL Shading Language ───────────────────────────────────────
+  // GLSL shaders define GPU rendering pipelines (vertex, fragment, compute).
+  // Shader source is deterministic; identical GLSL produces identical
+  // rendering. Content-addressing enables shader library provenance
+  // and visual reproducibility verification.
+  //
+  //   Format: urn:uor:lang:glsl:{hex} (SHA-256 of canonical GLSL shader)
+  //   Canonical: shader → SPIR-V → JSON-LD → URDNA2015 → SHA-256
+
   ["glsl", {
     project: ({ hex }) => `urn:uor:lang:glsl:${hex}`,
     fidelity: "lossless",
     spec: "https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html",
   }],
+
+  // ── HLSL — DirectX Shading Language ──────────────────────────────────────
+  // HLSL powers DirectX rendering and compute on Windows/Xbox.
+  // DXC compiler produces DXIL (deterministic bytecode) or SPIR-V.
+  // Game assets using HLSL shaders get content-addressed visual identity.
+  //
+  //   Format: urn:uor:lang:hlsl:{hex} (SHA-256 of canonical HLSL shader)
+  //   Canonical: shader → DXIL → JSON-LD → URDNA2015 → SHA-256
 
   ["hlsl", {
     project: ({ hex }) => `urn:uor:lang:hlsl:${hex}`,
@@ -1221,6 +1724,20 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // ═══════════════════════════════════════════════════════════════════════════
   // TIER 9n — NICHE & SPECIALIZED LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // These languages represent unique computational paradigms — array
+  // programming (APL), stack machines (Forth), logic programming (Prolog),
+  // message passing (Smalltalk). Each paradigm has a natural canonical
+  // form that maps to content-addressing.
+
+  // ── APL — Array Programming ──────────────────────────────────────────────
+  // APL's notation compresses complex array operations into terse expressions.
+  // Each APL expression is a deterministic array transformation.
+  // The canonical form is the normalized array expression — identical
+  // computations share identity regardless of syntactic sugar.
+  //
+  //   Format: urn:uor:lang:apl:{hex} (SHA-256 of canonical array expression)
+  //   Canonical: expression → normalized form → JSON-LD → URDNA2015 → SHA-256
 
   ["apl", {
     project: ({ hex }) => `urn:uor:lang:apl:${hex}`,
@@ -1228,11 +1745,29 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/36363.html",
   }],
 
+  // ── Forth — Stack Machine Programming ────────────────────────────────────
+  // Forth's stack-based execution model is purely deterministic — every
+  // word (function) transforms the stack in a predictable way. Forth
+  // dictionaries are structured word definitions, trivially canonicalizable.
+  // Used in space probes (Philae lander) and embedded systems.
+  //
+  //   Format: urn:uor:lang:forth:{hex} (SHA-256 of canonical word dictionary)
+  //   Canonical: dictionary → word list → JSON-LD → URDNA2015 → SHA-256
+
   ["forth", {
     project: ({ hex }) => `urn:uor:lang:forth:${hex}`,
     fidelity: "lossless",
     spec: "https://forth-standard.org/",
   }],
+
+  // ── Prolog — Logic Programming ───────────────────────────────────────────
+  // Prolog programs are sets of logical clauses (facts + rules). The
+  // canonical form is the sorted, normalized clause database. Identical
+  // logic programs produce identical proof trees — perfect for content-
+  // addressed theorem verification and knowledge base identity.
+  //
+  //   Format: urn:uor:lang:prolog:{hex} (SHA-256 of canonical clause database)
+  //   Canonical: clauses → sorted normalized form → JSON-LD → URDNA2015 → SHA-256
 
   ["prolog", {
     project: ({ hex }) => `urn:uor:lang:prolog:${hex}`,
@@ -1240,17 +1775,44 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/21413.html",
   }],
 
+  // ── Smalltalk — Message-Passing OOP ──────────────────────────────────────
+  // Smalltalk's image-based environment is a complete, serializable system
+  // state. Every object, method, and class lives in a persistent image.
+  // The image IS the canonical form — snapshotting an image produces a
+  // content-addressable system state. Squeak/Pharo continue this tradition.
+  //
+  //   Format: urn:uor:lang:smalltalk:{hex} (SHA-256 of canonical image snapshot)
+  //   Canonical: image → serialized objects → JSON-LD → URDNA2015 → SHA-256
+
   ["smalltalk", {
     project: ({ hex }) => `urn:uor:lang:smalltalk:${hex}`,
     fidelity: "lossless",
     spec: "https://www.iso.org/standard/36350.html",
   }],
 
+  // ── Crystal — Compiled Ruby-Like ─────────────────────────────────────────
+  // Crystal combines Ruby syntax with static typing and AOT compilation.
+  // Deterministic compilation produces native binaries. Shards (Crystal
+  // packages) use shard.lock with git commit hashes — UOR extends to
+  // content-addressed package identity.
+  //
+  //   Format: urn:uor:lang:crystal:{hex} (SHA-256 of canonical Crystal shard)
+  //   Canonical: shard.yml → JSON-LD → URDNA2015 → SHA-256
+
   ["crystal", {
     project: ({ hex }) => `urn:uor:lang:crystal:${hex}`,
     fidelity: "lossless",
     spec: "https://crystal-lang.org/reference/1.14/",
   }],
+
+  // ── Pony — Capabilities-Secure Actor Language ────────────────────────────
+  // Pony's capability system prevents data races at compile time.
+  // The reference capability type system (iso, val, ref, box, tag, trn)
+  // produces deterministic concurrent programs by construction.
+  // Actor message passing is deterministic for given message sequences.
+  //
+  //   Format: urn:uor:lang:pony:{hex} (SHA-256 of canonical Pony package)
+  //   Canonical: package → type descriptor → JSON-LD → URDNA2015 → SHA-256
 
   ["pony", {
     project: ({ hex }) => `urn:uor:lang:pony:${hex}`,
