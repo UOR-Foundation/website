@@ -154,8 +154,8 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-foreground/50">Issued</span>
-                  <span className="font-medium text-foreground">
-                    {(() => { const d = new Date(certificate["cert:issuedAt"]); return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }); })()}
+                  <span className="font-medium text-foreground font-mono text-xs">
+                    {(() => { const d = new Date(certificate["cert:issuedAt"]); return d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) + "." + String(d.getMilliseconds()).padStart(3, "0"); })()}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
