@@ -110,6 +110,7 @@ const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
 const MetaObserverPage = lazy(() => import("@/modules/observable/pages/MetaObserverPage"));
 const MultiScalePage = lazy(() => import("@/modules/observable/pages/MultiScalePage"));
 const StreamProjectionPage = lazy(() => import("@/modules/observable/pages/StreamProjectionPage"));
+const ObserverHubPage = lazy(() => import("@/modules/observable/pages/ObserverHubPage"));
 
 const queryClient = new QueryClient();
 
@@ -233,6 +234,7 @@ const App = () => {
             <Route path="/meta-observer" element={<MetaObserverPage />} />
             <Route path="/multi-scale" element={<MultiScalePage />} />
             <Route path="/stream-projection" element={<StreamProjectionPage />} />
+            <Route path="/console/observer" element={<ObserverHubPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
