@@ -135,3 +135,19 @@ export type {
   PolyTreeSnapshot,
   DirectionName,
 } from "@/modules/uns/core/hologram/polytree";
+
+// ── Post-Quantum Bridge (Lattice-Hash Duality) ──────────────────────────
+// Dilithium-3 signing + Bitcoin OP_RETURN anchoring for quantum-proof blockchains.
+
+export {
+  pqKeygen,
+  pqSign,
+  pqVerify,
+  pqBridgePipeline,
+} from "@/modules/uns/core/pq-bridge";
+
+export type {
+  PqKeyPair,
+  PqEnvelope,
+  PqVerifyResult,
+} from "@/modules/uns/core/pq-bridge";
