@@ -41,6 +41,9 @@ describe("Unified Agent Card", () => {
     expect(eco.payment).toMatch(/^x402:sha256:/);
     expect(eco.discovery).toMatch(/uor\.foundation/);
     expect(eco.settlement).toMatch(/^[0-9a-f]/);
+    expect(eco.nandaIndex).toMatch(/^nanda:index:/);
+    expect(eco.nandaFacts).toMatch(/projectnanda\.org\/agentfacts\//);
+    expect(eco.nandaResolve).toMatch(/^nanda:resolve:/);
   });
 
   it("all ecosystem hashes resolve to the same identity", async () => {

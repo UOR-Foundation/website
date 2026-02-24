@@ -43,6 +43,9 @@ export interface UnifiedCard {
     readonly payment: string;     // x402
     readonly discovery: string;   // ActivityPub
     readonly settlement: string;  // Bitcoin
+    readonly nandaIndex: string;  // NANDA Index
+    readonly nandaFacts: string;  // NANDA AgentFacts
+    readonly nandaResolve: string; // NANDA Resolver
   };
 }
 
@@ -106,6 +109,9 @@ export async function createUnifiedCard(agent: AgentDescriptor): Promise<Unified
       payment: project(input, "x402").value,
       discovery: project(input, "activitypub").value,
       settlement: project(input, "bitcoin").value,
+      nandaIndex: project(input, "nanda-index").value,
+      nandaFacts: project(input, "nanda-agentfacts").value,
+      nandaResolve: project(input, "nanda-resolver").value,
     },
   };
 }
