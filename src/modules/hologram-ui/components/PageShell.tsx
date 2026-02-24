@@ -5,6 +5,7 @@
 import { Link } from "react-router-dom";
 import { IconArrowLeft } from "@tabler/icons-react";
 import type { ReactNode } from "react";
+import { CoherenceWidget } from "./CoherenceWidget";
 
 export interface PageShellProps {
   title: string;
@@ -37,12 +38,15 @@ export function PageShell({
               {badge}
             </span>
           )}
-          {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
-          {!actions && subtitle && (
-            <span className="ml-auto text-[10px] font-mono text-muted-foreground">
-              {subtitle}
-            </span>
-          )}
+          <div className="ml-auto flex items-center gap-3">
+            <CoherenceWidget />
+            {actions && <>{actions}</>}
+            {!actions && subtitle && (
+              <span className="text-[10px] font-mono text-muted-foreground hidden sm:block">
+                {subtitle}
+              </span>
+            )}
+          </div>
         </div>
       </header>
 
