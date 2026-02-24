@@ -133,6 +133,7 @@ function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
     ["stac",        "StacCatalogItem"],
     ["croissant",   "CroissantDataset"],
     ["mls",         "MlsGroupId"],
+    ["scitt",       "ScittStatement"],
     ["crdt",        "CrdtDocumentId"],
   ];
 
