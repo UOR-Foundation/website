@@ -44,3 +44,13 @@ export type {
   GdprExport,
   RoyaltyReport,
 } from "./attribution";
+
+// ── TrustGraph — Social Attestation Layer ───────────────────────────────────
+export { UnsTrustGraph } from "./trust-graph";
+export type {
+  TrustAttestation,
+  TrustNetwork,
+  TrustWeights,
+  TrustScore,
+  TrustMember,
+} from "./trust-graph";
