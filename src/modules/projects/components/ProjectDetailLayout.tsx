@@ -89,6 +89,10 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
 
   const handleOpen = useCallback((o: boolean) => {
     setOpen(o);
+    if (o) {
+      setStatus("idle");
+      setVerifyResult(null);
+    }
   }, []);
 
   return (
