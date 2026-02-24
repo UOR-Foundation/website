@@ -9,6 +9,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { SynergyGraph } from "../components/SynergyGraph";
 import type { ProjectionInput } from "@/modules/uns/core/hologram/index";
 import {
   buildAgentLifecyclePipeline,
@@ -259,6 +260,9 @@ export default function OpportunityExplorerPage() {
             </div>
           ))}
         </div>
+
+        {/* Synergy Graph */}
+        <SynergyGraph />
 
         {/* Opportunity Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
