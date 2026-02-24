@@ -42,10 +42,9 @@ const MOCK_APPS: AppCard[] = [
 ];
 
 const DEPLOY_STEPS = [
-  { icon: Upload, label: "Build", desc: "Import your code and create a content-addressed image — like docker build" },
-  { icon: ShieldCheck, label: "Ship", desc: "Push to the UOR registry with a signed certificate — like docker push" },
-  { icon: Package, label: "Ingest", desc: "Store assets in content-addressed storage for self-hosted serving" },
-  { icon: Rocket, label: "Run", desc: "Execute via WASM on any device — like docker run" },
+  { icon: Upload, label: "Build", desc: "Import your app and create a unique, tamper-proof snapshot of your code" },
+  { icon: ShieldCheck, label: "Ship", desc: "Publish your app to a global registry with a signed certificate of authenticity" },
+  { icon: Rocket, label: "Run", desc: "Launch your app instantly on any device — one build runs everywhere" },
 ];
 
 const SOURCES = [
@@ -154,9 +153,9 @@ export default function AppConsoleApps() {
               </h1>
               <p className="mt-2 text-base text-muted-foreground leading-relaxed max-w-lg">
                 Paste a GitHub repo, live URL, or upload a ZIP.
-                We <strong className="text-foreground">build</strong> a content-addressed image,
-                <strong className="text-foreground"> push</strong> it to the UOR registry, and
-                <strong className="text-foreground"> run</strong> it via WASM — deploy once, run anywhere.
+                We <strong className="text-foreground">build</strong> a verified snapshot of your app,
+                <strong className="text-foreground"> ship</strong> it to a global registry, and
+                <strong className="text-foreground"> run</strong> it instantly — deploy once, run anywhere.
               </p>
             </div>
 
@@ -258,14 +257,14 @@ export default function AppConsoleApps() {
       {/* ── How It Works ─────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {DEPLOY_STEPS.map((step) => (
-          <div key={step.label} className="rounded-2xl border border-border/30 bg-card/30 p-8 space-y-3 text-center">
+          <div key={step.label} className="rounded-2xl border border-border/30 bg-card/30 p-8 space-y-4 text-center">
             <div className="mx-auto h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <step.icon className="h-6 w-6 text-primary" />
             </div>
-            <p className="text-lg font-semibold text-foreground">
+            <p className="text-xl font-semibold text-foreground">
               {step.label}
             </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
+            <p className="text-base text-muted-foreground leading-relaxed">{step.desc}</p>
           </div>
         ))}
       </div>
