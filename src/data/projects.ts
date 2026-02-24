@@ -101,6 +101,14 @@ export const projects: ProjectData[] = [
     url: "https://myterms.info/",
     imageKey: "uorPrivacy",
   },
+  {
+    name: "UOR Certificate",
+    slug: "uor-certificate",
+    category: "Core Infrastructure",
+    description: "A self-verifying receipt for any digital object. Proves authenticity through mathematics, not authorities. Anyone can verify, anywhere, with no special access required.",
+    maturity: "Sandbox",
+    imageKey: "uorCertificate",
+  },
 ];
 
 export const maturityInfo: { level: MaturityLevel; tagline: string; description: string; criteria: string[] }[] = [

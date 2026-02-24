@@ -54,6 +54,7 @@ const ProjectQrCartridge = lazy(() => import("@/modules/projects/pages/ProjectQr
 const ProjectHologramSdk = lazy(() => import("@/modules/projects/pages/ProjectHologramSdk"));
 const ProjectUorIdentity = lazy(() => import("@/modules/uor-identity/pages/ProjectUorIdentity"));
 const ProjectUorPrivacy = lazy(() => import("@/modules/uor-terms/pages/ProjectUorTerms"));
+const ProjectCertificate = lazy(() => import("@/modules/projects/pages/ProjectCertificate"));
 const TrustScorePreview = lazy(() => import("@/modules/mcp/pages/TrustScorePreview"));
 const BulkPinPage = lazy(() => import("@/modules/bulk-pin/pages/BulkPinPage"));
 const OraclePage = lazy(() => import("@/modules/oracle/pages/OraclePage"));
@@ -130,6 +131,7 @@ const App = () => {
             <Route path="/projects/hologram-sdk" element={<ProjectHologramSdk />} />
             <Route path="/projects/uor-identity" element={<ProjectUorIdentity />} />
             <Route path="/projects/uor-privacy" element={<ProjectUorPrivacy />} />
+            <Route path="/projects/uor-certificate" element={<ProjectCertificate />} />
             <Route path="/standard" element={<StandardPage />} />
             <Route path="/semantic-web" element={<SemanticWebPage />} />
             <Route path="/donate" element={<DonatePage />} />
