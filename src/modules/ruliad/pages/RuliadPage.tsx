@@ -242,6 +242,19 @@ export default function RuliadPage() {
         {/* Synthesis */}
         <SynthesisBanner />
 
+        {/* Motion Simulator CTA */}
+        <Link
+          to="/ruliad/motion"
+          className="flex items-center gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors group"
+        >
+          <span className="text-2xl">🌀</span>
+          <div className="flex-1">
+            <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">Rulial Motion Simulator</h3>
+            <p className="text-xs text-muted-foreground">Navigate Q0–Q7 via ProjectionHomomorphism & InclusionHomomorphism with live animations</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        </Link>
+
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
           <button
