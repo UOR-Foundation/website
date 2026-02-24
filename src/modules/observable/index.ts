@@ -44,3 +44,20 @@ export type {
   TelosVector,
   LogosClass,
 } from "./meta-observer";
+
+// ── Multi-Scale Observer — Holographic Zoom Engine ─────────────────────────
+export {
+  MultiScaleObserver,
+  createFullStackObservation,
+  observeByte,
+  observeDatum,
+  observeOperation,
+  observeModule,
+  observeProjection,
+  observeNetwork,
+  SCALE_LABELS,
+} from "./multi-scale";
+export type {
+  ScaleLevel,
+  ScaleObservation,
+} from "./multi-scale";

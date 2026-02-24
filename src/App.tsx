@@ -108,6 +108,7 @@ const TrustGraphPage = lazy(() => import("@/modules/trust-graph/pages/TrustGraph
 const HologramUiPage = lazy(() => import("@/modules/hologram-ui/pages/HologramUiPage"));
 const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
 const MetaObserverPage = lazy(() => import("@/modules/observable/pages/MetaObserverPage"));
+const MultiScalePage = lazy(() => import("@/modules/observable/pages/MultiScalePage"));
 
 const queryClient = new QueryClient();
 
@@ -229,6 +230,7 @@ const App = () => {
             <Route path="/hologram-ui" element={<HologramUiPage />} />
             <Route path="/code-kg" element={<CodeKgPage />} />
             <Route path="/meta-observer" element={<MetaObserverPage />} />
+            <Route path="/multi-scale" element={<MultiScalePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
