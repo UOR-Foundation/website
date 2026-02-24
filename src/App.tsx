@@ -113,6 +113,7 @@ const StreamProjectionPage = lazy(() => import("@/modules/observable/pages/Strea
 const ObserverHubPage = lazy(() => import("@/modules/observable/pages/ObserverHubPage"));
 const ConsoleFpp = lazy(() => import("@/modules/console/pages/ConsoleFpp"));
 const ConsolePqBridge = lazy(() => import("@/modules/console/pages/ConsolePqBridge"));
+const ConsoleEthereum = lazy(() => import("@/modules/console/pages/ConsoleEthereum"));
 
 const queryClient = new QueryClient();
 
@@ -200,6 +201,7 @@ const App = () => {
               <Route path="your-space" element={<ConsoleYourSpace />} />
               <Route path="fpp" element={<ConsoleFpp />} />
               <Route path="pq-bridge" element={<ConsolePqBridge />} />
+              <Route path="ethereum" element={<ConsoleEthereum />} />
             </Route>
             <Route path="/developers" element={<DevelopersPage />} />
             <Route path="/developers/directory" element={<DirectoryPage />} />
