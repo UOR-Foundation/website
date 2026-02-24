@@ -264,6 +264,25 @@ export default function OpportunityExplorerPage() {
         {/* Synergy Graph */}
         <SynergyGraph />
 
+        {/* Ruliad Correspondence Banner */}
+        <Link
+          to="/ruliad"
+          className="block bg-gradient-to-r from-primary/10 via-card to-accent/10 border border-primary/20 rounded-xl p-4 sm:p-5 hover:border-primary/40 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🌌</span>
+            <div className="flex-1">
+              <h3 className="font-bold text-foreground text-sm sm:text-base group-hover:text-primary transition-colors">
+                Ruliad ≅ UOR Correspondence
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Every Wolfram Ruliad concept maps to a UOR primitive — 17 structural isomorphisms proving UOR is a computable coordinatization of the Ruliad
+              </p>
+            </div>
+            <span className="text-muted-foreground group-hover:text-primary transition-colors">→</span>
+          </div>
+        </Link>
+
         {/* Opportunity Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {opportunities.map(opp => (
