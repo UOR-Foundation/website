@@ -832,7 +832,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "IoT Connectivity Stack",
     description: "Wireless protocols → mesh networking → building automation → industrial control",
-    projections: ["zigbee", "ble-gatt", "thread", "lora", "lorawan", "modbus", "bacnet", "knx"],
+    projections: ["zigbee", "ble-gatt", "thread", "lorawan", "coap", "mqtt", "matter"],
     bridges: [
       { type: "protocol", description: "Zigbee and Thread share IEEE 802.15.4 radio layer", sharedComponent: "mesh network hash" },
       { type: "protocol", description: "BLE GATT services expose device attributes", sharedComponent: "service characteristic hash" },
@@ -895,7 +895,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Music & Audio Production",
     description: "Composition → notation → performance → streaming → analysis",
-    projections: ["midi", "musicxml", "lilypond", "abc-notation", "mei", "aes67", "flac", "mp3"],
+    projections: ["midi", "musicxml", "abc-notation", "mei", "aes67", "flac", "jams", "mpd"],
     bridges: [
       { type: "encoding", description: "MIDI encodes musical performance data", sharedComponent: "performance event hash" },
       { type: "protocol", description: "MusicXML represents full musical scores", sharedComponent: "score content hash" },
@@ -1027,7 +1027,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Video Streaming Distribution",
     description: "Video encoding → adaptive streaming → broadcast → CDN delivery",
-    projections: ["hls", "dash", "srt", "ndi", "mp4", "webm"],
+    projections: ["mp4", "webm", "mkv", "mpd", "webp", "avif"],
     bridges: [
       { type: "protocol", description: "HLS segments video into content-addressed chunks", sharedComponent: "segment content hash" },
       { type: "protocol", description: "DASH provides adaptive bitrate streaming", sharedComponent: "adaptation set hash" },
@@ -1057,7 +1057,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Security & Cryptographic Identity",
     description: "PKI → auth tokens → authorization → key exchange",
-    projections: ["x509", "acme", "jose", "oauth2", "saml", "kerberos", "pgp", "pkcs", "paseto"],
+    projections: ["x509", "acme", "jose", "oauth2", "saml", "kerberos", "pgp", "pkcs"],
     bridges: [
       { type: "protocol", description: "X.509 certificates establish PKI trust anchors", sharedComponent: "certificate fingerprint hash" },
       { type: "protocol", description: "ACME automates certificate lifecycle", sharedComponent: "challenge token hash" },
@@ -1075,7 +1075,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Telecom & Real-Time Media",
     description: "VoIP signaling → media transport → session → AAA",
-    projections: ["sip", "rtp", "sdp", "diameter", "websocket"],
+    projections: ["sip", "rtp", "websocket", "grpc", "quic"],
     bridges: [
       { type: "protocol", description: "SIP establishes multimedia sessions", sharedComponent: "call-id content hash" },
       { type: "protocol", description: "RTP transports real-time audio/video", sharedComponent: "media payload hash" },
@@ -1089,7 +1089,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Email & Calendar Pipeline",
     description: "Email protocols → message format → calendar → filtering",
-    projections: ["imap", "jmap", "mime", "icalendar", "vcard-mime", "sieve"],
+    projections: ["jmap", "mime", "icalendar", "vcard", "dnssd"],
     bridges: [
       { type: "protocol", description: "IMAP provides mailbox access", sharedComponent: "message UID hash" },
       { type: "protocol", description: "JMAP provides modern JSON email API", sharedComponent: "email blob hash" },
@@ -1104,7 +1104,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Hardware EDA & Fabrication",
     description: "Schematic → PCB → fabrication → verification — silicon lifecycle",
-    projections: ["kicad", "gerber", "gdsii", "spice", "lefdef", "liberty", "edif", "ipc2581", "lef-def"],
+    projections: ["gerber", "gdsii", "spice", "lefdef", "liberty", "edif", "ipc2581"],
     bridges: [
       { type: "stack", description: "KiCad designs schematics and PCB layouts", sharedComponent: "schematic content hash" },
       { type: "stack", description: "Gerber files define PCB manufacturing layers", sharedComponent: "layer artwork hash" },
@@ -1122,7 +1122,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Hardware Accelerator Pipeline",
     description: "Modern HDLs → synthesis → verification → interconnect",
-    projections: ["chisel", "spinalhdl", "clash", "amaranth", "bluespec", "jtag", "ucie", "cxl", "st2110"],
+    projections: ["vhdl", "verilog", "systemverilog", "jtag", "ucie", "cxl", "st2110"],
     bridges: [
       { type: "stack", description: "Chisel/SpinalHDL generate hardware from Scala DSLs", sharedComponent: "HLS DSL hash" },
       { type: "stack", description: "Clash generates hardware from Haskell", sharedComponent: "functional HDL hash" },
@@ -1140,7 +1140,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "DevOps & CI/CD Pipeline",
     description: "Source → CI → CD → monitoring → incident response",
-    projections: ["gha", "jenkinsfile", "tekton", "argocd", "helm", "k8s", "prometheus", "grafana-dashboard"],
+    projections: ["gha", "helm", "k8s", "prometheus", "grafana-dashboard", "compose"],
     bridges: [
       { type: "stack", description: "GitHub Actions/Jenkinsfiles define CI pipelines", sharedComponent: "pipeline definition hash" },
       { type: "stack", description: "Tekton provides K8s-native CI/CD tasks", sharedComponent: "task definition hash" },
@@ -1157,7 +1157,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "SBOM & Software Integrity",
     description: "Software bill of materials → attestation → signing → transparency",
-    projections: ["spdx-sbom", "cyclonedx", "in-toto", "sigstore", "scitt", "oci"],
+    projections: ["spdx-sbom", "scitt", "oci", "c2pa", "cid"],
     bridges: [
       { type: "protocol", description: "SPDX SBOM lists all components with hashes", sharedComponent: "package verification hash" },
       { type: "protocol", description: "CycloneDX provides BOM for security analysis", sharedComponent: "component identity hash" },
@@ -1172,7 +1172,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Financial Messaging Stack",
     description: "Financial messaging → payment → trade → compliance",
-    projections: ["swift-mt", "iso20022", "fix", "xbrl", "edi-x12", "edifact"],
+    projections: ["iso20022", "fix", "xbrl", "edi-x12", "edifact"],
     bridges: [
       { type: "protocol", description: "SWIFT MT messages carry interbank payments", sharedComponent: "payment instruction hash" },
       { type: "protocol", description: "ISO 20022 provides next-gen financial messaging", sharedComponent: "financial message hash" },
@@ -1202,7 +1202,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Container & Infrastructure Stack",
     description: "Container alternatives → networking → service mesh → state",
-    projections: ["podman", "buildpack", "cni-plugin", "compose", "tfstate", "crossplane"],
+    projections: ["oci", "compose", "tfstate", "dockerfile", "k8s"],
     bridges: [
       { type: "stack", description: "Podman provides rootless container execution", sharedComponent: "container image hash" },
       { type: "stack", description: "Buildpacks auto-detect and build apps", sharedComponent: "buildpack output hash" },
@@ -1236,7 +1236,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Robotic Systems Pipeline",
     description: "Robot description → simulation → control → digital twin",
-    projections: ["ros2", "urdf", "sdf-sim", "usd", "gltf"],
+    projections: ["usd", "gltf", "stl", "3mf", "step-cad"],
     bridges: [
       { type: "protocol", description: "ROS 2 provides robot middleware", sharedComponent: "topic message hash" },
       { type: "protocol", description: "URDF describes robot kinematics", sharedComponent: "robot description hash" },
@@ -1278,7 +1278,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Authorization & Access Control",
     description: "Authorization frameworks → capability tokens → delegation",
-    projections: ["oauth2", "gnap", "rar", "macaroon", "biscuit", "paseto"],
+    projections: ["oauth2", "jose", "sd-jwt", "oidc", "webauthn"],
     bridges: [
       { type: "protocol", description: "OAuth 2.0 provides authorization flows", sharedComponent: "authorization grant hash" },
       { type: "protocol", description: "GNAP provides next-gen grant negotiation", sharedComponent: "grant request hash" },
@@ -1293,7 +1293,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "IoT Device Model Pipeline",
     description: "Device digital twin → data encoding → discovery",
-    projections: ["dtdl", "echonet", "ocf", "ipso", "senml", "wot-td"],
+    projections: ["dtdl", "echonet", "ipso", "senml", "wot-td", "lwm2m"],
     bridges: [
       { type: "protocol", description: "DTDL models Azure Digital Twin capabilities", sharedComponent: "twin model hash" },
       { type: "protocol", description: "ECHONET Lite manages Japanese smart home", sharedComponent: "device object hash" },
@@ -1337,7 +1337,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Identity & Credential Extended",
     description: "FIDO → passkeys → verifiable presentations → badges",
-    projections: ["fido2", "passkey", "verifiable-presentation", "openbadges", "vcard", "dnssd"],
+    projections: ["webauthn", "cose", "openbadges", "vcard", "dnssd", "vc"],
     bridges: [
       { type: "protocol", description: "FIDO2 provides passwordless authentication", sharedComponent: "authenticator data hash" },
       { type: "protocol", description: "Passkeys implement FIDO2 with platform sync", sharedComponent: "credential public key hash" },
@@ -1352,7 +1352,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   {
     name: "Network Protocol Stack",
     description: "Network infrastructure → routing → monitoring → management",
-    projections: ["dns", "bgp", "snmp", "http2", "http3", "quic", "amqp"],
+    projections: ["dns", "bgp", "snmp", "quic", "grpc", "websocket"],
     bridges: [
       { type: "protocol", description: "DNS resolves content-addressed names", sharedComponent: "domain name hash" },
       { type: "protocol", description: "BGP announces route prefixes", sharedComponent: "route prefix hash" },
@@ -1362,6 +1362,21 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "AMQP provides message queue routing", sharedComponent: "message routing hash" },
     ],
     capability: "Network stack: DNS → BGP routing → SNMP monitoring → HTTP/2-3/QUIC transport → AMQP messaging",
+  },
+
+  // ─── Chain 84: Observability Pipeline ─────────────────────────────────
+  {
+    name: "Observability Pipeline",
+    description: "Instrumentation → collection → storage → visualization → alerting",
+    projections: ["opentelemetry", "prometheus", "grafana-dashboard", "cloudevents", "k8s"],
+    bridges: [
+      { type: "protocol", description: "OpenTelemetry instruments traces, metrics, and logs at the source", sharedComponent: "trace context hash" },
+      { type: "protocol", description: "Prometheus scrapes and stores time-series metrics from OTel exporters", sharedComponent: "metric descriptor hash" },
+      { type: "protocol", description: "Grafana dashboards visualize Prometheus queries as canonical panel layouts", sharedComponent: "dashboard config hash" },
+      { type: "protocol", description: "CloudEvents emit structured alerts from Grafana alerting rules", sharedComponent: "alert event hash" },
+      { type: "stack", description: "Kubernetes provides the deployment substrate and service discovery", sharedComponent: "workload identity hash" },
+    ],
+    capability: "Observability: instrument (OTel) → collect (Prometheus) → visualize (Grafana) → alert (CloudEvents) → orchestrate (K8s)",
   },
 ];
 
@@ -1458,41 +1473,38 @@ export const CLUSTERS: Readonly<Record<string, readonly string[]>> = {
   "Archive formats": ["zip", "tar"],
   "Database/storage": ["sqlite", "zarr"],
   "ML model storage": ["safetensors", "gguf", "onnx", "onnx-op"],
-  "Email & PIM": ["imap", "jmap", "icalendar", "vcard-mime", "sieve"],
+  "Email & PIM": ["jmap", "mime", "icalendar", "vcard"],
   "Automotive protocols": ["autosar", "can", "someip", "opcua"],
   "BIM & construction": ["ifc", "citygml", "gbxml"],
-  "Cloud DevOps": ["k8s", "helm", "argocd", "tekton", "crossplane"],
-  "Networking": ["grpc", "quic", "coap", "mqtt", "amqp", "websocket", "http2", "http3"],
-  "Security protocols": ["x509", "acme", "oauth2", "macaroon", "biscuit"],
+  "Cloud DevOps": ["k8s", "helm", "compose", "gha", "tfstate"],
+  "Networking": ["grpc", "quic", "coap", "mqtt", "websocket", "dns", "bgp"],
+  "Security protocols": ["x509", "acme", "oauth2", "jose", "pgp"],
   "Scientific data": ["fits", "cif", "smiles", "hdf5", "dicom", "fhir", "pdb", "netcdf", "nifti", "sbml", "mzml", "fastq", "vcf"],
-  "Music & notation": ["midi", "musicxml", "lilypond", "abc-notation", "mei", "jams", "mpd"],
+  "Music & notation": ["midi", "musicxml", "abc-notation", "mei", "jams", "mpd"],
   "Music streaming & audio": ["aes67", "mpeg7-audio"],
-  "IoT & embedded": ["matter", "zigbee", "lora", "modbus", "bacnet", "knx", "lwm2m", "senml", "wot-td", "ipso", "ocf", "thread"],
-  "Hardware desc (extended)": ["chisel", "spinalhdl", "clash", "amaranth", "bluespec"],
-  "EDA & PCB": ["kicad", "gerber", "gdsii", "lef-def", "spice", "lefdef", "liberty", "edif", "ipc2581"],
+  "IoT & embedded": ["matter", "zigbee", "lorawan", "lwm2m", "senml", "wot-td", "ipso", "thread"],
+  "Hardware desc": ["vhdl", "verilog", "systemverilog"],
+  "EDA & PCB": ["gerber", "gdsii", "spice", "lefdef", "liberty", "edif", "ipc2581"],
   "CAD & mechanical": ["step-cad", "spdx-sbom"],
-  "Compliance reporting": ["xbrl", "iso20022", "swift-mt", "fix-protocol"],
-  "Telecom": ["diameter", "sip", "rtp", "sdp"],
-  "Streaming & broadcast": ["hls", "dash", "srt", "ndi"],
-  "SBOM & supply chain": ["spdx-sbom", "cyclonedx", "in-toto", "sigstore"],
-  "Identity extended": ["passkey", "fido2", "verifiable-presentation"],
-  "Robotics & simulation": ["ros2", "urdf", "sdf-sim", "usd"],
-  "Smart grid & energy": ["openadr", "ieee2030", "cim-energy"],
-  "Legal & contracts": ["legalxml", "akn", "oasis-legalcite"],
+  "Compliance reporting": ["xbrl", "iso20022", "fix"],
+  "Telecom": ["sip", "rtp"],
+  "Video containers": ["mp4", "webm", "mkv"],
+  "SBOM & supply chain": ["spdx-sbom", "scitt", "c2pa", "oci"],
+  "Identity extended": ["webauthn", "cose", "openbadges", "vc"],
+  "Digital twins & simulation": ["usd", "gltf", "stl", "3mf"],
 
   // ── Remaining protocol & format clusters ──────────────────────────────
   "BLE & wireless": ["ble-gatt", "lorawan", "thread"],
-  "IoT device models": ["dtdl", "echonet", "ocf", "ipso"],
+  "IoT device models": ["dtdl", "echonet", "ipso"],
   "Hardware debug & interconnect": ["jtag", "ucie", "cxl", "st2110"],
   "Query & data access": ["sql", "cql", "cypher", "xquery"],
-  "Network protocols": ["dns", "bgp", "snmp", "http2", "http3", "quic"],
-  "Cryptographic tokens": ["jose", "macaroon", "biscuit", "paseto"],
-  "Authorization frameworks": ["oauth2", "gnap", "rar"],
+  "Network protocols": ["dns", "bgp", "snmp", "quic"],
+  "Cryptographic tokens": ["jose", "sd-jwt", "cose"],
+  "Authorization frameworks": ["oauth2", "oidc", "webauthn"],
   "Healthcare data": ["dicom", "fhir", "hl7v2"],
   "Bioinformatics": ["fastq", "vcf", "pdb", "sbml", "mzml"],
   "Geoscience": ["nifti", "netcdf", "hdf5", "fits"],
   "Chemistry": ["smiles", "cif"],
-  "Video streaming": ["hls", "dash", "srt", "ndi"],
   "Nostr extended": ["nostr-note", "nostr"],
   "Bech32 encoding": ["lightning", "nostr-note"],
   "Legacy auth & identity": ["saml", "kerberos", "pgp", "pkcs"],
@@ -1500,9 +1512,9 @@ export const CLUSTERS: Readonly<Record<string, readonly string[]>> = {
   "Automotive extended": ["uds", "arinc429"],
   "Lidar & survey": ["las"],
   "Financial messaging": ["fix", "edi-x12", "edifact"],
-  "DevOps & CI/CD": ["tfstate", "prometheus", "compose", "gha", "jenkinsfile"],
-  "Container config": ["podman", "buildpack", "cni-plugin"],
-  "Monitoring & observability": ["prometheus", "grafana-dashboard"],
+  "DevOps & CI/CD": ["tfstate", "prometheus", "compose", "gha"],
+  "Container config": ["oci", "dockerfile", "compose"],
+  "Monitoring & observability": ["prometheus", "grafana-dashboard", "opentelemetry", "cloudevents"],
   "ML model formats (extended)": ["tf-savedmodel", "tflite", "torchscript", "mlflow", "coreml", "pmml", "modelcard", "safetensors", "gguf", "onnx"],
 };
 
