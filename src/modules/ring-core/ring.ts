@@ -29,6 +29,7 @@ import {
   byteBasis,
   verifyCriticalIdentity,
 } from "@/lib/uor-ring";
+import { SystemEventBus } from "@/modules/observable/system-event-bus";
 
 // ── ByteTuple ↔ Number conversion ───────────────────────────────────────────
 
@@ -77,57 +78,86 @@ export class UORRing {
 
   // ── Unary operations (ByteTuple → ByteTuple) ──────────────────────────
 
+  /** Emit a ring operation to the system event bus. */
+  private emitOp(op: string, input: ByteTuple, output: ByteTuple): void {
+    SystemEventBus.emit("ring", op, new Uint8Array(input), new Uint8Array(output));
+  }
+
   /** Additive inverse: (-x) mod 2^bits. */
   neg(b: ByteTuple): ByteTuple {
-    return this.toBytes(negNum(this.fromBytes(b), this.bits));
+    const result = this.toBytes(negNum(this.fromBytes(b), this.bits));
+    this.emitOp("neg", b, result);
+    return result;
   }
 
   /** Bitwise complement: per-byte XOR with 0xFF. */
   bnot(b: ByteTuple): ByteTuple {
-    // Direct per-byte implementation for correctness at all quantum levels
-    return b.map((byte) => byte ^ 0xff);
+    const result = b.map((byte) => byte ^ 0xff);
+    this.emitOp("bnot", b, result);
+    return result;
   }
 
   /** Successor: neg(bnot(x)) — NOT independently computed (per spec). */
   succ(b: ByteTuple): ByteTuple {
-    return this.neg(this.bnot(b));
+    // Pause to avoid double-emit from inner neg/bnot calls
+    SystemEventBus.pause();
+    const result = this.neg(this.bnot(b));
+    SystemEventBus.resume();
+    this.emitOp("succ", b, result);
+    return result;
   }
 
   /** Predecessor: bnot(neg(x)) — derived from involutions. */
   pred(b: ByteTuple): ByteTuple {
-    return this.bnot(this.neg(b));
+    SystemEventBus.pause();
+    const result = this.bnot(this.neg(b));
+    SystemEventBus.resume();
+    this.emitOp("pred", b, result);
+    return result;
   }
 
   // ── Binary operations (ByteTuple × ByteTuple → ByteTuple) ─────────────
 
   /** Per-byte XOR. */
   xor(a: ByteTuple, b: ByteTuple): ByteTuple {
-    return a.map((byte, i) => byte ^ (b[i] ?? 0));
+    const result = a.map((byte, i) => byte ^ (b[i] ?? 0));
+    this.emitOp("xor", a, result);
+    return result;
   }
 
   /** Per-byte AND. */
   band(a: ByteTuple, b: ByteTuple): ByteTuple {
-    return a.map((byte, i) => byte & (b[i] ?? 0));
+    const result = a.map((byte, i) => byte & (b[i] ?? 0));
+    this.emitOp("and", a, result);
+    return result;
   }
 
   /** Per-byte OR. */
   bor(a: ByteTuple, b: ByteTuple): ByteTuple {
-    return a.map((byte, i) => byte | (b[i] ?? 0));
+    const result = a.map((byte, i) => byte | (b[i] ?? 0));
+    this.emitOp("or", a, result);
+    return result;
   }
 
   /** Modular addition. */
   add(a: ByteTuple, b: ByteTuple): ByteTuple {
-    return this.toBytes(addNum(this.fromBytes(a), this.fromBytes(b), this.bits));
+    const result = this.toBytes(addNum(this.fromBytes(a), this.fromBytes(b), this.bits));
+    this.emitOp("add", a, result);
+    return result;
   }
 
   /** Modular subtraction. */
   sub(a: ByteTuple, b: ByteTuple): ByteTuple {
-    return this.toBytes(subNum(this.fromBytes(a), this.fromBytes(b), this.bits));
+    const result = this.toBytes(subNum(this.fromBytes(a), this.fromBytes(b), this.bits));
+    this.emitOp("sub", a, result);
+    return result;
   }
 
   /** Modular multiplication. */
   mul(a: ByteTuple, b: ByteTuple): ByteTuple {
-    return this.toBytes(mulNum(this.fromBytes(a), this.fromBytes(b), this.bits));
+    const result = this.toBytes(mulNum(this.fromBytes(a), this.fromBytes(b), this.bits));
+    this.emitOp("mul", a, result);
+    return result;
   }
 
   // ── Analysis ──────────────────────────────────────────────────────────

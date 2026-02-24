@@ -10,7 +10,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StreamProjection, type StreamSnapshot, type LevelSnapshot } from "../stream-projection";
+import { SystemEventBus } from "../system-event-bus";
 import { PageShell } from "@/modules/hologram-ui";
+import { Q0 } from "@/modules/ring-core/ring";
+import { singleProofHash } from "@/modules/uns/core/identity";
+import { project } from "@/modules/uns/core/hologram";
 
 // ── Zone Colors ─────────────────────────────────────────────────────────────
 
@@ -25,9 +29,11 @@ const ZONE_STYLE: Record<string, { bg: string; text: string; border: string; glo
 export default function StreamProjectionPage() {
   const engineRef = useRef<StreamProjection | null>(null);
   const [snapshot, setSnapshot] = useState<StreamSnapshot | null>(null);
-  const [mode, setMode] = useState<"coherent" | "drift" | "collapse" | "recovery">("coherent");
+  const [mode, setMode] = useState<"coherent" | "drift" | "collapse" | "recovery" | "live-system">("coherent");
   const [isStreaming, setIsStreaming] = useState(false);
   const [speed, setSpeed] = useState(80);
+  const [systemEvents, setSystemEvents] = useState(0);
+  const liveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Initialize engine once
   useEffect(() => {
@@ -37,24 +43,68 @@ export default function StreamProjectionPage() {
       setSnapshot(s);
       setIsStreaming(engine.isStreaming);
     });
-    return () => { engine.stop(); unsub(); };
+    return () => {
+      engine.stop();
+      engine.disconnectFromSystem();
+      unsub();
+      if (liveTimerRef.current) clearInterval(liveTimerRef.current);
+    };
+  }, []);
+
+  const stopLiveSystem = useCallback(() => {
+    if (liveTimerRef.current) {
+      clearInterval(liveTimerRef.current);
+      liveTimerRef.current = null;
+    }
+    engineRef.current?.disconnectFromSystem();
   }, []);
 
   const handleStart = useCallback(() => {
-    engineRef.current?.startDemo(mode, speed, 8);
-    setIsStreaming(true);
-  }, [mode, speed]);
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    if (mode === "live-system") {
+      // Connect to real system events + generate real operations periodically
+      engine.connectToSystem();
+      const ring = Q0();
+      let tick = 0;
+      liveTimerRef.current = setInterval(() => {
+        tick++;
+        // Ring operations
+        const a = [tick % 256];
+        const b = [(tick * 7) % 256];
+        ring.neg(a);
+        ring.succ(b);
+        ring.xor(a, b);
+        // Identity derivation every 5th tick
+        if (tick % 5 === 0) {
+          singleProofHash({ "@type": "LiveTick", value: tick, ts: Date.now() }).then((id) => {
+            // Hologram projection from the derived identity
+            project(id);
+          }).catch(() => {});
+        }
+      }, speed);
+      setIsStreaming(true);
+    } else {
+      stopLiveSystem();
+      engine.startDemo(mode, speed, 8);
+      setIsStreaming(true);
+    }
+  }, [mode, speed, stopLiveSystem]);
 
   const handleStop = useCallback(() => {
     engineRef.current?.stop();
+    stopLiveSystem();
     setIsStreaming(false);
-  }, []);
+  }, [stopLiveSystem]);
 
   const handleReset = useCallback(() => {
+    stopLiveSystem();
     engineRef.current?.reset();
     setSnapshot(null);
     setIsStreaming(false);
-  }, []);
+    setSystemEvents(0);
+  }, [stopLiveSystem]);
 
   const handlePulse = useCallback(() => {
     // Single manual injection
@@ -72,17 +122,25 @@ export default function StreamProjectionPage() {
         {/* ── Controls ─────────────────────────────────────────────────── */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Mode selector */}
-          {(["coherent", "drift", "collapse", "recovery"] as const).map((m) => (
+          {(["coherent", "drift", "collapse", "recovery", "live-system"] as const).map((m) => (
             <button
               key={m}
-              onClick={() => { setMode(m); if (isStreaming) { engineRef.current?.stop(); engineRef.current?.reset(); engineRef.current?.startDemo(m, speed, 8); } }}
+              onClick={() => {
+                setMode(m);
+                if (isStreaming) {
+                  handleStop();
+                  engineRef.current?.reset();
+                }
+              }}
               className={`px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${
                 mode === m
-                  ? "bg-primary/20 text-primary border border-primary/40"
+                  ? m === "live-system"
+                    ? "bg-sky-500/20 text-sky-400 border border-sky-500/40"
+                    : "bg-primary/20 text-primary border border-primary/40"
                   : "bg-muted/50 text-muted-foreground border border-transparent hover:border-muted-foreground/20"
               }`}
             >
-              {m}
+              {m === "live-system" ? "⚡ Live System" : m}
             </button>
           ))}
 
@@ -121,7 +179,7 @@ export default function StreamProjectionPage() {
 
         {/* ── Stats Bar ────────────────────────────────────────────────── */}
         {snapshot && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             <StatPill label="Frame" value={`#${snapshot.frame}`} />
             <StatPill label="Bytes" value={snapshot.totalBytes.toLocaleString()} />
             <StatPill label="Rate" value={`${snapshot.bytesPerSecond.toFixed(0)} B/s`} />
@@ -135,6 +193,13 @@ export default function StreamProjectionPage() {
               value={snapshot.network?.zone ?? "—"}
               zone={snapshot.network?.zone ?? "COHERENCE"}
             />
+            {mode === "live-system" && (
+              <StatPill
+                label="System Events"
+                value={`${engineRef.current?.systemEventsReceived ?? 0}`}
+                zone="COHERENCE"
+              />
+            )}
           </div>
         )}
 

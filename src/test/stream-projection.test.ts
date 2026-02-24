@@ -3,6 +3,7 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { StreamProjection, type StreamSnapshot } from "@/modules/observable/stream-projection";
+import { SystemEventBus } from "@/modules/observable/system-event-bus";
 
 describe("Stream Projection Engine", () => {
   it("1. Emits snapshot on ingest", () => {
@@ -119,5 +120,27 @@ describe("Stream Projection Engine", () => {
     sp.subscribe((s) => { snap = s; });
     sp.ingest(new Uint8Array(100));
     expect(snap!.bytesPerSecond).toBeGreaterThan(0);
+  });
+
+  it("13. connectToSystem receives system events", () => {
+    const sp = new StreamProjection();
+    let snap: StreamSnapshot | null = null;
+    sp.subscribe((s) => { snap = s; });
+    sp.connectToSystem();
+    expect(sp.isConnectedToSystem).toBe(true);
+    expect(sp.isStreaming).toBe(true);
+
+    // Emit a system event
+    SystemEventBus.emit("ring", "neg", new Uint8Array([42]), new Uint8Array([214]));
+    expect(snap).not.toBeNull();
+    expect(snap!.totalBytes).toBe(2); // 1 input + 1 output
+    expect(sp.systemEventsReceived).toBe(1);
+
+    sp.disconnectFromSystem();
+    expect(sp.isConnectedToSystem).toBe(false);
+
+    // No more events after disconnect
+    SystemEventBus.emit("ring", "neg", new Uint8Array([1]), new Uint8Array([255]));
+    expect(sp.systemEventsReceived).toBe(1);
   });
 });
