@@ -198,6 +198,11 @@ describe("W3C Interoperability", () => {
       const mlsService = doc.service.find(s => s.type === "MlsGroupId")!;
       expect(mlsService.serviceEndpoint).toMatch(/^urn:ietf:params:mls:group:[0-9a-f]{64}$/);
       expect(mlsService.id).toMatch(/#mls$/);
+      // SCITT — supply chain integrity, transparency and trust
+      expect(types).toContain("ScittStatement");
+      const scittService = doc.service.find(s => s.type === "ScittStatement")!;
+      expect(scittService.serviceEndpoint).toMatch(/^urn:ietf:params:scitt:statement:sha256:[0-9a-f]{64}$/);
+      expect(scittService.id).toMatch(/#scitt$/);
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {
