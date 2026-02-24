@@ -109,18 +109,18 @@ const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate
       <Dialog open={open} onOpenChange={handleOpen}>
         <DialogContent className="max-w-md p-0 overflow-hidden">
           {/* Receipt header */}
-          <div className="border-b border-dashed border-border px-6 pt-6 pb-5 text-center">
-            <p className="text-xs uppercase tracking-[0.25em] text-foreground/50 font-medium">
+          <div className="border-b border-dashed border-border px-6 pt-7 pb-6 text-center">
+            <p className="text-xs uppercase tracking-[0.25em] text-foreground/60 font-semibold">
               Receipt of Authenticity
             </p>
-            <p className="mt-3 text-2xl font-bold tracking-wide text-foreground">
+            <p className="mt-3 text-3xl font-bold tracking-wide text-foreground">
               {displayTriword}
             </p>
-            <p className="mt-1 text-sm text-foreground/50">{name}</p>
+            <p className="mt-1.5 text-base text-foreground/60">{name}</p>
           </div>
 
-          <div className="px-6 py-5 space-y-5">
-            <p className="text-sm text-foreground/70 leading-relaxed">
+          <div className="px-6 py-6 space-y-5">
+            <p className="text-base text-foreground/80 leading-relaxed">
               Identity derived from content. Verified by mathematics.
             </p>
 
@@ -128,7 +128,7 @@ const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate
 
             {breakdown && (
               <div className="space-y-3">
-                <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">Coordinates</p>
+                <p className="text-xs uppercase tracking-widest text-foreground/60 font-semibold">Coordinates</p>
                 <div className="grid grid-cols-3 gap-3">
                   {([
                     { key: "observer" as const, label: "Entity" },
@@ -136,8 +136,8 @@ const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate
                     { key: "context" as const, label: "Frame" },
                   ]).map(({ key, label }) => (
                     <div key={key} className="rounded-lg border border-border bg-card p-3 text-center">
-                      <p className="text-[11px] text-foreground/50">{label}</p>
-                      <p className="text-base font-bold capitalize text-foreground mt-1">{breakdown[key]}</p>
+                      <p className="text-xs text-foreground/60">{label}</p>
+                      <p className="text-lg font-bold capitalize text-foreground mt-1">{breakdown[key]}</p>
                     </div>
                   ))}
                 </div>
@@ -147,11 +147,11 @@ const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate
             <div className="border-t border-dashed border-border" />
 
             <div className="space-y-2">
-              <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">Fingerprint</p>
+              <p className="text-xs uppercase tracking-widest text-foreground/60 font-semibold">Fingerprint</p>
               <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3">
-                <code className="flex-1 font-mono text-xs break-all text-foreground">{cid}</code>
-                <button onClick={() => copyValue(cid)} className="shrink-0 text-foreground/40 hover:text-foreground transition-colors">
-                  {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} />}
+                <code className="flex-1 font-mono text-sm break-all text-foreground/90">{cid}</code>
+                <button onClick={() => copyValue(cid)} className="shrink-0 text-foreground/50 hover:text-foreground transition-colors">
+                  {copied ? <Check size={15} className="text-primary" /> : <Copy size={15} />}
                 </button>
               </div>
             </div>
@@ -162,20 +162,20 @@ const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate
               {status === "verifying" && (
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-4">
                   <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                  <span className="text-sm text-foreground/70">Verifying…</span>
+                  <span className="text-base text-foreground/70">Verifying…</span>
                 </div>
               )}
               {status === "verified" && (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-4 space-y-2">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck size={18} className="text-primary" />
-                    <span className="text-base font-bold text-primary">Authentic</span>
+                    <ShieldCheck size={20} className="text-primary" />
+                    <span className="text-lg font-bold text-primary">Authentic</span>
                   </div>
-                  <p className="text-sm text-foreground/60">
+                  <p className="text-sm text-foreground/70">
                     Original content re-hashed with SHA-256. Recomputed fingerprint matches the stored CID. Content is untampered.
                   </p>
                   {verifyTime !== null && (
-                    <p className="text-xs text-foreground/40 font-mono">
+                    <p className="text-xs text-foreground/50 font-mono">
                       Verified in {verifyTime}ms · {verifyTimestamp}
                     </p>
                   )}
@@ -183,23 +183,23 @@ const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate
               )}
               {status === "failed" && (
                 <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-4">
-                  <span className="text-base font-bold text-destructive">⚠ Verification Failed</span>
-                  <p className="text-sm text-foreground/60 mt-1">Content may have been modified.</p>
+                  <span className="text-lg font-bold text-destructive">⚠ Verification Failed</span>
+                  <p className="text-sm text-foreground/70 mt-1">Content may have been modified.</p>
                 </div>
               )}
               {status === "idle" && (
-                <button onClick={runVerification} className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors w-full">
-                  <ShieldCheck size={16} />
+                <button onClick={runVerification} className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-base font-medium text-foreground hover:bg-muted/50 transition-colors w-full">
+                  <ShieldCheck size={18} />
                   Verify
                 </button>
               )}
             </div>
           </div>
 
-          <div className="bg-muted/30 border-t border-dashed border-border px-6 py-3 flex items-center justify-between">
-            <p className="text-[10px] text-foreground/40">UOR · Content-Addressed · Self-Verifying</p>
-            <button onClick={() => copyValue(cid)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium">
-              {copied ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy ID</>}
+          <div className="bg-muted/30 border-t border-dashed border-border px-6 py-4 flex items-center justify-between">
+            <p className="text-xs text-foreground/60 font-medium">UOR · Content-Addressed · Self-Verifying</p>
+            <button onClick={() => copyValue(cid)} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-semibold">
+              {copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy ID</>}
             </button>
           </div>
         </DialogContent>
