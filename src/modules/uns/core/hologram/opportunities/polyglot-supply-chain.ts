@@ -60,6 +60,14 @@ const LANGUAGE_CATEGORIES: Record<string, string> = {
   "sql-schema": "Query/Data", "graphql": "Query/Data", "sparql": "Query/Data", "xquery": "Query/Data",
   "ada": "Safety-Critical", "fortran": "HPC/Legacy", "pascal": "Legacy", "assembly": "Machine Code",
   "apl": "Niche", "forth": "Niche", "prolog": "Niche", "smalltalk": "Niche", "crystal": "Niche", "pony": "Niche",
+  // Tier 10: Markup/Config/Serialization
+  "xml": "Markup/Document", "markdown": "Markup/Document", "latex": "Markup/Document", "asciidoc": "Markup/Document", "rst": "Markup/Document",
+  "yaml": "Configuration", "toml": "Configuration", "json-schema": "Configuration", "ini": "Configuration", "dotenv": "Configuration",
+  "protobuf": "Serialization/IDL", "thrift": "Serialization/IDL", "capnproto": "Serialization/IDL", "flatbuffers": "Serialization/IDL",
+  "avro": "Serialization/IDL", "msgpack": "Serialization/IDL", "cbor": "Serialization/IDL",
+  "openapi": "API Description", "asyncapi": "API Description", "wsdl": "API Description", "raml": "API Description",
+  "xsd": "Schema/Ontology", "shacl": "Schema/Ontology", "shex": "Schema/Ontology", "owl": "Schema/Ontology", "rdfs": "Schema/Ontology",
+  "mermaid": "Diagram/Visual", "plantuml": "Diagram/Visual", "dot": "Diagram/Visual", "svg": "Diagram/Visual",
 };
 
 /** Language → downstream chain targets. */
@@ -95,6 +103,32 @@ const CHAIN_MAP: Record<string, Array<[string, string]>> = {
   "php": [["mcp-tool", "Script → tool"]],
   "erlang": [["a2a", "Actor → agent"]],
   "elixir": [["a2a", "GenServer → agent"], ["erlang", "Source → BEAM"]],
+  // Tier 10 chains
+  "openapi": [["oasf", "Spec → service descriptor"], ["skill-md", "Endpoints → capabilities"], ["mcp-tool", "REST → tool"]],
+  "asyncapi": [["a2a", "Event spec → agent card"], ["oasf", "Async → service"]],
+  "protobuf": [["skill-md", "Schema → contract"], ["oasf", "gRPC → service"], ["mcp-tool", "RPC → tool"]],
+  "json-schema": [["skill-md", "Types → contract"], ["openapi", "Schema → API"], ["mcp-tool", "Validation → tool"]],
+  "yaml": [["hcl", "Config → IaC"], ["dockerfile", "Compose → build"], ["openapi", "Format → API spec"]],
+  "toml": [["rust-crate", "Cargo.toml → crate"], ["nix", "Config → build"]],
+  "xml": [["xsd", "Document → schema"], ["wsdl", "Data → service"]],
+  "xsd": [["json-schema", "XML → JSON migration"], ["protobuf", "XML → binary migration"]],
+  "markdown": [["skill-md", "Doc → contract"], ["nanda-agentfacts", "README → passport"]],
+  "latex": [["vc", "Paper → credential"], ["cid", "Paper → IPFS"]],
+  "shacl": [["vc", "Shape → credential"]],
+  "owl": [["shacl", "Ontology → validation"]],
+  "rdfs": [["owl", "Vocab → ontology"]],
+  "mermaid": [["markdown", "Diagram → doc"], ["svg", "Source → render"]],
+  "plantuml": [["svg", "UML → render"]],
+  "dot": [["svg", "Graph → render"]],
+  "wsdl": [["oasf", "SOAP → service"], ["cobol-program", "SOA → legacy"]],
+  "cbor": [["cid", "Binary → content-address"]],
+  "avro": [["sql-schema", "Schema → SQL"], ["nanda-agentfacts", "Data → agent"]],
+  "thrift": [["oasf", "IDL → service"], ["java-class", "IDL → stub"]],
+  "capnproto": [["rust-crate", "Schema → Rust code"]],
+  "flatbuffers": [["cpp-unit", "Schema → C++ accessor"]],
+  "raml": [["openapi", "RAML → OpenAPI migration"]],
+  "msgpack": [["cbor", "Binary → binary format bridge"]],
+  "svg": [["cid", "Graphic → content-address"]],
 };
 
 /**
