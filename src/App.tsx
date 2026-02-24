@@ -94,6 +94,7 @@ const ClaimIdentityPage = lazy(() => import("@/modules/uor-identity/pages/ClaimI
 const BitcoinScriptPage = lazy(() => import("@/modules/bitcoin/pages/BitcoinScriptPage"));
 const TimestampPage = lazy(() => import("@/modules/bitcoin/pages/TimestampPage"));
 const BitcoinDemoPage = lazy(() => import("@/modules/bitcoin/pages/DemoPage"));
+const ZcashDualityPage = lazy(() => import("@/modules/bitcoin/pages/ZcashDualityPage"));
 
 const queryClient = new QueryClient();
 
@@ -201,6 +202,7 @@ const App = () => {
             <Route path="/bitcoin" element={<BitcoinScriptPage />} />
             <Route path="/bitcoin/timestamp" element={<TimestampPage />} />
             <Route path="/bitcoin/demo" element={<BitcoinDemoPage />} />
+            <Route path="/bitcoin/zcash" element={<ZcashDualityPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

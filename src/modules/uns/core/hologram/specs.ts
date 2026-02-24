@@ -275,6 +275,68 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 5b — ZCASH PROTOCOL (Bitcoin-compatible + Privacy Duality)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Zcash Transparent OP_RETURN — Public Timestamping (t-address) ───────
+  // Zcash's transparent layer inherits Bitcoin's UTXO model and script
+  // system. The OP_RETURN commitment is IDENTICAL to Bitcoin's — same
+  // opcodes, same encoding, same 256-bit UOR identity. This is not an
+  // adaptation — it's the SAME script running on a second chain.
+  //
+  // This projection validates the holographic principle: one identity,
+  // two blockchains, zero translation. Zcash transparent IS Bitcoin script.
+  //
+  //   Script: OP_RETURN OP_PUSHBYTES_36 "UOR" <32-byte hash>
+  //   Hex:    6a24 554f52 {hash}
+
+  ["zcash-transparent", {
+    project: ({ hashBytes }) => {
+      const hex = Array.from(hashBytes)
+        .map(b => b.toString(16).padStart(2, "0")).join("");
+      return `6a24554f52${hex}`;
+    },
+    fidelity: "lossless",
+    spec: "https://zips.z.cash/protocol/protocol.pdf",
+  }],
+
+  // ── Zcash Shielded Memo — Privacy-Preserving Content Address ───────────
+  // ZIP-302 defines a 512-byte encrypted memo field attached to every
+  // shielded (z-address) note. Only the recipient can decrypt it.
+  //
+  // We encode the UOR identity into a typed memo:
+  //   Byte 0:    0xF5 — "No particular meaning" type (ZIP-302 §Memo Types)
+  //              This avoids collision with text memos (0x00-0xF4) and
+  //              the empty memo marker (0xF6).
+  //   Byte 1:    0x01 — UOR protocol version
+  //   Byte 2:    0x01 — Payload type: SHA-256 identity hash
+  //   Bytes 3-34: 32-byte SHA-256 hash (the UOR canonical identity)
+  //   Bytes 35-511: Zero-padded (memo field is always 512 bytes)
+  //
+  // The result is a hex string representing the full 512-byte memo.
+  // The actual encryption happens at the wallet layer — this projection
+  // produces the plaintext memo content that gets encrypted.
+  //
+  //   Format: f5 01 01 {32-byte hash} {477 zero bytes}
+
+  ["zcash-memo", {
+    project: ({ hashBytes }) => {
+      const hex = Array.from(hashBytes)
+        .map(b => b.toString(16).padStart(2, "0")).join("");
+      // f5 = ZIP-302 "no particular meaning" type
+      // 01 = UOR protocol version 1
+      // 01 = payload type: SHA-256 identity
+      // {hash} = 32 bytes of UOR identity
+      // remaining 477 bytes are zero-padded
+      const header = "f50101";
+      const padding = "00".repeat(512 - 3 - 32); // 477 zero bytes
+      return `${header}${hex}${padding}`;
+    },
+    fidelity: "lossless",
+    spec: "https://zips.z.cash/zip-0302",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // TIER 6 — SOCIAL PROTOCOLS (SHA-256 native alignment)
   // ═══════════════════════════════════════════════════════════════════════════
 
