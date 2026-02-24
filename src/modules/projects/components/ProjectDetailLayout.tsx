@@ -1,9 +1,16 @@
 import Layout from "@/modules/core/components/Layout";
 import { ExternalLink, ArrowLeft, ShieldCheck, Bot, CheckCircle2, Loader2, Copy, Check } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { generateCertificate, type UorCertificate } from "@/lib/uor-certificate";
 import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
+import { canonicalToTriword, formatTriword, triwordBreakdown } from "@/lib/uor-triword";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/modules/core/ui/dialog";
 
 export interface ProjectSection {
   heading: string;
@@ -44,6 +51,193 @@ const CopyRow = ({ label, value, display }: { label: string; value: string; disp
     </p>
   );
 };
+
+/**
+ * CertificateReceipt — Triword-based Receipt of Authenticity
+ * Used on every project page. Same format as the ConsoleUI CanonicalIdBadge verify dialog.
+ */
+const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate; name: string }) => {
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState<"idle" | "verifying" | "verified" | "failed">("idle");
+  const [verifyTime, setVerifyTime] = useState<number | null>(null);
+  const [verifyTimestamp, setVerifyTimestamp] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const cid = certificate["cert:cid"];
+  const triword = canonicalToTriword(cid);
+  const displayTriword = formatTriword(triword);
+  const breakdown = triwordBreakdown(triword);
+
+  const copyValue = useCallback((v: string) => {
+    navigator.clipboard.writeText(v);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, []);
+
+  const runVerification = useCallback(async () => {
+    setStatus("verifying");
+    const t0 = performance.now();
+    try {
+      const payloadBytes = new TextEncoder().encode(certificate["cert:canonicalPayload"]);
+      const recomputedCid = await computeCid(payloadBytes);
+      const match = recomputedCid === cid;
+      setVerifyTime(Math.round(performance.now() - t0));
+      setVerifyTimestamp(new Date().toISOString());
+      setStatus(match ? "verified" : "failed");
+    } catch {
+      setVerifyTime(Math.round(performance.now() - t0));
+      setVerifyTimestamp(new Date().toISOString());
+      setStatus("failed");
+    }
+  }, [certificate, cid]);
+
+  const handleOpen = useCallback((o: boolean) => {
+    setOpen(o);
+    if (o && status === "idle") runVerification();
+  }, [status, runVerification]);
+
+  return (
+    <div className="mt-5 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+      <div className="inline-flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-2.5">
+        <span className="text-sm font-semibold text-foreground tracking-wide">
+          {displayTriword}
+        </span>
+        <button
+          onClick={() => handleOpen(true)}
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
+          <ShieldCheck size={13} />
+          Verify certificate
+        </button>
+      </div>
+
+      <Dialog open={open} onOpenChange={handleOpen}>
+        <DialogContent className="max-w-md p-0 overflow-hidden">
+          <div className="bg-primary/5 border-b border-dashed border-border px-6 py-5 text-center">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Receipt of Authenticity
+            </p>
+            <p className="mt-2 text-xl font-bold tracking-wide text-foreground">
+              {displayTriword}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{name}</p>
+          </div>
+
+          <div className="px-6 py-4 space-y-4">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Every piece of data in this system has a unique identity derived from its content.
+              This receipt proves this object is authentic and untampered — verified by mathematics, not by trust.
+            </p>
+
+            <div className="border-t border-dashed border-border" />
+
+            {breakdown && (
+              <div className="space-y-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Identity Coordinates</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { key: "observer" as const, label: "Who / What", desc: "The entity" },
+                    { key: "observable" as const, label: "Property", desc: "The quality" },
+                    { key: "context" as const, label: "Where / When", desc: "The frame" },
+                  ]).map(({ key, label, desc }) => (
+                    <div key={key} className="rounded-md border border-border bg-card p-2.5 text-center">
+                      <p className="text-[9px] text-muted-foreground">{label}</p>
+                      <p className="text-sm font-semibold capitalize text-foreground mt-0.5">{breakdown[key]}</p>
+                      <p className="text-[8px] text-muted-foreground mt-0.5">{desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="border-t border-dashed border-border" />
+
+            <div className="space-y-2">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Digital Fingerprint</p>
+              <div className="flex items-start gap-2 rounded-md border border-border bg-muted/30 px-3 py-2.5">
+                <code className="flex-1 font-mono text-[10px] break-all text-foreground leading-relaxed">{cid}</code>
+                <button onClick={() => copyValue(cid)} className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors">
+                  {copied ? <Check size={12} className="text-primary" /> : <Copy size={12} />}
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Content ID (CIDv1) — unique to this exact content</p>
+            </div>
+
+            <div className="border-t border-dashed border-border" />
+
+            <div className="space-y-2">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">How Verification Works</p>
+              <div className="text-[11px] text-muted-foreground leading-relaxed space-y-1.5">
+                {[
+                  "The object's content is fed through a standardized algorithm (URDNA2015)",
+                  "This produces a unique fingerprint (the hash above)",
+                  "The first 3 bytes map to three words — the name you see",
+                  "If anything changes, the fingerprint changes — and so does the name",
+                ].map((step, i) => (
+                  <p key={i} className="flex items-start gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-foreground mt-0.5">{i + 1}</span>
+                    <span>{step}</span>
+                  </p>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-t border-dashed border-border" />
+
+            <div className="space-y-2">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Verification Status</p>
+              {status === "verifying" && (
+                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-3">
+                  <div className="h-3 w-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                  <span className="text-xs text-muted-foreground">Verifying content integrity…</span>
+                </div>
+              )}
+              {status === "verified" && (
+                <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-3 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-primary" />
+                    <span className="text-sm font-semibold text-primary">Authentic</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    This object's identity has been independently re-derived from its content
+                    and matches the declared fingerprint. No tampering detected.
+                  </p>
+                  {verifyTime !== null && (
+                    <p className="text-[9px] text-muted-foreground font-mono">
+                      Verified in {verifyTime}ms · {verifyTimestamp}
+                    </p>
+                  )}
+                </div>
+              )}
+              {status === "failed" && (
+                <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-3 space-y-1">
+                  <span className="text-sm font-semibold text-destructive">⚠ Verification Failed</span>
+                  <p className="text-[10px] text-muted-foreground">The re-computed identity does not match.</p>
+                </div>
+              )}
+              {status === "idle" && (
+                <button onClick={runVerification} className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2.5 text-xs text-foreground hover:bg-muted/50 transition-colors w-full">
+                  <ShieldCheck size={14} />
+                  Verify this certificate
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-muted/30 border-t border-dashed border-border px-6 py-3 flex items-center justify-between">
+            <div className="text-[9px] text-muted-foreground space-y-0.5">
+              <p>UOR Framework · Content-Addressed Identity</p>
+              <p>16,777,216 unique coordinates · Self-verifying</p>
+            </div>
+            <button onClick={() => copyValue(cid)} className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline">
+              {copied ? <><Check size={10} /> Copied</> : <><Copy size={10} /> Copy ID</>}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
 const ProjectDetailLayout = ({
   name,
   slug,
@@ -70,40 +264,6 @@ const ProjectDetailLayout = ({
     generateCertificate(`project:${slug}`, envelope).then(setCertificate);
   }, [slug, name, category, tagline, repoUrl]);
 
-  const [showCert, setShowCert] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [verified, setVerified] = useState<null | { match: boolean; decoded: Record<string, unknown> }>(null);
-
-  const handleVerify = async () => {
-    if (!certificate) return;
-    setVerifying(true);
-    setVerified(null);
-    try {
-      // Recompute CID from the canonical payload stored in the certificate
-      const payloadBytes = new TextEncoder().encode(certificate["cert:canonicalPayload"]);
-      const recomputedCid = await computeCid(payloadBytes);
-      const match = recomputedCid === certificate["cert:cid"];
-
-      // cert:canonicalPayload is N-Quads (RDF), not JSON.
-      // Try JSON.parse for JSON-LD payloads; fall back to showing raw N-Quads fields.
-      let decoded: Record<string, unknown> = {};
-      try {
-        decoded = JSON.parse(certificate["cert:canonicalPayload"]);
-      } catch {
-        // N-Quads payload — extract fields from the original envelope
-        decoded = {
-          "@type": "uor:ProjectCertificate",
-          "uor:subjectId": certificate["cert:subject"],
-          "uor:specification": certificate["cert:specification"],
-        };
-      }
-      setVerified({ match, decoded });
-    } catch {
-      setVerified({ match: false, decoded: {} });
-    } finally {
-      setVerifying(false);
-    }
-  };
   return (
     <Layout>
       {/* Hero */}
@@ -133,98 +293,7 @@ const ProjectDetailLayout = ({
             {tagline}
           </p>
 
-          {certificate && (
-            <div className="mt-5 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-              <button
-                onClick={() => setShowCert(!showCert)}
-                className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-body transition-colors cursor-pointer"
-              >
-                <ShieldCheck size={15} />
-                {showCert ? "Hide certificate" : "View certificate"}
-              </button>
-              {showCert && (
-                <div className="mt-3 rounded-xl border border-border bg-section-dark px-5 py-4 animate-fade-in-up">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-section-dark-foreground font-body mb-2">
-                    UOR Content Certificate
-                  </p>
-                  <CopyRow label="cid" value={certificate["cert:cid"]} />
-                  <CopyRow label="addr" value={certificate["store:uorAddress"]["u:glyph"]} display={
-                    <><span className="tracking-widest">{certificate["store:uorAddress"]["u:glyph"].slice(0, 32)}…</span>
-                    <span className="text-section-dark-foreground/50 ml-2">({certificate["store:uorAddress"]["u:length"]} bytes)</span></>
-                  } />
-                  <p className="text-sm text-section-dark-foreground/60 font-mono mt-1.5">
-                    subject: {certificate["cert:subject"]} · spec {certificate["cert:specification"]}
-                  </p>
-
-                  {/* Verify button */}
-                  <div className="mt-4 pt-3 border-t border-section-dark-foreground/10">
-                    {!verified ? (
-                      <button
-                        onClick={handleVerify}
-                        disabled={verifying}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 font-body"
-                      >
-                        {verifying ? (
-                          <><Loader2 size={14} className="animate-spin" /> Verifying…</>
-                        ) : (
-                          <><ShieldCheck size={14} /> Verify this certificate</>
-                        )}
-                      </button>
-                    ) : (
-                      <div className="space-y-3 animate-fade-in-up">
-                        {/* Verification result */}
-                        <div className={`flex items-center gap-2 text-sm font-semibold font-body ${verified.match ? "text-green-400" : "text-red-400"}`}>
-                          <CheckCircle2 size={16} />
-                          {verified.match
-                            ? "Certificate verified. Content is authentic."
-                            : "Verification failed. Content may have been altered."}
-                        </div>
-
-                        {verified.match && verified.decoded && Object.keys(verified.decoded).length > 0 && (
-                          <div className="rounded-lg border border-primary/10 bg-background/5 px-4 py-3 space-y-2.5">
-                            <p className="text-sm font-semibold text-section-dark-foreground/90 font-body">
-                              What this certificate confirms:
-                            </p>
-                            {(() => {
-                              const d = verified.decoded;
-                              const fieldLabels: Record<string, string> = {
-                                "uor:name": "Project name",
-                                "uor:description": "Description",
-                                "uor:category": "Category",
-                                "uor:repository": "Source code",
-                                "uor:maturity": "Maturity stage",
-                                "uor:subjectId": "Unique identifier",
-                                "@type": "Object type",
-                              };
-                              return Object.entries(d)
-                                .filter(([key]) => key !== "@context")
-                                .map(([key, value]) => (
-                                  <div key={key} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-2">
-                                    <span className="text-sm text-section-dark-foreground/50 font-body shrink-0">
-                                      {fieldLabels[key] || key.replace(/^uor:/, "").replace(/([A-Z])/g, " $1")}:
-                                    </span>
-                                    <span className="text-sm text-section-dark-foreground font-body break-all">
-                                      {typeof value === "string" ? value : JSON.stringify(value)}
-                                    </span>
-                                  </div>
-                                ));
-                            })()}
-                          </div>
-                        )}
-
-                        <button
-                          onClick={() => setVerified(null)}
-                          className="inline-flex items-center gap-1.5 text-sm text-section-dark-foreground/70 hover:text-section-dark-foreground transition-colors cursor-pointer font-body mt-2"
-                        >
-                          Reset
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {certificate && <CertificateReceipt certificate={certificate} name={name} />}
         </div>
       </section>
 
