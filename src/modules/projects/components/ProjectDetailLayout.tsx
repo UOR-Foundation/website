@@ -184,15 +184,21 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
               </div>
             )}
             {status === "verified" && verifyResult && (
-              <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3.5">
+              <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3.5 space-y-2">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 size={18} className="text-primary" />
                   <span className="text-base font-semibold text-primary">Authentic</span>
                 </div>
-                <p className="text-sm text-foreground/60 mt-1.5 leading-relaxed">
-                  This content has been independently re-checked and confirmed untampered.
+                <p className="text-sm text-foreground/60 leading-relaxed">
+                  Content, boundary, and algebraic coherence independently verified.
                 </p>
-                <p className="text-xs text-foreground/40 mt-2 font-mono">
+                {'coherenceVerified' in verifyResult && (
+                  <div className="flex items-center gap-1.5 text-xs text-foreground/40">
+                    <CheckCircle2 size={11} className="text-primary" />
+                    <span>neg(bnot(x)) ≡ succ(x) confirmed</span>
+                  </div>
+                )}
+                <p className="text-xs text-foreground/40 font-mono">
                   {(() => { const d = new Date(verifyResult.verifiedAt); return d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) + "." + String(d.getMilliseconds()).padStart(3, "0"); })()} · {verifyResult.elapsedMs}ms
                 </p>
               </div>
