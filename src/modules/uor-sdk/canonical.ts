@@ -98,3 +98,35 @@ export type {
   TrustGraphNode,
   SealedTrustGraphNode,
 } from "@/modules/uns/core/fpp";
+
+// ── Polynomial Trees (Coinductive Interface Evolution) ────────────────────
+// Spivak's PolyTr category: evolving projections via terminal coalgebra.
+
+export {
+  constantTree,
+  evolvingTree,
+  tensorProduct,
+  coproduct,
+  internalHom,
+  identityMorphism,
+  composeMorphisms,
+  executeInteraction,
+  truncate,
+  fppTrustEvolutionTree,
+  tspChannelEvolutionTree,
+  agentCapabilityEvolutionTree,
+  ZERO_TREE,
+  UNIT_TREE,
+  DIRECTIONS,
+} from "@/modules/uns/core/hologram/polytree";
+
+export type {
+  PolyTree,
+  Polynomial,
+  PolyTreeMorphism,
+  PolynomialMap,
+  TransitionContext,
+  InteractionStep,
+  PolyTreeSnapshot,
+  DirectionName,
+} from "@/modules/uns/core/hologram/polytree";

@@ -9,7 +9,7 @@
     "u:", "schema:", "op:", "kernel:",
     "partition:", "trace:", "observable:",
     "derivation:", "cert:", "morphism:",
-    "store:", "proof:", "state:", "tsp:", "fpp:", "trqp:"
+    "store:", "proof:", "state:", "tsp:", "fpp:", "trqp:", "polytree:"
   ],
   "exports": [
     "createUorClient",
@@ -33,7 +33,19 @@
     "exchangeVrcs",
     "verifyPhc",
     "verifyVrc",
-    "verifyTrustTriangle"
+    "verifyTrustTriangle",
+    "constantTree",
+    "evolvingTree",
+    "tensorProduct",
+    "coproduct",
+    "internalHom",
+    "identityMorphism",
+    "composeMorphisms",
+    "executeInteraction",
+    "truncate",
+    "fppTrustEvolutionTree",
+    "tspChannelEvolutionTree",
+    "agentCapabilityEvolutionTree"
   ],
   "dependencies": {
     "core": "^1.0.0"

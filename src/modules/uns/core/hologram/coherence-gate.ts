@@ -121,8 +121,9 @@ function classifyTier(name: string, spec: HologramSpec): string {
   if (["erc8004", "x402", "a2a", "a2a-task", "mcp-tool", "mcp-context", "skill-md", "oasf", "onnx", "onnx-op", "nanda-index", "nanda-agentfacts", "nanda-resolver"].includes(name)) return "agentic";
   if (name === "activitypub" || name === "atproto") return "federation";
   if (name.startsWith("tsp-")) return "trust-spanning";
-  if (name.startsWith("fpp-") || name === "trqp") return "first-person";
-  return "other";
+    if (name.startsWith("fpp-") || name === "trqp") return "first-person";
+    if (name.startsWith("polytree-")) return "polynomial-tree";
+    return "other";
 }
 
 /** Hash usage pattern — what part of the identity does the projection consume? */
@@ -420,6 +421,14 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["fpp-phc", "fpp-pdid", "PHC → P-DID: personhood credential enables public persona DID creation"],
     ["fpp-rcard", "fpp-pdid", "R-card → P-DID: digital business card references public persona identity"],
     ["trqp", "mcp-tool", "TRQP → MCP tool: trust registry query becomes agent tool — AI verifies human trust"],
+    // ── Polynomial Tree provenance chains ──
+    ["polytree-node", "polytree-morphism", "Node → morphism: polynomial tree node identity certifies morphism source/target"],
+    ["polytree-morphism", "polytree-tensor", "Morphism → tensor: morphism output certifies tensor product component"],
+    ["polytree-node", "did", "PolyTree node → DID: evolving interface node gets permanent self-sovereign identity"],
+    ["polytree-node", "vc", "PolyTree node → VC: interface state transition certified as verifiable credential"],
+    ["polytree-morphism", "mcp-tool", "PolyTree morphism → MCP tool: interface adaptation becomes agent tool provenance"],
+    ["polytree-node", "fpp-trustgraph", "PolyTree node → trust graph: evolving trust interface maps to trust graph topology"],
+    ["polytree-node", "tsp-envelope", "PolyTree node → TSP envelope: interface evolution state rides authenticated channel"],
   ];
   for (const [a, b, insight] of chains) {
     emitIf(has, synergies, a, b, "provenance-chain", insight,
@@ -532,6 +541,13 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["fpp-rdid", "fpp-mdid", "R-DID + M-DID: R-DID is PRIVATE, M-DID is COMMUNITY — complementary privacy scopes", "Same person, different contexts — pairwise privacy meets group membership"],
     ["fpp-vrc", "fpp-vec", "VRC + VEC: VRC proves RELATIONSHIP, VEC proves ENDORSEMENT — bilateral meets contextual trust", "VRC is peer-to-peer trust, VEC is reputation — structural and social trust complement"],
     ["fpp-trustgraph", "onnx", "Trust graph + ONNX: trust graph maps HUMAN trust, ONNX maps MODEL capability — AI trustworthiness", "Trust graph gates ONNX model access — only trusted humans can deploy models"],
+    // ── Polynomial Tree complementary pairs ──
+    ["polytree-node", "cid", "PolyTree node + CID: node is EVOLVING INTERFACE, CID is PERMANENT ADDRESS — dual temporality", "Polynomial tree node content-addressed via CID — evolving structure has immutable identity"],
+    ["polytree-morphism", "vc", "PolyTree morphism + VC: morphism proves ADAPTATION, VC proves CLAIMS — interface change is certifiable", "Interface adaptation morphism becomes verifiable claim — evolution is auditable"],
+    ["polytree-tensor", "a2a", "PolyTree tensor + A2A: tensor composes INTERFACES, A2A composes AGENTS — parallel composition", "Tensor product of agent interfaces IS multi-agent composition — PolyTr is the type theory of A2A"],
+    ["polytree-node", "skill-md", "PolyTree node + skill.md: node is CURRENT INTERFACE, skill.md is ADVERTISED CAPABILITY — co-evolving", "Polynomial tree node transitions map to skill.md capability updates — interface evolution updates advertisement"],
+    ["polytree-node", "onnx", "PolyTree node + ONNX: node is INTERFACE, ONNX is MODEL — progressive GAN training (Spivak §4)", "Polynomial tree models progressive resolution growth during training — the paper's motivating example"],
+    ["polytree-morphism", "tsp-relationship", "PolyTree morphism + TSP relationship: morphism adapts INTERFACE, TSP adapts CHANNEL — co-evolution", "Interface morphism triggers TSP channel renegotiation — structural change propagates to transport"],
   ];
   for (const [a, b, insight, impl] of pairs) {
     emitIf(has, synergies, a, b, "complementary-pair", insight,
@@ -539,7 +555,7 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
   }
 
   // Rule 6: Trust amplification
-  const trustSources = ["bitcoin", "zcash-transparent", "cid", "did", "tsp-relationship", "fpp-phc", "fpp-trustgraph"];
+  const trustSources = ["bitcoin", "zcash-transparent", "cid", "did", "tsp-relationship", "fpp-phc", "fpp-trustgraph", "polytree-node"];
   for (let i = 0; i < trustSources.length; i++) {
     for (let j = i + 1; j < trustSources.length; j++) {
       const [a, b] = [trustSources[i], trustSources[j]];
