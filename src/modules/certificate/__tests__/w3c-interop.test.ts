@@ -142,9 +142,16 @@ describe("W3C Interoperability", () => {
 
       expect(doc.service.length).toBeGreaterThanOrEqual(3);
       const types = doc.service.map(s => s.type);
+      // IPv6 — ULA content-addressed routing (fd00:0075:6f72::/48)
       expect(types).toContain("UorContentAddress");
+      const ipv6Service = doc.service.find(s => s.type === "UorContentAddress")!;
+      expect(ipv6Service.serviceEndpoint).toMatch(/^ipv6:\/\/fd00:0075:6f72:/);
+      expect(ipv6Service.id).toMatch(/#ipv6$/);
+      // Glyph — Braille bijection address
       expect(types).toContain("UorBrailleAddress");
-      // ActivityPub — W3C federated object endpoint
+      const glyphService = doc.service.find(s => s.type === "UorBrailleAddress")!;
+      expect(glyphService.serviceEndpoint).toMatch(/^urn:uor:address:[\u2800-\u28FF]+$/);
+      expect(glyphService.id).toMatch(/#glyph$/);
       expect(types).toContain("ActivityPubObject");
       const apService = doc.service.find(s => s.type === "ActivityPubObject")!;
       expect(apService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/ap\/objects\/[0-9a-f]{64}$/);
