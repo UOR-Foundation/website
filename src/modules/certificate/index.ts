@@ -85,3 +85,4 @@ export type { UorCertificate } from "./types";
 export { verifyCertificate, verifyCertificateFull, type VerificationResult, type FullVerificationResult } from "./verify";
 export { decodeCertificate, type DecodedCertificate } from "./decode";
 export { certificateToTriword, triwordBreakdown } from "./triword";
+export { enforceBoundary, verifyBoundary, type BoundaryManifest, type BoundaryResult } from "./boundary";

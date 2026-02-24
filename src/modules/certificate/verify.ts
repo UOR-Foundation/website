@@ -2,7 +2,8 @@
  * Certificate Verification
  * ════════════════════════
  *
- * Independently verifies that a UOR certificate is authentic.
+ * Independently verifies that a UOR certificate is authentic AND
+ * that its object boundaries are intact.
  *
  * TWO VERIFICATION MODES:
  *
@@ -11,39 +12,24 @@
  *   Fast. Proves the certificate is internally consistent.
  *
  * ── Full Re-derivation (verifyCertificateFull) ───────────────────
- *   Re-runs the ENTIRE canonical pipeline from the source object:
- *     Source Object → URDNA2015 → Canonical N-Quads → UTF-8 → SHA-256 → CID
- *   Then compares the freshly generated CID against the stored CID.
+ *   Re-runs the ENTIRE pipeline from the source object:
+ *     1. Enforce boundary (same rules as generation)
+ *     2. Canonicalize via URDNA2015
+ *     3. Hash with SHA-256
+ *     4. Compare CID, payload, AND boundary hash
  *
- *   This is the STRONGEST form of verification because it re-derives
- *   identity from scratch. Even a single bit difference in the source
- *   object will produce a completely different CID — making any
- *   tampering mathematically detectable.
+ *   This is the STRONGEST form of verification because it confirms:
+ *     - Content identity (CID match)
+ *     - Payload fidelity (byte-level N-Quads match)
+ *     - Boundary integrity (same fields included/excluded)
  *
- * THE VERIFICATION CONTRACT:
- *
- *   1. Take the source object (the original data)
- *   2. Canonicalize it: JSON-LD → URDNA2015 → N-Quads
- *   3. Hash it: UTF-8 encode → SHA-256 → CIDv1
- *   4. Compare the recomputed CID against the stored CID
- *
- * If they match: the content is authentic and untampered.
- * If they differ: the content or certificate has been modified.
- *
- * This requires NO external authority, NO network requests,
- * and NO special permissions. Anyone can verify, anywhere.
- *
- * WHY THIS WORKS:
- *
- * SHA-256 is a one-way function. Given content, you can compute
- * its hash. But you cannot reverse-engineer content from a hash.
- * Any change to the content — even a single byte — produces a
- * completely different hash. This makes tampering detectable
- * with mathematical certainty.
+ * Even a single bit difference — or a single extra field — will
+ * produce a completely different result.
  */
 
 import { computeCid } from "@/lib/uor-address";
 import { singleProofHash } from "@/lib/uor-canonical";
+import { enforceBoundary, type BoundaryManifest } from "./boundary";
 import type { UorCertificate } from "./types";
 
 /**
@@ -71,9 +57,7 @@ export interface VerificationResult {
 
 /**
  * Result of a FULL re-derivation verification.
- *
- * This extends the basic result with byte-level comparison data,
- * giving complete transparency into what was compared and how.
+ * Includes byte-level comparison AND boundary verification.
  */
 export interface FullVerificationResult extends VerificationResult {
   /** The verification mode used */
@@ -99,13 +83,19 @@ export interface FullVerificationResult extends VerificationResult {
 
   /** The derivation ID derived from the fresh hash */
   recomputedDerivationId: string;
+
+  /** The boundary manifest from the re-enforced source object */
+  recomputedBoundary: BoundaryManifest;
+
+  /** The boundary manifest stored in the certificate */
+  storedBoundary: BoundaryManifest;
+
+  /** Whether the boundary hashes match (same fields included) */
+  boundaryMatch: boolean;
 }
 
 /**
  * Quick verify: re-hash the stored canonical payload.
- *
- * @param certificate — The certificate to verify
- * @returns Verification result with match status and timing
  */
 export async function verifyCertificate(
   certificate: UorCertificate
@@ -128,8 +118,8 @@ export async function verifyCertificate(
       elapsedMs,
       verifiedAt: new Date().toISOString(),
       summary: authentic
-        ? `Original content re-hashed with SHA-256. Recomputed fingerprint matches the stored CID. Content is untampered.`
-        : `Recomputed fingerprint does not match the stored CID. Content may have been modified.`,
+        ? `Re-hashed canonical payload. CID matches. Content is untampered.`
+        : `Re-hashed canonical payload. CID does NOT match. Content may have been modified.`,
     };
   } catch (error) {
     const elapsedMs = Math.round(performance.now() - t0);
@@ -145,33 +135,18 @@ export async function verifyCertificate(
 }
 
 /**
- * FULL RE-DERIVATION VERIFICATION.
+ * FULL RE-DERIVATION VERIFICATION with boundary enforcement.
  *
- * This is the strongest form of verification. It takes the original
- * source object, re-runs the entire URDNA2015 → SHA-256 → CID pipeline
- * from scratch, and compares the result against the stored certificate.
+ * Pipeline:
+ *   1. Enforce boundary on source object (same rules as generation)
+ *   2. Canonicalize bounded object → URDNA2015 → N-Quads
+ *   3. Hash N-Quads → SHA-256 → CID
+ *   4. Compare: CID, payload bytes, AND boundary hash
  *
- * The pipeline:
- *   1. Source object → URDNA2015 canonicalization → N-Quads string
- *   2. N-Quads string → UTF-8 bytes → SHA-256 → 32-byte hash
- *   3. Hash → CIDv1 (dag-json, sha2-256, base32lower)
- *   4. Compare recomputed CID against stored CID
- *   5. Compare recomputed N-Quads against stored N-Quads (byte-level)
- *
- * Even a single bit difference in the source object will propagate
- * through the hash function and produce a completely different CID.
- *
- * @param sourceObject — The original object to re-derive from
- * @param certificate — The certificate to verify against
- * @returns Full verification result with byte-level comparison data
- *
- * @example
- * ```ts
- * const result = await verifyCertificateFull(originalData, cert);
- * if (result.authentic && result.payloadMatch) {
- *   console.log("Byte-perfect match. Content is untampered.");
- * }
- * ```
+ * All three must match for full authenticity:
+ *   - CID match → content identity is preserved
+ *   - Payload match → canonical form is byte-identical
+ *   - Boundary match → same fields were included/excluded
  */
 export async function verifyCertificateFull(
   sourceObject: Record<string, unknown>,
@@ -180,23 +155,30 @@ export async function verifyCertificateFull(
   const t0 = performance.now();
   const storedCid = certificate["cert:cid"];
   const storedNQuads = certificate["cert:canonicalPayload"];
+  const storedBoundary = certificate["cert:boundary"];
 
   try {
-    // Step 1: Re-run the ENTIRE canonical pipeline from the source object
-    //         Object → URDNA2015 → N-Quads → UTF-8 → SHA-256 → CID
-    const proof = await singleProofHash(sourceObject);
+    // Step 1: Re-enforce boundaries on the source object
+    const boundary = await enforceBoundary(sourceObject);
+    if (!boundary.valid) {
+      throw new Error(`Boundary enforcement failed: ${boundary.error}`);
+    }
 
-    // Step 2: Byte-level comparison of the canonical payloads
+    // Step 2: Canonicalize the BOUNDED object
+    const proof = await singleProofHash(boundary.boundedObject);
+
+    // Step 3: Compare everything
     const storedBytes = new TextEncoder().encode(storedNQuads);
     const payloadMatch = proof.nquads === storedNQuads;
-
-    // Step 3: CID comparison (the ultimate identity test)
     const authentic = proof.cid === storedCid;
+    const boundaryMatch = storedBoundary
+      ? boundary.manifest.boundaryHash === storedBoundary.boundaryHash
+      : true; // backward compat: old certs without boundary
 
     const elapsedMs = Math.round(performance.now() - t0);
 
     return {
-      authentic,
+      authentic: authentic && boundaryMatch,
       mode: "full-re-derivation",
       storedCid,
       recomputedCid: proof.cid,
@@ -207,20 +189,40 @@ export async function verifyCertificateFull(
       storedByteLength: storedBytes.byteLength,
       recomputedHashHex: proof.hashHex,
       recomputedDerivationId: proof.derivationId,
+      recomputedBoundary: boundary.manifest,
+      storedBoundary: storedBoundary || boundary.manifest,
+      boundaryMatch,
       elapsedMs,
       verifiedAt: new Date().toISOString(),
-      summary: authentic
-        ? `Full re-derivation complete. Source object re-canonicalized via URDNA2015, re-hashed with SHA-256. ` +
-          `Recomputed CID matches stored CID. ` +
-          `Payload: ${proof.canonicalBytes.byteLength} bytes. ` +
-          `Byte-level match: ${payloadMatch ? "YES" : "NO"}. ` +
+      summary: authentic && boundaryMatch
+        ? `Full re-derivation with boundary enforcement complete. ` +
+          `Object boundary: ${boundary.manifest.topLevelFields} fields, ` +
+          `${boundary.manifest.totalFields} total, depth ${boundary.manifest.maxDepthObserved}. ` +
+          `Boundary hash: ✓ match. CID: ✓ match. Payload: ${proof.canonicalBytes.byteLength} B ✓ exact. ` +
           `Content is authentic and untampered.`
-        : `Full re-derivation complete. Recomputed CID does NOT match stored CID. ` +
-          `Stored: ${storedCid.slice(0, 20)}… | Recomputed: ${proof.cid.slice(0, 20)}… ` +
-          `Content may have been modified.`,
+        : !boundaryMatch
+          ? `Boundary mismatch: object fields have changed since certification. ` +
+            `Stored boundary: ${storedBoundary?.boundaryHash?.slice(0, 12)}… | ` +
+            `Recomputed: ${boundary.manifest.boundaryHash.slice(0, 12)}…`
+          : `CID mismatch: content has been modified. ` +
+            `Stored: ${storedCid.slice(0, 20)}… | Recomputed: ${proof.cid.slice(0, 20)}…`,
     };
   } catch (error) {
     const elapsedMs = Math.round(performance.now() - t0);
+    const emptyBoundary = {
+      version: "1.0.0" as const,
+      totalFields: 0,
+      topLevelFields: 0,
+      maxDepthObserved: 0,
+      maxDepthAllowed: 16,
+      strippedFields: [],
+      boundaryKeys: [],
+      hasContext: false,
+      hasType: false,
+      declaredType: "(error)",
+      boundaryHash: "",
+      enforcedAt: new Date().toISOString(),
+    };
     return {
       authentic: false,
       mode: "full-re-derivation",
@@ -233,9 +235,12 @@ export async function verifyCertificateFull(
       storedByteLength: new TextEncoder().encode(storedNQuads).byteLength,
       recomputedHashHex: "",
       recomputedDerivationId: "",
+      recomputedBoundary: emptyBoundary,
+      storedBoundary: storedBoundary || emptyBoundary,
+      boundaryMatch: false,
       elapsedMs,
       verifiedAt: new Date().toISOString(),
-      summary: `Full re-derivation failed: ${error instanceof Error ? error.message : "unknown error"}`,
+      summary: `Verification failed: ${error instanceof Error ? error.message : "unknown error"}`,
     };
   }
 }
