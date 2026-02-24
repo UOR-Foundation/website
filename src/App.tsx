@@ -102,6 +102,7 @@ const OpportunityExplorerPage = lazy(() => import("@/modules/opportunities/pages
 const RuliadPage = lazy(() => import("@/modules/ruliad/pages/RuliadPage"));
 const RulialMotionPage = lazy(() => import("@/modules/ruliad/pages/RulialMotionPage"));
 const RuliadPaperPage = lazy(() => import("@/modules/ruliad/pages/RuliadPaperPage"));
+const ConsciousnessPage = lazy(() => import("@/modules/consciousness/pages/ConsciousnessPage"));
 
 const queryClient = new QueryClient();
 
@@ -217,6 +218,7 @@ const App = () => {
             <Route path="/ruliad" element={<RuliadPage />} />
             <Route path="/ruliad/motion" element={<RulialMotionPage />} />
             <Route path="/ruliad/paper" element={<RuliadPaperPage />} />
+            <Route path="/consciousness" element={<ConsciousnessPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
