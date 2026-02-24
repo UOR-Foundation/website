@@ -308,7 +308,8 @@ export default function AppConsoleRunner() {
           {/* The wasm-loader injects the iframe into this div */}
           <div
             ref={mountRef}
-            className="w-full h-full min-h-[400px]"
+            className="w-full h-full"
+            style={{ minHeight: "500px" }}
             data-uor-sandbox="true"
           />
         </div>

@@ -30,20 +30,22 @@ function instrumentHtml(
 ): string {
   const shimTag = `<script src="${UOR_SHIM_CDN}" data-uor-app-canonical="${canonicalId}"></script>`;
 
+  // Permissive CSP — allow the app's own origins to load all resources
   const csp = [
-    "default-src 'self' https://cdn.uor.foundation https://api.uor.foundation https://app.uor.app",
-    "script-src 'self' 'unsafe-inline' https://cdn.uor.foundation",
-    "style-src 'self' 'unsafe-inline'",
-    "connect-src 'self' https://api.uor.foundation https://app.uor.app",
-    "img-src 'self' data: blob:",
-    "font-src 'self'",
+    "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:",
+    "script-src * 'unsafe-inline' 'unsafe-eval'",
+    "style-src * 'unsafe-inline'",
+    "img-src * data: blob:",
+    "font-src * data:",
+    "connect-src *",
+    "frame-src *",
   ].join("; ");
 
   const cspMeta = `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
 
   // Inject before </head> if present
   if (html.includes("</head>")) {
-    return html.replace("</head>", `${cspMeta}\n${shimTag}\n</head>`);
+    return html.replace("</head>", `${shimTag}\n</head>`);
   }
 
   // Wrap in minimal document
@@ -52,7 +54,6 @@ function instrumentHtml(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-${cspMeta}
 ${shimTag}
 </head>
 <body>

@@ -165,10 +165,16 @@ export async function deployApp(opts: DeployOptions): Promise<DeployResult> {
   // ── Stage 4: RUN ─────────────────────────────────────────────
   progress("run", "Starting WASM runtime...");
 
+  // Use the ORIGINAL source URL for the live iframe (like docker port-forward).
+  // The serve-app stored copy is the content-addressed backup/verification layer.
+  const originalSourceUrl = importResult.manifest["app:sourceUrl"] as string;
+  const runnableUrl = originalSourceUrl.startsWith("http")
+    ? originalSourceUrl
+    : ingestResult.serveUrl;
+
   const instance = await runApp({
     imageRef: buildResult.image.canonicalId,
-    // Use our self-hosted serve URL instead of original source
-    sourceUrl: ingestResult.serveUrl,
+    sourceUrl: runnableUrl,
     mountTarget: opts.mountTarget,
     tracing: true,
   });

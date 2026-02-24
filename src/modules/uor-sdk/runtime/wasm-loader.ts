@@ -240,18 +240,25 @@ export async function runApp(
   if (typeof document !== "undefined" && config.mountTarget) {
     frame = document.createElement("iframe");
 
-    // If we have a real source URL, load it directly; otherwise use srcdoc
+    // If we have a real source URL, load it directly (like docker port-forward)
     if (resolvedSourceUrl && resolvedSourceUrl.startsWith("http")) {
       frame.src = resolvedSourceUrl;
     } else {
       frame.srcdoc = sandboxHtml;
     }
 
-    frame.sandbox.add("allow-scripts", "allow-same-origin", "allow-forms", "allow-popups", "allow-modals");
+    // Allow full app functionality — scripts, forms, navigation, popups
+    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation");
     frame.style.width = "100%";
     frame.style.height = "100%";
+    frame.style.minHeight = "500px";
     frame.style.border = "none";
+    frame.style.display = "block";
+    frame.style.background = "#fff";
     frame.setAttribute("data-uor-instance", instanceId);
+    frame.setAttribute("loading", "eager");
+    frame.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
+    frame.allow = "clipboard-write; clipboard-read";
 
     const target = typeof config.mountTarget === "string"
       ? document.querySelector(config.mountTarget)
