@@ -120,6 +120,7 @@ function classifyTier(name: string, spec: HologramSpec): string {
   if (["bitcoin", "lightning", "nostr"].includes(name) || name.startsWith("zcash")) return "settlement";
   if (["erc8004", "x402", "a2a", "a2a-task", "mcp-tool", "mcp-context", "skill-md", "oasf", "onnx", "onnx-op", "nanda-index", "nanda-agentfacts", "nanda-resolver"].includes(name)) return "agentic";
   if (name === "activitypub" || name === "atproto") return "federation";
+  if (name.startsWith("tsp-")) return "trust-spanning";
   return "other";
 }
 
@@ -379,6 +380,17 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["svg", "cid", "SVG image → CID — vector graphics become content-addressed"],
     ["raml", "openapi", "RAML spec → OpenAPI spec — API description migration chain"],
     ["msgpack", "cbor", "MessagePack → CBOR — binary serialization format bridge"],
+    // ── TSP (Trust Spanning Protocol) provenance chains ──
+    ["tsp-vid", "tsp-envelope", "VID identity → authenticated envelope — sender identity proves message origin"],
+    ["tsp-envelope", "tsp-nested", "Outer envelope → nested inner — intermediary routing preserves end-to-end trust"],
+    ["tsp-vid", "tsp-relationship", "VID identity → bilateral relationship — trust channel from content-addressed handshake"],
+    ["tsp-relationship", "tsp-envelope", "Formed relationship → authenticated messaging — relationship gates message exchange"],
+    ["tsp-key", "tsp-vid", "Verification key → VID resolution — key fingerprint anchors VID to crypto material"],
+    ["tsp-route", "tsp-nested", "Route hop → nested delivery — intermediary routing to final recipient"],
+    ["tsp-envelope", "mcp-tool", "TSP envelope → MCP tool output — authenticated delivery of agent tool results"],
+    ["tsp-envelope", "a2a-task", "TSP envelope → A2A task — agent tasks ride on authenticated channels"],
+    ["tsp-relationship", "nanda-agentfacts", "TSP relationship → AgentFacts — bilateral trust registered in agent passport"],
+    ["tsp-vid", "erc8004", "TSP VID → ERC-8004 on-chain identity — trust channel identity anchored on-chain"],
   ];
   for (const [a, b, insight] of chains) {
     emitIf(has, synergies, a, b, "provenance-chain", insight,
@@ -456,6 +468,16 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["mermaid", "did", "Diagram + identity: Mermaid diagram gets permanent DID", "Diagram hash IS the DID — architecture docs have identity"],
     ["wsdl", "did", "Service definition + identity: WSDL gets permanent DID", "WSDL hash IS the DID — SOAP services have permanent identity"],
     ["asyncapi", "did", "Event spec + identity: AsyncAPI gets permanent DID", "AsyncAPI hash IS the DID — event-driven APIs have identity"],
+    // ── TSP complementary pairs ──
+    ["tsp-vid", "did", "TSP VID + DID: TSP proves TRUST, DID proves IDENTITY — same URI, dual semantics", "tsp-vid IS did:uor — trust and identity are the same projection"],
+    ["tsp-envelope", "vc", "TSP envelope + VC: envelope authenticates DELIVERY, VC authenticates CLAIMS", "Wrap VC in TSP envelope — trusted delivery of verified claims"],
+    ["tsp-relationship", "vc", "TSP relationship + VC: relationship proves BILATERAL trust, VC proves UNILATERAL claims", "Issue VCs within formed TSP relationships — trust channel gates credential exchange"],
+    ["tsp-key", "did", "TSP key + DID: key proves CRYPTO capability, DID proves IDENTITY", "DID document references TSP verification key — identity resolves to crypto material"],
+    ["tsp-route", "ipv6", "TSP route + IPv6: TSP routes messages, IPv6 routes packets — convergent routing", "TSP intermediary VID maps to IPv6 ULA — message routing meets network routing"],
+    ["tsp-envelope", "bitcoin", "TSP envelope + Bitcoin: envelope authenticates message, Bitcoin timestamps it", "Hash TSP envelope, anchor on Bitcoin — authenticated messages become immutable"],
+    ["tsp-nested", "mls", "TSP nested + MLS: nested envelope for 1:1, MLS for group — complementary scopes", "TSP handles bilateral, MLS handles multilateral — same identity, different scale"],
+    ["tsp-vid", "a2a", "TSP VID + A2A: TSP provides trust channel, A2A provides agent protocol", "A2A messages ride on TSP envelopes — agent communication gets trust substrate"],
+    ["tsp-vid", "nanda-index", "TSP VID + NANDA: TSP VID is discoverable via NANDA agent index", "NANDA finds the agent, TSP authenticates the channel — discovery meets trust"],
   ];
   for (const [a, b, insight, impl] of pairs) {
     emitIf(has, synergies, a, b, "complementary-pair", insight,
@@ -463,7 +485,7 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
   }
 
   // Rule 6: Trust amplification
-  const trustSources = ["bitcoin", "zcash-transparent", "cid", "did"];
+  const trustSources = ["bitcoin", "zcash-transparent", "cid", "did", "tsp-relationship"];
   for (let i = 0; i < trustSources.length; i++) {
     for (let j = i + 1; j < trustSources.length; j++) {
       const [a, b] = [trustSources[i], trustSources[j]];
@@ -541,8 +563,21 @@ function synthesizeOpportunities(synergies: readonly Synergy[]): string[] {
 
   if (types.has("trust-amplification")) {
     opportunities.push(
-      "MULTI-LEDGER ANCHOR: Publish every high-value identity to Bitcoin + Zcash + IPFS simultaneously — " +
-      "three independent trust anchors from one hash, verifiable by any"
+      "MULTI-LEDGER ANCHOR: Publish every high-value identity to Bitcoin + Zcash + IPFS + TSP simultaneously — " +
+      "four independent trust anchors from one hash, verifiable by any"
+    );
+  }
+
+  // TSP-specific opportunity
+  const tspSynergies = synergies.filter(s =>
+    s.projections.some(p => p.startsWith("tsp-"))
+  );
+  if (tspSynergies.length > 0) {
+    opportunities.push(
+      "TRUST SPANNING LAYER: TSP provides the authenticated messaging substrate beneath all agent protocols — " +
+      "A2A tasks ride on TSP envelopes, MCP tool outputs are TSP-authenticated, NANDA discovery resolves to " +
+      "TSP VIDs, and bilateral relationships (RFI/RFA) create content-addressed trust channels. " +
+      "The TSP VID IS the did:uor projection — trust and identity are structurally identical."
     );
   }
 

@@ -1535,4 +1535,129 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://github.com/Bevel-Software/code-to-knowledge-graph",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 11 — TRUST SPANNING PROTOCOL (ToIP TSP — authenticated messaging)
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // The Trust Spanning Protocol (TSP), developed under the Trust over IP
+  // Foundation's Trust Spanning Working Group, defines a universal trust
+  // layer for authenticated, end-to-end encrypted communication between
+  // Verifiable Identifiers (VIDs). TSP operates at a layer BELOW application
+  // protocols — it is the trust substrate that ActivityPub, AT Protocol,
+  // A2A, and MCP messages ride on.
+  //
+  // UOR Alignment:
+  //   - TSP VID ≡ UOR did:uor:{cid}  (already a lossless DID projection)
+  //   - TSP uses HPKE for encryption + Ed25519/X25519 for key agreement
+  //   - TSP envelopes are CESR-encoded (Composable Event Streaming Repr.)
+  //   - TSP relationship forming (RFI/RFA handshake) maps to uor_certificates
+  //
+  // The canonical hash bytes from singleProofHash() deterministically
+  // derive the TSP VID, the verification key fingerprint, and the
+  // routed/nested envelope identifiers — all from ONE hash.
+
+  // ── TSP-VID — Trust Spanning Protocol Verifiable Identifier ────────────
+  // A TSP VID is a DID that can be resolved to verification and encryption
+  // keys. UOR's did:uor is ALREADY a VID — this projection makes the
+  // TSP-specific URI form explicit for protocol-level interop.
+  //
+  // TSP §4.1: "A VID is a URI that identifies an entity and can be
+  // resolved to a set of cryptographic keys."
+  //
+  //   Format: did:uor:{cid} (identical to the DID projection)
+  //   This is an ALIAS — proving that TSP trust and UOR identity are the same.
+
+  ["tsp-vid", {
+    project: ({ cid }) => `did:uor:${cid}`,
+    fidelity: "lossless",
+    spec: "https://trustoverip.github.io/tswg-tsp-specification/",
+  }],
+
+  // ── TSP Envelope — Authenticated Message Container ─────────────────────
+  // TSP envelopes wrap payloads with sender VID, receiver VID, and a
+  // cryptographic seal (HPKE or signed plaintext). The envelope ID is
+  // the content hash of the canonical envelope structure.
+  //
+  // TSP §5: "A TSP message consists of a header (sender, receiver,
+  // message type) and a payload, sealed with the sender's private key."
+  //
+  // UOR projects the envelope ID as a URN — enabling envelope-level
+  // content-addressing. Two identical messages produce the same envelope ID.
+  //
+  //   Format: urn:uor:tsp:envelope:{hex} (SHA-256 of canonical envelope)
+
+  ["tsp-envelope", {
+    project: ({ hex }) => `urn:uor:tsp:envelope:${hex}`,
+    fidelity: "lossless",
+    spec: "https://trustoverip.github.io/tswg-tsp-specification/",
+  }],
+
+  // ── TSP Route — Intermediary Routing Identifier ────────────────────────
+  // TSP supports routed messages through intermediaries (§6). Each
+  // intermediary hop is identified by a VID. UOR's IPv6 routing projection
+  // aligns naturally: the fd00:0075:6f72::/48 prefix provides native
+  // network-layer routing for TSP intermediaries.
+  //
+  // This projection creates a TSP-specific route identifier that
+  // encodes both the VID prefix (for TSP resolution) and the content
+  // hash suffix (for UOR verification).
+  //
+  //   Format: urn:uor:tsp:route:{hex16} (64-bit prefix for hop routing)
+
+  ["tsp-route", {
+    project: ({ hex }) => `urn:uor:tsp:route:${hex.slice(0, 16)}`,
+    fidelity: "lossy",
+    spec: "https://trustoverip.github.io/tswg-tsp-specification/",
+    lossWarning: "tsp-route-uses-64-bit-prefix-for-hop-routing (64 of 256 bits)",
+  }],
+
+  // ── TSP Relationship — Verified Trust Channel ──────────────────────────
+  // TSP defines relationship forming via a two-step handshake:
+  //   1. TSP_RFI (Relationship Forming Invitation) — sender proposes
+  //   2. TSP_RFA (Relationship Forming Acceptance) — receiver accepts
+  //
+  // The relationship ID is the hash of the combined RFI+RFA exchange,
+  // creating a content-addressed, bilateral trust channel. This maps
+  // directly to UOR's uor_certificates table: the certificate_id IS
+  // the relationship hash, and cert_chain stores the RFI/RFA sequence.
+  //
+  //   Format: urn:uor:tsp:relationship:{hex} (SHA-256 of RFI+RFA pair)
+
+  ["tsp-relationship", {
+    project: ({ hex }) => `urn:uor:tsp:relationship:${hex}`,
+    fidelity: "lossless",
+    spec: "https://trustoverip.github.io/tswg-tsp-specification/",
+  }],
+
+  // ── TSP Nested Envelope — End-to-End Through Intermediaries ────────────
+  // TSP §6.2 defines nested envelopes where the outer envelope is for
+  // the intermediary and the inner envelope is for the final recipient.
+  // UOR's content-addressing makes nesting trivially verifiable:
+  // the inner envelope hash is embedded in the outer envelope payload.
+  //
+  //   Format: urn:uor:tsp:nested:{hex} (SHA-256 of nested envelope)
+
+  ["tsp-nested", {
+    project: ({ hex }) => `urn:uor:tsp:nested:${hex}`,
+    fidelity: "lossless",
+    spec: "https://trustoverip.github.io/tswg-tsp-specification/",
+  }],
+
+  // ── TSP Verification Key Fingerprint — Key Identity ────────────────────
+  // TSP VID resolution yields verification and encryption keys. The
+  // fingerprint projection creates a content-addressed key identifier
+  // from the same hash — enabling key-level provenance tracking.
+  //
+  // Combined with UNS's post-quantum keypair module (Dilithium-3),
+  // this provides a migration path: TSP's Ed25519 keys can be wrapped
+  // in a Dilithium-3 certificate for quantum-safe trust anchoring.
+  //
+  //   Format: urn:uor:tsp:key:{hex} (SHA-256 of canonical key object)
+
+  ["tsp-key", {
+    project: ({ hex }) => `urn:uor:tsp:key:${hex}`,
+    fidelity: "lossless",
+    spec: "https://trustoverip.github.io/tswg-tsp-specification/",
+  }],
 ]);
