@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { initializeRegistry } from "@/lib/uor-registry";
 import { initializeContentRegistry } from "@/lib/uor-content-registry";
+import { initTriwordGenesis } from "@/lib/uor-triword";
 
 // Eager — homepage renders instantly
 import { IndexPage } from "@/modules/landing";
@@ -97,6 +98,7 @@ const App = () => {
     const init = () => {
       initializeRegistry().catch(console.error);
       initializeContentRegistry(true).catch(console.error);
+      initTriwordGenesis().catch(console.error);
     };
     if ("requestIdleCallback" in window) {
       (window as Window).requestIdleCallback(init);

@@ -29,7 +29,7 @@ import { quantumLevels } from "@/data/quantum-levels";
 import { closureModes } from "@/data/closure-modes";
 import { canonicalizationRules } from "@/data/canonicalization-rules";
 import { signatureOps } from "@/data/signature-ops";
-
+import { TRIWORD_GENESIS } from "./uor-triword";
 // ── Types ───────────────────────────────────────────────────────────────────
 
 export interface ContentCertificateEntry {
@@ -86,6 +86,7 @@ const CERTIFIABLE_CONTENT: Array<{
   { subjectId: "content:closure-modes", label: "Closure Modes", data: closureModes },
   { subjectId: "content:canonicalization-rules", label: "Canonicalization Rules", data: canonicalizationRules },
   { subjectId: "content:signature-ops", label: "Signature Operations", data: signatureOps },
+  { subjectId: "content:triword-genesis", label: "Triword Genesis", data: TRIWORD_GENESIS },
 ];
 
 // ── Initialization ──────────────────────────────────────────────────────────
