@@ -32,7 +32,7 @@
  * @see uns/core/hologram — dual projection system
  */
 
-import { popcount } from "./h-score";
+import { assessByteCoherence } from "@/modules/uns/core/hologram/unified";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -211,7 +211,7 @@ export class MetaObserver {
    *   embedding → popcount(input XOR output) ≤ thresholds.high (bounded loss)
    *   arbitrary → popcount(input XOR output) > thresholds.high (entropy-generating)
    */
-  observe(op: ObservedOperation): {
+   observe(op: ObservedOperation): {
     zone: CoherenceZone;
     previousZone: CoherenceZone;
     hScore: number;
@@ -226,10 +226,14 @@ export class MetaObserver {
     const previousZone = profile.zone;
     const previousH = profile.hScore;
 
-    // ── H-score: Hamming distance between input→output ──
-    const hammingDist = popcount((op.inputHash ^ op.outputHash) >>> 0);
+    // ── Unified coherence assessment ──
+    // Delegate to the unified engine: same function used by the Hologram.
+    // XOR of input/output bytes IS the distortion signal — assess it once.
+    const distortionByte = (op.inputHash ^ op.outputHash) >>> 0;
+    const coherence = assessByteCoherence(distortionByte & 0xff);
+    const hammingDist = coherence.popcount;
 
-    // ── Logos classification ──
+    // ── Logos classification (derived from unified H-score thresholds) ──
     const logosClass: LogosClass =
       hammingDist <= this.thresholds.low ? "isometry" :
       hammingDist <= this.thresholds.high ? "embedding" : "arbitrary";
@@ -252,7 +256,7 @@ export class MetaObserver {
     // H-score: exponential moving average of Hamming distances
     profile.hScore = profile.hScore * 0.7 + hammingDist * 0.3;
 
-    // Zone assignment
+    // Zone assignment from EMA'd H-score against thresholds
     profile.zone =
       profile.hScore <= this.thresholds.low ? "COHERENCE" :
       profile.hScore <= this.thresholds.high ? "DRIFT" : "COLLAPSE";
@@ -266,7 +270,7 @@ export class MetaObserver {
     const delta = hammingDist - previousH;
     profile.entropyPumpRate = profile.entropyPumpRate * 0.8 + (-delta) * 0.2;
 
-    // Integration Capacity (Φ): fraction of operations achieving Grade-A
+    // Integration Capacity (Φ): from unified engine's phi
     profile.phi = profile.gradeACount / profile.operationCount;
 
     // Logos compliance: fraction of isometric operations
