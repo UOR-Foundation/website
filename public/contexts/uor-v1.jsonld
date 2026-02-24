@@ -51,6 +51,7 @@
     "store:GatewayConfig": {"@id": "store:GatewayConfig"},
 
     "store:uorAddress": {"@id": "store:uorAddress", "@type": "@id"},
+    "store:ipv6Address": {"@id": "store:ipv6Address"},
     "store:cid": {"@id": "store:cid", "@type": "xsd:string"},
     "store:storedType": {"@id": "store:storedType", "@type": "@id"},
     "store:serialisation": {"@id": "store:serialisation", "@type": "xsd:string"},
