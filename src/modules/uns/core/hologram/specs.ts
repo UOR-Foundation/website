@@ -1457,4 +1457,28 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://www.w3.org/TR/SVG2/",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 8 — CONSCIOUSNESS STUDIES (Landscape of Consciousness projection)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  ["loc", {
+    project: ({ hex }) => `urn:uor:loc:theory:${hex}`,
+    fidelity: "lossless",
+    spec: "https://loc.closertotruth.com",
+  }],
+
+  ["loc-category", {
+    project: ({ hex }) => `urn:uor:loc:category:${hex.slice(0, 16)}`,
+    fidelity: "lossy",
+    spec: "https://loc.closertotruth.com/all-consciousness-categories-and-subcategories",
+    lossWarning: "loc-category-uses-64-bit-truncation-of-256-bit-hash",
+  }],
+
+  ["loc-implication", {
+    project: ({ hex }) => `urn:uor:loc:implication:${hex.slice(0, 16)}`,
+    fidelity: "lossy",
+    spec: "https://loc.closertotruth.com/implications/ai-consciousness",
+    lossWarning: "loc-implication-uses-64-bit-truncation-of-256-bit-hash",
+  }],
 ]);
