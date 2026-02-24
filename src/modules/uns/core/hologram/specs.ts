@@ -1481,4 +1481,37 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://loc.closertotruth.com/implications/ai-consciousness",
     lossWarning: "loc-implication-uses-64-bit-truncation-of-256-bit-hash",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 9 — VISUAL PRESENTATION (Hologram UI — the first visual projection)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Tabler UI — Human-Perceivable Visual Projection ────────────────────
+  // Every other projection maps hash → protocol string.
+  // This maps hash → visual component identifier.
+  // A hologram IS a projection of abstract data into perceivable form.
+  // Tabler provides the rendering grammar: cards, stats, tables, charts.
+  //
+  // The URN encodes the UOR identity + the visual component type:
+  //   urn:uor:ui:tabler:{component}:{hash}
+  //
+  // Component types: stat, table, metric, card, grid, page
+
+  ["ui-tabler", {
+    project: ({ hex }) => `urn:uor:ui:tabler:component:${hex}`,
+    fidelity: "lossless",
+    spec: "https://tabler.io/",
+  }],
+
+  ["ui-tabler-stat", {
+    project: ({ hex }) => `urn:uor:ui:tabler:stat:${hex}`,
+    fidelity: "lossless",
+    spec: "https://tabler.io/",
+  }],
+
+  ["ui-tabler-table", {
+    project: ({ hex }) => `urn:uor:ui:tabler:table:${hex}`,
+    fidelity: "lossless",
+    spec: "https://tabler.io/",
+  }],
 ]);

@@ -25,6 +25,7 @@
     "@radix-ui/react-toast": "^1.2.14",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@supabase/supabase-js": "^2.97.0",
+    "@tabler/icons-react": "^3.37.1",
     "@tanstack/react-query": "^5.83.0",
     "@types/d3-force": "^3.0.10",
     "@webgpu/types": "^0.1.69",
