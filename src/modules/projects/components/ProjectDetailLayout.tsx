@@ -241,8 +241,17 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
             </button>
           </div>
 
+          {/* W3C Compliance badges */}
+          <div className="border-t border-dashed border-border px-6 py-3 flex flex-wrap gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold text-primary tracking-wide">VC 2.0</span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold text-primary tracking-wide">DID</span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold text-primary tracking-wide">Data Integrity</span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold text-primary tracking-wide">URDNA2015</span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold text-primary tracking-wide">CIDv1</span>
+          </div>
+
           <div className="bg-muted/30 border-t border-dashed border-border px-6 py-4 flex items-center justify-between">
-            <p className="text-sm text-foreground/50">Content-addressed · Self-verifying</p>
+            <p className="text-sm text-foreground/50">W3C Compliant · Self-verifying</p>
             <button onClick={() => copyValue(cid)} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-semibold">
               {copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy ID</>}
             </button>
