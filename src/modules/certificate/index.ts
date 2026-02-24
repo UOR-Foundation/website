@@ -85,5 +85,6 @@ export type { UorCertificate, CompactBoundary, CoherenceWitness } from "./types"
 export { verifyCertificate, verifyCertificateFull, type VerificationResult, type FullVerificationResult } from "./verify";
 export { decodeCertificate, type DecodedCertificate } from "./decode";
 export { certificateToTriword, triwordBreakdown } from "./triword";
-export { enforceBoundary, verifyBoundary, type BoundaryManifest, type BoundaryResult } from "./boundary";
+export { enforceBoundary, type BoundaryManifest, type BoundaryResult } from "./boundary";
 export { deriveCoherenceWitness, verifyCoherenceWitness } from "./coherence";
+export { sha256hex, sourceObjectHash, toCompactBoundary } from "./utils";
