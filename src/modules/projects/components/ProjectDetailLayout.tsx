@@ -118,7 +118,9 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
           <div className="px-6 py-5 space-y-4">
             {/* Coordinates */}
             {breakdown && (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">UOR Coordinates</p>
+                <div className="grid grid-cols-3 gap-2">
                 {([
                   { key: "observer" as const, label: "Entity" },
                   { key: "observable" as const, label: "Property" },
@@ -129,6 +131,7 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                     <p className="text-base font-bold capitalize text-foreground mt-0.5">{breakdown[key]}</p>
                   </div>
                 ))}
+              </div>
               </div>
             )}
 
