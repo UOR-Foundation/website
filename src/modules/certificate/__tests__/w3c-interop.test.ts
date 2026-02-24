@@ -153,6 +153,11 @@ describe("W3C Interoperability", () => {
       const atService = doc.service.find(s => s.type === "AtProtocolRecord")!;
       expect(atService.serviceEndpoint).toMatch(/^at:\/\/did:uor:.+\/app\.uor\.object\//);
       expect(atService.id).toMatch(/#atproto$/);
+      // OpenID Connect — OIDC subject claim
+      expect(types).toContain("OpenIdConnectSubject");
+      const oidcService = doc.service.find(s => s.type === "OpenIdConnectSubject")!;
+      expect(oidcService.serviceEndpoint).toMatch(/^urn:uor:oidc:[0-9a-f]{64}$/);
+      expect(oidcService.id).toMatch(/#oidc$/);
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {
