@@ -28,6 +28,7 @@ import {
   type CoherenceZone,
   SCALE_LABELS,
 } from "./multi-scale";
+import { SystemEventBus, type SystemEvent } from "./system-event-bus";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -103,6 +104,8 @@ export class StreamProjection {
   private startTime = Date.now();
   private timerId: ReturnType<typeof setInterval> | null = null;
   private opCounter = 0;
+  private systemUnsub: (() => void) | null = null;
+  private _systemEventsReceived = 0;
 
   constructor(gradeAGraph?: number[]) {
     this.mso = new MultiScaleObserver(gradeAGraph);
@@ -113,6 +116,45 @@ export class StreamProjection {
   subscribe(listener: StreamListener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  // ── System Event Bus Integration ─────────────────────────────────────
+
+  /**
+   * Connect to the system event bus — real ring, identity, and hologram
+   * operations become live byte streams automatically.
+   *
+   * The system watches itself: every neg(), singleProofHash(), project()
+   * call flows through here as raw bytes.
+   */
+  connectToSystem(): void {
+    if (this.systemUnsub) return; // Already connected
+    this.systemUnsub = SystemEventBus.subscribe((event: SystemEvent) => {
+      // Combine input + output bytes into a single ingestion chunk
+      const combined = new Uint8Array(event.inputBytes.length + event.outputBytes.length);
+      combined.set(event.inputBytes, 0);
+      combined.set(event.outputBytes, event.inputBytes.length);
+      this._systemEventsReceived++;
+      this.ingest(combined);
+    });
+  }
+
+  /** Disconnect from the system event bus. */
+  disconnectFromSystem(): void {
+    if (this.systemUnsub) {
+      this.systemUnsub();
+      this.systemUnsub = null;
+    }
+  }
+
+  /** Whether connected to system event bus. */
+  get isConnectedToSystem(): boolean {
+    return this.systemUnsub !== null;
+  }
+
+  /** Count of real system events received. */
+  get systemEventsReceived(): number {
+    return this._systemEventsReceived;
   }
 
   // ── Ingestion ─────────────────────────────────────────────────────────
@@ -287,21 +329,23 @@ export class StreamProjection {
   /** Reset all state. */
   reset(gradeAGraph?: number[]): void {
     this.stop();
+    this.disconnectFromSystem();
     this.mso = new MultiScaleObserver(gradeAGraph);
     this.frame = 0;
     this.totalBytes = 0;
     this.recentBytes = [];
     this.startTime = Date.now();
     this.opCounter = 0;
+    this._systemEventsReceived = 0;
     // Reset module op lists
     for (const mod of STREAM_MODULES) mod.ops = [];
     // Emit empty snapshot
     this.emit(this.snapshot());
   }
 
-  /** Whether currently streaming. */
+  /** Whether currently streaming (demo or system). */
   get isStreaming(): boolean {
-    return this.timerId !== null;
+    return this.timerId !== null || this.systemUnsub !== null;
   }
 
   // ── Private ───────────────────────────────────────────────────────────

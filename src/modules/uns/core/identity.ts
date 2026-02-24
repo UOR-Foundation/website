@@ -21,6 +21,7 @@ import {
   verifyIpv6Routing as _verifyIpv6Routing,
 } from "./address";
 import type { UorCanonicalIdentity } from "./address";
+import { SystemEventBus } from "@/modules/observable/system-event-bus";
 
 // Re-export the identity type
 export type { UorCanonicalIdentity } from "./address";
@@ -50,7 +51,17 @@ export async function singleProofHash(
   const hashBytes = await sha256(canonicalBytes);
 
   // Step 4: Derive all four identity forms
-  return buildIdentity(hashBytes, canonicalBytes);
+  const identity = buildIdentity(hashBytes, canonicalBytes);
+
+  // Emit to system event bus: canonical input bytes → hash output bytes
+  SystemEventBus.emit(
+    "identity",
+    "singleProofHash",
+    new Uint8Array(canonicalBytes.slice(0, 32)), // First 32 bytes of input
+    new Uint8Array(hashBytes),                    // Full 32-byte SHA-256
+  );
+
+  return identity;
 }
 
 /**

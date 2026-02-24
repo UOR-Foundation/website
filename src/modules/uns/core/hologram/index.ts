@@ -22,6 +22,7 @@
 
 import type { UorCanonicalIdentity } from "../address";
 import { SPECS } from "./specs";
+import { SystemEventBus } from "@/modules/observable/system-event-bus";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -123,8 +124,19 @@ export function project(
 }
 
 function resolve(spec: HologramSpec, input: ProjectionInput): HologramProjection {
+  const value = spec.project(input);
+
+  // Emit to system event bus: hash bytes → projection string as bytes
+  const encoder = new TextEncoder();
+  SystemEventBus.emit(
+    "hologram",
+    `project:${spec.fidelity === "lossless" ? "lossless" : "lossy"}`,
+    new Uint8Array(input.hashBytes.slice(0, 8)),
+    new Uint8Array(encoder.encode(value).slice(0, 16)),
+  );
+
   return {
-    value: spec.project(input),
+    value,
     fidelity: spec.fidelity,
     spec: spec.spec,
     ...(spec.lossWarning ? { lossWarning: spec.lossWarning } : {}),
