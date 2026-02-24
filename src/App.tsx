@@ -114,6 +114,7 @@ const ObserverHubPage = lazy(() => import("@/modules/observable/pages/ObserverHu
 const ConsoleFpp = lazy(() => import("@/modules/console/pages/ConsoleFpp"));
 const ConsolePqBridge = lazy(() => import("@/modules/console/pages/ConsolePqBridge"));
 const ConsoleEthereum = lazy(() => import("@/modules/console/pages/ConsoleEthereum"));
+const InteroperabilityPage = lazy(() => import("@/modules/interoperability/pages/InteroperabilityPage"));
 
 const queryClient = new QueryClient();
 
@@ -241,6 +242,7 @@ const App = () => {
             <Route path="/multi-scale" element={<MultiScalePage />} />
             <Route path="/stream-projection" element={<StreamProjectionPage />} />
             <Route path="/console/observer" element={<ObserverHubPage />} />
+            <Route path="/interoperability" element={<InteroperabilityPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
