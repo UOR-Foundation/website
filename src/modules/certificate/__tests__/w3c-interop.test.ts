@@ -203,6 +203,11 @@ describe("W3C Interoperability", () => {
       const scittService = doc.service.find(s => s.type === "ScittStatement")!;
       expect(scittService.serviceEndpoint).toMatch(/^urn:ietf:params:scitt:statement:sha256:[0-9a-f]{64}$/);
       expect(scittService.id).toMatch(/#scitt$/);
+      // Solid — W3C WebID for personal data pods
+      expect(types).toContain("SolidWebID");
+      const solidService = doc.service.find(s => s.type === "SolidWebID")!;
+      expect(solidService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/profile\/[0-9a-f]{64}#me$/);
+      expect(solidService.id).toMatch(/#solid$/);
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {
