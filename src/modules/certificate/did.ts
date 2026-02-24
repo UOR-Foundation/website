@@ -130,6 +130,7 @@ function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
     ["solid",       "SolidWebID"],
     ["webfinger",   "WebFingerDiscovery"],
     ["dnssd",       "DnsServiceDiscovery"],
+    ["stac",        "StacCatalogItem"],
     ["crdt",        "CrdtDocumentId"],
   ];
 

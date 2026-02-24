@@ -183,6 +183,11 @@ describe("W3C Interoperability", () => {
       const crdtService = doc.service.find(s => s.type === "CrdtDocumentId")!;
       expect(crdtService.serviceEndpoint).toMatch(/^crdt:automerge:[0-9a-f]{64}$/);
       expect(crdtService.id).toMatch(/#crdt$/);
+      // STAC — geospatial catalog item
+      expect(types).toContain("StacCatalogItem");
+      const stacService = doc.service.find(s => s.type === "StacCatalogItem")!;
+      expect(stacService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/stac\/items\/[0-9a-f]{64}$/);
+      expect(stacService.id).toMatch(/#stac$/);
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {
