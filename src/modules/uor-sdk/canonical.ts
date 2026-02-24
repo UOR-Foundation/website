@@ -1,11 +1,11 @@
 /**
- * UOR SDK — Canonical identity re-exports.
+ * UOR SDK — Canonical identity & hologram re-exports.
  *
- * Delegates entirely to src/lib/uor-canonical.ts and src/lib/uor-address.ts.
- * These implement the Single Proof Hashing Standard:
- *   Object → URDNA2015 → SHA-256 → {derivation_id, CID, u:address, u:ipv6}
+ * Delegates to the UNS Core address model (single source of truth)
+ * via src/lib/uor-address.ts (thin re-export layer).
  *
- * Use for local content-addressing without hitting the live API.
+ * The hologram is the implementation of the UOR framework:
+ *   Object → URDNA2015 → SHA-256 → UorCanonicalIdentity → Hologram (17 projections)
  */
 
 export {
@@ -27,3 +27,15 @@ export {
 } from "@/lib/uor-address";
 
 export type { ModuleIdentity } from "@/lib/uor-address";
+
+// ── Hologram Projection Registry ───────────────────────────────────────────
+// The hologram IS the UOR implementation — one hash, every standard.
+
+export { project, PROJECTIONS } from "@/modules/uns/core/hologram";
+export type {
+  Hologram,
+  HologramProjection,
+  HologramSpec,
+  Fidelity,
+  ProjectionInput,
+} from "@/modules/uns/core/hologram";
