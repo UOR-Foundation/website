@@ -177,11 +177,11 @@ const CertificateReceipt = ({ certificate, name }: { certificate: UorCertificate
                     <span className="text-base font-bold text-primary">Authentic</span>
                   </div>
                   <p className="text-sm text-foreground/60">
-                    Content re-hashed. Fingerprint matches. Untampered.
+                    Original content re-hashed with SHA-256. Recomputed fingerprint matches the stored CID. Content is untampered.
                   </p>
                   {verifyTime !== null && (
                     <p className="text-xs text-foreground/40 font-mono">
-                      {verifyTime}ms · {verifyTimestamp}
+                      Verified in {verifyTime}ms · {verifyTimestamp}
                     </p>
                   )}
                 </div>
