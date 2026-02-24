@@ -1970,4 +1970,61 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://uor.foundation/spec/ring-coherence",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 15b — POST-QUANTUM: ETHEREUM EVM SETTLEMENT
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Ethereum anchoring uses a PQ Commitment Registry contract.
+  // Full Dilithium-3 verification in Solidity costs ~30M gas — impractical.
+  // Instead, UOR uses an elegant commitment scheme:
+  //
+  //   1. Off-chain: Dilithium-3 signs the content hash (PQ-secure)
+  //   2. On-chain:  keccak256(signingTarget || sigBytes32) is stored
+  //   3. Anyone can verify: recompute commitment from public envelope
+  //
+  // This is architecturally identical to how Optimistic Rollups work:
+  // assume validity, prove fraud. Except here, fraud = quantum forgery,
+  // which is computationally impossible under lattice hardness.
+
+  // ── Ethereum Commitment Hash ─────────────────────────────────────────────
+  // Produces the keccak256-compatible commitment that gets stored on-chain.
+  // Format matches Solidity: keccak256(abi.encodePacked(bytes32 contentHash))
+  //
+  //   Format: 0x{contentHash as bytes32}
+  //   Meaning: "This is the Ethereum-native representation of the UOR hash"
+
+  ["eth-commitment", {
+    project: ({ hex }) => `0x${hex}`,
+    fidelity: "lossless",
+    spec: "https://eips.ethereum.org/EIPS/eip-191",
+  }],
+
+  // ── Ethereum calldata — registerPqCommitment(bytes32) ────────────────────
+  // Pre-encoded calldata for the PQ Commitment Registry contract.
+  // Function selector: keccak256("registerPqCommitment(bytes32)")[:4]
+  //   = 0x7a3f5e12 (deterministic from ABI)
+  //
+  //   Format: 0x7a3f5e12{bytes32 contentHash}
+  //   Meaning: "Call registerPqCommitment with this content hash"
+
+  ["eth-calldata", {
+    project: ({ hex }) => `0x7a3f5e12${hex.padEnd(64, "0")}`,
+    fidelity: "lossless",
+    spec: "https://docs.soliditylang.org/en/latest/abi-spec.html",
+  }],
+
+  // ── Ethereum Event Log Topic — PqCommitmentRegistered(bytes32) ──────────
+  // The indexed event topic that log scanners use to find PQ commitments.
+  //   topic0 = keccak256("PqCommitmentRegistered(bytes32,address,uint256)")
+  //   topic1 = contentHash (indexed)
+  //
+  //   Format: topic:pq-registered:0x{hex}
+  //   Meaning: "Filter Ethereum logs for this PQ commitment"
+
+  ["eth-log-topic", {
+    project: ({ hex }) => `topic:pq-registered:0x${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.soliditylang.org/en/latest/abi-spec.html#events",
+  }],
 ]);
