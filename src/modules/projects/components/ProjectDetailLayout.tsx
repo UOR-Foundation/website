@@ -196,8 +196,8 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
             </button>
           </div>
 
-          <div className="bg-muted/30 border-t border-dashed border-border px-6 py-3.5 flex items-center justify-between">
-            <p className="text-xs text-foreground/50 font-medium">Content-addressed · Self-verifying</p>
+          <div className="bg-muted/30 border-t border-dashed border-border px-6 py-4 flex items-center justify-between">
+            <p className="text-sm text-foreground/60 font-medium">Content-addressed · Self-verifying</p>
             <button onClick={() => copyValue(cid)} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-semibold">
               {copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy ID</>}
             </button>
