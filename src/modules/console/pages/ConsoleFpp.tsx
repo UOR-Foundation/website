@@ -3,7 +3,7 @@
  * ═══════════════════════════════════
  *
  * Live interactive demonstration of the First Person Project trust pipeline:
- *   PHC Issuance → VRC Exchange → Trust Triangle Verification
+ *   PHC Issuance → VRC Exchange → Trust Triangle → Agent Delegation
  *
  * Each step runs real cryptographic operations (URDNA2015 → SHA-256 → hologram projections)
  * and visualizes the resulting hologram projections in real time.
@@ -17,19 +17,22 @@ import {
   IconX, IconPlayerPlay, IconRefresh, IconFingerprint,
   IconCertificate, IconLink,
   IconEye, IconBraces, IconArrowsExchange, IconTriangle,
+  IconRobot, IconTool, IconNetwork,
 } from "@tabler/icons-react";
 
 import {
   issuePhc, issueVrc, exchangeVrcs, verifyPhc,
   verifyTrustTriangle, createPersona,
+  issueAgentDelegation, verifyAgentDelegation,
   type SealedPhc, type SealedVrc, type ResolvedPersona,
+  type SealedAgentDelegation, type AgentDelegationCheck,
 } from "@/modules/uns/core/fpp";
 import { resolveVid, type TspVid } from "@/modules/uns/core/tsp";
 import { project, type Hologram } from "@/modules/uns/core/hologram";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type FlowStage = "idle" | "personas" | "phc" | "vrc" | "triangle" | "complete";
+type FlowStage = "idle" | "personas" | "phc" | "vrc" | "triangle" | "delegation" | "complete";
 
 interface StageResult {
   stage: FlowStage;
@@ -59,7 +62,7 @@ function StageIndicator({ stage, currentStage, label, icon: Icon }: {
   stage: FlowStage; currentStage: FlowStage; label: string;
   icon: typeof IconShield;
 }) {
-  const stages: FlowStage[] = ["personas", "phc", "vrc", "triangle", "complete"];
+  const stages: FlowStage[] = ["personas", "phc", "vrc", "triangle", "delegation", "complete"];
   const currentIdx = stages.indexOf(currentStage);
   const thisIdx = stages.indexOf(stage);
   const isDone = currentIdx > thisIdx || currentStage === "complete";
@@ -84,8 +87,8 @@ function StageIndicator({ stage, currentStage, label, icon: Icon }: {
 function ProjectionGrid({ hologram, label }: { hologram: Hologram; label: string }) {
   const SHOW_PROJECTIONS = [
     "did", "cid", "fpp-phc", "fpp-vrc", "fpp-rdid", "fpp-trustgraph",
-    "vc", "tsp-vid", "tsp-envelope", "bitcoin", "nostr", "activitypub",
-    "webfinger", "polytree-node",
+    "vc", "tsp-vid", "tsp-envelope", "a2a", "mcp-tool", "mcp-context",
+    "bitcoin", "nostr", "activitypub", "webfinger", "polytree-node",
   ];
 
   const entries = SHOW_PROJECTIONS
@@ -124,17 +127,16 @@ function ProjectionGrid({ hologram, label }: { hologram: Hologram; label: string
   );
 }
 
-function CredentialCard({ title, icon: Icon, data, color = "primary" }: {
+function CredentialCard({ title, icon: Icon, data }: {
   title: string; icon: typeof IconShield;
   data: Record<string, string | number | boolean | undefined>;
-  color?: string;
 }) {
   const filtered = Object.entries(data).filter(([, v]) => v !== undefined);
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
       <div className="flex items-center gap-2">
-        <div className={`w-7 h-7 rounded-lg bg-${color}/10 flex items-center justify-center`}>
-          <Icon size={14} className={`text-${color}`} />
+        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Icon size={14} className="text-primary" />
         </div>
         <h4 className="text-sm font-semibold">{title}</h4>
       </div>
@@ -155,13 +157,10 @@ function TrustTriangleViz({ valid, aliceDid, bobDid }: {
 }) {
   return (
     <div className="relative flex flex-col items-center py-6">
-      {/* Triangle SVG */}
       <svg viewBox="0 0 200 180" className="w-48 h-44">
-        {/* Triangle edges */}
         <line x1="100" y1="20" x2="20" y2="160" stroke="hsl(var(--primary))" strokeWidth="2" opacity={0.4} />
         <line x1="100" y1="20" x2="180" y2="160" stroke="hsl(var(--primary))" strokeWidth="2" opacity={0.4} />
         <line x1="20" y1="160" x2="180" y2="160" stroke={valid ? "hsl(var(--primary))" : "hsl(0, 70%, 55%)"} strokeWidth="3" />
-        {/* VRC arrows */}
         <line x1="50" y1="100" x2="85" y2="45" stroke="hsl(var(--primary))" strokeWidth="1.5" markerEnd="url(#arrow)" />
         <line x1="150" y1="100" x2="115" y2="45" stroke="hsl(var(--primary))" strokeWidth="1.5" markerEnd="url(#arrow)" />
         <defs>
@@ -169,25 +168,18 @@ function TrustTriangleViz({ valid, aliceDid, bobDid }: {
             <path d="M0,0 L6,3 L0,6 Z" fill="hsl(var(--primary))" />
           </marker>
         </defs>
-        {/* Ecosystem node (top) */}
         <circle cx="100" cy="20" r="12" fill="hsl(var(--primary))" opacity={0.2} stroke="hsl(var(--primary))" strokeWidth="2" />
         <text x="100" y="24" textAnchor="middle" fill="hsl(var(--primary))" fontSize="10" fontWeight="bold">E</text>
-        {/* Alice node (bottom left) */}
         <circle cx="20" cy="160" r="12" fill="hsl(var(--primary))" opacity={0.15} stroke="hsl(var(--primary))" strokeWidth="2" />
         <text x="20" y="164" textAnchor="middle" fill="hsl(var(--primary))" fontSize="8" fontWeight="bold">A</text>
-        {/* Bob node (bottom right) */}
         <circle cx="180" cy="160" r="12" fill="hsl(var(--primary))" opacity={0.15} stroke="hsl(var(--primary))" strokeWidth="2" />
         <text x="180" y="164" textAnchor="middle" fill="hsl(var(--primary))" fontSize="8" fontWeight="bold">B</text>
-        {/* Labels */}
         <text x="30" y="90" fill="hsl(var(--muted-foreground))" fontSize="7" fontFamily="monospace">VRC A→B</text>
         <text x="130" y="90" fill="hsl(var(--muted-foreground))" fontSize="7" fontFamily="monospace">VRC B→A</text>
         <text x="100" y="5" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="7">Ecosystem</text>
       </svg>
-      {/* Verification badge */}
       <div className={`mt-2 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 ${
-        valid
-          ? "bg-primary/10 text-primary"
-          : "bg-destructive/10 text-destructive"
+        valid ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
       }`}>
         {valid ? <IconCheck size={14} /> : <IconX size={14} />}
         {valid ? "Trust Triangle Verified ✓" : "Verification Failed"}
@@ -195,6 +187,85 @@ function TrustTriangleViz({ valid, aliceDid, bobDid }: {
       <div className="mt-1 text-[9px] font-mono text-muted-foreground text-center max-w-xs">
         A: {truncateId(aliceDid, 32)}<br />
         B: {truncateId(bobDid, 32)}
+      </div>
+    </div>
+  );
+}
+
+/** Agent delegation chain visualization: Human PHC → VRC → Agent → a2a + mcp-tool */
+function DelegationChainViz({ delegation, checks }: {
+  delegation: SealedAgentDelegation;
+  checks: AgentDelegationCheck[];
+}) {
+  const allPassed = checks.every(c => c.passed);
+  return (
+    <div className="space-y-4">
+      {/* Chain visualization */}
+      <div className="relative flex flex-col items-center py-4">
+        <svg viewBox="0 0 300 200" className="w-full max-w-xs h-48">
+          {/* Human → VRC edge */}
+          <line x1="50" y1="30" x2="150" y2="30" stroke="hsl(var(--primary))" strokeWidth="2" markerEnd="url(#darrow)" />
+          <text x="100" y="22" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="7" fontFamily="monospace">PHC+VRC</text>
+          {/* VRC → Agent edge */}
+          <line x1="150" y1="30" x2="250" y2="30" stroke="hsl(var(--primary))" strokeWidth="2" markerEnd="url(#darrow)" />
+          <text x="200" y="22" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="7" fontFamily="monospace">delegation</text>
+          {/* Agent → a2a edge */}
+          <line x1="250" y1="45" x2="200" y2="110" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#darrow)" />
+          <text x="215" y="82" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="7" fontFamily="monospace">a2a</text>
+          {/* Agent → mcp-tool edge */}
+          <line x1="250" y1="45" x2="280" y2="110" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#darrow)" />
+          <text x="275" y="82" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="7" fontFamily="monospace">mcp</text>
+          {/* Agent → vc edge */}
+          <line x1="250" y1="45" x2="250" y2="110" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#darrow)" />
+          <text x="257" y="82" textAnchor="start" fill="hsl(var(--muted-foreground))" fontSize="7" fontFamily="monospace">vc</text>
+          <defs>
+            <marker id="darrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="4" markerHeight="4" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="hsl(var(--primary))" />
+            </marker>
+          </defs>
+          {/* Human node */}
+          <circle cx="50" cy="30" r="16" fill="hsl(var(--primary))" opacity={0.15} stroke="hsl(var(--primary))" strokeWidth="2" />
+          <text x="50" y="34" textAnchor="middle" fill="hsl(var(--primary))" fontSize="9" fontWeight="bold">👤</text>
+          <text x="50" y="58" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="7">Human</text>
+          {/* VRC node */}
+          <circle cx="150" cy="30" r="12" fill="hsl(var(--primary))" opacity={0.1} stroke="hsl(var(--primary))" strokeWidth="1.5" />
+          <text x="150" y="34" textAnchor="middle" fill="hsl(var(--primary))" fontSize="8" fontWeight="bold">V</text>
+          <text x="150" y="53" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="7">VRC</text>
+          {/* Agent node */}
+          <circle cx="250" cy="30" r="16" fill="hsl(var(--primary))" opacity={0.2} stroke="hsl(var(--primary))" strokeWidth="2" />
+          <text x="250" y="34" textAnchor="middle" fill="hsl(var(--primary))" fontSize="9" fontWeight="bold">🤖</text>
+          <text x="250" y="58" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="7">Agent</text>
+          {/* Projection nodes */}
+          <circle cx="200" cy="120" r="10" fill="hsl(var(--primary))" opacity={0.1} stroke="hsl(var(--primary))" strokeWidth="1" />
+          <text x="200" y="124" textAnchor="middle" fill="hsl(var(--primary))" fontSize="6" fontWeight="bold">A2A</text>
+          <text x="200" y="140" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="6">discovery</text>
+          <circle cx="250" cy="120" r="10" fill="hsl(var(--primary))" opacity={0.1} stroke="hsl(var(--primary))" strokeWidth="1" />
+          <text x="250" y="124" textAnchor="middle" fill="hsl(var(--primary))" fontSize="6" fontWeight="bold">VC</text>
+          <text x="250" y="140" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="6">credential</text>
+          <circle cx="280" cy="120" r="10" fill="hsl(var(--primary))" opacity={0.1} stroke="hsl(var(--primary))" strokeWidth="1" />
+          <text x="280" y="124" textAnchor="middle" fill="hsl(var(--primary))" fontSize="6" fontWeight="bold">MCP</text>
+          <text x="280" y="140" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="6">tool</text>
+          {/* Status badge */}
+          <rect x="100" y="160" width="100" height="22" rx="11" fill={allPassed ? "hsl(var(--primary) / 0.1)" : "hsl(0 70% 55% / 0.1)"} stroke={allPassed ? "hsl(var(--primary))" : "hsl(0, 70%, 55%)"} strokeWidth="1" />
+          <text x="150" y="175" textAnchor="middle" fill={allPassed ? "hsl(var(--primary))" : "hsl(0, 70%, 55%)"} fontSize="8" fontWeight="bold">
+            {allPassed ? "✓ Certified" : "✗ Failed"}
+          </text>
+        </svg>
+      </div>
+
+      {/* Verification checks */}
+      <div className="space-y-1.5">
+        {checks.map((c, i) => (
+          <div key={i} className="flex items-center gap-2 text-xs">
+            <span className={`w-4 h-4 rounded-full flex items-center justify-center ${
+              c.passed ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
+            }`}>
+              {c.passed ? <IconCheck size={10} /> : <IconX size={10} />}
+            </span>
+            <span className="font-medium text-foreground">{c.name}</span>
+            <span className="text-muted-foreground">{c.detail}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -214,10 +285,13 @@ export default function ConsoleFpp() {
   const [triangleValid, setTriangleValid] = useState<boolean | null>(null);
   const [triangleReason, setTriangleReason] = useState<string>("");
 
+  // Agent delegation state
+  const [agentDelegation, setAgentDelegation] = useState<SealedAgentDelegation | null>(null);
+  const [agentDelegationChecks, setAgentDelegationChecks] = useState<AgentDelegationCheck[]>([]);
+  const [agentHologram, setAgentHologram] = useState<Hologram | null>(null);
+
   const ECOSYSTEM = "uor.foundation";
   const EXPIRES = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-
-  // Results are pushed via pushLog inside runFlow
 
   const reset = useCallback(() => {
     setStage("idle");
@@ -229,6 +303,9 @@ export default function ConsoleFpp() {
     setVrcBtoA(null);
     setTriangleValid(null);
     setTriangleReason("");
+    setAgentDelegation(null);
+    setAgentDelegationChecks([]);
+    setAgentHologram(null);
   }, []);
 
   const runFlow = useCallback(async () => {
@@ -243,8 +320,8 @@ export default function ConsoleFpp() {
     let aPersona: ResolvedPersona, bPersona: ResolvedPersona;
     let aVid: TspVid, bVid: TspVid;
     try {
-      aPersona = await createPersona("relationship", "Alice", [ECOSYSTEM]);
-      bPersona = await createPersona("relationship", "Bob", [ECOSYSTEM]);
+      aPersona = await createPersona("relationship", "Alice (Human)", [ECOSYSTEM]);
+      bPersona = await createPersona("relationship", "Bob (AI Agent)", [ECOSYSTEM]);
       aVid = resolveVid(aPersona.identity);
       bVid = resolveVid(bPersona.identity);
 
@@ -300,9 +377,43 @@ export default function ConsoleFpp() {
       setTriangleValid(triangleResult.valid);
       setTriangleReason(triangleResult.reason ?? "");
       pushLog({ stage: "triangle", timestamp: Date.now(), durationMs: performance.now() - t, success: triangleResult.valid });
-      setStage("complete");
     } catch (e: any) {
       pushLog({ stage: "triangle", timestamp: Date.now(), durationMs: performance.now() - t, success: false, error: e.message });
+      setRunning(false); return;
+    }
+
+    // ── Step 5: Agent Delegation ─────────────────────────────────
+    setStage("delegation");
+    t = performance.now();
+    try {
+      // Alice (human) delegates to Bob (AI agent) via VRC
+      const delegation = await issueAgentDelegation(
+        aPersona.did,         // delegator R-DID (human)
+        bPersona.did,         // agent DID
+        aPhc.phcId,           // delegator PHC ref
+        localVrcAtoB.vrcId,   // delegation VRC ref
+        ECOSYSTEM,
+        ["uor_derive", "uor_verify", "uor_query", "uor_resolve"],
+        EXPIRES,
+        {
+          mcpEndpoint: "https://mcp.uor.foundation",
+          agentModelUri: "urn:uor:onnx:agent-model-v1",
+        },
+      );
+
+      const delegationHologram = project(delegation.identity);
+
+      // Verify the delegation
+      const verification = await verifyAgentDelegation(delegation, localVrcAtoB);
+
+      setAgentDelegation(delegation);
+      setAgentDelegationChecks(verification.checks);
+      setAgentHologram(delegationHologram);
+
+      pushLog({ stage: "delegation", timestamp: Date.now(), durationMs: performance.now() - t, success: verification.valid });
+      setStage("complete");
+    } catch (e: any) {
+      pushLog({ stage: "delegation", timestamp: Date.now(), durationMs: performance.now() - t, success: false, error: e.message });
     }
 
     setRunning(false);
@@ -319,9 +430,9 @@ export default function ConsoleFpp() {
             <IconFingerprint size={20} className="text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">First Person Project — Trust Flow</h1>
+            <h1 className="text-xl font-bold tracking-tight">First Person Project — Certified AI Agent Flow</h1>
             <p className="text-sm text-muted-foreground">
-              Live PHC → VRC → Trust Triangle pipeline with hologram projections
+              PHC → VRC → Trust Triangle → Agent Delegation with a2a + mcp-tool projections
             </p>
           </div>
         </div>
@@ -330,13 +441,15 @@ export default function ConsoleFpp() {
       {/* Pipeline Progress Bar */}
       <div className="bg-card border border-border rounded-xl p-5">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <StageIndicator stage="personas" currentStage={stage} label="Create Personas" icon={IconUsers} />
+          <StageIndicator stage="personas" currentStage={stage} label="Personas" icon={IconUsers} />
           <IconArrowRight size={14} className="text-muted-foreground/40 hidden sm:block" />
-          <StageIndicator stage="phc" currentStage={stage} label="Issue PHCs" icon={IconCertificate} />
+          <StageIndicator stage="phc" currentStage={stage} label="PHCs" icon={IconCertificate} />
           <IconArrowRight size={14} className="text-muted-foreground/40 hidden sm:block" />
-          <StageIndicator stage="vrc" currentStage={stage} label="Exchange VRCs" icon={IconArrowsExchange} />
+          <StageIndicator stage="vrc" currentStage={stage} label="VRCs" icon={IconArrowsExchange} />
           <IconArrowRight size={14} className="text-muted-foreground/40 hidden sm:block" />
-          <StageIndicator stage="triangle" currentStage={stage} label="Verify Triangle" icon={IconTriangle} />
+          <StageIndicator stage="triangle" currentStage={stage} label="Triangle" icon={IconTriangle} />
+          <IconArrowRight size={14} className="text-muted-foreground/40 hidden sm:block" />
+          <StageIndicator stage="delegation" currentStage={stage} label="Agent Delegation" icon={IconRobot} />
         </div>
 
         <div className="flex gap-2 mt-5">
@@ -346,7 +459,7 @@ export default function ConsoleFpp() {
             className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             <IconPlayerPlay size={14} />
-            {running ? "Running…" : stage === "complete" ? "Run Again" : "Run Trust Flow"}
+            {running ? "Running…" : stage === "complete" ? "Run Again" : "Run Certified Agent Flow"}
           </button>
           {stage !== "idle" && (
             <button
@@ -396,7 +509,7 @@ export default function ConsoleFpp() {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <CredentialCard
-              title="Alice (R-DID)"
+              title="Alice (Human Delegator)"
               icon={IconFingerprint}
               data={{
                 "type": alice.persona.persona["fpp:type"],
@@ -406,8 +519,8 @@ export default function ConsoleFpp() {
               }}
             />
             <CredentialCard
-              title="Bob (R-DID)"
-              icon={IconFingerprint}
+              title="Bob (AI Agent)"
+              icon={IconRobot}
               data={{
                 "type": bob.persona.persona["fpp:type"],
                 "R-DID": truncateId(bob.persona.did, 40),
@@ -439,7 +552,7 @@ export default function ConsoleFpp() {
               }}
             />
             <CredentialCard
-              title="Bob's PHC"
+              title="Bob's PHC (Agent Identity)"
               icon={IconShield}
               data={{
                 "ecosystem": bob.phc.credential["fpp:ecosystem"],
@@ -451,15 +564,9 @@ export default function ConsoleFpp() {
             />
           </div>
 
-          {/* Hologram Projections */}
           {alice.hologram && (
             <div className="bg-card border border-border rounded-xl p-4">
-              <ProjectionGrid hologram={alice.hologram} label="Alice's PHC" />
-            </div>
-          )}
-          {bob.hologram && (
-            <div className="bg-card border border-border rounded-xl p-4">
-              <ProjectionGrid hologram={bob.hologram} label="Bob's PHC" />
+              <ProjectionGrid hologram={alice.hologram} label="Alice's PHC (Human)" />
             </div>
           )}
         </section>
@@ -470,29 +577,28 @@ export default function ConsoleFpp() {
         <section className="space-y-3">
           <h3 className="text-sm font-semibold flex items-center gap-2">
             <IconArrowsExchange size={16} className="text-primary" />
-            Step 3 — Verifiable Relationship Credentials Exchanged
+            Step 3 — Delegation VRC Exchange (Human ↔ Agent)
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <CredentialCard
-              title="VRC: Alice → Bob"
+              title="VRC: Alice → Bob (Delegation)"
               icon={IconLink}
               data={{
                 "issuer R-DID": truncateId(vrcAtoB.credential["fpp:issuerRdid"], 36),
-                "subject R-DID": truncateId(vrcAtoB.credential["fpp:subjectRdid"], 36),
+                "agent R-DID": truncateId(vrcAtoB.credential["fpp:subjectRdid"], 36),
                 "ecosystem": vrcAtoB.credential["fpp:ecosystem"],
                 "VRC ID": truncateId(vrcAtoB.vrcId, 40),
                 "trust-graph": truncateId(vrcAtoB.projections.trustgraph, 40),
               }}
             />
             <CredentialCard
-              title="VRC: Bob → Alice"
+              title="VRC: Bob → Alice (Acknowledgement)"
               icon={IconLink}
               data={{
-                "issuer R-DID": truncateId(vrcBtoA.credential["fpp:issuerRdid"], 36),
-                "subject R-DID": truncateId(vrcBtoA.credential["fpp:subjectRdid"], 36),
+                "agent R-DID": truncateId(vrcBtoA.credential["fpp:issuerRdid"], 36),
+                "delegator R-DID": truncateId(vrcBtoA.credential["fpp:subjectRdid"], 36),
                 "ecosystem": vrcBtoA.credential["fpp:ecosystem"],
                 "VRC ID": truncateId(vrcBtoA.vrcId, 40),
-                "trust-graph": truncateId(vrcBtoA.projections.trustgraph, 40),
               }}
             />
           </div>
@@ -538,11 +644,6 @@ export default function ConsoleFpp() {
                 {triangleReason && (
                   <p className="text-[10px] text-destructive font-mono">{triangleReason}</p>
                 )}
-                <div className="text-[10px] text-muted-foreground space-y-1 pt-2 border-t border-border">
-                  <p><strong>Pipeline:</strong> PHC → URDNA2015 → SHA-256 → Hologram</p>
-                  <p><strong>Trust model:</strong> Geodesic dome of trust triangles</p>
-                  <p><strong>Sybil resistance:</strong> PHC uniqueness per ecosystem</p>
-                </div>
               </div>
               <TrustTriangleViz
                 valid={triangleValid}
@@ -554,28 +655,134 @@ export default function ConsoleFpp() {
         </section>
       )}
 
+      {/* ── STEP 5: Agent Delegation ─────────────────────────────────── */}
+      {agentDelegation && (
+        <section className="space-y-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <IconRobot size={16} className="text-primary" />
+            Step 5 — Certified AI Agent Delegation
+          </h3>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Delegation Credential */}
+            <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <IconCertificate size={14} className="text-primary" />
+                </div>
+                <h4 className="text-sm font-semibold">Agent Delegation Credential</h4>
+              </div>
+              <div className="space-y-1.5">
+                {[
+                  ["delegator", truncateId(agentDelegation.credential["fpp:delegatorRdid"], 36)],
+                  ["agent DID", truncateId(agentDelegation.credential["fpp:agentDid"], 36)],
+                  ["PHC ref", truncateId(agentDelegation.credential["fpp:delegatorPhcRef"], 36)],
+                  ["VRC ref", truncateId(agentDelegation.credential["fpp:delegationVrcRef"], 36)],
+                  ["ecosystem", agentDelegation.credential["fpp:ecosystem"]],
+                  ["capabilities", agentDelegation.credential["fpp:delegatedCapabilities"].join(", ")],
+                  ["MCP endpoint", agentDelegation.credential["fpp:mcpEndpoint"] ?? "—"],
+                ].map(([k, v]) => (
+                  <div key={k} className="flex items-start gap-2 text-[10px]">
+                    <span className="font-mono text-muted-foreground shrink-0 w-24">{k}</span>
+                    <span className="font-mono text-foreground break-all">{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Agent Projections — a2a + mcp-tool focus */}
+            <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <IconNetwork size={14} className="text-primary" />
+                </div>
+                <h4 className="text-sm font-semibold">Agentic Protocol Projections</h4>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { label: "A2A Agent Card", key: "a2a", value: agentDelegation.projections.a2a, desc: "Google A2A discovery" },
+                  { label: "MCP Tool", key: "mcpTool", value: agentDelegation.projections.mcpTool, desc: "Tool identity" },
+                  { label: "MCP Context", key: "mcpContext", value: agentDelegation.projections.mcpContext, desc: "Context entry" },
+                  { label: "DID", key: "did", value: agentDelegation.projections.did, desc: "W3C DID" },
+                  { label: "VC", key: "vc", value: agentDelegation.projections.vc, desc: "Verifiable Credential" },
+                  { label: "VRC", key: "vrc", value: agentDelegation.projections.vrc, desc: "Delegation VRC" },
+                  { label: "Trust Graph", key: "trustgraph", value: agentDelegation.projections.trustgraph, desc: "Graph position" },
+                  { label: "CID", key: "cid", value: agentDelegation.projections.cid, desc: "Content ID" },
+                ].map(p => (
+                  <div key={p.key} className="flex items-start gap-2 px-2.5 py-1.5 rounded-lg bg-muted/30">
+                    <div className="shrink-0 mt-0.5 w-1.5 h-1.5 rounded-full bg-primary" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-mono font-bold text-foreground">{p.label}</span>
+                        <span className="text-[8px] px-1 rounded-full bg-primary/10 text-primary font-medium">{p.desc}</span>
+                      </div>
+                      <p className="text-[9px] font-mono text-muted-foreground truncate">{truncateId(p.value, 48)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Delegation Chain + Verification */}
+          <div className="bg-card border border-border rounded-xl p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <DelegationChainViz delegation={agentDelegation} checks={agentDelegationChecks} />
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <IconTool size={12} className="text-primary" />
+                  Trust Chain: How It Works
+                </h4>
+                <div className="space-y-2 text-[10px] text-muted-foreground">
+                  <p><strong className="text-foreground">1. Human PHC</strong> — Alice proves personhood (Sybil-resistant)</p>
+                  <p><strong className="text-foreground">2. Delegation VRC</strong> — Alice issues VRC to Bob (human→agent relationship)</p>
+                  <p><strong className="text-foreground">3. Agent Delegation Credential</strong> — Wraps PHC + VRC + capabilities</p>
+                  <p><strong className="text-foreground">4. A2A Projection</strong> — Agent discoverable via Google A2A protocol</p>
+                  <p><strong className="text-foreground">5. MCP-Tool Projection</strong> — Agent's tools are content-addressed</p>
+                  <p><strong className="text-foreground">6. VC Projection</strong> — Delegation is a W3C Verifiable Credential</p>
+                </div>
+                <div className="pt-2 border-t border-border space-y-1 text-[10px] text-muted-foreground">
+                  <p><strong className="text-foreground">Key insight:</strong> The A2A Agent Card and MCP Tool endpoint both derive from the <em>same canonical hash</em> as the VRC that establishes the delegation. Any verifier can trace from the agent's tool endpoint back to the human's personhood credential.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Full Hologram */}
+          {agentHologram && (
+            <div className="bg-card border border-border rounded-xl p-4">
+              <ProjectionGrid hologram={agentHologram} label="Agent Delegation Credential" />
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Architecture card */}
       <div className="bg-muted/30 border border-border rounded-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
           <IconBraces size={16} className="text-primary" />
-          <h3 className="text-sm font-semibold">Architecture: What This Demonstrates</h3>
+          <h3 className="text-sm font-semibold">Architecture: Certified AI Agent Trust Chain</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-[11px] text-muted-foreground">
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 text-[11px] text-muted-foreground">
           <div>
             <p className="font-bold text-foreground mb-1">Layer 0: UOR</p>
             <p>URDNA2015 → SHA-256 → canonical identity. Every object content-addressed.</p>
           </div>
           <div>
             <p className="font-bold text-foreground mb-1">Layer 1: VIDs</p>
-            <p>R-DIDs, M-DIDs, P-DIDs projected through hologram. Self-sovereign identity.</p>
+            <p>R-DIDs for human & agent. Self-sovereign identity for both.</p>
           </div>
           <div>
             <p className="font-bold text-foreground mb-1">Layer 2: TSP</p>
-            <p>VRC exchange wrapped in authenticated TSP envelopes. Metadata privacy.</p>
+            <p>VRC exchange over authenticated channels. Metadata privacy.</p>
           </div>
           <div>
-            <p className="font-bold text-foreground mb-1">Layer 3: Trust Tasks</p>
-            <p>PHCs prove personhood. VRCs prove relationships. Trust triangles prevent Sybil attacks.</p>
+            <p className="font-bold text-foreground mb-1">Layer 3: FPP</p>
+            <p>PHC proves personhood. VRC proves delegation. Triangle verifies.</p>
+          </div>
+          <div>
+            <p className="font-bold text-foreground mb-1">Layer 4: Agent</p>
+            <p>ADC projects into A2A + MCP-tool. Human-certified AI agents.</p>
           </div>
         </div>
       </div>
