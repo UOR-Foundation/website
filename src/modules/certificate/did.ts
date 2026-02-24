@@ -95,11 +95,17 @@ function certToInput(certificate: UorCertificate): ProjectionInput {
  * excluding the DID itself (it's the document's `id`, not an alias).
  */
 function buildAlsoKnownAs(input: ProjectionInput): string[] {
+  const did = `did:uor:${input.cid}`;
+  const seen = new Set<string>([did]); // exclude the DID itself
   const aliases: string[] = [];
   for (const [name, spec] of PROJECTIONS) {
-    if (name === "did") continue; // DID is the document id, not an alias
+    if (name === "did") continue;
     if (spec.fidelity === "lossless") {
-      aliases.push(spec.project(input));
+      const value = spec.project(input);
+      if (!seen.has(value)) {
+        seen.add(value);
+        aliases.push(value);
+      }
     }
   }
   return aliases;
