@@ -255,6 +255,19 @@ export default function RuliadPage() {
           <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
         </Link>
 
+        {/* Whitepaper CTA */}
+        <Link
+          to="/ruliad/paper"
+          className="flex items-center gap-3 p-4 rounded-xl border border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors group"
+        >
+          <span className="text-2xl">📄</span>
+          <div className="flex-1">
+            <h3 className="font-semibold text-sm group-hover:text-accent transition-colors">Formal Whitepaper</h3>
+            <p className="text-xs text-muted-foreground">Academic paper with 8 theorems, proofs, and full correspondence table — exportable as PDF</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent transition-colors" />
+        </Link>
+
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
           <button
