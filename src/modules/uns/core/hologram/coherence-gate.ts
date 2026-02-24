@@ -61,7 +61,7 @@ function classifyTier(name: string, spec: HologramSpec): string {
   if (s.includes("w3.org")) return "semantic-web";
   if (s.includes("rfc-editor") || name === "ipv6" || name === "braille") return "native";
   if (s.includes("schema.org") || s.includes("solidproject") || name === "webfinger") return "social-web";
-  if (name.startsWith("gs1") || name === "oci" || name === "doi") return "industry";
+  if (name.startsWith("gs1") || name === "oci" || name === "doi" || name.startsWith("cobol")) return "industry";
   if (["bitcoin", "lightning", "nostr"].includes(name) || name.startsWith("zcash")) return "settlement";
   if (["erc8004", "x402", "a2a", "a2a-task", "mcp-tool", "mcp-context", "skill-md", "oasf", "onnx", "onnx-op", "nanda-index", "nanda-agentfacts", "nanda-resolver"].includes(name)) return "agentic";
   if (name === "activitypub" || name === "atproto") return "federation";
@@ -176,6 +176,10 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["nanda-index", "nanda-resolver", "Index entry → recursive resolution endpoint"],
     ["nanda-agentfacts", "oasf", "AgentFacts service descriptor → OASF service entry"],
     ["nanda-agentfacts", "mcp-tool", "AgentFacts endpoint → MCP tool registration"],
+    ["cobol-copybook", "skill-md", "COBOL data definitions → skill.md interface contract"],
+    ["cobol-program", "onnx", "COBOL business rules → ONNX model provenance chain"],
+    ["cobol-program", "a2a", "COBOL transaction processor → A2A discoverable agent"],
+    ["cobol-copybook", "nanda-agentfacts", "COBOL service → AgentFacts passport for agent discovery"],
   ];
   for (const [a, b, insight] of chains) {
     emitIf(has, synergies, a, b, "provenance-chain", insight,
@@ -192,6 +196,8 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["nanda-index", "did", "Discovery + identity: NANDA finds the agent, DID proves who it is", "NANDA Index resolves to DID — agent discovery with self-sovereign identity"],
     ["nanda-agentfacts", "vc", "Passport + credential: AgentFacts describes capabilities, VC certifies them", "AgentFacts capabilities become verifiable claims via VC projection"],
     ["nanda-resolver", "webfinger", "Agent resolution + web discovery: NANDA resolves agents, WebFinger resolves identities", "Both resolve names to typed links — convergent discovery protocols"],
+    ["cobol-copybook", "vc", "Legacy data + credential: copybook defines DATA structure, VC certifies its INTEGRITY", "Hash copybook, issue VC against same identity — compliance becomes structural"],
+    ["cobol-program", "did", "Legacy program + identity: COBOL program gets a self-sovereign DID — permanent, portable", "Program hash IS the DID — identity survives platform migrations"],
   ];
   for (const [a, b, insight, impl] of pairs) {
     emitIf(has, synergies, a, b, "complementary-pair", insight,
