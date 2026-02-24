@@ -739,6 +739,7 @@
         "description": "Analyse a path of ring elements for PathLength, TotalVariation, or WindingNumber.",
         "security": [{}, {"AgentKey": []}],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -780,6 +781,7 @@
         "description": "Compute the accumulated transform over a closed path in the ring.",
         "security": [{}, {"AgentKey": []}],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -804,6 +806,7 @@
         "description": "Process a stream of ring values with sliding windows, computing stratum, hamming, and curvature metrics per window.",
         "security": [{}, {"AgentKey": []}],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -1616,7 +1619,9 @@
         "tags": ["morphism"],
         "summary": "Verify a ring morphism (embedding, isometry, or action)",
         "description": "Exhaustively verify a structure-preserving map between two quantum rings. Returns a TransformCertificate with verification result and computation trace.",
+        "security": [{}, {"AgentKey": []}],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -1741,19 +1746,36 @@
       }
     },
     "/schema-org/extend": {
+      "get": {
+        "operationId": "schemaOrgExtendGet",
+        "tags": ["semantic-web"],
+        "summary": "Get schema.org ↔ UOR extension vocabulary",
+        "description": "Returns the UOR extension vocabulary for schema.org: the set of additional properties (derivation_id, contentHash, attributionCertificate) that UOR adds to any schema.org object. Use this to understand the extension schema before calling POST.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": { "description": "Extension vocabulary with property definitions and examples" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      },
       "post": {
         "operationId": "schemaOrgExtend",
         "tags": ["semantic-web"],
         "summary": "Extend schema.org JSON-LD with UOR attribution",
         "description": "Takes any valid schema.org JSON-LD object and adds UOR derivation_id, contentHash, and attributionCertificate. Grade B (content hash, not algebraic proof).",
+        "security": [{}, {"AgentKey": []}],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": { "type": "object", "description": "Any valid schema.org JSON-LD object" }
             }
           }
         },
-        "responses": { "200": { "description": "Extended JSON-LD with UOR attribution" } }
+        "responses": {
+          "200": { "description": "Extended JSON-LD with UOR attribution" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
       }
     },
     "/": {
@@ -2181,50 +2203,6 @@
         }
       }
     },
-    "/tools/derive": {
-      "get": {
-        "operationId": "toolDerive",
-        "tags": ["agent-tools"],
-        "summary": "uor_derive — derive content-addressed identity from any input",
-        "description": "Core agent tool function. Takes any string or JSON input, canonicalises via URDNA2015, and returns the full UOR identity.",
-        "parameters": [
-          { "name": "input", "in": "query", "required": true, "schema": { "type": "string", "maxLength": 1000 }, "description": "Input string to derive" }
-        ],
-        "responses": {
-          "200": { "description": "UOR identity with derivation_id, CID, Braille address, IPv6, and epistemic grading" },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
-        }
-      }
-    },
-    "/tools/query": {
-      "post": {
-        "operationId": "toolQuery",
-        "tags": ["agent-tools"],
-        "summary": "uor_query — query the UOR knowledge graph",
-        "description": "Agent tool for SPARQL queries over the knowledge graph with epistemic grading per result node.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "sparql": { "type": "string", "description": "SPARQL SELECT query" },
-                  "graph_uri": { "type": "string", "description": "Optional named graph URI" }
-                },
-                "required": ["sparql"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "JSON-LD @graph array with epistemic grading per node" },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
-        }
-      }
-    },
     "/attribution/register": {
       "post": {
         "operationId": "attributionRegister",
@@ -2371,6 +2349,210 @@
               "application/ld+json": { "schema": { "type": "object" } }
             }
           }
+        }
+      }
+    },
+    "/kernel/schema/triad": {
+      "get": {
+        "operationId": "schemaTriad",
+        "tags": ["kernel-schema"],
+        "summary": "Get full schema:Triad decomposition for a ring value",
+        "description": "Returns the triadic coordinate decomposition (datum, stratum, spectrum) for a given integer value at quantum level n. The Triad is the canonical analytical lens of the UOR framework: datum↔subject (WHAT), stratum↔predicate (HOW MUCH), spectrum↔object (WHICH bits).\n\n**Framework mapping (schema.rs):**\n- `schema:Triad` — triadic coordinate system\n- `schema:datum` — big-endian byte tuple\n- `schema:stratum` — popcount per byte position\n- `schema:spectrum` — LSB-indexed basis elements per byte",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full schema:Triad with per-byte stratum and spectrum decomposition",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Datum" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/store/resolve": {
+      "get": {
+        "operationId": "storeResolve",
+        "tags": ["store"],
+        "summary": "Resolve a UOR address to its stored IPFS CID",
+        "description": "Given a UOR Braille address or derivation_id, resolves to the corresponding IPFS CID if the object has been stored. Returns the CID, gateway URL, and storage metadata.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "address", "in": "query", "required": false, "schema": { "type": "string" }, "description": "UOR Braille address (u:glyph) to resolve" },
+          { "name": "derivation_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" }, "description": "Derivation ID to resolve" }
+        ],
+        "responses": {
+          "200": { "description": "Resolution result with CID and gateway URL" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "description": "No stored object found for the given address or derivation_id" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/graph/query": {
+      "get": {
+        "operationId": "bridgeGraphQuery",
+        "tags": ["graph"],
+        "summary": "Query the UOR knowledge graph by triple pattern",
+        "description": "Lightweight triple-pattern query over the UOR knowledge graph. Supports subject, predicate, and object filters. Returns matching triples as a JSON-LD @graph array.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "subject", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Filter by subject IRI" },
+          { "name": "predicate", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Filter by predicate IRI" },
+          { "name": "object", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Filter by object IRI or literal" },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 100, "maximum": 1000 }, "description": "Maximum results to return" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching triples as JSON-LD @graph",
+            "content": {
+              "application/ld+json": { "schema": { "type": "object" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/observer/{id}/zone": {
+      "get": {
+        "operationId": "observerGetZone",
+        "tags": ["observer"],
+        "summary": "Get observer zone classification",
+        "description": "Returns the current zone (COHERENCE, DRIFT, or COLLAPSE) for a specific observer agent, along with zone transition history and h-score metrics.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Observer agent_id" }
+        ],
+        "responses": {
+          "200": { "description": "Zone classification with metrics" },
+          "404": { "description": "Observer not found" }
+        }
+      }
+    },
+    "/observer/{id}/history": {
+      "get": {
+        "operationId": "observerGetHistory",
+        "tags": ["observer"],
+        "summary": "Get observer assessment history",
+        "description": "Returns the full assessment history for an observer agent: all submitted outputs, h-scores, epistemic grades, and zone transitions over time.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Observer agent_id" },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 50, "maximum": 200 }, "description": "Maximum history entries to return" }
+        ],
+        "responses": {
+          "200": { "description": "Assessment history with h-scores and zone transitions" },
+          "404": { "description": "Observer not found" }
+        }
+      }
+    },
+    "/observer/{id}/remediate": {
+      "post": {
+        "operationId": "observerRemediate",
+        "tags": ["observer"],
+        "summary": "Remediate a drifting or collapsed observer",
+        "description": "Initiates remediation for an observer in DRIFT or COLLAPSE zone. Resets h-score accumulation and provides a remediation derivation_id for the agent to rebuild coherence.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Observer agent_id" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "remediation_derivation_id": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$", "description": "New founding derivation for remediation" }
+                },
+                "required": ["remediation_derivation_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Remediation initiated with new zone assessment" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "description": "Observer not found" }
+        }
+      }
+    },
+    "/sparql": {
+      "get": {
+        "operationId": "sparqlGet",
+        "tags": ["sparql"],
+        "summary": "SPARQL 1.1 query (alias for /bridge/sparql)",
+        "description": "Top-level SPARQL endpoint — alias for /bridge/sparql. Accepts the same query parameter and returns identical SPARQL results with epistemic grading.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" }, "description": "URL-encoded SPARQL query" },
+          { "name": "n", "in": "query", "required": false, "schema": { "type": "integer", "default": 8 }, "description": "Ring bit width" }
+        ],
+        "responses": {
+          "200": { "description": "application/sparql-results+json with epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      },
+      "post": {
+        "operationId": "sparqlPost",
+        "tags": ["sparql"],
+        "summary": "SPARQL 1.1 query POST (alias for /bridge/sparql POST)",
+        "description": "POST variant of the top-level SPARQL endpoint.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": { "type": "string" },
+                  "n": { "type": "integer", "default": 8 }
+                },
+                "required": ["query"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "application/sparql-results+json" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/sparql/verify": {
+      "get": {
+        "operationId": "sparqlVerifyTopLevel",
+        "tags": ["sparql"],
+        "summary": "Verify SPARQL query results (alias)",
+        "description": "Top-level alias for SPARQL result verification with epistemic grading.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "n", "in": "query", "required": false, "schema": { "type": "integer", "default": 8 } }
+        ],
+        "responses": {
+          "200": { "description": "Verification result with per-node grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
         }
       }
     }

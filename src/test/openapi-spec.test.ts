@@ -100,9 +100,9 @@ describe("OpenAPI 3.1.0 structural compliance", () => {
     expect(missingRefs).toEqual([]);
   });
 
-  it("has ≥ 40 documented path entries (matching runtime coverage)", () => {
+  it("has ≥ 50 documented path entries (matching runtime coverage)", () => {
     const pathCount = Object.keys(spec.paths).length;
-    expect(pathCount).toBeGreaterThanOrEqual(40);
+    expect(pathCount).toBeGreaterThanOrEqual(50);
   });
 
   it("every operation has a summary", () => {
