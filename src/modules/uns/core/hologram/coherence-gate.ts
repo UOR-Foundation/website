@@ -330,3 +330,40 @@ export function coherenceGate(): CoherenceReport {
     opportunities,
   };
 }
+
+// ── What-If Simulator ─────────────────────────────────────────────────────
+
+export interface WhatIfResult {
+  readonly name: string;
+  readonly newSynergies: readonly Synergy[];
+  readonly totalSynergiesBefore: number;
+  readonly totalSynergiesAfter: number;
+  readonly delta: number;
+}
+
+/**
+ * What-If Simulator — preview synergies before adding a projection.
+ *
+ * Pass a candidate projection spec. The simulator runs the coherence
+ * gate with and without it, then returns only the NEW synergies.
+ */
+export function whatIf(
+  name: string,
+  spec: HologramSpec,
+): WhatIfResult {
+  const before = discoverSynergies([...SPECS.entries()]);
+  const after = discoverSynergies([...SPECS.entries(), [name, spec]]);
+
+  // New synergies = those involving the new projection
+  const newSynergies = after.filter(
+    s => s.projections.includes(name),
+  );
+
+  return {
+    name,
+    newSynergies,
+    totalSynergiesBefore: before.length,
+    totalSynergiesAfter: after.length,
+    delta: after.length - before.length,
+  };
+}
