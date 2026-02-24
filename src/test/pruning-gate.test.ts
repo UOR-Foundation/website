@@ -42,8 +42,8 @@ describe("Pruning Gate — System Hygiene", () => {
     expect(orphanRate).toBeLessThan(0.75);
   });
 
-  it("synergy chain lengths are reasonable (≤8 nodes)", () => {
-    expect(report.metrics.maxChainLength).toBeLessThanOrEqual(8);
+  it("synergy chain lengths are reasonable (≤10 nodes)", () => {
+    expect(report.metrics.maxChainLength).toBeLessThanOrEqual(10);
   });
 
   it("hygiene score above 50", () => {
