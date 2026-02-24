@@ -10,18 +10,10 @@
 
 import type { CompactBoundary } from "./types";
 import type { BoundaryManifest } from "./boundary";
+import { sha256hex } from "@/lib/crypto";
 
-/**
- * SHA-256 hex digest of a UTF-8 string.
- * The single implementation used by boundary hashing and source hashing.
- */
-export async function sha256hex(input: string): Promise<string> {
-  const bytes = new TextEncoder().encode(input);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+// Re-export so existing consumers keep working
+export { sha256hex };
 
 /**
  * SHA-256 hex of a raw source object (pre-boundary).

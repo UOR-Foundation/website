@@ -10,14 +10,8 @@ interface DonatePopupProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** Compute a SHA-256 hex digest of a string (content-derived certificate). */
-async function sha256Hex(input: string): Promise<string> {
-  const data = new TextEncoder().encode(input);
-  const buf = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+// SHA-256 — canonical single implementation
+import { sha256hex as sha256Hex } from "@/lib/crypto";
 
 const CRYPTO_ADDRESSES = [
   {

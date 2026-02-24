@@ -19,15 +19,8 @@ function hexOf(value: number, bytes: number): string {
   return "0x" + value.toString(16).padStart(bytes * 2, "0");
 }
 
-async function sha256hex(input: string): Promise<string> {
-  const buf = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(input)
-  );
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+// SHA-256 — canonical single implementation
+import { sha256hex } from "@/lib/crypto";
 
 function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
