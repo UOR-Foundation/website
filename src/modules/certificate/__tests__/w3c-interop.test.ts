@@ -158,6 +158,11 @@ describe("W3C Interoperability", () => {
       const oidcService = doc.service.find(s => s.type === "OpenIdConnectSubject")!;
       expect(oidcService.serviceEndpoint).toMatch(/^urn:uor:oidc:[0-9a-f]{64}$/);
       expect(oidcService.id).toMatch(/#oidc$/);
+      // DNS-SD / mDNS — local network discovery
+      expect(types).toContain("DnsServiceDiscovery");
+      const dnssdService = doc.service.find(s => s.type === "DnsServiceDiscovery")!;
+      expect(dnssdService.serviceEndpoint).toMatch(/^_uor-[0-9a-f]{12}\._tcp\.local$/);
+      expect(dnssdService.id).toMatch(/#dnssd$/);
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {

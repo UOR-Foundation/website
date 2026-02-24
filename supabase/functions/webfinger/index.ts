@@ -70,6 +70,9 @@ const LINKS: LinkSpec[] = [
     (h) => `urn:uuid:${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`],
 
   // ═══ TIER 4 — INFRASTRUCTURE & EMERGING ═══
+  // DNS-SD / mDNS — local network discovery
+  ["describedby", "text/dns",
+    (h) => `_uor-${h.slice(0, 12)}._tcp.local`],
   // SCITT — supply chain transparency
   ["describedby", "application/json",
     (h) => `urn:ietf:params:scitt:statement:sha256:${h}`],
