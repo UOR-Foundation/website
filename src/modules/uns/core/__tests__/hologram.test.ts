@@ -37,8 +37,8 @@ const HEX = IDENTITY["u:canonicalId"].split(":").pop()!;
 // ── Core contract ───────────────────────────────────────────────────────────
 
 describe("Hologram Projection Registry", () => {
-  it("registers at least 35 projections", () => {
-    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(35);
+  it("registers at least 37 projections", () => {
+    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(37);
   });
 
   // ── Tier 0: Foundational Standards ──────────────────────────────────────
@@ -437,6 +437,29 @@ describe("Hologram Projection Registry", () => {
     expect(p.fidelity).toBe("lossless");
   });
 
+  // ── ONNX — Open Neural Network Exchange ─────────────────────────────
+
+  it("onnx projection produces URN with full hash", () => {
+    const p = project(IDENTITY, "onnx");
+    expect(p.value).toBe(`urn:uor:onnx:model:${HEX}`);
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  it("onnx-op projection produces URN with full hash", () => {
+    const p = project(IDENTITY, "onnx-op");
+    expect(p.value).toBe(`urn:uor:onnx:op:${HEX}`);
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  it("onnx model hash matches agent identity — model provenance", () => {
+    const modelHash = project(IDENTITY, "onnx").value.split(":").pop()!;
+    const agentHash = project(IDENTITY, "erc8004").value.split(":").pop()!;
+    const skillHash = project(IDENTITY, "skill-md").value.split(":").pop()!;
+    // Same identity links model → agent → skill
+    expect(modelHash).toBe(agentHash);
+    expect(modelHash).toBe(skillHash);
+  });
+
   // ── Cross-Framework Identity Equivalence ─────────────────────────────
 
   it("all agent infrastructure projections share the same 256-bit identity", () => {
@@ -445,25 +468,26 @@ describe("Hologram Projection Registry", () => {
     const mcp = project(IDENTITY, "mcp-tool").value.split(":").pop()!;
     const skill = project(IDENTITY, "skill-md").value.split(":").pop()!;
     const a2a = project(IDENTITY, "a2a").value.split(":").pop()!;
+    const onnx = project(IDENTITY, "onnx").value.split(":").pop()!;
     const nostr = project(IDENTITY, "nostr").value;
     const btc = project(IDENTITY, "bitcoin").value.slice(10);
-    // One hash, seven protocols
     expect(erc).toBe(x402);
     expect(x402).toBe(mcp);
     expect(mcp).toBe(skill);
     expect(skill).toBe(a2a);
-    expect(a2a).toBe(nostr);
+    expect(a2a).toBe(onnx);
+    expect(onnx).toBe(nostr);
     expect(nostr).toBe(btc);
   });
 
   it("agent infrastructure projections are all deterministic", () => {
-    for (const name of ["erc8004", "x402", "mcp-tool", "mcp-context", "skill-md", "a2a", "a2a-task", "oasf"]) {
+    for (const name of ["erc8004", "x402", "mcp-tool", "mcp-context", "skill-md", "a2a", "a2a-task", "oasf", "onnx", "onnx-op"]) {
       expect(project(IDENTITY, name).value).toBe(project(IDENTITY, name).value);
     }
   });
 
   it("all agent infrastructure projections are lossless", () => {
-    for (const name of ["erc8004", "x402", "mcp-tool", "mcp-context", "skill-md", "a2a", "a2a-task", "oasf"]) {
+    for (const name of ["erc8004", "x402", "mcp-tool", "mcp-context", "skill-md", "a2a", "a2a-task", "oasf", "onnx", "onnx-op"]) {
       expect(project(IDENTITY, name).fidelity).toBe("lossless");
     }
   });

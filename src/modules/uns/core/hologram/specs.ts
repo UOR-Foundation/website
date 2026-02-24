@@ -551,4 +551,35 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://github.com/agntcy/oasf",
   }],
+
+  // ── ONNX — Open Neural Network Exchange ───────────────────────────────
+  // An ONNX model is a serialized protobuf — raw bytes that are trivially
+  // content-addressable. Hashing the model file gives it a permanent,
+  // tamper-evident identity: if a single weight changes, the hash changes.
+  //
+  // Cross-framework synergy: an agent's model (ONNX) links to its
+  // identity (ERC-8004), its skills (skill.md), and its outputs (MCP).
+  // Model provenance becomes verifiable across the entire agent stack.
+  //
+  //   Format: urn:uor:onnx:model:{hex} (SHA-256 of model bytes)
+
+  ["onnx", {
+    project: ({ hex }) => `urn:uor:onnx:model:${hex}`,
+    fidelity: "lossless",
+    spec: "https://onnx.ai/",
+  }],
+
+  // ── ONNX Op — Content-Addressed Operator Identity ─────────────────────
+  // Individual ONNX operators (Conv, MatMul, Attention, etc.) can be
+  // canonicalized as JSON-LD descriptors and hashed — giving each operator
+  // a verifiable identity independent of the model it appears in.
+  // Enables operator-level provenance and reuse tracking across models.
+  //
+  //   Format: urn:uor:onnx:op:{hex} (hash of canonical operator descriptor)
+
+  ["onnx-op", {
+    project: ({ hex }) => `urn:uor:onnx:op:${hex}`,
+    fidelity: "lossless",
+    spec: "https://onnx.ai/onnx/operators/",
+  }],
 ]);
