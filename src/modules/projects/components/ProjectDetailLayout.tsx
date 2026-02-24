@@ -119,7 +119,7 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
             {/* Coordinates */}
             {breakdown && (
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">UOR Coordinates</p>
+                <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">UOR Address</p>
                 <div className="grid grid-cols-3 gap-2">
                 {([
                   { key: "observer" as const, label: "Entity" },
