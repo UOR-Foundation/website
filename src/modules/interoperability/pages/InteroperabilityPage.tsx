@@ -38,16 +38,6 @@ export default function InteroperabilityPage() {
               {/* View toggle */}
               <div className="flex items-center gap-1 bg-secondary rounded-lg p-1 shrink-0 self-start sm:self-auto">
                 <button
-                  onClick={() => setView("graph")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                    view === "graph"
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Graph
-                </button>
-                <button
                   onClick={() => setView("list")}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     view === "list"
@@ -56,6 +46,16 @@ export default function InteroperabilityPage() {
                   }`}
                 >
                   Explorer
+                </button>
+                <button
+                  onClick={() => setView("graph")}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    view === "graph"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Graph
                 </button>
               </div>
             </div>
