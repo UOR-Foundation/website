@@ -68,6 +68,19 @@ export {
   canonicalJsonLd,
 } from "./canonical";
 
+// ── Hologram Projection Registry (the UOR implementation layer) ─────────────
+export {
+  project,
+  PROJECTIONS,
+} from "./canonical";
+export type {
+  Hologram,
+  HologramProjection,
+  HologramSpec,
+  Fidelity,
+  ProjectionInput,
+} from "./canonical";
+
 // ── Monetization (payment-provider agnostic) ────────────────────────────────
 export { MonetizationEngine, createPaymentGateMiddleware } from "./monetization";
 export type {
