@@ -66,3 +66,35 @@ export type {
   TspRelationship,
   RoutedTspEnvelope,
 } from "@/modules/uns/core/tsp";
+
+// ── First Person Project (FPP) ───────────────────────────────────────────
+// Decentralized trust graph: PHCs, VRCs, VECs, personas, r-cards.
+
+export {
+  issuePhc,
+  issueVrc,
+  issueVec,
+  createPersona,
+  createRcard,
+  createTrustGraphNode,
+  exchangeVrcs,
+  verifyPhc,
+  verifyVrc,
+  verifyTrustTriangle,
+} from "@/modules/uns/core/fpp";
+
+export type {
+  PersonhoodCredential,
+  SealedPhc,
+  VerifiableRelationshipCredential,
+  SealedVrc,
+  VerifiableEndorsementCredential,
+  SealedVec,
+  PersonaType,
+  FppPersona,
+  ResolvedPersona,
+  RelationshipCard,
+  SealedRcard,
+  TrustGraphNode,
+  SealedTrustGraphNode,
+} from "@/modules/uns/core/fpp";

@@ -1660,4 +1660,186 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://trustoverip.github.io/tswg-tsp-specification/",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 12 — FIRST PERSON PROJECT (Decentralized Trust Graph Infrastructure)
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // The First Person Project (FPP) builds the Internet's missing trust layer
+  // on top of TSP (Layer 2) as trust task protocols (Layer 3 of the ToIP stack).
+  //
+  // Architecture:
+  //   UOR Object → singleProofHash() → Hologram → FPP Projections
+  //
+  // Every credential, relationship, persona, and trust graph node is a UOR
+  // object. The decentralized trust graph IS a hologram — each trust
+  // relationship is one canonical hash projected through every standard.
+  //
+  // Reference: The First Person Project White Paper V1.2 (2026-01-23)
+  // https://www.firstperson.network/
+
+  // ── FPP-PHC — Personhood Credential Identifier ────────────────────────
+  // A PHC is issued by a qualified ecosystem to attest that the holder
+  // is a real, unique person within that ecosystem. The PHC identity is
+  // the SHA-256 of the canonical credential object — ensuring that
+  // identical attestations produce identical identifiers.
+  //
+  // PHC Design Principles (from the Personhood Credentials paper):
+  //   1. Credential limits: At most one PHC per person per ecosystem
+  //   2. Unlinkable pseudonymity: service-specific pseudonyms via ZKP
+  //
+  // The PHC projection creates a URN that embeds the full hash, enabling
+  // lossless verification. Combined with the `vc` projection, any PHC
+  // is simultaneously a W3C Verifiable Credential and a First Person
+  // Personhood Credential — same hash, dual identity.
+  //
+  //   Format: urn:fpp:phc:sha256:{hex}
+
+  ["fpp-phc", {
+    project: ({ hex }) => `urn:fpp:phc:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.firstperson.network/",
+  }],
+
+  // ── FPP-VRC — Verifiable Relationship Credential Identifier ───────────
+  // VRCs are issued in pairs (bidirectional) between PHC holders to
+  // attest first-person trust relationships. Each VRC is signed by the
+  // issuer's pairwise private DID and linked to both parties' PHCs.
+  //
+  // The VRC identity is the hash of the credential object including
+  // both parties' R-DIDs, datestamp, and expiration. This means:
+  //   - The relationship IS the hash
+  //   - Two identical relationships → same hash → same VRC ID
+  //   - VRCs compose into the decentralized trust graph
+  //
+  // Combined with `tsp-relationship`, a VRC exchange IS a TSP
+  // relationship forming handshake — they are structurally identical.
+  //
+  //   Format: urn:fpp:vrc:sha256:{hex}
+
+  ["fpp-vrc", {
+    project: ({ hex }) => `urn:fpp:vrc:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.firstperson.network/",
+  }],
+
+  // ── FPP-VEC — Verifiable Endorsement Credential Identifier ────────────
+  // VECs extend VRCs with contextual reputation — Bob can vouch for
+  // Alice as a "microbiologist" or "gardener" using persona DIDs.
+  // VECs are the building blocks of contextual reputation graphs.
+  //
+  // Unlike VRCs (which use R-DIDs), VECs use P-DIDs for social context.
+  // This enables verifiers to check endorsements across ecosystems.
+  //
+  //   Format: urn:fpp:vec:sha256:{hex}
+
+  ["fpp-vec", {
+    project: ({ hex }) => `urn:fpp:vec:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.firstperson.network/",
+  }],
+
+  // ── FPP-RDID — Relationship DID (Pairwise Private) ────────────────────
+  // R-DIDs are generated per-relationship for private channels. They are
+  // known only to the two parties and are NOT intended for correlation.
+  //
+  // The R-DID projection creates a did:uor that encodes the relationship
+  // context — the hash is derived from the channel's founding exchange
+  // (QR scan → DID document exchange → verification).
+  //
+  // R-DIDs are Self-Certifying Identifiers (SCIDs) per the ToIP DID SCID
+  // specification — portable and location-independent.
+  //
+  //   Format: did:fpp:r:{hex16} (64-bit relationship prefix for privacy)
+
+  ["fpp-rdid", {
+    project: ({ hex }) => `did:fpp:r:${hex.slice(0, 16)}`,
+    fidelity: "lossy",
+    spec: "https://lf-toip.atlassian.net/wiki/spaces/HOME/pages/88572360",
+    lossWarning: "fpp-rdid-uses-64-bit-prefix-for-privacy (pairwise-only, not for global correlation)",
+  }],
+
+  // ── FPP-MDID — Membership DID (Community-Scoped) ──────────────────────
+  // M-DIDs are established when a person joins a Verifiable Trust
+  // Community (VTC). The M-DID is linked to a Verifiable Membership
+  // Credential (VMC) — a special form of VRC.
+  //
+  // A person may use different M-DIDs for different communities
+  // (maximum privacy) or share an M-DID across related communities
+  // (intentional correlation). This is persona management.
+  //
+  //   Format: did:fpp:m:{hex}
+
+  ["fpp-mdid", {
+    project: ({ hex }) => `did:fpp:m:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.firstperson.network/",
+  }],
+
+  // ── FPP-PDID — Persona DID (Cross-Context Public Identity) ────────────
+  // P-DIDs are used for intentional correlation across contexts.
+  // A persona may be private (shared in specific contexts) or public
+  // (globally resolvable). P-DIDs resolve via FedID's decentralized
+  // federation using ActivityPub.
+  //
+  // P-DIDs enable digital signatures for content credentials (C2PA),
+  // legal documents, and social vouching — all from the sovereign wallet.
+  //
+  //   Format: did:fpp:p:{hex}
+
+  ["fpp-pdid", {
+    project: ({ hex }) => `did:fpp:p:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.firstperson.network/",
+  }],
+
+  // ── FPP-RCARD — Relationship Card (Digital Business Card) ─────────────
+  // R-cards are cryptographically signed digital objects exchanged over
+  // private channels. They are the modern equivalent of business cards
+  // but with cryptographic provenance and one-way sync support.
+  //
+  // An r-card is a UOR object — its identity is the hash of the card
+  // contents. Updates produce new hashes, forming a verifiable history.
+  //
+  //   Format: urn:fpp:rcard:sha256:{hex}
+
+  ["fpp-rcard", {
+    project: ({ hex }) => `urn:fpp:rcard:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.firstperson.network/",
+  }],
+
+  // ── FPP-TRUSTGRAPH — Trust Graph Node Identifier ──────────────────────
+  // Each node in the decentralized trust graph is identified by the
+  // hash of the node's canonical representation — including its PHCs,
+  // VRCs, M-DIDs, and community memberships.
+  //
+  // The trust graph is a geodesic dome of verifiable relationship trust
+  // triangles — each triangle is (PHC-A, PHC-B, VRC-AB) anchored to
+  // a shared ecosystem. The trust load distributes across all triangles.
+  //
+  //   Format: urn:fpp:trustgraph:sha256:{hex}
+
+  ["fpp-trustgraph", {
+    project: ({ hex }) => `urn:fpp:trustgraph:sha256:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.firstperson.network/",
+  }],
+
+  // ── TRQP — Trust Registry Query Protocol Endpoint ─────────────────────
+  // TRQP enables any party to query whether a specific entity holds a
+  // specific role in a specific trust ecosystem. The Ayra Trust Network
+  // is the decentralized trust registry network that anchors TRQP.
+  //
+  // The TRQP projection creates a query-ready URI that embeds the
+  // entity's content-addressed identity — enabling resolution against
+  // any TRQP-compliant registry without centralized lookup.
+  //
+  //   Format: trqp://{domain}/registries/{hex16}/entities/{hex}
+
+  ["trqp", {
+    project: ({ hex }) => `trqp://${DOMAIN}/registries/${hex.slice(0, 16)}/entities/${hex}`,
+    fidelity: "lossless",
+    spec: "https://trustoverip.github.io/tswg-trust-registry-tf/",
+  }],
 ]);

@@ -121,6 +121,7 @@ function classifyTier(name: string, spec: HologramSpec): string {
   if (["erc8004", "x402", "a2a", "a2a-task", "mcp-tool", "mcp-context", "skill-md", "oasf", "onnx", "onnx-op", "nanda-index", "nanda-agentfacts", "nanda-resolver"].includes(name)) return "agentic";
   if (name === "activitypub" || name === "atproto") return "federation";
   if (name.startsWith("tsp-")) return "trust-spanning";
+  if (name.startsWith("fpp-") || name === "trqp") return "first-person";
   return "other";
 }
 
@@ -391,6 +392,23 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["tsp-envelope", "a2a-task", "TSP envelope → A2A task — agent tasks ride on authenticated channels"],
     ["tsp-relationship", "nanda-agentfacts", "TSP relationship → AgentFacts — bilateral trust registered in agent passport"],
     ["tsp-vid", "erc8004", "TSP VID → ERC-8004 on-chain identity — trust channel identity anchored on-chain"],
+    // ── FPP (First Person Project) provenance chains ──
+    ["fpp-phc", "fpp-vrc", "PHC → VRC: personhood credential anchors relationship credential — Sybil-resistant trust edges"],
+    ["fpp-vrc", "fpp-trustgraph", "VRC → trust graph: each VRC adds an edge to the decentralized trust graph"],
+    ["fpp-phc", "fpp-trustgraph", "PHC → trust graph: personhood credential creates a trust graph node"],
+    ["fpp-phc", "fpp-mdid", "PHC issuance → M-DID: joining a VTC requires personhood verification first"],
+    ["fpp-mdid", "fpp-vrc", "M-DID → VRC: membership identity enables relationship credential exchange"],
+    ["fpp-pdid", "fpp-vec", "P-DID → VEC: persona identity enables contextual endorsement vouching"],
+    ["fpp-vec", "fpp-trustgraph", "VEC → trust graph: endorsements strengthen trust graph edges"],
+    ["fpp-rdid", "fpp-rcard", "R-DID → r-card: relationship DID context determines r-card exchange scope"],
+    ["fpp-rcard", "fpp-vrc", "R-card → VRC: digital business card exchange precedes relationship credentialing"],
+    ["fpp-phc", "tsp-vid", "PHC → TSP VID: personhood credential holder becomes TSP-addressable entity"],
+    ["fpp-vrc", "tsp-envelope", "VRC → TSP envelope: relationship credentials ride on authenticated channels"],
+    ["fpp-vrc", "tsp-relationship", "VRC → TSP relationship: VRC exchange IS a TSP relationship forming handshake"],
+    ["fpp-trustgraph", "trqp", "Trust graph → TRQP: trust graph node queryable via Trust Registry Query Protocol"],
+    ["fpp-phc", "trqp", "PHC → TRQP: personhood credential status queryable via trust registry"],
+    ["fpp-mdid", "tsp-vid", "M-DID → TSP VID: community membership DID resolves to TSP transport endpoint"],
+    ["fpp-pdid", "activitypub", "P-DID → ActivityPub: public persona discoverable via federated social web"],
   ];
   for (const [a, b, insight] of chains) {
     emitIf(has, synergies, a, b, "provenance-chain", insight,
@@ -478,6 +496,20 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["tsp-nested", "mls", "TSP nested + MLS: nested envelope for 1:1, MLS for group — complementary scopes", "TSP handles bilateral, MLS handles multilateral — same identity, different scale"],
     ["tsp-vid", "a2a", "TSP VID + A2A: TSP provides trust channel, A2A provides agent protocol", "A2A messages ride on TSP envelopes — agent communication gets trust substrate"],
     ["tsp-vid", "nanda-index", "TSP VID + NANDA: TSP VID is discoverable via NANDA agent index", "NANDA finds the agent, TSP authenticates the channel — discovery meets trust"],
+    // ── FPP (First Person Project) complementary pairs ──
+    ["fpp-phc", "vc", "PHC + VC: PHC proves PERSONHOOD, VC proves CLAIMS — same object, dual semantics", "PHC IS a VC — personhood is a verifiable credential about uniqueness"],
+    ["fpp-phc", "did", "PHC + DID: PHC proves UNIQUE PERSON, DID proves IDENTITY — PHC anchors DID to real human", "PHC-anchored DID prevents Sybil attacks — identity requires personhood proof"],
+    ["fpp-vrc", "tsp-relationship", "VRC + TSP relationship: VRC attests TRUST, TSP relationship provides CHANNEL — structurally identical", "VRC exchange IS TSP handshake — trust assertion and trust channel are the same act"],
+    ["fpp-vrc", "vc", "VRC + VC: VRC proves RELATIONSHIP, VC proves CLAIMS — peer-to-peer trust is credential-native", "VRC IS a VC — relationships are verifiable claims about bilateral trust"],
+    ["fpp-rdid", "tsp-vid", "R-DID + TSP VID: R-DID scopes PRIVACY, TSP VID enables TRANSPORT — private channel identity", "R-DID becomes TSP VID for private channel — pairwise privacy meets authenticated messaging"],
+    ["fpp-mdid", "did", "M-DID + DID: M-DID scopes COMMUNITY, DID proves IDENTITY — community membership is self-sovereign", "M-DID IS a did:fpp — community identity without centralized directory"],
+    ["fpp-pdid", "activitypub", "P-DID + ActivityPub: P-DID proves PERSONA, ActivityPub enables DISCOVERY — federated identity", "P-DID resolves via FedID/ActivityPub — public personas discoverable without centralized platform"],
+    ["fpp-pdid", "webfinger", "P-DID + WebFinger: P-DID is the identity, WebFinger is the resolution — standards convergence", "P-DID resolves via WebFinger acct: URI — persona discovery uses existing web infrastructure"],
+    ["fpp-vec", "vc", "VEC + VC: VEC proves ENDORSEMENT, VC proves CLAIMS — social vouching is credential-native", "VEC IS a VC — contextual reputation becomes verifiable claims"],
+    ["fpp-rcard", "cid", "R-card + CID: r-card is the CONTENT, CID is the ADDRESS — digital business cards on IPFS", "R-card content-addressed via CID — business cards survive platform migration"],
+    ["fpp-trustgraph", "trqp", "Trust graph + TRQP: trust graph stores RELATIONSHIPS, TRQP enables QUERIES — infrastructure pair", "Trust graph nodes queryable via TRQP — decentralized trust registry resolution"],
+    ["fpp-trustgraph", "did", "Trust graph + DID: trust graph maps CONNECTIONS, DID identifies NODES — graph + identity", "Every trust graph node IS a DID — the graph is self-sovereign"],
+    ["trqp", "did", "TRQP + DID: TRQP resolves ROLES, DID resolves IDENTITY — complementary resolution", "TRQP queries trust status of DID holders — registry meets identity"],
   ];
   for (const [a, b, insight, impl] of pairs) {
     emitIf(has, synergies, a, b, "complementary-pair", insight,
@@ -485,7 +517,7 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
   }
 
   // Rule 6: Trust amplification
-  const trustSources = ["bitcoin", "zcash-transparent", "cid", "did", "tsp-relationship"];
+  const trustSources = ["bitcoin", "zcash-transparent", "cid", "did", "tsp-relationship", "fpp-phc", "fpp-trustgraph"];
   for (let i = 0; i < trustSources.length; i++) {
     for (let j = i + 1; j < trustSources.length; j++) {
       const [a, b] = [trustSources[i], trustSources[j]];
@@ -578,6 +610,22 @@ function synthesizeOpportunities(synergies: readonly Synergy[]): string[] {
       "A2A tasks ride on TSP envelopes, MCP tool outputs are TSP-authenticated, NANDA discovery resolves to " +
       "TSP VIDs, and bilateral relationships (RFI/RFA) create content-addressed trust channels. " +
       "The TSP VID IS the did:uor projection — trust and identity are structurally identical."
+    );
+  }
+
+  // FPP-specific opportunity
+  const fppSynergies = synergies.filter(s =>
+    s.projections.some(p => p.startsWith("fpp-") || p === "trqp")
+  );
+  if (fppSynergies.length > 0) {
+    opportunities.push(
+      "FIRST PERSON TRUST LAYER: The First Person Project builds the Internet's missing trust layer — " +
+      "Personhood Credentials (PHCs) anchor real humans to the trust graph, Verifiable Relationship " +
+      "Credentials (VRCs) create Sybil-resistant trust edges over TSP private channels, Persona DIDs " +
+      "(R-DID/M-DID/P-DID) enable privacy-preserving identity management, and the Trust Registry " +
+      "Query Protocol (TRQP) enables decentralized trust verification. The entire decentralized trust " +
+      "graph IS a hologram — each person, credential, and relationship is one canonical hash projected " +
+      "through every standard simultaneously."
     );
   }
 

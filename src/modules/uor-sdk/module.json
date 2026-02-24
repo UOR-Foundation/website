@@ -9,7 +9,7 @@
     "u:", "schema:", "op:", "kernel:",
     "partition:", "trace:", "observable:",
     "derivation:", "cert:", "morphism:",
-    "store:", "proof:", "state:", "tsp:"
+    "store:", "proof:", "state:", "tsp:", "fpp:", "trqp:"
   ],
   "exports": [
     "createUorClient",
@@ -23,7 +23,17 @@
     "createRfi",
     "acceptRfi",
     "verifyEnvelope",
-    "verifyRelationship"
+    "verifyRelationship",
+    "issuePhc",
+    "issueVrc",
+    "issueVec",
+    "createPersona",
+    "createRcard",
+    "createTrustGraphNode",
+    "exchangeVrcs",
+    "verifyPhc",
+    "verifyVrc",
+    "verifyTrustTriangle"
   ],
   "dependencies": {
     "core": "^1.0.0"
