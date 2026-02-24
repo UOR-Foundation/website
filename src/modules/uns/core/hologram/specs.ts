@@ -1257,4 +1257,204 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://tutorial.ponylang.io/",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 10 — MARKUP, CONFIGURATION & DOCUMENTATION LANGUAGES
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // These are the STRUCTURE languages — they define data shape, documentation,
+  // and configuration. Every config file, every README, every schema definition
+  // becomes content-addressed.
+
+  // ── 10a: Document / Markup Languages ──────────────────────────────────────
+
+  ["xml", {
+    project: ({ hex }) => `urn:uor:markup:xml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/xml/",
+  }],
+
+  ["markdown", {
+    project: ({ hex }) => `urn:uor:markup:md:${hex}`,
+    fidelity: "lossless",
+    spec: "https://spec.commonmark.org/",
+  }],
+
+  ["latex", {
+    project: ({ hex }) => `urn:uor:markup:latex:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.latex-project.org/help/documentation/",
+  }],
+
+  ["asciidoc", {
+    project: ({ hex }) => `urn:uor:markup:asciidoc:${hex}`,
+    fidelity: "lossless",
+    spec: "https://asciidoc.org/",
+  }],
+
+  ["rst", {
+    project: ({ hex }) => `urn:uor:markup:rst:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docutils.sourceforge.io/rst.html",
+  }],
+
+  // ── 10b: Configuration Languages ─────────────────────────────────────────
+
+  ["yaml", {
+    project: ({ hex }) => `urn:uor:config:yaml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://yaml.org/spec/1.2.2/",
+  }],
+
+  ["toml", {
+    project: ({ hex }) => `urn:uor:config:toml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://toml.io/en/v1.0.0",
+  }],
+
+  ["json-schema", {
+    project: ({ hex }) => `urn:uor:config:jsonschema:${hex}`,
+    fidelity: "lossless",
+    spec: "https://json-schema.org/specification",
+  }],
+
+  ["ini", {
+    project: ({ hex }) => `urn:uor:config:ini:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.freedesktop.org/software/systemd/man/systemd.syntax.html",
+  }],
+
+  ["dotenv", {
+    project: ({ hex }) => `urn:uor:config:dotenv:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.dotenv.org/docs/security/env",
+  }],
+
+  // ── 10c: Serialization / IDL (Interface Definition Languages) ────────────
+
+  ["protobuf", {
+    project: ({ hex }) => `urn:uor:idl:protobuf:${hex}`,
+    fidelity: "lossless",
+    spec: "https://protobuf.dev/programming-guides/proto3/",
+  }],
+
+  ["thrift", {
+    project: ({ hex }) => `urn:uor:idl:thrift:${hex}`,
+    fidelity: "lossless",
+    spec: "https://thrift.apache.org/docs/idl",
+  }],
+
+  ["capnproto", {
+    project: ({ hex }) => `urn:uor:idl:capnproto:${hex}`,
+    fidelity: "lossless",
+    spec: "https://capnproto.org/language.html",
+  }],
+
+  ["flatbuffers", {
+    project: ({ hex }) => `urn:uor:idl:flatbuffers:${hex}`,
+    fidelity: "lossless",
+    spec: "https://flatbuffers.dev/flatbuffers_guide_writing_schema.html",
+  }],
+
+  ["avro", {
+    project: ({ hex }) => `urn:uor:idl:avro:${hex}`,
+    fidelity: "lossless",
+    spec: "https://avro.apache.org/docs/1.11.1/specification/",
+  }],
+
+  ["msgpack", {
+    project: ({ hex }) => `urn:uor:idl:msgpack:${hex}`,
+    fidelity: "lossless",
+    spec: "https://msgpack.org/",
+  }],
+
+  ["cbor", {
+    project: ({ hex }) => `urn:uor:idl:cbor:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.rfc-editor.org/rfc/rfc8949",
+  }],
+
+  // ── 10d: API Description Languages ───────────────────────────────────────
+
+  ["openapi", {
+    project: ({ hex }) => `urn:uor:api:openapi:${hex}`,
+    fidelity: "lossless",
+    spec: "https://spec.openapis.org/oas/v3.1.0",
+  }],
+
+  ["asyncapi", {
+    project: ({ hex }) => `urn:uor:api:asyncapi:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.asyncapi.com/docs/reference/specification/v3.0.0",
+  }],
+
+  ["wsdl", {
+    project: ({ hex }) => `urn:uor:api:wsdl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/wsdl20/",
+  }],
+
+  ["raml", {
+    project: ({ hex }) => `urn:uor:api:raml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/raml-org/raml-spec/blob/master/versions/raml-10/raml-10.md/",
+  }],
+
+  // ── 10e: Schema / Ontology Languages ─────────────────────────────────────
+
+  ["xsd", {
+    project: ({ hex }) => `urn:uor:schema:xsd:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/xmlschema11-1/",
+  }],
+
+  ["shacl", {
+    project: ({ hex }) => `urn:uor:schema:shacl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/shacl/",
+  }],
+
+  ["shex", {
+    project: ({ hex }) => `urn:uor:schema:shex:${hex}`,
+    fidelity: "lossless",
+    spec: "https://shex.io/shex-semantics/",
+  }],
+
+  ["owl", {
+    project: ({ hex }) => `urn:uor:schema:owl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/owl2-overview/",
+  }],
+
+  ["rdfs", {
+    project: ({ hex }) => `urn:uor:schema:rdfs:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/rdf-schema/",
+  }],
+
+  // ── 10f: Diagram / Visual Languages ──────────────────────────────────────
+
+  ["mermaid", {
+    project: ({ hex }) => `urn:uor:diagram:mermaid:${hex}`,
+    fidelity: "lossless",
+    spec: "https://mermaid.js.org/intro/",
+  }],
+
+  ["plantuml", {
+    project: ({ hex }) => `urn:uor:diagram:plantuml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://plantuml.com/guide",
+  }],
+
+  ["dot", {
+    project: ({ hex }) => `urn:uor:diagram:dot:${hex}`,
+    fidelity: "lossless",
+    spec: "https://graphviz.org/doc/info/lang.html",
+  }],
+
+  ["svg", {
+    project: ({ hex }) => `urn:uor:diagram:svg:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/SVG2/",
+  }],
 ]);

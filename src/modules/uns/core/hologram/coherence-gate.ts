@@ -90,10 +90,28 @@ const LANGUAGE_PROJECTION_NAMES = new Set([
   "apl", "forth", "prolog", "smalltalk", "crystal", "pony",
 ]);
 
+/** All Tier 10 markup/config/serialization projection names. */
+const MARKUP_PROJECTION_NAMES = new Set([
+  // 10a Document/Markup
+  "xml", "markdown", "latex", "asciidoc", "rst",
+  // 10b Configuration
+  "yaml", "toml", "json-schema", "ini", "dotenv",
+  // 10c Serialization/IDL
+  "protobuf", "thrift", "capnproto", "flatbuffers", "avro", "msgpack", "cbor",
+  // 10d API Description
+  "openapi", "asyncapi", "wsdl", "raml",
+  // 10e Schema/Ontology
+  "xsd", "shacl", "shex", "owl", "rdfs",
+  // 10f Diagram/Visual
+  "mermaid", "plantuml", "dot", "svg",
+]);
+
 /** Tier classification derived from spec URL patterns. */
 function classifyTier(name: string, spec: HologramSpec): string {
   // Language projections checked FIRST — they may reference w3.org specs (CSS, WGSL, SPARQL)
   if (LANGUAGE_PROJECTION_NAMES.has(name)) return "language";
+  // Markup/config/serialization tier
+  if (MARKUP_PROJECTION_NAMES.has(name)) return "markup-config";
   const s = spec.spec;
   if (s.includes("w3.org")) return "semantic-web";
   if (s.includes("rfc-editor") || name === "ipv6" || name === "braille") return "native";
@@ -315,6 +333,52 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["apl", "onnx", "APL array computation → ONNX — array programming provenance"],
     ["crystal", "oci", "Crystal binary → OCI container — Ruby-speed→container chain"],
     ["pony", "a2a", "Pony actor → A2A AgentCard — reference-capability agents"],
+    // ── Tier 10: Markup/Config/Serialization provenance chains ──
+    ["openapi", "oasf", "OpenAPI spec → OASF service descriptor — REST API→agent bridge"],
+    ["openapi", "skill-md", "OpenAPI spec → skill contract — API endpoints become capabilities"],
+    ["openapi", "mcp-tool", "OpenAPI spec → MCP tool registration — REST→agent tool"],
+    ["asyncapi", "a2a", "AsyncAPI spec → A2A AgentCard — event-driven services become agents"],
+    ["asyncapi", "oasf", "AsyncAPI spec → OASF service descriptor — async services registered"],
+    ["wsdl", "oasf", "WSDL definition → OASF descriptor — SOAP→agent bridge"],
+    ["wsdl", "cobol-program", "WSDL → COBOL service — enterprise SOA legacy chain"],
+    ["protobuf", "skill-md", "Protobuf schema → skill contract — gRPC services self-describe"],
+    ["protobuf", "oasf", "Protobuf schema → OASF descriptor — gRPC→agent bridge"],
+    ["protobuf", "mcp-tool", "Protobuf message → MCP tool — typed RPC becomes agent tool"],
+    ["thrift", "oasf", "Thrift IDL → OASF descriptor — cross-language RPC→agent bridge"],
+    ["thrift", "java-class", "Thrift IDL → Java stub — IDL→implementation provenance"],
+    ["capnproto", "rust-crate", "Cap'n Proto schema → Rust code — zero-copy serialization chain"],
+    ["flatbuffers", "cpp-unit", "FlatBuffers schema → C++ accessor — game engine serialization chain"],
+    ["avro", "sql-schema", "Avro schema → SQL schema — data pipeline schema evolution chain"],
+    ["avro", "nanda-agentfacts", "Avro schema → AgentFacts — data services become agents"],
+    ["cbor", "cid", "CBOR encoding → CID — IPLD native encoding chain"],
+    ["json-schema", "skill-md", "JSON Schema → skill contract — type definitions ARE capabilities"],
+    ["json-schema", "openapi", "JSON Schema → OpenAPI spec — schema→API definition chain"],
+    ["json-schema", "mcp-tool", "JSON Schema → MCP tool input schema — validation→tool bridge"],
+    ["yaml", "hcl", "YAML config → Terraform — Kubernetes→infrastructure chain"],
+    ["yaml", "dockerfile", "YAML (docker-compose) → Dockerfile — orchestration→build chain"],
+    ["yaml", "openapi", "YAML → OpenAPI spec — YAML IS the serialization format for APIs"],
+    ["toml", "rust-crate", "TOML (Cargo.toml) → Rust crate — build config→artifact chain"],
+    ["toml", "nix", "TOML config → Nix derivation — config→reproducible build chain"],
+    ["xml", "xsd", "XML document → XSD schema — instance→schema provenance"],
+    ["xml", "wsdl", "XML → WSDL — data→service definition chain"],
+    ["xsd", "json-schema", "XSD → JSON Schema — XML schema→JSON schema migration"],
+    ["xsd", "protobuf", "XSD → Protobuf — XML schema→binary schema migration"],
+    ["markdown", "skill-md", "Markdown doc → skill contract — documentation IS the contract"],
+    ["markdown", "nanda-agentfacts", "Markdown README → AgentFacts — documentation→discovery"],
+    ["latex", "vc", "LaTeX paper → VC — academic publication gets verifiable credential"],
+    ["latex", "cid", "LaTeX document → CID — academic papers become content-addressed"],
+    ["shacl", "vc", "SHACL shape → VC — validation rules become verifiable claims"],
+    ["shacl", "did", "SHACL shape → DID — validation constraint gets permanent identity"],
+    ["owl", "did", "OWL ontology → DID — knowledge model gets permanent identity"],
+    ["owl", "vc", "OWL ontology → VC — ontology integrity becomes verifiable"],
+    ["rdfs", "owl", "RDFS vocabulary → OWL ontology — simple→rich schema chain"],
+    ["mermaid", "markdown", "Mermaid diagram → Markdown doc — visual→textual documentation"],
+    ["mermaid", "svg", "Mermaid diagram → SVG render — source→visual chain"],
+    ["plantuml", "svg", "PlantUML diagram → SVG render — UML→visual chain"],
+    ["dot", "svg", "Graphviz DOT → SVG render — graph→visual chain"],
+    ["svg", "cid", "SVG image → CID — vector graphics become content-addressed"],
+    ["raml", "openapi", "RAML spec → OpenAPI spec — API description migration chain"],
+    ["msgpack", "cbor", "MessagePack → CBOR — binary serialization format bridge"],
   ];
   for (const [a, b, insight] of chains) {
     emitIf(has, synergies, a, b, "provenance-chain", insight,
@@ -371,6 +435,27 @@ function discoverSynergies(entries: [string, HologramSpec][]): Synergy[] {
     ["nix", "did", "Reproducible build + identity: Nix derivation gets DID", "Nix hash IS the DID — reproducibility is structural identity"],
     ["coq", "did", "Mathematical proof + identity: Coq proof gets permanent DID", "Coq proof hash IS the DID — theorems have identity"],
     ["lean", "did", "Formal proof + identity: Lean proof gets permanent DID", "Lean proof hash IS the DID — mathematics gets content-addressed"],
+    // ── Tier 10: Markup/Config/Serialization complementary pairs ──
+    ["openapi", "did", "API spec + identity: OpenAPI spec gets permanent DID", "API spec hash IS the DID — API identity survives version changes"],
+    ["openapi", "vc", "API spec + credential: OpenAPI spec gets VC certification", "API spec hash → VC — API compliance becomes verifiable"],
+    ["protobuf", "did", "Schema + identity: Protobuf schema gets permanent DID", "Protobuf hash IS the DID — message format has permanent identity"],
+    ["protobuf", "vc", "Schema + credential: Protobuf gets backward-compat VC", "Protobuf hash → VC — schema compatibility is certifiable"],
+    ["json-schema", "did", "Type system + identity: JSON Schema gets permanent DID", "Schema hash IS the DID — type definitions have identity"],
+    ["json-schema", "vc", "Type system + credential: JSON Schema gets validation VC", "Schema hash → VC — data shape compliance is certifiable"],
+    ["yaml", "did", "Config + identity: YAML config file gets permanent DID", "Config hash IS the DID — configuration has content-derived identity"],
+    ["toml", "did", "Config + identity: TOML config gets permanent DID", "Config hash IS the DID — build configuration has identity"],
+    ["xml", "did", "Document + identity: XML document gets permanent DID", "XML hash IS the DID — structured document has identity"],
+    ["markdown", "did", "Documentation + identity: Markdown gets permanent DID", "Markdown hash IS the DID — documentation has content identity"],
+    ["markdown", "cid", "Documentation + IPFS: Markdown → content-addressed doc", "Markdown hash → CID — docs are IPFS-native"],
+    ["latex", "did", "Paper + identity: LaTeX document gets permanent DID", "LaTeX hash IS the DID — academic papers have permanent identity"],
+    ["shacl", "json-schema", "RDF validation + JSON validation: complementary constraint systems", "Same data shape, two validation ecosystems — SHACL↔JSON Schema bridge"],
+    ["owl", "shacl", "Ontology + validation: OWL defines semantics, SHACL enforces shape", "OWL says WHAT exists, SHACL says WHAT'S VALID — complementary"],
+    ["svg", "did", "Vector graphic + identity: SVG gets permanent DID", "SVG hash IS the DID — visual assets have permanent identity"],
+    ["cbor", "did", "Binary encoding + identity: CBOR document gets DID", "CBOR hash IS the DID — IoT payloads have identity"],
+    ["avro", "did", "Data schema + identity: Avro schema gets permanent DID", "Avro hash IS the DID — data pipeline schemas have identity"],
+    ["mermaid", "did", "Diagram + identity: Mermaid diagram gets permanent DID", "Diagram hash IS the DID — architecture docs have identity"],
+    ["wsdl", "did", "Service definition + identity: WSDL gets permanent DID", "WSDL hash IS the DID — SOAP services have permanent identity"],
+    ["asyncapi", "did", "Event spec + identity: AsyncAPI gets permanent DID", "AsyncAPI hash IS the DID — event-driven APIs have identity"],
   ];
   for (const [a, b, insight, impl] of pairs) {
     emitIf(has, synergies, a, b, "complementary-pair", insight,
@@ -519,6 +604,20 @@ function synthesizeOpportunities(synergies: readonly Synergy[]): string[] {
         "SILICON-TO-CLOUD PROVENANCE: Hardware description (VHDL/Verilog) → firmware (C) → " +
         "container (OCI) → agent (A2A) — the entire stack from transistor to agent is " +
         "content-addressed with a single identity"
+      );
+    }
+
+    // Markup/Config/Serialization opportunity
+    const markupSynergies = synergies.filter(s =>
+      [...MARKUP_PROJECTION_NAMES].some(m => s.projections.includes(m))
+    );
+    if (markupSynergies.length > 0) {
+      opportunities.push(
+        "UNIVERSAL SCHEMA BRIDGE: Every configuration format (YAML, TOML, JSON Schema, Protobuf, " +
+        "Avro, Thrift, Cap'n Proto, FlatBuffers), every API description (OpenAPI, AsyncAPI, WSDL, RAML), " +
+        "every ontology (OWL, SHACL, ShEx, RDFS, XSD), and every documentation format (Markdown, LaTeX, " +
+        "AsciiDoc, Mermaid, PlantUML, SVG) is content-addressed — schemas ARE identity, " +
+        "documentation IS provenance, configuration IS trust"
       );
     }
   }

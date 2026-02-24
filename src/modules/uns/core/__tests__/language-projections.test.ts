@@ -102,7 +102,47 @@ const ALL_LANGUAGE_PROJECTIONS = [
   { name: "pony",          urn: `urn:uor:lang:pony:${MOCK_INPUT.hex}` },
 ] as const;
 
-describe("Complete Language Hologram Projections (75 languages)", () => {
+/** All 30 Tier 10 markup/config/serialization projections. */
+const ALL_MARKUP_PROJECTIONS = [
+  // 10a Document/Markup
+  { name: "xml",          urn: `urn:uor:markup:xml:${MOCK_INPUT.hex}` },
+  { name: "markdown",     urn: `urn:uor:markup:md:${MOCK_INPUT.hex}` },
+  { name: "latex",        urn: `urn:uor:markup:latex:${MOCK_INPUT.hex}` },
+  { name: "asciidoc",     urn: `urn:uor:markup:asciidoc:${MOCK_INPUT.hex}` },
+  { name: "rst",          urn: `urn:uor:markup:rst:${MOCK_INPUT.hex}` },
+  // 10b Configuration
+  { name: "yaml",         urn: `urn:uor:config:yaml:${MOCK_INPUT.hex}` },
+  { name: "toml",         urn: `urn:uor:config:toml:${MOCK_INPUT.hex}` },
+  { name: "json-schema",  urn: `urn:uor:config:jsonschema:${MOCK_INPUT.hex}` },
+  { name: "ini",          urn: `urn:uor:config:ini:${MOCK_INPUT.hex}` },
+  { name: "dotenv",       urn: `urn:uor:config:dotenv:${MOCK_INPUT.hex}` },
+  // 10c Serialization/IDL
+  { name: "protobuf",     urn: `urn:uor:idl:protobuf:${MOCK_INPUT.hex}` },
+  { name: "thrift",       urn: `urn:uor:idl:thrift:${MOCK_INPUT.hex}` },
+  { name: "capnproto",    urn: `urn:uor:idl:capnproto:${MOCK_INPUT.hex}` },
+  { name: "flatbuffers",  urn: `urn:uor:idl:flatbuffers:${MOCK_INPUT.hex}` },
+  { name: "avro",         urn: `urn:uor:idl:avro:${MOCK_INPUT.hex}` },
+  { name: "msgpack",      urn: `urn:uor:idl:msgpack:${MOCK_INPUT.hex}` },
+  { name: "cbor",         urn: `urn:uor:idl:cbor:${MOCK_INPUT.hex}` },
+  // 10d API Description
+  { name: "openapi",      urn: `urn:uor:api:openapi:${MOCK_INPUT.hex}` },
+  { name: "asyncapi",     urn: `urn:uor:api:asyncapi:${MOCK_INPUT.hex}` },
+  { name: "wsdl",         urn: `urn:uor:api:wsdl:${MOCK_INPUT.hex}` },
+  { name: "raml",         urn: `urn:uor:api:raml:${MOCK_INPUT.hex}` },
+  // 10e Schema/Ontology
+  { name: "xsd",          urn: `urn:uor:schema:xsd:${MOCK_INPUT.hex}` },
+  { name: "shacl",        urn: `urn:uor:schema:shacl:${MOCK_INPUT.hex}` },
+  { name: "shex",         urn: `urn:uor:schema:shex:${MOCK_INPUT.hex}` },
+  { name: "owl",          urn: `urn:uor:schema:owl:${MOCK_INPUT.hex}` },
+  { name: "rdfs",         urn: `urn:uor:schema:rdfs:${MOCK_INPUT.hex}` },
+  // 10f Diagram/Visual
+  { name: "mermaid",      urn: `urn:uor:diagram:mermaid:${MOCK_INPUT.hex}` },
+  { name: "plantuml",     urn: `urn:uor:diagram:plantuml:${MOCK_INPUT.hex}` },
+  { name: "dot",          urn: `urn:uor:diagram:dot:${MOCK_INPUT.hex}` },
+  { name: "svg",          urn: `urn:uor:diagram:svg:${MOCK_INPUT.hex}` },
+] as const;
+
+describe("Complete Language Hologram Projections (75 languages + 30 markup/config)", () => {
 
   // ── Registration ──────────────────────────────────────────────────────
 
@@ -151,9 +191,71 @@ describe("Complete Language Hologram Projections (75 languages)", () => {
 
   // ── Total projection count ────────────────────────────────────────────
 
-  it("total projections ≥ 117 (42 protocol + 75 language)", () => {
+  it("total projections ≥ 147 (42 protocol + 75 language + 30 markup/config)", () => {
     const report = coherenceGate();
-    expect(report.totalProjections).toBeGreaterThanOrEqual(117);
+    expect(report.totalProjections).toBeGreaterThanOrEqual(147);
+  });
+
+  // ── Markup/Config Registration ──────────────────────────────────────
+
+  it("all 30 markup/config projections are registered", () => {
+    for (const { name } of ALL_MARKUP_PROJECTIONS) {
+      expect(PROJECTIONS.has(name), `Missing projection: ${name}`).toBe(true);
+    }
+  });
+
+  for (const { name, urn } of ALL_MARKUP_PROJECTIONS) {
+    it(`${name} → correct URN`, () => {
+      const p = project(MOCK_INPUT, name);
+      expect(p.value).toBe(urn);
+    });
+  }
+
+  it("all 30 markup/config projections are lossless", () => {
+    for (const { name } of ALL_MARKUP_PROJECTIONS) {
+      expect(project(MOCK_INPUT, name).fidelity).toBe("lossless");
+    }
+  });
+
+  it("markup/config projections classified in markup-config tier", () => {
+    const report = coherenceGate();
+    const cluster = report.clusters.find(c => c.name === "markup-config");
+    expect(cluster).toBeDefined();
+    expect(cluster!.members.length).toBe(30);
+  });
+
+  // ── Markup provenance chains ────────────────────────────────────────
+
+  it("discovers OpenAPI → OASF chain", () => {
+    const report = coherenceGate();
+    const chain = report.synergies.find(
+      s => s.type === "provenance-chain" &&
+        s.projections[0] === "openapi" && s.projections[1] === "oasf",
+    );
+    expect(chain).toBeDefined();
+  });
+
+  it("discovers Protobuf → skill-md chain", () => {
+    const report = coherenceGate();
+    const chain = report.synergies.find(
+      s => s.type === "provenance-chain" &&
+        s.projections[0] === "protobuf" && s.projections[1] === "skill-md",
+    );
+    expect(chain).toBeDefined();
+  });
+
+  it("discovers LaTeX → VC chain", () => {
+    const report = coherenceGate();
+    const chain = report.synergies.find(
+      s => s.type === "provenance-chain" &&
+        s.projections[0] === "latex" && s.projections[1] === "vc",
+    );
+    expect(chain).toBeDefined();
+  });
+
+  it("discovers UNIVERSAL SCHEMA BRIDGE opportunity", () => {
+    const report = coherenceGate();
+    expect(report.opportunities.some(o => o.includes("UNIVERSAL SCHEMA BRIDGE"))).toBe(true);
   });
 
   // ── Synergy categories ────────────────────────────────────────────────

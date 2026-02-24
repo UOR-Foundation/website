@@ -10,7 +10,7 @@ describe("Coherence Gate", () => {
   });
 
   it("counts all projections", () => {
-    expect(report.totalProjections).toBeGreaterThanOrEqual(52);
+    expect(report.totalProjections).toBeGreaterThanOrEqual(82);
     expect(report.losslessCount + report.lossyCount).toBe(report.totalProjections);
   });
 
