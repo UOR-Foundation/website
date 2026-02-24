@@ -107,6 +107,7 @@ const GodConjecturePage = lazy(() => import("@/modules/consciousness/pages/GodCo
 const TrustGraphPage = lazy(() => import("@/modules/trust-graph/pages/TrustGraphPage"));
 const HologramUiPage = lazy(() => import("@/modules/hologram-ui/pages/HologramUiPage"));
 const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
+const MetaObserverPage = lazy(() => import("@/modules/observable/pages/MetaObserverPage"));
 
 const queryClient = new QueryClient();
 
@@ -227,6 +228,7 @@ const App = () => {
             <Route path="/trust-graph" element={<TrustGraphPage />} />
             <Route path="/hologram-ui" element={<HologramUiPage />} />
             <Route path="/code-kg" element={<CodeKgPage />} />
+            <Route path="/meta-observer" element={<MetaObserverPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
