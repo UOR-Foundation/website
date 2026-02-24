@@ -148,7 +148,11 @@ describe("W3C Interoperability", () => {
       expect(types).toContain("ActivityPubObject");
       const apService = doc.service.find(s => s.type === "ActivityPubObject")!;
       expect(apService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/ap\/objects\/[0-9a-f]{64}$/);
-      expect(apService.id).toMatch(/#activitypub$/);
+      // AT Protocol — Bluesky-compatible AT URI
+      expect(types).toContain("AtProtocolRecord");
+      const atService = doc.service.find(s => s.type === "AtProtocolRecord")!;
+      expect(atService.serviceEndpoint).toMatch(/^at:\/\/did:uor:.+\/app\.uor\.object\//);
+      expect(atService.id).toMatch(/#atproto$/);
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {

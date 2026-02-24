@@ -45,9 +45,9 @@ const LINKS: LinkSpec[] = [
   // ActivityPub
   ["self", "application/activity+json",
     (h) => `https://${DOMAIN}/ap/objects/${h}`],
-  // AT Protocol
+  // AT Protocol (Bluesky) — uses did:uor authority + lexicon + rkey prefix
   ["self", "application/json",
-    (h) => `at://did:uor:${h}/app.uor.object`],
+    (h) => `at://did:uor:${h}/app.uor.object/${h.slice(0, 13)}`],
   // Solid WebID
   ["http://webid.info/spec/identity", "text/turtle",
     (h) => `https://${DOMAIN}/profile/${h}#me`],
