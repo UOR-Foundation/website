@@ -624,4 +624,41 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://arxiv.org/abs/2508.03113",
     lossWarning: "resolver-uses-64-bit-prefix-for-fast-lookup (64 of 256 bits)",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 8 — LEGACY INFRASTRUCTURE (bridging mainframe to hologram)
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // COBOL powers 95% of ATM transactions, 43% of banking systems, and
+  // 220 billion lines of production code. A holographic projection gives
+  // every COBOL artifact a content-addressed, cross-protocol identity —
+  // bridging the world's largest financial infrastructure to the UOR trust layer.
+
+  // ── COBOL Copybook — Content-Addressed Data Definitions ───────────────
+  // A COBOL copybook (data division extract) is the most reusable artifact
+  // in mainframe systems. Canonicalizing it as JSON-LD and hashing it gives
+  // every shared data structure a permanent, verifiable identity.
+  // Two banks using the same copybook hash = guaranteed identical semantics.
+  //
+  //   Format: urn:uor:cobol:copybook:{hex} (SHA-256 of canonical copybook)
+
+  ["cobol-copybook", {
+    project: ({ hex }) => `urn:uor:cobol:copybook:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/74527.html",
+  }],
+
+  // ── COBOL Program — Content-Addressed Program Unit ────────────────────
+  // A full COBOL program (all four divisions: Identification, Environment,
+  // Data, Procedure) canonicalized as a single JSON-LD object. The hash
+  // proves the program hasn't been modified since certification —
+  // the audit trail IS the identity.
+  //
+  //   Format: urn:uor:cobol:program:{hex} (SHA-256 of canonical program)
+
+  ["cobol-program", {
+    project: ({ hex }) => `urn:uor:cobol:program:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/74527.html",
+  }],
 ]);
