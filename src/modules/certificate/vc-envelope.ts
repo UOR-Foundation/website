@@ -9,7 +9,14 @@
  * VC-compliant verifier (wallets, governments, enterprises) can
  * consume it natively.
  *
- * W3C Spec: https://www.w3.org/TR/vc-data-model-2.0/
+ * W3C Compliance:
+ *   - VC Data Model 2.0: https://www.w3.org/TR/vc-data-model-2.0/
+ *   - Data Integrity 1.0: https://www.w3.org/TR/vc-data-integrity/
+ *
+ * Key design decisions:
+ *   - proofValue uses multibase 'f' (base16 lowercase) per DI §2.1
+ *   - Custom UOR properties on proof are namespaced under uor: context
+ *   - The VC v2 context bundles Data Integrity terms natively
  *
  * @module certificate/vc-envelope
  */
@@ -18,9 +25,10 @@ import type { UorCertificate } from "./types";
 import { sha256hex } from "@/lib/crypto";
 
 // ── W3C VC 2.0 Context ─────────────────────────────────────────────────────
+// Per VC DM 2.0 §4.3: The v2 context includes Data Integrity terms.
+// No separate DI context needed when using https://www.w3.org/ns/credentials/v2.
 
 const VC_CONTEXT = "https://www.w3.org/ns/credentials/v2" as const;
-const VC_INTEGRITY_CONTEXT = "https://www.w3.org/ns/credentials/examples/v2" as const;
 const UOR_CONTEXT = "https://uor.foundation/contexts/uor-v1.jsonld" as const;
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -28,38 +36,58 @@ const UOR_CONTEXT = "https://uor.foundation/contexts/uor-v1.jsonld" as const;
 /**
  * W3C Data Integrity Proof — attached to the VC.
  *
- * Uses a UOR-specific cryptosuite that combines:
- *   1. Content-hash integrity (SHA-256 of URDNA2015 canonical form)
- *   2. Algebraic coherence (neg(bnot(x)) ≡ succ(x) in Z/256Z)
+ * Per VC Data Integrity 1.0 §2.1:
+ *   - type: MUST be "DataIntegrityProof"
+ *   - cryptosuite: MUST be specified when type is DataIntegrityProof
+ *   - proofPurpose: MUST be specified
+ *   - verificationMethod: MUST be a URL
+ *   - proofValue: MUST be a multibase-encoded value
+ *   - created: SHOULD be an ISO 8601 datetime
  *
- * This is structurally compatible with W3C VC Data Integrity 1.0
- * while preserving UOR's unique algebraic verification.
+ * UOR extensions are namespaced to avoid collision with W3C terms.
  */
 export interface DataIntegrityProof {
+  /** W3C DI §2.1: MUST be "DataIntegrityProof" */
   type: "DataIntegrityProof";
+  /** W3C DI §2.1: Cryptographic suite identifier */
   cryptosuite: "uor-sha256-rdfc-2024";
+  /** W3C DI §2.1: ISO 8601 creation timestamp */
   created: string;
+  /** W3C DI §2.1: URL identifying the verification method */
   verificationMethod: string;
+  /** W3C DI §2.1: Purpose of this proof */
   proofPurpose: "assertionMethod";
-  /** Hex-encoded SHA-256 of the canonical N-Quads payload */
+  /**
+   * W3C DI §2.1: Multibase-encoded proof value.
+   * Uses 'f' prefix (base16 lowercase) per Multibase spec.
+   * Value is SHA-256 of the URDNA2015 canonical N-Quads payload.
+   */
   proofValue: string;
-  /** UOR-specific: algebraic coherence witness value */
+  /** UOR extension: algebraic coherence witness value (0–255) */
   "uor:coherenceWitness": number;
-  /** UOR-specific: algebraic identity that must hold */
+  /** UOR extension: the algebraic identity that must hold */
   "uor:coherenceIdentity": "neg(bnot(x)) ≡ succ(x)";
 }
 
 /**
  * W3C Verifiable Credential 2.0 wrapping a UOR certificate.
  *
- * Structure follows https://www.w3.org/TR/vc-data-model-2.0/
- * with the full UOR certificate embedded as the credentialSubject.
+ * Structure follows https://www.w3.org/TR/vc-data-model-2.0/ §4:
+ *   - @context: MUST include VC v2 context as first entry
+ *   - type: MUST include "VerifiableCredential"
+ *   - issuer: MUST be a URL or object with id
+ *   - validFrom: SHOULD be present
+ *   - credentialSubject: MUST be present
+ *   - proof: Added per Data Integrity 1.0
  */
 export interface VerifiableUorCredential {
   "@context": readonly [typeof VC_CONTEXT, typeof UOR_CONTEXT];
   type: readonly ["VerifiableCredential", "UorCertificate"];
   id: string;
-  issuer: string;
+  issuer: {
+    id: string;
+    name: string;
+  };
   validFrom: string;
   credentialSubject: {
     id: string;
@@ -67,6 +95,27 @@ export interface VerifiableUorCredential {
     "uor:certificate": UorCertificate;
   };
   proof: DataIntegrityProof;
+}
+
+// ── Multibase Encoding ──────────────────────────────────────────────────────
+
+/**
+ * Encode a hex string as multibase base16 lowercase.
+ * Per Multibase spec: prefix 'f' = base16 (lowercase hex).
+ */
+function toMultibaseHex(hex: string): string {
+  return `f${hex.toLowerCase()}`;
+}
+
+/**
+ * Decode a multibase base16 string back to raw hex.
+ * Strips the 'f' prefix and returns lowercase hex.
+ */
+function fromMultibaseHex(multibase: string): string {
+  if (!multibase.startsWith("f")) {
+    throw new Error(`Expected multibase 'f' prefix (base16), got '${multibase[0]}'`);
+  }
+  return multibase.slice(1).toLowerCase();
 }
 
 // ── Envelope Generation ─────────────────────────────────────────────────────
@@ -77,9 +126,9 @@ export interface VerifiableUorCredential {
  * The UOR certificate is preserved losslessly as the credentialSubject.
  * The VC envelope adds:
  *   - W3C-standard @context for VC ecosystem interop
- *   - `issuer` as a DID:uor (content-addressed)
- *   - `validFrom` mapped from cert:issuedAt
- *   - `proof` as a W3C Data Integrity proof with UOR coherence
+ *   - `issuer` as a DID:uor with name (VC DM 2.0 §4.4)
+ *   - `validFrom` mapped from cert:issuedAt (VC DM 2.0 §4.8)
+ *   - `proof` as a W3C Data Integrity proof with UOR coherence (DI §2.1)
  *
  * @param certificate  The UOR certificate to wrap
  * @returns            A W3C VC 2.0 compliant verifiable credential
@@ -91,8 +140,9 @@ export async function wrapAsVerifiableCredential(
   const subjectDid = `did:uor:${cid}`;
   const issuerDid = "did:uor:foundation";
 
-  // Compute proof value from canonical payload
-  const proofValue = await sha256hex(certificate["cert:canonicalPayload"]);
+  // Compute proof value from canonical payload, then multibase-encode
+  const rawHex = await sha256hex(certificate["cert:canonicalPayload"]);
+  const proofValue = toMultibaseHex(rawHex);
 
   const proof: DataIntegrityProof = {
     type: "DataIntegrityProof",
@@ -109,7 +159,10 @@ export async function wrapAsVerifiableCredential(
     "@context": [VC_CONTEXT, UOR_CONTEXT] as const,
     type: ["VerifiableCredential", "UorCertificate"] as const,
     id: `urn:uor:vc:${cid}`,
-    issuer: issuerDid,
+    issuer: {
+      id: issuerDid,
+      name: "UOR Foundation",
+    },
     validFrom: certificate["cert:issuedAt"],
     credentialSubject: {
       id: subjectDid,
@@ -124,12 +177,12 @@ export async function wrapAsVerifiableCredential(
 /**
  * Verify a W3C VC 2.0 wrapped UOR credential.
  *
- * Checks:
- *   1. VC structure (required fields present)
- *   2. Proof value matches re-hashed canonical payload
- *   3. UOR coherence witness is valid
+ * Checks (aligned with VC DM 2.0 §7 and DI §4):
+ *   1. VC structure — required fields per VC DM 2.0 §4
+ *   2. Proof integrity — re-hash canonical payload, compare multibase proofValue
+ *   3. UOR coherence — verify algebraic witness
  *
- * @returns true iff the VC envelope and UOR certificate are both valid
+ * @returns Verification result with per-layer diagnostics
  */
 export async function verifyVerifiableCredential(
   vc: VerifiableUorCredential
@@ -140,18 +193,20 @@ export async function verifyVerifiableCredential(
   coherenceValid: boolean;
   summary: string;
 }> {
-  // 1. VC structure check
+  // 1. VC structure check (VC DM 2.0 §4)
   const vcStructure =
     vc["@context"]?.[0] === VC_CONTEXT &&
     vc.type?.includes("VerifiableCredential") &&
     !!vc.issuer &&
+    typeof vc.issuer === "object" && !!vc.issuer.id &&
     !!vc.validFrom &&
     !!vc.credentialSubject;
 
-  // 2. Proof integrity — re-hash canonical payload
+  // 2. Proof integrity — re-hash canonical payload, compare via multibase
   const cert = vc.credentialSubject["uor:certificate"];
-  const recomputedHash = await sha256hex(cert["cert:canonicalPayload"]);
-  const proofIntegrity = recomputedHash === vc.proof.proofValue;
+  const recomputedHex = await sha256hex(cert["cert:canonicalPayload"]);
+  const storedHex = fromMultibaseHex(vc.proof.proofValue);
+  const proofIntegrity = recomputedHex === storedHex;
 
   // 3. Coherence check — verify witness from proof
   const { neg, bnot, succ } = await import("@/lib/uor-ring");
@@ -168,9 +223,9 @@ export async function verifyVerifiableCredential(
     summary: valid
       ? "W3C VC 2.0 verified. Content integrity and algebraic coherence confirmed."
       : !vcStructure
-        ? "Invalid VC 2.0 structure."
+        ? "Invalid VC 2.0 structure — missing required fields per §4."
         : !proofIntegrity
-          ? "Proof value does not match canonical payload."
-          : "Algebraic coherence check failed.",
+          ? "Proof value does not match canonical payload (Data Integrity §4)."
+          : "Algebraic coherence check failed (UOR ring identity).",
   };
 }
