@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import ProjectDetailLayout from "@/modules/projects/components/ProjectDetailLayout";
 import heroImg from "@/assets/project-uor-identity.jpg";
-import ClaimIdentityDialog from "@/modules/uor-identity/components/ClaimIdentityDialog";
+import ClaimIdentityDialog from "@/modules/identity/components/ClaimIdentityDialog";
 
 const ProjectUorIdentity = () => {
   const [claimOpen, setClaimOpen] = useState(false);
