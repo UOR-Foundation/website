@@ -63,6 +63,12 @@ export interface UorCertificate {
   /** ISO 8601 timestamp of certificate generation */
   "cert:computedAt": string;
 
+  /**
+   * Immutable creation timestamp — set once at first issuance,
+   * never modified. This is the canonical birth moment of the object.
+   */
+  "cert:issuedAt": string;
+
   /** Specification version */
   "cert:specification": "1.0.0";
 }

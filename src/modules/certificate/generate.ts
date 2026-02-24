@@ -45,6 +45,9 @@ export async function generateCertificate(
   // Step 2: Canonicalize the BOUNDED object (not the raw input)
   const proof = await singleProofHash(boundary.boundedObject);
 
+  // Step 3: Snapshot the creation moment — immutable issuance timestamp
+  const now = new Date().toISOString();
+
   return {
     "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
     "@type": "cert:ModuleCertificate",
@@ -54,7 +57,8 @@ export async function generateCertificate(
     "cert:boundary": boundary.manifest,
     "store:uorAddress": proof.uorAddress,
     "store:ipv6Address": proof.ipv6Address,
-    "cert:computedAt": new Date().toISOString(),
+    "cert:computedAt": now,
+    "cert:issuedAt": now,
     "cert:specification": "1.0.0",
   };
 }
