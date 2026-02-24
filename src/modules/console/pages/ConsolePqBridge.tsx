@@ -5,9 +5,10 @@
  * Visual pipeline: Object → URDNA2015 → SHA-256 → Dilithium-3 → Bitcoin + Ethereum
  */
 
-import { useState, useCallback } from "react";
-import { ShieldCheck, Zap, ArrowRight, Download, Copy, Check, Loader2, Lock, Atom, Hexagon, FileCode } from "lucide-react";
+import { useState, useCallback, useRef } from "react";
+import { ShieldCheck, Zap, ArrowRight, Download, Copy, Check, Loader2, Lock, Atom, Hexagon, FileCode, Key, BadgeCheck, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ml_dsa65 } from "@noble/post-quantum/ml-dsa.js";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -53,6 +54,27 @@ interface PqResult {
     identity: string;
     proof: string;
   };
+}
+
+/* ── Client-side signing state ─────────────────────────────────────────── */
+
+interface ClientKeyPair {
+  publicKey: Uint8Array;
+  secretKey: Uint8Array;
+  publicKeyHex: string;
+  generatedAt: number;
+}
+
+interface ClientSignResult {
+  signature: Uint8Array;
+  signatureHex: string;
+  signatureBytes: number;
+  verified: boolean;
+  verifiedAt: number;
+}
+
+function toHex(bytes: Uint8Array): string {
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 /* ── Solidity Contract ─────────────────────────────────────────────────── */
@@ -246,6 +268,14 @@ export default function ConsolePqBridge() {
   const [error, setError] = useState<string | null>(null);
   const [showContract, setShowContract] = useState(false);
 
+  // Client-side PQ signing state
+  const [keyPair, setKeyPair] = useState<ClientKeyPair | null>(null);
+  const [signing, setSigning] = useState(false);
+  const [signResult, setSignResult] = useState<ClientSignResult | null>(null);
+  const [keygenTime, setKeygenTime] = useState<number | null>(null);
+  const [signTime, setSignTime] = useState<number | null>(null);
+  const secretKeyRef = useRef<Uint8Array | null>(null);
+
   const run = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -265,16 +295,66 @@ export default function ConsolePqBridge() {
     }
   }, [input]);
 
+  const generateKeyPair = useCallback(() => {
+    const t0 = performance.now();
+    const kp = ml_dsa65.keygen();
+    const elapsed = performance.now() - t0;
+    setKeygenTime(Math.round(elapsed));
+    secretKeyRef.current = kp.secretKey;
+    setKeyPair({
+      publicKey: kp.publicKey,
+      secretKey: kp.secretKey,
+      publicKeyHex: toHex(kp.publicKey).slice(0, 64) + "…",
+      generatedAt: Date.now(),
+    });
+    setSignResult(null);
+  }, []);
+
+  const clientSign = useCallback(async () => {
+    if (!result || !secretKeyRef.current) return;
+    setSigning(true);
+    // Defer to next tick so the UI updates
+    await new Promise(r => setTimeout(r, 10));
+    try {
+      const t0 = performance.now();
+      const message = new TextEncoder().encode(result.signingTarget);
+      const signature = ml_dsa65.sign(message, secretKeyRef.current);
+      const verified = ml_dsa65.verify(signature, message, keyPair!.publicKey);
+      const elapsed = performance.now() - t0;
+      setSignTime(Math.round(elapsed));
+      setSignResult({
+        signature,
+        signatureHex: toHex(signature).slice(0, 80) + "…",
+        signatureBytes: signature.length,
+        verified,
+        verifiedAt: Date.now(),
+      });
+    } finally {
+      setSigning(false);
+    }
+  }, [result, keyPair]);
+
   const downloadEnvelope = useCallback(() => {
     if (!result) return;
-    const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
+    const envelope: Record<string, unknown> = { ...result };
+    if (keyPair && signResult) {
+      envelope.clientSigning = {
+        publicKeyHex: toHex(keyPair.publicKey),
+        signatureHex: toHex(signResult.signature),
+        signatureBytes: signResult.signatureBytes,
+        verified: signResult.verified,
+        algorithm: "ML-DSA-65 (Dilithium-3)",
+        securityLevel: "192-bit (NIST Level 3)",
+      };
+    }
+    const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `pq-envelope-${result.contentHash.slice(0, 12)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [result]);
+  }, [result, keyPair, signResult]);
 
   const active = !!result;
 
@@ -509,6 +589,105 @@ export default function ConsolePqBridge() {
         </div>
       </div>
 
+      {/* ── Client-Side Dilithium-3 Signing ────────────────────────────── */}
+      {result && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+            <Key size={12} /> Client-Side Dilithium-3 Signing
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono">Keys never leave browser</span>
+          </div>
+
+          <div className="rounded-lg border border-primary/30 bg-card">
+            {/* Keygen row */}
+            <div className="px-4 py-3 border-b border-border/50">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs">
+                  <span className="font-semibold text-foreground">Step 1:</span>{" "}
+                  <span className="text-muted-foreground">Generate Dilithium-3 keypair</span>
+                </div>
+                <button
+                  onClick={generateKeyPair}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+                >
+                  {keyPair ? <RefreshCw size={12} /> : <Key size={12} />}
+                  {keyPair ? "Regenerate" : "Generate Keypair"}
+                </button>
+              </div>
+              {keyPair && (
+                <div className="mt-2 space-y-1 text-[10px] font-mono">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Public key:</span>
+                    <code className="text-foreground">{keyPair.publicKeyHex}</code>
+                    <CopyBtn text={toHex(keyPair.publicKey)} />
+                  </div>
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <span>Public: {keyPair.publicKey.length.toLocaleString()} bytes</span>
+                    <span>Secret: {keyPair.secretKey.length.toLocaleString()} bytes</span>
+                    {keygenTime !== null && <span>Generated in {keygenTime}ms</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sign row */}
+            <div className="px-4 py-3 border-b border-border/50">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs">
+                  <span className="font-semibold text-foreground">Step 2:</span>{" "}
+                  <span className="text-muted-foreground">Sign the PQ Bridge target with Dilithium-3</span>
+                </div>
+                <button
+                  onClick={clientSign}
+                  disabled={!keyPair || signing}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40 shrink-0"
+                >
+                  {signing ? <Loader2 size={12} className="animate-spin" /> : <ShieldCheck size={12} />}
+                  {signing ? "Signing…" : signResult ? "Re-sign" : "Sign"}
+                </button>
+              </div>
+              {signResult && (
+                <div className="mt-2 space-y-1 text-[10px] font-mono">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Signature:</span>
+                    <code className="text-foreground">{signResult.signatureHex}</code>
+                    <CopyBtn text={toHex(signResult.signature)} />
+                  </div>
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <span>{signResult.signatureBytes.toLocaleString()} bytes</span>
+                    {signTime !== null && <span>Signed + verified in {signTime}ms</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Verify result */}
+            <div className="px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs">
+                  <span className="font-semibold text-foreground">Step 3:</span>{" "}
+                  <span className="text-muted-foreground">Verify signature (automatic)</span>
+                </div>
+                {signResult && (
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium ${
+                    signResult.verified ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
+                  }`}>
+                    <BadgeCheck size={12} />
+                    {signResult.verified ? "Signature Valid" : "Signature Invalid"}
+                  </span>
+                )}
+              </div>
+              {signResult?.verified && (
+                <div className="mt-2 text-[10px] text-muted-foreground">
+                  <span className="text-primary font-medium">✓ Full round-trip verified:</span>{" "}
+                  Object → URDNA2015 → SHA-256 → PQ Bridge → Dilithium-3 Sign → Verify.{" "}
+                  Private key never left the browser. Signature is {signResult.signatureBytes.toLocaleString()} bytes of lattice-hard proof.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Actions */}
       {result && (
         <div className="flex items-center gap-3 flex-wrap pt-2">
@@ -516,7 +695,7 @@ export default function ConsolePqBridge() {
             onClick={downloadEnvelope}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
-            <Download size={13} /> Download PQ Envelope
+            <Download size={13} /> Download PQ Envelope{signResult ? " (with signature)" : ""}
           </button>
           <button
             onClick={() => setShowContract(true)}
