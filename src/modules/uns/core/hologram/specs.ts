@@ -3536,4 +3536,562 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://www.iso.org/standard/79329.html",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 19 — HARDWARE DESIGN & FABRICATION STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Hardware standards span the entire lifecycle from circuit design (EDA)
+  // through fabrication (GDSII, Gerber) to packaging and test. Content-
+  // addressing hardware artifacts creates silicon provenance from RTL
+  // specification to manufactured die — the ultimate supply-chain integrity.
+
+  // ── GDSII — Graphic Data System II ──────────────────────────────────────
+  // GDSII (OASIS successor: OASIS.MASK) is the standard interchange format
+  // for integrated circuit layout data. Every chip manufactured since the
+  // 1980s has been defined by GDSII streams. A GDSII file contains
+  // hierarchical cell references, polygon boundaries, paths, and text
+  // labels — all with nanometer-precision coordinates.
+  //
+  // GDSII streams are deterministic binary structures. Content-addressing
+  // GDSII creates permanent identities for IC layouts — enabling foundry-
+  // to-designer provenance chains and IP protection verification.
+  //
+  //   Format: urn:uor:hw:gdsii:{hex} (SHA-256 of canonical GDSII stream)
+  //   Canonical: GDSII stream → cell hierarchy → SHA-256
+  //   Cross-projection: gdsii + verilog → RTL↔layout verification
+  //                     gdsii + spdx-sbom → silicon supply chain integrity
+
+  ["gdsii", {
+    project: ({ hex }) => `urn:uor:hw:gdsii:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.layouteditor.org/layout/file-formats/gdsii",
+  }],
+
+  // ── Gerber — PCB Fabrication Data ───────────────────────────────────────
+  // Gerber (RS-274X / Gerber X2/X3) is the universal format for PCB
+  // fabrication. Every printed circuit board on earth is manufactured
+  // from Gerber files — copper layers, solder mask, silkscreen, drill
+  // data, and component placement. Gerber X3 adds component-level
+  // metadata including manufacturer part numbers.
+  //
+  // Gerber files are ASCII text with deterministic aperture definitions
+  // and coordinate data. Content-addressing Gerber creates permanent
+  // identities for PCB designs — each board revision gets a unique hash
+  // linking schematic intent to physical fabrication output.
+  //
+  //   Format: urn:uor:hw:gerber:{hex} (SHA-256 of canonical Gerber file set)
+  //   Canonical: layer stack → sorted layer files → SHA-256
+  //   Cross-projection: gerber + gdsii → PCB↔IC integration identity
+  //                     gerber + spdx-sbom → board-level BOM provenance
+
+  ["gerber", {
+    project: ({ hex }) => `urn:uor:hw:gerber:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.ucamco.com/en/gerber/gerber-format-specification",
+  }],
+
+  // ── SPDX SBOM — Software/Hardware Bill of Materials ─────────────────────
+  // SPDX (ISO/IEC 5962:2021) is the international standard for Software
+  // Bills of Materials. Required by US Executive Order 14028 for federal
+  // software procurement. SPDX 3.0 extends to hardware BOMs, AI/ML
+  // model cards, and dataset descriptions.
+  //
+  // SPDX documents are structured JSON-LD with package identifiers,
+  // license expressions, checksums, and relationship graphs. Content-
+  // addressing SPDX creates permanent, verifiable supply chain manifests
+  // that link every component (software or hardware) to its provenance.
+  //
+  //   Format: urn:uor:hw:spdx:{hex} (SHA-256 of canonical SPDX document)
+  //   Canonical: SPDX JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: spdx-sbom + oci → container SBOM provenance
+  //                     spdx-sbom + scitt → SBOM transparency receipts
+  //                     spdx-sbom + gerber → hardware BOM identity
+
+  ["spdx-sbom", {
+    project: ({ hex }) => `urn:uor:hw:spdx:${hex}`,
+    fidelity: "lossless",
+    spec: "https://spdx.github.io/spdx-spec/v3.0/",
+  }],
+
+  // ── Matter — Smart Home Connectivity ────────────────────────────────────
+  // Matter (formerly Project CHIP) is the unified smart home protocol
+  // backed by Apple, Google, Amazon, and Samsung. Matter devices use
+  // Device Attestation Certificates (DAC) for cryptographic identity
+  // and Distributed Compliance Ledger (DCL) for device type verification.
+  //
+  // Matter's data model defines clusters (capabilities), attributes,
+  // commands, and events — all structured and deterministic. Each device
+  // type (light, lock, thermostat, sensor) has a canonical cluster
+  // composition that maps to a content-addressed identity.
+  //
+  //   Format: urn:uor:hw:matter:{hex} (SHA-256 of canonical Matter device descriptor)
+  //   Canonical: device type → cluster list → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: matter + did → device DID identity
+  //                     matter + weave → Thread network device provenance
+
+  ["matter", {
+    project: ({ hex }) => `urn:uor:hw:matter:${hex}`,
+    fidelity: "lossless",
+    spec: "https://csa-iot.org/developer-resource/specifications/",
+  }],
+
+  // ── LEF/DEF — Library Exchange / Design Exchange Format ─────────────────
+  // LEF (Library Exchange Format) and DEF (Design Exchange Format) are
+  // the standard cell library and placed-and-routed design interchange
+  // formats for IC physical design. Used by every EDA tool (Cadence,
+  // Synopsys, Mentor/Siemens). LEF defines cell abstracts (pins, geometry,
+  // timing); DEF defines placed instances and routing.
+  //
+  // Content-addressing LEF/DEF creates provenance from standard cell
+  // library characterization through place-and-route to GDSII tapeout.
+  //
+  //   Format: urn:uor:hw:lefdef:{hex} (SHA-256 of canonical LEF/DEF pair)
+  //   Canonical: LEF macros + DEF netlist → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: lefdef + gdsii → physical design→layout chain
+  //                     lefdef + verilog → synthesis→placement chain
+
+  ["lefdef", {
+    project: ({ hex }) => `urn:uor:hw:lefdef:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.si2.org/open-standards/lef-def/",
+  }],
+
+  // ── Liberty (.lib) — Timing & Power Characterization ────────────────────
+  // Liberty format (Synopsys) defines standard cell timing arcs, power
+  // models, and electrical characteristics. Every digital IC synthesis
+  // and timing analysis depends on Liberty libraries. Content-addressing
+  // Liberty files ensures that timing closure verification is traceable
+  // to specific cell characterization data.
+  //
+  //   Format: urn:uor:hw:liberty:{hex} (SHA-256 of canonical Liberty library)
+  //   Canonical: library → cell models → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: liberty + lefdef → characterized cells→placed design chain
+  //                     liberty + verilog → synthesis constraints provenance
+
+  ["liberty", {
+    project: ({ hex }) => `urn:uor:hw:liberty:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.synopsys.com/community/interoperability-programs/tap-in.html",
+  }],
+
+  // ── EDIF — Electronic Design Interchange Format ─────────────────────────
+  // EDIF (IEC 61690-2) is the ISO/IEC standard for exchanging electronic
+  // design data between EDA tools — schematics, netlists, and PCB layouts.
+  // While largely superseded by vendor-specific formats, EDIF remains
+  // the formal standard and is used for archival and interchange.
+  //
+  //   Format: urn:uor:hw:edif:{hex} (SHA-256 of canonical EDIF netlist)
+  //   Canonical: design → sorted cells → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: edif + gerber → schematic↔fabrication bridge
+  //                     edif + spice → schematic↔simulation bridge
+
+  ["edif", {
+    project: ({ hex }) => `urn:uor:hw:edif:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/33madhon.html",
+  }],
+
+  // ── SPICE — Circuit Simulation ──────────────────────────────────────────
+  // SPICE (Simulation Program with Integrated Circuit Emphasis) netlists
+  // define analog/mixed-signal circuit simulations. Every IC analog block,
+  // power supply, and RF circuit is verified via SPICE simulation.
+  // BSIM device models (Berkeley) are the industry standard.
+  //
+  // SPICE netlists are deterministic text — subcircuit definitions,
+  // component instances, and analysis commands. Content-addressing SPICE
+  // creates simulation provenance from circuit definition to waveform result.
+  //
+  //   Format: urn:uor:hw:spice:{hex} (SHA-256 of canonical SPICE netlist)
+  //   Canonical: netlist → sorted subcircuits → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: spice + verilog → analog↔digital co-simulation bridge
+  //                     spice + liberty → device model↔timing characterization
+
+  ["spice", {
+    project: ({ hex }) => `urn:uor:hw:spice:${hex}`,
+    fidelity: "lossless",
+    spec: "https://bsim.berkeley.edu/models/bsimcmg/",
+  }],
+
+  // ── STEP/AP214 — 3D CAD Exchange (ISO 10303) ───────────────────────────
+  // STEP (Standard for the Exchange of Product Data) is the ISO standard
+  // for 3D CAD model interchange. AP214 covers automotive design; AP242
+  // covers aerospace and defense. Used by every major CAD system
+  // (SolidWorks, CATIA, NX, Creo, Fusion 360).
+  //
+  // STEP files contain B-rep geometry, assembly structure, PMI (Product
+  // Manufacturing Information), and material properties. Content-addressing
+  // STEP creates permanent identities for mechanical designs — enabling
+  // design version tracking and manufacturing provenance.
+  //
+  //   Format: urn:uor:hw:step:{hex} (SHA-256 of canonical STEP file)
+  //   Canonical: STEP entities → sorted by ID → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: step + gerber → mechanical↔electrical co-design
+  //                     step + spdx-sbom → mechanical BOM provenance
+
+  ["step-cad", {
+    project: ({ hex }) => `urn:uor:hw:step:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.iso.org/standard/84667.html",
+  }],
+
+  // ── IPC-2581 — PCB Design-to-Manufacturing ──────────────────────────────
+  // IPC-2581 (Generic Requirements for Printed Board Assembly Products)
+  // is the IPC standard replacing Gerber + drill + BOM with a single
+  // intelligent XML format. Contains complete fabrication, assembly,
+  // and test data in one file — stackup, copper, solder paste, component
+  // placement, and netlist.
+  //
+  //   Format: urn:uor:hw:ipc2581:{hex} (SHA-256 of canonical IPC-2581 XML)
+  //   Canonical: design → sorted layers/components → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: ipc2581 + gerber → unified PCB fabrication identity
+  //                     ipc2581 + spdx-sbom → complete board BOM provenance
+
+  ["ipc2581", {
+    project: ({ hex }) => `urn:uor:hw:ipc2581:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.ipc.org/TOC/IPC-2581C.pdf",
+  }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 20 — IoT PROTOCOLS & STANDARDS
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // IoT protocols connect billions of constrained devices — sensors,
+  // actuators, gateways, and edge nodes. Content-addressing IoT data
+  // creates verifiable provenance from physical measurement to cloud
+  // analytics, ensuring data integrity across the entire IoT stack.
+
+  // ── LwM2M — Lightweight M2M Device Management ──────────────────────────
+  // OMA LwM2M is the standard for IoT device management and service
+  // enablement. Defines object/resource model for sensors, firmware
+  // update, connectivity monitoring, and device configuration.
+  // Used by major IoT platforms (AWS IoT, Azure IoT, ThingsBoard).
+  //
+  // LwM2M objects are structured resource trees with typed values.
+  // Content-addressing LwM2M object definitions creates permanent
+  // identities for device capabilities — enabling device type
+  // verification and firmware integrity checking.
+  //
+  //   Format: urn:uor:iot:lwm2m:{hex} (SHA-256 of canonical LwM2M object definition)
+  //   Canonical: object → resource list → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: lwm2m + matter → device management↔smart home bridge
+  //                     lwm2m + coap → transport↔management protocol bridge
+
+  ["lwm2m", {
+    project: ({ hex }) => `urn:uor:iot:lwm2m:${hex}`,
+    fidelity: "lossless",
+    spec: "https://openmobilealliance.org/release/LightweightM2M/",
+  }],
+
+  // ── CoAP — Constrained Application Protocol ─────────────────────────────
+  // CoAP (RFC 7252) is the HTTP equivalent for constrained IoT devices.
+  // Runs over UDP with DTLS security. Used with LwM2M for device
+  // management and with OSCORE for end-to-end security. CoAP resources
+  // are identified by URIs and support observe (pub/sub) pattern.
+  //
+  // Content-addressing CoAP resources creates permanent identities for
+  // IoT endpoints — each sensor reading, actuator command, and device
+  // state becomes a verifiable, content-addressed observation.
+  //
+  //   Format: urn:uor:iot:coap:{hex} (SHA-256 of canonical CoAP resource descriptor)
+  //   Canonical: resource → link-format description → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: coap + lwm2m → constrained transport↔management
+  //                     coap + cose → IoT message security
+
+  ["coap", {
+    project: ({ hex }) => `urn:uor:iot:coap:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc7252",
+  }],
+
+  // ── MQTT — Message Queuing Telemetry Transport ──────────────────────────
+  // MQTT is the dominant pub/sub messaging protocol for IoT. Used by
+  // AWS IoT Core, Azure IoT Hub, HiveMQ, and millions of edge devices.
+  // MQTT 5.0 adds user properties, shared subscriptions, and topic
+  // aliases. Sparkplug B (Eclipse) adds industrial IoT semantics.
+  //
+  // MQTT topic hierarchies are structured namespaces. Content-addressing
+  // topic definitions and message schemas creates verifiable IoT data
+  // pipelines from sensor to cloud to analytics.
+  //
+  //   Format: urn:uor:iot:mqtt:{hex} (SHA-256 of canonical MQTT topic schema)
+  //   Canonical: topic tree → sorted subscriptions → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: mqtt + lwm2m → messaging↔device management bridge
+  //                     mqtt + cloudevents → IoT events as CloudEvents
+
+  ["mqtt", {
+    project: ({ hex }) => `urn:uor:iot:mqtt:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html",
+  }],
+
+  // ── SenML — Sensor Measurement Lists ────────────────────────────────────
+  // SenML (RFC 8428) is the IETF standard for representing sensor
+  // measurements as structured JSON/CBOR arrays. Each record contains
+  // name, unit, value, and timestamp. Used with CoAP and MQTT for
+  // constrained device telemetry.
+  //
+  // SenML records are deterministic JSON/CBOR structures. Content-
+  // addressing SenML packs creates permanent identities for sensor
+  // readings — each measurement set becomes a verifiable observation.
+  //
+  //   Format: urn:uor:iot:senml:{hex} (SHA-256 of canonical SenML pack)
+  //   Canonical: records → sorted by name + time → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: senml + coap → sensor data transport
+  //                     senml + hdf5 → IoT→scientific data pipeline
+
+  ["senml", {
+    project: ({ hex }) => `urn:uor:iot:senml:${hex}`,
+    fidelity: "lossless",
+    spec: "https://datatracker.ietf.org/doc/html/rfc8428",
+  }],
+
+  // ── WoT TD — Web of Things Thing Description ───────────────────────────
+  // W3C Web of Things Thing Description (TD) is a JSON-LD document
+  // that describes IoT device capabilities — properties (readable state),
+  // actions (invocable operations), and events (observable notifications).
+  // TDs are inherently semantic web objects — native JSON-LD.
+  //
+  // Since TDs are already JSON-LD, they flow directly through UOR's
+  // URDNA2015 canonicalization pipeline. Content-addressing TDs creates
+  // permanent, verifiable identities for device capabilities.
+  //
+  //   Format: urn:uor:iot:wot-td:{hex} (SHA-256 of canonical Thing Description)
+  //   Canonical: TD JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: wot-td + did → device DID with capability description
+  //                     wot-td + matter → W3C↔CSA device model bridge
+
+  ["wot-td", {
+    project: ({ hex }) => `urn:uor:iot:wot-td:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/wot-thing-description11/",
+  }],
+
+  // ── OPC UA — Industrial Automation ──────────────────────────────────────
+  // OPC UA (IEC 62541) is the universal standard for industrial
+  // automation communication — factory floor, process control, energy
+  // management, and building automation. Defines an information model
+  // with nodes, references, and data types. Used by Siemens, ABB,
+  // Rockwell, Schneider Electric, and every major PLC vendor.
+  //
+  // OPC UA NodeSets are structured XML information models. Content-
+  // addressing NodeSets creates permanent identities for industrial
+  // device models — enabling factory-wide digital twin provenance.
+  //
+  //   Format: urn:uor:iot:opcua:{hex} (SHA-256 of canonical OPC UA NodeSet)
+  //   Canonical: NodeSet → sorted nodes → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: opcua + wot-td → industrial↔web device bridge
+  //                     opcua + mqtt → industrial pub/sub integration
+
+  ["opcua", {
+    project: ({ hex }) => `urn:uor:iot:opcua:${hex}`,
+    fidelity: "lossless",
+    spec: "https://opcfoundation.org/developer-tools/specifications-opc-ua",
+  }],
+
+  // ── IPSO Smart Objects — IoT Semantic Model ─────────────────────────────
+  // IPSO Smart Objects define reusable, semantic object models for IoT
+  // resources — temperature sensor, light control, GPS location, power
+  // measurement, etc. Registered at OMA with unique Object IDs.
+  // Foundation for LwM2M device modeling.
+  //
+  //   Format: urn:uor:iot:ipso:{hex} (SHA-256 of canonical IPSO object definition)
+  //   Canonical: object → resource definitions → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: ipso + lwm2m → semantic model↔management protocol
+  //                     ipso + senml → object model↔measurement bridge
+
+  ["ipso", {
+    project: ({ hex }) => `urn:uor:iot:ipso:${hex}`,
+    fidelity: "lossless",
+    spec: "https://technical.openmobilealliance.org/OMNA/LwM2M/LwM2MRegistry.html",
+  }],
+
+  // ── Thread — IoT Mesh Networking ────────────────────────────────────────
+  // Thread is the IPv6-based mesh networking protocol for IoT. Powers
+  // Matter smart home devices over low-power 802.15.4 radio. Thread
+  // Border Routers bridge Thread mesh to Wi-Fi/Ethernet. Thread devices
+  // use MLE (Mesh Link Establishment) for secure network formation.
+  //
+  // Thread network credentials (Network Key, PAN ID, Channel, Commissioner
+  // Credential) define a deterministic network identity. Content-addressing
+  // Thread network configurations enables secure, verifiable mesh deployments.
+  //
+  //   Format: urn:uor:iot:thread:{hex} (SHA-256 of canonical Thread network descriptor)
+  //   Canonical: network config → sorted parameters → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: thread + matter → mesh↔application protocol bridge
+  //                     thread + ipv6 → Thread mesh↔IPv6 addressing bridge
+
+  ["thread", {
+    project: ({ hex }) => `urn:uor:iot:thread:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.threadgroup.org/support#specifications",
+  }],
+
+  // ── Zigbee — Wireless Sensor Networks ───────────────────────────────────
+  // Zigbee (IEEE 802.15.4) is the established standard for low-power
+  // wireless sensor and actuator networks. Zigbee 3.0 unified the
+  // application profiles (Home Automation, Light Link, etc.). Zigbee
+  // Cluster Library (ZCL) defines device types and cluster commands.
+  //
+  //   Format: urn:uor:iot:zigbee:{hex} (SHA-256 of canonical Zigbee device descriptor)
+  //   Canonical: device type → cluster list → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: zigbee + matter → legacy↔modern smart home bridge
+  //                     zigbee + thread → Zigbee↔Thread migration identity
+
+  ["zigbee", {
+    project: ({ hex }) => `urn:uor:iot:zigbee:${hex}`,
+    fidelity: "lossless",
+    spec: "https://csa-iot.org/developer-resource/specifications/",
+  }],
+
+  // ── BLE GATT — Bluetooth Low Energy ─────────────────────────────────────
+  // BLE GATT (Generic Attribute Profile) defines services and
+  // characteristics for Bluetooth Low Energy devices. Used by wearables,
+  // medical devices, beacons, and industrial sensors. Bluetooth SIG
+  // maintains a registry of standardized GATT services and characteristics.
+  //
+  // GATT profiles are structured service/characteristic trees with UUIDs.
+  // Content-addressing GATT profiles creates permanent identities for
+  // BLE device capabilities — enabling device type verification and
+  // firmware integrity checking across the BLE ecosystem.
+  //
+  //   Format: urn:uor:iot:ble-gatt:{hex} (SHA-256 of canonical GATT profile)
+  //   Canonical: services → sorted characteristics → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: ble-gatt + matter → BLE↔Matter commissioning bridge
+  //                     ble-gatt + dicom → medical BLE device identity
+
+  ["ble-gatt", {
+    project: ({ hex }) => `urn:uor:iot:ble-gatt:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.bluetooth.com/specifications/specs/core-specification-6-0/",
+  }],
+
+  // ── LoRaWAN — Long-Range Wide Area Network ──────────────────────────────
+  // LoRaWAN enables kilometer-range IoT connectivity with years of
+  // battery life. Used for smart agriculture, asset tracking, smart
+  // cities, and utility metering. LoRaWAN 1.0.4 defines device classes
+  // (A/B/C), activation methods (OTAA/ABP), and MAC commands.
+  //
+  // LoRaWAN device profiles (DevEUI, AppKey, NwkKey) are deterministic
+  // device identity credentials. Content-addressing LoRaWAN device
+  // profiles creates permanent device identities independent of
+  // network server operator.
+  //
+  //   Format: urn:uor:iot:lorawan:{hex} (SHA-256 of canonical LoRaWAN device profile)
+  //   Canonical: device profile → sorted parameters → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: lorawan + senml → LPWAN sensor data provenance
+  //                     lorawan + lwm2m → LPWAN device management
+
+  ["lorawan", {
+    project: ({ hex }) => `urn:uor:iot:lorawan:${hex}`,
+    fidelity: "lossless",
+    spec: "https://lora-alliance.org/resource_hub/lorawan-specification-v1-0-4/",
+  }],
+
+  // ── DTDL — Digital Twins Definition Language ────────────────────────────
+  // DTDL (Microsoft Azure Digital Twins) defines digital twin models
+  // using JSON-LD. Telemetry, properties, commands, relationships, and
+  // components map physical assets to digital representations. Used for
+  // building management, manufacturing, and smart cities.
+  //
+  // DTDL models are native JSON-LD — they flow directly through UOR's
+  // canonicalization pipeline. Content-addressing digital twin models
+  // creates permanent identities for physical-digital asset mappings.
+  //
+  //   Format: urn:uor:iot:dtdl:{hex} (SHA-256 of canonical DTDL model)
+  //   Canonical: DTDL JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: dtdl + wot-td → Azure↔W3C device model bridge
+  //                     dtdl + opcua → digital twin↔industrial automation
+
+  ["dtdl", {
+    project: ({ hex }) => `urn:uor:iot:dtdl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://azure.github.io/opendigitaltwins-dtdl/DTDL/v3/DTDL.v3.html",
+  }],
+
+  // ── ECHONET Lite — Japanese Smart Home Standard ─────────────────────────
+  // ECHONET Lite is the dominant smart home protocol in Japan, mandated
+  // for HEMS (Home Energy Management Systems). Defines device objects
+  // for air conditioners, lighting, EV chargers, solar inverters, and
+  // storage batteries. 250M+ deployed devices.
+  //
+  //   Format: urn:uor:iot:echonet:{hex} (SHA-256 of canonical ECHONET object)
+  //   Canonical: device object → property list → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: echonet + matter → Japan↔global smart home bridge
+  //                     echonet + wot-td → ECHONET↔W3C WoT bridge
+
+  ["echonet", {
+    project: ({ hex }) => `urn:uor:iot:echonet:${hex}`,
+    fidelity: "lossless",
+    spec: "https://echonet.jp/spec_v114_lite_en/",
+  }],
+
+  // ── JTAG/IEEE 1149.1 — Hardware Test & Debug ────────────────────────────
+  // JTAG (Joint Test Action Group, IEEE 1149.1) is the universal standard
+  // for IC testing, debugging, and programming. BSDL (Boundary Scan
+  // Description Language) files define device pin mappings and test
+  // registers. Every IC with JTAG has a deterministic BSDL descriptor.
+  //
+  //   Format: urn:uor:hw:jtag:{hex} (SHA-256 of canonical BSDL descriptor)
+  //   Canonical: BSDL → sorted pin/register definitions → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: jtag + gdsii → test↔layout verification chain
+  //                     jtag + verilog → debug↔RTL traceability
+
+  ["jtag", {
+    project: ({ hex }) => `urn:uor:hw:jtag:${hex}`,
+    fidelity: "lossless",
+    spec: "https://ieeexplore.ieee.org/document/9930828",
+  }],
+
+  // ── UCIe — Universal Chiplet Interconnect Express ───────────────────────
+  // UCIe is the open standard for chiplet-to-chiplet interconnect,
+  // enabling heterogeneous integration of dies from different foundries.
+  // Backed by Intel, AMD, ARM, TSMC, Samsung. UCIe defines physical
+  // layer, protocol layer, and die-to-die adapter specifications.
+  //
+  //   Format: urn:uor:hw:ucie:{hex} (SHA-256 of canonical UCIe interface descriptor)
+  //   Canonical: interface spec → sorted parameters → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: ucie + gdsii → chiplet↔package integration
+  //                     ucie + spdx-sbom → chiplet supply chain provenance
+
+  ["ucie", {
+    project: ({ hex }) => `urn:uor:hw:ucie:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.uciexpress.org/specification",
+  }],
+
+  // ── CXL — Compute Express Link ─────────────────────────────────────────
+  // CXL is the open interconnect standard for CPU-to-device and CPU-to-
+  // memory coherent connections. CXL 3.0 enables memory pooling, sharing,
+  // and fabric-attached memory. Critical for data center, HPC, and AI
+  // infrastructure — used by Intel, AMD, ARM, and all major server vendors.
+  //
+  //   Format: urn:uor:hw:cxl:{hex} (SHA-256 of canonical CXL device descriptor)
+  //   Canonical: device → capability registers → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: cxl + ucie → chiplet interconnect stack
+  //                     cxl + spdx-sbom → data center component provenance
+
+  ["cxl", {
+    project: ({ hex }) => `urn:uor:hw:cxl:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.computeexpresslink.org/spec-landing",
+  }],
+
+  // ── SMPTE ST 2110 — Professional Media over IP ──────────────────────────
+  // SMPTE ST 2110 defines separate transport of video, audio, and
+  // ancillary data over IP networks for broadcast production. Used by
+  // every major broadcaster and live production facility. Replaces
+  // SDI baseband with IP-native media flows.
+  //
+  //   Format: urn:uor:hw:st2110:{hex} (SHA-256 of canonical ST 2110 flow descriptor)
+  //   Canonical: SDP → sorted media descriptions → JSON-LD → URDNA2015 → SHA-256
+  //   Cross-projection: st2110 + aes67 → broadcast video↔audio bridge
+  //                     st2110 + c2pa → broadcast content provenance
+
+  ["st2110", {
+    project: ({ hex }) => `urn:uor:hw:st2110:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.smpte.org/standards/st2110",
+  }],
 ]);
