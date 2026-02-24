@@ -37,8 +37,8 @@ const HEX = IDENTITY["u:canonicalId"].split(":").pop()!;
 // ── Core contract ───────────────────────────────────────────────────────────
 
 describe("Hologram Projection Registry", () => {
-  it("registers at least 10 projections", () => {
-    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(10);
+  it("registers at least 17 projections", () => {
+    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(17);
   });
 
   it("every spec has project function, fidelity, and spec URL", () => {
@@ -121,7 +121,36 @@ describe("Hologram Projection Registry", () => {
     expect(project(IDENTITY, "oci").value).toBe(`sha256:${HEX}`);
   });
 
-  // ── Fidelity contract ─────────────────────────────────────────────────
+  it("solid uses WebID profile URL with #me fragment", () => {
+    expect(project(IDENTITY, "solid").value).toMatch(/^https:\/\/uor\.foundation\/profile\/[0-9a-f]+#me$/);
+  });
+
+  it("openbadges uses UUIDv4 format", () => {
+    const v = project(IDENTITY, "openbadges").value;
+    expect(v).toMatch(/^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  });
+
+  it("scitt uses IETF SCITT statement URN with full hex", () => {
+    expect(project(IDENTITY, "scitt").value).toBe(`urn:ietf:params:scitt:statement:sha256:${HEX}`);
+    expect(project(IDENTITY, "scitt").fidelity).toBe("lossless");
+  });
+
+  it("mls uses IETF MLS group URN with full hex", () => {
+    expect(project(IDENTITY, "mls").value).toBe(`urn:ietf:params:mls:group:${HEX}`);
+  });
+
+  it("dnssd uses _tcp.local service name", () => {
+    expect(project(IDENTITY, "dnssd").value).toMatch(/^_uor-[0-9a-f]{12}\._tcp\.local$/);
+  });
+
+  it("stac uses STAC item URL with full hex", () => {
+    expect(project(IDENTITY, "stac").value).toBe(`https://uor.foundation/stac/items/${HEX}`);
+  });
+
+  it("croissant uses Croissant dataset URL with full hex", () => {
+    expect(project(IDENTITY, "croissant").value).toBe(`https://uor.foundation/croissant/${HEX}`);
+  });
+
 
   it("lossy projections always carry a lossWarning", () => {
     const hologram = project(IDENTITY);
