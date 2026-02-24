@@ -13,10 +13,11 @@
 
 import { useState, useCallback, useMemo } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { Bitcoin, Copy, Check, Info, Zap, Lock, FileText, ArrowRight, Hash, ChevronDown, ChevronUp } from "lucide-react";
+import { Bitcoin, Copy, Check, Info, Zap, Lock, FileText, ArrowRight, Hash, ChevronDown, ChevronUp, Braces, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/modules/core/ui/tooltip";
 import { project, PROJECTIONS } from "@/modules/uns/core/hologram";
 import type { ProjectionInput } from "@/modules/uns/core/hologram";
+import { singleProofHash } from "@/lib/uor-canonical";
 
 /* ── Shared helpers ──────────────────────────────────────────── */
 
@@ -196,18 +197,56 @@ function hexToBytes(hex: string): Uint8Array {
 const EXAMPLE_HEX = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const EXAMPLE_CID = "bafyreigdcnuc6w4fuf5udrstk5pnwb2fhkhliahmxrpfwvcaotbnbczyse";
 
+const EXAMPLE_JSONLD = `{
+  "@context": { "schema": "https://schema.org/" },
+  "@type": "schema:Article",
+  "schema:name": "Hello World",
+  "schema:author": "UOR Framework"
+}`;
+
+type InputMode = "hex" | "object";
+
 /* ── Main page ───────────────────────────────────────────────── */
 
 function BitcoinScriptPage() {
+  const [mode, setMode] = useState<InputMode>("hex");
   const [hexInput, setHexInput] = useState(EXAMPLE_HEX);
+  const [jsonInput, setJsonInput] = useState(EXAMPLE_JSONLD);
+  const [objectResult, setObjectResult] = useState<{ hex: string; hashBytes: Uint8Array; cid: string; nquads: string } | null>(null);
+  const [objectError, setObjectError] = useState<string | null>(null);
+  const [computing, setComputing] = useState(false);
 
-  const isValid = /^[0-9a-f]{64}$/i.test(hexInput);
+  const isValidHex = /^[0-9a-f]{64}$/i.test(hexInput);
+
+  const handleComputeFromObject = useCallback(async () => {
+    setComputing(true);
+    setObjectError(null);
+    setObjectResult(null);
+    try {
+      const parsed = JSON.parse(jsonInput);
+      const proof = await singleProofHash(parsed);
+      setObjectResult({
+        hex: proof.hashHex,
+        hashBytes: proof.hashBytes,
+        cid: proof.cid,
+        nquads: proof.nquads,
+      });
+    } catch (err: any) {
+      setObjectError(err.message ?? "Failed to compute identity");
+    } finally {
+      setComputing(false);
+    }
+  }, [jsonInput]);
+
+  const activeHex = mode === "hex" ? (isValidHex ? hexInput.toLowerCase() : null) : objectResult?.hex ?? null;
+  const activeBytes = mode === "hex"
+    ? (isValidHex ? hexToBytes(hexInput.toLowerCase()) : null)
+    : objectResult?.hashBytes ?? null;
 
   const input: ProjectionInput | null = useMemo(() => {
-    if (!isValid) return null;
-    const hex = hexInput.toLowerCase();
-    return { hashBytes: hexToBytes(hex), cid: EXAMPLE_CID, hex };
-  }, [hexInput, isValid]);
+    if (!activeHex || !activeBytes) return null;
+    return { hashBytes: activeBytes, cid: objectResult?.cid ?? EXAMPLE_CID, hex: activeHex };
+  }, [activeHex, activeBytes, objectResult]);
 
   const scripts = useMemo(() => {
     if (!input) return null;
@@ -239,45 +278,129 @@ function BitcoinScriptPage() {
             </p>
           </div>
 
-          {/* Hash input */}
-          <Card className="mb-8">
-            <div className="flex items-center gap-2 mb-3">
-              <Hash size={16} className="text-primary" />
-              <span className="text-sm font-bold text-foreground">UOR Identity Hash</span>
-              <Ref label="SHA-256" tip="The 256-bit SHA-256 hash of an object's URDNA2015 canonical form. This is the atomic identity from which all projections are derived." />
-            </div>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={hexInput}
-                onChange={e => setHexInput(e.target.value.replace(/[^0-9a-fA-F]/g, "").slice(0, 64))}
-                placeholder="Enter 64-character hex SHA-256 hash…"
-                className="flex-1 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40"
+          {/* Mode tabs */}
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setMode("hex")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-mono transition-colors border ${mode === "hex" ? "bg-primary/10 border-primary/30 text-primary font-bold" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted/60"}`}
+            >
+              <Hash size={14} /> Raw Hash
+            </button>
+            <button
+              onClick={() => setMode("object")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-mono transition-colors border ${mode === "object" ? "bg-primary/10 border-primary/30 text-primary font-bold" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted/60"}`}
+            >
+              <Braces size={14} /> Generate from Object
+            </button>
+          </div>
+
+          {/* Hash input (hex mode) */}
+          {mode === "hex" && (
+            <Card className="mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <Hash size={16} className="text-primary" />
+                <span className="text-sm font-bold text-foreground">UOR Identity Hash</span>
+                <Ref label="SHA-256" tip="The 256-bit SHA-256 hash of an object's URDNA2015 canonical form. This is the atomic identity from which all projections are derived." />
+              </div>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={hexInput}
+                  onChange={e => setHexInput(e.target.value.replace(/[^0-9a-fA-F]/g, "").slice(0, 64))}
+                  placeholder="Enter 64-character hex SHA-256 hash…"
+                  className="flex-1 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  spellCheck={false}
+                />
+                <button
+                  onClick={() => setHexInput(EXAMPLE_HEX)}
+                  className="px-4 py-3 rounded-xl text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-border transition-colors whitespace-nowrap"
+                >
+                  Example
+                </button>
+              </div>
+              {hexInput.length > 0 && !isValidHex && (
+                <p className="text-xs text-destructive mt-2 font-mono">
+                  ⚠ Hash must be exactly 64 lowercase hex characters ({hexInput.length}/64)
+                </p>
+              )}
+              {isValidHex && (
+                <div className="flex items-center gap-2 mt-3">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  <span className="text-xs text-primary font-mono">Identity locked — 3 projections active</span>
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* Object input (generate mode) */}
+          {mode === "object" && (
+            <Card className="mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <Braces size={16} className="text-primary" />
+                <span className="text-sm font-bold text-foreground">JSON-LD Object</span>
+                <Ref label="URDNA2015" tip="Your object is canonicalized via W3C URDNA2015, hashed with SHA-256, and the resulting identity is projected into Bitcoin scripts." />
+              </div>
+              <textarea
+                value={jsonInput}
+                onChange={e => setJsonInput(e.target.value)}
+                rows={6}
+                placeholder="Paste a JSON-LD object…"
+                className="w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-y"
                 spellCheck={false}
               />
-              <button
-                onClick={() => setHexInput(EXAMPLE_HEX)}
-                className="px-4 py-3 rounded-xl text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-border transition-colors whitespace-nowrap"
-              >
-                Example
-              </button>
-            </div>
-            {hexInput.length > 0 && !isValid && (
-              <p className="text-xs text-destructive mt-2 font-mono">
-                ⚠ Hash must be exactly 64 lowercase hex characters ({hexInput.length}/64)
-              </p>
-            )}
-            {isValid && (
-              <div className="flex items-center gap-2 mt-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                <span className="text-xs text-primary font-mono">Identity locked — 3 projections active</span>
+              <div className="flex items-center gap-3 mt-3">
+                <button
+                  onClick={handleComputeFromObject}
+                  disabled={computing}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-mono font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {computing ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
+                  {computing ? "Computing…" : "Compute Identity & Project"}
+                </button>
+                <button
+                  onClick={() => setJsonInput(EXAMPLE_JSONLD)}
+                  className="px-4 py-2 rounded-xl text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-border transition-colors"
+                >
+                  Example
+                </button>
               </div>
-            )}
-          </Card>
+              {objectError && (
+                <p className="text-xs text-destructive mt-2 font-mono">⚠ {objectError}</p>
+              )}
+              {objectResult && (
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="text-xs text-primary font-mono">Identity computed — 3 projections active</span>
+                  </div>
+                  <div className="rounded-xl border border-border bg-muted/30 p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">SHA-256</span>
+                      <CopyBtn text={objectResult.hex} label="Copy" />
+                    </div>
+                    <p className="font-mono text-xs text-foreground break-all select-all">{objectResult.hex}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-muted/30 p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">N-Quads</span>
+                      <CopyBtn text={objectResult.nquads} label="Copy" />
+                    </div>
+                    <p className="font-mono text-xs text-muted-foreground break-all select-all whitespace-pre-wrap max-h-24 overflow-y-auto">{objectResult.nquads}</p>
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
 
           {/* Pipeline visualization */}
-          {isValid && (
-            <div className="flex items-center justify-center gap-2 mb-8 text-xs font-mono text-muted-foreground">
+          {scripts && (
+            <div className="flex items-center justify-center gap-2 mb-8 text-xs font-mono text-muted-foreground flex-wrap">
+              {mode === "object" && (
+                <>
+                  <span className="px-2 py-1 rounded bg-accent/10 border border-accent/30 text-accent-foreground font-bold">JSON-LD</span>
+                  <ArrowRight size={12} />
+                </>
+              )}
               <span className="px-2 py-1 rounded bg-muted border border-border">Object</span>
               <ArrowRight size={12} />
               <span className="px-2 py-1 rounded bg-muted border border-border">URDNA2015</span>
