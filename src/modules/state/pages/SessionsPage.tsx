@@ -5,7 +5,7 @@ import {
 import { Q0, Q1, UORRing } from "@/modules/ring-core/ring";
 import { computeStateFrame, persistStateFrame } from "@/modules/state/state";
 import type { StateFrame, StateTransition } from "@/modules/state/state";
-import { withVerifiedReceipt } from "@/modules/self-verify";
+import { withVerifiedReceipt } from "@/modules/verify";
 import { EpistemicBadge } from "@/modules/epistemic";
 
 const SessionsPage = () => {

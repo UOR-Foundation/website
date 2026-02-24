@@ -2,7 +2,7 @@
  * Tests for UOR Self-Verification module.
  */
 import { describe, it, expect } from "vitest";
-import { verifyReceiptChain } from "@/modules/self-verify/audit-trail";
+import { verifyReceiptChain } from "@/modules/verify/audit-trail";
 import type { DerivationReceipt } from "@/modules/derivation/receipt";
 
 function makeReceipt(overrides: Partial<DerivationReceipt> = {}): DerivationReceipt {

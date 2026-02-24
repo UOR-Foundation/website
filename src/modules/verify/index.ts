@@ -1,7 +1,5 @@
 /**
- * UOR Self-Verification Module — the system is its own auditor.
- *
- * Barrel export for the self-verify module.
+ * verify module barrel export (merged from verify + self-verify).
  */
 
 export { withVerifiedReceipt } from "./receipt-manager";

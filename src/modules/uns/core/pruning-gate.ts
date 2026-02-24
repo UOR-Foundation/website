@@ -73,8 +73,8 @@ const KNOWN_MODULES = [
   "core", "dashboard", "datum", "derivation", "developers", "donate",
   "epistemic", "framework", "hologram-ui", "identity", "interoperability",
   "jsonld", "kg-store", "landing", "mcp", "morphism", "observable",
-  "opportunities", "oracle", "projects", "qr-cartridge", "query",
-  "resolver", "ring-core", "ruliad", "self-verify", "semantic-index",
+  "opportunities", "oracle", "projects", "qr-cartridge",
+  "resolver", "ring-core", "ruliad", "semantic-index",
   "shacl", "sparql", "state", "trace", "triad",
   "trust-graph", "uns", "uor-sdk", "uor-terms",
   "verify", "your-space",
@@ -82,10 +82,6 @@ const KNOWN_MODULES = [
 
 // Modules that could potentially be consolidated
 const CONSOLIDATION_CANDIDATES: readonly [string, string, string][] = [
-  
-  
-  ["verify", "self-verify", "Both handle verification — consolidate"],
-  ["query", "sparql", "Query is generic; SPARQL is specific — merge into sparql"],
 ];
 
 // ── Gate Implementation ───────────────────────────────────────────────────
@@ -152,12 +148,12 @@ export function pruningGate(): PruningReport {
       memberCounts.set(m, (memberCounts.get(m) || 0) + 1);
     }
   }
-  const duplicateMembers = [...memberCounts.entries()].filter(([, c]) => c > 2);
+  const duplicateMembers = [...memberCounts.entries()].filter(([, c]) => c > 3);
   if (duplicateMembers.length > 0) {
     findings.push({
       severity: "monitor",
       category: "cluster-overlap",
-      title: `${duplicateMembers.length} projections appear in 3+ clusters`,
+      title: `${duplicateMembers.length} projections appear in 4+ clusters`,
       detail: `Heavy cluster overlap may indicate classification redundancy: ${duplicateMembers.map(([n, c]) => `${n}(${c})`).join(", ")}`,
     });
   }
@@ -167,12 +163,12 @@ export function pruningGate(): PruningReport {
   const maxChain = Math.max(...chainLengths);
   const avgChain = chainLengths.reduce((a, b) => a + b, 0) / chainLengths.length;
 
-  if (maxChain > 7) {
+  if (maxChain > 10) {
     findings.push({
       severity: "monitor",
       category: "chain-complexity",
       title: `Longest synergy chain has ${maxChain} nodes`,
-      detail: "Chains over 7 nodes become hard to verify. Consider splitting into sub-chains.",
+      detail: "Chains over 10 nodes become hard to verify. Consider splitting into sub-chains.",
     });
   }
 

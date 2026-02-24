@@ -8,8 +8,8 @@ import {
 import uorIcon from "@/assets/uor-icon-new.png";
 import { Q0 } from "@/modules/ring-core";
 import { supabase } from "@/integrations/supabase/client";
-import { systemIntegrityCheck, getRecentReceipts } from "@/modules/self-verify";
-import type { IntegrityReport } from "@/modules/self-verify";
+import { systemIntegrityCheck, getRecentReceipts } from "@/modules/verify";
+import type { IntegrityReport } from "@/modules/verify";
 import type { DerivationReceipt } from "@/modules/derivation/receipt";
 import { uor_derive } from "@/modules/agent-tools";
 import type { DeriveOutput } from "@/modules/agent-tools";

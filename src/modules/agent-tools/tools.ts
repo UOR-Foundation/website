@@ -123,8 +123,8 @@ export async function uor_derive(input: DeriveInput): Promise<DeriveOutput> {
 // If body.intent → UnsQuery.query() (DihedralFactorizationResolver)
 // If body.sparql → UnsQuery.sparqlQuery() (SPARQL with epistemic grading)
 
-import { UnsQuery } from "@/modules/query/query";
-import type { QueryResult as IntentQueryResult, SparqlQueryResult, QueryIntent } from "@/modules/query/query";
+import { UnsQuery } from "@/modules/sparql/query";
+import type { QueryResult as IntentQueryResult, SparqlQueryResult, QueryIntent } from "@/modules/sparql/query";
 import { UnsGraph } from "@/modules/kg-store/uns-graph";
 
 export interface QueryInput {

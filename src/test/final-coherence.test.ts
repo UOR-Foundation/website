@@ -46,7 +46,7 @@ import { analyzePayload, analyzePayloadFast } from "@/modules/uns/shield/partiti
 import { correlateIds, FIDELITY_THRESHOLDS } from "@/modules/resolver/correlate-engine";
 
 // ── Query ───────────────────────────────────────────────────────────────────
-import { UnsQuery } from "@/modules/query/query";
+import { UnsQuery } from "@/modules/sparql/query";
 
 // ── Entity Resolver ─────────────────────────────────────────────────────────
 import { resolveEntity } from "@/modules/resolver/entity-resolver";

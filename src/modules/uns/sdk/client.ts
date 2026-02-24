@@ -520,7 +520,7 @@ export class UnsClient {
     }>;
   }> {
     // Lazy import to avoid circular dependencies
-    const { UnsQuery: QueryEngine } = await import("@/modules/query/query");
+    const { UnsQuery: QueryEngine } = await import("@/modules/sparql/query");
     const { UnsGraph: GraphEngine } = await import("@/modules/kg-store/uns-graph");
 
     const graph = new GraphEngine();
@@ -554,7 +554,7 @@ export class UnsClient {
     "@graph": Array<Record<string, string>>;
     epistemic_grade: "B";
   }> {
-    const { UnsQuery: QueryEngine } = await import("@/modules/query/query");
+    const { UnsQuery: QueryEngine } = await import("@/modules/sparql/query");
     const { UnsGraph: GraphEngine } = await import("@/modules/kg-store/uns-graph");
 
     const graph = new GraphEngine();

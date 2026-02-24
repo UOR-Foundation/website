@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { UnsQuery } from "@/modules/query/query";
+import { UnsQuery } from "@/modules/sparql/query";
 import { UnsGraph } from "@/modules/kg-store/uns-graph";
 
 function makeTestGraph(): UnsGraph {

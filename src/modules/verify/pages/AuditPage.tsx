@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { systemIntegrityCheck, getRecentReceipts, exportAuditTrail } from "@/modules/self-verify";
-import type { IntegrityReport } from "@/modules/self-verify";
+import { systemIntegrityCheck, getRecentReceipts, exportAuditTrail } from "@/modules/verify";
+import type { IntegrityReport } from "@/modules/verify";
 import type { DerivationReceipt } from "@/modules/derivation/receipt";
 
 const AuditPage = () => {
