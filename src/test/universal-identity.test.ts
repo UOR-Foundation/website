@@ -204,8 +204,8 @@ describe("Pooled Subscription — YouTube Premium Revenue Model", () => {
     const period = await engine.closePeriod({ records, subscriptions });
 
     expect(period.totalRevenue).toBe(29.97);
-    expect(period.platformShare).toBe(5.99);
-    expect(period.developerPool).toBe(23.98);
+    expect(period.platformShare).toBe(0);
+    expect(period.developerPool).toBe(29.97);
 
     const appX = period.payouts.find((p) => p.appCanonicalId === "app-X");
     const appY = period.payouts.find((p) => p.appCanonicalId === "app-Y");
@@ -240,7 +240,7 @@ describe("Pooled Subscription — YouTube Premium Revenue Model", () => {
 
     const balance = await engine.getDeveloperBalance("my-app");
     expect(balance.totalPeriods).toBe(2);
-    expect(balance.totalEarned).toBe(16);
+    expect(balance.totalEarned).toBe(20);
     expect(balance.averageUsageShare).toBe(1);
   });
 
