@@ -99,8 +99,11 @@ export {
 
 export {
   resolveDidDocument,
+  resolveDidFull,
   cidToDid,
   didToCid,
   isDidUor,
   type UorDidDocument,
+  type DidResolutionResult,
+  type DidResolutionMetadata,
 } from "./did";

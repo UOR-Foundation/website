@@ -52,6 +52,7 @@ export function emitContext(): UorJsonLdContext {
     cert: "https://uor.foundation/cert/",
     morphism: "https://uor.foundation/morphism/",
     state: "https://uor.foundation/state/",
+    store: "https://uor.foundation/store/",
     u: "https://uor.foundation/u/",
 
     // ── Typed properties (xsd:nonNegativeInteger) ────────────────────────

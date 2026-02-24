@@ -4,6 +4,12 @@
  *
  * End-to-end validation that UOR certificates correctly wrap into
  * W3C VC 2.0, resolve as DID Documents, and pass Data Integrity checks.
+ *
+ * Tests validate against:
+ *   - VC Data Model 2.0 (https://www.w3.org/TR/vc-data-model-2.0/)
+ *   - Data Integrity 1.0 (https://www.w3.org/TR/vc-data-integrity/)
+ *   - DID Core 1.0 (https://www.w3.org/TR/did-core/)
+ *   - DID Resolution (https://www.w3.org/TR/did-resolution/)
  */
 
 import { describe, it, expect } from "vitest";
@@ -14,6 +20,7 @@ import {
 } from "../vc-envelope";
 import {
   resolveDidDocument,
+  resolveDidFull,
   cidToDid,
   didToCid,
   isDidUor,
@@ -31,15 +38,17 @@ describe("W3C Interoperability", () => {
   // ── VC 2.0 Envelope ───────────────────────────────────────────────────
 
   describe("Verifiable Credentials 2.0", () => {
-    it("wraps a UOR certificate in VC 2.0 structure", async () => {
+    it("wraps a UOR certificate in VC 2.0 structure (§4)", async () => {
       const cert = await generateCertificate(TEST_SUBJECT, TEST_ATTRIBUTES);
       const vc = await wrapAsVerifiableCredential(cert);
 
-      // Required VC 2.0 fields
+      // Required VC 2.0 fields per §4
       expect(vc["@context"][0]).toBe("https://www.w3.org/ns/credentials/v2");
       expect(vc.type).toContain("VerifiableCredential");
       expect(vc.type).toContain("UorCertificate");
       expect(vc.issuer).toBeDefined();
+      expect(vc.issuer.id).toMatch(/^did:uor:/);
+      expect(vc.issuer.name).toBe("UOR Foundation");
       expect(vc.validFrom).toBe(cert["cert:issuedAt"]);
       expect(vc.credentialSubject).toBeDefined();
       expect(vc.credentialSubject.id).toMatch(/^did:uor:/);
@@ -56,14 +65,15 @@ describe("W3C Interoperability", () => {
       expect(embedded["cert:coherence"]).toEqual(cert["cert:coherence"]);
     });
 
-    it("includes a Data Integrity proof", async () => {
+    it("includes a Data Integrity proof with multibase proofValue (DI §2.1)", async () => {
       const cert = await generateCertificate(TEST_SUBJECT, TEST_ATTRIBUTES);
       const vc = await wrapAsVerifiableCredential(cert);
 
       expect(vc.proof.type).toBe("DataIntegrityProof");
       expect(vc.proof.cryptosuite).toBe("uor-sha256-rdfc-2024");
       expect(vc.proof.proofPurpose).toBe("assertionMethod");
-      expect(vc.proof.proofValue).toMatch(/^[0-9a-f]{64}$/); // SHA-256 hex
+      // proofValue MUST be multibase 'f' prefix + hex (DI §2.1)
+      expect(vc.proof.proofValue).toMatch(/^f[0-9a-f]{64}$/);
       expect(vc.proof["uor:coherenceIdentity"]).toBe("neg(bnot(x)) ≡ succ(x)");
     });
 
@@ -82,8 +92,8 @@ describe("W3C Interoperability", () => {
       const cert = await generateCertificate(TEST_SUBJECT, TEST_ATTRIBUTES);
       const vc = await wrapAsVerifiableCredential(cert);
 
-      // Tamper with the proof value
-      const tampered = { ...vc, proof: { ...vc.proof, proofValue: "0".repeat(64) } };
+      // Tamper with the proof value (still must be multibase format)
+      const tampered = { ...vc, proof: { ...vc.proof, proofValue: "f" + "0".repeat(64) } };
       const result = await verifyVerifiableCredential(tampered);
 
       expect(result.valid).toBe(false);
@@ -94,38 +104,61 @@ describe("W3C Interoperability", () => {
   // ── DID:UOR Method ────────────────────────────────────────────────────
 
   describe("DID:UOR Method", () => {
-    it("resolves a UOR certificate to a DID Document", async () => {
+    it("resolves a UOR certificate to a DID Document (DID Core §5)", async () => {
       const cert = await generateCertificate(TEST_SUBJECT, TEST_ATTRIBUTES);
       const doc = resolveDidDocument(cert);
 
+      // DID Core §4.1: context
       expect(doc["@context"][0]).toBe("https://www.w3.org/ns/did/v1");
+      // DID Core §5.1: id
       expect(doc.id).toBe(`did:uor:${cert["cert:cid"]}`);
+      // DID Core §5.1.2: controller
+      expect(doc.controller).toBe(doc.id);
+      // DID Core §5.1.1: alsoKnownAs
+      expect(doc.alsoKnownAs).toBeDefined();
+      expect(doc.alsoKnownAs.length).toBeGreaterThan(0);
+      // DID Core §5.2: verificationMethod
       expect(doc.verificationMethod).toHaveLength(1);
       expect(doc.assertionMethod).toHaveLength(1);
       expect(doc.authentication).toHaveLength(1);
-      expect(doc.created).toBe(cert["cert:issuedAt"]);
     });
 
-    it("includes content-hash verification method", async () => {
+    it("uses Multikey verification method with publicKeyMultibase", async () => {
       const cert = await generateCertificate(TEST_SUBJECT, TEST_ATTRIBUTES);
       const doc = resolveDidDocument(cert);
       const vm = doc.verificationMethod[0];
 
-      expect(vm.type).toBe("ContentHashVerification2024");
+      // Per DID Core §5.2 and Multikey spec
+      expect(vm.type).toBe("Multikey");
       expect(vm.controller).toBe(doc.id);
-      expect(vm["uor:cid"]).toBe(cert["cert:cid"]);
-      expect(vm["uor:hashHex"]).toBe(cert["cert:sourceHash"]);
+      // publicKeyMultibase MUST start with multibase prefix
+      expect(vm.publicKeyMultibase).toMatch(/^f[0-9a-f]+$/);
+      expect(vm.publicKeyMultibase).toBe(`f${cert["cert:sourceHash"]}`);
     });
 
-    it("includes IPv6 service endpoint", async () => {
+    it("includes service endpoints for IPv6 and Braille address", async () => {
       const cert = await generateCertificate(TEST_SUBJECT, TEST_ATTRIBUTES);
       const doc = resolveDidDocument(cert);
 
-      expect(doc.service).toHaveLength(1);
+      expect(doc.service).toHaveLength(2);
       expect(doc.service[0].type).toBe("UorContentAddress");
-      expect(doc.service[0].serviceEndpoint).toBe(
-        cert["store:ipv6Address"]["u:ipv6"]
-      );
+      expect(doc.service[1].type).toBe("UorBrailleAddress");
+    });
+
+    it("provides full resolution with metadata (DID Resolution §3)", async () => {
+      const cert = await generateCertificate(TEST_SUBJECT, TEST_ATTRIBUTES);
+      const result = resolveDidFull(cert);
+
+      // Resolution metadata
+      expect(result.didResolutionMetadata.contentType).toBe("application/did+ld+json");
+      expect(result.didResolutionMetadata.created).toBe(cert["cert:issuedAt"]);
+      expect(result.didResolutionMetadata["uor:cid"]).toBe(cert["cert:cid"]);
+
+      // Document metadata
+      expect(result.didDocumentMetadata.created).toBe(cert["cert:issuedAt"]);
+
+      // Document
+      expect(result.didDocument.id).toBe(`did:uor:${cert["cert:cid"]}`);
     });
 
     it("round-trips CID ↔ DID", () => {
@@ -163,8 +196,13 @@ describe("W3C Interoperability", () => {
       const result = await verifyVerifiableCredential(vc);
       expect(result.valid).toBe(true);
 
-      // 5. Cross-check: DID verification method references same CID
-      expect(did.verificationMethod[0]["uor:cid"]).toBe(cert["cert:cid"]);
+      // 5. Cross-check: DID publicKeyMultibase contains source hash
+      expect(did.verificationMethod[0].publicKeyMultibase).toBe(
+        `f${cert["cert:sourceHash"]}`
+      );
+
+      // 6. Cross-check: alsoKnownAs includes CID URN
+      expect(did.alsoKnownAs).toContain(`urn:uor:cid:${cert["cert:cid"]}`);
     });
   });
 });
