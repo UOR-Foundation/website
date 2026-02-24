@@ -273,4 +273,89 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://github.com/lightning/bolts/blob/master/11-payment-encoding.md",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 6 — SOCIAL PROTOCOLS (SHA-256 native alignment)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Nostr NIP-01 — Content-Addressed Social Events ─────────────────────
+  // A Nostr event ID is the SHA-256 hash of a canonical JSON serialization:
+  //   [0, pubkey, created_at, kind, tags, content]
+  //
+  // UOR's SHA-256 identity maps directly: the UOR hash IS a valid Nostr
+  // event ID. Any relay can index it, any client can reference it.
+  // The hex encoding is identical — 64 lowercase hex characters.
+  //
+  // NIP-01 §Events: "id: 32-bytes lowercase hex-encoded sha256"
+  //
+  // Fidelity: LOSSLESS — the full 256-bit hash is preserved as-is.
+  // No encoding translation, no truncation, no prefix. Pure SHA-256.
+
+  ["nostr", {
+    project: ({ hex }) => hex,
+    fidelity: "lossless",
+    spec: "https://github.com/nostr-protocol/nips/blob/master/01.md",
+  }],
+
+  // ── Nostr NIP-19 — Bech32 Human-Readable Encoding ─────────────────────
+  // NIP-19 defines `note1...` bech32m encoding for event IDs, making them
+  // copy-paste friendly for humans. The encoding wraps the raw 32-byte
+  // hash with HRP "note" + bech32m checksum.
+  //
+  // This is the format users see in Nostr clients: note1{bech32 chars}
+  //
+  // Encoding: bech32m("note", hashBytes) per BIP-173/BIP-350
+
+  ["nostr-note", {
+    project: ({ hashBytes }) => {
+      // bech32 encoding: HRP "note" + separator "1" + data + checksum
+      const A = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+      // Convert 8-bit bytes to 5-bit groups
+      let bits = 0;
+      let value = 0;
+      const data5: number[] = [];
+      for (const byte of hashBytes) {
+        value = (value << 8) | byte;
+        bits += 8;
+        while (bits >= 5) {
+          bits -= 5;
+          data5.push((value >> bits) & 31);
+        }
+      }
+      if (bits > 0) {
+        data5.push((value << (5 - bits)) & 31);
+      }
+
+      // bech32m checksum (BIP-350)
+      const hrpExpand = (hrp: string): number[] => {
+        const ret: number[] = [];
+        for (let i = 0; i < hrp.length; i++) ret.push(hrp.charCodeAt(i) >> 5);
+        ret.push(0);
+        for (let i = 0; i < hrp.length; i++) ret.push(hrp.charCodeAt(i) & 31);
+        return ret;
+      };
+      const polymod = (values: number[]): number => {
+        const GEN = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+        let chk = 1;
+        for (const v of values) {
+          const b = chk >> 25;
+          chk = ((chk & 0x1ffffff) << 5) ^ v;
+          for (let i = 0; i < 5; i++) if ((b >> i) & 1) chk ^= GEN[i];
+        }
+        return chk;
+      };
+      const createChecksum = (hrp: string, data: number[]): number[] => {
+        const values = [...hrpExpand(hrp), ...data, 0, 0, 0, 0, 0, 0];
+        const mod = polymod(values) ^ 0x2bc830a3; // bech32m constant
+        const ret: number[] = [];
+        for (let i = 0; i < 6; i++) ret.push((mod >> (5 * (5 - i))) & 31);
+        return ret;
+      };
+
+      const checksum = createChecksum("note", data5);
+      return "note1" + [...data5, ...checksum].map(d => A[d]).join("");
+    },
+    fidelity: "lossless",
+    spec: "https://github.com/nostr-protocol/nips/blob/master/19.md",
+  }],
 ]);

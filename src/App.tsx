@@ -93,6 +93,7 @@ const SandboxPage = lazy(() => import("@/modules/projects/pages/SandboxPage"));
 const ClaimIdentityPage = lazy(() => import("@/modules/uor-identity/pages/ClaimIdentityPage"));
 const BitcoinScriptPage = lazy(() => import("@/modules/bitcoin/pages/BitcoinScriptPage"));
 const TimestampPage = lazy(() => import("@/modules/bitcoin/pages/TimestampPage"));
+const BitcoinDemoPage = lazy(() => import("@/modules/bitcoin/pages/DemoPage"));
 
 const queryClient = new QueryClient();
 
@@ -199,6 +200,7 @@ const App = () => {
             <Route path="/claim-identity" element={<ClaimIdentityPage />} />
             <Route path="/bitcoin" element={<BitcoinScriptPage />} />
             <Route path="/bitcoin/timestamp" element={<TimestampPage />} />
+            <Route path="/bitcoin/demo" element={<BitcoinDemoPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

@@ -37,8 +37,8 @@ const HEX = IDENTITY["u:canonicalId"].split(":").pop()!;
 // ── Core contract ───────────────────────────────────────────────────────────
 
 describe("Hologram Projection Registry", () => {
-  it("registers at least 23 projections", () => {
-    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(23);
+  it("registers at least 25 projections", () => {
+    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(25);
   });
 
   // ── Tier 0: Foundational Standards ──────────────────────────────────────
@@ -241,6 +241,41 @@ describe("Hologram Projection Registry", () => {
     for (let i = 0; i < 32; i++) {
       expect(bytes[i]).toBe(i); // Our test fixture uses 0x00..0x1f
     }
+  });
+
+  // ── Nostr NIP-01/NIP-19 — Social Protocol Projection ───────────────────
+
+  it("nostr projection returns raw 64-char lowercase hex event ID", () => {
+    const p = project(IDENTITY, "nostr");
+    expect(p.value).toBe(HEX);
+    expect(p.value).toMatch(/^[0-9a-f]{64}$/);
+    expect(p.fidelity).toBe("lossless");
+  });
+
+  it("nostr-note projection returns bech32m-encoded note1... identifier", () => {
+    const p = project(IDENTITY, "nostr-note");
+    expect(p.value).toMatch(/^note1[qpzry9x8gf2tvdw0s3jn54khce6mua7l]+$/);
+    expect(p.fidelity).toBe("lossless");
+    // note1 + 52 data chars + 6 checksum chars = 59+ chars
+    expect(p.value.length).toBeGreaterThanOrEqual(59);
+  });
+
+  it("nostr projection is deterministic", () => {
+    const a = project(IDENTITY, "nostr").value;
+    const b = project(IDENTITY, "nostr").value;
+    expect(a).toBe(b);
+  });
+
+  it("nostr-note projection is deterministic", () => {
+    const a = project(IDENTITY, "nostr-note").value;
+    const b = project(IDENTITY, "nostr-note").value;
+    expect(a).toBe(b);
+  });
+
+  it("nostr event ID matches bitcoin OP_RETURN embedded hash", () => {
+    const nostrId = project(IDENTITY, "nostr").value;
+    const btcScript = project(IDENTITY, "bitcoin").value;
+    expect(btcScript.slice(10)).toBe(nostrId);
   });
 
   it("lossy projections always carry a lossWarning", () => {
