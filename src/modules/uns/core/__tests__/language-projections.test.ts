@@ -8,7 +8,9 @@ const MOCK_INPUT = {
   hex: "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
 };
 
-const LANGUAGE_PROJECTIONS = [
+/** All 75 language projections with expected URN format. */
+const ALL_LANGUAGE_PROJECTIONS = [
+  // Original 10
   { name: "python-module", urn: `urn:uor:lang:python:${MOCK_INPUT.hex}` },
   { name: "js-module",     urn: `urn:uor:lang:js:${MOCK_INPUT.hex}` },
   { name: "java-class",    urn: `urn:uor:lang:java:${MOCK_INPUT.hex}` },
@@ -19,151 +21,316 @@ const LANGUAGE_PROJECTIONS = [
   { name: "rust-crate",    urn: `urn:uor:lang:rust:${MOCK_INPUT.hex}` },
   { name: "ts-module",     urn: `urn:uor:lang:ts:${MOCK_INPUT.hex}` },
   { name: "sql-schema",    urn: `urn:uor:lang:sql:${MOCK_INPUT.hex}` },
+  // 9a Systems
+  { name: "zig",           urn: `urn:uor:lang:zig:${MOCK_INPUT.hex}` },
+  { name: "nim",           urn: `urn:uor:lang:nim:${MOCK_INPUT.hex}` },
+  { name: "d-lang",        urn: `urn:uor:lang:d:${MOCK_INPUT.hex}` },
+  { name: "ada",           urn: `urn:uor:lang:ada:${MOCK_INPUT.hex}` },
+  { name: "fortran",       urn: `urn:uor:lang:fortran:${MOCK_INPUT.hex}` },
+  { name: "pascal",        urn: `urn:uor:lang:pascal:${MOCK_INPUT.hex}` },
+  { name: "assembly",      urn: `urn:uor:lang:asm:${MOCK_INPUT.hex}` },
+  // 9b JVM
+  { name: "kotlin",        urn: `urn:uor:lang:kotlin:${MOCK_INPUT.hex}` },
+  { name: "scala",         urn: `urn:uor:lang:scala:${MOCK_INPUT.hex}` },
+  { name: "groovy",        urn: `urn:uor:lang:groovy:${MOCK_INPUT.hex}` },
+  { name: "clojure",       urn: `urn:uor:lang:clojure:${MOCK_INPUT.hex}` },
+  // 9c Functional
+  { name: "haskell",       urn: `urn:uor:lang:haskell:${MOCK_INPUT.hex}` },
+  { name: "ocaml",         urn: `urn:uor:lang:ocaml:${MOCK_INPUT.hex}` },
+  { name: "fsharp",        urn: `urn:uor:lang:fsharp:${MOCK_INPUT.hex}` },
+  { name: "erlang",        urn: `urn:uor:lang:erlang:${MOCK_INPUT.hex}` },
+  { name: "elixir",        urn: `urn:uor:lang:elixir:${MOCK_INPUT.hex}` },
+  { name: "common-lisp",   urn: `urn:uor:lang:lisp:${MOCK_INPUT.hex}` },
+  { name: "scheme",        urn: `urn:uor:lang:scheme:${MOCK_INPUT.hex}` },
+  { name: "racket",        urn: `urn:uor:lang:racket:${MOCK_INPUT.hex}` },
+  // 9d Scripting
+  { name: "ruby",          urn: `urn:uor:lang:ruby:${MOCK_INPUT.hex}` },
+  { name: "php",           urn: `urn:uor:lang:php:${MOCK_INPUT.hex}` },
+  { name: "perl",          urn: `urn:uor:lang:perl:${MOCK_INPUT.hex}` },
+  { name: "lua",           urn: `urn:uor:lang:lua:${MOCK_INPUT.hex}` },
+  { name: "bash",          urn: `urn:uor:lang:bash:${MOCK_INPUT.hex}` },
+  { name: "powershell",    urn: `urn:uor:lang:powershell:${MOCK_INPUT.hex}` },
+  { name: "raku",          urn: `urn:uor:lang:raku:${MOCK_INPUT.hex}` },
+  { name: "tcl",           urn: `urn:uor:lang:tcl:${MOCK_INPUT.hex}` },
+  // 9e Mobile
+  { name: "swift",         urn: `urn:uor:lang:swift:${MOCK_INPUT.hex}` },
+  { name: "objective-c",   urn: `urn:uor:lang:objc:${MOCK_INPUT.hex}` },
+  { name: "dart",          urn: `urn:uor:lang:dart:${MOCK_INPUT.hex}` },
+  // 9f Data/Scientific
+  { name: "r-lang",        urn: `urn:uor:lang:r:${MOCK_INPUT.hex}` },
+  { name: "julia",         urn: `urn:uor:lang:julia:${MOCK_INPUT.hex}` },
+  { name: "matlab",        urn: `urn:uor:lang:matlab:${MOCK_INPUT.hex}` },
+  // 9g Web Platform
+  { name: "html",          urn: `urn:uor:lang:html:${MOCK_INPUT.hex}` },
+  { name: "css",           urn: `urn:uor:lang:css:${MOCK_INPUT.hex}` },
+  { name: "wasm",          urn: `urn:uor:lang:wasm:${MOCK_INPUT.hex}` },
+  { name: "wgsl",          urn: `urn:uor:lang:wgsl:${MOCK_INPUT.hex}` },
+  // 9h Query/Data
+  { name: "graphql",       urn: `urn:uor:lang:graphql:${MOCK_INPUT.hex}` },
+  { name: "sparql",        urn: `urn:uor:lang:sparql:${MOCK_INPUT.hex}` },
+  { name: "xquery",        urn: `urn:uor:lang:xquery:${MOCK_INPUT.hex}` },
+  // 9i Smart Contract
+  { name: "solidity",      urn: `urn:uor:lang:solidity:${MOCK_INPUT.hex}` },
+  { name: "vyper",         urn: `urn:uor:lang:vyper:${MOCK_INPUT.hex}` },
+  { name: "move",          urn: `urn:uor:lang:move:${MOCK_INPUT.hex}` },
+  { name: "cairo",         urn: `urn:uor:lang:cairo:${MOCK_INPUT.hex}` },
+  // 9j Hardware
+  { name: "vhdl",          urn: `urn:uor:lang:vhdl:${MOCK_INPUT.hex}` },
+  { name: "verilog",       urn: `urn:uor:lang:verilog:${MOCK_INPUT.hex}` },
+  { name: "systemverilog", urn: `urn:uor:lang:systemverilog:${MOCK_INPUT.hex}` },
+  // 9k Formal Verification
+  { name: "coq",           urn: `urn:uor:lang:coq:${MOCK_INPUT.hex}` },
+  { name: "lean",          urn: `urn:uor:lang:lean:${MOCK_INPUT.hex}` },
+  { name: "agda",          urn: `urn:uor:lang:agda:${MOCK_INPUT.hex}` },
+  { name: "tlaplus",       urn: `urn:uor:lang:tlaplus:${MOCK_INPUT.hex}` },
+  // 9l IaC/Build
+  { name: "hcl",           urn: `urn:uor:lang:hcl:${MOCK_INPUT.hex}` },
+  { name: "nix",           urn: `urn:uor:lang:nix:${MOCK_INPUT.hex}` },
+  { name: "dockerfile",    urn: `urn:uor:lang:dockerfile:${MOCK_INPUT.hex}` },
+  { name: "makefile",      urn: `urn:uor:lang:makefile:${MOCK_INPUT.hex}` },
+  // 9m GPU/Shader
+  { name: "cuda",          urn: `urn:uor:lang:cuda:${MOCK_INPUT.hex}` },
+  { name: "opencl",        urn: `urn:uor:lang:opencl:${MOCK_INPUT.hex}` },
+  { name: "glsl",          urn: `urn:uor:lang:glsl:${MOCK_INPUT.hex}` },
+  { name: "hlsl",          urn: `urn:uor:lang:hlsl:${MOCK_INPUT.hex}` },
+  // 9n Niche
+  { name: "apl",           urn: `urn:uor:lang:apl:${MOCK_INPUT.hex}` },
+  { name: "forth",         urn: `urn:uor:lang:forth:${MOCK_INPUT.hex}` },
+  { name: "prolog",        urn: `urn:uor:lang:prolog:${MOCK_INPUT.hex}` },
+  { name: "smalltalk",     urn: `urn:uor:lang:smalltalk:${MOCK_INPUT.hex}` },
+  { name: "crystal",       urn: `urn:uor:lang:crystal:${MOCK_INPUT.hex}` },
+  { name: "pony",          urn: `urn:uor:lang:pony:${MOCK_INPUT.hex}` },
 ] as const;
 
-describe("Language Hologram Projections", () => {
+describe("Complete Language Hologram Projections (75 languages)", () => {
+
   // ── Registration ──────────────────────────────────────────────────────
 
-  it("all 10 language projections are registered", () => {
-    for (const { name } of LANGUAGE_PROJECTIONS) {
-      expect(PROJECTIONS.has(name)).toBe(true);
+  it("all 75 language projections are registered in the hologram", () => {
+    for (const { name } of ALL_LANGUAGE_PROJECTIONS) {
+      expect(PROJECTIONS.has(name), `Missing projection: ${name}`).toBe(true);
     }
   });
 
-  // ── URN correctness ───────────────────────────────────────────────────
+  // ── URN correctness for every language ────────────────────────────────
 
-  for (const { name, urn } of LANGUAGE_PROJECTIONS) {
-    it(`${name} produces correct URN`, () => {
+  for (const { name, urn } of ALL_LANGUAGE_PROJECTIONS) {
+    it(`${name} → correct URN`, () => {
       const p = project(MOCK_INPUT, name);
       expect(p.value).toBe(urn);
-      expect(p.fidelity).toBe("lossless");
     });
   }
 
-  // ── All lossless ──────────────────────────────────────────────────────
+  // ── Fidelity: all lossless ────────────────────────────────────────────
 
-  it("all language projections are lossless (full 256-bit identity)", () => {
-    for (const { name } of LANGUAGE_PROJECTIONS) {
-      const p = project(MOCK_INPUT, name);
-      expect(p.fidelity).toBe("lossless");
+  it("all 75 language projections are lossless", () => {
+    for (const { name } of ALL_LANGUAGE_PROJECTIONS) {
+      expect(project(MOCK_INPUT, name).fidelity).toBe("lossless");
     }
   });
 
-  // ── Full hex embedded ─────────────────────────────────────────────────
+  // ── Full hex identity embedded ────────────────────────────────────────
 
-  it("all language projections embed the full hex hash", () => {
-    for (const { name } of LANGUAGE_PROJECTIONS) {
-      const p = project(MOCK_INPUT, name);
-      expect(p.value).toContain(MOCK_INPUT.hex);
+  it("all 75 projections embed the full 256-bit hex hash", () => {
+    for (const { name } of ALL_LANGUAGE_PROJECTIONS) {
+      expect(project(MOCK_INPUT, name).value).toContain(MOCK_INPUT.hex);
     }
   });
 
   // ── Tier classification ───────────────────────────────────────────────
 
-  it("all language projections classified in language tier", () => {
+  it("all 75 language projections classified in language tier", () => {
     const report = coherenceGate();
-    const languageCluster = report.clusters.find(c => c.name === "language");
-    expect(languageCluster).toBeDefined();
-    for (const { name } of LANGUAGE_PROJECTIONS) {
-      expect(languageCluster!.members).toContain(name);
+    const cluster = report.clusters.find(c => c.name === "language");
+    expect(cluster).toBeDefined();
+    expect(cluster!.members.length).toBe(75);
+    for (const { name } of ALL_LANGUAGE_PROJECTIONS) {
+      expect(cluster!.members, `${name} missing from language cluster`).toContain(name);
     }
   });
 
-  // ── Synergy discovery ─────────────────────────────────────────────────
+  // ── Total projection count ────────────────────────────────────────────
 
-  it("coherence gate discovers language synergies", () => {
+  it("total projections ≥ 117 (42 protocol + 75 language)", () => {
     const report = coherenceGate();
-    const langNames = LANGUAGE_PROJECTIONS.map(l => l.name);
-    const langSynergies = report.synergies.filter(
-      s => langNames.some(n => s.projections.includes(n)),
-    );
-    // Should have many synergies: provenance chains + complementary pairs + settlement bridges
-    expect(langSynergies.length).toBeGreaterThan(30);
+    expect(report.totalProjections).toBeGreaterThanOrEqual(117);
   });
 
-  it("discovers provenance chains for language projections", () => {
+  // ── Synergy categories ────────────────────────────────────────────────
+
+  it("discovers JVM compilation chains (Kotlin/Scala/Groovy/Clojure → Java)", () => {
     const report = coherenceGate();
-    const langChains = report.synergies.filter(
-      s => s.type === "provenance-chain" &&
-        ["python-module", "js-module", "ts-module", "go-module", "rust-crate"]
-          .some(n => s.projections.includes(n)),
-    );
-    expect(langChains.length).toBeGreaterThan(10);
-  });
-
-  it("discovers complementary pairs for language projections", () => {
-    const report = coherenceGate();
-    const langPairs = report.synergies.filter(
-      s => s.type === "complementary-pair" &&
-        ["python-module", "java-class", "csharp-assembly", "c-unit", "sql-schema"]
-          .some(n => s.projections.includes(n)),
-    );
-    expect(langPairs.length).toBeGreaterThan(5);
-  });
-
-  // ── Key provenance chain verification ─────────────────────────────────
-
-  it("python → onnx provenance chain exists (ML pipeline)", () => {
-    const report = coherenceGate();
-    const chain = report.synergies.find(
-      s => s.type === "provenance-chain" &&
-        s.projections[0] === "python-module" && s.projections[1] === "onnx",
-    );
-    expect(chain).toBeDefined();
-  });
-
-  it("ts-module → js-module provenance chain exists (compilation)", () => {
-    const report = coherenceGate();
-    const chain = report.synergies.find(
-      s => s.type === "provenance-chain" &&
-        s.projections[0] === "ts-module" && s.projections[1] === "js-module",
-    );
-    expect(chain).toBeDefined();
-  });
-
-  it("go-module → oci provenance chain exists (cloud-native)", () => {
-    const report = coherenceGate();
-    const chain = report.synergies.find(
-      s => s.type === "provenance-chain" &&
-        s.projections[0] === "go-module" && s.projections[1] === "oci",
-    );
-    expect(chain).toBeDefined();
-  });
-
-  // ── Cross-language interoperability ───────────────────────────────────
-
-  it("all language projections share identity with each other (same hex)", () => {
-    const values = LANGUAGE_PROJECTIONS.map(
-      ({ name }) => project(MOCK_INPUT, name).value,
-    );
-    // All contain the same hex → same canonical identity
-    for (const v of values) {
-      expect(v).toContain(MOCK_INPUT.hex);
+    for (const lang of ["kotlin", "scala", "groovy", "clojure"]) {
+      const chain = report.synergies.find(
+        s => s.type === "provenance-chain" &&
+          s.projections[0] === lang && s.projections[1] === "java-class",
+      );
+      expect(chain, `${lang} → java-class chain missing`).toBeDefined();
     }
   });
 
-  it("language projections interoperate with settlement layer", () => {
+  it("discovers smart contract → ERC-8004 chains", () => {
+    const report = coherenceGate();
+    for (const lang of ["solidity", "vyper", "move", "cairo"]) {
+      const chain = report.synergies.find(
+        s => s.type === "provenance-chain" &&
+          s.projections[0] === lang && s.projections[1] === "erc8004",
+      );
+      expect(chain, `${lang} → erc8004 chain missing`).toBeDefined();
+    }
+  });
+
+  it("discovers hardware → firmware chains (VHDL/Verilog → C)", () => {
+    const report = coherenceGate();
+    for (const lang of ["vhdl", "verilog"]) {
+      const chain = report.synergies.find(
+        s => s.type === "provenance-chain" &&
+          s.projections[0] === lang && s.projections[1] === "c-unit",
+      );
+      expect(chain, `${lang} → c-unit chain missing`).toBeDefined();
+    }
+  });
+
+  it("discovers formal proof → VC chains", () => {
+    const report = coherenceGate();
+    for (const lang of ["coq", "lean", "agda", "tlaplus", "ada"]) {
+      const chain = report.synergies.find(
+        s => s.type === "provenance-chain" &&
+          s.projections[0] === lang && s.projections[1] === "vc",
+      );
+      expect(chain, `${lang} → vc chain missing`).toBeDefined();
+    }
+  });
+
+  it("discovers GPU → ONNX chains", () => {
+    const report = coherenceGate();
+    for (const lang of ["cuda", "opencl"]) {
+      const chain = report.synergies.find(
+        s => s.type === "provenance-chain" &&
+          s.projections[0] === lang && s.projections[1] === "onnx",
+      );
+      expect(chain, `${lang} → onnx chain missing`).toBeDefined();
+    }
+  });
+
+  it("discovers IaC → OCI chains", () => {
+    const report = coherenceGate();
+    for (const lang of ["hcl", "dockerfile", "nix"]) {
+      const chain = report.synergies.find(
+        s => s.type === "provenance-chain" &&
+          s.projections[0] === lang && s.projections[1] === "oci",
+      );
+      expect(chain, `${lang} → oci chain missing`).toBeDefined();
+    }
+  });
+
+  it("discovers scripting → MCP tool chains", () => {
+    const report = coherenceGate();
+    for (const lang of ["ruby", "php", "perl", "lua", "bash", "powershell"]) {
+      const chain = report.synergies.find(
+        s => s.type === "provenance-chain" &&
+          s.projections[0] === lang && s.projections[1] === "mcp-tool",
+      );
+      expect(chain, `${lang} → mcp-tool chain missing`).toBeDefined();
+    }
+  });
+
+  it("discovers actor/agent model chains (Erlang/Elixir → A2A)", () => {
+    const report = coherenceGate();
+    for (const lang of ["erlang", "elixir"]) {
+      const chain = report.synergies.find(
+        s => s.type === "provenance-chain" &&
+          s.projections[0] === lang && s.projections[1] === "a2a",
+      );
+      expect(chain, `${lang} → a2a chain missing`).toBeDefined();
+    }
+  });
+
+  it("discovers scientific → ONNX chains", () => {
+    const report = coherenceGate();
+    for (const lang of ["r-lang", "julia", "matlab", "fortran"]) {
+      const chain = report.synergies.find(
+        s => s.type === "provenance-chain" &&
+          s.projections[0] === lang && s.projections[1] === "onnx",
+      );
+      expect(chain, `${lang} → onnx chain missing`).toBeDefined();
+    }
+  });
+
+  it("discovers WASM compilation chains", () => {
+    const report = coherenceGate();
+    for (const [src, tgt] of [["rust-crate", "wasm"], ["cpp-unit", "wasm"]]) {
+      const chain = report.synergies.find(
+        s => s.type === "provenance-chain" &&
+          s.projections[0] === src && s.projections[1] === tgt,
+      );
+      expect(chain, `${src} → ${tgt} chain missing`).toBeDefined();
+    }
+  });
+
+  // ── Settlement bridges ────────────────────────────────────────────────
+
+  it("all 75 language projections have settlement bridges", () => {
     const report = coherenceGate();
     const langSettlement = report.synergies.filter(
       s => s.type === "settlement-bridge" &&
-        LANGUAGE_PROJECTIONS.some(l => s.projections.includes(l.name)),
+        ALL_LANGUAGE_PROJECTIONS.some(l => s.projections.includes(l.name)),
     );
-    // Every lossless language projection should have a settlement bridge
-    expect(langSettlement.length).toBe(10);
+    expect(langSettlement.length).toBe(75);
   });
 
   // ── Opportunity synthesis ─────────────────────────────────────────────
 
   it("generates POLYGLOT SUPPLY CHAIN opportunity", () => {
     const report = coherenceGate();
-    const polyglot = report.opportunities.find(o => o.includes("POLYGLOT"));
-    expect(polyglot).toBeDefined();
+    expect(report.opportunities.find(o => o.includes("POLYGLOT"))).toBeDefined();
   });
 
-  // ── Total projection count ────────────────────────────────────────────
-
-  it("total projections now includes all 10 languages", () => {
+  it("generates SMART CONTRACT INTEGRITY opportunity", () => {
     const report = coherenceGate();
-    expect(report.totalProjections).toBeGreaterThanOrEqual(52);
+    expect(report.opportunities.find(o => o.includes("SMART CONTRACT"))).toBeDefined();
+  });
+
+  it("generates PROOF-CERTIFIED SOFTWARE opportunity", () => {
+    const report = coherenceGate();
+    expect(report.opportunities.find(o => o.includes("PROOF-CERTIFIED"))).toBeDefined();
+  });
+
+  it("generates SILICON-TO-CLOUD PROVENANCE opportunity", () => {
+    const report = coherenceGate();
+    expect(report.opportunities.find(o => o.includes("SILICON-TO-CLOUD"))).toBeDefined();
+  });
+
+  // ── Cross-language identity equivalence ───────────────────────────────
+
+  it("all 75 projections share the same canonical identity", () => {
+    const values = ALL_LANGUAGE_PROJECTIONS.map(
+      ({ name }) => project(MOCK_INPUT, name).value,
+    );
+    for (const v of values) {
+      expect(v).toContain(MOCK_INPUT.hex);
+    }
+  });
+
+  // ── Total synergy count is substantial ────────────────────────────────
+
+  it("discovers > 150 total language synergies", () => {
+    const report = coherenceGate();
+    const langNames = new Set<string>(ALL_LANGUAGE_PROJECTIONS.map(l => l.name));
+    const langSynergies = report.synergies.filter(
+      s => langNames.has(s.projections[0] as string) || langNames.has(s.projections[1] as string),
+    );
+    expect(langSynergies.length).toBeGreaterThan(150);
+  });
+
+  // ── Coherence gate purity ─────────────────────────────────────────────
+
+  it("coherence gate is pure — two calls produce identical counts", () => {
+    const a = coherenceGate();
+    const b = coherenceGate();
+    expect(a.totalProjections).toBe(b.totalProjections);
+    expect(a.synergies.length).toBe(b.synergies.length);
+    expect(a.clusters.length).toBe(b.clusters.length);
+    expect(a.opportunities.length).toBe(b.opportunities.length);
   });
 });
