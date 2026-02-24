@@ -31,7 +31,7 @@ export default function DeployResultCard({ result, onDismiss }: DeployResultCard
   const version = result.import.manifest["app:version"];
   const canonicalId = result.build.image.canonicalId;
   const serveUrl = result.ingest?.serveUrl ?? "";
-  const sourceUrl = serveUrl || result.instance?.sourceUrl ?? result.import.manifest["app:sourceUrl"] as string ?? "";
+  const sourceUrl = serveUrl || (result.instance?.sourceUrl ?? (result.import.manifest["app:sourceUrl"] as string) ?? "");
   const snapshotId = result.ship?.snapshot?.["u:canonicalId"] ?? canonicalId;
   const ipv6 = result.instance?.ipv6 ?? "fd00:75:6f72::1";
   const wasmStatus = result.instance?.status ?? "running";

@@ -55,114 +55,41 @@ export interface IngestResult {
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-const SERVE_FUNCTION_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/serve-app`;
-
-// ── Lazy Supabase client ────────────────────────────────────────────────────
-
-/** Lazy-load the Supabase client to avoid compile-time type issues. */
-async function getSupabase() {
-  const { supabase } = await import("@/integrations/supabase/client");
-  return supabase;
-}
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SERVE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/serve-app`;
 
 // ── Ingestor ────────────────────────────────────────────────────────────────
 
 /**
- * Fetch an app's source, store it content-addressed, and register it.
- *
- * This is the critical bridge that makes apps self-hosted:
- * after this function runs, the app can be served entirely from
- * our infrastructure via the serve-app edge function.
+ * Ingest app assets via the serve-app edge function (service role).
+ * The edge function handles fetching, storing, and registering.
  */
 export async function ingestAppAssets(
   input: IngestInput,
 ): Promise<IngestResult> {
-  const { sourceUrl, appName, version, imageCanonicalId } = input;
-  const supabase = await getSupabase();
+  const response = await fetch(SERVE_FUNCTION_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify({
+      sourceUrl: input.sourceUrl,
+      appName: input.appName,
+      version: input.version,
+      imageCanonicalId: input.imageCanonicalId,
+      snapshotId: input.snapshotId,
+      ingestedBy: input.ingestedBy,
+    }),
+  });
 
-  // 1. Check if already ingested (content-addressed dedup)
-  const { data: existing } = await (supabase as any)
-    .from("app_asset_registry")
-    .select("canonical_id, storage_path, size_bytes")
-    .eq("canonical_id", imageCanonicalId)
-    .maybeSingle();
-
-  if (existing) {
-    return {
-      canonicalId: existing.canonical_id,
-      storagePath: existing.storage_path,
-      serveUrl: `${SERVE_FUNCTION_URL}?id=${existing.canonical_id}`,
-      sizeBytes: existing.size_bytes,
-      deduplicated: true,
-    };
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(err.error || `Ingestion failed: HTTP ${response.status}`);
   }
 
-  // 2. Fetch the source HTML
-  let htmlContent: string;
-  try {
-    const response = await fetch(sourceUrl);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    htmlContent = await response.text();
-  } catch {
-    // Fallback: generate a minimal loader page
-    htmlContent = buildFallbackHtml(appName, version, sourceUrl);
-  }
-
-  // 3. Compute content hash for verification
-  const contentBytes = new TextEncoder().encode(htmlContent);
-
-  // 4. Upload to storage bucket
-  // Storage path: {shortHash}/{appName}/{version}/index.html
-  const shortHash = imageCanonicalId
-    .replace("urn:uor:derivation:sha256:", "")
-    .slice(0, 16);
-  const storagePath = `${shortHash}/${appName}/${version}/index.html`;
-
-  const blob = new Blob([contentBytes], { type: "text/html" });
-  const { error: uploadError } = await supabase.storage
-    .from("app-assets")
-    .upload(storagePath, blob, {
-      contentType: "text/html",
-      upsert: true,
-    });
-
-  if (uploadError) {
-    console.error("[AssetIngestor] Upload failed:", uploadError);
-    throw new Error(`Storage upload failed: ${uploadError.message}`);
-  }
-
-  // 5. Register in app_asset_registry
-  const { error: registryError } = await (supabase as any)
-    .from("app_asset_registry")
-    .upsert({
-      canonical_id: imageCanonicalId,
-      app_name: appName,
-      version,
-      storage_path: storagePath,
-      content_type: "text/html",
-      size_bytes: contentBytes.length,
-      source_url: sourceUrl,
-      snapshot_id: input.snapshotId ?? null,
-      ingested_by: input.ingestedBy ?? null,
-    }, {
-      onConflict: "canonical_id",
-    });
-
-  if (registryError) {
-    console.error("[AssetIngestor] Registry insert failed:", registryError);
-    throw new Error(`Registry insert failed: ${registryError.message}`);
-  }
-
-  return {
-    canonicalId: imageCanonicalId,
-    storagePath,
-    serveUrl: `${SERVE_FUNCTION_URL}?id=${imageCanonicalId}`,
-    sizeBytes: contentBytes.length,
-    deduplicated: false,
-  };
+  return await response.json();
 }
 
 /**
