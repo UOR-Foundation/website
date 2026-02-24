@@ -101,6 +101,7 @@ const UnifiedCardPage = lazy(() => import("@/modules/bitcoin/pages/UnifiedCardPa
 const OpportunityExplorerPage = lazy(() => import("@/modules/opportunities/pages/OpportunityExplorerPage"));
 const RuliadPage = lazy(() => import("@/modules/ruliad/pages/RuliadPage"));
 const RulialMotionPage = lazy(() => import("@/modules/ruliad/pages/RulialMotionPage"));
+const RuliadPaperPage = lazy(() => import("@/modules/ruliad/pages/RuliadPaperPage"));
 
 const queryClient = new QueryClient();
 
@@ -215,6 +216,7 @@ const App = () => {
             <Route path="/opportunities" element={<OpportunityExplorerPage />} />
             <Route path="/ruliad" element={<RuliadPage />} />
             <Route path="/ruliad/motion" element={<RulialMotionPage />} />
+            <Route path="/ruliad/paper" element={<RuliadPaperPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
