@@ -13,7 +13,7 @@
  * It is structured as 5 tiers mirroring the 6-layer UOR architecture:
  *
  *   T0 — RING FOUNDATION        neg(bnot(x)) ≡ succ(x) for all Q0
- *   T1 — HOLOGRAPHIC IDENTITY   20 projections, determinism, fidelity
+ *   T1 — HOLOGRAPHIC IDENTITY   22 projections, determinism, fidelity
  *   T2 — CANONICALIZATION       Context sync, URDNA2015, union types
  *   T3 — INTEROPERABILITY       DID, VC, WebFinger, W3C compliance
  *   T4 — INFRASTRUCTURE         Records, DHT, Shield, KV, PQC
@@ -138,12 +138,12 @@ describe("UOR COHERENCE GATE", () => {
 
   // ═══════════════════════════════════════════════════════════════════════
   // T1 — HOLOGRAPHIC IDENTITY
-  // "Does the same identity cohere across all 20 projections?"
+  // "Does the same identity cohere across all 22 projections?"
   // ═══════════════════════════════════════════════════════════════════════
 
   describe("T1 — Holographic Identity", () => {
-    it("registers at least 20 projections", () => {
-      expect(PROJECTIONS.size).toBeGreaterThanOrEqual(20);
+    it("registers at least 22 projections", () => {
+      expect(PROJECTIONS.size).toBeGreaterThanOrEqual(22);
     });
 
     it("every spec has project(), fidelity, and spec URL", () => {
@@ -201,6 +201,8 @@ describe("UOR COHERENCE GATE", () => {
       ["stac",        /^https:\/\/uor\.foundation\/stac\/items\/[0-9a-f]{64}$/],
       ["croissant",   /^https:\/\/uor\.foundation\/croissant\/[0-9a-f]{64}$/],
       ["crdt",        /^crdt:automerge:[0-9a-f]{64}$/],
+      ["bitcoin",     /^6a24554f52[0-9a-f]{64}$/],
+      ["bitcoin-hashlock", /^a820[0-9a-f]{64}87$/],
     ];
 
     for (const [name, expected] of projectionChecks) {

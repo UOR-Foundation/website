@@ -188,4 +188,48 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://automerge.org/automerge/stable/",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 5 — BITCOIN PROTOCOL (SHA-256 native alignment)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Bitcoin OP_RETURN Commitment — On-Chain Timestamping ─────────────
+  // Embeds the full 256-bit UOR identity into a standard OP_RETURN output
+  // script. Bitcoin's SHA-256 IS UOR's hash function — no translation
+  // required. The 3-byte "UOR" magic prefix (0x554f52) enables protocol
+  // identification by indexers. Total: 36 bytes (within 80-byte limit).
+  //
+  //   Script: OP_RETURN OP_PUSHBYTES_36 "UOR" <32-byte hash>
+  //   Hex:    6a24 554f52 {hash}
+
+  ["bitcoin", {
+    project: ({ hashBytes }) => {
+      const hex = Array.from(hashBytes)
+        .map(b => b.toString(16).padStart(2, "0")).join("");
+      return `6a24554f52${hex}`;
+    },
+    fidelity: "lossless",
+    spec: "https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki",
+  }],
+
+  // ── Bitcoin HTLC Hash Lock — Content-Gated Spending ─────────────────
+  // Produces a minimal Bitcoin Script that verifies a SHA-256 preimage.
+  // The UOR canonical bytes of an object ARE the preimage — revealing
+  // the object's URDNA2015 form unlocks the UTXO. Content = Key.
+  //
+  // Bitcoin's OP_SHA256 opcode performs SINGLE SHA-256 — identical to the
+  // UOR canonical hash. No double-hashing, no protocol mismatch.
+  //
+  //   Script: OP_SHA256 OP_PUSHBYTES_32 <hash> OP_EQUAL
+  //   Hex:    a8 20 {hash} 87
+
+  ["bitcoin-hashlock", {
+    project: ({ hashBytes }) => {
+      const hex = Array.from(hashBytes)
+        .map(b => b.toString(16).padStart(2, "0")).join("");
+      return `a820${hex}87`;
+    },
+    fidelity: "lossless",
+    spec: "https://github.com/bitcoin/bips/blob/master/bip-0199.mediawiki",
+  }],
 ]);

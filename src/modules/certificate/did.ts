@@ -135,13 +135,19 @@ function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
     ["mls",         "MlsGroupId"],
     ["scitt",       "ScittStatement"],
     ["crdt",        "CrdtDocumentId"],
+    ["bitcoin",     "BitcoinOpReturn"],
+    ["bitcoin-hashlock", "BitcoinHashLock"],
   ];
 
   for (const [name, type] of endpointMap) {
     const spec = PROJECTIONS.get(name);
     if (spec) {
       const value = spec.project(input);
-      const prefix = name === "ipv6" ? "ipv6://" : name === "glyph" ? "urn:uor:address:" : "";
+      const prefix = name === "ipv6" ? "ipv6://"
+        : name === "glyph" ? "urn:uor:address:"
+        : name === "bitcoin" ? "bitcoin:script:"
+        : name === "bitcoin-hashlock" ? "bitcoin:script:"
+        : "";
       services.push({
         id: `${did}#${name}`,
         type,

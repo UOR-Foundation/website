@@ -37,8 +37,8 @@ const HEX = IDENTITY["u:canonicalId"].split(":").pop()!;
 // ── Core contract ───────────────────────────────────────────────────────────
 
 describe("Hologram Projection Registry", () => {
-  it("registers at least 20 projections", () => {
-    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(20);
+  it("registers at least 22 projections", () => {
+    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(22);
   });
 
   // ── Tier 0: Foundational Standards ──────────────────────────────────────
@@ -166,6 +166,38 @@ describe("Hologram Projection Registry", () => {
   it("crdt uses deterministic Automerge document ID with full hex", () => {
     expect(project(IDENTITY, "crdt").value).toBe(`crdt:automerge:${HEX}`);
     expect(project(IDENTITY, "crdt").fidelity).toBe("lossless");
+  });
+
+  // ── Bitcoin Protocol — SHA-256 Native Alignment ───────────────────────
+
+  it("bitcoin projection produces valid OP_RETURN script (6a24 + UOR magic + hash)", () => {
+    const p = project(IDENTITY, "bitcoin");
+    // 6a = OP_RETURN, 24 = push 36 bytes, 554f52 = "UOR", then 64 hex chars
+    expect(p.value).toMatch(/^6a24554f52[0-9a-f]{64}$/);
+    expect(p.value.length).toBe(10 + 64); // prefix + full hash
+    expect(p.fidelity).toBe("lossless");
+    // Verify the embedded hash matches the source identity
+    expect(p.value.slice(10)).toBe(HEX);
+  });
+
+  it("bitcoin-hashlock projection produces valid OP_SHA256 script", () => {
+    const p = project(IDENTITY, "bitcoin-hashlock");
+    // a8 = OP_SHA256, 20 = push 32 bytes, {hash}, 87 = OP_EQUAL
+    expect(p.value).toMatch(/^a820[0-9a-f]{64}87$/);
+    expect(p.value.length).toBe(4 + 64 + 2); // opcodes + hash + OP_EQUAL
+    expect(p.fidelity).toBe("lossless");
+    // Verify the embedded hash matches the source identity
+    expect(p.value.slice(4, 68)).toBe(HEX);
+  });
+
+  it("bitcoin projections are deterministic and hash-preserving", () => {
+    const opreturn = project(IDENTITY, "bitcoin");
+    const hashlock = project(IDENTITY, "bitcoin-hashlock");
+    // Both embed the same hash
+    expect(opreturn.value.slice(10)).toBe(hashlock.value.slice(4, 68));
+    // Both are lossless
+    expect(opreturn.fidelity).toBe("lossless");
+    expect(hashlock.fidelity).toBe("lossless");
   });
 
   it("lossy projections always carry a lossWarning", () => {
