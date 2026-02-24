@@ -13,7 +13,7 @@ import { KnowledgeGraph } from "../components/KnowledgeGraph";
 type ViewMode = "graph" | "list";
 
 export default function InteroperabilityPage() {
-  const [view, setView] = useState<ViewMode>("graph");
+  const [view, setView] = useState<ViewMode>("list");
 
   return (
     <Layout>
