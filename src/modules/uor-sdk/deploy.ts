@@ -26,6 +26,8 @@ import { buildAppImage } from "./runtime/image-builder";
 import type { ImageBuildResult } from "./runtime/image-builder";
 import { shipApp } from "./runtime/registry-ship";
 import type { ShipResult } from "./runtime/registry-ship";
+import { ingestAppAssets } from "./runtime/asset-ingestor";
+import type { IngestResult } from "./runtime/asset-ingestor";
 import { runApp } from "./runtime/wasm-loader";
 import type { WasmAppInstance } from "./runtime/wasm-loader";
 
@@ -36,6 +38,7 @@ export type DeployStage =
   | "import"    // Resolving source → files
   | "build"     // Building content-addressed image
   | "ship"      // Pushing to registry + snapshot
+  | "ingest"    // Storing assets in content-addressed storage
   | "run"       // Starting WASM sandbox
   | "complete"  // Done
   | "error";    // Failed
@@ -74,6 +77,8 @@ export interface DeployResult {
   build: ImageBuildResult;
   /** Stage 3: Ship result (push + snapshot). */
   ship: ShipResult;
+  /** Stage 3.5: Ingestion result (asset storage). */
+  ingest: IngestResult;
   /** Stage 4: Running instance. */
   instance: WasmAppInstance;
   /** Total pipeline duration in ms. */
@@ -144,12 +149,26 @@ export async function deployApp(opts: DeployOptions): Promise<DeployResult> {
     previousSnapshotId: opts.previousSnapshotId,
   });
 
+  // ── Stage 3.5: INGEST ─────────────────────────────────────────
+  progress("ingest", "Ingesting assets into content-addressed storage...");
+
+  const sourceUrl = importResult.manifest["app:sourceUrl"] as string;
+  const ingestResult = await ingestAppAssets({
+    sourceUrl,
+    appName,
+    version,
+    imageCanonicalId: buildResult.image.canonicalId,
+    snapshotId: shipResult.snapshot["u:canonicalId"],
+    ingestedBy: opts.developerCanonicalId,
+  });
+
   // ── Stage 4: RUN ─────────────────────────────────────────────
   progress("run", "Starting WASM runtime...");
 
   const instance = await runApp({
     imageRef: buildResult.image.canonicalId,
-    sourceUrl: importResult.manifest["app:sourceUrl"] as string,
+    // Use our self-hosted serve URL instead of original source
+    sourceUrl: ingestResult.serveUrl,
     mountTarget: opts.mountTarget,
     tracing: true,
   });
@@ -162,6 +181,7 @@ export async function deployApp(opts: DeployOptions): Promise<DeployResult> {
     import: importResult,
     build: buildResult,
     ship: shipResult,
+    ingest: ingestResult,
     instance,
     durationMs,
   };
