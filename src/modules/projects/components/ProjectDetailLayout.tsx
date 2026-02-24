@@ -122,7 +122,7 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                 <div className="flex items-center justify-between">
                   <p className="text-xs uppercase tracking-widest text-foreground/50 font-semibold">UOR Address</p>
                   <button
-                    onClick={() => copyValue(`${breakdown.observer} · ${breakdown.observable} · ${breakdown.context}`)}
+                    onClick={() => copyValue(`${breakdown.observer}.${breakdown.observable}.${breakdown.context}`)}
                     className="text-foreground/40 hover:text-foreground transition-colors"
                     title="Copy UOR address"
                   >
