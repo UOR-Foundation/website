@@ -126,7 +126,7 @@ const examples: Example[] = [
     id: "hologram",
     label: "Hologram",
     tagline: "One object, one hash, every standard on earth — each a viewing angle of the same identity.",
-    code: `# Every UOR object is a hologram: 17 projections from one SHA-256 hash.
+    code: `# Every UOR object is a hologram: 19 projections from one SHA-256 hash.
 
 curl "https://api.uor.foundation/v1/webfinger\\
   ?resource=acct:a1b2c3d4e5f67890@uor.foundation"

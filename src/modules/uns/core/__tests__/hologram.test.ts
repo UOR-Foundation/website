@@ -37,8 +37,20 @@ const HEX = IDENTITY["u:canonicalId"].split(":").pop()!;
 // ── Core contract ───────────────────────────────────────────────────────────
 
 describe("Hologram Projection Registry", () => {
-  it("registers at least 17 projections", () => {
-    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(17);
+  it("registers at least 19 projections", () => {
+    expect(PROJECTIONS.size).toBeGreaterThanOrEqual(19);
+  });
+
+  // ── Tier 0: Foundational Standards ──────────────────────────────────────
+
+  it("jsonld projection returns canonical URN", () => {
+    expect(project(IDENTITY, "jsonld").value).toBe(`urn:uor:derivation:sha256:${HEX}`);
+    expect(project(IDENTITY, "jsonld").fidelity).toBe("lossless");
+  });
+
+  it("vc projection returns VC URN", () => {
+    expect(project(IDENTITY, "vc").value).toBe(`urn:uor:vc:bafyreitest123`);
+    expect(project(IDENTITY, "vc").fidelity).toBe("lossless");
   });
 
   it("every spec has project function, fidelity, and spec URL", () => {

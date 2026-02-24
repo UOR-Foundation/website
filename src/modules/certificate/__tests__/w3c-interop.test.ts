@@ -136,13 +136,15 @@ describe("W3C Interoperability", () => {
       expect(vm.publicKeyMultibase).toBe(`f${cert["cert:sourceHash"]}`);
     });
 
-    it("includes service endpoints for IPv6 and Braille address", async () => {
+    it("includes service endpoints derived from hologram projections", async () => {
       const cert = await generateCertificate(TEST_SUBJECT, TEST_ATTRIBUTES);
       const doc = resolveDidDocument(cert);
 
-      expect(doc.service).toHaveLength(2);
-      expect(doc.service[0].type).toBe("UorContentAddress");
-      expect(doc.service[1].type).toBe("UorBrailleAddress");
+      expect(doc.service.length).toBeGreaterThanOrEqual(2);
+      // Must include IPv6 and Braille at minimum
+      const types = doc.service.map(s => s.type);
+      expect(types).toContain("UorContentAddress");
+      expect(types).toContain("UorBrailleAddress");
     });
 
     it("provides full resolution with metadata (DID Resolution §3)", async () => {
@@ -201,8 +203,8 @@ describe("W3C Interoperability", () => {
         `f${cert["cert:sourceHash"]}`
       );
 
-      // 6. Cross-check: alsoKnownAs includes CID URN
-      expect(did.alsoKnownAs).toContain(`urn:uor:cid:${cert["cert:cid"]}`);
+      // 6. Cross-check: alsoKnownAs includes CID (hologram projection)
+      expect(did.alsoKnownAs).toContain(cert["cert:cid"]);
     });
   });
 });

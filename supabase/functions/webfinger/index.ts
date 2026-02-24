@@ -30,9 +30,18 @@ const corsHeaders = {
 type LinkSpec = [rel: string, type: string, href: (hex: string) => string];
 
 const LINKS: LinkSpec[] = [
-  // W3C DID
+  // W3C JSON-LD / RDF (Tier 0)
+  ["canonical", "application/ld+json",
+    (h) => `urn:uor:derivation:sha256:${h}`],
+  // W3C DID (Tier 0)
   ["self", "application/did+ld+json",
     (h) => `https://${DOMAIN}/.well-known/did.json?id=did:uor:${h}`],
+  // W3C VC 2.0 (Tier 0)
+  ["describedby", "application/vc+ld+json",
+    (h) => `urn:uor:vc:${h}`],
+  // IPFS CID (Tier 0)
+  ["describedby", "application/json",
+    (h) => `https://w3s.link/ipfs/${h}`],
   // ActivityPub
   ["self", "application/activity+json",
     (h) => `https://${DOMAIN}/ap/objects/${h}`],
@@ -45,12 +54,6 @@ const LINKS: LinkSpec[] = [
   // OpenID Connect
   ["http://openid.net/specs/connect/1.0/issuer", "application/json",
     (h) => `https://${DOMAIN}/.well-known/openid-configuration`],
-  // IPFS CID (via gateway)
-  ["describedby", "application/json",
-    (h) => `https://w3s.link/ipfs/${h}`],
-  // UOR canonical
-  ["canonical", "application/ld+json",
-    (h) => `urn:uor:derivation:sha256:${h}`],
   // STAC
   ["describedby", "application/geo+json",
     (h) => `https://${DOMAIN}/stac/items/${h}`],
