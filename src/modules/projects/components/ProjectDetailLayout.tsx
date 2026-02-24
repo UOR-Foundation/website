@@ -174,8 +174,30 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                     Full re-derivation complete. Source object re-canonicalized via URDNA2015, re-hashed with SHA-256.
                     Recomputed fingerprint matches the stored CID. Content is untampered.
                   </p>
-                  {/* Byte-level comparison details */}
-                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1.5">
+                  {/* Boundary + Byte-level comparison details */}
+                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2.5">
+                    <p className="text-xs font-semibold text-foreground/60 uppercase tracking-widest">Object Boundary</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs font-mono">
+                      <span className="text-foreground/50">Type:</span>
+                      <span className="text-foreground/80">{verifyResult.recomputedBoundary.declaredType}</span>
+                      <span className="text-foreground/50">Fields:</span>
+                      <span className="text-foreground/80">{verifyResult.recomputedBoundary.topLevelFields} top / {verifyResult.recomputedBoundary.totalFields} total</span>
+                      <span className="text-foreground/50">Depth:</span>
+                      <span className="text-foreground/80">{verifyResult.recomputedBoundary.maxDepthObserved} / {verifyResult.recomputedBoundary.maxDepthAllowed} max</span>
+                      <span className="text-foreground/50">Boundary match:</span>
+                      <span className={verifyResult.boundaryMatch ? "text-primary" : "text-destructive"}>
+                        {verifyResult.boundaryMatch ? "✓ Exact" : "✗ Shifted"}
+                      </span>
+                      {verifyResult.recomputedBoundary.strippedFields.length > 0 && (
+                        <>
+                          <span className="text-foreground/50">Stripped:</span>
+                          <span className="text-foreground/80">{verifyResult.recomputedBoundary.strippedFields.length} fields</span>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="border-t border-border/50 my-1" />
+
                     <p className="text-xs font-semibold text-foreground/60 uppercase tracking-widest">Byte-Level Comparison</p>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs font-mono">
                       <span className="text-foreground/50">Payload bytes:</span>
@@ -185,7 +207,9 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                         {verifyResult.payloadMatch ? "✓ Exact" : "✗ Mismatch"}
                       </span>
                       <span className="text-foreground/50">CID match:</span>
-                      <span className="text-primary">✓ Exact</span>
+                      <span className={verifyResult.authentic ? "text-primary" : "text-destructive"}>
+                        {verifyResult.authentic ? "✓ Exact" : "✗ Mismatch"}
+                      </span>
                       <span className="text-foreground/50">SHA-256:</span>
                       <span className="text-foreground/80 break-all">{verifyResult.recomputedHashHex.slice(0, 16)}…</span>
                     </div>

@@ -5,16 +5,19 @@
  * The certificate is a JSON-LD document that carries all information
  * needed for independent verification. Every field is self-describing:
  *
- *   @context           — The JSON-LD context (UOR ontology)
- *   @type              — Always "cert:ModuleCertificate"
- *   cert:subject       — What this certificate is about
- *   cert:cid           — The content identifier (CIDv1)
+ *   @context              — The JSON-LD context (UOR ontology)
+ *   @type                 — Always "cert:ModuleCertificate"
+ *   cert:subject          — What this certificate is about
+ *   cert:cid              — The content identifier (CIDv1)
  *   cert:canonicalPayload — The original content in canonical form
- *   store:uorAddress   — Braille visual encoding of the hash
- *   store:ipv6Address  — Routable network address derived from content
- *   cert:computedAt    — When the certificate was generated
- *   cert:specification — Version of the certificate format
+ *   cert:boundary         — The object boundary manifest (what was certified)
+ *   store:uorAddress      — Braille visual encoding of the hash
+ *   store:ipv6Address     — Routable network address derived from content
+ *   cert:computedAt       — When the certificate was generated
+ *   cert:specification    — Version of the certificate format
  */
+
+import type { BoundaryManifest } from "./boundary";
 
 export interface UorCertificate {
   /** JSON-LD context linking to the UOR ontology */
@@ -35,6 +38,13 @@ export interface UorCertificate {
    * Preserving it enables anyone to re-verify the certificate.
    */
   "cert:canonicalPayload": string;
+
+  /**
+   * The boundary manifest documenting exactly what fields were
+   * included in the certified object. This enables verifiers to
+   * confirm that the object's boundary hasn't shifted.
+   */
+  "cert:boundary": BoundaryManifest;
 
   /** UOR Braille address — visual, bijective encoding of the hash */
   "store:uorAddress": {
