@@ -99,7 +99,7 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
     <div className="mt-5 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
       <button
         onClick={() => handleOpen(true)}
-        className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
       >
         <ShieldCheck size={15} />
         View certificate
