@@ -28,7 +28,12 @@ const UOR_WRAP_CONTEXT: Record<string, unknown> = {
 const UOR_V1_CONTEXT_URL = "https://uor.foundation/contexts/uor-v1.jsonld";
 const UNS_V1_CONTEXT_URL = "https://uor.foundation/contexts/uns-v1.jsonld";
 
+// Inline context matching public/contexts/uor-v1.jsonld — avoids network fetch.
+// CRITICAL: This MUST be an exact mirror of the published context file.
+// Any divergence causes different URDNA2015 canonicalization output,
+// breaking content-addressed identity determinism.
 const UOR_V1_INLINE_CONTEXT: Record<string, unknown> = {
+  // ── W3C standard namespaces ──────────────────────────────────────────
   rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
   rdfs: "http://www.w3.org/2000/01/rdf-schema#",
   owl: "http://www.w3.org/2002/07/owl#",
@@ -38,6 +43,8 @@ const UOR_V1_INLINE_CONTEXT: Record<string, unknown> = {
   foaf: "http://xmlns.com/foaf/0.1/",
   prov: "http://www.w3.org/ns/prov#",
   sdo: "https://schema.org/",
+
+  // ── 17 UOR namespaces ────────────────────────────────────────────────
   u: "https://uor.foundation/u/",
   schema: "https://uor.foundation/schema/",
   op: "https://uor.foundation/op/",
@@ -54,6 +61,49 @@ const UOR_V1_INLINE_CONTEXT: Record<string, unknown> = {
   state: "https://uor.foundation/state/",
   store: "https://uor.foundation/store/",
   sobridge: "https://uor.foundation/sobridge/",
+
+  // ── sobridge typed properties (mirrors uor-v1.jsonld exactly) ────────
+  "sobridge:SchemaOrgType": { "@id": "sobridge:SchemaOrgType" },
+  "sobridge:SchemaOrgInstance": { "@id": "sobridge:SchemaOrgInstance" },
+  "sobridge:sourceType": { "@id": "sobridge:sourceType", "@type": "@id" },
+  "sobridge:schemaOrgIri": { "@id": "sobridge:schemaOrgIri", "@type": "xsd:anyURI" },
+  "sobridge:properties": { "@id": "sobridge:properties" },
+  "sobridge:superClasses": { "@id": "sobridge:superClasses", "@type": "@id" },
+  "sobridge:canonicalPayload": { "@id": "sobridge:canonicalPayload", "@type": "xsd:string" },
+  "sobridge:storedCid": { "@id": "sobridge:storedCid", "@type": "xsd:string" },
+  "sobridge:coherenceProof": { "@id": "sobridge:coherenceProof" },
+  "sobridge:actionMapping": { "@id": "sobridge:actionMapping" },
+  "sobridge:morphismType": { "@id": "sobridge:morphismType", "@type": "@id" },
+  "sobridge:actionInput": { "@id": "sobridge:actionInput" },
+  "sobridge:actionOutput": { "@id": "sobridge:actionOutput" },
+  "sobridge:storachaCid": { "@id": "sobridge:storachaCid", "@type": "xsd:string" },
+  "sobridge:pinataCid": { "@id": "sobridge:pinataCid", "@type": "xsd:string" },
+
+  // ── store typed properties (mirrors uor-v1.jsonld exactly) ───────────
+  "store:StoredObject": { "@id": "store:StoredObject" },
+  "store:Cid": { "@id": "store:Cid" },
+  "store:PinRecord": { "@id": "store:PinRecord" },
+  "store:StoreContext": { "@id": "store:StoreContext" },
+  "store:RetrievedObject": { "@id": "store:RetrievedObject" },
+  "store:GatewayConfig": { "@id": "store:GatewayConfig" },
+
+  "store:uorAddress": { "@id": "store:uorAddress", "@type": "@id" },
+  "store:ipv6Address": { "@id": "store:ipv6Address" },
+  "store:cid": { "@id": "store:cid", "@type": "xsd:string" },
+  "store:storedType": { "@id": "store:storedType", "@type": "@id" },
+  "store:serialisation": { "@id": "store:serialisation", "@type": "xsd:string" },
+  "store:pinRecord": { "@id": "store:pinRecord", "@type": "@id" },
+  "store:pinnedAt": { "@id": "store:pinnedAt", "@type": "xsd:dateTime" },
+  "store:gatewayUrl": { "@id": "store:gatewayUrl", "@type": "xsd:anyURI" },
+  "store:pinCertificate": { "@id": "store:pinCertificate", "@type": "@id" },
+  "store:retrievedFrom": { "@id": "store:retrievedFrom", "@type": "xsd:string" },
+  "store:storedUorAddress": { "@id": "store:storedUorAddress", "@type": "xsd:string" },
+  "store:recomputedUorAddress": { "@id": "store:recomputedUorAddress", "@type": "xsd:string" },
+  "store:verified": { "@id": "store:verified", "@type": "xsd:boolean" },
+  "store:rootCid": { "@id": "store:rootCid", "@type": "xsd:string" },
+  "store:ipnsKey": { "@id": "store:ipnsKey", "@type": "xsd:string" },
+  "store:gatewayReadUrl": { "@id": "store:gatewayReadUrl", "@type": "xsd:anyURI" },
+  "store:pinsApiUrl": { "@id": "store:pinsApiUrl", "@type": "xsd:anyURI" },
 };
 
 /** UNS v1 context — inlined for offline canonicalization. */

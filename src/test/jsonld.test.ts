@@ -11,12 +11,15 @@ describe("emitContext", () => {
     expect(ctx["@vocab"]).toBe("https://uor.foundation/u/");
   });
 
-  it("has all 14 UOR namespaces plus 7 W3C prefixes", () => {
+  it("has all 17 UOR namespaces plus 9 W3C prefixes", () => {
     const ctx = emitContext();
-    const namespaces = ["xsd", "schema", "op", "type", "resolver", "partition",
-      "observable", "proof", "derivation", "trace", "cert", "morphism", "state", "u",
-      "rdf", "rdfs", "owl", "skos", "dcterms", "foaf", "prov"];
-    for (const ns of namespaces) {
+    // 9 W3C standard namespaces
+    const w3c = ["rdf", "rdfs", "owl", "xsd", "skos", "dcterms", "foaf", "prov", "sdo"];
+    // 17 UOR namespaces
+    const uor = ["schema", "op", "type", "resolver", "partition", "observable",
+      "proof", "derivation", "trace", "cert", "morphism", "state", "store",
+      "u", "query", "sobridge"];
+    for (const ns of [...w3c, ...uor]) {
       expect(ctx).toHaveProperty(ns);
     }
   });
