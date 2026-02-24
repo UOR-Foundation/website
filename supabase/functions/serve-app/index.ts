@@ -68,6 +68,102 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // ── POST: Ingest assets (called by client-side asset-ingestor) ──
+    if (req.method === "POST") {
+      const body = await req.json();
+      const { sourceUrl, appName, version, imageCanonicalId, snapshotId, ingestedBy } = body;
+
+      if (!sourceUrl || !appName || !version || !imageCanonicalId) {
+        return new Response(
+          JSON.stringify({ error: "Missing required fields: sourceUrl, appName, version, imageCanonicalId" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      // Check for existing (dedup)
+      const { data: existing } = await supabase
+        .from("app_asset_registry")
+        .select("canonical_id, storage_path, size_bytes")
+        .eq("canonical_id", imageCanonicalId)
+        .maybeSingle();
+
+      if (existing) {
+        return new Response(
+          JSON.stringify({
+            canonicalId: existing.canonical_id,
+            storagePath: existing.storage_path,
+            serveUrl: `${url.origin}/functions/v1/serve-app?id=${existing.canonical_id}`,
+            sizeBytes: existing.size_bytes,
+            deduplicated: true,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      // Fetch source HTML
+      let htmlContent: string;
+      try {
+        const resp = await fetch(sourceUrl);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        htmlContent = await resp.text();
+      } catch {
+        htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${appName} v${version}</title></head><body><h1>${appName}</h1><p>v${version}</p><p>Source: ${sourceUrl}</p></body></html>`;
+      }
+
+      const contentBytes = new TextEncoder().encode(htmlContent);
+      const shortHash = imageCanonicalId.replace("urn:uor:derivation:sha256:", "").slice(0, 16);
+      const storagePath = `${shortHash}/${appName}/${version}/index.html`;
+
+      const blob = new Blob([contentBytes], { type: "text/html" });
+      const { error: uploadError } = await supabase.storage
+        .from("app-assets")
+        .upload(storagePath, blob, { contentType: "text/html", upsert: true });
+
+      if (uploadError) {
+        return new Response(
+          JSON.stringify({ error: `Storage upload failed: ${uploadError.message}` }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const { error: registryError } = await supabase
+        .from("app_asset_registry")
+        .upsert({
+          canonical_id: imageCanonicalId,
+          app_name: appName,
+          version,
+          storage_path: storagePath,
+          content_type: "text/html",
+          size_bytes: contentBytes.length,
+          source_url: sourceUrl,
+          snapshot_id: snapshotId ?? null,
+          ingested_by: ingestedBy ?? null,
+        }, { onConflict: "canonical_id" });
+
+      if (registryError) {
+        return new Response(
+          JSON.stringify({ error: `Registry insert failed: ${registryError.message}` }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          canonicalId: imageCanonicalId,
+          storagePath,
+          serveUrl: `${url.origin}/functions/v1/serve-app?id=${imageCanonicalId}`,
+          sizeBytes: contentBytes.length,
+          deduplicated: false,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ── GET: Serve assets ──
     const canonicalId = url.searchParams.get("id");
     const appName = url.searchParams.get("app");
     const version = url.searchParams.get("v") || "latest";
@@ -79,11 +175,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Resolve canonical ID from app name if needed
     let resolvedCanonicalId = canonicalId;
 
     if (!resolvedCanonicalId && appName) {
@@ -111,7 +202,6 @@ Deno.serve(async (req) => {
       resolvedCanonicalId = data.canonical_id;
     }
 
-    // Look up storage path from registry
     const { data: asset, error: assetError } = await supabase
       .from("app_asset_registry")
       .select("*")
@@ -125,7 +215,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Download from storage bucket
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("app-assets")
       .download(asset.storage_path);
@@ -137,7 +226,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // If HTML, inject the UOR shim + CSP
     const contentType = asset.content_type || "text/html";
     let body: string | Blob = fileData;
 
