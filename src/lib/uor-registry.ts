@@ -52,7 +52,7 @@ import traceManifest from "@/modules/trace/module.json";
 import stateManifest from "@/modules/state/module.json";
 
 // Layer 5: Verification & Agent Tools
-import selfVerifyManifest from "@/modules/self-verify/module.json";
+import selfVerifyManifest from "@/modules/verify/module.json";
 import agentToolsManifest from "@/modules/agent-tools/module.json";
 import codeKgManifest from "@/modules/code-kg/module.json";
 import dashboardManifest from "@/modules/dashboard/module.json";

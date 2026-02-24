@@ -9,3 +9,5 @@ export type { SparqlResult, SparqlResultRow } from "./executor";
 export { federatedQuery, LOCAL_ENDPOINT, UOR_API_ENDPOINT, DEFAULT_ENDPOINTS } from "./federation";
 export type { FederationEndpoint, FederatedResult, EndpointType } from "./federation";
 export { default as SparqlEditorPage } from "./pages/SparqlEditorPage";
+export { UnsQuery } from "./query";
+export type { QueryIntent, QueryMatch, QueryResult, SparqlQueryResult } from "./query";

@@ -1,0 +1,21 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "verify",
+  "version": "1.0.0",
+  "description": "Unified verification module — self-verifying receipts, audit trails, integrity checks, and content verification. The system is its own auditor.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["verify:", "audit:"],
+  "exports": [
+    "withVerifiedReceipt", "verifyReceiptChain",
+    "systemIntegrityCheck", "exportAuditTrail",
+    "AuditPage", "VerifyPage"
+  ],
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "derivation": "^1.0.0"
+  },
+  "routes": ["/audit", "/verify"],
+  "api_endpoints": [],
+  "assets": []
+}

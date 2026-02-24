@@ -36,7 +36,7 @@ const SparqlEditorPage = lazy(() => import("@/modules/sparql/pages/SparqlEditorP
 const ConformancePage = lazy(() => import("@/modules/shacl/pages/ConformancePage"));
 const CodeKnowledgeGraphPage = lazy(() => import("@/modules/code-kg/pages/CodeKnowledgeGraphPage"));
 const AgentConsolePage = lazy(() => import("@/modules/agent-tools/pages/AgentConsolePage"));
-const AuditPage = lazy(() => import("@/modules/self-verify/pages/AuditPage"));
+const AuditPage = lazy(() => import("@/modules/verify/pages/AuditPage"));
 const DashboardPage = lazy(() => import("@/modules/dashboard/pages/DashboardPage"));
 const SessionsPage = lazy(() => import("@/modules/state/pages/SessionsPage"));
 const VerifyPage = lazy(() => import("@/modules/verify/pages/VerifyPage"));
