@@ -63,3 +63,13 @@ export type {
   NeuralObservation, SymbolicPrediction, ObservableRegistration,
   AbductiveIteration, AbductiveLoopResult,
 } from "./abductive-loop";
+
+// ── v2 Proof State Machine ───────────────────────────────────────────────
+export {
+  createProof, addDeductiveStep, addInductiveStep, addAbductiveStep,
+  proofFromLoop, certifyProof, verifyCertificate, composeProofs,
+  stepsByMode, hasCompleteCycle, totalFibersResolved,
+} from "./proof-machine";
+export type {
+  ProofStep, ReasoningProof, ProofCertificate, ComposedProof,
+} from "./proof-machine";
