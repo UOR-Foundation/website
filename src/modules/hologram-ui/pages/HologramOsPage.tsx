@@ -5,6 +5,12 @@
  * Desktop: Sidebar + full-bleed sanctuary hero (Aman-inspired).
  * Mobile: iOS-style homescreen shell.
  *
+ * Architecture: Multi-frame layer stack
+ *   Frame 0 (Canvas)  — Background imagery, Ken Burns, gradient veils
+ *   Frame 1 (Chrome)  — Sidebar, Focus toggle, Day ring, BG mode dots
+ *   Frame 2 (Content) — Welcome text, CTA, interest pills, chat pill
+ *   Frame 3 (Overlay) — AI Chat, Claim overlay
+ *
  * Design language: extreme restraint, muted earth tones,
  * generous whitespace, ultra-light serif, barely-there chrome.
  */
@@ -16,6 +22,7 @@ import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaim
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
+import HologramFrame, { HologramViewport } from "@/modules/hologram-ui/components/HologramFrame";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 import { useTriadicActivity } from "@/modules/hologram-ui/hooks/useTriadicActivity";
@@ -155,10 +162,13 @@ export default function HologramOsPage() {
 
   const welcomeName = name || "traveller";
 
-  // ── Desktop: sidebar + sanctuary hero ──
+  // ── Desktop: Layered frame stack ──
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
+      {/* ════════════════════════════════════════════════════════════════
+       *  FRAME 1 — Chrome Layer (always visible, highest priority)
+       *  Sidebar + Focus toggle sit here, unaffected by content below
+       * ════════════════════════════════════════════════════════════════ */}
       <DesktopOsSidebar
         collapsed={attention.preset === "focus" ? true : sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((p) => !p)}
@@ -171,9 +181,9 @@ export default function HologramOsPage() {
         }}
       />
 
-      {/* Main content area */}
+      {/* Main viewport — contains all frame layers */}
       <div
-        className="flex-1 flex flex-col overflow-hidden relative transition-all ease-in-out"
+        className="flex-1 relative overflow-hidden transition-all ease-in-out"
         style={{
           opacity: departing ? 0 : 1,
           transform: departing ? "scale(1.02)" : "scale(1)",
@@ -181,167 +191,199 @@ export default function HologramOsPage() {
           transitionDuration: "900ms",
         }}
       >
-        <main className="flex-1 relative">
-          {/* Solid background for white/dark modes */}
-          <div
-            className="absolute inset-0 transition-all duration-1000 ease-in-out"
-            style={{ background: P.bg, opacity: bgMode === "image" ? 0 : 1, zIndex: 1 }}
-          />
-
-          {/* Background Image — slow Ken Burns for life */}
-          <div
-            className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
-            style={{ opacity: bgMode === "image" ? 1 : 0 }}
-          >
-            <img
-              src={heroLandscape}
-              alt="Serene landscape with misty mountains and tranquil water"
-              className="w-full h-full object-cover"
-              style={{
-                animation: attention.animateBackground ? "ken-burns 30s ease-in-out infinite alternate" : "none",
-              }}
-            />
-            {/* Gradient veil */}
+        <HologramViewport>
+          {/* ══════════════════════════════════════════════════════════
+           *  FRAME 0 — Canvas Layer (background, imagery, veils)
+           * ══════════════════════════════════════════════════════════ */}
+          <HologramFrame layer={0} label="canvas" interactive={false}>
+            {/* Solid background for white/dark modes */}
             <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to bottom, hsla(30, 8%, 12%, 0.15) 0%, hsla(30, 6%, 10%, 0.08) 35%, hsla(25, 10%, 8%, 0.55) 100%)",
-              }}
+              className="absolute inset-0 transition-all duration-1000 ease-in-out"
+              style={{ background: P.bg, opacity: bgMode === "image" ? 0 : 1 }}
             />
-          </div>
 
-          {/* ── Background Mode Toggle — top right, minimal pill ────── */}
-          <div
-            className="absolute top-[3vh] right-[3vw] z-20 animate-fade-in transition-all duration-700"
-            style={{ opacity: "var(--focus-chrome-opacity, 1)", filter: "blur(var(--focus-blur-chrome, 0px))" }}
-          >
+            {/* Background Image — slow Ken Burns for life */}
             <div
-              className="flex items-center gap-0.5 px-2 py-1.5 rounded-full transition-all duration-700"
-              style={{
-                background: bgMode === "white" ? "hsla(30, 8%, 40%, 0.06)" : "hsla(30, 8%, 90%, 0.06)",
-                border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 40%, 0.1)" : "hsla(38, 15%, 70%, 0.08)"}`,
-                backdropFilter: "blur(16px)",
-                WebkitBackdropFilter: "blur(16px)",
-              }}
+              className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+              style={{ opacity: bgMode === "image" ? 1 : 0 }}
             >
-              {BG_MODES.map(({ mode, label }) => {
-                const isActive = bgMode === mode;
-                const dotColor = isActive
-                  ? (bgMode === "white" ? "hsla(30, 10%, 25%, 0.7)" : "hsla(38, 35%, 75%, 0.85)")
-                  : (bgMode === "white" ? "hsla(30, 8%, 50%, 0.25)" : "hsla(38, 15%, 70%, 0.2)");
-                return (
-                  <button
-                    key={mode}
-                    onClick={() => setBgMode(mode)}
-                    className="relative group flex items-center justify-center w-5 h-5 rounded-full transition-all duration-500"
-                    aria-label={`Switch to ${label} background`}
-                  >
-                    <div
-                      className="w-[5px] h-[5px] rounded-full transition-all duration-700 ease-in-out"
-                      style={{
-                        background: dotColor,
-                        transform: isActive ? "scale(1.3)" : "scale(1)",
-                        boxShadow: isActive ? `0 0 8px 1px ${dotColor}` : "none",
-                      }}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── Logo — top center ──────────── */}
-          <div
-            className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-[3vh] animate-fade-in transition-all duration-700"
-            style={{ opacity: "var(--focus-dim-opacity, 1)" }}
-          >
-            <span
-              className="transition-colors duration-700"
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                fontWeight: 400,
-                fontSize: "clamp(16px, 1.5vw, 24px)",
-                letterSpacing: "0.55em",
-                textTransform: "uppercase" as const,
-                color: P.wordmark,
-              }}
-            >
-              Hologram
-            </span>
-          </div>
-
-          {/* ── Welcome — centered ─────────── */}
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8">
-            <div className="text-center max-w-2xl space-y-[2.5vh] animate-fade-in">
-              <p
-                className="tracking-[0.45em] uppercase transition-colors duration-700"
+              <img
+                src={heroLandscape}
+                alt="Serene landscape with misty mountains and tranquil water"
+                className="w-full h-full object-cover"
                 style={{
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  color: "hsla(0, 0%, 100%, 0.85)",
-                  fontWeight: 300,
-                  fontSize: "clamp(11px, 0.8vw, 13px)",
-                  letterSpacing: "0.3em",
+                  animation: attention.animateBackground ? "ken-burns 30s ease-in-out infinite alternate" : "none",
+                }}
+              />
+              {/* Gradient veil */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, hsla(30, 8%, 12%, 0.15) 0%, hsla(30, 6%, 10%, 0.08) 35%, hsla(25, 10%, 8%, 0.55) 100%)",
+                }}
+              />
+            </div>
+          </HologramFrame>
+
+          {/* ══════════════════════════════════════════════════════════
+           *  FRAME 1 — Chrome Layer (persistent UI controls)
+           *  Background mode toggle, Day progress ring
+           *  These remain visible regardless of what opens above
+           * ══════════════════════════════════════════════════════════ */}
+          <HologramFrame layer={1} label="chrome" interactive={false}>
+            {/* Background Mode Toggle — top right */}
+            <div
+              className="absolute top-[3vh] right-[3vw] animate-fade-in transition-all duration-700"
+              style={{
+                pointerEvents: "auto",
+                opacity: "var(--focus-chrome-opacity, 1)",
+                filter: "blur(var(--focus-blur-chrome, 0px))",
+              }}
+            >
+              <div
+                className="flex items-center gap-0.5 px-2 py-1.5 rounded-full transition-all duration-700"
+                style={{
+                  background: bgMode === "white" ? "hsla(30, 8%, 40%, 0.06)" : "hsla(30, 8%, 90%, 0.06)",
+                  border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 40%, 0.1)" : "hsla(38, 15%, 70%, 0.08)"}`,
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)",
                 }}
               >
-                {greeting}
-              </p>
+                {BG_MODES.map(({ mode, label }) => {
+                  const isActive = bgMode === mode;
+                  const dotColor = isActive
+                    ? (bgMode === "white" ? "hsla(30, 10%, 25%, 0.7)" : "hsla(38, 35%, 75%, 0.85)")
+                    : (bgMode === "white" ? "hsla(30, 8%, 50%, 0.25)" : "hsla(38, 15%, 70%, 0.2)");
+                  return (
+                    <button
+                      key={mode}
+                      onClick={() => setBgMode(mode)}
+                      className="relative group flex items-center justify-center w-5 h-5 rounded-full transition-all duration-500"
+                      aria-label={`Switch to ${label} background`}
+                    >
+                      <div
+                        className="w-[5px] h-[5px] rounded-full transition-all duration-700 ease-in-out"
+                        style={{
+                          background: dotColor,
+                          transform: isActive ? "scale(1.3)" : "scale(1)",
+                          boxShadow: isActive ? `0 0 8px 1px ${dotColor}` : "none",
+                        }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-              <h1
-                className="leading-[1.08] transition-colors duration-700"
+            {/* Day Progress Ring — bottom right */}
+            <div
+              className="absolute bottom-[3vh] right-[3vw] animate-fade-in flex flex-col items-center gap-3"
+              style={{ pointerEvents: "auto" }}
+            >
+              <DayProgressRing balance={triadicActivity.balance ?? undefined} />
+            </div>
+          </HologramFrame>
+
+          {/* ══════════════════════════════════════════════════════════
+           *  FRAME 2 — Content Layer (welcome text, CTA, pills)
+           *  The primary interactive surface for the welcome screen
+           * ══════════════════════════════════════════════════════════ */}
+          <HologramFrame layer={2} label="content" interactive={false}>
+            {/* Logo — top center */}
+            <div
+              className="absolute top-0 left-0 right-0 flex justify-center pt-[3vh] animate-fade-in transition-all duration-700"
+              style={{
+                pointerEvents: "auto",
+                opacity: "var(--focus-dim-opacity, 1)",
+              }}
+            >
+              <span
+                className="transition-colors duration-700"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  fontWeight: 300,
-                  color: P.heading,
-                  letterSpacing: "-0.01em",
-                  fontSize: "clamp(36px, 4.5vw, 76px)",
+                  fontWeight: 400,
+                  fontSize: "clamp(16px, 1.5vw, 24px)",
+                  letterSpacing: "0.55em",
+                  textTransform: "uppercase" as const,
+                  color: P.wordmark,
                 }}
               >
-                Welcome{contextHints.length > 0 ? " back" : " home"},
-                <br />
-                {welcomeName}
-              </h1>
+                Hologram
+              </span>
+            </div>
 
-              {/* Context-aware subtitle — appears when user has interests */}
-              {contextHints.length > 0 && (
+            {/* Welcome — centered */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-8">
+              <div className="text-center max-w-2xl space-y-[2.5vh] animate-fade-in" style={{ pointerEvents: "auto" }}>
                 <p
-                  className="animate-fade-in transition-colors duration-700"
+                  className="tracking-[0.45em] uppercase transition-colors duration-700"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
-                    color: bgMode === "white" ? "hsla(30, 8%, 40%, 0.5)" : "hsla(38, 15%, 80%, 0.45)",
+                    color: "hsla(0, 0%, 100%, 0.85)",
                     fontWeight: 300,
-                    fontSize: "clamp(10px, 0.7vw, 12px)",
-                    letterSpacing: "0.15em",
+                    fontSize: "clamp(11px, 0.8vw, 13px)",
+                    letterSpacing: "0.3em",
                   }}
                 >
-                  Continuing {dominantPhase}
+                  {greeting}
                 </p>
-              )}
 
-              {/* Hedosophia-inspired vertical line divider */}
-              <div className="flex justify-center pt-[1.5vh] pb-[0.5vh]">
-                <div
-                  className="w-px overflow-hidden"
-                  style={{ height: contextHints.length > 0 ? "clamp(32px, 3.5vh, 52px)" : "clamp(48px, 5.5vh, 80px)" }}
+                <h1
+                  className="leading-[1.08] transition-colors duration-700"
+                  style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontWeight: 300,
+                    color: P.heading,
+                    letterSpacing: "-0.01em",
+                    fontSize: "clamp(36px, 4.5vw, 76px)",
+                  }}
                 >
-                  <div
-                    className="w-full"
-                    style={{
-                      height: "100%",
-                      background: `linear-gradient(to bottom, transparent 0%, ${
-                        bgMode === "white" ? "hsla(30, 8%, 30%, 0.2)" : "hsla(38, 20%, 80%, 0.2)"
-                      } 40%, ${
-                        bgMode === "white" ? "hsla(30, 8%, 30%, 0.2)" : "hsla(38, 20%, 80%, 0.2)"
-                      } 60%, transparent 100%)`,
-                      animation: "line-reveal 2.5s ease-out forwards",
-                    }}
-                  />
-                </div>
-              </div>
+                  Welcome{contextHints.length > 0 ? " back" : " home"},
+                  <br />
+                  {welcomeName}
+                </h1>
 
-              {/* Context interest pills — whisper-thin, barely there */}
-              {contextHints.length > 0 && (
-                <div className="flex items-center justify-center gap-2 animate-fade-in pb-[1vh]">
+                {/* Context-aware subtitle */}
+                {contextHints.length > 0 && (
+                  <p
+                    className="animate-fade-in transition-colors duration-700"
+                    style={{
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      color: bgMode === "white" ? "hsla(30, 8%, 40%, 0.5)" : "hsla(38, 15%, 80%, 0.45)",
+                      fontWeight: 300,
+                      fontSize: "clamp(10px, 0.7vw, 12px)",
+                      letterSpacing: "0.15em",
+                    }}
+                  >
+                    Continuing {dominantPhase}
+                  </p>
+                )}
+
+                {/* Vertical line divider */}
+                <div className="flex justify-center pt-[1.5vh] pb-[0.5vh]">
+                  <div
+                    className="w-px overflow-hidden"
+                    style={{ height: contextHints.length > 0 ? "clamp(32px, 3.5vh, 52px)" : "clamp(48px, 5.5vh, 80px)" }}
+                  >
+                    <div
+                      className="w-full"
+                      style={{
+                        height: "100%",
+                        background: `linear-gradient(to bottom, transparent 0%, ${
+                          bgMode === "white" ? "hsla(30, 8%, 30%, 0.2)" : "hsla(38, 20%, 80%, 0.2)"
+                        } 40%, ${
+                          bgMode === "white" ? "hsla(30, 8%, 30%, 0.2)" : "hsla(38, 20%, 80%, 0.2)"
+                        } 60%, transparent 100%)`,
+                        animation: "line-reveal 2.5s ease-out forwards",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Context interest pills */}
+                {contextHints.length > 0 && (
+                  <div className="flex items-center justify-center gap-2 animate-fade-in pb-[1vh]">
                     {contextHints.map((hint) => (
                       <button
                         key={hint}
@@ -368,93 +410,97 @@ export default function HologramOsPage() {
                         {hint}
                       </button>
                     ))}
-                </div>
-              )}
+                  </div>
+                )}
 
-              <div>
-                <button
-                  onClick={goConsole}
-                  className="inline-flex items-center transition-all duration-700"
-                  style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
-                    fontWeight: 300,
-                    fontSize: "clamp(11px, 0.8vw, 13px)",
-                    letterSpacing: "0.3em",
-                    textTransform: "uppercase" as const,
-                    color: P.cta,
-                    border: `1px solid ${P.ctaBorder}`,
-                    padding: "clamp(12px, 1.2vw, 16px) clamp(32px, 3vw, 48px)",
-                    background: "transparent",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = P.ctaHoverBg;
-                    e.currentTarget.style.color = P.ctaHoverText;
-                    e.currentTarget.style.borderColor = P.ctaHoverBorder;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = P.cta;
-                    e.currentTarget.style.borderColor = P.ctaBorder;
-                  }}
-                >
-                  Enter
-                </button>
+                <div>
+                  <button
+                    onClick={goConsole}
+                    className="inline-flex items-center transition-all duration-700"
+                    style={{
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      fontWeight: 300,
+                      fontSize: "clamp(11px, 0.8vw, 13px)",
+                      letterSpacing: "0.3em",
+                      textTransform: "uppercase" as const,
+                      color: P.cta,
+                      border: `1px solid ${P.ctaBorder}`,
+                      padding: "clamp(12px, 1.2vw, 16px) clamp(32px, 3vw, 48px)",
+                      background: "transparent",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = P.ctaHoverBg;
+                      e.currentTarget.style.color = P.ctaHoverText;
+                      e.currentTarget.style.borderColor = P.ctaHoverBorder;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.color = P.cta;
+                      e.currentTarget.style.borderColor = P.ctaBorder;
+                    }}
+                  >
+                    Enter
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </main>
 
-        {/* AI Chat Pill */}
-        <div
-          className="absolute bottom-[3.5vh] left-1/2 -translate-x-1/2 z-20 transition-all duration-700"
-          style={{ opacity: "var(--focus-chrome-opacity, 1)", filter: "blur(var(--focus-blur-chrome, 0px))" }}
-        >
-          <button
-            onClick={() => setChatOpen(true)}
-            className="relative flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-700 hover:scale-105 group"
-            style={{
-              background: P.pill,
-              backdropFilter: "blur(24px)",
-              WebkitBackdropFilter: "blur(24px)",
-              border: `1px solid ${P.pillBorder}`,
-            }}
-          >
+            {/* AI Chat Pill — bottom center */}
             <div
-              className="w-1.5 h-1.5 rounded-full group-hover:scale-150 transition-transform duration-500"
+              className="absolute bottom-[3.5vh] left-1/2 -translate-x-1/2 transition-all duration-700"
               style={{
-                background: P.dotPulse,
-                animation: "heartbeat-love 1.6s ease-in-out infinite",
-              }}
-            />
-            <span
-              className="tracking-[0.2em] font-light transition-colors duration-700"
-              style={{
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                color: P.pillText,
-                fontSize: "clamp(11px, 0.8vw, 13px)",
+                pointerEvents: "auto",
+                opacity: "var(--focus-chrome-opacity, 1)",
+                filter: "blur(var(--focus-blur-chrome, 0px))",
               }}
             >
-              Hologram Intelligence
-            </span>
-
-            {/* Suppressed message badge */}
-            {journalEntryCount > 0 && (
-              <span
-                className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold tabular-nums animate-in zoom-in-50 duration-200"
+              <button
+                onClick={() => setChatOpen(true)}
+                className="relative flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-700 hover:scale-105 group"
                 style={{
-                  background: "hsl(38, 50%, 50%)",
-                  color: "hsl(38, 10%, 98%)",
-                  boxShadow: "0 2px 8px hsla(38, 50%, 40%, 0.4)",
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  background: P.pill,
+                  backdropFilter: "blur(24px)",
+                  WebkitBackdropFilter: "blur(24px)",
+                  border: `1px solid ${P.pillBorder}`,
                 }}
               >
-                {journalEntryCount > 99 ? "99+" : journalEntryCount}
-              </span>
-            )}
-          </button>
-        </div>
+                <div
+                  className="w-1.5 h-1.5 rounded-full group-hover:scale-150 transition-transform duration-500"
+                  style={{
+                    background: P.dotPulse,
+                    animation: "heartbeat-love 1.6s ease-in-out infinite",
+                  }}
+                />
+                <span
+                  className="tracking-[0.2em] font-light transition-colors duration-700"
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    color: P.pillText,
+                    fontSize: "clamp(11px, 0.8vw, 13px)",
+                  }}
+                >
+                  Hologram Intelligence
+                </span>
 
-        {/* Heartbeat keyframe */}
+                {journalEntryCount > 0 && (
+                  <span
+                    className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold tabular-nums animate-in zoom-in-50 duration-200"
+                    style={{
+                      background: "hsl(38, 50%, 50%)",
+                      color: "hsl(38, 10%, 98%)",
+                      boxShadow: "0 2px 8px hsla(38, 50%, 40%, 0.4)",
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                    }}
+                  >
+                    {journalEntryCount > 99 ? "99+" : journalEntryCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </HologramFrame>
+        </HologramViewport>
+
+        {/* Keyframes */}
         <style>{`
           @keyframes heartbeat-love {
             0%   { transform: scale(1);    opacity: 0.8; }
@@ -470,16 +516,21 @@ export default function HologramOsPage() {
             100% { opacity: 1; transform: scaleY(1); }
           }
         `}</style>
-
-        {/* Day Progress Ring */}
-        <div className="absolute bottom-[3vh] right-[3vw] z-20 animate-fade-in flex flex-col items-center gap-3">
-          <DayProgressRing balance={triadicActivity.balance ?? undefined} />
-        </div>
       </div>
 
-      {/* Overlays */}
+      {/* ════════════════════════════════════════════════════════════════
+       *  FRAME 3 — Overlay Layer (modals, chat, claim)
+       *  Rendered outside the viewport so they cover everything
+       * ════════════════════════════════════════════════════════════════ */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
-      <HologramAiChat open={chatOpen} onClose={() => { setChatOpen(false); setChatPrompt(""); }} onPhaseChange={triadicActivity.setActivePhase} creatorStage={triadicActivity.creatorStage} replayGuideKey={replayGuide} initialPrompt={chatPrompt} />
+      <HologramAiChat
+        open={chatOpen}
+        onClose={() => { setChatOpen(false); setChatPrompt(""); }}
+        onPhaseChange={triadicActivity.setActivePhase}
+        creatorStage={triadicActivity.creatorStage}
+        replayGuideKey={replayGuide}
+        initialPrompt={chatPrompt}
+      />
     </div>
   );
 }
