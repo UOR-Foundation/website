@@ -40,7 +40,7 @@ const apps: AppIcon[] = [
   { label: "Community",   icon: Globe,    action: "/research",         color: "20 14% 30%" },
   { label: "Identity",    icon: Shield,   action: "__claim",           color: "15 16% 28%" },
   { label: "Settings",    icon: Settings, action: "/settings",         color: "30 8% 26%" },
-  { label: "Hologram AI", icon: Sparkles, action: "__chat",            color: "38 25% 28%" },
+  { label: "Intelligence", icon: Sparkles, action: "__chat",            color: "38 25% 28%" },
 ];
 
 const dockApps: AppIcon[] = [

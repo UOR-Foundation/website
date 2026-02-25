@@ -187,7 +187,7 @@ export default function HologramOsPage() {
                 color: "hsla(38, 12%, 78%, 0.45)",
               }}
             >
-              Hologram AI
+              Hologram Intelligence
             </span>
           </button>
         </div>
