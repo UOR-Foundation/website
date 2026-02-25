@@ -6,6 +6,7 @@ import type { DerivationReceipt } from "@/modules/derivation/receipt";
 import { AuditField } from "@/modules/verify/components/AuditField";
 import DerivationPanel from "@/modules/verify/components/DerivationPanel";
 import CertificatePanel from "@/modules/verify/components/CertificatePanel";
+import AuditSummaryCards from "@/modules/verify/components/AuditSummaryCards";
 
 const AuditPage = () => {
   const [report, setReport] = useState<IntegrityReport | null>(null);
@@ -63,6 +64,7 @@ const AuditPage = () => {
             every entity earns a derivation, and every verified entity receives a certificate.
             The system is its own auditor.
           </p>
+          <AuditSummaryCards />
 
           {/* Integrity Check */}
           <div className="rounded-lg border border-border bg-card p-6 mb-6">
