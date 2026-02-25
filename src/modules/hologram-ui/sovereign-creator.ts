@@ -332,6 +332,74 @@ export function sovereignCreatorGate(
   };
 }
 
+// ── Agent Coherence Gate ───────────────────────────────────────────────────
+
+export interface AgentPersonaStub {
+  readonly id: string;
+  readonly name: string;
+  readonly phase: TriadicPhase;
+  readonly primaryForce: DualForce;
+}
+
+export interface AgentGateReport {
+  readonly passed: boolean;
+  readonly phase: TriadicPhase;
+  readonly balanceAfter: BalanceReport;
+  readonly warnings: readonly string[];
+}
+
+/**
+ * Agent Coherence Gate — validates that adding a new persona maintains
+ * triadic balance across the persona registry.
+ *
+ * Works like sovereignCreatorGate but for agent personas instead of apps.
+ * Prevents phase-dominant persona registries from forming.
+ */
+export function agentCoherenceGate(
+  newPersona: AgentPersonaStub,
+  existingPersonas: readonly AgentPersonaStub[],
+): AgentGateReport {
+  const warnings: string[] = [];
+
+  const counts: Record<TriadicPhase, number> = { learn: 0, work: 0, play: 0 };
+  for (const p of existingPersonas) counts[p.phase]++;
+  counts[newPersona.phase]++;
+
+  const total = counts.learn + counts.work + counts.play;
+  const balance: TriadicBalance = {
+    learn: counts.learn / total,
+    work: counts.work / total,
+    play: counts.play / total,
+  };
+
+  const report = computeBalance(balance);
+
+  if (report.dominant === newPersona.phase) {
+    warnings.push(
+      `Adding "${newPersona.name}" increases ${newPersona.phase} dominance. Consider a ${report.neglected || "different"}-phase persona.`,
+    );
+  }
+
+  // Check dual-force balance
+  const forces: Record<DualForce, number> = { intellect: 0, compassion: 0 };
+  for (const p of existingPersonas) forces[p.primaryForce]++;
+  forces[newPersona.primaryForce]++;
+  const forceTotal = forces.intellect + forces.compassion;
+  const forceRatio = forces[newPersona.primaryForce] / forceTotal;
+  if (forceRatio > 0.7) {
+    warnings.push(
+      `${newPersona.primaryForce} force is over-represented (${Math.round(forceRatio * 100)}%). Both intellect and compassion strengthen the spiral.`,
+    );
+  }
+
+  return {
+    passed: report.coherent && warnings.length === 0,
+    phase: newPersona.phase,
+    balanceAfter: report,
+    warnings,
+  };
+}
+
 // ── Cycle Cadence ──────────────────────────────────────────────────────────
 
 export type CycleCadence = "micro" | "meso" | "macro";
