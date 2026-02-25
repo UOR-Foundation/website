@@ -13,6 +13,22 @@ import { Menu, Search } from "lucide-react";
 import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
+import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
+
+// ── Mobile detection hook ───────────────────────────────────────────────────
+function useIsMobile(breakpoint = 640) {
+  const [mobile, setMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < breakpoint : false,
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const handler = (e: MediaQueryListEvent) => setMobile(e.matches);
+    setMobile(mql.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, [breakpoint]);
+  return mobile;
+}
 
 // ── Live Clock ──────────────────────────────────────────────────────────────
 
@@ -43,11 +59,15 @@ function formatDate(d: Date) {
 export default function HologramOsPage() {
   const navigate = useNavigate();
   const now = useLiveClock();
+  const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
   const goConsole = useCallback(() => navigate("/hologram-console"), [navigate]);
+
+  // ── Mobile: full iOS-style homescreen ──
+  if (isMobile) return <MobileOsShell />;
 
   return (
     <div className="h-screen overflow-hidden bg-background">
