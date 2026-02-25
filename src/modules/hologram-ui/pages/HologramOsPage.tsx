@@ -257,9 +257,10 @@ export default function HologramOsPage() {
                 className="tracking-[0.45em] uppercase transition-colors duration-700"
                 style={{
                   fontFamily: "'DM Sans', system-ui, sans-serif",
-                  color: P.greeting,
-                  fontWeight: 400,
-                  fontSize: "clamp(10px, 0.75vw, 13px)",
+                  color: "hsla(0, 0%, 100%, 0.85)",
+                  fontWeight: 300,
+                  fontSize: "clamp(11px, 0.8vw, 13px)",
+                  letterSpacing: "0.3em",
                 }}
               >
                 {greeting}
