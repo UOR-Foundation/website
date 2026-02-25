@@ -54,6 +54,8 @@ import {
   replayAsStream,
 } from "@/modules/uns/core/hologram/inference-cache";
 import { useAiChatHistory, type Conversation } from "@/modules/hologram-ui/hooks/useAiChatHistory";
+import { useContextProjection } from "@/modules/hologram-ui/hooks/useContextProjection";
+import { extractTopicTags } from "@/modules/hologram-ui/engine/extractTopicTags";
 
 // ── Palette constants ──────────────────────────────────────────────────────
 
@@ -123,6 +125,17 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const attention = useAttentionMode();
   const history = useAiChatHistory();
   const journal = useFocusJournal();
+  const ctx = useContextProjection();
+
+  // Fire-and-forget: enrich context graph from conversation text
+  const enrichContext = useCallback((userText: string, aiText: string) => {
+    if (!ctx.authenticated) return;
+    const tags = extractTopicTags(`${userText} ${aiText}`, 4);
+    for (const { tag, weight } of tags) {
+      ctx.addInterest(tag, weight).catch(() => {});
+    }
+    ctx.addDomain("hologram-intelligence").catch(() => {});
+  }, [ctx]);
 
   // Determine active model name
   const activeModelName = ai.isReady
@@ -337,6 +350,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         );
         if (convId) history.saveMessage(convId, "assistant", cacheHit.output, meta as Record<string, unknown>);
         journal.log({ message: cacheHit.output.slice(0, 120), source: "chat", tags: [selectedPersona.phase, activeSkill?.id ?? "general"].filter(Boolean) as string[], phase: selectedPersona.phase, priority: "medium" }, !open);
+        enrichContext(text, cacheHit.output);
         setIsGenerating(false);
         return;
       }
@@ -364,6 +378,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         );
         if (convId) history.saveMessage(convId, "assistant", finalContent, meta as Record<string, unknown>);
         journal.log({ message: finalContent.slice(0, 120), source: "chat", tags: [selectedPersona.phase, activeSkill?.id ?? "general"].filter(Boolean) as string[], phase: selectedPersona.phase, priority: "medium" }, !open);
+        enrichContext(text, finalContent);
 
         // Cache write (fire-and-forget)
         getInputHash(text, modelId).then((proof) => {
@@ -460,6 +475,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       );
       if (convId) history.saveMessage(convId, "assistant", finalContent, meta as Record<string, unknown>);
       journal.log({ message: finalContent.slice(0, 120), source: "chat", tags: [selectedPersona.phase, activeSkill?.id ?? "general"].filter(Boolean) as string[], phase: selectedPersona.phase, priority: "medium" }, !open);
+      enrichContext(text, finalContent);
 
       // Cache write for future O(1) replay
       getInputHash(text, modelId).then((proof) => {
@@ -481,7 +497,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     } finally {
       setIsGenerating(false);
     }
-  }, [input, isGenerating, ai, history, selectedCloudModel, isLoadingModel, selectedPersona, activeSkill, journal, open]);
+  }, [input, isGenerating, ai, history, selectedCloudModel, isLoadingModel, selectedPersona, activeSkill, journal, open, enrichContext]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
