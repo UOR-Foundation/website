@@ -2493,7 +2493,6 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     project: ({ hex }) => `https://schema.org/Thing#urn:uor:${hex}`,
     fidelity: "lossless",
     spec: "https://schema.org/",
-    lossWarning: "Projection maps UOR identity to Schema.org anchor URI. Use the Schema.org Functor (F: SchemaOrg → UOR) for full dual representation of all 806+ types.",
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -5302,7 +5301,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
 
   ["pickle", {
     project: ({ hex }) => `urn:uor:data:pickle:${hex}`,
-    fidelity: "lossy",
+    fidelity: "lossless",
     spec: "https://docs.python.org/3/library/pickle.html",
   }],
 
@@ -5826,6 +5825,29 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     project: ({ hex }) => `urn:uor:bim:gbxml:${hex}`,
     fidelity: "lossless",
     spec: "https://www.gbxml.org/schema_doc/6.01/GreenBuildingXML_Ver6.01.html",
+  }],
+
+  // ── GeoPackage — OGC Geospatial Data Container ─────────────────────────
+  // GeoPackage is an OGC standard for storing vector features, tile matrix
+  // sets, and raster maps in a single SQLite container. Used in BIM/GIS
+  // pipelines for spatial data exchange and smart city infrastructure.
+  //
+  //   Format: urn:uor:geo:geopackage:{hex} (SHA-256 of GeoPackage file)
+  //   Canonical: GeoPackage → raw bytes → SHA-256
+  //   Cross-projection: geopackage + citygml → spatial↔urban model bridge
+  //                     geopackage + geotiff → vector↔raster bridge
+
+  ["geopackage", {
+    project: ({ hex }) => `urn:uor:geo:geopackage:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.geopackage.org/spec/",
+  }],
+
+  // ── GeoTIFF — Georeferenced Raster Images ──────────────────────────────
+  ["geotiff", {
+    project: ({ hex }) => `urn:uor:geo:geotiff:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.ogc.org/standard/geotiff/",
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════

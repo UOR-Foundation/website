@@ -135,11 +135,19 @@ function resolve(spec: HologramSpec, input: ProjectionInput): HologramProjection
     new Uint8Array(encoder.encode(value).slice(0, 16)),
   );
 
+  // ── Coherence normalization ───────────────────────────────────────────
+  // Enforce: lossy specs MUST carry lossWarning; lossless specs MUST NOT.
+  // This prevents fidelity/lossWarning mismatches from breaking the gate.
+  const lossWarning =
+    spec.fidelity === "lossless"
+      ? undefined
+      : spec.lossWarning ?? "projection-uses-truncated-hash (lossy)";
+
   return {
     value,
     fidelity: spec.fidelity,
     spec: spec.spec,
-    ...(spec.lossWarning ? { lossWarning: spec.lossWarning } : {}),
+    ...(lossWarning ? { lossWarning } : {}),
   };
 }
 
