@@ -107,7 +107,7 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
                 cy={SIZE / 2}
                 r={RADIUS}
                 fill="none"
-                stroke={`hsla(${phaseDef.hue}, 35%, 62%, 0.7)`}
+                stroke={`hsla(${phaseDef.hue}, 40%, 60%, 0.8)`}
                 strokeWidth={STROKE}
                 strokeLinecap="butt"
                 strokeDasharray={`${length} ${CIRCUMFERENCE - length}`}
@@ -140,27 +140,18 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
           }}
         />
 
-        {/* Center — percentage + label */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+        {/* Center — percentage only */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
-            className="text-xl font-light leading-none"
+            className="text-[22px] font-light leading-none"
             style={{
               fontFamily: "'Playfair Display', serif",
-              color: "hsla(38, 15%, 92%, 0.92)",
+              color: "hsla(38, 15%, 94%, 0.95)",
               fontWeight: 300,
+              letterSpacing: "0.02em",
             }}
           >
             {pct}%
-          </span>
-          <span
-            className="text-[7px] tracking-[0.25em] uppercase leading-none transition-opacity duration-500"
-            style={{
-              fontFamily: "'DM Sans', system-ui, sans-serif",
-              color: "hsla(38, 15%, 80%, 0.4)",
-              fontWeight: 400,
-            }}
-          >
-            of day
           </span>
         </div>
       </div>
@@ -203,25 +194,6 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
         ))}
       </div>
 
-      {/* Hover tooltip */}
-      <div
-        className="absolute -top-12 left-1/2 -translate-x-1/2 transition-opacity duration-500 pointer-events-none whitespace-nowrap"
-        style={{
-          opacity: hovered ? 1 : 0,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: "10px",
-          letterSpacing: "0.12em",
-          color: "hsla(38, 15%, 85%, 0.6)",
-          background: "hsla(30, 8%, 10%, 0.7)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          padding: "5px 12px",
-          borderRadius: "6px",
-          border: "1px solid hsla(38, 15%, 60%, 0.08)",
-        }}
-      >
-        {report.guidance}
-      </div>
 
       <style>{`
         @keyframes ring-breathe {

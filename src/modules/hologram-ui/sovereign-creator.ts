@@ -44,8 +44,8 @@ export const PHASES: Record<TriadicPhase, PhaseDefinition> = {
     produces: "Clear, directional vision — a knowing ready to be acted upon",
     failureSignature: "Visionary paralysis — knowing without being",
     correction: "Commit to a specific, time-bounded manifestation",
-    hue: 38,
-    color: "hsl(38, 35%, 62%)",   // Warm gold — illumination
+    hue: 45,
+    color: "hsl(45, 38%, 62%)",   // Sage gold — illumination
     icon: "◉",
   },
   work: {
@@ -56,8 +56,8 @@ export const PHASES: Record<TriadicPhase, PhaseDefinition> = {
     produces: "A real artifact — evidence that the vision was tested",
     failureSignature: "Blind execution — effort without insight",
     correction: "Stop and observe honestly; let the work speak back",
-    hue: 25,
-    color: "hsl(25, 30%, 55%)",   // Warm terracotta — grounded action
+    hue: 160,
+    color: "hsl(160, 22%, 52%)",  // Moss sage — grounded action
     icon: "◈",
   },
   play: {
@@ -68,8 +68,8 @@ export const PHASES: Record<TriadicPhase, PhaseDefinition> = {
     produces: "Refined input for the next cycle — a richer vision",
     failureSignature: "Perpetual observation without commitment",
     correction: "Articulate a vision and enter Work with it",
-    hue: 20,
-    color: "hsl(20, 25%, 50%)",   // Warm sienna — reflective depth
+    hue: 15,
+    color: "hsl(15, 28%, 55%)",   // Warm terracotta — reflective depth
     icon: "◎",
   },
 } as const;
