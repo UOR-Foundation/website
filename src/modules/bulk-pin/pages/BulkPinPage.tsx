@@ -558,7 +558,7 @@ export default function BulkPinPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-background text-foreground pt-[18px] md:pt-52 pb-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-background text-foreground pt-[21px] md:pt-52 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div>
