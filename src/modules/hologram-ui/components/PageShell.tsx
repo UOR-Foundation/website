@@ -22,8 +22,14 @@ export function PageShell({
 }: PageShellProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Sticky header bar */}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-sm">
+      {/* Sticky header bar — fades with focus */}
+      <header
+        className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-sm transition-all duration-700"
+        style={{
+          opacity: "var(--focus-chrome-opacity, 1)",
+          filter: "blur(var(--focus-blur-chrome, 0px))",
+        }}
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
           <Link
             to={backTo}
@@ -50,8 +56,14 @@ export function PageShell({
         </div>
       </header>
 
-      {/* Content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      {/* Content — scales and boosts contrast with focus */}
+      <main
+        className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8 transition-all duration-700 origin-top"
+        style={{
+          transform: "scale(var(--focus-content-scale, 1))",
+          filter: `contrast(var(--focus-contrast, 1)) saturate(var(--focus-saturation, 1))`,
+        }}
+      >
         {children}
       </main>
     </div>

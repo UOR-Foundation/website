@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { initializeRegistry } from "@/lib/uor-registry";
 import { AttentionProvider } from "@/modules/hologram-ui/hooks/useAttentionMode";
+import FocusVignette from "@/modules/hologram-ui/components/FocusVignette";
 import { initializeContentRegistry } from "@/lib/uor-content-registry";
 import { initTriwordGenesis } from "@/lib/uor-triword";
 
@@ -142,6 +143,7 @@ const App = () => {
   return (
   <QueryClientProvider client={queryClient}>
     <AttentionProvider>
+    <FocusVignette />
     <TooltipProvider>
       <Toaster />
       <Sonner />

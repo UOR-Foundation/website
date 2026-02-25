@@ -190,7 +190,10 @@ export default function HologramOsPage() {
           </div>
 
           {/* ── Background Mode Toggle — top right, minimal pill ────── */}
-          <div className="absolute top-[3vh] right-[3vw] z-20 animate-fade-in">
+          <div
+            className="absolute top-[3vh] right-[3vw] z-20 animate-fade-in transition-all duration-700"
+            style={{ opacity: "var(--focus-chrome-opacity, 1)", filter: "blur(var(--focus-blur-chrome, 0px))" }}
+          >
             <div
               className="flex items-center gap-0.5 px-2 py-1.5 rounded-full transition-all duration-700"
               style={{
@@ -227,7 +230,10 @@ export default function HologramOsPage() {
           </div>
 
           {/* ── Logo — top center ──────────── */}
-          <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-[3vh] animate-fade-in">
+          <div
+            className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-[3vh] animate-fade-in transition-all duration-700"
+            style={{ opacity: "var(--focus-dim-opacity, 1)" }}
+          >
             <span
               className="transition-colors duration-700"
               style={{
@@ -328,7 +334,10 @@ export default function HologramOsPage() {
         </main>
 
         {/* AI Chat Pill */}
-        <div className="absolute bottom-[3.5vh] left-1/2 -translate-x-1/2 z-20">
+        <div
+          className="absolute bottom-[3.5vh] left-1/2 -translate-x-1/2 z-20 transition-all duration-700"
+          style={{ opacity: "var(--focus-chrome-opacity, 1)", filter: "blur(var(--focus-blur-chrome, 0px))" }}
+        >
           <button
             onClick={() => setChatOpen(true)}
             className="flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-700 hover:scale-105 group"
