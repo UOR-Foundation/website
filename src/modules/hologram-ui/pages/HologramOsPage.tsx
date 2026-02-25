@@ -9,7 +9,7 @@
  * generous whitespace, ultra-light serif, barely-there chrome.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
@@ -107,10 +107,14 @@ export default function HologramOsPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [bgMode, setBgMode] = useState<BgMode>("image");
+  const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
   const triadicActivity = useTriadicActivity();
 
-  const goConsole = useCallback(() => navigate("/hologram-console"), [navigate]);
+  const goConsole = useCallback(() => {
+    setDeparting(true);
+    setTimeout(() => navigate("/hologram-console"), 900);
+  }, [navigate]);
   const P = palette(bgMode);
 
   // ── Mobile: iOS homescreen ──
@@ -130,7 +134,15 @@ export default function HologramOsPage() {
       />
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      <div
+        className="flex-1 flex flex-col overflow-hidden relative transition-all ease-in-out"
+        style={{
+          opacity: departing ? 0 : 1,
+          transform: departing ? "scale(1.02)" : "scale(1)",
+          filter: departing ? "blur(4px)" : "blur(0px)",
+          transitionDuration: "900ms",
+        }}
+      >
         <main className="flex-1 relative">
           {/* Solid background for white/dark modes */}
           <div

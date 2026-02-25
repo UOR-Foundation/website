@@ -44,6 +44,12 @@ interface TermLine {
 // ── The OS Console ─────────────────────────────────────────────────────────
 
 export default function HologramOsPage() {
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    const t = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(t);
+  }, []);
+
   const engineRef = useRef<HologramEngine | null>(null);
   const shellRef = useRef<VShell | null>(null);
   const [lines, setLines] = useState<TermLine[]>([]);
@@ -314,6 +320,14 @@ export default function HologramOsPage() {
   ], []);
 
   return (
+    <div
+      className="transition-all ease-out"
+      style={{
+        opacity: entered ? 1 : 0,
+        transform: entered ? "scale(1)" : "scale(0.98)",
+        transitionDuration: "1200ms",
+      }}
+    >
     <PageShell
       title="Hologram OS"
       subtitle="Virtual Operating System Console"
@@ -459,6 +473,7 @@ export default function HologramOsPage() {
         Hologram OS — One hash. Every standard. Any system. Powered by the UOR Framework.
       </div>
     </PageShell>
+    </div>
   );
 }
 
