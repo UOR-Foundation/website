@@ -2,8 +2,11 @@
  * Hologram OS — Welcome Screen
  * ═════════════════════════════
  *
- * Desktop: Claude-style sidebar + serene sanctuary hero (Aman-inspired).
+ * Desktop: Sidebar + full-bleed sanctuary hero (Aman-inspired).
  * Mobile: iOS-style homescreen shell.
+ *
+ * Design language: extreme restraint, muted earth tones,
+ * generous whitespace, ultra-light serif, barely-there chrome.
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -62,7 +65,7 @@ export default function HologramOsPage() {
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <main className="flex-1 relative">
-          {/* Background Image */}
+          {/* Background Image — slow Ken Burns for life */}
           <div className="absolute inset-0">
             <img
               src={heroLandscape}
@@ -72,46 +75,86 @@ export default function HologramOsPage() {
                 animation: "ken-burns 30s ease-in-out infinite alternate",
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/45" />
+            {/* Gradient: soft earth-toned veil — warmer than pure black */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to bottom, hsla(30, 8%, 12%, 0.15) 0%, hsla(30, 6%, 10%, 0.08) 35%, hsla(25, 10%, 8%, 0.55) 100%)",
+              }}
+            />
           </div>
 
           {/* ── Welcome — centered, intimate, personal ─────────── */}
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-white px-8">
-            <div className="text-center max-w-lg space-y-5 animate-fade-in">
-              {/* Greeting */}
+            <div className="text-center max-w-2xl space-y-8 animate-fade-in">
+              {/* Time greeting — whisper-quiet, Aman-style label */}
               <p
-                className="text-sm md:text-base tracking-[0.35em] uppercase text-white/50 font-medium"
-                style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
+                className="text-xs md:text-sm tracking-[0.45em] uppercase"
+                style={{
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  color: "hsla(38, 20%, 85%, 0.5)",
+                  fontWeight: 400,
+                }}
               >
                 {greeting}
               </p>
 
-              {/* Personal welcome */}
+              {/* Personal welcome — large, light, serene serif */}
               <h1
-                className="text-5xl md:text-6xl lg:text-7xl font-light leading-[1.15] text-white/95"
-                style={{ fontFamily: "'Playfair Display', serif" }}
+                className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-[1.1]"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontWeight: 300,
+                  color: "hsla(38, 15%, 92%, 0.92)",
+                  letterSpacing: "-0.01em",
+                }}
               >
                 Welcome home,
                 <br />
                 {welcomeName}
               </h1>
 
-              {/* Warm subtext */}
+              {/* Warm subtext — earth-toned, generous line height */}
               <p
-                className="text-base md:text-lg leading-relaxed text-white/55 max-w-md mx-auto font-light"
-                style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
+                className="text-base md:text-lg leading-[1.8] max-w-md mx-auto"
+                style={{
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontWeight: 300,
+                  color: "hsla(38, 12%, 78%, 0.5)",
+                }}
               >
                 Everything is as you left it.
                 <br />
                 Take your time.
               </p>
 
-              {/* Gentle CTA */}
-              <div className="pt-6">
+              {/* Gentle CTA — Aman-style: thin border, generous padding, quiet text */}
+              <div className="pt-8">
                 <button
                   onClick={goConsole}
-                  className="inline-flex items-center border border-white/30 text-white/65 bg-transparent px-10 py-3.5 text-sm tracking-[0.25em] uppercase hover:bg-white/10 hover:text-white/90 hover:border-white/50 transition-all duration-700"
-                  style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
+                  className="inline-flex items-center transition-all duration-700"
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    fontWeight: 300,
+                    fontSize: "13px",
+                    letterSpacing: "0.3em",
+                    textTransform: "uppercase" as const,
+                    color: "hsla(38, 15%, 82%, 0.6)",
+                    border: "1px solid hsla(38, 15%, 70%, 0.2)",
+                    padding: "16px 48px",
+                    background: "transparent",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "hsla(38, 15%, 70%, 0.08)";
+                    e.currentTarget.style.color = "hsla(38, 15%, 90%, 0.85)";
+                    e.currentTarget.style.borderColor = "hsla(38, 15%, 70%, 0.35)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = "hsla(38, 15%, 82%, 0.6)";
+                    e.currentTarget.style.borderColor = "hsla(38, 15%, 70%, 0.2)";
+                  }}
                 >
                   Begin
                 </button>
@@ -120,25 +163,28 @@ export default function HologramOsPage() {
           </div>
         </main>
 
-        {/* AI Chat Pill — bottom center */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
+        {/* AI Chat Pill — bottom center, barely there */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
           <button
             onClick={() => setChatOpen(true)}
-            className="flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-300 hover:scale-105 group"
+            className="flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-500 hover:scale-105 group"
             style={{
-              background: "hsla(0, 0%, 0%, 0.45)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid hsla(0, 0%, 100%, 0.08)",
+              background: "hsla(30, 8%, 10%, 0.5)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              border: "1px solid hsla(38, 15%, 60%, 0.08)",
             }}
           >
             <div
-              className="w-2 h-2 rounded-full group-hover:scale-125 transition-transform"
-              style={{ background: "hsl(38, 50%, 55%)" }}
+              className="w-1.5 h-1.5 rounded-full group-hover:scale-150 transition-transform duration-500"
+              style={{ background: "hsl(38, 40%, 55%)" }}
             />
             <span
-              className="text-white/55 text-[13px] tracking-[0.15em] font-light"
-              style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
+              className="text-[13px] tracking-[0.2em] font-light"
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                color: "hsla(38, 12%, 78%, 0.45)",
+              }}
             >
               Hologram AI
             </span>

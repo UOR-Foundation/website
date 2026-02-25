@@ -14,18 +14,18 @@ import {
   Sparkles, ChevronLeft, Search,
 } from "lucide-react";
 
-/* ── Palette (shared with HologramAiChat) ──────────────────────── */
+/* ── Palette — Aman earth tones ─────────────────────────────── */
 const S = {
-  bg: "hsl(220, 16%, 7%)",
-  surface: "hsla(220, 14%, 12%, 0.9)",
-  surfaceHover: "hsla(220, 14%, 16%, 0.8)",
-  surfaceActive: "hsla(38, 20%, 18%, 0.5)",
-  border: "hsla(0, 0%, 100%, 0.06)",
-  text: "hsl(38, 15%, 82%)",
-  textMuted: "hsl(220, 8%, 48%)",
-  textDim: "hsl(220, 6%, 38%)",
-  gold: "hsl(38, 45%, 50%)",
-  goldBg: "hsla(38, 45%, 50%, 0.08)",
+  bg: "hsl(28, 10%, 7%)",
+  surface: "hsla(30, 10%, 14%, 0.9)",
+  surfaceHover: "hsla(30, 10%, 18%, 0.7)",
+  surfaceActive: "hsla(38, 18%, 18%, 0.5)",
+  border: "hsla(38, 15%, 50%, 0.06)",
+  text: "hsl(38, 12%, 78%)",
+  textMuted: "hsl(30, 8%, 45%)",
+  textDim: "hsl(30, 6%, 32%)",
+  gold: "hsl(38, 35%, 52%)",
+  goldBg: "hsla(38, 35%, 52%, 0.08)",
   font: "'DM Sans', system-ui, sans-serif",
   fontDisplay: "'Playfair Display', serif",
 } as const;
