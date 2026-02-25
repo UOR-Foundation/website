@@ -9,6 +9,8 @@
 
 import { unzipSync, strFromU8 } from "fflate";
 import { analyzeTypeScript } from "@/modules/code-kg/analyzer";
+import { analyzePython } from "@/modules/code-kg/analyzer-python";
+import { analyzeRust } from "@/modules/code-kg/analyzer-rust";
 import type { CodeEntity, CodeRelation, AnalysisResult } from "@/modules/code-kg/analyzer";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -37,6 +39,9 @@ const SUPPORTED_EXTENSIONS: Record<string, string> = {
   ".jsx": "javascript",
   ".mjs": "javascript",
   ".mts": "typescript",
+  ".py": "python",
+  ".pyw": "python",
+  ".rs": "rust",
 };
 
 function detectLanguage(path: string): string | null {
@@ -52,6 +57,11 @@ function shouldSkip(path: string): boolean {
     path.includes("build/") ||
     path.includes(".next/") ||
     path.includes("__pycache__/") ||
+    path.includes("target/debug/") ||
+    path.includes("target/release/") ||
+    path.includes(".venv/") ||
+    path.includes("venv/") ||
+    path.includes("site-packages/") ||
     path.endsWith(".d.ts") ||
     path.endsWith(".min.js") ||
     path.endsWith(".map") ||
@@ -61,7 +71,11 @@ function shouldSkip(path: string): boolean {
     path.endsWith(".svg") ||
     path.endsWith(".ico") ||
     path.endsWith(".woff") ||
-    path.endsWith(".woff2")
+    path.endsWith(".woff2") ||
+    path.endsWith(".pyc") ||
+    path.endsWith(".pyo") ||
+    path.endsWith(".so") ||
+    path.endsWith(".dylib")
   );
 }
 
@@ -107,10 +121,24 @@ export function extractFilesFromZip(zipData: Uint8Array): SourceFile[] {
   return files;
 }
 
+// ── Language-aware analyzer dispatch ────────────────────────────────────────
+
+function analyzeFile(file: SourceFile): Promise<AnalysisResult> {
+  switch (file.language) {
+    case "python":
+      return analyzePython(file.content);
+    case "rust":
+      return analyzeRust(file.content);
+    default:
+      return analyzeTypeScript(file.content);
+  }
+}
+
 // ── Analysis pipeline ───────────────────────────────────────────────────────
 
 /**
  * Analyze all source files and aggregate entities/relations.
+ * Dispatches to the correct language analyzer per file.
  * Entity names are scoped with file path to avoid collisions.
  */
 export async function analyzeFiles(
@@ -123,7 +151,7 @@ export async function analyzeFiles(
   let totalLines = 0;
 
   for (const file of files) {
-    const analysis = await analyzeTypeScript(file.content);
+    const analysis = await analyzeFile(file);
     analyses.set(file.path, analysis);
 
     // Prefix entity names with file path for uniqueness
