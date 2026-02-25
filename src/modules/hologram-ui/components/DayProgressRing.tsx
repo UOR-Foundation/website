@@ -12,6 +12,7 @@ import {
   PHASE_ORDER,
   computeBalance,
   type TriadicBalance,
+  type TriadicPhase,
 } from "@/modules/hologram-ui/sovereign-creator";
 
 // ── Day progress ───────────────────────────────────────────────────────────
@@ -32,9 +33,10 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 interface DayProgressRingProps {
   balance?: TriadicBalance;
+  activePhase?: TriadicPhase | null;
 }
 
-export default function DayProgressRing({ balance: externalBalance }: DayProgressRingProps) {
+export default function DayProgressRing({ balance: externalBalance, activePhase }: DayProgressRingProps) {
   const [progress, setProgress] = useState(getDayProgress);
   const [hovered, setHovered] = useState(false);
 
@@ -140,8 +142,8 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
           }}
         />
 
-        {/* Center — percentage only */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
+        {/* Center — percentage + OF DAY */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-[6px]">
           <span
             className="text-[22px] font-light leading-none"
             style={{
@@ -153,22 +155,45 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
           >
             {pct}%
           </span>
+          <span
+            className="text-[6.5px] tracking-[0.2em] uppercase leading-none"
+            style={{
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              color: "hsla(38, 15%, 80%, 0.4)",
+              fontWeight: 400,
+            }}
+          >
+            of day
+          </span>
         </div>
       </div>
 
-      {/* Label */}
-      <span
-        className="text-[9px] tracking-[0.4em] uppercase transition-colors duration-500"
-        style={{
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          color: report.coherent
+      {/* Dynamic label */}
+      {(() => {
+        const phaseLabels: Record<TriadicPhase, string> = {
+          learn: "Learning",
+          work: "Working",
+          play: "Playing",
+        };
+        const label = activePhase ? phaseLabels[activePhase] : (report.coherent ? "Today" : "Rebalance");
+        const labelColor = activePhase
+          ? `hsla(${PHASES[activePhase].hue}, 30%, 72%, 0.7)`
+          : report.coherent
             ? "hsla(38, 15%, 80%, 0.6)"
-            : "hsla(25, 25%, 70%, 0.6)",
-          fontWeight: 400,
-        }}
-      >
-        {report.coherent ? "Today" : "Rebalance"}
-      </span>
+            : "hsla(25, 25%, 70%, 0.6)";
+        return (
+          <span
+            className="text-[9px] tracking-[0.4em] uppercase transition-all duration-700"
+            style={{
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              color: labelColor,
+              fontWeight: 400,
+            }}
+          >
+            {label}
+          </span>
+        );
+      })()}
 
       {/* Phase legend — appears on hover */}
       <div
