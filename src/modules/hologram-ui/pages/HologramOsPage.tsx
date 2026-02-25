@@ -98,7 +98,7 @@ export default function HologramOsPage() {
 
               {/* Warm subtext */}
               <p
-                className="text-[14px] leading-relaxed text-white/50 max-w-sm mx-auto font-light"
+                className="text-base md:text-lg leading-relaxed text-white/55 max-w-md mx-auto font-light"
                 style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
               >
                 Everything is as you left it.
@@ -107,10 +107,10 @@ export default function HologramOsPage() {
               </p>
 
               {/* Gentle CTA */}
-              <div className="pt-4">
+              <div className="pt-6">
                 <button
                   onClick={goConsole}
-                  className="inline-flex items-center border border-white/25 text-white/60 bg-transparent px-7 py-2.5 text-[12px] tracking-[0.2em] uppercase hover:bg-white/10 hover:text-white/90 hover:border-white/40 transition-all duration-700"
+                  className="inline-flex items-center border border-white/30 text-white/65 bg-transparent px-10 py-3.5 text-sm tracking-[0.25em] uppercase hover:bg-white/10 hover:text-white/90 hover:border-white/50 transition-all duration-700"
                   style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
                 >
                   Begin
