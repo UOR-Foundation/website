@@ -10,6 +10,7 @@ import { AttentionProvider } from "@/modules/hologram-ui/hooks/useAttentionMode"
 import FocusVignette from "@/modules/hologram-ui/components/FocusVignette";
 import { FocusJournalProvider } from "@/modules/hologram-ui/hooks/useFocusJournal";
 import FocusJournalOverlay from "@/modules/hologram-ui/components/FocusJournalOverlay";
+import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
 import { initializeContentRegistry } from "@/lib/uor-content-registry";
 import { initTriwordGenesis } from "@/lib/uor-triword";
 
@@ -148,6 +149,7 @@ const App = () => {
     <FocusJournalProvider>
     <FocusVignette />
     <FocusJournalOverlay />
+    <AttentionToggle />
     <TooltipProvider>
       <Toaster />
       <Sonner />

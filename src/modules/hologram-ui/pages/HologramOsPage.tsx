@@ -19,7 +19,6 @@ import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar"
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 import { useTriadicActivity } from "@/modules/hologram-ui/hooks/useTriadicActivity";
-import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
@@ -388,7 +387,6 @@ export default function HologramOsPage() {
         {/* Day Progress Ring */}
         <div className="absolute bottom-[3vh] right-[3vw] z-20 animate-fade-in flex flex-col items-center gap-3">
           <DayProgressRing balance={triadicActivity.balance ?? undefined} />
-          <AttentionToggle />
         </div>
       </div>
 
