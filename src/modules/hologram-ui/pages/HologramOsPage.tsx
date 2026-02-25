@@ -194,7 +194,10 @@ export default function HologramOsPage() {
           >
             <div
               className="w-1.5 h-1.5 rounded-full group-hover:scale-150 transition-transform duration-500"
-              style={{ background: "hsl(38, 40%, 55%)" }}
+              style={{
+                background: "hsl(38, 40%, 55%)",
+                animation: "heartbeat-love 1.6s ease-in-out infinite",
+              }}
             />
             <span
               className="text-[13px] tracking-[0.2em] font-light"
@@ -207,6 +210,18 @@ export default function HologramOsPage() {
             </span>
           </button>
         </div>
+
+        {/* Heartbeat keyframe — ~60bpm resting love frequency, double-pulse like a real heart */}
+        <style>{`
+          @keyframes heartbeat-love {
+            0%   { transform: scale(1);    opacity: 0.85; }
+            12%  { transform: scale(1.5);  opacity: 1; }
+            20%  { transform: scale(1);    opacity: 0.85; }
+            32%  { transform: scale(1.3);  opacity: 0.95; }
+            40%  { transform: scale(1);    opacity: 0.85; }
+            100% { transform: scale(1);    opacity: 0.85; }
+          }
+        `}</style>
 
         {/* Day Progress Ring — bottom right */}
         <div className="absolute bottom-8 right-8 z-20 animate-fade-in">
