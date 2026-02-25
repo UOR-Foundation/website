@@ -5,17 +5,18 @@
  * A serene, Aman-styled chat overlay for conversing with locally-running
  * ONNX models via the Hologram AI Engine. Streaming token generation
  * with warm charcoal panels, gold accents, and Playfair Display typography.
+ * Conversations persist to the database for authenticated users.
  *
  * @module hologram-ui/components/HologramAiChat
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { X, Send, Loader2, Cpu, Sparkles } from "lucide-react";
+import { X, Send, Loader2, Cpu, Sparkles, MessageSquare, Plus, Trash2, ChevronLeft } from "lucide-react";
 import {
   getAiEngine,
   RECOMMENDED_MODELS,
-  type AiTask,
 } from "@/modules/uns/core/hologram/ai-engine";
+import { useAiChatHistory, type Conversation } from "@/modules/hologram-ui/hooks/useAiChatHistory";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -46,10 +47,13 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoadingModel, setIsLoadingModel] = useState(false);
   const [loadProgress, setLoadProgress] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
+  const [isFirstMessage, setIsFirstMessage] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const ai = getAiEngine();
+  const history = useAiChatHistory();
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -67,7 +71,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
 
   // Welcome message
   useEffect(() => {
-    if (open && messages.length === 0) {
+    if (open && messages.length === 0 && !history.activeConversationId) {
       setMessages([
         {
           id: "welcome",
@@ -78,8 +82,52 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
           timestamp: new Date(),
         },
       ]);
+      setIsFirstMessage(true);
     }
   }, [open]);
+
+  /** Load a conversation from history */
+  const resumeConversation = useCallback(async (conv: Conversation) => {
+    const persisted = await history.loadMessages(conv.id);
+    history.setActiveConversationId(conv.id);
+    setShowHistory(false);
+    setIsFirstMessage(false);
+
+    const loaded: ChatMessage[] = persisted.map((m) => ({
+      id: m.id,
+      role: m.role as ChatMessage["role"],
+      content: m.content,
+      timestamp: new Date(m.created_at),
+      meta: m.meta as ChatMessage["meta"],
+    }));
+
+    setMessages([
+      {
+        id: "resumed",
+        role: "system",
+        content: `Resumed: ${conv.title}`,
+        timestamp: new Date(),
+      },
+      ...loaded,
+    ]);
+  }, [history]);
+
+  /** Start a new conversation */
+  const startNewConversation = useCallback(() => {
+    history.setActiveConversationId(null);
+    setShowHistory(false);
+    setIsFirstMessage(true);
+    setMessages([
+      {
+        id: "welcome",
+        role: "system",
+        content: ai.isReady
+          ? `Connected to ${ai.active!.modelId.split("/").pop()} · Ready for a new conversation.`
+          : "Welcome. Load a model to begin.",
+        timestamp: new Date(),
+      },
+    ]);
+  }, [ai, history]);
 
   const loadModel = useCallback(async (index: number) => {
     const rec = RECOMMENDED_MODELS[index];
@@ -140,6 +188,15 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
       return;
     }
 
+    // Auto-create a conversation for authenticated users on first message
+    let convId = history.activeConversationId;
+    if (history.isAuthenticated && !convId) {
+      convId = await history.createConversation(
+        text.length > 40 ? text.slice(0, 40) + "…" : text,
+        ai.active?.modelId,
+      );
+    }
+
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -150,6 +207,11 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsGenerating(true);
+
+    // Persist user message
+    if (convId) {
+      history.saveMessage(convId, "user", text);
+    }
 
     // Create a placeholder assistant message for streaming
     const assistantId = `ai-${Date.now()}`;
@@ -179,24 +241,30 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
         },
       });
 
+      const finalContent = result.output || streamedText || "(empty response)";
+      const meta = {
+        inferenceTimeMs: result.inferenceTimeMs,
+        tokensGenerated: result.tokensGenerated,
+        gpuAccelerated: result.gpuAccelerated,
+        inputCid: result.inputCid,
+        outputCid: result.outputCid,
+      };
+
       // Final update with metadata
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantId
-            ? {
-                ...m,
-                content: result.output || streamedText || "(empty response)",
-                meta: {
-                  inferenceTimeMs: result.inferenceTimeMs,
-                  tokensGenerated: result.tokensGenerated,
-                  gpuAccelerated: result.gpuAccelerated,
-                  inputCid: result.inputCid,
-                  outputCid: result.outputCid,
-                },
-              }
+            ? { ...m, content: finalContent, meta }
             : m,
         ),
       );
+
+      // Persist assistant message
+      if (convId) {
+        history.saveMessage(convId, "assistant", finalContent, meta as Record<string, unknown>);
+      }
+
+      setIsFirstMessage(false);
     } catch (e) {
       setMessages((prev) => [
         ...prev,
@@ -210,7 +278,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
     } finally {
       setIsGenerating(false);
     }
-  }, [input, isGenerating, ai]);
+  }, [input, isGenerating, ai, history]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -224,6 +292,133 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
 
   if (!open) return null;
 
+  // ── History Sidebar ──────────────────────────────────────────────────────
+  if (showHistory) {
+    return (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center animate-fade-in">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+        <div
+          className="relative w-full max-w-lg mx-4 flex flex-col overflow-hidden shadow-2xl animate-scale-in"
+          style={{
+            maxHeight: "min(85vh, 720px)",
+            background: "linear-gradient(180deg, hsl(30, 8%, 18%) 0%, hsl(25, 10%, 14%) 100%)",
+            borderRadius: "16px",
+            border: "1px solid hsla(38, 40%, 40%, 0.3)",
+          }}
+        >
+          {/* History Header */}
+          <div
+            className="flex items-center justify-between px-5 py-4"
+            style={{ borderBottom: "1px solid hsla(38, 30%, 30%, 0.3)" }}
+          >
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowHistory(false)}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+                style={{ color: "hsl(30, 10%, 60%)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "hsla(0,0%,100%,0.08)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <h3
+                className="text-sm font-medium tracking-wide"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  color: "hsl(38, 30%, 85%)",
+                }}
+              >
+                Conversations
+              </h3>
+            </div>
+            <button
+              onClick={startNewConversation}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-wider transition-colors"
+              style={{
+                color: "hsl(38, 50%, 55%)",
+                border: "1px solid hsla(38, 40%, 40%, 0.3)",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "hsla(38, 40%, 40%, 0.15)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <Plus className="w-3 h-3" />
+              New
+            </button>
+          </div>
+
+          {/* Conversation List */}
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5" style={{ minHeight: "300px" }}>
+            {!history.isAuthenticated ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <MessageSquare className="w-8 h-8" style={{ color: "hsl(30, 10%, 35%)" }} />
+                <p className="text-xs text-center" style={{ color: "hsl(30, 10%, 50%)" }}>
+                  Sign in to save and resume conversations.
+                </p>
+              </div>
+            ) : history.conversations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <MessageSquare className="w-8 h-8" style={{ color: "hsl(30, 10%, 35%)" }} />
+                <p className="text-xs text-center" style={{ color: "hsl(30, 10%, 50%)" }}>
+                  No conversations yet. Start chatting to create one.
+                </p>
+              </div>
+            ) : (
+              history.conversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  className="flex items-center gap-2 group"
+                >
+                  <button
+                    onClick={() => resumeConversation(conv)}
+                    className="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all"
+                    style={{
+                      background: conv.id === history.activeConversationId
+                        ? "hsla(38, 30%, 30%, 0.25)"
+                        : "transparent",
+                      border: conv.id === history.activeConversationId
+                        ? "1px solid hsla(38, 40%, 40%, 0.3)"
+                        : "1px solid transparent",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (conv.id !== history.activeConversationId) {
+                        e.currentTarget.style.background = "hsla(30, 8%, 22%, 0.6)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (conv.id !== history.activeConversationId) {
+                        e.currentTarget.style.background = "transparent";
+                      }
+                    }}
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "hsl(38, 40%, 45%)" }} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium truncate" style={{ color: "hsl(38, 20%, 80%)" }}>
+                        {conv.title}
+                      </p>
+                      <p className="text-[10px]" style={{ color: "hsl(30, 10%, 45%)" }}>
+                        {new Date(conv.updated_at).toLocaleDateString()} · {conv.model_id?.split("/").pop() ?? ""}
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => history.deleteConversation(conv.id)}
+                    className="w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ color: "hsl(0, 40%, 55%)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "hsla(0, 40%, 40%, 0.15)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main Chat View ───────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center animate-fade-in">
       {/* Backdrop */}
@@ -271,15 +466,41 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-            style={{ color: "hsl(30, 10%, 60%)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "hsla(0,0%,100%,0.08)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {/* History button */}
+            {history.isAuthenticated && (
+              <button
+                onClick={() => setShowHistory(true)}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors relative"
+                style={{ color: "hsl(30, 10%, 60%)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "hsla(0,0%,100%,0.08)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                title="Conversation history"
+              >
+                <MessageSquare className="w-4 h-4" />
+                {history.conversations.length > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full text-[8px] flex items-center justify-center font-medium"
+                    style={{
+                      background: "hsl(38, 50%, 45%)",
+                      color: "hsl(30, 8%, 14%)",
+                    }}
+                  >
+                    {history.conversations.length > 9 ? "9+" : history.conversations.length}
+                  </span>
+                )}
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+              style={{ color: "hsl(30, 10%, 60%)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "hsla(0,0%,100%,0.08)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* ── Messages ─────────────────────────────────────────────── */}
@@ -417,11 +638,19 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
               />
             </button>
           </div>
-          {ai.isReady && (
-            <p className="text-center mt-1.5 text-[9px] tracking-wider" style={{ color: "hsl(30, 10%, 40%)" }}>
-              Running locally · {ai.active!.device.toUpperCase()} · Content-addressed
-            </p>
-          )}
+          <div className="flex items-center justify-between mt-1.5 px-1">
+            {ai.isReady && (
+              <p className="text-[9px] tracking-wider" style={{ color: "hsl(30, 10%, 40%)" }}>
+                Running locally · {ai.active!.device.toUpperCase()} · Content-addressed
+              </p>
+            )}
+            {!ai.isReady && <span />}
+            {history.isAuthenticated && history.activeConversationId && (
+              <p className="text-[9px] tracking-wider" style={{ color: "hsl(38, 40%, 45%)" }}>
+                ● Saving
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
