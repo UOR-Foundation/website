@@ -23,6 +23,7 @@ import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import HologramFrame, { HologramViewport } from "@/modules/hologram-ui/components/HologramFrame";
+import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 import { useTriadicActivity } from "@/modules/hologram-ui/hooks/useTriadicActivity";
@@ -132,6 +133,7 @@ export default function HologramOsPage() {
   const attention = useAttentionMode();
   const [replayGuide, setReplayGuide] = useState(0);
   const ctx = useContextProjection();
+  const contentTilt = useFrameTilt({ maxTilt: 2.5, smoothing: 0.06 });
 
   // Derive top interests for contextual suggestions (max 3)
   const contextHints = useMemo(() => {
@@ -289,7 +291,7 @@ export default function HologramOsPage() {
            *  FRAME 2 — Content Layer (welcome text, CTA, pills)
            *  The primary interactive surface for the welcome screen
            * ══════════════════════════════════════════════════════════ */}
-          <HologramFrame layer={2} label="content" interactive={false}>
+          <HologramFrame layer={2} label="content" interactive={false} transform={contentTilt}>
             {/* Logo — top center */}
             <div
               className="absolute top-0 left-0 right-0 flex justify-center pt-[3vh] animate-fade-in transition-all duration-700"
