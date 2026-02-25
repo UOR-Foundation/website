@@ -874,21 +874,19 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
     capability: "Bioinformatics: sequencing (FASTQ) → variants (VCF) → protein (PDB) → chemistry (SMILES) → systems biology (SBML/MzML)",
   },
 
-  // ─── Chain 53: Geoscience & Earth Observation ─────────────────────────
+  // ─── Chain 53: Quantum Circuit Compilation Pipeline ────────────────────
   {
-    name: "Geoscience & Earth Observation",
-    description: "Satellite data → geospatial analysis → visualization → catalog",
-    projections: ["geotiff", "netcdf", "hdf5", "fits", "shapefile", "geojson", "stac", "kml"],
+    name: "Quantum Circuit Compilation Pipeline",
+    description: "High-level quantum program → IR → pulse schedule → hardware execution",
+    projections: ["openqasm3", "qir", "openpulse", "qpy", "qiskit", "cirq", "pytket"],
     bridges: [
-      { type: "encoding", description: "GeoTIFF raster data contains georeferenced imagery", sharedComponent: "raster content hash" },
-      { type: "encoding", description: "NetCDF stores multidimensional scientific arrays", sharedComponent: "array data hash" },
-      { type: "encoding", description: "HDF5 provides hierarchical scientific data containers", sharedComponent: "dataset content hash" },
-      { type: "encoding", description: "FITS stores astronomical observation data", sharedComponent: "observation data hash" },
-      { type: "protocol", description: "Shapefile/GeoJSON contain vector geospatial features", sharedComponent: "feature geometry hash" },
-      { type: "protocol", description: "STAC catalogs geospatial assets", sharedComponent: "asset catalog hash" },
-      { type: "protocol", description: "KML provides geospatial visualization", sharedComponent: "visualization hash" },
+      { type: "encoding", description: "OpenQASM 3 defines portable quantum circuits", sharedComponent: "circuit source hash" },
+      { type: "stack", description: "QIR provides LLVM-based intermediate representation", sharedComponent: "compiled IR hash" },
+      { type: "stack", description: "OpenPulse defines hardware-native pulse sequences", sharedComponent: "pulse schedule hash" },
+      { type: "encoding", description: "QPY serializes Qiskit circuits for binary interchange", sharedComponent: "circuit binary hash" },
+      { type: "protocol", description: "pytket transpiles across Qiskit/Cirq/Braket backends", sharedComponent: "transpiled circuit hash" },
     ],
-    capability: "Earth observation: satellite imagery (GeoTIFF) → scientific data (NetCDF/HDF5) → astronomy (FITS) → vector (Shapefile/GeoJSON) → catalog (STAC)",
+    capability: "Quantum compilation: source (OpenQASM 3) → IR (QIR) → pulses (OpenPulse) → serialized (QPY) → cross-platform (pytket)",
   },
 
   // ─── Chain 54: Music & Audio Production ───────────────────────────────
@@ -973,20 +971,19 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
     capability: "Document lifecycle: authoring (OOXML/ODF) → technical docs (DocBook/DITA) → publishing (PDF/EPUB/RTF)",
   },
 
-  // ─── Chain 59: Geospatial Analysis Pipeline ───────────────────────────
+  // ─── Chain 59: Quantum-ML Hybrid Pipeline ──────────────────────────────
   {
-    name: "Geospatial Analysis Pipeline",
-    description: "Vector features → raster → map tiling → web visualization",
-    projections: ["shapefile", "geopackage", "wkt", "mvt", "geojson", "kml", "las"],
+    name: "Quantum-ML Hybrid Pipeline",
+    description: "Variational circuits → differentiable QML → classical ML → deployment",
+    projections: ["pennylane", "blackbird", "qiskit", "cirq", "braket-sdk", "onnx", "dwave-ocean"],
     bridges: [
-      { type: "encoding", description: "Shapefile stores vector geospatial data", sharedComponent: "feature collection hash" },
-      { type: "encoding", description: "GeoPackage provides portable geospatial SQLite", sharedComponent: "geopackage content hash" },
-      { type: "encoding", description: "WKT represents geometry as text", sharedComponent: "geometry text hash" },
-      { type: "encoding", description: "MVT enables web map rendering", sharedComponent: "tile content hash" },
-      { type: "protocol", description: "GeoJSON provides web-native geospatial interchange", sharedComponent: "feature object hash" },
-      { type: "protocol", description: "LAS stores lidar point cloud surveys", sharedComponent: "point cloud hash" },
+      { type: "protocol", description: "PennyLane computes quantum gradients for variational algorithms", sharedComponent: "variational circuit hash" },
+      { type: "encoding", description: "Blackbird encodes photonic CV circuits", sharedComponent: "photonic program hash" },
+      { type: "stack", description: "Qiskit/Cirq/Braket provide gate-model backends", sharedComponent: "backend circuit hash" },
+      { type: "protocol", description: "ONNX bridges quantum and classical ML models", sharedComponent: "hybrid model hash" },
+      { type: "protocol", description: "D-Wave Ocean solves optimization via quantum annealing", sharedComponent: "annealing solution hash" },
     ],
-    capability: "Geospatial: features (Shapefile/GeoJSON) → database (GeoPackage) → geometry (WKT) → tiles (MVT) → visualization (KML) → lidar (LAS)",
+    capability: "Quantum ML: variational (PennyLane) → photonic (Blackbird) → gate-model (Qiskit/Cirq/Braket) → classical ML (ONNX) → optimization (D-Wave)",
   },
 
   // ─── Chain 60: Semantic RDF Pipeline ──────────────────────────────────
