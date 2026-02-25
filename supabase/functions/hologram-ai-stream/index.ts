@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 // ── Agent Persona System Prompts ──────────────────────────────────────────
-// Canonical behavioral archetypes distilled from 30+ AI agent instruction sets.
 
 const PERSONA_PROMPTS: Record<string, string> = {
   hologram:
@@ -56,8 +55,6 @@ const PERSONA_PROMPTS: Record<string, string> = {
 };
 
 // ── Skill Prompt Fragments ────────────────────────────────────────────────
-// Atomic behavioral primitives that compose with persona prompts.
-// UOR principle: skills are datums, personas are projections.
 
 const SKILL_FRAGMENTS: Record<string, string> = {
   reason:
@@ -122,18 +119,108 @@ const SKILL_FRAGMENTS: Record<string, string> = {
     "Every transformation should preserve the essential truth while revealing a new facet.",
 };
 
+// ── Knowledge Distillations ───────────────────────────────────────────────
+// Condensed wisdom from curated sources, injected per-skill.
+// These are the UOR projections of the knowledge registry —
+// each skill's distillation is a coherent synthesis, not a list.
+
+const KNOWLEDGE_DISTILLATIONS: Record<string, string> = {
+  reason:
+    "Channel the traditions of Aristotle (formal logic), Descartes (first principles), " +
+    "Munger (mental model lattice), Kahneman (cognitive bias awareness), and Popper (falsifiability). " +
+    "Apply: First Principles decomposition, Inversion (solve backwards), Bayesian updating, " +
+    "Second-Order thinking (consequences of consequences), Steel-Manning, and Occam's Razor. " +
+    "Where these perspectives diverge, present the productive tension.",
+  research:
+    "Channel Feynman (curiosity-driven inquiry), Darwin (systematic long-term observation), " +
+    "Nate Silver (probabilistic evidence), and Saffo (signal vs noise). " +
+    "Apply: the Scientific Method, DIKW Pyramid, Triangulation across sources, " +
+    "the 5 Whys for root causes, and the CRAAP test for source evaluation. " +
+    "Distinguish established fact from emerging consensus from speculation.",
+  explain:
+    "Channel Feynman (simplify until clear), Sagan (wonder), Rosling (data storytelling), " +
+    "Khan (meet the learner), and Orwell (plain language). " +
+    "Apply: the Feynman Technique (teach to a child), Pyramid Principle (conclusion first), " +
+    "Chunking (7±2 units), Analogy Mapping, and SUCCES (Simple, Unexpected, Concrete, Credible, Emotional, Story). " +
+    "Build understanding constructively — the learner is active, not passive.",
+  summarize:
+    "Channel Adler (syntopical reading), Naval (aphoristic compression), " +
+    "Pascal (brevity as discipline), and Bacon (essays as distilled wisdom). " +
+    "Apply: Pareto 80/20 for information density, Progressive Summarization (layer by layer), " +
+    "Inverted Pyramid (most important first), and Zettelkasten (atomic linked notes). " +
+    "Preserve nuance while compressing ruthlessly.",
+  plan:
+    "Channel Eisenhower (planning > plans), Sun Tzu (strategy under uncertainty), " +
+    "Bezos (work backwards), Grove (OKRs), and Drucker (management by objectives). " +
+    "Apply: OKRs for alignment, OODA Loop for fast adaptation, Eisenhower Matrix for priorities, " +
+    "Wardley Mapping for situational awareness, Pre-Mortem to anticipate failure, " +
+    "and Theory of Constraints to find the bottleneck. Think Agile and Lean.",
+  code:
+    "Channel Knuth (rigor and elegance), Torvalds (pragmatic systems), Fowler (refactoring), " +
+    "Uncle Bob (Clean Code), Beck (TDD), and Liskov (type safety). " +
+    "Apply: SOLID principles, DRY, YAGNI, Test-Driven Development, Unix Philosophy (do one thing well), " +
+    "and Domain-Driven Design. Readability trumps cleverness. Compose via interfaces.",
+  review:
+    "Channel Deming (quality through process), Dalio (radical transparency), " +
+    "and Torvalds (rigorous review culture). " +
+    "Apply: PDCA cycle, After Action Review, Six Thinking Hats, Red Team methodology, " +
+    "Chesterton's Fence (understand before removing), and SBI feedback (Situation-Behavior-Impact). " +
+    "Be constructive — explain why, not just what.",
+  debug:
+    "Channel Grace Hopper (systematic fault-finding), Feynman (root cause thinking), " +
+    "Ohno (5 Whys), and James Reason (Swiss Cheese Model). " +
+    "Apply: 5 Whys iteratively, Root Cause Analysis, Rubber Duck Debugging, " +
+    "Binary Search to narrow the problem space, Fishbone Diagrams for cause mapping, " +
+    "and Blameless Postmortems. The goal is prevention, not just fixes.",
+  create:
+    "Channel da Vinci (polymath curiosity), Eno (oblique strategies), " +
+    "Catmull (creative culture), Csikszentmihalyi (flow), and Tharp (discipline as foundation). " +
+    "Apply: SCAMPER, TRIZ (inventive problem solving), Lateral Thinking, " +
+    "Design Thinking (empathize → prototype → test), Oblique Strategies (constraints as catalysts), " +
+    "and Blue Ocean Strategy. Diverge first, then converge. Bauhaus: form follows function.",
+  reflect:
+    "Channel Marcus Aurelius (daily self-examination), Montaigne (reflective essays), " +
+    "Jung (shadow work), Frankl (meaning-making), and Senge (reflective practice). " +
+    "Apply: Kolb's Learning Cycle (experience → reflect → conceptualize → experiment), " +
+    "Johari Window, Double-Loop Learning (question assumptions), " +
+    "Stoic Evening Review, and Morning Pages. Rooted in Stoicism, Zen, and Existentialism.",
+  connect:
+    "Channel Feynman (connecting physics to everything), Steven Johnson (adjacent possible), " +
+    "Epstein (Range — cross-domain), Barabási (network science), and Carnegie (human connection). " +
+    "Apply: Adjacent Possible, Weak Ties Theory (bridges drive novelty), " +
+    "the Medici Effect (intersection of disciplines), Systems Thinking (feedback loops and leverage), " +
+    "Concept Mapping, and the T-Shaped Person model (depth + breadth).",
+  transform:
+    "Channel Campbell (Hero's Journey), Lewin (Unfreeze-Change-Refreeze), " +
+    "Dweck (growth mindset), Scharmer (Theory U), and Fuller (build the new). " +
+    "Apply: the Hero's Journey structure, Theory U (co-sense → co-create), " +
+    "Kotter's 8 Steps, Threshold Concepts (transformative knowledge), " +
+    "Antifragility (gain from disorder), and Dialectical Thinking (thesis → antithesis → synthesis). " +
+    "Rooted in Complexity Theory and Process Philosophy.",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, model, personaId, skillId } = await req.json();
+    const { messages, model, personaId, skillId, knowledgeDistillation } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Compose system prompt: persona base + optional skill fragment
+    // Compose system prompt: persona base + skill fragment + knowledge distillation
     const personaPrompt = PERSONA_PROMPTS[personaId || "hologram"] || PERSONA_PROMPTS.hologram;
-    const skillFragment = skillId && SKILL_FRAGMENTS[skillId] ? `\n\nActive skill mode — ${skillId.toUpperCase()}:\n${SKILL_FRAGMENTS[skillId]}` : "";
-    const systemPrompt = personaPrompt + skillFragment;
+    const skillFragment = skillId && SKILL_FRAGMENTS[skillId]
+      ? `\n\nActive skill mode — ${skillId.toUpperCase()}:\n${SKILL_FRAGMENTS[skillId]}`
+      : "";
+
+    // Knowledge: prefer client-sent distillation (for composability),
+    // fall back to server-side registry
+    const knowledge = knowledgeDistillation
+      || (skillId && KNOWLEDGE_DISTILLATIONS[skillId]
+        ? `\n\nKnowledge traditions to draw from:\n${KNOWLEDGE_DISTILLATIONS[skillId]}`
+        : "");
+
+    const systemPrompt = personaPrompt + skillFragment + knowledge;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

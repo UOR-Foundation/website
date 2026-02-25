@@ -26,6 +26,11 @@ import {
   type AgentPersona,
   type AgentSkill,
 } from "@/modules/hologram-ui/agent-personas";
+import {
+  getKnowledgeForSkill,
+  getSourceCount,
+  distillKnowledge,
+} from "@/modules/hologram-ui/skill-knowledge-registry";
 import { PHASES } from "@/modules/hologram-ui/sovereign-creator";
 import {
   getAiEngine,
@@ -385,6 +390,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange }: Hologra
           model: selectedCloudModel,
           personaId: selectedPersona.id,
           skillId: activeSkill?.id || selectedPersona.defaultSkillId,
+          knowledgeDistillation: distillKnowledge(activeSkill?.id || selectedPersona.defaultSkillId),
         }),
       });
 
@@ -647,6 +653,9 @@ export default function HologramAiChat({ open, onClose, onPhaseChange }: Hologra
                 >
                   <span>{skill.icon}</span>
                   {skill.name}
+                  {getSourceCount(skill.id) > 0 && (
+                    <span className="text-[9px] opacity-50">·{getSourceCount(skill.id)}</span>
+                  )}
                 </button>
               );
             })}
@@ -733,7 +742,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange }: Hologra
                       const isActive = (activeSkill?.id || selectedPersona.defaultSkillId) === skill.id;
                       const phaseDef = PHASES[skill.phase];
                       return (
-                        <button
+                         <button
                           key={skill.id}
                           onClick={() => setActiveSkill(isActive && activeSkill ? null : skill)}
                           className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] transition-all hover:scale-[1.03]"
@@ -746,11 +755,56 @@ export default function HologramAiChat({ open, onClose, onPhaseChange }: Hologra
                         >
                           <span className="text-[10px]">{skill.icon}</span>
                           {skill.name}
+                          {getSourceCount(skill.id) > 0 && (
+                            <span className="text-[9px] opacity-60">·{getSourceCount(skill.id)}</span>
+                          )}
                         </button>
                       );
                     })}
                   </div>
                 </div>
+
+                {/* Knowledge Sources for active skill */}
+                {(() => {
+                  const activeId = activeSkill?.id || selectedPersona.defaultSkillId;
+                  const knowledge = getKnowledgeForSkill(activeId);
+                  if (!knowledge) return null;
+                  const skillName = AGENT_SKILLS.find(s => s.id === activeId)?.name || activeId;
+                  return (
+                    <div className="mt-3">
+                      <p className="text-[10px] tracking-widest uppercase text-center mb-2" style={{ color: P.textDimmer }}>
+                        {skillName} draws from
+                      </p>
+                      <div className="flex flex-wrap justify-center gap-1">
+                        {knowledge.people.map((p) => (
+                          <span
+                            key={p.name}
+                            className="px-2 py-0.5 rounded-full text-[10px]"
+                            style={{ background: "hsla(38, 30%, 30%, 0.15)", color: P.textMuted }}
+                            title={p.essence}
+                          >
+                            {p.name}
+                          </span>
+                        ))}
+                        {knowledge.frameworks.slice(0, 4).map((f) => (
+                          <span
+                            key={f.name}
+                            className="px-2 py-0.5 rounded-full text-[10px]"
+                            style={{ background: "hsla(25, 20%, 25%, 0.3)", color: P.textDim }}
+                            title={f.essence}
+                          >
+                            {f.name}
+                          </span>
+                        ))}
+                        {knowledge.frameworks.length > 4 && (
+                          <span className="text-[10px] px-1" style={{ color: P.textDimmer }}>
+                            +{knowledge.frameworks.length - 4} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
