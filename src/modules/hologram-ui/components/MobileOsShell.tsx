@@ -7,7 +7,7 @@
  * Maximum breathing room, balanced composition, inviting warmth.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Grid3X3,
@@ -49,11 +49,63 @@ const dockApps: AppIcon[] = [
   { label: "Search",  icon: Search,   action: "__search",          color: "210 8% 34%" },
 ];
 
+/* ── Parallax hook (gyroscope + touch fallback) ────────────── */
+function useParallax() {
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const touchRef = useRef({ active: false, startX: 0, startY: 0 });
+
+  useEffect(() => {
+    // Try DeviceOrientation (gyroscope) first
+    let hasGyro = false;
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      if (e.gamma === null || e.beta === null) return;
+      hasGyro = true;
+      // gamma: left-right tilt (-90..90), beta: front-back tilt (-180..180)
+      // Normalize to a subtle range (-1..1) then scale to pixels
+      const x = Math.max(-1, Math.min(1, (e.gamma ?? 0) / 30)) * 8;
+      const y = Math.max(-1, Math.min(1, ((e.beta ?? 0) - 45) / 30)) * 8;
+      setOffset({ x, y });
+    };
+
+    window.addEventListener("deviceorientation", handleOrientation);
+
+    // Touch fallback — tracks finger position relative to screen center
+    const handleTouchMove = (e: TouchEvent) => {
+      if (hasGyro) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const x = ((touch.clientX - cx) / cx) * 6;
+      const y = ((touch.clientY - cy) / cy) * 6;
+      setOffset({ x, y });
+    };
+
+    const handleTouchEnd = () => {
+      if (hasGyro) return;
+      // Ease back to center
+      setOffset({ x: 0, y: 0 });
+    };
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd);
+
+    return () => {
+      window.removeEventListener("deviceorientation", handleOrientation);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, []);
+
+  return offset;
+}
+
 /* ── Component ──────────────────────────────────────────────── */
 export default function MobileOsShell() {
   const navigate = useNavigate();
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const parallax = useParallax();
 
   const handleApp = useCallback(
     (action: string) => {
@@ -75,12 +127,22 @@ export default function MobileOsShell() {
           "linear-gradient(168deg, hsl(220 18% 11%) 0%, hsl(220 16% 8%) 40%, hsl(210 14% 9%) 70%, hsl(220 18% 6%) 100%)",
       }}
     >
-      {/* Subtle warmth overlay */}
+      {/* Subtle warmth overlay — parallax-responsive */}
       <div
-        className="absolute inset-0 z-0 pointer-events-none"
+        className="absolute inset-0 z-0 pointer-events-none transition-transform duration-700 ease-out"
         style={{
+          transform: `translate(${parallax.x}px, ${parallax.y}px)`,
           background:
-            "radial-gradient(ellipse at 50% 30%, hsla(38, 25%, 45%, 0.04) 0%, transparent 65%)",
+            "radial-gradient(ellipse at 50% 30%, hsla(38, 25%, 45%, 0.06) 0%, transparent 65%)",
+        }}
+      />
+      {/* Secondary cool accent — moves opposite for depth */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none transition-transform duration-1000 ease-out"
+        style={{
+          transform: `translate(${-parallax.x * 0.6}px, ${-parallax.y * 0.6}px)`,
+          background:
+            "radial-gradient(ellipse at 30% 70%, hsla(210, 20%, 40%, 0.03) 0%, transparent 50%)",
         }}
       />
 
