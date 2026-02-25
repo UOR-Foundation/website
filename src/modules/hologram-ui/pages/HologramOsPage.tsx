@@ -83,7 +83,7 @@ function palette(m: BgMode) {
   };
   // image mode
   return {
-    wordmark: "hsla(38, 15%, 92%, 0.92)",
+    wordmark: "hsla(30, 8%, 10%, 0.9)",
     greeting: "hsla(38, 20%, 85%, 0.5)",
     heading:  "hsla(38, 15%, 92%, 0.92)",
     sub:      "hsla(38, 12%, 78%, 0.5)",
@@ -233,8 +233,8 @@ export default function HologramOsPage() {
               style={{
                 fontFamily: "'Playfair Display', serif",
                 fontWeight: 400,
-                fontSize: "clamp(14px, 1.2vw, 20px)",
-                letterSpacing: "0.45em",
+                fontSize: "clamp(16px, 1.5vw, 24px)",
+                letterSpacing: "0.55em",
                 textTransform: "uppercase" as const,
                 color: P.wordmark,
               }}
@@ -277,7 +277,7 @@ export default function HologramOsPage() {
               <div className="flex justify-center pt-[1.5vh] pb-[0.5vh]">
                 <div
                   className="w-px overflow-hidden"
-                  style={{ height: "clamp(36px, 4vh, 64px)" }}
+                  style={{ height: "clamp(48px, 5.5vh, 80px)" }}
                 >
                   <div
                     className="w-full"
