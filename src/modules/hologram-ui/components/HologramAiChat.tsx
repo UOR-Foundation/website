@@ -13,12 +13,18 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   X, Send, Loader2, Cpu, Sparkles, MessageSquare,
-  Plus, Trash2, ChevronLeft, ChevronDown, Check,
+  Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap,
 } from "lucide-react";
 import {
   getAiEngine,
   RECOMMENDED_MODELS,
 } from "@/modules/uns/core/hologram/ai-engine";
+import {
+  checkInferenceCache,
+  getInputHash,
+  writeInferenceCache,
+  replayAsStream,
+} from "@/modules/uns/core/hologram/inference-cache";
 import { useAiChatHistory, type Conversation } from "@/modules/hologram-ui/hooks/useAiChatHistory";
 
 // ── Palette constants ──────────────────────────────────────────────────────
@@ -202,19 +208,17 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
     const text = input.trim();
     if (!text || isGenerating) return;
 
-    if (!ai.isReady) {
-      // Auto-load first recommended model if none selected
-      if (selectedModelIdx !== null) {
-        setMessages((prev) => [
-          ...prev,
-          { id: `hint-${Date.now()}`, role: "system", content: "Model is still loading, please wait…", timestamp: new Date() },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { id: `hint-${Date.now()}`, role: "system", content: "Select a model from the dropdown to begin.", timestamp: new Date() },
-        ]);
-      }
+    // Determine inference path: model ID for cache keying
+    const modelId = ai.isReady
+      ? ai.active!.modelId
+      : "cloud/gemini-3-flash-preview";
+
+    // If no local model and no cloud fallback intent, prompt user
+    if (!ai.isReady && selectedModelIdx !== null) {
+      setMessages((prev) => [
+        ...prev,
+        { id: `hint-${Date.now()}`, role: "system", content: "Model is still loading, please wait…", timestamp: new Date() },
+      ]);
       return;
     }
 
@@ -222,7 +226,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
     if (history.isAuthenticated && !convId) {
       convId = await history.createConversation(
         text.length > 40 ? text.slice(0, 40) + "…" : text,
-        ai.active?.modelId,
+        modelId,
       );
     }
 
@@ -247,32 +251,168 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
       { id: assistantId, role: "assistant", content: "", timestamp: new Date() },
     ]);
 
+    const updateAssistant = (newText: string) => {
+      streamedText = newText;
+      setMessages((prev) =>
+        prev.map((m) => m.id === assistantId ? { ...m, content: streamedText } : m),
+      );
+    };
+
     try {
-      const result = await ai.run(text, {
-        maxNewTokens: 256,
-        temperature: 0.7,
-        onToken: (token: string) => {
-          streamedText += token;
-          setMessages((prev) =>
-            prev.map((m) => m.id === assistantId ? { ...m, content: streamedText } : m),
+      // ── Path 1: Cache Hit (O(1), ~200 tok/s) ──────────────────
+      const cacheHit = await checkInferenceCache(text, modelId);
+
+      if (cacheHit) {
+        const start = performance.now();
+        await new Promise<void>((resolve) => {
+          replayAsStream(
+            cacheHit.output,
+            (token) => { streamedText += token; updateAssistant(streamedText); },
+            resolve,
+            5, // ~200 tok/s
           );
+        });
+        const elapsed = Math.round(performance.now() - start);
+        const tokCount = cacheHit.output.split(/\s+/).length;
+
+        const meta = {
+          inferenceTimeMs: elapsed,
+          tokensGenerated: tokCount,
+          gpuAccelerated: false,
+          inputCid: cacheHit.proofId,
+          outputCid: `cache:hit#${cacheHit.hitCount}`,
+          inferenceSource: "cache" as const,
+        };
+
+        setMessages((prev) =>
+          prev.map((m) => m.id === assistantId ? { ...m, content: cacheHit.output, meta } : m),
+        );
+        if (convId) history.saveMessage(convId, "assistant", cacheHit.output, meta as Record<string, unknown>);
+        setIsGenerating(false);
+        return;
+      }
+
+      // ── Path 2: Local Model (WebGPU/WASM) ────────────────────
+      if (ai.isReady) {
+        const result = await ai.run(text, {
+          maxNewTokens: 256,
+          temperature: 0.7,
+          onToken: (token: string) => { streamedText += token; updateAssistant(streamedText); },
+        });
+
+        const finalContent = result.output || streamedText || "(empty response)";
+        const meta = {
+          inferenceTimeMs: result.inferenceTimeMs,
+          tokensGenerated: result.tokensGenerated,
+          gpuAccelerated: result.gpuAccelerated,
+          inputCid: result.inputCid,
+          outputCid: result.outputCid,
+          inferenceSource: "local" as const,
+        };
+
+        setMessages((prev) =>
+          prev.map((m) => m.id === assistantId ? { ...m, content: finalContent, meta } : m),
+        );
+        if (convId) history.saveMessage(convId, "assistant", finalContent, meta as Record<string, unknown>);
+
+        // Cache write (fire-and-forget)
+        getInputHash(text, modelId).then((proof) => {
+          writeInferenceCache({
+            inputHash: proof.hashHex,
+            inputCanonical: proof.nquads,
+            outputText: finalContent,
+            toolName: `local:${result.modelId}`,
+            epistemicGrade: "B",
+          });
+        });
+
+        setIsGenerating(false);
+        return;
+      }
+
+      // ── Path 3: Cloud Fallback (Lovable AI Gateway) ──────────
+      const STREAM_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hologram-ai-stream`;
+
+      const resp = await fetch(STREAM_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: text }],
+          model: "google/gemini-3-flash-preview",
+        }),
       });
 
-      const finalContent = result.output || streamedText || "(empty response)";
+      if (!resp.ok) {
+        const errBody = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+        throw new Error(errBody.error || `Cloud AI error: ${resp.status}`);
+      }
+
+      if (!resp.body) throw new Error("No response stream");
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+      let streamDone = false;
+      const start = performance.now();
+
+      while (!streamDone) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") { streamDone = true; break; }
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) { streamedText += content; updateAssistant(streamedText); }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+
+      const elapsed = Math.round(performance.now() - start);
+      const tokCount = streamedText.split(/\s+/).length;
+      const finalContent = streamedText || "(empty response)";
+
       const meta = {
-        inferenceTimeMs: result.inferenceTimeMs,
-        tokensGenerated: result.tokensGenerated,
-        gpuAccelerated: result.gpuAccelerated,
-        inputCid: result.inputCid,
-        outputCid: result.outputCid,
+        inferenceTimeMs: elapsed,
+        tokensGenerated: tokCount,
+        gpuAccelerated: false,
+        inputCid: "",
+        outputCid: "",
+        inferenceSource: "cloud" as const,
       };
 
       setMessages((prev) =>
         prev.map((m) => m.id === assistantId ? { ...m, content: finalContent, meta } : m),
       );
-
       if (convId) history.saveMessage(convId, "assistant", finalContent, meta as Record<string, unknown>);
+
+      // Cache write for future O(1) replay
+      getInputHash(text, modelId).then((proof) => {
+        meta.inputCid = proof.cid;
+        writeInferenceCache({
+          inputHash: proof.hashHex,
+          inputCanonical: proof.nquads,
+          outputText: finalContent,
+          toolName: "cloud:gemini-3-flash-preview",
+          epistemicGrade: "B",
+        });
+      });
+
     } catch (e) {
       setMessages((prev) => [
         ...prev,
@@ -459,7 +599,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                 <p className="text-sm max-w-sm" style={{ color: P.textMuted }}>
                   {ai.isReady
                     ? `Running ${activeModelName} locally · Private & content-addressed`
-                    : "Select a model below to begin a private, on-device conversation."
+                    : "Cloud AI ready · Load a local model for private on-device inference"
                   }
                 </p>
               </div>
@@ -571,7 +711,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={ai.isReady ? "How can I help you today?" : "Select a model to start…"}
+                placeholder={ai.isReady ? "Ask anything…" : "Ask anything — cloud AI is always ready…"}
                 disabled={isGenerating}
                 rows={1}
                 className="w-full bg-transparent border-none outline-none resize-none text-[15px] placeholder:opacity-40 leading-relaxed"
@@ -690,7 +830,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
           {/* Subtle status line */}
           <div className="flex items-center justify-between mt-1.5 px-2">
             <p className="text-[11px] tracking-wider" style={{ color: P.textDimmer }}>
-              {ai.isReady ? "Private · On-device · Content-addressed" : ""}
+              {ai.isReady ? "Private · On-device · Content-addressed" : "Cloud AI · Content-addressed · Cached"}
             </p>
             {history.isAuthenticated && history.activeConversationId && (
               <p className="text-[11px] tracking-wider" style={{ color: P.goldMuted }}>● Saving</p>
@@ -770,6 +910,17 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
           {/* Inference metadata */}
           {meta && (
             <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 px-1">
+              {(meta as any).inferenceSource && (
+                <span className="text-[11px] font-mono" style={{
+                  color: (meta as any).inferenceSource === "cache" ? P.goldLight
+                       : (meta as any).inferenceSource === "cloud" ? "hsl(200, 50%, 60%)"
+                       : P.textDim,
+                }}>
+                  {(meta as any).inferenceSource === "cache" ? "⚡ Cache"
+                   : (meta as any).inferenceSource === "cloud" ? "☁ Cloud"
+                   : "⬡ Local"}
+                </span>
+              )}
               {meta.inferenceTimeMs !== undefined && (
                 <span className="text-[11px] font-mono" style={{ color: P.textDim }}>
                   {meta.inferenceTimeMs}ms
@@ -778,11 +929,12 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
               {meta.tokensGenerated !== undefined && (
                 <span className="text-[11px] font-mono" style={{ color: P.textDim }}>
                   ~{meta.tokensGenerated} tok
+                  {meta.inferenceTimeMs ? ` · ${Math.round(meta.tokensGenerated / (meta.inferenceTimeMs / 1000))}/s` : ""}
                 </span>
               )}
-              {meta.gpuAccelerated !== undefined && (
-                <span className="text-[11px] font-mono" style={{ color: meta.gpuAccelerated ? P.gold : P.textDim }}>
-                  {meta.gpuAccelerated ? "WebGPU ✓" : "WASM"}
+              {meta.gpuAccelerated && (
+                <span className="text-[11px] font-mono" style={{ color: P.gold }}>
+                  WebGPU ✓
                 </span>
               )}
               {meta.outputCid && (
