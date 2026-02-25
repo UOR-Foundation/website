@@ -172,25 +172,79 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
         </div>
       </div>
 
-      {/* Dynamic label */}
+      {/* Dynamic label — context-aware prompts */}
       {(() => {
-        const phaseLabels: Record<TriadicPhase, string> = {
-          learn: "Learning",
-          work: "Working",
-          play: "Playing",
+        // Determine if we have enough data for rebalancing prompts
+        const totalWeight = balance.learn + balance.work + balance.play;
+        const hasSufficientData = externalBalance !== undefined && totalWeight > 0;
+
+        // Smart rebalancing prompts — human, warm, actionable
+        const getRebalancePrompt = (): { label: string; color: string } => {
+          if (!hasSufficientData) {
+            return { label: "Your day", color: "hsla(38, 15%, 80%, 0.6)" };
+          }
+
+          // If actively doing something, show that
+          if (activePhase) {
+            const phaseLabels: Record<TriadicPhase, string> = {
+              learn: "Discovering",
+              work: "Building",
+              play: "Reflecting",
+            };
+            return {
+              label: phaseLabels[activePhase],
+              color: `hsla(${PHASES[activePhase].hue}, 30%, 72%, 0.7)`,
+            };
+          }
+
+          // Check for imbalance — only suggest when data shows clear skew
+          const { dominant, neglected } = report;
+
+          if (dominant && neglected) {
+            // Strong imbalance: dominant+neglected both flagged
+            const prompts: Partial<Record<TriadicPhase, Partial<Record<TriadicPhase, string>>>> = {
+              work: {
+                learn: "Try something new",
+                play: "Take a moment to reflect",
+              },
+              learn: {
+                work: "Put ideas into action",
+                play: "Step back and enjoy",
+              },
+              play: {
+                learn: "Feed your curiosity",
+                work: "Channel this energy",
+              },
+            };
+            const prompt = prompts[dominant]?.[neglected] ?? "Your day";
+            return { label: prompt, color: "hsla(25, 25%, 70%, 0.7)" };
+          }
+
+          if (dominant) {
+            // Mild imbalance: only dominant flagged
+            const nudges: Record<TriadicPhase, string> = {
+              work: "Pause and breathe",
+              learn: "Create something",
+              play: "Focus your energy",
+            };
+            return { label: nudges[dominant], color: "hsla(25, 25%, 70%, 0.65)" };
+          }
+
+          if (report.coherent) {
+            return { label: "Your day", color: "hsla(38, 15%, 80%, 0.6)" };
+          }
+
+          return { label: "Your day", color: "hsla(38, 15%, 80%, 0.6)" };
         };
-        const label = activePhase ? phaseLabels[activePhase] : (report.coherent ? "Today" : "Rebalance");
-        const labelColor = activePhase
-          ? `hsla(${PHASES[activePhase].hue}, 30%, 72%, 0.7)`
-          : report.coherent
-            ? "hsla(38, 15%, 80%, 0.6)"
-            : "hsla(25, 25%, 70%, 0.6)";
+
+        const { label, color } = getRebalancePrompt();
+
         return (
           <span
             className="text-[9px] tracking-[0.4em] uppercase transition-all duration-700"
             style={{
               fontFamily: "'DM Sans', system-ui, sans-serif",
-              color: labelColor,
+              color,
               fontWeight: 400,
             }}
           >
