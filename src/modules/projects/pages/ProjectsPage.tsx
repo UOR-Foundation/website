@@ -142,7 +142,7 @@ const Projects = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-[25px] md:pt-52 pb-16 md:pb-22">
+      <section className="hero-gradient pt-[18px] md:pt-52 pb-16 md:pb-22">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             Project Maturity Framework
