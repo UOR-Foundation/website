@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/modules/core/ui/dialog";
-import { Heart, Copy, Check, Wallet, Bitcoin, ShieldCheck, X } from "lucide-react";
+import { Heart, Copy, Check, Wallet, Bitcoin, ShieldCheck, X, Eye } from "lucide-react";
 import qrBitcoin from "@/assets/qr-bitcoin.png";
 import qrEthereum from "@/assets/qr-ethereum.png";
 import qrSolana from "@/assets/qr-solana.png";
@@ -72,11 +72,40 @@ function CopyAddress({ address }: { address: string }) {
   );
 }
 
+/** QR code with blur overlay — click to reveal one at a time. */
+function RevealableQR({ src, name }: { src: string; name: string }) {
+  const [revealed, setRevealed] = useState(false);
+
+  return (
+    <div className="shrink-0 w-[160px] h-[160px] rounded-lg overflow-hidden bg-background border border-border/30 p-2 relative">
+      <img
+        src={src}
+        alt={`${name} QR code`}
+        className="w-full h-full object-contain"
+      />
+      {!revealed && (
+        <button
+          onClick={() => setRevealed(true)}
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 cursor-pointer backdrop-blur-md bg-background/60 transition-opacity hover:bg-background/50"
+          aria-label={`Reveal ${name} QR code`}
+        >
+          <Eye size={24} className="text-foreground/70" />
+          <span className="text-xs font-semibold font-body text-foreground/80">
+            Click to reveal
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 /** Certificate panel that derives a SHA-256 proof from the address content. */
 function CertificatePanel({ name, symbol, address }: { name: string; symbol: string; address: string }) {
   const [open, setOpen] = useState(false);
   const [hash, setHash] = useState<string | null>(null);
-  const issuedAt = "2025-01-15T00:00:00Z";
+
+  // Precise issuance timestamp — captured at component mount
+  const issuedAt = useMemo(() => new Date().toISOString(), []);
 
   useEffect(() => {
     if (open && !hash) {
@@ -84,7 +113,7 @@ function CertificatePanel({ name, symbol, address }: { name: string; symbol: str
       const canonical = JSON.stringify({ network: symbol, address, issuedAt });
       sha256Hex(canonical).then(setHash);
     }
-  }, [open, hash, symbol, address]);
+  }, [open, hash, symbol, address, issuedAt]);
 
   if (!open) {
     return (
@@ -133,7 +162,6 @@ function CertificatePanel({ name, symbol, address }: { name: string; symbol: str
     </div>
   );
 }
-
 const DonatePopup = ({ open, onOpenChange }: DonatePopupProps) => {
   const [tab, setTab] = useState<"fiat" | "crypto">("fiat");
 
@@ -213,13 +241,7 @@ const DonatePopup = ({ open, onOpenChange }: DonatePopupProps) => {
               >
                 <div className="flex items-start gap-4">
                   {/* QR Code */}
-                  <div className="shrink-0 w-[160px] h-[160px] rounded-lg overflow-hidden bg-background border border-border/30 p-2">
-                    <img
-                      src={crypto.qr}
-                      alt={`${crypto.name} QR code`}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
+                  <RevealableQR src={crypto.qr} name={crypto.name} />
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
