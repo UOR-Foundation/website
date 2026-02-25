@@ -112,7 +112,7 @@ export function useAttentionMode(): AttentionContextValue {
   if (!ctx) {
     // Fallback for components outside the provider — return diffuse defaults
     return {
-      ...deriveState(0.7),
+      ...deriveState(0.3),
       toggle: () => {},
       setAperture: () => {},
       setPreset: () => {},
