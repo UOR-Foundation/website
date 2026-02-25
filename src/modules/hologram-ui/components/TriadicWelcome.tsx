@@ -9,7 +9,7 @@
  * @module hologram-ui/components/TriadicWelcome
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { PHASES, PHASE_ORDER, type TriadicPhase } from "@/modules/hologram-ui/sovereign-creator";
 import {
   AGENT_PERSONAS,
@@ -76,14 +76,39 @@ export default function TriadicWelcome({
   onSelectSkill,
 }: TriadicWelcomeProps) {
   const [focusedPhase, setFocusedPhase] = useState<TriadicPhase | null>(null);
+  const [animDirection, setAnimDirection] = useState<"enter" | "exit">("enter");
+  const [renderPhase, setRenderPhase] = useState<TriadicPhase | null>(null);
   const personasByPhase = getPersonasByPhase();
 
-  const goBack = useCallback(() => setFocusedPhase(null), []);
+  const selectPhase = useCallback((phase: TriadicPhase) => {
+    setAnimDirection("enter");
+    setFocusedPhase(phase);
+    setRenderPhase(phase);
+  }, []);
+
+  const goBack = useCallback(() => {
+    setAnimDirection("exit");
+    // Wait for exit animation before switching view
+    setTimeout(() => {
+      setFocusedPhase(null);
+      setRenderPhase(null);
+      setAnimDirection("enter");
+    }, 280);
+  }, []);
+
+  const isOverview = focusedPhase === null;
 
   // ── Phase Overview (no phase selected) ──────────────────────────────
-  if (!focusedPhase) {
+  if (isOverview) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-8 py-8 animate-fade-in">
+      <div
+        className="flex flex-col items-center justify-center h-full gap-8 py-8"
+        style={{
+          animation: animDirection === "enter"
+            ? "triadic-slide-in-left 0.4s cubic-bezier(0.22, 1, 0.36, 1) both"
+            : "triadic-slide-out-left 0.28s cubic-bezier(0.55, 0, 1, 0.45) both",
+        }}
+      >
         {/* Greeting */}
         <div className="text-center space-y-2">
           <h2
@@ -108,7 +133,7 @@ export default function TriadicWelcome({
             return (
               <button
                 key={phase}
-                onClick={() => setFocusedPhase(phase)}
+                onClick={() => selectPhase(phase)}
                 className="w-full group relative flex items-center gap-5 px-5 py-4 rounded-2xl text-left transition-all duration-500 hover:scale-[1.01]"
                 style={{
                   background: isCurrentPhase
@@ -177,13 +202,21 @@ export default function TriadicWelcome({
   }
 
   // ── Focused Phase View ──────────────────────────────────────────────
-  const phaseDef = PHASES[focusedPhase];
-  const desc = PHASE_DESCRIPTIONS[focusedPhase];
-  const phasePersonas = personasByPhase[focusedPhase];
-  const phaseSkills = AGENT_SKILLS.filter(s => s.phase === focusedPhase);
+  const phaseDef = PHASES[renderPhase ?? focusedPhase!];
+  const phaseKey = renderPhase ?? focusedPhase!;
+  const desc = PHASE_DESCRIPTIONS[phaseKey];
+  const phasePersonas = personasByPhase[phaseKey];
+  const phaseSkills = AGENT_SKILLS.filter(s => s.phase === phaseKey);
 
   return (
-    <div className="flex flex-col h-full py-6 animate-fade-in">
+    <div
+      className="flex flex-col h-full py-6"
+      style={{
+        animation: animDirection === "enter"
+          ? "triadic-slide-in-right 0.4s cubic-bezier(0.22, 1, 0.36, 1) both"
+          : "triadic-slide-out-right 0.28s cubic-bezier(0.55, 0, 1, 0.45) both",
+      }}
+    >
       {/* Back + Phase Header */}
       <div className="px-6 mb-6">
         <button
@@ -322,4 +355,29 @@ export default function TriadicWelcome({
       </div>
     </div>
   );
+}
+
+/* ── Transition keyframes ────────────────────────────────────────────── */
+const styleSheet = document.createElement("style");
+styleSheet.textContent = `
+  @keyframes triadic-slide-in-right {
+    0% { opacity: 0; transform: translateX(24px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes triadic-slide-out-right {
+    0% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(24px); }
+  }
+  @keyframes triadic-slide-in-left {
+    0% { opacity: 0; transform: translateX(-24px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes triadic-slide-out-left {
+    0% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(-24px); }
+  }
+`;
+if (!document.querySelector('[data-triadic-transitions]')) {
+  styleSheet.setAttribute('data-triadic-transitions', '');
+  document.head.appendChild(styleSheet);
 }
