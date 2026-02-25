@@ -10,6 +10,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      style={{
+        // Respect focus mode — toasts fade and blur when focused
+        opacity: "var(--focus-chrome-opacity, 1)",
+        filter: "blur(var(--focus-blur-chrome, 0px))",
+        transition: "opacity 700ms ease, filter 700ms ease",
+      }}
       toastOptions={{
         classNames: {
           toast:
