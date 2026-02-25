@@ -509,8 +509,12 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
           className="flex-1 overflow-y-auto px-5 py-5 space-y-5"
           style={{ minHeight: "300px" }}
         >
-          {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
+          {messages.map((msg, idx) => (
+            <MessageBubble
+              key={msg.id}
+              message={msg}
+              isStreaming={isGenerating && msg.role === "assistant" && idx === messages.length - 1}
+            />
           ))}
 
           {isGenerating && (
@@ -659,7 +663,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
 
 // ── Message Bubble ─────────────────────────────────────────────────────────
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({ message, isStreaming = false }: { message: ChatMessage; isStreaming?: boolean }) {
   const { role, content, meta } = message;
 
   if (role === "system") {
@@ -706,6 +710,15 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           }}
         >
           {content}
+          {isStreaming && (
+            <span
+              className="inline-block w-[2px] h-[1.1em] align-middle ml-0.5"
+              style={{
+                background: "hsl(38, 50%, 55%)",
+                animation: "blink-caret 0.8s steps(2) infinite",
+              }}
+            />
+          )}
         </p>
 
         {/* Inference metadata */}
