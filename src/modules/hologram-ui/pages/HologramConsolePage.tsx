@@ -185,7 +185,36 @@ export default function HologramOsPage() {
 
   // ── Keyboard Handler ───────────────────────────────────────────────────
 
+  const [tabCandidates, setTabCandidates] = useState<string[]>([]);
+  const tabIdxRef = useRef(-1);
+
   const handleKey = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const candidates = tabCandidates.length > 0 ? tabCandidates : shell.complete(input);
+      if (candidates.length === 0) return;
+
+      if (candidates.length === 1) {
+        // Single match — complete directly
+        setInput(candidates[0] + " ");
+        setTabCandidates([]);
+        tabIdxRef.current = -1;
+      } else {
+        // Cycle through candidates
+        if (tabCandidates.length === 0) setTabCandidates(candidates);
+        const nextIdx = (tabIdxRef.current + 1) % candidates.length;
+        tabIdxRef.current = nextIdx;
+        setInput(candidates[nextIdx]);
+      }
+      return;
+    }
+
+    // Any non-Tab key resets tab completion state
+    if (e.key !== "Shift") {
+      setTabCandidates([]);
+      tabIdxRef.current = -1;
+    }
+
     if (e.key === "Enter") {
       exec(input);
       setInput("");
@@ -202,7 +231,7 @@ export default function HologramOsPage() {
       setHistIdx(next);
       setInput(next >= 0 ? h[next] ?? "" : "");
     }
-  }, [exec, input, shell, histIdx]);
+  }, [exec, input, shell, histIdx, tabCandidates]);
 
   // ── Quick Actions ──────────────────────────────────────────────────────
 

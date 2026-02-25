@@ -183,6 +183,64 @@ export class VShell {
     return { ...this.state, history: [...this.state.history] };
   }
 
+  // ── Tab Completion ─────────────────────────────────────────────────────
+
+  /**
+   * Return completion candidates for the current input string.
+   * - If the input has no spaces, complete command names.
+   * - If the first token is a command that takes a PID arg, complete PIDs.
+   * - For "gpu", complete subcommands.
+   */
+  complete(input: string): string[] {
+    const trimmed = input.trimStart();
+    const parts = trimmed.split(/\s+/);
+
+    if (parts.length <= 1) {
+      // Complete command names
+      const prefix = parts[0] ?? "";
+      return Object.keys(COMMANDS)
+        .filter(c => c.startsWith(prefix))
+        .sort();
+    }
+
+    const cmd = parts[0];
+
+    // Commands that accept a PID as the next argument
+    const pidCommands = new Set(["stat", "tick", "mmap", "mmapall", "select", "kill", "fork"]);
+    if (pidCommands.has(cmd) && parts.length === 2) {
+      const partial = parts[1];
+      return this.engine.listProcesses()
+        .filter(p => p.startsWith(partial))
+        .map(p => `${cmd} ${p}`);
+    }
+
+    // GPU subcommands
+    if (cmd === "gpu" && parts.length === 2) {
+      const subs = ["info", "bench", "matmul", "relu"];
+      const partial = parts[1];
+      return subs
+        .filter(s => s.startsWith(partial))
+        .map(s => `gpu ${s}`);
+    }
+
+    // Pipe filter completions (after |)
+    const lastPipe = trimmed.lastIndexOf("|");
+    if (lastPipe >= 0) {
+      const afterPipe = trimmed.slice(lastPipe + 1).trim();
+      const filterParts = afterPipe.split(/\s+/);
+      if (filterParts.length <= 1) {
+        const filters = ["grep", "head", "tail", "wc", "sort", "uniq", "cat"];
+        const prefix = filterParts[0] ?? "";
+        const before = trimmed.slice(0, lastPipe + 1) + " ";
+        return filters
+          .filter(f => f.startsWith(prefix))
+          .map(f => before + f);
+      }
+    }
+
+    return [];
+  }
+
   // ── Command Execution ─────────────────────────────────────────────────
 
   /**
