@@ -10,6 +10,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import TriadicOnboarding, { hasSeenOnboarding } from "@/modules/hologram-ui/components/TriadicOnboarding";
 import { PHASES, PHASE_ORDER, type TriadicPhase } from "@/modules/hologram-ui/sovereign-creator";
 import {
   AGENT_PERSONAS,
@@ -76,6 +77,7 @@ export default function TriadicWelcome({
   onSelectSkill,
 }: TriadicWelcomeProps) {
   const [focusedPhase, setFocusedPhase] = useState<TriadicPhase | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding());
   const [animDirection, setAnimDirection] = useState<"enter" | "exit">("enter");
   const [renderPhase, setRenderPhase] = useState<TriadicPhase | null>(null);
   const personasByPhase = getPersonasByPhase();
@@ -102,7 +104,7 @@ export default function TriadicWelcome({
   if (isOverview) {
     return (
       <div
-        className="flex flex-col items-center justify-center h-full gap-8 py-8"
+        className="relative flex flex-col items-center justify-center h-full gap-8 py-8"
         style={{
           animation: animDirection === "enter"
             ? "triadic-slide-in-left 0.4s cubic-bezier(0.22, 1, 0.36, 1) both"
@@ -197,6 +199,11 @@ export default function TriadicWelcome({
         <p className="text-[10px] tracking-wider" style={{ color: P.textDimmer }}>
           Active · {selectedPersona.name}
         </p>
+
+        {/* First-time onboarding overlay */}
+        {showOnboarding && (
+          <TriadicOnboarding onComplete={() => setShowOnboarding(false)} />
+        )}
       </div>
     );
   }
