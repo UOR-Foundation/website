@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import HologramClaimOverlay from "./HologramClaimOverlay";
 import HologramAiChat from "./HologramAiChat";
+import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 
 /* ── App definition ─────────────────────────────────────────── */
 interface AppIcon {
@@ -106,6 +107,7 @@ export default function MobileOsShell() {
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const parallax = useParallax();
+  const { greeting, name } = useGreeting();
 
   const handleApp = useCallback(
     (action: string) => {
@@ -146,13 +148,19 @@ export default function MobileOsShell() {
         }}
       />
 
-      {/* ── Branding — discreet, top-center ──────────────────── */}
-      <div className="relative z-10 flex justify-center pt-14 pb-2">
+      {/* ── Branding + Greeting ───────────────────────────────── */}
+      <div className="relative z-10 flex flex-col items-center pt-14 pb-2 gap-1">
         <p
           className="text-white/25 text-[11px] tracking-[0.45em] uppercase"
           style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
         >
           Hologram
+        </p>
+        <p
+          className="text-white/35 text-[13px] font-light tracking-wide"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
+          {greeting}{name ? `, ${name}` : ""}
         </p>
       </div>
 

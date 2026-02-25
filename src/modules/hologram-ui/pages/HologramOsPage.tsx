@@ -13,6 +13,7 @@ import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaim
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
+import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -60,6 +61,7 @@ export default function HologramOsPage() {
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { greeting, name } = useGreeting();
 
   const goConsole = useCallback(() => navigate("/hologram-console"), [navigate]);
 
@@ -112,7 +114,7 @@ export default function HologramOsPage() {
                 className="text-[11px] tracking-[0.3em] uppercase mb-4 text-white/50"
                 style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
               >
-                Experiences &amp; Applications
+                {greeting}{name ? `, ${name}` : ""}
               </p>
               <h2
                 className="text-4xl lg:text-5xl font-light leading-[1.15] mb-6 text-white/95"
