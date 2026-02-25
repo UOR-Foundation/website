@@ -16,6 +16,7 @@ import { GraphExplorer } from "../components/GraphExplorer";
 import { EntityInspector } from "../components/EntityInspector";
 import { IntelligencePanel } from "../components/IntelligencePanel";
 import { ingestFromGitHub, ingestFromZip } from "../lib/ingestion";
+import { persistToUorGraph } from "../lib/uor-persistence";
 import { mapToUor } from "../lib/uor-mapper";
 import { CodeGraphStore } from "../lib/graph-store";
 import { dehydrateSession, listSessions, rehydrateSession } from "../lib/session-persistence";
@@ -67,6 +68,13 @@ export default function CodeNexusPage() {
       const uorResult = await mapToUor(ingestionResult, setProgress);
       setProgress("Building graph…");
       populateGraph(ingestionResult, uorResult);
+      // Persist to UOR knowledge graph (non-blocking)
+      setProgress("Persisting to UOR graph…");
+      try {
+        await persistToUorGraph(uorResult, setProgress);
+      } catch {
+        // Non-fatal: persistence failure doesn't block the UI
+      }
       setProgress(null);
     },
     [populateGraph]
