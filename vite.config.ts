@@ -23,9 +23,8 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.png", "pwa-icon-192.png", "pwa-icon-512.png"],
       workbox: {
         // Exclude large WASM files (ONNX runtime ~22 MB) from precache
-        maximumFileSizeToCacheInBytes: 25 * 1024 * 1024, // 25 MB
-        // Also explicitly exclude WASM from precache manifest
-        globIgnores: ["**/*.wasm"],
+        globIgnores: ["**/ort-wasm-*.wasm", "**/*.wasm"],
+        maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, // 50 MB — safety net; WASM excluded via globIgnores
         // Never cache OAuth redirects
         navigateFallbackDenylist: [/^\/~oauth/],
         // Cache strategies for a crisp, fast experience
