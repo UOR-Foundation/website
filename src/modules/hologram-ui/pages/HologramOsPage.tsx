@@ -108,6 +108,7 @@ export default function HologramOsPage() {
   const isMobile = useIsMobile();
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatPrompt, setChatPrompt] = useState("");
   const { entryCount: journalEntryCount } = useFocusJournal();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [bgMode, setBgModeState] = useState<BgMode>(() => {
@@ -341,27 +342,32 @@ export default function HologramOsPage() {
               {/* Context interest pills — whisper-thin, barely there */}
               {contextHints.length > 0 && (
                 <div className="flex items-center justify-center gap-2 animate-fade-in pb-[1vh]">
-                  {contextHints.map((hint) => (
-                    <span
-                      key={hint}
-                      className="transition-all duration-700"
-                      style={{
-                        fontFamily: "'DM Sans', system-ui, sans-serif",
-                        fontSize: "clamp(8px, 0.6vw, 10px)",
-                        letterSpacing: "0.2em",
-                        textTransform: "uppercase" as const,
-                        fontWeight: 300,
-                        color: bgMode === "white" ? "hsla(30, 8%, 40%, 0.4)" : "hsla(38, 15%, 80%, 0.35)",
-                        padding: "3px 10px",
-                        borderRadius: "100px",
-                        border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 40%, 0.1)" : "hsla(38, 15%, 70%, 0.1)"}`,
-                        background: bgMode === "white" ? "hsla(30, 8%, 90%, 0.3)" : "hsla(30, 8%, 20%, 0.2)",
-                        backdropFilter: "blur(8px)",
-                      }}
-                    >
-                      {hint}
-                    </span>
-                  ))}
+                    {contextHints.map((hint) => (
+                      <button
+                        key={hint}
+                        onClick={() => {
+                          setChatPrompt(`Tell me more about ${hint} — what should I explore next?`);
+                          setChatOpen(true);
+                        }}
+                        className="transition-all duration-700 hover:scale-105"
+                        style={{
+                          fontFamily: "'DM Sans', system-ui, sans-serif",
+                          fontSize: "clamp(8px, 0.6vw, 10px)",
+                          letterSpacing: "0.2em",
+                          textTransform: "uppercase" as const,
+                          fontWeight: 300,
+                          color: bgMode === "white" ? "hsla(30, 8%, 40%, 0.4)" : "hsla(38, 15%, 80%, 0.35)",
+                          padding: "3px 10px",
+                          borderRadius: "100px",
+                          border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 40%, 0.1)" : "hsla(38, 15%, 70%, 0.1)"}`,
+                          background: bgMode === "white" ? "hsla(30, 8%, 90%, 0.3)" : "hsla(30, 8%, 20%, 0.2)",
+                          backdropFilter: "blur(8px)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {hint}
+                      </button>
+                    ))}
                 </div>
               )}
 
@@ -473,7 +479,7 @@ export default function HologramOsPage() {
 
       {/* Overlays */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
-      <HologramAiChat open={chatOpen} onClose={() => setChatOpen(false)} onPhaseChange={triadicActivity.setActivePhase} creatorStage={triadicActivity.creatorStage} replayGuideKey={replayGuide} />
+      <HologramAiChat open={chatOpen} onClose={() => { setChatOpen(false); setChatPrompt(""); }} onPhaseChange={triadicActivity.setActivePhase} creatorStage={triadicActivity.creatorStage} replayGuideKey={replayGuide} initialPrompt={chatPrompt} />
     </div>
   );
 }
