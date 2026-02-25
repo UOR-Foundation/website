@@ -2,7 +2,7 @@
  * Hologram OS — Welcome Screen
  * ═════════════════════════════
  *
- * Desktop: Claude-style sidebar + serene hero (Aman-inspired).
+ * Desktop: Claude-style sidebar + serene sanctuary hero (Aman-inspired).
  * Mobile: iOS-style homescreen shell.
  */
 
@@ -30,33 +30,10 @@ function useIsMobile(breakpoint = 640) {
   return mobile;
 }
 
-// ── Live Clock ──────────────────────────────────────────────────────────────
-function useLiveClock() {
-  const [now, setNow] = useState(new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  return now;
-}
-
-function formatTime(d: Date) {
-  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-}
-
-function formatDate(d: Date) {
-  return d.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 // ── Welcome Screen ──────────────────────────────────────────────────────────
 
 export default function HologramOsPage() {
   const navigate = useNavigate();
-  const now = useLiveClock();
   const isMobile = useIsMobile();
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -68,7 +45,10 @@ export default function HologramOsPage() {
   // ── Mobile: iOS homescreen ──
   if (isMobile) return <MobileOsShell />;
 
-  // ── Desktop: sidebar + hero ──
+  // Personal welcome line
+  const welcomeName = name || "traveller";
+
+  // ── Desktop: sidebar + sanctuary hero ──
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
@@ -81,7 +61,6 @@ export default function HologramOsPage() {
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Hero Section — full bleed */}
         <main className="flex-1 relative">
           {/* Background Image */}
           <div className="absolute inset-0">
@@ -90,74 +69,49 @@ export default function HologramOsPage() {
               alt="Serene landscape with misty mountains and tranquil water"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/50" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/45" />
           </div>
 
-          {/* Top bar — minimal, floating */}
-          <header className="relative z-10 flex items-center justify-between px-8 pt-6">
-            <div />
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setClaimOpen(true)}
-                className="text-white/70 text-[13px] tracking-wider hover:text-white transition-colors"
-                style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
-              >
-                Claim Your ID
-              </button>
-            </div>
-          </header>
-
-          {/* Hero Content — bottom left, Aman-style editorial */}
-          <div className="absolute bottom-16 left-10 right-10 z-10 text-white">
-            <div className="max-w-xl">
+          {/* ── Welcome — centered, intimate, personal ─────────── */}
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-white px-8">
+            <div className="text-center max-w-lg space-y-5 animate-fade-in">
+              {/* Greeting */}
               <p
-                className="text-[11px] tracking-[0.3em] uppercase mb-4 text-white/50"
+                className="text-[11px] tracking-[0.35em] uppercase text-white/40"
                 style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
               >
-                {greeting}{name ? `, ${name}` : ""}
+                {greeting}
               </p>
-              <h2
-                className="text-4xl lg:text-5xl font-light leading-[1.15] mb-6 text-white/95"
+
+              {/* Personal welcome */}
+              <h1
+                className="text-4xl lg:text-5xl font-light leading-[1.2] text-white/90"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                Explore the universe of
+                Welcome home,
                 <br />
-                Hologram Apps
-              </h2>
-              <button
-                onClick={goConsole}
-                className="inline-flex items-center border border-white/40 text-white/80 bg-transparent px-7 py-2.5 text-[13px] tracking-wider hover:bg-white hover:text-black transition-all duration-500"
-                style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
-              >
-                Discover Now
-              </button>
-            </div>
-          </div>
+                {welcomeName}
+              </h1>
 
-          {/* Bottom bar — clock + status */}
-          <div className="absolute bottom-6 left-10 right-10 z-10 flex items-end justify-between text-white">
-            {/* Left: playback dots */}
-            <div className="flex items-center gap-3">
-              <div className="flex gap-1.5">
-                <div className="w-1 h-1 bg-white/80 rounded-full" />
-                <div className="w-1 h-1 bg-white/30 rounded-full" />
-                <div className="w-1 h-1 bg-white/30 rounded-full" />
-              </div>
-            </div>
+              {/* Warm subtext */}
+              <p
+                className="text-[14px] leading-relaxed text-white/50 max-w-sm mx-auto font-light"
+                style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
+              >
+                Everything is as you left it.
+                <br />
+                Take your time.
+              </p>
 
-            {/* Right: clock */}
-            <div className="text-right">
-              <div
-                className="text-lg font-light tracking-wider text-white/70"
-                style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
-              >
-                {formatTime(now)}
-              </div>
-              <div
-                className="text-[11px] tracking-wider text-white/40"
-                style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
-              >
-                {formatDate(now)}
+              {/* Gentle CTA */}
+              <div className="pt-4">
+                <button
+                  onClick={goConsole}
+                  className="inline-flex items-center border border-white/25 text-white/60 bg-transparent px-7 py-2.5 text-[12px] tracking-[0.2em] uppercase hover:bg-white/10 hover:text-white/90 hover:border-white/40 transition-all duration-700"
+                  style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
+                >
+                  Begin
+                </button>
               </div>
             </div>
           </div>
@@ -169,10 +123,10 @@ export default function HologramOsPage() {
             onClick={() => setChatOpen(true)}
             className="flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-300 hover:scale-105 group"
             style={{
-              background: "hsla(0, 0%, 0%, 0.55)",
+              background: "hsla(0, 0%, 0%, 0.45)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid hsla(0, 0%, 100%, 0.1)",
+              border: "1px solid hsla(0, 0%, 100%, 0.08)",
             }}
           >
             <div
@@ -180,7 +134,7 @@ export default function HologramOsPage() {
               style={{ background: "hsl(38, 50%, 55%)" }}
             />
             <span
-              className="text-white/70 text-[12px] tracking-wider"
+              className="text-white/50 text-[11px] tracking-[0.15em]"
               style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
             >
               Hologram AI
