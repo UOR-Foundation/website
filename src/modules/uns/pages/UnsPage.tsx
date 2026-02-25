@@ -10,7 +10,7 @@ import { Layout } from "@/modules/core";
 const UnsPage = () => {
   return (
     <Layout>
-      <div className="min-h-screen bg-background pt-32 md:pt-52 pb-16">
+      <div className="min-h-screen bg-background pt-[25px] md:pt-52 pb-16">
         <div className="container mx-auto px-4 max-w-4xl">
           {/* Header */}
           <div className="mb-12">
