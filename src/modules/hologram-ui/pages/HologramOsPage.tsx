@@ -280,7 +280,7 @@ export default function HologramOsPage() {
                     e.currentTarget.style.borderColor = P.ctaBorder;
                   }}
                 >
-                  Begin
+                  Enter
                 </button>
               </div>
             </div>
