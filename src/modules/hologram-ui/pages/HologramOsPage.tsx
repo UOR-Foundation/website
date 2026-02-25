@@ -181,9 +181,9 @@ export default function HologramOsPage() {
           </div>
 
           {/* ── Background Mode Toggle — top right, minimal pill ────── */}
-          <div className="absolute top-10 right-10 z-20 animate-fade-in">
+          <div className="absolute top-[3vh] right-[3vw] z-20 animate-fade-in">
             <div
-              className="flex items-center gap-1 px-3 py-2 rounded-full transition-all duration-700"
+              className="flex items-center gap-0.5 px-2 py-1.5 rounded-full transition-all duration-700"
               style={{
                 background: bgMode === "white" ? "hsla(30, 8%, 40%, 0.06)" : "hsla(30, 8%, 90%, 0.06)",
                 border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 40%, 0.1)" : "hsla(38, 15%, 70%, 0.08)"}`,
@@ -200,36 +200,17 @@ export default function HologramOsPage() {
                   <button
                     key={mode}
                     onClick={() => setBgMode(mode)}
-                    className="relative group flex items-center justify-center w-7 h-7 rounded-full transition-all duration-500"
+                    className="relative group flex items-center justify-center w-5 h-5 rounded-full transition-all duration-500"
                     aria-label={`Switch to ${label} background`}
                   >
                     <div
-                      className="w-[6px] h-[6px] rounded-full transition-all duration-700 ease-in-out"
+                      className="w-[5px] h-[5px] rounded-full transition-all duration-700 ease-in-out"
                       style={{
                         background: dotColor,
                         transform: isActive ? "scale(1.3)" : "scale(1)",
-                        boxShadow: isActive ? `0 0 10px 1px ${dotColor}` : "none",
+                        boxShadow: isActive ? `0 0 8px 1px ${dotColor}` : "none",
                       }}
                     />
-                    {/* Tooltip on hover */}
-                    <div
-                      className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none whitespace-nowrap"
-                      style={{
-                        fontFamily: "'DM Sans', system-ui, sans-serif",
-                        fontSize: "9px",
-                        letterSpacing: "0.2em",
-                        textTransform: "uppercase",
-                        color: bgMode === "white" ? "hsla(30, 8%, 35%, 0.5)" : "hsla(38, 15%, 80%, 0.45)",
-                        background: bgMode === "white" ? "hsla(30, 8%, 95%, 0.8)" : "hsla(30, 8%, 10%, 0.7)",
-                        backdropFilter: "blur(12px)",
-                        WebkitBackdropFilter: "blur(12px)",
-                        padding: "3px 8px",
-                        borderRadius: "4px",
-                        border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 60%, 0.1)" : "hsla(38, 15%, 60%, 0.08)"}`,
-                      }}
-                    >
-                      {label}
-                    </div>
                   </button>
                 );
               })}
@@ -237,13 +218,13 @@ export default function HologramOsPage() {
           </div>
 
           {/* ── Logo — top center ──────────── */}
-          <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-10 animate-fade-in">
+          <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-[3vh] animate-fade-in">
             <span
               className="transition-colors duration-700"
               style={{
                 fontFamily: "'Playfair Display', serif",
                 fontWeight: 400,
-                fontSize: "22px",
+                fontSize: "clamp(14px, 1.2vw, 20px)",
                 letterSpacing: "0.45em",
                 textTransform: "uppercase" as const,
                 color: P.wordmark,
@@ -255,25 +236,27 @@ export default function HologramOsPage() {
 
           {/* ── Welcome — centered ─────────── */}
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8">
-            <div className="text-center max-w-2xl space-y-6 animate-fade-in">
+            <div className="text-center max-w-2xl space-y-[2.5vh] animate-fade-in">
               <p
-                className="text-xs md:text-sm tracking-[0.45em] uppercase transition-colors duration-700"
+                className="tracking-[0.45em] uppercase transition-colors duration-700"
                 style={{
                   fontFamily: "'DM Sans', system-ui, sans-serif",
                   color: P.greeting,
                   fontWeight: 400,
+                  fontSize: "clamp(10px, 0.75vw, 13px)",
                 }}
               >
                 {greeting}
               </p>
 
               <h1
-                className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-[1.1] transition-colors duration-700"
+                className="leading-[1.08] transition-colors duration-700"
                 style={{
                   fontFamily: "'Playfair Display', serif",
                   fontWeight: 300,
                   color: P.heading,
                   letterSpacing: "-0.01em",
+                  fontSize: "clamp(36px, 4.5vw, 76px)",
                 }}
               >
                 Welcome home,
@@ -282,10 +265,10 @@ export default function HologramOsPage() {
               </h1>
 
               {/* Hedosophia-inspired vertical line divider */}
-              <div className="flex justify-center pt-4 pb-2">
+              <div className="flex justify-center pt-[1.5vh] pb-[0.5vh]">
                 <div
                   className="w-px overflow-hidden"
-                  style={{ height: "64px" }}
+                  style={{ height: "clamp(36px, 4vh, 64px)" }}
                 >
                   <div
                     className="w-full"
@@ -309,12 +292,12 @@ export default function HologramOsPage() {
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     fontWeight: 300,
-                    fontSize: "13px",
+                    fontSize: "clamp(11px, 0.8vw, 13px)",
                     letterSpacing: "0.3em",
                     textTransform: "uppercase" as const,
                     color: P.cta,
                     border: `1px solid ${P.ctaBorder}`,
-                    padding: "16px 48px",
+                    padding: "clamp(12px, 1.2vw, 16px) clamp(32px, 3vw, 48px)",
                     background: "transparent",
                   }}
                   onMouseEnter={(e) => {
@@ -336,7 +319,7 @@ export default function HologramOsPage() {
         </main>
 
         {/* AI Chat Pill */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
+        <div className="absolute bottom-[3.5vh] left-1/2 -translate-x-1/2 z-20">
           <button
             onClick={() => setChatOpen(true)}
             className="flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-700 hover:scale-105 group"
@@ -355,10 +338,11 @@ export default function HologramOsPage() {
               }}
             />
             <span
-              className="text-[13px] tracking-[0.2em] font-light transition-colors duration-700"
+              className="tracking-[0.2em] font-light transition-colors duration-700"
               style={{
                 fontFamily: "'DM Sans', system-ui, sans-serif",
                 color: P.pillText,
+                fontSize: "clamp(11px, 0.8vw, 13px)",
               }}
             >
               Hologram Intelligence
@@ -384,7 +368,7 @@ export default function HologramOsPage() {
         `}</style>
 
         {/* Day Progress Ring */}
-        <div className="absolute bottom-8 right-8 z-20 animate-fade-in">
+        <div className="absolute bottom-[3vh] right-[3vw] z-20 animate-fade-in">
           <DayProgressRing balance={triadicActivity.balance ?? undefined} />
         </div>
       </div>
