@@ -45,8 +45,9 @@ export type {
 
 // ── Holographic Lens (Composable Projection Circuits) ─────────────────────
 // Content-addressed circuits: elements + wiring → one hash → every standard.
+// Bidirectional: focus (dehydrate) + refract (rehydrate) = universal codec.
 
-export { composeLens, grindLens, focusLens, nestLens, fromProjection, element, sequence, parallel } from "@/modules/uns/core/hologram";
+export { composeLens, grindLens, focusLens, refractLens, dehydrate, rehydrate, roundTrip, nestLens, fromProjection, element, sequence, parallel } from "@/modules/uns/core/hologram";
 export type {
   HolographicLens,
   LensElement,
@@ -54,6 +55,9 @@ export type {
   LensMorphism,
   GroundLens,
   FocusResult,
+  RefractionModality,
+  RefractResult,
+  DehydrationResult,
 } from "@/modules/uns/core/hologram";
 
 // ── Trust Spanning Protocol (TSP) ─────────────────────────────────────────
