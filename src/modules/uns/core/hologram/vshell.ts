@@ -29,6 +29,7 @@ import {
 import { DIRECTIONS } from "./polytree";
 import type { ProjectionInput } from "./index";
 import { getHologramGpu, getLutEngine, UorLutEngine, type HologramGpu, type GpuBenchmarkResult } from "./gpu";
+import { getAiEngine, RECOMMENDED_MODELS, type AiTask, type AiProgressCallback } from "./ai-engine";
 
 /** Fill a Uint8Array with random bytes (chunked to respect Web Crypto 65536-byte limit). */
 function fillRandom(buf: Uint8Array): void {
@@ -123,6 +124,7 @@ const COMMANDS: Record<string, CommandDef> = {
   save:    { usage: "save",                    description: "Save all processes to disk" },
   load:    { usage: "load",                    description: "Restore saved processes" },
   gpu:     { usage: "gpu <sub>",               description: "GPU device (info|bench|matmul|relu|lut)" },
+  ai:      { usage: "ai <sub>",                description: "AI inference (load|run|models|info|unload)" },
   grep:    { usage: "grep <pattern>",          description: "Filter lines matching pattern" },
   head:    { usage: "head [-n N]",             description: "Show first N lines (default 10)" },
   tail:    { usage: "tail [-n N]",             description: "Show last N lines (default 10)" },
@@ -241,6 +243,25 @@ export class VShell {
       return lutSubs
         .filter(s => s.startsWith(partial))
         .map(s => `gpu lut ${s}`);
+    }
+
+    // AI subcommands
+    if (cmd === "ai" && parts.length === 2) {
+      const subs = ["load", "run", "models", "info", "unload"];
+      const partial = parts[1];
+      return subs
+        .filter(s => s.startsWith(partial))
+        .map(s => `ai ${s}`);
+    }
+
+    // AI load model name completion
+    if (cmd === "ai" && parts.length === 3 && parts[1] === "load") {
+      const partial = parts[2];
+      return RECOMMENDED_MODELS
+        .map((m, i) => String(i + 1))
+        .concat(RECOMMENDED_MODELS.map(m => m.id))
+        .filter(s => s.startsWith(partial))
+        .map(s => `ai load ${s}`);
     }
 
     // GPU LUT apply table name completion
@@ -437,6 +458,10 @@ export class VShell {
 
         case "gpu":
           await this.cmdGpu(args, out, info, err, effects);
+          break;
+
+        case "ai":
+          await this.cmdAi(args, out, info, err);
           break;
 
         // Filter commands used standalone (with no pipe input)
@@ -1043,6 +1068,191 @@ export class VShell {
       default:
         err(`Unknown lut subcommand: ${sub}`);
         info("  Usage: gpu lut info | tables | verify | apply [table] [size] | apply-gpu [table] [size] | compose <outer> <inner> | bench");
+    }
+  }
+
+  // ── AI Commands ──────────────────────────────────────────────────────
+
+  /**
+   * ai <subcommand> — In-browser ONNX model inference via Transformers.js.
+   *
+   * Subcommands:
+   *   load [model-id]  — Download & register a HuggingFace ONNX model
+   *   run <prompt>     — Generate with active model
+   *   models           — List recommended & registered models
+   *   info             — Show active model & device info
+   *   unload           — Release model from memory
+   */
+  private async cmdAi(
+    args: string[],
+    out: (t: string) => void,
+    info: (t: string) => void,
+    err: (t: string) => void,
+  ): Promise<void> {
+    const sub = args[0] ?? "info";
+    const ai = getAiEngine();
+
+    switch (sub) {
+      case "load": {
+        if (ai.isLoading) {
+          err("A model is already loading. Please wait.");
+          return;
+        }
+
+        // Find model — use arg or default to first recommended
+        const modelArg = args.slice(1).join(" ").trim();
+        let modelId: string;
+        let task: AiTask = "text-generation";
+        let dtype: string | undefined;
+
+        if (modelArg) {
+          // Check if it matches a recommended model index (1-based)
+          const idx = parseInt(modelArg, 10);
+          if (!isNaN(idx) && idx >= 1 && idx <= RECOMMENDED_MODELS.length) {
+            const rec = RECOMMENDED_MODELS[idx - 1];
+            modelId = rec.id;
+            task = rec.task;
+            dtype = rec.dtype;
+          } else {
+            modelId = modelArg;
+          }
+        } else {
+          const rec = RECOMMENDED_MODELS[0];
+          modelId = rec.id;
+          task = rec.task;
+          dtype = rec.dtype;
+        }
+
+        info(`Loading ${modelId}…`);
+        info("  This may take a moment on first load (downloading ONNX weights).");
+        info("");
+
+        try {
+          const reg = await ai.load(modelId, task, {
+            dtype,
+            onProgress: (p) => {
+              if (p.progress !== undefined && p.file) {
+                // Progress is reported via the callback but we can't stream
+                // to the terminal mid-command, so we log to console
+                console.log(`[AI] ${p.file}: ${p.progress?.toFixed(0)}%`);
+              }
+            },
+          });
+
+          out("──────────────────────────────────────────────");
+          out("  ✓ Model loaded");
+          out(`  Model:    ${reg.modelId}`);
+          out(`  Task:     ${reg.task}`);
+          out(`  Device:   ${reg.device.toUpperCase()}`);
+          out(`  Dtype:    ${reg.dtype}`);
+          out(`  CID:      ${reg.configCid.slice(0, 40)}…`);
+          out("──────────────────────────────────────────────");
+          out("");
+          info("  Use 'ai run <prompt>' to generate.");
+        } catch (e) {
+          err(`Failed to load model: ${e instanceof Error ? e.message : String(e)}`);
+        }
+        break;
+      }
+
+      case "run": {
+        const prompt = args.slice(1).join(" ").trim();
+        if (!prompt) {
+          err("Usage: ai run <prompt>");
+          return;
+        }
+        if (!ai.isReady) {
+          err("No model loaded. Use 'ai load' first.");
+          info("  Tip: 'ai load' loads a default model, or 'ai models' to see options.");
+          return;
+        }
+
+        info(`Generating (${ai.active!.modelId.split("/").pop()})…`);
+
+        try {
+          const result = await ai.run(prompt, {
+            maxNewTokens: 128,
+            temperature: 0.7,
+          });
+
+          out("");
+          out(result.output || "(empty output)");
+          out("");
+          out("──────────────────────────────────────────────");
+          out(`  Time:     ${result.inferenceTimeMs} ms`);
+          out(`  Tokens:   ~${result.tokensGenerated}`);
+          out(`  GPU:      ${result.gpuAccelerated ? "WebGPU ✓" : "WASM (CPU)"}`);
+          out(`  In CID:   ${result.inputCid.slice(0, 32)}…`);
+          out(`  Out CID:  ${result.outputCid.slice(0, 32)}…`);
+          out("──────────────────────────────────────────────");
+        } catch (e) {
+          err(`Inference failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
+        break;
+      }
+
+      case "models": {
+        out("── Recommended Models ────────────────────────");
+        out("  #  Model                                      Size      Task");
+        out("  ─  ──────────────────────────────────────────  ────────  ────────────────");
+        RECOMMENDED_MODELS.forEach((m, i) => {
+          out(
+            `  ${String(i + 1)}  ${m.id.padEnd(46)}  ${m.sizeApprox.padEnd(8)}  ${m.task}`,
+          );
+        });
+        out("");
+        info("  Load by number: 'ai load 1'");
+        info("  Load any HF model: 'ai load <org/model-name>'");
+
+        const registered = ai.models;
+        if (registered.length > 0) {
+          out("");
+          out("── Loaded Models ─────────────────────────────");
+          for (const m of registered) {
+            const active = ai.active?.configCid === m.configCid ? " ◀ active" : "";
+            out(`  ${m.modelId} (${m.device}, ${m.dtype})${active}`);
+          }
+        }
+        break;
+      }
+
+      case "info": {
+        if (!ai.isReady) {
+          info("── Hologram AI ───────────────────────────────");
+          info("  Status: No model loaded");
+          info("");
+          info("  Load a model with 'ai load' or 'ai models' to browse.");
+          info("  Any ONNX model from Hugging Face is supported.");
+          info("──────────────────────────────────────────────");
+          return;
+        }
+
+        const m = ai.active!;
+        out("── Hologram AI ───────────────────────────────");
+        out(`  Model:    ${m.modelId}`);
+        out(`  Task:     ${m.task}`);
+        out(`  Device:   ${m.device.toUpperCase()}`);
+        out(`  Dtype:    ${m.dtype}`);
+        out(`  CID:      ${m.configCid.slice(0, 40)}…`);
+        out(`  Loaded:   ${m.loadedAt}`);
+        out("──────────────────────────────────────────────");
+        break;
+      }
+
+      case "unload": {
+        if (!ai.isReady) {
+          info("No model currently loaded.");
+          return;
+        }
+        const name = ai.active!.modelId;
+        await ai.unload();
+        out(`✓ Unloaded ${name}. Memory released.`);
+        break;
+      }
+
+      default:
+        err(`Unknown ai subcommand: ${sub}`);
+        info("  Usage: ai load [model] | run <prompt> | models | info | unload");
     }
   }
 }

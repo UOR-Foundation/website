@@ -34,3 +34,15 @@ export type {
   CriticalIdentityProof,
   LutEngineInfo,
 } from "./lut-engine";
+
+// Re-export AI engine from sibling module for convenience
+export {
+  HologramAiEngine,
+  getAiEngine,
+  RECOMMENDED_MODELS,
+} from "../ai-engine";
+export type {
+  AiModelRegistration,
+  AiInferenceResult,
+  AiTask,
+} from "../ai-engine";
