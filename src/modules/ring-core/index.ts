@@ -73,3 +73,13 @@ export {
 export type {
   ProofStep, ReasoningProof, ProofCertificate, ComposedProof,
 } from "./proof-machine";
+
+// ── v2 Strategy Scheduler ────────────────────────────────────────────────
+export {
+  depthFirstDeductive, breadthFirstInductive, abductiveSpiral,
+  composedScheduler, executeSchedule,
+  modeSequence, scheduleStepsByMode, hasScheduledCycle,
+} from "./strategy-scheduler";
+export type {
+  StrategyNode, StrategyStepResult, ScheduleResult, ScheduleConfig,
+} from "./strategy-scheduler";
