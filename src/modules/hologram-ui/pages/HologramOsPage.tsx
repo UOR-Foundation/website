@@ -37,7 +37,7 @@ export default function HologramOsPage() {
   const isMobile = useIsMobile();
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const { greeting, name } = useGreeting();
 
   const goConsole = useCallback(() => navigate("/hologram-console"), [navigate]);
