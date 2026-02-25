@@ -3,16 +3,18 @@
  * after a successful repository ingestion.
  */
 
-import { FileCode, GitFork, Hash, Layers } from "lucide-react";
+import { FileCode, GitFork, Hash, Layers, ShieldCheck } from "lucide-react";
 import type { IngestionResult } from "../lib/ingestion";
 import type { UorMappingResult } from "../lib/uor-mapper";
+import type { PersistenceReport } from "../lib/uor-persistence";
 
 interface IngestionResultsProps {
   ingestion: IngestionResult;
   mapping: UorMappingResult | null;
+  persistence?: PersistenceReport | null;
 }
 
-export function IngestionResults({ ingestion, mapping }: IngestionResultsProps) {
+export function IngestionResults({ ingestion, mapping, persistence }: IngestionResultsProps) {
   const stats = [
     { icon: FileCode, label: "Files", value: ingestion.files.length },
     { icon: Layers, label: "Entities", value: ingestion.entities.length },
@@ -93,7 +95,21 @@ export function IngestionResults({ ingestion, mapping }: IngestionResultsProps) 
         </div>
       </div>
 
-      {/* UOR Triples preview */}
+      {/* Certification status */}
+      {persistence && persistence.certificatesIssued > 0 && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+          <ShieldCheck size={14} className="text-primary shrink-0" />
+          <p className="text-[11px] text-foreground" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+            <span className="font-medium">{persistence.certificatesIssued}</span> entities certified ·{" "}
+            <span className="font-medium">{persistence.derivationsWritten}</span> derivations ·{" "}
+            <span className="font-medium">{persistence.triplesWritten}</span> triples persisted
+          </p>
+          <span className="ml-auto text-[9px] font-mono text-muted-foreground" title={persistence.receiptId}>
+            Grade B
+          </span>
+        </div>
+      )}
+
       {mapping && mapping.triples.length > 0 && (
         <div className="space-y-2">
           <h4
