@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { Menu, Search } from "lucide-react";
 import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
+import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 
 // ── Live Clock ──────────────────────────────────────────────────────────────
 
@@ -44,6 +45,7 @@ export default function HologramOsPage() {
   const now = useLiveClock();
   const [menuOpen, setMenuOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const goConsole = useCallback(() => navigate("/hologram-console"), [navigate]);
 
@@ -170,18 +172,24 @@ onClick={() => setClaimOpen(true)}
         </section>
       </main>
 
-      {/* ── Lumen Voice Assistant Pill ─────────────────────────────────── */}
+      {/* ── AI Chat Pill ──────────────────────────────────────────────── */}
       <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
-        <button className="bg-black/70 border border-white/20 rounded-full px-5 py-2.5 backdrop-blur-sm hover:bg-black/80 transition-all duration-300 shadow-lg hover:shadow-xl group">
+        <button
+          onClick={() => setChatOpen(true)}
+          className="bg-black/70 border border-white/20 rounded-full px-5 py-2.5 backdrop-blur-sm hover:bg-black/80 transition-all duration-300 shadow-lg hover:shadow-xl group"
+        >
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-white rounded-full group-hover:bg-white" />
-            <span className="text-white text-sm font-mono tracking-wide">Lumen Voice Assistant</span>
+            <div className="w-2 h-2 rounded-full group-hover:scale-110 transition-transform" style={{ background: "hsl(38, 60%, 55%)" }} />
+            <span className="text-white text-sm font-mono tracking-wide">Hologram AI</span>
           </div>
         </button>
       </div>
 
       {/* ── Claim Your ID Overlay ──────────────────────────────────────── */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
+
+      {/* ── AI Chat Overlay ────────────────────────────────────────────── */}
+      <HologramAiChat open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
 }
