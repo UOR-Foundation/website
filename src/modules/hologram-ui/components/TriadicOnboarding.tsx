@@ -109,19 +109,23 @@ export default function TriadicOnboarding({ onComplete }: TriadicOnboardingProps
         }}
         key={step}
       >
-        {/* Phase accent bar */}
-        {current.phase && (
+        {/* Progress bar */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl overflow-hidden">
           <div
-            className="w-8 h-[3px] rounded-full mb-1"
+            className="absolute inset-0"
+            style={{ background: "hsla(38, 10%, 50%, 0.1)" }}
+          />
+          <div
+            className="h-full transition-all duration-700 ease-out"
             style={{
-              background: phaseColor,
-              animation: "onboard-accent-in 0.6s ease-out 0.15s both",
+              width: `${((step + 1) / STEPS.length) * 100}%`,
+              background: `linear-gradient(90deg, hsla(38, 30%, 55%, 0.4), ${phaseColor})`,
             }}
           />
-        )}
+        </div>
 
         {/* Step indicator dots */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-1">
           {STEPS.map((_, i) => (
             <div
               key={i}
@@ -129,7 +133,9 @@ export default function TriadicOnboarding({ onComplete }: TriadicOnboardingProps
               style={{
                 background: i === step
                   ? phaseColor
-                  : "hsla(38, 10%, 50%, 0.2)",
+                  : i < step
+                    ? "hsla(38, 20%, 55%, 0.4)"
+                    : "hsla(38, 10%, 50%, 0.2)",
                 transform: i === step ? "scale(1.3)" : "scale(1)",
               }}
             />
