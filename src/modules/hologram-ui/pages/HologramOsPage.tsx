@@ -241,18 +241,7 @@ export default function HologramOsPage() {
                 {welcomeName}
               </h1>
 
-              <p
-                className="text-base md:text-lg leading-[1.8] max-w-md mx-auto transition-colors duration-700"
-                style={{
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  fontWeight: 300,
-                  color: P.sub,
-                }}
-              >
-                Everything is as you left it.
-                <br />
-                Take your time.
-              </p>
+              
 
               <div className="pt-8">
                 <button
