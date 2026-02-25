@@ -48,7 +48,7 @@ const BG_MODES: { mode: BgMode; dot: string; dotActive: string; label: string }[
 /** Palette per mode — all text/chrome adapts */
 function palette(m: BgMode) {
   if (m === "white") return {
-    wordmark: "hsla(30, 8%, 22%, 0.8)",
+    wordmark: "hsla(30, 8%, 18%, 0.9)",
     greeting: "hsla(30, 8%, 40%, 0.6)",
     heading:  "hsla(30, 10%, 15%, 0.9)",
     sub:      "hsla(30, 6%, 35%, 0.55)",
@@ -64,7 +64,7 @@ function palette(m: BgMode) {
     bg:       "hsl(0, 0%, 98%)",
   };
   if (m === "dark") return {
-    wordmark: "hsla(38, 15%, 82%, 0.75)",
+    wordmark: "hsla(38, 15%, 88%, 0.9)",
     greeting: "hsla(38, 15%, 70%, 0.45)",
     heading:  "hsla(38, 12%, 90%, 0.9)",
     sub:      "hsla(38, 10%, 70%, 0.45)",
@@ -81,7 +81,7 @@ function palette(m: BgMode) {
   };
   // image mode
   return {
-    wordmark: "hsla(38, 15%, 88%, 0.85)",
+    wordmark: "hsla(38, 15%, 92%, 0.92)",
     greeting: "hsla(38, 20%, 85%, 0.5)",
     heading:  "hsla(38, 15%, 92%, 0.92)",
     sub:      "hsla(38, 12%, 78%, 0.5)",
@@ -224,8 +224,8 @@ export default function HologramOsPage() {
               style={{
                 fontFamily: "'Playfair Display', serif",
                 fontWeight: 400,
-                fontSize: "15px",
-                letterSpacing: "0.55em",
+                fontSize: "22px",
+                letterSpacing: "0.45em",
                 textTransform: "uppercase" as const,
                 color: P.wordmark,
               }}
