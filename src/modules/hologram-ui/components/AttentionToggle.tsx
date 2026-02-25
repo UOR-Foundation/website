@@ -29,6 +29,8 @@ export default function AttentionToggle() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [pulsing, setPulsing] = useState(false);
+  const lastSnappedRef = useRef<number | null>(null);
 
   const updateFromPointer = useCallback(
     (clientX: number, snap = false) => {
@@ -36,7 +38,17 @@ export default function AttentionToggle() {
       if (!track) return;
       const rect = track.getBoundingClientRect();
       let ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-      if (snap) ratio = snapToDetent(ratio);
+      if (snap) {
+        const snapped = snapToDetent(ratio);
+        if (snapped !== ratio && snapped !== lastSnappedRef.current) {
+          lastSnappedRef.current = snapped;
+          setPulsing(true);
+          setTimeout(() => setPulsing(false), 200);
+        } else if (snapped === ratio) {
+          lastSnappedRef.current = null;
+        }
+        ratio = snapped;
+      }
       setAperture(ratio);
     },
     [setAperture],
@@ -136,8 +148,15 @@ export default function AttentionToggle() {
             height: THUMB_R * 2,
             left: thumbLeft,
             background: `hsla(38, 35%, 65%, ${0.5 + aperture * 0.35})`,
-            boxShadow: `0 0 ${4 + aperture * 4}px ${1 + aperture}px hsla(38, 40%, 60%, ${glowIntensity})`,
-            transition: dragging ? "none" : "left 0.5s ease, background 0.5s ease, box-shadow 0.5s ease",
+            boxShadow: pulsing
+              ? `0 0 12px 3px hsla(38, 50%, 65%, 0.5)`
+              : `0 0 ${4 + aperture * 4}px ${1 + aperture}px hsla(38, 40%, 60%, ${glowIntensity})`,
+            transform: pulsing ? "scale(1.6)" : "scale(1)",
+            transition: pulsing
+              ? "transform 0.1s ease-out, box-shadow 0.1s ease-out"
+              : dragging
+                ? "box-shadow 0.15s ease"
+                : "left 0.5s ease, background 0.5s ease, box-shadow 0.5s ease, transform 0.15s ease",
           }}
         >
           {(dragging || hovered) && (
