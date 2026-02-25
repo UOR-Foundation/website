@@ -168,3 +168,34 @@ export type {
   PqEnvelope,
   PqVerifyResult,
 } from "@/modules/uns/core/pq-bridge";
+
+// ── Lens Blueprints (Shareable, Content-Addressed Lens Circuits) ────────
+// Serializable lens compositions that can be saved, shared, and instantiated
+// in any environment running a hologram implementation.
+
+export {
+  createBlueprint,
+  grindBlueprint,
+  instantiateBlueprint,
+  buildLens,
+  serializeBlueprint,
+  deserializeBlueprint,
+  composeBlueprints,
+  registerElementFactory,
+  getRegisteredKinds,
+  isKindRegistered,
+} from "@/modules/uns/core/hologram/lens-blueprint";
+
+export type {
+  LensBlueprint,
+  ElementSpec,
+  GroundBlueprint,
+  InstantiatedLens,
+  ElementFactory,
+} from "@/modules/uns/core/hologram/lens-blueprint";
+
+// ── Pre-built Lens Library ──────────────────────────────────────────────
+export {
+  MEMORY_CRISIS_BLUEPRINT,
+  createMemoryCrisisBlueprint,
+} from "@/modules/uns/core/hologram/lenses";
