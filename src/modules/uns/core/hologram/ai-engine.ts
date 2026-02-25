@@ -56,8 +56,10 @@ export interface AiModelRegistration {
   readonly loadedAt: string;
 }
 
-/** Result of a single inference run. */
+/** Result of a single inference run — also a v2 ComputationTrace. */
 export interface AiInferenceResult {
+  /** Trace type identifier. */
+  readonly "@type": "trace:ComputationTrace";
   /** The generated text output. */
   readonly output: string;
   /** Content-addressed identity of the input. */
@@ -72,6 +74,8 @@ export interface AiInferenceResult {
   readonly gpuAccelerated: boolean;
   /** Model that produced this output. */
   readonly modelId: string;
+  /** Self-certification: outputCid is the certificate. */
+  readonly certifiedBy: string;
 }
 
 /** Progress callback for model loading. */
@@ -351,6 +355,7 @@ export class HologramAiEngine {
     });
 
     return {
+      "@type": "trace:ComputationTrace",
       output: outputText,
       inputCid: inputProof.cid,
       outputCid: outputProof.cid,
@@ -358,6 +363,7 @@ export class HologramAiEngine {
       tokensGenerated,
       gpuAccelerated: this.activeModel.device === "webgpu",
       modelId: this.activeModel.modelId,
+      certifiedBy: `urn:uor:cert:self:${outputProof.cid.slice(0, 16)}`,
     };
   }
 

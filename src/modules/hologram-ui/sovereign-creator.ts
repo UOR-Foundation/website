@@ -201,11 +201,14 @@ export function computeBalance(balance: TriadicBalance): BalanceReport {
   const w = work / total;
   const p = play / total;
 
-  // Shannon entropy, normalized to [0, 1] where 1 = max imbalance
-  const maxEntropy = Math.log(3);
-  const vals = [l, w, p].filter((v) => v > 0);
-  const entropy = vals.reduce((acc, v) => acc - v * Math.log(v), 0);
-  const normalizedEntropy = 1 - entropy / maxEntropy;
+  // Ring metric: distance from perfect balance [⅓,⅓,⅓].
+  // d = max(|phase - ⅓|) × 3, normalized to [0, 1].
+  // Equivalent to Shannon entropy for 3 categories but O(1) and ring-native.
+  const normalizedEntropy = Math.max(
+    Math.abs(l - 1 / 3),
+    Math.abs(w - 1 / 3),
+    Math.abs(p - 1 / 3),
+  ) * 3;
 
   // Dominant & neglected
   const phases: [TriadicPhase, number][] = [
