@@ -152,3 +152,17 @@ export type {
   UnifiedProjectionResult,
   ProjectionCoherence,
 } from "./unified";
+
+// ── Holographic Lens (Composable Projection Circuits) ──────────────────────
+// A Lens is a content-addressed circuit of composable elements.
+// Same elements + same wiring = same identity. Lenses ARE holograms.
+
+export { composeLens, grindLens, focusLens, nestLens } from "./lens";
+export type {
+  HolographicLens,
+  LensElement,
+  LensWire,
+  LensPort,
+  GroundLens,
+  FocusResult,
+} from "./lens";
