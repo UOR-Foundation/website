@@ -106,18 +106,24 @@ export interface FocusResult {
  * SingleProofResult) to a specific representation. The lens provides the
  * blueprint; the modality provides the target form factor.
  *
- *   "nquads"       → raw W3C URDNA2015 N-Quads string
- *   "jsonld"       → expanded JSON-LD document (from N-Quads)
- *   "compact-json" → deterministic sorted-key JSON (no @context)
- *   "turtle"       → Terse RDF Triple Language (N3 subset)
- *   "hologram"     → full hologram: all 25+ protocol projections
- *   "identity"     → SingleProofResult passthrough
+ *   "nquads"        → raw W3C URDNA2015 N-Quads string
+ *   "jsonld"        → expanded JSON-LD document (from N-Quads)
+ *   "jsonld-framed" → JSON-LD compacted via a standard @frame
+ *   "compact-json"  → deterministic sorted-key JSON (no @context)
+ *   "turtle"        → Terse RDF Triple Language (N3 subset)
+ *   "rdf-xml"       → RDF/XML serialization
+ *   "graphql-sdl"   → GraphQL Schema Definition Language
+ *   "hologram"      → full hologram: all 25+ protocol projections
+ *   "identity"      → SingleProofResult passthrough
  */
 export type RefractionModality =
   | "nquads"
   | "jsonld"
+  | "jsonld-framed"
   | "compact-json"
   | "turtle"
+  | "rdf-xml"
+  | "graphql-sdl"
   | "hologram"
   | "identity";
 
@@ -425,6 +431,53 @@ export function parallel(
 
 // ── Refraction (Bidirectional Lens — Rehydration) ──────────────────────────
 
+// ── Helpers for RDF/XML and GraphQL SDL modalities ─────────────────────────
+
+function escapeXml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function hashCode(s: string): string {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h).toString(36).slice(0, 4);
+}
+
+function toGraphQLName(uri: string): string {
+  const local = uri.split(/[/#]/).pop() ?? "Object";
+  return local.replace(/[^a-zA-Z0-9]/g, "_").replace(/^(\d)/, "_$1") || "UorObject";
+}
+
+function toGraphQLFieldName(uri: string): string {
+  const local = uri.split(/[/#]/).pop() ?? "field";
+  const cleaned = local.replace(/[^a-zA-Z0-9_]/g, "_").replace(/^(\d)/, "_$1");
+  return cleaned.charAt(0).toLowerCase() + cleaned.slice(1);
+}
+
+function inferGraphQLType(value: unknown): string {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[String]";
+    return `[${inferGraphQLType(value[0])}]`;
+  }
+  if (value !== null && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    if ("@value" in obj) {
+      const dt = obj["@type"] as string | undefined;
+      if (dt?.includes("integer") || dt?.includes("int")) return "Int";
+      if (dt?.includes("float") || dt?.includes("double") || dt?.includes("decimal")) return "Float";
+      if (dt?.includes("boolean")) return "Boolean";
+      return "String";
+    }
+    if ("@id" in obj) return "ID";
+    return "JSON";
+  }
+  if (typeof value === "number") return Number.isInteger(value) ? "Int" : "Float";
+  if (typeof value === "boolean") return "Boolean";
+  return "String";
+}
+
 /**
  * Standard rehydration targets — built-in refraction modalities.
  *
@@ -456,17 +509,36 @@ const REFRACTION_TARGETS: Record<
   },
 
   /**
+   * jsonld-framed: JSON-LD compacted via a standard @frame.
+   */
+  "jsonld-framed": async (proof) => {
+    const jsonldLib = await import("jsonld");
+    const expanded = await (jsonldLib.default as any).fromRDF(proof.nquads, {
+      format: "application/n-quads",
+    });
+    const types: string[] = [];
+    for (const node of Array.isArray(expanded) ? expanded : [expanded]) {
+      const t = node?.["@type"];
+      if (Array.isArray(t)) types.push(...t);
+      else if (typeof t === "string") types.push(t);
+    }
+    const frame: Record<string, unknown> = {};
+    if (types.length > 0) frame["@type"] = types[0];
+    try {
+      return await (jsonldLib.default as any).frame(expanded, frame);
+    } catch {
+      return await (jsonldLib.default as any).compact(expanded, {});
+    }
+  },
+
+  /**
    * compact-json: Deterministic sorted-key JSON.
-   * Strips all JSON-LD semantics (@context, @type, @id) and returns a
-   * compact, human-readable JSON representation. Lossy for RDF metadata
-   * but lossless for the payload data.
    */
   "compact-json": async (proof) => {
     const jsonldLib = await import("jsonld");
     const expanded = await (jsonldLib.default as any).fromRDF(proof.nquads, {
       format: "application/n-quads",
     });
-    // Flatten and strip JSON-LD wrappers for maximum readability
     if (Array.isArray(expanded) && expanded.length === 1) {
       return expanded[0];
     }
@@ -474,28 +546,96 @@ const REFRACTION_TARGETS: Record<
   },
 
   /**
-   * turtle: Terse RDF Triple Language (Turtle/N3 subset).
-   * A human-readable RDF serialization produced from canonical N-Quads.
-   * Each N-Quad line "S P O ." is valid Turtle as-is (minus graph component).
+   * turtle: Terse RDF Triple Language.
    */
   turtle: async (proof) => {
-    // N-Quads → Turtle: strip the graph component (4th position) from each quad
     const lines = proof.nquads.trim().split("\n").filter(Boolean);
     const triples = lines.map((line) => {
-      // N-Quad format: <S> <P> <O> <G> .
-      // Turtle format: <S> <P> <O> .
       const parts = line.trim().replace(/ \.$/, "").split(" ");
-      // If there's a graph component (4th part before '.'), remove it
       if (parts.length >= 4) {
-        // Check if 4th part looks like a graph URI
         const last = parts[parts.length - 1];
-        if (last.startsWith("<") && last.endsWith(">")) {
-          parts.pop(); // Remove graph
-        }
+        if (last.startsWith("<") && last.endsWith(">")) parts.pop();
       }
       return parts.join(" ") + " .";
     });
     return triples.join("\n");
+  },
+
+  /**
+   * rdf-xml: RDF/XML serialization from canonical N-Quads.
+   */
+  "rdf-xml": async (proof) => {
+    const lines = proof.nquads.trim().split("\n").filter(Boolean);
+    const xmlLines: string[] = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">',
+    ];
+    const subjects = new Map<string, { p: string; o: string }[]>();
+    for (const line of lines) {
+      const match = line.match(/^(\S+)\s+(<[^>]+>)\s+(.+?)\s*\.$/);
+      if (!match) continue;
+      const [, s, p, o] = match;
+      const subj = s.replace(/^<|>$/g, "");
+      if (!subjects.has(subj)) subjects.set(subj, []);
+      subjects.get(subj)!.push({ p: p.replace(/^<|>$/g, ""), o: o.trim() });
+    }
+    for (const [subj, preds] of subjects) {
+      const isBlank = subj.startsWith("_:");
+      const attr = isBlank ? `rdf:nodeID="${subj.slice(2)}"` : `rdf:about="${escapeXml(subj)}"`;
+      xmlLines.push(`  <rdf:Description ${attr}>`);
+      for (const { p, o } of preds) {
+        const splitIdx = Math.max(p.lastIndexOf("#"), p.lastIndexOf("/"));
+        const ns = p.slice(0, splitIdx + 1);
+        const local = p.slice(splitIdx + 1);
+        const pfx = `ns${hashCode(ns)}`;
+        if (o.startsWith("<") && o.endsWith(">")) {
+          xmlLines.push(`    <${pfx}:${local} xmlns:${pfx}="${escapeXml(ns)}" rdf:resource="${escapeXml(o.slice(1, -1))}"/>`);
+        } else if (o.startsWith('"')) {
+          const m = o.match(/^"(.*)"(?:\^\^<(.+)>)?(?:@(\w+))?$/);
+          if (m) {
+            const [, val, dtype, lang] = m;
+            let attrs = `xmlns:${pfx}="${escapeXml(ns)}"`;
+            if (dtype) attrs += ` rdf:datatype="${escapeXml(dtype)}"`;
+            if (lang) attrs += ` xml:lang="${lang}"`;
+            xmlLines.push(`    <${pfx}:${local} ${attrs}>${escapeXml(val)}</${pfx}:${local}>`);
+          }
+        }
+      }
+      xmlLines.push("  </rdf:Description>");
+    }
+    xmlLines.push("</rdf:RDF>");
+    return xmlLines.join("\n");
+  },
+
+  /**
+   * graphql-sdl: GraphQL Schema Definition Language from RDF structure.
+   */
+  "graphql-sdl": async (proof) => {
+    const jsonldLib = await import("jsonld");
+    const expanded = await (jsonldLib.default as any).fromRDF(proof.nquads, {
+      format: "application/n-quads",
+    });
+    const nodes = Array.isArray(expanded) ? expanded : [expanded];
+    const sdlLines: string[] = [
+      "# GraphQL SDL — auto-generated from UOR canonical form",
+      `# Source CID: ${proof.cid}`,
+      "",
+    ];
+    for (const node of nodes) {
+      const types = node["@type"] ?? [];
+      const typeArr = Array.isArray(types) ? types : [types];
+      const typeName = typeArr.length > 0 ? toGraphQLName(typeArr[0]) : "UorObject";
+      sdlLines.push(`type ${typeName} {`);
+      sdlLines.push(`  """Content-addressed UOR identity"""`);
+      sdlLines.push(`  _cid: String!`);
+      for (const [key, value] of Object.entries(node)) {
+        if (key.startsWith("@")) continue;
+        sdlLines.push(`  ${toGraphQLFieldName(key)}: ${inferGraphQLType(value)}`);
+      }
+      sdlLines.push("}");
+      sdlLines.push("");
+    }
+    return sdlLines.join("\n");
   },
 
   /**

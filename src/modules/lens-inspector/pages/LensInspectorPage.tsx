@@ -11,7 +11,7 @@
 import { useState, useCallback } from "react";
 import {
   IconPrism, IconCode, IconHash, IconCopy, IconCheck,
-  IconPlayerPlay, IconBraces, IconWorld, IconArrowsExchange,
+  IconPlayerPlay, IconBraces, IconWorld, IconArrowsExchange, IconFileCode, IconSchema,
 } from "@tabler/icons-react";
 import { PageShell } from "@/modules/hologram-ui";
 import {
@@ -58,8 +58,11 @@ const MODALITIES: {
 }[] = [
   { key: "nquads", label: "N-Quads", icon: IconCode, description: "W3C URDNA2015 canonical form" },
   { key: "jsonld", label: "JSON-LD", icon: IconBraces, description: "Expanded JSON-LD document" },
+  { key: "jsonld-framed", label: "Framed", icon: IconBraces, description: "JSON-LD compacted via @frame — cleaner structure" },
   { key: "compact-json", label: "Compact JSON", icon: IconBraces, description: "Flattened, readable JSON" },
   { key: "turtle", label: "Turtle", icon: IconCode, description: "Terse RDF Triple Language" },
+  { key: "rdf-xml", label: "RDF/XML", icon: IconFileCode, description: "W3C RDF/XML serialization" },
+  { key: "graphql-sdl", label: "GraphQL SDL", icon: IconSchema, description: "GraphQL Schema Definition Language — API integration" },
   { key: "hologram", label: "Hologram", icon: IconWorld, description: "All 25+ protocol projections" },
   { key: "identity", label: "Identity", icon: IconHash, description: "SingleProofResult passthrough" },
 ];
@@ -197,7 +200,7 @@ export default function LensInspectorPage() {
       setHologram(result.hologram);
 
       // Rehydrate all modalities in parallel
-      const keys: RefractionModality[] = ["nquads", "jsonld", "compact-json", "turtle"];
+      const keys: RefractionModality[] = ["nquads", "jsonld", "jsonld-framed", "compact-json", "turtle", "rdf-xml", "graphql-sdl"];
       const results = await Promise.all(
         keys.map(async (m) => {
           const out = await rehydrate(result.proof, m);
