@@ -18,6 +18,7 @@ import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
+import { useTriadicActivity } from "@/modules/hologram-ui/hooks/useTriadicActivity";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -43,6 +44,7 @@ export default function HologramOsPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const { greeting, name } = useGreeting();
+  const triadicActivity = useTriadicActivity();
 
   const goConsole = useCallback(() => navigate("/hologram-console"), [navigate]);
 
@@ -225,13 +227,13 @@ export default function HologramOsPage() {
 
         {/* Day Progress Ring — bottom right */}
         <div className="absolute bottom-8 right-8 z-20 animate-fade-in">
-          <DayProgressRing />
+          <DayProgressRing balance={triadicActivity.balance ?? undefined} />
         </div>
       </div>
 
       {/* Overlays */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
-      <HologramAiChat open={chatOpen} onClose={() => setChatOpen(false)} />
+      <HologramAiChat open={chatOpen} onClose={() => setChatOpen(false)} onPhaseChange={triadicActivity.setActivePhase} />
     </div>
   );
 }
