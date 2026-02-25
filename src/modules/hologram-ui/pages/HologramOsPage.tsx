@@ -106,7 +106,14 @@ export default function HologramOsPage() {
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [bgMode, setBgMode] = useState<BgMode>("image");
+  const [bgMode, setBgModeState] = useState<BgMode>(() => {
+    const saved = localStorage.getItem("hologram-bg-mode");
+    return saved === "white" || saved === "dark" || saved === "image" ? saved : "image";
+  });
+  const setBgMode = useCallback((m: BgMode) => {
+    setBgModeState(m);
+    localStorage.setItem("hologram-bg-mode", m);
+  }, []);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
   const triadicActivity = useTriadicActivity();
