@@ -28,6 +28,7 @@ export default function AttentionToggle() {
   const { aperture, setAperture, preset } = useAttentionMode();
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const updateFromPointer = useCallback(
     (clientX: number, snap = false) => {
@@ -101,6 +102,8 @@ export default function AttentionToggle() {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       >
         {/* Filled portion */}
         <div
@@ -125,7 +128,7 @@ export default function AttentionToggle() {
           />
         ))}
 
-        {/* Thumb */}
+        {/* Thumb + Tooltip */}
         <div
           className="absolute top-[2px] rounded-full pointer-events-none"
           style={{
@@ -136,7 +139,28 @@ export default function AttentionToggle() {
             boxShadow: `0 0 ${4 + aperture * 4}px ${1 + aperture}px hsla(38, 40%, 60%, ${glowIntensity})`,
             transition: dragging ? "none" : "left 0.5s ease, background 0.5s ease, box-shadow 0.5s ease",
           }}
-        />
+        >
+          {(dragging || hovered) && (
+            <div
+              className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+              style={{
+                bottom: THUMB_R * 2 + 4,
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: 9,
+                letterSpacing: "0.05em",
+                color: "hsla(38, 20%, 88%, 0.85)",
+                background: "hsla(30, 8%, 14%, 0.9)",
+                border: "1px solid hsla(38, 20%, 40%, 0.2)",
+                borderRadius: 4,
+                padding: "2px 5px",
+                whiteSpace: "nowrap",
+                animation: "fade-in 0.15s ease-out",
+              }}
+            >
+              {Math.round(aperture * 100)}%
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Diffuse label */}
