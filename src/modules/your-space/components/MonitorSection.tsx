@@ -3,9 +3,10 @@
  * Uses semantic tokens for theme compatibility.
  */
 
-import { Database, Users, HardDrive, Wifi, Upload, Download } from "lucide-react";
+import { Database, Users, HardDrive, Wifi, Upload, Download, GitBranch } from "lucide-react";
 import { SpaceCard } from "./SpaceCard";
 import { SortableSection } from "./SortableSection";
+import { ContextGraph } from "./ContextGraph";
 
 interface MonitorSectionProps {
   isDark: boolean;
@@ -101,13 +102,31 @@ export const MonitorSection = ({ isDark, votes, onVote }: MonitorSectionProps) =
         </div>
       </SpaceCard>
     ),
+    context: (
+      <SpaceCard
+        title="Context Graph"
+        icon={<GitBranch className="text-foreground" size={16} />}
+        isDark={isDark}
+        moduleSlug="context-graph"
+        expandedContent={
+          <div className="space-y-3">
+            <h4 className="text-foreground font-body text-sm font-semibold">How It Works</h4>
+            <p className="text-muted-foreground text-sm font-body leading-relaxed">
+              Your context graph is projected from atomic triples in your knowledge graph. Conversations with the hologram automatically enrich it with interest, task, and domain nodes.
+            </p>
+          </div>
+        }
+      >
+        <ContextGraph isDark={isDark} />
+      </SpaceCard>
+    ),
   };
 
   return (
     <div>
       <h2 className="text-foreground font-body text-xl font-semibold mb-6">Monitor Your Activity</h2>
       <SortableSection
-        initialOrder={["data", "social", "resources"]}
+        initialOrder={["context", "data", "social", "resources"]}
         cards={cards}
         storageKey="uor-space-monitor-order"
       />
