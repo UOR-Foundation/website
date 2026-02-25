@@ -1,428 +1,182 @@
 /**
- * Phase 6: Hologram OS — The Virtual Operating System Console
- * ════════════════════════════════════════════════════════════
+ * Hologram OS — Welcome Screen
+ * ═════════════════════════════
  *
- * The holographic principle made interactive:
- *   Any digital artifact → content-addressed identity → running process → live UI projections.
- *
- * This page ties all 5 phases into a single cohesive experience:
- *   Phase 1 (Projections)     → mmap/mmapAll displays protocol addresses
- *   Phase 2 (Lens)            → read/write through lens pipelines
- *   Phase 3 (Executable)      → boot, fork, interact processes
- *   Phase 4 (Virtual I/O)     → POSIX syscall commands
- *   Phase 5 (Universal Ingest)→ drag-and-drop / paste any artifact
- *
- * @module hologram-ui/pages/HologramOsPage
+ * A fullscreen, serene welcome screen inspired by luxury resort aesthetics.
+ * Hides all technical complexity behind a clean, human-centered interface.
+ * The console is accessible via "Discover Now" → /hologram-console.
  */
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import {
-  IconTerminal2, IconCpu, IconUpload, IconPlayerPlay,
-  IconEye, IconWorldWww, IconBinaryTree, IconCircleFilled, IconBolt,
-  IconDeviceFloppy, IconRestore,
-} from "@tabler/icons-react";
-import { useHologramPersistence } from "@/modules/hologram-ui/hooks/useHologramPersistence";
-import {
-  PageShell, StatCard, DashboardGrid, MetricBar, InfoCard, DataTable,
-  DynamicProjection,
-  type DataTableColumn,
-} from "@/modules/hologram-ui";
-import { HologramEngine, type EngineTick } from "@/modules/uns/core/hologram/engine";
-import { ingestAndSpawn } from "@/modules/uns/core/hologram/universal-ingest";
-import { VShell, type ShellResult } from "@/modules/uns/core/hologram/vshell";
-import type { MmapResult } from "@/modules/uns/core/hologram/virtual-io";
-import type { ProjectionInput } from "@/modules/uns/core/hologram";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Menu, Search } from "lucide-react";
+import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 
-// ── Terminal Line Types ────────────────────────────────────────────────────
+// ── Live Clock ──────────────────────────────────────────────────────────────
 
-interface TermLine {
-  id: number;
-  type: "input" | "output" | "error" | "info";
-  text: string;
+function useLiveClock() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return now;
 }
 
-// ── The OS Console ─────────────────────────────────────────────────────────
+function formatTime(d: Date) {
+  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+// ── Welcome Screen ──────────────────────────────────────────────────────────
 
 export default function HologramOsPage() {
-  const engineRef = useRef<HologramEngine | null>(null);
-  const shellRef = useRef<VShell | null>(null);
-  const [lines, setLines] = useState<TermLine[]>([]);
-  const [input, setInput] = useState("");
-  const [histIdx, setHistIdx] = useState(-1);
-  const [selectedPid, setSelectedPid] = useState<string | null>(null);
-  const [projections, setProjections] = useState<MmapResult[]>([]);
-  const [lastTick, setLastTick] = useState<EngineTick | null>(null);
-  const [identity, setIdentity] = useState<ProjectionInput | null>(null);
-  const [processCount, setProcessCount] = useState(0);
-  const [persisted, setPersisted] = useState(false);
-  const termRef = useRef<HTMLDivElement>(null);
-  const lineId = useRef(0);
-  const { saveAll, loadAll } = useHologramPersistence();
+  const navigate = useNavigate();
+  const now = useLiveClock();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Boot engine + shell once
-  const engine = useMemo(() => {
-    if (!engineRef.current) {
-      engineRef.current = new HologramEngine("hologram-os:console");
-    }
-    return engineRef.current;
-  }, []);
-
-  const shell = useMemo(() => {
-    if (!shellRef.current) {
-      shellRef.current = new VShell(engine);
-    }
-    return shellRef.current;
-  }, [engine]);
-
-  // Wire persistence into vShell
-  useEffect(() => {
-    shell.onSave = saveAll;
-    shell.onLoad = loadAll;
-  }, [shell, saveAll, loadAll]);
-
-  const emit = useCallback((type: TermLine["type"], text: string) => {
-    setLines(prev => [...prev, { id: lineId.current++, type, text }]);
-  }, []);
-
-  // Auto-scroll
-  useEffect(() => {
-    if (termRef.current) {
-      termRef.current.scrollTop = termRef.current.scrollHeight;
-    }
-  }, [lines]);
-
-  // Welcome message
-  useEffect(() => {
-    emit("info", "╔══════════════════════════════════════════════════╗");
-    emit("info", "║         HOLOGRAM OS v1.0 — Virtual Shell (vsh)  ║");
-    emit("info", "║   One hash. Every standard. Any system.         ║");
-    emit("info", "╚══════════════════════════════════════════════════╝");
-    emit("info", "");
-    emit("info", "Type 'help' for commands. Drag & drop any file to ingest.");
-    emit("info", "");
-  }, [emit]);
-
-  // Auto-load persisted sessions on mount
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const result = await shell.exec("load");
-        if (cancelled) return;
-        applyShellResult(result);
-      } catch {
-        // No persisted sessions — that's fine
-      }
-    })();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Auto-save before page unload
-  useEffect(() => {
-    const handler = () => {
-      saveAll(engine, shell.blueprintMap);
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [engine, saveAll, shell]);
-
-  // ── Apply ShellResult to React state ──────────────────────────────────
-
-  const applyShellResult = useCallback((result: ShellResult) => {
-    // Emit lines
-    for (const line of result.lines) {
-      const typeMap: Record<string, TermLine["type"]> = {
-        output: "output", info: "info", error: "error", mutation: "info",
-      };
-      emit(typeMap[line.kind] ?? "output", line.text);
-    }
-    // Apply effects
-    const fx = result.effects;
-    if (fx.clear) setLines([]);
-    if (fx.selectedPid !== undefined) setSelectedPid(fx.selectedPid);
-    if (fx.identity !== undefined) setIdentity(fx.identity);
-    if (fx.tick !== undefined) setLastTick(fx.tick);
-    if (fx.projections) setProjections(fx.projections);
-    if (fx.processCount !== undefined) setProcessCount(fx.processCount);
-    if (fx.persistedCount !== undefined && fx.persistedCount > 0) setPersisted(true);
-  }, [emit]);
-
-  // ── Command Execution (delegates to vShell) ───────────────────────────
-
-  const exec = useCallback(async (cmd: string) => {
-    const trimmed = cmd.trim();
-    if (!trimmed) return;
-    emit("input", `$ ${trimmed}`);
-    setHistIdx(-1);
-    const result = await shell.exec(trimmed);
-    applyShellResult(result);
-  }, [shell, emit, applyShellResult]);
-
-  // ── File Drop Handler ──────────────────────────────────────────────────
-
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
-
-    emit("info", `Ingesting: ${file.name} (${file.size} bytes)…`);
-    const buffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-
-    const result = await ingestAndSpawn(engine, bytes, {
-      label: file.name,
-      tags: [file.type || "unknown"],
-    });
-
-    shell.blueprintMap.set(result.pid, result.blueprint);
-    emit("output", `✓ Spawned "${file.name}" as PID: ${result.pid.slice(0, 24)}…`);
-    emit("output", `  Format: ${result.envelope.format} | CID: ${result.proof.cid.slice(0, 32)}…`);
-    setSelectedPid(result.pid);
-    setIdentity(result.identity);
-    setProcessCount(engine.processCount);
-  }, [engine, emit, shell]);
-
-  // ── Keyboard Handler ───────────────────────────────────────────────────
-
-  const handleKey = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      exec(input);
-      setInput("");
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      const h = shell.history;
-      const next = Math.min(histIdx + 1, h.length - 1);
-      setHistIdx(next);
-      if (h[next]) setInput(h[next]);
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      const h = shell.history;
-      const next = histIdx - 1;
-      setHistIdx(next);
-      setInput(next >= 0 ? h[next] ?? "" : "");
-    }
-  }, [exec, input, shell, histIdx]);
-
-  // ── Quick Actions ──────────────────────────────────────────────────────
-
-  const quickSpawn = useCallback(async () => {
-    await exec("spawn Hello World from Hologram OS!");
-  }, [exec]);
-
-  const quickIngestJson = useCallback(async () => {
-    const obj = { "@context": "https://schema.org", "@type": "Thing", name: "Demo Object" };
-    const result = await ingestAndSpawn(engine, obj, { label: "schema.org/Thing" });
-    shell.blueprintMap.set(result.pid, result.blueprint);
-    emit("output", `✓ JSON-LD → PID: ${result.pid.slice(0, 24)}…`);
-    setSelectedPid(result.pid);
-    setIdentity(result.identity);
-    setProcessCount(engine.processCount);
-  }, [engine, emit, exec, shell]);
-
-  const quickSave = useCallback(async () => {
-    await exec("save");
-  }, [exec]);
-
-  const quickLoad = useCallback(async () => {
-    await exec("load");
-  }, [exec]);
-
-  // ── Projection Columns ─────────────────────────────────────────────────
-
-  // Map MmapResults to generic records for DataTable
-  const projRows = useMemo(() =>
-    projections.map(p => ({
-      projection: p.projection,
-      address: p.address,
-      fidelity: p.fidelity,
-      spec: p.spec,
-    })),
-    [projections],
-  );
-
-  type ProjRow = { projection: string; address: string; fidelity: string; spec: string; [k: string]: unknown };
-
-  const projCols = useMemo<DataTableColumn<ProjRow>[]>(() => [
-    { key: "projection", label: "Standard", mono: true, width: "140px" },
-    {
-      key: "address", label: "Address",
-      render: (r) => (
-        <span className="text-[10px] font-mono break-all">
-          {r.address.length > 60 ? r.address.slice(0, 60) + "…" : r.address}
-        </span>
-      ),
-    },
-    {
-      key: "fidelity", label: "Fidelity", width: "80px",
-      render: (r) => (
-        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-          r.fidelity === "lossless"
-            ? "bg-[hsl(152,44%,50%)]/10 text-[hsl(152,44%,50%)]"
-            : "bg-[hsl(38,92%,50%)]/10 text-[hsl(38,92%,50%)]"
-        }`}>
-          {r.fidelity.toUpperCase()}
-        </span>
-      ),
-    },
-  ], []);
+  const goConsole = useCallback(() => navigate("/hologram-console"), [navigate]);
 
   return (
-    <PageShell
-      title="Hologram OS"
-      subtitle="Virtual Operating System Console"
-      icon={<IconTerminal2 size={18} />}
-      badge="Phase 6"
-      backTo="/hologram-ui"
-    >
-      {/* Quick Actions */}
-      <section className="flex flex-wrap gap-2">
-        <button onClick={quickSpawn} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors flex items-center gap-1.5">
-          <IconPlayerPlay size={12} /> Spawn Process
-        </button>
-        <button onClick={quickIngestJson} className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:hover:bg-secondary/80 transition-colors flex items-center gap-1.5">
-          <IconUpload size={12} /> Ingest JSON-LD
-        </button>
-        <button onClick={() => exec("ps")} className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:bg-secondary/80 transition-colors flex items-center gap-1.5">
-          <IconCpu size={12} /> Process Table
-        </button>
-        {selectedPid && (
-          <button onClick={() => exec("mmapall")} className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:bg-secondary/80 transition-colors flex items-center gap-1.5">
-            <IconWorldWww size={12} /> All Projections
+    <div className="h-screen overflow-hidden bg-background">
+      {/* ── Top Navigation Bar ─────────────────────────────────────────── */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 bg-transparent">
+        {/* Left: Menu + Search */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex items-center gap-2 text-white/90 hover:text-white transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+            <span className="text-sm font-light tracking-wide hidden sm:inline">Menu</span>
           </button>
-        )}
-        {processCount > 0 && (
-          <button onClick={quickSave} className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:bg-secondary/80 transition-colors flex items-center gap-1.5">
-            <IconDeviceFloppy size={12} /> Save State
+          <button className="text-white/80 hover:text-white transition-colors">
+            <Search className="w-4 h-4" />
           </button>
-        )}
-        <button onClick={quickLoad} className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:bg-secondary/80 transition-colors flex items-center gap-1.5">
-          <IconRestore size={12} /> Restore
-        </button>
-      </section>
+        </div>
 
-      {/* Stats Row */}
-      <DashboardGrid cols={4}>
-        <StatCard label="Processes" value={processCount} icon={<IconCpu size={16} />} trend={processCount > 0 ? processCount * 10 : 0} sublabel="running" />
-        <StatCard label="Last Tick" value={lastTick?.sequence ?? "—"} icon={<IconBolt size={16} />} sublabel={lastTick ? `halted: ${lastTick.halted}` : "no ticks yet"} />
-        <StatCard label="Projections" value={lastTick?.projections.size ?? 0} icon={<IconEye size={16} />} sublabel="UI components" />
-        <StatCard label="Selected" value={selectedPid ? selectedPid.slice(0, 10) + "…" : "none"} icon={<IconBinaryTree size={16} />} sublabel={selectedPid ? "active" : "select a process"} />
-      </DashboardGrid>
-
-      {/* Terminal + UI Panel side-by-side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Terminal */}
-        <div
-          className="bg-card border border-border rounded-xl overflow-hidden flex flex-col"
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
+        {/* Center: Brand */}
+        <button
+          onClick={() => navigate("/")}
+          className="absolute left-1/2 transform -translate-x-1/2 text-white text-lg sm:text-xl font-light tracking-[0.35em] hover:opacity-80 transition-opacity"
         >
-          <div className="flex items-center gap-2 px-4 py-2 bg-secondary/50 border-b border-border">
-            <IconCircleFilled size={8} className="text-[hsl(0,70%,55%)]" />
-            <IconCircleFilled size={8} className="text-[hsl(45,70%,50%)]" />
-            <IconCircleFilled size={8} className="text-[hsl(152,44%,50%)]" />
-            <span className="text-[10px] font-mono text-muted-foreground ml-2">hologram-os:~</span>
-          </div>
-          <div ref={termRef} className="flex-1 min-h-[320px] max-h-[480px] overflow-y-auto p-4 font-mono text-xs space-y-0.5">
-            {lines.map(line => (
-              <div key={line.id} className={
-                line.type === "input" ? "text-primary font-semibold" :
-                line.type === "error" ? "text-destructive" :
-                line.type === "info" ? "text-muted-foreground" :
-                "text-foreground"
-              }>
-                {line.text}
-              </div>
+          HOLOGRAM
+        </button>
+
+        {/* Right: Language + CTA */}
+        <div className="flex items-center gap-4">
+          <span className="text-white/80 text-sm font-light tracking-wide hidden sm:inline border-b border-white/30 pb-0.5 cursor-pointer hover:text-white hover:border-white transition-all">
+            English
+          </span>
+          <button
+            onClick={() => navigate("/console")}
+            className="bg-foreground text-background px-5 py-2 text-sm font-light tracking-wide hover:opacity-90 transition-opacity"
+          >
+            Get Your Key
+          </button>
+        </div>
+      </header>
+
+      {/* ── Menu Overlay ───────────────────────────────────────────────── */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-center justify-center"
+          onClick={() => setMenuOpen(false)}
+        >
+          <nav className="text-center space-y-6" onClick={(e) => e.stopPropagation()}>
+            {[
+              { label: "Console", path: "/hologram-console" },
+              { label: "Your Space", path: "/your-space" },
+              { label: "Applications", path: "/console/apps" },
+              { label: "UOR Framework", path: "/standard" },
+              { label: "Community", path: "/research" },
+            ].map((item) => (
+              <button
+                key={item.path}
+                onClick={() => { navigate(item.path); setMenuOpen(false); }}
+                className="block w-full text-white text-2xl md:text-3xl font-light tracking-wider hover:opacity-70 transition-opacity"
+              >
+                {item.label}
+              </button>
             ))}
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 border-t border-border bg-secondary/30">
-            <span className="text-primary text-xs font-mono">$</span>
-            <input
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKey}
-              placeholder="Type a command…"
-              className="flex-1 bg-transparent outline-none text-xs font-mono text-foreground placeholder:text-muted-foreground"
-              autoFocus
-            />
-          </div>
+          </nav>
         </div>
-
-        {/* UI Projection Panel */}
-        <div className="bg-card border border-border rounded-xl p-4 space-y-4">
-          <div className="flex items-center gap-2">
-            <IconEye size={14} className="text-primary" />
-            <span className="text-xs font-semibold">Live UI Projections</span>
-          </div>
-
-          {identity ? (
-            <div className="space-y-3">
-              <DynamicProjection source={identity} type="ui:stat-card" />
-              <DynamicProjection source={identity} type="ui:metric-bar" />
-              <DynamicProjection source={identity} type="ui:info-card">
-                <div className="text-[10px] font-mono text-muted-foreground space-y-1">
-                  <div>CID: {identity.cid.slice(0, 40)}…</div>
-                  <div>Hex: {identity.hex.slice(0, 40)}…</div>
-                  <div>Hash Bytes: [{Array.from(identity.hashBytes.slice(0, 8)).join(", ")}…]</div>
-                </div>
-              </DynamicProjection>
-              <DynamicProjection source={identity} type="ui:data-table" />
-            </div>
-          ) : (
-            <div className="text-xs text-muted-foreground text-center py-12">
-              Spawn or ingest an artifact to see its live visual projections here.
-              <br />
-              <span className="text-[10px]">Each process state deterministically maps to unique UI components.</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Projection Table */}
-      {projections.length > 0 && (
-        <section className="space-y-3">
-          <h3 className="font-semibold text-sm flex items-center gap-2">
-            <IconWorldWww size={16} className="text-primary" />
-            Protocol Projections ({projections.length} standards)
-          </h3>
-          <DataTable
-            columns={projCols}
-            data={projRows}
-            getKey={(r) => r.projection}
-          />
-        </section>
       )}
 
-      {/* Architecture Info */}
-      <section className="space-y-3">
-        <h3 className="font-semibold text-sm flex items-center gap-2">
-          <IconBinaryTree size={16} className="text-primary" />
-          Architecture — The Six Phases
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {PHASES.map(p => (
-            <InfoCard key={p.phase} title={p.title} badge={`Phase ${p.phase}`} badgeColor={p.color} defaultOpen={p.phase === 6}>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">{p.desc}</p>
-            </InfoCard>
-          ))}
-        </div>
-      </section>
+      {/* ── Hero Section ───────────────────────────────────────────────── */}
+      <main>
+        <section className="relative h-screen overflow-hidden">
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <img
+              src={heroLandscape}
+              alt="Serene landscape with misty mountains and tranquil water"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/40" />
+          </div>
 
-      {/* Footer */}
-      <div className="text-center text-xs text-muted-foreground py-4 border-t border-border">
-        Hologram OS — One hash. Every standard. Any system. Powered by the UOR Framework.
+          {/* Hero Content — bottom left */}
+          <div className="absolute bottom-20 left-8 right-8 text-white">
+            <div className="max-w-2xl">
+              <p className="text-sm font-light tracking-[0.2em] uppercase mb-4 opacity-90">
+                Experiences &amp; Applications
+              </p>
+              <h2
+                className="text-4xl md:text-5xl font-light leading-tight mb-6 text-white"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                Explore the universe of
+                <br />
+                Hologram Apps
+              </h2>
+              <button
+                onClick={goConsole}
+                className="inline-flex items-center justify-center border border-white text-white bg-transparent px-8 py-3 text-sm font-light tracking-wide hover:bg-white hover:text-black transition-all duration-500"
+              >
+                Discover Now
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Left — Playback indicator */}
+          <div className="absolute bottom-8 left-8 flex items-center gap-4 text-white">
+            <button className="hover:bg-white/10 rounded w-10 h-10 flex items-center justify-center transition-colors">
+              <div className="w-3 h-3 bg-white" />
+            </button>
+            <div className="text-sm font-light tracking-wide opacity-80">00:31</div>
+            <div className="flex gap-2">
+              <div className="w-1 h-1 bg-white rounded-full" />
+              <div className="w-1 h-1 bg-white/50 rounded-full" />
+              <div className="w-1 h-1 bg-white/50 rounded-full" />
+            </div>
+          </div>
+
+          {/* Bottom Right — Clock + Date */}
+          <div className="absolute bottom-8 right-8 text-white text-right">
+            <div className="text-lg font-light tracking-wide">{formatTime(now)}</div>
+            <div className="text-sm font-light tracking-wide opacity-80">{formatDate(now)}</div>
+          </div>
+        </section>
+      </main>
+
+      {/* ── Lumen Voice Assistant Pill ─────────────────────────────────── */}
+      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+        <button className="bg-black/70 border border-white/20 rounded-full px-5 py-2.5 backdrop-blur-sm hover:bg-black/80 transition-all duration-300 shadow-lg hover:shadow-xl group">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-white rounded-full group-hover:bg-white" />
+            <span className="text-white text-sm font-mono tracking-wide">Lumen Voice Assistant</span>
+          </div>
+        </button>
       </div>
-    </PageShell>
+    </div>
   );
 }
-
-// ── Constants ──────────────────────────────────────────────────────────────
-
-const PHASES = [
-  { phase: 1, title: "Hologram Projections", color: "hsl(200, 60%, 50%)", desc: "356+ projections map one SHA-256 hash to every protocol standard — DID, CID, IPv6, ActivityPub, Bitcoin Script, and more." },
-  { phase: 2, title: "Holographic Lens", color: "hsl(280, 60%, 55%)", desc: "Composable, bidirectional transformation circuits. Dehydrate (Focus) any object to canonical bytes, Refract into 9 modalities." },
-  { phase: 3, title: "Executable Blueprint", color: "hsl(152, 44%, 50%)", desc: "Self-evolving programs: LensBlueprint (WHAT) + PolyTree (HOW). Content-addressed, deterministic, with full suspend/resume." },
-  { phase: 4, title: "Virtual I/O", color: "hsl(45, 70%, 50%)", desc: "POSIX syscall facade — fork, exec, read, write, mmap, pipe, kill — mapped to UOR primitives. Zero new state." },
-  { phase: 5, title: "Universal Ingest", color: "hsl(0, 70%, 55%)", desc: "Any artifact (WASM, JSON, binary, text) → content-addressed JSON-LD envelope → full hologram with one function call." },
-  { phase: 6, title: "Hologram OS Console", color: "hsl(var(--primary))", desc: "This console. The interactive virtual OS environment that ties all phases into a live, operational browser-based system." },
-];
