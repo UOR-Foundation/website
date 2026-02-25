@@ -332,17 +332,13 @@ export default function TriadicWelcome({
         <div className="flex flex-wrap gap-1.5">
           {phaseSkills.map((skill, i) => {
             const isActive = (activeSkill?.id || selectedPersona.defaultSkillId) === skill.id;
-            const isAvailable = selectedPersona.skillIds.includes(skill.id);
             const baseDelay = 120 + phasePersonas.length * 70;
 
             return (
               <button
                 key={skill.id}
-                onClick={() => isAvailable && onSelectSkill(isActive && activeSkill ? null : skill)}
-                disabled={!isAvailable}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] transition-all duration-300 ${
-                  !isAvailable ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.03]"
-                }`}
+                onClick={() => onSelectSkill(isActive && activeSkill ? null : skill)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] transition-all duration-300 hover:scale-[1.03]"
                 style={{
                   background: isActive
                     ? `hsla(${phaseDef.hue}, 35%, 40%, 0.25)`
@@ -351,7 +347,7 @@ export default function TriadicWelcome({
                     ? `hsla(${phaseDef.hue}, 35%, 50%, 0.35)`
                     : P.borderLight
                   }`,
-                  color: isActive ? phaseDef.color : (isAvailable ? P.textMuted : P.textDimmer),
+                  color: isActive ? phaseDef.color : P.textMuted,
                   animation: "stagger-fade-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both",
                   animationDelay: `${baseDelay + i * 50}ms`,
                 }}
