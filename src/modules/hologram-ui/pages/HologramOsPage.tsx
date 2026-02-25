@@ -19,7 +19,9 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   IconTerminal2, IconCpu, IconUpload, IconPlayerPlay,
   IconEye, IconWorldWww, IconBinaryTree, IconCircleFilled, IconBolt,
+  IconDeviceFloppy, IconRestore,
 } from "@tabler/icons-react";
+import { useHologramPersistence } from "@/modules/hologram-ui/hooks/useHologramPersistence";
 import {
   PageShell, StatCard, DashboardGrid, MetricBar, InfoCard, DataTable,
   DynamicProjection,
@@ -58,8 +60,11 @@ export default function HologramOsPage() {
   const [lastTick, setLastTick] = useState<EngineTick | null>(null);
   const [identity, setIdentity] = useState<ProjectionInput | null>(null);
   const [processCount, setProcessCount] = useState(0);
+  const [persisted, setPersisted] = useState(false);
   const termRef = useRef<HTMLDivElement>(null);
   const lineId = useRef(0);
+  const blueprintMapRef = useRef(new Map<string, import("@/modules/uns/core/hologram/executable-blueprint").ExecutableBlueprint>());
+  const { saveAll, loadAll, clearAll } = useHologramPersistence();
 
   // Boot engine once
   const engine = useMemo(() => {
@@ -91,6 +96,42 @@ export default function HologramOsPage() {
     emit("info", "");
   }, [emit]);
 
+  // Auto-load persisted sessions on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { pids, blueprintMap } = await loadAll(engine);
+        if (cancelled || pids.length === 0) return;
+        for (const [pid, bp] of blueprintMap) {
+          blueprintMapRef.current.set(pid, bp);
+        }
+        setProcessCount(engine.processCount);
+        if (pids[0]) {
+          setSelectedPid(pids[0]);
+          const tick = await engine.tick(pids[0]);
+          setIdentity(tick.identity);
+          setLastTick(tick);
+        }
+        setPersisted(true);
+        emit("info", `✓ Restored ${pids.length} process(es) from previous session.`);
+      } catch {
+        // No persisted sessions — that's fine
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [engine, loadAll, emit]);
+
+  // Auto-save before page unload
+  useEffect(() => {
+    const handler = () => {
+      // Fire-and-forget save (best effort on unload)
+      saveAll(engine, blueprintMapRef.current);
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [engine, saveAll]);
+
   // ── Command Execution ──────────────────────────────────────────────────
 
   const exec = useCallback(async (cmd: string) => {
@@ -116,6 +157,8 @@ export default function HologramOsPage() {
           emit("info", "  mmapall <pid>       Show ALL projections");
           emit("info", "  select <pid>        Select process for UI");
           emit("info", "  kill   <pid>        Terminate process");
+          emit("info", "  save                Save all processes to disk");
+          emit("info", "  load                Restore saved processes");
           emit("info", "  clear               Clear terminal");
           emit("info", "  help                Show this help");
           emit("info", "──────────────────────────────────────────────");
@@ -143,12 +186,46 @@ export default function HologramOsPage() {
           const result: IngestSpawnedResult = await ingestAndSpawn(engine, text, {
             label: text.slice(0, 32),
           });
+          blueprintMapRef.current.set(result.pid, result.blueprint);
           emit("output", `✓ Spawned process PID: ${result.pid.slice(0, 24)}…`);
           emit("output", `  Format: ${result.envelope.format} | ${result.envelope.byteLength} bytes`);
           emit("output", `  Blueprint: ${result.blueprint.name}`);
           setSelectedPid(result.pid);
           setIdentity(result.identity);
           setProcessCount(engine.processCount);
+          break;
+        }
+
+        case "save": {
+          emit("info", "Saving all processes…");
+          const count = await saveAll(engine, blueprintMapRef.current);
+          if (count > 0) {
+            setPersisted(true);
+            emit("output", `✓ Saved ${count} process(es) to persistent storage.`);
+            emit("info", "  Processes will be restored on next page load.");
+          } else {
+            emit("info", "No running processes to save.");
+          }
+          break;
+        }
+
+        case "load": {
+          emit("info", "Loading persisted sessions…");
+          const { pids, blueprintMap } = await loadAll(engine);
+          for (const [pid, bp] of blueprintMap) {
+            blueprintMapRef.current.set(pid, bp);
+          }
+          setProcessCount(engine.processCount);
+          if (pids.length > 0) {
+            setSelectedPid(pids[0]);
+            const tick = await engine.tick(pids[0]);
+            setIdentity(tick.identity);
+            setLastTick(tick);
+            setPersisted(true);
+            emit("output", `✓ Restored ${pids.length} process(es).`);
+          } else {
+            emit("info", "No saved sessions found.");
+          }
           break;
         }
 
@@ -269,7 +346,7 @@ export default function HologramOsPage() {
     } catch (e: unknown) {
       emit("error", `Error: ${e instanceof Error ? e.message : String(e)}`);
     }
-  }, [engine, emit, selectedPid]);
+  }, [engine, emit, selectedPid, saveAll, loadAll]);
 
   // ── File Drop Handler ──────────────────────────────────────────────────
 
@@ -287,6 +364,7 @@ export default function HologramOsPage() {
       tags: [file.type || "unknown"],
     });
 
+    blueprintMapRef.current.set(result.pid, result.blueprint);
     emit("output", `✓ Spawned "${file.name}" as PID: ${result.pid.slice(0, 24)}…`);
     emit("output", `  Format: ${result.envelope.format} | CID: ${result.proof.cid.slice(0, 32)}…`);
     setSelectedPid(result.pid);
@@ -322,11 +400,20 @@ export default function HologramOsPage() {
   const quickIngestJson = useCallback(async () => {
     const obj = { "@context": "https://schema.org", "@type": "Thing", name: "Demo Object" };
     const result = await ingestAndSpawn(engine, obj, { label: "schema.org/Thing" });
+    blueprintMapRef.current.set(result.pid, result.blueprint);
     emit("output", `✓ JSON-LD → PID: ${result.pid.slice(0, 24)}…`);
     setSelectedPid(result.pid);
     setIdentity(result.identity);
     setProcessCount(engine.processCount);
   }, [engine, emit, exec]);
+
+  const quickSave = useCallback(async () => {
+    await exec("save");
+  }, [exec]);
+
+  const quickLoad = useCallback(async () => {
+    await exec("load");
+  }, [exec]);
 
   // ── Projection Columns ─────────────────────────────────────────────────
 
@@ -391,6 +478,14 @@ export default function HologramOsPage() {
             <IconWorldWww size={12} /> All Projections
           </button>
         )}
+        {processCount > 0 && (
+          <button onClick={quickSave} className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:bg-secondary/80 transition-colors flex items-center gap-1.5">
+            <IconDeviceFloppy size={12} /> Save State
+          </button>
+        )}
+        <button onClick={quickLoad} className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:bg-secondary/80 transition-colors flex items-center gap-1.5">
+          <IconRestore size={12} /> Restore
+        </button>
       </section>
 
       {/* Stats Row */}
