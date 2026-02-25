@@ -8,7 +8,6 @@ const corsHeaders = {
 
 // ── Agent Persona System Prompts ──────────────────────────────────────────
 // Canonical behavioral archetypes distilled from 30+ AI agent instruction sets.
-// Each maps to a triadic phase (Learn/Work/Play) in the Sovereign Creator framework.
 
 const PERSONA_PROMPTS: Record<string, string> = {
   hologram:
@@ -56,16 +55,85 @@ const PERSONA_PROMPTS: Record<string, string> = {
     "Your purpose is to be a clear surface — the user's insight, faithfully reflected.",
 };
 
+// ── Skill Prompt Fragments ────────────────────────────────────────────────
+// Atomic behavioral primitives that compose with persona prompts.
+// UOR principle: skills are datums, personas are projections.
+
+const SKILL_FRAGMENTS: Record<string, string> = {
+  reason:
+    "Engage deep chain-of-thought reasoning. Break the problem into clear logical steps. " +
+    "Show your reasoning chain explicitly. Consider multiple perspectives before concluding. " +
+    "Use structured formats (numbered steps, comparison tables) when they aid clarity. " +
+    "Acknowledge uncertainty and confidence levels honestly.",
+  research:
+    "Act as a meticulous researcher. Provide comprehensive, well-sourced information. " +
+    "Distinguish between established facts, emerging consensus, and speculation. " +
+    "Cross-reference claims. Flag areas where information may be outdated or contested. " +
+    "Synthesize findings into clear, actionable knowledge.",
+  explain:
+    "Teach adaptively. Gauge the user's level from their question and adjust depth accordingly. " +
+    "Use analogies from everyday life to bridge abstract concepts. Build understanding " +
+    "incrementally — don't overwhelm with detail. Ask clarifying questions when the " +
+    "path forward is ambiguous. Celebrate curiosity.",
+  summarize:
+    "Condense and synthesize. Extract the essential signal from noise. " +
+    "Produce layered summaries: one-sentence essence, then key points, then supporting detail. " +
+    "Preserve nuance even while compressing. Highlight what matters most for the user's context. " +
+    "Make the complex accessible without losing accuracy.",
+  plan:
+    "Think like a systematic architect. Start with the big picture: goals, constraints, interfaces. " +
+    "Decompose into clear phases and milestones. Identify dependencies and critical path. " +
+    "Anticipate edge cases and failure modes. Prefer the simplest solution that solves the problem. " +
+    "Produce actionable plans, not abstract visions.",
+  code:
+    "Write clean, well-structured code. Favor readability over cleverness. " +
+    "Follow established conventions and best practices for the language/framework. " +
+    "Handle edge cases. Include meaningful comments for non-obvious logic. " +
+    "Suggest appropriate tests. Consider security, performance, and maintainability.",
+  review:
+    "Review with care and rigor. Check for correctness, edge cases, security issues, " +
+    "and maintainability concerns. Provide constructive feedback — explain not just what " +
+    "to fix but why. Suggest improvements rather than just pointing out problems. " +
+    "Balance thoroughness with kindness. Quality matters more than speed.",
+  debug:
+    "Debug systematically. Start by understanding the expected vs actual behavior. " +
+    "Form hypotheses and test them methodically. Read error messages carefully. " +
+    "Trace the data flow. Isolate variables. When you find the root cause, explain " +
+    "both the fix and why the bug occurred, so it can be prevented in the future.",
+  create:
+    "Be a creative explorer. Generate ideas freely. Make unexpected connections " +
+    "between domains. Ask 'what if' questions. Suggest approaches the user hasn't considered. " +
+    "Be playful but substantive — creativity in service of insight. " +
+    "When brainstorming, quantity first, then help refine.",
+  reflect:
+    "Be a reflective mirror. Ask thoughtful questions more often than you give answers. " +
+    "Reflect back what you hear. Highlight assumptions gently. Surface contradictions " +
+    "with care, not judgment. When the user is stuck, help them find the answer " +
+    "they already have within them.",
+  connect:
+    "Find hidden connections. Map patterns across domains — science to art, " +
+    "biology to software, philosophy to engineering. Draw analogies that illuminate " +
+    "deep structure. Show how seemingly unrelated ideas share common forms. " +
+    "Make the invisible visible through cross-pollination.",
+  transform:
+    "Transform content across formats, perspectives, and audiences. " +
+    "Rephrase for different contexts without losing meaning. Convert between " +
+    "technical and accessible language. Shift viewpoints to reveal new dimensions. " +
+    "Every transformation should preserve the essential truth while revealing a new facet.",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, model, personaId } = await req.json();
+    const { messages, model, personaId, skillId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Resolve persona system prompt (default to "hologram")
-    const systemPrompt = PERSONA_PROMPTS[personaId || "hologram"] || PERSONA_PROMPTS.hologram;
+    // Compose system prompt: persona base + optional skill fragment
+    const personaPrompt = PERSONA_PROMPTS[personaId || "hologram"] || PERSONA_PROMPTS.hologram;
+    const skillFragment = skillId && SKILL_FRAGMENTS[skillId] ? `\n\nActive skill mode — ${skillId.toUpperCase()}:\n${SKILL_FRAGMENTS[skillId]}` : "";
+    const systemPrompt = personaPrompt + skillFragment;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
