@@ -3,7 +3,8 @@
  */
 
 export { withVerifiedReceipt } from "./receipt-manager";
-export { getReceiptsForOperation, getReceiptsForModule, verifyReceiptChain, exportAuditTrail, getRecentReceipts } from "./audit-trail";
+export { getReceiptsForOperation, getReceiptsForModule, verifyReceiptChain, exportAuditTrail, getRecentReceipts, getRecentDerivations, getRecentCertificates } from "./audit-trail";
+export type { AuditDerivation, AuditCertificate } from "./audit-trail";
 export { systemIntegrityCheck } from "./integrity-check";
 export type { CheckResult, IntegrityReport } from "./integrity-check";
 export { default as AuditPage } from "./pages/AuditPage";
