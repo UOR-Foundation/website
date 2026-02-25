@@ -181,6 +181,7 @@ export {
   serializeBlueprint,
   deserializeBlueprint,
   composeBlueprints,
+  forkBlueprint,
   registerElementFactory,
   getRegisteredKinds,
   isKindRegistered,
