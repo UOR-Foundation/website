@@ -12,13 +12,11 @@
 import { describe, it, expect } from "vitest";
 import { Q0, Q1 } from "@/modules/ring-core/ring";
 import {
-  transformCertificate,
-  isometryCertificate,
-  involutionCertificate,
-} from "@/modules/ring-core/certificate";
-import { resolve, deriveState } from "@/modules/ring-core/resolver";
-import { createFiberBudget, pinFiber } from "@/modules/ring-core/fiber-budget";
-import { residueConstraint, depthConstraint } from "@/modules/ring-core/constraint";
+  transformCertificate, isometryCertificate, involutionCertificate,
+  resolve, deriveState,
+  createFiberBudget, pinFiber,
+  residueConstraint, depthConstraint,
+} from "@/modules/ring-core";
 
 describe("Phase 5: Certificate Hierarchy & Resolver", () => {
   // ── T5.1: TransformCertificate ──────────────────────────────────────────

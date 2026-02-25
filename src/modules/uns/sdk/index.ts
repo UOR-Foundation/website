@@ -36,7 +36,7 @@ export type {
 
 // ── Compute ─────────────────────────────────────────────────────────────────
 export type { ComputeFunction } from "../compute/registry";
-export type { ExecutionResult, ComputationTrace } from "../compute/executor";
+export type { ExecutionResult, ExecutorTrace, ComputationTrace } from "../compute/executor";
 
 // ── Agent Gateway ───────────────────────────────────────────────────────────
 export type {

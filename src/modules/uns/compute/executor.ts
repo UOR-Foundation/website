@@ -23,8 +23,8 @@ import { analyzePayloadFast } from "../shield/partition";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-/** Signed computation trace — the audit record of an invocation. */
-export interface ComputationTrace {
+/** Executor-specific trace — the audit record of a sandboxed invocation. */
+export interface ExecutorTrace {
   "@type": "trace:ComputationTrace";
   "trace:functionCanonicalId": string;
   "trace:inputCanonicalId": string;
@@ -34,6 +34,9 @@ export interface ComputationTrace {
   "trace:injectionDetected": boolean;
 }
 
+/** @deprecated Use ExecutorTrace instead */
+export type ComputationTrace = ExecutorTrace;
+
 /** Full execution result with trace and optional error. */
 export interface ExecutionResult {
   /** Function return value. */
@@ -41,7 +44,7 @@ export interface ExecutionResult {
   /** Canonical ID of serialized output. */
   outputCanonicalId: string;
   /** Signed computation trace. */
-  trace: ComputationTrace & { "cert:signature": SignatureBlock };
+  trace: ExecutorTrace & { "cert:signature": SignatureBlock };
   /** Error message if execution failed. */
   error?: string;
   /** P22: Epistemic grade — 'A' for signed traced computations. */
@@ -187,7 +190,7 @@ export async function invokeFunction(
   const partition = analyzePayloadFast(outputBytes);
 
   // Step 6: Build trace
-  const trace: ComputationTrace = {
+  const trace: ExecutorTrace = {
     "@type": "trace:ComputationTrace",
     "trace:functionCanonicalId": functionCanonicalId,
     "trace:inputCanonicalId": inputCanonicalId,

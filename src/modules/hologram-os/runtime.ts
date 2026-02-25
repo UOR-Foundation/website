@@ -25,7 +25,7 @@
 
 import type { MetricAxis } from "@/types/uor-foundation/enums";
 import type { FiberBudget } from "@/types/uor-foundation/bridge/partition";
-import { resolution } from "@/modules/ring-core/fiber-budget";
+import { resolution } from "@/modules/ring-core";
 
 // ── Panel: Observable → visual ────────────────────────────────────────────
 

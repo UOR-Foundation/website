@@ -11,16 +11,11 @@
  */
 import { describe, it, expect } from "vitest";
 import {
-  createFiberBudget,
-  pinFiber,
-  freeCount,
-  resolution,
-} from "@/modules/ring-core/fiber-budget";
-import {
+  createFiberBudget, pinFiber, freeCount, resolution,
   stratum, ringMetric, hammingMetric, cascadeObs, cascadeLength,
   curvature, holonomy, catastrophe, catastropheThreshold, dihedralElement,
   metricObs, pathObs,
-} from "@/modules/ring-core/observable-factory";
+} from "@/modules/ring-core";
 import { OBSERVABLE_AXIS } from "@/types/uor-foundation/bridge/observable";
 import { classifyByte } from "@/lib/uor-ring";
 
