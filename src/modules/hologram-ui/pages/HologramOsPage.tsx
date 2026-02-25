@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, Search } from "lucide-react";
 import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
+import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
 
 // ── Live Clock ──────────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ export default function HologramOsPage() {
   const navigate = useNavigate();
   const now = useLiveClock();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false);
 
   const goConsole = useCallback(() => navigate("/hologram-console"), [navigate]);
 
@@ -77,10 +79,10 @@ export default function HologramOsPage() {
             English
           </span>
           <button
-            onClick={() => navigate("/console")}
+onClick={() => setClaimOpen(true)}
             className="bg-foreground text-background px-5 py-2 text-sm font-light tracking-wide hover:opacity-90 transition-opacity"
           >
-            Get Your Key
+            Claim Your ID
           </button>
         </div>
       </header>
@@ -177,6 +179,9 @@ export default function HologramOsPage() {
           </div>
         </button>
       </div>
+
+      {/* ── Claim Your ID Overlay ──────────────────────────────────────── */}
+      <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
     </div>
   );
 }
