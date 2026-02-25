@@ -67,6 +67,7 @@ interface TriadicWelcomeProps {
   activeSkill: AgentSkill | null;
   onSelectPersona: (persona: AgentPersona) => void;
   onSelectSkill: (skill: AgentSkill | null) => void;
+  forceOnboarding?: boolean;
 }
 
 export default function TriadicWelcome({
@@ -75,9 +76,10 @@ export default function TriadicWelcome({
   activeSkill,
   onSelectPersona,
   onSelectSkill,
+  forceOnboarding = false,
 }: TriadicWelcomeProps) {
   const [focusedPhase, setFocusedPhase] = useState<TriadicPhase | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding());
+  const [showOnboarding, setShowOnboarding] = useState(() => forceOnboarding || !hasSeenOnboarding());
   const [animDirection, setAnimDirection] = useState<"enter" | "exit">("enter");
   const [renderPhase, setRenderPhase] = useState<TriadicPhase | null>(null);
   const personasByPhase = getPersonasByPhase();

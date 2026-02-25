@@ -11,7 +11,7 @@ import { useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Plus, Home, LayoutGrid, User,
-  Settings, ChevronLeft,
+  Settings, ChevronLeft, HelpCircle,
 } from "lucide-react";
 
 /* ── Palette — higher contrast, warm whites ────────────────── */
@@ -46,6 +46,7 @@ interface DesktopOsSidebarProps {
   onToggle: () => void;
   onNewChat: () => void;
   onOpenChat: () => void;
+  onReplayGuide?: () => void;
 }
 
 /* ── Component ─────────────────────────────────────────────── */
@@ -53,6 +54,7 @@ export default function DesktopOsSidebar({
   collapsed,
   onToggle,
   onNewChat,
+  onReplayGuide,
 }: DesktopOsSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -152,6 +154,21 @@ export default function DesktopOsSidebar({
         className="px-2.5 py-4 space-y-1"
         style={{ borderTop: `1px solid ${S.border}` }}
       >
+        {onReplayGuide && (
+          <button
+            onClick={onReplayGuide}
+            className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
+              collapsed ? "justify-center px-0 py-3" : "px-3.5 py-3"
+            }`}
+            style={{ color: S.text, fontFamily: S.font }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            title={collapsed ? "Replay Guide" : undefined}
+          >
+            <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
+            {!collapsed && <span className="text-[14px] font-light">Replay Guide</span>}
+          </button>
+        )}
         <button
           onClick={() => navigate("/settings")}
           className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${

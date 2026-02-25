@@ -97,11 +97,12 @@ interface HologramAiChatProps {
   onClose: () => void;
   onPhaseChange?: (phase: TriadicPhase | null) => void;
   creatorStage?: CreatorStage;
+  replayGuideKey?: number;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export default function HologramAiChat({ open, onClose, onPhaseChange, creatorStage = 1 }: HologramAiChatProps) {
+export default function HologramAiChat({ open, onClose, onPhaseChange, creatorStage = 1, replayGuideKey = 0 }: HologramAiChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -672,11 +673,13 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           {/* Welcome state when no messages */}
           {!hasMessages && !isLoadingModel && attention.showExpanded && (
             <TriadicWelcome
+              key={replayGuideKey}
               creatorStage={creatorStage}
               selectedPersona={selectedPersona}
               activeSkill={activeSkill}
               onSelectPersona={setSelectedPersona}
               onSelectSkill={setActiveSkill}
+              forceOnboarding={replayGuideKey > 0}
             />
           )}
 
