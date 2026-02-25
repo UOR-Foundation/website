@@ -86,6 +86,22 @@ export default function HologramOsPage() {
             />
           </div>
 
+          {/* ── Logo — top center, Aman-style wordmark ──────────── */}
+          <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-10 animate-fade-in">
+            <span
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 400,
+                fontSize: "15px",
+                letterSpacing: "0.55em",
+                textTransform: "uppercase" as const,
+                color: "hsla(38, 15%, 88%, 0.85)",
+              }}
+            >
+              Hologram
+            </span>
+          </div>
+
           {/* ── Welcome — centered, intimate, personal ─────────── */}
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-white px-8">
             <div className="text-center max-w-2xl space-y-8 animate-fade-in">
