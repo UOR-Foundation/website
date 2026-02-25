@@ -1,6 +1,6 @@
 /**
- * HologramFrame — Composable Layer System
- * ════════════════════════════════════════
+ * HologramFrame — Composable Layer System with Cinematic Transitions
+ * ══════════════════════════════════════════════════════════════════
  *
  * The holographic principle applied to UI rendering:
  * complex multi-dimensional state encoded onto discrete 2D frames,
@@ -16,6 +16,12 @@
  *   2  = Content (main interactive surfaces)
  *   3+ = Overlays (chat, modals, claim flows)
  *
+ * Transition system:
+ *   When an overlay (layer ≥ 3) opens, lower-layer frames receive a
+ *   "depth recession" — they scale down and blur slightly, producing a
+ *   cinematic focal-shift effect. This is powered by framer-motion's
+ *   AnimatePresence and the HologramViewport's DepthShift context.
+ *
  * Future-proofing for VR/XR:
  *   - Each frame carries a Transform3D (position, rotation, scale)
  *     that currently maps to CSS transforms but will map 1:1 to
@@ -26,9 +32,6 @@
  *     enabling "holographic hibernation" — freeze any viewport state,
  *     hash it, resume it anywhere.
  *
- * The frame system mirrors the UOR Frames concept: each frame is a
- * snapshot of visual state at a given depth, composable and streamable.
- *
  * @module hologram-ui/components/HologramFrame
  */
 
@@ -38,9 +41,12 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
+  useCallback,
   type ReactNode,
   type CSSProperties,
 } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ── Transform3D — Future-ready spatial metadata ─────────────────────────────
@@ -49,9 +55,6 @@ import {
 /**
  * 3D transform for a frame. Currently projected onto CSS transforms;
  * in a WebXR/Three.js backend, these map directly to Object3D properties.
- *
- * Units: position in viewport-relative units (vh/vw today, meters in VR).
- * Rotation in degrees. Scale is multiplicative (1 = identity).
  */
 export interface Transform3D {
   position: [x: number, y: number, z: number];
@@ -68,16 +71,12 @@ export const IDENTITY_TRANSFORM: Readonly<Transform3D> = {
 
 /**
  * Convert a Transform3D to a CSS transform string.
- * This is the 2D projection of the 3D transform — the holographic encoding.
- * When the renderer upgrades to WebXR, this function is simply replaced
- * with a Three.js matrix setter; all frame metadata stays identical.
  */
 function transform3DToCss(t: Transform3D): string {
   const [x, y, z] = t.position;
   const [rx, ry, rz] = t.rotation;
   const [sx, sy, sz] = t.scale;
 
-  // Only emit transform if non-identity to avoid unnecessary GPU layers
   const isIdentity =
     x === 0 && y === 0 && z === 0 &&
     rx === 0 && ry === 0 && rz === 0 &&
@@ -100,32 +99,15 @@ function transform3DToCss(t: Transform3D): string {
 // ── Frame Descriptor — Serializable frame metadata ──────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-/**
- * A serializable snapshot of a frame's state.
- * This IS the "frame" in the streaming/GPU sense: a discrete, hashable
- * unit of visual state that can be transmitted, cached, or resumed.
- *
- * In UOR terms: FrameDescriptor is the canonical form of visual state.
- * Hash it → content-address it → project it anywhere.
- */
 export interface FrameDescriptor {
-  /** Unique frame ID (auto-generated or user-supplied label) */
   id: string;
-  /** Depth layer (0 = canvas, 1 = chrome, 2 = content, 3+ = overlays) */
   layer: number;
-  /** Human-readable label for debugging / frame registry */
   label: string;
-  /** 3D spatial transform */
   transform: Transform3D;
-  /** Whether the frame accepts pointer events */
   interactive: boolean;
-  /** Opacity (0–1) */
   opacity: number;
-  /** Visibility — hidden frames skip rendering but stay in the registry */
   visible: boolean;
-  /** Arbitrary metadata for domain-specific extensions */
   meta: Record<string, unknown>;
-  /** Timestamp of last update (for temporal ordering in streams) */
   updatedAt: number;
 }
 
@@ -133,76 +115,48 @@ export interface FrameDescriptor {
 // ── Frame Registry — The Scene Graph ────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-/**
- * FrameRegistry — singleton scene graph of all active frames.
- *
- * This is the "frame buffer" of the hologram. Every HologramFrame
- * registers itself on mount and unregisters on unmount, giving us
- * a live, queryable inventory of the entire visual state.
- *
- * Why this matters for VR/streaming:
- *   1. A VR renderer can walk the registry and map each frame to
- *      a floating panel in 3D space — same data, different projection.
- *   2. A streaming encoder can serialize the registry to transmit
- *      the entire viewport state as a compact frame packet.
- *   3. Frame-level diffing: compare two registry snapshots to compute
- *      the minimal visual delta (like GPU frame diffing).
- */
 class FrameRegistry {
   private frames = new Map<string, FrameDescriptor>();
   private listeners = new Set<(snapshot: FrameDescriptor[]) => void>();
   private nextId = 0;
 
-  /** Generate a unique frame ID */
   generateId(label?: string): string {
     return label ? `frame:${label}:${this.nextId++}` : `frame:${this.nextId++}`;
   }
 
-  /** Register or update a frame */
   upsert(descriptor: FrameDescriptor): void {
     this.frames.set(descriptor.id, { ...descriptor, updatedAt: Date.now() });
     this.notify();
   }
 
-  /** Remove a frame */
   remove(id: string): void {
     this.frames.delete(id);
     this.notify();
   }
 
-  /** Get all frames sorted by layer depth (ascending) */
   snapshot(): FrameDescriptor[] {
     return [...this.frames.values()].sort((a, b) => a.layer - b.layer);
   }
 
-  /** Get frames at a specific layer */
   atLayer(layer: number): FrameDescriptor[] {
     return this.snapshot().filter((f) => f.layer === layer);
   }
 
-  /** Get the topmost interactive frame */
   topInteractive(): FrameDescriptor | undefined {
     return [...this.frames.values()]
       .filter((f) => f.interactive && f.visible)
       .sort((a, b) => b.layer - a.layer)[0];
   }
 
-  /** Count of active frames */
   get size(): number {
     return this.frames.size;
   }
 
-  /** Subscribe to registry changes */
   subscribe(fn: (snapshot: FrameDescriptor[]) => void): () => void {
     this.listeners.add(fn);
     return () => this.listeners.delete(fn);
   }
 
-  /**
-   * Serialize the entire registry to a JSON-serializable object.
-   * This is the "dehydrated" form — hash it for content-addressing,
-   * transmit it for streaming, store it for hibernation.
-   */
   serialize(): { version: 1; timestamp: number; frames: FrameDescriptor[] } {
     return {
       version: 1,
@@ -217,30 +171,47 @@ class FrameRegistry {
   }
 }
 
-/** Singleton registry — the global scene graph */
 export const frameRegistry = new FrameRegistry();
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ── Z-Index Bands — 100 units apart for sub-layering ────────────────────────
+// ── Z-Index Bands ───────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
 const LAYER_BASE = 0;
 const LAYER_BAND = 100;
 
-export type FrameLayer = number; // 0, 1, 2, 3, …
+export type FrameLayer = number;
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ── Frame Context — Accessible from any child ───────────────────────────────
+// ── Depth Shift Context — cinematic focal-shift on overlay open ─────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+interface DepthShiftState {
+  /** Whether an overlay is active (causes lower layers to recede) */
+  overlayActive: boolean;
+  /** The layer threshold — frames below this recede */
+  overlayLayer: number;
+  setOverlayActive: (active: boolean, layer?: number) => void;
+}
+
+const DepthShiftContext = createContext<DepthShiftState>({
+  overlayActive: false,
+  overlayLayer: 3,
+  setOverlayActive: () => {},
+});
+
+export function useDepthShift() {
+  return useContext(DepthShiftContext);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── Frame Context ───────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
 interface FrameContextValue {
-  /** Current frame's layer depth */
   layer: FrameLayer;
-  /** Computed z-index for this layer */
   zIndex: number;
-  /** The frame's descriptor in the registry */
   descriptor: FrameDescriptor;
-  /** The global frame registry */
   registry: FrameRegistry;
 }
 
@@ -261,39 +232,50 @@ const FrameContext = createContext<FrameContextValue>({
   registry: frameRegistry,
 });
 
-/** Access the current frame's layer info from any child */
 export function useHologramFrame() {
   return useContext(FrameContext);
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── Transition Presets ──────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** Spring config for cinematic depth transitions */
+const DEPTH_SPRING = { type: "spring" as const, stiffness: 80, damping: 20, mass: 0.8 };
+const FADE_SPRING = { type: "spring" as const, stiffness: 120, damping: 22, mass: 0.6 };
+
+/** How much lower layers recede when an overlay opens */
+const RECESSION_SCALE = 0.965;
+const RECESSION_BLUR = 6; // px
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ── Frame Component ─────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
 interface HologramFrameProps {
-  /** Depth layer (0 = base, 1 = chrome, 2 = content, 3+ = overlays) */
   layer: FrameLayer;
-  /** Content within this frame */
   children: ReactNode;
-  /** Additional class names */
   className?: string;
-  /** Additional inline styles */
   style?: CSSProperties;
-  /** Whether the frame is interactive (pointer-events). Default: true */
   interactive?: boolean;
-  /** Frame label for debugging / frame registry */
   label?: string;
-  /**
-   * 3D transform. Currently projected to CSS; will map directly to
-   * WebXR Object3D transforms when the renderer upgrades.
-   */
   transform?: Transform3D;
-  /** Opacity (0–1). Default: 1 */
   opacity?: number;
-  /** Visibility — hidden frames stay in registry but skip rendering */
   visible?: boolean;
-  /** Arbitrary metadata attached to the frame descriptor */
   meta?: Record<string, unknown>;
+  /**
+   * Transition preset for mount/unmount.
+   * - "none"    — instant, no animation
+   * - "fade"    — simple opacity fade (default for layers 0-2)
+   * - "depth"   — cinematic depth-shift: slides from behind with scale (default for layers 3+)
+   * - "slide"   — slide in from right (good for panels)
+   */
+  transition?: "none" | "fade" | "depth" | "slide";
+  /**
+   * Whether this frame should recede when an overlay opens.
+   * Default: true for layers < 3, false for layers >= 3.
+   */
+  recessOnOverlay?: boolean;
 }
 
 export default function HologramFrame({
@@ -307,15 +289,21 @@ export default function HologramFrame({
   opacity = 1,
   visible = true,
   meta = {},
+  transition: transitionProp,
+  recessOnOverlay: recessProp,
 }: HologramFrameProps) {
   const zIndex = LAYER_BASE + layer * LAYER_BAND;
   const frameIdRef = useRef<string>("");
+  const depthShift = useContext(DepthShiftContext);
 
-  // Stable frame ID across renders
   if (!frameIdRef.current) {
     frameIdRef.current = frameRegistry.generateId(label);
   }
   const frameId = frameIdRef.current;
+
+  // Determine transition preset
+  const transition = transitionProp ?? (layer >= 3 ? "depth" : "fade");
+  const shouldRecess = recessProp ?? (layer < 3);
 
   // Build descriptor
   const descriptor = useMemo<FrameDescriptor>(
@@ -346,31 +334,141 @@ export default function HologramFrame({
     [layer, zIndex, descriptor],
   );
 
-  // Hidden frames stay in registry but don't render
   if (!visible) return null;
 
   const cssTransform = transform3DToCss(transform);
 
+  // Recession state — when overlay is active and this frame is below the overlay
+  const isReceding = shouldRecess && depthShift.overlayActive && layer < depthShift.overlayLayer;
+
+  // Build motion variants
+  const baseStyle: CSSProperties = {
+    zIndex,
+    pointerEvents: interactive ? "auto" : "none",
+    transformStyle: "preserve-3d",
+    willChange: "transform, opacity, filter",
+    ...style,
+  };
+
+  // Entry/exit animation variants by preset
+  const variants = {
+    none: {
+      initial: {},
+      animate: {
+        opacity,
+        scale: isReceding ? RECESSION_SCALE : 1,
+        filter: isReceding ? `blur(${RECESSION_BLUR}px)` : "blur(0px)",
+        ...(cssTransform ? { transform: cssTransform } : {}),
+      },
+      exit: {},
+    },
+    fade: {
+      initial: { opacity: 0 },
+      animate: {
+        opacity: isReceding ? opacity * 0.7 : opacity,
+        scale: isReceding ? RECESSION_SCALE : 1,
+        filter: isReceding ? `blur(${RECESSION_BLUR}px)` : "blur(0px)",
+      },
+      exit: { opacity: 0 },
+    },
+    depth: {
+      initial: {
+        opacity: 0,
+        scale: 0.92,
+        y: 40,
+        filter: "blur(8px)",
+      },
+      animate: {
+        opacity,
+        scale: 1,
+        y: 0,
+        filter: "blur(0px)",
+      },
+      exit: {
+        opacity: 0,
+        scale: 0.92,
+        y: 40,
+        filter: "blur(8px)",
+      },
+    },
+    slide: {
+      initial: { opacity: 0, x: "100%" },
+      animate: { opacity, x: 0 },
+      exit: { opacity: 0, x: "100%" },
+    },
+  };
+
+  const preset = variants[transition];
+  const animateTransition = transition === "depth" ? DEPTH_SPRING : FADE_SPRING;
+
   return (
     <FrameContext.Provider value={ctx}>
-      <div
+      <motion.div
         className={`absolute inset-0 ${className}`}
         style={{
-          zIndex,
-          pointerEvents: interactive ? "auto" : "none",
-          opacity,
-          transform: cssTransform || undefined,
-          transformStyle: "preserve-3d",
-          willChange: cssTransform ? "transform, opacity" : "opacity",
-          ...style,
+          ...baseStyle,
+          ...(cssTransform && !isReceding ? { transform: cssTransform } : {}),
         }}
+        initial={preset.initial}
+        animate={preset.animate}
+        exit={preset.exit}
+        transition={animateTransition}
         data-hologram-frame={layer}
         data-frame-label={label}
         data-frame-id={frameId}
       >
         {children}
-      </div>
+      </motion.div>
     </FrameContext.Provider>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── Overlay Frame — Triggers depth recession on lower layers ────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+interface OverlayFrameProps extends Omit<HologramFrameProps, "layer" | "transition"> {
+  /** Whether this overlay is open */
+  open: boolean;
+  /** Layer (default 3) */
+  layer?: FrameLayer;
+  /** Transition preset (default "depth") */
+  transition?: "depth" | "slide" | "fade";
+}
+
+/**
+ * Specialized frame for overlays that automatically triggers the
+ * depth-recession effect on lower frames when opened.
+ */
+export function OverlayFrame({
+  open,
+  layer = 3,
+  transition = "depth",
+  children,
+  ...rest
+}: OverlayFrameProps) {
+  const depthShift = useDepthShift();
+
+  useEffect(() => {
+    depthShift.setOverlayActive(open, layer);
+    return () => {
+      if (open) depthShift.setOverlayActive(false, layer);
+    };
+  }, [open, layer]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <HologramFrame
+          layer={layer}
+          transition={transition}
+          recessOnOverlay={false}
+          {...rest}
+        >
+          {children}
+        </HologramFrame>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -385,21 +483,35 @@ interface HologramViewportProps {
 
 /**
  * Root container for the frame stack.
- * Creates the positioning context and perspective origin that all frames
- * layer within. The `perspective` value enables CSS 3D transforms today
- * and will be the camera FOV in a WebXR context.
+ * Provides the DepthShift context that coordinates the cinematic
+ * recession effect across all child frames.
  */
 export function HologramViewport({ children, className = "" }: HologramViewportProps) {
+  const [overlayActive, setOverlayActiveRaw] = useState(false);
+  const [overlayLayer, setOverlayLayer] = useState(3);
+
+  const setOverlayActive = useCallback((active: boolean, layer = 3) => {
+    setOverlayActiveRaw(active);
+    setOverlayLayer(layer);
+  }, []);
+
+  const depthState = useMemo<DepthShiftState>(
+    () => ({ overlayActive, overlayLayer, setOverlayActive }),
+    [overlayActive, overlayLayer, setOverlayActive],
+  );
+
   return (
-    <div
-      className={`relative w-full h-full overflow-hidden ${className}`}
-      style={{
-        perspective: "1200px",
-        perspectiveOrigin: "50% 50%",
-        transformStyle: "preserve-3d",
-      }}
-    >
-      {children}
-    </div>
+    <DepthShiftContext.Provider value={depthState}>
+      <div
+        className={`relative w-full h-full overflow-hidden ${className}`}
+        style={{
+          perspective: "1200px",
+          perspectiveOrigin: "50% 50%",
+          transformStyle: "preserve-3d",
+        }}
+      >
+        {children}
+      </div>
+    </DepthShiftContext.Provider>
   );
 }

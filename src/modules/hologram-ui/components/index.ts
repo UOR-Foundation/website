@@ -30,5 +30,5 @@ export { DynamicProjection, MultiProjection } from "./DynamicProjection";
 export type { DynamicProjectionProps, MultiProjectionProps } from "./DynamicProjection";
 
 // ── Frame System (Composable Layer Architecture) ───────────────────────────
-export { default as HologramFrame, HologramViewport, useHologramFrame, frameRegistry, IDENTITY_TRANSFORM } from "./HologramFrame";
+export { default as HologramFrame, HologramViewport, OverlayFrame, useHologramFrame, useDepthShift, frameRegistry, IDENTITY_TRANSFORM } from "./HologramFrame";
 export type { FrameLayer, FrameDescriptor, Transform3D } from "./HologramFrame";

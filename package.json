@@ -35,6 +35,7 @@
     "d3-force": "^3.0.0",
     "date-fns": "^3.6.0",
     "fflate": "^0.8.2",
+    "framer-motion": "^12.34.3",
     "jsonld": "^9.0.0",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
