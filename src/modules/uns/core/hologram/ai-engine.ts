@@ -104,18 +104,18 @@ export const RECOMMENDED_MODELS: ReadonlyArray<{
     sizeApprox: "~350MB",
   },
   {
-    id: "onnx-community/SmolLM2-135M-Instruct",
-    task: "text-generation",
-    dtype: "q8",
-    description: "SmolLM2 135M — ultra-light, instant responses",
-    sizeApprox: "~150MB",
-  },
-  {
-    id: "onnx-community/SmolLM2-360M-Instruct",
+    id: "onnx-community/Qwen3-0.6B-ONNX",
     task: "text-generation",
     dtype: "q4f16",
-    description: "SmolLM2 360M — balanced quality & speed",
-    sizeApprox: "~250MB",
+    description: "Qwen3 0.6B — ultra-light, fast responses",
+    sizeApprox: "~400MB",
+  },
+  {
+    id: "Xenova/gpt2",
+    task: "text-generation",
+    dtype: "fp32",
+    description: "GPT-2 — classic, instant responses",
+    sizeApprox: "~500MB",
   },
   {
     id: "Xenova/distilbert-base-uncased-finetuned-sst-2-english",
