@@ -84,6 +84,20 @@ export default function HologramOsPage() {
     setLines(prev => [...prev, { id: lineId.current++, type, text }]);
   }, []);
 
+  /** Append text to the last terminal line (for streaming tokens). */
+  const appendToLastLine = useCallback((token: string) => {
+    setLines(prev => {
+      if (prev.length === 0) return [{ id: lineId.current++, type: "output" as const, text: token }];
+      const last = prev[prev.length - 1];
+      if (last.type !== "output") {
+        // Start a new streaming output line
+        return [...prev, { id: lineId.current++, type: "output" as const, text: token }];
+      }
+      // Append to existing output line
+      return [...prev.slice(0, -1), { ...last, text: last.text + token }];
+    });
+  }, []);
+
   // Auto-scroll
   useEffect(() => {
     if (termRef.current) {
@@ -155,9 +169,12 @@ export default function HologramOsPage() {
     if (!trimmed) return;
     emit("input", `$ ${trimmed}`);
     setHistIdx(-1);
-    const result = await shell.exec(trimmed);
+
+    // Provide a streaming token callback so ai run streams tokens in real-time
+    const streamCallback = (token: string) => appendToLastLine(token);
+    const result = await shell.exec(trimmed, { onStreamToken: streamCallback });
     applyShellResult(result);
-  }, [shell, emit, applyShellResult]);
+  }, [shell, emit, applyShellResult, appendToLastLine]);
 
   // ── File Drop Handler ──────────────────────────────────────────────────
 
