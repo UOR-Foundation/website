@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.hologram-ai-stream]
 verify_jwt = false
+
+[functions.code-nexus-query]
+verify_jwt = false

@@ -8,12 +8,13 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { PageShell } from "@/modules/hologram-ui/components/PageShell";
-import { GitBranch, Save, Database, Eye, Search } from "lucide-react";
+import { GitBranch, Save, Database, Eye, Search, Sparkles } from "lucide-react";
 import { RepoInput } from "../components/RepoInput";
 import { IngestionResults } from "../components/IngestionResults";
 import { GraphQueryPanel } from "../components/GraphQueryPanel";
 import { GraphExplorer } from "../components/GraphExplorer";
 import { EntityInspector } from "../components/EntityInspector";
+import { IntelligencePanel } from "../components/IntelligencePanel";
 import { ingestFromGitHub, ingestFromZip } from "../lib/ingestion";
 import { mapToUor } from "../lib/uor-mapper";
 import { CodeGraphStore } from "../lib/graph-store";
@@ -24,7 +25,7 @@ import type { SessionRecord } from "../lib/session-persistence";
 import type { GraphNode } from "../lib/graph-store";
 import { supabase } from "@/integrations/supabase/client";
 
-type ViewMode = "visual" | "query";
+type ViewMode = "visual" | "query" | "intelligence";
 
 export default function CodeNexusPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -274,6 +275,15 @@ export default function CodeNexusPage() {
                   >
                     <Search size={12} /> Query
                   </button>
+                  <button
+                    onClick={() => setViewMode("intelligence")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors ${
+                      viewMode === "intelligence" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    style={{ fontFamily: "'DM Sans', sans-serif" }}
+                  >
+                    <Sparkles size={12} /> Intelligence
+                  </button>
                 </div>
 
                 {/* Content */}
@@ -294,8 +304,16 @@ export default function CodeNexusPage() {
                       />
                     )}
                   </div>
-                ) : (
+                ) : viewMode === "query" ? (
                   <GraphQueryPanel store={graphStore} />
+                ) : (
+                  <IntelligencePanel
+                    store={graphStore}
+                    onSelectNode={(node) => {
+                      setSelectedNode(node);
+                      setViewMode("visual");
+                    }}
+                  />
                 )}
               </>
             )}
