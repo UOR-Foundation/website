@@ -199,28 +199,41 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
         );
       })()}
 
-      {/* Phase legend — appears on hover */}
+      {/* Phase legend — appears on hover, above the ring */}
       <div
-        className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-3 transition-opacity duration-700 pointer-events-none"
-        style={{ opacity: hovered && attention.showExpanded ? 1 : 0 }}
+        className="absolute -top-16 left-1/2 -translate-x-1/2 flex gap-5 transition-all duration-700 pointer-events-none"
+        style={{
+          opacity: hovered && attention.showExpanded ? 1 : 0,
+          transform: `translateX(-50%) translateY(${hovered && attention.showExpanded ? "0" : "6px"})`,
+        }}
       >
-        {PHASE_ORDER.map((phase) => (
-          <div key={phase} className="flex items-center gap-1">
-            <div
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: PHASES[phase].color }}
-            />
-            <span
-              className="text-[8px] tracking-[0.2em] uppercase"
-              style={{
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                color: "hsla(38, 12%, 70%, 0.4)",
-              }}
-            >
-              {phase}
-            </span>
-          </div>
-        ))}
+        {PHASE_ORDER.map((phase) => {
+          const phasePct = Math.round(balance[phase] * 100);
+          return (
+            <div key={phase} className="flex flex-col items-center gap-1">
+              <span
+                className="text-[13px] font-light leading-none"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  color: `hsla(${PHASES[phase].hue}, 35%, 72%, 0.9)`,
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {phasePct}%
+              </span>
+              <span
+                className="text-[9px] tracking-[0.25em] uppercase leading-none"
+                style={{
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  color: `hsla(${PHASES[phase].hue}, 25%, 68%, 0.55)`,
+                  fontWeight: 400,
+                }}
+              >
+                {phase}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
 
