@@ -39,3 +39,15 @@ export {
 } from "./engine/contextProjection";
 
 export { useContextProjection, type ContextProjectionHandle } from "./hooks/useContextProjection";
+
+// ── Frame System (Composable Depth Layers) ─────────────────────────────────
+export {
+  HologramFrame,
+  HologramViewport,
+  useHologramFrame,
+  frameRegistry,
+  IDENTITY_TRANSFORM,
+  type FrameLayer,
+  type FrameDescriptor,
+  type Transform3D,
+} from "./components";
