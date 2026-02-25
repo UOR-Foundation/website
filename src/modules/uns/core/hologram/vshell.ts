@@ -30,6 +30,17 @@ import { DIRECTIONS } from "./polytree";
 import type { ProjectionInput } from "./index";
 import { getHologramGpu, getLutEngine, UorLutEngine, type HologramGpu, type GpuBenchmarkResult } from "./gpu";
 
+/** Fill a Uint8Array with random bytes (chunked to respect Web Crypto 65536-byte limit). */
+function fillRandom(buf: Uint8Array): void {
+  const CHUNK = 65536;
+  for (let offset = 0; offset < buf.length; offset += CHUNK) {
+    const len = Math.min(CHUNK, buf.length - offset);
+    const chunk = new Uint8Array(len);
+    crypto.getRandomValues(chunk);
+    buf.set(chunk, offset);
+  }
+}
+
 // ── Shell Result Types ────────────────────────────────────────────────────
 
 export type ShellResultKind =
@@ -916,7 +927,7 @@ export class VShell {
 
         // Generate random input data
         const data = new Uint8Array(size);
-        crypto.getRandomValues(data);
+        fillRandom(data);
 
         info(`Applying '${tableName}' to ${(size / 1024).toFixed(0)}KB of data (CPU)…`);
         const result = await lut.applyNamed(tableName, data);
@@ -935,7 +946,7 @@ export class VShell {
         if (!table) { err(`Unknown table: ${tableName}. Use 'gpu lut tables' to list.`); return; }
 
         const data = new Uint8Array(size);
-        crypto.getRandomValues(data);
+        fillRandom(data);
 
         info(`Applying '${tableName}' to ${(size / 1024).toFixed(0)}KB on GPU…`);
         const result = await lut.applyGpu(table, data);
@@ -976,7 +987,7 @@ export class VShell {
 
         for (const size of sizes) {
           const data = new Uint8Array(size);
-          crypto.getRandomValues(data);
+          fillRandom(data);
 
           // CPU
           const cpuResult = await lut.applyNamed("neg", data);
@@ -1002,7 +1013,7 @@ export class VShell {
                        lut.SUCC, lut.PRED, lut.NEG, lut.BNOT, lut.SUCC];
         const composed = UorLutEngine.composeChain(chain);
         const bigData = new Uint8Array(1048576);
-        crypto.getRandomValues(bigData);
+        fillRandom(bigData);
 
         // 10 sequential applies
         const seqStart = performance.now();
