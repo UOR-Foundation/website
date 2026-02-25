@@ -12,6 +12,8 @@
  */
 
 import { useCallback, useRef, useState } from "react";
+import { Settings } from "lucide-react";
+import ContextPreferencesPanel from "./ContextPreferencesPanel";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 
 const TRACK_H = 160;
@@ -32,6 +34,7 @@ export default function AttentionToggle() {
   const [dragging, setDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [pulsing, setPulsing] = useState(false);
+  const [contextOpen, setContextOpen] = useState(false);
   const lastSnappedRef = useRef<number | null>(null);
 
   // Vertical: top = 0 (diffuse), bottom = 1 (focus)
@@ -215,6 +218,22 @@ export default function AttentionToggle() {
       >
         Focus
       </span>
+
+      {/* Context preferences trigger */}
+      <button
+        onClick={() => setContextOpen(true)}
+        className="mt-3 p-1 rounded-full transition-all"
+        style={{
+          opacity: hovered ? 0.5 : 0.15,
+          color: "hsl(38, 15%, 75%)",
+          transition: "opacity 0.4s ease",
+        }}
+        title="Signal context preferences"
+      >
+        <Settings size={10} />
+      </button>
+
+      <ContextPreferencesPanel open={contextOpen} onClose={() => setContextOpen(false)} />
     </div>
   );
 }
