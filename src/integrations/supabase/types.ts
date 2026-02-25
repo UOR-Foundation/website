@@ -266,6 +266,48 @@ export type Database = {
         }
         Relationships: []
       }
+      hologram_sessions: {
+        Row: {
+          blueprint: Json
+          created_at: string
+          envelope: Json
+          id: string
+          label: string
+          session_cid: string
+          session_hex: string
+          status: string
+          tick_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blueprint: Json
+          created_at?: string
+          envelope: Json
+          id?: string
+          label?: string
+          session_cid: string
+          session_hex: string
+          status?: string
+          tick_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blueprint?: Json
+          created_at?: string
+          envelope?: Json
+          id?: string
+          label?: string
+          session_cid?: string
+          session_hex?: string
+          status?: string
+          tick_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lens_blueprints: {
         Row: {
           author_id: string | null
