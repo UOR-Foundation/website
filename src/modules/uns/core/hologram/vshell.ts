@@ -112,6 +112,14 @@ const COMMANDS: Record<string, CommandDef> = {
   save:    { usage: "save",                    description: "Save all processes to disk" },
   load:    { usage: "load",                    description: "Restore saved processes" },
   gpu:     { usage: "gpu <sub>",               description: "GPU device (info|bench|matmul|relu)" },
+  grep:    { usage: "grep <pattern>",          description: "Filter lines matching pattern" },
+  head:    { usage: "head [-n N]",             description: "Show first N lines (default 10)" },
+  tail:    { usage: "tail [-n N]",             description: "Show last N lines (default 10)" },
+  wc:      { usage: "wc",                      description: "Count lines, words, chars" },
+  sort:    { usage: "sort [-r]",               description: "Sort lines alphabetically" },
+  uniq:    { usage: "uniq",                    description: "Remove consecutive duplicates" },
+  cat:     { usage: "cat",                     description: "Pass-through (identity filter)" },
+  echo:    { usage: "echo <text>",             description: "Print text to output" },
   clear:   { usage: "clear",                   description: "Clear terminal" },
 };
 
@@ -178,8 +186,15 @@ export class VShell {
   // ── Command Execution ─────────────────────────────────────────────────
 
   /**
-   * Execute a command string and return the structured result.
-   * This is the single entry point for all shell interaction.
+   * Execute a command string with pipe and redirect support.
+   *
+   * Supports:
+   *   cmd1 | cmd2 | cmd3    — pipe output of one command into the next
+   *   cmd > /dev/null        — discard output
+   *   cmd >> /dev/clipboard  — append to clipboard (future)
+   *
+   * Filter commands (grep, head, tail, wc, sort, uniq, cat) can only
+   * appear in pipeline positions after the first command.
    */
   async exec(cmd: string): Promise<ShellResult> {
     const trimmed = cmd.trim();
@@ -190,6 +205,70 @@ export class VShell {
     // Record in history
     this.state.history = [trimmed, ...this.state.history].slice(0, 100);
 
+    // ── Parse redirect (last segment after > or >>) ──────────────────
+    let redirectTarget: string | null = null;
+    let redirectAppend = false;
+    let commandPart = trimmed;
+
+    const redirectMatch = trimmed.match(/^(.+?)(\s*>>?\s*)(\S+)\s*$/);
+    if (redirectMatch) {
+      const beforeRedirect = redirectMatch[1].trim();
+      redirectAppend = redirectMatch[2].includes(">>");
+      redirectTarget = redirectMatch[3];
+      commandPart = beforeRedirect;
+    }
+
+    // ── Parse pipeline ───────────────────────────────────────────────
+    const stages = commandPart.split(/\s*\|\s*/).filter(Boolean);
+
+    if (stages.length === 0) {
+      return { command: trimmed, lines: [], effects: {} };
+    }
+
+    // Execute the first (producer) command
+    const firstResult = await this.execSingle(stages[0]);
+
+    // Run each subsequent stage as a filter on previous output
+    let currentLines = [...firstResult.lines];
+    const mergedEffects = { ...firstResult.effects };
+
+    for (let i = 1; i < stages.length; i++) {
+      currentLines = this.applyFilter(stages[i], currentLines);
+    }
+
+    // ── Apply redirect ───────────────────────────────────────────────
+    if (redirectTarget) {
+      if (redirectTarget === "/dev/null") {
+        // Discard all output
+        currentLines = [{ kind: "info" as const, text: `(output redirected to /dev/null)` }];
+      } else if (redirectTarget === "/dev/clipboard") {
+        const text = currentLines.map(l => l.text).join("\n");
+        try {
+          await navigator.clipboard.writeText(text);
+          currentLines = [{ kind: "info" as const, text: `✓ ${text.split("\n").length} lines copied to clipboard` }];
+        } catch {
+          currentLines = [{ kind: "error" as const, text: "Clipboard write failed (no permission)" }];
+        }
+      } else {
+        // Store in env as a pseudo-file
+        const text = currentLines.map(l => l.text).join("\n");
+        if (redirectAppend) {
+          this.state.env[redirectTarget] = (this.state.env[redirectTarget] ?? "") + "\n" + text;
+        } else {
+          this.state.env[redirectTarget] = text;
+        }
+        currentLines = [{ kind: "info" as const, text: `✓ Output written to $${redirectTarget} (${text.length} chars)` }];
+      }
+    }
+
+    return { command: trimmed, lines: currentLines, effects: mergedEffects };
+  }
+
+  /**
+   * Execute a single command (no pipes/redirects).
+   */
+  private async execSingle(cmd: string): Promise<ShellResult> {
+    const trimmed = cmd.trim();
     const [op, ...args] = trimmed.split(/\s+/);
     const lines: ShellLine[] = [];
     const effects: ShellEffects = {};
@@ -206,6 +285,10 @@ export class VShell {
 
         case "clear":
           effects.clear = true;
+          break;
+
+        case "echo":
+          out(args.join(" "));
           break;
 
         case "ingest":
@@ -268,6 +351,12 @@ export class VShell {
           await this.cmdGpu(args, out, info, err, effects);
           break;
 
+        // Filter commands used standalone (with no pipe input)
+        case "grep": case "head": case "tail": case "wc":
+        case "sort": case "uniq": case "cat":
+          info(`'${op}' is a filter — use it after a pipe: cmd | ${op}`);
+          break;
+
         default:
           err(`Unknown command: ${op}. Type 'help' for available commands.`);
       }
@@ -278,10 +367,88 @@ export class VShell {
     return { command: trimmed, lines, effects };
   }
 
+  // ── Pipeline Filters ──────────────────────────────────────────────────
+
+  /**
+   * Apply a filter command to an array of ShellLines.
+   * Filters operate only on the text content, preserving line kinds.
+   */
+  private applyFilter(filterCmd: string, input: readonly ShellLine[]): ShellLine[] {
+    const [op, ...args] = filterCmd.trim().split(/\s+/);
+
+    switch (op) {
+      case "grep": {
+        const pattern = args.join(" ");
+        if (!pattern) return [...input];
+        const flags = args[0]?.startsWith("-i") ? "i" : "";
+        const searchPattern = flags ? args.slice(1).join(" ") : pattern;
+        try {
+          const re = new RegExp(searchPattern, flags);
+          return input.filter(l => re.test(l.text));
+        } catch {
+          // Fallback to string includes
+          const lower = searchPattern.toLowerCase();
+          return input.filter(l => l.text.toLowerCase().includes(lower));
+        }
+      }
+
+      case "head": {
+        let n = 10;
+        if (args[0] === "-n" && args[1]) n = parseInt(args[1], 10);
+        else if (args[0]) n = parseInt(args[0], 10);
+        return input.slice(0, Math.max(1, n));
+      }
+
+      case "tail": {
+        let n = 10;
+        if (args[0] === "-n" && args[1]) n = parseInt(args[1], 10);
+        else if (args[0]) n = parseInt(args[0], 10);
+        return input.slice(-Math.max(1, n));
+      }
+
+      case "wc": {
+        const lineCount = input.length;
+        const wordCount = input.reduce((s, l) => s + l.text.split(/\s+/).filter(Boolean).length, 0);
+        const charCount = input.reduce((s, l) => s + l.text.length, 0);
+        return [{ kind: "output", text: `  ${lineCount} lines  ${wordCount} words  ${charCount} chars` }];
+      }
+
+      case "sort": {
+        const sorted = [...input].sort((a, b) => a.text.localeCompare(b.text));
+        if (args[0] === "-r") sorted.reverse();
+        return sorted;
+      }
+
+      case "uniq": {
+        return input.filter((l, i) => i === 0 || l.text !== input[i - 1].text);
+      }
+
+      case "cat":
+        return [...input];
+
+      case "grep-v":
+      case "grep -v": {
+        const pattern = args.join(" ");
+        if (!pattern) return [...input];
+        return input.filter(l => !l.text.toLowerCase().includes(pattern.toLowerCase()));
+      }
+
+      default:
+        return [
+          ...input,
+          { kind: "error" as const, text: `Unknown filter: ${op}` },
+        ];
+    }
+  }
+
   // ── Command Implementations ──────────────────────────────────────────
 
   private cmdHelp(info: (t: string) => void): void {
     info("── Hologram OS Shell (vsh) ──────────────────────");
+    info("  Operators:  cmd1 | cmd2    pipe output");
+    info("              cmd > file     redirect to $file");
+    info("              cmd > /dev/null  discard output");
+    info("");
     for (const [, def] of Object.entries(COMMANDS)) {
       info(`  ${def.usage.padEnd(26)} ${def.description}`);
     }
