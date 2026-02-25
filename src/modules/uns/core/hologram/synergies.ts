@@ -884,6 +884,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "stack", description: "QIR provides LLVM-based intermediate representation", sharedComponent: "compiled IR hash" },
       { type: "stack", description: "OpenPulse defines hardware-native pulse sequences", sharedComponent: "pulse schedule hash" },
       { type: "encoding", description: "QPY serializes Qiskit circuits for binary interchange", sharedComponent: "circuit binary hash" },
+      { type: "stack", description: "Qiskit and Cirq compile OpenQASM 3 to hardware-native gates", sharedComponent: "gate compilation hash" },
       { type: "protocol", description: "pytket transpiles across Qiskit/Cirq/Braket backends", sharedComponent: "transpiled circuit hash" },
     ],
     capability: "Quantum compilation: source (OpenQASM 3) → IR (QIR) → pulses (OpenPulse) → serialized (QPY) → cross-platform (pytket)",
@@ -1376,14 +1377,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
     capability: "Observability: instrument (OTel) → collect (Prometheus) → visualize (Grafana) → alert (CloudEvents) → orchestrate (K8s)",
   },
 
-  // ─── Chain 85: Quantum-to-Agent Inference Pipeline ────────────────────
+  // ─── Chain 85: Quantum Circuit Compilation Pipeline ────────────────────
   {
-    name: "Quantum-to-Agent Inference Pipeline",
-    description: "Quantum circuits → hybrid QML → classical ML models → agent tool invocation → auditable inference",
+    name: "Quantum Circuit Compilation Pipeline",
+    description: "Quantum circuits → SDK compilation → hybrid QML optimization → classical model export",
     projections: [
       "openqasm3", "qiskit", "cirq", "pennylane", "blackbird",
       "onnx", "safetensors",
-      "mcp-tool", "a2a", "a2a-task", "oasf",
     ],
     bridges: [
       { type: "encoding", description: "OpenQASM 3 defines portable quantum circuits consumed by all SDKs", sharedComponent: "circuit source hash" },
@@ -1392,11 +1392,26 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "encoding", description: "Blackbird encodes photonic CV circuits for Xanadu hardware via PennyLane plugins", sharedComponent: "photonic program hash" },
       { type: "protocol", description: "ONNX serializes the classical component of hybrid QML models for cross-framework deployment", sharedComponent: "model graph hash" },
       { type: "encoding", description: "SafeTensors stores trained model weights with zero-copy memory safety", sharedComponent: "weight tensor hash" },
+    ],
+    capability: "Quantum compilation: circuits (OpenQASM 3) → SDKs (Qiskit/Cirq) → QML (PennyLane/Blackbird) → models (ONNX/SafeTensors)",
+  },
+
+  // ─── Chain 86: Quantum-Enhanced Agent Inference ───────────────────────
+  {
+    name: "Quantum-Enhanced Agent Inference",
+    description: "Trained models → agent tool invocation → delegation → auditable discovery",
+    projections: [
+      "onnx", "safetensors",
+      "mcp-tool", "a2a", "a2a-task", "oasf",
+    ],
+    bridges: [
+      { type: "protocol", description: "ONNX models provide inference capabilities to MCP tools", sharedComponent: "model graph hash" },
+      { type: "encoding", description: "SafeTensors provides efficient weight loading for model serving", sharedComponent: "weight tensor hash" },
       { type: "protocol", description: "MCP tools expose quantum-enhanced inference as callable agent capabilities", sharedComponent: "tool invocation hash" },
       { type: "stack", description: "A2A protocol enables agent-to-agent delegation of quantum workloads", sharedComponent: "task delegation hash" },
       { type: "protocol", description: "OASF registers quantum-capable agents in discovery indexes", sharedComponent: "agent capability hash" },
     ],
-    capability: "Quantum-AI bridge: circuits (OpenQASM 3) → SDKs (Qiskit/Cirq) → QML (PennyLane/Blackbird) → models (ONNX/SafeTensors) → agents (MCP/A2A/OASF)",
+    capability: "Quantum-AI agents: models (ONNX/SafeTensors) → tools (MCP) → delegation (A2A) → discovery (OASF)",
   },
 ];
 

@@ -57,12 +57,12 @@ describe("T0: Synergy Structure", () => {
 
   it("every chain has at least (projections - 1) bridges", () => {
     for (const chain of SYNERGY_CHAINS) {
-      expect(chain.bridges.length).toBeGreaterThanOrEqual(chain.projections.length - 1);
+      expect(chain.bridges.length, `${chain.name}: ${chain.bridges.length} bridges < ${chain.projections.length - 1} (projections-1)`).toBeGreaterThanOrEqual(chain.projections.length - 1);
     }
   });
 
-  it("84 synergy chains are defined", () => {
-    expect(SYNERGY_CHAINS.length).toBe(84);
+  it("86 synergy chains are defined", () => {
+    expect(SYNERGY_CHAINS.length).toBe(86);
   });
 
   it("clusters cover all major ecosystems", () => {
@@ -352,7 +352,7 @@ describe("T3: Synergy Analysis Engine", () => {
   it("analyzeSynergies reports correct chain count", async () => {
     await setup();
     const analysis = analyzeSynergies(testInput);
-    expect(analysis.stats.totalChains).toBe(84);
+    expect(analysis.stats.totalChains).toBe(86);
   });
 
   it("synergy coverage exceeds 30% of all projections", async () => {
