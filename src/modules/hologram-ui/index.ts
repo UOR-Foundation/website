@@ -10,6 +10,19 @@
 
 export {
   StatCard, DataTable, MetricBar, InfoCard, DashboardGrid, PageShell,
+  DynamicProjection, MultiProjection,
   type StatCardProps, type DataTableProps, type DataTableColumn,
   type MetricBarProps, type InfoCardProps, type PageShellProps,
+  type DynamicProjectionProps, type MultiProjectionProps,
 } from "./components";
+
+// ── UI Projection Registry ─────────────────────────────────────────────────
+export {
+  resolveUIProjection,
+  resolveAllUIProjections,
+  UI_PROJECTIONS,
+  type UIComponentType,
+  type UIProjectionSpec,
+  type UIProjectionResult,
+  type PropSchema,
+} from "./projection-registry";

@@ -24,3 +24,7 @@ export { MetricBar, type MetricBarProps } from "./MetricBar";
 export { InfoCard, type InfoCardProps } from "./InfoCard";
 export { DashboardGrid } from "./DashboardGrid";
 export { PageShell, type PageShellProps } from "./PageShell";
+
+// ── Dynamic Projection (Phase 2 — Visual Hologram Renderer) ────────────────
+export { DynamicProjection, MultiProjection } from "./DynamicProjection";
+export type { DynamicProjectionProps, MultiProjectionProps } from "./DynamicProjection";
