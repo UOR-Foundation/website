@@ -61,7 +61,7 @@ export default function DayProgressRing() {
             strokeDashoffset={offset}
             style={{ transition: "stroke-dashoffset 1.2s ease-out" }}
           />
-          {/* Subtle glow dot at the leading edge of the arc */}
+          {/* Subtle glow dot at the leading edge of the arc — heartbeat pulse */}
           <circle
             cx={SIZE / 2 + RADIUS * Math.cos(2 * Math.PI * progress)}
             cy={SIZE / 2 + RADIUS * Math.sin(2 * Math.PI * progress)}
@@ -70,6 +70,7 @@ export default function DayProgressRing() {
             style={{
               transition: "cx 1.2s ease-out, cy 1.2s ease-out",
               filter: "blur(2px)",
+              animation: "dot-heartbeat 1.2s ease-in-out infinite",
             }}
           />
         </svg>
@@ -134,6 +135,13 @@ export default function DayProgressRing() {
         @keyframes ring-breathe {
           0%, 100% { opacity: 0.5; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.06); }
+        }
+        @keyframes dot-heartbeat {
+          0%, 100% { opacity: 0.6; r: 4; }
+          14% { opacity: 1; r: 5.5; }
+          28% { opacity: 0.7; r: 4.2; }
+          42% { opacity: 0.95; r: 5; }
+          56% { opacity: 0.6; r: 4; }
         }
       `}</style>
     </div>
