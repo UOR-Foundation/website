@@ -35,6 +35,69 @@ function useIsMobile(breakpoint = 640) {
   return mobile;
 }
 
+// ── Background Modes ────────────────────────────────────────────────────────
+
+type BgMode = "image" | "white" | "dark";
+
+const BG_MODES: { mode: BgMode; dot: string; dotActive: string; label: string }[] = [
+  { mode: "image", dot: "hsla(38, 25%, 65%, 0.35)", dotActive: "hsl(38, 40%, 60%)", label: "Landscape" },
+  { mode: "white", dot: "hsla(0, 0%, 80%, 0.5)", dotActive: "hsl(0, 0%, 95%)", label: "Light" },
+  { mode: "dark",  dot: "hsla(0, 0%, 30%, 0.5)", dotActive: "hsl(30, 6%, 12%)", label: "Dark" },
+];
+
+/** Palette per mode — all text/chrome adapts */
+function palette(m: BgMode) {
+  if (m === "white") return {
+    wordmark: "hsla(30, 8%, 22%, 0.8)",
+    greeting: "hsla(30, 8%, 40%, 0.6)",
+    heading:  "hsla(30, 10%, 15%, 0.9)",
+    sub:      "hsla(30, 6%, 35%, 0.55)",
+    cta:      "hsla(30, 8%, 28%, 0.6)",
+    ctaBorder:"hsla(30, 8%, 40%, 0.2)",
+    ctaHoverBg: "hsla(30, 8%, 40%, 0.06)",
+    ctaHoverText: "hsla(30, 10%, 12%, 0.85)",
+    ctaHoverBorder: "hsla(30, 8%, 40%, 0.35)",
+    pill:     "hsla(30, 8%, 90%, 0.7)",
+    pillBorder: "hsla(30, 8%, 60%, 0.12)",
+    pillText: "hsla(30, 8%, 30%, 0.5)",
+    dotPulse: "hsl(38, 40%, 45%)",
+    bg:       "hsl(0, 0%, 98%)",
+  };
+  if (m === "dark") return {
+    wordmark: "hsla(38, 15%, 82%, 0.75)",
+    greeting: "hsla(38, 15%, 70%, 0.45)",
+    heading:  "hsla(38, 12%, 90%, 0.9)",
+    sub:      "hsla(38, 10%, 70%, 0.45)",
+    cta:      "hsla(38, 12%, 75%, 0.55)",
+    ctaBorder:"hsla(38, 12%, 50%, 0.18)",
+    ctaHoverBg: "hsla(38, 12%, 50%, 0.08)",
+    ctaHoverText: "hsla(38, 15%, 90%, 0.85)",
+    ctaHoverBorder: "hsla(38, 12%, 50%, 0.3)",
+    pill:     "hsla(30, 8%, 8%, 0.6)",
+    pillBorder: "hsla(38, 12%, 40%, 0.1)",
+    pillText: "hsla(38, 10%, 72%, 0.4)",
+    dotPulse: "hsl(38, 40%, 55%)",
+    bg:       "hsl(30, 6%, 7%)",
+  };
+  // image mode
+  return {
+    wordmark: "hsla(38, 15%, 88%, 0.85)",
+    greeting: "hsla(38, 20%, 85%, 0.5)",
+    heading:  "hsla(38, 15%, 92%, 0.92)",
+    sub:      "hsla(38, 12%, 78%, 0.5)",
+    cta:      "hsla(38, 15%, 82%, 0.6)",
+    ctaBorder:"hsla(38, 15%, 70%, 0.2)",
+    ctaHoverBg: "hsla(38, 15%, 70%, 0.08)",
+    ctaHoverText: "hsla(38, 15%, 90%, 0.85)",
+    ctaHoverBorder: "hsla(38, 15%, 70%, 0.35)",
+    pill:     "hsla(30, 8%, 10%, 0.5)",
+    pillBorder: "hsla(38, 15%, 60%, 0.08)",
+    pillText: "hsla(38, 12%, 78%, 0.45)",
+    dotPulse: "hsl(38, 40%, 55%)",
+    bg:       "transparent",
+  };
+}
+
 // ── Welcome Screen ──────────────────────────────────────────────────────────
 
 export default function HologramOsPage() {
@@ -43,15 +106,16 @@ export default function HologramOsPage() {
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [bgMode, setBgMode] = useState<BgMode>("image");
   const { greeting, name } = useGreeting();
   const triadicActivity = useTriadicActivity();
 
   const goConsole = useCallback(() => navigate("/hologram-console"), [navigate]);
+  const P = palette(bgMode);
 
   // ── Mobile: iOS homescreen ──
   if (isMobile) return <MobileOsShell />;
 
-  // Personal welcome line
   const welcomeName = name || "traveller";
 
   // ── Desktop: sidebar + sanctuary hero ──
@@ -68,8 +132,17 @@ export default function HologramOsPage() {
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <main className="flex-1 relative">
+          {/* Solid background for white/dark modes */}
+          <div
+            className="absolute inset-0 transition-all duration-1000 ease-in-out"
+            style={{ background: P.bg, opacity: bgMode === "image" ? 0 : 1, zIndex: 1 }}
+          />
+
           {/* Background Image — slow Ken Burns for life */}
-          <div className="absolute inset-0">
+          <div
+            className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+            style={{ opacity: bgMode === "image" ? 1 : 0 }}
+          >
             <img
               src={heroLandscape}
               alt="Serene landscape with misty mountains and tranquil water"
@@ -78,7 +151,7 @@ export default function HologramOsPage() {
                 animation: "ken-burns 30s ease-in-out infinite alternate",
               }}
             />
-            {/* Gradient: soft earth-toned veil — warmer than pure black */}
+            {/* Gradient veil */}
             <div
               className="absolute inset-0"
               style={{
@@ -88,44 +161,78 @@ export default function HologramOsPage() {
             />
           </div>
 
-          {/* ── Logo — top center, Aman-style wordmark ──────────── */}
+          {/* ── Background Mode Toggle — top right, 3 dots ────── */}
+          <div className="absolute top-10 right-10 z-20 flex items-center gap-2.5 animate-fade-in">
+            {BG_MODES.map(({ mode, dot, dotActive }) => {
+              const isActive = bgMode === mode;
+              return (
+                <button
+                  key={mode}
+                  onClick={() => setBgMode(mode)}
+                  className="relative group p-1.5 rounded-full transition-all duration-500"
+                  aria-label={`Switch to ${mode} background`}
+                  style={{ background: "transparent" }}
+                >
+                  <div
+                    className="w-2.5 h-2.5 rounded-full transition-all duration-700 ease-in-out"
+                    style={{
+                      background: isActive ? dotActive : dot,
+                      transform: isActive ? "scale(1.35)" : "scale(1)",
+                      boxShadow: isActive
+                        ? `0 0 12px 2px ${dotActive}40`
+                        : "none",
+                    }}
+                  />
+                  {/* Gentle ring on hover */}
+                  <div
+                    className="absolute inset-0 rounded-full transition-all duration-500 opacity-0 group-hover:opacity-100"
+                    style={{
+                      border: `1px solid ${dot}`,
+                      transform: "scale(1.6)",
+                    }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ── Logo — top center ──────────── */}
           <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-10 animate-fade-in">
             <span
+              className="transition-colors duration-700"
               style={{
                 fontFamily: "'Playfair Display', serif",
                 fontWeight: 400,
                 fontSize: "15px",
                 letterSpacing: "0.55em",
                 textTransform: "uppercase" as const,
-                color: "hsla(38, 15%, 88%, 0.85)",
+                color: P.wordmark,
               }}
             >
               Hologram
             </span>
           </div>
 
-          {/* ── Welcome — centered, intimate, personal ─────────── */}
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-white px-8">
+          {/* ── Welcome — centered ─────────── */}
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8">
             <div className="text-center max-w-2xl space-y-8 animate-fade-in">
-              {/* Time greeting — whisper-quiet, Aman-style label */}
               <p
-                className="text-xs md:text-sm tracking-[0.45em] uppercase"
+                className="text-xs md:text-sm tracking-[0.45em] uppercase transition-colors duration-700"
                 style={{
                   fontFamily: "'DM Sans', system-ui, sans-serif",
-                  color: "hsla(38, 20%, 85%, 0.5)",
+                  color: P.greeting,
                   fontWeight: 400,
                 }}
               >
                 {greeting}
               </p>
 
-              {/* Personal welcome — large, light, serene serif */}
               <h1
-                className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-[1.1]"
+                className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-[1.1] transition-colors duration-700"
                 style={{
                   fontFamily: "'Playfair Display', serif",
                   fontWeight: 300,
-                  color: "hsla(38, 15%, 92%, 0.92)",
+                  color: P.heading,
                   letterSpacing: "-0.01em",
                 }}
               >
@@ -134,13 +241,12 @@ export default function HologramOsPage() {
                 {welcomeName}
               </h1>
 
-              {/* Warm subtext — earth-toned, generous line height */}
               <p
-                className="text-base md:text-lg leading-[1.8] max-w-md mx-auto"
+                className="text-base md:text-lg leading-[1.8] max-w-md mx-auto transition-colors duration-700"
                 style={{
                   fontFamily: "'DM Sans', system-ui, sans-serif",
                   fontWeight: 300,
-                  color: "hsla(38, 12%, 78%, 0.5)",
+                  color: P.sub,
                 }}
               >
                 Everything is as you left it.
@@ -148,7 +254,6 @@ export default function HologramOsPage() {
                 Take your time.
               </p>
 
-              {/* Gentle CTA — Aman-style: thin border, generous padding, quiet text */}
               <div className="pt-8">
                 <button
                   onClick={goConsole}
@@ -159,20 +264,20 @@ export default function HologramOsPage() {
                     fontSize: "13px",
                     letterSpacing: "0.3em",
                     textTransform: "uppercase" as const,
-                    color: "hsla(38, 15%, 82%, 0.6)",
-                    border: "1px solid hsla(38, 15%, 70%, 0.2)",
+                    color: P.cta,
+                    border: `1px solid ${P.ctaBorder}`,
                     padding: "16px 48px",
                     background: "transparent",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "hsla(38, 15%, 70%, 0.08)";
-                    e.currentTarget.style.color = "hsla(38, 15%, 90%, 0.85)";
-                    e.currentTarget.style.borderColor = "hsla(38, 15%, 70%, 0.35)";
+                    e.currentTarget.style.background = P.ctaHoverBg;
+                    e.currentTarget.style.color = P.ctaHoverText;
+                    e.currentTarget.style.borderColor = P.ctaHoverBorder;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = "hsla(38, 15%, 82%, 0.6)";
-                    e.currentTarget.style.borderColor = "hsla(38, 15%, 70%, 0.2)";
+                    e.currentTarget.style.color = P.cta;
+                    e.currentTarget.style.borderColor = P.ctaBorder;
                   }}
                 >
                   Begin
@@ -182,30 +287,30 @@ export default function HologramOsPage() {
           </div>
         </main>
 
-        {/* AI Chat Pill — bottom center, barely there */}
+        {/* AI Chat Pill */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
           <button
             onClick={() => setChatOpen(true)}
-            className="flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-500 hover:scale-105 group"
+            className="flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-700 hover:scale-105 group"
             style={{
-              background: "hsla(30, 8%, 10%, 0.5)",
+              background: P.pill,
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
-              border: "1px solid hsla(38, 15%, 60%, 0.08)",
+              border: `1px solid ${P.pillBorder}`,
             }}
           >
             <div
               className="w-1.5 h-1.5 rounded-full group-hover:scale-150 transition-transform duration-500"
               style={{
-                background: "hsl(38, 40%, 55%)",
+                background: P.dotPulse,
                 animation: "heartbeat-love 1.6s ease-in-out infinite",
               }}
             />
             <span
-              className="text-[13px] tracking-[0.2em] font-light"
+              className="text-[13px] tracking-[0.2em] font-light transition-colors duration-700"
               style={{
                 fontFamily: "'DM Sans', system-ui, sans-serif",
-                color: "hsla(38, 12%, 78%, 0.45)",
+                color: P.pillText,
               }}
             >
               Hologram Intelligence
@@ -213,7 +318,7 @@ export default function HologramOsPage() {
           </button>
         </div>
 
-        {/* Heartbeat keyframe — shared ~62 BPM resting rhythm, double-pulse (systole/diastole) */}
+        {/* Heartbeat keyframe */}
         <style>{`
           @keyframes heartbeat-love {
             0%   { transform: scale(1);    opacity: 0.8; }
@@ -225,7 +330,7 @@ export default function HologramOsPage() {
           }
         `}</style>
 
-        {/* Day Progress Ring — bottom right */}
+        {/* Day Progress Ring */}
         <div className="absolute bottom-8 right-8 z-20 animate-fade-in">
           <DayProgressRing balance={triadicActivity.balance ?? undefined} />
         </div>
