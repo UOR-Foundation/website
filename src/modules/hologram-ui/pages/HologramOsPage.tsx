@@ -120,6 +120,7 @@ export default function HologramOsPage() {
   const { greeting, name } = useGreeting();
   const triadicActivity = useTriadicActivity();
   const attention = useAttentionMode();
+  const [replayGuide, setReplayGuide] = useState(0);
 
   const goConsole = useCallback(() => {
     setDeparting(true);
@@ -141,6 +142,11 @@ export default function HologramOsPage() {
         onToggle={() => setSidebarCollapsed((p) => !p)}
         onNewChat={() => setChatOpen(true)}
         onOpenChat={() => setChatOpen(true)}
+        onReplayGuide={() => {
+          localStorage.removeItem("hologram:onboarding-seen");
+          setReplayGuide((c) => c + 1);
+          setChatOpen(true);
+        }}
       />
 
       {/* Main content area */}
@@ -379,7 +385,7 @@ export default function HologramOsPage() {
 
       {/* Overlays */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
-      <HologramAiChat open={chatOpen} onClose={() => setChatOpen(false)} onPhaseChange={triadicActivity.setActivePhase} creatorStage={triadicActivity.creatorStage} />
+      <HologramAiChat open={chatOpen} onClose={() => setChatOpen(false)} onPhaseChange={triadicActivity.setActivePhase} creatorStage={triadicActivity.creatorStage} replayGuideKey={replayGuide} />
     </div>
   );
 }
