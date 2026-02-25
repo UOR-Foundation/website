@@ -151,27 +151,52 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
     setInput("");
     setIsGenerating(true);
 
+    // Create a placeholder assistant message for streaming
+    const assistantId = `ai-${Date.now()}`;
+    let streamedText = "";
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: assistantId,
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+      },
+    ]);
+
     try {
       const result = await ai.run(text, {
         maxNewTokens: 256,
         temperature: 0.7,
+        onToken: (token: string) => {
+          streamedText += token;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId ? { ...m, content: streamedText } : m,
+            ),
+          );
+        },
       });
 
-      const assistantMsg: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        role: "assistant",
-        content: result.output || "(empty response)",
-        timestamp: new Date(),
-        meta: {
-          inferenceTimeMs: result.inferenceTimeMs,
-          tokensGenerated: result.tokensGenerated,
-          gpuAccelerated: result.gpuAccelerated,
-          inputCid: result.inputCid,
-          outputCid: result.outputCid,
-        },
-      };
-
-      setMessages((prev) => [...prev, assistantMsg]);
+      // Final update with metadata
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? {
+                ...m,
+                content: result.output || streamedText || "(empty response)",
+                meta: {
+                  inferenceTimeMs: result.inferenceTimeMs,
+                  tokensGenerated: result.tokensGenerated,
+                  gpuAccelerated: result.gpuAccelerated,
+                  inputCid: result.inputCid,
+                  outputCid: result.outputCid,
+                },
+              }
+            : m,
+        ),
+      );
     } catch (e) {
       setMessages((prev) => [
         ...prev,

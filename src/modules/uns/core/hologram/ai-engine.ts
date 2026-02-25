@@ -257,6 +257,8 @@ export class HologramAiEngine {
       temperature?: number;
       topK?: number;
       doSample?: boolean;
+      /** Called with each token/chunk of text as it's generated. */
+      onToken?: (text: string) => void;
     } = {},
   ): Promise<AiInferenceResult> {
     if (!this.pipeline || !this.activeModel) {
@@ -278,11 +280,26 @@ export class HologramAiEngine {
     const task = this.activeModel.task;
 
     if (task === "text-generation") {
+      // Build streamer if callback provided
+      let streamer: any = undefined;
+      if (options.onToken) {
+        const { TextStreamer } = await import("@huggingface/transformers");
+        const tokenizer = this.pipeline.tokenizer;
+        streamer = new TextStreamer(tokenizer, {
+          skip_prompt: true,
+          skip_special_tokens: true,
+          callback_function: (text: string) => {
+            options.onToken!(text);
+          },
+        });
+      }
+
       const result = await this.pipeline(prompt, {
         max_new_tokens: options.maxNewTokens ?? 128,
         temperature: options.temperature ?? 0.7,
         top_k: options.topK ?? 50,
         do_sample: options.doSample ?? true,
+        ...(streamer ? { streamer } : {}),
       });
 
       // Extract generated text, removing the original prompt

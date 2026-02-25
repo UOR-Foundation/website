@@ -87,6 +87,8 @@ export interface ShellEffects {
   persistedCount?: number;
   /** GPU benchmark result. */
   gpuBenchmark?: GpuBenchmarkResult;
+  /** Streaming text callback — set by commands that produce incremental output. */
+  onStreamToken?: (token: string) => void;
 }
 
 // ── Shell State ───────────────────────────────────────────────────────────
@@ -305,7 +307,7 @@ export class VShell {
    * Filter commands (grep, head, tail, wc, sort, uniq, cat) can only
    * appear in pipeline positions after the first command.
    */
-  async exec(cmd: string): Promise<ShellResult> {
+  async exec(cmd: string, externalEffects?: Partial<ShellEffects>): Promise<ShellResult> {
     const trimmed = cmd.trim();
     if (!trimmed) {
       return { command: "", lines: [], effects: {} };
@@ -334,8 +336,8 @@ export class VShell {
       return { command: trimmed, lines: [], effects: {} };
     }
 
-    // Execute the first (producer) command
-    const firstResult = await this.execSingle(stages[0]);
+    // Execute the first (producer) command, merging external effects (e.g. streaming callback)
+    const firstResult = await this.execSingle(stages[0], externalEffects);
 
     // Run each subsequent stage as a filter on previous output
     let currentLines = [...firstResult.lines];
@@ -376,11 +378,11 @@ export class VShell {
   /**
    * Execute a single command (no pipes/redirects).
    */
-  private async execSingle(cmd: string): Promise<ShellResult> {
+  private async execSingle(cmd: string, externalEffects?: Partial<ShellEffects>): Promise<ShellResult> {
     const trimmed = cmd.trim();
     const [op, ...args] = trimmed.split(/\s+/);
     const lines: ShellLine[] = [];
-    const effects: ShellEffects = {};
+    const effects: ShellEffects = { ...externalEffects };
 
     const out = (text: string) => lines.push({ kind: "output", text });
     const info = (text: string) => lines.push({ kind: "info", text });
@@ -461,7 +463,7 @@ export class VShell {
           break;
 
         case "ai":
-          await this.cmdAi(args, out, info, err);
+          await this.cmdAi(args, out, info, err, effects);
           break;
 
         // Filter commands used standalone (with no pipe input)
@@ -1088,6 +1090,7 @@ export class VShell {
     out: (t: string) => void,
     info: (t: string) => void,
     err: (t: string) => void,
+    effects?: ShellEffects,
   ): Promise<void> {
     const sub = args[0] ?? "info";
     const ai = getAiEngine();
@@ -1168,15 +1171,22 @@ export class VShell {
         }
 
         info(`Generating (${ai.active!.modelId.split("/").pop()})…`);
+        out("");
+
+        // Set up streaming callback so tokens appear in real-time
+        const streamFn = effects?.onStreamToken;
 
         try {
           const result = await ai.run(prompt, {
             maxNewTokens: 128,
             temperature: 0.7,
+            onToken: streamFn ? (token) => streamFn(token) : undefined,
           });
 
-          out("");
-          out(result.output || "(empty output)");
+          // If not streaming, show output as batch
+          if (!streamFn) {
+            out(result.output || "(empty output)");
+          }
           out("");
           out("──────────────────────────────────────────────");
           out(`  Time:     ${result.inferenceTimeMs} ms`);
