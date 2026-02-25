@@ -46,12 +46,12 @@ export type {
 // ── Holographic Lens (Composable Projection Circuits) ─────────────────────
 // Content-addressed circuits: elements + wiring → one hash → every standard.
 
-export { composeLens, grindLens, focusLens, nestLens } from "@/modules/uns/core/hologram";
+export { composeLens, grindLens, focusLens, nestLens, fromProjection, element, sequence, parallel } from "@/modules/uns/core/hologram";
 export type {
   HolographicLens,
   LensElement,
   LensWire,
-  LensPort,
+  LensMorphism,
   GroundLens,
   FocusResult,
 } from "@/modules/uns/core/hologram";
