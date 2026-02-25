@@ -23,6 +23,10 @@ interface TiltOptions {
   zShift?: number;
   /** Disable on mobile (default true) */
   disableOnTouch?: boolean;
+  /** Invert the tilt direction (for parallax counter-motion) */
+  invert?: boolean;
+  /** Translate on X/Y in px in addition to rotation (parallax shift) */
+  maxShift?: number;
 }
 
 export function useFrameTilt(options: TiltOptions = {}): Transform3D {
@@ -31,11 +35,13 @@ export function useFrameTilt(options: TiltOptions = {}): Transform3D {
     smoothing = 0.08,
     zShift = 0,
     disableOnTouch = true,
+    invert = false,
+    maxShift = 0,
   } = options;
 
   const [transform, setTransform] = useState<Transform3D>({ ...IDENTITY_TRANSFORM });
-  const target = useRef({ rx: 0, ry: 0 });
-  const current = useRef({ rx: 0, ry: 0 });
+  const target = useRef({ rx: 0, ry: 0, nx: 0, ny: 0 });
+  const current = useRef({ rx: 0, ry: 0, nx: 0, ny: 0 });
   const rafId = useRef<number>(0);
   const active = useRef(true);
 
@@ -43,13 +49,17 @@ export function useFrameTilt(options: TiltOptions = {}): Transform3D {
     (e: MouseEvent) => {
       const cx = window.innerWidth / 2;
       const cy = window.innerHeight / 2;
-      // Normalize to -1..1
       const nx = (e.clientX - cx) / cx;
       const ny = (e.clientY - cy) / cy;
-      // Invert Y for natural tilt (mouse up → tilt toward viewer)
-      target.current = { rx: -ny * maxTilt, ry: nx * maxTilt };
+      const sign = invert ? 1 : -1;
+      target.current = {
+        rx: sign * ny * maxTilt,
+        ry: (invert ? -1 : 1) * nx * maxTilt,
+        nx,
+        ny,
+      };
     },
-    [maxTilt],
+    [maxTilt, invert],
   );
 
   useEffect(() => {
@@ -63,11 +73,13 @@ export function useFrameTilt(options: TiltOptions = {}): Transform3D {
       const t = target.current;
       c.rx += (t.rx - c.rx) * smoothing;
       c.ry += (t.ry - c.ry) * smoothing;
+      c.nx += (t.nx - c.nx) * smoothing;
+      c.ny += (t.ny - c.ny) * smoothing;
 
-      // Only update state when movement is perceptible (> 0.01 deg)
       if (Math.abs(t.rx - c.rx) > 0.01 || Math.abs(t.ry - c.ry) > 0.01) {
+        const shiftSign = invert ? -1 : 1;
         setTransform({
-          position: [0, 0, zShift],
+          position: [shiftSign * c.nx * maxShift, shiftSign * c.ny * maxShift, zShift],
           rotation: [c.rx, c.ry, 0],
           scale: [1, 1, 1],
         });
@@ -81,7 +93,7 @@ export function useFrameTilt(options: TiltOptions = {}): Transform3D {
       cancelAnimationFrame(rafId.current);
       window.removeEventListener("mousemove", onMove);
     };
-  }, [onMove, smoothing, zShift, disableOnTouch]);
+  }, [onMove, smoothing, zShift, disableOnTouch, invert, maxShift]);
 
   return transform;
 }
