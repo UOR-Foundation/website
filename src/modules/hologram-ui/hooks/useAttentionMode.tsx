@@ -1,10 +1,10 @@
 /**
- * AttentionMode — Focus ↔ Diffuse Attention Spectrum
+ * AttentionMode — Diffuse ↔ Focus Attention Spectrum
  * ═══════════════════════════════════════════════════
  *
  * Maps to the Dual Force model from the Sovereign Creator Framework:
- *   Focus  (0.0) = Intellect-dominant attention — convergent, selective, deep
- *   Diffuse (1.0) = Compassion-dominant attention — divergent, receptive, open
+ *   Diffuse (0.0) = Compassion-dominant attention — divergent, receptive, open
+ *   Focus   (1.0) = Intellect-dominant attention — convergent, selective, deep
  *
  * In UOR terms, this is the observer's "aperture" — analogous to stratum:
  *   Low stratum  = few bits active = focused signal
@@ -21,7 +21,7 @@ import { createContext, useContext, useState, useCallback, useMemo, type ReactNo
 export type AttentionPreset = "focus" | "diffuse";
 
 export interface AttentionState {
-  /** 0.0 = pure focus, 1.0 = pure diffuse */
+  /** 0.0 = pure diffuse, 1.0 = pure focus */
   aperture: number;
   /** Binary preset for v1 toggle */
   preset: AttentionPreset;
@@ -49,15 +49,17 @@ interface AttentionContextValue extends AttentionState {
 const STORAGE_KEY = "hologram:attention-mode";
 
 function deriveState(aperture: number): AttentionState {
-  const preset: AttentionPreset = aperture < 0.5 ? "focus" : "diffuse";
+  // Now: 0 = diffuse, 1 = focus
+  const preset: AttentionPreset = aperture >= 0.5 ? "focus" : "diffuse";
+  const diffusion = 1 - aperture; // high diffusion = low aperture
   return {
     aperture,
     preset,
-    showNotifications: aperture >= 0.4,
-    showExpanded: aperture >= 0.5,
-    sidebarExpanded: aperture >= 0.6,
-    animateBackground: aperture >= 0.3,
-    aiResponseStyle: aperture < 0.5 ? "concise" : "exploratory",
+    showNotifications: diffusion >= 0.4,
+    showExpanded: diffusion >= 0.5,
+    sidebarExpanded: diffusion >= 0.6,
+    animateBackground: diffusion >= 0.3,
+    aiResponseStyle: aperture >= 0.5 ? "concise" : "exploratory",
   };
 }
 
@@ -69,7 +71,7 @@ function loadAperture(): number {
       if (!isNaN(val) && val >= 0 && val <= 1) return val;
     }
   } catch { /* ignore */ }
-  return 0.7; // Default: slightly diffuse (welcoming for new users)
+  return 0.3; // Default: slightly diffuse (welcoming for new users)
 }
 
 const AttentionContext = createContext<AttentionContextValue | null>(null);
@@ -84,11 +86,11 @@ export function AttentionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggle = useCallback(() => {
-    setAperture(aperture < 0.5 ? 0.8 : 0.2);
+    setAperture(aperture >= 0.5 ? 0.2 : 0.8);
   }, [aperture, setAperture]);
 
   const setPreset = useCallback((preset: AttentionPreset) => {
-    setAperture(preset === "focus" ? 0.2 : 0.8);
+    setAperture(preset === "focus" ? 0.8 : 0.2);
   }, [setAperture]);
 
   const value = useMemo<AttentionContextValue>(() => ({

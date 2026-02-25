@@ -78,25 +78,25 @@ export default function AttentionToggle() {
   // Derived visual values
   const thumbLeft = aperture * (TRACK_W - THUMB_R * 2);
   const glowIntensity = 0.15 + aperture * 0.25;
-  const labelOpacityFocus = Math.max(0, 1 - aperture * 2.2);
-  const labelOpacityDiffuse = Math.max(0, (aperture - 0.45) * 2.2);
+  const labelOpacityDiffuse = Math.max(0, 1 - aperture * 2.2);
+  const labelOpacityFocus = Math.max(0, (aperture - 0.45) * 2.2);
 
   return (
     <div
       className="flex items-center gap-2.5 select-none touch-none"
       aria-label={`Attention: ${Math.round(aperture * 100)}% — ${preset}`}
     >
-      {/* Focus label */}
+      {/* Diffuse label */}
       <span
-        className="text-[8px] tracking-[0.3em] uppercase w-[38px] text-right cursor-pointer"
+        className="text-[8px] tracking-[0.3em] uppercase w-[46px] text-right cursor-pointer"
         onClick={() => setAperture(0.1)}
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
-          color: `hsla(38, 15%, 80%, ${0.2 + labelOpacityFocus * 0.4})`,
+          color: `hsla(38, 15%, 80%, ${0.2 + labelOpacityDiffuse * 0.4})`,
           transition: dragging ? "none" : "color 0.5s ease",
         }}
       >
-        Focus
+        Diffuse
       </span>
 
       {/* Track */}
@@ -183,17 +183,17 @@ export default function AttentionToggle() {
         </div>
       </div>
 
-      {/* Diffuse label */}
+      {/* Focus label */}
       <span
-        className="text-[8px] tracking-[0.3em] uppercase w-[46px] cursor-pointer"
+        className="text-[8px] tracking-[0.3em] uppercase w-[38px] cursor-pointer"
         onClick={() => setAperture(0.9)}
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
-          color: `hsla(38, 15%, 80%, ${0.2 + labelOpacityDiffuse * 0.3})`,
+          color: `hsla(38, 15%, 80%, ${0.2 + labelOpacityFocus * 0.3})`,
           transition: dragging ? "none" : "color 0.5s ease",
         }}
       >
-        Diffuse
+        Focus
       </span>
     </div>
   );
