@@ -642,7 +642,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             <span className="text-[10px] tracking-wider flex-shrink-0 mr-1" style={{ color: P.textDimmer }}>
               {selectedPersona.name}
             </span>
-            {getSkillsForPersona(selectedPersona).map((skill) => {
+            {AGENT_SKILLS.filter(s => s.phase === selectedPersona.phase).map((skill) => {
               const isActive = (activeSkill?.id || selectedPersona.defaultSkillId) === skill.id;
               const phaseDef = PHASES[skill.phase];
               return (
