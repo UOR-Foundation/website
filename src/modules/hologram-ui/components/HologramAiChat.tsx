@@ -19,6 +19,13 @@ import {
   getAiEngine,
   RECOMMENDED_MODELS,
 } from "@/modules/uns/core/hologram/ai-engine";
+
+// ── Cloud AI Models (instant, no download) ─────────────────────────────────
+const CLOUD_MODELS = [
+  { id: "google/gemini-3-flash-preview", label: "Gemini 3 Flash", desc: "fast, versatile, streaming", icon: "☁" },
+  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", desc: "balanced speed & reasoning", icon: "☁" },
+  { id: "openai/gpt-5-mini", label: "GPT-5 Mini", desc: "strong reasoning, multimodal", icon: "☁" },
+] as const;
 import {
   checkInferenceCache,
   getInputHash,
@@ -81,6 +88,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
   const [showHistory, setShowHistory] = useState(false);
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [selectedModelIdx, setSelectedModelIdx] = useState<number | null>(null);
+  const [selectedCloudModel, setSelectedCloudModel] = useState<string>(CLOUD_MODELS[0].id);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const modelPickerRef = useRef<HTMLDivElement>(null);
@@ -91,9 +99,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
   // Determine active model name
   const activeModelName = ai.isReady
     ? ai.active!.modelId.split("/").pop()
-    : selectedModelIdx !== null
-      ? RECOMMENDED_MODELS[selectedModelIdx]?.id.split("/").pop()
-      : null;
+    : CLOUD_MODELS.find((m) => m.id === selectedCloudModel)?.label ?? "Gemini 3 Flash";
 
   // Auto-scroll
   useEffect(() => {
@@ -156,17 +162,30 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
     setMessages([]);
   }, [history]);
 
-  // ── Model loading ────────────────────────────────────────────────────
+  // ── Cloud model selection (instant, no download) ──────────────────────
+  const selectCloudModel = useCallback((modelId: string) => {
+    setSelectedCloudModel(modelId);
+    setShowModelPicker(false);
+    const label = CLOUD_MODELS.find((m) => m.id === modelId)?.label ?? modelId;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `model-${Date.now()}`,
+        role: "system",
+        content: `${label} selected · Cloud AI ready`,
+        timestamp: new Date(),
+      },
+    ]);
+  }, []);
 
-  const loadModel = useCallback(async (index: number) => {
+  // Keep legacy local model loading for advanced use (not shown in default UI)
+  const loadLocalModel = useCallback(async (index: number) => {
     const rec = RECOMMENDED_MODELS[index];
     if (!rec) return;
-
     setSelectedModelIdx(index);
     setShowModelPicker(false);
     setIsLoadingModel(true);
     setLoadProgress(`Downloading ${rec.id.split("/").pop()}…`);
-
     try {
       await ai.load(rec.id, rec.task, {
         dtype: rec.dtype,
@@ -176,25 +195,14 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
           }
         },
       });
-
       setMessages((prev) => [
         ...prev,
-        {
-          id: `loaded-${Date.now()}`,
-          role: "system",
-          content: `${rec.id.split("/").pop()} ready · ${ai.active!.device.toUpperCase()} · ${rec.sizeApprox}`,
-          timestamp: new Date(),
-        },
+        { id: `loaded-${Date.now()}`, role: "system", content: `${rec.id.split("/").pop()} ready · ${ai.active!.device.toUpperCase()} · ${rec.sizeApprox}`, timestamp: new Date() },
       ]);
     } catch (e) {
       setMessages((prev) => [
         ...prev,
-        {
-          id: `error-${Date.now()}`,
-          role: "system",
-          content: `Failed to load: ${e instanceof Error ? e.message : String(e)}`,
-          timestamp: new Date(),
-        },
+        { id: `error-${Date.now()}`, role: "system", content: `Local model failed: ${e instanceof Error ? e.message : String(e)}. Using Cloud AI instead.`, timestamp: new Date() },
       ]);
     } finally {
       setIsLoadingModel(false);
@@ -211,10 +219,10 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
     // Determine inference path: model ID for cache keying
     const modelId = ai.isReady
       ? ai.active!.modelId
-      : "cloud/gemini-3-flash-preview";
+      : `cloud/${selectedCloudModel}`;
 
-    // If no local model and no cloud fallback intent, prompt user
-    if (!ai.isReady && selectedModelIdx !== null) {
+    // If local model is loading, wait
+    if (isLoadingModel) {
       setMessages((prev) => [
         ...prev,
         { id: `hint-${Date.now()}`, role: "system", content: "Model is still loading, please wait…", timestamp: new Date() },
@@ -341,7 +349,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
         },
         body: JSON.stringify({
           messages: [{ role: "user", content: text }],
-          model: "google/gemini-3-flash-preview",
+          model: selectedCloudModel,
         }),
       });
 
@@ -408,7 +416,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
           inputHash: proof.hashHex,
           inputCanonical: proof.nquads,
           outputText: finalContent,
-          toolName: "cloud:gemini-3-flash-preview",
+          toolName: `cloud:${selectedCloudModel}`,
           epistemicGrade: "B",
         });
       });
@@ -421,7 +429,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
     } finally {
       setIsGenerating(false);
     }
-  }, [input, isGenerating, ai, history, selectedModelIdx]);
+  }, [input, isGenerating, ai, history, selectedCloudModel, isLoadingModel]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -610,38 +618,41 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                   <p className="text-xs tracking-widest uppercase text-center mb-3" style={{ color: P.textDim }}>
                     Choose a model
                   </p>
-                  {RECOMMENDED_MODELS.slice(0, 3).map((m, i) => (
+                  {CLOUD_MODELS.map((m) => (
                     <button
                       key={m.id}
-                      onClick={() => loadModel(i)}
+                      onClick={() => selectCloudModel(m.id)}
                       className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all hover:scale-[1.01]"
                       style={{
-                        background: P.surface,
-                        border: `1px solid ${P.borderLight}`,
+                        background: selectedCloudModel === m.id ? P.surfaceHover : P.surface,
+                        border: `1px solid ${selectedCloudModel === m.id ? "hsla(38, 40%, 40%, 0.4)" : P.borderLight}`,
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.borderColor = "hsla(38, 40%, 40%, 0.4)";
                         e.currentTarget.style.background = P.surfaceHover;
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = P.borderLight;
-                        e.currentTarget.style.background = P.surface;
+                        e.currentTarget.style.borderColor = selectedCloudModel === m.id ? "hsla(38, 40%, 40%, 0.4)" : P.borderLight;
+                        e.currentTarget.style.background = selectedCloudModel === m.id ? P.surfaceHover : P.surface;
                       }}
                     >
                       <div
                         className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{ background: P.goldBg }}
                       >
-                        <Cpu className="w-4 h-4" style={{ color: P.gold }} />
+                        <Cloud className="w-4 h-4" style={{ color: P.gold }} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium" style={{ color: P.text }}>
-                          {m.id.split("/").pop()}
+                          {m.label}
                         </p>
                         <p className="text-xs" style={{ color: P.textDim }}>
-                          {m.sizeApprox} · {m.description.split("—")[1]?.trim() || m.task}
+                          {m.desc}
                         </p>
                       </div>
+                      {selectedCloudModel === m.id && (
+                        <Check className="w-4 h-4 flex-shrink-0" style={{ color: P.goldLight }} />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -747,8 +758,8 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/[0.06]"
                     style={{ color: P.textMuted }}
                   >
-                    <Cpu className="w-3.5 h-3.5" style={{ color: ai.isReady ? P.goldMuted : P.textDim }} />
-                    <span style={{ color: ai.isReady ? P.text : P.textDim }}>
+                    <Cloud className="w-3.5 h-3.5" style={{ color: ai.isReady ? P.goldMuted : P.goldMuted }} />
+                    <span style={{ color: P.text }}>
                       {activeModelName || "Select model"}
                     </span>
                     {ai.isReady && (
@@ -774,17 +785,15 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                         </p>
                       </div>
                       <div className="py-1">
-                        {RECOMMENDED_MODELS.map((m, i) => {
-                          const isActive = ai.isReady && ai.active?.modelId === m.id;
+                        {CLOUD_MODELS.map((m) => {
+                          const isActive = selectedCloudModel === m.id && !ai.isReady;
                           return (
                             <button
                               key={m.id}
                               onClick={() => {
-                                if (!isActive) loadModel(i);
-                                setShowModelPicker(false);
+                                selectCloudModel(m.id);
                               }}
-                              disabled={isLoadingModel}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-white/[0.05] disabled:opacity-40"
+                              className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-white/[0.05]"
                             >
                               <div
                                 className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
@@ -792,15 +801,15 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                               >
                                 {isActive
                                   ? <Check className="w-3.5 h-3.5" style={{ color: P.goldLight }} />
-                                  : <Cpu className="w-3.5 h-3.5" style={{ color: P.textDim }} />
+                                  : <Cloud className="w-3.5 h-3.5" style={{ color: P.textDim }} />
                                 }
                               </div>
                               <div className="min-w-0 flex-1">
                                 <p className="text-sm font-medium" style={{ color: isActive ? P.goldLight : P.text }}>
-                                  {m.id.split("/").pop()}
+                                  {m.label}
                                 </p>
                                 <p className="text-[11px]" style={{ color: P.textDim }}>
-                                  {m.sizeApprox} · {m.description.split("—")[1]?.trim() || m.task}
+                                  {m.desc}
                                 </p>
                               </div>
                             </button>
