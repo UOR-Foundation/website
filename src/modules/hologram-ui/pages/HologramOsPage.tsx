@@ -68,6 +68,9 @@ export default function HologramOsPage() {
               src={heroLandscape}
               alt="Serene landscape with misty mountains and tranquil water"
               className="w-full h-full object-cover"
+              style={{
+                animation: "ken-burns 30s ease-in-out infinite alternate",
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/45" />
           </div>
