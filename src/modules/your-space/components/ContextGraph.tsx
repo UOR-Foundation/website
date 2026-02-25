@@ -12,6 +12,8 @@ interface GraphNode {
   label: string;
   type: "identity" | "interest" | "task" | "domain";
   weight?: number;
+  /** 0 = freshest, 1 = oldest (used for time-decay visuals) */
+  decay?: number;
   x?: number;
   y?: number;
   vx?: number;
@@ -67,27 +69,39 @@ export function ContextGraph({ isDark }: ContextGraphProps) {
     const anchorId = "self";
     ns.push({ id: anchorId, label: ctx.authenticated ? "You" : "Identity", type: "identity" });
 
-    // Interests (top 8)
+    // Interests (top 8) — sorted by weight desc; index = recency rank
     const interests = Object.entries(ctx.profile.interests)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 8);
-    for (const [tag, weight] of interests) {
+    const iCount = interests.length;
+    for (let i = 0; i < iCount; i++) {
+      const [tag, weight] = interests[i];
       const id = `i:${tag}`;
-      ns.push({ id, label: tag.replace(/-/g, " "), type: "interest", weight });
+      // decay: 0 for freshest (highest weight), 1 for oldest
+      const decay = iCount > 1 ? i / (iCount - 1) : 0;
+      ns.push({ id, label: tag.replace(/-/g, " "), type: "interest", weight, decay });
       ls.push({ source: anchorId, target: id });
     }
 
-    // Tasks (top 5)
-    for (const task of ctx.profile.activeTasks.slice(0, 5)) {
+    // Tasks (top 5) — first = most recent
+    const tasks = ctx.profile.activeTasks.slice(0, 5);
+    const tCount = tasks.length;
+    for (let i = 0; i < tCount; i++) {
+      const task = tasks[i];
       const id = `t:${task}`;
-      ns.push({ id, label: task.length > 18 ? task.slice(0, 16) + "…" : task, type: "task" });
+      const decay = tCount > 1 ? i / (tCount - 1) : 0;
+      ns.push({ id, label: task.length > 18 ? task.slice(0, 16) + "…" : task, type: "task", decay });
       ls.push({ source: anchorId, target: id });
     }
 
-    // Domains (top 5)
-    for (const domain of ctx.profile.recentDomains.slice(0, 5)) {
+    // Domains (top 5) — first = most recent
+    const domains = ctx.profile.recentDomains.slice(0, 5);
+    const dCount = domains.length;
+    for (let i = 0; i < dCount; i++) {
+      const domain = domains[i];
       const id = `d:${domain}`;
-      ns.push({ id, label: domain.replace(/-/g, " "), type: "domain" });
+      const decay = dCount > 1 ? i / (dCount - 1) : 0;
+      ns.push({ id, label: domain.replace(/-/g, " "), type: "domain", decay });
       ls.push({ source: anchorId, target: id });
     }
 
@@ -145,13 +159,18 @@ export function ContextGraph({ isDark }: ContextGraphProps) {
           const s = positions.get(l.source);
           const t = positions.get(l.target);
           if (!s || !t) return null;
+          // Find target node's decay for link opacity
+          const targetNode = nodes.find((n) => n.id === l.target);
+          const linkDecay = targetNode?.decay ?? 0;
+          const linkOpacity = 0.6 - linkDecay * 0.4; // 0.6 → 0.2
           return (
             <line
               key={`${l.source}-${l.target}`}
               x1={s.x} y1={s.y} x2={t.x} y2={t.y}
               stroke="hsl(var(--border))"
               strokeWidth={1}
-              opacity={0.5}
+              opacity={linkOpacity}
+              style={{ transition: "opacity 0.6s ease" }}
             />
           );
         })}
@@ -159,9 +178,18 @@ export function ContextGraph({ isDark }: ContextGraphProps) {
         {/* Nodes */}
         {nodes.map((n) => {
           const pos = positions.get(n.id) ?? { x: dimensions.w / 2, y: dimensions.h / 2 };
-          const r = TYPE_RADIUS[n.type];
+          const baseR = TYPE_RADIUS[n.type];
           const colors = TYPE_COLORS[n.type];
           const isHovered = hoveredNode === n.id;
+          const decay = n.decay ?? 0;
+
+          // Time-decay visuals: fresh nodes are larger, brighter, glowing
+          const freshness = 1 - decay; // 1 = newest, 0 = oldest
+          const nodeOpacity = n.type === "identity" ? 1 : 0.35 + freshness * 0.65; // 0.35–1.0
+          const r = n.type === "identity" ? baseR : baseR * (0.7 + freshness * 0.3); // shrink older
+          const glowRadius = freshness > 0.6 ? 4 + freshness * 4 : 0;
+          const glowOpacity = freshness > 0.6 ? 0.15 + (freshness - 0.6) * 0.5 : 0;
+          const labelOpacity = n.type === "identity" ? 1 : 0.4 + freshness * 0.6;
 
           return (
             <g
@@ -171,13 +199,22 @@ export function ContextGraph({ isDark }: ContextGraphProps) {
               onMouseLeave={() => setHoveredNode(null)}
               style={{ cursor: "default" }}
             >
+              {/* Glow halo for fresh nodes */}
+              {glowRadius > 0 && n.type !== "identity" && (
+                <circle
+                  r={r + glowRadius}
+                  fill={colors.fill}
+                  opacity={isHovered ? glowOpacity * 1.5 : glowOpacity}
+                  style={{ filter: "blur(6px)", transition: "opacity 0.6s ease" }}
+                />
+              )}
               <circle
                 r={isHovered ? r + 3 : r}
                 fill={colors.fill}
                 stroke={colors.stroke}
                 strokeWidth={n.type === "identity" ? 2.5 : 1.5}
-                opacity={isHovered ? 1 : 0.8}
-                style={{ transition: "r 0.2s, opacity 0.2s" }}
+                opacity={isHovered ? 1 : nodeOpacity}
+                style={{ transition: "r 0.3s, opacity 0.6s" }}
               />
               {/* Label */}
               <text
@@ -187,7 +224,8 @@ export function ContextGraph({ isDark }: ContextGraphProps) {
                 fontSize={n.type === "identity" ? 11 : 9}
                 fontFamily="'DM Sans', system-ui, sans-serif"
                 fontWeight={n.type === "identity" ? 600 : 400}
-                style={{ textTransform: "capitalize" as const }}
+                opacity={isHovered ? 1 : labelOpacity}
+                style={{ textTransform: "capitalize" as const, transition: "opacity 0.6s ease" }}
               >
                 {n.label}
               </text>
@@ -200,6 +238,7 @@ export function ContextGraph({ isDark }: ContextGraphProps) {
                   fontSize={8}
                   fontFamily="'DM Sans', monospace"
                   fontWeight={500}
+                  opacity={nodeOpacity}
                 >
                   {(n.weight * 100).toFixed(0)}
                 </text>
