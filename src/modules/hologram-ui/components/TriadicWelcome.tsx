@@ -265,7 +265,7 @@ export default function TriadicWelcome({
           Guides
         </p>
         <div className="space-y-1.5">
-          {phasePersonas.map((persona) => {
+          {phasePersonas.map((persona, i) => {
             const isActive = selectedPersona.id === persona.id;
             const locked = persona.minStage > creatorStage;
 
@@ -285,6 +285,8 @@ export default function TriadicWelcome({
                     ? `hsla(${phaseDef.hue}, 35%, 50%, 0.25)`
                     : P.borderLight
                   }`,
+                  animation: "stagger-fade-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
+                  animationDelay: `${120 + i * 70}ms`,
                 }}
               >
                 <span
@@ -326,9 +328,10 @@ export default function TriadicWelcome({
           Skills
         </p>
         <div className="flex flex-wrap gap-1.5">
-          {phaseSkills.map((skill) => {
+          {phaseSkills.map((skill, i) => {
             const isActive = (activeSkill?.id || selectedPersona.defaultSkillId) === skill.id;
             const isAvailable = selectedPersona.skillIds.includes(skill.id);
+            const baseDelay = 120 + phasePersonas.length * 70;
 
             return (
               <button
@@ -347,6 +350,8 @@ export default function TriadicWelcome({
                     : P.borderLight
                   }`,
                   color: isActive ? phaseDef.color : (isAvailable ? P.textMuted : P.textDimmer),
+                  animation: "stagger-fade-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both",
+                  animationDelay: `${baseDelay + i * 50}ms`,
                 }}
                 title={skill.description}
               >
@@ -382,6 +387,10 @@ styleSheet.textContent = `
   @keyframes triadic-slide-out-left {
     0% { opacity: 1; transform: translateX(0); }
     100% { opacity: 0; transform: translateX(-24px); }
+  }
+  @keyframes stagger-fade-in {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
 `;
 if (!document.querySelector('[data-triadic-transitions]')) {
