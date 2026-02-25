@@ -12,3 +12,8 @@ export {
   MEMORY_CRISIS_BLUEPRINT,
   createMemoryCrisisBlueprint,
 } from "./memory-crisis";
+
+export {
+  PROMPT_INJECTION_SHIELD_BLUEPRINT,
+  createPromptInjectionShieldBlueprint,
+} from "./prompt-injection-shield";

@@ -12,7 +12,7 @@
 import { useState, useCallback } from "react";
 import {
   IconDatabase, IconDownload, IconTrash, IconCopy, IconCheck,
-  IconBrain, IconPlus, IconChevronDown, IconChevronUp,
+  IconBrain, IconShield, IconPlus, IconChevronDown, IconChevronUp,
 } from "@tabler/icons-react";
 import {
   useLensBlueprints,
@@ -22,6 +22,7 @@ import {
 } from "../hooks/use-lens-blueprints";
 import type { LensBlueprint } from "@/modules/uns/core/hologram/lens-blueprint";
 import { MEMORY_CRISIS_BLUEPRINT } from "@/modules/uns/core/hologram/lenses/memory-crisis";
+import { PROMPT_INJECTION_SHIELD_BLUEPRINT } from "@/modules/uns/core/hologram/lenses/prompt-injection-shield";
 
 // ── Copy button ────────────────────────────────────────────────────────────
 
@@ -52,19 +53,23 @@ function BlueprintCard({
   onLoad,
   onDelete,
   isBuiltIn,
+  builtInBlueprint,
+  icon,
 }: {
   stored?: StoredBlueprint;
   onLoad: (bp: LensBlueprint) => void;
   onDelete?: (id: string) => void;
   isBuiltIn?: boolean;
+  builtInBlueprint?: LensBlueprint;
+  icon?: React.ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const bp = stored?.blueprint ?? MEMORY_CRISIS_BLUEPRINT;
+  const bp = stored?.blueprint ?? builtInBlueprint ?? MEMORY_CRISIS_BLUEPRINT;
 
   return (
     <div className="border border-border rounded-lg overflow-hidden hover:border-primary/30 transition-colors">
       <div className="px-3 py-2.5 flex items-start gap-2">
-        <IconBrain size={14} className="text-primary mt-0.5 shrink-0" />
+        {icon ?? <IconBrain size={14} className="text-primary mt-0.5 shrink-0" />}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold text-foreground truncate">
@@ -235,6 +240,16 @@ export default function BlueprintLibrary({
         <BlueprintCard
           onLoad={onLoadBlueprint}
           isBuiltIn
+          builtInBlueprint={MEMORY_CRISIS_BLUEPRINT}
+          icon={<IconBrain size={14} className="text-primary mt-0.5 shrink-0" />}
+        />
+
+        {/* Built-in: Prompt Injection Shield */}
+        <BlueprintCard
+          onLoad={onLoadBlueprint}
+          isBuiltIn
+          builtInBlueprint={PROMPT_INJECTION_SHIELD_BLUEPRINT}
+          icon={<IconShield size={14} className="text-amber-500 mt-0.5 shrink-0" />}
         />
 
         {/* Saved blueprints */}
