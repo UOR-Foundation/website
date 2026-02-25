@@ -322,7 +322,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <h3
-                className="text-sm font-medium tracking-wide"
+                className="text-lg font-medium tracking-wide"
                 style={{
                   fontFamily: "'Playfair Display', serif",
                   color: "hsl(38, 30%, 85%)",
@@ -333,7 +333,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
             </div>
             <button
               onClick={startNewConversation}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-wider transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm tracking-wider transition-colors"
               style={{
                 color: "hsl(38, 50%, 55%)",
                 border: "1px solid hsla(38, 40%, 40%, 0.3)",
@@ -341,7 +341,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
               onMouseEnter={(e) => (e.currentTarget.style.background = "hsla(38, 40%, 40%, 0.15)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              <Plus className="w-3 h-3" />
+              <Plus className="w-4 h-4" />
               New
             </button>
           </div>
@@ -351,14 +351,14 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
             {!history.isAuthenticated ? (
               <div className="flex flex-col items-center justify-center py-12 gap-3">
                 <MessageSquare className="w-8 h-8" style={{ color: "hsl(30, 10%, 35%)" }} />
-                <p className="text-xs text-center" style={{ color: "hsl(30, 10%, 50%)" }}>
+                <p className="text-base text-center" style={{ color: "hsl(30, 10%, 55%)" }}>
                   Sign in to save and resume conversations.
                 </p>
               </div>
             ) : history.conversations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 gap-3">
                 <MessageSquare className="w-8 h-8" style={{ color: "hsl(30, 10%, 35%)" }} />
-                <p className="text-xs text-center" style={{ color: "hsl(30, 10%, 50%)" }}>
+                <p className="text-base text-center" style={{ color: "hsl(30, 10%, 55%)" }}>
                   No conversations yet. Start chatting to create one.
                 </p>
               </div>
@@ -370,7 +370,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                 >
                   <button
                     onClick={() => resumeConversation(conv)}
-                    className="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all"
+                    className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all"
                     style={{
                       background: conv.id === history.activeConversationId
                         ? "hsla(38, 30%, 30%, 0.25)"
@@ -390,12 +390,12 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                       }
                     }}
                   >
-                    <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "hsl(38, 40%, 45%)" }} />
+                    <MessageSquare className="w-4 h-4 flex-shrink-0" style={{ color: "hsl(38, 40%, 45%)" }} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium truncate" style={{ color: "hsl(38, 20%, 80%)" }}>
+                      <p className="text-sm font-medium truncate" style={{ color: "hsl(38, 20%, 80%)" }}>
                         {conv.title}
                       </p>
-                      <p className="text-[10px]" style={{ color: "hsl(30, 10%, 45%)" }}>
+                      <p className="text-xs" style={{ color: "hsl(30, 10%, 50%)" }}>
                         {new Date(conv.updated_at).toLocaleDateString()} · {conv.model_id?.split("/").pop() ?? ""}
                       </p>
                     </div>
@@ -407,7 +407,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                     onMouseEnter={(e) => (e.currentTarget.style.background = "hsla(0, 40%, 40%, 0.15)")}
                     onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               ))
@@ -444,14 +444,14 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
         >
           <div className="flex items-center gap-3">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center"
+              className="w-10 h-10 rounded-full flex items-center justify-center"
               style={{ background: "hsla(38, 50%, 50%, 0.15)" }}
             >
-              <Sparkles className="w-4 h-4" style={{ color: "hsl(38, 60%, 55%)" }} />
+              <Sparkles className="w-5 h-5" style={{ color: "hsl(38, 60%, 55%)" }} />
             </div>
             <div>
               <h3
-                className="text-sm font-medium tracking-wide"
+                className="text-lg font-medium tracking-wide"
                 style={{
                   fontFamily: "'Playfair Display', serif",
                   color: "hsl(38, 30%, 85%)",
@@ -459,7 +459,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
               >
                 Hologram AI
               </h3>
-              <p className="text-[10px] tracking-wider" style={{ color: "hsla(30, 10%, 60%, 0.8)" }}>
+              <p className="text-xs tracking-wider" style={{ color: "hsla(30, 10%, 60%, 0.8)" }}>
                 {ai.isReady
                   ? `${ai.active!.modelId.split("/").pop()} · ${ai.active!.device.toUpperCase()}`
                   : "Select a model to begin"}
@@ -477,10 +477,10 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 title="Conversation history"
               >
-                <MessageSquare className="w-4 h-4" />
+                <MessageSquare className="w-5 h-5" />
                 {history.conversations.length > 0 && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full text-[8px] flex items-center justify-center font-medium"
+                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-medium"
                     style={{
                       background: "hsl(38, 50%, 45%)",
                       color: "hsl(30, 8%, 14%)",
@@ -493,12 +493,12 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
             )}
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
               style={{ color: "hsl(30, 10%, 60%)" }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "hsla(0,0%,100%,0.08)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -506,7 +506,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
         {/* ── Messages ─────────────────────────────────────────────── */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto px-5 py-4 space-y-4"
+          className="flex-1 overflow-y-auto px-5 py-5 space-y-5"
           style={{ minHeight: "300px" }}
         >
           {messages.map((msg) => (
@@ -527,7 +527,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                   />
                 ))}
               </div>
-              <span className="text-[11px]" style={{ color: "hsl(30, 10%, 50%)" }}>
+              <span className="text-sm" style={{ color: "hsl(30, 10%, 55%)" }}>
                 Generating…
               </span>
             </div>
@@ -536,10 +536,10 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
           {isLoadingModel && (
             <div className="flex items-center gap-2 px-3 py-2">
               <Loader2
-                className="w-3.5 h-3.5 animate-spin"
+                className="w-4 h-4 animate-spin"
                 style={{ color: "hsl(38, 50%, 50%)" }}
               />
-              <span className="text-[11px] font-mono" style={{ color: "hsl(30, 10%, 50%)" }}>
+              <span className="text-sm font-mono" style={{ color: "hsl(30, 10%, 55%)" }}>
                 {loadProgress}
               </span>
             </div>
@@ -553,17 +553,17 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
             style={{ borderTop: "1px solid hsla(38, 30%, 30%, 0.2)" }}
           >
             <p
-              className="text-[10px] tracking-widest uppercase pt-3 pb-2"
-              style={{ color: "hsl(30, 10%, 50%)" }}
+              className="text-xs tracking-widest uppercase pt-4 pb-3"
+              style={{ color: "hsl(30, 10%, 55%)" }}
             >
               Select Model
             </p>
-            <div className="grid grid-cols-1 gap-1.5">
+            <div className="grid grid-cols-1 gap-2">
               {RECOMMENDED_MODELS.slice(0, 3).map((m, i) => (
                 <button
                   key={m.id}
                   onClick={() => loadModel(i)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all"
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-lg text-left transition-all"
                   style={{
                     background: "hsla(30, 8%, 22%, 0.6)",
                     border: "1px solid hsla(38, 30%, 30%, 0.2)",
@@ -577,12 +577,12 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                     e.currentTarget.style.borderColor = "hsla(38, 30%, 30%, 0.2)";
                   }}
                 >
-                  <Cpu className="w-4 h-4 flex-shrink-0" style={{ color: "hsl(38, 50%, 50%)" }} />
+                  <Cpu className="w-5 h-5 flex-shrink-0" style={{ color: "hsl(38, 50%, 50%)" }} />
                   <div className="min-w-0">
-                    <p className="text-xs font-medium truncate" style={{ color: "hsl(38, 20%, 80%)" }}>
+                    <p className="text-sm font-medium truncate" style={{ color: "hsl(38, 20%, 80%)" }}>
                       {m.id.split("/").pop()}
                     </p>
-                    <p className="text-[10px]" style={{ color: "hsl(30, 10%, 50%)" }}>
+                    <p className="text-xs" style={{ color: "hsl(30, 10%, 55%)" }}>
                       {m.sizeApprox} · {m.description.split("—")[1]?.trim() || m.task}
                     </p>
                   </div>
@@ -598,7 +598,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
           style={{ borderTop: "1px solid hsla(38, 30%, 30%, 0.2)" }}
         >
           <div
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full"
+            className="flex items-center gap-2 px-4 py-3 rounded-full"
             style={{
               background: "hsla(30, 8%, 22%, 0.8)",
               border: "1px solid hsla(38, 30%, 30%, 0.25)",
@@ -612,7 +612,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
               onKeyDown={handleKeyDown}
               placeholder={ai.isReady ? "Ask anything…" : "Load a model to chat"}
               disabled={!ai.isReady || isGenerating}
-              className="flex-1 bg-transparent border-none outline-none text-sm placeholder:opacity-40"
+              className="flex-1 bg-transparent border-none outline-none text-base placeholder:opacity-40"
               style={{
                 color: "hsl(38, 20%, 85%)",
                 fontFamily: "'DM Sans', sans-serif",
@@ -621,7 +621,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
             <button
               onClick={sendMessage}
               disabled={!input.trim() || isGenerating || !ai.isReady}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
               style={{
                 background: input.trim() && ai.isReady
                   ? "hsla(38, 50%, 50%, 0.25)"
@@ -629,7 +629,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
               }}
             >
               <Send
-                className="w-4 h-4"
+                className="w-5 h-5"
                 style={{
                   color: input.trim() && ai.isReady
                     ? "hsl(38, 60%, 60%)"
@@ -640,13 +640,13 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
           </div>
           <div className="flex items-center justify-between mt-1.5 px-1">
             {ai.isReady && (
-              <p className="text-[9px] tracking-wider" style={{ color: "hsl(30, 10%, 40%)" }}>
+              <p className="text-[11px] tracking-wider" style={{ color: "hsl(30, 10%, 45%)" }}>
                 Running locally · {ai.active!.device.toUpperCase()} · Content-addressed
               </p>
             )}
             {!ai.isReady && <span />}
             {history.isAuthenticated && history.activeConversationId && (
-              <p className="text-[9px] tracking-wider" style={{ color: "hsl(38, 40%, 45%)" }}>
+              <p className="text-[11px] tracking-wider" style={{ color: "hsl(38, 40%, 50%)" }}>
                 ● Saving
               </p>
             )}
@@ -666,7 +666,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
     return (
       <div className="flex justify-center">
         <p
-          className="text-[11px] px-4 py-1.5 rounded-full"
+          className="text-sm px-5 py-2 rounded-full"
           style={{
             color: "hsl(38, 30%, 60%)",
             background: "hsla(38, 30%, 30%, 0.15)",
@@ -683,7 +683,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className="max-w-[85%] px-4 py-3 rounded-2xl"
+        className="max-w-[85%] px-5 py-4 rounded-2xl"
         style={
           isUser
             ? {
@@ -699,7 +699,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         }
       >
         <p
-          className="text-[13px] leading-relaxed whitespace-pre-wrap"
+          className="text-base leading-relaxed whitespace-pre-wrap"
           style={{
             color: isUser ? "hsl(38, 20%, 85%)" : "hsl(30, 15%, 78%)",
             fontFamily: "'DM Sans', sans-serif",
@@ -711,26 +711,26 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         {/* Inference metadata */}
         {meta && (
           <div
-            className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 pt-1.5"
+            className="flex flex-wrap gap-x-3 gap-y-1 mt-2.5 pt-2"
             style={{ borderTop: "1px solid hsla(30, 10%, 30%, 0.2)" }}
           >
             {meta.inferenceTimeMs !== undefined && (
-              <span className="text-[9px] font-mono" style={{ color: "hsl(30, 10%, 45%)" }}>
+              <span className="text-[11px] font-mono" style={{ color: "hsl(30, 10%, 50%)" }}>
                 {meta.inferenceTimeMs}ms
               </span>
             )}
             {meta.tokensGenerated !== undefined && (
-              <span className="text-[9px] font-mono" style={{ color: "hsl(30, 10%, 45%)" }}>
+              <span className="text-[11px] font-mono" style={{ color: "hsl(30, 10%, 50%)" }}>
                 ~{meta.tokensGenerated} tok
               </span>
             )}
             {meta.gpuAccelerated !== undefined && (
-              <span className="text-[9px] font-mono" style={{ color: meta.gpuAccelerated ? "hsl(38, 50%, 50%)" : "hsl(30, 10%, 45%)" }}>
+              <span className="text-[11px] font-mono" style={{ color: meta.gpuAccelerated ? "hsl(38, 50%, 50%)" : "hsl(30, 10%, 50%)" }}>
                 {meta.gpuAccelerated ? "WebGPU ✓" : "WASM"}
               </span>
             )}
             {meta.outputCid && (
-              <span className="text-[9px] font-mono" style={{ color: "hsl(30, 10%, 40%)" }}>
+              <span className="text-[11px] font-mono" style={{ color: "hsl(30, 10%, 45%)" }}>
                 {meta.outputCid.slice(0, 16)}…
               </span>
             )}
