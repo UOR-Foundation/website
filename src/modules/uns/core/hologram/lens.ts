@@ -2,154 +2,377 @@
  * Holographic Lens — Composable Projection Circuits
  * ══════════════════════════════════════════════════
  *
- * A Lens is the holographic equivalent of a circuit:
+ * A Lens is a content-addressed composition of pure functions.
  *
- *   • Each ELEMENT is a projection or transform (a Lego block)
- *   • Each WIRE defines data flow between elements (order matters)
- *   • The LENS itself is content-addressed — same wiring = same identity
- *   • A Lens IS a hologram: it projects through all 25+ standards
+ * In optics, a compound lens is multiple elements stacked in order.
+ * Light enters, passes through each element sequentially, and exits
+ * focused. The same compound lens always produces the same focal point.
  *
- * Optical metaphor:
- *   A compound lens focuses light through multiple elements in sequence.
- *   Each element bends the beam. The same compound lens always produces
- *   the same focal point. Swap two elements → different image → different hash.
+ *   compose → grind → focus
+ *   (build)   (hash)   (run)
  *
- * Implementation:
- *   Lens = JSON-LD → URDNA2015 → SHA-256 → CID → Hologram (all projections)
- *   Focus = topological sort of DAG → sequential pure execution
+ * Pipeline-first design:
+ *   Elements are ordered. Output of each feeds into the next.
+ *   No wiring needed for the 90% case — just list your elements.
+ *
+ *   const lens = composeLens("my-pipeline", [hash, sign, project]);
+ *   const ground = await grindLens(lens);   // → CID, DID, WebFinger…
+ *   const result = await focusLens(lens, inputData);
+ *
+ * DAG wiring (advanced):
+ *   When elements need non-linear data flow, add explicit wires.
+ *   Wires use dotted notation: "elementId.portName"
+ *
+ * Morphism classification:
+ *   Every lens declares its morphism type from the UOR hierarchy:
+ *     • "transform" — general (may be lossy)
+ *     • "isometry"  — preserves all information (invertible)
+ *     • "embedding"  — lossy but with compression witness
+ *
+ * A lens IS a hologram — its identity projects through all 25+ standards.
  *
  * @module uns/core/hologram/lens
  */
 
 import { singleProofHash, type SingleProofResult } from "@/lib/uor-canonical";
-import { project, type Hologram, type ProjectionInput } from "./index";
+import { project, PROJECTIONS, type Hologram, type ProjectionInput } from "./index";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-/** A port on a lens element — typed input or output slot. */
-export interface LensPort {
-  /** Machine-readable port name (e.g. "hashBytes", "document"). */
-  readonly name: string;
-  /** Semantic type hint (e.g. "Uint8Array", "string", "json"). */
-  readonly type: string;
-}
-
-/** A single element in the lens — one functional unit. */
+/**
+ * A single lens element — one pure function.
+ *
+ * In the linear (pipeline) case, focus receives the previous element's
+ * output as a single value. In the DAG case, it receives a named record.
+ */
 export interface LensElement {
-  /** Unique ID within this lens (e.g. "canonicalize", "sign"). */
+  /** Unique ID within this lens. */
   readonly id: string;
-  /** What this element does — a registered projection name or "transform". */
+  /** Classification: a registered projection name, "transform", or "hologram:Lens". */
   readonly kind: string;
-  /** Input ports this element accepts. */
-  readonly inputs: readonly LensPort[];
-  /** Output ports this element produces. */
-  readonly outputs: readonly LensPort[];
-  /**
-   * The pure function. Takes named inputs, returns named outputs.
-   * Must be deterministic: same input → same output. Always.
-   */
-  readonly focus: (inputs: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  /** The pure function. Deterministic: same input → same output. Always. */
+  readonly focus: (input: unknown) => Promise<unknown>;
 }
 
-/** A wire connecting one element's output port to another's input port. */
+/**
+ * A wire for non-linear (DAG) data flow.
+ * Uses dotted notation: "elementId.portName" or just "elementId".
+ */
 export interface LensWire {
-  readonly from: { readonly element: string; readonly port: string };
-  readonly to: { readonly element: string; readonly port: string };
+  readonly from: string;
+  readonly to: string;
 }
+
+/** UOR morphism classification for the lens. */
+export type LensMorphism = "transform" | "isometry" | "embedding";
 
 /** The complete Holographic Lens — a content-addressed circuit. */
 export interface HolographicLens {
-  /** JSON-LD context for canonical hashing. */
   readonly "@context": "https://uor.foundation/contexts/uor-v1.jsonld";
   readonly "@type": "hologram:Lens";
-  /** Human-readable name. */
   readonly name: string;
-  /** Lens version. */
   readonly version: string;
-  /** The elements (Lego blocks). */
+  readonly morphism: LensMorphism;
+  /** Ordered elements. In pipeline mode, executed sequentially. */
   readonly elements: readonly LensElement[];
-  /** The wiring (connections — order matters). */
-  readonly wires: readonly LensWire[];
-  /** External input ports (what the lens accepts from outside). */
-  readonly input: readonly LensPort[];
-  /** External output ports (what the lens emits). */
-  readonly output: readonly LensPort[];
+  /** Optional DAG wiring. When absent, elements form a linear pipeline. */
+  readonly wires?: readonly LensWire[];
 }
 
 /** The result of grinding a lens: its content-addressed identity. */
 export interface GroundLens {
-  /** The lens definition. */
   readonly lens: HolographicLens;
-  /** Content-addressed identity (CID, hex, derivationId, etc.). */
   readonly proof: SingleProofResult;
-  /** Full hologram: all 25+ projections of this lens's identity. */
   readonly hologram: Hologram;
 }
 
-/** The result of focusing (executing) a lens on input. */
+/** The result of focusing (executing) a lens. */
 export interface FocusResult {
-  /** The final output values. */
-  readonly output: Record<string, unknown>;
-  /** Execution trace: element IDs in execution order. */
+  readonly output: unknown;
   readonly trace: readonly string[];
-  /** The lens's content-addressed identity. */
   readonly lensCid: string;
 }
 
-// ── Serializable Manifest (for hashing — no functions) ─────────────────────
+// ── Serializable Manifest (for hashing — strips functions) ─────────────────
 
-interface LensManifest {
-  "@context": string;
-  "@type": string;
-  name: string;
-  version: string;
-  elements: Array<{
-    id: string;
-    kind: string;
-    inputs: readonly LensPort[];
-    outputs: readonly LensPort[];
-  }>;
-  wires: readonly LensWire[];
-  input: readonly LensPort[];
-  output: readonly LensPort[];
-}
-
-function toManifest(lens: HolographicLens): LensManifest {
+function toManifest(lens: HolographicLens) {
   return {
     "@context": lens["@context"],
     "@type": lens["@type"],
     name: lens.name,
     version: lens.version,
-    elements: lens.elements.map((e) => ({
-      id: e.id,
-      kind: e.kind,
-      inputs: e.inputs,
-      outputs: e.outputs,
-    })),
-    wires: lens.wires,
-    input: lens.input,
-    output: lens.output,
+    morphism: lens.morphism,
+    elements: lens.elements.map((e) => ({ id: e.id, kind: e.kind })),
+    ...(lens.wires ? { wires: lens.wires } : {}),
   };
 }
 
-// ── Topological Sort ───────────────────────────────────────────────────────
+// ── Element Factories ──────────────────────────────────────────────────────
 
-function topoSort(elements: readonly LensElement[], wires: readonly LensWire[]): string[] {
+/**
+ * Create a LensElement from a registered hologram projection.
+ *
+ * The element accepts a ProjectionInput and returns the projection string.
+ * This binds directly to the Hologram Projection Registry — zero boilerplate.
+ *
+ *   const didElement = fromProjection("did");
+ *   const btcElement = fromProjection("bitcoin");
+ */
+export function fromProjection(projectionName: string): LensElement {
+  const spec = PROJECTIONS.get(projectionName);
+  if (!spec) {
+    throw new Error(
+      `[Lens] Unknown projection: "${projectionName}". ` +
+        `Available: ${[...PROJECTIONS.keys()].join(", ")}`
+    );
+  }
+  return {
+    id: projectionName,
+    kind: projectionName,
+    focus: async (input) => spec.project(input as ProjectionInput),
+  };
+}
+
+/**
+ * Create a LensElement from any pure function.
+ *
+ *   const upper = element("uppercase", async (s) => (s as string).toUpperCase());
+ */
+export function element(
+  id: string,
+  focus: (input: unknown) => Promise<unknown>,
+  kind = "transform",
+): LensElement {
+  return { id, kind, focus };
+}
+
+// ── Core API ───────────────────────────────────────────────────────────────
+
+/**
+ * Compose a Holographic Lens.
+ *
+ * Pipeline mode (default): just pass an ordered array of elements.
+ *   composeLens("my-pipeline", [a, b, c])
+ *
+ * DAG mode: pass elements + explicit wires.
+ *   composeLens("my-dag", elements, { wires, morphism: "embedding" })
+ */
+export function composeLens(
+  name: string,
+  elements: LensElement[],
+  options?: {
+    version?: string;
+    morphism?: LensMorphism;
+    wires?: LensWire[];
+  },
+): HolographicLens {
+  if (elements.length === 0) {
+    throw new Error("[Lens] A lens must have at least one element.");
+  }
+
+  const wires = options?.wires;
+
+  // Validate DAG wiring if provided
+  if (wires) {
+    const ids = new Set(elements.map((e) => e.id));
+    for (const w of wires) {
+      const fromId = w.from.split(".")[0];
+      const toId = w.to.split(".")[0];
+      if (!ids.has(fromId)) throw new Error(`[Lens] Wire references unknown element: "${fromId}"`);
+      if (!ids.has(toId)) throw new Error(`[Lens] Wire references unknown element: "${toId}"`);
+    }
+    // Validate acyclic
+    dagSort(elements, wires);
+  }
+
+  return {
+    "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+    "@type": "hologram:Lens",
+    name,
+    version: options?.version ?? "1.0.0",
+    morphism: options?.morphism ?? "transform",
+    elements,
+    ...(wires ? { wires } : {}),
+  };
+}
+
+/**
+ * Grind a lens — compute its permanent content-addressed identity.
+ *
+ * "Grinding" is the optical term for shaping a lens to its final form.
+ * After grinding, the lens projects through all 25+ hologram standards.
+ * Same elements + same order + same version = same identity. Forever.
+ */
+export async function grindLens(lens: HolographicLens): Promise<GroundLens> {
+  const proof = await singleProofHash(toManifest(lens));
+  const input: ProjectionInput = {
+    hashBytes: proof.hashBytes,
+    cid: proof.cid,
+    hex: proof.hashHex,
+  };
+  return { lens, proof, hologram: project(input) };
+}
+
+/**
+ * Focus a lens — execute the circuit on input.
+ *
+ * Pipeline mode: input flows through each element sequentially.
+ *   Element₁(input) → Element₂(result₁) → … → ElementN(resultN₋₁) → output
+ *
+ * DAG mode: data flows along explicit wires. Elements with all inputs
+ *   satisfied are executed in deterministic topological order.
+ *
+ * @param lens   The Holographic Lens to execute.
+ * @param input  The input data (single value for pipeline, record for DAG).
+ * @returns      FocusResult with output, execution trace, and lens CID.
+ */
+export async function focusLens(
+  lens: HolographicLens,
+  input: unknown,
+): Promise<FocusResult> {
+  const trace: string[] = [];
+
+  let output: unknown;
+
+  if (!lens.wires) {
+    // ── Pipeline mode: simple sequential flow ──────────────────────────
+    let current = input;
+    for (const el of lens.elements) {
+      current = await el.focus(current);
+      trace.push(el.id);
+    }
+    output = current;
+  } else {
+    // ── DAG mode: topological execution with data bus ──────────────────
+    const order = dagSort(lens.elements, lens.wires);
+    const bus = new Map<string, unknown>();
+    bus.set("__input", input);
+
+    for (const id of order) {
+      const el = lens.elements.find((e) => e.id === id)!;
+
+      // Gather inputs from wires pointing to this element
+      const incoming = lens.wires.filter((w) => w.to.split(".")[0] === id);
+
+      let elInput: unknown;
+      if (incoming.length === 0) {
+        // Root element — receives the lens input
+        elInput = input;
+      } else if (incoming.length === 1) {
+        // Single wire — pass value directly
+        elInput = bus.get(incoming[0].from);
+      } else {
+        // Multiple wires — collect into a named record
+        const record: Record<string, unknown> = {};
+        for (const w of incoming) {
+          const portName = w.to.split(".")[1] ?? w.from.split(".")[0];
+          record[portName] = bus.get(w.from);
+        }
+        elInput = record;
+      }
+
+      const result = await el.focus(elInput);
+      bus.set(id, result);
+      trace.push(id);
+    }
+
+    // Output is the last element's result
+    const lastId = order[order.length - 1];
+    output = bus.get(lastId);
+  }
+
+  const proof = await singleProofHash(toManifest(lens));
+  return { output, trace, lensCid: proof.cid };
+}
+
+/**
+ * Nest a lens inside another lens as a single element.
+ * Fractal composition: lenses containing lenses.
+ */
+export function nestLens(inner: HolographicLens): LensElement {
+  return {
+    id: `lens:${inner.name}`,
+    kind: "hologram:Lens",
+    focus: async (input) => {
+      const result = await focusLens(inner, input);
+      return result.output;
+    },
+  };
+}
+
+// ── Lens Algebra ───────────────────────────────────────────────────────────
+
+/**
+ * Sequential composition: lens₁ ∘ lens₂
+ * Light passes through lens₁ first, then lens₂.
+ * The result is a new lens with combined identity.
+ */
+export function sequence(
+  name: string,
+  first: HolographicLens,
+  second: HolographicLens,
+): HolographicLens {
+  return composeLens(name, [nestLens(first), nestLens(second)]);
+}
+
+/**
+ * Parallel composition: lens₁ ⊗ lens₂ (tensor product)
+ * Both lenses receive the same input independently.
+ * Output is a record: { [lens₁.name]: result₁, [lens₂.name]: result₂ }
+ */
+export function parallel(
+  name: string,
+  ...lenses: HolographicLens[]
+): HolographicLens {
+  const elements = lenses.map<LensElement>((l) => ({
+    id: `lens:${l.name}`,
+    kind: "hologram:Lens",
+    focus: async (input) => {
+      const result = await focusLens(l, input);
+      return result.output;
+    },
+  }));
+
+  // Parallel element: fans input to all children, collects outputs
+  const fan: LensElement = {
+    id: "__fan",
+    kind: "transform",
+    focus: async (input) => {
+      const results: Record<string, unknown> = {};
+      await Promise.all(
+        lenses.map(async (l, i) => {
+          const r = await elements[i].focus(input);
+          results[l.name] = r;
+        }),
+      );
+      return results;
+    },
+  };
+
+  return composeLens(name, [fan], { morphism: "transform" });
+}
+
+// ── DAG Topological Sort ───────────────────────────────────────────────────
+
+function dagSort(elements: readonly LensElement[], wires: readonly LensWire[]): string[] {
   const ids = elements.map((e) => e.id);
   const inDegree = new Map<string, number>(ids.map((id) => [id, 0]));
   const adj = new Map<string, string[]>(ids.map((id) => [id, []]));
 
   for (const w of wires) {
-    adj.get(w.from.element)!.push(w.to.element);
-    inDegree.set(w.to.element, (inDegree.get(w.to.element) ?? 0) + 1);
+    const fromId = w.from.split(".")[0];
+    const toId = w.to.split(".")[0];
+    if (ids.includes(fromId) && ids.includes(toId)) {
+      adj.get(fromId)!.push(toId);
+      inDegree.set(toId, (inDegree.get(toId) ?? 0) + 1);
+    }
   }
 
   const queue = ids.filter((id) => inDegree.get(id) === 0);
   const sorted: string[] = [];
 
   while (queue.length > 0) {
-    // Deterministic: sort lexicographically so same topology = same order
-    queue.sort();
+    queue.sort(); // deterministic: lexicographic tie-breaking
     const current = queue.shift()!;
     sorted.push(current);
     for (const next of adj.get(current) ?? []) {
@@ -161,183 +384,10 @@ function topoSort(elements: readonly LensElement[], wires: readonly LensWire[]):
 
   if (sorted.length !== ids.length) {
     throw new Error(
-      `[Holographic Lens] Cycle detected in wiring. A lens must be a DAG. ` +
-        `Sorted ${sorted.length} of ${ids.length} elements.`
+      `[Holographic Lens] Cycle detected. A lens must be a DAG. ` +
+        `Sorted ${sorted.length}/${ids.length} elements.`
     );
   }
 
   return sorted;
-}
-
-// ── Core API ───────────────────────────────────────────────────────────────
-
-/**
- * Compose a Holographic Lens from elements and wiring.
- *
- * This is the "assembly" step — like placing Lego blocks and snapping
- * them together. The result is a complete, validated lens definition.
- */
-export function composeLens(config: {
-  name: string;
-  version?: string;
-  elements: LensElement[];
-  wires: LensWire[];
-  input: LensPort[];
-  output: LensPort[];
-}): HolographicLens {
-  // Validate: all wire endpoints reference real elements and ports
-  const elementMap = new Map(config.elements.map((e) => [e.id, e]));
-
-  for (const w of config.wires) {
-    const fromEl = elementMap.get(w.from.element);
-    if (!fromEl) throw new Error(`Wire references unknown element: "${w.from.element}"`);
-    if (!fromEl.outputs.some((p) => p.name === w.from.port)) {
-      throw new Error(`Element "${w.from.element}" has no output port "${w.from.port}"`);
-    }
-    const toEl = elementMap.get(w.to.element);
-    if (!toEl) throw new Error(`Wire references unknown element: "${w.to.element}"`);
-    if (!toEl.inputs.some((p) => p.name === w.to.port)) {
-      throw new Error(`Element "${w.to.element}" has no input port "${w.to.port}"`);
-    }
-  }
-
-  // Validate DAG (will throw on cycle)
-  topoSort(config.elements, config.wires);
-
-  return {
-    "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-    "@type": "hologram:Lens",
-    name: config.name,
-    version: config.version ?? "1.0.0",
-    elements: config.elements,
-    wires: config.wires,
-    input: config.input,
-    output: config.output,
-  };
-}
-
-/**
- * Grind a lens — compute its content-addressed identity and hologram.
- *
- * "Grinding" is the optical term for shaping a lens to its final form.
- * After grinding, the lens has a permanent UOR identity that projects
- * through all 25+ standards: DID, ActivityPub, WebFinger, IPFS, Bitcoin…
- *
- * Same elements + same wiring + same version = same identity. Forever.
- */
-export async function grindLens(lens: HolographicLens): Promise<GroundLens> {
-  const manifest = toManifest(lens);
-  const proof = await singleProofHash(manifest);
-
-  const input: ProjectionInput = {
-    hashBytes: proof.hashBytes,
-    cid: proof.cid,
-    hex: proof.hashHex,
-  };
-  const hologram = project(input);
-
-  return { lens, proof, hologram };
-}
-
-/**
- * Focus a lens — execute the circuit on concrete input.
- *
- * "Focusing" is the optical act of passing light through a compound lens.
- * Each element transforms the beam in sequence (topological order).
- * The result is deterministic: same lens + same input = same output.
- *
- * @param lens     The Holographic Lens to execute.
- * @param input    Named input values matching the lens's input ports.
- * @returns        FocusResult with output values, execution trace, and lens CID.
- */
-export async function focusLens(
-  lens: HolographicLens,
-  input: Record<string, unknown>,
-): Promise<FocusResult> {
-  const order = topoSort(lens.elements, lens.wires);
-  const elementMap = new Map(lens.elements.map((e) => [e.id, e]));
-
-  // Data bus: element.port → value
-  const bus = new Map<string, unknown>();
-
-  // Seed external inputs into the bus
-  // Convention: external inputs are wired FROM a virtual "__input" element
-  for (const [key, value] of Object.entries(input)) {
-    bus.set(`__input.${key}`, value);
-  }
-
-  // Also seed wires from __input
-  for (const w of lens.wires) {
-    if (w.from.element === "__input") {
-      bus.set(`__input.${w.from.port}`, input[w.from.port]);
-    }
-  }
-
-  const trace: string[] = [];
-
-  for (const id of order) {
-    const element = elementMap.get(id)!;
-
-    // Gather inputs for this element from the bus
-    const elementInputs: Record<string, unknown> = {};
-    for (const w of lens.wires) {
-      if (w.to.element === id) {
-        elementInputs[w.to.port] = bus.get(`${w.from.element}.${w.from.port}`);
-      }
-    }
-
-    // Execute the element's pure function
-    const result = await element.focus(elementInputs);
-
-    // Write outputs to the bus
-    for (const [port, value] of Object.entries(result)) {
-      bus.set(`${id}.${port}`, value);
-    }
-
-    trace.push(id);
-  }
-
-  // Collect final outputs from the bus
-  const output: Record<string, unknown> = {};
-  for (const w of lens.wires) {
-    if (w.to.element === "__output") {
-      output[w.to.port] = bus.get(`${w.from.element}.${w.from.port}`);
-    }
-  }
-
-  // Also collect from output port declarations if directly named
-  for (const p of lens.output) {
-    if (!(p.name in output)) {
-      // Try to find the last element that outputs this port name
-      for (const w of lens.wires) {
-        if (w.to.element === "__output" && w.to.port === p.name) {
-          output[p.name] = bus.get(`${w.from.element}.${w.from.port}`);
-        }
-      }
-    }
-  }
-
-  const proof = await singleProofHash(toManifest(lens));
-
-  return { output, trace, lensCid: proof.cid };
-}
-
-/**
- * Nest a lens inside another lens as a single element.
- *
- * This is composition: Lens A contains Lens B as one of its elements.
- * The nested lens's focus function calls focusLens recursively.
- * The outer lens's identity reflects the inner lens's topology.
- */
-export function nestLens(inner: HolographicLens): LensElement {
-  return {
-    id: `lens:${inner.name}`,
-    kind: "hologram:Lens",
-    inputs: [...inner.input],
-    outputs: [...inner.output],
-    focus: async (inputs) => {
-      const result = await focusLens(inner, inputs);
-      return result.output;
-    },
-  };
 }
