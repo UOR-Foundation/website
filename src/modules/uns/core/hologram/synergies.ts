@@ -1375,6 +1375,29 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
     ],
     capability: "Observability: instrument (OTel) → collect (Prometheus) → visualize (Grafana) → alert (CloudEvents) → orchestrate (K8s)",
   },
+
+  // ─── Chain 85: Quantum-to-Agent Inference Pipeline ────────────────────
+  {
+    name: "Quantum-to-Agent Inference Pipeline",
+    description: "Quantum circuits → hybrid QML → classical ML models → agent tool invocation → auditable inference",
+    projections: [
+      "openqasm3", "qiskit", "cirq", "pennylane", "blackbird",
+      "onnx", "safetensors",
+      "mcp-tool", "a2a", "a2a-task", "oasf",
+    ],
+    bridges: [
+      { type: "encoding", description: "OpenQASM 3 defines portable quantum circuits consumed by all SDKs", sharedComponent: "circuit source hash" },
+      { type: "stack", description: "Qiskit and Cirq compile and optimize circuits for gate-model hardware", sharedComponent: "compiled circuit hash" },
+      { type: "protocol", description: "PennyLane computes quantum gradients bridging variational circuits to classical optimizers", sharedComponent: "variational parameter hash" },
+      { type: "encoding", description: "Blackbird encodes photonic CV circuits for Xanadu hardware via PennyLane plugins", sharedComponent: "photonic program hash" },
+      { type: "protocol", description: "ONNX serializes the classical component of hybrid QML models for cross-framework deployment", sharedComponent: "model graph hash" },
+      { type: "encoding", description: "SafeTensors stores trained model weights with zero-copy memory safety", sharedComponent: "weight tensor hash" },
+      { type: "protocol", description: "MCP tools expose quantum-enhanced inference as callable agent capabilities", sharedComponent: "tool invocation hash" },
+      { type: "stack", description: "A2A protocol enables agent-to-agent delegation of quantum workloads", sharedComponent: "task delegation hash" },
+      { type: "protocol", description: "OASF registers quantum-capable agents in discovery indexes", sharedComponent: "agent capability hash" },
+    ],
+    capability: "Quantum-AI bridge: circuits (OpenQASM 3) → SDKs (Qiskit/Cirq) → QML (PennyLane/Blackbird) → models (ONNX/SafeTensors) → agents (MCP/A2A/OASF)",
+  },
 ];
 
 // ── Cluster Definitions (projections grouped by shared component) ──────────
@@ -1401,7 +1424,11 @@ export const CLUSTERS: Readonly<Record<string, readonly string[]>> = {
   "Semantic web": ["jsonld", "solid", "schema-org", "crdt", "cbor-ld"],
   "Privacy layers": ["sd-jwt", "gordian-envelope", "zcash-memo", "fpp-rdid"],
 
-  // ── NEW: Programming language clusters ────────────────────────────────
+  // ── Quantum computing clusters ────────────────────────────────────────
+  "Quantum circuit languages": ["openqasm3", "openqasm2", "quil", "qsharp", "quipper", "blackbird"],
+  "Quantum SDKs (gate-model)": ["qiskit", "cirq", "braket-sdk", "pyquil", "pytket"],
+  "Quantum-ML bridge": ["pennylane", "onnx", "safetensors", "mcp-tool"],
+  "Quantum IR/pulse": ["qir", "openpulse", "qua"],
   "JVM bytecode target": ["java-class", "kotlin", "scala", "groovy", "clojure"],
   "Systems languages (native)": ["c-unit", "cpp-unit", "rust-crate", "zig", "nim", "d-lang", "go-module"],
   "Safety-critical languages": ["ada", "fortran", "pascal", "vhdl", "verilog", "systemverilog"],
