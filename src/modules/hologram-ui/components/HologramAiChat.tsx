@@ -31,7 +31,8 @@ import {
   getSourceCount,
   distillKnowledge,
 } from "@/modules/hologram-ui/skill-knowledge-registry";
-import { PHASES } from "@/modules/hologram-ui/sovereign-creator";
+import { PHASES, computeBalance, PHASE_ORDER, type TriadicBalance } from "@/modules/hologram-ui/sovereign-creator";
+import { AlertTriangle } from "lucide-react";
 import {
   getAiEngine,
   RECOMMENDED_MODELS,
@@ -739,7 +740,67 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                   {selectedPersona.description}
                 </p>
 
-                {/* Skill chips for selected persona */}
+                {/* ── Triadic Coherence Indicator ─────────────── */}
+                {(() => {
+                  const unlocked = AGENT_PERSONAS.filter((p) => p.minStage <= creatorStage);
+                  const counts = { learn: 0, work: 0, play: 0 };
+                  for (const p of unlocked) counts[p.phase]++;
+                  const total = counts.learn + counts.work + counts.play;
+                  if (total === 0) return null;
+                  const bal: TriadicBalance = {
+                    learn: counts.learn / total,
+                    work: counts.work / total,
+                    play: counts.play / total,
+                  };
+                  const report = computeBalance(bal);
+                  return (
+                    <div
+                      className="mt-3 px-3 py-2.5 rounded-lg transition-all duration-500"
+                      style={{
+                        background: report.coherent
+                          ? "hsla(38, 30%, 30%, 0.08)"
+                          : "hsla(25, 40%, 30%, 0.12)",
+                        border: `1px solid ${report.coherent ? "hsla(38, 30%, 40%, 0.1)" : "hsla(25, 40%, 40%, 0.15)"}`,
+                      }}
+                    >
+                      {/* Phase balance bars */}
+                      <div className="flex items-center gap-2 mb-1.5">
+                        {PHASE_ORDER.map((phase) => {
+                          const phaseDef = PHASES[phase];
+                          const frac = bal[phase];
+                          return (
+                            <div key={phase} className="flex-1 flex items-center gap-1.5">
+                              <span className="text-[9px]" style={{ color: phaseDef.color }}>{phaseDef.icon}</span>
+                              <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: "hsla(30, 10%, 30%, 0.3)" }}>
+                                <div
+                                  className="h-full rounded-full transition-all duration-700 ease-out"
+                                  style={{
+                                    width: `${Math.round(frac * 100)}%`,
+                                    background: phaseDef.color,
+                                    opacity: frac < 0.15 ? 0.4 : 0.85,
+                                  }}
+                                />
+                              </div>
+                              <span className="text-[8px] tabular-nums w-5 text-right" style={{ color: P.textDimmer }}>
+                                {counts[phase]}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {/* Guidance message */}
+                      <div className="flex items-start gap-1.5">
+                        {!report.coherent && (
+                          <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-px" style={{ color: "hsl(38, 50%, 55%)" }} />
+                        )}
+                        <p className="text-[9px] leading-relaxed" style={{ color: report.coherent ? P.textDimmer : P.textDim }}>
+                          {report.guidance}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div className="mt-3">
                   <p className="text-[10px] tracking-widest uppercase text-center mb-2" style={{ color: P.textDimmer }}>
                     Available skills
