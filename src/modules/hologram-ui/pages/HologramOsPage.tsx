@@ -25,6 +25,8 @@ import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar"
 import HologramFrame, { HologramViewport, OverlayFrame, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
 import FrameDebugOverlay from "@/modules/hologram-ui/components/FrameDebugOverlay";
+import LayerNavHUD from "@/modules/hologram-ui/components/LayerNavHUD";
+import { useLayerNav } from "@/modules/hologram-ui/hooks/useLayerNav";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 import { useTriadicActivity } from "@/modules/hologram-ui/hooks/useTriadicActivity";
@@ -144,6 +146,7 @@ export default function HologramOsPage() {
   const ctx = useContextProjection();
   const contentTilt = useFrameTilt({ maxTilt: 2.5, smoothing: 0.06 });
   const canvasTilt = useFrameTilt({ maxTilt: 1.2, smoothing: 0.04, invert: true, maxShift: 12 });
+  const layerNav = useLayerNav();
 
   // Derive top interests for contextual suggestions (max 3)
   const contextHints = useMemo(() => {
@@ -179,6 +182,7 @@ export default function HologramOsPage() {
     <HologramViewport className="h-screen bg-background">
       {/* Depth-shift trigger: recede lower frames when overlays open */}
       <DepthShiftSync active={chatOpen || claimOpen} />
+      <LayerNavHUD nav={layerNav} />
 
       <div className="flex h-full overflow-hidden">
         {/* ════════════════════════════════════════════════════════════════
@@ -210,7 +214,7 @@ export default function HologramOsPage() {
           {/* ══════════════════════════════════════════════════════════
            *  FRAME 0 — Canvas Layer (background, imagery, veils)
            * ══════════════════════════════════════════════════════════ */}
-          <HologramFrame layer={0} label="canvas" interactive={false} transform={canvasTilt}>
+          <HologramFrame layer={0} label="canvas" interactive={false} transform={canvasTilt} opacity={layerNav.layerOpacity(0)} style={{ transform: `scale(${layerNav.layerScale(0)})`, transition: "opacity 0.5s, transform 0.5s" }}>
             {/* Solid background for white/dark modes */}
             <div
               className="absolute inset-0 transition-all duration-1000 ease-in-out"
@@ -246,7 +250,7 @@ export default function HologramOsPage() {
            *  Background mode toggle, Day progress ring
            *  These remain visible regardless of what opens above
            * ══════════════════════════════════════════════════════════ */}
-          <HologramFrame layer={1} label="chrome" interactive={false}>
+          <HologramFrame layer={1} label="chrome" interactive={false} opacity={layerNav.layerOpacity(1)} style={{ transform: `scale(${layerNav.layerScale(1)})`, transition: "opacity 0.5s, transform 0.5s" }}>
             {/* Background Mode Toggle — top right */}
             <div
               className="absolute top-[3vh] right-[3vw] animate-fade-in transition-all duration-700"
@@ -304,7 +308,7 @@ export default function HologramOsPage() {
            *  FRAME 2 — Content Layer (welcome text, CTA, pills)
            *  The primary interactive surface for the welcome screen
            * ══════════════════════════════════════════════════════════ */}
-          <HologramFrame layer={2} label="content" interactive={false} transform={contentTilt}>
+          <HologramFrame layer={2} label="content" interactive={false} transform={contentTilt} opacity={layerNav.layerOpacity(2)} style={{ transform: `scale(${layerNav.layerScale(2)})`, transition: "opacity 0.5s, transform 0.5s" }}>
             {/* Logo — top center */}
             <div
               className="absolute top-0 left-0 right-0 flex justify-center pt-[3vh] animate-fade-in transition-all duration-700"
