@@ -64,7 +64,8 @@ export default function AttentionToggle() {
     >
       {/* Focus label */}
       <span
-        className="text-[8px] tracking-[0.3em] uppercase w-[38px] text-right"
+        className="text-[8px] tracking-[0.3em] uppercase w-[38px] text-right cursor-pointer"
+        onClick={() => setAperture(0.1)}
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
           color: `hsla(38, 15%, 80%, ${0.2 + labelOpacityFocus * 0.4})`,
@@ -117,7 +118,8 @@ export default function AttentionToggle() {
 
       {/* Diffuse label */}
       <span
-        className="text-[8px] tracking-[0.3em] uppercase w-[46px]"
+        className="text-[8px] tracking-[0.3em] uppercase w-[46px] cursor-pointer"
+        onClick={() => setAperture(0.9)}
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
           color: `hsla(38, 15%, 80%, ${0.2 + labelOpacityDiffuse * 0.3})`,
