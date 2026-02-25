@@ -44,8 +44,11 @@ describe("Bidirectional Lens — dehydrate / rehydrate", () => {
   const modalities: RefractionModality[] = [
     "nquads",
     "jsonld",
+    "jsonld-framed",
     "compact-json",
     "turtle",
+    "rdf-xml",
+    "graphql-sdl",
     "hologram",
     "identity",
   ];
