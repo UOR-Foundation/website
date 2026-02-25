@@ -53,3 +53,13 @@ export type {
   ReasoningMode, DeductiveResult, InductiveResult, AbductiveResult,
   AbductiveHypothesis, ReasoningCycle,
 } from "./reasoning";
+
+// ── v2 Abductive Loop ────────────────────────────────────────────────────
+export {
+  neuralToObservable, symbolicToObservable, measureCurvature,
+  hypothesisToConstraint, abductiveLoop, inferenceToObservation,
+} from "./abductive-loop";
+export type {
+  NeuralObservation, SymbolicPrediction, ObservableRegistration,
+  AbductiveIteration, AbductiveLoopResult,
+} from "./abductive-loop";
