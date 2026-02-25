@@ -1,66 +1,131 @@
 /**
- * AttentionToggle — Focus ↔ Diffuse Toggle Near the Day Progress Ring
- * ═══════════════════════════════════════════════════════════════════
+ * AttentionToggle — Focus ↔ Diffuse Continuous Slider
+ * ════════════════════════════════════════════════════
  *
- * A minimal, elegant toggle that sits near the ring. Two states
- * represented by a single pill with a sliding indicator.
+ * A minimal, elegant slider that sits near the ring. Dragging moves
+ * smoothly across the 0–1 aperture spectrum. Labels fade between
+ * "Focus" and "Diffuse" based on position.
  *
  * @module hologram-ui/components/AttentionToggle
  */
 
+import { useCallback, useRef, useState } from "react";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 
+const TRACK_W = 48;
+const THUMB_R = 5;
+
 export default function AttentionToggle() {
-  const { preset, toggle } = useAttentionMode();
-  const isFocus = preset === "focus";
+  const { aperture, setAperture, preset } = useAttentionMode();
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const updateFromPointer = useCallback(
+    (clientX: number) => {
+      const track = trackRef.current;
+      if (!track) return;
+      const rect = track.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      setAperture(ratio);
+    },
+    [setAperture],
+  );
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      setDragging(true);
+      updateFromPointer(e.clientX);
+    },
+    [updateFromPointer],
+  );
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!dragging) return;
+      updateFromPointer(e.clientX);
+    },
+    [dragging, updateFromPointer],
+  );
+
+  const onPointerUp = useCallback(() => setDragging(false), []);
+
+  // Derived visual values
+  const thumbLeft = aperture * (TRACK_W - THUMB_R * 2);
+  const glowIntensity = 0.15 + aperture * 0.25;
+  const labelOpacityFocus = Math.max(0, 1 - aperture * 2.2);
+  const labelOpacityDiffuse = Math.max(0, (aperture - 0.45) * 2.2);
 
   return (
-    <button
-      onClick={toggle}
-      className="group flex items-center gap-2 transition-all duration-700"
-      aria-label={`Switch to ${isFocus ? "diffuse" : "focus"} mode`}
-      title={isFocus ? "Focus · Deep, distraction-free" : "Diffuse · Open, receptive"}
+    <div
+      className="flex items-center gap-2.5 select-none touch-none"
+      aria-label={`Attention: ${Math.round(aperture * 100)}% — ${preset}`}
     >
-      {/* Label */}
+      {/* Focus label */}
       <span
-        className="text-[8px] tracking-[0.3em] uppercase transition-all duration-700"
+        className="text-[8px] tracking-[0.3em] uppercase w-[38px] text-right"
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
-          color: isFocus
-            ? "hsla(38, 15%, 80%, 0.5)"
-            : "hsla(38, 15%, 80%, 0.35)",
+          color: `hsla(38, 15%, 80%, ${0.2 + labelOpacityFocus * 0.4})`,
+          transition: dragging ? "none" : "color 0.5s ease",
         }}
       >
-        {isFocus ? "Focus" : "Diffuse"}
+        Focus
       </span>
 
-      {/* Pill */}
+      {/* Track */}
       <div
-        className="relative w-7 h-[14px] rounded-full transition-all duration-700"
+        ref={trackRef}
+        className="relative cursor-pointer"
         style={{
-          background: isFocus
-            ? "hsla(38, 20%, 40%, 0.15)"
-            : "hsla(38, 20%, 50%, 0.12)",
-          border: `1px solid ${isFocus
-            ? "hsla(38, 25%, 55%, 0.2)"
-            : "hsla(38, 15%, 60%, 0.12)"
-          }`,
+          width: TRACK_W,
+          height: 14,
+          borderRadius: 7,
+          background: `linear-gradient(90deg, hsla(38, 25%, 40%, 0.18), hsla(38, 20%, 50%, 0.12))`,
+          border: `1px solid hsla(38, 20%, 55%, ${0.1 + aperture * 0.1})`,
+          transition: dragging ? "none" : "border-color 0.5s ease",
         }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
       >
-        {/* Sliding dot */}
+        {/* Filled portion */}
         <div
-          className="absolute top-[2px] w-[8px] h-[8px] rounded-full transition-all duration-700 ease-in-out"
+          className="absolute top-0 left-0 h-full rounded-full pointer-events-none"
           style={{
-            left: isFocus ? "2px" : "15px",
-            background: isFocus
-              ? "hsla(38, 35%, 65%, 0.8)"
-              : "hsla(38, 25%, 60%, 0.5)",
-            boxShadow: isFocus
-              ? "0 0 6px 1px hsla(38, 40%, 60%, 0.3)"
-              : "0 0 4px 1px hsla(38, 25%, 55%, 0.15)",
+            width: `${aperture * 100}%`,
+            background: `hsla(38, 30%, 55%, ${0.06 + aperture * 0.08})`,
+            transition: dragging ? "none" : "width 0.5s ease, background 0.5s ease",
+          }}
+        />
+
+        {/* Thumb */}
+        <div
+          className="absolute top-[2px] rounded-full pointer-events-none"
+          style={{
+            width: THUMB_R * 2,
+            height: THUMB_R * 2,
+            left: thumbLeft,
+            background: `hsla(38, 35%, 65%, ${0.5 + aperture * 0.35})`,
+            boxShadow: `0 0 ${4 + aperture * 4}px ${1 + aperture}px hsla(38, 40%, 60%, ${glowIntensity})`,
+            transition: dragging ? "none" : "left 0.5s ease, background 0.5s ease, box-shadow 0.5s ease",
           }}
         />
       </div>
-    </button>
+
+      {/* Diffuse label */}
+      <span
+        className="text-[8px] tracking-[0.3em] uppercase w-[46px]"
+        style={{
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          color: `hsla(38, 15%, 80%, ${0.2 + labelOpacityDiffuse * 0.3})`,
+          transition: dragging ? "none" : "color 0.5s ease",
+        }}
+      >
+        Diffuse
+      </span>
+    </div>
   );
 }
