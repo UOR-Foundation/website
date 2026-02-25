@@ -11,14 +11,10 @@
  */
 import { describe, it, expect } from "vitest";
 import {
-  residueConstraint,
-  carryConstraint,
-  depthConstraint,
-  compositeConstraint,
-  applyConstraint,
-  filterByConstraint,
-} from "@/modules/ring-core/constraint";
-import { createFiberBudget, freeCount } from "@/modules/ring-core/fiber-budget";
+  residueConstraint, carryConstraint, depthConstraint,
+  compositeConstraint, applyConstraint, filterByConstraint,
+  createFiberBudget, freeCount,
+} from "@/modules/ring-core";
 
 describe("Phase 4: Constraint Algebra", () => {
   // ── T4.1: ResidueConstraint ─────────────────────────────────────────────

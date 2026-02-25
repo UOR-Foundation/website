@@ -16,16 +16,16 @@ import {
   createAttestation,
   createHologramState,
 } from "@/modules/hologram-os/runtime";
-import { createFiberBudget, pinFiber, resolution } from "@/modules/ring-core/fiber-budget";
-import { resolve } from "@/modules/ring-core/resolver";
-import { residueConstraint, depthConstraint } from "@/modules/ring-core/constraint";
-import { involutionCertificate } from "@/modules/ring-core/certificate";
-import { Q0 as makeQ0 } from "@/modules/ring-core/ring";
+import {
+  createFiberBudget, pinFiber, resolution,
+  resolve,
+  residueConstraint, depthConstraint,
+  involutionCertificate,
+  Q0 as makeQ0,
+  stratum, hammingMetric, curvature,
+} from "@/modules/ring-core";
 
 const Q0 = makeQ0();
-import {
-  stratum, hammingMetric, curvature,
-} from "@/modules/ring-core/observable-factory";
 
 describe("Phase 6: Hologram OS Integration", () => {
 

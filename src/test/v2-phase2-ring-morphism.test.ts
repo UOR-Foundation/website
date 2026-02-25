@@ -10,9 +10,8 @@
  * T2.7: Cross-quantum: all 10 ops work at Q0/Q1/Q2
  */
 import { describe, it, expect } from "vitest";
-import { UORRing, Q0, Q1, Q2, fromBytes } from "@/modules/ring-core/ring";
+import { UORRing, Q0, Q1, Q2, fromBytes, compose, verifyCriticalComposition, verifyCriticalCompositionAll } from "@/modules/ring-core";
 import { OP_TABLE, OP_META, verifyGeometryAlignment, dihedralOrder } from "@/modules/ring-core/op-meta";
-import { compose, verifyCriticalComposition, verifyCriticalCompositionAll } from "@/modules/ring-core/compose";
 import { OP_GEOMETRY, CRITICAL_IDENTITY, D2N } from "@/types/uor-foundation/kernel/op";
 import { CRITICAL_COMPOSITION } from "@/types/uor-foundation/user/morphism";
 import type { Isometry, Transform } from "@/types/uor-foundation/user/morphism";

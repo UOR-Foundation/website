@@ -52,7 +52,7 @@ import {
   invokeFunction as executorInvoke,
   verifyExecution as executorVerify,
   type ExecutionResult,
-  type ComputationTrace,
+  type ExecutorTrace,
 } from "../compute/executor";
 import type { ComputeFunction } from "../compute/registry";
 import {
