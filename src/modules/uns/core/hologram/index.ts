@@ -280,3 +280,16 @@ export type {
   ShellEffects,
   ShellState,
 } from "./vshell";
+
+// ── GPU Device (/dev/gpu) ─────────────────────────────────────────────────
+// WebGPU compute and render as a virtual device in the Hologram OS.
+// Content-addressed shaders, cached pipelines, graceful CPU fallback.
+
+export { HologramGpu, getHologramGpu, WGSL_SHADERS } from "./gpu";
+export type {
+  GpuStatus,
+  GpuDeviceInfo,
+  GpuComputeResult,
+  GpuBenchmarkResult,
+  ShaderName,
+} from "./gpu";

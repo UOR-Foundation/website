@@ -28,6 +28,7 @@ import {
 } from "./universal-ingest";
 import { DIRECTIONS } from "./polytree";
 import type { ProjectionInput } from "./index";
+import { getHologramGpu, type HologramGpu, type GpuBenchmarkResult } from "./gpu";
 
 // ── Shell Result Types ────────────────────────────────────────────────────
 
@@ -72,6 +73,8 @@ export interface ShellEffects {
   spawnedBlueprint?: { pid: string; blueprint: ExecutableBlueprint };
   /** Number of items persisted (for save/load feedback). */
   persistedCount?: number;
+  /** GPU benchmark result. */
+  gpuBenchmark?: GpuBenchmarkResult;
 }
 
 // ── Shell State ───────────────────────────────────────────────────────────
@@ -108,6 +111,7 @@ const COMMANDS: Record<string, CommandDef> = {
   history: { usage: "history",                 description: "Show command history" },
   save:    { usage: "save",                    description: "Save all processes to disk" },
   load:    { usage: "load",                    description: "Restore saved processes" },
+  gpu:     { usage: "gpu <sub>",               description: "GPU device (info|bench|matmul|relu)" },
   clear:   { usage: "clear",                   description: "Clear terminal" },
 };
 
@@ -258,6 +262,10 @@ export class VShell {
 
         case "load":
           await this.cmdLoad(out, info, err, effects);
+          break;
+
+        case "gpu":
+          await this.cmdGpu(args, out, info, err, effects);
           break;
 
         default:
@@ -525,6 +533,78 @@ export class VShell {
       out(`✓ Restored ${pids.length} process(es).`);
     } else {
       info("No saved sessions found.");
+    }
+  }
+
+  // ── GPU Commands ────────────────────────────────────────────────────────
+
+  private async cmdGpu(
+    args: string[], out: (t: string) => void, info: (t: string) => void,
+    err: (t: string) => void, effects: ShellEffects,
+  ): Promise<void> {
+    const sub = args[0] ?? "info";
+    const gpu = getHologramGpu();
+
+    switch (sub) {
+      case "info": {
+        const devInfo = await gpu.init();
+        out("── GPU Device (/dev/gpu) ─────────────────────");
+        out(`  Status:       ${devInfo.status}`);
+        out(`  Adapter:      ${devInfo.adapterName}`);
+        out(`  Vendor:       ${devInfo.vendor}`);
+        out(`  Architecture: ${devInfo.architecture}`);
+        out(`  Max Buffer:   ${(devInfo.maxBufferSize / 1048576).toFixed(0)} MB`);
+        out(`  Workgroup:    ${devInfo.maxWorkgroupSizeX}×${devInfo.maxWorkgroupSizeY}×${devInfo.maxWorkgroupSizeZ}`);
+        out(`  Bind Groups:  ${devInfo.maxBindGroups}`);
+        out("──────────────────────────────────────────────");
+        break;
+      }
+
+      case "bench": {
+        info("Running GPU benchmark…");
+        await gpu.init();
+        if (!gpu.isReady) { err("GPU unavailable — cannot benchmark."); return; }
+        const bench = await gpu.benchmark();
+        out("── GPU Benchmark Results ─────────────────────");
+        out(`  MatMul (128×128): ${bench.matmulGflops} GFLOPS`);
+        out(`  Bandwidth:        ${bench.bandwidthGBps} GB/s`);
+        out(`  Shader Compile:   ${bench.compileTimeMs} ms`);
+        out(`  Total Time:       ${bench.totalTimeMs} ms`);
+        out("──────────────────────────────────────────────");
+        effects.gpuBenchmark = bench;
+        break;
+      }
+
+      case "matmul": {
+        const size = parseInt(args[1] ?? "64", 10);
+        info(`Running ${size}×${size} matrix multiply on GPU…`);
+        await gpu.init();
+        const a = new Float32Array(size * size);
+        const b = new Float32Array(size * size);
+        for (let i = 0; i < a.length; i++) { a[i] = Math.random(); b[i] = Math.random(); }
+        const r = await gpu.matmul(a, b, size, size, size);
+        out(`✓ MatMul ${size}×${size}: ${r.timeMs} ms (${r.gflops.toFixed(2)} GFLOPS)`);
+        out(`  GPU accelerated: ${gpu.isReady}`);
+        break;
+      }
+
+      case "relu": {
+        const len = parseInt(args[1] ?? "1024", 10);
+        info(`Running ReLU on ${len} elements…`);
+        await gpu.init();
+        const input = new Float32Array(len);
+        for (let i = 0; i < len; i++) input[i] = Math.random() * 2 - 1;
+        const start = performance.now();
+        const result = await gpu.relu(input);
+        const ms = Math.round((performance.now() - start) * 100) / 100;
+        const negCount = Array.from(result).filter(v => v === 0).length;
+        out(`✓ ReLU: ${ms} ms — ${negCount}/${len} values clamped to 0`);
+        break;
+      }
+
+      default:
+        err(`Unknown gpu subcommand: ${sub}`);
+        info("  Usage: gpu info | gpu bench | gpu matmul [size] | gpu relu [size]");
     }
   }
 }
