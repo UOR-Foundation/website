@@ -23,6 +23,7 @@ import {
 import type { LensBlueprint } from "@/modules/uns/core/hologram/lens-blueprint";
 import { MEMORY_CRISIS_BLUEPRINT } from "@/modules/uns/core/hologram/lenses/memory-crisis";
 import { PROMPT_INJECTION_SHIELD_BLUEPRINT } from "@/modules/uns/core/hologram/lenses/prompt-injection-shield";
+import { SECURE_MEMORY_BLUEPRINT } from "@/modules/uns/core/hologram/lenses/secure-memory";
 
 // ── Copy button ────────────────────────────────────────────────────────────
 
@@ -250,6 +251,14 @@ export default function BlueprintLibrary({
           isBuiltIn
           builtInBlueprint={PROMPT_INJECTION_SHIELD_BLUEPRINT}
           icon={<IconShield size={14} className="text-amber-500 mt-0.5 shrink-0" />}
+        />
+
+        {/* Built-in: Secure Memory (composed) */}
+        <BlueprintCard
+          onLoad={onLoadBlueprint}
+          isBuiltIn
+          builtInBlueprint={SECURE_MEMORY_BLUEPRINT}
+          icon={<IconShield size={14} className="text-primary mt-0.5 shrink-0" />}
         />
 
         {/* Saved blueprints */}

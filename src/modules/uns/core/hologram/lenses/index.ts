@@ -17,3 +17,8 @@ export {
   PROMPT_INJECTION_SHIELD_BLUEPRINT,
   createPromptInjectionShieldBlueprint,
 } from "./prompt-injection-shield";
+
+export {
+  SECURE_MEMORY_BLUEPRINT,
+  createSecureMemoryBlueprint,
+} from "./secure-memory";
