@@ -9,7 +9,7 @@
  * generous whitespace, ultra-light serif, barely-there chrome.
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
@@ -21,6 +21,7 @@ import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 import { useTriadicActivity } from "@/modules/hologram-ui/hooks/useTriadicActivity";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 import { useFocusJournal } from "@/modules/hologram-ui/hooks/useFocusJournal";
+import { useContextProjection } from "@/modules/hologram-ui/hooks/useContextProjection";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -122,6 +123,25 @@ export default function HologramOsPage() {
   const triadicActivity = useTriadicActivity();
   const attention = useAttentionMode();
   const [replayGuide, setReplayGuide] = useState(0);
+  const ctx = useContextProjection();
+
+  // Derive top interests for contextual suggestions (max 3)
+  const contextHints = useMemo(() => {
+    const entries = Object.entries(ctx.profile.interests);
+    if (entries.length === 0) return [];
+    return entries
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3)
+      .map(([tag]) => tag.replace(/-/g, " "));
+  }, [ctx.profile.interests]);
+
+  // Derive dominant phase
+  const dominantPhase = useMemo(() => {
+    const { learn, work, play } = ctx.profile.phaseAffinity;
+    if (learn > work && learn > play) return "learning";
+    if (work > learn && work > play) return "building";
+    return "exploring";
+  }, [ctx.profile.phaseAffinity]);
 
   const goConsole = useCallback(() => {
     setDeparting(true);
@@ -276,16 +296,32 @@ export default function HologramOsPage() {
                   fontSize: "clamp(36px, 4.5vw, 76px)",
                 }}
               >
-                Welcome home,
+                Welcome{contextHints.length > 0 ? " back" : " home"},
                 <br />
                 {welcomeName}
               </h1>
+
+              {/* Context-aware subtitle — appears when user has interests */}
+              {contextHints.length > 0 && (
+                <p
+                  className="animate-fade-in transition-colors duration-700"
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    color: bgMode === "white" ? "hsla(30, 8%, 40%, 0.5)" : "hsla(38, 15%, 80%, 0.45)",
+                    fontWeight: 300,
+                    fontSize: "clamp(10px, 0.7vw, 12px)",
+                    letterSpacing: "0.15em",
+                  }}
+                >
+                  Continuing {dominantPhase}
+                </p>
+              )}
 
               {/* Hedosophia-inspired vertical line divider */}
               <div className="flex justify-center pt-[1.5vh] pb-[0.5vh]">
                 <div
                   className="w-px overflow-hidden"
-                  style={{ height: "clamp(48px, 5.5vh, 80px)" }}
+                  style={{ height: contextHints.length > 0 ? "clamp(32px, 3.5vh, 52px)" : "clamp(48px, 5.5vh, 80px)" }}
                 >
                   <div
                     className="w-full"
@@ -301,6 +337,33 @@ export default function HologramOsPage() {
                   />
                 </div>
               </div>
+
+              {/* Context interest pills — whisper-thin, barely there */}
+              {contextHints.length > 0 && (
+                <div className="flex items-center justify-center gap-2 animate-fade-in pb-[1vh]">
+                  {contextHints.map((hint) => (
+                    <span
+                      key={hint}
+                      className="transition-all duration-700"
+                      style={{
+                        fontFamily: "'DM Sans', system-ui, sans-serif",
+                        fontSize: "clamp(8px, 0.6vw, 10px)",
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase" as const,
+                        fontWeight: 300,
+                        color: bgMode === "white" ? "hsla(30, 8%, 40%, 0.4)" : "hsla(38, 15%, 80%, 0.35)",
+                        padding: "3px 10px",
+                        borderRadius: "100px",
+                        border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 40%, 0.1)" : "hsla(38, 15%, 70%, 0.1)"}`,
+                        background: bgMode === "white" ? "hsla(30, 8%, 90%, 0.3)" : "hsla(30, 8%, 20%, 0.2)",
+                        backdropFilter: "blur(8px)",
+                      }}
+                    >
+                      {hint}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               <div>
                 <button
