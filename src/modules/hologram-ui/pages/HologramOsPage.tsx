@@ -24,6 +24,7 @@ import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import HologramFrame, { HologramViewport, OverlayFrame, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
+import FrameDebugOverlay from "@/modules/hologram-ui/components/FrameDebugOverlay";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 import { useTriadicActivity } from "@/modules/hologram-ui/hooks/useTriadicActivity";
@@ -544,6 +545,7 @@ export default function HologramOsPage() {
         replayGuideKey={replayGuide}
         initialPrompt={chatPrompt}
       />
+      <FrameDebugOverlay />
     </HologramViewport>
   );
 }
