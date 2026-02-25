@@ -42,7 +42,7 @@ const DevelopersPage = () => (
     <div className="dark bg-section-dark text-section-dark-foreground min-h-screen">
 
       {/* ━━ Hero ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="pt-[25px] pb-14 md:pt-52 md:pb-20">
+      <section className="pt-[18px] pb-14 md:pt-52 md:pb-20">
         <div className="container max-w-6xl">
           <nav className="flex items-center gap-5 text-sm mb-8">
             <Link to="/developers/directory" className="text-foreground/70 hover:text-foreground underline underline-offset-4 decoration-border/60 transition-colors">Directory</Link>
