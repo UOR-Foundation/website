@@ -17,6 +17,7 @@ import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
+import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -189,6 +190,11 @@ export default function HologramOsPage() {
               Hologram AI
             </span>
           </button>
+        </div>
+
+        {/* Day Progress Ring — bottom right */}
+        <div className="absolute bottom-8 right-8 z-20 animate-fade-in">
+          <DayProgressRing />
         </div>
       </div>
 
