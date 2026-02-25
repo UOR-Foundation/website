@@ -1,100 +1,40 @@
 /**
- * UOR v2.0.0 — Hologram OS Runtime
+ * UOR v2.0.0 — Hologram OS Runtime Bridge
+ * ════════════════════════════════════════
  *
- * Maps v2 foundation types to Hologram OS abstractions:
+ * The thinnest possible bridge between the v2 algebraic substrate
+ * and the Hologram Engine. Rather than wrapping v2 types in new types,
+ * this module provides factory functions that project v2 primitives
+ * directly into the engine's existing abstractions.
  *
- *   ComputationTrace  →  Process  (executable unit)
- *   Context + Binding  →  FileSystem  (directory + files)
- *   Observable         →  Panel  (dashboard metric)
- *   FiberBudget        →  ProgressTracker
- *   Certificate        →  Attestation
+ * Key simplification (v2.0.0):
+ *   - Delegates to HologramEngine for process management
+ *   - Uses FiberBudget directly (no ProgressTracker wrapper)
+ *   - Observable → Panel mapping is a pure projection
+ *   - Certificate → Attestation is a pure projection
+ *   - Context/Binding → engine FileDescriptor mapping is native
  *
- * Pure data. No UI. No side effects. The thinnest possible bridge
- * between the algebraic substrate and the Hologram rendering layer.
+ * The HologramState is the unified snapshot that combines:
+ *   - EngineSnapshot (processes, ticks)
+ *   - FiberBudget (resolution progress)
+ *   - Panels (observable projections)
+ *   - Attestations (certificate projections)
+ *
+ * Pure data. No classes. No side effects.
  */
 
 import type { MetricAxis } from "@/types/uor-foundation/enums";
 import type { FiberBudget } from "@/types/uor-foundation/bridge/partition";
 import { resolution } from "@/modules/ring-core/fiber-budget";
 
-// ── Process: wraps ComputationTrace ────────────────────────────────────────
-
-export interface ProcessStep {
-  index: number;
-  operation: string;
-  input: number;
-  output: number;
-  certified: boolean;
-}
-
-export interface Process {
-  pid: string;
-  quantum: number;
-  steps: ProcessStep[];
-  status: "running" | "completed" | "failed";
-  allCertified: boolean;
-}
-
-export function createProcess(
-  traceId: string,
-  quantum: number,
-  steps: ProcessStep[],
-): Process {
-  return {
-    pid: traceId,
-    quantum,
-    steps,
-    status: steps.length > 0 ? "completed" : "running",
-    allCertified: steps.every((s) => s.certified),
-  };
-}
-
-// ── FileSystem: wraps Context/Binding/Frame ────────────────────────────────
-
-export interface File {
-  name: string;
-  address: string;
-  bindingType: string;
-}
-
-export interface Directory {
-  contextId: string;
-  quantum: number;
-  capacity: number;
-  files: File[];
-}
-
-export interface FileSystemSnapshot {
-  directories: Directory[];
-  totalFiles: number;
-  totalCapacity: number;
-}
-
-export function createDirectory(
-  contextId: string,
-  quantum: number,
-  capacity: number,
-  files: File[] = [],
-): Directory {
-  return { contextId, quantum, capacity, files };
-}
-
-export function createFileSystem(directories: Directory[]): FileSystemSnapshot {
-  return {
-    directories,
-    totalFiles: directories.reduce((s, d) => s + d.files.length, 0),
-    totalCapacity: directories.reduce((s, d) => s + d.capacity, 0),
-  };
-}
-
-// ── Panel: wraps Observable ────────────────────────────────────────────────
+// ── Panel: Observable → visual ────────────────────────────────────────────
 
 export interface Panel {
-  id: string;
-  axis: MetricAxis;
-  label: string;
-  value: number;
-  quantum: number;
+  readonly id: string;
+  readonly axis: MetricAxis;
+  readonly label: string;
+  readonly value: number;
+  readonly quantum: number;
 }
 
 export function createPanel(
@@ -121,32 +61,14 @@ export function groupByAxis(panels: Panel[]): Record<MetricAxis, Panel[]> {
   };
 }
 
-// ── ProgressTracker: wraps FiberBudget ─────────────────────────────────────
-
-export interface ProgressTracker {
-  totalFibers: number;
-  resolved: number;
-  ratio: number;
-  closed: boolean;
-}
-
-export function createTracker(budget: FiberBudget): ProgressTracker {
-  return {
-    totalFibers: budget.totalFibers,
-    resolved: budget.pinnedCount,
-    ratio: resolution(budget),
-    closed: budget.isClosed,
-  };
-}
-
-// ── Attestation: wraps Certificate ─────────────────────────────────────────
+// ── Attestation: Certificate → verifiable badge ───────────────────────────
 
 export interface Attestation {
-  certId: string;
-  targetIri: string;
-  valid: boolean;
-  issuedAt: string;
-  kind: "transform" | "isometry" | "involution";
+  readonly certId: string;
+  readonly targetIri: string;
+  readonly valid: boolean;
+  readonly issuedAt: string;
+  readonly kind: "transform" | "isometry" | "involution";
 }
 
 export function createAttestation(
@@ -158,28 +80,41 @@ export function createAttestation(
   return { certId, targetIri, valid, issuedAt: new Date().toISOString(), kind };
 }
 
-// ── HologramState: the complete OS snapshot ────────────────────────────────
+// ── HologramState: unified OS snapshot ────────────────────────────────────
+// Instead of wrapping Process/FileSystem (which the Engine already handles),
+// the HologramState captures what the engine DOESN'T: the v2 resolution
+// layer (fiber budget, observable panels, certificate attestations).
 
 export interface HologramState {
-  processes: Process[];
-  fileSystem: FileSystemSnapshot;
-  dashboard: Record<MetricAxis, Panel[]>;
-  tracker: ProgressTracker;
-  attestations: Attestation[];
+  /** Engine identity (delegated to HologramEngine.snapshot()) */
+  readonly engineId: string;
+  /** Process count (from engine) */
+  readonly processCount: number;
+  /** Tri-axis dashboard panels (from observables) */
+  readonly dashboard: Record<MetricAxis, Panel[]>;
+  /** Resolution progress (from FiberBudget — no wrapper needed) */
+  readonly budget: FiberBudget;
+  readonly resolutionRatio: number;
+  /** Certificate attestations */
+  readonly attestations: Attestation[];
+  /** Timestamp */
+  readonly timestamp: string;
 }
 
 export function createHologramState(opts: {
-  processes: Process[];
-  directories: Directory[];
+  engineId?: string;
+  processCount?: number;
   panels: Panel[];
   budget: FiberBudget;
   attestations: Attestation[];
 }): HologramState {
   return {
-    processes: opts.processes,
-    fileSystem: createFileSystem(opts.directories),
+    engineId: opts.engineId ?? "hologram:default",
+    processCount: opts.processCount ?? 0,
     dashboard: groupByAxis(opts.panels),
-    tracker: createTracker(opts.budget),
+    budget: opts.budget,
+    resolutionRatio: resolution(opts.budget),
     attestations: opts.attestations,
+    timestamp: new Date().toISOString(),
   };
 }
