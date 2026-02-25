@@ -161,39 +161,60 @@ export default function HologramOsPage() {
             />
           </div>
 
-          {/* ── Background Mode Toggle — top right, 3 dots ────── */}
-          <div className="absolute top-10 right-10 z-20 flex items-center gap-2.5 animate-fade-in">
-            {BG_MODES.map(({ mode, dot, dotActive }) => {
-              const isActive = bgMode === mode;
-              return (
-                <button
-                  key={mode}
-                  onClick={() => setBgMode(mode)}
-                  className="relative group p-1.5 rounded-full transition-all duration-500"
-                  aria-label={`Switch to ${mode} background`}
-                  style={{ background: "transparent" }}
-                >
-                  <div
-                    className="w-2.5 h-2.5 rounded-full transition-all duration-700 ease-in-out"
-                    style={{
-                      background: isActive ? dotActive : dot,
-                      transform: isActive ? "scale(1.35)" : "scale(1)",
-                      boxShadow: isActive
-                        ? `0 0 12px 2px ${dotActive}40`
-                        : "none",
-                    }}
-                  />
-                  {/* Gentle ring on hover */}
-                  <div
-                    className="absolute inset-0 rounded-full transition-all duration-500 opacity-0 group-hover:opacity-100"
-                    style={{
-                      border: `1px solid ${dot}`,
-                      transform: "scale(1.6)",
-                    }}
-                  />
-                </button>
-              );
-            })}
+          {/* ── Background Mode Toggle — top right, minimal pill ────── */}
+          <div className="absolute top-10 right-10 z-20 animate-fade-in">
+            <div
+              className="flex items-center gap-1 px-3 py-2 rounded-full transition-all duration-700"
+              style={{
+                background: bgMode === "white" ? "hsla(30, 8%, 40%, 0.06)" : "hsla(30, 8%, 90%, 0.06)",
+                border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 40%, 0.1)" : "hsla(38, 15%, 70%, 0.08)"}`,
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+              }}
+            >
+              {BG_MODES.map(({ mode, label }) => {
+                const isActive = bgMode === mode;
+                const dotColor = isActive
+                  ? (bgMode === "white" ? "hsla(30, 10%, 25%, 0.7)" : "hsla(38, 35%, 75%, 0.85)")
+                  : (bgMode === "white" ? "hsla(30, 8%, 50%, 0.25)" : "hsla(38, 15%, 70%, 0.2)");
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => setBgMode(mode)}
+                    className="relative group flex items-center justify-center w-7 h-7 rounded-full transition-all duration-500"
+                    aria-label={`Switch to ${label} background`}
+                  >
+                    <div
+                      className="w-[6px] h-[6px] rounded-full transition-all duration-700 ease-in-out"
+                      style={{
+                        background: dotColor,
+                        transform: isActive ? "scale(1.3)" : "scale(1)",
+                        boxShadow: isActive ? `0 0 10px 1px ${dotColor}` : "none",
+                      }}
+                    />
+                    {/* Tooltip on hover */}
+                    <div
+                      className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none whitespace-nowrap"
+                      style={{
+                        fontFamily: "'DM Sans', system-ui, sans-serif",
+                        fontSize: "9px",
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                        color: bgMode === "white" ? "hsla(30, 8%, 35%, 0.5)" : "hsla(38, 15%, 80%, 0.45)",
+                        background: bgMode === "white" ? "hsla(30, 8%, 95%, 0.8)" : "hsla(30, 8%, 10%, 0.7)",
+                        backdropFilter: "blur(12px)",
+                        WebkitBackdropFilter: "blur(12px)",
+                        padding: "3px 8px",
+                        borderRadius: "4px",
+                        border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 60%, 0.1)" : "hsla(38, 15%, 60%, 0.08)"}`,
+                      }}
+                    >
+                      {label}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* ── Logo — top center ──────────── */}
@@ -215,7 +236,7 @@ export default function HologramOsPage() {
 
           {/* ── Welcome — centered ─────────── */}
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8">
-            <div className="text-center max-w-2xl space-y-8 animate-fade-in">
+            <div className="text-center max-w-2xl space-y-6 animate-fade-in">
               <p
                 className="text-xs md:text-sm tracking-[0.45em] uppercase transition-colors duration-700"
                 style={{
@@ -241,9 +262,28 @@ export default function HologramOsPage() {
                 {welcomeName}
               </h1>
 
-              
+              {/* Hedosophia-inspired vertical line divider */}
+              <div className="flex justify-center pt-4 pb-2">
+                <div
+                  className="w-px overflow-hidden"
+                  style={{ height: "64px" }}
+                >
+                  <div
+                    className="w-full"
+                    style={{
+                      height: "100%",
+                      background: `linear-gradient(to bottom, transparent 0%, ${
+                        bgMode === "white" ? "hsla(30, 8%, 30%, 0.2)" : "hsla(38, 20%, 80%, 0.2)"
+                      } 40%, ${
+                        bgMode === "white" ? "hsla(30, 8%, 30%, 0.2)" : "hsla(38, 20%, 80%, 0.2)"
+                      } 60%, transparent 100%)`,
+                      animation: "line-reveal 2.5s ease-out forwards",
+                    }}
+                  />
+                </div>
+              </div>
 
-              <div className="pt-8">
+              <div>
                 <button
                   onClick={goConsole}
                   className="inline-flex items-center transition-all duration-700"
@@ -316,6 +356,11 @@ export default function HologramOsPage() {
             32%  { transform: scale(1.25); opacity: 0.95; }
             44%  { transform: scale(1);    opacity: 0.8; }
             100% { transform: scale(1);    opacity: 0.8; }
+          }
+          @keyframes line-reveal {
+            0%   { opacity: 0; transform: scaleY(0); transform-origin: top; }
+            40%  { opacity: 1; transform: scaleY(1); transform-origin: top; }
+            100% { opacity: 1; transform: scaleY(1); }
           }
         `}</style>
 
