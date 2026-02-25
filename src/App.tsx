@@ -117,6 +117,7 @@ const ConsoleEthereum = lazy(() => import("@/modules/console/pages/ConsoleEthere
 const InteroperabilityPage = lazy(() => import("@/modules/interoperability/pages/InteroperabilityPage"));
 const ContinuityPage = lazy(() => import("@/modules/continuity/pages/ContinuityPage"));
 const LensInspectorPage = lazy(() => import("@/modules/lens-inspector/pages/LensInspectorPage"));
+const SchemaOrgExplorerPage = lazy(() => import("@/modules/schema-org/pages/SchemaOrgExplorerPage"));
 
 const queryClient = new QueryClient();
 
@@ -247,6 +248,7 @@ const App = () => {
             <Route path="/interoperability" element={<InteroperabilityPage />} />
             <Route path="/continuity" element={<ContinuityPage />} />
             <Route path="/lens-inspector" element={<LensInspectorPage />} />
+            <Route path="/schema-org" element={<SchemaOrgExplorerPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

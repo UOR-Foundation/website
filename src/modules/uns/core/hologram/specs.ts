@@ -2493,6 +2493,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     project: ({ hex }) => `https://schema.org/Thing#urn:uor:${hex}`,
     fidelity: "lossless",
     spec: "https://schema.org/",
+    lossWarning: "Projection maps UOR identity to Schema.org anchor URI. Use the Schema.org Functor (F: SchemaOrg → UOR) for full dual representation of all 806+ types.",
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
