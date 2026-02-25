@@ -169,3 +169,34 @@ export type {
   RefractResult,
   DehydrationResult,
 } from "./lens";
+
+// ── Executable Blueprint (Self-Evolving Programs) ──────────────────────────
+// The merger of LensBlueprint (WHAT) + PolyTree (HOW) = Executable Blueprint.
+// One hash. One program. One identity. The holographic principle applied to code.
+
+export {
+  createExecutableBlueprint,
+  grindExecutableBlueprint,
+  boot,
+  resume,
+  forkExecutableBlueprint,
+  compileScheduler,
+  serializeExecutable,
+  deserializeExecutable,
+  STATIC_SCHEDULER,
+  ADAPTIVE_SCHEDULER,
+  LIFECYCLE_SCHEDULER,
+} from "./executable-blueprint";
+export type {
+  ExecutableBlueprint,
+  GroundExecutableBlueprint,
+  IOChannel,
+  IOChannelSet,
+  RuntimeConstraints,
+  SchedulerSpec,
+  TransitionRule,
+  TransitionEffect,
+  HologramSession,
+  InteractionResult,
+  SuspendedSession,
+} from "./executable-blueprint";
