@@ -14,6 +14,15 @@ import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 
 const TRACK_W = 48;
 const THUMB_R = 5;
+const SNAP_DETENTS = [0, 0.25, 0.5, 0.75, 1.0];
+const SNAP_THRESHOLD = 0.045;
+
+function snapToDetent(value: number): number {
+  for (const d of SNAP_DETENTS) {
+    if (Math.abs(value - d) < SNAP_THRESHOLD) return d;
+  }
+  return value;
+}
 
 export default function AttentionToggle() {
   const { aperture, setAperture, preset } = useAttentionMode();
@@ -21,11 +30,12 @@ export default function AttentionToggle() {
   const [dragging, setDragging] = useState(false);
 
   const updateFromPointer = useCallback(
-    (clientX: number) => {
+    (clientX: number, snap = false) => {
       const track = trackRef.current;
       if (!track) return;
       const rect = track.getBoundingClientRect();
-      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      let ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      if (snap) ratio = snapToDetent(ratio);
       setAperture(ratio);
     },
     [setAperture],
@@ -36,7 +46,7 @@ export default function AttentionToggle() {
       e.preventDefault();
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
       setDragging(true);
-      updateFromPointer(e.clientX);
+      updateFromPointer(e.clientX, true);
     },
     [updateFromPointer],
   );
@@ -44,7 +54,7 @@ export default function AttentionToggle() {
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!dragging) return;
-      updateFromPointer(e.clientX);
+      updateFromPointer(e.clientX, true);
     },
     [dragging, updateFromPointer],
   );
@@ -101,6 +111,19 @@ export default function AttentionToggle() {
             transition: dragging ? "none" : "width 0.5s ease, background 0.5s ease",
           }}
         />
+
+        {/* Snap detent ticks */}
+        {SNAP_DETENTS.map((d) => (
+          <div
+            key={d}
+            className="absolute top-[5px] w-px h-[4px] pointer-events-none"
+            style={{
+              left: d * (TRACK_W - 2) + 1,
+              background: `hsla(38, 20%, 65%, ${Math.abs(aperture - d) < 0.06 ? 0.4 : 0.12})`,
+              transition: "background 0.3s ease",
+            }}
+          />
+        ))}
 
         {/* Thumb */}
         <div
