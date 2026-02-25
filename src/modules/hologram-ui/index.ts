@@ -26,3 +26,16 @@ export {
   type UIProjectionResult,
   type PropSchema,
 } from "./projection-registry";
+
+// ── Context Projection Engine ──────────────────────────────────────────────
+export {
+  projectProfile,
+  fetchAndProject,
+  recordInterest,
+  recordTask,
+  recordDomainVisit,
+  recordInteraction,
+  CONTEXT_PREDICATES,
+} from "./engine/contextProjection";
+
+export { useContextProjection, type ContextProjectionHandle } from "./hooks/useContextProjection";
