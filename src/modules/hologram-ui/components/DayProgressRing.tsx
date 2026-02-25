@@ -14,6 +14,7 @@ import {
   type TriadicBalance,
   type TriadicPhase,
 } from "@/modules/hologram-ui/sovereign-creator";
+import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 
 // ── Day progress ───────────────────────────────────────────────────────────
 
@@ -39,6 +40,7 @@ interface DayProgressRingProps {
 export default function DayProgressRing({ balance: externalBalance, activePhase }: DayProgressRingProps) {
   const [progress, setProgress] = useState(getDayProgress);
   const [hovered, setHovered] = useState(false);
+  const attention = useAttentionMode();
 
   useEffect(() => {
     const id = setInterval(() => setProgress(getDayProgress()), 10_000);
@@ -155,16 +157,18 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
           >
             {pct}%
           </span>
-          <span
-            className="text-[6.5px] tracking-[0.2em] uppercase leading-none"
-            style={{
-              fontFamily: "'DM Sans', system-ui, sans-serif",
-              color: "hsla(38, 15%, 80%, 0.4)",
-              fontWeight: 400,
-            }}
-          >
-            of day
-          </span>
+          {attention.showExpanded && (
+            <span
+              className="text-[6.5px] tracking-[0.2em] uppercase leading-none transition-opacity duration-700"
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                color: "hsla(38, 15%, 80%, 0.4)",
+                fontWeight: 400,
+              }}
+            >
+              of day
+            </span>
+          )}
         </div>
       </div>
 
@@ -198,7 +202,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
       {/* Phase legend — appears on hover */}
       <div
         className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-3 transition-opacity duration-700 pointer-events-none"
-        style={{ opacity: hovered ? 1 : 0 }}
+        style={{ opacity: hovered && attention.showExpanded ? 1 : 0 }}
       >
         {PHASE_ORDER.map((phase) => (
           <div key={phase} className="flex items-center gap-1">

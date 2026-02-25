@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import TriadicWelcome from "@/modules/hologram-ui/components/TriadicWelcome";
+import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 import {
   AGENT_PERSONAS,
   AGENT_SKILLS,
@@ -117,6 +118,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const modelPickerRef = useRef<HTMLDivElement>(null);
 
   const ai = getAiEngine();
+  const attention = useAttentionMode();
   const history = useAiChatHistory();
 
   // Determine active model name
@@ -668,7 +670,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         {/* ── Messages / Welcome ───────────────────────────────────── */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6" style={{ minHeight: "320px" }}>
           {/* Welcome state when no messages */}
-          {!hasMessages && !isLoadingModel && (
+          {!hasMessages && !isLoadingModel && attention.showExpanded && (
             <TriadicWelcome
               creatorStage={creatorStage}
               selectedPersona={selectedPersona}
@@ -676,6 +678,21 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               onSelectPersona={setSelectedPersona}
               onSelectSkill={setActiveSkill}
             />
+          )}
+
+          {/* Focus mode: minimal welcome — just persona name */}
+          {!hasMessages && !isLoadingModel && !attention.showExpanded && (
+            <div className="flex flex-col items-center justify-center h-full gap-3 animate-fade-in">
+              <p
+                className="text-sm tracking-wider"
+                style={{ fontFamily: P.fontDisplay, color: P.text }}
+              >
+                {selectedPersona.name}
+              </p>
+              <p className="text-[10px]" style={{ color: P.textDimmer }}>
+                Focus mode · type to begin
+              </p>
+            </div>
           )}
 
           {/* System messages */}
