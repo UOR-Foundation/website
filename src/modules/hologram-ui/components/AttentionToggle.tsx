@@ -20,7 +20,7 @@ export default function AttentionToggle() {
   const [contextOpen, setContextOpen] = useState(false);
 
   const isFocus = preset === "focus";
-  const restOpacity = hovered ? 1 : 0.4;
+  const restOpacity = hovered ? 1 : 0.6;
 
   return (
     <div
@@ -33,19 +33,33 @@ export default function AttentionToggle() {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Label */}
+      {/* Title label */}
       <span
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: 7,
-          letterSpacing: "0.2em",
+          fontSize: 8,
+          letterSpacing: "0.18em",
           textTransform: "uppercase",
-          color: "hsla(38, 15%, 80%, 0.5)",
+          fontWeight: 500,
+          color: "hsla(38, 15%, 85%, 0.7)",
           writingMode: "vertical-rl",
           textOrientation: "mixed",
         }}
       >
-        {isFocus ? "Focus" : "Open"}
+        Focus Mode
+      </span>
+
+      {/* ON / OFF state label */}
+      <span
+        style={{
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          fontSize: 8,
+          letterSpacing: "0.15em",
+          fontWeight: 600,
+          color: isFocus ? "hsla(38, 45%, 70%, 0.9)" : "hsla(38, 15%, 70%, 0.55)",
+        }}
+      >
+        {isFocus ? "ON" : "OFF"}
       </span>
 
       {/* Toggle pill */}
