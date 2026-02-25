@@ -199,4 +199,6 @@ export type {
 export {
   MEMORY_CRISIS_BLUEPRINT,
   createMemoryCrisisBlueprint,
+  PROMPT_INJECTION_SHIELD_BLUEPRINT,
+  createPromptInjectionShieldBlueprint,
 } from "@/modules/uns/core/hologram/lenses";
