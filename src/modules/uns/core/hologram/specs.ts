@@ -4551,103 +4551,238 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 25 — DATA FORMATS: GEOSPATIAL & MAPPING
+  // TIER 25 — QUANTUM COMPUTING
   // ═══════════════════════════════════════════════════════════════════════════
-
-  // ── Shapefile — Esri Vector Data ───────────────────────────────────────
-  // Shapefile (Esri) is the most widely used geospatial vector format.
-  // Contains geometry (.shp), attributes (.dbf), and index (.shx).
-  // Despite being proprietary, it's the de facto standard for GIS data
-  // exchange — every GIS system reads/writes shapefiles.
   //
-  //   Format: urn:uor:data:shapefile:{hex} (SHA-256 of canonical shapefile set)
-  //   Canonical: .shp + .dbf + .shx → sorted records → SHA-256
-  //   Cross-projection: shapefile + geojson → Esri↔web geospatial bridge
+  // Standards, languages, IRs, SDKs, and file formats for quantum computation.
+  // Every quantum artifact — circuit, pulse schedule, compiled IR — becomes a
+  // content-addressed UOR object. Identical programs on any platform share
+  // one canonical identity, enabling reproducible experiments and verifiable
+  // compilation across simulators and real hardware.
 
-  ["shapefile", {
-    project: ({ hex }) => `urn:uor:data:shapefile:${hex}`,
+  // ── Standards Bodies ────────────────────────────────────────────────────
+
+  // IEEE Quantum Standards (P7130, P7131, etc.) — terminology, energy
+  // efficiency, benchmarks, simulators for the quantum industry.
+  ["ieee-quantum", {
+    project: ({ hex }) => `urn:uor:quantum:ieee:${hex}`,
     fidelity: "lossless",
-    spec: "https://www.esri.com/content/dam/esrisites/sitecore-archive/Files/Pdfs/library/whitepapers/pdfs/shapefile.pdf",
+    spec: "https://standards.ieee.org/initiatives/quantum/",
   }],
 
-  // ── GeoPackage — OGC Geospatial Container ──────────────────────────────
-  // GeoPackage (OGC) is the SQLite-based container for geospatial vector
-  // and raster data. Replaces shapefile with support for multiple layers,
-  // coordinate systems, and metadata — all in a single portable file.
-  //
-  //   Format: urn:uor:data:geopackage:{hex} (SHA-256 of GeoPackage file)
-  //   Canonical: SQLite → sorted tables → SHA-256
-  //   Cross-projection: geopackage + geojson → OGC↔web geospatial bridge
-  //                     geopackage + shapefile → modern↔legacy GIS bridge
-
-  ["geopackage", {
-    project: ({ hex }) => `urn:uor:data:geopackage:${hex}`,
+  // IEC/ISO JTC 3 — Joint Technical Committee on Quantum Technologies
+  // Broad scope: quantum computing, simulation, communication, sensing.
+  ["iec-iso-jtc3", {
+    project: ({ hex }) => `urn:uor:quantum:jtc3:${hex}`,
     fidelity: "lossless",
-    spec: "https://www.geopackage.org/spec131/",
+    spec: "https://www.iso.org/committee/9900819.html",
   }],
 
-  // ── KML — Keyhole Markup Language ──────────────────────────────────────
-  // KML (OGC, originally Google) is the XML format for geographic
-  // visualization. Used by Google Earth, Google Maps, and geospatial
-  // web applications. KML defines placemarks, polygons, overlays,
-  // network links, and 3D models.
-  //
-  //   Format: urn:uor:data:kml:{hex} (SHA-256 of canonical KML)
-  //   Canonical: KML XML → C14N → SHA-256
-  //   Cross-projection: kml + geojson → Google Earth↔web mapping bridge
+  // ── Gate / Circuit-Level Languages ──────────────────────────────────────
 
-  ["kml", {
-    project: ({ hex }) => `urn:uor:data:kml:${hex}`,
+  // OpenQASM 3 — The current open quantum assembly language spec.
+  // Supports classical control flow, timing, pulse-level gates, and
+  // hierarchical program structure. Native export from Qiskit.
+  //
+  //   Format: urn:uor:quantum:openqasm3:{hex}
+  //   Canonical: OpenQASM 3 source → normalize whitespace → SHA-256
+  //   Cross-projection: openqasm3 + qir → source↔IR compilation bridge
+  ["openqasm3", {
+    project: ({ hex }) => `urn:uor:quantum:openqasm3:${hex}`,
     fidelity: "lossless",
-    spec: "https://www.ogc.org/standard/kml/",
+    spec: "https://openqasm.com/",
   }],
 
-  // ── GeoTIFF — Georeferenced Raster ─────────────────────────────────────
-  // GeoTIFF embeds geographic metadata (coordinate system, projection,
-  // tie points) in standard TIFF images. Used for satellite imagery,
-  // aerial photography, elevation models (DEM), and land cover maps.
-  // Cloud-Optimized GeoTIFF (COG) enables efficient HTTP range requests.
-  //
-  //   Format: urn:uor:data:geotiff:{hex} (SHA-256 of GeoTIFF file)
-  //   Canonical: GeoTIFF → raw bytes → SHA-256
-  //   Cross-projection: geotiff + netcdf → raster↔scientific data bridge
-
-  ["geotiff", {
-    project: ({ hex }) => `urn:uor:data:geotiff:${hex}`,
+  // OpenQASM 2 — Historic but still widely supported. Many published
+  // circuits and textbook examples use QASM 2 syntax.
+  ["openqasm2", {
+    project: ({ hex }) => `urn:uor:quantum:openqasm2:${hex}`,
     fidelity: "lossless",
-    spec: "https://www.ogc.org/standard/geotiff/",
+    spec: "https://en.wikipedia.org/wiki/OpenQASM",
   }],
 
-  // ── WKT/WKB — Well-Known Text/Binary ───────────────────────────────────
-  // WKT (ISO 13249 SQL/MM) and WKB are the standard text and binary
-  // representations for geometry objects — used by PostGIS, MySQL Spatial,
-  // SQL Server, and every spatial database. WKB is the wire format for
-  // geometry exchange between databases and applications.
+  // Quil — Rigetti's instruction set / language spec.
+  // Supports parametric gates, classical memory, and Quil-T timing.
   //
-  //   Format: urn:uor:data:wkt:{hex} (SHA-256 of canonical WKT/WKB)
-  //   Canonical: geometry → WKB canonical form → SHA-256
-  //   Cross-projection: wkt + geojson → database↔web geometry bridge
-
-  ["wkt", {
-    project: ({ hex }) => `urn:uor:data:wkt:${hex}`,
+  //   Cross-projection: quil + openqasm3 → Rigetti↔IBM circuit bridge
+  ["quil", {
+    project: ({ hex }) => `urn:uor:quantum:quil:${hex}`,
     fidelity: "lossless",
-    spec: "https://www.iso.org/standard/60343.html",
+    spec: "https://quil-lang.github.io/",
   }],
 
-  // ── MVT — Mapbox Vector Tiles ──────────────────────────────────────────
-  // MVT (Mapbox Vector Tile, OGC Community Standard) is the protobuf-
-  // encoded format for serving vector map data as tiles. Used by Mapbox,
-  // MapLibre, OpenMapTiles, and every modern web mapping platform.
+  // Q# — Microsoft's quantum programming language.
+  // Strongly typed, functional-inspired, compiles to QIR.
   //
-  //   Format: urn:uor:data:mvt:{hex} (SHA-256 of MVT protobuf)
-  //   Canonical: MVT → protobuf binary → SHA-256
-  //   Cross-projection: mvt + geojson → tiled↔full-resolution vector bridge
-  //                     mvt + protobuf → map tiles↔serialization bridge
-
-  ["mvt", {
-    project: ({ hex }) => `urn:uor:data:mvt:${hex}`,
+  //   Cross-projection: qsharp + qir → source↔LLVM IR bridge
+  ["qsharp", {
+    project: ({ hex }) => `urn:uor:quantum:qsharp:${hex}`,
     fidelity: "lossless",
-    spec: "https://github.com/mapbox/vector-tile-spec",
+    spec: "https://learn.microsoft.com/en-us/azure/quantum/user-guide/",
+  }],
+
+  // Quipper — Research-level quantum language (Haskell-embedded).
+  // Used in academic circuit generation and resource estimation.
+  ["quipper", {
+    project: ({ hex }) => `urn:uor:quantum:quipper:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.mathstat.dal.ca/~selinger/quipper/",
+  }],
+
+  // Blackbird — Continuous-variable / photonics assembly language.
+  // Used with Xanadu's Strawberry Fields for photonic QC.
+  //
+  //   Cross-projection: blackbird + pennylane → photonic↔hybrid QML bridge
+  ["blackbird", {
+    project: ({ hex }) => `urn:uor:quantum:blackbird:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/XanaduAI/blackbird",
+  }],
+
+  // ── Intermediate Representations ───────────────────────────────────────
+
+  // QIR — Quantum Intermediate Representation (LLVM-based).
+  // Intended as the common compiler target for quantum toolchains.
+  // Q# compiles to QIR; other frontends can target it too.
+  //
+  //   Format: urn:uor:quantum:qir:{hex}
+  //   Canonical: QIR LLVM bitcode → raw bytes → SHA-256
+  //   Cross-projection: qir + openqasm3 → IR↔source roundtrip
+  //                     qir + qsharp → IR↔language roundtrip
+  ["qir", {
+    project: ({ hex }) => `urn:uor:quantum:qir:${hex}`,
+    fidelity: "lossless",
+    spec: "https://github.com/qir-alliance/qir-spec",
+  }],
+
+  // ── Pulse / Control-Level Specs ────────────────────────────────────────
+
+  // OpenPulse — Pulse-level grammar within the OpenQASM ecosystem.
+  // Defines calibration grammars for hardware-native gate definitions.
+  //
+  //   Cross-projection: openpulse + openqasm3 → pulse↔gate abstraction bridge
+  ["openpulse", {
+    project: ({ hex }) => `urn:uor:quantum:openpulse:${hex}`,
+    fidelity: "lossless",
+    spec: "https://openqasm.com/language/pulses.html",
+  }],
+
+  // QUA — Quantum Machines' pulse-level control language.
+  // Real-time classical processing alongside quantum pulse sequences.
+  ["qua", {
+    project: ({ hex }) => `urn:uor:quantum:qua:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.quantum-machines.co/latest/docs/Introduction/qua_overview/",
+  }],
+
+  // ── File Formats ───────────────────────────────────────────────────────
+
+  // .qasm — OpenQASM source files
+  ["qasm-file", {
+    project: ({ hex }) => `urn:uor:quantum:file:qasm:${hex}`,
+    fidelity: "lossless",
+    spec: "https://openqasm.com/",
+  }],
+
+  // .quil — Quil program files
+  ["quil-file", {
+    project: ({ hex }) => `urn:uor:quantum:file:quil:${hex}`,
+    fidelity: "lossless",
+    spec: "https://quil-lang.github.io/",
+  }],
+
+  // .qs — Q# source files
+  ["qs-file", {
+    project: ({ hex }) => `urn:uor:quantum:file:qs:${hex}`,
+    fidelity: "lossless",
+    spec: "https://learn.microsoft.com/en-us/azure/quantum/",
+  }],
+
+  // QPY — Qiskit's binary serialization for QuantumCircuit objects.
+  // Captures the full circuit including metadata, parameters, and layout.
+  //
+  //   Format: urn:uor:quantum:qpy:{hex}
+  //   Canonical: QPY binary → raw bytes → SHA-256
+  //   Cross-projection: qpy + openqasm3 → binary↔text circuit bridge
+  ["qpy", {
+    project: ({ hex }) => `urn:uor:quantum:qpy:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.quantum.ibm.com/api/qiskit/qpy",
+  }],
+
+  // ── Gate-Model SDKs ────────────────────────────────────────────────────
+
+  // Qiskit — IBM's open-source quantum SDK. Largest community, supports
+  // OpenQASM export, QPY serialization, transpilation, and IBM hardware.
+  //
+  //   Cross-projection: qiskit + openqasm3 → SDK↔spec source bridge
+  //                     qiskit + qpy → runtime↔serialized circuit bridge
+  ["qiskit", {
+    project: ({ hex }) => `urn:uor:quantum:sdk:qiskit:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.quantum.ibm.com/",
+  }],
+
+  // Cirq — Google Quantum AI's Python framework.
+  // Optimized for NISQ-era devices, noise simulation, and Google hardware.
+  ["cirq", {
+    project: ({ hex }) => `urn:uor:quantum:sdk:cirq:${hex}`,
+    fidelity: "lossless",
+    spec: "https://quantumai.google/cirq",
+  }],
+
+  // Amazon Braket SDK — AWS quantum computing service.
+  // Multi-hardware: IonQ, Rigetti, OQC, QuEra from one API.
+  ["braket-sdk", {
+    project: ({ hex }) => `urn:uor:quantum:sdk:braket:${hex}`,
+    fidelity: "lossless",
+    spec: "https://amazon-braket-sdk-python.readthedocs.io/",
+  }],
+
+  // pyQuil — Rigetti's Python SDK for Quil programs.
+  // Connects to Quilc compiler and QVM simulator.
+  //
+  //   Cross-projection: pyquil + quil → SDK↔spec bridge
+  ["pyquil", {
+    project: ({ hex }) => `urn:uor:quantum:sdk:pyquil:${hex}`,
+    fidelity: "lossless",
+    spec: "https://pyquil-docs.rigetti.com/",
+  }],
+
+  // pytket — Quantinuum's Python interface to the TKET compiler.
+  // Cross-platform transpilation: Qiskit, Cirq, Braket, pyQuil backends.
+  //
+  //   Cross-projection: pytket + cirq + qiskit → universal transpilation bridge
+  ["pytket", {
+    project: ({ hex }) => `urn:uor:quantum:sdk:pytket:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.quantinuum.com/tket/",
+  }],
+
+  // ── Hybrid / Differentiable / Quantum-ML ───────────────────────────────
+
+  // PennyLane — Xanadu's differentiable quantum programming framework.
+  // Quantum gradients, variational circuits, and ML integration.
+  // Works with Qiskit, Cirq, Braket, Strawberry Fields backends.
+  //
+  //   Cross-projection: pennylane + blackbird → hybrid↔photonic bridge
+  //                     pennylane + onnx → quantum↔classical ML bridge
+  ["pennylane", {
+    project: ({ hex }) => `urn:uor:quantum:sdk:pennylane:${hex}`,
+    fidelity: "lossless",
+    spec: "https://pennylane.ai/",
+  }],
+
+  // ── Quantum Annealing ──────────────────────────────────────────────────
+
+  // D-Wave Ocean SDK — Quantum annealing optimization framework.
+  // Different computation model: QUBO/Ising problems, hybrid solvers.
+  //
+  //   Cross-projection: dwave-ocean + qiskit → annealing↔gate model bridge
+  ["dwave-ocean", {
+    project: ({ hex }) => `urn:uor:quantum:sdk:dwave:${hex}`,
+    fidelity: "lossless",
+    spec: "https://docs.dwavequantum.com/",
   }],
 
   // ══════════════════════════════════════════════════════════════════════════

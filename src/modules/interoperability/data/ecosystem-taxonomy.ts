@@ -10,7 +10,7 @@
  *   L3 Structure   → Languages, Data & Encoding, Media & Creative
  *   L4 Resolution  → Federation & Social, Network & Cloud
  *   L5 Verification → Web3 & Blockchain, Identity & Trust
- *   L6 Transformation → AI & Agents, Industry & Science, Geospatial
+ *   L6 Transformation → AI & Agents, Industry & Science, Quantum Computing
  *
  * @module interoperability/data/ecosystem-taxonomy
  */
@@ -217,19 +217,32 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
     ],
   },
 
-  /* ─── 11. Geospatial & Earth Observation ────────────────────────────── */
+  /* ─── 11. Quantum Computing ──────────────────────────────────────────── */
   {
-    id: "geospatial",
-    label: "Geospatial & Earth Observation",
+    id: "quantum-computing",
+    label: "Quantum Computing",
     description:
-      "Standards for representing and analyzing location-based information: maps and vector data (GeoJSON, Shapefile), satellite imagery (GeoTIFF, STAC), spatial databases (GeoPackage), and building information models (IFC, CityGML). How we describe and understand the physical world at every scale.",
+      "Standards, languages, and frameworks for quantum computation: circuit languages (OpenQASM 3, Quil, Q#), intermediate representations (QIR), pulse-level control (OpenPulse, QUA), gate-model SDKs (Qiskit, Cirq, PennyLane, Braket, pytket), quantum annealing (D-Wave Ocean), file formats (.qasm, .quil, .qs, QPY), and standards bodies (IEEE Quantum, IEC/ISO JTC 3). The emerging computational paradigm where information is processed through superposition, entanglement, and interference.",
     uorExpression:
-      "Every geospatial object — a map feature, a satellite tile, a building model — is content-addressed through UOR. The same geographic region described by the same attributes always resolves to the same identity, enabling cross-platform spatial analysis without format lock-in.",
-    color: "hsl(160, 55%, 42%)",
+      "Every quantum object — a circuit, a pulse schedule, a compiled IR, a model checkpoint — is content-addressed through UOR. The same quantum program always resolves to the same canonical identity, enabling reproducible experiments, verifiable compilation, and cross-platform circuit portability from simulators to real hardware.",
+    color: "hsl(260, 60%, 50%)",
     projections: [
-      "geojson", "shapefile", "geopackage", "kml", "geotiff", "wkt", "mvt",
-      "ifc", "citygml", "las", "gbxml",
-      "stac",
+      // Standards bodies
+      "ieee-quantum", "iec-iso-jtc3",
+      // Gate/circuit-level languages
+      "openqasm3", "openqasm2", "quil", "qsharp", "quipper", "blackbird",
+      // Intermediate representations
+      "qir",
+      // Pulse-level specs
+      "openpulse", "qua",
+      // File formats
+      "qasm-file", "quil-file", "qs-file", "qpy",
+      // Gate-model SDKs
+      "qiskit", "cirq", "braket-sdk", "pyquil", "pytket",
+      // Hybrid / differentiable / quantum-ML
+      "pennylane",
+      // Quantum annealing
+      "dwave-ocean",
     ],
   },
 
@@ -238,15 +251,19 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
     id: "industry-science",
     label: "Industry & Science",
     description:
-      "Domain-specific standards used in regulated and research-intensive fields: automotive (AUTOSAR, CAN), aviation (ARINC 429), healthcare (FHIR, DICOM, HL7), financial reporting (XBRL, ISO 20022), and scientific data (HDF5, FITS, SMILES). Where precision and compliance are non-negotiable.",
+      "Domain-specific standards used in regulated, research-intensive, and spatial fields: automotive (AUTOSAR, CAN), aviation (ARINC 429), healthcare (FHIR, DICOM, HL7), financial reporting (XBRL, ISO 20022), scientific data (HDF5, FITS, SMILES), geospatial & mapping (GeoJSON, Shapefile, GeoTIFF, STAC), and BIM/construction (IFC, CityGML). Where precision, compliance, and spatial accuracy are non-negotiable.",
     uorExpression:
-      "Every domain-specific record — a medical image, a financial transaction, a genomic sequence — becomes a verifiable UOR object. Content-addressing ensures that regulatory data, research datasets, and compliance artifacts maintain integrity across systems, jurisdictions, and time.",
+      "Every domain-specific record — a medical image, a financial transaction, a genomic sequence, a geospatial feature, a building model — becomes a verifiable UOR object. Content-addressing ensures that regulatory data, research datasets, spatial features, and compliance artifacts maintain integrity across systems, jurisdictions, and time.",
     color: "hsl(170, 45%, 45%)",
     projections: [
       "autosar", "can", "someip", "uds", "arinc429",
       "xbrl", "fix", "iso20022", "edi-x12", "edifact", "hl7v2",
       "fits", "cif", "smiles", "hdf5", "dicom", "fhir",
       "pdb", "netcdf", "nifti", "sbml", "mzml", "fastq", "vcf",
+      // BIM & Construction (formerly Geospatial)
+      "ifc", "citygml", "las", "gbxml",
+      // Geospatial (absorbed into Industry & Science)
+      "geojson", "shapefile", "geopackage", "kml", "geotiff", "wkt", "mvt", "stac",
     ],
   },
 ];
