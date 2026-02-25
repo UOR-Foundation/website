@@ -93,11 +93,12 @@ interface HologramAiChatProps {
   open: boolean;
   onClose: () => void;
   onPhaseChange?: (phase: TriadicPhase | null) => void;
+  creatorStage?: CreatorStage;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export default function HologramAiChat({ open, onClose, onPhaseChange }: HologramAiChatProps) {
+export default function HologramAiChat({ open, onClose, onPhaseChange, creatorStage = 1 }: HologramAiChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -697,7 +698,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange }: Hologra
                   {AGENT_PERSONAS.map((persona) => {
                     const isActive = selectedPersona.id === persona.id;
                     const phaseDef = PHASES[persona.phase];
-                    const userStage: CreatorStage = 1; // TODO: derive from profile
+                    const userStage: CreatorStage = creatorStage;
                     const locked = persona.minStage > userStage;
                     return (
                       <button
