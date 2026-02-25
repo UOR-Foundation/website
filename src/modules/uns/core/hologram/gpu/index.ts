@@ -2,8 +2,9 @@
  * Hologram GPU — Module Barrel
  * ════════════════════════════
  *
- * The WebGPU device layer of the Hologram OS.
- * Provides content-addressed GPU compute and rendering.
+ * The WebGPU device layer + UOR LUT compute engine.
+ * Provides content-addressed GPU compute, rendering,
+ * and constant-time lookup-table computation.
  *
  * @module uns/core/hologram/gpu
  */
@@ -20,3 +21,16 @@ export type {
   GpuBenchmarkResult,
   ShaderName,
 } from "./device";
+
+export {
+  UorLutEngine,
+  getLutEngine,
+  WGSL_LUT_APPLY,
+} from "./lut-engine";
+export type {
+  LutName,
+  LutApplyResult,
+  LutComposeResult,
+  CriticalIdentityProof,
+  LutEngineInfo,
+} from "./lut-engine";
