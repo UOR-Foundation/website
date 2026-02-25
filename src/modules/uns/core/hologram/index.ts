@@ -247,3 +247,23 @@ export type {
   Pipe,
   MmapResult,
 } from "./virtual-io";
+
+// ── Universal Ingest (Any Artifact → UOR Object) ──────────────────────────
+// Takes any digital artifact (WASM, JSON, binary, text) and wraps it in a
+// content-addressed JSON-LD envelope. One function, any format, full hologram.
+
+export {
+  ingest,
+  ingestJson,
+  ingestJsonLd,
+  ingestText,
+  ingestBinary,
+  ingestAndSpawn,
+} from "./universal-ingest";
+export type {
+  ArtifactFormat,
+  IngestEnvelope,
+  IngestResult,
+  IngestExecutableResult,
+  IngestSpawnedResult,
+} from "./universal-ingest";
