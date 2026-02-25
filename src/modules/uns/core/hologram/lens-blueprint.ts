@@ -19,14 +19,17 @@
  */
 
 import { singleProofHash, type SingleProofResult } from "@/lib/uor-canonical";
-import { project, type Hologram, type ProjectionInput } from "./index";
+import { project, PROJECTIONS, type Hologram, type ProjectionInput } from "./index";
 import {
   composeLens,
   element,
+  dehydrate,
+  rehydrate,
   type HolographicLens,
   type LensElement,
   type LensWire,
   type LensMorphism,
+  type RefractionModality,
 } from "./lens";
 
 // ── Blueprint Types ────────────────────────────────────────────────────────
@@ -46,6 +49,10 @@ export interface ElementSpec {
   readonly bidirectional?: boolean;
   /** Human-readable description of what this element does. */
   readonly description?: string;
+  /** For 'projection' kind: which hologram projection to use. */
+  readonly projection?: string;
+  /** For 'dehydrate'/'rehydrate' kind: target modality. */
+  readonly modality?: RefractionModality;
 }
 
 /**
@@ -322,8 +329,114 @@ function registerBuiltins(): void {
   });
 }
 
-// Initialize builtins on module load
+// ── Holographic Element Factories (Projection-Native) ──────────────────────
+
+/**
+ * Register element factories that bind directly to the hologram system.
+ * These make every projection and modality a first-class blueprint element.
+ */
+function registerHolographicFactories(): void {
+  // projection: apply any named hologram projection
+  // Use { kind: "projection", projection: "did" } in a blueprint
+  registerElementFactory("projection", (spec) => {
+    const projName = spec.projection ?? (spec.config?.projection as string) ?? "cid";
+    const projSpec = PROJECTIONS.get(projName);
+    if (!projSpec) {
+      console.warn(`[LensBlueprint] Unknown projection "${projName}", using cid`);
+    }
+    return element(spec.id, async (input) => {
+      // If input is already a ProjectionInput, project directly
+      if (input && typeof input === "object" && "hashBytes" in (input as any)) {
+        const pi = input as ProjectionInput;
+        const resolved = projSpec ?? PROJECTIONS.get("cid")!;
+        return resolved.project(pi);
+      }
+      // Otherwise dehydrate first, then project
+      const { proof } = await dehydrate(input);
+      const pi: ProjectionInput = {
+        hashBytes: proof.hashBytes,
+        cid: proof.cid,
+        hex: proof.hashHex,
+      };
+      const resolved = projSpec ?? PROJECTIONS.get("cid")!;
+      return resolved.project(pi);
+    }, projName);
+  });
+
+  // dehydrate: canonicalize any object → SingleProofResult
+  registerElementFactory("dehydrate", (spec) =>
+    element(spec.id, async (input) => {
+      const result = await dehydrate(input);
+      return result.proof;
+    }, "isometry")
+  );
+
+  // rehydrate: SingleProofResult → target modality
+  registerElementFactory("rehydrate", (spec) => {
+    const modality = spec.modality ?? (spec.config?.modality as RefractionModality) ?? "jsonld";
+    return element(spec.id, async (input) => {
+      return rehydrate(input as SingleProofResult, modality);
+    }, "isometry");
+  });
+
+  // hologram: project through ALL standards at once
+  registerElementFactory("hologram", (spec) =>
+    element(spec.id, async (input) => {
+      if (input && typeof input === "object" && "hashBytes" in (input as any)) {
+        return project(input as ProjectionInput);
+      }
+      const { proof } = await dehydrate(input);
+      return project({
+        hashBytes: proof.hashBytes,
+        cid: proof.cid,
+        hex: proof.hashHex,
+      });
+    }, "isometry")
+  );
+
+  // blueprint-ref: reference another blueprint by CID (lazy resolution)
+  // The referenced blueprint must be loaded into the registry at runtime
+  registerElementFactory("blueprint-ref", (spec) => {
+    const refCid = (spec.config?.cid as string) ?? "";
+    return element(spec.id, async (input) => {
+      // At runtime, check if the referenced blueprint has been loaded
+      const factory = ELEMENT_REGISTRY.get(`blueprint:${refCid}`);
+      if (factory) {
+        const el = factory(spec);
+        return el.focus(input);
+      }
+      // Graceful: return input with reference metadata
+      return {
+        _unresolvedBlueprint: refCid,
+        input,
+      };
+    }, "hologram:Lens");
+  });
+
+  // multi-project: fan input to multiple named projections, return record
+  registerElementFactory("multi-project", (spec) => {
+    const projections = (spec.config?.projections as string[]) ?? ["cid", "did", "webfinger"];
+    return element(spec.id, async (input) => {
+      const { proof } = await dehydrate(input);
+      const pi: ProjectionInput = {
+        hashBytes: proof.hashBytes,
+        cid: proof.cid,
+        hex: proof.hashHex,
+      };
+      const result: Record<string, string> = {};
+      for (const name of projections) {
+        const ps = PROJECTIONS.get(name);
+        if (ps) result[name] = ps.project(pi);
+      }
+      return result;
+    }, "isometry");
+  });
+}
+
+// Initialize all factories on module load
 registerBuiltins();
+registerHolographicFactories();
+
 
 // ── Core API ───────────────────────────────────────────────────────────────
 
@@ -467,8 +580,10 @@ export function deserializeBlueprint(json: string): LensBlueprint {
 }
 
 /**
- * Compose two blueprints into a new one (fractal composition).
- * The resulting blueprint contains all elements from both, sequentially.
+ * Compose multiple blueprints into a new one (fractal composition).
+ *
+ * The resulting blueprint chains all elements sequentially with namespaced IDs.
+ * Morphism is inferred: isometry only if ALL children are isometry.
  */
 export function composeBlueprints(
   name: string,
@@ -479,7 +594,6 @@ export function composeBlueprints(
   const allImports: string[] = [];
 
   for (const bp of blueprints) {
-    // Namespace element IDs to avoid collisions
     const prefix = bp.name.replace(/\s+/g, "-").toLowerCase();
     for (const el of bp.elements) {
       allElements.push({ ...el, id: `${prefix}/${el.id}` });
@@ -503,5 +617,65 @@ export function composeBlueprints(
     imports: allImports.length > 0 ? allImports : undefined,
     tags: [...new Set(blueprints.flatMap((b) => b.tags ?? []))],
     description: `Composed from: ${blueprints.map((b) => b.name).join(" + ")}`,
+  });
+}
+
+/**
+ * Fork a blueprint: clone with modifications.
+ *
+ * Creates a new blueprint from an existing one with overrides.
+ * The forked blueprint gets its own UOR address (different config = different identity).
+ */
+export function forkBlueprint(
+  base: LensBlueprint,
+  overrides: {
+    name?: string;
+    version?: string;
+    elements?: ElementSpec[];
+    replaceElements?: Record<string, Partial<ElementSpec>>;
+    appendElements?: ElementSpec[];
+    removeElements?: string[];
+    tags?: string[];
+    problem?: string;
+    description?: string;
+    metadata?: Record<string, unknown>;
+  },
+): LensBlueprint {
+  let elements = [...base.elements] as ElementSpec[];
+
+  // Replace specific elements
+  if (overrides.replaceElements) {
+    elements = elements.map((el) => {
+      const patch = overrides.replaceElements![el.id];
+      return patch ? { ...el, ...patch } as ElementSpec : el;
+    });
+  }
+
+  // Remove elements
+  if (overrides.removeElements) {
+    elements = elements.filter((el) => !overrides.removeElements!.includes(el.id));
+  }
+
+  // Append elements
+  if (overrides.appendElements) {
+    elements.push(...overrides.appendElements);
+  }
+
+  // Full replacement
+  if (overrides.elements) {
+    elements = overrides.elements;
+  }
+
+  return createBlueprint({
+    name: overrides.name ?? `${base.name} (fork)`,
+    version: overrides.version ?? base.version,
+    morphism: base.morphism,
+    problem: overrides.problem ?? base.problem,
+    description: overrides.description ?? base.description,
+    tags: overrides.tags ?? (base.tags ? [...base.tags] : undefined),
+    elements,
+    wires: base.wires ? [...base.wires] : undefined,
+    imports: base.imports ? [...base.imports] : undefined,
+    metadata: overrides.metadata ?? base.metadata,
   });
 }
