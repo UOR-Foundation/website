@@ -80,7 +80,7 @@ export default function HologramOsPage() {
             <div className="text-center max-w-lg space-y-5 animate-fade-in">
               {/* Greeting */}
               <p
-                className="text-[11px] tracking-[0.35em] uppercase text-white/40"
+                className="text-sm md:text-base tracking-[0.35em] uppercase text-white/50 font-medium"
                 style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
               >
                 {greeting}
@@ -88,7 +88,7 @@ export default function HologramOsPage() {
 
               {/* Personal welcome */}
               <h1
-                className="text-4xl lg:text-5xl font-light leading-[1.2] text-white/90"
+                className="text-5xl md:text-6xl lg:text-7xl font-light leading-[1.15] text-white/95"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 Welcome home,

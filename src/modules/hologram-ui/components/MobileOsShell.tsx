@@ -151,13 +151,13 @@ export default function MobileOsShell() {
       {/* ── Branding + Greeting ───────────────────────────────── */}
       <div className="relative z-10 flex flex-col items-center pt-14 pb-2 gap-1">
         <p
-          className="text-white/25 text-[11px] tracking-[0.45em] uppercase"
+          className="text-white/30 text-xs tracking-[0.45em] uppercase font-medium"
           style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
         >
           Hologram
         </p>
         <p
-          className="text-white/35 text-[13px] font-light tracking-wide"
+          className="text-white/50 text-base font-light tracking-wide"
           style={{ fontFamily: "'Playfair Display', serif" }}
         >
           {greeting}{name ? `, ${name}` : ""}
