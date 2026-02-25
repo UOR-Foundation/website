@@ -4,6 +4,9 @@
  *
  * Aman-inspired: serene, noble, deeply personal.
  * Muted earth tones, generous spacing, whisper-quiet chrome.
+ *
+ * Apps are classified under the Sovereign Creator triadic framework:
+ * Learn (vision), Work (creation), Play (reflection).
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
@@ -25,30 +28,44 @@ import HologramAiChat from "./HologramAiChat";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 
 /* ── App definition ─────────────────────────────────────────── */
+import type { TriadicPhase } from "@/modules/hologram-ui/sovereign-creator";
+import { PHASES } from "@/modules/hologram-ui/sovereign-creator";
+
 interface AppIcon {
   label: string;
   icon: React.ElementType;
   action: string;
   color: string; // HSL values
+  /** Sovereign Creator triadic phase */
+  phase: TriadicPhase;
 }
 
-// Earth-toned, muted palette — inspired by Aman's natural materials
+// Earth-toned, muted palette — phase-aware hue shifts
+// Learn apps: gold (38°), Work apps: terracotta (25–32°), Play apps: sienna (20°)
 const apps: AppIcon[] = [
-  { label: "Console",      icon: Grid3X3,   action: "/hologram-console", color: "30 12% 22%" },
-  { label: "Your Space",   icon: User,      action: "/your-space",       color: "25 18% 28%" },
-  { label: "Apps",         icon: Compass,   action: "/console/apps",     color: "45 16% 26%" },
-  { label: "Code Nexus",   icon: GitBranch, action: "/code-nexus",       color: "32 20% 26%" },
-  { label: "Framework",    icon: FileText,  action: "/standard",         color: "38 22% 30%" },
-  { label: "Community",    icon: Globe,     action: "/research",         color: "20 14% 30%" },
-  { label: "Identity",     icon: Shield,    action: "__claim",           color: "15 16% 28%" },
-  { label: "Intelligence", icon: Sparkles,  action: "__chat",            color: "38 25% 28%" },
+  // Work — creation, building
+  { label: "Console",      icon: Grid3X3,   action: "/hologram-console", color: "30 12% 22%",  phase: "work" },
+  // Play — reflection, witnessing
+  { label: "Your Space",   icon: User,      action: "/your-space",       color: "20 18% 28%",  phase: "play" },
+  // Work — building
+  { label: "Apps",         icon: Compass,   action: "/console/apps",     color: "28 16% 26%",  phase: "work" },
+  // Work — creation via code
+  { label: "Code Nexus",   icon: GitBranch, action: "/code-nexus",       color: "25 20% 26%",  phase: "work" },
+  // Learn — vision, understanding
+  { label: "Framework",    icon: FileText,  action: "/standard",         color: "38 22% 30%",  phase: "learn" },
+  // Learn — knowledge, discovery
+  { label: "Community",    icon: Globe,     action: "/research",         color: "38 14% 30%",  phase: "learn" },
+  // Work — identity manifestation
+  { label: "Identity",     icon: Shield,    action: "__claim",           color: "25 16% 28%",  phase: "work" },
+  // Work — intelligence tools
+  { label: "Intelligence", icon: Sparkles,  action: "__chat",            color: "30 25% 28%",  phase: "work" },
 ];
 
 const dockApps: AppIcon[] = [
-  { label: "Console", icon: Grid3X3,  action: "/hologram-console", color: "30 12% 22%" },
-  { label: "AI",      icon: Sparkles, action: "__chat",            color: "38 25% 28%" },
-  { label: "Space",   icon: User,     action: "/your-space",       color: "25 18% 28%" },
-  { label: "Search",  icon: Search,   action: "__search",          color: "30 8% 26%" },
+  { label: "Console", icon: Grid3X3,  action: "/hologram-console", color: "30 12% 22%",  phase: "work" },
+  { label: "AI",      icon: Sparkles, action: "__chat",            color: "30 25% 28%",  phase: "work" },
+  { label: "Space",   icon: User,     action: "/your-space",       color: "20 18% 28%",  phase: "play" },
+  { label: "Search",  icon: Search,   action: "__search",          color: "30 8% 26%",   phase: "learn" },
 ];
 
 /* ── Parallax hook (gyroscope + touch fallback) ────────────── */
@@ -190,15 +207,22 @@ export default function MobileOsShell() {
                   style={{ color: "hsla(38, 15%, 85%, 0.7)" }}
                 />
               </div>
-              <span
-                className="text-[10px] tracking-wide leading-tight"
-                style={{
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  color: "hsla(38, 12%, 70%, 0.45)",
-                }}
-              >
-                {app.label}
-              </span>
+              {/* Phase indicator dot — whisper-subtle */}
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="w-1 h-1 rounded-full"
+                  style={{ background: PHASES[app.phase].color, opacity: 0.5 }}
+                />
+                <span
+                  className="text-[10px] tracking-wide leading-tight"
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    color: "hsla(38, 12%, 70%, 0.45)",
+                  }}
+                >
+                  {app.label}
+                </span>
+              </div>
             </button>
           ))}
         </div>
