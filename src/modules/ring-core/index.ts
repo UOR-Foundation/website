@@ -41,3 +41,15 @@ export { transformCertificate, isometryCertificate, involutionCertificate } from
 
 // ── v2 Composition ────────────────────────────────────────────────────────
 export { compose, verifyCriticalComposition, verifyCriticalCompositionAll } from "./compose";
+
+// ── v2 Geometric Reasoning ───────────────────────────────────────────────
+export {
+  AXIS_TO_REASONING, REASONING_TO_AXIS,
+  deductiveStep, inductiveStep, inductiveNearest,
+  abductiveCurvature, reasoningCycle, reasoningLoop,
+  CATASTROPHE_THRESHOLD_Q0, CONVERGENCE_EPSILON,
+} from "./reasoning";
+export type {
+  ReasoningMode, DeductiveResult, InductiveResult, AbductiveResult,
+  AbductiveHypothesis, ReasoningCycle,
+} from "./reasoning";
