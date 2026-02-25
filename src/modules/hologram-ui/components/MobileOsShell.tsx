@@ -17,6 +17,7 @@ import {
   FileText,
   Globe,
   Shield,
+  GitBranch,
   Search,
 } from "lucide-react";
 import HologramClaimOverlay from "./HologramClaimOverlay";
@@ -33,14 +34,14 @@ interface AppIcon {
 
 // Earth-toned, muted palette — inspired by Aman's natural materials
 const apps: AppIcon[] = [
-  { label: "Console",     icon: Grid3X3,  action: "/hologram-console", color: "30 12% 22%" },
-  { label: "Your Space",  icon: User,     action: "/your-space",       color: "25 18% 28%" },
-  { label: "Apps",        icon: Compass,  action: "/console/apps",     color: "45 16% 26%" },
-  { label: "Framework",   icon: FileText, action: "/standard",         color: "38 22% 30%" },
-  { label: "Community",   icon: Globe,    action: "/research",         color: "20 14% 30%" },
-  { label: "Identity",    icon: Shield,   action: "__claim",           color: "15 16% 28%" },
-  { label: "Settings",    icon: Settings, action: "/settings",         color: "30 8% 26%" },
-  { label: "Intelligence", icon: Sparkles, action: "__chat",            color: "38 25% 28%" },
+  { label: "Console",      icon: Grid3X3,   action: "/hologram-console", color: "30 12% 22%" },
+  { label: "Your Space",   icon: User,      action: "/your-space",       color: "25 18% 28%" },
+  { label: "Apps",         icon: Compass,   action: "/console/apps",     color: "45 16% 26%" },
+  { label: "Code Nexus",   icon: GitBranch, action: "/code-nexus",       color: "32 20% 26%" },
+  { label: "Framework",    icon: FileText,  action: "/standard",         color: "38 22% 30%" },
+  { label: "Community",    icon: Globe,     action: "/research",         color: "20 14% 30%" },
+  { label: "Identity",     icon: Shield,    action: "__claim",           color: "15 16% 28%" },
+  { label: "Intelligence", icon: Sparkles,  action: "__chat",            color: "38 25% 28%" },
 ];
 
 const dockApps: AppIcon[] = [
