@@ -668,7 +668,7 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
 
   if (role === "system") {
     return (
-      <div className="flex justify-center">
+      <div className="flex justify-center animate-[message-fade-in_0.5s_ease-out_both]">
         <p
           className="text-sm px-5 py-2 rounded-full"
           style={{
@@ -685,7 +685,7 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
   const isUser = role === "user";
 
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"} animate-[message-fade-in_0.5s_ease-out_both]`}>
       <div
         className="max-w-[85%] px-5 py-4 rounded-2xl"
         style={
