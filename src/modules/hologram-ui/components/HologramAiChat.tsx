@@ -17,9 +17,12 @@ import {
 } from "lucide-react";
 import {
   AGENT_PERSONAS,
+  AGENT_SKILLS,
   getDefaultPersona,
   getPersonaById,
+  getSkillsForPersona,
   type AgentPersona,
+  type AgentSkill,
 } from "@/modules/hologram-ui/agent-personas";
 import { PHASES } from "@/modules/hologram-ui/sovereign-creator";
 import {
@@ -97,6 +100,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
   const [selectedModelIdx, setSelectedModelIdx] = useState<number | null>(null);
   const [selectedCloudModel, setSelectedCloudModel] = useState<string>(CLOUD_MODELS[0].id);
   const [selectedPersona, setSelectedPersona] = useState<AgentPersona>(getDefaultPersona());
+  const [activeSkill, setActiveSkill] = useState<AgentSkill | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const modelPickerRef = useRef<HTMLDivElement>(null);
@@ -359,6 +363,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
           messages: [{ role: "user", content: text }],
           model: selectedCloudModel,
           personaId: selectedPersona.id,
+          skillId: activeSkill?.id || selectedPersona.defaultSkillId,
         }),
       });
 
@@ -438,7 +443,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
     } finally {
       setIsGenerating(false);
     }
-  }, [input, isGenerating, ai, history, selectedCloudModel, isLoadingModel, selectedPersona]);
+  }, [input, isGenerating, ai, history, selectedCloudModel, isLoadingModel, selectedPersona, activeSkill]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -595,6 +600,38 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
           </div>
         </div>
 
+        {/* ── Skill Bar (compact, always visible when in conversation) ── */}
+        {hasMessages && (
+          <div
+            className="flex items-center gap-1.5 px-4 py-1.5 overflow-x-auto no-scrollbar"
+            style={{ borderBottom: `1px solid ${P.borderLight}` }}
+          >
+            <span className="text-[10px] tracking-wider flex-shrink-0 mr-1" style={{ color: P.textDimmer }}>
+              {selectedPersona.name}
+            </span>
+            {getSkillsForPersona(selectedPersona).map((skill) => {
+              const isActive = (activeSkill?.id || selectedPersona.defaultSkillId) === skill.id;
+              const phaseDef = PHASES[skill.phase];
+              return (
+                <button
+                  key={skill.id}
+                  onClick={() => setActiveSkill(isActive && activeSkill ? null : skill)}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] flex-shrink-0 transition-all"
+                  style={{
+                    background: isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.2)` : "transparent",
+                    border: `1px solid ${isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.35)` : "transparent"}`,
+                    color: isActive ? phaseDef.color : P.textDimmer,
+                  }}
+                  title={skill.description}
+                >
+                  <span>{skill.icon}</span>
+                  {skill.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* ── Messages / Welcome ───────────────────────────────────── */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6" style={{ minHeight: "320px" }}>
           {/* Welcome state when no messages */}
@@ -664,6 +701,35 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                 <p className="text-[10px] text-center mt-2" style={{ color: P.textDimmer }}>
                   {selectedPersona.description}
                 </p>
+
+                {/* Skill chips for selected persona */}
+                <div className="mt-3">
+                  <p className="text-[10px] tracking-widest uppercase text-center mb-2" style={{ color: P.textDimmer }}>
+                    Available skills
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    {getSkillsForPersona(selectedPersona).map((skill) => {
+                      const isActive = (activeSkill?.id || selectedPersona.defaultSkillId) === skill.id;
+                      const phaseDef = PHASES[skill.phase];
+                      return (
+                        <button
+                          key={skill.id}
+                          onClick={() => setActiveSkill(isActive && activeSkill ? null : skill)}
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] transition-all hover:scale-[1.03]"
+                          style={{
+                            background: isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.25)` : "hsla(30, 8%, 26%, 0.5)",
+                            border: `1px solid ${isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.4)` : P.borderLight}`,
+                            color: isActive ? phaseDef.color : P.textMuted,
+                          }}
+                          title={skill.description}
+                        >
+                          <span className="text-[10px]">{skill.icon}</span>
+                          {skill.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           )}
