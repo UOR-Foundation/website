@@ -267,3 +267,16 @@ export type {
   IngestExecutableResult,
   IngestSpawnedResult,
 } from "./universal-ingest";
+
+// ── vShell (REPL Compound Operation) ──────────────────────────────────────
+// A stateful shell session over the HologramEngine. Parses POSIX-style
+// commands, dispatches to vIO syscalls, returns structured results for UI.
+
+export { VShell } from "./vshell";
+export type {
+  ShellResult,
+  ShellLine,
+  ShellResultKind,
+  ShellEffects,
+  ShellState,
+} from "./vshell";
