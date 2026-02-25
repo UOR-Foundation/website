@@ -1,9 +1,9 @@
 /**
- * CodeNexusPage — Phase 3
- * ═══════════════════════
+ * CodeNexusPage — Holographic Lens
+ * ═════════════════════════════════
  *
- * Repository ingestion → graph store → visual explorer + query panel.
- * Two modes: Visual (d3-force graph) and Query (structured traversals).
+ * Repository ingestion → UOR mapping → graph store → visual explorer + query + intelligence.
+ * Three modes: Visual (d3-force), Query (structured traversals), Intelligence (NL→graph).
  */
 
 import { useState, useCallback, useMemo, useEffect } from "react";
@@ -110,6 +110,7 @@ export default function CodeNexusPage() {
       setIngestion(null);
       setMapping(null);
       setSelectedNode(null);
+      setPersistenceReport(null);
       try {
         const result = await ingestFromZip(file, setProgress);
         await runPipeline(result);
@@ -170,6 +171,7 @@ export default function CodeNexusPage() {
     setError(null);
     setProgress(null);
     setSelectedNode(null);
+    setPersistenceReport(null);
   };
 
   const hasGraph = graphStore.entityCount() > 0;
@@ -180,7 +182,7 @@ export default function CodeNexusPage() {
       subtitle="Holographic Lens · Isometry"
       icon={<GitBranch size={16} />}
       backTo="/"
-      badge="Phase 3"
+      badge="Lens"
       actions={
         <div className="flex items-center gap-2">
           {hasGraph && userId && (

@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.code-nexus-query]
 verify_jwt = false
+
+[functions.fetch-repo]
+verify_jwt = false

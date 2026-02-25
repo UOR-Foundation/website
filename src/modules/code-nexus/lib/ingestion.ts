@@ -172,9 +172,9 @@ export async function ingestFromGitHub(
   onProgress?.("Fetching repository archive…");
 
   // Call the fetch-repo edge function
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  const funcUrl = `https://${projectId}.supabase.co/functions/v1/fetch-repo`;
+  const funcUrl = `${supabaseUrl}/functions/v1/fetch-repo`;
 
   const response = await fetch(funcUrl, {
     method: "POST",
