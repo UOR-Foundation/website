@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 function getDayProgress(): number {
   const now = new Date();
   const seconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-  return seconds / 86400; // fraction of 24h
+  return seconds / 86400;
 }
 
 const SIZE = 96;
@@ -29,7 +29,7 @@ export default function DayProgressRing() {
   const offset = CIRCUMFERENCE * (1 - progress);
 
   return (
-    <div className="group relative flex flex-col items-center gap-1.5 cursor-default select-none">
+    <div className="group relative flex flex-col items-center gap-2 cursor-default select-none">
       {/* Ring container */}
       <div className="relative" style={{ width: SIZE, height: SIZE }}>
         <svg
@@ -61,7 +61,27 @@ export default function DayProgressRing() {
             strokeDashoffset={offset}
             style={{ transition: "stroke-dashoffset 1.2s ease-out" }}
           />
+          {/* Subtle glow dot at the leading edge of the arc */}
+          <circle
+            cx={SIZE / 2 + RADIUS * Math.cos(2 * Math.PI * progress)}
+            cy={SIZE / 2 + RADIUS * Math.sin(2 * Math.PI * progress)}
+            r={4}
+            fill="hsla(38, 40%, 65%, 0.6)"
+            style={{
+              transition: "cx 1.2s ease-out, cy 1.2s ease-out",
+              filter: "blur(2px)",
+            }}
+          />
         </svg>
+
+        {/* Slow breathing glow behind the ring */}
+        <div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            background: "radial-gradient(circle, hsla(38, 35%, 55%, 0.08) 0%, transparent 70%)",
+            animation: "ring-breathe 6s ease-in-out infinite",
+          }}
+        />
 
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -69,7 +89,7 @@ export default function DayProgressRing() {
             className="text-xl font-light leading-none"
             style={{
               fontFamily: "'Playfair Display', serif",
-              color: "hsla(38, 15%, 90%, 0.88)",
+              color: "hsla(38, 15%, 92%, 0.92)",
               fontWeight: 300,
             }}
           >
@@ -78,12 +98,12 @@ export default function DayProgressRing() {
         </div>
       </div>
 
-      {/* Label */}
+      {/* Label — higher contrast */}
       <span
-        className="text-[9px] tracking-[0.35em] uppercase"
+        className="text-[9px] tracking-[0.4em] uppercase"
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
-          color: "hsla(38, 12%, 70%, 0.35)",
+          color: "hsla(38, 15%, 80%, 0.6)",
           fontWeight: 400,
         }}
       >
@@ -108,6 +128,14 @@ export default function DayProgressRing() {
       >
         {pct}% of your day has passed
       </div>
+
+      {/* Keyframe for breathing glow */}
+      <style>{`
+        @keyframes ring-breathe {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.06); }
+        }
+      `}</style>
     </div>
   );
 }
