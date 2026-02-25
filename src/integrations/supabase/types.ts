@@ -266,6 +266,57 @@ export type Database = {
         }
         Relationships: []
       }
+      lens_blueprints: {
+        Row: {
+          author_id: string | null
+          blueprint: Json
+          created_at: string
+          derivation_id: string
+          description: string | null
+          id: string
+          morphism: string
+          name: string
+          problem_statement: string | null
+          tags: string[] | null
+          uor_address: string
+          uor_cid: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          author_id?: string | null
+          blueprint: Json
+          created_at?: string
+          derivation_id: string
+          description?: string | null
+          id?: string
+          morphism?: string
+          name: string
+          problem_statement?: string | null
+          tags?: string[] | null
+          uor_address: string
+          uor_cid: string
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          author_id?: string | null
+          blueprint?: Json
+          created_at?: string
+          derivation_id?: string
+          description?: string | null
+          id?: string
+          morphism?: string
+          name?: string
+          problem_statement?: string | null
+          tags?: string[] | null
+          uor_address?: string
+          uor_cid?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

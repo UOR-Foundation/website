@@ -5,6 +5,9 @@
  * Paste any JSON object → dehydrate → refract through all modalities.
  * Visual proof that UOR is a universal, lossless encoder-decoder.
  *
+ * Now with Blueprint Library: save, load, and share composed lenses
+ * as content-addressed UOR objects.
+ *
  * @module lens-inspector/pages/LensInspectorPage
  */
 
@@ -12,6 +15,7 @@ import { useState, useCallback } from "react";
 import {
   IconPrism, IconCode, IconHash, IconCopy, IconCheck,
   IconPlayerPlay, IconBraces, IconWorld, IconArrowsExchange, IconFileCode, IconSchema,
+  IconBrain, IconArrowRight,
 } from "@tabler/icons-react";
 import { PageShell } from "@/modules/hologram-ui";
 import {
@@ -21,6 +25,14 @@ import {
   type SingleProofResult,
 } from "@/modules/uor-sdk/canonical";
 import type { Hologram } from "@/modules/uns/core/hologram";
+import {
+  instantiateBlueprint,
+  grindBlueprint,
+  type LensBlueprint,
+  type GroundBlueprint,
+} from "@/modules/uns/core/hologram/lens-blueprint";
+import { focusLens } from "@/modules/uns/core/hologram/lens";
+import BlueprintLibrary from "../components/BlueprintLibrary";
 
 // ── Sample objects ─────────────────────────────────────────────────────────
 
@@ -40,12 +52,16 @@ const SAMPLES: Record<string, unknown> = {
     version: "1.0.0",
     tags: ["content-addressing", "lossless", "deterministic"],
   },
-  "UOR Store Object": {
-    "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-    "@type": "store:StoredObject",
-    "store:cid": "bafyreib...",
-    "store:serialisation": '{"hello":"world"}',
-  },
+  "Agent Session": `My name is Claude. I am an AI assistant created by Anthropic.
+I decided to use the UOR framework for content-addressing.
+I learned that URDNA2015 produces deterministic N-Quads.
+The plan is to build a memory system using hash-chains.
+I discovered that CIDv1 provides universal content identifiers.
+I realized that every session gap causes identity fragmentation.
+My purpose is to help humans solve complex problems.
+I chose to prioritize identity preservation over compression.
+This is general context about the current conversation.
+I confirmed that the Memory Crisis is the most discussed topic on Moltbook.`,
 };
 
 // ── Modality metadata ──────────────────────────────────────────────────────
@@ -179,6 +195,42 @@ function HologramPanel({ hologram }: { hologram: Hologram }) {
   );
 }
 
+// ── Blueprint Execution Result Panel ───────────────────────────────────────
+
+function BlueprintResultPanel({
+  result,
+  ground,
+}: {
+  result: unknown;
+  ground: GroundBlueprint | null;
+}) {
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <div className="bg-primary/5 border-b border-border px-4 py-2.5 flex items-center gap-2">
+        <IconBrain size={14} className="text-primary" />
+        <span className="text-xs font-semibold text-foreground">Blueprint Execution Result</span>
+        {ground && (
+          <span className="ml-auto text-[9px] font-mono text-muted-foreground">
+            Lens CID: {ground.proof.cid.slice(0, 20)}…
+          </span>
+        )}
+      </div>
+      {ground && (
+        <div className="px-4 py-2 border-b border-border bg-secondary/30 flex items-center gap-3">
+          <span className="text-[9px] font-medium text-muted-foreground">UOR Address</span>
+          <span className="text-[10px] font-mono text-primary">
+            {ground.proof.uorAddress["u:glyph"]}
+          </span>
+          <CopyButton text={ground.proof.cid} />
+        </div>
+      )}
+      <pre className="p-4 overflow-x-auto text-[11px] leading-relaxed font-mono text-foreground whitespace-pre-wrap break-all max-h-[500px] overflow-y-auto">
+        {typeof result === "string" ? result : JSON.stringify(result, null, 2)}
+      </pre>
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────
 
 export default function LensInspectorPage() {
@@ -190,6 +242,12 @@ export default function LensInspectorPage() {
   const [refractions, setRefractions] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<RefractionModality>("nquads");
 
+  // Blueprint state
+  const [activeBlueprint, setActiveBlueprint] = useState<LensBlueprint | null>(null);
+  const [blueprintResult, setBlueprintResult] = useState<unknown>(null);
+  const [blueprintGround, setBlueprintGround] = useState<GroundBlueprint | null>(null);
+  const [executingBlueprint, setExecutingBlueprint] = useState(false);
+
   const handleDehydrate = useCallback(async () => {
     setParseError(null);
     setProcessing(true);
@@ -199,7 +257,6 @@ export default function LensInspectorPage() {
       setProof(result.proof);
       setHologram(result.hologram);
 
-      // Rehydrate all modalities in parallel
       const keys: RefractionModality[] = ["nquads", "jsonld", "jsonld-framed", "compact-json", "turtle", "rdf-xml", "graphql-sdl"];
       const results = await Promise.all(
         keys.map(async (m) => {
@@ -217,11 +274,50 @@ export default function LensInspectorPage() {
   }, [input]);
 
   const loadSample = useCallback((name: string) => {
-    setInput(JSON.stringify(SAMPLES[name], null, 2));
+    const sample = SAMPLES[name];
+    setInput(typeof sample === "string" ? sample : JSON.stringify(sample, null, 2));
     setProof(null);
     setHologram(null);
     setRefractions({});
+    setBlueprintResult(null);
+    setBlueprintGround(null);
   }, []);
+
+  const handleLoadBlueprint = useCallback((bp: LensBlueprint) => {
+    setActiveBlueprint(bp);
+    setBlueprintResult(null);
+    setBlueprintGround(null);
+  }, []);
+
+  const handleExecuteBlueprint = useCallback(async () => {
+    if (!activeBlueprint) return;
+    setExecutingBlueprint(true);
+    setParseError(null);
+    try {
+      // Grind for identity
+      const ground = await grindBlueprint(activeBlueprint);
+      setBlueprintGround(ground);
+
+      // Instantiate and execute
+      const { lens } = instantiateBlueprint(activeBlueprint);
+
+      // Use the current input as the lens input
+      let lensInput: unknown;
+      try {
+        lensInput = JSON.parse(input);
+      } catch {
+        // If input isn't JSON, pass as raw string (for session text)
+        lensInput = input;
+      }
+
+      const result = await focusLens(lens, lensInput);
+      setBlueprintResult(result.output);
+    } catch (err: any) {
+      setParseError(err.message ?? "Blueprint execution failed");
+    } finally {
+      setExecutingBlueprint(false);
+    }
+  }, [activeBlueprint, input]);
 
   return (
     <PageShell
@@ -231,6 +327,43 @@ export default function LensInspectorPage() {
       backTo="/hologram-ui"
       badge="EOR"
     >
+      {/* Blueprint Library */}
+      <section>
+        <BlueprintLibrary
+          onLoadBlueprint={handleLoadBlueprint}
+          currentBlueprint={activeBlueprint}
+        />
+      </section>
+
+      {/* Active Blueprint */}
+      {activeBlueprint && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <IconBrain size={14} className="text-primary" />
+              Active Lens: {activeBlueprint.name}
+              <span className="text-[9px] font-mono text-muted-foreground ml-1">
+                {activeBlueprint.elements.length} elements → {activeBlueprint.morphism}
+              </span>
+            </h2>
+            <button
+              onClick={handleExecuteBlueprint}
+              disabled={executingBlueprint || !input.trim()}
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground text-[10px] font-semibold rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <IconArrowRight size={12} />
+              {executingBlueprint ? "Executing…" : "Execute Lens on Input"}
+            </button>
+          </div>
+          {activeBlueprint.problem && (
+            <div className="bg-secondary/50 border border-border rounded-lg p-3">
+              <span className="text-[9px] font-semibold text-muted-foreground uppercase">Problem Statement</span>
+              <p className="text-[10px] text-foreground mt-1">{activeBlueprint.problem}</p>
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Input section */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
@@ -240,7 +373,7 @@ export default function LensInspectorPage() {
               Input Object
             </h2>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Paste any JSON or JSON-LD object. Dehydrate to canonical form, then refract into any modality.
+              Paste any JSON, JSON-LD object, or raw text. Dehydrate to canonical form, refract into any modality, or execute through a lens.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -281,7 +414,14 @@ export default function LensInspectorPage() {
         </button>
       </section>
 
-      {/* Results */}
+      {/* Blueprint execution result */}
+      {blueprintResult && (
+        <section className="space-y-3">
+          <BlueprintResultPanel result={blueprintResult} ground={blueprintGround} />
+        </section>
+      )}
+
+      {/* Dehydration Results */}
       {proof && (
         <>
           {/* Identity card */}
@@ -306,7 +446,6 @@ export default function LensInspectorPage() {
               </span>
             </h2>
 
-            {/* Tab bar */}
             <div className="flex items-center gap-1 border-b border-border pb-px overflow-x-auto">
               {MODALITIES.map(({ key, label, icon: Icon }) => (
                 <button
@@ -324,7 +463,6 @@ export default function LensInspectorPage() {
               ))}
             </div>
 
-            {/* Active panel */}
             <div className="mt-2">
               {activeTab === "hologram" && hologram ? (
                 <HologramPanel hologram={hologram} />
@@ -351,7 +489,6 @@ export default function LensInspectorPage() {
                 </div>
               )}
 
-              {/* Modality description */}
               <p className="text-[10px] text-muted-foreground mt-2 italic">
                 {MODALITIES.find((m) => m.key === activeTab)?.description}
               </p>
