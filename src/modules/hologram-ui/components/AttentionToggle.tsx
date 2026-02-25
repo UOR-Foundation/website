@@ -44,6 +44,7 @@ export default function AttentionToggle() {
           lastSnappedRef.current = snapped;
           setPulsing(true);
           setTimeout(() => setPulsing(false), 200);
+          if (navigator.vibrate) navigator.vibrate(8);
         } else if (snapped === ratio) {
           lastSnappedRef.current = null;
         }
