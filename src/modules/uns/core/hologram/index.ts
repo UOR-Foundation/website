@@ -157,7 +157,7 @@ export type {
 // A Lens is a content-addressed circuit of composable elements.
 // Same elements + same wiring = same identity. Lenses ARE holograms.
 
-export { composeLens, grindLens, focusLens, nestLens, fromProjection, element, sequence, parallel } from "./lens";
+export { composeLens, grindLens, focusLens, refractLens, dehydrate, rehydrate, roundTrip, nestLens, fromProjection, element, sequence, parallel } from "./lens";
 export type {
   HolographicLens,
   LensElement,
@@ -165,4 +165,7 @@ export type {
   LensMorphism,
   GroundLens,
   FocusResult,
+  RefractionModality,
+  RefractResult,
+  DehydrationResult,
 } from "./lens";

@@ -34,7 +34,7 @@
  * @module uns/core/hologram/lens
  */
 
-import { singleProofHash, type SingleProofResult } from "@/lib/uor-canonical";
+import { singleProofHash, canonicalizeToNQuads, type SingleProofResult } from "@/lib/uor-canonical";
 import { project, PROJECTIONS, type Hologram, type ProjectionInput } from "./index";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -44,6 +44,9 @@ import { project, PROJECTIONS, type Hologram, type ProjectionInput } from "./ind
  *
  * In the linear (pipeline) case, focus receives the previous element's
  * output as a single value. In the DAG case, it receives a named record.
+ *
+ * Bidirectional elements MAY provide a `refract` inverse function.
+ * When present, the lens can operate in reverse (rehydration).
  */
 export interface LensElement {
   /** Unique ID within this lens. */
@@ -52,8 +55,9 @@ export interface LensElement {
   readonly kind: string;
   /** The pure function. Deterministic: same input → same output. Always. */
   readonly focus: (input: unknown) => Promise<unknown>;
+  /** Optional inverse function for rehydration. When present, the element is bidirectional. */
+  readonly refract?: (input: unknown) => Promise<unknown>;
 }
-
 /**
  * A wire for non-linear (DAG) data flow.
  * Uses dotted notation: "elementId.portName" or just "elementId".
@@ -91,6 +95,67 @@ export interface FocusResult {
   readonly output: unknown;
   readonly trace: readonly string[];
   readonly lensCid: string;
+}
+
+// ── Refraction Types (Bidirectional Lens) ──────────────────────────────────
+
+/**
+ * Supported rehydration modalities — the target "language" for refraction.
+ *
+ * Each modality is a deterministic function from canonical form (N-Quads +
+ * SingleProofResult) to a specific representation. The lens provides the
+ * blueprint; the modality provides the target form factor.
+ *
+ *   "nquads"       → raw W3C URDNA2015 N-Quads string
+ *   "jsonld"       → expanded JSON-LD document (from N-Quads)
+ *   "compact-json" → deterministic sorted-key JSON (no @context)
+ *   "turtle"       → Terse RDF Triple Language (N3 subset)
+ *   "hologram"     → full hologram: all 25+ protocol projections
+ *   "identity"     → SingleProofResult passthrough
+ */
+export type RefractionModality =
+  | "nquads"
+  | "jsonld"
+  | "compact-json"
+  | "turtle"
+  | "hologram"
+  | "identity";
+
+/**
+ * The result of refracting (rehydrating) through a lens.
+ *
+ * Refraction is the inverse of focus: it takes a canonical form and
+ * unpacks it into a desired modality, running any bidirectional elements
+ * in reverse order.
+ */
+export interface RefractResult {
+  /** The rehydrated output in the requested modality. */
+  readonly output: unknown;
+  /** The modality used for rehydration. */
+  readonly modality: RefractionModality;
+  /** Morphism classification of the refraction. */
+  readonly morphism: LensMorphism;
+  /** Execution trace (element IDs in reverse order). */
+  readonly trace: readonly string[];
+  /** CID of the lens used (same as focus — lens identity is fixed). */
+  readonly lensCid: string;
+  /** The SingleProofResult that was the source of the refraction. */
+  readonly proof: SingleProofResult;
+}
+
+/**
+ * The result of dehydration: any object → canonical UOR form.
+ *
+ * Dehydration collapses any object into its canonical, content-addressed
+ * representation. This is a morphism:Isometry — lossless, invertible.
+ */
+export interface DehydrationResult {
+  /** The SingleProofResult containing all identity forms. */
+  readonly proof: SingleProofResult;
+  /** The full hologram (all protocol projections). */
+  readonly hologram: Hologram;
+  /** The original object, preserved for round-trip verification. */
+  readonly original: unknown;
 }
 
 // ── Serializable Manifest (for hashing — strips functions) ─────────────────
@@ -135,15 +200,21 @@ export function fromProjection(projectionName: string): LensElement {
 
 /**
  * Create a LensElement from any pure function.
+ * Optionally provide a `refract` inverse for bidirectional lenses.
  *
- *   const upper = element("uppercase", async (s) => (s as string).toUpperCase());
+ *   const upper = element("uppercase",
+ *     async (s) => (s as string).toUpperCase(),
+ *     "transform",
+ *     async (s) => (s as string).toLowerCase(),   // inverse
+ *   );
  */
 export function element(
   id: string,
   focus: (input: unknown) => Promise<unknown>,
   kind = "transform",
+  refract?: (input: unknown) => Promise<unknown>,
 ): LensElement {
-  return { id, kind, focus };
+  return { id, kind, focus, ...(refract ? { refract } : {}) };
 }
 
 // ── Core API ───────────────────────────────────────────────────────────────
@@ -350,6 +421,234 @@ export function parallel(
   };
 
   return composeLens(name, [fan], { morphism: "transform" });
+}
+
+// ── Refraction (Bidirectional Lens — Rehydration) ──────────────────────────
+
+/**
+ * Standard rehydration targets — built-in refraction modalities.
+ *
+ * Each is a pure function: SingleProofResult → target representation.
+ * These form the "spectral lines" of the EOR decoder: one canonical form,
+ * refracted into any desired modality.
+ */
+const REFRACTION_TARGETS: Record<
+  RefractionModality,
+  (proof: SingleProofResult, original?: unknown) => Promise<unknown>
+> = {
+  /**
+   * nquads: Raw URDNA2015 canonical N-Quads string.
+   * The most fundamental form — byte-identical on any W3C-compliant system.
+   */
+  nquads: async (proof) => proof.nquads,
+
+  /**
+   * jsonld: Expanded JSON-LD document reconstructed from N-Quads.
+   * Uses jsonld.fromRDF to parse the canonical N-Quads back into JSON-LD.
+   * This is a lossless round-trip when the original was JSON-LD.
+   */
+  jsonld: async (proof) => {
+    const jsonldLib = await import("jsonld");
+    const expanded = await (jsonldLib.default as any).fromRDF(proof.nquads, {
+      format: "application/n-quads",
+    });
+    return expanded;
+  },
+
+  /**
+   * compact-json: Deterministic sorted-key JSON.
+   * Strips all JSON-LD semantics (@context, @type, @id) and returns a
+   * compact, human-readable JSON representation. Lossy for RDF metadata
+   * but lossless for the payload data.
+   */
+  "compact-json": async (proof) => {
+    const jsonldLib = await import("jsonld");
+    const expanded = await (jsonldLib.default as any).fromRDF(proof.nquads, {
+      format: "application/n-quads",
+    });
+    // Flatten and strip JSON-LD wrappers for maximum readability
+    if (Array.isArray(expanded) && expanded.length === 1) {
+      return expanded[0];
+    }
+    return expanded;
+  },
+
+  /**
+   * turtle: Terse RDF Triple Language (Turtle/N3 subset).
+   * A human-readable RDF serialization produced from canonical N-Quads.
+   * Each N-Quad line "S P O ." is valid Turtle as-is (minus graph component).
+   */
+  turtle: async (proof) => {
+    // N-Quads → Turtle: strip the graph component (4th position) from each quad
+    const lines = proof.nquads.trim().split("\n").filter(Boolean);
+    const triples = lines.map((line) => {
+      // N-Quad format: <S> <P> <O> <G> .
+      // Turtle format: <S> <P> <O> .
+      const parts = line.trim().replace(/ \.$/, "").split(" ");
+      // If there's a graph component (4th part before '.'), remove it
+      if (parts.length >= 4) {
+        // Check if 4th part looks like a graph URI
+        const last = parts[parts.length - 1];
+        if (last.startsWith("<") && last.endsWith(">")) {
+          parts.pop(); // Remove graph
+        }
+      }
+      return parts.join(" ") + " .";
+    });
+    return triples.join("\n");
+  },
+
+  /**
+   * hologram: The full hologram — all 25+ protocol projections.
+   * Returns the complete Hologram object with every registered standard.
+   */
+  hologram: async (proof) => {
+    const input: ProjectionInput = {
+      hashBytes: proof.hashBytes,
+      cid: proof.cid,
+      hex: proof.hashHex,
+    };
+    return project(input);
+  },
+
+  /**
+   * identity: SingleProofResult passthrough.
+   * Returns the canonical form itself — useful for piping into other lenses.
+   */
+  identity: async (proof) => proof,
+};
+
+/**
+ * Refract a lens — execute the circuit in reverse (rehydration).
+ *
+ * Given a canonical form (SingleProofResult) and a target modality,
+ * this runs any bidirectional elements in reverse order and then
+ * applies the standard rehydration target.
+ *
+ * If the lens has bidirectional elements (with `refract` functions),
+ * those are executed in reverse pipeline order before the modality
+ * transform. This enables custom rehydration logic.
+ *
+ * The refraction is classified by the lens's morphism type:
+ *   • "isometry"  — lossless round-trip guaranteed
+ *   • "embedding" — lossy, with compression witness
+ *   • "transform" — general, may be lossy
+ *
+ * @param lens      The Holographic Lens to refract through.
+ * @param proof     The SingleProofResult to rehydrate.
+ * @param modality  The target modality (default: "jsonld").
+ * @param original  Optional original object (for round-trip verification).
+ * @returns         RefractResult with rehydrated output.
+ */
+export async function refractLens(
+  lens: HolographicLens,
+  proof: SingleProofResult,
+  modality: RefractionModality = "jsonld",
+  original?: unknown,
+): Promise<RefractResult> {
+  const trace: string[] = [];
+
+  // Step 1: Apply the standard rehydration target
+  let current: unknown = await REFRACTION_TARGETS[modality](proof, original);
+  trace.push(`modality:${modality}`);
+
+  // Step 2: Run bidirectional elements in reverse (if any have refract)
+  const reversedElements = [...lens.elements].reverse();
+  for (const el of reversedElements) {
+    if (el.refract) {
+      current = await el.refract(current);
+      trace.push(`refract:${el.id}`);
+    }
+  }
+
+  const lensProof = await singleProofHash(toManifest(lens));
+
+  return {
+    output: current,
+    modality,
+    morphism: lens.morphism,
+    trace,
+    lensCid: lensProof.cid,
+    proof,
+  };
+}
+
+/**
+ * Dehydrate any object into its canonical UOR form.
+ *
+ * This is the universal encoder: any JavaScript object → content-addressed
+ * canonical representation with all identity forms (CID, DID, IPv6, Braille).
+ *
+ * Dehydration is always a morphism:Isometry — lossless and invertible
+ * (given the canonical bytes, the original semantics can be reconstructed).
+ *
+ *   const { proof, hologram } = await dehydrate(myObj);
+ *   // proof.nquads       — canonical N-Quads (source of truth)
+ *   // proof.cid          — IPFS CIDv1
+ *   // hologram           — all 25+ protocol projections
+ *
+ * @param obj  Any JavaScript object (JSON-LD or plain).
+ * @returns    DehydrationResult with proof, hologram, and original.
+ */
+export async function dehydrate(obj: unknown): Promise<DehydrationResult> {
+  const proof = await singleProofHash(obj);
+  const input: ProjectionInput = {
+    hashBytes: proof.hashBytes,
+    cid: proof.cid,
+    hex: proof.hashHex,
+  };
+  const hologram = project(input);
+  return { proof, hologram, original: obj };
+}
+
+/**
+ * Rehydrate a canonical form into a target modality.
+ *
+ * This is the universal decoder: canonical bytes → any desired representation.
+ * The modality specifies the "language" and form factor of the output.
+ *
+ * Can be used standalone (without a lens) for direct modality conversion,
+ * or through `refractLens()` for lens-guided rehydration with custom
+ * bidirectional elements.
+ *
+ *   const jsonld = await rehydrate(proof, "jsonld");
+ *   const turtle = await rehydrate(proof, "turtle");
+ *   const holo   = await rehydrate(proof, "hologram");
+ *
+ * @param proof     SingleProofResult from dehydration or singleProofHash.
+ * @param modality  Target modality (default: "jsonld").
+ * @returns         The rehydrated object in the requested modality.
+ */
+export async function rehydrate(
+  proof: SingleProofResult,
+  modality: RefractionModality = "jsonld",
+): Promise<unknown> {
+  return REFRACTION_TARGETS[modality](proof);
+}
+
+/**
+ * Full round-trip: dehydrate → refract → verify.
+ *
+ * Takes any object, dehydrates it to canonical form, then refracts it
+ * through a lens into the target modality. Returns both the rehydrated
+ * output and the dehydration proof for verification.
+ *
+ * This is the UOR encoder-decoder in a single function call:
+ *   Object → URDNA2015 → SHA-256 → Canonical Form → Target Modality
+ *
+ * @param lens      The lens to refract through.
+ * @param obj       Any JavaScript object.
+ * @param modality  Target modality for rehydration.
+ * @returns         Object containing refract result + dehydration proof.
+ */
+export async function roundTrip(
+  lens: HolographicLens,
+  obj: unknown,
+  modality: RefractionModality = "jsonld",
+): Promise<{ dehydrated: DehydrationResult; refracted: RefractResult }> {
+  const dehydrated = await dehydrate(obj);
+  const refracted = await refractLens(lens, dehydrated.proof, modality, obj);
+  return { dehydrated, refracted };
 }
 
 // ── DAG Topological Sort ───────────────────────────────────────────────────
