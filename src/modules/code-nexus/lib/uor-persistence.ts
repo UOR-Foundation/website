@@ -1,16 +1,16 @@
 /**
- * Code Nexus — UOR Graph Persistence
- * ═══════════════════════════════════
+ * Code Nexus — UOR Graph Persistence + Certification
+ * ═══════════════════════════════════════════════════
  *
  * Persists code graph entities as first-class UOR citizens:
- *   - Entities → uor_derivations (with epistemic grade)
- *   - Relations → uor_triples (with graph IRI scoping)
- *   - Pipeline → uor_receipts (via withVerifiedReceipt)
- *
- * Single function, single responsibility: bridge local graph → persistent UOR KG.
+ *   - Entities → uor_datums + uor_derivations (Grade B)
+ *   - Relations → uor_triples (graph-scoped)
+ *   - Certificates → uor_certificates (structural trust chain)
+ *   - Receipts → uor_receipts (via withVerifiedReceipt)
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { singleProofHash } from "@/lib/uor-canonical";
 import { withVerifiedReceipt } from "@/modules/verify/receipt-manager";
 import type { UorMappingResult, MappedEntity, MappedTriple } from "./uor-mapper";
 
@@ -19,6 +19,7 @@ import type { UorMappingResult, MappedEntity, MappedTriple } from "./uor-mapper"
 export interface PersistenceReport {
   derivationsWritten: number;
   triplesWritten: number;
+  certificatesIssued: number;
   receiptId: string;
   graphIri: string;
 }
@@ -120,11 +121,53 @@ export async function persistToUorGraph(
         if (!error) triplesWritten += batch.length;
       }
 
+      // Issue certificates — structural verification via re-hashing
+      onProgress?.("Issuing certificates…");
+      let certificatesIssued = 0;
+      const certRows = [];
+      for (const me of mapping.mappedEntities) {
+        // Re-hash to verify structural integrity
+        const reProof = await singleProofHash({
+          "@context": { "code": "https://uor.foundation/lens/code-nexus/entity/" },
+          "@type": `code:${me.entity.type}`,
+          "code:name": me.entity.name,
+          "code:content": me.entity.content,
+          "code:hash": me.entity.hash,
+        });
+        const valid = reProof.cid === me.proof.cid;
+        if (!valid) continue; // Skip entities that fail re-verification
+
+        const certProof = await singleProofHash({
+          "@context": { cert: "https://uor.foundation/cert/" },
+          "@type": "cert:CodeEntityCertificate",
+          "cert:derivationId": me.proof.derivationId,
+          "cert:resultIri": me.iri,
+          "cert:valid": "true",
+        });
+
+        certRows.push({
+          certificate_id: `urn:uor:cert:${certProof.cid.slice(0, 24)}`,
+          certifies_iri: me.iri,
+          derivation_id: me.proof.derivationId,
+          valid: true,
+          cert_chain: [me.proof.derivationId],
+        });
+      }
+
+      if (certRows.length > 0) {
+        for (let i = 0; i < certRows.length; i += BATCH_SIZE) {
+          const batch = certRows.slice(i, i + BATCH_SIZE);
+          const { error } = await supabase.from("uor_certificates").insert(batch);
+          if (!error) certificatesIssued += batch.length;
+        }
+      }
+
       return {
         derivationsWritten,
         triplesWritten,
+        certificatesIssued,
         graphIri,
-        receiptId: "", // filled below
+        receiptId: "",
       };
     },
     () => ({

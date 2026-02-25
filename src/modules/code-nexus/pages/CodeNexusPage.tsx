@@ -24,6 +24,7 @@ import type { IngestionResult } from "../lib/ingestion";
 import type { UorMappingResult } from "../lib/uor-mapper";
 import type { SessionRecord } from "../lib/session-persistence";
 import type { GraphNode } from "../lib/graph-store";
+import type { PersistenceReport } from "../lib/uor-persistence";
 import { supabase } from "@/integrations/supabase/client";
 
 type ViewMode = "visual" | "query" | "intelligence";
@@ -40,6 +41,7 @@ export default function CodeNexusPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("visual");
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [persistenceReport, setPersistenceReport] = useState<PersistenceReport | null>(null);
 
   const graphStore = useMemo(() => new CodeGraphStore(), []);
 
@@ -68,10 +70,11 @@ export default function CodeNexusPage() {
       const uorResult = await mapToUor(ingestionResult, setProgress);
       setProgress("Building graph…");
       populateGraph(ingestionResult, uorResult);
-      // Persist to UOR knowledge graph (non-blocking)
-      setProgress("Persisting to UOR graph…");
+      // Persist + certify to UOR knowledge graph (non-blocking)
+      setProgress("Persisting & certifying…");
       try {
-        await persistToUorGraph(uorResult, setProgress);
+        const report = await persistToUorGraph(uorResult, setProgress);
+        setPersistenceReport(report);
       } catch {
         // Non-fatal: persistence failure doesn't block the UI
       }
@@ -87,6 +90,7 @@ export default function CodeNexusPage() {
       setIngestion(null);
       setMapping(null);
       setSelectedNode(null);
+      setPersistenceReport(null);
       try {
         const result = await ingestFromGitHub(url, setProgress);
         await runPipeline(result);
@@ -259,7 +263,7 @@ export default function CodeNexusPage() {
         ) : (
           /* ── Results: Stats + Visual/Query ── */
           <div className="w-full space-y-6">
-            <IngestionResults ingestion={ingestion} mapping={mapping} />
+            <IngestionResults ingestion={ingestion} mapping={mapping} persistence={persistenceReport} />
 
             {hasGraph && (
               <>
