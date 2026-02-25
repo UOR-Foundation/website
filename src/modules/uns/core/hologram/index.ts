@@ -213,3 +213,37 @@ export type {
   EngineEvent,
   EngineListener,
 } from "./engine";
+
+// ── Virtual I/O Layer (POSIX Syscall Interface) ────────────────────────────
+// Maps familiar POSIX syscalls to UOR primitives. Zero new state — pure facade.
+// fork=forkBlueprint, exec=boot, read=refract, write=focus, mmap=project.
+
+export {
+  vExec,
+  vForkBlueprint,
+  vRead,
+  vWrite,
+  vMmap,
+  vMmapAll,
+  vIoctl,
+  vKill,
+  vWait,
+  vSuspend,
+  vResume,
+  vPipe,
+  vDup2,
+  vOpen,
+  vClose,
+  vForkExec,
+  vStat,
+  vPs,
+  STDIN,
+  STDOUT,
+  STDERR,
+  NETFD,
+} from "./virtual-io";
+export type {
+  FileDescriptor,
+  Pipe,
+  MmapResult,
+} from "./virtual-io";
