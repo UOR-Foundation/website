@@ -11,6 +11,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import type { TriadicPhase } from "@/modules/hologram-ui/sovereign-creator";
 import {
   X, Send, Loader2, Cpu, Sparkles, MessageSquare,
   Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap, User,
@@ -86,11 +87,12 @@ interface ChatMessage {
 interface HologramAiChatProps {
   open: boolean;
   onClose: () => void;
+  onPhaseChange?: (phase: TriadicPhase | null) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
+export default function HologramAiChat({ open, onClose, onPhaseChange }: HologramAiChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -142,6 +144,18 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
       setMessages([]);
     }
   }, [open]);
+
+  // ── Track active triadic phase for DayProgressRing ──────────────────
+  useEffect(() => {
+    if (!onPhaseChange) return;
+    if (open) {
+      // Active skill phase takes priority, then persona phase
+      const phase = activeSkill?.phase || selectedPersona.phase;
+      onPhaseChange(phase);
+    } else {
+      onPhaseChange(null);
+    }
+  }, [open, selectedPersona, activeSkill, onPhaseChange]);
 
   // Auto-resize textarea
   useEffect(() => {
