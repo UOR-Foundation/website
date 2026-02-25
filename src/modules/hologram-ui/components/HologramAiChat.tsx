@@ -13,8 +13,15 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   X, Send, Loader2, Cpu, Sparkles, MessageSquare,
-  Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap,
+  Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap, User,
 } from "lucide-react";
+import {
+  AGENT_PERSONAS,
+  getDefaultPersona,
+  getPersonaById,
+  type AgentPersona,
+} from "@/modules/hologram-ui/agent-personas";
+import { PHASES } from "@/modules/hologram-ui/sovereign-creator";
 import {
   getAiEngine,
   RECOMMENDED_MODELS,
@@ -89,6 +96,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [selectedModelIdx, setSelectedModelIdx] = useState<number | null>(null);
   const [selectedCloudModel, setSelectedCloudModel] = useState<string>(CLOUD_MODELS[0].id);
+  const [selectedPersona, setSelectedPersona] = useState<AgentPersona>(getDefaultPersona());
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const modelPickerRef = useRef<HTMLDivElement>(null);
@@ -350,6 +358,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
         body: JSON.stringify({
           messages: [{ role: "user", content: text }],
           model: selectedCloudModel,
+          personaId: selectedPersona.id,
         }),
       });
 
@@ -429,7 +438,7 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
     } finally {
       setIsGenerating(false);
     }
-  }, [input, isGenerating, ai, history, selectedCloudModel, isLoadingModel]);
+  }, [input, isGenerating, ai, history, selectedCloudModel, isLoadingModel, selectedPersona]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -604,59 +613,58 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
                 >
                   How can I help you today?
                 </h2>
-                <p className="text-sm max-w-sm" style={{ color: P.textMuted }}>
+            <p className="text-sm max-w-sm" style={{ color: P.textMuted }}>
                   {ai.isReady
-                    ? `Running ${activeModelName} locally · Private & content-addressed`
-                    : "Cloud AI ready · Load a local model for private on-device inference"
+                    ? `Running ${activeModelName} locally · ${selectedPersona.name}`
+                    : `${selectedPersona.name} · ${selectedPersona.subtitle}`
                   }
                 </p>
               </div>
 
-              {/* Quick model cards when no model loaded */}
-              {!ai.isReady && (
-                <div className="w-full max-w-md mt-4 space-y-2">
-                  <p className="text-xs tracking-widest uppercase text-center mb-3" style={{ color: P.textDim }}>
-                    Choose a model
-                  </p>
-                  {CLOUD_MODELS.map((m) => (
-                    <button
-                      key={m.id}
-                      onClick={() => selectCloudModel(m.id)}
-                      className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all hover:scale-[1.01]"
-                      style={{
-                        background: selectedCloudModel === m.id ? P.surfaceHover : P.surface,
-                        border: `1px solid ${selectedCloudModel === m.id ? "hsla(38, 40%, 40%, 0.4)" : P.borderLight}`,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = "hsla(38, 40%, 40%, 0.4)";
-                        e.currentTarget.style.background = P.surfaceHover;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = selectedCloudModel === m.id ? "hsla(38, 40%, 40%, 0.4)" : P.borderLight;
-                        e.currentTarget.style.background = selectedCloudModel === m.id ? P.surfaceHover : P.surface;
-                      }}
-                    >
-                      <div
-                        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ background: P.goldBg }}
+              {/* Persona selector — triadic phase grouping */}
+              <div className="w-full max-w-md mt-4 space-y-3">
+                <p className="text-xs tracking-widest uppercase text-center mb-3" style={{ color: P.textDim }}>
+                  Choose a perspective
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {AGENT_PERSONAS.map((persona) => {
+                    const isActive = selectedPersona.id === persona.id;
+                    const phaseDef = PHASES[persona.phase];
+                    return (
+                      <button
+                        key={persona.id}
+                        onClick={() => setSelectedPersona(persona)}
+                        className="flex items-start gap-2.5 px-3 py-3 rounded-xl text-left transition-all hover:scale-[1.01]"
+                        style={{
+                          background: isActive ? persona.accent : P.surface,
+                          border: `1px solid ${isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.4)` : P.borderLight}`,
+                        }}
                       >
-                        <Cloud className="w-4 h-4" style={{ color: P.gold }} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium" style={{ color: P.text }}>
-                          {m.label}
-                        </p>
-                        <p className="text-xs" style={{ color: P.textDim }}>
-                          {m.desc}
-                        </p>
-                      </div>
-                      {selectedCloudModel === m.id && (
-                        <Check className="w-4 h-4 flex-shrink-0" style={{ color: P.goldLight }} />
-                      )}
-                    </button>
-                  ))}
+                        <span
+                          className="text-base mt-0.5 flex-shrink-0"
+                          style={{ color: phaseDef.color }}
+                        >
+                          {persona.icon}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-xs font-medium" style={{ color: isActive ? P.goldLight : P.text }}>
+                              {persona.name}
+                            </p>
+                            {isActive && <Check className="w-3 h-3 flex-shrink-0" style={{ color: P.goldLight }} />}
+                          </div>
+                          <p className="text-[10px] mt-0.5 leading-tight" style={{ color: P.textDim }}>
+                            {persona.subtitle}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
+                <p className="text-[10px] text-center mt-2" style={{ color: P.textDimmer }}>
+                  {selectedPersona.description}
+                </p>
+              </div>
             </div>
           )}
 
