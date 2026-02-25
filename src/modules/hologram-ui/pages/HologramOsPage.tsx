@@ -211,15 +211,15 @@ export default function HologramOsPage() {
           </button>
         </div>
 
-        {/* Heartbeat keyframe — ~60bpm resting love frequency, double-pulse like a real heart */}
+        {/* Heartbeat keyframe — shared ~62 BPM resting rhythm, double-pulse (systole/diastole) */}
         <style>{`
           @keyframes heartbeat-love {
-            0%   { transform: scale(1);    opacity: 0.85; }
-            12%  { transform: scale(1.5);  opacity: 1; }
-            20%  { transform: scale(1);    opacity: 0.85; }
-            32%  { transform: scale(1.3);  opacity: 0.95; }
-            40%  { transform: scale(1);    opacity: 0.85; }
-            100% { transform: scale(1);    opacity: 0.85; }
+            0%   { transform: scale(1);    opacity: 0.8; }
+            10%  { transform: scale(1.45); opacity: 1; }
+            22%  { transform: scale(1);    opacity: 0.8; }
+            32%  { transform: scale(1.25); opacity: 0.95; }
+            44%  { transform: scale(1);    opacity: 0.8; }
+            100% { transform: scale(1);    opacity: 0.8; }
           }
         `}</style>
 
