@@ -1,10 +1,12 @@
 /**
- * AttentionToggle — Focus ↔ Diffuse Continuous Slider
- * ════════════════════════════════════════════════════
+ * AttentionToggle — Vertical Focus ↔ Diffuse Slider (Right Edge)
+ * ══════════════════════════════════════════════════════════════
  *
- * A minimal, elegant slider that sits near the ring. Dragging moves
- * smoothly across the 0–1 aperture spectrum. Labels fade between
- * "Focus" and "Diffuse" based on position.
+ * A whisper-thin vertical slider fixed to the right edge of the viewport.
+ * Always accessible, never imposing. Top = Diffuse, Bottom = Focus.
+ *
+ * Design: near-invisible at rest, reveals on hover/touch. The track is
+ * a gossamer line with a warm gold thumb that breathes gently.
  *
  * @module hologram-ui/components/AttentionToggle
  */
@@ -12,8 +14,8 @@
 import { useCallback, useRef, useState } from "react";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 
-const TRACK_W = 48;
-const THUMB_R = 5;
+const TRACK_H = 160;
+const THUMB_R = 4;
 const SNAP_DETENTS = [0, 0.25, 0.5, 0.75, 1.0];
 const SNAP_THRESHOLD = 0.045;
 
@@ -32,12 +34,13 @@ export default function AttentionToggle() {
   const [pulsing, setPulsing] = useState(false);
   const lastSnappedRef = useRef<number | null>(null);
 
+  // Vertical: top = 0 (diffuse), bottom = 1 (focus)
   const updateFromPointer = useCallback(
-    (clientX: number, snap = false) => {
+    (clientY: number, snap = false) => {
       const track = trackRef.current;
       if (!track) return;
       const rect = track.getBoundingClientRect();
-      let ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      let ratio = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
       if (snap) {
         const snapped = snapToDetent(ratio);
         if (snapped !== ratio && snapped !== lastSnappedRef.current) {
@@ -60,7 +63,7 @@ export default function AttentionToggle() {
       e.preventDefault();
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
       setDragging(true);
-      updateFromPointer(e.clientX, true);
+      updateFromPointer(e.clientY, true);
     },
     [updateFromPointer],
   );
@@ -68,7 +71,7 @@ export default function AttentionToggle() {
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!dragging) return;
-      updateFromPointer(e.clientX, true);
+      updateFromPointer(e.clientY, true);
     },
     [dragging, updateFromPointer],
   );
@@ -76,27 +79,39 @@ export default function AttentionToggle() {
   const onPointerUp = useCallback(() => setDragging(false), []);
 
   // Derived visual values
-  const thumbLeft = aperture * (TRACK_W - THUMB_R * 2);
-  const glowIntensity = 0.15 + aperture * 0.25;
+  const thumbTop = aperture * (TRACK_H - THUMB_R * 2);
+  const glowIntensity = 0.12 + aperture * 0.2;
   const labelOpacityDiffuse = Math.max(0, 1 - aperture * 2.2);
   const labelOpacityFocus = Math.max(0, (aperture - 0.45) * 2.2);
+  const restOpacity = hovered || dragging ? 1 : 0.35;
 
   return (
     <div
-      className="flex items-center gap-2.5 select-none touch-none"
+      className="fixed right-0 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center py-3 px-2 select-none touch-none"
+      style={{
+        opacity: restOpacity,
+        transition: "opacity 0.6s ease",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       aria-label={`Attention: ${Math.round(aperture * 100)}% — ${preset}`}
     >
-      {/* Diffuse label */}
+      {/* Diffuse label (top) */}
       <span
-        className="text-[8px] tracking-[0.3em] uppercase w-[46px] text-right cursor-pointer"
-        onClick={() => setAperture(0.1)}
+        className="cursor-pointer mb-2"
+        onClick={() => setAperture(0.05)}
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
-          color: `hsla(38, 15%, 80%, ${0.2 + labelOpacityDiffuse * 0.4})`,
+          fontSize: 7,
+          letterSpacing: "0.25em",
+          textTransform: "uppercase" as const,
+          color: `hsla(38, 15%, 80%, ${0.15 + labelOpacityDiffuse * 0.45})`,
           transition: dragging ? "none" : "color 0.5s ease",
+          writingMode: "vertical-rl",
+          textOrientation: "mixed",
         }}
       >
-        Diffuse
+        Open
       </span>
 
       {/* Track */}
@@ -104,27 +119,25 @@ export default function AttentionToggle() {
         ref={trackRef}
         className="relative cursor-pointer"
         style={{
-          width: TRACK_W,
-          height: 14,
-          borderRadius: 7,
-          background: `linear-gradient(90deg, hsla(38, 25%, 40%, 0.18), hsla(38, 20%, 50%, 0.12))`,
-          border: `1px solid hsla(38, 20%, 55%, ${0.1 + aperture * 0.1})`,
+          width: 10,
+          height: TRACK_H,
+          borderRadius: 5,
+          background: `linear-gradient(180deg, hsla(38, 20%, 55%, 0.06), hsla(38, 25%, 40%, 0.1))`,
+          border: `1px solid hsla(38, 20%, 55%, ${0.06 + aperture * 0.06})`,
           transition: dragging ? "none" : "border-color 0.5s ease",
         }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
       >
-        {/* Filled portion */}
+        {/* Filled portion (from top) */}
         <div
-          className="absolute top-0 left-0 h-full rounded-full pointer-events-none"
+          className="absolute top-0 left-0 w-full rounded-full pointer-events-none"
           style={{
-            width: `${aperture * 100}%`,
-            background: `hsla(38, 30%, 55%, ${0.06 + aperture * 0.08})`,
-            transition: dragging ? "none" : "width 0.5s ease, background 0.5s ease",
+            height: `${aperture * 100}%`,
+            background: `hsla(38, 30%, 55%, ${0.04 + aperture * 0.06})`,
+            transition: dragging ? "none" : "height 0.5s ease, background 0.5s ease",
           }}
         />
 
@@ -132,65 +145,72 @@ export default function AttentionToggle() {
         {SNAP_DETENTS.map((d) => (
           <div
             key={d}
-            className="absolute top-[5px] w-px h-[4px] pointer-events-none"
+            className="absolute left-[3px] w-[4px] h-px pointer-events-none"
             style={{
-              left: d * (TRACK_W - 2) + 1,
-              background: `hsla(38, 20%, 65%, ${Math.abs(aperture - d) < 0.06 ? 0.4 : 0.12})`,
+              top: d * (TRACK_H - 2) + 1,
+              background: `hsla(38, 20%, 65%, ${Math.abs(aperture - d) < 0.06 ? 0.35 : 0.08})`,
               transition: "background 0.3s ease",
             }}
           />
         ))}
 
-        {/* Thumb + Tooltip */}
+        {/* Thumb */}
         <div
-          className="absolute top-[2px] rounded-full pointer-events-none"
+          className="absolute left-[1px] rounded-full pointer-events-none"
           style={{
             width: THUMB_R * 2,
             height: THUMB_R * 2,
-            left: thumbLeft,
-            background: `hsla(38, 35%, 65%, ${0.5 + aperture * 0.35})`,
+            top: thumbTop,
+            background: `hsla(38, 35%, 65%, ${0.4 + aperture * 0.35})`,
             boxShadow: pulsing
-              ? `0 0 12px 3px hsla(38, 50%, 65%, 0.5)`
-              : `0 0 ${4 + aperture * 4}px ${1 + aperture}px hsla(38, 40%, 60%, ${glowIntensity})`,
-            transform: pulsing ? "scale(1.6)" : "scale(1)",
+              ? `0 0 10px 2px hsla(38, 50%, 65%, 0.45)`
+              : `0 0 ${3 + aperture * 3}px ${1 + aperture * 0.5}px hsla(38, 40%, 60%, ${glowIntensity})`,
+            transform: pulsing ? "scale(1.5)" : "scale(1)",
             transition: pulsing
               ? "transform 0.1s ease-out, box-shadow 0.1s ease-out"
               : dragging
                 ? "box-shadow 0.15s ease"
-                : "left 0.5s ease, background 0.5s ease, box-shadow 0.5s ease, transform 0.15s ease",
+                : "top 0.5s ease, background 0.5s ease, box-shadow 0.5s ease, transform 0.15s ease",
           }}
-        >
-          {(dragging || hovered) && (
-            <div
-              className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-              style={{
-                bottom: THUMB_R * 2 + 4,
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                fontSize: 9,
-                letterSpacing: "0.05em",
-                color: "hsla(38, 20%, 88%, 0.85)",
-                background: "hsla(30, 8%, 14%, 0.9)",
-                border: "1px solid hsla(38, 20%, 40%, 0.2)",
-                borderRadius: 4,
-                padding: "2px 5px",
-                whiteSpace: "nowrap",
-                animation: "fade-in 0.15s ease-out",
-              }}
-            >
-              {Math.round(aperture * 100)}%
-            </div>
-          )}
-        </div>
+        />
+
+        {/* Tooltip on drag/hover */}
+        {(dragging || hovered) && (
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              right: THUMB_R * 2 + 10,
+              top: thumbTop - 2,
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontSize: 8,
+              letterSpacing: "0.05em",
+              color: "hsla(38, 20%, 88%, 0.7)",
+              background: "hsla(30, 8%, 10%, 0.85)",
+              border: "1px solid hsla(38, 20%, 40%, 0.15)",
+              borderRadius: 3,
+              padding: "1px 5px",
+              whiteSpace: "nowrap",
+              animation: "fade-in 0.15s ease-out",
+            }}
+          >
+            {Math.round(aperture * 100)}%
+          </div>
+        )}
       </div>
 
-      {/* Focus label */}
+      {/* Focus label (bottom) */}
       <span
-        className="text-[8px] tracking-[0.3em] uppercase w-[38px] cursor-pointer"
+        className="cursor-pointer mt-2"
         onClick={() => setAperture(0.9)}
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
-          color: `hsla(38, 15%, 80%, ${0.2 + labelOpacityFocus * 0.3})`,
+          fontSize: 7,
+          letterSpacing: "0.25em",
+          textTransform: "uppercase" as const,
+          color: `hsla(38, 15%, 80%, ${0.15 + labelOpacityFocus * 0.35})`,
           transition: dragging ? "none" : "color 0.5s ease",
+          writingMode: "vertical-rl",
+          textOrientation: "mixed",
         }}
       >
         Focus
