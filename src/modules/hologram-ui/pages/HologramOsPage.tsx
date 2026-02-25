@@ -338,7 +338,7 @@ export default function HologramOsPage() {
 
       {/* Overlays */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
-      <HologramAiChat open={chatOpen} onClose={() => setChatOpen(false)} onPhaseChange={triadicActivity.setActivePhase} />
+      <HologramAiChat open={chatOpen} onClose={() => setChatOpen(false)} onPhaseChange={triadicActivity.setActivePhase} creatorStage={triadicActivity.creatorStage} />
     </div>
   );
 }
