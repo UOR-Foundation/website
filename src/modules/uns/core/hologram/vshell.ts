@@ -28,7 +28,7 @@ import {
 } from "./universal-ingest";
 import { DIRECTIONS } from "./polytree";
 import type { ProjectionInput } from "./index";
-import { getHologramGpu, type HologramGpu, type GpuBenchmarkResult } from "./gpu";
+import { getHologramGpu, getLutEngine, UorLutEngine, type HologramGpu, type GpuBenchmarkResult } from "./gpu";
 
 // ── Shell Result Types ────────────────────────────────────────────────────
 
@@ -111,7 +111,7 @@ const COMMANDS: Record<string, CommandDef> = {
   history: { usage: "history",                 description: "Show command history" },
   save:    { usage: "save",                    description: "Save all processes to disk" },
   load:    { usage: "load",                    description: "Restore saved processes" },
-  gpu:     { usage: "gpu <sub>",               description: "GPU device (info|bench|matmul|relu)" },
+  gpu:     { usage: "gpu <sub>",               description: "GPU device (info|bench|matmul|relu|lut)" },
   grep:    { usage: "grep <pattern>",          description: "Filter lines matching pattern" },
   head:    { usage: "head [-n N]",             description: "Show first N lines (default 10)" },
   tail:    { usage: "tail [-n N]",             description: "Show last N lines (default 10)" },
@@ -216,11 +216,30 @@ export class VShell {
 
     // GPU subcommands
     if (cmd === "gpu" && parts.length === 2) {
-      const subs = ["info", "bench", "matmul", "relu"];
+      const subs = ["info", "bench", "matmul", "relu", "lut"];
       const partial = parts[1];
       return subs
         .filter(s => s.startsWith(partial))
         .map(s => `gpu ${s}`);
+    }
+
+    // GPU LUT sub-subcommands
+    if (cmd === "gpu" && parts.length === 3 && parts[1] === "lut") {
+      const lutSubs = ["info", "tables", "verify", "apply", "apply-gpu", "compose", "bench"];
+      const partial = parts[2];
+      return lutSubs
+        .filter(s => s.startsWith(partial))
+        .map(s => `gpu lut ${s}`);
+    }
+
+    // GPU LUT apply table name completion
+    if (cmd === "gpu" && parts.length === 4 && parts[1] === "lut"
+        && (parts[2] === "apply" || parts[2] === "apply-gpu")) {
+      const engine = getLutEngine();
+      const partial = parts[3];
+      return engine.listTables()
+        .filter(t => t.startsWith(partial))
+        .map(t => `gpu lut ${parts[2]} ${t}`);
     }
 
     // Pipe filter completions (after |)
@@ -827,9 +846,192 @@ export class VShell {
         break;
       }
 
+      case "lut": {
+        await this.cmdGpuLut(args.slice(1), out, info, err);
+        break;
+      }
+
       default:
         err(`Unknown gpu subcommand: ${sub}`);
-        info("  Usage: gpu info | gpu bench | gpu matmul [size] | gpu relu [size]");
+        info("  Usage: gpu info | gpu bench | gpu matmul [size] | gpu relu [size] | gpu lut <sub>");
+    }
+  }
+
+  // ── LUT Commands ───────────────────────────────────────────────────────
+
+  private async cmdGpuLut(
+    args: string[], out: (t: string) => void, info: (t: string) => void,
+    err: (t: string) => void,
+  ): Promise<void> {
+    const sub = args[0] ?? "info";
+    const lut = getLutEngine();
+
+    switch (sub) {
+      case "info": {
+        const engineInfo = await lut.info();
+        out("── LUT Compute Engine (/dev/gpu/lut) ────────");
+        out(`  Ring:         Z/${engineInfo.ringModulus}Z`);
+        out(`  Tables:       ${engineInfo.tableCount} × ${engineInfo.tableSize} bytes`);
+        out(`  Cache:        ${engineInfo.cacheSizeBytes} bytes (${(engineInfo.cacheSizeBytes / 256).toFixed(0)} cache lines)`);
+        out(`  GPU:          ${engineInfo.gpuAvailable ? "available" : "CPU fallback"}`);
+        out(`  Identity:     neg∘bnot = succ — ${engineInfo.criticalIdentityHolds ? "✓ HOLDS" : "✗ FAILED"}`);
+        out("──────────────────────────────────────────────");
+        break;
+      }
+
+      case "tables": {
+        const names = lut.listTables();
+        out(`── ${names.length} Registered Tables ──────────────────`);
+        for (const name of names) {
+          const table = lut.getTable(name)!;
+          const bijection = lut.isBijection(table);
+          const sample = `[0]→${table[0]}, [42]→${table[42]}, [255]→${table[255]}`;
+          out(`  ${name.padEnd(14)} ${bijection ? "bij" : "   "}  ${sample}`);
+        }
+        out("──────────────────────────────────────────────");
+        break;
+      }
+
+      case "verify": {
+        info("Verifying critical identity: neg(bnot(x)) = succ(x) …");
+        const proof = await lut.verifyCriticalIdentity();
+        out("── Critical Identity Proof ───────────────────");
+        out(`  Holds:        ${proof.holds ? "✓ YES" : "✗ NO"}`);
+        out(`  Verified:     ${proof.verified} / 256 values`);
+        out(`  neg∘bnot CID: ${proof.negBnotCid.slice(0, 40)}…`);
+        out(`  succ CID:     ${proof.succCid.slice(0, 40)}…`);
+        out(`  CIDs match:   ${proof.cidsMatch ? "✓ IDENTICAL (structural proof)" : "✗ DIFFER"}`);
+        if (proof.firstFailure !== null) {
+          out(`  First fail:   x = ${proof.firstFailure}`);
+        }
+        out("──────────────────────────────────────────────");
+        break;
+      }
+
+      case "apply": {
+        const tableName = args[1] ?? "neg";
+        const size = parseInt(args[2] ?? "1048576", 10); // 1M default
+        const table = lut.getTable(tableName);
+        if (!table) { err(`Unknown table: ${tableName}. Use 'gpu lut tables' to list.`); return; }
+
+        // Generate random input data
+        const data = new Uint8Array(size);
+        crypto.getRandomValues(data);
+
+        info(`Applying '${tableName}' to ${(size / 1024).toFixed(0)}KB of data (CPU)…`);
+        const result = await lut.applyNamed(tableName, data);
+        out(`✓ LUT apply '${tableName}': ${result.timeMs} ms`);
+        out(`  Elements:     ${result.elementCount.toLocaleString()}`);
+        out(`  Throughput:   ${result.throughputGBps} GB/s`);
+        out(`  GPU:          ${result.gpuAccelerated ? "yes" : "no (CPU)"}`);
+        out(`  Table CID:    ${result.tableCid.slice(0, 40)}…`);
+        break;
+      }
+
+      case "apply-gpu": {
+        const tableName = args[1] ?? "neg";
+        const size = parseInt(args[2] ?? "1048576", 10);
+        const table = lut.getTable(tableName);
+        if (!table) { err(`Unknown table: ${tableName}. Use 'gpu lut tables' to list.`); return; }
+
+        const data = new Uint8Array(size);
+        crypto.getRandomValues(data);
+
+        info(`Applying '${tableName}' to ${(size / 1024).toFixed(0)}KB on GPU…`);
+        const result = await lut.applyGpu(table, data);
+        out(`✓ LUT apply-gpu '${tableName}': ${result.timeMs} ms`);
+        out(`  Elements:     ${result.elementCount.toLocaleString()}`);
+        out(`  Throughput:   ${result.throughputGBps} GB/s`);
+        out(`  GPU:          ${result.gpuAccelerated ? "✓ accelerated" : "CPU fallback"}`);
+        out(`  Table CID:    ${result.tableCid.slice(0, 40)}…`);
+        break;
+      }
+
+      case "compose": {
+        const outer = args[1];
+        const inner = args[2];
+        if (!outer || !inner) { err("Usage: gpu lut compose <outer> <inner>"); return; }
+        info(`Composing ${outer} ∘ ${inner} …`);
+        try {
+          const result = await lut.composeWithProof(outer, inner);
+          const name = `${outer}_${inner}`;
+          lut.registerTable(name, result.table);
+          const bijection = lut.isBijection(result.table);
+          out(`✓ Composed: ${name}`);
+          out(`  CID:        ${result.cid.slice(0, 40)}…`);
+          out(`  Bijection:  ${bijection ? "yes" : "no"}`);
+          out(`  Sample:     [0]→${result.table[0]}, [42]→${result.table[42]}, [255]→${result.table[255]}`);
+          out(`  Registered as '${name}' — use with: gpu lut apply ${name}`);
+        } catch (e) {
+          err(e instanceof Error ? e.message : String(e));
+        }
+        break;
+      }
+
+      case "bench": {
+        const sizes = [1024, 65536, 262144, 1048576];
+        out("── LUT Benchmark: CPU vs GPU ─────────────────");
+        out("  Size          CPU ms    GPU ms    Speedup");
+        out("  ──────────    ──────    ──────    ───────");
+
+        for (const size of sizes) {
+          const data = new Uint8Array(size);
+          crypto.getRandomValues(data);
+
+          // CPU
+          const cpuResult = await lut.applyNamed("neg", data);
+          // GPU
+          const gpuResult = await lut.applyGpu(lut.NEG, data);
+
+          const speedup = cpuResult.timeMs > 0 && gpuResult.timeMs > 0
+            ? (cpuResult.timeMs / gpuResult.timeMs).toFixed(1) + "×"
+            : "—";
+
+          out(
+            `  ${(size / 1024).toFixed(0).padStart(6)}KB` +
+            `    ${String(cpuResult.timeMs).padStart(6)}` +
+            `    ${String(gpuResult.timeMs).padStart(6)}` +
+            `    ${speedup.padStart(7)}`,
+          );
+        }
+
+        // Composition benchmark: 10-op chain vs single composed table
+        out("");
+        out("  Composition: 10-op chain → 1 table");
+        const chain = [lut.NEG, lut.BNOT, lut.SUCC, lut.NEG, lut.BNOT,
+                       lut.SUCC, lut.PRED, lut.NEG, lut.BNOT, lut.SUCC];
+        const composed = UorLutEngine.composeChain(chain);
+        const bigData = new Uint8Array(1048576);
+        crypto.getRandomValues(bigData);
+
+        // 10 sequential applies
+        const seqStart = performance.now();
+        let current: Uint8Array = bigData;
+        for (const t of chain) current = lut.apply(t, current);
+        const seqMs = Math.round((performance.now() - seqStart) * 1000) / 1000;
+
+        // 1 composed apply
+        const compStart = performance.now();
+        const compResult = lut.apply(composed, bigData);
+        const compMs = Math.round((performance.now() - compStart) * 1000) / 1000;
+
+        // Verify correctness
+        let match = true;
+        for (let i = 0; i < current.length; i++) {
+          if (current[i] !== compResult[i]) { match = false; break; }
+        }
+
+        out(`  10× sequential: ${seqMs} ms`);
+        out(`  1× composed:    ${compMs} ms`);
+        out(`  Speedup:        ${seqMs > 0 && compMs > 0 ? (seqMs / compMs).toFixed(1) : "∞"}×`);
+        out(`  Correct:        ${match ? "✓" : "✗"}`);
+        out("──────────────────────────────────────────────");
+        break;
+      }
+
+      default:
+        err(`Unknown lut subcommand: ${sub}`);
+        info("  Usage: gpu lut info | tables | verify | apply [table] [size] | apply-gpu [table] [size] | compose <outer> <inner> | bench");
     }
   }
 }
