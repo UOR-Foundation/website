@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { initializeRegistry } from "@/lib/uor-registry";
+import { AttentionProvider } from "@/modules/hologram-ui/hooks/useAttentionMode";
 import { initializeContentRegistry } from "@/lib/uor-content-registry";
 import { initTriwordGenesis } from "@/lib/uor-triword";
 
@@ -140,6 +141,7 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
+    <AttentionProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -260,6 +262,7 @@ const App = () => {
         </Suspense>
       </BrowserRouter>
     </TooltipProvider>
+    </AttentionProvider>
   </QueryClientProvider>
   );
 };

@@ -19,6 +19,8 @@ import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar"
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 import { useTriadicActivity } from "@/modules/hologram-ui/hooks/useTriadicActivity";
+import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
+import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -117,6 +119,7 @@ export default function HologramOsPage() {
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
   const triadicActivity = useTriadicActivity();
+  const attention = useAttentionMode();
 
   const goConsole = useCallback(() => {
     setDeparting(true);
@@ -134,7 +137,7 @@ export default function HologramOsPage() {
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
       <DesktopOsSidebar
-        collapsed={sidebarCollapsed}
+        collapsed={attention.preset === "focus" ? true : sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((p) => !p)}
         onNewChat={() => setChatOpen(true)}
         onOpenChat={() => setChatOpen(true)}
@@ -167,7 +170,7 @@ export default function HologramOsPage() {
               alt="Serene landscape with misty mountains and tranquil water"
               className="w-full h-full object-cover"
               style={{
-                animation: "ken-burns 30s ease-in-out infinite alternate",
+                animation: attention.animateBackground ? "ken-burns 30s ease-in-out infinite alternate" : "none",
               }}
             />
             {/* Gradient veil */}
@@ -368,8 +371,9 @@ export default function HologramOsPage() {
         `}</style>
 
         {/* Day Progress Ring */}
-        <div className="absolute bottom-[3vh] right-[3vw] z-20 animate-fade-in">
+        <div className="absolute bottom-[3vh] right-[3vw] z-20 animate-fade-in flex flex-col items-center gap-3">
           <DayProgressRing balance={triadicActivity.balance ?? undefined} />
+          <AttentionToggle />
         </div>
       </div>
 
