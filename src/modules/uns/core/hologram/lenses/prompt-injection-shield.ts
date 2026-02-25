@@ -293,7 +293,7 @@ function registerSecurityFactories(): void {
         }
 
         // Entropy analysis: unusually low entropy suggests encoded payloads
-        const content = (obj.content as string) ?? "";
+        const content = typeof obj.content === "string" ? obj.content : JSON.stringify(obj.content ?? "");
         const charSet = new Set(content.split(""));
         const entropyRatio = charSet.size / Math.max(content.length, 1);
         if (entropyRatio < 0.1 && content.length > 20) {
@@ -529,24 +529,24 @@ export const PROMPT_INJECTION_SHIELD_BLUEPRINT: LensBlueprint = createBlueprint(
         "Malicious fragments are blocked entirely.",
       config: { safeThreshold: 0.2, maliciousThreshold: 0.7 },
     },
-    // Stage 6: Project safe fragments through hologram for full identity
-    {
-      id: "project",
-      kind: "hologram",
-      description:
-        "Project the classified result through the full hologram — every standard " +
-        "gets a view of the security analysis. DID, CID, WebFinger, VC — the verdict " +
-        "is universally addressable.",
-    },
-    // Stage 7: Seal the final SecurityVerdict
+    // Stage 6: Seal the SecurityVerdict
     {
       id: "verdict",
       kind: "security-verdict",
       description:
-        "Produce the final SecurityVerdict envelope: approved content, quarantine zone, " +
+        "Produce the SecurityVerdict envelope: approved content, quarantine zone, " +
         "blocked items, threat categories, and the verdict's own CID. " +
         "This IS the auditable security record.",
       config: { agentId: "anonymous" },
+    },
+    // Stage 7: Project verdict through hologram for universal addressability
+    {
+      id: "project",
+      kind: "hologram",
+      description:
+        "Project the sealed verdict through the full hologram — every standard " +
+        "gets a view of the security analysis. DID, CID, WebFinger, VC — the verdict " +
+        "is universally addressable.",
     },
   ] satisfies ElementSpec[],
   metadata: {
