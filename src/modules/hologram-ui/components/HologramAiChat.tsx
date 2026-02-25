@@ -15,6 +15,7 @@ import {
   X, Send, Loader2, Cpu, Sparkles, MessageSquare,
   Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap, User,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import {
   AGENT_PERSONAS,
   AGENT_SKILLS,
@@ -360,7 +361,13 @@ export default function HologramAiChat({ open, onClose }: HologramAiChatProps) {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
-          messages: [{ role: "user", content: text }],
+          messages: [
+            // Send full conversation history for context
+            ...messages
+              .filter((m) => m.role !== "system")
+              .map((m) => ({ role: m.role, content: m.content })),
+            { role: "user", content: text },
+          ],
           model: selectedCloudModel,
           personaId: selectedPersona.id,
           skillId: activeSkill?.id || selectedPersona.defaultSkillId,
@@ -970,24 +977,75 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
                   }
             }
           >
-            <p
-              className="text-[15px] leading-[1.7] whitespace-pre-wrap"
-              style={{
-                color: isUser ? P.text : "hsl(30, 12%, 78%)",
-                fontFamily: P.font,
-              }}
-            >
-              {content}
-              {isStreaming && (
-                <span
-                  className="inline-block w-[2px] h-[1.1em] align-middle ml-0.5"
-                  style={{
-                    background: P.gold,
-                    animation: "blink-caret 0.8s steps(2) infinite",
+            {isUser ? (
+              <p
+                className="text-[15px] leading-[1.7] whitespace-pre-wrap"
+                style={{ color: P.text, fontFamily: P.font }}
+              >
+                {content}
+              </p>
+            ) : (
+              <div
+                className="text-[15px] leading-[1.7] prose prose-sm prose-invert max-w-none"
+                style={{
+                  color: "hsl(30, 12%, 78%)",
+                  fontFamily: P.font,
+                  ['--tw-prose-headings' as string]: P.text,
+                  ['--tw-prose-bold' as string]: P.text,
+                  ['--tw-prose-code' as string]: P.goldLight,
+                  ['--tw-prose-links' as string]: P.goldLight,
+                  ['--tw-prose-bullets' as string]: P.goldMuted,
+                  ['--tw-prose-counters' as string]: P.goldMuted,
+                }}
+              >
+                <ReactMarkdown
+                  components={{
+                    code: ({ children, className, ...props }) => {
+                      const isBlock = className?.includes("language-");
+                      return isBlock ? (
+                        <pre
+                          style={{
+                            background: "hsla(30, 8%, 12%, 0.8)",
+                            border: `1px solid ${P.borderLight}`,
+                            borderRadius: "8px",
+                            padding: "12px 16px",
+                            overflowX: "auto",
+                            fontSize: "13px",
+                          }}
+                        >
+                          <code className={className} {...props}>{children}</code>
+                        </pre>
+                      ) : (
+                        <code
+                          style={{
+                            background: "hsla(38, 30%, 30%, 0.2)",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            fontSize: "0.9em",
+                            color: P.goldLight,
+                          }}
+                          {...props}
+                        >
+                          {children}
+                        </code>
+                      );
+                    },
+                    pre: ({ children }) => <>{children}</>,
                   }}
-                />
-              )}
-            </p>
+                >
+                  {content}
+                </ReactMarkdown>
+                {isStreaming && (
+                  <span
+                    className="inline-block w-[2px] h-[1.1em] align-middle ml-0.5"
+                    style={{
+                      background: P.gold,
+                      animation: "blink-caret 0.8s steps(2) infinite",
+                    }}
+                  />
+                )}
+              </div>
+            )}
           </div>
 
           {/* Inference metadata */}
