@@ -34,6 +34,7 @@
     "clsx": "^2.1.1",
     "d3-force": "^3.0.0",
     "date-fns": "^3.6.0",
+    "fflate": "^0.8.2",
     "jsonld": "^9.0.0",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
