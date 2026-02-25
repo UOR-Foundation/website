@@ -101,11 +101,13 @@ interface HologramAiChatProps {
   onPhaseChange?: (phase: TriadicPhase | null) => void;
   creatorStage?: CreatorStage;
   replayGuideKey?: number;
+  /** Pre-seed the input with a prompt when opening */
+  initialPrompt?: string;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export default function HologramAiChat({ open, onClose, onPhaseChange, creatorStage = 1, replayGuideKey = 0 }: HologramAiChatProps) {
+export default function HologramAiChat({ open, onClose, onPhaseChange, creatorStage = 1, replayGuideKey = 0, initialPrompt }: HologramAiChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -147,10 +149,15 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
-  // Focus input
+  // Focus input & handle initialPrompt
   useEffect(() => {
-    if (open && inputRef.current) setTimeout(() => inputRef.current?.focus(), 300);
-  }, [open]);
+    if (open && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 300);
+    }
+    if (open && initialPrompt && initialPrompt.trim()) {
+      setInput(initialPrompt);
+    }
+  }, [open, initialPrompt]);
 
   // Close model picker on outside click
   useEffect(() => {
