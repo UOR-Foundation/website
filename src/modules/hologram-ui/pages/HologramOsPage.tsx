@@ -20,6 +20,7 @@ import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 import { useTriadicActivity } from "@/modules/hologram-ui/hooks/useTriadicActivity";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
+import { useFocusJournal } from "@/modules/hologram-ui/hooks/useFocusJournal";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -106,6 +107,7 @@ export default function HologramOsPage() {
   const isMobile = useIsMobile();
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const { entryCount: journalEntryCount } = useFocusJournal();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [bgMode, setBgModeState] = useState<BgMode>(() => {
     const saved = localStorage.getItem("hologram-bg-mode");
@@ -339,7 +341,7 @@ export default function HologramOsPage() {
         >
           <button
             onClick={() => setChatOpen(true)}
-            className="flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-700 hover:scale-105 group"
+            className="relative flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-700 hover:scale-105 group"
             style={{
               background: P.pill,
               backdropFilter: "blur(24px)",
@@ -364,6 +366,21 @@ export default function HologramOsPage() {
             >
               Hologram Intelligence
             </span>
+
+            {/* Suppressed message badge */}
+            {journalEntryCount > 0 && (
+              <span
+                className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold tabular-nums animate-in zoom-in-50 duration-200"
+                style={{
+                  background: "hsl(38, 50%, 50%)",
+                  color: "hsl(38, 10%, 98%)",
+                  boxShadow: "0 2px 8px hsla(38, 50%, 40%, 0.4)",
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                }}
+              >
+                {journalEntryCount > 99 ? "99+" : journalEntryCount}
+              </span>
+            )}
           </button>
         </div>
 
