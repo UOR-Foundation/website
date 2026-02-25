@@ -3,6 +3,9 @@ import Layout from "@/modules/core/components/Layout";
 import { systemIntegrityCheck, getRecentReceipts, exportAuditTrail } from "@/modules/verify";
 import type { IntegrityReport } from "@/modules/verify";
 import type { DerivationReceipt } from "@/modules/derivation/receipt";
+import { AuditField } from "@/modules/verify/components/AuditField";
+import DerivationPanel from "@/modules/verify/components/DerivationPanel";
+import CertificatePanel from "@/modules/verify/components/CertificatePanel";
 
 const AuditPage = () => {
   const [report, setReport] = useState<IntegrityReport | null>(null);
@@ -56,8 +59,9 @@ const AuditPage = () => {
             System Audit
           </h1>
           <p className="text-muted-foreground mb-8 max-w-2xl">
-            Self-verification dashboard — every operation in the system produces a canonical
-            receipt that proves its own correctness. The system is its own auditor.
+            Self-verification dashboard — every operation produces a canonical receipt,
+            every entity earns a derivation, and every verified entity receives a certificate.
+            The system is its own auditor.
           </p>
 
           {/* Integrity Check */}
@@ -106,7 +110,7 @@ const AuditPage = () => {
           </div>
 
           {/* Receipt Log */}
-          <div className="rounded-lg border border-border bg-card p-6">
+          <div className="rounded-lg border border-border bg-card p-6 mb-6">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <h2 className="text-lg font-display font-semibold">Receipt Log</h2>
               <div className="flex gap-2">
@@ -161,6 +165,14 @@ const AuditPage = () => {
             )}
           </div>
 
+          {/* Derivation Log */}
+          <div className="mb-6">
+            <DerivationPanel />
+          </div>
+
+          {/* Certificate Log */}
+          <CertificatePanel />
+
           {/* Receipt Detail Modal */}
           {selectedReceipt && (
             <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4" onClick={() => setSelectedReceipt(null)}>
@@ -175,14 +187,14 @@ const AuditPage = () => {
                   {selectedReceipt.selfVerified ? "✓ SELF-VERIFIED" : "✗ VERIFICATION FAILED"}
                 </div>
                 <div className="space-y-3 text-sm">
-                  <Field label="Receipt ID" value={selectedReceipt.receiptId} />
-                  <Field label="Module" value={selectedReceipt.moduleId} />
-                  <Field label="Operation" value={selectedReceipt.operation} />
-                  <Field label="Input Hash" value={selectedReceipt.inputHash} />
-                  <Field label="Output Hash" value={selectedReceipt.outputHash} />
-                  <Field label="Recompute Hash" value={selectedReceipt.recomputeHash || "(stored receipts omit recompute)"} />
-                  <Field label="Coherence" value={selectedReceipt.coherenceVerified ? "✓ Ring coherent" : "✗ Not verified"} />
-                  <Field label="Timestamp" value={new Date(selectedReceipt.timestamp).toLocaleString()} />
+                  <AuditField label="Receipt ID" value={selectedReceipt.receiptId} />
+                  <AuditField label="Module" value={selectedReceipt.moduleId} />
+                  <AuditField label="Operation" value={selectedReceipt.operation} />
+                  <AuditField label="Input Hash" value={selectedReceipt.inputHash} />
+                  <AuditField label="Output Hash" value={selectedReceipt.outputHash} />
+                  <AuditField label="Recompute Hash" value={selectedReceipt.recomputeHash || "(stored receipts omit recompute)"} />
+                  <AuditField label="Coherence" value={selectedReceipt.coherenceVerified ? "✓ Ring coherent" : "✗ Not verified"} />
+                  <AuditField label="Timestamp" value={new Date(selectedReceipt.timestamp).toLocaleString()} />
                 </div>
               </div>
             </div>
@@ -192,14 +204,5 @@ const AuditPage = () => {
     </Layout>
   );
 };
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
-      <p className="font-mono text-xs text-foreground break-all">{value}</p>
-    </div>
-  );
-}
 
 export default AuditPage;

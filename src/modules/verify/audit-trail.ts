@@ -135,3 +135,88 @@ export async function getRecentReceipts(limit = 50): Promise<DerivationReceipt[]
   if (error) throw new Error(`getRecentReceipts failed: ${error.message}`);
   return (data ?? []).map(rowToReceipt);
 }
+
+// ── Derivation + Certificate queries (for system-wide audit) ────────────────
+
+export interface AuditDerivation {
+  derivationId: string;
+  originalTerm: string;
+  canonicalTerm: string;
+  resultIri: string;
+  epistemicGrade: string;
+  quantum: number;
+  metrics: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface AuditCertificate {
+  certificateId: string;
+  certifiesIri: string;
+  derivationId: string | null;
+  valid: boolean;
+  certChain: unknown[];
+  issuedAt: string;
+}
+
+/**
+ * Get recent derivations, optionally filtered by source module.
+ */
+export async function getRecentDerivations(
+  limit = 50,
+  source?: string
+): Promise<AuditDerivation[]> {
+  let query = supabase
+    .from("uor_derivations")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  // Filter by source in metrics JSONB if provided
+  if (source) {
+    query = query.eq("metrics->>source", source);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(`getRecentDerivations failed: ${error.message}`);
+
+  return (data ?? []).map((row) => ({
+    derivationId: row.derivation_id,
+    originalTerm: row.original_term,
+    canonicalTerm: row.canonical_term,
+    resultIri: row.result_iri,
+    epistemicGrade: row.epistemic_grade,
+    quantum: row.quantum,
+    metrics: (row.metrics as Record<string, unknown>) ?? {},
+    createdAt: row.created_at,
+  }));
+}
+
+/**
+ * Get recent certificates, optionally filtered by validity.
+ */
+export async function getRecentCertificates(
+  limit = 50,
+  validOnly = false
+): Promise<AuditCertificate[]> {
+  let query = supabase
+    .from("uor_certificates")
+    .select("*")
+    .order("issued_at", { ascending: false })
+    .limit(limit);
+
+  if (validOnly) {
+    query = query.eq("valid", true);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(`getRecentCertificates failed: ${error.message}`);
+
+  return (data ?? []).map((row) => ({
+    certificateId: row.certificate_id,
+    certifiesIri: row.certifies_iri,
+    derivationId: row.derivation_id,
+    valid: row.valid,
+    certChain: (row.cert_chain as unknown[]) ?? [],
+    issuedAt: row.issued_at,
+  }));
+}
