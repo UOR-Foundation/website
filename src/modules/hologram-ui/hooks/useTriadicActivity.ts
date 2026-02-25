@@ -42,7 +42,8 @@ function loadState(): ActivityState {
       if (parsed.date === todayKey()) return parsed;
     }
   } catch { /* ignore */ }
-  return { date: todayKey(), learn: 0, work: 0, play: 0 };
+  // New users default to learning — the natural starting point
+  return { date: todayKey(), learn: 1, work: 0, play: 0 };
 }
 
 function saveState(state: ActivityState) {
