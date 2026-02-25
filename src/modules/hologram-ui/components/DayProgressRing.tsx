@@ -70,7 +70,7 @@ export default function DayProgressRing() {
             style={{
               transition: "cx 1.2s ease-out, cy 1.2s ease-out",
               filter: "blur(2px)",
-              animation: "dot-heartbeat 1.2s ease-in-out infinite",
+              animation: "dot-heartbeat 1.6s ease-in-out infinite",
             }}
           />
         </svg>
@@ -138,10 +138,10 @@ export default function DayProgressRing() {
         }
         @keyframes dot-heartbeat {
           0%, 100% { opacity: 0.6; r: 4; }
-          14% { opacity: 1; r: 5.5; }
-          28% { opacity: 0.7; r: 4.2; }
-          42% { opacity: 0.95; r: 5; }
-          56% { opacity: 0.6; r: 4; }
+          10% { opacity: 1; r: 5.5; }
+          22% { opacity: 0.6; r: 4; }
+          32% { opacity: 0.9; r: 5; }
+          44% { opacity: 0.6; r: 4; }
         }
       `}</style>
     </div>
