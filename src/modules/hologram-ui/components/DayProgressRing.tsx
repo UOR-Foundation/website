@@ -1,15 +1,9 @@
 /**
- * DayProgressRing — Triadic Day-Progress Indicator
- * ═════════════════════════════════════════════════
+ * DayProgressRing — Unified Triadic Day-Progress Indicator
+ * ═════════════════════════════════════════════════════════
  *
- * Three concentric arcs — Learn (outer), Work (middle), Play (inner) —
- * reflecting the Sovereign Creator's triadic time allocation.
- * The overall day progress is shown as a unified percentage.
- *
- * When no activity data is available, the ring displays a single
- * unified arc (graceful degradation for Stage 1 users).
- *
- * Balance guidance appears on hover — never preachy, always gentle.
+ * A single ring composed of three colored segments (Learn, Work, Play)
+ * showing how much of the day has passed. Hover reveals a phase legend.
  */
 
 import { useState, useEffect, useMemo } from "react";
@@ -18,7 +12,6 @@ import {
   PHASE_ORDER,
   computeBalance,
   type TriadicBalance,
-  type TriadicPhase,
 } from "@/modules/hologram-ui/sovereign-creator";
 
 // ── Day progress ───────────────────────────────────────────────────────────
@@ -32,22 +25,18 @@ function getDayProgress(): number {
 
 const SIZE = 96;
 const STROKE = 2.5;
-const GAP = 5; // Spacing between concentric rings
-const RINGS: { phase: TriadicPhase; radius: number }[] = [
-  { phase: "learn", radius: (SIZE - STROKE * 2) / 2 },              // Outer
-  { phase: "work",  radius: (SIZE - STROKE * 2) / 2 - GAP },        // Middle
-  { phase: "play",  radius: (SIZE - STROKE * 2) / 2 - GAP * 2 },    // Inner
-];
+const RADIUS = (SIZE - STROKE * 2) / 2;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 // ── Component ──────────────────────────────────────────────────────────────
 
 interface DayProgressRingProps {
-  /** Optional triadic balance override. If omitted, uses simulated data. */
   balance?: TriadicBalance;
 }
 
 export default function DayProgressRing({ balance: externalBalance }: DayProgressRingProps) {
   const [progress, setProgress] = useState(getDayProgress);
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setProgress(getDayProgress()), 10_000);
@@ -56,8 +45,6 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
 
   const pct = Math.round(progress * 100);
 
-  // If no external balance data, derive gentle defaults from time of day
-  // Morning leans Learn, midday leans Work, evening leans Play
   const balance = useMemo<TriadicBalance>(() => {
     if (externalBalance) return externalBalance;
     const hour = new Date().getHours();
@@ -68,8 +55,29 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
 
   const report = useMemo(() => computeBalance(balance), [balance]);
 
+  // Build segment data: each phase occupies a proportional arc of the filled portion
+  const totalFilled = CIRCUMFERENCE * progress;
+  const segments = useMemo(() => {
+    let offset = 0;
+    return PHASE_ORDER.map((phase) => {
+      const segLen = totalFilled * balance[phase];
+      const seg = { phase, length: segLen, offset };
+      offset += segLen;
+      return seg;
+    });
+  }, [progress, balance, totalFilled]);
+
+  // Leading dot position (end of the filled arc)
+  const leadingAngle = 2 * Math.PI * progress;
+  const dotCx = SIZE / 2 + RADIUS * Math.cos(leadingAngle);
+  const dotCy = SIZE / 2 + RADIUS * Math.sin(leadingAngle);
+
   return (
-    <div className="group relative flex flex-col items-center gap-2 cursor-default select-none">
+    <div
+      className="group relative flex flex-col items-center gap-2 cursor-default select-none"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="relative" style={{ width: SIZE, height: SIZE }}>
         <svg
           width={SIZE}
@@ -78,62 +86,49 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
           className="block"
           style={{ transform: "rotate(-90deg)" }}
         >
-          {/* Triadic arcs */}
-          {RINGS.map(({ phase, radius }) => {
-            const circumference = 2 * Math.PI * radius;
-            const phaseValue = balance[phase];
-            // Each arc fills proportional to its share of elapsed time
-            const arcProgress = phaseValue * progress;
-            const offset = circumference * (1 - arcProgress);
-            const phaseDef = PHASES[phase];
+          {/* Track */}
+          <circle
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={RADIUS}
+            fill="none"
+            stroke="hsla(38, 12%, 60%, 0.08)"
+            strokeWidth={STROKE}
+          />
 
+          {/* Colored segments — layered with dash offsets */}
+          {segments.map(({ phase, length, offset }) => {
+            if (length <= 0) return null;
+            const phaseDef = PHASES[phase];
             return (
-              <g key={phase}>
-                {/* Track */}
-                <circle
-                  cx={SIZE / 2}
-                  cy={SIZE / 2}
-                  r={radius}
-                  fill="none"
-                  stroke={`hsla(${phaseDef.hue}, 12%, 60%, 0.08)`}
-                  strokeWidth={STROKE}
-                />
-                {/* Progress arc */}
-                <circle
-                  cx={SIZE / 2}
-                  cy={SIZE / 2}
-                  r={radius}
-                  fill="none"
-                  stroke={`hsla(${phaseDef.hue}, 35%, 62%, 0.65)`}
-                  strokeWidth={STROKE}
-                  strokeLinecap="round"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={offset}
-                  style={{ transition: "stroke-dashoffset 1.2s ease-out" }}
-                />
-              </g>
+              <circle
+                key={phase}
+                cx={SIZE / 2}
+                cy={SIZE / 2}
+                r={RADIUS}
+                fill="none"
+                stroke={`hsla(${phaseDef.hue}, 35%, 62%, 0.7)`}
+                strokeWidth={STROKE}
+                strokeLinecap="butt"
+                strokeDasharray={`${length} ${CIRCUMFERENCE - length}`}
+                strokeDashoffset={-offset}
+                style={{ transition: "stroke-dasharray 1.2s ease-out, stroke-dashoffset 1.2s ease-out" }}
+              />
             );
           })}
 
-          {/* Leading glow dot on outermost ring */}
-          {(() => {
-            const outerRadius = RINGS[0].radius;
-            const outerProgress = balance.learn * progress;
-            const angle = 2 * Math.PI * outerProgress;
-            return (
-              <circle
-                cx={SIZE / 2 + outerRadius * Math.cos(angle)}
-                cy={SIZE / 2 + outerRadius * Math.sin(angle)}
-                r={3.5}
-                fill="hsla(38, 40%, 65%, 0.5)"
-                style={{
-                  transition: "cx 1.2s ease-out, cy 1.2s ease-out",
-                  filter: "blur(2px)",
-                  animation: "dot-heartbeat 1.6s ease-in-out infinite",
-                }}
-              />
-            );
-          })()}
+          {/* Leading glow dot */}
+          <circle
+            cx={dotCx}
+            cy={dotCy}
+            r={3.5}
+            fill="hsla(38, 40%, 65%, 0.5)"
+            style={{
+              transition: "cx 1.2s ease-out, cy 1.2s ease-out",
+              filter: "blur(2px)",
+              animation: "dot-heartbeat 1.6s ease-in-out infinite",
+            }}
+          />
         </svg>
 
         {/* Breathing glow */}
@@ -145,8 +140,8 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
           }}
         />
 
-        {/* Center — percentage */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
+        {/* Center — percentage + label */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
           <span
             className="text-xl font-light leading-none"
             style={{
@@ -157,12 +152,22 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
           >
             {pct}%
           </span>
+          <span
+            className="text-[7px] tracking-[0.25em] uppercase leading-none transition-opacity duration-500"
+            style={{
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              color: "hsla(38, 15%, 80%, 0.4)",
+              fontWeight: 400,
+            }}
+          >
+            of day
+          </span>
         </div>
       </div>
 
-      {/* Label — shifts to show balance state */}
+      {/* Label */}
       <span
-        className="text-[9px] tracking-[0.4em] uppercase"
+        className="text-[9px] tracking-[0.4em] uppercase transition-colors duration-500"
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
           color: report.coherent
@@ -174,28 +179,10 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
         {report.coherent ? "Today" : "Rebalance"}
       </span>
 
-      {/* Hover tooltip — gentle guidance, never judgmental */}
+      {/* Phase legend — appears on hover */}
       <div
-        className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none whitespace-nowrap"
-        style={{
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: "10px",
-          letterSpacing: "0.12em",
-          color: "hsla(38, 15%, 85%, 0.6)",
-          background: "hsla(30, 8%, 10%, 0.7)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          padding: "5px 12px",
-          borderRadius: "6px",
-          border: "1px solid hsla(38, 15%, 60%, 0.08)",
-        }}
-      >
-        {report.guidance}
-      </div>
-
-      {/* Phase legend — appears on hover, fades in gently */}
-      <div
-        className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+        className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-3 transition-opacity duration-700 pointer-events-none"
+        style={{ opacity: hovered ? 1 : 0 }}
       >
         {PHASE_ORDER.map((phase) => (
           <div key={phase} className="flex items-center gap-1">
@@ -214,6 +201,26 @@ export default function DayProgressRing({ balance: externalBalance }: DayProgres
             </span>
           </div>
         ))}
+      </div>
+
+      {/* Hover tooltip */}
+      <div
+        className="absolute -top-12 left-1/2 -translate-x-1/2 transition-opacity duration-500 pointer-events-none whitespace-nowrap"
+        style={{
+          opacity: hovered ? 1 : 0,
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          fontSize: "10px",
+          letterSpacing: "0.12em",
+          color: "hsla(38, 15%, 85%, 0.6)",
+          background: "hsla(30, 8%, 10%, 0.7)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          padding: "5px 12px",
+          borderRadius: "6px",
+          border: "1px solid hsla(38, 15%, 60%, 0.08)",
+        }}
+      >
+        {report.guidance}
       </div>
 
       <style>{`
