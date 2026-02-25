@@ -250,7 +250,23 @@ function createDocumentLoader() {
       };
     }
 
-    // Fall back to default loader for external contexts
+    // Serve Lens/Executable/Session contexts locally — all use UOR v1 namespaces
+    const UOR_DERIVED_CONTEXTS = [
+      "https://uor.foundation/contexts/lens-v1.jsonld",
+      "https://uor.foundation/contexts/executable-v1.jsonld",
+      "https://uor.foundation/contexts/session-v1.jsonld",
+    ];
+    if (
+      UOR_DERIVED_CONTEXTS.some(
+        (ctx) => url === ctx || url === ctx.replace("https://", "http://"),
+      )
+    ) {
+      return {
+        contextUrl: null,
+        documentUrl: url,
+        document: { "@context": UOR_V1_INLINE_CONTEXT },
+      };
+    }
     if (defaultLoader) {
       return defaultLoader(url);
     }

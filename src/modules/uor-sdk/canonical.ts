@@ -60,6 +60,37 @@ export type {
   DehydrationResult,
 } from "@/modules/uns/core/hologram";
 
+// ── Executable Blueprint (Self-Evolving Programs / Hologram OS) ───────────
+// The merger of LensBlueprint (WHAT) + PolyTree (HOW) = Executable Blueprint.
+// One hash, one program, one identity. The holographic principle applied to code.
+
+export {
+  createExecutableBlueprint,
+  grindExecutableBlueprint,
+  boot,
+  resume,
+  forkExecutableBlueprint,
+  compileScheduler,
+  serializeExecutable,
+  deserializeExecutable,
+  STATIC_SCHEDULER,
+  ADAPTIVE_SCHEDULER,
+  LIFECYCLE_SCHEDULER,
+} from "@/modules/uns/core/hologram";
+export type {
+  ExecutableBlueprint,
+  GroundExecutableBlueprint,
+  IOChannel,
+  IOChannelSet,
+  RuntimeConstraints,
+  SchedulerSpec,
+  TransitionRule,
+  TransitionEffect,
+  HologramSession,
+  InteractionResult,
+  SuspendedSession,
+} from "@/modules/uns/core/hologram";
+
 // ── Trust Spanning Protocol (TSP) ─────────────────────────────────────────
 // Authenticated messaging, relationship forming, and trust channels.
 
