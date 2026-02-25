@@ -143,6 +143,7 @@ export default function HologramOsPage() {
   const [replayGuide, setReplayGuide] = useState(0);
   const ctx = useContextProjection();
   const contentTilt = useFrameTilt({ maxTilt: 2.5, smoothing: 0.06 });
+  const canvasTilt = useFrameTilt({ maxTilt: 1.2, smoothing: 0.04, invert: true, maxShift: 12 });
 
   // Derive top interests for contextual suggestions (max 3)
   const contextHints = useMemo(() => {
@@ -209,7 +210,7 @@ export default function HologramOsPage() {
           {/* ══════════════════════════════════════════════════════════
            *  FRAME 0 — Canvas Layer (background, imagery, veils)
            * ══════════════════════════════════════════════════════════ */}
-          <HologramFrame layer={0} label="canvas" interactive={false}>
+          <HologramFrame layer={0} label="canvas" interactive={false} transform={canvasTilt}>
             {/* Solid background for white/dark modes */}
             <div
               className="absolute inset-0 transition-all duration-1000 ease-in-out"
