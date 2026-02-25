@@ -121,10 +121,10 @@ export default function HologramOsPage() {
         </main>
 
         {/* AI Chat Pill — bottom center */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
           <button
             onClick={() => setChatOpen(true)}
-            className="flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-300 hover:scale-105 group"
+            className="flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-300 hover:scale-105 group"
             style={{
               background: "hsla(0, 0%, 0%, 0.45)",
               backdropFilter: "blur(20px)",
@@ -133,11 +133,11 @@ export default function HologramOsPage() {
             }}
           >
             <div
-              className="w-1.5 h-1.5 rounded-full group-hover:scale-125 transition-transform"
+              className="w-2 h-2 rounded-full group-hover:scale-125 transition-transform"
               style={{ background: "hsl(38, 50%, 55%)" }}
             />
             <span
-              className="text-white/50 text-[11px] tracking-[0.15em]"
+              className="text-white/55 text-[13px] tracking-[0.15em] font-light"
               style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
             >
               Hologram AI
