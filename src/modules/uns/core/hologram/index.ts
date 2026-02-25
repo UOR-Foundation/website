@@ -200,3 +200,16 @@ export type {
   InteractionResult,
   SuspendedSession,
 } from "./executable-blueprint";
+
+// ── Hologram Engine (The Kernel) ───────────────────────────────────────────
+// The engine orchestrates the full lifecycle: spawn → tick → project → render.
+// It manages a process table of sessions and produces UI projections each tick.
+
+export { HologramEngine } from "./engine";
+export type {
+  EngineProcess,
+  EngineTick,
+  EngineSnapshot,
+  EngineEvent,
+  EngineListener,
+} from "./engine";
