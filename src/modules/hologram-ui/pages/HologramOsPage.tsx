@@ -22,7 +22,7 @@ import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaim
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
-import HologramFrame, { HologramViewport } from "@/modules/hologram-ui/components/HologramFrame";
+import HologramFrame, { HologramViewport, OverlayFrame, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
@@ -110,6 +110,14 @@ function palette(m: BgMode) {
 }
 
 // ── Welcome Screen ──────────────────────────────────────────────────────────
+/** Syncs overlay open state into the DepthShift context */
+function DepthShiftSync({ active }: { active: boolean }) {
+  const { setOverlayActive } = useDepthShift();
+  useEffect(() => {
+    setOverlayActive(active, 3);
+  }, [active, setOverlayActive]);
+  return null;
+}
 
 export default function HologramOsPage() {
   const navigate = useNavigate();
@@ -166,34 +174,37 @@ export default function HologramOsPage() {
 
   // ── Desktop: Layered frame stack ──
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* ════════════════════════════════════════════════════════════════
-       *  FRAME 1 — Chrome Layer (always visible, highest priority)
-       *  Sidebar + Focus toggle sit here, unaffected by content below
-       * ════════════════════════════════════════════════════════════════ */}
-      <DesktopOsSidebar
-        collapsed={attention.preset === "focus" ? true : sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed((p) => !p)}
-        onNewChat={() => setChatOpen(true)}
-        onOpenChat={() => setChatOpen(true)}
-        onReplayGuide={() => {
-          localStorage.removeItem("hologram:onboarding-seen");
-          setReplayGuide((c) => c + 1);
-          setChatOpen(true);
-        }}
-      />
+    <HologramViewport className="h-screen bg-background">
+      {/* Depth-shift trigger: recede lower frames when overlays open */}
+      <DepthShiftSync active={chatOpen || claimOpen} />
 
-      {/* Main viewport — contains all frame layers */}
-      <div
-        className="flex-1 relative overflow-hidden transition-all ease-in-out"
-        style={{
-          opacity: departing ? 0 : 1,
-          transform: departing ? "scale(1.02)" : "scale(1)",
-          filter: departing ? "blur(4px)" : "blur(0px)",
-          transitionDuration: "900ms",
-        }}
-      >
-        <HologramViewport>
+      <div className="flex h-full overflow-hidden">
+        {/* ════════════════════════════════════════════════════════════════
+         *  FRAME 1 — Chrome Layer (always visible, highest priority)
+         *  Sidebar + Focus toggle sit here, unaffected by content below
+         * ════════════════════════════════════════════════════════════════ */}
+        <DesktopOsSidebar
+          collapsed={attention.preset === "focus" ? true : sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((p) => !p)}
+          onNewChat={() => setChatOpen(true)}
+          onOpenChat={() => setChatOpen(true)}
+          onReplayGuide={() => {
+            localStorage.removeItem("hologram:onboarding-seen");
+            setReplayGuide((c) => c + 1);
+            setChatOpen(true);
+          }}
+        />
+
+        {/* Main viewport area — contains canvas + chrome + content frames */}
+        <div
+          className="flex-1 relative overflow-hidden transition-all ease-in-out"
+          style={{
+            opacity: departing ? 0 : 1,
+            transform: departing ? "scale(1.02)" : "scale(1)",
+            filter: departing ? "blur(4px)" : "blur(0px)",
+            transitionDuration: "900ms",
+          }}
+        >
           {/* ══════════════════════════════════════════════════════════
            *  FRAME 0 — Canvas Layer (background, imagery, veils)
            * ══════════════════════════════════════════════════════════ */}
@@ -500,29 +511,29 @@ export default function HologramOsPage() {
               </button>
             </div>
           </HologramFrame>
-        </HologramViewport>
 
-        {/* Keyframes */}
-        <style>{`
-          @keyframes heartbeat-love {
-            0%   { transform: scale(1);    opacity: 0.8; }
-            10%  { transform: scale(1.45); opacity: 1; }
-            22%  { transform: scale(1);    opacity: 0.8; }
-            32%  { transform: scale(1.25); opacity: 0.95; }
-            44%  { transform: scale(1);    opacity: 0.8; }
-            100% { transform: scale(1);    opacity: 0.8; }
-          }
-          @keyframes line-reveal {
-            0%   { opacity: 0; transform: scaleY(0); transform-origin: top; }
-            40%  { opacity: 1; transform: scaleY(1); transform-origin: top; }
-            100% { opacity: 1; transform: scaleY(1); }
-          }
-        `}</style>
+          {/* Keyframes */}
+          <style>{`
+            @keyframes heartbeat-love {
+              0%   { transform: scale(1);    opacity: 0.8; }
+              10%  { transform: scale(1.45); opacity: 1; }
+              22%  { transform: scale(1);    opacity: 0.8; }
+              32%  { transform: scale(1.25); opacity: 0.95; }
+              44%  { transform: scale(1);    opacity: 0.8; }
+              100% { transform: scale(1);    opacity: 0.8; }
+            }
+            @keyframes line-reveal {
+              0%   { opacity: 0; transform: scaleY(0); transform-origin: top; }
+              40%  { opacity: 1; transform: scaleY(1); transform-origin: top; }
+              100% { opacity: 1; transform: scaleY(1); }
+            }
+          `}</style>
+        </div>
       </div>
 
       {/* ════════════════════════════════════════════════════════════════
        *  FRAME 3 — Overlay Layer (modals, chat, claim)
-       *  Rendered outside the viewport so they cover everything
+       *  Inside the viewport so depth recession triggers on lower frames
        * ════════════════════════════════════════════════════════════════ */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
       <HologramAiChat
@@ -533,6 +544,6 @@ export default function HologramOsPage() {
         replayGuideKey={replayGuide}
         initialPrompt={chatPrompt}
       />
-    </div>
+    </HologramViewport>
   );
 }
