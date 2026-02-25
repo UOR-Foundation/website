@@ -11,10 +11,10 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { TriadicPhase } from "@/modules/hologram-ui/sovereign-creator";
+import type { TriadicPhase, CreatorStage } from "@/modules/hologram-ui/sovereign-creator";
 import {
   X, Send, Loader2, Cpu, Sparkles, MessageSquare,
-  Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap, User,
+  Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap, User, Lock,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
@@ -697,11 +697,14 @@ export default function HologramAiChat({ open, onClose, onPhaseChange }: Hologra
                   {AGENT_PERSONAS.map((persona) => {
                     const isActive = selectedPersona.id === persona.id;
                     const phaseDef = PHASES[persona.phase];
+                    const userStage: CreatorStage = 1; // TODO: derive from profile
+                    const locked = persona.minStage > userStage;
                     return (
                       <button
                         key={persona.id}
-                        onClick={() => setSelectedPersona(persona)}
-                        className="flex items-start gap-2.5 px-3 py-3 rounded-xl text-left transition-all hover:scale-[1.01]"
+                        onClick={() => !locked && setSelectedPersona(persona)}
+                        disabled={locked}
+                        className={`flex items-start gap-2.5 px-3 py-3 rounded-xl text-left transition-all ${locked ? "opacity-40 cursor-not-allowed" : "hover:scale-[1.01]"}`}
                         style={{
                           background: isActive ? persona.accent : P.surface,
                           border: `1px solid ${isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.4)` : P.borderLight}`,
@@ -709,15 +712,18 @@ export default function HologramAiChat({ open, onClose, onPhaseChange }: Hologra
                       >
                         <span
                           className="text-base mt-0.5 flex-shrink-0"
-                          style={{ color: phaseDef.color }}
+                          style={{ color: locked ? P.textDimmer : phaseDef.color }}
                         >
-                          {persona.icon}
+                          {locked ? <Lock className="w-4 h-4" /> : persona.icon}
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <p className="text-xs font-medium" style={{ color: isActive ? P.goldLight : P.text }}>
                               {persona.name}
                             </p>
+                            {locked && (
+                              <span className="text-[9px]" style={{ color: P.textDimmer }}>Stage {persona.minStage}+</span>
+                            )}
                             {isActive && <Check className="w-3 h-3 flex-shrink-0" style={{ color: P.goldLight }} />}
                           </div>
                           <p className="text-[10px] mt-0.5 leading-tight" style={{ color: P.textDim }}>
