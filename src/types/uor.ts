@@ -1,29 +1,23 @@
 /**
  * UOR Semantic Web Agentic Infrastructure — Shared Type System
  *
- * Foundational types for the 4-layer architecture:
- *   Layer 0: Ring Arithmetic Core
- *   Layer 1: Knowledge Graph (triplestore + IPFS)
- *   Layer 2: Semantic Index (entity resolution)
- *   Layer 3: Agent Interface (tool functions + epistemic grading)
+ * BACKWARD COMPATIBILITY SHIM — All canonical types now live in
+ * src/types/uor-foundation/ (v2.0.0 ontology). This file re-exports
+ * them under the original names for zero-breakage migration.
  *
- * These types are consumed by all modules and never import from UI code.
- * All types align with the UOR ontology namespaces and the live API at
- * https://api.uor.foundation/v1.
+ * @see src/types/uor-foundation/index.ts — canonical source
  */
 
-// ── Layer 0: Ring Arithmetic Primitives ─────────────────────────────────────
+// ── Re-exports from v2.0.0 Foundation ──────────────────────────────────────
 
-/** Big-endian byte tuple representing a value in Z/(2^n)Z. */
-export type ByteTuple = number[];
+// v2 PrimitiveOp uses capitalized variants; legacy code uses lowercase.
+// Keep both for backward compatibility.
+export type { PrimitiveOp } from "./uor-foundation";
 
-/** Quantum level q where width = q + 1 bytes and bits = 8 × width. */
-export type Quantum = number;
-
-/** The 5 primitive signature operations (UOR ontology op: namespace). */
+/** The 5 primitive signature operations (lowercase — legacy compat). */
 export type OperationName = "neg" | "bnot" | "xor" | "and" | "or";
 
-/** Extended operation set including derived operations available in the ring engine. */
+/** Extended operation set (lowercase — legacy compat). */
 export type ExtendedOperationName =
   | OperationName
   | "succ"
@@ -32,17 +26,23 @@ export type ExtendedOperationName =
   | "sub"
   | "mul";
 
+// Address replaces UorAddress
+export type { Address as UorAddressV2 } from "./uor-foundation";
+
+// ── Layer 0: Ring Arithmetic Primitives (unchanged — kept inline) ──────────
+
+/** Big-endian byte tuple representing a value in Z/(2^n)Z. */
+export type ByteTuple = number[];
+
+/** Quantum level q where width = q + 1 bytes and bits = 8 × width. */
+export type Quantum = number;
+
 /** Configuration for a specific ring R_n = Z/(2^n)Z. */
 export interface RingConfig {
-  /** Quantum level: width - 1. */
   quantum: Quantum;
-  /** Number of bytes: quantum + 1. */
   width: number;
-  /** Number of bits: 8 × width. */
   bits: number;
-  /** Ring cycle 2^bits as bigint for large-ring safety. */
   cycle: bigint;
-  /** Bit mask (cycle - 1) for modular reduction. */
   mask: bigint;
 }
 
@@ -51,13 +51,9 @@ export interface RingConfig {
  * Aligns with schema:Triad in the UOR ontology.
  */
 export interface Triad {
-  /** Big-endian byte tuple. */
   datum: ByteTuple;
-  /** Popcount per byte position. */
   stratum: number[];
-  /** LSB-indexed basis elements per byte. */
   spectrum: number[][];
-  /** Sum of stratum values. */
   totalStratum: number;
 }
 
@@ -80,7 +76,6 @@ export interface Datum {
 
 /**
  * Partition classification for a byte value within a ring.
- * Aligns with partition: namespace.
  */
 export type PartitionComponent =
   | "partition:ExteriorSet"
@@ -95,7 +90,6 @@ export interface PartitionClassification {
 
 // ── Layer 1: Identity & Content Addressing ──────────────────────────────────
 
-/** UOR address — Braille bijection of content bytes. */
 export interface UorAddress {
   "u:glyph": string;
   "u:length": number;
@@ -103,21 +97,10 @@ export interface UorAddress {
 
 // ── Layer 3: Epistemic Grading ──────────────────────────────────────────────
 
-/**
- * Epistemic grade for every fact in the knowledge graph.
- *   A = algebraically proven (ring identity, exhaustive proof)
- *   B = certified (content-addressed, CID-verified)
- *   C = attributed (sourced claim, not independently verified)
- *   D = unverified (raw input, no provenance)
- */
 export type EpistemicGrade = "A" | "B" | "C" | "D";
 
 // ── Cross-cutting: Receipts & Health ────────────────────────────────────────
 
-/**
- * Derivation record — an auditable step in a computation chain.
- * Aligns with derivation: namespace in the API.
- */
 export interface Derivation {
   derivationId: string;
   resultIri: string;
@@ -127,10 +110,6 @@ export interface Derivation {
   timestamp: string;
 }
 
-/**
- * Canonical receipt — self-verifying proof that a computation was performed.
- * Every ring operation and triplestore mutation produces one.
- */
 export interface CanonicalReceipt {
   receiptId: string;
   moduleId: string;
@@ -141,9 +120,6 @@ export interface CanonicalReceipt {
   timestamp: string;
 }
 
-/**
- * Module health check — coherence verification for any module.
- */
 export interface ModuleHealth {
   moduleId: string;
   status: "healthy" | "failed";
