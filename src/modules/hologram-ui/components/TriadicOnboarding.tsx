@@ -82,6 +82,14 @@ export default function TriadicOnboarding({ onComplete }: TriadicOnboardingProps
     setTimeout(onComplete, 400);
   }, [onComplete]);
 
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") skip();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [skip]);
+
   const phaseColor = current.phase
     ? `hsla(${PHASES[current.phase].hue}, 35%, 60%, 0.9)`
     : "hsla(38, 40%, 65%, 0.9)";
