@@ -812,24 +812,26 @@ export default function HologramOsPage() {
       />
       {/* FrameDebugOverlay removed for cleaner UI */}
       <AmbientPlayer lumenOffset={chatOpen ? lumenPanel.width : 0} onStateChange={setAmbientState} />
-      {/* ── Browser Panel (full-bleed overlay) ── */}
+      {/* ── Browser Panel — opens to the right of sidebar ── */}
       {browserOpen && (
-        <OverlayFrame layer={3} open={browserOpen}>
-          <div
-            className="fixed inset-0 z-[500] flex"
-            style={{ background: "hsl(25, 8%, 10%)" }}
-          >
-            <HologramBrowser
-              onClose={() => setBrowserOpen(false)}
-              onSendToLumen={({ title, url, markdown }) => {
-                const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) + "\n\n…[truncated]" : markdown;
-                setChatPrompt(`I'm reading "${title}" (${url}). Here's the page content:\n\n${truncated}\n\nPlease summarize the key points and insights from this page.`);
-                setBrowserOpen(false);
-                setChatOpen(true);
-              }}
-            />
-          </div>
-        </OverlayFrame>
+        <div
+          className="fixed top-0 bottom-0 z-[500] flex"
+          style={{
+            left: 68,
+            right: 0,
+            animation: "lumen-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both",
+          }}
+        >
+          <HologramBrowser
+            onClose={() => setBrowserOpen(false)}
+            onSendToLumen={({ title, url, markdown }) => {
+              const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) + "\n\n…[truncated]" : markdown;
+              setChatPrompt(`I'm reading "${title}" (${url}). Here's the page content:\n\n${truncated}\n\nPlease summarize the key points and insights from this page.`);
+              setBrowserOpen(false);
+              setChatOpen(true);
+            }}
+          />
+        </div>
       )}
       <SnapGuideOverlay />
     </HologramViewport>
