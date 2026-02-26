@@ -36,6 +36,7 @@ const SHORTCUTS: Shortcut[] = [
   // View
   { keys: [MOD, "F"], label: "Toggle Focus Mode", section: "View" },
   { keys: [MOD, "Y"], label: "Cycle Style", section: "View" },
+  { keys: [MOD, "⇧", "A"], label: "Ambient Music", section: "View" },
   
   // System
   { keys: [MOD, "/"], label: "Shortcut Cheat Sheet", section: "System" },
