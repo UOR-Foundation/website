@@ -1,20 +1,19 @@
 /**
- * DesktopOsSidebar — Modular Resizable Navigation
- * ═════════════════════════════════════════════════
+ * DesktopOsSidebar — Always-collapsed icon sidebar
+ * ═══════════════════════════════════════════════════
  *
- * Uses the modular panel system for drag-to-resize.
- * Collapses below a threshold width automatically.
+ * Fixed-width icon rail. Click the logo to expand inline;
+ * no drag-to-resize handle.
  */
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, User,
-  Settings, ChevronLeft, ChevronRight, HelpCircle, Inbox, PanelLeftOpen,
+  Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
 } from "lucide-react";
-import type { ModularPanelResult } from "@/modules/hologram-ui/hooks/useModularPanel";
 
-/* ── Palette — higher contrast, warm whites ────────────────── */
+/* ── Palette ───────────────────────────────────────────────── */
 const S = {
   bg: "hsl(25, 8%, 10%)",
   surfaceHover: "hsla(38, 12%, 90%, 0.08)",
@@ -22,7 +21,6 @@ const S = {
   border: "hsla(38, 12%, 70%, 0.1)",
   text: "hsl(38, 10%, 88%)",
   textMuted: "hsl(38, 8%, 60%)",
-  textDim: "hsl(30, 6%, 42%)",
   gold: "hsl(38, 40%, 65%)",
   font: "'DM Sans', system-ui, sans-serif",
 } as const;
@@ -37,44 +35,24 @@ function detectMac(): boolean {
 }
 const MOD_KEY = detectMac() ? "⌘" : "Ctrl";
 
-/* ── Shortcut badge component ───────────────────────────────── */
-function ShortcutBadge({ keys, opacity = 1 }: { keys: string; opacity?: number }) {
-  if (opacity <= 0) return null;
-  const display = keys.replace("⌘", MOD_KEY);
-  return (
-    <span
-      className="ml-auto text-[10px] tracking-[0.15em] uppercase font-medium shrink-0 transition-opacity duration-700"
-      style={{
-        fontFamily: S.font,
-        color: S.textMuted,
-        opacity: opacity * 0.4,
-      }}
-    >
-      {display}
-    </span>
-  );
-}
-
-/* ── Core Navigation — 3 familiar items ─────────────────────── */
+/* ── Nav items ─────────────────────────────────────────────── */
 interface NavItem {
   label: string;
   icon: React.ElementType;
   path: string;
-  shortcut: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home",     icon: Home,       path: "/hologram-console", shortcut: "" },
-  { label: "Apps",     icon: LayoutGrid, path: "/console/apps",     shortcut: "" },
-  { label: "Profile",  icon: User,       path: "/your-space",       shortcut: "" },
+  { label: "Home",    icon: Home,       path: "/hologram-console" },
+  { label: "Apps",    icon: LayoutGrid, path: "/console/apps" },
+  { label: "Profile", icon: User,       path: "/your-space" },
 ];
 
-/** Width below which the sidebar auto-collapses to icon-only mode */
-const COLLAPSE_THRESHOLD = 120;
+const COLLAPSED_W = 68;
+const EXPANDED_W = 220;
 
 /* ── Props ─────────────────────────────────────────────────── */
 interface DesktopOsSidebarProps {
-  panel: ModularPanelResult;
   onNewChat: () => void;
   onOpenChat: () => void;
   onReplayGuide?: () => void;
@@ -83,37 +61,36 @@ interface DesktopOsSidebarProps {
 
 /* ── Component ─────────────────────────────────────────────── */
 export default function DesktopOsSidebar({
-  panel,
   onNewChat,
   onReplayGuide,
   hintOpacity,
 }: DesktopOsSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [expanded, setExpanded] = useState(false);
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname],
   );
 
-  const collapsed = panel.width < COLLAPSE_THRESHOLD;
+  const w = expanded ? EXPANDED_W : COLLAPSED_W;
 
   return (
     <aside
-      className={`flex flex-col h-full shrink-0 relative ${collapsed ? "group/sidebar" : ""}`}
+      className="flex flex-col h-full shrink-0 relative"
       style={{
-        width: `${panel.width}px`,
+        width: `${w}px`,
         background: S.bg,
         borderRight: `1px solid ${S.border}`,
-        transition: panel.isResizing ? "none" : "width 300ms ease-out",
+        transition: "width 300ms cubic-bezier(0.34, 1.56, 0.64, 1)",
       }}
     >
-      {/* ── Top: Logo + collapse toggle ────────────────────────── */}
+      {/* ── Top: Logo / toggle ─────────────────────────────────── */}
       <div className="flex items-center justify-between px-3 pt-5 pb-6">
-        {!collapsed ? (
+        {expanded ? (
           <>
             <div className="flex items-center gap-2.5 px-2 py-1 overflow-hidden">
-              {/* Geometric H monogram */}
               <svg
                 width="28" height="28" viewBox="0 0 28 28"
                 fill="none" stroke={S.gold} strokeWidth="1.2"
@@ -125,7 +102,6 @@ export default function DesktopOsSidebar({
                 <line x1="20" y1="7" x2="20" y2="21" />
                 <line x1="8" y1="14" x2="20" y2="14" />
               </svg>
-              {/* SVG wordmark */}
               <svg
                 viewBox="0 0 360 40"
                 className="select-none"
@@ -159,17 +135,17 @@ export default function DesktopOsSidebar({
               </svg>
             </div>
             <button
-              onClick={() => panel.setWidth(68)}
+              onClick={() => setExpanded(false)}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/[0.06]"
               style={{ color: S.textMuted }}
               title={`Collapse sidebar (${MOD_KEY} B)`}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <PanelLeftClose className="w-4 h-4" />
             </button>
           </>
         ) : (
           <button
-            onClick={() => panel.setWidth(240)}
+            onClick={() => setExpanded(true)}
             className="group/logo w-10 h-10 mx-auto rounded-xl flex items-center justify-center transition-all duration-200 hover:bg-white/[0.08] hover:scale-105 relative"
             style={{ background: "transparent", border: `1px solid ${S.border}` }}
             title={`Expand sidebar (${MOD_KEY} B)`}
@@ -178,14 +154,14 @@ export default function DesktopOsSidebar({
               width="20" height="20" viewBox="0 0 28 28"
               fill="none" stroke={S.gold} strokeWidth="1.3"
               strokeLinecap="round" strokeLinejoin="round"
-              className="absolute transition-opacity duration-200 group-hover/sidebar:opacity-0"
+              className="absolute transition-opacity duration-200 group-hover/logo:opacity-0"
             >
               <line x1="8" y1="7" x2="8" y2="21" />
               <line x1="20" y1="7" x2="20" y2="21" />
               <line x1="8" y1="14" x2="20" y2="14" />
             </svg>
             <PanelLeftOpen
-              className="w-5 h-5 absolute transition-opacity duration-200 opacity-0 group-hover/sidebar:opacity-100"
+              className="w-5 h-5 absolute transition-opacity duration-200 opacity-0 group-hover/logo:opacity-100"
               strokeWidth={1.4}
               style={{ color: S.gold }}
             />
@@ -193,7 +169,7 @@ export default function DesktopOsSidebar({
         )}
       </div>
 
-      {/* ── Core Navigation — 3 items ─────────────────────────── */}
+      {/* ── Core Navigation ───────────────────────────────────── */}
       <div className="flex-1 px-2.5 space-y-1 overflow-hidden">
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.path);
@@ -202,7 +178,7 @@ export default function DesktopOsSidebar({
               key={item.path}
               onClick={() => navigate(item.path)}
               className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
-                collapsed ? "justify-center px-0 py-3" : "px-3.5 py-3"
+                !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
               }`}
               style={{
                 color: active ? S.gold : S.text,
@@ -213,16 +189,16 @@ export default function DesktopOsSidebar({
                 if (!active) e.currentTarget.style.background = S.surfaceHover;
               }}
               onMouseLeave={(e) => {
-                if (!active) e.currentTarget.style.background = active ? S.surfaceActive : "transparent";
+                e.currentTarget.style.background = active ? S.surfaceActive : "transparent";
               }}
-              title={collapsed ? item.label : undefined}
+              title={!expanded ? item.label : undefined}
             >
               <item.icon
                 className="w-5 h-5 shrink-0"
                 strokeWidth={1.5}
                 style={{ color: active ? S.gold : S.textMuted }}
               />
-              {!collapsed && (
+              {expanded && (
                 <span className="text-[14px] font-light whitespace-nowrap">{item.label}</span>
               )}
             </button>
@@ -239,68 +215,44 @@ export default function DesktopOsSidebar({
           <button
             onClick={onReplayGuide}
             className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
-              collapsed ? "justify-center px-0 py-3" : "px-3.5 py-3"
+              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
             }`}
             style={{ color: S.text, fontFamily: S.font }}
             onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-            title={collapsed ? `Help (${MOD_KEY} /)` : undefined}
+            title={!expanded ? `Help (${MOD_KEY} /)` : undefined}
           >
             <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
-            {!collapsed && (
-              <>
-                <span className="text-[14px] font-light">Help</span>
-                <ShortcutBadge keys="⌘ /" opacity={hintOpacity?.("/") ?? 1} />
-              </>
-            )}
+            {expanded && <span className="text-[14px] font-light">Help</span>}
           </button>
         )}
         <button
           onClick={() => {}}
           className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
-            collapsed ? "justify-center px-0 py-3" : "px-3.5 py-3"
+            !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
           }`}
           style={{ color: S.text, fontFamily: S.font }}
           onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={collapsed ? `Messages (${MOD_KEY} M)` : undefined}
+          title={!expanded ? `Messages (${MOD_KEY} M)` : undefined}
         >
           <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
-          {!collapsed && (
-            <>
-              <span className="text-[14px] font-light">Messages</span>
-              <ShortcutBadge keys="⌘ M" opacity={hintOpacity?.("m") ?? 1} />
-            </>
-          )}
+          {expanded && <span className="text-[14px] font-light">Messages</span>}
         </button>
         <button
           onClick={() => navigate("/settings")}
           className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
-            collapsed ? "justify-center px-0 py-3" : "px-3.5 py-3"
+            !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
           }`}
           style={{ color: S.text, fontFamily: S.font }}
           onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={collapsed ? "Settings" : undefined}
+          title={!expanded ? "Settings" : undefined}
         >
           <Settings className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
-          {!collapsed && (
-            <span className="text-[14px] font-light">Settings</span>
-          )}
+          {expanded && <span className="text-[14px] font-light">Settings</span>}
         </button>
       </div>
-
-      {/* ── Resize handle — right edge ──────────────────────────── */}
-      <div
-        {...panel.resizeHandleProps}
-        className="hologram-resize-handle absolute top-0 right-0 h-full"
-        style={{
-          ...panel.resizeHandleProps.style,
-          width: "6px",
-          transform: "translateX(50%)",
-          zIndex: 50,
-        }}
-      />
     </aside>
   );
 }
