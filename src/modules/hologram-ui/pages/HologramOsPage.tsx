@@ -612,7 +612,7 @@ export default function HologramOsPage() {
 
             {/* AI Chat Pill — bottom center */}
             <div
-              className={`absolute bottom-[6vh] left-1/2 -translate-x-1/2 transition-all duration-500 ease-out ${chatOpen ? "pointer-events-none opacity-0 translate-y-4" : ""}`}
+              className={`absolute bottom-[6vh] left-1/2 -translate-x-1/2 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${chatOpen ? "pointer-events-none opacity-0 translate-y-6 scale-90" : "opacity-100 translate-y-0 scale-100"}`}
               style={{
                 pointerEvents: "auto",
                 opacity: isFocus ? 0.7 : 1,
