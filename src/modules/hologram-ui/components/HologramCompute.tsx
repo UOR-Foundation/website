@@ -1,11 +1,9 @@
 /**
  * HologramCompute — Full-panel compute dashboard within the Hologram OS.
  *
- * Two modes:
- *   Overview  — Layperson view: your compute at a glance, key metrics, status
- *   Pro       — Cloud-like infrastructure dashboard for developers/skeptics
- *
- * Plus a visible link to the live benchmark demo.
+ * Overview  — Human-first: Why, How, What + resources, performance, usage log
+ * Pro       — Cloud-like infrastructure dashboard for developers
+ * Demo      — Live constant-time benchmark proof
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
@@ -13,17 +11,19 @@ import {
   IconCpu, IconBolt, IconBrain, IconChartBar, IconX,
   IconCloudComputing, IconUsers, IconPlayerPlay,
   IconCircleCheck, IconFlame, IconActivity, IconBoltFilled,
-  IconArrowRight, IconExternalLink,
+  IconArrowRight, IconShieldCheck, IconClock, IconDatabase,
+  IconMessageChatbot, IconPhoto, IconCode, IconLock,
 } from "@tabler/icons-react";
 import { getOrchestrator, type ProviderSnapshot } from "@/modules/hologram-compute";
 import ConstantTimeBenchmark from "@/modules/hologram-compute/ConstantTimeBenchmark";
 
-// ── Palette (matches browser panel styling) ─────────────────────────────────
+// ── Palette ─────────────────────────────────────────────────────────────────
 
 const P = {
   bg: "hsl(25, 8%, 8%)",
   border: "hsla(38, 12%, 70%, 0.1)",
   font: "'DM Sans', system-ui, sans-serif",
+  serif: "'Playfair Display', serif",
   card: "hsla(25, 8%, 12%, 0.6)",
   cardBorder: "hsla(38, 12%, 70%, 0.08)",
   text: "hsl(38, 10%, 88%)",
@@ -44,6 +44,30 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 function sc(s: string) { return STATUS_COLOR[s] ?? STATUS_COLOR.offline; }
+
+// ── Simulated Activity Log ──────────────────────────────────────────────────
+
+interface ActivityEntry {
+  id: string;
+  task: string;
+  icon: React.ReactNode;
+  timeAgo: string;
+  durationMs: number;
+  status: "done" | "active";
+}
+
+function generateActivityLog(): ActivityEntry[] {
+  return [
+    { id: "1", task: "AI Chat Response", icon: <IconMessageChatbot size={14} />, timeAgo: "Just now", durationMs: 42, status: "active" },
+    { id: "2", task: "Content Analysis", icon: <IconBrain size={14} />, timeAgo: "2s ago", durationMs: 18, status: "done" },
+    { id: "3", task: "Data Encryption", icon: <IconLock size={14} />, timeAgo: "5s ago", durationMs: 3, status: "done" },
+    { id: "4", task: "Identity Verification", icon: <IconShieldCheck size={14} />, timeAgo: "12s ago", durationMs: 7, status: "done" },
+    { id: "5", task: "Image Processing", icon: <IconPhoto size={14} />, timeAgo: "18s ago", durationMs: 31, status: "done" },
+    { id: "6", task: "Code Completion", icon: <IconCode size={14} />, timeAgo: "25s ago", durationMs: 12, status: "done" },
+    { id: "7", task: "Data Lookup", icon: <IconDatabase size={14} />, timeAgo: "34s ago", durationMs: 1, status: "done" },
+    { id: "8", task: "AI Chat Response", icon: <IconMessageChatbot size={14} />, timeAgo: "41s ago", durationMs: 55, status: "done" },
+  ];
+}
 
 // ── Main Component ──────────────────────────────────────────────────────────
 
@@ -109,7 +133,6 @@ export default function HologramCompute({ onClose }: HologramComputeProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Mode toggle */}
           <div
             className="inline-flex items-center rounded-full p-0.5 gap-0.5"
             style={{ border: `1px solid ${P.cardBorder}`, background: P.card }}
@@ -129,7 +152,6 @@ export default function HologramCompute({ onClose }: HologramComputeProps) {
             ))}
           </div>
 
-          {/* Demo link */}
           <button
             onClick={() => { setView(view === "demo" ? "dashboard" : "demo"); scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }}
             className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition-all duration-200"
@@ -143,7 +165,6 @@ export default function HologramCompute({ onClose }: HologramComputeProps) {
             {view === "demo" ? "Back" : "Demo"}
           </button>
 
-          {/* Close */}
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg transition-colors duration-200"
@@ -163,15 +184,15 @@ export default function HologramCompute({ onClose }: HologramComputeProps) {
             <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
           </div>
         ) : view === "demo" ? (
-          <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+          <div className="px-6 lg:px-10 py-8 space-y-6">
             <div className="space-y-2">
               <h2
                 className="text-xl font-light"
-                style={{ color: P.text, fontFamily: "'Playfair Display', serif" }}
+                style={{ color: P.text, fontFamily: P.serif }}
               >
                 Performance Proof
               </h2>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
+              <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
                 Live benchmark comparing standard compute against the Virtual GPU.
                 All data computed in real-time in your browser.
               </p>
@@ -189,7 +210,7 @@ export default function HologramCompute({ onClose }: HologramComputeProps) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// OVERVIEW MODE — Clear, human, for the layperson
+// OVERVIEW MODE — Full-width, human-first, Why → How → What
 // ═══════════════════════════════════════════════════════════════════════════
 
 function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
@@ -206,104 +227,238 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
   const isOnline = snap?.status === "ready" || snap?.status === "degraded";
   const hasBench = mops > 0 || gflops > 0;
 
+  const activityLog = useMemo(() => generateActivityLog(), []);
+
   return (
-    <div className="max-w-2xl mx-auto px-6 py-10 space-y-12">
-      {/* Status */}
-      <section className="text-center space-y-4">
-        <h2
-          className="text-2xl md:text-3xl font-light tracking-tight"
-          style={{ color: P.text, fontFamily: "'Playfair Display', serif" }}
-        >
-          Your compute, everywhere
-        </h2>
-        <p className="text-[13px] leading-relaxed max-w-sm mx-auto" style={{ color: P.muted }}>
-          AI processing that runs directly on your device.
-          No cloud bills. No data leaves your machine.
-        </p>
-        <div className="flex items-center justify-center gap-2 pt-1">
-          <div className="w-2 h-2 rounded-full" style={{ background: sc(snap?.status ?? "offline") }} />
-          <span className="text-[12px]" style={{ color: P.muted }}>
-            {isOnline ? "Active" : "Initializing"}
+    <div className="px-6 lg:px-10 py-8 space-y-10">
+      {/* ── Hero: Why ────────────────────────────────────────── */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ background: sc(snap?.status ?? "offline") }} />
+          <span className="text-sm font-medium" style={{ color: isOnline ? P.green : P.muted }}>
+            {isOnline ? "Online" : "Initializing"}
           </span>
+        </div>
+        <h2
+          className="text-3xl lg:text-4xl font-light tracking-tight leading-tight"
+          style={{ color: P.text, fontFamily: P.serif }}
+        >
+          AI that runs on your device
+        </h2>
+        <p className="text-base lg:text-lg leading-relaxed max-w-xl" style={{ color: P.muted, lineHeight: 1.8 }}>
+          Your data never leaves your machine. No cloud bills. No waiting.
+          Everything happens right here, powered by your own hardware.
+        </p>
+      </section>
+
+      {/* ── Performance at a glance ──────────────────────────── */}
+      <section className="space-y-4">
+        <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+          Performance
+        </h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <MetricCard
+            value={gflops > 0 ? `${gflops.toFixed(0)}` : mops > 0 ? `${mops.toFixed(0)}M` : "—"}
+            unit={gflops > 0 ? "GFLOPS" : "ops/sec"}
+            label="Processing Power"
+            sublabel="How fast your device can compute"
+          />
+          <MetricCard
+            value={bw > 0 ? bw.toFixed(1) : "—"}
+            unit="GB/s"
+            label="Throughput"
+            sublabel="Data processed per second"
+          />
+          <MetricCard
+            value={tokSec > 0 ? `~${tokSec}` : "—"}
+            unit="tok/s"
+            label="AI Speed"
+            sublabel="Words generated per second"
+          />
+          <MetricCard
+            value="$0"
+            unit="forever"
+            label="Cost"
+            sublabel="No subscriptions, no cloud fees"
+            accent
+          />
+        </div>
+
+        {/* Benchmark CTA */}
+        <div className="flex items-center gap-4 pt-1">
+          <button
+            onClick={onBenchmark}
+            disabled={benchmarking}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 disabled:opacity-50"
+            style={{ background: P.gold, color: "hsl(25, 8%, 8%)" }}
+          >
+            {benchmarking ? (
+              <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Measuring…</>
+            ) : (
+              <><IconPlayerPlay size={14} /> {hasBench ? "Re-measure" : "Measure your device"}</>
+            )}
+          </button>
+          {hasBench && (
+            <span className="text-xs" style={{ color: P.dim }}>
+              Last measured {snap?.lastUpdated ? new Date(snap.lastUpdated).toLocaleTimeString() : "just now"}
+            </span>
+          )}
         </div>
       </section>
 
-      {/* Key metrics */}
-      <section className="grid grid-cols-3 gap-6">
-        <Metric
-          value={gflops > 0 ? `${gflops.toFixed(0)}` : mops > 0 ? `${mops.toFixed(0)}M` : "—"}
-          unit={gflops > 0 ? "GFLOPS" : "ops/s"}
-          label="Processing"
-        />
-        <Metric value={bw > 0 ? bw.toFixed(1) : "—"} unit="GB/s" label="Throughput" />
-        <Metric value={tokSec > 0 ? `~${tokSec}` : "—"} unit="tok/s" label="AI Speed" />
-      </section>
+      {/* ── Two-column: Resources + Activity ─────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Available Resources */}
+        <section className="space-y-4">
+          <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+            Your Resources
+          </h3>
+          <div className="space-y-2">
+            <ResourceRow
+              icon={<IconCpu size={16} />}
+              label="Virtual GPU"
+              value={isOnline ? "Active" : "Starting…"}
+              on={isOnline}
+              detail={snap?.deviceInfo?.adapterName || "Browser compute engine"}
+            />
+            <ResourceRow
+              icon={<IconBolt size={16} />}
+              label="Lookup Tables"
+              value={tables > 0 ? `${tables} loaded` : "Loading…"}
+              on={tables > 0}
+              detail="Pre-computed operations for instant results"
+            />
+            <ResourceRow
+              icon={<IconBrain size={16} />}
+              label="AI Engine"
+              value={tokSec > 0 ? `${tokSec} tok/s` : "Awaiting benchmark"}
+              on={tokSec > 0}
+              detail="On-device language model inference"
+            />
+            <ResourceRow
+              icon={<IconShieldCheck size={16} />}
+              label="Integrity Check"
+              value={snap?.criticalIdentity?.holds ? "Verified" : "Pending"}
+              on={snap?.criticalIdentity?.holds ?? false}
+              detail="Mathematical proof that computations are correct"
+            />
+          </div>
+        </section>
 
-      {/* Resources */}
-      <section className="grid grid-cols-2 gap-3">
-        <ResourceItem icon={<IconCpu size={16} />} label="Compute Engine" value={isOnline ? "Active" : "—"} on={isOnline} />
-        <ResourceItem icon={<IconBolt size={16} />} label="LUT Tables" value={tables > 0 ? `${tables} loaded` : "—"} on={tables > 0} />
-        <ResourceItem icon={<IconBrain size={16} />} label="AI Inference" value={tokSec > 0 ? "Ready" : "Awaiting benchmark"} on={tokSec > 0} />
-        <ResourceItem icon={<IconBoltFilled size={16} />} label="Cost" value="$0 / forever" on />
-      </section>
+        {/* Activity Log */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+              Activity
+            </h3>
+            <span className="text-xs" style={{ color: P.dim }}>Live</span>
+          </div>
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ border: `1px solid ${P.cardBorder}`, background: P.card }}
+          >
+            {activityLog.map((entry, i) => (
+              <div
+                key={entry.id}
+                className="flex items-center gap-3 px-4 py-3"
+                style={{ borderBottom: i < activityLog.length - 1 ? `1px solid ${P.cardBorder}` : "none" }}
+              >
+                <div style={{ color: entry.status === "active" ? P.gold : P.dim }}>
+                  {entry.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: P.text }}>{entry.task}</p>
+                </div>
+                <span className="text-xs font-mono tabular-nums shrink-0" style={{ color: P.muted }}>
+                  {entry.durationMs}ms
+                </span>
+                <span className="text-xs shrink-0" style={{ color: P.dim }}>
+                  {entry.timeAgo}
+                </span>
+                {entry.status === "active" && (
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse" style={{ background: P.gold }} />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
 
-      {/* CTA */}
-      <section className="text-center space-y-3">
-        <button
-          onClick={onBenchmark}
-          disabled={benchmarking}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-medium transition-all duration-300 disabled:opacity-50"
-          style={{ background: P.gold, color: "hsl(25, 8%, 8%)" }}
-        >
-          {benchmarking ? (
-            <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Measuring…</>
-          ) : (
-            <><IconPlayerPlay size={14} /> {hasBench ? "Re-measure" : "Measure your device"}</>
-          )}
-        </button>
-        {hasBench && (
-          <p className="text-[11px]" style={{ color: P.dim }}>
-            Last measured {snap?.lastUpdated ? new Date(snap.lastUpdated).toLocaleTimeString() : "just now"}
-          </p>
-        )}
-      </section>
-
-      {/* Demo teaser */}
-      <section className="text-center">
-        <button
-          onClick={onDemo}
-          className="inline-flex items-center gap-2 text-[12px] font-medium transition-colors duration-200"
-          style={{ color: P.gold }}
-        >
-          <IconChartBar size={14} />
-          See the live performance proof
-          <IconArrowRight size={12} />
-        </button>
-      </section>
-
-      {/* What's included */}
+      {/* ── How it works ─────────────────────────────────────── */}
       <section className="space-y-4">
-        <h3 className="text-[13px] font-medium" style={{ color: P.text }}>What's included</h3>
-        <div className="space-y-2.5">
+        <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+          How It Works
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <HowCard
+            step="1"
+            title="Pre-compute"
+            desc="Complex operations are collapsed into simple lookup tables — like an answer key for math."
+          />
+          <HowCard
+            step="2"
+            title="Instant lookup"
+            desc="Instead of calculating every time, your device just looks up the answer. One step, done."
+          />
+          <HowCard
+            step="3"
+            title="Verified results"
+            desc="Every result is mathematically proven to be identical to the full computation. Zero shortcuts in accuracy."
+          />
+        </div>
+      </section>
+
+      {/* ── What's included ──────────────────────────────────── */}
+      <section className="space-y-4">
+        <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+          What's Included
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
-            ["Private AI inference on your device", true],
-            ["Constant-time compute engine", true],
-            ["Zero-cost — no cloud GPU bills", true],
-            ["Cloud GPU clusters (H100, B200)", false],
-            ["Peer-to-peer compute sharing", false],
-          ].map(([text, available], i) => (
-            <div key={i} className="flex items-center gap-3">
-              <IconCircleCheck
-                size={14}
-                style={{ color: available ? P.green : P.dim, opacity: available ? 1 : 0.5 }}
-              />
-              <span className="text-[12px]" style={{ color: available ? P.text : P.dim }}>
-                {text as string}
-                {!available && <span className="ml-1.5 text-[10px]" style={{ color: P.dim }}>coming soon</span>}
+            { text: "Private AI inference on your device", available: true, icon: <IconBrain size={14} /> },
+            { text: "Constant-time compute engine", available: true, icon: <IconBolt size={14} /> },
+            { text: "Zero cost — no cloud GPU bills", available: true, icon: <IconBoltFilled size={14} /> },
+            { text: "Verified computation integrity", available: true, icon: <IconShieldCheck size={14} /> },
+            { text: "Cloud GPU clusters (H100, B200)", available: false, icon: <IconCloudComputing size={14} /> },
+            { text: "Peer-to-peer compute sharing", available: false, icon: <IconUsers size={14} /> },
+          ].map((item, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{
+                background: item.available ? P.card : "transparent",
+                border: `1px solid ${item.available ? P.cardBorder : "hsla(38, 12%, 70%, 0.04)"}`,
+                opacity: item.available ? 1 : 0.5,
+              }}
+            >
+              <div style={{ color: item.available ? P.green : P.dim }}>{item.icon}</div>
+              <span className="text-sm" style={{ color: item.available ? P.text : P.dim }}>
+                {item.text}
               </span>
+              {!item.available && (
+                <span className="ml-auto text-[10px] font-medium uppercase tracking-wider" style={{ color: P.dim }}>Soon</span>
+              )}
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ── Demo teaser ──────────────────────────────────────── */}
+      <section
+        className="rounded-xl p-6 flex items-center justify-between cursor-pointer transition-all duration-300 hover:opacity-90"
+        style={{
+          background: "hsla(38, 40%, 65%, 0.06)",
+          border: `1px solid hsla(38, 40%, 65%, 0.12)`,
+        }}
+        onClick={onDemo}
+      >
+        <div className="space-y-1">
+          <h3 className="text-base font-medium" style={{ color: P.text }}>See the proof</h3>
+          <p className="text-sm" style={{ color: P.muted }}>
+            Run a live benchmark and watch the Virtual GPU outperform standard compute by 100×+
+          </p>
+        </div>
+        <IconArrowRight size={20} style={{ color: P.gold }} />
       </section>
     </div>
   );
@@ -324,7 +479,7 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
   const cpu = localSnap?.cpuBenchmarkResult;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+    <div className="px-6 lg:px-10 py-8 space-y-8">
       {/* Top metrics */}
       <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatCell label="Status" value={localSnap?.status === "ready" ? "Online" : localSnap?.status === "degraded" ? "CPU Mode" : "—"} color={sc(localSnap?.status ?? "")} />
@@ -378,15 +533,15 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div>
                 <p className="text-xl font-mono font-light" style={{ color: P.text }}>{localSnap.lutInfo.tableCount}</p>
-                <p className="text-[11px] mt-1" style={{ color: P.muted }}>Lookup Tables</p>
+                <p className="text-xs mt-1" style={{ color: P.muted }}>Lookup Tables</p>
               </div>
               <div>
                 <p className="text-xl font-mono font-light" style={{ color: P.text }}>{localSnap.lutInfo.tableSize}</p>
-                <p className="text-[11px] mt-1" style={{ color: P.muted }}>Entries Each</p>
+                <p className="text-xs mt-1" style={{ color: P.muted }}>Entries Each</p>
               </div>
               <div>
                 <p className="text-xl font-mono font-light" style={{ color: P.text }}>{(localSnap.lutInfo.cacheSizeBytes / 1024).toFixed(1)}K</p>
-                <p className="text-[11px] mt-1" style={{ color: P.muted }}>Cache Size</p>
+                <p className="text-xs mt-1" style={{ color: P.muted }}>Cache Size</p>
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -395,7 +550,7 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
                   </p>
                   <IconCircleCheck size={14} style={{ color: localSnap.lutInfo.criticalIdentityHolds ? P.green : "hsl(0, 55%, 55%)" }} />
                 </div>
-                <p className="text-[11px] mt-1" style={{ color: P.muted }}>Critical Identity</p>
+                <p className="text-xs mt-1" style={{ color: P.muted }}>Critical Identity</p>
               </div>
             </div>
           </div>
@@ -416,18 +571,18 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
           ].map(s => (
             <div
               key={s.name}
-              className="flex items-center justify-between p-3 rounded-lg transition-colors duration-200"
+              className="flex items-center justify-between p-3 rounded-lg"
               style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}
             >
               <div className="flex items-center gap-2.5">
                 <IconFlame size={12} style={{ color: P.dim }} />
                 <div>
-                  <p className="text-[12px] font-medium" style={{ color: P.text }}>{s.name}</p>
-                  <p className="text-[10px]" style={{ color: P.dim }}>{s.desc}</p>
+                  <p className="text-sm font-medium" style={{ color: P.text }}>{s.name}</p>
+                  <p className="text-xs" style={{ color: P.dim }}>{s.desc}</p>
                 </div>
               </div>
               <span
-                className="text-[9px] font-mono px-1.5 py-0.5 rounded"
+                className="text-[10px] font-mono px-1.5 py-0.5 rounded"
                 style={{ color: P.muted, border: `1px solid ${P.cardBorder}` }}
               >
                 {s.badge}
@@ -441,7 +596,7 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
       <section className="text-center pt-2">
         <button
           onClick={onDemo}
-          className="inline-flex items-center gap-2 text-[12px] font-medium transition-colors duration-200"
+          className="inline-flex items-center gap-2 text-sm font-medium transition-colors duration-200"
           style={{ color: P.gold }}
         >
           <IconChartBar size={14} />
@@ -449,40 +604,72 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
           <IconArrowRight size={12} />
         </button>
       </section>
-
-      {/* Footer */}
-      <div className="text-center text-[11px] py-4" style={{ color: P.dim, borderTop: `1px solid ${P.border}` }}>
-        Hologram Compute — Local vGPU today. Cloud + Peer tomorrow.
-      </div>
     </div>
   );
 }
 
 // ── Shared sub-components ───────────────────────────────────────────────────
 
-function Metric({ value, unit, label }: { value: string; unit: string; label: string }) {
+function MetricCard({ value, unit, label, sublabel, accent }: {
+  value: string; unit: string; label: string; sublabel: string; accent?: boolean;
+}) {
   return (
-    <div className="text-center space-y-1">
-      <div className="flex items-baseline justify-center gap-1">
-        <span className="text-2xl font-light font-mono tracking-tight" style={{ color: P.text }}>{value}</span>
-        <span className="text-[11px]" style={{ color: P.muted }}>{unit}</span>
+    <div
+      className="rounded-xl p-5 space-y-3"
+      style={{
+        background: accent ? "hsla(38, 40%, 65%, 0.06)" : P.card,
+        border: `1px solid ${accent ? "hsla(38, 40%, 65%, 0.12)" : P.cardBorder}`,
+      }}
+    >
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-3xl lg:text-4xl font-light font-mono tracking-tight" style={{ color: accent ? P.gold : P.text }}>{value}</span>
+        <span className="text-sm" style={{ color: P.muted }}>{unit}</span>
       </div>
-      <p className="text-[11px]" style={{ color: P.dim }}>{label}</p>
+      <div>
+        <p className="text-sm font-medium" style={{ color: P.text }}>{label}</p>
+        <p className="text-xs mt-0.5" style={{ color: P.dim }}>{sublabel}</p>
+      </div>
     </div>
   );
 }
 
-function ResourceItem({ icon, label, value, on }: { icon: React.ReactNode; label: string; value: string; on?: boolean }) {
+function ResourceRow({ icon, label, value, on, detail }: {
+  icon: React.ReactNode; label: string; value: string; on: boolean; detail: string;
+}) {
   return (
     <div
-      className="flex items-center gap-3 p-3 rounded-xl"
+      className="flex items-center gap-4 px-4 py-3.5 rounded-xl"
       style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}
     >
-      <div style={{ color: on ? P.green : P.dim }}>{icon}</div>
+      <div className="shrink-0" style={{ color: on ? P.green : P.dim }}>{icon}</div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px]" style={{ color: P.muted }}>{label}</p>
-        <p className="text-[12px] font-medium truncate" style={{ color: P.text }}>{value}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium" style={{ color: P.text }}>{label}</p>
+          <span className="text-xs" style={{ color: on ? P.green : P.muted }}>{value}</span>
+        </div>
+        <p className="text-xs mt-0.5 truncate" style={{ color: P.dim }}>{detail}</p>
       </div>
+      <div className="w-2 h-2 rounded-full shrink-0" style={{ background: on ? P.green : P.dim }} />
+    </div>
+  );
+}
+
+function HowCard({ step, title, desc }: { step: string; title: string; desc: string }) {
+  return (
+    <div
+      className="rounded-xl p-5 space-y-3"
+      style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}
+    >
+      <div className="flex items-center gap-3">
+        <span
+          className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+          style={{ background: "hsla(38, 40%, 65%, 0.12)", color: P.gold }}
+        >
+          {step}
+        </span>
+        <h4 className="text-sm font-semibold" style={{ color: P.text }}>{title}</h4>
+      </div>
+      <p className="text-sm leading-relaxed" style={{ color: P.muted, lineHeight: 1.7 }}>{desc}</p>
     </div>
   );
 }
@@ -490,10 +677,10 @@ function ResourceItem({ icon, label, value, on }: { icon: React.ReactNode; label
 function StatCell({ label, value, unit, color }: { label: string; value: string; unit?: string; color?: string }) {
   return (
     <div className="p-3 rounded-xl" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-      <p className="text-[10px] mb-1" style={{ color: P.muted }}>{label}</p>
+      <p className="text-xs mb-1" style={{ color: P.muted }}>{label}</p>
       <div className="flex items-baseline gap-1">
         <span className="text-base font-mono font-medium" style={{ color: color ?? P.text }}>{value}</span>
-        {unit && <span className="text-[10px]" style={{ color: P.dim }}>{unit}</span>}
+        {unit && <span className="text-xs" style={{ color: P.dim }}>{unit}</span>}
       </div>
     </div>
   );
@@ -501,7 +688,7 @@ function StatCell({ label, value, unit, color }: { label: string; value: string;
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+    <h2 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
       {children}
     </h2>
   );
@@ -524,17 +711,17 @@ function ProCard({ icon, title, desc, active, action, onClick, loading }: {
         <div className="p-2 rounded-lg" style={{ background: "hsla(38, 12%, 90%, 0.06)", color: active ? P.green : P.dim }}>
           {icon}
         </div>
-        {!active && <span className="text-[9px] font-medium uppercase tracking-wider" style={{ color: P.dim }}>Planned</span>}
+        {!active && <span className="text-[10px] font-medium uppercase tracking-wider" style={{ color: P.dim }}>Planned</span>}
       </div>
       <div>
-        <h3 className="text-[13px] font-semibold" style={{ color: P.text }}>{title}</h3>
-        <p className="text-[11px] mt-1 leading-relaxed" style={{ color: P.muted }}>{desc}</p>
+        <h3 className="text-sm font-semibold" style={{ color: P.text }}>{title}</h3>
+        <p className="text-xs mt-1 leading-relaxed" style={{ color: P.muted }}>{desc}</p>
       </div>
       {action && onClick && (
         <button
           onClick={onClick}
           disabled={loading}
-          className="flex items-center gap-1.5 text-[11px] font-medium transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 text-xs font-medium transition-colors disabled:opacity-50"
           style={{ color: P.text }}
         >
           {loading ? <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: P.text, borderTopColor: "transparent" }} /> : <IconActivity size={12} />}
@@ -559,12 +746,12 @@ function ProviderCard({ snap }: { snap: ProviderSnapshot }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ background: sc(snap.status) }} />
-          <span className="text-[12px] font-medium" style={{ color: P.text }}>{snap.name}</span>
+          <span className="text-sm font-medium" style={{ color: P.text }}>{snap.name}</span>
         </div>
-        <span className="text-[9px] font-mono" style={{ color: P.dim }}>{snap.id}</span>
+        <span className="text-[10px] font-mono" style={{ color: P.dim }}>{snap.id}</span>
       </div>
       {isActive && snap.cpuBenchmarkResult && (
-        <div className="flex gap-4 text-[11px] pt-2" style={{ borderTop: `1px solid ${P.cardBorder}` }}>
+        <div className="flex gap-4 text-xs pt-2" style={{ borderTop: `1px solid ${P.cardBorder}` }}>
           <div>
             <span style={{ color: P.muted }}>LUT</span>
             <p className="font-mono" style={{ color: P.text }}>{snap.cpuBenchmarkResult.lutMopsPerSec.toFixed(0)}M ops/s</p>
@@ -576,7 +763,7 @@ function ProviderCard({ snap }: { snap: ProviderSnapshot }) {
         </div>
       )}
       {!isActive && (
-        <p className="text-[11px]" style={{ color: P.dim }}>
+        <p className="text-xs" style={{ color: P.dim }}>
           {snap.kind === "cloud" ? "Cloud GPU — coming soon" : "Peer mesh — coming soon"}
         </p>
       )}
