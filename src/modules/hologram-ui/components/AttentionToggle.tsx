@@ -1,11 +1,9 @@
 /**
- * AttentionToggle — Focus Mode Toggle (Top-Right)
- * ════════════════════════════════════════════════
+ * AttentionToggle — Focus Mode Toggle (Right Edge, Vertical)
+ * ══════════════════════════════════════════════════════════
  *
- * A prominent, self-describing toggle fixed to the top-right.
+ * Vertically oriented toggle fixed to the right edge of the viewport.
  * Binary: Open (diffuse) ↔ Focus (deep).
- *
- * @module hologram-ui/components/AttentionToggle
  */
 
 import { useState } from "react";
@@ -23,31 +21,32 @@ export default function AttentionToggle() {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       aria-label={`${isFocus ? "Focus" : "Open"} mode. Click to switch.`}
-      className="fixed top-5 right-5 flex items-center gap-2.5 select-none transition-all duration-500"
+      className="fixed right-5 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 select-none transition-all duration-500"
       style={{
         zIndex: 60,
-        opacity: hovered ? 1 : 0.75,
+        opacity: hovered ? 1 : 0.7,
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
-      {/* Label */}
+      {/* Label — rotated vertically */}
       <span
-        className="text-[11px] font-semibold tracking-[0.15em] uppercase transition-colors duration-500"
+        className="text-[10px] font-semibold tracking-[0.2em] uppercase transition-colors duration-500"
         style={{
+          writingMode: "vertical-rl",
           color: isFocus
             ? "hsla(38, 45%, 75%, 0.9)"
-            : "hsla(220, 15%, 80%, 0.65)",
+            : "hsla(220, 15%, 80%, 0.55)",
         }}
       >
         {isFocus ? "Focus" : "Open"}
       </span>
 
-      {/* Toggle track */}
+      {/* Toggle track — vertical */}
       <div
         className="relative rounded-full transition-all duration-500"
         style={{
-          width: 36,
-          height: 18,
+          width: 16,
+          height: 34,
           background: isFocus
             ? "hsla(38, 35%, 55%, 0.25)"
             : "hsla(220, 15%, 50%, 0.12)",
@@ -58,11 +57,11 @@ export default function AttentionToggle() {
       >
         {/* Thumb */}
         <div
-          className="absolute top-[2px] rounded-full transition-all duration-500"
+          className="absolute left-[2px] rounded-full transition-all duration-500"
           style={{
-            width: 12,
-            height: 12,
-            left: isFocus ? 20 : 2,
+            width: 10,
+            height: 10,
+            top: isFocus ? 20 : 2,
             background: isFocus
               ? "hsla(38, 45%, 68%, 0.95)"
               : "hsla(220, 15%, 70%, 0.4)",
