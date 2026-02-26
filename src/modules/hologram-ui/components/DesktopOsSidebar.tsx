@@ -28,8 +28,13 @@ const S = {
   font: "'DM Sans', system-ui, sans-serif",
 } as const;
 
+/* ── OS-aware modifier key ──────────────────────────────────── */
+const MOD_KEY = typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? "⌘" : "Ctrl";
+
 /* ── Shortcut badge component ───────────────────────────────── */
 function ShortcutBadge({ keys }: { keys: string }) {
+  // Replace ⌘ placeholder with OS-appropriate modifier
+  const display = keys.replace("⌘", MOD_KEY);
   return (
     <span
       className="ml-auto text-[10px] tracking-[0.15em] uppercase font-medium opacity-40 shrink-0"
@@ -38,7 +43,7 @@ function ShortcutBadge({ keys }: { keys: string }) {
         color: S.textMuted,
       }}
     >
-      {keys}
+      {display}
     </span>
   );
 }
