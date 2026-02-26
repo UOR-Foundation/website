@@ -27,6 +27,7 @@ import LegalPanel from "@/modules/hologram-ui/components/LegalPanel";
 import HologramFrame, { HologramViewport, OverlayFrame, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
 import ModularSnapGrid from "@/modules/hologram-ui/components/ModularSnapGrid";
+import AmbientPlayer from "@/modules/hologram-ui/components/AmbientPlayer";
 import { useModularPanel } from "@/modules/hologram-ui/hooks/useModularPanel";
 import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
 import FrameDebugOverlay from "@/modules/hologram-ui/components/FrameDebugOverlay";
@@ -754,6 +755,7 @@ export default function HologramOsPage() {
         isResizing={lumenPanel.isResizing}
       />
       {/* FrameDebugOverlay removed for cleaner UI */}
+      <AmbientPlayer lumenOffset={chatOpen ? lumenPanel.width : 0} />
     </HologramViewport>
   );
 }
