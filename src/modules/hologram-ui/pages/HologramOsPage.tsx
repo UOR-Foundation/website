@@ -423,28 +423,6 @@ export default function HologramOsPage() {
                 >
                   Style
                 </span>
-                <button
-                  onClick={() => {
-                    lumenPillDrag.resetPosition();
-                    dayRingDrag.resetPosition();
-                    // Clear any other hologram-pos keys
-                    Object.keys(localStorage).filter(k => k.startsWith("hologram-pos:")).forEach(k => localStorage.removeItem(k));
-                    window.location.reload();
-                  }}
-                  className="tracking-[0.15em] uppercase font-light transition-all duration-300 hover:opacity-80"
-                  style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
-                    fontSize: "clamp(9px, 0.6vw, 11px)",
-                    color: bgMode === "white"
-                      ? "hsla(0, 0%, 55%, 0.35)"
-                      : "hsla(0, 0%, 70%, 0.35)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  Reset Layout
-                </button>
               </div>
             </div>
 
