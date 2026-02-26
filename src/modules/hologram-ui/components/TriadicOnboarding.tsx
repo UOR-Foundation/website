@@ -106,77 +106,115 @@ export default function TriadicOnboarding({ onComplete }: TriadicOnboardingProps
       }}
     >
       <div
-        className="relative max-w-[320px] w-full mx-4 rounded-2xl px-7 py-8 flex flex-col items-center text-center gap-5"
+        className="relative max-w-[340px] w-full mx-4 rounded-2xl px-8 py-9 flex flex-col items-center text-center gap-6"
         style={{
           background: P.surface,
           border: `1px solid ${P.border}`,
-          boxShadow: "0 24px 80px -12px hsla(25, 15%, 5%, 0.6)",
+          boxShadow: "0 30px 80px -16px hsla(25, 15%, 5%, 0.55)",
           animation: exiting
             ? "onboard-card-exit 0.25s ease-in both"
             : "onboard-card-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
         }}
         key={step}
       >
-        {/* Progress bar */}
+        {/* ── Progress — thin line with glowing leading edge ──── */}
         <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl overflow-hidden">
           <div
             className="absolute inset-0"
-            style={{ background: "hsla(38, 10%, 50%, 0.1)" }}
+            style={{ background: "hsla(38, 10%, 50%, 0.08)" }}
           />
           <div
-            className="h-full transition-all duration-700 ease-out"
+            className="h-full transition-all duration-700 ease-out relative"
             style={{
               width: `${((step + 1) / STEPS.length) * 100}%`,
-              background: `linear-gradient(90deg, hsla(38, 30%, 55%, 0.4), ${phaseColor})`,
+              background: `linear-gradient(90deg, hsla(38, 30%, 55%, 0.3), ${phaseColor})`,
             }}
-          />
-        </div>
-
-        {/* Step indicator dots */}
-        <div className="flex gap-2 mt-1">
-          {STEPS.map((_, i) => (
+          >
+            {/* Leading glow dot */}
             <div
-              key={i}
-              className="w-1.5 h-1.5 rounded-full transition-all duration-500"
+              className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
               style={{
-                background: i === step
-                  ? phaseColor
-                  : i < step
-                    ? "hsla(38, 20%, 55%, 0.4)"
-                    : "hsla(38, 10%, 50%, 0.2)",
-                transform: i === step ? "scale(1.3)" : "scale(1)",
+                background: phaseColor,
+                boxShadow: `0 0 8px ${phaseColor}, 0 0 16px ${phaseColor}`,
+                animation: "onboard-pulse 2s ease-in-out infinite",
               }}
             />
-          ))}
+          </div>
         </div>
 
-        {/* Title */}
+        {/* ── Step indicator — minimal arcs ──────────────────── */}
+        <div className="flex items-center gap-3 mt-1">
+          {STEPS.map((s, i) => {
+            const done = i < step;
+            const active = i === step;
+            const dotColor = active
+              ? phaseColor
+              : done
+                ? "hsla(38, 25%, 60%, 0.5)"
+                : "hsla(38, 10%, 50%, 0.15)";
+
+            return (
+              <div key={i} className="relative flex items-center justify-center">
+                {/* Connecting line (between dots) */}
+                {i < STEPS.length - 1 && (
+                  <div
+                    className="absolute left-[calc(50%+6px)] top-1/2 -translate-y-1/2 h-[1px] transition-all duration-700"
+                    style={{
+                      width: "12px",
+                      background: done ? "hsla(38, 25%, 60%, 0.3)" : "hsla(38, 10%, 50%, 0.08)",
+                    }}
+                  />
+                )}
+                {/* Dot */}
+                <div
+                  className="rounded-full transition-all duration-500"
+                  style={{
+                    width: active ? "8px" : "5px",
+                    height: active ? "8px" : "5px",
+                    background: dotColor,
+                    boxShadow: active ? `0 0 10px ${phaseColor}40` : "none",
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Step counter — whisper-quiet ───────────────────── */}
+        <span
+          className="text-[10px] tracking-[0.25em] uppercase"
+          style={{ color: P.textDim, fontFamily: P.font }}
+        >
+          {step + 1} of {STEPS.length}
+        </span>
+
+        {/* ── Title ─────────────────────────────────────────── */}
         <h3
-          className="text-lg font-light tracking-wide leading-snug"
+          className="text-xl font-normal tracking-[0.03em] leading-snug"
           style={{
             fontFamily: P.fontDisplay,
             color: current.phase
-              ? `hsla(${PHASES[current.phase].hue}, 28%, 78%, 0.95)`
-              : P.text,
+              ? `hsla(${PHASES[current.phase].hue}, 30%, 75%, 0.95)`
+              : "hsl(38, 35%, 72%)",
           }}
         >
           {current.title}
         </h3>
 
-        {/* Body */}
+        {/* ── Body ──────────────────────────────────────────── */}
         <p
-          className="text-[13px] leading-[1.7] max-w-[260px]"
+          className="text-sm leading-[1.75] max-w-[270px]"
           style={{ fontFamily: P.font, color: P.textMuted }}
         >
           {current.body}
         </p>
 
-        {/* Actions */}
-        <div className="flex items-center gap-4 mt-2">
+        {/* ── Actions ───────────────────────────────────────── */}
+        <div className="flex items-center gap-5 mt-1">
           {step === 0 && (
             <button
               onClick={skip}
-              className="text-[11px] tracking-[0.15em] uppercase transition-opacity duration-300 hover:opacity-70"
+              className="text-xs tracking-[0.15em] uppercase transition-opacity duration-300 hover:opacity-60"
               style={{ fontFamily: P.font, color: P.textDim }}
             >
               Skip
@@ -184,16 +222,16 @@ export default function TriadicOnboarding({ onComplete }: TriadicOnboardingProps
           )}
           <button
             onClick={advance}
-            className="px-5 py-2 rounded-full text-[12px] tracking-[0.1em] uppercase transition-all duration-300 hover:scale-[1.03]"
+            className="px-6 py-2.5 rounded-full text-xs tracking-[0.12em] uppercase transition-all duration-300 hover:scale-[1.02]"
             style={{
               fontFamily: P.font,
               fontWeight: 500,
-              background: `hsla(38, 25%, 40%, 0.2)`,
-              border: `1px solid hsla(38, 30%, 50%, 0.25)`,
+              background: `hsla(38, 25%, 40%, 0.15)`,
+              border: `1px solid hsla(38, 30%, 50%, 0.2)`,
               color: P.text,
             }}
           >
-            {isLast ? "Begin" : "Next"}
+            {isLast ? "Begin" : "Continue"}
           </button>
         </div>
       </div>
@@ -218,6 +256,10 @@ export default function TriadicOnboarding({ onComplete }: TriadicOnboardingProps
         @keyframes onboard-accent-in {
           0% { opacity: 0; width: 0; }
           100% { opacity: 1; width: 2rem; }
+        }
+        @keyframes onboard-pulse {
+          0%, 100% { opacity: 0.6; transform: translateY(-50%) scale(1); }
+          50% { opacity: 1; transform: translateY(-50%) scale(1.4); }
         }
       `}</style>
     </div>
