@@ -269,8 +269,9 @@ export default function HologramOsPage() {
           style={{
             opacity: departing ? 0 : 1,
             transform: departing ? "scale(1.02)" : isFocus ? "scale(1.03)" : "scale(1)",
-            filter: departing ? "blur(4px)" : "blur(0px)",
+            filter: departing ? "blur(4px)" : "none",
             transitionDuration: isFocus ? "600ms" : "400ms",
+            marginRight: chatOpen ? "min(380px, 82vw)" : "0px",
           }}
         >
           {/* ══════════════════════════════════════════════════════════
