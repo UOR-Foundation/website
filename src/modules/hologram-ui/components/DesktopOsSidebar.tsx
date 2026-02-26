@@ -52,9 +52,9 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home",     icon: Home,       path: "/hologram-console", shortcut: "⌘ 1" },
-  { label: "Apps",     icon: LayoutGrid, path: "/console/apps",     shortcut: "⌘ 2" },
-  { label: "Profile",  icon: User,       path: "/your-space",       shortcut: "⌘ 3" },
+  { label: "Home",     icon: Home,       path: "/hologram-console", shortcut: "" },
+  { label: "Apps",     icon: LayoutGrid, path: "/console/apps",     shortcut: "" },
+  { label: "Profile",  icon: User,       path: "/your-space",       shortcut: "" },
 ];
 
 /* ── Props ─────────────────────────────────────────────────── */
@@ -119,7 +119,7 @@ export default function DesktopOsSidebar({
               onClick={onToggle}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/[0.06]"
               style={{ color: S.textMuted }}
-              title="Collapse sidebar (⌘ \)"
+              title="Collapse sidebar (⌘ B)"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -129,7 +129,7 @@ export default function DesktopOsSidebar({
             onClick={onToggle}
             className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center transition-colors hover:bg-white/[0.06]"
             style={{ background: "transparent", border: `1px solid ${S.border}` }}
-            title="Expand sidebar (⌘ \)"
+            title="Expand sidebar (⌘ B)"
           >
             {/* Compact H monogram when collapsed */}
             <svg
@@ -167,7 +167,7 @@ export default function DesktopOsSidebar({
               onMouseLeave={(e) => {
                 if (!active) e.currentTarget.style.background = active ? S.surfaceActive : "transparent";
               }}
-              title={collapsed ? `${item.label} (${item.shortcut})` : undefined}
+              title={collapsed ? item.label : undefined}
             >
               <item.icon
                 className="w-5 h-5 shrink-0"
@@ -175,10 +175,7 @@ export default function DesktopOsSidebar({
                 style={{ color: active ? S.gold : S.textMuted }}
               />
               {!collapsed && (
-                <>
-                  <span className="text-[14px] font-light">{item.label}</span>
-                  <ShortcutBadge keys={item.shortcut} />
-                </>
+                <span className="text-[14px] font-light">{item.label}</span>
               )}
             </button>
           );
@@ -199,13 +196,13 @@ export default function DesktopOsSidebar({
             style={{ color: S.text, fontFamily: S.font }}
             onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-            title={collapsed ? "Replay Guide (⌘ ?)" : undefined}
+            title={collapsed ? "Help (⌘ /)" : undefined}
           >
             <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
             {!collapsed && (
               <>
-                <span className="text-[14px] font-light">Replay Guide</span>
-                <ShortcutBadge keys="⌘ ?" />
+                <span className="text-[14px] font-light">Help</span>
+                <ShortcutBadge keys="⌘ /" />
               </>
             )}
           </button>
@@ -218,13 +215,13 @@ export default function DesktopOsSidebar({
           style={{ color: S.text, fontFamily: S.font }}
           onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={collapsed ? "Messages (⌘ M)" : undefined}
+          title={collapsed ? "Messages (⌘ .)" : undefined}
         >
           <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
           {!collapsed && (
             <>
               <span className="text-[14px] font-light">Messages</span>
-              <ShortcutBadge keys="⌘ M" />
+              <ShortcutBadge keys="⌘ ." />
             </>
           )}
         </button>
