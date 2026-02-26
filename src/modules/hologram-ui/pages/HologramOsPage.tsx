@@ -133,6 +133,19 @@ function palette(m: BgMode) {
   };
 }
 
+// ── Time-aware Lumen subtitle ───────────────────────────────────────────────
+function getLumenSubtitle(): string {
+  const h = new Date().getHours();
+  if (h >= 22 || h < 5)  return "Wind down. I\u2019m here if you need me.";
+  if (h >= 5 && h < 7)   return "The world is still quiet. A good time to think.";
+  if (h >= 7 && h < 10)  return "A fresh start. What matters to you today?";
+  if (h >= 10 && h < 12) return "Your companion, here whenever you\u2019re ready.";
+  if (h >= 12 && h < 14) return "Take a breath. I\u2019ll be here when you return.";
+  if (h >= 14 && h < 17) return "Deep in the day. Let\u2019s make it count.";
+  if (h >= 17 && h < 20) return "The day is unwinding. Reflect, or keep going.";
+  return "Evening light. A gentle space to explore.";
+}
+
 // ── Welcome Screen ──────────────────────────────────────────────────────────
 /** Syncs overlay open state into the DepthShift context */
 function DepthShiftSync({ active }: { active: boolean }) {
@@ -585,11 +598,11 @@ export default function HologramOsPage() {
                   </div>
                 </div>
 
-                {/* Meet Lumen — gentle invitation */}
+                {/* Meet Lumen — gentle, time-aware invitation */}
                 <div
                   className="flex flex-col items-center gap-[1.8vh]"
                   style={{
-                    animation: "stagger-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.4s both",
+                    animation: "stagger-fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both",
                   }}
                 >
                   <button
@@ -597,29 +610,18 @@ export default function HologramOsPage() {
                     className="group flex flex-col items-center gap-[1.2vh] transition-all duration-700 hover:scale-[1.02]"
                     style={{ cursor: "pointer", background: "none", border: "none" }}
                   >
-                    {/* Breathing glyph */}
+                    {/* Breathing glyph — slower, more meditative */}
                     <span
                       className="block transition-all duration-700 group-hover:scale-110"
                       style={{
                         fontSize: isFocus ? "clamp(28px, 3vw, 44px)" : "clamp(22px, 2.4vw, 36px)",
                         color: bgMode === "white" ? "hsla(38, 30%, 45%, 0.5)" : "hsla(38, 25%, 70%, 0.4)",
-                        animation: "ambient-glow-breathe 6s ease-in-out infinite",
+                        animation: "ambient-glow-breathe 8s ease-in-out infinite",
                         lineHeight: 1,
                       }}
                     >
                       ◎
                     </span>
-                    <p
-                      className="tracking-[0.35em] uppercase transition-all duration-500"
-                      style={{
-                        fontFamily: "'DM Sans', system-ui, sans-serif",
-                        fontWeight: 300,
-                        fontSize: isFocus ? "clamp(11px, 0.9vw, 14px)" : "clamp(9px, 0.7vw, 12px)",
-                        color: bgMode === "white" ? "hsla(0, 0%, 25%, 0.45)" : "hsla(38, 15%, 75%, 0.4)",
-                      }}
-                    >
-                      Meet Lumen
-                    </p>
                     <p
                       className="tracking-[0.08em] transition-all duration-500"
                       style={{
@@ -627,12 +629,13 @@ export default function HologramOsPage() {
                         fontWeight: 300,
                         fontStyle: "italic",
                         fontSize: isFocus ? "clamp(14px, 1.2vw, 20px)" : "clamp(12px, 1vw, 17px)",
-                        color: bgMode === "white" ? "hsla(0, 0%, 30%, 0.4)" : "hsla(38, 12%, 72%, 0.35)",
-                        maxWidth: "28ch",
+                        color: bgMode === "white" ? "hsla(0, 0%, 30%, 0.45)" : "hsla(38, 12%, 72%, 0.4)",
+                        maxWidth: "30ch",
                         lineHeight: 1.6,
+                        animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
                       }}
                     >
-                      Your quiet companion, here whenever you are ready.
+                      {getLumenSubtitle()}
                     </p>
                   </button>
                 </div>
