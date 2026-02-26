@@ -103,6 +103,14 @@ export type {
   TransformCertificate,
   IsometryCertificate,
   InvolutionCertificate,
+  // Audio
+  AudioSampleFormat,
+  AudioDatum as AudioDatumType,
+  AudioFrame as AudioFrameType,
+  AudioFeature as AudioFeatureType,
+  AudioSegment as AudioSegmentType,
+  AudioTrack as AudioTrackType,
+  AudioLensProjection,
 } from "./bridge";
 
 export type { ResolutionState } from "./bridge/resolver";

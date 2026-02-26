@@ -13,3 +13,4 @@ export * from "./proof";
 export * from "./derivation";
 export * from "./trace";
 export * from "./cert";
+export * from "./audio";

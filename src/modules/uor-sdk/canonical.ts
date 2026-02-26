@@ -235,3 +235,22 @@ export {
   SECURE_MEMORY_BLUEPRINT,
   createSecureMemoryBlueprint,
 } from "@/modules/uns/core/hologram/lenses";
+
+// ── Audio Namespace (Content-Addressed Music) ──────────────────────────
+export {
+  analyzeFrame,
+  frameCurvature,
+  frameCatastrophe,
+  AudioSegmentCache,
+  globalSegmentCache,
+} from "@/modules/audio";
+export type {
+  AudioFormatDescriptor,
+  AudioFrameData,
+  AudioFeatureData,
+  AudioSegmentData,
+  AudioTrackRecord,
+  SegmentCacheEntry,
+  AudioEngineState,
+  AudioEngineEvents,
+} from "@/modules/audio";
