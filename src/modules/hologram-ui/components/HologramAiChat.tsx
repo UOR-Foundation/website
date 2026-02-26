@@ -1074,8 +1074,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything…"
                 disabled={isGenerating}
-                rows={1}
-                className="w-full bg-transparent border-none outline-none resize-none text-[14px] placeholder:opacity-30 leading-relaxed block"
+                rows={2}
+                className="w-full bg-transparent border-none outline-none resize-none text-[15px] placeholder:opacity-30 leading-loose block py-2"
                 style={{
                   color: P.text,
                   fontFamily: P.font,
