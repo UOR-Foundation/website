@@ -390,24 +390,8 @@ export default function HologramOsPage() {
                 >
                   Welcome{contextHints.length > 0 ? " back" : " home"},
                   <br />
-                  {welcomeName}
+                  {welcomeName}.
                 </h1>
-
-                {/* Context-aware subtitle */}
-                {contextHints.length > 0 && (
-                  <p
-                    className="animate-fade-in transition-colors duration-700"
-                    style={{
-                      fontFamily: "'DM Sans', system-ui, sans-serif",
-                      color: P.sub,
-                      fontWeight: 300,
-                      fontSize: "clamp(10px, 0.7vw, 12px)",
-                      letterSpacing: "0.15em",
-                    }}
-                  >
-                    Continuing {dominantPhase}
-                  </p>
-                )}
 
                 {/* Vertical line divider */}
                 <div className="flex justify-center pt-[1.5vh] pb-[0.5vh]">
