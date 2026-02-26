@@ -23,6 +23,7 @@ import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 import BrowserProjection from "@/modules/hologram-ui/components/BrowserProjection";
+import ComputeProjection from "@/modules/hologram-ui/components/ComputeProjection";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
@@ -214,6 +215,7 @@ export default function HologramOsPage() {
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [browserOpen, setBrowserOpen] = useState(false);
+  const [computeOpen, setComputeOpen] = useState(false);
   const [pillGlow, setPillGlow] = useState(false);
   const [ambientState, setAmbientState] = useState<AmbientState>({ playing: false, loading: false, stationHue: "220", stationName: "" });
   const lumenPillDrag = useDraggablePosition({ storageKey: "hologram-pos:lumen-pill", defaultPos: { x: 0, y: 0 }, mode: "offset", snapSize: { width: 160, height: 44 } });
@@ -397,7 +399,8 @@ export default function HologramOsPage() {
           <DesktopOsSidebar
             onNewChat={() => setChatOpen(true)}
             onOpenChat={() => setChatOpen(true)}
-            onOpenBrowser={() => { setBrowserOpen(true); setChatOpen(false); }}
+            onOpenBrowser={() => { setBrowserOpen(true); setChatOpen(false); setComputeOpen(false); }}
+            onOpenCompute={() => { setComputeOpen(true); setChatOpen(false); setBrowserOpen(false); }}
             onReplayGuide={() => setShortcutsOpen(true)}
             hintOpacity={mastery.hintOpacity}
             bgMode={bgMode}
@@ -888,6 +891,11 @@ export default function HologramOsPage() {
           setBrowserOpen(false);
           setChatOpen(true);
         }}
+      />
+      {/* ── Compute Panel — projection from sidebar ── */}
+      <ComputeProjection
+        open={computeOpen}
+        onClose={() => setComputeOpen(false)}
       />
       <SnapGuideOverlay />
     </HologramViewport>
