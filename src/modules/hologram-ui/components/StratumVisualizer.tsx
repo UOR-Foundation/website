@@ -88,34 +88,24 @@ export default function StratumVisualizer({ playing, stationHue, visible, onFram
 
     connectLens();
 
-    const tick = () => {
-      const lens = lensRef.current;
-      if (lens) {
-        const f = lens.read();
-        setFrame(f);
-        setIsReal(lens.isRealData);
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
     // Throttle to ~30fps for performance
     let lastTime = 0;
-    const throttledTick = () => {
+    const tick = () => {
       const now = performance.now();
       if (now - lastTime >= 33) {
         lastTime = now;
         const lens = lensRef.current;
         if (lens) {
-        const f = lens.read();
+          const f = lens.read();
           setFrame(f);
           setIsReal(lens.isRealData);
           onFrame?.(f);
         }
       }
-      rafRef.current = requestAnimationFrame(throttledTick);
+      rafRef.current = requestAnimationFrame(tick);
     };
 
-    rafRef.current = requestAnimationFrame(throttledTick);
+    rafRef.current = requestAnimationFrame(tick);
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
