@@ -282,6 +282,15 @@ export default function TriadicWelcome({
           {phasePersonas.map((persona, i) => {
             const isActive = selectedPersona.id === persona.id;
             const locked = persona.minStage > creatorStage;
+            // Rigor level: 0 = exploratory, 1 = balanced, 2 = rigorous
+            const rigor = i;
+            const totalGuides = phasePersonas.length;
+            // Progressive border width: 1px → 1.5px → 2px
+            const borderWidth = 1 + (rigor / Math.max(totalGuides - 1, 1));
+            // Progressive border opacity when active
+            const activeBorderAlpha = 0.2 + rigor * 0.08;
+            // Rigor pips (small dots indicating rigor level)
+            const rigorPips = rigor + 1;
 
             return (
               <button
@@ -295,8 +304,8 @@ export default function TriadicWelcome({
                   background: isActive
                     ? `hsla(${phaseDef.hue}, 30%, 35%, 0.18)`
                     : P.surface,
-                  border: `1px solid ${isActive
-                    ? `hsla(${phaseDef.hue}, 35%, 50%, 0.25)`
+                  border: `${borderWidth}px solid ${isActive
+                    ? `hsla(${phaseDef.hue}, 35%, 50%, ${activeBorderAlpha})`
                     : P.borderLight
                   }`,
                   animation: "stagger-fade-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
@@ -324,12 +333,23 @@ export default function TriadicWelcome({
                     {persona.subtitle}
                   </p>
                 </div>
-                {isActive && (
-                  <div
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ background: phaseDef.color }}
-                  />
-                )}
+                {/* Rigor pips — progressively more dots */}
+                <div className="flex flex-col items-center gap-[3px] flex-shrink-0 mr-1">
+                  {Array.from({ length: rigorPips }).map((_, j) => (
+                    <div
+                      key={j}
+                      className="rounded-full"
+                      style={{
+                        width: 4,
+                        height: 4,
+                        background: isActive
+                          ? phaseDef.color
+                          : `hsla(${phaseDef.hue}, 20%, 50%, ${0.25 + rigor * 0.1})`,
+                        transition: "background 0.4s ease",
+                      }}
+                    />
+                  ))}
+                </div>
               </button>
             );
           })}
