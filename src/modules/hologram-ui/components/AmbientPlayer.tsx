@@ -13,7 +13,7 @@
  * @module hologram-ui/components/AmbientPlayer
  */
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical } from "lucide-react";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
@@ -513,7 +513,7 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.2 }}
-            className="flex items-center rounded-full"
+            className="relative flex items-center rounded-full"
             style={{
               background: P.surface,
               backdropFilter: "blur(30px) saturate(1.3)",
@@ -522,6 +522,8 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
               boxShadow: "0 4px 20px hsla(0, 0%, 0%, 0.3)",
             }}
           >
+            {/* Frequency visualizer ring */}
+            {playing && <FrequencyRing analyserRef={analyserRef} hue={station.color} />}
             {/* Drag grip */}
             <div
               className="flex items-center justify-center pl-2 pr-0.5 py-2.5 cursor-grab active:cursor-grabbing"
@@ -570,6 +572,77 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+// ── Frequency Visualizer Ring ─────────────────────────────────────────────
+function FrequencyRing({ analyserRef, hue }: { analyserRef: React.RefObject<AnalyserNode | null>; hue: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const SIZE = 160; // canvas logical size
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+
+    const freqData = new Uint8Array(32);
+
+    const draw = () => {
+      rafRef.current = requestAnimationFrame(draw);
+      ctx.clearRect(0, 0, SIZE, SIZE);
+
+      const analyser = analyserRef.current;
+      if (!analyser) return;
+      analyser.getByteFrequencyData(freqData);
+
+      const cx = SIZE / 2;
+      const cy = SIZE / 2;
+      const baseRadius = 34;
+      const bars = freqData.length;
+
+      for (let i = 0; i < bars; i++) {
+        const angle = (i / bars) * Math.PI * 2 - Math.PI / 2;
+        const val = freqData[i] / 255;
+        const barLen = 4 + val * 18;
+        const alpha = 0.25 + val * 0.55;
+
+        const x1 = cx + Math.cos(angle) * baseRadius;
+        const y1 = cy + Math.sin(angle) * baseRadius;
+        const x2 = cx + Math.cos(angle) * (baseRadius + barLen);
+        const y2 = cy + Math.sin(angle) * (baseRadius + barLen);
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = `hsla(${hue}, 50%, 60%, ${alpha})`;
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = "round";
+        ctx.stroke();
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [analyserRef, hue]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute pointer-events-none"
+      style={{
+        width: 160,
+        height: 160,
+        left: "50%",
+        top: "50%",
+        transform: "translate(-50%, -50%)",
+        opacity: 0.85,
+      }}
+    />
   );
 }
 
