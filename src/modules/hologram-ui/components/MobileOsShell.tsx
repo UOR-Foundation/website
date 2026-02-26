@@ -15,11 +15,13 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Home, Compass, User, Globe, Shield, Settings,
-  Sparkles, ChevronUp, X,
+  Sparkles, ChevronUp, X, Download,
 } from "lucide-react";
 import HologramClaimOverlay from "./HologramClaimOverlay";
 import HologramAiChat from "./HologramAiChat";
+import PwaInstallBanner from "./PwaInstallBanner";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
+import { usePwaInstall } from "@/modules/hologram-ui/hooks/usePwaInstall";
 import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 
 /* ── Palette ───────────────────────────────────────────────── */
@@ -122,6 +124,7 @@ export default function MobileOsShell() {
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const parallax = useParallax();
   const { greeting, name } = useGreeting();
+  const pwa = usePwaInstall();
 
   /* ── Swipe-up gesture for drawer ─────────────────────────── */
   const touchStartY = useRef<number | null>(null);
@@ -429,7 +432,23 @@ export default function MobileOsShell() {
             </nav>
 
             {/* Lumen AI shortcut at bottom of drawer */}
-            <div className="px-6 pb-4">
+            <div className="px-6 pb-4 space-y-2">
+              {/* Install Hologram — only if installable */}
+              {pwa.canInstall && !pwa.isStandalone && (
+                <button
+                  onClick={() => { setDrawerOpen(false); pwa.install(); }}
+                  className="w-full flex items-center justify-center gap-3 py-3.5 rounded-2xl active:scale-[0.97] transition-all duration-200"
+                  style={{
+                    background: "hsla(38, 25%, 40%, 0.1)",
+                    border: "1px solid hsla(38, 20%, 45%, 0.08)",
+                    color: P.goldMuted,
+                    fontFamily: P.font,
+                  }}
+                >
+                  <Download className="w-4 h-4" strokeWidth={1.5} />
+                  <span className="text-[14px] font-light tracking-wide">Install Hologram</span>
+                </button>
+              )}
               <button
                 onClick={() => { setDrawerOpen(false); setChatOpen(true); heartbeatHaptic(); }}
                 className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl active:scale-[0.97] transition-all duration-200"
@@ -451,6 +470,9 @@ export default function MobileOsShell() {
       {/* ── Overlays ──────────────────────────────────────────── */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
       <HologramAiChat open={chatOpen} onClose={() => setChatOpen(false)} />
+
+      {/* ── PWA Install Banner ────────────────────────────────── */}
+      <PwaInstallBanner pwa={pwa} />
 
       {/* ── Injected styles ───────────────────────────────────── */}
       <style>{`
