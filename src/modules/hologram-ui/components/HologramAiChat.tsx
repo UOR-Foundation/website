@@ -269,13 +269,20 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     setHasUnseenBelow(false);
   }, []);
 
-  // Focus input & handle initialPrompt
+  // Focus input & handle initialPrompt — auto-send for zero-friction flow
+  const initialPromptSentRef = useRef<string | null>(null);
+  const pendingPromptRef = useRef<string | null>(null);
   useEffect(() => {
     if (open && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 300);
     }
-    if (open && initialPrompt && initialPrompt.trim()) {
-      setInput(initialPrompt);
+    if (open && initialPrompt && initialPrompt.trim() && initialPromptSentRef.current !== initialPrompt) {
+      initialPromptSentRef.current = initialPrompt;
+      // Store for deferred auto-send (sendMessage defined later)
+      pendingPromptRef.current = initialPrompt;
+    }
+    if (!open) {
+      initialPromptSentRef.current = null;
     }
   }, [open, initialPrompt]);
 
@@ -392,9 +399,11 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
   // ── Send message ─────────────────────────────────────────────────────
 
-  const sendMessage = useCallback(async () => {
-    const text = input.trim();
+  const sendMessage = useCallback(async (directText?: string) => {
+    const text = (directText ?? input).trim();
     if (!text || isGenerating) return;
+    // Clear input immediately if using direct text
+    if (directText) setInput("");
 
     // Determine inference path: model ID for cache keying
     const modelId = ai.isReady
@@ -819,6 +828,16 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     [sendMessage],
   );
 
+  // Deferred auto-send for initialPrompt (sendMessage now available)
+  useEffect(() => {
+    if (pendingPromptRef.current && open && !isGenerating) {
+      const prompt = pendingPromptRef.current;
+      pendingPromptRef.current = null;
+      const timer = setTimeout(() => sendMessage(prompt), 450);
+      return () => clearTimeout(timer);
+    }
+  }, [open, sendMessage, isGenerating]);
+
   if (!open) return null;
 
   // ── History Sidebar ──────────────────────────────────────────────────
@@ -1071,8 +1090,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                   message={msg}
                   isStreaming={isGenerating && msg.role === "assistant" && idx === arr.length - 1}
                   onSendFollowUp={(prompt) => {
-                    setInput(prompt);
-                    setTimeout(() => inputRef.current?.focus(), 100);
+                    // Auto-send: one click, zero friction
+                    sendMessage(prompt);
                   }}
                   userQuery={prevUserMsg?.content}
                 />
@@ -1457,7 +1476,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
                 {/* Send button */}
                 <button
-                  onClick={sendMessage}
+                  onClick={() => sendMessage()}
                   disabled={!input.trim() || isGenerating}
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-20"
                   style={{
