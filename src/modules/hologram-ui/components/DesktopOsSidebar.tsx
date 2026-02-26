@@ -11,7 +11,7 @@ import { useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Plus, Home, LayoutGrid, User,
-  Settings, ChevronLeft, HelpCircle,
+  Settings, ChevronLeft, HelpCircle, MessageSquare,
 } from "lucide-react";
 
 /* ── Palette — higher contrast, warm whites ────────────────── */
@@ -169,6 +169,19 @@ export default function DesktopOsSidebar({
             {!collapsed && <span className="text-[14px] font-light">Replay Guide</span>}
           </button>
         )}
+        <button
+          onClick={() => {/* TODO: open messages/alerts */}}
+          className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
+            collapsed ? "justify-center px-0 py-3" : "px-3.5 py-3"
+          }`}
+          style={{ color: S.text, fontFamily: S.font }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          title={collapsed ? "Messages" : undefined}
+        >
+          <MessageSquare className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
+          {!collapsed && <span className="text-[14px] font-light">Messages</span>}
+        </button>
         <button
           onClick={() => navigate("/settings")}
           className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
