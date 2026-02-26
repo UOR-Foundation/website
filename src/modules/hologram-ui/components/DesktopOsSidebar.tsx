@@ -11,7 +11,7 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Home, LayoutGrid, User, Globe, Cpu,
+  Home, LayoutGrid, User, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
@@ -79,6 +79,7 @@ interface DesktopOsSidebarProps {
   onOpenChat: () => void;
   onOpenBrowser?: () => void;
   onOpenCompute?: () => void;
+  onOpenMemory?: () => void;
   onReplayGuide?: () => void;
   hintOpacity?: (key: string) => number;
   bgMode?: "image" | "white" | "dark";
@@ -89,6 +90,7 @@ export default function DesktopOsSidebar({
   onNewChat,
   onOpenBrowser,
   onOpenCompute,
+  onOpenMemory,
   onReplayGuide,
   hintOpacity,
   bgMode = "image",
@@ -244,13 +246,24 @@ export default function DesktopOsSidebar({
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
             }`}
-            style={{
-              color: "var(--sb-text)",
-              background: "transparent",
-            }}
+            style={{ color: "var(--sb-text)", background: "transparent" }}
           >
             <Cpu className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
             {expanded && <span className="text-[14px] font-light whitespace-nowrap">Compute</span>}
+          </button>
+        </IconTooltip>
+
+        {/* Memory */}
+        <IconTooltip label="Memory" show={!expanded}>
+          <button
+            onClick={() => onOpenMemory?.()}
+            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+            }`}
+            style={{ color: "var(--sb-text)", background: "transparent" }}
+          >
+            <Database className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
+            {expanded && <span className="text-[14px] font-light whitespace-nowrap">Memory</span>}
           </button>
         </IconTooltip>
       </div>
