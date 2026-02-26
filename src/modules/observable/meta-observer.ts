@@ -424,6 +424,15 @@ export class MetaObserver {
  * Lower = more fundamental (closer to the Ruliad).
  * Higher = more specialized (more restriction from the infinite).
  */
+/**
+ * The 14 canonical UOR namespaces, mapped for MetaObserver registration.
+ * Aligned with src/modules/namespace-registry.ts.
+ *
+ * Tri-Space Layout:
+ *   Kernel (3): u/, schema/, op/
+ *   Bridge (8): query/, resolver/, partition/, observable/, proof/, derivation/, trace/, cert/
+ *   User   (3): type/, morphism/, state/
+ */
 export const UOR_MODULES: {
   id: string;
   name: string;
@@ -431,18 +440,23 @@ export const UOR_MODULES: {
   description: string;
   icon: string;
 }[] = [
-  { id: "ring-core", name: "Q0 Ring", tzimtzumDepth: 1, description: "The Ruliad at quantum level 0 — all 256 states", icon: "∞" },
-  { id: "identity", name: "Content Addressing", tzimtzumDepth: 2, description: "SHA-256 canonical identity — permanent addresses", icon: "🔑" },
-  { id: "hologram", name: "Hologram Projector", tzimtzumDepth: 3, description: "Universal bridge pattern — protocol projections", icon: "🌐" },
-  { id: "observable", name: "Observable Geometry", tzimtzumDepth: 2, description: "7 ring metrics — curvature, holonomy, commutator", icon: "📐" },
-  { id: "observer", name: "Observer Theory", tzimtzumDepth: 3, description: "Agent coherence zones — H-score, OIP/EDP/CAP", icon: "👁" },
-  { id: "trust", name: "Trust Graph", tzimtzumDepth: 4, description: "Social attestation — PageRank-weighted trust scores", icon: "🤝" },
-  { id: "morphism", name: "Morphism Gateway", tzimtzumDepth: 3, description: "Agent messaging — isometric transforms", icon: "🔀" },
-  { id: "kg-store", name: "Knowledge Graph", tzimtzumDepth: 2, description: "Quad store — Supabase-persisted triples", icon: "🧠" },
-  { id: "certificate", name: "Certificate Engine", tzimtzumDepth: 3, description: "Self-verifying proofs — CIDv1 + Braille", icon: "📜" },
-  { id: "code-kg", name: "Code-to-KG", tzimtzumDepth: 4, description: "Source code → knowledge graph projection", icon: "🔮" },
-  { id: "consciousness", name: "Consciousness", tzimtzumDepth: 5, description: "44 theories mapped to UOR — God Conjecture", icon: "🌀" },
-  { id: "state-machine", name: "State Machine", tzimtzumDepth: 3, description: "Formal agent lifecycle — typed transitions", icon: "⚙️" },
+  // ── Kernel Space ──────────────────────────────────────────────────────
+  { id: "u",          name: "Universal Ring",       tzimtzumDepth: 1, description: "Ring R₈ arithmetic + content-addressed identity", icon: "∞" },
+  { id: "schema",     name: "Schema Primitives",    tzimtzumDepth: 1, description: "Triadic coordinates + JSON-LD emission", icon: "📐" },
+  { id: "op",         name: "Operations",           tzimtzumDepth: 1, description: "10 PrimitiveOps with geometric character mapping", icon: "⚡" },
+  // ── Bridge Space ──────────────────────────────────────────────────────
+  { id: "query",      name: "Query Engine",         tzimtzumDepth: 2, description: "SPARQL execution + federated query", icon: "🔍" },
+  { id: "resolver",   name: "Resolver",             tzimtzumDepth: 2, description: "Entity → canonical IRI resolution", icon: "🎯" },
+  { id: "partition",  name: "Partition",             tzimtzumDepth: 2, description: "Irreducible/reducible/unit/exterior classification", icon: "🧩" },
+  { id: "observable", name: "Observable Geometry",   tzimtzumDepth: 2, description: "7 ring metrics — curvature, holonomy, commutator", icon: "📏" },
+  { id: "proof",      name: "Proof & Verification",  tzimtzumDepth: 3, description: "Receipts, epistemic grading, SHACL shape validation", icon: "🛡️" },
+  { id: "derivation", name: "Derivation",            tzimtzumDepth: 2, description: "Auditable term-level computation records", icon: "🔬" },
+  { id: "trace",      name: "Computation Trace",     tzimtzumDepth: 2, description: "Step-by-step computation recording", icon: "📝" },
+  { id: "cert",       name: "Certificate",           tzimtzumDepth: 3, description: "Self-verifying CIDv1 + W3C VC + DID certificates", icon: "📜" },
+  // ── User Space ────────────────────────────────────────────────────────
+  { id: "type",       name: "Type Store",            tzimtzumDepth: 2, description: "Knowledge graph quad store + code-to-graph projection", icon: "🧠" },
+  { id: "morphism",   name: "Morphism",              tzimtzumDepth: 3, description: "Structure-preserving transforms with disjoint constraints", icon: "🔀" },
+  { id: "state",      name: "State",                 tzimtzumDepth: 3, description: "Context/binding/frame/transition lifecycle", icon: "⚙️" },
 ];
 
 /**
