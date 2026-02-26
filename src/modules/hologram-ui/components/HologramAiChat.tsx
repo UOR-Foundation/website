@@ -813,28 +813,18 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col"
+      className="fixed inset-0 z-[60] flex flex-col pointer-events-none"
       style={{ animation: "lumen-overlay-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both" }}
     >
-      {/* Full-field backdrop — immersive, part of the OS */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: "radial-gradient(ellipse at 50% 60%, hsla(30, 10%, 5%, 0.25) 0%, hsla(25, 8%, 3%, 0.4) 70%, hsla(20, 6%, 2%, 0.5) 100%)",
-          backdropFilter: "blur(8px) saturate(0.8) brightness(0.85)",
-          WebkitBackdropFilter: "blur(8px) saturate(0.8) brightness(0.85)",
-          animation: "lumen-backdrop-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both, lumen-converge 8s cubic-bezier(0.25, 0.1, 0.25, 1) 0.3s both",
-          transformOrigin: "50% 45%",
-        }}
-      />
+      {/* No backdrop — fully transparent, the OS stays alive underneath */}
 
-      {/* Full-screen container — no card, no box, the OS IS the chat */}
+      {/* Full-screen layout container */}
       <div
-        className="relative flex flex-col flex-1 overflow-hidden"
+        className="relative flex flex-col flex-1 overflow-hidden pointer-events-none"
         style={{ animation: "lumen-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both" }}
       >
         {/* ── Header — minimal floating bar ──────────────────────── */}
-        <div className="flex items-center justify-between px-6 py-4 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 flex-shrink-0 pointer-events-auto">
           <div className="flex items-center gap-3">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -888,7 +878,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
         {/* ── Skill Bar — centered, floating ─────────────────────── */}
         {hasMessages && (
-          <div className="flex justify-center flex-shrink-0">
+          <div className="flex justify-center flex-shrink-0 pointer-events-auto">
             <div
               className="flex items-center gap-1.5 px-4 py-1.5 overflow-x-auto no-scrollbar max-w-2xl"
             >
@@ -920,8 +910,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         )}
 
         {/* ── Messages / Welcome ───────────────────────────────────── */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 flex flex-col items-center">
-          <div className="w-full max-w-2xl">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 flex flex-col items-center pointer-events-none">
+          <div className="w-full max-w-2xl pointer-events-auto">
           {/* Welcome state when no messages */}
           {!hasMessages && !isLoadingModel && (
             <TriadicWelcome
@@ -988,7 +978,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         </div>
 
         {/* ── Input Bar — bottom-anchored, centered ────────────────── */}
-        <div className="flex justify-center px-4 pb-6 pt-2 flex-shrink-0">
+        <div className="flex justify-center px-4 pb-6 pt-2 flex-shrink-0 pointer-events-auto">
           <div className="w-full max-w-2xl">
           <div
             className="rounded-2xl overflow-visible transition-all"
@@ -1180,13 +1170,18 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
             className="px-4 py-3 rounded-2xl"
             style={
               isUser
-                ? {
-                    background: "hsla(38, 40%, 40%, 0.15)",
+                 ? {
+                    background: "hsla(38, 40%, 40%, 0.18)",
+                    backdropFilter: "blur(16px)",
+                    WebkitBackdropFilter: "blur(16px)",
                     border: `1px solid hsla(38, 40%, 35%, 0.2)`,
                     borderBottomRightRadius: "6px",
                   }
                 : {
-                    background: "transparent",
+                    background: "hsla(30, 8%, 8%, 0.45)",
+                    backdropFilter: "blur(16px)",
+                    WebkitBackdropFilter: "blur(16px)",
+                    border: "1px solid hsla(38, 15%, 25%, 0.1)",
                   }
             }
           >
