@@ -241,6 +241,17 @@ export default function HologramOsPage() {
       if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) return;
 
       const mod = e.metaKey || e.ctrlKey;
+
+      // ⌘⇧R — Reset all element positions
+      if (mod && e.shiftKey && (e.key === "r" || e.key === "R")) {
+        e.preventDefault();
+        lumenPillDrag.resetPosition();
+        dayRingDrag.resetPosition();
+        Object.keys(localStorage).filter(k => k.startsWith("hologram-pos:")).forEach(k => localStorage.removeItem(k));
+        window.location.reload();
+        return;
+      }
+
       if (!mod) return;
 
       switch (e.key) {
