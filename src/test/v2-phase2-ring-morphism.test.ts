@@ -8,6 +8,7 @@
  * T2.5: CompositionLaw: compose(neg, bnot) = succ
  * T2.6: DihedralGroup: neg and bnot generate D_{256}
  * T2.7: Cross-quantum: all 10 ops work at Q0/Q1/Q2
+ * T2.8: Disjoint constraints enforced at runtime
  */
 import { describe, it, expect } from "vitest";
 import { UORRing, Q0, Q1, Q2, fromBytes, compose, verifyCriticalComposition, verifyCriticalCompositionAll } from "@/modules/ring-core";
@@ -16,6 +17,7 @@ import { OP_GEOMETRY, CRITICAL_IDENTITY, D2N } from "@/types/uor-foundation/kern
 import { CRITICAL_COMPOSITION } from "@/types/uor-foundation/user/morphism";
 import type { Isometry, Transform } from "@/types/uor-foundation/user/morphism";
 import type { PrimitiveOp, GeometricCharacter } from "@/types/uor-foundation/enums";
+import { assertDisjointKind, enforceDisjointConstraints, type TransformRecord, type MorphismKind } from "@/modules/morphism/transform";
 
 describe("Phase 2: Ring & Morphism Alignment", () => {
   // ── T2.1: All 10 PrimitiveOps callable at Q0 ────────────────────────────
@@ -178,5 +180,65 @@ describe("Phase 2: Ring & Morphism Alignment", () => {
         expect(fromBytes(ring.sub(ring.add(a, b), b))).toBe(100);
       });
     }
+  });
+
+  // ── T2.8: Disjoint constraints enforced at runtime ──────────────────────
+  describe("T2.8: Disjoint constraints", () => {
+    /** Helper to build a minimal TransformRecord */
+    function makeRecord(kind: MorphismKind, overrides: Partial<TransformRecord> = {}): TransformRecord {
+      return {
+        "@type": `morphism:${kind}`,
+        transformId: `urn:uor:morphism:test-${kind}`,
+        sourceIri: "urn:source",
+        targetIri: kind === "Identity" ? "urn:source" : "urn:target",
+        sourceValue: 42,
+        targetValue: kind === "Identity" ? 42 : 43,
+        sourceQuantum: 0,
+        targetQuantum: 0,
+        kind,
+        rules: kind === "Composition"
+          ? [{ label: "a", operation: "embed", sourceQuantum: 0, targetQuantum: 1 },
+             { label: "b", operation: "project", sourceQuantum: 1, targetQuantum: 0 }]
+          : [{ label: "test", operation: "embed", sourceQuantum: 0, targetQuantum: 1 }],
+        fidelityPreserved: kind === "Isometry" || kind === "Identity",
+        timestamp: new Date().toISOString(),
+        ...overrides,
+      };
+    }
+
+    it("accepts all 5 valid concrete kinds", () => {
+      const kinds: MorphismKind[] = ["Isometry", "Embedding", "Action", "Composition", "Identity"];
+      for (const kind of kinds) {
+        expect(() => enforceDisjointConstraints(makeRecord(kind))).not.toThrow();
+      }
+    });
+
+    it("accepts abstract Transform kind", () => {
+      expect(() => assertDisjointKind("Transform")).not.toThrow();
+    });
+
+    it("rejects Isometry without fidelityPreserved", () => {
+      expect(() => enforceDisjointConstraints(
+        makeRecord("Isometry", { fidelityPreserved: false })
+      )).toThrow(/must preserve fidelity/);
+    });
+
+    it("rejects Identity without fidelityPreserved", () => {
+      expect(() => enforceDisjointConstraints(
+        makeRecord("Identity", { fidelityPreserved: false })
+      )).toThrow(/must preserve fidelity/);
+    });
+
+    it("rejects Composition with < 2 rules", () => {
+      expect(() => enforceDisjointConstraints(
+        makeRecord("Composition", {
+          rules: [{ label: "solo", operation: "embed", sourceQuantum: 0, targetQuantum: 1 }],
+        })
+      )).toThrow(/requires ≥2 rules/);
+    });
+
+    it("rejects invalid kind string", () => {
+      expect(() => assertDisjointKind("InvalidKind" as MorphismKind)).toThrow(/Invalid morphism kind/);
+    });
   });
 });

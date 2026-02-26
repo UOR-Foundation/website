@@ -4,7 +4,7 @@
  * Barrel export for the morphism module.
  */
 
-export { applyTransform, recordTransform } from "./transform";
+export { applyTransform, recordTransform, assertDisjointKind, enforceDisjointConstraints } from "./transform";
 export type { MorphismKind, MappingRule, TransformRecord } from "./transform";
 
 export { embedQ0toQ1, projectQ1toQ0, crossQuantumTransform } from "./cross-quantum";
