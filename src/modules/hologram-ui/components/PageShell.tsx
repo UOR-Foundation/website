@@ -14,11 +14,12 @@ export interface PageShellProps {
   backTo?: string;
   actions?: ReactNode;
   badge?: string;
+  headerRight?: ReactNode;
   children: ReactNode;
 }
 
 export function PageShell({
-  title, subtitle, icon, backTo = "/", actions, badge, children,
+  title, subtitle, icon, backTo = "/", actions, badge, headerRight, children,
 }: PageShellProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -46,8 +47,9 @@ export function PageShell({
           )}
           <div className="ml-auto flex items-center gap-3">
             <CoherenceWidget />
+            {headerRight}
             {actions && <>{actions}</>}
-            {!actions && subtitle && (
+            {!actions && !headerRight && subtitle && (
               <span className="text-[10px] font-mono text-muted-foreground hidden sm:block">
                 {subtitle}
               </span>
