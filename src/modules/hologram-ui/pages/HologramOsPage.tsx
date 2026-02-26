@@ -176,7 +176,6 @@ export default function HologramOsPage() {
   // ── Global keyboard shortcuts ──────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Ignore when typing in inputs
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) return;
 
@@ -184,21 +183,20 @@ export default function HologramOsPage() {
       if (!mod) return;
 
       switch (e.key) {
-        case "1": e.preventDefault(); navigate("/hologram-console"); break;
-        case "2": e.preventDefault(); navigate("/console/apps"); break;
-        case "3": e.preventDefault(); navigate("/your-space"); break;
-        case "n": case "N": e.preventDefault(); setChatOpen(true); break;
-        case "l": case "L": e.preventDefault(); setChatOpen(true); break;
-        case "m": case "M": e.preventDefault(); /* TODO: open messages */ break;
+        // ⌘K — Lumen AI (universal command, K = right-hand home row)
+        case "k": case "K": e.preventDefault(); setChatOpen(true); break;
+        // ⌘B — Toggle sidebar (standard, B = left-hand near modifier)
+        case "b": case "B": e.preventDefault(); setSidebarCollapsed(p => !p); break;
+        // ⌘, — Settings (macOS universal)
         case ",": e.preventDefault(); navigate("/settings"); break;
-        case "\\": e.preventDefault(); setSidebarCollapsed(p => !p); break;
-        case "/": case "?":
-          if (e.shiftKey || e.key === "?") {
-            e.preventDefault();
-            localStorage.removeItem("hologram:onboarding-seen");
-            setReplayGuide(c => c + 1);
-            setChatOpen(true);
-          }
+        // ⌘. — Messages (paired with settings, same finger zone)
+        case ".": e.preventDefault(); /* TODO: open messages */ break;
+        // ⌘/ — Help guide (universal help convention)
+        case "/":
+          e.preventDefault();
+          localStorage.removeItem("hologram:onboarding-seen");
+          setReplayGuide(c => c + 1);
+          setChatOpen(true);
           break;
       }
     };
@@ -593,7 +591,7 @@ export default function HologramOsPage() {
                     fontSize: "10px",
                   }}
                 >
-                  ⌘ L
+                  ⌘ K
                 </span>
 
                 {journalEntryCount > 0 && (
