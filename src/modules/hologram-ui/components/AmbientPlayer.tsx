@@ -15,7 +15,8 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Music, Pause, Play, Volume2, VolumeX, ChevronDown } from "lucide-react";
+import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical } from "lucide-react";
+import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
 
 // ── Palette (consistent with OS) ──────────────────────────────────────────
 const P = {
@@ -137,6 +138,12 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   const [muted, setMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pillRef = useRef<HTMLDivElement>(null);
+
+  // Draggable position — default to bottom-left
+  const drag = useDraggablePosition({
+    storageKey: "hologram-pos:ambient",
+    defaultPos: { x: 20, y: typeof window !== "undefined" ? window.innerHeight - 70 : 700 },
+  });
 
   // Persist prefs on change
   useEffect(() => { savePrefs(station.id, volume); }, [station, volume]);
@@ -267,11 +274,12 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   return (
     <div
       ref={pillRef}
-      className="fixed z-[55] transition-all duration-500 ease-out"
+      className="fixed z-[55]"
       style={{
-        bottom: "20px",
-        left: "20px",
-        right: lumenOffset > 0 ? undefined : undefined,
+        left: drag.pos.x,
+        top: drag.pos.y,
+        touchAction: "none",
+        userSelect: "none",
       }}
     >
       <AnimatePresence mode="wait">
@@ -292,9 +300,13 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
               boxShadow: "0 8px 40px hsla(0, 0%, 0%, 0.5)",
             }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-2.5">
+            {/* Header — drag handle */}
+            <div
+              className="flex items-center justify-between px-4 py-3 cursor-grab active:cursor-grabbing"
+              {...drag.handlers}
+            >
+              <div className="flex items-center gap-2">
+                <GripVertical className="w-3.5 h-3.5 opacity-40" style={{ color: P.textMuted }} />
                 <Music className="w-4 h-4" style={{ color: P.goldMuted }} />
                 <span
                   className="text-[14px] font-medium tracking-wide"
@@ -429,14 +441,13 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
           </motion.div>
         ) : (
           // ── Collapsed Pill ──────────────────────────────────────────
-          <motion.button
+          <motion.div
             key="collapsed"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.2 }}
-            onClick={() => setExpanded(true)}
-            className="flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full transition-all hover:scale-[1.03]"
+            className="flex items-center rounded-full"
             style={{
               background: P.surface,
               backdropFilter: "blur(30px) saturate(1.3)",
@@ -444,39 +455,52 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
               border: `1px solid ${P.border}`,
               boxShadow: "0 4px 20px hsla(0, 0%, 0%, 0.3)",
             }}
-            title="Ambient music (⌘⇧A)"
           >
-            {playing || loading ? (
-              <>
-                {/* Breathing equalizer */}
-                <div className="flex items-end gap-[2px] h-3.5">
-                  {[0.5, 0.9, 0.65, 0.4].map((h, i) => (
-                    <div
-                      key={i}
-                      className="w-[2px] rounded-full"
-                      style={{
-                        height: `${h * 14}px`,
-                        background: `hsla(${station.color}, 50%, 60%, ${loading ? 0.4 : 0.8})`,
-                        animation: loading
-                          ? `ambient-eq 0.8s ease-in-out infinite alternate`
-                          : `ambient-eq ${0.6 + i * 0.15}s ease-in-out infinite alternate`,
-                      }}
-                    />
-                  ))}
-                </div>
-                <span className="text-[12px] font-medium" style={{ color: P.text }}>
-                  {loading ? "Connecting…" : station.name}
-                </span>
-              </>
-            ) : (
-              <>
-                <Music className="w-3.5 h-3.5" style={{ color: P.goldMuted }} />
-                <span className="text-[12px]" style={{ color: P.textMuted }}>
-                  Ambient
-                </span>
-              </>
-            )}
-          </motion.button>
+            {/* Drag grip */}
+            <div
+              className="flex items-center justify-center pl-2 pr-0.5 py-2.5 cursor-grab active:cursor-grabbing"
+              {...drag.handlers}
+              title="Drag to reposition"
+            >
+              <GripVertical className="w-3 h-3 opacity-40" style={{ color: P.textMuted }} />
+            </div>
+            <button
+              onClick={() => { if (!drag.wasDragged()) setExpanded(true); }}
+              className="flex items-center gap-2.5 pr-4 py-2.5"
+              title="Ambient music (⌘⇧A)"
+            >
+              {playing || loading ? (
+                <>
+                  {/* Breathing equalizer */}
+                  <div className="flex items-end gap-[2px] h-3.5">
+                    {[0.5, 0.9, 0.65, 0.4].map((h, i) => (
+                      <div
+                        key={i}
+                        className="w-[2px] rounded-full"
+                        style={{
+                          height: `${h * 14}px`,
+                          background: `hsla(${station.color}, 50%, 60%, ${loading ? 0.4 : 0.8})`,
+                          animation: loading
+                            ? `ambient-eq 0.8s ease-in-out infinite alternate`
+                            : `ambient-eq ${0.6 + i * 0.15}s ease-in-out infinite alternate`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-[12px] font-medium" style={{ color: P.text }}>
+                    {loading ? "Connecting…" : station.name}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Music className="w-3.5 h-3.5" style={{ color: P.goldMuted }} />
+                  <span className="text-[12px]" style={{ color: P.textMuted }}>
+                    Ambient
+                  </span>
+                </>
+              )}
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
