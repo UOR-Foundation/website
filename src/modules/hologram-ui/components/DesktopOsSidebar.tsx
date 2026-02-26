@@ -137,7 +137,7 @@ export default function DesktopOsSidebar({
                 src={hologramLogo}
                 alt="Hologram"
                 className="w-7 h-7 object-contain shrink-0"
-                style={{ imageRendering: "auto", filter: S.logoFilter }}
+                style={{ imageRendering: "auto", filter: bgMode === "white" ? "sepia(0.4) saturate(0.8) brightness(0.5) hue-rotate(-10deg)" : "sepia(0.3) saturate(1.2) brightness(1.3) hue-rotate(10deg)" }}
               />
               <svg
                 viewBox="0 0 360 40"
