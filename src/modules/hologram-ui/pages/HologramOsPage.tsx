@@ -171,6 +171,7 @@ export default function HologramOsPage() {
     setTimeout(() => navigate("/hologram-console"), 900);
   }, [navigate]);
   const P = palette(bgMode);
+  const isFocus = attention.preset === "focus";
 
   // ── Mobile: iOS homescreen ──
   if (isMobile) return <MobileOsShell />;
@@ -189,26 +190,34 @@ export default function HologramOsPage() {
          *  FRAME 1 — Chrome Layer (always visible, highest priority)
          *  Sidebar + Focus toggle sit here, unaffected by content below
          * ════════════════════════════════════════════════════════════════ */}
-        <DesktopOsSidebar
-          collapsed={attention.preset === "focus" ? true : sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed((p) => !p)}
-          onNewChat={() => setChatOpen(true)}
-          onOpenChat={() => setChatOpen(true)}
-          onReplayGuide={() => {
-            localStorage.removeItem("hologram:onboarding-seen");
-            setReplayGuide((c) => c + 1);
-            setChatOpen(true);
+        <div
+          className="shrink-0 transition-all duration-700 ease-in-out overflow-hidden"
+          style={{
+            width: isFocus ? 0 : undefined,
+            opacity: isFocus ? 0 : 1,
           }}
-        />
+        >
+          <DesktopOsSidebar
+            collapsed={isFocus ? true : sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed((p) => !p)}
+            onNewChat={() => setChatOpen(true)}
+            onOpenChat={() => setChatOpen(true)}
+            onReplayGuide={() => {
+              localStorage.removeItem("hologram:onboarding-seen");
+              setReplayGuide((c) => c + 1);
+              setChatOpen(true);
+            }}
+          />
+        </div>
 
         {/* Main viewport area — contains canvas + chrome + content frames */}
         <div
           className="flex-1 relative overflow-hidden transition-all ease-in-out"
           style={{
             opacity: departing ? 0 : 1,
-            transform: departing ? "scale(1.02)" : "scale(1)",
+            transform: departing ? "scale(1.02)" : isFocus ? "scale(1.03)" : "scale(1)",
             filter: departing ? "blur(4px)" : "blur(0px)",
-            transitionDuration: "900ms",
+            transitionDuration: isFocus ? "1200ms" : "900ms",
           }}
         >
           {/* ══════════════════════════════════════════════════════════
@@ -250,13 +259,14 @@ export default function HologramOsPage() {
            *  Background mode toggle, Day progress ring
            *  These remain visible regardless of what opens above
            * ══════════════════════════════════════════════════════════ */}
-          <HologramFrame layer={1} label="chrome" interactive={false} opacity={layerNav.layerOpacity(1)} style={{ transform: `scale(${layerNav.layerScale(1)})`, transition: "opacity 0.5s, transform 0.5s" }}>
+          <HologramFrame layer={1} label="chrome" interactive={false} opacity={layerNav.layerOpacity(1)} style={{ transform: `scale(${layerNav.layerScale(1)})`, transition: "opacity 0.7s ease, transform 0.7s ease" }}>
             {/* Background Mode Toggle — top right */}
             <div
-              className="absolute top-[3vh] right-[3vw] animate-fade-in transition-all duration-700"
+              className="absolute top-[3vh] right-[3vw] animate-fade-in transition-all duration-700 ease-in-out"
               style={{
-                pointerEvents: "auto",
-                opacity: "var(--focus-chrome-opacity, 1)",
+                pointerEvents: isFocus ? "none" : "auto",
+                opacity: isFocus ? 0 : 1,
+                transform: isFocus ? "translateY(-10px)" : "translateY(0)",
                 filter: "blur(var(--focus-blur-chrome, 0px))",
               }}
             >
@@ -310,8 +320,12 @@ export default function HologramOsPage() {
 
             {/* Day Progress Ring — bottom right */}
             <div
-              className="absolute bottom-[3vh] right-[3vw] animate-fade-in flex flex-col items-center gap-3"
-              style={{ pointerEvents: "auto" }}
+              className="absolute bottom-[3vh] right-[3vw] animate-fade-in flex flex-col items-center gap-3 transition-all duration-700 ease-in-out"
+              style={{
+                pointerEvents: isFocus ? "none" : "auto",
+                opacity: isFocus ? 0 : 1,
+                transform: isFocus ? "translateY(10px)" : "translateY(0)",
+              }}
             >
               <DayProgressRing balance={triadicActivity.balance ?? undefined} />
             </div>
@@ -324,10 +338,11 @@ export default function HologramOsPage() {
           <HologramFrame layer={2} label="content" interactive={false} transform={contentTilt} opacity={layerNav.layerOpacity(2)} style={{ transform: `scale(${layerNav.layerScale(2)})`, transition: "opacity 0.5s, transform 0.5s" }}>
             {/* Logo — top center */}
             <div
-              className="absolute top-0 left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-700"
+              className="absolute top-0 left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-700 ease-in-out"
               style={{
-                pointerEvents: "auto",
-                opacity: "var(--focus-dim-opacity, 1)",
+                pointerEvents: isFocus ? "none" : "auto",
+                opacity: isFocus ? 0 : 1,
+                transform: isFocus ? "translateY(-10px)" : "translateY(0)",
                 height: "calc(3vh + 52px)",
               }}
             >
@@ -480,11 +495,11 @@ export default function HologramOsPage() {
 
             {/* AI Chat Pill — bottom center */}
             <div
-              className="absolute bottom-[3.5vh] left-1/2 -translate-x-1/2 transition-all duration-700"
+              className="absolute bottom-[3.5vh] left-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out"
               style={{
-                pointerEvents: "auto",
-                opacity: "var(--focus-chrome-opacity, 1)",
-                filter: "blur(var(--focus-blur-chrome, 0px))",
+                pointerEvents: isFocus ? "none" : "auto",
+                opacity: isFocus ? 0 : 1,
+                transform: isFocus ? "translate(-50%, 10px)" : "translate(-50%, 0)",
               }}
             >
               <button
