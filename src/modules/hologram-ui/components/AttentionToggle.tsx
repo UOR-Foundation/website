@@ -9,16 +9,6 @@
 import { useState } from "react";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 
-// OS-aware modifier
-function _detectMac(): boolean {
-  if (typeof navigator === "undefined") return false;
-  if ("userAgentData" in navigator && (navigator as any).userAgentData?.platform) {
-    return /mac/i.test((navigator as any).userAgentData.platform);
-  }
-  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent);
-}
-const MOD = _detectMac() ? "⌘" : "Ctrl";
-
 export default function AttentionToggle() {
   const { preset, toggle } = useAttentionMode();
   const [hovered, setHovered] = useState(false);
@@ -95,18 +85,6 @@ export default function AttentionToggle() {
         {isFocus ? "On" : "Off"}
       </span>
 
-      {/* Shortcut hint */}
-      <span
-        className="text-[9px] font-medium tracking-[0.1em] uppercase transition-all duration-300"
-        style={{
-          writingMode: "vertical-rl",
-          color: hovered
-            ? "hsla(0, 0%, 80%, 0.6)"
-            : "hsla(0, 0%, 70%, 0.3)",
-        }}
-      >
-        {MOD} F
-      </span>
     </button>
   );
 }
