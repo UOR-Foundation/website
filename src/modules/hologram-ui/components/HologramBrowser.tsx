@@ -11,7 +11,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Globe, ArrowLeft, ArrowRight, RotateCw, X, ExternalLink, Loader2, Search, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { firecrawlApi } from "@/lib/api/firecrawl";
+import { firecrawlApi, type SearchResult } from "@/lib/api/firecrawl";
 
 /* ── Palette (Aman-consistent) ──────────────────────────────── */
 const P = {
@@ -44,6 +44,8 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<HistoryEntry | null>(null);
+  const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -112,9 +114,46 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
     }
   }, [history, historyIdx]);
 
+  /* Detect if input looks like a URL */
+  const isUrl = (input: string): boolean => {
+    const trimmed = input.trim();
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return true;
+    // Contains a dot and no spaces → likely a URL
+    if (/^[^\s]+\.[^\s]+$/.test(trimmed)) return true;
+    return false;
+  };
+
+  const search = useCallback(async (query: string) => {
+    if (!query.trim()) return;
+    setLoading(true);
+    setError(null);
+    setPage(null);
+    setSearchQuery(query);
+    setSearchResults(null);
+    setUrl(query);
+
+    try {
+      const result = await firecrawlApi.search(query);
+      if (!result.success) {
+        setError(result.error || "Search failed");
+        setLoading(false);
+        return;
+      }
+      setSearchResults(result.data || []);
+    } catch (err: any) {
+      setError(err.message || "Search error");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(url);
+    if (isUrl(url)) {
+      navigate(url);
+    } else {
+      search(url);
+    }
   };
 
   const handleLinkClick = (href: string) => {
@@ -244,7 +283,7 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
 
       {/* ── Content Area ────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto lumen-scroll">
-        {!page && !loading && !error && (
+        {!page && !loading && !error && !searchResults && (
           <div className="flex flex-col items-center justify-center h-full gap-6 px-6">
             <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center"
@@ -321,6 +360,41 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
             >
               Retry
             </button>
+          </div>
+        )}
+
+        {/* ── Search Results ── */}
+        {searchResults && !page && !loading && (
+          <div className="px-12 py-10 max-w-[960px] mx-auto" style={{ color: P.text }}>
+            <div className="mb-6 pb-4" style={{ borderBottom: `1px solid ${P.border}` }}>
+              <p className="text-[11px] font-light uppercase tracking-widest mb-1" style={{ color: P.textMuted }}>
+                Search results
+              </p>
+              <h1 className="text-[20px] font-light tracking-tight" style={{ color: P.text }}>
+                {searchQuery}
+              </h1>
+            </div>
+            {searchResults.length === 0 && (
+              <p className="text-[14px] font-light" style={{ color: P.textMuted }}>No results found.</p>
+            )}
+            <div className="space-y-4">
+              {searchResults.map((r, i) => (
+                <button
+                  key={i}
+                  onClick={() => { setSearchResults(null); setSearchQuery(null); navigate(r.url); }}
+                  className="w-full text-left p-5 rounded-xl transition-all duration-200 group"
+                  style={{ background: "hsla(38, 10%, 15%, 0.5)", border: `1px solid ${P.border}` }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "hsla(38, 12%, 18%, 0.6)"; e.currentTarget.style.borderColor = P.borderFocus; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "hsla(38, 10%, 15%, 0.5)"; e.currentTarget.style.borderColor = P.border; }}
+                >
+                  <p className="text-[11px] font-light truncate mb-1" style={{ color: P.goldMuted }}>{r.url}</p>
+                  <h3 className="text-[15px] font-light mb-1.5 group-hover:underline" style={{ color: P.gold }}>{r.title || r.url}</h3>
+                  {r.description && (
+                    <p className="text-[13px] font-light leading-relaxed line-clamp-2" style={{ color: P.textMuted }}>{r.description}</p>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
