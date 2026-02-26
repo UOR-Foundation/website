@@ -173,6 +173,10 @@ export function useModularPanel({
       e.preventDefault();
       startResize(e.clientX);
     },
+    onDoubleClick: (e: React.MouseEvent) => {
+      e.preventDefault();
+      reset();
+    },
     onTouchStart: (e: React.TouchEvent) => {
       if (e.touches[0]) startResize(e.touches[0].clientX);
     },
