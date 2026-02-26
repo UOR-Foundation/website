@@ -527,10 +527,53 @@ export default function ConstantTimeBenchmark() {
   );
 }
 
+/** Animated counter hook — counts from 0 to target over ~800ms with easeOut. */
+function useCountUp(target: number, duration = 800): number {
+  const [current, setCurrent] = useState(0);
+  const prevTarget = useRef(0);
+
+  useEffect(() => {
+    if (target === prevTarget.current) return;
+    prevTarget.current = target;
+    const start = performance.now();
+    const from = 0;
+    let raf: number;
+
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const t = Math.min(elapsed / duration, 1);
+      // easeOutExpo
+      const ease = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+      setCurrent(from + (target - from) * ease);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+
+  return current;
+}
+
+/** Parse a numeric value and suffix from strings like "392×", "1.5 ms", "~38" */
+function parseValueParts(value: string): { num: number; prefix: string; suffix: string; decimals: number } {
+  const match = value.match(/^([~]?)(\d+\.?\d*)\s*(.*)$/);
+  if (!match) return { num: 0, prefix: "", suffix: value, decimals: 0 };
+  const numStr = match[2];
+  const decimals = numStr.includes(".") ? numStr.split(".")[1].length : 0;
+  return { num: parseFloat(numStr), prefix: match[1], suffix: match[3] ? ` ${match[3]}` : "", decimals };
+}
+
 function SummaryCard({ value, label, color }: { value: string; label: string; color?: string }) {
+  const { num, prefix, suffix, decimals } = parseValueParts(value);
+  const animated = useCountUp(num);
+  const display = num > 0
+    ? `${prefix}${decimals > 0 ? animated.toFixed(decimals) : Math.round(animated)}${suffix}`
+    : value;
+
   return (
     <div className="text-center p-3 rounded-lg bg-secondary/30">
-      <p className="text-xl font-bold font-mono" style={{ color: color ?? "hsl(var(--foreground))" }}>{value}</p>
+      <p className="text-xl font-bold font-mono tabular-nums" style={{ color: color ?? "hsl(var(--foreground))" }}>{display}</p>
       <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-1">{label}</p>
     </div>
   );
