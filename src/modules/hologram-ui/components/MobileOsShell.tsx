@@ -232,7 +232,7 @@ export default function MobileOsShell() {
           </p>
         </div>
 
-        {/* Center: Greeting + Lumen AI circle */}
+        {/* Center: Greeting + LUMEN AI circle */}
         <div className="flex-1 flex flex-col items-center justify-center px-8">
           {/* Greeting */}
           <div className="text-center mb-2">
@@ -261,12 +261,12 @@ export default function MobileOsShell() {
             }}
           />
 
-          {/* ── Lumen AI Circle — the portal ────────────────── */}
+          {/* ── LUMEN AI Circle — the portal ────────────────── */}
           <button
             onClick={handleLumenPress}
             className="relative flex items-center justify-center mb-4 active:scale-95 transition-transform duration-300"
             style={{ width: 72, height: 72 }}
-            aria-label="Open Lumen AI"
+            aria-label="Open LUMEN AI"
           >
             {/* Outer breathing ring */}
             <div
@@ -431,7 +431,7 @@ export default function MobileOsShell() {
               ))}
             </nav>
 
-            {/* Lumen AI shortcut at bottom of drawer */}
+            {/* LUMEN AI shortcut at bottom of drawer */}
             <div className="px-6 pb-4 space-y-2">
               {/* Install Hologram — only if installable */}
               {pwa.canInstall && !pwa.isStandalone && (
@@ -460,7 +460,7 @@ export default function MobileOsShell() {
                 }}
               >
                 <Sparkles className="w-4 h-4" strokeWidth={1.5} />
-                <span className="text-[15px] font-light tracking-wide">Open Lumen AI</span>
+                <span className="text-[15px] font-light tracking-wide">Open LUMEN AI</span>
               </button>
             </div>
           </div>

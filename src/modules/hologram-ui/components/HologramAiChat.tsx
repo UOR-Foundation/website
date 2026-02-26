@@ -1,9 +1,9 @@
 /**
- * Lumen AI Chat — In-System Intelligence Panel
+ * LUMEN AI Chat — In-System Intelligence Panel
  * ══════════════════════════════════════════════
  *
  * A serene, focused slide-out assistant for conversing with
- * cloud AI models via the Lumen AI engine. Warm charcoal panels,
+ * cloud AI models via the LUMEN AI engine. Warm charcoal panels,
  * gold accents, and Playfair Display typography.
  *
  * @module hologram-ui/components/HologramAiChat
@@ -1001,7 +1001,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               height: 56,
               background: "transparent",
             }}
-            aria-label="Close Lumen AI"
+            aria-label="Close LUMEN AI"
           >
             <svg
               width="8"
@@ -1033,7 +1033,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               className="text-[13px] font-medium tracking-[0.18em] uppercase"
               style={{ fontFamily: P.font, color: "hsla(38, 15%, 75%, 0.4)" }}
             >
-              Lumen AI
+              LUMEN AI
             </span>
           </div>
           <div className="flex items-center gap-0.5">
@@ -1442,7 +1442,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                       >
                         <div className="py-1.5">
                           {[
-                            { icon: Settings, label: "Lumen AI settings", shortcut: "Ctrl .", action: () => { setShowInputMenu(false); /* TODO: open settings */ } },
+                            { icon: Settings, label: "LUMEN AI settings", shortcut: "Ctrl .", action: () => { setShowInputMenu(false); /* TODO: open settings */ } },
                             { icon: History, label: "History", action: () => { setShowInputMenu(false); setShowHistory(true); } },
                             { icon: BookOpen, label: "Knowledge", action: () => { setShowInputMenu(false); setShowSaved(true); } },
                             { icon: Link2, label: "Add reference", subtitle: "Paste a URL or link", action: () => {
