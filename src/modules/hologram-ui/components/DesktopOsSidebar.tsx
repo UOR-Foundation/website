@@ -181,17 +181,17 @@ export default function DesktopOsSidebar({
             </button>
           </>
         ) : (
-          <button
+        <button
             onClick={() => setExpanded(true)}
-            className="group/logo w-10 h-10 mx-auto rounded-xl flex items-center justify-center transition-all duration-200 hover:bg-white/[0.08] hover:scale-105 relative"
-            style={{ background: "transparent", border: `1px solid ${S.border}` }}
+            className="group/logo w-11 h-11 mx-auto rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 relative"
+            style={{ background: S.surfaceActive, border: `1px solid ${S.border}` }}
             title={`Expand sidebar (${MOD_KEY} B)`}
           >
             <img
               src={hologramLogo}
               alt="Hologram"
-              className="w-5 h-5 object-contain absolute transition-opacity duration-200 group-hover/logo:opacity-0"
-              style={{ imageRendering: "auto", filter: S.logoFilter }}
+              className="w-6 h-6 object-contain absolute transition-opacity duration-200 group-hover/logo:opacity-0"
+              style={{ imageRendering: "auto", filter: bgMode === "white" ? "sepia(0.4) saturate(0.8) brightness(0.5) hue-rotate(-10deg)" : "sepia(0.3) saturate(1.2) brightness(1.3) hue-rotate(10deg)" }}
             />
             <PanelLeftOpen
               className="w-5 h-5 absolute transition-opacity duration-200 opacity-0 group-hover/logo:opacity-100"
