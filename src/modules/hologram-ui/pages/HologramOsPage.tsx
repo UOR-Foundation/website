@@ -393,22 +393,21 @@ export default function HologramOsPage() {
                   {welcomeName}.
                 </h1>
 
-                {/* Vertical line divider */}
-                <div className="flex justify-center pt-[1.5vh] pb-[0.5vh]">
+                {/* Vertical line divider — hedosophia-inspired expand from center */}
+                <div className="flex justify-center pt-[2vh] pb-[1vh]">
                   <div
-                    className="w-px overflow-hidden"
-                    style={{ height: contextHints.length > 0 ? "clamp(32px, 3.5vh, 52px)" : "clamp(48px, 5.5vh, 80px)" }}
+                    className="relative flex items-center justify-center"
+                    style={{ height: "clamp(60px, 8vh, 120px)" }}
                   >
                     <div
-                      className="w-full"
                       style={{
+                        width: "1px",
                         height: "100%",
-                        background: `linear-gradient(to bottom, transparent 0%, ${
-                          bgMode === "white" ? "hsla(0, 0%, 20%, 0.2)" : "hsla(0, 0%, 80%, 0.2)"
-                        } 40%, ${
-                          bgMode === "white" ? "hsla(0, 0%, 20%, 0.2)" : "hsla(0, 0%, 80%, 0.2)"
-                        } 60%, transparent 100%)`,
-                        animation: "line-reveal 2.5s ease-out forwards",
+                        background: bgMode === "white"
+                          ? "hsla(0, 0%, 20%, 0.35)"
+                          : "hsla(38, 15%, 75%, 0.35)",
+                        transformOrigin: "center center",
+                        animation: "line-expand 2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both",
                       }}
                     />
                   </div>
@@ -542,10 +541,10 @@ export default function HologramOsPage() {
               44%  { transform: scale(1);    opacity: 0.8; }
               100% { transform: scale(1);    opacity: 0.8; }
             }
-            @keyframes line-reveal {
-              0%   { opacity: 0; transform: scaleY(0); transform-origin: top; }
-              40%  { opacity: 1; transform: scaleY(1); transform-origin: top; }
-              100% { opacity: 1; transform: scaleY(1); }
+            @keyframes line-expand {
+              0%   { transform: scaleY(0); opacity: 0; }
+              30%  { opacity: 1; }
+              100% { transform: scaleY(1); opacity: 1; }
             }
           `}</style>
         </div>
