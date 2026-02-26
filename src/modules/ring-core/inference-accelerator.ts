@@ -266,7 +266,7 @@ export function streamOptimized(
   }
 
   const tokens = text.match(/\S+\s*/g) || [text];
-  const tps = options.tokensPerSecond ?? 600;
+  const tps = options.tokensPerSecond ?? 800;
   // How many tokens per 16.67ms frame at target TPS
   const tokensPerFrame = Math.max(1, Math.round(tps / 60));
 
