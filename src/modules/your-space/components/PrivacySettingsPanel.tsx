@@ -11,7 +11,7 @@ import {
   ShieldCheck, Eye, EyeOff, Clock, Lock, Unlock,
   ChevronDown, ChevronUp, FileText, Download,
   ToggleLeft, ToggleRight, Info, AlertTriangle, Check,
-  CloudOff, Cloud, Loader2, GitCompareArrows, ArrowRight,
+  CloudOff, Cloud, Loader2, GitCompareArrows, ArrowRight, Undo2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -488,17 +488,31 @@ export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
           <FileText size={12} /> {showPolicy ? "Hide Policy" : "View My Policy"}
         </button>
         {hasChanges && (
-          <button
-            onClick={() => setShowDiff(!showDiff)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-body font-medium border transition-all cursor-pointer ${
-              showDiff
-                ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
-                : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/15"
-            }`}
-          >
-            <GitCompareArrows size={12} />
-            {diffs.length} {diffs.length === 1 ? "Change" : "Changes"}
-          </button>
+          <>
+            <button
+              onClick={() => setShowDiff(!showDiff)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-body font-medium border transition-all cursor-pointer ${
+                showDiff
+                  ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/15"
+              }`}
+            >
+              <GitCompareArrows size={12} />
+              {diffs.length} {diffs.length === 1 ? "Change" : "Changes"}
+            </button>
+            <button
+              onClick={() => {
+                if (debounceRef.current) clearTimeout(debounceRef.current);
+                setRules(lastSavedRules);
+                saveRules(lastSavedRules);
+                setSaved(true);
+                setShowDiff(false);
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-body font-medium bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/15 transition-all cursor-pointer"
+            >
+              <Undo2 size={12} /> Undo All
+            </button>
+          </>
         )}
         {showPolicy && (
           <button
