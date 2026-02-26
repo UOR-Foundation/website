@@ -319,6 +319,13 @@
   100% { transform: scale(1);    opacity: 0.8; }
 }
 
+@keyframes pill-glow-pulse {
+  0%   { box-shadow: 0 0 0 hsla(38, 50%, 50%, 0), 0 0 0 hsla(38, 50%, 50%, 0); }
+  15%  { box-shadow: 0 0 24px hsla(38, 50%, 50%, 0.4), 0 0 48px hsla(38, 50%, 50%, 0.15); }
+  40%  { box-shadow: 0 0 16px hsla(38, 50%, 50%, 0.25), 0 0 32px hsla(38, 50%, 50%, 0.08); }
+  100% { box-shadow: 0 0 0 hsla(38, 50%, 50%, 0), 0 0 0 hsla(38, 50%, 50%, 0); }
+}
+
 @keyframes line-expand {
   0%   { transform: scaleY(0); opacity: 0; }
   30%  { opacity: 1; }
