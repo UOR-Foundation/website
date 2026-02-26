@@ -11,7 +11,7 @@
 import { useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Plus, Home, LayoutGrid, User,
+  Home, LayoutGrid, User,
   Settings, ChevronLeft, HelpCircle, Inbox,
 } from "lucide-react";
 
@@ -91,24 +91,30 @@ export default function DesktopOsSidebar({
         borderRight: `1px solid ${S.border}`,
       }}
     >
-      {/* ── Top: New Chat ─────────────────────────────────────── */}
+      {/* ── Top: Logo + collapse toggle ────────────────────────── */}
       <div className="flex items-center justify-between px-3 pt-5 pb-6">
         {!collapsed ? (
           <>
-            <button
-              onClick={onNewChat}
-              className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm tracking-wide transition-all duration-200 hover:scale-[1.02]"
-              style={{
-                color: S.text,
-                background: S.surfaceHover,
-                border: `1px solid ${S.border}`,
-                fontFamily: S.font,
-              }}
-            >
-              <Plus className="w-4 h-4" style={{ color: S.gold }} />
-              <span>New chat</span>
-              <ShortcutBadge keys="⌘ N" />
-            </button>
+            <div className="flex items-center gap-2.5 px-2 py-1">
+              {/* Geometric H monogram */}
+              <svg
+                width="28" height="28" viewBox="0 0 28 28"
+                fill="none" stroke={S.gold} strokeWidth="1.2"
+                strokeLinecap="round" strokeLinejoin="round"
+                className="shrink-0"
+              >
+                <circle cx="14" cy="14" r="12.5" strokeOpacity="0.25" />
+                <line x1="8" y1="7" x2="8" y2="21" />
+                <line x1="20" y1="7" x2="20" y2="21" />
+                <line x1="8" y1="14" x2="20" y2="14" />
+              </svg>
+              <span
+                className="text-[13px] tracking-[0.3em] uppercase font-light"
+                style={{ fontFamily: S.font, color: S.text }}
+              >
+                Hologram
+              </span>
+            </div>
             <button
               onClick={onToggle}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/[0.06]"
@@ -122,10 +128,19 @@ export default function DesktopOsSidebar({
           <button
             onClick={onToggle}
             className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center transition-colors hover:bg-white/[0.06]"
-            style={{ background: S.surfaceHover, border: `1px solid ${S.border}` }}
+            style={{ background: "transparent", border: `1px solid ${S.border}` }}
             title="Expand sidebar (⌘ \)"
           >
-            <ChevronLeft className="w-4.5 h-4.5 rotate-180" style={{ color: S.gold }} />
+            {/* Compact H monogram when collapsed */}
+            <svg
+              width="20" height="20" viewBox="0 0 28 28"
+              fill="none" stroke={S.gold} strokeWidth="1.3"
+              strokeLinecap="round" strokeLinejoin="round"
+            >
+              <line x1="8" y1="7" x2="8" y2="21" />
+              <line x1="20" y1="7" x2="20" y2="21" />
+              <line x1="8" y1="14" x2="20" y2="14" />
+            </svg>
           </button>
         )}
       </div>
