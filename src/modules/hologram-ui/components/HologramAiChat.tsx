@@ -814,17 +814,58 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     <>
       {/* ── Slide-out panel — docked right, part of the OS ─────────── */}
       <div
-        className="fixed top-0 right-0 bottom-0 z-[60] flex flex-col pointer-events-auto"
+        className="fixed top-0 right-0 bottom-0 z-[60] flex pointer-events-auto"
         style={{
           width: "min(380px, 82vw)",
-          background: "hsla(25, 10%, 6%, 0.92)",
-          backdropFilter: "blur(40px) saturate(0.85)",
-          WebkitBackdropFilter: "blur(40px) saturate(0.85)",
-          borderLeft: "1px solid hsla(38, 15%, 35%, 0.1)",
-          boxShadow: "-8px 0 40px hsla(25, 10%, 3%, 0.4)",
           animation: "lumen-slide-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both",
         }}
       >
+        {/* ── Close tab — left edge arrow ──────────────────────────── */}
+        <button
+          onClick={onClose}
+          className="absolute top-1/2 -translate-y-1/2 -left-[22px] z-[61] flex items-center justify-center cursor-pointer group"
+          style={{
+            width: 22,
+            height: 64,
+            background: "hsla(25, 10%, 8%, 0.95)",
+            borderRadius: "8px 0 0 8px",
+            border: "1px solid hsla(38, 15%, 35%, 0.12)",
+            borderRight: "none",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            boxShadow: "-4px 0 16px hsla(25, 10%, 3%, 0.3)",
+          }}
+          aria-label="Close Lumen AI"
+        >
+          <svg
+            width="10"
+            height="18"
+            viewBox="0 0 10 18"
+            fill="none"
+            className="transition-transform duration-200 group-hover:translate-x-[1px]"
+          >
+            <path
+              d="M2 2L8 9L2 16"
+              stroke="hsla(38, 20%, 65%, 0.5)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="transition-all duration-200 group-hover:stroke-[hsla(38,25%,75%,0.8)]"
+            />
+          </svg>
+        </button>
+
+        {/* ── Panel body ───────────────────────────────────────────── */}
+        <div
+          className="flex-1 flex flex-col h-full"
+          style={{
+            background: "hsla(25, 10%, 6%, 0.92)",
+            backdropFilter: "blur(40px) saturate(0.85)",
+            WebkitBackdropFilter: "blur(40px) saturate(0.85)",
+            borderLeft: "1px solid hsla(38, 15%, 35%, 0.1)",
+            boxShadow: "-8px 0 40px hsla(25, 10%, 3%, 0.4)",
+          }}
+        >
         {/* ── Header — whisper-quiet ────────────────────────────────── */}
         <div className="flex items-center justify-between px-5 py-3.5 flex-shrink-0" style={{ borderBottom: "1px solid hsla(38, 15%, 30%, 0.08)" }}>
           <div className="flex items-center gap-2.5">
@@ -1077,6 +1118,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           </div>
         </div>
       </div>
+    </div>
     </>
   );
 }
