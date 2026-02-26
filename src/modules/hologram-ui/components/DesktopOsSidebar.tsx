@@ -12,7 +12,7 @@ import {
   Home, LayoutGrid, User, Globe,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
 } from "lucide-react";
-import hologramLogo from "@/assets/hologram-logo.png";
+import HologramLogo from "./HologramLogo";
 
 /* ── Tooltip wrapper for collapsed icon buttons ────────────── */
 function IconTooltip({ label, children, show }: { label: string; children: React.ReactNode; show: boolean }) {
@@ -133,11 +133,10 @@ export default function DesktopOsSidebar({
         {expanded ? (
           <>
             <div className="flex items-center gap-2.5 px-2 py-1 overflow-hidden">
-              <img
-                src={hologramLogo}
-                alt="Hologram"
-                className="w-7 h-7 object-contain shrink-0"
-                style={{ imageRendering: "auto", filter: bgMode === "white" ? "sepia(0.4) saturate(0.8) brightness(0.5) hue-rotate(-10deg)" : "sepia(0.3) saturate(1.2) brightness(1.3) hue-rotate(10deg)" }}
+              <HologramLogo
+                size={28}
+                color={bgMode === "white" ? "hsl(30, 15%, 30%)" : "hsl(38, 25%, 80%)"}
+                className="shrink-0"
               />
               <svg
                 viewBox="0 0 360 40"
@@ -187,11 +186,10 @@ export default function DesktopOsSidebar({
             style={{ background: S.surfaceActive, border: `1px solid ${S.border}` }}
             title={`Expand sidebar (${MOD_KEY} B)`}
           >
-            <img
-              src={hologramLogo}
-              alt="Hologram"
-              className="w-6 h-6 object-contain absolute transition-opacity duration-200 group-hover/logo:opacity-0"
-              style={{ imageRendering: "auto", filter: bgMode === "white" ? "sepia(0.4) saturate(0.8) brightness(0.5) hue-rotate(-10deg)" : "sepia(0.3) saturate(1.2) brightness(1.3) hue-rotate(10deg)" }}
+            <HologramLogo
+              size={24}
+              color={bgMode === "white" ? "hsl(30, 15%, 30%)" : "hsl(38, 25%, 80%)"}
+              className="absolute transition-opacity duration-200 group-hover/logo:opacity-0"
             />
             <PanelLeftOpen
               className="w-5 h-5 absolute transition-opacity duration-200 opacity-0 group-hover/logo:opacity-100"
