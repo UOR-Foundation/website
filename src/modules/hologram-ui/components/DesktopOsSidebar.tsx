@@ -12,6 +12,7 @@ import {
   Home, LayoutGrid, User, Globe,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
 } from "lucide-react";
+import hologramLogo from "@/assets/hologram-logo.png";
 
 /* ── Tooltip wrapper for collapsed icon buttons ────────────── */
 function IconTooltip({ label, children, show }: { label: string; children: React.ReactNode; show: boolean }) {
@@ -115,17 +116,12 @@ export default function DesktopOsSidebar({
         {expanded ? (
           <>
             <div className="flex items-center gap-2.5 px-2 py-1 overflow-hidden">
-              <svg
-                width="28" height="28" viewBox="0 0 28 28"
-                fill="none" stroke={S.gold} strokeWidth="1.2"
-                strokeLinecap="round" strokeLinejoin="round"
-                className="shrink-0"
-              >
-                <circle cx="14" cy="14" r="12.5" strokeOpacity="0.25" />
-                <line x1="8" y1="7" x2="8" y2="21" />
-                <line x1="20" y1="7" x2="20" y2="21" />
-                <line x1="8" y1="14" x2="20" y2="14" />
-              </svg>
+              <img
+                src={hologramLogo}
+                alt="Hologram"
+                className="w-7 h-7 object-contain shrink-0"
+                style={{ imageRendering: "auto", filter: "brightness(1.1)" }}
+              />
               <svg
                 viewBox="0 0 360 40"
                 className="select-none"
@@ -174,16 +170,12 @@ export default function DesktopOsSidebar({
             style={{ background: "transparent", border: `1px solid ${S.border}` }}
             title={`Expand sidebar (${MOD_KEY} B)`}
           >
-            <svg
-              width="20" height="20" viewBox="0 0 28 28"
-              fill="none" stroke={S.gold} strokeWidth="1.3"
-              strokeLinecap="round" strokeLinejoin="round"
-              className="absolute transition-opacity duration-200 group-hover/logo:opacity-0"
-            >
-              <line x1="8" y1="7" x2="8" y2="21" />
-              <line x1="20" y1="7" x2="20" y2="21" />
-              <line x1="8" y1="14" x2="20" y2="14" />
-            </svg>
+            <img
+              src={hologramLogo}
+              alt="Hologram"
+              className="w-5 h-5 object-contain absolute transition-opacity duration-200 group-hover/logo:opacity-0"
+              style={{ imageRendering: "auto", filter: "brightness(1.1)" }}
+            />
             <PanelLeftOpen
               className="w-5 h-5 absolute transition-opacity duration-200 opacity-0 group-hover/logo:opacity-100"
               strokeWidth={1.4}
