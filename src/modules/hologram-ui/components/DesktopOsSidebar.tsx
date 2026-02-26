@@ -11,7 +11,7 @@ import { useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Plus, Home, LayoutGrid, User,
-  Settings, ChevronLeft, HelpCircle, MessageSquare,
+  Settings, ChevronLeft, HelpCircle, Inbox,
 } from "lucide-react";
 
 /* ── Palette — higher contrast, warm whites ────────────────── */
@@ -179,7 +179,7 @@ export default function DesktopOsSidebar({
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           title={collapsed ? "Messages" : undefined}
         >
-          <MessageSquare className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
+          <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
           {!collapsed && <span className="text-[14px] font-light">Messages</span>}
         </button>
         <button
