@@ -102,12 +102,12 @@ export default function DesktopOsSidebar({
           </>
         ) : (
           <button
-            onClick={onNewChat}
+            onClick={onToggle}
             className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center transition-colors hover:bg-white/[0.06]"
             style={{ background: S.surfaceHover, border: `1px solid ${S.border}` }}
-            title="New chat"
+            title="Expand sidebar"
           >
-            <Plus className="w-4.5 h-4.5" style={{ color: S.gold }} />
+            <ChevronLeft className="w-4.5 h-4.5 rotate-180" style={{ color: S.gold }} />
           </button>
         )}
       </div>
@@ -183,18 +183,6 @@ export default function DesktopOsSidebar({
           {!collapsed && <span className="text-[14px] font-light">Settings</span>}
         </button>
 
-        {collapsed && (
-          <button
-            onClick={onToggle}
-            className="w-full flex justify-center py-2"
-            title="Expand sidebar"
-          >
-            <ChevronLeft
-              className="w-4 h-4 rotate-180 transition-transform"
-              style={{ color: S.textDim }}
-            />
-          </button>
-        )}
       </div>
     </aside>
   );
