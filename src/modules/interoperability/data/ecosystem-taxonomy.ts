@@ -227,16 +227,14 @@ export const ECOSYSTEMS: readonly Ecosystem[] = [
       "Every quantum object — a circuit, a pulse schedule, a compiled IR, a model checkpoint — is content-addressed through UOR. The same quantum program always resolves to the same canonical identity, enabling reproducible experiments, verifiable compilation, and cross-platform circuit portability from simulators to real hardware.",
     color: "hsl(260, 60%, 50%)",
     projections: [
-      // Standards bodies
-      "ieee-quantum", "iec-iso-jtc3",
       // Gate/circuit-level languages
       "openqasm3", "openqasm2", "quil", "qsharp", "quipper", "blackbird",
       // Intermediate representations
       "qir",
       // Pulse-level specs
       "openpulse", "qua",
-      // File formats
-      "qasm-file", "quil-file", "qs-file", "qpy",
+      // Binary serialization
+      "qpy",
       // Gate-model SDKs
       "qiskit", "cirq", "braket-sdk", "pyquil", "pytket",
       // Hybrid / differentiable / quantum-ML
