@@ -18,11 +18,11 @@ import { firecrawlApi, type SearchResult } from "@/lib/api/firecrawl";
 
 /* ── Glass palette — nearly invisible chrome ─────────────────── */
 const P = {
-  bg: "hsla(25, 8%, 8%, 0.92)",
-  surface: "hsla(25, 8%, 12%, 0.6)",
-  surfaceHover: "hsla(38, 12%, 90%, 0.06)",
-  border: "hsla(38, 12%, 70%, 0.06)",
-  borderFocus: "hsla(38, 30%, 55%, 0.2)",
+  bg: "hsla(25, 8%, 6%, 0.97)",
+  surface: "hsla(25, 8%, 12%, 0.75)",
+  surfaceHover: "hsla(38, 12%, 90%, 0.08)",
+  border: "hsla(38, 12%, 70%, 0.08)",
+  borderFocus: "hsla(38, 30%, 55%, 0.25)",
   text: "hsl(38, 10%, 88%)",
   textMuted: "hsl(38, 8%, 50%)",
   gold: "hsl(38, 40%, 65%)",
@@ -191,10 +191,11 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
       className="flex flex-col h-full w-full"
       style={{
         background: P.bg,
-        backdropFilter: "blur(40px) saturate(1.4)",
-        WebkitBackdropFilter: "blur(40px) saturate(1.4)",
+        backdropFilter: "blur(60px) saturate(1.6)",
+        WebkitBackdropFilter: "blur(60px) saturate(1.6)",
         fontFamily: P.font,
         borderLeft: `1px solid ${P.border}`,
+        boxShadow: "inset 0 0 80px hsla(25, 8%, 4%, 0.3)",
       }}
     >
       {/* ── Glass Chrome Bar — ultra-thin ──────────────────────── */}

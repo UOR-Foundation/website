@@ -22,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
-import HologramBrowser from "@/modules/hologram-ui/components/HologramBrowser";
+import BrowserProjection from "@/modules/hologram-ui/components/BrowserProjection";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
@@ -878,27 +878,17 @@ export default function HologramOsPage() {
       {isWidgetVisible("ambient-player") && (
         <AmbientPlayer lumenOffset={chatOpen ? lumenPanel.width : 0} onStateChange={setAmbientState} />
       )}
-      {/* ── Browser Panel — opens to the right of sidebar ── */}
-      {browserOpen && (
-        <div
-          className="fixed top-0 bottom-0 z-[500] flex"
-          style={{
-            left: 68,
-            right: 0,
-            animation: "lumen-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both",
-          }}
-        >
-          <HologramBrowser
-            onClose={() => setBrowserOpen(false)}
-            onSendToLumen={({ title, url, markdown }) => {
-              const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) + "\n\n…[truncated]" : markdown;
-              setChatPrompt(`I'm reading "${title}" (${url}). Here's the page content:\n\n${truncated}\n\nPlease summarize the key points and insights from this page.`);
-              setBrowserOpen(false);
-              setChatOpen(true);
-            }}
-          />
-        </div>
-      )}
+      {/* ── Browser Panel — projection from sidebar ── */}
+      <BrowserProjection
+        open={browserOpen}
+        onClose={() => setBrowserOpen(false)}
+        onSendToLumen={({ title, url, markdown }) => {
+          const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) + "\n\n…[truncated]" : markdown;
+          setChatPrompt(`I'm reading "${title}" (${url}). Here's the page content:\n\n${truncated}\n\nPlease summarize the key points and insights from this page.`);
+          setBrowserOpen(false);
+          setChatOpen(true);
+        }}
+      />
       <SnapGuideOverlay />
     </HologramViewport>
   );
