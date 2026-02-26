@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { registerRect, unregisterRect, snapToOthers } from "./dragSnapRegistry";
+import { SNAP_GUIDE_EVENT, type SnapGuidePayload } from "../components/SnapGuideOverlay";
 
 /**
  * Generic hook that makes any absolutely/fixed-positioned element draggable.
  * Position is persisted to localStorage under the given key.
- * If no saved position exists (or user isn't logged in), `defaultPos` is used.
+ * If no saved position exists, `defaultPos` is used.
  *
- * Returns:
- *  - `pos`   — the current { x, y } in CSS pixels (from viewport top-left)
- *  - `style` — convenience object to spread onto the element
- *  - `handlers` — onPointerDown to attach to the drag handle
- *  - `resetPosition` — restore the default
+ * Features:
+ *  - Snap-to-alignment with other draggable elements
+ *  - Visual guide lines emitted via custom event
+ *  - Haptic-style feedback through snapping behavior
  */
 
 export interface DragPosition {
@@ -29,6 +30,8 @@ interface UseDraggablePositionOptions {
    * "offset": pos is a delta from the element's natural position (returns translate style).
    */
   mode?: "absolute" | "offset";
+  /** Approximate element size for snap calculations (default 48x48) */
+  snapSize?: { width: number; height: number };
 }
 
 function load(key: string): DragPosition | null {
@@ -47,16 +50,26 @@ function save(key: string, pos: DragPosition) {
   } catch {}
 }
 
+function emitGuides(guides: SnapGuidePayload["guides"], active: boolean) {
+  window.dispatchEvent(
+    new CustomEvent<SnapGuidePayload>(SNAP_GUIDE_EVENT, {
+      detail: { guides, active },
+    }),
+  );
+}
+
 export function useDraggablePosition({
   storageKey,
   defaultPos,
   padding = 8,
   mode = "absolute",
+  snapSize = { width: 48, height: 48 },
 }: UseDraggablePositionOptions) {
   const [pos, setPos] = useState<DragPosition>(() => load(storageKey) ?? defaultPos);
   const dragging = useRef(false);
   const offset = useRef({ dx: 0, dy: 0 });
   const moved = useRef(false);
+  const elementRef = useRef<HTMLElement | null>(null);
 
   // Clamp helper
   const clamp = useCallback(
@@ -67,7 +80,19 @@ export function useDraggablePosition({
     [padding],
   );
 
-  // Persist whenever pos changes (debounced naturally by pointer events)
+  // Register this element's rect in the snap registry
+  useEffect(() => {
+    registerRect(storageKey, {
+      key: storageKey,
+      x: pos.x,
+      y: pos.y,
+      width: snapSize.width,
+      height: snapSize.height,
+    });
+    return () => unregisterRect(storageKey);
+  }, [storageKey, pos.x, pos.y, snapSize.width, snapSize.height]);
+
+  // Persist whenever pos changes
   useEffect(() => {
     save(storageKey, pos);
   }, [storageKey, pos]);
@@ -77,23 +102,42 @@ export function useDraggablePosition({
     const onMove = (e: PointerEvent) => {
       if (!dragging.current) return;
       moved.current = true;
-      const next = clamp({ x: e.clientX - offset.current.dx, y: e.clientY - offset.current.dy });
-      setPos(next);
+
+      const raw = clamp({
+        x: e.clientX - offset.current.dx,
+        y: e.clientY - offset.current.dy,
+      });
+
+      // Snap to other elements
+      const snap = snapToOthers(
+        storageKey,
+        raw.x,
+        raw.y,
+        snapSize.width,
+        snapSize.height,
+      );
+
+      setPos({ x: snap.x, y: snap.y });
+      emitGuides(snap.guides, true);
     };
+
     const onUp = () => {
-      dragging.current = false;
+      if (dragging.current) {
+        dragging.current = false;
+        emitGuides([], false);
+      }
     };
+
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [clamp]);
+  }, [clamp, storageKey, snapSize.width, snapSize.height]);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
-      // Only primary button
       if (e.button !== 0) return;
       dragging.current = true;
       moved.current = false;
@@ -108,7 +152,6 @@ export function useDraggablePosition({
     save(storageKey, defaultPos);
   }, [defaultPos, storageKey]);
 
-  /** True if pointer moved since last pointerdown (used to suppress click) */
   const wasDragged = useCallback(() => moved.current, []);
 
   const style = mode === "offset"

@@ -28,6 +28,7 @@ import LegalPanel from "@/modules/hologram-ui/components/LegalPanel";
 import HologramFrame, { HologramViewport, OverlayFrame, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
 import ModularSnapGrid from "@/modules/hologram-ui/components/ModularSnapGrid";
+import SnapGuideOverlay from "@/modules/hologram-ui/components/SnapGuideOverlay";
 import AmbientPlayer, { type AmbientState } from "@/modules/hologram-ui/components/AmbientPlayer";
 import { useModularPanel } from "@/modules/hologram-ui/hooks/useModularPanel";
 import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
@@ -149,8 +150,8 @@ export default function HologramOsPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [pillGlow, setPillGlow] = useState(false);
   const [ambientState, setAmbientState] = useState<AmbientState>({ playing: false, loading: false, stationHue: "220", stationName: "" });
-  const lumenPillDrag = useDraggablePosition({ storageKey: "hologram-pos:lumen-pill", defaultPos: { x: 0, y: 0 }, mode: "offset" });
-  const dayRingDrag = useDraggablePosition({ storageKey: "hologram-pos:day-ring", defaultPos: { x: 0, y: 0 }, mode: "offset" });
+  const lumenPillDrag = useDraggablePosition({ storageKey: "hologram-pos:lumen-pill", defaultPos: { x: 0, y: 0 }, mode: "offset", snapSize: { width: 160, height: 44 } });
+  const dayRingDrag = useDraggablePosition({ storageKey: "hologram-pos:day-ring", defaultPos: { x: 0, y: 0 }, mode: "offset", snapSize: { width: 64, height: 64 } });
   const lumenPanel = useModularPanel({
     storageKey: "lumen-ai",
     defaultWidth: 340,
@@ -869,6 +870,7 @@ export default function HologramOsPage() {
       />
       {/* FrameDebugOverlay removed for cleaner UI */}
       <AmbientPlayer lumenOffset={chatOpen ? lumenPanel.width : 0} onStateChange={setAmbientState} />
+      <SnapGuideOverlay />
     </HologramViewport>
   );
 }

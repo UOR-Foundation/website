@@ -28,6 +28,7 @@ export default function LayerNavHUD({ nav }: LayerNavHUDProps) {
   const drag = useDraggablePosition({
     storageKey: "hologram-pos:layer-nav",
     defaultPos: { x: typeof window !== "undefined" ? window.innerWidth - 220 : 1000, y: 16 },
+    snapSize: { width: 200, height: 36 },
   });
 
   return (

@@ -143,6 +143,7 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   const drag = useDraggablePosition({
     storageKey: "hologram-pos:ambient",
     defaultPos: { x: 20, y: typeof window !== "undefined" ? window.innerHeight - 70 : 700 },
+    snapSize: { width: 160, height: 40 },
   });
 
   // Persist prefs on change
