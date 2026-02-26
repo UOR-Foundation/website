@@ -113,10 +113,10 @@ export default function TriadicWelcome({
             : "triadic-slide-out-left 0.28s cubic-bezier(0.55, 0, 1, 0.45) both",
         }}
       >
-        {/* Greeting — balanced top space */}
-        <div className="flex-1 flex flex-col justify-end pb-8 px-5 min-h-0">
+        {/* Greeting */}
+        <div className="flex flex-col justify-end pb-5 px-5 pt-4">
           <h2
-            className="text-[clamp(26px,5.5vw,34px)] font-light leading-snug tracking-wide"
+            className="text-[clamp(28px,6vw,36px)] font-light leading-snug tracking-wide"
             style={{ fontFamily: P.fontDisplay, color: P.text }}
           >
             What would you like
@@ -124,7 +124,7 @@ export default function TriadicWelcome({
             to focus on?
           </h2>
           <p
-            className="text-[15px] mt-4 leading-relaxed"
+            className="text-[16px] mt-3 leading-relaxed"
             style={{ color: P.textDim }}
           >
             Pick a mode to get started
@@ -132,7 +132,7 @@ export default function TriadicWelcome({
         </div>
 
         {/* Three phase cards */}
-        <div className="flex-[1.8] flex flex-col justify-start gap-3 px-3 pb-5">
+        <div className="flex-1 flex flex-col justify-start gap-3 px-3 pb-4">
           {PHASE_ORDER.map((phase, i) => {
             const phaseDef = PHASES[phase];
             const desc = PHASE_DESCRIPTIONS[phase];
@@ -167,7 +167,7 @@ export default function TriadicWelcome({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2.5">
                     <span
-                      className="text-[20px] font-light tracking-wide capitalize"
+                      className="text-[22px] font-light tracking-wide capitalize"
                       style={{
                         fontFamily: P.fontDisplay,
                         color: `hsla(${phaseDef.hue}, 28%, 78%, 0.95)`,
@@ -176,14 +176,14 @@ export default function TriadicWelcome({
                       {phase}
                     </span>
                     <span
-                      className="text-[12px] tracking-[0.16em] uppercase"
+                      className="text-[13px] tracking-[0.16em] uppercase"
                       style={{ color: P.textDimmer }}
                     >
                       {desc.verb}
                     </span>
                   </div>
                   <p
-                    className="text-[14px] mt-1.5 leading-relaxed"
+                    className="text-[15px] mt-1.5 leading-relaxed"
                     style={{ color: P.textMuted }}
                   >
                     {desc.invitation}
@@ -193,7 +193,7 @@ export default function TriadicWelcome({
                 {/* Persona count */}
                 <div className="flex-shrink-0 text-right">
                   <span
-                    className="text-[13px] tabular-nums"
+                    className="text-[14px] tabular-nums"
                     style={{ color: P.textDimmer }}
                   >
                     {personaCount} {personaCount === 1 ? "guide" : "guides"}
@@ -205,8 +205,8 @@ export default function TriadicWelcome({
         </div>
 
         {/* Current selection indicator */}
-        <div className="flex justify-center pb-4">
-          <p className="text-[13px] tracking-wider" style={{ color: P.textDimmer }}>
+        <div className="flex justify-center pb-3 pt-1">
+          <p className="text-[14px] tracking-wider" style={{ color: P.textDimmer }}>
             Currently using · {selectedPersona.name}
           </p>
         </div>

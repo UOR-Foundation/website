@@ -922,7 +922,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               className="text-[13px] font-medium tracking-[0.18em] uppercase"
               style={{ fontFamily: P.font, color: "hsla(38, 15%, 75%, 0.4)" }}
             >
-              Lumen
+              Lumen AI
             </span>
           </div>
           <div className="flex items-center gap-0.5">
