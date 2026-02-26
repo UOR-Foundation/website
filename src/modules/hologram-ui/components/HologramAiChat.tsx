@@ -1051,52 +1051,60 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                     <ChevronDown className="w-3 h-3" style={{ color: P.textDim }} />
                   </button>
 
-                  {/* Dropdown — opens upward, high z-index, solid background */}
+                  {/* Dropdown — fixed position to escape overflow:hidden */}
                   {showModelPicker && (
                     <div
-                      className="absolute bottom-full mb-2 right-0 w-72 rounded-xl overflow-hidden shadow-2xl z-[100] animate-[message-fade-in_0.2s_ease-out_both]"
-                      style={{
-                        background: "hsl(30, 8%, 14%)",
-                        border: `1px solid ${P.border}`,
-                        boxShadow: "0 -8px 40px hsla(0, 0%, 0%, 0.5)",
-                      }}
+                      className="fixed inset-0 z-[200]"
+                      onClick={(e) => { e.stopPropagation(); setShowModelPicker(false); }}
                     >
-                      <div className="px-4 py-3" style={{ borderBottom: `1px solid ${P.borderLight}` }}>
-                        <p className="text-[13px] font-medium" style={{ color: P.text }}>
-                          Choose a model
-                        </p>
-                      </div>
-                      <div className="py-1.5 max-h-[280px] overflow-y-auto">
-                        {CLOUD_MODELS.map((m) => {
-                          const isActive = selectedCloudModel === m.id && !ai.isReady;
-                          return (
-                            <button
-                              key={m.id}
-                              onClick={() => {
-                                selectCloudModel(m.id);
-                              }}
-                              className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.06]"
-                            >
-                              <div
-                                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                                style={{ background: isActive ? P.goldBg : "hsla(30, 8%, 22%, 0.8)" }}
+                      <div
+                        className="absolute w-72 rounded-xl overflow-hidden shadow-2xl animate-[message-fade-in_0.15s_ease-out_both]"
+                        style={{
+                          bottom: `${window.innerHeight - (modelPickerRef.current?.getBoundingClientRect().top ?? 0) + 8}px`,
+                          right: `${window.innerWidth - (modelPickerRef.current?.getBoundingClientRect().right ?? 0)}px`,
+                          background: "hsl(30, 8%, 14%)",
+                          border: "1px solid hsla(38, 15%, 30%, 0.4)",
+                          boxShadow: "0 -8px 40px hsla(0, 0%, 0%, 0.6), 0 0 0 1px hsla(38, 15%, 20%, 0.2)",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="px-4 py-3" style={{ borderBottom: "1px solid hsla(38, 12%, 25%, 0.3)" }}>
+                          <p className="text-[13px] font-medium" style={{ color: P.text }}>
+                            Choose a model
+                          </p>
+                        </div>
+                        <div className="py-1.5 max-h-[320px] overflow-y-auto">
+                          {CLOUD_MODELS.map((m) => {
+                            const isActive = selectedCloudModel === m.id && !ai.isReady;
+                            return (
+                              <button
+                                key={m.id}
+                                onClick={() => {
+                                  selectCloudModel(m.id);
+                                }}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.06]"
                               >
-                                {isActive
-                                  ? <Check className="w-4 h-4" style={{ color: P.goldLight }} />
-                                  : <Cloud className="w-4 h-4" style={{ color: P.textMuted }} />
-                                }
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-[14px] font-medium" style={{ color: isActive ? P.goldLight : P.text }}>
-                                  {m.label}
-                                </p>
-                                <p className="text-[12px] mt-0.5" style={{ color: P.textMuted }}>
-                                  {m.desc}
-                                </p>
-                              </div>
-                            </button>
-                          );
-                        })}
+                                <div
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                  style={{ background: isActive ? P.goldBg : "hsla(30, 8%, 22%, 0.8)" }}
+                                >
+                                  {isActive
+                                    ? <Check className="w-4 h-4" style={{ color: P.goldLight }} />
+                                    : <Cloud className="w-4 h-4" style={{ color: P.textMuted }} />
+                                  }
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[14px] font-medium" style={{ color: isActive ? P.goldLight : P.text }}>
+                                    {m.label}
+                                  </p>
+                                  <p className="text-[12px] mt-0.5" style={{ color: P.textMuted }}>
+                                    {m.desc}
+                                  </p>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   )}
