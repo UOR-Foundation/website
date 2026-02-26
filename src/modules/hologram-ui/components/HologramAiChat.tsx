@@ -14,6 +14,7 @@ import type { TriadicPhase, CreatorStage } from "@/modules/hologram-ui/sovereign
 import {
   X, Send, Loader2, Cpu, Sparkles, MessageSquare,
   Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap, User, Lock,
+  Eye, EyeOff,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import TriadicWelcome from "@/modules/hologram-ui/components/TriadicWelcome";
@@ -156,6 +157,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const [selectedCloudModel, setSelectedCloudModel] = useState<string>(CLOUD_MODELS[0].id);
   const [selectedPersona, setSelectedPersona] = useState<AgentPersona>(getDefaultPersona());
   const [activeSkill, setActiveSkill] = useState<AgentSkill | null>(null);
+  const [privateSession, setPrivateSession] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const modelPickerRef = useRef<HTMLDivElement>(null);
@@ -585,8 +587,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             skillId,
             knowledgeDistillation: distillKnowledge(skillId),
             scaffold: scaffoldPrompt,
-            screenContext: screenCtx.getPromptContext(),
-            observerBriefing: observer.promptText || undefined,
+            screenContext: privateSession ? undefined : screenCtx.getPromptContext(),
+            observerBriefing: privateSession ? undefined : (observer.promptText || undefined),
           }),
         });
 
@@ -1061,6 +1063,48 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
           {/* ── Context Awareness Chip ─────────────────────────── */}
           {(() => {
+            // Private session — show minimal chip
+            if (privateSession) {
+              return (
+                <div
+                  className="flex items-center gap-2.5 px-3.5 py-2 mb-2 rounded-xl transition-all"
+                  style={{
+                    background: "hsla(30, 10%, 15%, 0.5)",
+                    border: "1px solid hsla(38, 15%, 30%, 0.12)",
+                  }}
+                >
+                  <EyeOff
+                    className="w-3.5 h-3.5 shrink-0"
+                    style={{ color: P.textDim }}
+                  />
+                  <span
+                    className="text-[12px] tracking-wide"
+                    style={{ color: P.textDim, fontFamily: P.font }}
+                  >
+                    Private session · Lumen is not observing
+                  </span>
+                  <button
+                    onClick={() => setPrivateSession(false)}
+                    className="ml-auto text-[11px] tracking-wider px-2.5 py-1 rounded-lg transition-all duration-200"
+                    style={{
+                      color: P.goldMuted,
+                      background: "hsla(38, 30%, 40%, 0.08)",
+                      border: "1px solid hsla(38, 30%, 40%, 0.12)",
+                      fontFamily: P.font,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "hsla(38, 30%, 40%, 0.15)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "hsla(38, 30%, 40%, 0.08)";
+                    }}
+                  >
+                    Resume
+                  </button>
+                </div>
+              );
+            }
+
             const digest = screenCtx.getDigest();
             const selectedText = digest.selectedText;
             const topBeacon = digest.beacons[0];
@@ -1072,32 +1116,73 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             if (!contextLabel && !digest.hasContext) return null;
             return (
               <div
-                className="flex items-center gap-2 px-3 py-1.5 mb-2 rounded-xl transition-all"
+                className="flex items-center gap-2.5 px-3.5 py-2 mb-2 rounded-xl transition-all"
                 style={{
                   background: "hsla(38, 20%, 20%, 0.3)",
                   border: "1px solid hsla(38, 30%, 40%, 0.15)",
                 }}
               >
+                {/* Breathing observation dot */}
                 <div
-                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  className="w-2 h-2 rounded-full shrink-0"
                   style={{
-                    background: selectedText ? P.goldLight : P.goldMuted,
-                    boxShadow: selectedText ? `0 0 6px ${P.goldLight}` : "none",
+                    background: P.goldMuted,
+                    boxShadow: `0 0 6px hsla(38, 50%, 50%, 0.3)`,
+                    animation: "pulse 2.4s ease-in-out infinite",
                   }}
                 />
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span
+                    className="text-[12px] tracking-wide truncate"
+                    style={{ color: P.textMuted, fontFamily: P.font }}
+                  >
+                    {selectedText ? (
+                      <>
+                        <span style={{ color: P.goldMuted }}>Observing selection</span>
+                        {" · "}
+                        <span style={{ color: P.text }}>{contextLabel}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span style={{ color: P.goldMuted }}>Observing</span>
+                        {" · "}
+                        <span style={{ color: P.text }}>{contextLabel}</span>
+                      </>
+                    )}
+                  </span>
+                  <span
+                    className="text-[10px] tracking-wide"
+                    style={{ color: P.textDimmer, fontFamily: P.font }}
+                  >
+                    Lumen sees your screen context to give better answers
+                  </span>
+                </div>
                 <span
-                  className="text-[13px] tracking-wide truncate"
-                  style={{ color: P.textMuted, fontFamily: P.font }}
-                >
-                  {selectedText ? "Selected: " : "Viewing: "}
-                  <span style={{ color: P.text }}>{contextLabel}</span>
-                </span>
-                <span
-                  className="text-[12px] tracking-wider ml-auto shrink-0"
+                  className="text-[11px] tracking-wider shrink-0"
                   style={{ color: P.textDimmer }}
                 >
                   {digest.section}
                 </span>
+                {/* Private session toggle */}
+                <button
+                  onClick={() => setPrivateSession(true)}
+                  className="shrink-0 p-1.5 rounded-lg transition-all duration-200"
+                  style={{
+                    color: P.textDim,
+                    background: "transparent",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "hsla(38, 15%, 30%, 0.15)";
+                    e.currentTarget.style.color = P.goldMuted;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = P.textDim;
+                  }}
+                  title="Go private — stop Lumen from observing this session"
+                >
+                  <EyeOff className="w-3.5 h-3.5" />
+                </button>
               </div>
             );
           })()}
