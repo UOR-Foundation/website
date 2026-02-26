@@ -13,9 +13,9 @@
  * @module hologram-ui/components/AmbientPlayer
  */
 
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical, BarChart3 } from "lucide-react";
+import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical, BarChart3, Database } from "lucide-react";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
 import { getAudioEngine, type AudioEngineState } from "@/modules/audio";
 import StratumVisualizer from "./StratumVisualizer";
@@ -139,6 +139,7 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   const [volume, setVolume] = useState(() => prefs.current.volume);
   const [muted, setMuted] = useState(false);
   const [showVisualizer, setShowVisualizer] = useState(false);
+  const [cacheStats, setCacheStats] = useState({ entries: 0, totalBytes: 0, maxBytes: 1, utilization: 0 });
   const engineRef = useRef(getAudioEngine());
   const pillRef = useRef<HTMLDivElement>(null);
 
@@ -188,6 +189,15 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
       unsub();
     };
   }, []);
+
+  // Poll cache stats every 2s while playing
+  useEffect(() => {
+    if (!playing) return;
+    const tick = () => setCacheStats(engineRef.current.getCacheStats());
+    tick();
+    const id = setInterval(tick, 2000);
+    return () => clearInterval(id);
+  }, [playing]);
 
 
   // Sync volume
@@ -403,6 +413,43 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
               ))}
             </div>
 
+            {/* Cache Stats */}
+            {playing && cacheStats.entries > 0 && (
+              <div
+                className="flex items-center gap-2 mx-3 mb-2 px-3 py-2 rounded-xl"
+                style={{ background: "hsla(200, 20%, 20%, 0.2)" }}
+              >
+                <Database className="w-3 h-3 flex-shrink-0" style={{ color: "hsl(200, 50%, 55%)" }} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-medium" style={{ color: "hsl(200, 30%, 70%)" }}>
+                      {cacheStats.entries} segment{cacheStats.entries !== 1 ? "s" : ""} cached
+                    </span>
+                    <span className="text-[10px] tabular-nums" style={{ color: P.textDim }}>
+                      {cacheStats.totalBytes < 1024 * 1024
+                        ? `${(cacheStats.totalBytes / 1024).toFixed(0)} KB`
+                        : `${(cacheStats.totalBytes / (1024 * 1024)).toFixed(1)} MB`}
+                    </span>
+                  </div>
+                  {/* Utilization bar */}
+                  <div
+                    className="mt-1 h-[3px] rounded-full overflow-hidden"
+                    style={{ background: "hsla(200, 15%, 30%, 0.3)" }}
+                  >
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.min(cacheStats.utilization * 100, 100)}%`,
+                        background: cacheStats.utilization > 0.8
+                          ? "hsl(0, 50%, 55%)"
+                          : "hsl(200, 50%, 55%)",
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Volume */}
             <div
               className="flex items-center gap-3 px-4 py-3"
@@ -511,6 +558,18 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
                   <span className="text-[12px] font-medium" style={{ color: P.text }}>
                     {loading ? "Connecting…" : station.name}
                   </span>
+                  {playing && cacheStats.entries > 0 && (
+                    <span
+                      className="text-[10px] tabular-nums px-1.5 py-0.5 rounded-full"
+                      style={{
+                        color: "hsl(200, 40%, 65%)",
+                        background: "hsla(200, 30%, 25%, 0.35)",
+                      }}
+                      title={`${cacheStats.entries} content-addressed segments in memory (${(cacheStats.totalBytes / (1024 * 1024)).toFixed(1)} MB)`}
+                    >
+                      {cacheStats.entries}⬡
+                    </span>
+                  )}
                 </>
               ) : (
                 <>
