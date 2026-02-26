@@ -223,7 +223,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold, screenContext, observerBriefing, conversationContext } = await req.json();
+    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold, screenContext, observerBriefing, conversationContext, fusionContext } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -258,7 +258,12 @@ serve(async (req) => {
       ? `\n\n═══ RELATIONSHIP CONTEXT (what you know from past conversations) ═══\n${conversationContext}\n═══ END RELATIONSHIP CONTEXT ═══\n`
       : "";
 
-    const systemPrompt = CONSTITUTIONAL_DIRECTIVE + personaPrompt + skillFragment + knowledge + scaffoldPrompt + contextAwareness + observerAwareness + conversationCtx;
+    // Inject holographic fusion graph (multi-modal context surface)
+    const fusionCtx = fusionContext
+      ? `\n\n═══ HOLOGRAPHIC CONTEXT SURFACE (compressed multi-modal knowledge graph) ═══\n${fusionContext}\n═══ END HOLOGRAPHIC CONTEXT ═══\nThis is a structured knowledge graph of the user's audio library, reasoning proofs, agent memories, and contextual interests encoded as subject-predicate-object triples. Use it silently to give richer, more contextually aware answers. Do NOT enumerate or reference the triples directly — use them as background intelligence.`
+      : "";
+
+    const systemPrompt = CONSTITUTIONAL_DIRECTIVE + personaPrompt + skillFragment + knowledge + scaffoldPrompt + contextAwareness + observerAwareness + conversationCtx + fusionCtx;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
