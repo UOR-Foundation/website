@@ -814,7 +814,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             </div>
             <div>
               <h3 className="text-base font-medium tracking-wide" style={{ fontFamily: P.fontDisplay, color: P.text }}>
-                Hologram Intelligence
+                Luminal AI
               </h3>
             </div>
           </div>
