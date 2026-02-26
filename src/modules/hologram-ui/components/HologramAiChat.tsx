@@ -219,22 +219,55 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     ? ai.active!.modelId.split("/").pop()
     : CLOUD_MODELS.find((m) => m.id === selectedCloudModel)?.label ?? "Gemini 3 Flash";
 
-  // Auto-scroll — gentle, only when user is near the bottom (not reading above)
+  // ── Natural reading scroll — never yanks, gentle "new below" pill ──
   const isNearBottomRef = useRef(true);
-  const handleScroll = useCallback(() => {
+  const [hasUnseenBelow, setHasUnseenBelow] = useState(false);
+  const lastUserMsgIdRef = useRef<string | null>(null);
+
+  const checkUnseen = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const threshold = 120;
-    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    const threshold = 80;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    isNearBottomRef.current = atBottom;
+    setHasUnseenBelow(!atBottom && el.scrollHeight > el.clientHeight + 40);
   }, []);
 
+  const handleScroll = useCallback(() => {
+    checkUnseen();
+  }, [checkUnseen]);
+
+  // Only auto-scroll when the USER sends a message (to show their bubble)
+  // Never scroll during AI streaming — let the reader absorb naturally
   useEffect(() => {
-    if (!scrollRef.current || !isNearBottomRef.current) return;
-    scrollRef.current.scrollTo({
+    const userMsgs = messages.filter((m) => m.role === "user");
+    const lastUser = userMsgs[userMsgs.length - 1];
+    if (lastUser && lastUser.id !== lastUserMsgIdRef.current) {
+      lastUserMsgIdRef.current = lastUser.id;
+      // Gentle scroll to show the user's own message
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      });
+    }
+  }, [messages]);
+
+  // Periodically check for unseen content during streaming
+  useEffect(() => {
+    if (!isGenerating) return;
+    const interval = setInterval(checkUnseen, 600);
+    return () => clearInterval(interval);
+  }, [isGenerating, checkUnseen]);
+
+  const scrollToBottom = useCallback(() => {
+    scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages]);
+    setHasUnseenBelow(false);
+  }, []);
 
   // Focus input & handle initialPrompt
   useEffect(() => {
@@ -1045,7 +1078,33 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 />
               );
             })}
-          </div>
+        </div>
+
+        {/* ── "New below" floating pill — gentle, non-intrusive ──── */}
+        <AnimatePresence>
+          {hasUnseenBelow && (
+            <motion.button
+              initial={{ opacity: 0, y: 8, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.9 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              onClick={scrollToBottom}
+              className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] tracking-wider z-20 cursor-pointer"
+              style={{
+                bottom: "180px",
+                background: "hsla(25, 12%, 12%, 0.92)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid hsla(38, 30%, 40%, 0.2)",
+                color: P.goldLight,
+                fontFamily: P.font,
+                boxShadow: "0 4px 16px hsla(25, 10%, 3%, 0.5), 0 0 0 1px hsla(38, 30%, 40%, 0.06)",
+              }}
+            >
+              <ChevronDown className="w-3 h-3" style={{ color: P.goldMuted }} />
+              <span>New below</span>
+            </motion.button>
+          )}
+        </AnimatePresence>
 
           {isGenerating && !messages.some(m => m.role === "assistant" && m.content) && (
             <div className="flex items-center gap-3 px-3 py-4 mt-2 animate-in fade-in duration-500">
