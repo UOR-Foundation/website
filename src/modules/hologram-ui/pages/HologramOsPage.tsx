@@ -55,27 +55,27 @@ type BgMode = "image" | "white" | "dark";
 
 const BG_MODES: { mode: BgMode; dot: string; dotActive: string; label: string }[] = [
   { mode: "image", dot: "hsla(38, 25%, 65%, 0.35)", dotActive: "hsl(38, 40%, 60%)", label: "Landscape" },
-  { mode: "white", dot: "hsla(0, 0%, 80%, 0.5)", dotActive: "hsl(0, 0%, 95%)", label: "Light" },
+  { mode: "white", dot: "hsla(0, 0%, 30%, 0.5)", dotActive: "hsl(0, 0%, 15%)", label: "Light" },
   { mode: "dark",  dot: "hsla(0, 0%, 30%, 0.5)", dotActive: "hsl(30, 6%, 12%)", label: "Dark" },
 ];
 
 /** Palette per mode — all text/chrome adapts */
 function palette(m: BgMode) {
   if (m === "white") return {
-    wordmark: "hsla(30, 8%, 18%, 0.9)",
-    greeting: "hsla(30, 8%, 40%, 0.6)",
-    heading:  "hsla(30, 10%, 15%, 0.9)",
-    sub:      "hsla(30, 6%, 35%, 0.55)",
-    cta:      "hsla(30, 8%, 28%, 0.6)",
-    ctaBorder:"hsla(30, 8%, 40%, 0.2)",
-    ctaHoverBg: "hsla(30, 8%, 40%, 0.06)",
-    ctaHoverText: "hsla(30, 10%, 12%, 0.85)",
-    ctaHoverBorder: "hsla(30, 8%, 40%, 0.35)",
-    pill:     "hsla(30, 8%, 90%, 0.7)",
-    pillBorder: "hsla(30, 8%, 60%, 0.12)",
-    pillText: "hsla(30, 8%, 30%, 0.5)",
-    dotPulse: "hsl(38, 40%, 45%)",
-    bg:       "hsl(0, 0%, 98%)",
+    wordmark: "hsla(38, 15%, 88%, 0.9)",
+    greeting: "hsla(38, 15%, 75%, 0.55)",
+    heading:  "hsla(38, 12%, 92%, 0.92)",
+    sub:      "hsla(38, 10%, 72%, 0.5)",
+    cta:      "hsla(38, 12%, 78%, 0.6)",
+    ctaBorder:"hsla(38, 12%, 50%, 0.2)",
+    ctaHoverBg: "hsla(38, 12%, 50%, 0.08)",
+    ctaHoverText: "hsla(38, 15%, 92%, 0.85)",
+    ctaHoverBorder: "hsla(38, 12%, 50%, 0.3)",
+    pill:     "hsla(30, 8%, 15%, 0.6)",
+    pillBorder: "hsla(38, 12%, 40%, 0.1)",
+    pillText: "hsla(38, 10%, 75%, 0.45)",
+    dotPulse: "hsl(38, 40%, 55%)",
+    bg:       "hsl(0, 0%, 4%)",
   };
   if (m === "dark") return {
     wordmark: "hsla(38, 15%, 88%, 0.9)",
@@ -336,13 +336,13 @@ export default function HologramOsPage() {
             <div className="absolute inset-0 flex flex-col items-center justify-center px-8">
               <div className="text-center max-w-2xl space-y-[2.5vh] animate-fade-in" style={{ pointerEvents: "auto" }}>
                 <p
-                  className="tracking-[0.45em] uppercase transition-colors duration-700"
+                  className="tracking-[0.25em] uppercase transition-colors duration-700"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
-                    color: "hsla(0, 0%, 100%, 0.85)",
-                    fontWeight: 300,
-                    fontSize: "clamp(11px, 0.8vw, 13px)",
-                    letterSpacing: "0.3em",
+                    color: P.greeting,
+                    fontWeight: 400,
+                    fontSize: "clamp(18px, 2vw, 28px)",
+                    letterSpacing: "0.25em",
                   }}
                 >
                   {greeting}
