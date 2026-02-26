@@ -1,11 +1,9 @@
 /**
- * DesktopOsSidebar — Minimal, High-Contrast Navigation
- * ═════════════════════════════════════════════════════
+ * DesktopOsSidebar — Modular Resizable Navigation
+ * ═════════════════════════════════════════════════
  *
- * Simplified to 3 core familiar items: Home, Apps, Profile.
- * Higher contrast for visibility against dark backgrounds.
- * New Chat button at top, Settings at bottom.
- * Keyboard shortcut hints displayed inline.
+ * Uses the modular panel system for drag-to-resize.
+ * Collapses below a threshold width automatically.
  */
 
 import { useCallback } from "react";
@@ -14,6 +12,7 @@ import {
   Home, LayoutGrid, User,
   Settings, ChevronLeft, ChevronRight, HelpCircle, Inbox, PanelLeftOpen,
 } from "lucide-react";
+import type { ModularPanelResult } from "@/modules/hologram-ui/hooks/useModularPanel";
 
 /* ── Palette — higher contrast, warm whites ────────────────── */
 const S = {
@@ -31,11 +30,9 @@ const S = {
 /* ── OS-aware modifier key ──────────────────────────────────── */
 function detectMac(): boolean {
   if (typeof navigator === "undefined") return false;
-  // Modern API first
   if ("userAgentData" in navigator && (navigator as any).userAgentData?.platform) {
     return /mac/i.test((navigator as any).userAgentData.platform);
   }
-  // Fallback: check both platform and userAgent
   return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent);
 }
 const MOD_KEY = detectMac() ? "⌘" : "Ctrl";
@@ -63,7 +60,7 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   path: string;
-  shortcut: string; // display hint
+  shortcut: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -72,10 +69,12 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Profile",  icon: User,       path: "/your-space",       shortcut: "" },
 ];
 
+/** Width below which the sidebar auto-collapses to icon-only mode */
+const COLLAPSE_THRESHOLD = 120;
+
 /* ── Props ─────────────────────────────────────────────────── */
 interface DesktopOsSidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
+  panel: ModularPanelResult;
   onNewChat: () => void;
   onOpenChat: () => void;
   onReplayGuide?: () => void;
@@ -84,8 +83,7 @@ interface DesktopOsSidebarProps {
 
 /* ── Component ─────────────────────────────────────────────── */
 export default function DesktopOsSidebar({
-  collapsed,
-  onToggle,
+  panel,
   onNewChat,
   onReplayGuide,
   hintOpacity,
@@ -98,21 +96,23 @@ export default function DesktopOsSidebar({
     [location.pathname],
   );
 
-  const w = collapsed ? "w-[68px]" : "w-[240px]";
+  const collapsed = panel.width < COLLAPSE_THRESHOLD;
 
   return (
     <aside
-      className={`flex flex-col h-full ${w} transition-all duration-300 ease-out shrink-0 ${collapsed ? "group/sidebar" : ""}`}
+      className={`flex flex-col h-full shrink-0 relative ${collapsed ? "group/sidebar" : ""}`}
       style={{
+        width: `${panel.width}px`,
         background: S.bg,
         borderRight: `1px solid ${S.border}`,
+        transition: panel.isResizing ? "none" : "width 300ms ease-out",
       }}
     >
       {/* ── Top: Logo + collapse toggle ────────────────────────── */}
       <div className="flex items-center justify-between px-3 pt-5 pb-6">
         {!collapsed ? (
           <>
-            <div className="flex items-center gap-2.5 px-2 py-1">
+            <div className="flex items-center gap-2.5 px-2 py-1 overflow-hidden">
               {/* Geometric H monogram */}
               <svg
                 width="28" height="28" viewBox="0 0 28 28"
@@ -125,7 +125,7 @@ export default function DesktopOsSidebar({
                 <line x1="20" y1="7" x2="20" y2="21" />
                 <line x1="8" y1="14" x2="20" y2="14" />
               </svg>
-              {/* SVG wordmark — matches main page geometric logo */}
+              {/* SVG wordmark */}
               <svg
                 viewBox="0 0 360 40"
                 className="select-none"
@@ -138,27 +138,19 @@ export default function DesktopOsSidebar({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  {/* H */}
                   <line x1="10" y1="6" x2="10" y2="34" />
                   <line x1="30" y1="6" x2="30" y2="34" />
                   <line x1="10" y1="20" x2="30" y2="20" />
-                  {/* O */}
                   <ellipse cx="60" cy="20" rx="14" ry="14" />
-                  {/* L */}
                   <line x1="94" y1="6" x2="94" y2="34" />
                   <line x1="94" y1="34" x2="114" y2="34" />
-                  {/* O */}
                   <ellipse cx="144" cy="20" rx="14" ry="14" />
-                  {/* G */}
                   <path d="M 198 12 A 14 14 0 1 0 198 28 L 198 20 L 188 20" />
-                  {/* R */}
                   <line x1="222" y1="6" x2="222" y2="34" />
                   <path d="M 222 6 L 236 6 A 7 7 0 0 1 236 20 L 222 20" />
                   <line x1="232" y1="20" x2="242" y2="34" />
-                  {/* A */}
                   <line x1="266" y1="34" x2="280" y2="6" />
                   <line x1="280" y1="6" x2="294" y2="34" />
-                  {/* M */}
                   <line x1="318" y1="34" x2="318" y2="6" />
                   <line x1="318" y1="6" x2="334" y2="22" />
                   <line x1="334" y1="22" x2="350" y2="6" />
@@ -167,7 +159,7 @@ export default function DesktopOsSidebar({
               </svg>
             </div>
             <button
-              onClick={onToggle}
+              onClick={() => panel.setWidth(68)}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/[0.06]"
               style={{ color: S.textMuted }}
               title={`Collapse sidebar (${MOD_KEY} B)`}
@@ -177,12 +169,11 @@ export default function DesktopOsSidebar({
           </>
         ) : (
           <button
-            onClick={onToggle}
+            onClick={() => panel.setWidth(240)}
             className="group/logo w-10 h-10 mx-auto rounded-xl flex items-center justify-center transition-all duration-200 hover:bg-white/[0.08] hover:scale-105 relative"
             style={{ background: "transparent", border: `1px solid ${S.border}` }}
             title={`Expand sidebar (${MOD_KEY} B)`}
           >
-            {/* H monogram — default */}
             <svg
               width="20" height="20" viewBox="0 0 28 28"
               fill="none" stroke={S.gold} strokeWidth="1.3"
@@ -193,7 +184,6 @@ export default function DesktopOsSidebar({
               <line x1="20" y1="7" x2="20" y2="21" />
               <line x1="8" y1="14" x2="20" y2="14" />
             </svg>
-            {/* Expand icon — on hover */}
             <PanelLeftOpen
               className="w-5 h-5 absolute transition-opacity duration-200 opacity-0 group-hover/sidebar:opacity-100"
               strokeWidth={1.4}
@@ -204,7 +194,7 @@ export default function DesktopOsSidebar({
       </div>
 
       {/* ── Core Navigation — 3 items ─────────────────────────── */}
-      <div className="flex-1 px-2.5 space-y-1">
+      <div className="flex-1 px-2.5 space-y-1 overflow-hidden">
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.path);
           return (
@@ -233,14 +223,14 @@ export default function DesktopOsSidebar({
                 style={{ color: active ? S.gold : S.textMuted }}
               />
               {!collapsed && (
-                <span className="text-[14px] font-light">{item.label}</span>
+                <span className="text-[14px] font-light whitespace-nowrap">{item.label}</span>
               )}
             </button>
           );
         })}
       </div>
 
-      {/* ── Bottom: Settings + Expand ─────────────────────────── */}
+      {/* ── Bottom: Settings + Help ───────────────────────────── */}
       <div
         className="px-2.5 py-4 space-y-1"
         style={{ borderTop: `1px solid ${S.border}` }}
@@ -254,7 +244,7 @@ export default function DesktopOsSidebar({
             style={{ color: S.text, fontFamily: S.font }}
             onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-            title={collapsed ? `Help (${MOD_KEY} /)` : undefined}  
+            title={collapsed ? `Help (${MOD_KEY} /)` : undefined}
           >
             <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
             {!collapsed && (
@@ -266,7 +256,7 @@ export default function DesktopOsSidebar({
           </button>
         )}
         <button
-          onClick={() => {/* TODO: open messages/alerts */}}
+          onClick={() => {}}
           className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
             collapsed ? "justify-center px-0 py-3" : "px-3.5 py-3"
           }`}
@@ -298,8 +288,19 @@ export default function DesktopOsSidebar({
             <span className="text-[14px] font-light">Settings</span>
           )}
         </button>
-
       </div>
+
+      {/* ── Resize handle — right edge ──────────────────────────── */}
+      <div
+        {...panel.resizeHandleProps}
+        className="hologram-resize-handle absolute top-0 right-0 h-full"
+        style={{
+          ...panel.resizeHandleProps.style,
+          width: "6px",
+          transform: "translateX(50%)",
+          zIndex: 50,
+        }}
+      />
     </aside>
   );
 }
