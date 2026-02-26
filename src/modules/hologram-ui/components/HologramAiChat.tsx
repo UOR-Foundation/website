@@ -49,6 +49,7 @@ import {
 } from "@/modules/ring-core/neuro-symbolic";
 import AnnotatedResponse from "@/components/reasoning/EpistemicBadge";
 import TrustScoreBar from "@/components/reasoning/TrustScoreBar";
+import TrustTrendBar from "@/components/reasoning/TrustTrendBar";
 import { saveReasoningProof } from "@/modules/ring-core/proof-persistence";
 import {
   planPGI,
@@ -995,6 +996,9 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         </div>
 
         {/* Skill bar removed — cleaner, less clutter */}
+
+        {/* ── Trust Trend (appears after 2+ graded responses) ────────── */}
+        <TrustTrendBar messages={messages} />
 
         {/* ── Messages / Welcome ─────────────────────────────────────── */}
         <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-5 py-5 lumen-scroll">
