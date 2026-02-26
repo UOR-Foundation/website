@@ -818,15 +818,13 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         className="fixed top-0 right-0 bottom-0 z-[60] flex flex-col pointer-events-auto"
         style={{
           width: "min(420px, 85vw)",
-          background: "hsla(25, 8%, 6%, 0.72)",
-          backdropFilter: "blur(40px) saturate(0.7)",
-          WebkitBackdropFilter: "blur(40px) saturate(0.7)",
-          borderLeft: "1px solid hsla(38, 15%, 30%, 0.1)",
+          background: "transparent",
+          borderLeft: "1px solid hsla(38, 15%, 40%, 0.08)",
           animation: "lumen-slide-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both",
         }}
       >
         {/* ── Header — whisper-quiet ────────────────────────────────── */}
-        <div className="flex items-center justify-between px-5 py-3.5 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-3.5 flex-shrink-0" style={{ background: "hsla(25, 10%, 8%, 0.75)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderBottom: "1px solid hsla(38, 15%, 30%, 0.08)" }}>
           <div className="flex items-center gap-2.5">
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center"
@@ -978,10 +976,11 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           <div
             className="rounded-2xl overflow-visible transition-all"
             style={{
-              background: "hsla(30, 8%, 10%, 0.55)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid hsla(38, 15%, 30%, 0.18)",
+              background: "hsla(25, 10%, 8%, 0.85)",
+              backdropFilter: "blur(30px) saturate(1.2)",
+              WebkitBackdropFilter: "blur(30px) saturate(1.2)",
+              border: "1px solid hsla(38, 15%, 30%, 0.2)",
+              boxShadow: "0 4px 20px hsla(25, 10%, 5%, 0.4)",
             }}
           >
             {/* Text input area */}
@@ -1166,17 +1165,19 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
             style={
               isUser
                  ? {
-                    background: "hsla(38, 40%, 40%, 0.18)",
-                    backdropFilter: "blur(16px)",
-                    WebkitBackdropFilter: "blur(16px)",
-                    border: `1px solid hsla(38, 40%, 35%, 0.2)`,
+                    background: "hsla(38, 40%, 40%, 0.35)",
+                    backdropFilter: "blur(24px) saturate(1.2)",
+                    WebkitBackdropFilter: "blur(24px) saturate(1.2)",
+                    border: `1px solid hsla(38, 40%, 35%, 0.3)`,
                     borderBottomRightRadius: "6px",
+                    boxShadow: "0 2px 12px hsla(25, 10%, 5%, 0.3)",
                   }
                 : {
-                    background: "hsla(30, 8%, 8%, 0.45)",
-                    backdropFilter: "blur(16px)",
-                    WebkitBackdropFilter: "blur(16px)",
-                    border: "1px solid hsla(38, 15%, 25%, 0.1)",
+                    background: "hsla(25, 10%, 8%, 0.82)",
+                    backdropFilter: "blur(24px) saturate(1.2)",
+                    WebkitBackdropFilter: "blur(24px) saturate(1.2)",
+                    border: "1px solid hsla(38, 15%, 25%, 0.15)",
+                    boxShadow: "0 2px 12px hsla(25, 10%, 5%, 0.3)",
                   }
             }
           >
