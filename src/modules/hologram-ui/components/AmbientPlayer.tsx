@@ -523,7 +523,20 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
             }}
           >
             {/* Frequency visualizer ring */}
-            {playing && <FrequencyRing analyserRef={analyserRef} hue={station.color} />}
+            <AnimatePresence>
+              {playing && (
+                <motion.div
+                  key="freq-ring"
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute inset-0 pointer-events-none"
+                >
+                  <FrequencyRing analyserRef={analyserRef} hue={station.color} />
+                </motion.div>
+              )}
+            </AnimatePresence>
             {/* Drag grip */}
             <div
               className="flex items-center justify-center pl-2 pr-0.5 py-2.5 cursor-grab active:cursor-grabbing"
