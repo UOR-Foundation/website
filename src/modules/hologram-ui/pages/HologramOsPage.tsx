@@ -492,7 +492,7 @@ export default function HologramOsPage() {
 
             {/* Day Progress Ring — bottom right, draggable */}
             <div
-              className="absolute bottom-[3vh] right-6 animate-fade-in flex items-center gap-2 transition-all duration-300 ease-out"
+              className="absolute bottom-[3vh] right-12 animate-fade-in flex items-center gap-2 transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
