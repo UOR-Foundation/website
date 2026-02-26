@@ -105,21 +105,38 @@ interface AmbientPlayerProps {
 export default function AmbientPlayer({ lumenOffset = 0 }: AmbientPlayerProps) {
   const [expanded, setExpanded] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [station, setStation] = useState<AmbientStation>(STATIONS[0]);
   const [volume, setVolume] = useState(0.4);
   const [muted, setMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pillRef = useRef<HTMLDivElement>(null);
 
-  // Initialize audio element
+  // Initialize audio element — no crossOrigin (SomaFM doesn't send CORS headers)
   useEffect(() => {
     const audio = new Audio();
     audio.volume = volume;
-    audio.crossOrigin = "anonymous";
+    audio.preload = "none";
     audioRef.current = audio;
+
+    const onPlaying = () => { setLoading(false); setPlaying(true); };
+    const onWaiting = () => setLoading(true);
+    const onError = () => { setLoading(false); setPlaying(false); };
+    const onEnded = () => { setPlaying(false); };
+
+    audio.addEventListener("playing", onPlaying);
+    audio.addEventListener("waiting", onWaiting);
+    audio.addEventListener("error", onError);
+    audio.addEventListener("ended", onEnded);
+
     return () => {
+      audio.removeEventListener("playing", onPlaying);
+      audio.removeEventListener("waiting", onWaiting);
+      audio.removeEventListener("error", onError);
+      audio.removeEventListener("ended", onEnded);
       audio.pause();
-      audio.src = "";
+      audio.removeAttribute("src");
+      audio.load();
     };
   }, []);
 
@@ -134,10 +151,25 @@ export default function AmbientPlayer({ lumenOffset = 0 }: AmbientPlayerProps) {
     (s: AmbientStation) => {
       const audio = audioRef.current;
       if (!audio) return;
+      // Stop current stream first
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+
       setStation(s);
-      audio.src = s.streamUrl;
-      audio.play().catch(() => {});
-      setPlaying(true);
+      setLoading(true);
+      setPlaying(false);
+
+      // Small delay to ensure clean transition
+      setTimeout(() => {
+        audio.src = s.streamUrl;
+        audio.load();
+        audio.play().catch((err) => {
+          console.warn("Ambient playback blocked:", err);
+          setLoading(false);
+          setPlaying(false);
+        });
+      }, 50);
     },
     [],
   );
@@ -145,16 +177,22 @@ export default function AmbientPlayer({ lumenOffset = 0 }: AmbientPlayerProps) {
   const togglePlayback = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (playing) {
+    if (playing || loading) {
       audio.pause();
-      audio.src = ""; // disconnect stream
+      audio.removeAttribute("src");
+      audio.load();
       setPlaying(false);
+      setLoading(false);
     } else {
+      setLoading(true);
       audio.src = station.streamUrl;
-      audio.play().catch(() => {});
-      setPlaying(true);
+      audio.load();
+      audio.play().catch((err) => {
+        console.warn("Ambient playback blocked:", err);
+        setLoading(false);
+      });
     }
-  }, [playing, station]);
+  }, [playing, loading, station]);
 
   const selectStation = useCallback(
     (s: AmbientStation) => {
@@ -180,17 +218,17 @@ export default function AmbientPlayer({ lumenOffset = 0 }: AmbientPlayerProps) {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === "a" || e.key === "A")) {
         e.preventDefault();
-        if (playing) {
+        if (playing || loading) {
           togglePlayback();
         } else {
-          setExpanded((p) => !p);
-          if (!playing) playStation(station);
+          setExpanded(true);
+          playStation(station);
         }
       }
     };
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
-  }, [playing, togglePlayback, playStation, station]);
+  }, [playing, loading, togglePlayback, playStation, station]);
 
   return (
     <div
@@ -241,7 +279,7 @@ export default function AmbientPlayer({ lumenOffset = 0 }: AmbientPlayerProps) {
             </div>
 
             {/* Now Playing */}
-            {playing && (
+            {(playing || loading) && (
               <div
                 className="mx-3 mb-2 px-3 py-2.5 rounded-xl flex items-center gap-3"
                 style={{ background: `hsla(${station.color}, 30%, 30%, 0.15)` }}
@@ -374,7 +412,7 @@ export default function AmbientPlayer({ lumenOffset = 0 }: AmbientPlayerProps) {
             }}
             title="Ambient music (⌘⇧A)"
           >
-            {playing ? (
+            {playing || loading ? (
               <>
                 {/* Breathing equalizer */}
                 <div className="flex items-end gap-[2px] h-3.5">
@@ -384,14 +422,16 @@ export default function AmbientPlayer({ lumenOffset = 0 }: AmbientPlayerProps) {
                       className="w-[2px] rounded-full"
                       style={{
                         height: `${h * 14}px`,
-                        background: `hsla(${station.color}, 50%, 60%, 0.8)`,
-                        animation: `ambient-eq ${0.6 + i * 0.15}s ease-in-out infinite alternate`,
+                        background: `hsla(${station.color}, 50%, 60%, ${loading ? 0.4 : 0.8})`,
+                        animation: loading
+                          ? `ambient-eq 0.8s ease-in-out infinite alternate`
+                          : `ambient-eq ${0.6 + i * 0.15}s ease-in-out infinite alternate`,
                       }}
                     />
                   ))}
                 </div>
                 <span className="text-[12px] font-medium" style={{ color: P.text }}>
-                  {station.name}
+                  {loading ? "Connecting…" : station.name}
                 </span>
               </>
             ) : (
