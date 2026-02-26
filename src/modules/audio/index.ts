@@ -27,3 +27,7 @@ export { analyzeFrame, frameCurvature, frameCatastrophe } from "./frame-analyzer
 // Audio engine (HLS + native streaming)
 export { AudioEngine, getAudioEngine } from "./engine";
 export type { AudioEngineConfig } from "./engine";
+
+// Lenses
+export { HarmonicLens } from "./lenses/harmonic-lens";
+export type { HarmonicLensFrame } from "./lenses/harmonic-lens";
