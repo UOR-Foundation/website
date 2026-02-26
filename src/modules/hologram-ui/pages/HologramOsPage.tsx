@@ -150,25 +150,34 @@ function getLumenSubtitle(): string {
 function TypewriterText({ text, delay = 2400, speed = 45 }: { text: string; delay?: number; speed?: number }) {
   const [displayed, setDisplayed] = useState("");
   const [started, setStarted] = useState(false);
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     setDisplayed("");
     setStarted(false);
+    setDone(false);
     const t = setTimeout(() => setStarted(true), delay);
     return () => clearTimeout(t);
   }, [text, delay]);
 
   useEffect(() => {
     if (!started || displayed.length >= text.length) return;
-    const t = setTimeout(() => setDisplayed(text.slice(0, displayed.length + 1)), speed);
+    const t = setTimeout(() => {
+      const next = text.slice(0, displayed.length + 1);
+      setDisplayed(next);
+      if (next.length >= text.length) setDone(true);
+    }, speed);
     return () => clearTimeout(t);
   }, [started, displayed, text, speed]);
 
   return (
     <>
       {displayed}
-      {started && displayed.length < text.length && (
+      {started && !done && (
         <span style={{ opacity: 0.5, animation: "blink-caret 0.8s step-end infinite" }}>▎</span>
+      )}
+      {done && (
+        <span style={{ animation: "blink-caret 0.8s step-end 2, fade-out 0.6s ease-out 1.6s forwards", opacity: 0.5 }}>▎</span>
       )}
     </>
   );
