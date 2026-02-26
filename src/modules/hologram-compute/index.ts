@@ -24,4 +24,5 @@ export type {
   ComputeJob,
   ComputeJobResult,
   ComputeProvider,
+  CpuLutBenchmarkResult,
 } from "./providers";

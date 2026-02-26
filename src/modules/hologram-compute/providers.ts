@@ -24,7 +24,7 @@
  */
 
 import { getHologramGpu, type GpuDeviceInfo, type GpuBenchmarkResult } from "@/modules/uns/core/hologram/gpu";
-import { getLutEngine, type LutApplyResult, type CriticalIdentityProof, type LutEngineInfo } from "@/modules/uns/core/hologram/gpu";
+import { getLutEngine, type LutApplyResult, type CriticalIdentityProof, type LutEngineInfo, type LutName } from "@/modules/uns/core/hologram/gpu";
 
 // ── Provider Types ──────────────────────────────────────────────────────────
 
@@ -43,6 +43,21 @@ export interface ComputeCapabilities {
   readonly estimatedBandwidthGBps: number;
 }
 
+/** CPU-only LUT benchmark result (always available). */
+export interface CpuLutBenchmarkResult {
+  readonly "@type": "uor:CpuLutBenchmark";
+  /** Millions of LUT ops per second. */
+  readonly lutMopsPerSec: number;
+  /** Throughput in GB/s (1 byte read + 1 byte write per op). */
+  readonly lutThroughputGBps: number;
+  /** Tables benchmarked. */
+  readonly tablesTested: number;
+  /** Total elements processed. */
+  readonly totalElements: number;
+  /** Wall-clock time in ms. */
+  readonly timeMs: number;
+}
+
 /** A snapshot of provider health + metrics. */
 export interface ProviderSnapshot {
   readonly kind: ProviderKind;
@@ -53,6 +68,7 @@ export interface ProviderSnapshot {
   readonly deviceInfo: GpuDeviceInfo | null;
   readonly lutInfo: LutEngineInfo | null;
   readonly benchmarkResult: GpuBenchmarkResult | null;
+  readonly cpuBenchmarkResult: CpuLutBenchmarkResult | null;
   readonly criticalIdentity: CriticalIdentityProof | null;
   readonly lastUpdated: string;
   /** Estimated cost per GFLOP-second (0 for local). */
@@ -120,6 +136,9 @@ export class LocalGpuProvider implements ComputeProvider {
       estimatedBandwidthGBps: 0,
     };
 
+    // Run CPU LUT benchmark immediately on init
+    const cpuBench = this._runCpuLutBenchmark(lut);
+
     this._snapshot = {
       kind: "local",
       id: this.id,
@@ -129,10 +148,11 @@ export class LocalGpuProvider implements ComputeProvider {
       deviceInfo,
       lutInfo,
       benchmarkResult: null,
+      cpuBenchmarkResult: cpuBench,
       criticalIdentity,
       lastUpdated: new Date().toISOString(),
       costPerGflopS: 0,
-      estimatedTokPerSec: 0,
+      estimatedTokPerSec: cpuBench ? Math.round(cpuBench.lutMopsPerSec * 0.5) : 0,
     };
 
     return this._snapshot;
@@ -143,30 +163,83 @@ export class LocalGpuProvider implements ComputeProvider {
     return this._snapshot;
   }
 
+  /** CPU-only LUT throughput benchmark — always works, no GPU needed. */
+  private _runCpuLutBenchmark(lut: ReturnType<typeof getLutEngine>): CpuLutBenchmarkResult {
+    const tables: LutName[] = ["neg", "bnot", "succ", "pred", "neg_bnot", "double", "square"];
+    const elementCount = 65536; // 64KB per table
+    const input = new Uint8Array(elementCount);
+    // Fill with deterministic pattern
+    for (let i = 0; i < elementCount; i++) input[i] = i & 0xff;
+
+    const start = performance.now();
+    let totalOps = 0;
+    for (const name of tables) {
+      // Use CPU apply path (synchronous TypedArray indexing)
+      const table = lut.getTable(name);
+      if (!table) continue;
+      const out = new Uint8Array(elementCount);
+      for (let i = 0; i < elementCount; i++) {
+        out[i] = table[input[i]];
+      }
+      totalOps += elementCount;
+    }
+    const elapsed = performance.now() - start;
+
+    const mops = (totalOps / 1e6) / (elapsed / 1000);
+    // Each op = 1 byte read from table + 1 byte write = 2 bytes transferred
+    const throughputGBps = (totalOps * 2) / (elapsed / 1000) / 1e9;
+
+    return {
+      "@type": "uor:CpuLutBenchmark",
+      lutMopsPerSec: Math.round(mops * 10) / 10,
+      lutThroughputGBps: Math.round(throughputGBps * 100) / 100,
+      tablesTested: tables.length,
+      totalElements: totalOps,
+      timeMs: Math.round(elapsed * 100) / 100,
+    };
+  }
+
   async benchmark(): Promise<GpuBenchmarkResult | null> {
     const gpu = getHologramGpu();
+    const lut = getLutEngine();
     await gpu.init();
-    if (!gpu.isReady) return null;
 
-    const result = await gpu.benchmark();
+    // Always re-run CPU benchmark
+    const cpuBench = this._runCpuLutBenchmark(lut);
 
-    // Update snapshot with benchmark data
+    if (gpu.isReady) {
+      const result = await gpu.benchmark();
+      if (this._snapshot) {
+        this._snapshot = {
+          ...this._snapshot,
+          benchmarkResult: result,
+          cpuBenchmarkResult: cpuBench,
+          capabilities: {
+            ...this._snapshot.capabilities,
+            estimatedGflops: result.matmulGflops,
+            estimatedBandwidthGBps: result.bandwidthGBps,
+          },
+          estimatedTokPerSec: Math.round(result.matmulGflops * 8),
+          lastUpdated: new Date().toISOString(),
+        };
+      }
+      return result;
+    }
+
+    // No GPU — update snapshot with CPU-only results
     if (this._snapshot) {
       this._snapshot = {
         ...this._snapshot,
-        benchmarkResult: result,
+        cpuBenchmarkResult: cpuBench,
         capabilities: {
           ...this._snapshot.capabilities,
-          estimatedGflops: result.matmulGflops,
-          estimatedBandwidthGBps: result.bandwidthGBps,
+          estimatedBandwidthGBps: cpuBench.lutThroughputGBps,
         },
-        // Rough inference estimate: ~1 tok/sec per GFLOP for small models
-        estimatedTokPerSec: Math.round(result.matmulGflops * 8),
+        estimatedTokPerSec: Math.round(cpuBench.lutMopsPerSec * 0.5),
         lastUpdated: new Date().toISOString(),
       };
     }
-
-    return result;
+    return null;
   }
 
   destroy(): void {
@@ -192,7 +265,7 @@ export class CloudProvider implements ComputeProvider {
         matmul: false, lutApply: false, inference: false, customShader: false,
         maxBufferBytes: 0, maxWorkgroups: 0, estimatedGflops: 0, estimatedBandwidthGBps: 0,
       },
-      deviceInfo: null, lutInfo: null, benchmarkResult: null, criticalIdentity: null,
+      deviceInfo: null, lutInfo: null, benchmarkResult: null, cpuBenchmarkResult: null, criticalIdentity: null,
       lastUpdated: new Date().toISOString(),
       costPerGflopS: 0,
       estimatedTokPerSec: 0,
@@ -221,7 +294,7 @@ export class PeerProvider implements ComputeProvider {
         matmul: false, lutApply: false, inference: false, customShader: false,
         maxBufferBytes: 0, maxWorkgroups: 0, estimatedGflops: 0, estimatedBandwidthGBps: 0,
       },
-      deviceInfo: null, lutInfo: null, benchmarkResult: null, criticalIdentity: null,
+      deviceInfo: null, lutInfo: null, benchmarkResult: null, cpuBenchmarkResult: null, criticalIdentity: null,
       lastUpdated: new Date().toISOString(),
       costPerGflopS: 0,
       estimatedTokPerSec: 0,
