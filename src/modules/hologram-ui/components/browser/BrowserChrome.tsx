@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { ArrowLeft, ArrowRight, RotateCw, X, ExternalLink, Loader2, Search, Sparkles, Clock, Monitor, BookOpen } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCw, X, ExternalLink, Loader2, Search, Sparkles, Clock, Globe, BookOpen, ShieldCheck, ShieldOff } from "lucide-react";
 import { P, isUrl } from "./browser-palette";
 import { type BrowserNavState, type BrowserNavActions } from "./useBrowserNavigation";
 
@@ -39,8 +39,8 @@ interface BrowserChromeProps {
 }
 
 export default function BrowserChrome({ state, actions, onClose, onSendToLumen }: BrowserChromeProps) {
-  const { url, loading, page, historyIdx, history, showHistory, viewMode } = state;
-  const { setUrl, goBack, goForward, navigate, setShowHistory, toggleViewMode, inputRef } = actions;
+  const { url, loading, page, historyIdx, history, showHistory, viewMode, popupsBlocked } = state;
+  const { setUrl, goBack, goForward, navigate, setShowHistory, toggleViewMode, togglePopups, inputRef } = actions;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,8 +104,22 @@ export default function BrowserChrome({ state, actions, onClose, onSendToLumen }
       )}
 
       {page && (
-        <IconBtn onClick={toggleViewMode} title={viewMode === "fidelity" ? "Switch to Reader mode" : "Switch to Fidelity mode"} active={viewMode === "reader"}>
-          {viewMode === "fidelity" ? <BookOpen className="w-3 h-3" /> : <Monitor className="w-3 h-3" />}
+        <IconBtn
+          onClick={toggleViewMode}
+          title={`Mode: ${viewMode === "live" ? "Live (interactive)" : viewMode === "fidelity" ? "Fidelity (static)" : "Reader (markdown)"} · Click to cycle`}
+          active={viewMode !== "live"}
+        >
+          {viewMode === "live" ? <Globe className="w-3 h-3" /> : viewMode === "fidelity" ? <BookOpen className="w-3 h-3" /> : <BookOpen className="w-3 h-3" />}
+        </IconBtn>
+      )}
+
+      {page && viewMode === "live" && (
+        <IconBtn
+          onClick={togglePopups}
+          title={popupsBlocked ? "Popups blocked · Click to allow" : "Popups allowed · Click to block"}
+          active={!popupsBlocked}
+        >
+          {popupsBlocked ? <ShieldCheck className="w-3 h-3" /> : <ShieldOff className="w-3 h-3" />}
         </IconBtn>
       )}
 
