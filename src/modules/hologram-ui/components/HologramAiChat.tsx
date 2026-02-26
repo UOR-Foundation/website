@@ -1616,7 +1616,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
           >
             {isUser ? (
               <p
-                className="text-[15px] leading-[1.7] whitespace-pre-wrap"
+                className="text-base leading-[1.75] whitespace-pre-wrap"
                 style={{ color: P.text, fontFamily: P.font }}
               >
                 {content}
@@ -1633,7 +1633,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
               </div>
             ) : (
               <div
-                className={`text-[15px] leading-[1.8] prose prose-sm prose-invert max-w-none ${isStreaming ? "streaming-reveal" : ""}`}
+                className={`text-base leading-[1.85] prose prose-invert max-w-none ${isStreaming ? "streaming-reveal" : ""}`}
                 style={{
                   color: "hsl(30, 12%, 78%)",
                   fontFamily: P.font,
@@ -1650,7 +1650,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                   components={{
                     h1: ({ children }) => (
                       <h1
-                        className="text-lg font-medium tracking-wide mt-4 mb-2"
+                        className="text-xl font-medium tracking-wide mt-5 mb-2.5"
                         style={{ fontFamily: P.fontDisplay, color: P.text }}
                       >
                         {children}
@@ -1658,7 +1658,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                     ),
                     h2: ({ children }) => (
                       <h2
-                        className="text-base font-medium tracking-wide mt-3 mb-1.5"
+                        className="text-lg font-medium tracking-wide mt-4 mb-2"
                         style={{ fontFamily: P.fontDisplay, color: P.text }}
                       >
                         {children}
@@ -1666,14 +1666,14 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                     ),
                     h3: ({ children }) => (
                       <h3
-                        className="text-sm font-medium tracking-wider uppercase mt-3 mb-1"
+                        className="text-base font-medium tracking-wider uppercase mt-4 mb-1.5"
                         style={{ color: P.goldMuted, letterSpacing: "0.1em" }}
                       >
                         {children}
                       </h3>
                     ),
                     p: ({ children }) => (
-                      <p className="mb-2.5 last:mb-0" style={{ lineHeight: "1.8" }}>{children}</p>
+                      <p className="mb-3 last:mb-0" style={{ lineHeight: "1.85" }}>{children}</p>
                     ),
                     strong: ({ children }) => (
                       <strong style={{ color: P.text, fontWeight: 600 }}>{children}</strong>
@@ -1682,20 +1682,20 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                       <em style={{ color: P.goldLight, fontStyle: "italic" }}>{children}</em>
                     ),
                     ul: ({ children }) => (
-                      <ul className="space-y-1.5 my-2.5 pl-1" style={{ listStyle: "none" }}>{children}</ul>
+                      <ul className="space-y-2 my-3 pl-1" style={{ listStyle: "none" }}>{children}</ul>
                     ),
                     ol: ({ children }) => (
-                      <ol className="space-y-1.5 my-2.5 pl-1" style={{ listStyle: "none", counterReset: "item" }}>{children}</ol>
+                      <ol className="space-y-2 my-3 pl-1" style={{ listStyle: "none", counterReset: "item" }}>{children}</ol>
                     ),
                     li: ({ children }) => (
-                      <li className="flex gap-2 items-start text-[15px]" style={{ color: "hsl(30, 12%, 78%)" }}>
+                      <li className="flex gap-2.5 items-start text-base" style={{ color: "hsl(30, 12%, 78%)" }}>
                         <span
-                          className="flex-shrink-0 mt-[7px]"
+                          className="flex-shrink-0 mt-[9px]"
                           style={{ color: P.goldMuted, fontSize: "6px" }}
                         >
                           ◆
                         </span>
-                        <span>{children}</span>
+                        <span style={{ lineHeight: "1.8" }}>{children}</span>
                       </li>
                     ),
                     blockquote: ({ children }) => (
