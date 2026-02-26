@@ -113,6 +113,7 @@ const GodConjecturePage = lazy(() => import("@/modules/consciousness/pages/GodCo
 const TrustGraphPage = lazy(() => import("@/modules/trust-graph/pages/TrustGraphPage"));
 const HologramUiPage = lazy(() => import("@/modules/hologram-ui/pages/HologramUiPage"));
 const HologramOsPage = lazy(() => import("@/modules/hologram-ui/pages/HologramOsPage"));
+const HologramInstallPage = lazy(() => import("@/modules/hologram-ui/pages/HologramInstallPage"));
 const HologramConsolePage = lazy(() => import("@/modules/hologram-ui/pages/HologramConsolePage"));
 const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
 const MetaObserverPage = lazy(() => import("@/modules/observable/pages/MetaObserverPage"));
@@ -255,6 +256,8 @@ const App = () => {
             <Route path="/trust-graph" element={<TrustGraphPage />} />
             <Route path="/hologram-ui" element={<HologramUiPage />} />
             <Route path="/hologram-os" element={<HologramOsPage />} />
+            <Route path="/hologram" element={<HologramOsPage />} />
+            <Route path="/hologram-install" element={<HologramInstallPage />} />
             <Route path="/hologram-console" element={<HologramConsolePage />} />
             <Route path="/code-kg" element={<CodeKgPage />} />
             <Route path="/meta-observer" element={<MetaObserverPage />} />
