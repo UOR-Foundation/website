@@ -3,7 +3,7 @@
  *
  * Content-addressable Braille identifiers.
  *
- * @see spec/src/namespaces/address.rs
+ * @see foundation/src/kernel/address.rs
  * @namespace u/
  */
 
@@ -15,6 +15,8 @@
 export interface Glyph {
   /** The Unicode Braille character. */
   character(): string;
+  /** Unicode codepoint (U+2800–U+28FF). */
+  codepoint(): number;
   /** The byte value [0, 255] this glyph encodes. */
   byteValue(): number;
 }
