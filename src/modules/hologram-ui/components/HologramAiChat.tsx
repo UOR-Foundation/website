@@ -591,8 +591,12 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       const skillId = activeSkill?.id || selectedPersona.defaultSkillId;
       const isReasoningSkill = skillId === "reason" || skillId === "research" || skillId === "debug";
 
-      // DEDUCTIVE: Use accelerator's memoized scaffold (L1 cache)
-      const scaffold = isReasoningSkill ? resolved.scaffold : null;
+      // DEDUCTIVE: Build scaffold for ALL responses (enables universal CoT).
+      // Reasoning skills use the accelerator's memoized scaffold; all others
+      // get a fresh lightweight scaffold so every reply is claim-decomposed.
+      const scaffold = isReasoningSkill
+        ? resolved.scaffold
+        : buildScaffold(text, 0);
 
       // PGI: Use accelerator's pre-resolved lookup if available, else fresh
       let pgiPlan: Awaited<ReturnType<typeof planPGI>> | null = null;
