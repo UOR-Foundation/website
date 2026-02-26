@@ -12,7 +12,7 @@ import { useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, User,
-  Settings, ChevronLeft, ChevronRight, HelpCircle, Inbox,
+  Settings, ChevronLeft, ChevronRight, HelpCircle, Inbox, PanelLeftOpen,
 } from "lucide-react";
 
 /* ── Palette — higher contrast, warm whites ────────────────── */
@@ -141,23 +141,13 @@ export default function DesktopOsSidebar({
         ) : (
           <button
             onClick={onToggle}
-            className="group/logo w-10 h-10 mx-auto rounded-xl flex items-center justify-center transition-colors hover:bg-white/[0.06]"
+            className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center transition-all duration-200 hover:bg-white/[0.08] hover:scale-105"
             style={{ background: "transparent", border: `1px solid ${S.border}` }}
             title={`Expand sidebar (${MOD_KEY} B)`}
           >
-            {/* H monogram → chevron-right on hover */}
-            <svg
-              width="20" height="20" viewBox="0 0 28 28"
-              fill="none" stroke={S.gold} strokeWidth="1.3"
-              strokeLinecap="round" strokeLinejoin="round"
-              className="transition-opacity duration-200 group-hover/logo:opacity-0 absolute"
-            >
-              <line x1="8" y1="7" x2="8" y2="21" />
-              <line x1="20" y1="7" x2="20" y2="21" />
-              <line x1="8" y1="14" x2="20" y2="14" />
-            </svg>
-            <ChevronRight
-              className="w-4 h-4 transition-opacity duration-200 opacity-0 group-hover/logo:opacity-100"
+            <PanelLeftOpen
+              className="w-5 h-5"
+              strokeWidth={1.4}
               style={{ color: S.gold }}
             />
           </button>
