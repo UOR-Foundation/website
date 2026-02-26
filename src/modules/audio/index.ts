@@ -41,3 +41,11 @@ export type { GenreCoordinate, GenreClassification, GenreRegion } from "./lenses
 // Services
 export { FeatureAggregator, generateTrackCid, persistAnalysis, loadFeatures, hasPersistedFeatures, persistRawFeatures } from "./services/feature-persistence";
 export type { PersistedTrack, AggregatedFeatures } from "./services/feature-persistence";
+
+// Stations data
+export { STATIONS } from "./stations";
+export type { AmbientStation } from "./stations";
+
+// Hooks
+export { useAmbientPlayer } from "./hooks/useAmbientPlayer";
+export type { AmbientState, AmbientPlayerControls } from "./hooks/useAmbientPlayer";
