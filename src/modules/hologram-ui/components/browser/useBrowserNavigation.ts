@@ -29,8 +29,8 @@ function cacheSet(url: string, entry: HistoryEntry) {
 
 async function fetchPage(url: string): Promise<HistoryEntry> {
   const result = await firecrawlApi.scrape(url, {
-    formats: ["markdown", "links"],
-    onlyMainContent: true,
+    formats: ["markdown", "rawHtml", "links"],
+    onlyMainContent: false,
   });
   if (!result.success) throw new Error(result.error || "Failed to load page");
   const d = result.data || (result as any);
@@ -38,10 +38,13 @@ async function fetchPage(url: string): Promise<HistoryEntry> {
     url,
     title: d?.metadata?.title || url,
     markdown: d?.markdown || "",
+    rawHtml: d?.rawHtml || d?.html || "",
     links: d?.links || [],
     visitedAt: Date.now(),
   };
 }
+
+export type ViewMode = "fidelity" | "reader";
 
 export interface BrowserNavState {
   url: string;
@@ -53,6 +56,7 @@ export interface BrowserNavState {
   history: HistoryEntry[];
   historyIdx: number;
   showHistory: boolean;
+  viewMode: ViewMode;
 }
 
 export interface BrowserNavActions {
@@ -69,6 +73,7 @@ export interface BrowserNavActions {
   saveScrollPosition: (url: string, scrollTop: number) => void;
   getScrollPosition: (url: string) => number;
   selectHistoryEntry: (idx: number) => void;
+  toggleViewMode: () => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
 }
 
@@ -82,6 +87,7 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [showHistory, setShowHistory] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("fidelity");
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Refs for stable callbacks
@@ -265,9 +271,13 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
     }
   }, []);
 
+  const toggleViewMode = useCallback(() => {
+    setViewMode((m) => (m === "fidelity" ? "reader" : "fidelity"));
+  }, []);
+
   const state: BrowserNavState = {
     url, loading, error, page, searchResults, searchQuery,
-    history, historyIdx, showHistory,
+    history, historyIdx, showHistory, viewMode,
   };
 
   const actions: BrowserNavActions = {
@@ -275,7 +285,7 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
     search: searchFn, handleSubmit, handleLinkClick,
     setShowHistory, clearHistory, prefetch,
     saveScrollPosition, getScrollPosition, selectHistoryEntry,
-    inputRef,
+    toggleViewMode, inputRef,
   };
 
   return [state, actions];

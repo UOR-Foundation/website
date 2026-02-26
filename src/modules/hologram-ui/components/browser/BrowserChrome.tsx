@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { ArrowLeft, ArrowRight, RotateCw, X, ExternalLink, Loader2, Search, Sparkles, Clock } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCw, X, ExternalLink, Loader2, Search, Sparkles, Clock, Monitor, BookOpen } from "lucide-react";
 import { P, isUrl } from "./browser-palette";
 import { type BrowserNavState, type BrowserNavActions } from "./useBrowserNavigation";
 
@@ -39,8 +39,8 @@ interface BrowserChromeProps {
 }
 
 export default function BrowserChrome({ state, actions, onClose, onSendToLumen }: BrowserChromeProps) {
-  const { url, loading, page, historyIdx, history, showHistory } = state;
-  const { setUrl, goBack, goForward, navigate, setShowHistory, inputRef } = actions;
+  const { url, loading, page, historyIdx, history, showHistory, viewMode } = state;
+  const { setUrl, goBack, goForward, navigate, setShowHistory, toggleViewMode, inputRef } = actions;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +101,12 @@ export default function BrowserChrome({ state, actions, onClose, onSendToLumen }
           <Sparkles className="w-2.5 h-2.5" />
           Lumen
         </button>
+      )}
+
+      {page && (
+        <IconBtn onClick={toggleViewMode} title={viewMode === "fidelity" ? "Switch to Reader mode" : "Switch to Fidelity mode"} active={viewMode === "reader"}>
+          {viewMode === "fidelity" ? <BookOpen className="w-3 h-3" /> : <Monitor className="w-3 h-3" />}
+        </IconBtn>
       )}
 
       {page && (
