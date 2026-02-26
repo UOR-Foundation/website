@@ -1,13 +1,15 @@
 /**
  * EpistemicBadge — Inline proof annotation for neuro-symbolic responses.
  *
- * Renders warm, human-friendly claim cards with subtle grade indicators.
- * Designed for clarity, trust, and delight within the Hologram aesthetic.
+ * By default, the response shows clean readable text. A toggle at the
+ * bottom lets users reveal the full chain-of-thought with epistemic
+ * grade badges and proof metadata.
  */
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { AnnotatedClaim, EpistemicGrade } from "@/modules/ring-core/neuro-symbolic";
+import { ChevronDown, ChevronUp, Shield } from "lucide-react";
 
 // ── Grade Styling (warm tones matching Hologram palette) ──────────────────
 
@@ -170,6 +172,61 @@ export function AnnotatedClaimView({ claim, delay = 0 }: { claim: AnnotatedClaim
   );
 }
 
+// ── Plain Text View (no badges, clean reading) ───────────────────────────
+
+function PlainClaimsView({ claims }: { claims: AnnotatedClaim[] }) {
+  // Join all claim texts into a single readable block
+  const fullText = claims.map((c) => c.text).join(" ");
+
+  return (
+    <div
+      className="text-[15px] leading-[1.8]"
+      style={{
+        color: "hsl(30, 12%, 78%)",
+        textRendering: "optimizeLegibility",
+      }}
+    >
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => (
+            <p className="mb-2 last:mb-0" style={{ lineHeight: "1.8" }}>{children}</p>
+          ),
+          strong: ({ children }) => (
+            <strong style={{ color: P.text, fontWeight: 600 }}>{children}</strong>
+          ),
+          em: ({ children }) => (
+            <em style={{ color: P.goldLight, fontStyle: "italic" }}>{children}</em>
+          ),
+          code: ({ children }) => (
+            <code
+              style={{
+                background: "hsla(38, 30%, 30%, 0.2)",
+                padding: "1px 5px",
+                borderRadius: "4px",
+                fontSize: "0.9em",
+                color: P.goldLight,
+              }}
+            >
+              {children}
+            </code>
+          ),
+          ul: ({ children }) => (
+            <ul style={{ listStyle: "none", paddingLeft: "0.5em", margin: "0.3em 0" }}>{children}</ul>
+          ),
+          li: ({ children }) => (
+            <li className="flex gap-1.5 items-start" style={{ color: P.textMuted }}>
+              <span style={{ color: P.goldLight, fontSize: "8px", marginTop: "6px" }}>◆</span>
+              <span>{children}</span>
+            </li>
+          ),
+        }}
+      >
+        {fullText}
+      </ReactMarkdown>
+    </div>
+  );
+}
+
 // ── Annotated Response Renderer ───────────────────────────────────────────
 
 interface AnnotatedResponseProps {
@@ -187,55 +244,115 @@ export default function AnnotatedResponse({
   converged,
   curvature,
 }: AnnotatedResponseProps) {
+  const [showChainOfThought, setShowChainOfThought] = useState(false);
   const style = GRADE_STYLES[grade];
+  const groundedCount = claims.filter((c) => c.grade <= "B").length;
 
   return (
-    <div className="space-y-4" style={{ fontFamily: P.font }}>
-      {/* Claims — each rendered as warm, readable text with subtle badges */}
-      <div
-        className="text-[15px] leading-[1.8]"
-        style={{
-          color: "hsl(30, 12%, 78%)",
-          textRendering: "optimizeLegibility",
-        }}
-      >
-        {claims.map((claim, i) => (
-          <AnnotatedClaimView key={i} claim={claim} delay={i * 80} />
-        ))}
-      </div>
+    <div className="space-y-3" style={{ fontFamily: P.font }}>
+      {/* Response content — plain by default, annotated when toggled */}
+      {showChainOfThought ? (
+        <>
+          <div
+            className="text-[15px] leading-[1.8]"
+            style={{
+              color: "hsl(30, 12%, 78%)",
+              textRendering: "optimizeLegibility",
+            }}
+          >
+            {claims.map((claim, i) => (
+              <AnnotatedClaimView key={i} claim={claim} delay={i * 80} />
+            ))}
+          </div>
 
-      {/* Proof summary — minimal, warm, trustworthy */}
-      <div
-        className="flex items-center gap-4 text-[10px] tracking-wider pt-3"
+          {/* Proof summary — minimal, warm, trustworthy */}
+          <div
+            className="flex items-center gap-4 text-[10px] tracking-wider pt-3"
+            style={{
+              borderTop: `1px solid ${P.border}`,
+              fontFamily: P.font,
+            }}
+          >
+            <span
+              className="flex items-center gap-1.5 px-2 py-1 rounded-md font-medium"
+              style={{
+                background: style.bg,
+                color: style.color,
+                letterSpacing: "0.1em",
+              }}
+            >
+              <span style={{ fontSize: "8px" }}>{style.icon}</span>
+              Grade {grade}
+            </span>
+            <span style={{ color: P.textDim }}>
+              {iterations} {iterations === 1 ? "pass" : "passes"}
+            </span>
+            <span style={{ color: P.textDim }}>
+              κ {(curvature * 100).toFixed(0)}%
+            </span>
+            <span style={{ color: converged ? GRADE_STYLES.A.color : GRADE_STYLES.C.color }}>
+              {converged ? "✓ converged" : "refining…"}
+            </span>
+            <span className="ml-auto" style={{ color: P.textDim }}>
+              {groundedCount}/{claims.length} grounded
+            </span>
+          </div>
+        </>
+      ) : (
+        <PlainClaimsView claims={claims} />
+      )}
+
+      {/* Toggle button — always visible at the bottom */}
+      <button
+        onClick={() => setShowChainOfThought((v) => !v)}
+        className="flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-200 w-full justify-center group"
         style={{
-          borderTop: `1px solid ${P.border}`,
+          background: showChainOfThought
+            ? "hsla(38, 30%, 40%, 0.12)"
+            : "hsla(38, 15%, 30%, 0.08)",
+          border: `1px solid ${showChainOfThought ? "hsla(38, 30%, 50%, 0.2)" : "hsla(38, 15%, 30%, 0.12)"}`,
+          color: showChainOfThought ? P.goldLight : P.textMuted,
           fontFamily: P.font,
+          letterSpacing: "0.03em",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "hsla(38, 30%, 40%, 0.15)";
+          e.currentTarget.style.borderColor = "hsla(38, 30%, 50%, 0.25)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = showChainOfThought
+            ? "hsla(38, 30%, 40%, 0.12)"
+            : "hsla(38, 15%, 30%, 0.08)";
+          e.currentTarget.style.borderColor = showChainOfThought
+            ? "hsla(38, 30%, 50%, 0.2)"
+            : "hsla(38, 15%, 30%, 0.12)";
         }}
       >
+        <Shield
+          className="w-3.5 h-3.5 transition-colors"
+          style={{ color: showChainOfThought ? style.color : P.textDim }}
+        />
+        <span>
+          {showChainOfThought ? "Hide" : "View"} chain of thought
+        </span>
         <span
-          className="flex items-center gap-1.5 px-2 py-1 rounded-md font-medium"
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px]"
           style={{
             background: style.bg,
             color: style.color,
-            letterSpacing: "0.1em",
           }}
         >
-          <span style={{ fontSize: "8px" }}>{style.icon}</span>
-          Grade {grade}
+          {style.icon} {grade}
         </span>
         <span style={{ color: P.textDim }}>
-          {iterations} {iterations === 1 ? "pass" : "passes"}
+          · {groundedCount}/{claims.length} verified
         </span>
-        <span style={{ color: P.textDim }}>
-          κ {(curvature * 100).toFixed(0)}%
-        </span>
-        <span style={{ color: converged ? GRADE_STYLES.A.color : GRADE_STYLES.C.color }}>
-          {converged ? "✓ converged" : "refining…"}
-        </span>
-        <span className="ml-auto" style={{ color: P.textDim }}>
-          {claims.filter(c => c.grade <= "B").length}/{claims.length} grounded
-        </span>
-      </div>
+        {showChainOfThought ? (
+          <ChevronUp className="w-3 h-3 ml-auto" style={{ color: P.textDim }} />
+        ) : (
+          <ChevronDown className="w-3 h-3 ml-auto" style={{ color: P.textDim }} />
+        )}
+      </button>
     </div>
   );
 }
