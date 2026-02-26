@@ -144,6 +144,7 @@ export default function HologramOsPage() {
   const isMobile = useIsMobile();
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [pillGlow, setPillGlow] = useState(false);
   const lumenPanel = useModularPanel({
     storageKey: "lumen-ai",
     defaultWidth: 340,
@@ -618,6 +619,10 @@ export default function HologramOsPage() {
                   backdropFilter: "blur(24px)",
                   WebkitBackdropFilter: "blur(24px)",
                   border: `1px solid ${P.pillBorder}`,
+                  boxShadow: pillGlow
+                    ? "0 0 20px hsla(38, 50%, 50%, 0.35), 0 0 40px hsla(38, 50%, 50%, 0.15), 0 0 60px hsla(38, 50%, 50%, 0.05)"
+                    : "none",
+                  animation: pillGlow ? "pill-glow-pulse 1.8s ease-out both" : "none",
                 }}
               >
                 <div
@@ -739,7 +744,7 @@ export default function HologramOsPage() {
       <ModularSnapGrid visible={lumenPanel.isResizing} />
       <HologramAiChat
         open={chatOpen}
-        onClose={() => { setChatOpen(false); setChatPrompt(""); }}
+        onClose={() => { setChatOpen(false); setChatPrompt(""); setPillGlow(true); setTimeout(() => setPillGlow(false), 1800); }}
         onPhaseChange={triadicActivity.setActivePhase}
         creatorStage={triadicActivity.creatorStage}
         replayGuideKey={replayGuide}
