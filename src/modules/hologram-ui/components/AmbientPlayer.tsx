@@ -102,15 +102,35 @@ interface AmbientPlayerProps {
   lumenOffset?: number;
 }
 
+const STORAGE_KEY = "hologram-ambient-prefs";
+
+function loadPrefs(): { stationId: string; volume: number } {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { stationId: STATIONS[0].id, volume: 0.4 };
+}
+
+function savePrefs(stationId: string, volume: number) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ stationId, volume })); } catch {}
+}
+
 export default function AmbientPlayer({ lumenOffset = 0 }: AmbientPlayerProps) {
+  const prefs = useRef(loadPrefs());
   const [expanded, setExpanded] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [station, setStation] = useState<AmbientStation>(STATIONS[0]);
-  const [volume, setVolume] = useState(0.4);
+  const [station, setStation] = useState<AmbientStation>(
+    () => STATIONS.find((s) => s.id === prefs.current.stationId) ?? STATIONS[0],
+  );
+  const [volume, setVolume] = useState(() => prefs.current.volume);
   const [muted, setMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pillRef = useRef<HTMLDivElement>(null);
+
+  // Persist prefs on change
+  useEffect(() => { savePrefs(station.id, volume); }, [station, volume]);
 
   // Initialize audio element — no crossOrigin (SomaFM doesn't send CORS headers)
   useEffect(() => {
