@@ -392,7 +392,7 @@ export default function HologramOsPage() {
             >
               {/* SVG wordmark — geometric, open-A, ĀMAN-inspired */}
               <svg
-                viewBox="0 0 520 40"
+                viewBox="0 0 360 40"
                 className="transition-opacity duration-300 select-none"
                 style={{
                   width: "clamp(260px, 28vw, 420px)",
