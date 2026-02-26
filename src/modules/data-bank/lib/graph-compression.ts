@@ -6,14 +6,14 @@
  * using a shared dictionary of common predicates/prefixes and
  * unsigned varint encoding for references.
  *
- * Wire format (per triple):
- *   [predicate_varint] [subject_varint] [object_len_varint] [object_utf8]
+ * v2 adds a third-tier Object Value Dictionary that deduplicates
+ * repetitive object strings (enum tags, weights, booleans, zones)
+ * via frequency-gated dictionary encoding.
  *
- * Subjects are dictionary-indexed (first occurrence assigns an ID).
- * Predicates use a static dictionary of known UOR predicates.
- * Objects are length-prefixed UTF-8 strings (weights, tags, domains).
- *
- * Achieves 10-20x compression vs raw JSON for typical context graphs.
+ * Wire format v2 (per triple):
+ *   [predicate_varint] [subject_varint] [object_flag] ...
+ *     flag=0 → [object_dict_id varint]         (dictionary hit)
+ *     flag=1 → [object_len_varint] [object_utf8] (inline string)
  *
  * @module data-bank/lib/graph-compression
  */
@@ -56,15 +56,19 @@ const PREDICATE_TO_ID = new Map<string, number>(
   PREDICATE_DICT.map((p, i) => [p, i])
 );
 
-// Magic bytes: "UGC1" (UOR Graph Compressed v1)
-const MAGIC = new Uint8Array([0x55, 0x47, 0x43, 0x31]);
-const FORMAT_VERSION = 1;
+// Magic bytes: "UGC1" (v1) / "UGC2" (v2 with object dict)
+const MAGIC_V1 = new Uint8Array([0x55, 0x47, 0x43, 0x31]);
+const MAGIC_V2 = new Uint8Array([0x55, 0x47, 0x43, 0x32]);
+const FORMAT_VERSION = 2;
+
+/** Minimum occurrences for an object value to enter the dictionary */
+const OBJECT_DICT_THRESHOLD = 2;
 
 // ── Varint Encoding (LEB128 unsigned) ───────────────────────────────────
 
 function encodeVarint(value: number): Uint8Array {
   const bytes: number[] = [];
-  let v = value >>> 0; // ensure unsigned
+  let v = value >>> 0;
   do {
     let byte = v & 0x7f;
     v >>>= 7;
@@ -124,25 +128,28 @@ export interface CompressionStats {
   ratio: number;
   subjectDictSize: number;
   unknownPredicates: number;
+  /** Number of unique object values in the v2 object dictionary */
+  objectDictSize: number;
+  /** Number of triple objects resolved via dictionary (saved bytes) */
+  objectDictHits: number;
 }
 
-// ── Compress ────────────────────────────────────────────────────────────
+// ── Compress (v2) ───────────────────────────────────────────────────────
 
 /**
- * Compress an array of triples into the UGC1 binary format.
+ * Compress an array of triples into the UGC2 binary format.
  *
  * Layout:
- *   [4 magic] [1 version] [tripleCount varint]
- *   [subjectDictSize varint] [subject_0 string] [subject_1 string] ...
+ *   [4 magic "UGC2"] [1 version]
+ *   [tripleCount varint]
+ *   [subjectDictSize varint] [subject_0 string] ...
  *   [unknownPredCount varint] [unknownPred_0 string] ...
+ *   [objectDictSize varint] [objectVal_0 string] ...   ← NEW in v2
  *   For each triple:
- *     [predicate_flag_varint] [subject_id_varint] [object string]
- *
- *   predicate_flag: if < PREDICATE_DICT.length → static dict ID
- *                   else → (PREDICATE_DICT.length + unknownPredIndex)
+ *     [predicate_flag varint] [subject_id varint]
+ *     [object_flag: 0=dict 1=inline] ...
  */
 export function compressTriples(triples: CompressibleTriple[]): { buffer: Uint8Array; stats: CompressionStats } {
-  // Measure raw size
   const rawJson = JSON.stringify(triples);
   const rawBytes = encoder.encode(rawJson).length;
 
@@ -166,12 +173,26 @@ export function compressTriples(triples: CompressibleTriple[]): { buffer: Uint8A
     }
   }
 
+  // Build object value dictionary (frequency-gated)
+  const objectFreq = new Map<string, number>();
+  for (const t of triples) {
+    objectFreq.set(t.object, (objectFreq.get(t.object) ?? 0) + 1);
+  }
+  const objectDict: string[] = [];
+  const objectToId = new Map<string, number>();
+  for (const [val, freq] of objectFreq) {
+    if (freq >= OBJECT_DICT_THRESHOLD) {
+      objectToId.set(val, objectDict.length);
+      objectDict.push(val);
+    }
+  }
+
   // Assemble chunks
   const chunks: Uint8Array[] = [];
   const push = (c: Uint8Array) => chunks.push(c);
 
   // Header
-  push(MAGIC);
+  push(MAGIC_V2);
   push(new Uint8Array([FORMAT_VERSION]));
   push(encodeVarint(triples.length));
 
@@ -183,7 +204,12 @@ export function compressTriples(triples: CompressibleTriple[]): { buffer: Uint8A
   push(encodeVarint(unknownPreds.length));
   for (const p of unknownPreds) push(encodeString(p));
 
+  // Object value dictionary (v2)
+  push(encodeVarint(objectDict.length));
+  for (const o of objectDict) push(encodeString(o));
+
   // Triples
+  let objectDictHits = 0;
   for (const t of triples) {
     const predId = PREDICATE_TO_ID.get(t.predicate);
     const flag = predId !== undefined
@@ -191,7 +217,17 @@ export function compressTriples(triples: CompressibleTriple[]): { buffer: Uint8A
       : PREDICATE_DICT.length + (unknownPredToId.get(t.predicate) ?? 0);
     push(encodeVarint(flag));
     push(encodeVarint(subjectToId.get(t.subject) ?? 0));
-    push(encodeString(t.object));
+
+    // Object: dictionary hit or inline
+    const objDictId = objectToId.get(t.object);
+    if (objDictId !== undefined) {
+      push(new Uint8Array([0])); // flag=0 → dict ref
+      push(encodeVarint(objDictId));
+      objectDictHits++;
+    } else {
+      push(new Uint8Array([1])); // flag=1 → inline
+      push(encodeString(t.object));
+    }
   }
 
   // Concatenate
@@ -212,26 +248,35 @@ export function compressTriples(triples: CompressibleTriple[]): { buffer: Uint8A
       ratio: rawBytes / buffer.length,
       subjectDictSize: subjectDict.length,
       unknownPredicates: unknownPreds.length,
+      objectDictSize: objectDict.length,
+      objectDictHits,
     },
   };
 }
 
-// ── Decompress ──────────────────────────────────────────────────────────
+// ── Decompress (v1 + v2) ────────────────────────────────────────────────
 
 /**
- * Decompress UGC1 binary back to triples.
+ * Decompress UGC1 or UGC2 binary back to triples.
+ * Automatically detects format version from magic bytes.
  */
 export function decompressTriples(data: Uint8Array): CompressibleTriple[] {
   let pos = 0;
 
-  // Verify magic
-  for (let i = 0; i < 4; i++) {
-    if (data[pos++] !== MAGIC[i]) throw new Error("Invalid UGC1 magic bytes");
-  }
+  // Detect magic
+  const isV2 =
+    data[0] === MAGIC_V2[0] && data[1] === MAGIC_V2[1] &&
+    data[2] === MAGIC_V2[2] && data[3] === MAGIC_V2[3];
+  const isV1 =
+    data[0] === MAGIC_V1[0] && data[1] === MAGIC_V1[1] &&
+    data[2] === MAGIC_V1[2] && data[3] === MAGIC_V1[3];
 
-  // Version
+  if (!isV1 && !isV2) throw new Error("Invalid UGC magic bytes");
+  pos = 4;
+
+  // Version byte
   const version = data[pos++];
-  if (version !== FORMAT_VERSION) throw new Error(`Unsupported UGC1 version: ${version}`);
+  if (version !== 1 && version !== 2) throw new Error(`Unsupported UGC version: ${version}`);
 
   // Triple count
   let tripleCount: number;
@@ -257,13 +302,42 @@ export function decompressTriples(data: Uint8Array): CompressibleTriple[] {
     unknownPreds.push(p);
   }
 
+  // Object value dictionary (v2 only)
+  const objectDict: string[] = [];
+  if (isV2 && version >= 2) {
+    let objectDictSize: number;
+    [objectDictSize, pos] = decodeVarint(data, pos);
+    for (let i = 0; i < objectDictSize; i++) {
+      let o: string;
+      [o, pos] = decodeString(data, pos);
+      objectDict.push(o);
+    }
+  }
+
   // Triples
   const triples: CompressibleTriple[] = [];
   for (let i = 0; i < tripleCount; i++) {
-    let flag: number, subjectId: number, object: string;
+    let flag: number, subjectId: number;
     [flag, pos] = decodeVarint(data, pos);
     [subjectId, pos] = decodeVarint(data, pos);
-    [object, pos] = decodeString(data, pos);
+
+    let object: string;
+    if (isV2 && version >= 2) {
+      // v2: read object flag
+      const objFlag = data[pos++];
+      if (objFlag === 0) {
+        // Dictionary reference
+        let dictId: number;
+        [dictId, pos] = decodeVarint(data, pos);
+        object = objectDict[dictId] ?? `unknown_obj:${dictId}`;
+      } else {
+        // Inline string
+        [object, pos] = decodeString(data, pos);
+      }
+    } else {
+      // v1: always inline
+      [object, pos] = decodeString(data, pos);
+    }
 
     const predicate = flag < PREDICATE_DICT.length
       ? PREDICATE_DICT[flag]
