@@ -237,13 +237,13 @@ export default function MobileOsShell() {
           {/* Greeting */}
           <div className="text-center mb-2">
             <p
-              className="text-[11px] tracking-[0.35em] uppercase mb-3"
+              className="text-[13px] tracking-[0.35em] uppercase mb-3"
               style={{ color: "hsla(38, 15%, 80%, 0.45)", fontFamily: P.font }}
             >
               {greeting}
             </p>
             <h1
-              className="text-[32px] font-light leading-[1.2] tracking-[0.01em]"
+              className="text-[36px] font-light leading-[1.2] tracking-[0.01em]"
               style={{ fontFamily: P.fontDisplay, color: P.text }}
             >
               Welcome{name ? `,` : "."}<br />
@@ -321,7 +321,7 @@ export default function MobileOsShell() {
           {/* Typewriter whisper */}
           <div className="h-5 flex items-center justify-center">
             <p
-              className="text-[18px] font-light italic text-center"
+              className="text-[20px] font-light italic text-center"
               style={{
                 fontFamily: P.fontDisplay,
                 color: "hsla(38, 15%, 80%, 0.55)",
