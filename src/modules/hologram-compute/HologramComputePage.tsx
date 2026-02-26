@@ -121,7 +121,7 @@ function ProviderCard({ snap, onBenchmark, benchmarking }: {
         </div>
       )}
 
-      {/* Benchmark */}
+      {/* GPU Benchmark */}
       {snap.benchmarkResult && (
         <div className="grid grid-cols-3 gap-3 pt-2 border-t border-border/50">
           <div className="text-center">
@@ -141,6 +141,30 @@ function ProviderCard({ snap, onBenchmark, benchmarking }: {
               {snap.benchmarkResult.compileTimeMs.toFixed(0)}
             </p>
             <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Compile ms</p>
+          </div>
+        </div>
+      )}
+
+      {/* CPU LUT Benchmark (always available) */}
+      {snap.cpuBenchmarkResult && (
+        <div className="grid grid-cols-3 gap-3 pt-2 border-t border-border/50">
+          <div className="text-center">
+            <p className="text-lg font-bold font-mono" style={{ color: C.gold }}>
+              {snap.cpuBenchmarkResult.lutMopsPerSec.toFixed(1)}
+            </p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wider">M ops/sec</p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold font-mono" style={{ color: C.gold }}>
+              {snap.cpuBenchmarkResult.lutThroughputGBps.toFixed(2)}
+            </p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wider">LUT GB/s</p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold font-mono" style={{ color: C.gold }}>
+              {snap.cpuBenchmarkResult.timeMs.toFixed(1)}
+            </p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Time ms</p>
           </div>
         </div>
       )}
@@ -264,8 +288,9 @@ function LutEnginePanel({ snap }: { snap: ProviderSnapshot }) {
 function InferencePanel({ snap }: { snap: ProviderSnapshot }) {
   const hasGpu = snap.status === "ready";
   const gflops = snap.benchmarkResult?.matmulGflops ?? 0;
-  // Conservative estimate: small quantized models can achieve ~8-15 tok/s per GFLOP
   const estTokSec = snap.estimatedTokPerSec || Math.round(gflops * 8);
+  const hasBench = hasGpu && gflops > 0;
+  const hasCpuBench = !!snap.cpuBenchmarkResult;
 
   return (
     <div className="rounded-xl border border-border bg-card p-5 space-y-4">
@@ -275,21 +300,23 @@ function InferencePanel({ snap }: { snap: ProviderSnapshot }) {
       </div>
 
       <p className="text-[11px] text-muted-foreground leading-relaxed">
-        Local inference via WebGPU matmul + LUT-accelerated quantized attention.
-        The constant-time engine eliminates activation computation overhead for int8/int4 models.
+        {hasGpu
+          ? "Local inference via WebGPU matmul + LUT-accelerated quantized attention."
+          : "CPU-only inference via O(1) LUT engine. WebGPU unavailable — activations still constant-time."}
+        {" "}The constant-time engine eliminates activation computation overhead for int8/int4 models.
       </p>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <p className="text-2xl font-bold font-mono text-foreground">
-            {hasGpu && gflops > 0 ? `~${estTokSec}` : "—"}
+            {hasBench ? `~${estTokSec}` : hasCpuBench ? `~${estTokSec || Math.round(snap.cpuBenchmarkResult!.lutMopsPerSec * 0.5)}` : "—"}
           </p>
-          <p className="text-[10px] text-muted-foreground">Est. tokens/sec (7B quantized)</p>
+          <p className="text-[10px] text-muted-foreground">
+            Est. tokens/sec (7B quantized{!hasGpu && hasCpuBench ? ", CPU" : ""})
+          </p>
         </div>
         <div>
-          <p className="text-2xl font-bold font-mono text-foreground">
-            {hasGpu ? "$0" : "—"}
-          </p>
+          <p className="text-2xl font-bold font-mono text-foreground">$0</p>
           <p className="text-[10px] text-muted-foreground">Cost per 1M tokens</p>
         </div>
       </div>
@@ -458,15 +485,15 @@ export default function HologramComputePage() {
           />
           <StatCard
             label="GFLOPS"
-            value={localSnap?.benchmarkResult?.matmulGflops.toFixed(1) ?? "—"}
+            value={localSnap?.benchmarkResult?.matmulGflops.toFixed(1) ?? (localSnap?.cpuBenchmarkResult ? `${localSnap.cpuBenchmarkResult.lutMopsPerSec.toFixed(0)}M` : "—")}
             icon={<IconChartBar size={16} />}
-            sublabel="matmul throughput"
+            sublabel={localSnap?.benchmarkResult ? "matmul throughput" : "LUT ops/sec"}
           />
           <StatCard
             label="Bandwidth"
-            value={localSnap?.benchmarkResult?.bandwidthGBps.toFixed(1) ?? "—"}
+            value={localSnap?.benchmarkResult?.bandwidthGBps.toFixed(1) ?? localSnap?.cpuBenchmarkResult?.lutThroughputGBps.toFixed(2) ?? "—"}
             icon={<IconBolt size={16} />}
-            sublabel="GB/s transfer"
+            sublabel={localSnap?.benchmarkResult ? "GB/s transfer" : "LUT GB/s"}
           />
           <StatCard
             label="LUT Tables"
