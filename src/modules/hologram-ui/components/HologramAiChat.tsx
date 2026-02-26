@@ -813,6 +813,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center" style={{ animation: "lumen-overlay-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
+      {/* Backdrop — slow immersive zoom into the space */}
       <div
         className="absolute inset-0"
         onClick={onClose}
@@ -820,7 +821,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           background: "radial-gradient(ellipse at 50% 40%, hsla(30, 10%, 6%, 0.78) 0%, hsla(25, 8%, 4%, 0.93) 100%)",
           backdropFilter: "blur(20px) saturate(0.65)",
           WebkitBackdropFilter: "blur(20px) saturate(0.65)",
-          animation: "lumen-backdrop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
+          animation: "lumen-backdrop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both, lumen-converge 8s cubic-bezier(0.25, 0.1, 0.25, 1) 0.3s both",
+          transformOrigin: "50% 45%",
         }}
       />
 
