@@ -29,3 +29,9 @@ verify_jwt = false
 
 [functions.fetch-repo]
 verify_jwt = false
+
+[functions.web-proxy]
+verify_jwt = false
+
+[functions.firecrawl-scrape]
+verify_jwt = false
