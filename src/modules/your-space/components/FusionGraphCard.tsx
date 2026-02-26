@@ -3,7 +3,7 @@
  * Shows modality breakdown, triple counts, compression ratio, and dict hit rate.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Loader2, Layers, Zap, BookOpen, Activity } from "lucide-react";
 import { assembleFusionGraph, type FusionGraphStats } from "@/modules/data-bank";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ export function FusionGraphCard() {
   const [stats, setStats] = useState<FusionGraphStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const didAutoAssemble = useRef(false);
 
   const assemble = useCallback(async () => {
     setLoading(true);
@@ -27,6 +28,14 @@ export function FusionGraphCard() {
       setLoading(false);
     }
   }, []);
+
+  // Auto-assemble on mount
+  useEffect(() => {
+    if (!didAutoAssemble.current) {
+      didAutoAssemble.current = true;
+      assemble();
+    }
+  }, [assemble]);
 
   const ratio = stats?.compression.ratio ?? 0;
   const dictHits = stats?.compression.objectDictHits ?? 0;
@@ -45,7 +54,7 @@ export function FusionGraphCard() {
           disabled={loading}
           className="text-[10px] px-2 py-1 rounded-md border border-border bg-card hover:bg-muted/50 text-muted-foreground transition-colors disabled:opacity-50 font-body"
         >
-          {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Assemble"}
+          {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
         </button>
       </div>
 
