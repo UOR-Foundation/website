@@ -261,6 +261,83 @@ function DualLineChart({
   );
 }
 
+// ── Throughput Gauge ─────────────────────────────────────────────────────────
+
+interface ThroughputLive {
+  elemPerSec: number;   // millions
+  opsPerSec: number;    // millions
+  phase: "std" | "holo";
+  label: string;
+}
+
+const GAUGE_R = 52;
+const GAUGE_STROKE = 7;
+const GAUGE_CIRC = Math.PI * GAUGE_R; // half-circle
+
+function ThroughputGauge({ data }: { data: ThroughputLive }) {
+  // Normalize to 0–1 range (cap at 2000 M elem/s for gauge)
+  const maxElem = 2000;
+  const fill = Math.min(data.elemPerSec / maxElem, 1);
+  const dashOffset = GAUGE_CIRC * (1 - fill);
+  const gaugeColor = data.phase === "holo" ? C_HOLO : C_STD;
+
+  return (
+    <div className="rounded-lg bg-secondary/30 p-4 animate-fade-in">
+      <div className="flex items-center gap-6 justify-center flex-wrap">
+        {/* SVG gauge */}
+        <div className="relative" style={{ width: 120, height: 68 }}>
+          <svg viewBox="0 0 120 68" className="w-full h-full">
+            {/* Background arc */}
+            <path
+              d="M 8 64 A 52 52 0 0 1 112 64"
+              fill="none"
+              stroke="hsl(var(--border))"
+              strokeWidth={GAUGE_STROKE}
+              strokeLinecap="round"
+            />
+            {/* Fill arc */}
+            <path
+              d="M 8 64 A 52 52 0 0 1 112 64"
+              fill="none"
+              stroke={gaugeColor}
+              strokeWidth={GAUGE_STROKE}
+              strokeLinecap="round"
+              strokeDasharray={GAUGE_CIRC}
+              strokeDashoffset={dashOffset}
+              style={{ transition: "stroke-dashoffset 0.3s ease-out, stroke 0.2s" }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-end pb-0.5">
+            <span className="text-lg font-bold font-mono tabular-nums" style={{ color: gaugeColor }}>
+              {data.elemPerSec < 10 ? data.elemPerSec.toFixed(1) : Math.round(data.elemPerSec)}
+            </span>
+            <span className="text-[8px] text-muted-foreground uppercase tracking-wider">M elem/s</span>
+          </div>
+        </div>
+
+        {/* Live stats */}
+        <div className="space-y-2 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: gaugeColor }} />
+            <span className="text-muted-foreground">Phase:</span>
+            <span className="font-semibold text-foreground">{data.phase === "holo" ? "Hologram" : "Standard"}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Throughput: </span>
+            <span className="font-mono font-semibold text-foreground tabular-nums">
+              {data.opsPerSec < 10 ? data.opsPerSec.toFixed(1) : Math.round(data.opsPerSec)} M ops/s
+            </span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Running: </span>
+            <span className="font-mono text-foreground">{data.label}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Main Component
 // ═══════════════════════════════════════════════════════════════════════════
@@ -275,7 +352,15 @@ export default function ConstantTimeBenchmark() {
   const [chainPoints, setChainPoints] = useState<ChainPoint[]>([]);
   const [scalePoints, setScalePoints] = useState<ScalePoint[]>([]);
   const [progress, setProgress] = useState("");
+  const [throughput, setThroughput] = useState<ThroughputLive | null>(null);
   const cancelRef = useRef(false);
+
+  const emitThroughput = useCallback((dataSize: number, chainDepth: number, ms: number, phase: "std" | "holo", label: string) => {
+    const totalOps = phase === "holo" ? dataSize : dataSize * chainDepth;
+    const elemPerSec = (dataSize / Math.max(ms, 0.01)) / 1000; // millions
+    const opsPerSec = (totalOps / Math.max(ms, 0.01)) / 1000;  // millions
+    setThroughput({ elemPerSec, opsPerSec, phase, label });
+  }, []);
 
   const runChain = useCallback(async () => {
     cancelRef.current = false;
@@ -285,11 +370,19 @@ export default function ConstantTimeBenchmark() {
       if (cancelRef.current) break;
       setProgress(`${depth} ops`);
       await new Promise(r => setTimeout(r, 50));
+
+      // Emit standard phase throughput
+      const stdStart = performance.now();
       const point = runChainBenchmark(depth);
+      emitThroughput(CHAIN_DATA_SIZE, depth, point.standardMs, "std", `${depth} ops`);
+      await new Promise(r => setTimeout(r, 30));
+      emitThroughput(CHAIN_DATA_SIZE, depth, point.hologramMs, "holo", `${depth} ops`);
+
       setChainPoints(prev => [...prev, point]);
     }
     setChainState("done");
-  }, []);
+    setThroughput(null);
+  }, [emitThroughput]);
 
   const runScale = useCallback(async () => {
     cancelRef.current = false;
@@ -297,13 +390,20 @@ export default function ConstantTimeBenchmark() {
     setScalePoints([]);
     for (const size of DATA_SIZES) {
       if (cancelRef.current) break;
-      setProgress(formatSize(size));
+      const label = formatSize(size);
+      setProgress(label);
       await new Promise(r => setTimeout(r, 80));
+
       const point = runScaleBenchmark(size);
+      emitThroughput(size, FIXED_CHAIN_DEPTH, point.standardMs, "std", label);
+      await new Promise(r => setTimeout(r, 30));
+      emitThroughput(size, FIXED_CHAIN_DEPTH, point.hologramMs, "holo", label);
+
       setScalePoints(prev => [...prev, point]);
     }
     setScaleState("done");
-  }, []);
+    setThroughput(null);
+  }, [emitThroughput]);
 
   useEffect(() => () => { cancelRef.current = true; }, []);
 
@@ -414,6 +514,9 @@ export default function ConstantTimeBenchmark() {
           )}
         </div>
       )}
+
+      {/* Live throughput gauge */}
+      {isRunning && throughput && <ThroughputGauge data={throughput} />}
 
       {/* Chart */}
       {tab === "chain" && chainPoints.length > 0 && (
