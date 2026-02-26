@@ -544,7 +544,7 @@ export default function HologramComputePage() {
     >
       <PageShell
         title="Compute"
-        subtitle={mode === "consumer" ? "Private AI on your device" : "Provider-Agnostic Virtual GPU Substrate"}
+        subtitle={mode === "consumer" ? "Private AI on your device" : "Provider-Agnostic Hologram Virtual GPU Substrate"}
         icon={<IconCpu size={18} />}
         badge="vGPU"
         backTo="/hologram-console"

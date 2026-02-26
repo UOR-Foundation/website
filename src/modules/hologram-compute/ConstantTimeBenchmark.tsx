@@ -206,7 +206,7 @@ interface DualLineChartProps {
 function DualLineChart({
   xValues, xLabels, stdValues, holoValues, xAxisLabel, yAxisLabel,
   stdLabel = "Standard",
-  holoLabel = "Virtual GPU",
+  holoLabel = "Hologram Virtual GPU",
 }: DualLineChartProps) {
   const maxMs = Math.max(...stdValues, 1);
   const maxX = Math.max(...xValues, 1);
@@ -297,7 +297,7 @@ function exportBenchmark(
   const checksumMatch = data.every(p => p.checksum === p.holoChecksum);
 
   const report = {
-    benchmark: "Virtual GPU — Constant-Time Proof",
+    benchmark: "Hologram Virtual GPU — Constant-Time Proof",
     timestamp: new Date().toISOString(),
     userAgent: navigator.userAgent,
     mode: tab === "chain" ? "Chain Depth Scaling" : "Data Size Scaling",
@@ -317,7 +317,7 @@ function exportBenchmark(
       "1. Open your browser's DevTools Console",
       "2. The operations are: neg(x)=(256-x)&0xFF, bnot(x)=(~x)&0xFF, succ(x)=(x+1)&0xFF, pred(x)=(x+255)&0xFF, dbl(x)=(2*x)&0xFF, sqr(x)=(x*x)&0xFF, xorAA(x)=(x^0xAA)&0xFF, neg again",
       "3. For chain depth N, apply operations 0..N-1 (cycling the 8 ops) sequentially to each byte",
-      "4. The Virtual GPU path composes these into one 256-entry table, then applies it once per byte",
+      "4. The Hologram Virtual GPU path composes these into one 256-entry table, then applies it once per byte",
       "5. Both must produce the same output (checksum field confirms this)",
     ],
   };
@@ -453,7 +453,7 @@ export default function ConstantTimeBenchmark() {
           <div className="rounded-xl p-6 space-y-4" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full" style={{ background: P.gold }} />
-              <h3 className="text-base font-medium" style={{ color: P.text }}>Virtual GPU</h3>
+              <h3 className="text-base font-medium" style={{ color: P.text }}>Hologram Virtual GPU</h3>
             </div>
             <p className="text-5xl font-light font-mono tabular-nums leading-none" style={{ color: P.gold }}>
               O(1)
@@ -478,7 +478,7 @@ export default function ConstantTimeBenchmark() {
             xAxisLabel="Chained Operations"
             yAxisLabel="Time (ms)"
             stdLabel="Standard — O(N × D)"
-            holoLabel="Virtual GPU — O(1) in N"
+            holoLabel="Hologram vGPU — O(1) in N"
           />
         </div>
       )}
@@ -493,7 +493,7 @@ export default function ConstantTimeBenchmark() {
             xAxisLabel="Data Size (elements)"
             yAxisLabel="Time (ms)"
             stdLabel="Standard — 128 passes × N"
-            holoLabel="Virtual GPU — 1 pass × N"
+            holoLabel="Hologram vGPU — 1 pass × N"
           />
         </div>
       )}
@@ -505,7 +505,7 @@ export default function ConstantTimeBenchmark() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <SummaryCard value={`${chainMax.toFixed(0)}×`} label="Peak Speedup" color={P.gold} accent />
             <SummaryCard value={`${last.standardMs.toFixed(1)} ms`} label={`Standard @ ${last.chainDepth} ops`} color={P.red} />
-            <SummaryCard value={`${last.hologramMs.toFixed(1)} ms`} label={`Virtual GPU @ ${last.chainDepth} ops`} color={P.gold} />
+            <SummaryCard value={`${last.hologramMs.toFixed(1)} ms`} label={`Hologram vGPU @ ${last.chainDepth} ops`} color={P.gold} />
             <SummaryCard value={`${last.composeMs.toFixed(2)} ms`} label="Table Compose" />
           </div>
         );
@@ -536,7 +536,7 @@ export default function ConstantTimeBenchmark() {
                   {tab === "chain" ? "Ops" : "Data"}
                 </th>
                 <th className="text-right py-3 px-4 font-medium" style={{ color: P.red, borderBottom: `1px solid ${P.cardBorder}` }}>Standard</th>
-                <th className="text-right py-3 px-4 font-medium" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>Virtual GPU</th>
+                <th className="text-right py-3 px-4 font-medium" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>Hologram vGPU</th>
                 {tab === "scale" && (
                   <th className="text-right py-3 px-4 font-medium" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Apply</th>
                 )}
