@@ -170,7 +170,7 @@ export default function HologramOsPage() {
     setDeparting(true);
     setTimeout(() => navigate("/hologram-console"), 900);
   }, [navigate]);
-  const P = palette(bgMode);
+  const P = useMemo(() => palette(bgMode), [bgMode]);
   const isFocus = attention.preset === "focus";
 
   // ── Mobile: iOS homescreen ──
@@ -191,7 +191,7 @@ export default function HologramOsPage() {
          *  Sidebar + Focus toggle sit here, unaffected by content below
          * ════════════════════════════════════════════════════════════════ */}
         <div
-          className="shrink-0 transition-all duration-700 ease-in-out overflow-hidden"
+          className="shrink-0 transition-all duration-300 ease-out overflow-hidden"
           style={{
             width: isFocus ? 0 : undefined,
             opacity: isFocus ? 0 : 1,
@@ -218,7 +218,7 @@ export default function HologramOsPage() {
             opacity: departing ? 0 : 1,
             transform: departing ? "scale(1.02)" : isFocus ? "scale(1.03)" : "scale(1)",
             filter: departing ? "blur(4px)" : "blur(0px)",
-            transitionDuration: isFocus ? "1200ms" : "900ms",
+            transitionDuration: isFocus ? "600ms" : "400ms",
           }}
         >
           {/* ══════════════════════════════════════════════════════════
@@ -263,7 +263,7 @@ export default function HologramOsPage() {
           <HologramFrame layer={1} label="chrome" interactive opacity={layerNav.layerOpacity(1)} style={{ transform: `scale(${layerNav.layerScale(1)})`, transition: "opacity 0.7s ease, transform 0.7s ease", zIndex: 400, pointerEvents: "none" }}>
             {/* Background Mode Toggle — top right */}
             <div
-              className="absolute top-[3vh] right-[3vw] animate-fade-in transition-all duration-700 ease-in-out"
+              className="absolute top-[3vh] right-[3vw] animate-fade-in transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
@@ -273,7 +273,7 @@ export default function HologramOsPage() {
             >
               <div className="flex flex-col items-center gap-2">
                 <div
-                  className="flex items-center gap-0.5 px-2 py-1.5 rounded-full transition-all duration-700"
+                  className="flex items-center gap-0.5 px-2 py-1.5 rounded-full transition-all duration-300"
                   style={{
                     background: bgMode === "white" ? "hsla(0, 0%, 40%, 0.06)" : "hsla(0, 0%, 90%, 0.06)",
                     border: `1px solid ${bgMode === "white" ? "hsla(0, 0%, 40%, 0.12)" : "hsla(0, 0%, 70%, 0.08)"}`,
@@ -290,11 +290,11 @@ export default function HologramOsPage() {
                       <button
                         key={mode}
                         onClick={() => setBgMode(mode)}
-                        className="relative group flex items-center justify-center w-5 h-5 rounded-full transition-all duration-500"
+                        className="relative group flex items-center justify-center w-5 h-5 rounded-full transition-all duration-300"
                         aria-label={`Switch to ${label} background`}
                       >
                         <div
-                          className="w-[5px] h-[5px] rounded-full transition-all duration-700 ease-in-out"
+                          className="w-[5px] h-[5px] rounded-full transition-all duration-300 ease-out"
                           style={{
                             background: dotColor,
                             transform: isActive ? "scale(1.3)" : "scale(1)",
@@ -306,7 +306,7 @@ export default function HologramOsPage() {
                   })}
                 </div>
                 <span
-                  className="text-[12px] tracking-[0.35em] uppercase font-medium transition-colors duration-500"
+                  className="text-[12px] tracking-[0.35em] uppercase font-medium transition-colors duration-300"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     color: bgMode === "white"
@@ -321,7 +321,7 @@ export default function HologramOsPage() {
 
             {/* Day Progress Ring — bottom right */}
             <div
-              className="absolute bottom-[3vh] right-[3vw] animate-fade-in flex flex-col items-center gap-3 transition-all duration-700 ease-in-out"
+              className="absolute bottom-[3vh] right-[3vw] animate-fade-in flex flex-col items-center gap-3 transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
@@ -339,7 +339,7 @@ export default function HologramOsPage() {
           <HologramFrame layer={2} label="content" interactive={false} transform={contentTilt} opacity={layerNav.layerOpacity(2)} style={{ transform: `scale(${layerNav.layerScale(2)})`, transition: "opacity 0.5s, transform 0.5s" }}>
             {/* Logo — top center */}
             <div
-              className="absolute top-[3vh] left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-700 ease-in-out"
+              className="absolute top-[3vh] left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
@@ -347,7 +347,7 @@ export default function HologramOsPage() {
               }}
             >
               <span
-                className="transition-colors duration-700"
+                className="transition-colors duration-300"
                 style={{
                   fontFamily: "'Playfair Display', serif",
                   fontWeight: 400,
@@ -365,7 +365,7 @@ export default function HologramOsPage() {
             <div className="absolute inset-0 flex flex-col items-center justify-center px-8">
               <div className="text-center max-w-2xl space-y-[2.5vh] animate-fade-in" style={{ pointerEvents: "auto" }}>
                 <p
-                  className="tracking-[0.25em] uppercase transition-colors duration-700"
+                  className="tracking-[0.25em] uppercase transition-colors duration-300"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     color: P.greeting,
@@ -378,7 +378,7 @@ export default function HologramOsPage() {
                 </p>
 
                 <h1
-                  className="leading-[1.08] transition-colors duration-700"
+                  className="leading-[1.08] transition-colors duration-300"
                   style={{
                     fontFamily: "'Playfair Display', serif",
                     fontWeight: 300,
@@ -422,7 +422,7 @@ export default function HologramOsPage() {
                           setChatPrompt(`Tell me more about ${hint} — what should I explore next?`);
                           setChatOpen(true);
                         }}
-                        className="transition-all duration-700 hover:scale-105"
+                        className="transition-all duration-200 hover:scale-105"
                         style={{
                           fontFamily: "'DM Sans', system-ui, sans-serif",
                           fontSize: "clamp(8px, 0.6vw, 10px)",
@@ -447,7 +447,7 @@ export default function HologramOsPage() {
                 <div>
                   <button
                     onClick={goConsole}
-                    className="inline-flex items-center transition-all duration-700"
+                    className="inline-flex items-center transition-all duration-300"
                     style={{
                       fontFamily: "'DM Sans', system-ui, sans-serif",
                       fontWeight: 300,
@@ -478,7 +478,7 @@ export default function HologramOsPage() {
 
             {/* AI Chat Pill — bottom center */}
             <div
-              className="absolute bottom-[3.5vh] left-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out"
+              className="absolute bottom-[3.5vh] left-1/2 -translate-x-1/2 transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
@@ -487,7 +487,7 @@ export default function HologramOsPage() {
             >
               <button
                 onClick={() => setChatOpen(true)}
-                className="relative flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-700 hover:scale-105 group"
+                className="relative flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-300 hover:scale-105 group"
                 style={{
                   background: P.pill,
                   backdropFilter: "blur(24px)",
@@ -496,14 +496,14 @@ export default function HologramOsPage() {
                 }}
               >
                 <div
-                  className="w-1.5 h-1.5 rounded-full group-hover:scale-150 transition-transform duration-500"
+                  className="w-1.5 h-1.5 rounded-full group-hover:scale-150 transition-transform duration-200"
                   style={{
                     background: P.dotPulse,
                     animation: "heartbeat-love 1.6s ease-in-out infinite",
                   }}
                 />
                 <span
-                  className="tracking-[0.2em] font-light transition-colors duration-700"
+                  className="tracking-[0.2em] font-light transition-colors duration-300"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     color: P.pillText,
@@ -530,22 +530,7 @@ export default function HologramOsPage() {
             </div>
           </HologramFrame>
 
-          {/* Keyframes */}
-          <style>{`
-            @keyframes heartbeat-love {
-              0%   { transform: scale(1);    opacity: 0.8; }
-              10%  { transform: scale(1.45); opacity: 1; }
-              22%  { transform: scale(1);    opacity: 0.8; }
-              32%  { transform: scale(1.25); opacity: 0.95; }
-              44%  { transform: scale(1);    opacity: 0.8; }
-              100% { transform: scale(1);    opacity: 0.8; }
-            }
-            @keyframes line-expand {
-              0%   { transform: scaleY(0); opacity: 0; }
-              30%  { opacity: 1; }
-              100% { transform: scaleY(1); opacity: 1; }
-            }
-          `}</style>
+          {/* Keyframes moved to index.css for zero-recalc mounting */}
         </div>
       </div>
 

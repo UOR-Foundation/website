@@ -133,7 +133,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
                 strokeLinecap="butt"
                 strokeDasharray={`${length} ${CIRCUMFERENCE - length}`}
                 strokeDashoffset={-offset}
-                style={{ transition: "stroke-dasharray 1.2s ease-out, stroke-dashoffset 1.2s ease-out" }}
+                style={{ transition: "stroke-dasharray 0.6s ease-out, stroke-dashoffset 0.6s ease-out" }}
               />
             );
           })}
@@ -145,7 +145,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
             r={3.5}
             fill="hsla(38, 40%, 65%, 0.5)"
             style={{
-              transition: "cx 1.2s ease-out, cy 1.2s ease-out",
+              transition: "cx 0.6s ease-out, cy 0.6s ease-out",
               filter: "blur(2px)",
               animation: "dot-heartbeat 1.6s ease-in-out infinite",
             }}
@@ -294,7 +294,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
 
         return (
           <span
-            className="text-[12px] tracking-[0.35em] uppercase transition-all duration-700"
+            className="text-[12px] tracking-[0.35em] uppercase transition-all duration-300"
             style={{
               fontFamily: "'DM Sans', system-ui, sans-serif",
               color,
@@ -308,7 +308,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
 
       {/* Phase legend — appears on hover, above the ring */}
       <div
-        className="absolute -top-16 left-1/2 -translate-x-1/2 flex gap-5 transition-all duration-700 pointer-events-none"
+        className="absolute -top-16 left-1/2 -translate-x-1/2 flex gap-5 transition-all duration-300 pointer-events-none"
         style={{
           opacity: hovered && attention.showExpanded ? 1 : 0,
           transform: `translateX(-50%) translateY(${hovered && attention.showExpanded ? "0" : "6px"})`,
@@ -344,19 +344,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
       </div>
 
 
-      <style>{`
-        @keyframes ring-breathe {
-          0%, 100% { opacity: 0.5; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.06); }
-        }
-        @keyframes dot-heartbeat {
-          0%, 100% { opacity: 0.6; r: 3.5; }
-          10% { opacity: 1; r: 5; }
-          22% { opacity: 0.6; r: 3.5; }
-          32% { opacity: 0.9; r: 4.5; }
-          44% { opacity: 0.6; r: 3.5; }
-        }
-      `}</style>
+      {/* Keyframes moved to index.css for zero-recalc mounting */}
     </div>
   );
 }

@@ -240,9 +240,9 @@ export function useHologramFrame() {
 // ── Transition Presets ──────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-/** Spring config for cinematic depth transitions */
-const DEPTH_SPRING = { type: "spring" as const, stiffness: 80, damping: 20, mass: 0.8 };
-const FADE_SPRING = { type: "spring" as const, stiffness: 120, damping: 22, mass: 0.6 };
+/** Spring config tuned for crisp, fast settling — flow-optimized */
+const DEPTH_SPRING = { type: "spring" as const, stiffness: 200, damping: 28, mass: 0.5 };
+const FADE_SPRING = { type: "spring" as const, stiffness: 260, damping: 26, mass: 0.4 };
 
 /** How much lower layers recede when an overlay opens */
 const RECESSION_SCALE = 0.965;
@@ -346,7 +346,7 @@ export default function HologramFrame({
     zIndex,
     pointerEvents: interactive ? "auto" : "none",
     transformStyle: "preserve-3d",
-    willChange: "transform, opacity, filter",
+    willChange: interactive ? "transform, opacity" : "auto",
     ...style,
   };
 
