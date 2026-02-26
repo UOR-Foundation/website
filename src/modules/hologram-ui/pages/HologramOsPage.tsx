@@ -265,7 +265,7 @@ export default function HologramOsPage() {
 
         {/* Main viewport area — contains canvas + chrome + content frames */}
         <div
-          className="flex-1 relative overflow-hidden transition-all ease-in-out"
+          className="flex-1 relative overflow-hidden transition-all ease-in-out z-0"
           style={{
             opacity: departing ? 0 : 1,
             transform: departing ? "scale(1.02)" : isFocus ? "scale(1.03)" : "scale(1)",
