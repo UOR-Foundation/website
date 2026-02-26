@@ -195,6 +195,24 @@ export default function LegalPanel({ open, initialTab = "privacy", onClose, bgMo
 
 // ── Shared styles ──────────────────────────────────────────────────────────
 
+const InlineLink = ({ href, children, P }: { href: string; children: React.ReactNode; P: ReturnType<typeof palette> }) => (
+  <a
+    href={href}
+    target={href.startsWith("http") ? "_blank" : undefined}
+    rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+    style={{
+      color: P.tabActive,
+      textDecoration: "none",
+      borderBottom: `1px solid ${P.tabActive}44`,
+      transition: "border-color 0.3s",
+    }}
+    onMouseEnter={(e) => (e.currentTarget.style.borderColor = P.tabActive)}
+    onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${P.tabActive}44`)}
+  >
+    {children}
+  </a>
+);
+
 const Section = ({ title, children, P, fontDisplay }: { title: string; children: React.ReactNode; P: ReturnType<typeof palette>; fontDisplay: string }) => (
   <section className="mb-10">
     <h2
@@ -285,54 +303,154 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
         className="text-xl font-light tracking-wide mb-2"
         style={{ fontFamily: fontDisplay, color: P.heading }}
       >
-        Terms of Use
+        Your Terms
       </h1>
-      <p className="text-[12px] tracking-wider uppercase mb-10" style={{ color: P.textMuted }}>
+      <p className="text-[12px] tracking-wider uppercase mb-4" style={{ color: P.textMuted }}>
         Last updated: February 2026
       </p>
+      <p
+        className="text-[13px] leading-[1.9] mb-10 italic"
+        style={{ color: P.textMuted }}
+      >
+        Hologram is built on a simple principle: you define the terms under which your data is
+        shared — not us, not applications, not third parties. This approach is inspired by and
+        aligned with the{" "}
+        <InlineLink href="https://myterms.info/" P={P}>IEEE 7012-2025 standard (MyTerms)</InlineLink>,
+        a global framework for machine-readable personal privacy terms.
+      </p>
 
-      <Section title="1. Acceptance of Terms" P={P} fontDisplay={fontDisplay}>
+      <Section title="1. Your Space, Your Rules" P={P} fontDisplay={fontDisplay}>
         <p>
-          By accessing or using the UOR Foundation platform, you agree to be bound by these
-          Terms of Use. If you do not agree to these terms, please do not use our services.
+          Hologram provides you with a personal, private space. When you create an identity here,
+          you gain complete ownership over three things:
+        </p>
+        <ul className="space-y-2 pl-1 mt-2" style={{ listStyle: "none" }}>
+          <li className="flex gap-2 items-start">
+            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Your Identity</strong> — A cryptographically unique address derived from your credentials, belonging solely to you. No platform can revoke or reassign it.</span>
+          </li>
+          <li className="flex gap-2 items-start">
+            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Your Data</strong> — Everything you create, store, or generate within Hologram is yours. We do not mine, sell, or monetise your personal data.</span>
+          </li>
+          <li className="flex gap-2 items-start">
+            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Your Network</strong> — The relationships and connections you build are private by default. You choose who sees what, and under what conditions.</span>
+          </li>
+        </ul>
+      </Section>
+
+      <Section title="2. How Terms Work in Hologram" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Unlike traditional platforms where you accept a company's terms, Hologram inverts this
+          relationship. You define your own terms as structured, machine-readable objects —
+          following the principles of the{" "}
+          <InlineLink href="https://myterms.info/ieee7012-standards/" P={P}>IEEE 7012 standard</InlineLink>.
+          These terms travel with your identity and govern every interaction.
+        </p>
+        <p>
+          When an application, service, or agent wants to interact with you or access your data,
+          it must first accept <em style={{ color: P.tabActive }}>your</em> terms — not the other way around.
+          This creates a transparent, equitable exchange where you always know what is being
+          shared, with whom, and why.
         </p>
       </Section>
 
-      <Section title="2. Use of Services" P={P} fontDisplay={fontDisplay}>
+      <Section title="3. What You Control" P={P} fontDisplay={fontDisplay}>
         <p>
-          You agree to use our services in accordance with all applicable laws and regulations.
-          You are responsible for maintaining the confidentiality of your account credentials
-          and for all activities that occur under your account.
+          Through your{" "}
+          <InlineLink href="/your-space/preferences" P={P}>personal preferences</InlineLink>,
+          you can define:
+        </p>
+        <ul className="space-y-2 pl-1 mt-2" style={{ listStyle: "none" }}>
+          <li className="flex gap-2 items-start">
+            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Data sharing boundaries</strong> — Which categories of personal data (if any) may be shared with applications and services.</span>
+          </li>
+          <li className="flex gap-2 items-start">
+            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Interaction permissions</strong> — Whether agents and services may contact you, and under what circumstances.</span>
+          </li>
+          <li className="flex gap-2 items-start">
+            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Retention policies</strong> — How long any shared data may be retained by third parties before it must be deleted.</span>
+          </li>
+          <li className="flex gap-2 items-start">
+            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Consent withdrawal</strong> — The ability to revoke access at any time, with immediate effect across all connected services.</span>
+          </li>
+        </ul>
+        <p className="mt-3">
+          These preferences are stored as content-addressed, cryptographically signed objects within
+          the{" "}
+          <InlineLink href="/standard" P={P}>UOR Framework</InlineLink>,
+          ensuring they are tamper-proof and verifiable.
         </p>
       </Section>
 
-      <Section title="3. Intellectual Property" P={P} fontDisplay={fontDisplay}>
+      <Section title="4. No Surveillance" P={P} fontDisplay={fontDisplay}>
         <p>
-          The UOR Framework is open source and governed by its respective licence. All other
-          content, trademarks, and materials on this platform are the property of the
-          UOR Foundation unless otherwise stated.
+          Hologram does not track you across sessions. There are no third-party trackers, no
+          behavioural profiling, and no advertising identifiers. Your activity within your space
+          is yours alone — visible only to you unless you explicitly choose to share it.
+        </p>
+        <p>
+          This is not a policy choice that can be reversed. It is an architectural guarantee,
+          built into the protocol layer of the platform.
         </p>
       </Section>
 
-      <Section title="4. Limitation of Liability" P={P} fontDisplay={fontDisplay}>
+      <Section title="5. The Hologram Ecosystem" P={P} fontDisplay={fontDisplay}>
         <p>
-          Our services are provided on an &ldquo;as is&rdquo; basis. We make no warranties,
-          express or implied, regarding the reliability, availability, or suitability of the
-          platform for any particular purpose.
+          Applications and experiences within the Hologram ecosystem operate under a simple
+          contract: they must respect your terms to participate. If an application cannot
+          operate within your stated boundaries, it will not have access to your data.
+        </p>
+        <p>
+          This creates an environment where trust is the default — not something extracted
+          through lengthy legal documents that no one reads.
         </p>
       </Section>
 
-      <Section title="5. Changes to Terms" P={P} fontDisplay={fontDisplay}>
+      <Section title="6. Implementation" P={P} fontDisplay={fontDisplay}>
         <p>
-          We reserve the right to modify these terms at any time. Continued use of the platform
-          after changes constitutes acceptance of the updated terms.
+          Your terms are implemented through three layers:
+        </p>
+        <ul className="space-y-2 pl-1 mt-2" style={{ listStyle: "none" }}>
+          <li className="flex gap-2 items-start">
+            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>1</span>
+            <span><strong style={{ color: P.heading }}>Identity Layer</strong> — Your sovereign identity, derived from the UOR Framework, serves as the root of all permissions.</span>
+          </li>
+          <li className="flex gap-2 items-start">
+            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>2</span>
+            <span><strong style={{ color: P.heading }}>Terms Layer</strong> — Your preferences are canonicalised using URDNA2015 and hashed via SHA-256, creating an immutable, machine-readable terms object aligned with IEEE 7012.</span>
+          </li>
+          <li className="flex gap-2 items-start">
+            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>3</span>
+            <span><strong style={{ color: P.heading }}>Enforcement Layer</strong> — Every data exchange is gated by your terms object. Services must present a valid acceptance receipt before access is granted.</span>
+          </li>
+        </ul>
+      </Section>
+
+      <Section title="7. Your Preferences" P={P} fontDisplay={fontDisplay}>
+        <p>
+          You can review and update your personal terms at any time from your{" "}
+          <InlineLink href="/your-space/preferences" P={P}>Preferences</InlineLink>{" "}
+          section within Your Space. Changes take effect immediately across all connected
+          applications and services.
         </p>
       </Section>
 
-      <Section title="6. Governing Law" P={P} fontDisplay={fontDisplay}>
+      <Section title="8. Open Standard" P={P} fontDisplay={fontDisplay}>
         <p>
-          These terms shall be governed by and construed in accordance with applicable law,
-          without regard to conflict of law principles.
+          This approach is built on open standards and open-source technology. The underlying
+          framework is publicly available at{" "}
+          <InlineLink href="https://github.com/UOR-Foundation" P={P}>github.com/UOR-Foundation</InlineLink>,
+          and the privacy terms standard is documented at{" "}
+          <InlineLink href="https://myterms.info/" P={P}>myterms.info</InlineLink>.
+        </p>
+        <p>
+          We believe privacy should not be a feature — it should be the foundation.
         </p>
       </Section>
     </article>
