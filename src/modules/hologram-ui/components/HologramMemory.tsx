@@ -181,15 +181,15 @@ export default function HologramMemory({ onClose }: HologramMemoryProps) {
 
 function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => void }) {
   return (
-    <div className="px-6 lg:px-10 py-8 space-y-10">
+    <div className="px-6 md:px-8 lg:px-10 py-8 lg:py-10 space-y-8 lg:space-y-10 flex flex-col min-h-full">
       {/* Hero */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.green }} />
-          <span className="text-sm font-medium" style={{ color: P.green }}>Protected</span>
+          <span className="text-base font-medium" style={{ color: P.green }}>Protected</span>
         </div>
         <h2
-          className="text-3xl lg:text-4xl font-light tracking-tight leading-tight"
+          className="text-2xl md:text-3xl lg:text-4xl font-light tracking-tight leading-tight"
           style={{ color: P.text, fontFamily: P.serif }}
         >
           Your memory, encrypted
@@ -202,10 +202,10 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
 
       {/* Key metrics */}
       <section className="space-y-4">
-        <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+        <h3 className="text-sm font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
           At a Glance
         </h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <MetricCard
             value={`${stats.totalItems}`}
             unit="items"
@@ -236,36 +236,36 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
       </section>
 
       {/* Two-column: Storage tiers + Recent activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 flex-1">
         {/* Storage tiers */}
-        <section className="space-y-4">
-          <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+        <section className="space-y-4 flex flex-col">
+          <h3 className="text-sm font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
             Storage
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1 flex flex-col justify-between">
             <ResourceRow
-              icon={<IconFlame size={16} />}
+              icon={<IconFlame size={18} />}
               label="Hot Memory"
               value={`${stats.tierBreakdown.hot} items`}
               on
               detail="Instant access — recent conversations, active context"
             />
             <ResourceRow
-              icon={<IconStack2 size={16} />}
+              icon={<IconStack2 size={18} />}
               label="Warm Memory"
               value={`${stats.tierBreakdown.warm} items`}
               on
               detail="Quick recall — past sessions, learned preferences"
             />
             <ResourceRow
-              icon={<IconArchive size={16} />}
+              icon={<IconArchive size={18} />}
               label="Cold Archive"
               value={`${stats.tierBreakdown.cold} items`}
               on
               detail="Deep storage — compressed history, proofs, certificates"
             />
             <ResourceRow
-              icon={<IconLock size={16} />}
+              icon={<IconLock size={18} />}
               label="Encryption"
               value="AES-256-GCM"
               on
@@ -275,31 +275,31 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
         </section>
 
         {/* Recent activity */}
-        <section className="space-y-4">
+        <section className="space-y-4 flex flex-col">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+            <h3 className="text-sm font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
               Recent Activity
             </h3>
-            <span className="text-xs" style={{ color: P.dim }}>Live</span>
+            <span className="text-sm" style={{ color: P.dim }}>Live</span>
           </div>
           <div
-            className="rounded-xl overflow-hidden"
+            className="rounded-xl overflow-hidden flex-1"
             style={{ border: `1px solid ${P.cardBorder}`, background: P.card }}
           >
             {stats.recentItems.map((item, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 px-4 py-3"
+                className="flex items-center gap-3 px-4 py-3.5"
                 style={{ borderBottom: i < stats.recentItems.length - 1 ? `1px solid ${P.cardBorder}` : "none" }}
               >
-                <IconFileText size={14} style={{ color: i === 0 ? P.gold : P.dim }} />
+                <IconFileText size={16} style={{ color: i === 0 ? P.gold : P.dim }} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: P.text }}>{item.label}</p>
+                  <p className="text-base font-medium truncate" style={{ color: P.text }}>{item.label}</p>
                 </div>
-                <span className="text-xs font-mono tabular-nums shrink-0" style={{ color: P.muted }}>
+                <span className="text-sm font-mono tabular-nums shrink-0" style={{ color: P.muted }}>
                   {formatBytes(item.sizeBytes)}
                 </span>
-                <span className="text-xs shrink-0" style={{ color: P.dim }}>{item.timeAgo}</span>
+                <span className="text-sm shrink-0" style={{ color: P.dim }}>{item.timeAgo}</span>
               </div>
             ))}
           </div>
@@ -308,10 +308,10 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
 
       {/* How it works */}
       <section className="space-y-4">
-        <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+        <h3 className="text-sm font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
           How It Works
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
           <HowCard step="1" title="Capture" desc="Every interaction is encoded into a universal canonical form — one format that works everywhere." />
           <HowCard step="2" title="Compress" desc="Intelligent compression removes redundancy while keeping every bit of meaning. Nothing is ever lost." />
           <HowCard step="3" title="Encrypt" desc="Your data is encrypted on your device before it ever leaves. Only you hold the decryption keys." />
@@ -320,13 +320,13 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
 
       {/* Demo teaser */}
       <section
-        className="rounded-xl p-6 flex items-center justify-between cursor-pointer transition-all duration-300 hover:opacity-90"
+        className="rounded-xl p-5 md:p-6 flex items-center justify-between cursor-pointer transition-all duration-300 hover:opacity-90"
         style={{ background: "hsla(38, 40%, 65%, 0.06)", border: `1px solid hsla(38, 40%, 65%, 0.12)` }}
         onClick={onDemo}
       >
         <div className="space-y-1">
-          <h3 className="text-base font-medium" style={{ color: P.text }}>Try it yourself</h3>
-          <p className="text-sm" style={{ color: P.muted }}>
+          <h3 className="text-base md:text-lg font-medium" style={{ color: P.text }}>Try it yourself</h3>
+          <p className="text-sm md:text-base" style={{ color: P.muted }}>
             Drop a PDF and watch it get compressed, canonicalized, and become AI-searchable — instantly
           </p>
         </div>
@@ -342,7 +342,7 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
 
 function ProMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => void }) {
   return (
-    <div className="px-6 lg:px-10 py-8 space-y-8">
+    <div className="px-6 md:px-8 lg:px-10 py-8 lg:py-10 space-y-8 flex flex-col min-h-full">
       {/* Top metrics */}
       <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatCell label="Total Items" value={`${stats.totalItems}`} color={P.green} />
@@ -383,35 +383,35 @@ function ProMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => void }) 
       {/* Compression details */}
       <section className="space-y-3">
         <SectionTitle>Compression Pipeline</SectionTitle>
-        <div className="rounded-xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <div className="rounded-xl p-5 md:p-6" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
-              <p className="text-xl font-mono font-light" style={{ color: P.text }}>{stats.compressionRatio.toFixed(1)}×</p>
-              <p className="text-xs mt-1" style={{ color: P.muted }}>Compression Ratio</p>
+              <p className="text-lg md:text-xl font-mono font-light" style={{ color: P.text }}>{stats.compressionRatio.toFixed(1)}×</p>
+              <p className="text-xs md:text-sm mt-1" style={{ color: P.muted }}>Compression Ratio</p>
             </div>
             <div>
-              <p className="text-xl font-mono font-light" style={{ color: P.text }}>UGC2</p>
-              <p className="text-xs mt-1" style={{ color: P.muted }}>Format</p>
+              <p className="text-lg md:text-xl font-mono font-light" style={{ color: P.text }}>UGC2</p>
+              <p className="text-xs md:text-sm mt-1" style={{ color: P.muted }}>Format</p>
             </div>
             <div>
-              <p className="text-xl font-mono font-light" style={{ color: P.text }}>URDNA2015</p>
-              <p className="text-xs mt-1" style={{ color: P.muted }}>Canonicalization</p>
+              <p className="text-lg md:text-xl font-mono font-light" style={{ color: P.text }}>URDNA2015</p>
+              <p className="text-xs md:text-sm mt-1" style={{ color: P.muted }}>Canonicalization</p>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <p className="text-xl font-mono font-light" style={{ color: P.text }}>Lossless</p>
-                <IconCircleCheck size={14} style={{ color: P.green }} />
+                <p className="text-lg md:text-xl font-mono font-light" style={{ color: P.text }}>Lossless</p>
+                <IconCircleCheck size={16} style={{ color: P.green }} />
               </div>
-              <p className="text-xs mt-1" style={{ color: P.muted }}>Integrity</p>
+              <p className="text-xs md:text-sm mt-1" style={{ color: P.muted }}>Integrity</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Data types */}
-      <section className="space-y-3">
+      <section className="space-y-3 flex-1">
         <SectionTitle>Data Types</SectionTitle>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
           {[
             { name: "Sessions", desc: "Conversation chains", badge: "Delta" },
             { name: "Memories", desc: "Semantic knowledge", badge: "UGC2" },
@@ -422,17 +422,17 @@ function ProMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => void }) 
           ].map(s => (
             <div
               key={s.name}
-              className="flex items-center justify-between p-3 rounded-lg"
+              className="flex items-center justify-between p-3 md:p-4 rounded-lg"
               style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}
             >
               <div className="flex items-center gap-2.5">
-                <IconDatabase size={12} style={{ color: P.dim }} />
+                <IconDatabase size={14} style={{ color: P.dim }} />
                 <div>
-                  <p className="text-sm font-medium" style={{ color: P.text }}>{s.name}</p>
-                  <p className="text-xs" style={{ color: P.dim }}>{s.desc}</p>
+                  <p className="text-sm md:text-base font-medium" style={{ color: P.text }}>{s.name}</p>
+                  <p className="text-xs md:text-sm" style={{ color: P.dim }}>{s.desc}</p>
                 </div>
               </div>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ color: P.muted, border: `1px solid ${P.cardBorder}` }}>
+              <span className="text-xs font-mono px-2 py-0.5 rounded" style={{ color: P.muted, border: `1px solid ${P.cardBorder}` }}>
                 {s.badge}
               </span>
             </div>
@@ -444,12 +444,12 @@ function ProMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => void }) 
       <section className="text-center pt-2">
         <button
           onClick={onDemo}
-          className="inline-flex items-center gap-2 text-sm font-medium transition-colors duration-200"
+          className="inline-flex items-center gap-2 text-sm md:text-base font-medium transition-colors duration-200"
           style={{ color: P.gold }}
         >
-          <IconChartBar size={14} />
+          <IconChartBar size={16} />
           View compression demo
-          <IconArrowRight size={12} />
+          <IconArrowRight size={14} />
         </button>
       </section>
     </div>
@@ -864,19 +864,19 @@ function MetricCard({ value, unit, label, sublabel, accent }: {
 }) {
   return (
     <div
-      className="rounded-xl p-5 space-y-3"
+      className="rounded-xl p-4 md:p-5 space-y-2 md:space-y-3"
       style={{
         background: accent ? "hsla(38, 40%, 65%, 0.06)" : P.card,
         border: `1px solid ${accent ? "hsla(38, 40%, 65%, 0.12)" : P.cardBorder}`,
       }}
     >
       <div className="flex items-baseline gap-1.5">
-        <span className="text-3xl lg:text-4xl font-light font-mono tracking-tight" style={{ color: accent ? P.gold : P.text }}>{value}</span>
-        {unit && <span className="text-sm" style={{ color: P.muted }}>{unit}</span>}
+        <span className="text-2xl md:text-3xl lg:text-4xl font-light font-mono tracking-tight" style={{ color: accent ? P.gold : P.text }}>{value}</span>
+        {unit && <span className="text-sm md:text-base" style={{ color: P.muted }}>{unit}</span>}
       </div>
       <div>
-        <p className="text-sm font-medium" style={{ color: P.text }}>{label}</p>
-        <p className="text-xs mt-0.5" style={{ color: P.dim }}>{sublabel}</p>
+        <p className="text-sm md:text-base font-medium" style={{ color: P.text }}>{label}</p>
+        <p className="text-xs md:text-sm mt-0.5" style={{ color: P.dim }}>{sublabel}</p>
       </div>
     </div>
   );
@@ -887,16 +887,16 @@ function ResourceRow({ icon, label, value, on, detail }: {
 }) {
   return (
     <div
-      className="flex items-center gap-4 px-4 py-3.5 rounded-xl"
+      className="flex items-center gap-4 px-4 py-3.5 md:py-4 rounded-xl"
       style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}
     >
       <div className="shrink-0" style={{ color: on ? P.green : P.dim }}>{icon}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium" style={{ color: P.text }}>{label}</p>
-          <span className="text-xs" style={{ color: on ? P.green : P.muted }}>{value}</span>
+          <p className="text-sm md:text-base font-medium" style={{ color: P.text }}>{label}</p>
+          <span className="text-xs md:text-sm" style={{ color: on ? P.green : P.muted }}>{value}</span>
         </div>
-        <p className="text-xs mt-0.5 truncate" style={{ color: P.dim }}>{detail}</p>
+        <p className="text-xs md:text-sm mt-0.5 truncate" style={{ color: P.dim }}>{detail}</p>
       </div>
       <div className="w-2 h-2 rounded-full shrink-0" style={{ background: on ? P.green : P.dim }} />
     </div>
@@ -905,25 +905,25 @@ function ResourceRow({ icon, label, value, on, detail }: {
 
 function HowCard({ step, title, desc }: { step: string; title: string; desc: string }) {
   return (
-    <div className="rounded-xl p-5 space-y-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+    <div className="rounded-xl p-4 md:p-5 space-y-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
       <div className="flex items-center gap-3">
-        <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "hsla(38, 40%, 65%, 0.12)", color: P.gold }}>
+        <span className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-bold" style={{ background: "hsla(38, 40%, 65%, 0.12)", color: P.gold }}>
           {step}
         </span>
-        <h4 className="text-sm font-semibold" style={{ color: P.text }}>{title}</h4>
+        <h4 className="text-sm md:text-base font-semibold" style={{ color: P.text }}>{title}</h4>
       </div>
-      <p className="text-sm leading-relaxed" style={{ color: P.muted, lineHeight: 1.7 }}>{desc}</p>
+      <p className="text-sm md:text-base leading-relaxed" style={{ color: P.muted, lineHeight: 1.7 }}>{desc}</p>
     </div>
   );
 }
 
 function StatCell({ label, value, unit, color }: { label: string; value: string; unit?: string; color?: string }) {
   return (
-    <div className="p-3 rounded-xl" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-      <p className="text-xs mb-1" style={{ color: P.muted }}>{label}</p>
+    <div className="p-3 md:p-4 rounded-xl" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+      <p className="text-xs md:text-sm mb-1" style={{ color: P.muted }}>{label}</p>
       <div className="flex items-baseline gap-1">
-        <span className="text-base font-mono font-medium" style={{ color: color ?? P.text }}>{value}</span>
-        {unit && <span className="text-xs" style={{ color: P.dim }}>{unit}</span>}
+        <span className="text-base md:text-lg font-mono font-medium" style={{ color: color ?? P.text }}>{value}</span>
+        {unit && <span className="text-xs md:text-sm" style={{ color: P.dim }}>{unit}</span>}
       </div>
     </div>
   );
@@ -931,7 +931,7 @@ function StatCell({ label, value, unit, color }: { label: string; value: string;
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+    <h2 className="text-xs md:text-sm font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
       {children}
     </h2>
   );
@@ -942,7 +942,7 @@ function TierCard({ icon, title, desc, count, active }: {
 }) {
   return (
     <div
-      className="rounded-xl p-4 space-y-3"
+      className="rounded-xl p-4 md:p-5 space-y-3"
       style={{
         background: P.card,
         border: `1px solid ${active ? P.cardBorder : "hsla(38, 12%, 70%, 0.04)"}`,
@@ -953,11 +953,11 @@ function TierCard({ icon, title, desc, count, active }: {
         <div className="p-2 rounded-lg" style={{ background: "hsla(38, 12%, 90%, 0.06)", color: active ? P.green : P.dim }}>
           {icon}
         </div>
-        <span className="text-base font-mono font-medium" style={{ color: P.text }}>{count}</span>
+        <span className="text-base md:text-lg font-mono font-medium" style={{ color: P.text }}>{count}</span>
       </div>
       <div>
-        <h3 className="text-sm font-semibold" style={{ color: P.text }}>{title}</h3>
-        <p className="text-xs mt-1 leading-relaxed" style={{ color: P.muted }}>{desc}</p>
+        <h3 className="text-sm md:text-base font-semibold" style={{ color: P.text }}>{title}</h3>
+        <p className="text-xs md:text-sm mt-1 leading-relaxed" style={{ color: P.muted }}>{desc}</p>
       </div>
     </div>
   );

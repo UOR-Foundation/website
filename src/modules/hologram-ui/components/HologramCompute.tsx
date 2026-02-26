@@ -230,17 +230,17 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
   const activityLog = useMemo(() => generateActivityLog(), []);
 
   return (
-    <div className="px-6 lg:px-10 py-8 space-y-10">
+    <div className="px-6 md:px-8 lg:px-10 py-8 lg:py-10 space-y-8 lg:space-y-10 flex flex-col min-h-full">
       {/* ── Hero: Why ────────────────────────────────────────── */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full" style={{ background: sc(snap?.status ?? "offline") }} />
-          <span className="text-sm font-medium" style={{ color: isOnline ? P.green : P.muted }}>
+          <span className="text-base font-medium" style={{ color: isOnline ? P.green : P.muted }}>
             {isOnline ? "Online" : "Initializing"}
           </span>
         </div>
         <h2
-          className="text-3xl lg:text-4xl font-light tracking-tight leading-tight"
+          className="text-2xl md:text-3xl lg:text-4xl font-light tracking-tight leading-tight"
           style={{ color: P.text, fontFamily: P.serif }}
         >
           AI that runs on your device
@@ -253,10 +253,10 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
 
       {/* ── Performance at a glance ──────────────────────────── */}
       <section className="space-y-4">
-        <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+        <h3 className="text-sm font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
           Performance
         </h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <MetricCard
             value={gflops > 0 ? `${gflops.toFixed(0)}` : mops > 0 ? `${mops.toFixed(0)}M` : "—"}
             unit={gflops > 0 ? "GFLOPS" : "ops/sec"}
@@ -307,10 +307,10 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
       </section>
 
       {/* ── Two-column: Resources + Activity ─────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 flex-1">
         {/* Available Resources */}
-        <section className="space-y-4">
-          <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+        <section className="space-y-4 flex flex-col">
+          <h3 className="text-sm font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
             Your Resources
           </h3>
           <div className="space-y-2">
@@ -348,7 +348,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
         {/* Activity Log */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+            <h3 className="text-sm font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
               Activity
             </h3>
             <span className="text-xs" style={{ color: P.dim }}>Live</span>
@@ -386,7 +386,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
 
       {/* ── How it works ─────────────────────────────────────── */}
       <section className="space-y-4">
-        <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+        <h3 className="text-sm font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
           How It Works
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -410,7 +410,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
 
       {/* ── What's included ──────────────────────────────────── */}
       <section className="space-y-4">
-        <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+        <h3 className="text-sm font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
           What's Included
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -615,19 +615,19 @@ function MetricCard({ value, unit, label, sublabel, accent }: {
 }) {
   return (
     <div
-      className="rounded-xl p-5 space-y-3"
+      className="rounded-xl p-4 md:p-5 space-y-2 md:space-y-3"
       style={{
         background: accent ? "hsla(38, 40%, 65%, 0.06)" : P.card,
         border: `1px solid ${accent ? "hsla(38, 40%, 65%, 0.12)" : P.cardBorder}`,
       }}
     >
       <div className="flex items-baseline gap-1.5">
-        <span className="text-3xl lg:text-4xl font-light font-mono tracking-tight" style={{ color: accent ? P.gold : P.text }}>{value}</span>
-        <span className="text-sm" style={{ color: P.muted }}>{unit}</span>
+        <span className="text-2xl md:text-3xl lg:text-4xl font-light font-mono tracking-tight" style={{ color: accent ? P.gold : P.text }}>{value}</span>
+        <span className="text-sm md:text-base" style={{ color: P.muted }}>{unit}</span>
       </div>
       <div>
-        <p className="text-sm font-medium" style={{ color: P.text }}>{label}</p>
-        <p className="text-xs mt-0.5" style={{ color: P.dim }}>{sublabel}</p>
+        <p className="text-sm md:text-base font-medium" style={{ color: P.text }}>{label}</p>
+        <p className="text-xs md:text-sm mt-0.5" style={{ color: P.dim }}>{sublabel}</p>
       </div>
     </div>
   );
@@ -638,16 +638,16 @@ function ResourceRow({ icon, label, value, on, detail }: {
 }) {
   return (
     <div
-      className="flex items-center gap-4 px-4 py-3.5 rounded-xl"
+      className="flex items-center gap-4 px-4 py-3.5 md:py-4 rounded-xl"
       style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}
     >
       <div className="shrink-0" style={{ color: on ? P.green : P.dim }}>{icon}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium" style={{ color: P.text }}>{label}</p>
-          <span className="text-xs" style={{ color: on ? P.green : P.muted }}>{value}</span>
+          <p className="text-sm md:text-base font-medium" style={{ color: P.text }}>{label}</p>
+          <span className="text-xs md:text-sm" style={{ color: on ? P.green : P.muted }}>{value}</span>
         </div>
-        <p className="text-xs mt-0.5 truncate" style={{ color: P.dim }}>{detail}</p>
+        <p className="text-xs md:text-sm mt-0.5 truncate" style={{ color: P.dim }}>{detail}</p>
       </div>
       <div className="w-2 h-2 rounded-full shrink-0" style={{ background: on ? P.green : P.dim }} />
     </div>
@@ -657,30 +657,30 @@ function ResourceRow({ icon, label, value, on, detail }: {
 function HowCard({ step, title, desc }: { step: string; title: string; desc: string }) {
   return (
     <div
-      className="rounded-xl p-5 space-y-3"
+      className="rounded-xl p-4 md:p-5 space-y-3"
       style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}
     >
       <div className="flex items-center gap-3">
         <span
-          className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+          className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-bold"
           style={{ background: "hsla(38, 40%, 65%, 0.12)", color: P.gold }}
         >
           {step}
         </span>
-        <h4 className="text-sm font-semibold" style={{ color: P.text }}>{title}</h4>
+        <h4 className="text-sm md:text-base font-semibold" style={{ color: P.text }}>{title}</h4>
       </div>
-      <p className="text-sm leading-relaxed" style={{ color: P.muted, lineHeight: 1.7 }}>{desc}</p>
+      <p className="text-sm md:text-base leading-relaxed" style={{ color: P.muted, lineHeight: 1.7 }}>{desc}</p>
     </div>
   );
 }
 
 function StatCell({ label, value, unit, color }: { label: string; value: string; unit?: string; color?: string }) {
   return (
-    <div className="p-3 rounded-xl" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-      <p className="text-xs mb-1" style={{ color: P.muted }}>{label}</p>
+    <div className="p-3 md:p-4 rounded-xl" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+      <p className="text-xs md:text-sm mb-1" style={{ color: P.muted }}>{label}</p>
       <div className="flex items-baseline gap-1">
-        <span className="text-base font-mono font-medium" style={{ color: color ?? P.text }}>{value}</span>
-        {unit && <span className="text-xs" style={{ color: P.dim }}>{unit}</span>}
+        <span className="text-base md:text-lg font-mono font-medium" style={{ color: color ?? P.text }}>{value}</span>
+        {unit && <span className="text-xs md:text-sm" style={{ color: P.dim }}>{unit}</span>}
       </div>
     </div>
   );
@@ -688,7 +688,7 @@ function StatCell({ label, value, unit, color }: { label: string; value: string;
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+    <h2 className="text-xs md:text-sm font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
       {children}
     </h2>
   );
@@ -700,7 +700,7 @@ function ProCard({ icon, title, desc, active, action, onClick, loading }: {
 }) {
   return (
     <div
-      className="rounded-xl p-4 space-y-3 transition-all duration-300"
+      className="rounded-xl p-4 md:p-5 space-y-3 transition-all duration-300"
       style={{
         background: P.card,
         border: `1px solid ${active ? P.cardBorder : "hsla(38, 12%, 70%, 0.04)"}`,
@@ -711,20 +711,20 @@ function ProCard({ icon, title, desc, active, action, onClick, loading }: {
         <div className="p-2 rounded-lg" style={{ background: "hsla(38, 12%, 90%, 0.06)", color: active ? P.green : P.dim }}>
           {icon}
         </div>
-        {!active && <span className="text-[10px] font-medium uppercase tracking-wider" style={{ color: P.dim }}>Planned</span>}
+        {!active && <span className="text-xs font-medium uppercase tracking-wider" style={{ color: P.dim }}>Planned</span>}
       </div>
       <div>
-        <h3 className="text-sm font-semibold" style={{ color: P.text }}>{title}</h3>
-        <p className="text-xs mt-1 leading-relaxed" style={{ color: P.muted }}>{desc}</p>
+        <h3 className="text-sm md:text-base font-semibold" style={{ color: P.text }}>{title}</h3>
+        <p className="text-xs md:text-sm mt-1 leading-relaxed" style={{ color: P.muted }}>{desc}</p>
       </div>
       {action && onClick && (
         <button
           onClick={onClick}
           disabled={loading}
-          className="flex items-center gap-1.5 text-xs font-medium transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 text-xs md:text-sm font-medium transition-colors disabled:opacity-50"
           style={{ color: P.text }}
         >
-          {loading ? <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: P.text, borderTopColor: "transparent" }} /> : <IconActivity size={12} />}
+          {loading ? <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: P.text, borderTopColor: "transparent" }} /> : <IconActivity size={14} />}
           {loading ? "Running…" : action}
         </button>
       )}
@@ -736,7 +736,7 @@ function ProviderCard({ snap }: { snap: ProviderSnapshot }) {
   const isActive = snap.status === "ready" || snap.status === "degraded";
   return (
     <div
-      className="rounded-xl p-4 space-y-3"
+      className="rounded-xl p-4 md:p-5 space-y-3"
       style={{
         background: P.card,
         border: `1px solid ${isActive ? P.cardBorder : "hsla(38, 12%, 70%, 0.04)"}`,
@@ -746,12 +746,12 @@ function ProviderCard({ snap }: { snap: ProviderSnapshot }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ background: sc(snap.status) }} />
-          <span className="text-sm font-medium" style={{ color: P.text }}>{snap.name}</span>
+          <span className="text-sm md:text-base font-medium" style={{ color: P.text }}>{snap.name}</span>
         </div>
-        <span className="text-[10px] font-mono" style={{ color: P.dim }}>{snap.id}</span>
+        <span className="text-xs font-mono" style={{ color: P.dim }}>{snap.id}</span>
       </div>
       {isActive && snap.cpuBenchmarkResult && (
-        <div className="flex gap-4 text-xs pt-2" style={{ borderTop: `1px solid ${P.cardBorder}` }}>
+        <div className="flex gap-4 text-xs md:text-sm pt-2" style={{ borderTop: `1px solid ${P.cardBorder}` }}>
           <div>
             <span style={{ color: P.muted }}>LUT</span>
             <p className="font-mono" style={{ color: P.text }}>{snap.cpuBenchmarkResult.lutMopsPerSec.toFixed(0)}M ops/s</p>
@@ -763,7 +763,7 @@ function ProviderCard({ snap }: { snap: ProviderSnapshot }) {
         </div>
       )}
       {!isActive && (
-        <p className="text-xs" style={{ color: P.dim }}>
+        <p className="text-xs md:text-sm" style={{ color: P.dim }}>
           {snap.kind === "cloud" ? "Cloud GPU — coming soon" : "Peer mesh — coming soon"}
         </p>
       )}
