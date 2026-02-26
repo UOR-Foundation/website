@@ -186,9 +186,9 @@ function runScaleBenchmark(dataSize: number): ScalePoint {
 // SVG Chart
 // ═══════════════════════════════════════════════════════════════════════════
 
-const CHART_W = 700;
+const CHART_W = 560;
 const CHART_H = 320;
-const PAD = { top: 30, right: 30, bottom: 55, left: 70 };
+const PAD = { top: 30, right: 24, bottom: 55, left: 60 };
 const INNER_W = CHART_W - PAD.left - PAD.right;
 const INNER_H = CHART_H - PAD.top - PAD.bottom;
 
@@ -225,7 +225,7 @@ function DualLineChart({
   });
 
   return (
-    <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full" style={{ maxWidth: 760 }}>
+    <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full">
       <defs>
         <linearGradient id="std-fill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={P.red} stopOpacity="0.18" />
@@ -240,18 +240,18 @@ function DualLineChart({
       {gridLines.map((g, i) => (
         <g key={i}>
           <line x1={PAD.left} y1={g.y} x2={CHART_W - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.4} />
-          <text x={PAD.left - 10} y={g.y + 4} textAnchor="end" fill={P.muted} fontSize={11} fontFamily="'DM Sans', monospace">{g.label}</text>
+          <text x={PAD.left - 10} y={g.y + 4} textAnchor="end" fill={P.muted} fontSize={10} fontFamily="'DM Sans', monospace">{g.label}</text>
         </g>
       ))}
 
       {xValues.map((x, i) => (
-        <text key={i} x={xScale(x)} y={CHART_H - PAD.bottom + 20} textAnchor="middle" fill={P.muted} fontSize={11} fontFamily="'DM Sans', monospace">
+        <text key={i} x={xScale(x)} y={CHART_H - PAD.bottom + 20} textAnchor="middle" fill={P.muted} fontSize={10} fontFamily="'DM Sans', monospace">
           {xLabels[i]}
         </text>
       ))}
 
-      <text x={CHART_W / 2} y={CHART_H - 5} textAnchor="middle" fill={P.dim} fontSize={12} fontFamily={P.font}>{xAxisLabel}</text>
-      <text x={16} y={CHART_H / 2} textAnchor="middle" fill={P.dim} fontSize={12} fontFamily={P.font} transform={`rotate(-90, 16, ${CHART_H / 2})`}>{yAxisLabel}</text>
+      <text x={CHART_W / 2} y={CHART_H - 5} textAnchor="middle" fill={P.dim} fontSize={11} fontFamily={P.font}>{xAxisLabel}</text>
+      <text x={14} y={CHART_H / 2} textAnchor="middle" fill={P.dim} fontSize={11} fontFamily={P.font} transform={`rotate(-90, 14, ${CHART_H / 2})`}>{yAxisLabel}</text>
 
       {/* Standard — rising line */}
       <polygon
@@ -260,7 +260,7 @@ function DualLineChart({
       />
       <polyline points={stdPath} fill="none" stroke={P.red} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       {xValues.map((x, i) => (
-        <circle key={`s-${i}`} cx={xScale(x)} cy={yScale(stdValues[i])} r={4.5} fill={P.red} />
+        <circle key={`s-${i}`} cx={xScale(x)} cy={yScale(stdValues[i])} r={4} fill={P.red} />
       ))}
 
       {/* Hologram — flat gold line */}
@@ -270,17 +270,179 @@ function DualLineChart({
       />
       <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       {xValues.map((x, i) => (
-        <circle key={`h-${i}`} cx={xScale(x)} cy={yScale(holoValues[i])} r={4.5} fill={P.gold} />
+        <circle key={`h-${i}`} cx={xScale(x)} cy={yScale(holoValues[i])} r={4} fill={P.gold} />
       ))}
 
       {/* Legend */}
-      <g transform={`translate(${PAD.left + 10}, ${PAD.top + 5})`}>
-        <rect x={0} y={0} width={12} height={3} rx={1} fill={P.red} />
-        <text x={16} y={5} fill={P.muted} fontSize={11} fontFamily={P.font}>{stdLabel}</text>
-        <rect x={0} y={16} width={12} height={3} rx={1} fill={P.gold} />
-        <text x={16} y={21} fill={P.muted} fontSize={11} fontFamily={P.font}>{holoLabel}</text>
+      <g transform={`translate(${PAD.left + 8}, ${PAD.top + 4})`}>
+        <rect x={0} y={0} width={10} height={3} rx={1} fill={P.red} />
+        <text x={14} y={5} fill={P.muted} fontSize={10} fontFamily={P.font}>{stdLabel}</text>
+        <rect x={0} y={14} width={10} height={3} rx={1} fill={P.gold} />
+        <text x={14} y={19} fill={P.muted} fontSize={10} fontFamily={P.font}>{holoLabel}</text>
       </g>
     </svg>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Efficiency Amplifier — Radial Gauge + Wasted Ops
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface EfficiencyAmplifierProps {
+  speedup: number;
+  stdTotalMs: number;
+  holoTotalMs: number;
+  pointCount: number;
+  isRunning: boolean;
+  tab: "chain" | "scale";
+}
+
+function EfficiencyAmplifier({ speedup, stdTotalMs, holoTotalMs, pointCount, isRunning, tab }: EfficiencyAmplifierProps) {
+  const animatedSpeedup = useCountUp(speedup, 600);
+  const animatedWaste = useCountUp(stdTotalMs - holoTotalMs, 600);
+  const animatedEfficiency = useCountUp(Math.min((1 - holoTotalMs / Math.max(stdTotalMs, 0.01)) * 100, 99.9), 600);
+
+  // Radial gauge parameters
+  const R = 80;
+  const CX = 100;
+  const CY = 95;
+  const START_ANGLE = 135;
+  const END_ANGLE = 405;
+  const ARC_SPAN = END_ANGLE - START_ANGLE;
+  const MAX_SPEEDUP = 200;
+  const fill = Math.min(speedup / MAX_SPEEDUP, 1);
+  const currentAngle = START_ANGLE + ARC_SPAN * fill;
+
+  const toXY = (angle: number, r: number) => {
+    const rad = (angle * Math.PI) / 180;
+    return { x: CX + r * Math.cos(rad), y: CY + r * Math.sin(rad) };
+  };
+
+  const arcPath = (startA: number, endA: number, r: number) => {
+    const s = toXY(startA, r);
+    const e = toXY(endA, r);
+    const large = endA - startA > 180 ? 1 : 0;
+    return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
+  };
+
+  // Waste ratio visual — how many cycles standard burns for every 1 hologram cycle
+  const wasteRatio = Math.max(Math.round(stdTotalMs / Math.max(holoTotalMs, 0.01)), 1);
+
+  return (
+    <div className="rounded-xl p-5 flex flex-col items-center justify-between h-full" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+      {/* Radial gauge */}
+      <div className="relative">
+        <svg viewBox="0 0 200 160" className="w-full" style={{ maxWidth: 220 }}>
+          <defs>
+            <linearGradient id="gauge-glow" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor={P.gold} stopOpacity="0.6" />
+              <stop offset="100%" stopColor="hsl(38, 60%, 75%)" stopOpacity="1" />
+            </linearGradient>
+          </defs>
+          {/* Track */}
+          <path d={arcPath(START_ANGLE, END_ANGLE, R)} fill="none" stroke={P.dim} strokeWidth={6} strokeLinecap="round" opacity={0.3} />
+          {/* Fill */}
+          {speedup > 0 && (
+            <path
+              d={arcPath(START_ANGLE, currentAngle, R)}
+              fill="none"
+              stroke="url(#gauge-glow)"
+              strokeWidth={6}
+              strokeLinecap="round"
+              style={{ transition: "d 0.6s ease-out" }}
+            />
+          )}
+          {/* Center text */}
+          <text x={CX} y={CY - 8} textAnchor="middle" fill={P.gold} fontSize={32} fontFamily="'DM Sans', monospace" fontWeight="300">
+            {speedup > 0 ? `${animatedSpeedup.toFixed(0)}×` : "—"}
+          </text>
+          <text x={CX} y={CY + 12} textAnchor="middle" fill={P.muted} fontSize={10} fontFamily={P.font}>
+            {speedup > 0 ? "speedup" : "awaiting data"}
+          </text>
+
+          {/* Scale markers */}
+          {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+            const a = START_ANGLE + ARC_SPAN * t;
+            const outer = toXY(a, R + 10);
+            const val = Math.round(MAX_SPEEDUP * t);
+            return (
+              <text key={i} x={outer.x} y={outer.y + 3} textAnchor="middle" fill={P.dim} fontSize={8} fontFamily="'DM Sans', monospace">
+                {val}×
+              </text>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Stats */}
+      <div className="w-full space-y-3 mt-1">
+        {/* Wasted time */}
+        <div className="rounded-lg p-3" style={{ background: "hsla(0, 55%, 55%, 0.06)", border: `1px solid hsla(0, 55%, 55%, 0.1)` }}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] uppercase tracking-widest font-medium" style={{ color: P.red }}>Wasted by Standard</span>
+          </div>
+          <p className="text-xl font-mono font-light tabular-nums" style={{ color: P.red }}>
+            {stdTotalMs > 0 ? `${animatedWaste.toFixed(1)} ms` : "—"}
+          </p>
+          <p className="text-[10px] mt-0.5" style={{ color: P.dim }}>
+            {stdTotalMs > 0 ? `${wasteRatio}× more cycles burned` : "Run benchmark to measure"}
+          </p>
+        </div>
+
+        {/* Efficiency */}
+        <div className="rounded-lg p-3" style={{ background: "hsla(38, 40%, 65%, 0.06)", border: `1px solid hsla(38, 40%, 65%, 0.1)` }}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] uppercase tracking-widest font-medium" style={{ color: P.gold }}>Compute Efficiency</span>
+          </div>
+          <p className="text-xl font-mono font-light tabular-nums" style={{ color: P.gold }}>
+            {stdTotalMs > 0 ? `${animatedEfficiency.toFixed(1)}%` : "—"}
+          </p>
+          <p className="text-[10px] mt-0.5" style={{ color: P.dim }}>
+            {stdTotalMs > 0 ? "of standard work eliminated" : "Cycles saved via LUT collapse"}
+          </p>
+        </div>
+
+        {/* Live pipeline vis — two bars racing */}
+        {pointCount > 0 && (
+          <div className="space-y-1.5">
+            <span className="text-[10px] uppercase tracking-widest font-medium" style={{ color: P.muted }}>
+              {tab === "chain" ? "Work per chain depth" : "Work per data size"}
+            </span>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono w-8 shrink-0 text-right" style={{ color: P.red }}>STD</span>
+                <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: "hsla(0, 55%, 55%, 0.08)" }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-500 ease-out"
+                    style={{ width: "100%", background: P.red }}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono w-8 shrink-0 text-right" style={{ color: P.gold }}>vGPU</span>
+                <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.08)" }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-500 ease-out"
+                    style={{
+                      width: `${Math.max(100 / Math.max(speedup, 1), 1.5)}%`,
+                      background: P.gold,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Pulsing indicator when running */}
+      {isRunning && (
+        <div className="flex items-center gap-2 mt-3">
+          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: P.gold }} />
+          <span className="text-[10px]" style={{ color: P.muted }}>Computing…</span>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -384,6 +546,11 @@ export default function ConstantTimeBenchmark() {
   const scaleMax = scalePoints.length > 0 ? Math.max(...scalePoints.map(p => p.speedup)) : 0;
   const checksumMatch = currentPoints.length > 0 && currentPoints.every(p => p.checksum === p.holoChecksum);
 
+  // Compute totals for the efficiency amplifier
+  const currentMaxSpeedup = tab === "chain" ? chainMax : scaleMax;
+  const stdTotalMs = currentPoints.reduce((s, p) => s + p.standardMs, 0);
+  const holoTotalMs = currentPoints.reduce((s, p) => s + p.hologramMs, 0);
+
   return (
     <div className="space-y-8" style={{ fontFamily: P.font }}>
       {/* ── Header ─────────────────────────────────────────────── */}
@@ -474,33 +641,44 @@ export default function ConstantTimeBenchmark() {
         </div>
       )}
 
-      {/* ── Chart ─────────────────────────────────────────────── */}
-      {tab === "chain" && chainPoints.length > 0 && (
-        <div className="rounded-xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <DualLineChart
-            xValues={chainPoints.map(p => p.chainDepth)}
-            xLabels={chainPoints.map(p => `${p.chainDepth}`)}
-            stdValues={chainPoints.map(p => p.standardMs)}
-            holoValues={chainPoints.map(p => p.hologramMs)}
-            xAxisLabel="Chained Operations"
-            yAxisLabel="Time (ms)"
-            stdLabel="Standard — O(N × D)"
-            holoLabel="Hologram vGPU — O(1) in N"
-          />
-        </div>
-      )}
+      {/* ── Chart + Efficiency Amplifier (side-by-side) ────────── */}
+      {currentPoints.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
+          {/* Chart */}
+          <div className="rounded-xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+            {tab === "chain" ? (
+              <DualLineChart
+                xValues={chainPoints.map(p => p.chainDepth)}
+                xLabels={chainPoints.map(p => `${p.chainDepth}`)}
+                stdValues={chainPoints.map(p => p.standardMs)}
+                holoValues={chainPoints.map(p => p.hologramMs)}
+                xAxisLabel="Chained Operations"
+                yAxisLabel="Time (ms)"
+                stdLabel="Standard — O(N × D)"
+                holoLabel="Hologram vGPU — O(1) in N"
+              />
+            ) : (
+              <DualLineChart
+                xValues={scalePoints.map(p => p.dataSize)}
+                xLabels={scalePoints.map(p => p.label)}
+                stdValues={scalePoints.map(p => p.standardMs)}
+                holoValues={scalePoints.map(p => p.hologramMs)}
+                xAxisLabel="Data Size (elements)"
+                yAxisLabel="Time (ms)"
+                stdLabel="Standard — 128 passes × N"
+                holoLabel="Hologram vGPU — 1 pass × N"
+              />
+            )}
+          </div>
 
-      {tab === "scale" && scalePoints.length > 0 && (
-        <div className="rounded-xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <DualLineChart
-            xValues={scalePoints.map(p => p.dataSize)}
-            xLabels={scalePoints.map(p => p.label)}
-            stdValues={scalePoints.map(p => p.standardMs)}
-            holoValues={scalePoints.map(p => p.hologramMs)}
-            xAxisLabel="Data Size (elements)"
-            yAxisLabel="Time (ms)"
-            stdLabel="Standard — 128 passes × N"
-            holoLabel="Hologram vGPU — 1 pass × N"
+          {/* Efficiency Amplifier */}
+          <EfficiencyAmplifier
+            speedup={currentMaxSpeedup}
+            stdTotalMs={stdTotalMs}
+            holoTotalMs={holoTotalMs}
+            pointCount={currentPoints.length}
+            isRunning={isRunning}
+            tab={tab}
           />
         </div>
       )}
