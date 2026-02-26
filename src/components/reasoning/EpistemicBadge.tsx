@@ -1,46 +1,52 @@
 /**
  * EpistemicBadge — Inline proof annotation for neuro-symbolic responses.
  *
- * Renders a small colored badge next to each claim showing:
- *   A — Algebraically proven (emerald)
- *   B — Constraint-consistent (sky)
- *   C — Plausible (amber)
- *   D — LLM-generated (muted)
- *
- * Hovering reveals the source justification and proof step.
+ * Renders warm, human-friendly claim cards with subtle grade indicators.
+ * Designed for clarity, trust, and delight within the Hologram aesthetic.
  */
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 import type { AnnotatedClaim, EpistemicGrade } from "@/modules/ring-core/neuro-symbolic";
 
-// ── Grade Styling ──────────────────────────────────────────────────────────
+// ── Grade Styling (warm tones matching Hologram palette) ──────────────────
 
-const GRADE_STYLES: Record<EpistemicGrade, { bg: string; text: string; label: string; border: string }> = {
+const GRADE_STYLES: Record<EpistemicGrade, { color: string; bg: string; label: string; icon: string }> = {
   A: {
-    bg: "bg-emerald-500/15",
-    text: "text-emerald-400",
-    border: "border-emerald-500/30",
+    color: "hsl(160, 45%, 55%)",
+    bg: "hsla(160, 45%, 55%, 0.1)",
     label: "Proven",
+    icon: "◆",
   },
   B: {
-    bg: "bg-sky-500/15",
-    text: "text-sky-400",
-    border: "border-sky-500/30",
+    color: "hsl(200, 45%, 60%)",
+    bg: "hsla(200, 45%, 60%, 0.1)",
     label: "Verified",
+    icon: "◇",
   },
   C: {
-    bg: "bg-amber-500/15",
-    text: "text-amber-400",
-    border: "border-amber-500/30",
+    color: "hsl(38, 50%, 55%)",
+    bg: "hsla(38, 50%, 55%, 0.1)",
     label: "Plausible",
+    icon: "○",
   },
   D: {
-    bg: "bg-muted/50",
-    text: "text-muted-foreground",
-    border: "border-border",
+    color: "hsl(30, 10%, 55%)",
+    bg: "hsla(30, 10%, 55%, 0.08)",
     label: "Unverified",
+    icon: "·",
   },
 };
+
+const P = {
+  font: "'DM Sans', sans-serif",
+  fontDisplay: "'Playfair Display', serif",
+  text: "hsl(38, 20%, 85%)",
+  textMuted: "hsl(30, 10%, 60%)",
+  textDim: "hsl(30, 10%, 50%)",
+  border: "hsla(38, 30%, 30%, 0.2)",
+  goldLight: "hsl(38, 60%, 60%)",
+} as const;
 
 // ── Components ─────────────────────────────────────────────────────────────
 
@@ -49,9 +55,17 @@ function GradeBadge({ grade, onClick }: { grade: EpistemicGrade; onClick?: () =>
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-0.5 px-1 py-0 rounded text-[10px] font-mono font-semibold border cursor-pointer transition-opacity hover:opacity-80 ${style.bg} ${style.text} ${style.border}`}
+      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium cursor-pointer transition-all duration-200 hover:brightness-110"
+      style={{
+        background: style.bg,
+        color: style.color,
+        border: `1px solid ${style.color}22`,
+        fontFamily: P.font,
+        letterSpacing: "0.05em",
+      }}
       title={`Grade ${grade}: ${style.label}`}
     >
+      <span style={{ fontSize: "8px" }}>{style.icon}</span>
       {grade}
     </button>
   );
@@ -61,34 +75,94 @@ function ClaimTooltip({ claim, onClose }: { claim: AnnotatedClaim; onClose: () =
   const style = GRADE_STYLES[claim.grade];
   return (
     <div
-      className="absolute z-50 bottom-full left-0 mb-1 w-64 rounded-lg border border-border bg-card shadow-lg p-2.5 text-xs animate-in fade-in slide-in-from-bottom-1 duration-150"
+      className="absolute z-50 bottom-full left-0 mb-2 w-72 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200"
+      style={{
+        background: "hsl(30, 8%, 16%)",
+        border: `1px solid ${P.border}`,
+        fontFamily: P.font,
+      }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between mb-1.5">
-        <span className={`font-semibold ${style.text}`}>
-          Grade {claim.grade} — {style.label}
-        </span>
-        <button onClick={onClose} className="text-muted-foreground hover:text-foreground">✕</button>
+      <div
+        className="flex items-center justify-between px-3.5 py-2.5"
+        style={{ borderBottom: `1px solid ${P.border}` }}
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-[10px]" style={{ color: style.color }}>{style.icon}</span>
+          <span className="text-xs font-medium" style={{ color: style.color }}>
+            Grade {claim.grade} — {style.label}
+          </span>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-xs transition-colors hover:opacity-80"
+          style={{ color: P.textDim }}
+        >
+          ✕
+        </button>
       </div>
-      <div className="space-y-1 text-muted-foreground">
-        <div><span className="text-foreground/70">Source:</span> {claim.source}</div>
-        <div><span className="text-foreground/70">Curvature:</span> {(claim.curvature * 100).toFixed(1)}%</div>
+      <div className="px-3.5 py-2.5 space-y-1.5">
+        <div className="text-[11px]" style={{ color: P.textMuted }}>
+          <span style={{ color: P.text }}>Source:</span> {claim.source}
+        </div>
+        <div className="text-[11px]" style={{ color: P.textMuted }}>
+          <span style={{ color: P.text }}>Curvature:</span> {(claim.curvature * 100).toFixed(1)}%
+        </div>
         {claim.stepIndex !== null && (
-          <div><span className="text-foreground/70">Proof step:</span> #{claim.stepIndex}</div>
+          <div className="text-[11px]" style={{ color: P.textMuted }}>
+            <span style={{ color: P.text }}>Proof step:</span> #{claim.stepIndex}
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-// ── Main: Annotated Claim ─────────────────────────────────────────────────
+// ── Annotated Claim ────────────────────────────────────────────────────────
 
-export function AnnotatedClaimView({ claim }: { claim: AnnotatedClaim }) {
+export function AnnotatedClaimView({ claim, delay = 0 }: { claim: AnnotatedClaim; delay?: number }) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
-    <span className="relative inline">
-      {claim.text}{" "}
+    <span
+      className="relative inline animate-in fade-in slide-in-from-bottom-1"
+      style={{ animationDelay: `${delay}ms`, animationDuration: "500ms", animationFillMode: "both" }}
+    >
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => <span>{children} </span>,
+          strong: ({ children }) => (
+            <strong style={{ color: P.text, fontWeight: 600 }}>{children}</strong>
+          ),
+          em: ({ children }) => (
+            <em style={{ color: P.goldLight, fontStyle: "italic" }}>{children}</em>
+          ),
+          code: ({ children }) => (
+            <code
+              style={{
+                background: "hsla(38, 30%, 30%, 0.2)",
+                padding: "1px 5px",
+                borderRadius: "4px",
+                fontSize: "0.9em",
+                color: P.goldLight,
+              }}
+            >
+              {children}
+            </code>
+          ),
+          ul: ({ children }) => (
+            <ul style={{ listStyle: "none", paddingLeft: "0.5em", margin: "0.3em 0" }}>{children}</ul>
+          ),
+          li: ({ children }) => (
+            <li className="flex gap-1.5 items-start" style={{ color: P.textMuted }}>
+              <span style={{ color: P.goldLight, fontSize: "8px", marginTop: "6px" }}>◆</span>
+              <span>{children}</span>
+            </li>
+          ),
+        }}
+      >
+        {claim.text}
+      </ReactMarkdown>
       <GradeBadge grade={claim.grade} onClick={() => setShowTooltip(!showTooltip)} />
       {showTooltip && <ClaimTooltip claim={claim} onClose={() => setShowTooltip(false)} />}
       {" "}
@@ -116,29 +190,49 @@ export default function AnnotatedResponse({
   const style = GRADE_STYLES[grade];
 
   return (
-    <div className="space-y-2">
-      {/* Claim text with inline badges */}
-      <div className="leading-relaxed">
+    <div className="space-y-4" style={{ fontFamily: P.font }}>
+      {/* Claims — each rendered as warm, readable text with subtle badges */}
+      <div
+        className="text-[15px] leading-[1.8]"
+        style={{
+          color: "hsl(30, 12%, 78%)",
+          textRendering: "optimizeLegibility",
+        }}
+      >
         {claims.map((claim, i) => (
-          <AnnotatedClaimView key={i} claim={claim} />
+          <AnnotatedClaimView key={i} claim={claim} delay={i * 80} />
         ))}
       </div>
 
-      {/* Proof summary bar */}
-      <div className={`flex items-center gap-3 text-[10px] font-mono border-t border-border pt-1.5 mt-2 ${style.text}`}>
-        <span className={`px-1.5 py-0.5 rounded ${style.bg} ${style.border} border font-semibold`}>
+      {/* Proof summary — minimal, warm, trustworthy */}
+      <div
+        className="flex items-center gap-4 text-[10px] tracking-wider pt-3"
+        style={{
+          borderTop: `1px solid ${P.border}`,
+          fontFamily: P.font,
+        }}
+      >
+        <span
+          className="flex items-center gap-1.5 px-2 py-1 rounded-md font-medium"
+          style={{
+            background: style.bg,
+            color: style.color,
+            letterSpacing: "0.1em",
+          }}
+        >
+          <span style={{ fontSize: "8px" }}>{style.icon}</span>
           Grade {grade}
         </span>
-        <span className="text-muted-foreground">
-          {iterations} iteration{iterations > 1 ? "s" : ""}
+        <span style={{ color: P.textDim }}>
+          {iterations} {iterations === 1 ? "pass" : "passes"}
         </span>
-        <span className="text-muted-foreground">
-          κ = {(curvature * 100).toFixed(1)}%
+        <span style={{ color: P.textDim }}>
+          κ {(curvature * 100).toFixed(0)}%
         </span>
-        <span className={converged ? "text-emerald-400" : "text-amber-400"}>
-          {converged ? "✓ converged" : "⚠ partial"}
+        <span style={{ color: converged ? GRADE_STYLES.A.color : GRADE_STYLES.C.color }}>
+          {converged ? "✓ converged" : "refining…"}
         </span>
-        <span className="text-muted-foreground">
+        <span className="ml-auto" style={{ color: P.textDim }}>
           {claims.filter(c => c.grade <= "B").length}/{claims.length} grounded
         </span>
       </div>
