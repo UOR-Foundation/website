@@ -359,3 +359,19 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* Slow convergence — zooming gently into the landscape, then resting */
+@keyframes lumen-converge {
+  0% {
+    transform: scale(1);
+    filter: blur(0px) brightness(0.92);
+  }
+  70% {
+    transform: scale(1.12);
+    filter: blur(2px) brightness(0.96);
+  }
+  100% {
+    transform: scale(1.15);
+    filter: blur(3px) brightness(1);
+  }
+}
