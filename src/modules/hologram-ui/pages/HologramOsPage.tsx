@@ -63,7 +63,7 @@ const BG_MODES: { mode: BgMode; dot: string; dotActive: string; label: string }[
 function palette(m: BgMode) {
   if (m === "white") return {
     wordmark: "hsla(38, 15%, 88%, 0.9)",
-    greeting: "hsla(38, 15%, 75%, 0.55)",
+    greeting: "hsla(0, 0%, 8%, 0.7)",
     heading:  "hsla(38, 12%, 92%, 0.92)",
     sub:      "hsla(38, 10%, 72%, 0.5)",
     cta:      "hsla(38, 12%, 78%, 0.6)",
@@ -79,7 +79,7 @@ function palette(m: BgMode) {
   };
   if (m === "dark") return {
     wordmark: "hsla(38, 15%, 88%, 0.9)",
-    greeting: "hsla(38, 15%, 70%, 0.45)",
+    greeting: "hsla(0, 0%, 100%, 0.65)",
     heading:  "hsla(38, 12%, 90%, 0.9)",
     sub:      "hsla(38, 10%, 70%, 0.45)",
     cta:      "hsla(38, 12%, 75%, 0.55)",
@@ -96,7 +96,7 @@ function palette(m: BgMode) {
   // image mode
   return {
     wordmark: "hsla(30, 8%, 10%, 0.9)",
-    greeting: "hsla(38, 20%, 85%, 0.5)",
+    greeting: "hsla(0, 0%, 8%, 0.65)",
     heading:  "hsla(38, 15%, 92%, 0.92)",
     sub:      "hsla(38, 12%, 78%, 0.5)",
     cta:      "hsla(38, 15%, 82%, 0.6)",
@@ -354,7 +354,7 @@ export default function HologramOsPage() {
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     color: P.greeting,
                     fontWeight: 400,
-                    fontSize: "clamp(18px, 2vw, 28px)",
+                    fontSize: "clamp(13px, 1.4vw, 18px)",
                     letterSpacing: "0.25em",
                   }}
                 >
