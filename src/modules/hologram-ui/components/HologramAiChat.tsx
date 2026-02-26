@@ -58,6 +58,7 @@ import {
   getAccelerator,
   streamOptimized,
 } from "@/modules/ring-core/inference-accelerator";
+import { StreamingCurvatureMonitor } from "@/modules/ring-core/symbolica-enhancements";
 
 // ── Cloud AI Models (instant, no download) ─────────────────────────────────
 const CLOUD_MODELS = [
@@ -504,7 +505,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         }
       }
 
-      const doStream = async (extraMessages: Array<{role: string; content: string}> = [], scaffoldPrompt?: string): Promise<string> => {
+      const doStream = async (extraMessages: Array<{role: string; content: string}> = [], scaffoldPrompt?: string, curvatureMonitor?: StreamingCurvatureMonitor): Promise<string> => {
         const resp = await fetch(STREAM_URL, {
           method: "POST",
           headers: {
@@ -550,7 +551,16 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             try {
               const parsed = JSON.parse(jsonStr);
               const c = parsed.choices?.[0]?.delta?.content as string | undefined;
-              if (c) { streamedText += c; updateAssistant(streamedText); }
+              if (c) {
+                streamedText += c;
+                updateAssistant(streamedText);
+                // Symbolica Insight 2: real-time curvature monitoring
+                if (curvatureMonitor && !curvatureMonitor.onToken(c)) {
+                  console.warn(`[HODMA] Early termination: curvature ${(curvatureMonitor.currentCurvature * 100).toFixed(0)}%`);
+                  done = true;
+                  break;
+                }
+              }
             } catch { buf = line + "\n" + buf; break; }
           }
         }

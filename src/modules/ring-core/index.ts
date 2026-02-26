@@ -145,3 +145,14 @@ export {
   SemanticIndex,
 } from "./semantic-similarity";
 export type { SparseVector, SemanticEntry } from "./semantic-similarity";
+
+// ── Symbolica-Inspired Enhancements ──────────────────────────────────────
+export {
+  structuralFingerprint,
+  StreamingCurvatureMonitor,
+  inferMorphismType,
+  buildCompositionPlan,
+  decomposeScaffold,
+  ConversationalTermEvolver,
+} from "./symbolica-enhancements";
+export type { ClaimMorphismType, TypedClaimSlot, SubScaffoldPlan } from "./symbolica-enhancements";

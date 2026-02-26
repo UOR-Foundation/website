@@ -22,6 +22,7 @@
 import { buildScaffold, type SymbolicScaffold } from "./neuro-symbolic";
 import { decomposeToClaims, batchLookupProofs, type ClaimSlot, type ProofLookupResult } from "./proof-gated-inference";
 import { SemanticIndex } from "./semantic-similarity";
+import { structuralFingerprint, ConversationalTermEvolver } from "./symbolica-enhancements";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // L0 — In-Memory LRU Cache (zero latency)
@@ -350,6 +351,7 @@ export class InferenceAccelerator {
   readonly l0 = new InferenceL0Cache(256);
   readonly semanticIndex = new SemanticIndex(256, 0.78);
   readonly prefetcher = new SpeculativePrefetcher(this.l0);
+  readonly termEvolver = new ConversationalTermEvolver(64);
 
   /**
    * Resolve a query through the acceleration tiers.
@@ -455,16 +457,19 @@ export class InferenceAccelerator {
     const fingerprint = lutFingerprint(query);
     this.l0.set(fingerprint, output, grade);
     this.semanticIndex.add(query, fingerprint);
+    // Symbolica Insight 5: evolve session terms from high-quality responses
+    this.termEvolver.ingestResponse(output, grade as "A" | "B" | "C" | "D");
   }
 
   /**
    * Get acceleration stats for UI display.
    */
-  stats(): { l0Size: number; semanticIndexSize: number; scaffoldCacheSize: number } {
+  stats(): { l0Size: number; semanticIndexSize: number; scaffoldCacheSize: number; evolvedTerms: string[] } {
     return {
       l0Size: this.l0.size,
       semanticIndexSize: this.semanticIndex.size,
       scaffoldCacheSize: scaffoldCache.size,
+      evolvedTerms: this.termEvolver.topTerms,
     };
   }
 }
