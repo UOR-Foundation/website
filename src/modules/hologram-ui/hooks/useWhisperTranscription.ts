@@ -79,12 +79,14 @@ async function audioToFloat32(blob: Blob): Promise<Float32Array> {
 export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhisperOptions) {
   const [status, setStatus] = useState<WhisperStatus>("idle");
   const [loadProgress, setLoadProgress] = useState(0);
-  const [audioLevel, setAudioLevel] = useState(0); // 0-1 normalized RMS
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [elapsed, setElapsed] = useState(0); // seconds
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const updateStatus = useCallback(
     (s: WhisperStatus) => {
@@ -146,6 +148,10 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
       };
       rafRef.current = requestAnimationFrame(tick);
 
+      // Start elapsed timer
+      setElapsed(0);
+      timerRef.current = setInterval(() => setElapsed((s) => s + 1), 1000);
+
       const recorder = new MediaRecorder(stream, {
         mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
           ? "audio/webm;codecs=opus"
@@ -162,6 +168,8 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
         rafRef.current = null;
         analyserRef.current = null;
         setAudioLevel(0);
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = null;
 
         // Stop all tracks
         stream.getTracks().forEach((t) => t.stop());
@@ -224,6 +232,7 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
         mediaRecorderRef.current.stop();
       }
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (timerRef.current) clearInterval(timerRef.current);
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, []);
@@ -232,6 +241,7 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
     status,
     loadProgress,
     audioLevel,
+    elapsed,
     isRecording: status === "recording",
     isTranscribing: status === "transcribing",
     isLoading: status === "loading",

@@ -1219,25 +1219,35 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                   {/* Waveform visualizer — only while recording */}
                   {whisper.isRecording && (
                     <div
-                      className="flex items-center gap-[2px] h-6 px-1"
+                      className="flex items-center gap-1.5 h-6 px-1"
                       style={{ animation: "message-fade-in 0.2s ease-out both" }}
                     >
-                      {Array.from({ length: 5 }).map((_, i) => {
-                        // Each bar gets a slightly different scale based on audio level + offset
-                        const offset = [0.3, 0.6, 1, 0.7, 0.4][i];
-                        const height = Math.max(4, Math.round(whisper.audioLevel * offset * 20));
-                        return (
-                          <div
-                            key={i}
-                            className="w-[3px] rounded-full"
-                            style={{
-                              height: `${height}px`,
-                              background: `hsla(0, 55%, 60%, ${0.5 + whisper.audioLevel * 0.5})`,
-                              transition: "height 80ms ease-out, background 80ms ease-out",
-                            }}
-                          />
-                        );
-                      })}
+                      {/* Timer */}
+                      <span
+                        className="text-[12px] tabular-nums font-medium"
+                        style={{ color: "hsl(0, 55%, 60%)" }}
+                      >
+                        {Math.floor(whisper.elapsed / 60)}:{String(whisper.elapsed % 60).padStart(2, "0")}
+                      </span>
+
+                      {/* Waveform bars */}
+                      <div className="flex items-center gap-[2px]">
+                        {Array.from({ length: 5 }).map((_, i) => {
+                          const offset = [0.3, 0.6, 1, 0.7, 0.4][i];
+                          const height = Math.max(4, Math.round(whisper.audioLevel * offset * 20));
+                          return (
+                            <div
+                              key={i}
+                              className="w-[3px] rounded-full"
+                              style={{
+                                height: `${height}px`,
+                                background: `hsla(0, 55%, 60%, ${0.5 + whisper.audioLevel * 0.5})`,
+                                transition: "height 80ms ease-out, background 80ms ease-out",
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
