@@ -42,22 +42,32 @@ function heartbeatHaptic() {
   navigator.vibrate([60, 80, 40, 400, 60, 80, 40]);
 }
 
-/* ── Parallax from device orientation ──────────────────────── */
-function useParallax() {
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-
+/* ── Parallax via direct DOM mutation (bypasses React, no re-renders) ── */
+function useParallax(ref: React.RefObject<HTMLDivElement | null>) {
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let rafId = 0;
+    let lastX = 0, lastY = 0;
+
     const handle = (e: DeviceOrientationEvent) => {
       if (e.gamma === null || e.beta === null) return;
       const x = Math.max(-1, Math.min(1, (e.gamma ?? 0) / 30)) * 6;
       const y = Math.max(-1, Math.min(1, ((e.beta ?? 0) - 45) / 30)) * 6;
-      setOffset({ x, y });
+      // Skip if unchanged (within 0.5px)
+      if (Math.abs(x - lastX) < 0.5 && Math.abs(y - lastY) < 0.5) return;
+      lastX = x; lastY = y;
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        el.style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
+      });
     };
     window.addEventListener("deviceorientation", handle);
-    return () => window.removeEventListener("deviceorientation", handle);
-  }, []);
-
-  return offset;
+    return () => {
+      window.removeEventListener("deviceorientation", handle);
+      cancelAnimationFrame(rafId);
+    };
+  }, [ref]);
 }
 
 /* ── Stabilized typewriter ─────────────────────────────────── */
@@ -122,7 +132,8 @@ export default function MobileOsShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [pressing, setPressing] = useState(false);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const parallax = useParallax();
+  const parallaxRef = useRef<HTMLDivElement | null>(null);
+  useParallax(parallaxRef);
   const { greeting, name } = useGreeting();
   const pwa = usePwaInstall();
 
@@ -190,10 +201,11 @@ export default function MobileOsShell() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* ── Layer 0: Background — living landscape ──────────── */}
+      {/* ── Layer 0: Background — living landscape (parallax via ref, zero React renders) ── */}
       <div
-        className="absolute inset-0 transition-transform duration-[1.5s] ease-out"
-        style={{ transform: `translate(${parallax.x}px, ${parallax.y}px) scale(1.05)` }}
+        ref={parallaxRef}
+        className="absolute inset-0"
+        style={{ transform: "translate(0px, 0px) scale(1.05)", willChange: "transform", transition: "transform 1.5s ease-out" }}
       >
         <img
           src={heroLandscape}
@@ -416,18 +428,14 @@ export default function MobileOsShell() {
                 <button
                   key={item.label}
                   onClick={() => handleNav(item.action)}
-                  className="w-full flex items-center gap-4 py-4 px-4 rounded-2xl active:scale-[0.98] transition-all duration-200"
+                  className="mobile-drawer-btn w-full flex items-center gap-4 py-4 px-4 rounded-2xl active:scale-[0.98] active:bg-[hsla(38,12%,90%,0.06)] transition-all duration-200"
                   style={{
                     color: P.text,
                     fontFamily: P.font,
+                    touchAction: "manipulation",
+                    WebkitTapHighlightColor: "transparent",
                     animation: "stagger-fade-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both",
                     animationDelay: `${80 + i * 60}ms`,
-                  }}
-                  onTouchStart={(e) => {
-                    (e.currentTarget as HTMLElement).style.background = "hsla(38, 12%, 90%, 0.06)";
-                  }}
-                  onTouchEnd={(e) => {
-                    (e.currentTarget as HTMLElement).style.background = "transparent";
                   }}
                 >
                   <item.icon className="w-5 h-5" strokeWidth={1.3} style={{ color: P.goldMuted }} />

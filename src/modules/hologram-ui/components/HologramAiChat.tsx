@@ -227,32 +227,35 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     ? ai.active!.modelId.split("/").pop()
     : CLOUD_MODELS.find((m) => m.id === selectedCloudModel)?.label ?? "Gemini 3 Flash";
 
-  // ── Natural reading scroll — never yanks, gentle "new below" pill ──
+  // ── Natural reading scroll — IntersectionObserver (zero polling) ──
   const isNearBottomRef = useRef(true);
   const [hasUnseenBelow, setHasUnseenBelow] = useState(false);
   const lastUserMsgIdRef = useRef<string | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const checkUnseen = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const threshold = 80;
-    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
-    isNearBottomRef.current = atBottom;
-    setHasUnseenBelow(!atBottom && el.scrollHeight > el.clientHeight + 40);
-  }, []);
+  // IntersectionObserver: watches a sentinel div at the bottom of messages
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    const scrollEl = scrollRef.current;
+    if (!sentinel || !scrollEl) return;
 
-  const handleScroll = useCallback(() => {
-    checkUnseen();
-  }, [checkUnseen]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isNearBottomRef.current = entry.isIntersecting;
+        setHasUnseenBelow(!entry.isIntersecting && scrollEl.scrollHeight > scrollEl.clientHeight + 40);
+      },
+      { root: scrollEl, threshold: 0, rootMargin: "80px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [messages.length]); // Re-observe when message count changes
 
   // Only auto-scroll when the USER sends a message (to show their bubble)
-  // Never scroll during AI streaming — let the reader absorb naturally
   useEffect(() => {
     const userMsgs = messages.filter((m) => m.role === "user");
     const lastUser = userMsgs[userMsgs.length - 1];
     if (lastUser && lastUser.id !== lastUserMsgIdRef.current) {
       lastUserMsgIdRef.current = lastUser.id;
-      // Gentle scroll to show the user's own message
       requestAnimationFrame(() => {
         scrollRef.current?.scrollTo({
           top: scrollRef.current.scrollHeight,
@@ -261,13 +264,6 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       });
     }
   }, [messages]);
-
-  // Periodically check for unseen content during streaming
-  useEffect(() => {
-    if (!isGenerating) return;
-    const interval = setInterval(checkUnseen, 600);
-    return () => clearInterval(interval);
-  }, [isGenerating, checkUnseen]);
 
   const scrollToBottom = useCallback(() => {
     scrollRef.current?.scrollTo({
@@ -1089,7 +1085,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         <TrustTrendBar messages={messages} />
 
         {/* ── Messages / Welcome ─────────────────────────────────────── */}
-        <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-5 py-5 lumen-scroll">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5 lumen-scroll">
           {!hasMessages && !isLoadingModel && (
             <TriadicWelcome
               key={replayGuideKey}
@@ -1149,6 +1145,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 />
               );
             })}
+            {/* Sentinel for IntersectionObserver — replaces scroll polling */}
+            <div ref={sentinelRef} className="h-1 w-full shrink-0" aria-hidden="true" />
         </div>
 
         {/* ── "New below" floating pill — gentle, non-intrusive ──── */}

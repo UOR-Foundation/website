@@ -2,37 +2,18 @@
  * FocusVignette — Universal "Tunnel Vision" Overlay
  * ══════════════════════════════════════════════════
  *
- * Placed once at the app root (inside AttentionProvider).
- * As aperture moves from diffuse (0) → focus (1):
+ * As aperture moves from diffuse (0) → focus (1), CSS custom
+ * properties propagate to all descendants. A single `--focus-t`
+ * value drives all derived properties via a batched rAF write.
  *
- *   1. Radial vignette darkens the periphery (cinematic tunnel vision)
- *   2. CSS custom properties propagate to all descendants:
- *      --focus-chrome-opacity   (1 → 0.15) — fade headers, sidebars, nav
- *      --focus-vignette         (0 → 1)    — vignette intensity
- *      --focus-contrast         (1 → 1.12) — text contrast boost
- *      --focus-content-scale    (1 → 1.015)— subtle zoom into content
- *      --focus-saturation       (1 → 0.8)  — desaturate distractions
- *      --focus-blur-chrome      (0 → 4px)  — blur non-essential chrome
- *      --focus-dim-opacity      (1 → 0.4)  — dim secondary elements
- *      --focus-text-weight      (400 → 500)— slightly heavier text in focus
- *      --focus-snr              (raw SNR value)
- *      --focus-gate             (gate threshold 0–1)
- *
- *   The effect is entirely CSS-driven: any component can read these
- *   variables without importing this module. This makes it modality-
- *   agnostic — video, text, chat, canvas all benefit automatically.
- *
- * UOR Alignment:
- *   The vignette IS the observer's field-of-observation rendered visually.
- *   As stratum narrows (focus ↑), the observable field contracts toward
- *   the center — a literal projection of the observer's aperture function.
- *   The CSS variables are the observer's "measurement basis" — every
- *   component is an observable that collapses according to these values.
+ * Performance: All 11 CSS vars are written in a single rAF
+ * callback using cssText, producing exactly ONE style recalc
+ * per animation frame instead of 11.
  *
  * @module hologram-ui/components/FocusVignette
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 
 /** Easing: slow start, accelerate mid-range, plateau at top */
@@ -40,41 +21,71 @@ function ease(t: number): number {
   return t < 0.3 ? 0 : Math.min(1, ((t - 0.3) / 0.7) ** 1.6);
 }
 
+/** All focus CSS properties derived from a single eased value */
+function buildFocusVars(f: number, snr: number, gate: number, stratum: number): string {
+  return [
+    `--focus-t:${f}`,
+    `--focus-chrome-opacity:${1 - f * 0.85}`,
+    `--focus-vignette:${f}`,
+    `--focus-contrast:${1 + f * 0.12}`,
+    `--focus-content-scale:${1 + f * 0.015}`,
+    `--focus-saturation:${1 - f * 0.2}`,
+    `--focus-blur-chrome:${f * 4}px`,
+    `--focus-dim-opacity:${1 - f * 0.6}`,
+    `--focus-text-weight:${400 + f * 100}`,
+    `--focus-snr:${snr.toFixed(2)}`,
+    `--focus-gate:${gate.toFixed(2)}`,
+    `--focus-stratum:${stratum.toFixed(2)}`,
+  ].join(";");
+}
+
+const FOCUS_PROPS = [
+  "--focus-t", "--focus-chrome-opacity", "--focus-vignette", "--focus-contrast",
+  "--focus-content-scale", "--focus-saturation", "--focus-blur-chrome",
+  "--focus-dim-opacity", "--focus-text-weight", "--focus-snr", "--focus-gate",
+  "--focus-stratum",
+];
+
 export default function FocusVignette() {
   const { aperture, snr, distractionGate, observerStratum } = useAttentionMode();
+  const rafRef = useRef<number>(0);
+  const lastCssRef = useRef("");
 
-  // Propagate CSS custom properties to :root
+  // Batch all CSS var updates into a single rAF write
   useEffect(() => {
-    const root = document.documentElement;
     const f = ease(aperture);
+    const css = buildFocusVars(f, snr, distractionGate, observerStratum);
 
-    root.style.setProperty("--focus-chrome-opacity", `${1 - f * 0.85}`);
-    root.style.setProperty("--focus-vignette", `${f}`);
-    root.style.setProperty("--focus-contrast", `${1 + f * 0.12}`);
-    root.style.setProperty("--focus-content-scale", `${1 + f * 0.015}`);
-    root.style.setProperty("--focus-saturation", `${1 - f * 0.2}`);
-    root.style.setProperty("--focus-blur-chrome", `${f * 4}px`);
-    root.style.setProperty("--focus-dim-opacity", `${1 - f * 0.6}`);
-    root.style.setProperty("--focus-text-weight", `${400 + f * 100}`);
+    // Skip if nothing changed (memoized comparison)
+    if (css === lastCssRef.current) return;
 
-    // UOR metrics as CSS vars (for debug overlays or advanced components)
-    root.style.setProperty("--focus-snr", `${snr.toFixed(2)}`);
-    root.style.setProperty("--focus-gate", `${distractionGate.toFixed(2)}`);
-    root.style.setProperty("--focus-stratum", `${observerStratum.toFixed(2)}`);
+    cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      const root = document.documentElement;
+      // Single DOM write — sets all properties at once
+      const existing = root.style.cssText;
+      // Remove old focus vars, append new ones
+      const cleaned = existing
+        .split(";")
+        .filter((s) => s.trim() && !s.trim().startsWith("--focus-"))
+        .join(";");
+      root.style.cssText = cleaned + (cleaned ? ";" : "") + css;
+      lastCssRef.current = css;
+    });
 
-    return () => {
-      [
-        "--focus-chrome-opacity", "--focus-vignette", "--focus-contrast",
-        "--focus-content-scale", "--focus-saturation", "--focus-blur-chrome",
-        "--focus-dim-opacity", "--focus-text-weight",
-        "--focus-snr", "--focus-gate", "--focus-stratum",
-      ].forEach((p) => root.style.removeProperty(p));
-    };
+    return () => cancelAnimationFrame(rafRef.current);
   }, [aperture, snr, distractionGate, observerStratum]);
 
-  const f = ease(aperture);
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      const root = document.documentElement;
+      FOCUS_PROPS.forEach((p) => root.style.removeProperty(p));
+    };
+  }, []);
 
-  // No overlay needed when fully diffuse
+  const f = ease(aperture);
   if (f < 0.01) return null;
 
   return (

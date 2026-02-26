@@ -501,3 +501,29 @@
   height: 100% !important;
   border-radius: 0 !important;
 }
+
+/* ── Sidebar: CSS-only hover effects (zero JS, GPU-composited) ────── */
+.sidebar-nav-btn {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.sidebar-nav-btn:not(.sidebar-nav-active):hover {
+  background: var(--sb-hover) !important;
+}
+.sidebar-logo-btn {
+  background: var(--sb-active);
+  border: 1px solid var(--sb-border);
+}
+.sidebar-tooltip {
+  background: hsl(25, 10%, 16%);
+  color: hsl(38, 15%, 85%);
+  border: 1px solid hsla(38, 12%, 70%, 0.15);
+  box-shadow: 0 8px 24px -6px hsla(25, 15%, 5%, 0.5);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+/* ── Mobile drawer: CSS-only touch feedback ──────────────────────── */
+.mobile-drawer-btn {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
