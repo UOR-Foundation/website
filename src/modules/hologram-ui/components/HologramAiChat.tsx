@@ -812,45 +812,42 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const isFocus = attention.preset === "focus";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center" style={{ animation: "lumen-overlay-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
-      {/* Backdrop — slow immersive zoom into the space */}
+    <div
+      className="fixed inset-0 z-[60] flex flex-col"
+      style={{ animation: "lumen-overlay-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both" }}
+    >
+      {/* Full-field backdrop — immersive, part of the OS */}
       <div
-        className="absolute inset-0"
-        onClick={onClose}
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at 50% 40%, hsla(30, 10%, 6%, 0.78) 0%, hsla(25, 8%, 4%, 0.93) 100%)",
-          backdropFilter: "blur(20px) saturate(0.65)",
-          WebkitBackdropFilter: "blur(20px) saturate(0.65)",
-          animation: "lumen-backdrop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both, lumen-converge 8s cubic-bezier(0.25, 0.1, 0.25, 1) 0.3s both",
+          background: "radial-gradient(ellipse at 50% 60%, hsla(30, 10%, 5%, 0.65) 0%, hsla(25, 8%, 3%, 0.88) 70%, hsla(20, 6%, 2%, 0.95) 100%)",
+          backdropFilter: "blur(24px) saturate(0.55) brightness(0.7)",
+          WebkitBackdropFilter: "blur(24px) saturate(0.55) brightness(0.7)",
+          animation: "lumen-backdrop-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both, lumen-converge 8s cubic-bezier(0.25, 0.1, 0.25, 1) 0.3s both",
           transformOrigin: "50% 45%",
         }}
       />
 
+      {/* Full-screen container — no card, no box, the OS IS the chat */}
       <div
-        className="relative flex flex-col overflow-hidden shadow-2xl transition-all duration-700 ease-in-out"
-        style={{
-          animation: "lumen-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both",
-          width: isFocus ? "100%" : undefined,
-          maxWidth: isFocus ? "100%" : "42rem",
-          maxHeight: isFocus ? "100vh" : "min(88vh, 800px)",
-          height: isFocus ? "100vh" : undefined,
-          margin: isFocus ? 0 : "0 1rem",
-          background: P.bgGrad,
-          borderRadius: isFocus ? 0 : "20px",
-          border: isFocus ? "none" : `1px solid ${P.border}`,
-        }}
+        className="relative flex flex-col flex-1 overflow-hidden"
+        style={{ animation: "lumen-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both" }}
       >
-        {/* ── Header ───────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-6 py-3.5" style={{ borderBottom: `1px solid ${P.borderLight}` }}>
+        {/* ── Header — minimal floating bar ──────────────────────── */}
+        <div className="flex items-center justify-between px-6 py-4 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: P.goldBg }}>
-              <Sparkles className="w-4.5 h-4.5" style={{ color: P.goldLight }} />
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ background: "hsla(38, 30%, 40%, 0.15)", border: "1px solid hsla(38, 20%, 50%, 0.12)" }}
+            >
+              <Sparkles className="w-4 h-4" style={{ color: P.goldLight }} />
             </div>
-            <div>
-              <h3 className="text-base font-medium tracking-wide" style={{ fontFamily: P.fontDisplay, color: P.text }}>
-                Lumen AI
-              </h3>
-            </div>
+            <h3
+              className="text-sm font-medium tracking-[0.15em] uppercase"
+              style={{ fontFamily: P.font, color: "hsla(38, 15%, 75%, 0.5)" }}
+            >
+              Lumen
+            </h3>
           </div>
           <div className="flex items-center gap-1">
             {history.isAuthenticated && (
@@ -860,10 +857,10 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 style={{ color: P.textMuted }}
                 title="Conversations"
               >
-                <MessageSquare className="w-4.5 h-4.5" />
+                <MessageSquare className="w-4 h-4" />
                 {history.conversations.length > 0 && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-medium"
+                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-medium"
                     style={{ background: P.gold, color: P.bg }}
                   >
                     {history.conversations.length > 9 ? "9+" : history.conversations.length}
@@ -877,52 +874,54 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               style={{ color: P.textMuted }}
               title="New conversation"
             >
-              <Plus className="w-4.5 h-4.5" />
+              <Plus className="w-4 h-4" />
             </button>
             <button
               onClick={onClose}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/[0.08]"
               style={{ color: P.textMuted }}
             >
-              <X className="w-4.5 h-4.5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* ── Skill Bar (compact, always visible when in conversation) ── */}
+        {/* ── Skill Bar — centered, floating ─────────────────────── */}
         {hasMessages && (
-          <div
-            className="flex items-center gap-1.5 px-4 py-1.5 overflow-x-auto no-scrollbar"
-            style={{ borderBottom: `1px solid ${P.borderLight}` }}
-          >
-            <span className="text-[12px] tracking-wider flex-shrink-0 mr-1" style={{ color: P.textDim }}>
-              {selectedPersona.name}
-            </span>
-            {AGENT_SKILLS.filter(s => s.phase === selectedPersona.phase).map((skill) => {
-              const isActive = (activeSkill?.id || selectedPersona.defaultSkillId) === skill.id;
-              const phaseDef = PHASES[skill.phase];
-              return (
-                <button
-                  key={skill.id}
-                  onClick={() => setActiveSkill(isActive && activeSkill ? null : skill)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] flex-shrink-0 transition-all"
-                  style={{
-                    background: isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.2)` : "transparent",
-                    border: `1px solid ${isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.35)` : "transparent"}`,
-                    color: isActive ? phaseDef.color : P.textDim,
-                  }}
-                  title={skill.description}
-                >
-                  <span>{skill.icon}</span>
-                  {skill.name}
-                </button>
-              );
-            })}
+          <div className="flex justify-center flex-shrink-0">
+            <div
+              className="flex items-center gap-1.5 px-4 py-1.5 overflow-x-auto no-scrollbar max-w-2xl"
+            >
+              <span className="text-[12px] tracking-wider flex-shrink-0 mr-1" style={{ color: P.textDim }}>
+                {selectedPersona.name}
+              </span>
+              {AGENT_SKILLS.filter(s => s.phase === selectedPersona.phase).map((skill) => {
+                const isActive = (activeSkill?.id || selectedPersona.defaultSkillId) === skill.id;
+                const phaseDef = PHASES[skill.phase];
+                return (
+                  <button
+                    key={skill.id}
+                    onClick={() => setActiveSkill(isActive && activeSkill ? null : skill)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] flex-shrink-0 transition-all"
+                    style={{
+                      background: isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.2)` : "transparent",
+                      border: `1px solid ${isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.35)` : "transparent"}`,
+                      color: isActive ? phaseDef.color : P.textDim,
+                    }}
+                    title={skill.description}
+                  >
+                    <span>{skill.icon}</span>
+                    {skill.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {/* ── Messages / Welcome ───────────────────────────────────── */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6" style={{ minHeight: "320px" }}>
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 flex flex-col items-center">
+          <div className="w-full max-w-2xl">
           {/* Welcome state when no messages */}
           {!hasMessages && !isLoadingModel && (
             <TriadicWelcome
@@ -985,15 +984,19 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               <span className="text-sm font-mono" style={{ color: P.textDim }}>{loadProgress}</span>
             </div>
           )}
+          </div>
         </div>
 
-        {/* ── Input Bar (Claude-style) ─────────────────────────────── */}
-        <div className="px-4 pb-4 pt-2">
+        {/* ── Input Bar — bottom-anchored, centered ────────────────── */}
+        <div className="flex justify-center px-4 pb-6 pt-2 flex-shrink-0">
+          <div className="w-full max-w-2xl">
           <div
-            className="rounded-2xl overflow-hidden transition-all"
+            className="rounded-2xl overflow-visible transition-all"
             style={{
-              background: P.surface,
-              border: `1px solid ${P.border}`,
+              background: "hsla(30, 8%, 10%, 0.55)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid hsla(38, 15%, 30%, 0.18)",
             }}
           >
             {/* Text input area */}
@@ -1134,6 +1137,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             {history.isAuthenticated && history.activeConversationId && (
               <p className="text-[11px] tracking-wider" style={{ color: P.goldMuted }}>● Saving</p>
             )}
+          </div>
           </div>
         </div>
       </div>
