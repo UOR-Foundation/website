@@ -338,40 +338,14 @@
   44% { opacity: 0.6; }
 }
 
-/* ── Lumen AI overlay — smooth, human, no parallax ───────────────── */
-@keyframes lumen-overlay-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-@keyframes lumen-backdrop-in {
-  from { opacity: 0; backdrop-filter: blur(0px) saturate(1); }
-  to   { opacity: 1; backdrop-filter: blur(20px) saturate(0.65); }
-}
-
-@keyframes lumen-card-in {
+/* ── Lumen AI slide-out panel ─────────────────────────────────────── */
+@keyframes lumen-slide-in {
   from {
     opacity: 0;
-    transform: translateY(24px) scale(0.97);
+    transform: translateX(100%);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Slow convergence — zooming gently into the landscape, then resting */
-@keyframes lumen-converge {
-  0% {
-    transform: scale(1);
-    filter: blur(0px) brightness(0.92);
-  }
-  70% {
-    transform: scale(1.12);
-    filter: blur(2px) brightness(0.96);
-  }
-  100% {
-    transform: scale(1.15);
-    filter: blur(3px) brightness(1);
+    transform: translateX(0);
   }
 }
