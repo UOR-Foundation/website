@@ -502,6 +502,80 @@ export type Database = {
         }
         Relationships: []
       }
+      reasoning_proofs: {
+        Row: {
+          certificate: Json | null
+          claims: Json
+          conclusion: string | null
+          converged: boolean
+          conversation_id: string | null
+          created_at: string
+          final_curvature: number
+          id: string
+          is_complete: boolean
+          iterations: number
+          overall_grade: string
+          premises: string[]
+          proof_id: string
+          quantum: number
+          scaffold_summary: string | null
+          state: string
+          steps: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          certificate?: Json | null
+          claims?: Json
+          conclusion?: string | null
+          converged?: boolean
+          conversation_id?: string | null
+          created_at?: string
+          final_curvature?: number
+          id?: string
+          is_complete?: boolean
+          iterations?: number
+          overall_grade?: string
+          premises?: string[]
+          proof_id: string
+          quantum?: number
+          scaffold_summary?: string | null
+          state?: string
+          steps?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          certificate?: Json | null
+          claims?: Json
+          conclusion?: string | null
+          converged?: boolean
+          conversation_id?: string | null
+          created_at?: string
+          final_curvature?: number
+          id?: string
+          is_complete?: boolean
+          iterations?: number
+          overall_grade?: string
+          premises?: string[]
+          proof_id?: string
+          quantum?: number
+          scaffold_summary?: string | null
+          state?: string
+          steps?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reasoning_proofs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       uor_bindings: {
         Row: {
           address: string

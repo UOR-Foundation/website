@@ -47,6 +47,7 @@ import {
   type NeuroSymbolicResult,
 } from "@/modules/ring-core/neuro-symbolic";
 import AnnotatedResponse from "@/components/reasoning/EpistemicBadge";
+import { saveReasoningProof } from "@/modules/ring-core/proof-persistence";
 
 // ── Cloud AI Models (instant, no download) ─────────────────────────────────
 const CLOUD_MODELS = [
@@ -538,6 +539,11 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       if (convId) history.saveMessage(convId, "assistant", finalContent, meta as Record<string, unknown>);
       journal.log({ message: finalContent.slice(0, 120), source: "chat", tags: [selectedPersona.phase, activeSkill?.id ?? "general"].filter(Boolean) as string[], phase: selectedPersona.phase, priority: "medium" }, !open);
       enrichContext(text, finalContent);
+
+      // Phase 7: Persist reasoning proof (fire-and-forget)
+      if (nsResult) {
+        saveReasoningProof(nsResult, convId).catch(() => {});
+      }
 
       // Cache write for future O(1) replay
       getInputHash(text, modelId).then((proof) => {

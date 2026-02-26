@@ -100,3 +100,9 @@ export type {
   EpistemicGrade, AnnotatedClaim, SymbolicScaffold,
   CurvatureReport, NeuroSymbolicResult, NeuroSymbolicConfig,
 } from "./neuro-symbolic";
+
+// ── Phase 7: Proof Persistence ──────────────────────────────────────────
+export {
+  saveReasoningProof, loadReasoningProofs, loadProofById, getProofStats,
+} from "./proof-persistence";
+export type { PersistedProof } from "./proof-persistence";
