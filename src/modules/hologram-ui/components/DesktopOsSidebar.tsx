@@ -196,7 +196,7 @@ export default function DesktopOsSidebar({
             style={{ color: S.text, fontFamily: S.font }}
             onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-            title={collapsed ? "Help (⌘ /)" : undefined}
+            title={collapsed ? "Help (⌘ /)" : undefined}  
           >
             <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
             {!collapsed && (
@@ -215,13 +215,13 @@ export default function DesktopOsSidebar({
           style={{ color: S.text, fontFamily: S.font }}
           onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={collapsed ? "Messages (⌘ .)" : undefined}
+          title={collapsed ? "Messages (⌘ M)" : undefined}
         >
           <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
           {!collapsed && (
             <>
               <span className="text-[14px] font-light">Messages</span>
-              <ShortcutBadge keys="⌘ ." />
+              <ShortcutBadge keys="⌘ M" />
             </>
           )}
         </button>
@@ -233,13 +233,13 @@ export default function DesktopOsSidebar({
           style={{ color: S.text, fontFamily: S.font }}
           onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={collapsed ? "Settings (⌘ ,)" : undefined}
+          title={collapsed ? "Settings (⌘ S)" : undefined}
         >
           <Settings className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
           {!collapsed && (
             <>
               <span className="text-[14px] font-light">Settings</span>
-              <ShortcutBadge keys="⌘ ," />
+              <ShortcutBadge keys="⌘ S" />
             </>
           )}
         </button>
