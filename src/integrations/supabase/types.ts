@@ -289,6 +289,160 @@ export type Database = {
         }
         Relationships: []
       }
+      audio_features: {
+        Row: {
+          confidence: number
+          created_at: string
+          derivation_id: string | null
+          feature_id: string
+          frame_range: Json
+          id: string
+          label: string
+          lens_id: string
+          track_cid: string
+          unit: string
+          value: number
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          derivation_id?: string | null
+          feature_id: string
+          frame_range?: Json
+          id?: string
+          label?: string
+          lens_id?: string
+          track_cid: string
+          unit?: string
+          value?: number
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          derivation_id?: string | null
+          feature_id?: string
+          frame_range?: Json
+          id?: string
+          label?: string
+          lens_id?: string
+          track_cid?: string
+          unit?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_features_track_cid_fkey"
+            columns: ["track_cid"]
+            isOneToOne: false
+            referencedRelation: "audio_tracks"
+            referencedColumns: ["track_cid"]
+          },
+        ]
+      }
+      audio_segments: {
+        Row: {
+          bitrate: number
+          byte_length: number
+          byte_offset: number
+          cached: boolean
+          created_at: string
+          duration: number
+          frame_cids: string[]
+          id: string
+          segment_cid: string
+          segment_index: number
+          track_cid: string
+        }
+        Insert: {
+          bitrate?: number
+          byte_length?: number
+          byte_offset?: number
+          cached?: boolean
+          created_at?: string
+          duration?: number
+          frame_cids?: string[]
+          id?: string
+          segment_cid: string
+          segment_index?: number
+          track_cid: string
+        }
+        Update: {
+          bitrate?: number
+          byte_length?: number
+          byte_offset?: number
+          cached?: boolean
+          created_at?: string
+          duration?: number
+          frame_cids?: string[]
+          id?: string
+          segment_cid?: string
+          segment_index?: number
+          track_cid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_segments_track_cid_fkey"
+            columns: ["track_cid"]
+            isOneToOne: false
+            referencedRelation: "audio_tracks"
+            referencedColumns: ["track_cid"]
+          },
+        ]
+      }
+      audio_tracks: {
+        Row: {
+          album: string
+          artist: string
+          created_at: string
+          derivation_id: string | null
+          duration_seconds: number
+          format: Json
+          genres: string[]
+          id: string
+          ingested_at: string
+          ipv6_address: string | null
+          source_uri: string | null
+          title: string
+          track_cid: string
+          uor_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          album?: string
+          artist?: string
+          created_at?: string
+          derivation_id?: string | null
+          duration_seconds?: number
+          format?: Json
+          genres?: string[]
+          id?: string
+          ingested_at?: string
+          ipv6_address?: string | null
+          source_uri?: string | null
+          title?: string
+          track_cid: string
+          uor_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          album?: string
+          artist?: string
+          created_at?: string
+          derivation_id?: string | null
+          duration_seconds?: number
+          format?: Json
+          genres?: string[]
+          id?: string
+          ingested_at?: string
+          ipv6_address?: string | null
+          source_uri?: string | null
+          title?: string
+          track_cid?: string
+          uor_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       discord_events: {
         Row: {
           calendar_date: string | null
