@@ -141,6 +141,7 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   const pillRef = useRef<HTMLDivElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
   const streamTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Draggable position — default to bottom-left
@@ -192,6 +193,8 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
       audio.removeAttribute("src");
       audio.load();
       stopSystemStream();
+      sourceNodeRef.current = null;
+      analyserRef.current = null;
       if (audioCtxRef.current) {
         audioCtxRef.current.close().catch(() => {});
         audioCtxRef.current = null;
@@ -209,17 +212,21 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
       const ctx = audioCtxRef.current;
       if (ctx.state === "suspended") ctx.resume();
 
-      const source = ctx.createMediaElementSource(audio);
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 64; // 32 frequency bins — compact
-      source.connect(analyser);
-      analyser.connect(ctx.destination);
-      analyserRef.current = analyser;
+      // Only create source node once per audio element — it throws if called twice
+      if (!sourceNodeRef.current) {
+        const source = ctx.createMediaElementSource(audio);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 64;
+        source.connect(analyser);
+        analyser.connect(ctx.destination);
+        sourceNodeRef.current = source;
+        analyserRef.current = analyser;
+      }
 
+      const analyser = analyserRef.current!;
       const freqData = new Uint8Array(analyser.frequencyBinCount);
       const timeData = new Uint8Array(analyser.frequencyBinCount);
 
-      // Emit frequency snapshots every 200ms
       streamTimerRef.current = setInterval(() => {
         if (!analyserRef.current) return;
         analyserRef.current.getByteFrequencyData(freqData);
