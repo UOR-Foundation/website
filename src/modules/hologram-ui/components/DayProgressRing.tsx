@@ -278,7 +278,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
 
         return (
           <span
-            className="text-[10px] tracking-[0.35em] uppercase transition-all duration-700"
+            className="text-[12px] tracking-[0.35em] uppercase transition-all duration-700"
             style={{
               fontFamily: "'DM Sans', system-ui, sans-serif",
               color,

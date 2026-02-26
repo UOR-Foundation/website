@@ -30,7 +30,7 @@ export default function AttentionToggle() {
     >
       {/* "Focus Mode" label — vertical */}
       <span
-        className="text-[10px] font-medium tracking-[0.2em] uppercase transition-colors duration-500"
+        className="text-[12px] font-medium tracking-[0.2em] uppercase transition-colors duration-500"
         style={{
           writingMode: "vertical-rl",
           color: isFocus
@@ -74,7 +74,7 @@ export default function AttentionToggle() {
 
       {/* OFF / ON label — vertical */}
       <span
-        className="text-[10px] font-semibold tracking-[0.15em] uppercase transition-colors duration-500"
+        className="text-[12px] font-semibold tracking-[0.15em] uppercase transition-colors duration-500"
         style={{
           writingMode: "vertical-rl",
           color: isFocus
