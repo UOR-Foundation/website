@@ -162,6 +162,7 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   // Initialize audio element
   useEffect(() => {
     const audio = new Audio();
+    audio.crossOrigin = "anonymous";
     audio.volume = volume;
     audio.preload = "none";
     audioRef.current = audio;
@@ -169,11 +170,30 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     const onPlaying = () => {
       setLoading(false);
       setPlaying(true);
-      // Start streaming frequency data to SystemEventBus
-      startSystemStream(audio);
+      // Try to set up Web Audio API for visualization (non-critical)
+      tryConnectAnalyser(audio);
     };
     const onWaiting = () => setLoading(true);
-    const onError = () => { setLoading(false); setPlaying(false); stopSystemStream(); };
+    const onError = (e: Event) => {
+      console.warn("Ambient audio error:", (e.target as HTMLAudioElement)?.error);
+      setLoading(false);
+      setPlaying(false);
+      stopSystemStream();
+      // If CORS failed with crossOrigin="anonymous", retry without it
+      // (lose visualization but gain playback)
+      if (audio.crossOrigin === "anonymous" && audio.src) {
+        console.log("Retrying stream without CORS for playback...");
+        audio.crossOrigin = "";
+        const src = audio.src;
+        audio.src = "";
+        audio.load();
+        setTimeout(() => {
+          audio.src = src;
+          audio.load();
+          audio.play().catch(() => {});
+        }, 100);
+      }
+    };
     const onEnded = () => { setPlaying(false); stopSystemStream(); };
     const onPause = () => { stopSystemStream(); };
 
@@ -202,8 +222,8 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     };
   }, []);
 
-  // Stream audio frequency data into the SystemEventBus
-  const startSystemStream = useCallback((audio: HTMLAudioElement) => {
+  // Try to connect Web Audio API for visualization — non-critical, graceful fallback
+  const tryConnectAnalyser = useCallback((audio: HTMLAudioElement) => {
     stopSystemStream();
     try {
       if (!audioCtxRef.current) {
@@ -239,7 +259,8 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
         );
       }, 200);
     } catch (err) {
-      console.warn("Ambient system stream setup failed:", err);
+      // Visualization failed (likely CORS) — audio still plays fine
+      console.info("Ambient visualizer unavailable (CORS), playback continues:", err);
     }
   }, []);
 
@@ -261,25 +282,31 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     (s: AmbientStation) => {
       const audio = audioRef.current;
       if (!audio) return;
-      // Stop current stream first
+
+      // Stop current stream
+      stopSystemStream();
       audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
 
       setStation(s);
       setLoading(true);
       setPlaying(false);
 
-      // Small delay to ensure clean transition
-      setTimeout(() => {
-        audio.src = s.streamUrl;
-        audio.load();
-        audio.play().catch((err) => {
+      // Unlock audio context immediately within user gesture
+      if (audioCtxRef.current?.state === "suspended") {
+        audioCtxRef.current.resume().catch(() => {});
+      }
+
+      // Set source and play — immediate, within the user click gesture
+      audio.src = s.streamUrl;
+      audio.load();
+      const playPromise = audio.play();
+      if (playPromise) {
+        playPromise.catch((err) => {
           console.warn("Ambient playback blocked:", err);
           setLoading(false);
           setPlaying(false);
         });
-      }, 50);
+      }
     },
     [],
   );
@@ -289,12 +316,15 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     if (!audio) return;
     if (playing || loading) {
       audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
+      stopSystemStream();
       setPlaying(false);
       setLoading(false);
     } else {
       setLoading(true);
+      // Resume audio context within user gesture
+      if (audioCtxRef.current?.state === "suspended") {
+        audioCtxRef.current.resume().catch(() => {});
+      }
       audio.src = station.streamUrl;
       audio.load();
       audio.play().catch((err) => {
