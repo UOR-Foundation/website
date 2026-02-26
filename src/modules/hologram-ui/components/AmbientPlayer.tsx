@@ -17,6 +17,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical } from "lucide-react";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
+import { getAudioEngine, type AudioEngineState } from "@/modules/audio";
 
 // ── Palette (consistent with OS) ──────────────────────────────────────────
 const P = {
@@ -136,7 +137,7 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   );
   const [volume, setVolume] = useState(() => prefs.current.volume);
   const [muted, setMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const engineRef = useRef(getAudioEngine());
   const pillRef = useRef<HTMLDivElement>(null);
 
   // Draggable position — default to bottom-left
@@ -154,97 +155,63 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     onStateChange?.({ playing, loading, stationHue: station.color, stationName: station.name });
   }, [playing, loading, station, onStateChange]);
 
-  // Initialize audio element
+  // Subscribe to engine state changes
   useEffect(() => {
-    const audio = new Audio();
-    // Don't set crossOrigin — SomaFM doesn't serve CORS headers.
-    // Visualization via Web Audio API requires same-origin, but
-    // reliable playback is more important. We use CSS animations
-    // for the equalizer instead.
-    audio.volume = volume;
-    audio.preload = "none";
-    audioRef.current = audio;
+    const engine = engineRef.current;
+    engine.setVolume(volume);
 
-    const onPlaying = () => {
-      setLoading(false);
-      setPlaying(true);
-    };
-    const onWaiting = () => setLoading(true);
-    const onError = (e: Event) => {
-      const mediaError = (e.target as HTMLAudioElement)?.error;
-      console.warn("Ambient audio error:", mediaError?.message || mediaError);
-      setLoading(false);
-      setPlaying(false);
-    };
-    const onEnded = () => { setPlaying(false); };
-    const onPause = () => {};
-
-    audio.addEventListener("playing", onPlaying);
-    audio.addEventListener("waiting", onWaiting);
-    audio.addEventListener("error", onError);
-    audio.addEventListener("ended", onEnded);
-    audio.addEventListener("pause", onPause);
+    const unsub = engine.onStateChange((state: AudioEngineState) => {
+      switch (state) {
+        case "playing":
+          setLoading(false);
+          setPlaying(true);
+          break;
+        case "loading":
+        case "buffering":
+          setLoading(true);
+          break;
+        case "paused":
+        case "idle":
+          setPlaying(false);
+          setLoading(false);
+          break;
+        case "error":
+          setPlaying(false);
+          setLoading(false);
+          break;
+      }
+    });
 
     return () => {
-      audio.removeEventListener("playing", onPlaying);
-      audio.removeEventListener("waiting", onWaiting);
-      audio.removeEventListener("error", onError);
-      audio.removeEventListener("ended", onEnded);
-      audio.removeEventListener("pause", onPause);
-      audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
+      unsub();
     };
   }, []);
 
 
   // Sync volume
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = muted ? 0 : volume;
-    }
+    engineRef.current.setVolume(muted ? 0 : volume);
   }, [volume, muted]);
 
   const playStation = useCallback(
     (s: AmbientStation) => {
-      const audio = audioRef.current;
-      if (!audio) return;
-
-      audio.pause();
       setStation(s);
       setLoading(true);
       setPlaying(false);
-
-      // Set source and play — immediate, within the user click gesture
-      audio.src = s.streamUrl;
-      audio.load();
-      const playPromise = audio.play();
-      if (playPromise) {
-        playPromise.catch((err) => {
-          console.warn("Ambient playback blocked:", err);
-          setLoading(false);
-          setPlaying(false);
-        });
-      }
+      engineRef.current.play(s.streamUrl);
     },
     [],
   );
 
   const togglePlayback = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const engine = engineRef.current;
     if (playing || loading) {
-      audio.pause();
+      engine.pause();
       setPlaying(false);
       setLoading(false);
     } else {
       setLoading(true);
-      audio.src = station.streamUrl;
-      audio.load();
-      audio.play().catch((err) => {
-        console.warn("Ambient playback blocked:", err);
-        setLoading(false);
-      });
+      engine.play(station.streamUrl);
     }
   }, [playing, loading, station]);
 

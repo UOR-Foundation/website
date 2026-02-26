@@ -168,6 +168,17 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     depth: 3,
     icon: "⚙️",
   },
+
+  // ── Extended Namespaces ──────────────────────────────────────────────
+  {
+    prefix: "audio:",
+    label: "Audio",
+    space: "bridge",
+    modules: ["audio"],
+    barrel: "@/modules/ns/audio",
+    depth: 2,
+    icon: "🎵",
+  },
 ] as const;
 
 // ── Lookup Helpers ─────────────────────────────────────────────────────────
@@ -192,7 +203,7 @@ export const ONTOLOGICAL_MODULES = new Set(
   CANONICAL_NAMESPACES.flatMap((ns) => ns.modules)
 );
 
-/** Count: should be 14 */
+/** Count: 15 canonical namespaces (14 original + audio) */
 export const NAMESPACE_COUNT = CANONICAL_NAMESPACES.length;
 
 /**

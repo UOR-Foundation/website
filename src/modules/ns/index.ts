@@ -28,3 +28,4 @@ export * as proof from "./proof";
 export * as query from "./query";
 export * as type from "./type";
 export * as schema from "./schema";
+export * as audio from "./audio";
