@@ -147,8 +147,8 @@ function getLumenSubtitle(): string {
   return "Evening light. A gentle space to explore.";
 }
 
-// ── Typewriter text — reveals characters one by one ─────────────────────────
-function TypewriterText({ text, delay = 2400, speed = 45 }: { text: string; delay?: number; speed?: number }) {
+// ── Typewriter text — human-paced, contemplative reveal ─────────────────────
+function TypewriterText({ text, delay = 3200, speed = 80 }: { text: string; delay?: number; speed?: number }) {
   const [displayed, setDisplayed] = useState("");
   const [started, setStarted] = useState(false);
   const [done, setDone] = useState(false);
@@ -163,11 +163,19 @@ function TypewriterText({ text, delay = 2400, speed = 45 }: { text: string; dela
 
   useEffect(() => {
     if (!started || displayed.length >= text.length) return;
+    const nextChar = text[displayed.length];
+    // Variable pacing — pauses feel like thought
+    let charDelay = speed + Math.random() * speed * 0.6; // gentle variation
+    if (nextChar === "." || nextChar === "!" || nextChar === "?") charDelay = speed * 6; // breath after sentence
+    else if (nextChar === ",") charDelay = speed * 3; // pause at comma
+    else if (nextChar === " " && Math.random() > 0.6) charDelay = speed * 2; // occasional word pause
+    else if (nextChar === "\u2019" || nextChar === "'") charDelay = speed * 1.5; // apostrophe pause
+
     const t = setTimeout(() => {
       const next = text.slice(0, displayed.length + 1);
       setDisplayed(next);
       if (next.length >= text.length) setDone(true);
-    }, speed);
+    }, charDelay);
     return () => clearTimeout(t);
   }, [started, displayed, text, speed]);
 
