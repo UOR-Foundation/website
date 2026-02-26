@@ -816,7 +816,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       <div
         className="fixed top-0 right-0 bottom-0 z-[60] flex pointer-events-auto"
         style={{
-          width: "min(380px, 82vw)",
+          width: "min(340px, 82vw)",
           animation: "lumen-slide-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both",
         }}
       >
@@ -916,7 +916,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         {/* Skill bar removed — cleaner, less clutter */}
 
         {/* ── Messages / Welcome ─────────────────────────────────────── */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5 lumen-scroll">
           {!hasMessages && !isLoadingModel && (
             <TriadicWelcome
               key={replayGuideKey}
@@ -992,7 +992,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             }}
           >
             {/* Text input area */}
-            <div className="px-4 pt-3 pb-2">
+            <div className="px-4 pt-3.5 pb-2.5">
               <textarea
                 ref={inputRef}
                 value={input}
@@ -1001,11 +1001,12 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 placeholder="Ask anything…"
                 disabled={isGenerating}
                 rows={1}
-                className="w-full bg-transparent border-none outline-none resize-none text-[15px] placeholder:opacity-40 leading-relaxed"
+                className="w-full bg-transparent border-none outline-none resize-none text-[14px] placeholder:opacity-30 leading-relaxed block"
                 style={{
                   color: P.text,
                   fontFamily: P.font,
                   maxHeight: "120px",
+                  letterSpacing: "0.01em",
                 }}
               />
             </div>
