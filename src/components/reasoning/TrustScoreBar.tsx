@@ -105,10 +105,24 @@ function getImprovementActions(
   return actions;
 }
 
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+/** Turn a source string into a clickable search URL when it references a real source. */
+function getSourceUrl(source: string): string | null {
+  if (!source) return null;
+  const s = source.trim();
+  if (/^https?:\/\//i.test(s)) return s;
+  if (/^(scaffold|llm-generated|ring-core|internal|cache|local)/i.test(s)) return null;
+  if (s.length < 8) return null;
+  return `https://scholar.google.com/scholar?q=${encodeURIComponent(s)}`;
+}
+
 // ── Claim Detail Row ───────────────────────────────────────────────────────
 
 function ClaimRow({ claim, index }: { claim: AnnotatedClaim; index: number }) {
   const g = GRADE[claim.grade];
+  const sourceUrl = getSourceUrl(claim.source);
+
   return (
     <div
       className="flex items-start gap-2.5 py-2 px-3 rounded-lg transition-colors hover:bg-white/[0.02]"
@@ -129,9 +143,27 @@ function ClaimRow({ claim, index }: { claim: AnnotatedClaim; index: number }) {
           {claim.text.replace(/\s*\{source:\s*"[^"]*"\}\s*/g, "").slice(0, 200)}
         </p>
         <div className="flex items-center gap-3 mt-1">
-          <span className="text-xs" style={{ color: P.textDim }}>
-            Source: {claim.source}
-          </span>
+          {sourceUrl ? (
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs inline-flex items-center gap-1 transition-opacity hover:opacity-75"
+              style={{
+                color: P.goldLight,
+                textDecoration: "none",
+                borderBottom: "1px solid hsla(38, 40%, 55%, 0.2)",
+              }}
+              title={`Search for: ${claim.source}`}
+            >
+              Source: {claim.source}
+              <ExternalLink className="w-2.5 h-2.5 inline-block" style={{ opacity: 0.5 }} />
+            </a>
+          ) : (
+            <span className="text-xs" style={{ color: P.textDim }}>
+              Source: {claim.source}
+            </span>
+          )}
           <span className="text-xs" style={{ color: P.textDim }}>
             κ {(claim.curvature * 100).toFixed(0)}%
           </span>
