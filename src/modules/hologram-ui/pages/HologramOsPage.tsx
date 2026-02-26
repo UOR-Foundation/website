@@ -50,6 +50,16 @@ function useIsMobile(breakpoint = 640) {
   return mobile;
 }
 
+// ── OS-aware modifier label ──────────────────────────────────────────────────
+function _detectMac(): boolean {
+  if (typeof navigator === "undefined") return false;
+  if ("userAgentData" in navigator && (navigator as any).userAgentData?.platform) {
+    return /mac/i.test((navigator as any).userAgentData.platform);
+  }
+  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent);
+}
+const MOD_LABEL = _detectMac() ? "⌘" : "Ctrl";
+
 // ── Background Modes ────────────────────────────────────────────────────────
 
 type BgMode = "image" | "white" | "dark";
@@ -589,7 +599,7 @@ export default function HologramOsPage() {
                     fontSize: "10px",
                   }}
                 >
-                  ⌘ K
+                  {MOD_LABEL} L
                 </span>
 
                 {journalEntryCount > 0 && (
