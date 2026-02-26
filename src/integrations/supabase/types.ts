@@ -1409,6 +1409,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_data_bank: {
+        Row: {
+          byte_length: number
+          cid: string
+          created_at: string
+          encrypted_blob: string
+          id: string
+          iv: string
+          slot_key: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          byte_length?: number
+          cid: string
+          created_at?: string
+          encrypted_blob: string
+          id?: string
+          iv: string
+          slot_key: string
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          byte_length?: number
+          cid?: string
+          created_at?: string
+          encrypted_blob?: string
+          id?: string
+          iv?: string
+          slot_key?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
