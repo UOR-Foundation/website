@@ -420,9 +420,10 @@
   100% { transform: scaleY(1); }
 }
 
-/* Lumen dot hover glow — warm bloom */
+/* Lumen dot hover — gentle warmth, no scale change */
 .group:hover .lumen-dot-hover {
-  box-shadow: 0 0 32px hsla(38, 50%, 55%, 0.55), 0 0 64px hsla(38, 50%, 55%, 0.2) !important;
+  box-shadow: 0 0 28px hsla(38, 50%, 55%, 0.5), 0 0 56px hsla(38, 50%, 55%, 0.15) !important;
+  background: hsla(38, 55%, 55%, 0.85) !important;
 }
 
 @keyframes ring-breathe {
