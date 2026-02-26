@@ -980,7 +980,9 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
     bridges: [
       { type: "protocol", description: "PennyLane computes quantum gradients for variational algorithms", sharedComponent: "variational circuit hash" },
       { type: "encoding", description: "Blackbird encodes photonic CV circuits", sharedComponent: "photonic program hash" },
-      { type: "stack", description: "Qiskit/Cirq/Braket provide gate-model backends", sharedComponent: "backend circuit hash" },
+      { type: "stack", description: "Qiskit provides IBM Quantum gate-model backends", sharedComponent: "backend circuit hash" },
+      { type: "stack", description: "Cirq provides Google Quantum gate-model backends", sharedComponent: "cirq circuit hash" },
+      { type: "stack", description: "Braket SDK bridges to AWS Quantum hardware", sharedComponent: "braket task hash" },
       { type: "protocol", description: "ONNX bridges quantum and classical ML models", sharedComponent: "hybrid model hash" },
       { type: "protocol", description: "D-Wave Ocean solves optimization via quantum annealing", sharedComponent: "annealing solution hash" },
     ],
