@@ -262,7 +262,15 @@ export default function HologramOsPage() {
       return next;
     });
   }, []);
-  const isWidgetVisible = useCallback((id: string) => !hiddenWidgets.has(id), [hiddenWidgets]);
+
+  // ── Global widget hide/show toggle ─────────────────────────────────────
+  const [allWidgetsHidden, setAllWidgetsHidden] = useState(false);
+  const toggleAllWidgets = useCallback(() => setAllWidgetsHidden(prev => !prev), []);
+
+  const isWidgetVisible = useCallback(
+    (id: string) => !allWidgetsHidden && !hiddenWidgets.has(id),
+    [hiddenWidgets, allWidgetsHidden],
+  );
 
   // Register context beacon so Lumini.AI knows what the user is viewing
   useContextBeacon({
@@ -305,6 +313,11 @@ export default function HologramOsPage() {
   const P = useMemo(() => palette(bgMode), [bgMode]);
   const isFocus = attention.preset === "focus";
 
+  // ── Auto-hide widgets in focus mode ────────────────────────────────────
+  useEffect(() => {
+    if (isFocus) setAllWidgetsHidden(true);
+  }, [isFocus]);
+
   // ── Global keyboard shortcuts ──────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -341,6 +354,8 @@ export default function HologramOsPage() {
         case "m": case "M": e.preventDefault(); mastery.record("m"); /* TODO: open messages */ break;
         // ⌘H — Home (H = Home)
         case "h": case "H": e.preventDefault(); mastery.record("h"); navigate("/hologram-console"); break;
+        // ⌘W — Toggle all widgets
+        case "w": case "W": e.preventDefault(); mastery.record("w"); toggleAllWidgets(); break;
         // ⌘/ — Shortcut cheat sheet
         case "/":
           e.preventDefault();
@@ -351,7 +366,7 @@ export default function HologramOsPage() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [navigate, attention, bgMode, setBgMode]);
+  }, [navigate, attention, bgMode, setBgMode, toggleAllWidgets]);
 
   // ── Mobile: iOS homescreen ──
   if (isMobile) return <MobileOsShell />;
