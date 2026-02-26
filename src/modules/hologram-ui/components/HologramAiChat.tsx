@@ -1214,51 +1214,68 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                   )}
                 </div>
 
-                {/* Voice input button */}
-                <button
-                  onClick={whisper.toggleRecording}
-                  disabled={isGenerating || whisper.isTranscribing}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all relative"
-                  style={{
-                    background: whisper.isRecording
-                      ? "hsla(0, 55%, 50%, 0.2)"
-                      : whisper.isTranscribing
-                        ? P.goldBg
-                        : "transparent",
-                    color: whisper.isRecording
-                      ? "hsl(0, 55%, 60%)"
-                      : whisper.isTranscribing
-                        ? P.goldLight
-                        : P.textDim,
-                  }}
-                  title={
-                    whisper.isRecording
-                      ? "Stop recording (⌘⇧V)"
-                      : whisper.isTranscribing
-                        ? "Transcribing…"
-                        : whisper.isLoading
-                          ? `Loading model… ${whisper.loadProgress}%`
-                          : "Voice input (⌘⇧V)"
-                  }
-                >
-                  {whisper.isRecording ? (
-                    <>
-                      <MicOff className="w-4 h-4" />
-                      {/* Pulsing ring */}
-                      <span
-                        className="absolute inset-0 rounded-lg animate-ping"
-                        style={{
-                          background: "hsla(0, 55%, 50%, 0.15)",
-                          animationDuration: "1.5s",
-                        }}
-                      />
-                    </>
-                  ) : whisper.isTranscribing ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Mic className="w-4 h-4" />
+                {/* Voice input button + waveform */}
+                <div className="flex items-center gap-1">
+                  {/* Waveform visualizer — only while recording */}
+                  {whisper.isRecording && (
+                    <div
+                      className="flex items-center gap-[2px] h-6 px-1"
+                      style={{ animation: "message-fade-in 0.2s ease-out both" }}
+                    >
+                      {Array.from({ length: 5 }).map((_, i) => {
+                        // Each bar gets a slightly different scale based on audio level + offset
+                        const offset = [0.3, 0.6, 1, 0.7, 0.4][i];
+                        const height = Math.max(4, Math.round(whisper.audioLevel * offset * 20));
+                        return (
+                          <div
+                            key={i}
+                            className="w-[3px] rounded-full"
+                            style={{
+                              height: `${height}px`,
+                              background: `hsla(0, 55%, 60%, ${0.5 + whisper.audioLevel * 0.5})`,
+                              transition: "height 80ms ease-out, background 80ms ease-out",
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
                   )}
-                </button>
+
+                  <button
+                    onClick={whisper.toggleRecording}
+                    disabled={isGenerating || whisper.isTranscribing}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all relative"
+                    style={{
+                      background: whisper.isRecording
+                        ? "hsla(0, 55%, 50%, 0.2)"
+                        : whisper.isTranscribing
+                          ? P.goldBg
+                          : "transparent",
+                      color: whisper.isRecording
+                        ? "hsl(0, 55%, 60%)"
+                        : whisper.isTranscribing
+                          ? P.goldLight
+                          : P.textDim,
+                    }}
+                    title={
+                      whisper.isRecording
+                        ? "Stop recording (⌘⇧V)"
+                        : whisper.isTranscribing
+                          ? "Transcribing…"
+                          : whisper.isLoading
+                            ? `Loading model… ${whisper.loadProgress}%`
+                            : "Voice input (⌘⇧V)"
+                    }
+                  >
+                    {whisper.isRecording ? (
+                      <MicOff className="w-4 h-4" />
+                    ) : whisper.isTranscribing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Mic className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
 
                 {/* Send button */}
                 <button
