@@ -172,15 +172,20 @@ function TypewriterText({ text, delay = 2400, speed = 45 }: { text: string; dela
   }, [started, displayed, text, speed]);
 
   return (
-    <>
-      {displayed}
-      {started && !done && (
-        <span style={{ opacity: 0.5, animation: "blink-caret 0.8s step-end infinite" }}>▎</span>
-      )}
-      {done && (
-        <span style={{ animation: "blink-caret 0.8s step-end 2, fade-out 0.6s ease-out 1.6s forwards", opacity: 0.5 }}>▎</span>
-      )}
-    </>
+    <span style={{ position: "relative", display: "inline" }}>
+      {/* Invisible full text reserves the final layout height — no jumps */}
+      <span style={{ visibility: "hidden" }} aria-hidden="true">{text}</span>
+      {/* Visible typed portion overlaid exactly on top */}
+      <span style={{ position: "absolute", left: 0, top: 0 }}>
+        {displayed}
+        {started && !done && (
+          <span style={{ opacity: 0.5, animation: "blink-caret 0.8s step-end infinite" }}>▎</span>
+        )}
+        {done && (
+          <span style={{ animation: "blink-caret 0.8s step-end 2, fade-out 0.6s ease-out 1.6s forwards", opacity: 0.5 }}>▎</span>
+        )}
+      </span>
+    </span>
   );
 }
 
