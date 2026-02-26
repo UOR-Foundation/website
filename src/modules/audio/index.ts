@@ -33,6 +33,8 @@ export { HarmonicLens } from "./lenses/harmonic-lens";
 export type { HarmonicLensFrame } from "./lenses/harmonic-lens";
 export { CurvatureLens } from "./lenses/curvature-lens";
 export type { CurvaturePoint, CatastropheEvent, CurvatureLensState } from "./lenses/curvature-lens";
+export { HolonomyLens } from "./lenses/holonomy-lens";
+export type { HolonomyPoint, HolonomyLoop, HolonomyLensState } from "./lenses/holonomy-lens";
 export { GenreFingerprint, GENRE_REGIONS } from "./lenses/genre-fingerprint";
 export type { GenreCoordinate, GenreClassification, GenreRegion } from "./lenses/genre-fingerprint";
 
