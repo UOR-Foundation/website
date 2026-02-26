@@ -324,10 +324,11 @@ export default function HologramOsPage() {
           <HologramFrame layer={2} label="content" interactive={false} transform={contentTilt} opacity={layerNav.layerOpacity(2)} style={{ transform: `scale(${layerNav.layerScale(2)})`, transition: "opacity 0.5s, transform 0.5s" }}>
             {/* Logo — top center */}
             <div
-              className="absolute top-0 left-0 right-0 flex justify-center pt-[3vh] animate-fade-in transition-all duration-700"
+              className="absolute top-0 left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-700"
               style={{
                 pointerEvents: "auto",
                 opacity: "var(--focus-dim-opacity, 1)",
+                height: "calc(3vh + 52px)",
               }}
             >
               <span
@@ -335,7 +336,7 @@ export default function HologramOsPage() {
                 style={{
                   fontFamily: "'Playfair Display', serif",
                   fontWeight: 400,
-                  fontSize: "clamp(16px, 1.5vw, 24px)",
+                  fontSize: "clamp(20px, 2vw, 30px)",
                   letterSpacing: "0.55em",
                   textTransform: "uppercase" as const,
                   color: P.wordmark,
