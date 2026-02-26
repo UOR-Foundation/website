@@ -71,9 +71,10 @@ export class AudioEngine {
    * Load and play a URL. Automatically detects HLS (.m3u8) vs direct stream.
    */
   async play(url: string): Promise<void> {
-    // Tear down previous stream
+    // Tear down previous stream completely
     this.destroyHls();
     this.audio.pause();
+    this.audio.removeAttribute("src");
 
     this.currentUrl = url;
     this.setState("loading");
@@ -83,10 +84,8 @@ export class AudioEngine {
     if (isHls && Hls.isSupported()) {
       await this.playHls(url);
     } else if (isHls && this.audio.canPlayType("application/vnd.apple.mpegurl")) {
-      // Safari native HLS
       this.playNative(url);
     } else {
-      // Direct MP3/AAC stream (SomaFM etc.)
       this.playNative(url);
     }
   }
