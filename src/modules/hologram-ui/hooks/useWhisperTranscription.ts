@@ -79,9 +79,12 @@ async function audioToFloat32(blob: Blob): Promise<Float32Array> {
 export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhisperOptions) {
   const [status, setStatus] = useState<WhisperStatus>("idle");
   const [loadProgress, setLoadProgress] = useState(0);
+  const [audioLevel, setAudioLevel] = useState(0); // 0-1 normalized RMS
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   const updateStatus = useCallback(
     (s: WhisperStatus) => {
@@ -121,6 +124,28 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
       streamRef.current = stream;
       chunksRef.current = [];
 
+      // Set up audio analyser for level metering
+      const audioCtx = new AudioContext();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.4;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+
+      // Animation loop for audio level
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const tick = () => {
+        analyser.getByteFrequencyData(dataArray);
+        // Calculate RMS-ish average, normalize to 0-1
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+        const avg = sum / dataArray.length / 255;
+        setAudioLevel(avg);
+        rafRef.current = requestAnimationFrame(tick);
+      };
+      rafRef.current = requestAnimationFrame(tick);
+
       const recorder = new MediaRecorder(stream, {
         mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
           ? "audio/webm;codecs=opus"
@@ -132,6 +157,12 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
       };
 
       recorder.onstop = async () => {
+        // Stop analyser
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+        analyserRef.current = null;
+        setAudioLevel(0);
+
         // Stop all tracks
         stream.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
@@ -192,6 +223,7 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
       if (mediaRecorderRef.current?.state === "recording") {
         mediaRecorderRef.current.stop();
       }
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, []);
@@ -199,6 +231,7 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
   return {
     status,
     loadProgress,
+    audioLevel,
     isRecording: status === "recording",
     isTranscribing: status === "transcribing",
     isLoading: status === "loading",
