@@ -66,13 +66,13 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
   const ZERO_BALANCE: TriadicBalance = { learn: 0, work: 0, play: 0 };
 
   const balance = useMemo<TriadicBalance>(() => {
-    if (!isLoggedIn) return ZERO_BALANCE;
     if (externalBalance) return externalBalance;
+    // Default time-of-day balance for all users (logged in or not)
     const hour = new Date().getHours();
     if (hour < 12) return { learn: 0.45, work: 0.30, play: 0.25 };
     if (hour < 18) return { learn: 0.25, work: 0.50, play: 0.25 };
     return { learn: 0.20, work: 0.30, play: 0.50 };
-  }, [externalBalance, isLoggedIn]);
+  }, [externalBalance]);
 
   const report = useMemo(() => computeBalance(balance), [balance]);
 
@@ -332,7 +332,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
                 className="text-[9px] tracking-[0.25em] uppercase leading-none"
                 style={{
                   fontFamily: "'DM Sans', system-ui, sans-serif",
-                  color: `hsla(${PHASES[phase].hue}, 25%, 68%, 0.55)`,
+                  color: `hsla(${PHASES[phase].hue}, 30%, 75%, 0.85)`,
                   fontWeight: 400,
                 }}
               >
