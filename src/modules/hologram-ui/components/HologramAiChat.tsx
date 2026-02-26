@@ -793,17 +793,23 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
   const hasMessages = messages.filter((m) => m.role !== "system").length > 0;
 
+  const isFocus = attention.preset === "focus";
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center animate-fade-in">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       <div
-        className="relative w-full max-w-2xl mx-4 flex flex-col overflow-hidden shadow-2xl animate-scale-in"
+        className="relative flex flex-col overflow-hidden shadow-2xl animate-scale-in transition-all duration-700 ease-in-out"
         style={{
-          maxHeight: "min(88vh, 800px)",
+          width: isFocus ? "100%" : undefined,
+          maxWidth: isFocus ? "100%" : "42rem",
+          maxHeight: isFocus ? "100vh" : "min(88vh, 800px)",
+          height: isFocus ? "100vh" : undefined,
+          margin: isFocus ? 0 : "0 1rem",
           background: P.bgGrad,
-          borderRadius: "20px",
-          border: `1px solid ${P.border}`,
+          borderRadius: isFocus ? 0 : "20px",
+          border: isFocus ? "none" : `1px solid ${P.border}`,
         }}
       >
         {/* ── Header ───────────────────────────────────────────────── */}
