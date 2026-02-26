@@ -1658,12 +1658,13 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
               </div>
             ) : (
               <div
-                className={`text-base leading-[1.85] prose prose-invert max-w-none ${isStreaming ? "streaming-reveal" : ""}`}
+                className={`text-base leading-[1.9] prose prose-invert max-w-none ${isStreaming ? "streaming-reveal" : ""}`}
                 style={{
-                  color: "hsl(30, 12%, 78%)",
+                  color: "hsl(30, 14%, 76%)",
                   fontFamily: P.font,
                   textRendering: "optimizeLegibility",
-                  ['--tw-prose-headings' as string]: P.text,
+                  letterSpacing: "0.005em",
+                  ['--tw-prose-headings' as string]: "hsl(38, 35%, 72%)",
                   ['--tw-prose-bold' as string]: P.text,
                   ['--tw-prose-code' as string]: P.goldLight,
                   ['--tw-prose-links' as string]: P.goldLight,
@@ -1675,61 +1676,64 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                   components={{
                     h1: ({ children }) => (
                       <h1
-                        className="text-xl font-medium tracking-wide mt-5 mb-2.5"
-                        style={{ fontFamily: P.fontDisplay, color: P.text }}
+                        className="text-[22px] font-normal tracking-[0.04em] mt-7 mb-3"
+                        style={{ fontFamily: P.fontDisplay, color: "hsl(38, 40%, 70%)", lineHeight: "1.35" }}
                       >
                         {children}
                       </h1>
                     ),
                     h2: ({ children }) => (
                       <h2
-                        className="text-lg font-medium tracking-wide mt-4 mb-2"
-                        style={{ fontFamily: P.fontDisplay, color: P.text }}
+                        className="text-lg font-normal tracking-[0.035em] mt-6 mb-2.5"
+                        style={{ fontFamily: P.fontDisplay, color: "hsl(38, 35%, 68%)", lineHeight: "1.4" }}
                       >
                         {children}
                       </h2>
                     ),
                     h3: ({ children }) => (
                       <h3
-                        className="text-base font-medium tracking-wider uppercase mt-4 mb-1.5"
-                        style={{ color: P.goldMuted, letterSpacing: "0.1em" }}
+                        className="text-[15px] font-medium tracking-[0.12em] uppercase mt-6 mb-2"
+                        style={{ color: "hsl(38, 30%, 55%)", letterSpacing: "0.14em" }}
                       >
                         {children}
                       </h3>
                     ),
                     p: ({ children }) => (
-                      <p className="mb-3 last:mb-0" style={{ lineHeight: "1.85" }}>{children}</p>
+                      <p className="mb-4 last:mb-0" style={{ lineHeight: "1.9" }}>{children}</p>
                     ),
                     strong: ({ children }) => (
-                      <strong style={{ color: P.text, fontWeight: 600 }}>{children}</strong>
+                      <strong style={{ color: "hsl(38, 25%, 82%)", fontWeight: 500 }}>{children}</strong>
                     ),
                     em: ({ children }) => (
-                      <em style={{ color: P.goldLight, fontStyle: "italic" }}>{children}</em>
+                      <em style={{ color: "hsl(38, 40%, 65%)", fontStyle: "italic" }}>{children}</em>
                     ),
                     ul: ({ children }) => (
-                      <ul className="space-y-2 my-3 pl-1" style={{ listStyle: "none" }}>{children}</ul>
+                      <ul className="space-y-2.5 my-4 pl-1" style={{ listStyle: "none" }}>{children}</ul>
                     ),
                     ol: ({ children }) => (
-                      <ol className="space-y-2 my-3 pl-1" style={{ listStyle: "none", counterReset: "item" }}>{children}</ol>
+                      <ol className="space-y-2.5 my-4 pl-1" style={{ listStyle: "none", counterReset: "item" }}>{children}</ol>
                     ),
                     li: ({ children }) => (
-                      <li className="flex gap-2.5 items-start text-base" style={{ color: "hsl(30, 12%, 78%)" }}>
+                      <li className="flex gap-3 items-start text-base" style={{ color: "hsl(30, 14%, 76%)" }}>
                         <span
-                          className="flex-shrink-0 mt-[9px]"
-                          style={{ color: P.goldMuted, fontSize: "6px" }}
+                          className="flex-shrink-0 mt-[10px]"
+                          style={{ color: "hsl(38, 35%, 52%)", fontSize: "5px" }}
                         >
-                          ◆
+                          ●
                         </span>
-                        <span style={{ lineHeight: "1.8" }}>{children}</span>
+                        <span style={{ lineHeight: "1.85" }}>{children}</span>
                       </li>
                     ),
                     blockquote: ({ children }) => (
                       <blockquote
-                        className="my-3 pl-4 py-1"
+                        className="my-5 pl-5 py-2"
                         style={{
-                          borderLeft: `2px solid ${P.goldMuted}`,
-                          color: P.textMuted,
+                          borderLeft: `2px solid hsl(38, 30%, 45%)`,
+                          color: "hsl(30, 15%, 65%)",
                           fontStyle: "italic",
+                          fontFamily: P.fontDisplay,
+                          fontSize: "15px",
+                          lineHeight: "1.8",
                         }}
                       >
                         {children}
