@@ -50,6 +50,8 @@ const PREDICATE_DICT: readonly string[] = [
   "delta:hScore",           // 26
   "delta:phi",              // 27
   "delta:memCount",         // 28
+  "schema:abstract",        // 29
+  "schema:author",          // 30
 ] as const;
 
 const PREDICATE_TO_ID = new Map<string, number>(
