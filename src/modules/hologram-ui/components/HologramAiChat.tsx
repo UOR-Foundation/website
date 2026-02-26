@@ -48,6 +48,7 @@ import {
   type NeuroSymbolicResult,
 } from "@/modules/ring-core/neuro-symbolic";
 import AnnotatedResponse from "@/components/reasoning/EpistemicBadge";
+import TrustScoreBar from "@/components/reasoning/TrustScoreBar";
 import { saveReasoningProof } from "@/modules/ring-core/proof-persistence";
 import {
   planPGI,
@@ -1021,13 +1022,25 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           ))}
 
           <div className="space-y-4">
-            {messages.filter((m) => m.role !== "system").map((msg, idx, arr) => (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                isStreaming={isGenerating && msg.role === "assistant" && idx === arr.length - 1}
-              />
-            ))}
+            {messages.filter((m) => m.role !== "system").map((msg, idx, arr) => {
+              // Find the preceding user message for context
+              const allNonSystem = arr;
+              const prevUserMsg = msg.role === "assistant"
+                ? allNonSystem.slice(0, idx).reverse().find((m) => m.role === "user")
+                : undefined;
+              return (
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  isStreaming={isGenerating && msg.role === "assistant" && idx === arr.length - 1}
+                  onSendFollowUp={(prompt) => {
+                    setInput(prompt);
+                    setTimeout(() => inputRef.current?.focus(), 100);
+                  }}
+                  userQuery={prevUserMsg?.content}
+                />
+              );
+            })}
           </div>
 
           {isGenerating && !messages.some(m => m.role === "assistant" && m.content) && (
@@ -1417,7 +1430,7 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
 
 // ── Message Bubble ─────────────────────────────────────────────────────────
 
-function MessageBubble({ message, isStreaming = false }: { message: ChatMessage; isStreaming?: boolean }) {
+function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery }: { message: ChatMessage; isStreaming?: boolean; onSendFollowUp?: (prompt: string) => void; userQuery?: string }) {
   const { role, content, meta } = message;
   const isUser = role === "user";
 
@@ -1606,10 +1619,23 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
             )}
           </div>
 
+          {/* Trust Score Bar — on every assistant response, not while streaming */}
+          {!isUser && !isStreaming && content && (
+            <TrustScoreBar
+              grade={meta?.neuroSymbolic?.overallGrade ?? "D"}
+              claims={meta?.neuroSymbolic?.claims}
+              iterations={meta?.neuroSymbolic?.iterations}
+              converged={meta?.neuroSymbolic?.converged}
+              curvature={meta?.neuroSymbolic?.curvature}
+              onSendFollowUp={onSendFollowUp}
+              userQuery={userQuery}
+            />
+          )}
+
           {/* Minimal metadata — just source indicator */}
           {meta && !isStreaming && (meta as any).inferenceSource && (
-            <div className="mt-1.5 px-1 animate-in fade-in duration-500" style={{ animationDelay: "200ms", animationFillMode: "both" }}>
-              <span className="text-[12px] tracking-wider" style={{
+            <div className="mt-1 px-1 animate-in fade-in duration-500" style={{ animationDelay: "200ms", animationFillMode: "both" }}>
+              <span className="text-[11px] tracking-wider" style={{
                 color: (meta as any).inferenceSource === "cache" ? P.goldMuted : P.textDim,
                 fontFamily: P.font,
               }}>
