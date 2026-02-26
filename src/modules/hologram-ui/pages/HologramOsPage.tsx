@@ -25,6 +25,7 @@ import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar"
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
 import LegalPanel from "@/modules/hologram-ui/components/LegalPanel";
 import HologramFrame, { HologramViewport, OverlayFrame, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
+import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
 import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
 import FrameDebugOverlay from "@/modules/hologram-ui/components/FrameDebugOverlay";
 import LayerNavHUD from "@/modules/hologram-ui/components/LayerNavHUD";
@@ -274,6 +275,8 @@ export default function HologramOsPage() {
             marginRight: chatOpen ? "min(380px, 82vw)" : "0px",
           }}
         >
+          {/* Focus toggle — lives inside content area so it shifts with Lumen */}
+          <AttentionToggle />
           {/* ══════════════════════════════════════════════════════════
            *  FRAME 0 — Canvas Layer (background, imagery, veils)
            * ══════════════════════════════════════════════════════════ */}
