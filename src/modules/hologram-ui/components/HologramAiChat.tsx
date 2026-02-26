@@ -50,6 +50,7 @@ import {
 import AnnotatedResponse from "@/components/reasoning/EpistemicBadge";
 import TrustScoreBar from "@/components/reasoning/TrustScoreBar";
 import TrustTrendBar from "@/components/reasoning/TrustTrendBar";
+import { useSavedResponses } from "@/hooks/useSavedResponses";
 import { saveReasoningProof } from "@/modules/ring-core/proof-persistence";
 import {
   planPGI,
@@ -167,6 +168,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const acceleratorRef = useRef(getAccelerator());
 
   const ai = getAiEngine();
+  const savedResponses = useSavedResponses();
   const attention = useAttentionMode();
   const history = useAiChatHistory();
   const journal = useFocusJournal();
@@ -1094,10 +1096,26 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                   message={msg}
                   isStreaming={isGenerating && msg.role === "assistant" && idx === arr.length - 1}
                   onSendFollowUp={(prompt) => {
-                    // Auto-send: one click, zero friction
                     sendMessage(prompt);
                   }}
                   userQuery={prevUserMsg?.content}
+                  isBookmarked={msg.role === "assistant" ? savedResponses.isSaved(msg.content) : undefined}
+                  onToggleBookmark={msg.role === "assistant" ? () => {
+                    const grade = msg.meta?.neuroSymbolic?.overallGrade ?? "D";
+                    if (savedResponses.isSaved(msg.content)) {
+                      savedResponses.unsave(msg.content);
+                    } else {
+                      savedResponses.save({
+                        messageContent: msg.content,
+                        grade: grade as import("@/modules/ring-core/neuro-symbolic").EpistemicGrade,
+                        claims: msg.meta?.neuroSymbolic?.claims,
+                        curvature: msg.meta?.neuroSymbolic?.curvature,
+                        iterations: msg.meta?.neuroSymbolic?.iterations,
+                        converged: msg.meta?.neuroSymbolic?.converged,
+                        userQuery: prevUserMsg?.content,
+                      });
+                    }
+                  } : undefined}
                 />
               );
             })}
@@ -1516,7 +1534,7 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
 
 // ── Message Bubble ─────────────────────────────────────────────────────────
 
-function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery }: { message: ChatMessage; isStreaming?: boolean; onSendFollowUp?: (prompt: string) => void; userQuery?: string }) {
+function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery, isBookmarked, onToggleBookmark }: { message: ChatMessage; isStreaming?: boolean; onSendFollowUp?: (prompt: string) => void; userQuery?: string; isBookmarked?: boolean; onToggleBookmark?: () => void }) {
   const { role, content, meta } = message;
   const isUser = role === "user";
 
@@ -1715,6 +1733,9 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
               curvature={meta?.neuroSymbolic?.curvature}
               onSendFollowUp={onSendFollowUp}
               userQuery={userQuery}
+              messageContent={content}
+              isBookmarked={isBookmarked}
+              onToggleBookmark={onToggleBookmark}
             />
           )}
 
