@@ -248,21 +248,21 @@ function PrivacyContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fon
         className="text-[16px] leading-[2] mb-12"
         style={{ color: P.text }}
       >
-        Most platforms write a privacy policy to protect themselves. Hologram is different — we give you the infrastructure and tools to create your own. Privacy is not a feature we bolt on. It is the architecture itself.
+        Most platforms write a privacy policy to protect themselves. Hologram is different. We give you the infrastructure and tools to create your own. Privacy is not a feature we bolt on. It is the architecture itself.
       </p>
 
       <Section title="1. Our Default: Store Nothing" P={P} fontDisplay={fontDisplay}>
         <p>
-          By default, Hologram aims to store as little information about you as possible. Your identity is derived from your email handle, which we use only to verify you are you — we do not store it as personal data or use it to build a profile about you.
+          By default, Hologram aims to store as little information about you as possible. Your identity is derived from your email handle, which we use only to verify you are you. We do not store it as personal data or use it to build a profile about you.
         </p>
         <p>
           There is no hidden data collection. No behavioural tracking. No advertising profiles. No third-party analytics. The platform is designed from the ground up to function without needing to know who you are beyond what you choose to share.
         </p>
       </Section>
 
-      <Section title="2. Zero-Knowledge by Design" P={P} fontDisplay={fontDisplay}>
+      <Section title="2. Zero Knowledge by Design" P={P} fontDisplay={fontDisplay}>
         <p>
-          Hologram is built on zero-knowledge principles. This means you can prove things about yourself — that your identity is valid, that you meet a requirement, that you hold a credential — without disclosing the underlying information.
+          Hologram is built on zero knowledge principles. This means you can prove things about yourself, that your identity is valid, that you meet a requirement, that you hold a credential, without disclosing the underlying information.
         </p>
         <p>
           Think of it like proving you are over 18 without showing your date of birth, or confirming you are a member without revealing your name. The platform's architecture makes this the default, not an option you have to enable.
@@ -276,15 +276,15 @@ function PrivacyContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fon
         <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Default: fully private</strong> — nothing is shared with anyone. No application, service, or user can see your information unless you grant access.</span>
+            <span><strong style={{ color: P.heading }}>Default: fully private</strong>. Nothing is shared with anyone. No application, service, or user can see your information unless you grant access.</span>
           </li>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Step-by-step opt out</strong> — revealing information is a graduated process. You choose what to share, with whom, and for how long. Each step requires your explicit action.</span>
+            <span><strong style={{ color: P.heading }}>Step by step opt out</strong>. Revealing information is a graduated process. You choose what to share, with whom, and for how long. Each step requires your explicit action.</span>
           </li>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Revocable at any time</strong> — any disclosure you make can be withdrawn. Access you have granted can be removed. You are always in control.</span>
+            <span><strong style={{ color: P.heading }}>Revocable at any time</strong>. Any disclosure you make can be withdrawn. Access you have granted can be removed. You are always in control.</span>
           </li>
         </ul>
       </Section>
@@ -294,7 +294,7 @@ function PrivacyContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fon
           Hologram provides programmatic tools for you to define your own privacy policy. Rather than accepting a document written by a company to protect itself, you create rules that protect you.
         </p>
         <p>
-          These tools allow you to specify what data you are willing to share, under what conditions, with which applications, and for how long. When an application wants to interact with your information, it must meet <em style={{ color: P.tabActive }}>your</em> terms — not the other way around.
+          These tools allow you to specify what data you are willing to share, under what conditions, with which applications, and for how long. When an application wants to interact with your information, it must meet <em style={{ color: P.tabActive }}>your</em> terms, not the other way around.
         </p>
         <p>
           This is the foundation of Hologram's privacy architecture: you write the rules, and the system enforces them.
@@ -333,30 +333,30 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
         className="text-[16px] leading-[2] mb-12"
         style={{ color: P.text }}
       >
-        Polygram is built on a simple premise: your information is yours. We do not
+        Hologram is built on a simple premise: your information is yours. We do not
         write terms to protect ourselves from you. We build infrastructure that
-        protects you — and gives you the tools to define your own terms for how
+        protects you and gives you the tools to define your own terms for how
         applications interact with your data.
       </p>
 
       <Section title="1. Privacy Is the Default" P={P} fontDisplay={fontDisplay}>
         <p>
-          When you use Polygram, privacy is not something you opt into — it is where
+          When you use Hologram, privacy is not something you opt into. It is where
           you start. By default, we store the absolute minimum: your identity is
           anchored to your email handle, which we do not retain on our servers. No
           profiles are built, no behaviour is tracked, no data is mined.
         </p>
         <p>
           To share anything about yourself, you must actively choose to do so. Every
-          piece of information you reveal is a deliberate, reversible decision — not
+          piece of information you reveal is a deliberate, reversible decision, not
           a checkbox buried in a settings page.
         </p>
       </Section>
 
-      <Section title="2. Zero-Knowledge Verification" P={P} fontDisplay={fontDisplay}>
+      <Section title="2. Zero Knowledge Verification" P={P} fontDisplay={fontDisplay}>
         <p>
-          Polygram enables you to prove things about yourself — your age, your
-          credentials, your membership — without disclosing the underlying information.
+          Hologram enables you to prove things about yourself, such as your age, your
+          credentials, or your membership, without disclosing the underlying information.
           Applications can confirm what they need to know without ever seeing what
           they do not need to know.
         </p>
@@ -366,10 +366,10 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
         </p>
       </Section>
 
-      <Section title="3. Selective Disclosure — You Choose" P={P} fontDisplay={fontDisplay}>
+      <Section title="3. Selective Disclosure: You Choose" P={P} fontDisplay={fontDisplay}>
         <p>
-          Traditional platforms operate on an all-or-nothing model: accept our terms
-          or leave. Polygram reverses this entirely. You decide:
+          Traditional platforms operate on an all or nothing model: accept our terms
+          or leave. Hologram reverses this entirely. You decide:
         </p>
         <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
           <li className="flex gap-2.5 items-start">
@@ -382,21 +382,21 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
           </li>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>When and for how long</strong> — set time-limited disclosures that automatically expire. You can revoke access at any moment, and connected services are notified immediately.</span>
+            <span><strong style={{ color: P.heading }}>When and for how long</strong> — set time limited disclosures that automatically expire. You can revoke access at any moment, and connected services are notified immediately.</span>
           </li>
         </ul>
       </Section>
 
       <Section title="4. Your Terms, Not Ours" P={P} fontDisplay={fontDisplay}>
         <p>
-          Polygram gives you the programmatic tools to create your own machine-readable
-          privacy policy. This is not a template you fill in — it is a real, enforceable
+          Hologram gives you the programmatic tools to create your own machine readable
+          privacy policy. This is not a template you fill in. It is a real, enforceable
           set of rules that applications must accept before they can interact with your data.
         </p>
         <p>
           This approach is inspired by the{" "}
           <InlineLink href="https://myterms.info/" P={P}>MyTerms</InlineLink>{" "}
-          standard (IEEE 7012), which was designed to put individuals — not corporations —
+          standard (IEEE 7012), which was designed to put individuals, not corporations,
           in control of personal data exchange. When an app cannot meet your conditions,
           it simply does not get access.
         </p>
@@ -404,7 +404,7 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
 
       <Section title="5. Opting Out of Privacy" P={P} fontDisplay={fontDisplay}>
         <p>
-          Privacy on Polygram is not a setting you turn on. It is the foundation you
+          Privacy on Hologram is not a setting you turn on. It is the foundation you
           would have to deliberately step away from. Revealing information requires
           explicit, incremental steps:
         </p>
@@ -447,7 +447,7 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
           </li>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span>We will continue to minimise our own data footprint — storing less, not more, over time.</span>
+            <span>We will continue to minimise our own data footprint, storing less, not more, over time.</span>
           </li>
         </ul>
       </Section>
@@ -456,8 +456,8 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
         <p>
           The infrastructure behind your personal terms is based on{" "}
           <InlineLink href="https://myterms.info/" P={P}>MyTerms</InlineLink>{" "}
-          (IEEE 7012), a published global standard for machine-readable personal privacy.
-          It is not proprietary — it is open, auditable, and designed so that privacy
+          (IEEE 7012), a published global standard for machine readable personal privacy.
+          It is not proprietary. It is open, auditable, and designed so that privacy
           is something you can see, control, and trust.
         </p>
       </Section>
@@ -465,7 +465,7 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
       <Section title="8. Contact" P={P} fontDisplay={fontDisplay}>
         <p>
           Questions about these terms or your privacy? Reach us at{" "}
-          <InlineLink href="mailto:privacy@polygram.me" P={P}>privacy@polygram.me</InlineLink>.
+          <InlineLink href="mailto:privacy@hologram.xyz" P={P}>privacy@hologram.xyz</InlineLink>.
         </p>
       </Section>
     </article>
