@@ -19,6 +19,7 @@ export interface HistoryEntry {
   url: string;
   title: string;
   markdown: string;
+  rawHtml: string;
   links: string[];
   visitedAt: number;
 }

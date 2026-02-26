@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         url: formattedUrl,
-        formats: options?.formats || ['markdown', 'html', 'links'],
+        formats: options?.formats || ['markdown', 'rawHtml', 'links'],
         onlyMainContent: options?.onlyMainContent ?? false,
         waitFor: options?.waitFor,
         location: options?.location,

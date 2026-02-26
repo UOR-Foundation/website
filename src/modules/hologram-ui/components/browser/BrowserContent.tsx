@@ -27,7 +27,7 @@ interface BrowserContentProps {
 }
 
 export default function BrowserContent({ state, actions }: BrowserContentProps) {
-  const { page, loading, error, searchResults, searchQuery, url } = state;
+  const { page, loading, error, searchResults, searchQuery, url, viewMode } = state;
   const { navigate, handleLinkClick, prefetch, saveScrollPosition, getScrollPosition, setUrl } = actions;
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevUrlRef = useRef<string | null>(null);
@@ -236,8 +236,20 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
         </div>
       )}
 
-      {/* Page Content */}
-      {page && !loading && (
+      {/* Page Content — Fidelity Mode (pixel-perfect iframe) */}
+      {page && !loading && viewMode === "fidelity" && page.rawHtml && (
+        <iframe
+          key={page.url}
+          srcDoc={page.rawHtml}
+          sandbox="allow-same-origin allow-scripts allow-popups"
+          className="w-full h-full border-none"
+          style={{ background: "#fff" }}
+          title={page.title}
+        />
+      )}
+
+      {/* Page Content — Reader Mode (markdown) */}
+      {page && !loading && (viewMode === "reader" || !page.rawHtml) && (
         <article className="px-8 md:px-14 py-8 max-w-[1000px] mx-auto w-full animate-fade-in" style={{ color: P.text }}>
           <div className="mb-6 pb-4" style={{ borderBottom: `1px solid ${P.border}` }}>
             <h1 className="text-[22px] font-light tracking-tight" style={{ color: P.text }}>{page.title}</h1>
