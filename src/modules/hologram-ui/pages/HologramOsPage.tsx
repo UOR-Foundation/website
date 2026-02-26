@@ -573,7 +573,7 @@ export default function HologramOsPage() {
             {/* Welcome — centered */}
             <div className="absolute inset-0 flex flex-col items-center justify-center px-8">
               <div
-                className="text-center space-y-[2.5vh] animate-fade-in transition-all duration-500 ease-out"
+                className="text-center space-y-[3.5vh] animate-fade-in transition-all duration-500 ease-out"
                 style={{
                   textShadow: bgMode === "image" ? "0 1px 8px hsla(0, 0%, 0%, 0.5), 0 0 30px hsla(0, 0%, 0%, 0.2)" : "none",
                   pointerEvents: "auto",
@@ -637,11 +637,11 @@ export default function HologramOsPage() {
                 >
                   <button
                     onClick={() => { setChatPrompt(""); setChatOpen(true); }}
-                    className="group flex flex-col items-center gap-[2vh] transition-all duration-700 hover:scale-[1.03]"
-                    style={{ cursor: "pointer", background: "none", border: "none" }}
+                    className="group flex flex-col items-center transition-all duration-700 hover:scale-[1.03]"
+                    style={{ cursor: "pointer", background: "none", border: "none", gap: isFocus ? "clamp(20px, 3vh, 36px)" : "clamp(16px, 2.5vh, 28px)" }}
                   >
                     {/* Breathing glyph — the heart of Lumen */}
-                    <div className="relative flex items-center justify-center">
+                    <div className="relative flex items-center justify-center" style={{ width: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)", height: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)" }}>
                       {/* Outer ring — soft pulse */}
                       <div
                         className="absolute rounded-full transition-all duration-700 group-hover:scale-125"
