@@ -4257,27 +4257,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // TIER 22 — DATA FORMATS: QUERY LANGUAGES & SCHEMA DEFINITIONS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── GraphQL — API Query Language ───────────────────────────────────────
-  // GraphQL is the dominant API query language for modern web applications.
-  // A GraphQL schema (SDL) defines types, fields, queries, mutations, and
-  // subscriptions. GraphQL operations (queries/mutations) are deterministic
-  // ASTs. Used by GitHub, Shopify, Stripe, Meta, and millions of apps.
-  //
-  // Content-addressing GraphQL schemas creates permanent, verifiable API
-  // contracts. Each schema version gets a unique hash — enabling API
-  // evolution tracking and contract testing verification.
-  //
-  //   Format: urn:uor:data:graphql:{hex} (SHA-256 of canonical GraphQL SDL)
-  //   Canonical: SDL → sorted types/fields → JSON-LD → URDNA2015 → SHA-256
-  //   Cross-projection: graphql + openapi → GraphQL↔REST API bridge
-  //                     graphql + json-schema → GraphQL↔JSON Schema bridge
-  //                     graphql + protobuf → GraphQL↔gRPC bridge
-
-  ["graphql", {
-    project: ({ hex }) => `urn:uor:data:graphql:${hex}`,
-    fidelity: "lossless",
-    spec: "https://spec.graphql.org/October2021/",
-  }],
+  // ── GraphQL — already registered in Tier 9h (urn:uor:lang:graphql) ────
+  // Duplicate removed to prevent namespace override (data: → lang:).
 
   // ── SQL/DDL — Structured Query Language ────────────────────────────────
   // SQL (ISO/IEC 9075) is the universal language for relational databases.
@@ -4850,38 +4831,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/rdf-syntax-grammar/",
   }],
 
-  // ── SHACL — Shapes Constraint Language ─────────────────────────────────
-  // SHACL (W3C) defines shapes for validating RDF graphs — constraints
-  // on node types, property paths, cardinality, value ranges, and
-  // patterns. Used for data quality enforcement in knowledge graphs.
-  //
-  //   Format: urn:uor:data:shacl:{hex} (SHA-256 of canonical SHACL shapes)
-  //   Canonical: SHACL Turtle → N-Quads → URDNA2015 → SHA-256
-  //   Cross-projection: shacl + json-schema → RDF↔JSON validation bridge
+  // ── SHACL — already registered in Tier 10e (urn:uor:schema:shacl) ─────
+  // Duplicate removed to prevent namespace override (data: → schema:).
 
-  ["shacl", {
-    project: ({ hex }) => `urn:uor:data:shacl:${hex}`,
-    fidelity: "lossless",
-    spec: "https://www.w3.org/TR/shacl/",
-  }],
-
-  // ── OWL — Web Ontology Language ────────────────────────────────────────
-  // OWL 2 (W3C, ISO/IEC 23765:2022) defines formal ontologies with
-  // classes, properties, individuals, and axioms. Three profiles (EL, QL,
-  // RL) trade expressivity for computational tractability. Powers
-  // biomedical ontologies (SNOMED CT, Gene Ontology), enterprise
-  // knowledge graphs, and semantic web reasoning.
-  //
-  //   Format: urn:uor:data:owl:{hex} (SHA-256 of canonical OWL ontology)
-  //   Canonical: OWL → functional syntax → N-Quads → URDNA2015 → SHA-256
-  //   Cross-projection: owl + shacl → ontology↔validation bridge
-  //                     owl + json-schema → semantic↔structural schema bridge
-
-  ["owl", {
-    project: ({ hex }) => `urn:uor:data:owl:${hex}`,
-    fidelity: "lossless",
-    spec: "https://www.w3.org/TR/owl2-overview/",
-  }],
+  // ── OWL — already registered in Tier 10e (urn:uor:schema:owl) ─────────
+  // Duplicate removed to prevent namespace override (data: → schema:).
 
   // ══════════════════════════════════════════════════════════════════════════
   // TIER 27 — DATA FORMATS: MEDIA & IMAGE FORMATS

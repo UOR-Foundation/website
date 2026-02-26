@@ -25,7 +25,6 @@
  */
 
 import type { ProjectionInput } from "@/modules/uns/core/hologram/index";
-import { registerElementFactory } from "@/modules/uns/core/hologram/lens-blueprint";
 import { dehydrate } from "@/modules/uns/core/hologram/lens";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -304,13 +303,16 @@ export function resolveAllUIProjections(
 // and returns a UIProjectionResult — a serializable descriptor that the
 // DynamicProjection React component can render.
 
-function registerUIElementFactories(): void {
-  for (const [type, spec] of UI_PROJECTIONS) {
+async function registerUIElementFactories(): Promise<void> {
+  // Dynamic import to break circular dependency:
+  // engine.ts → projection-registry.ts → lens-blueprint.ts → index.ts → engine.ts
+  const { registerElementFactory } = await import("@/modules/uns/core/hologram/lens-blueprint");
+
+  for (const [type] of UI_PROJECTIONS) {
     registerElementFactory(type, (elementSpec) => ({
       id: elementSpec.id,
       kind: type,
       focus: async (input: unknown) => {
-        // Normalize input to ProjectionInput
         let pi: ProjectionInput;
         if (
           input &&
@@ -321,7 +323,6 @@ function registerUIElementFactories(): void {
         ) {
           pi = input as ProjectionInput;
         } else {
-          // Dehydrate arbitrary input to get canonical identity
           const { proof } = await dehydrate(input);
           pi = {
             hashBytes: proof.hashBytes,
@@ -329,8 +330,6 @@ function registerUIElementFactories(): void {
             hex: proof.hashHex,
           };
         }
-
-        // Resolve the UI projection with any config overrides
         const overrides = elementSpec.config ?? {};
         return resolveUIProjection(pi, type, overrides);
       },
@@ -338,5 +337,26 @@ function registerUIElementFactories(): void {
   }
 }
 
-// Initialize on module load
-registerUIElementFactories();
+// Lazy initialization — called on first use rather than module load.
+let _uiFactoriesRegistered = false;
+let _registrationPromise: Promise<void> | null = null;
+export function ensureUIElementFactories(): Promise<void> {
+  if (_uiFactoriesRegistered) return Promise.resolve();
+  if (_registrationPromise) return _registrationPromise;
+  _registrationPromise = registerUIElementFactories().then(() => {
+    _uiFactoriesRegistered = true;
+  });
+  return _registrationPromise;
+}
+
+// Deferred auto-registration. Uses setTimeout to ensure all ESM modules
+// complete their top-level evaluation before we touch ELEMENT_REGISTRY.
+// The catch prevents unhandled rejections in test environments where
+// the circular dependency may not fully resolve.
+setTimeout(() => {
+  ensureUIElementFactories().catch(() => {
+    // Silently retry on next explicit call — registration will succeed
+    // once all modules are fully initialized.
+    _registrationPromise = null;
+  });
+}, 0);
