@@ -146,7 +146,35 @@ function getLumenSubtitle(): string {
   return "Evening light. A gentle space to explore.";
 }
 
-// ── Welcome Screen ──────────────────────────────────────────────────────────
+// ── Typewriter text — reveals characters one by one ─────────────────────────
+function TypewriterText({ text, delay = 2400, speed = 45 }: { text: string; delay?: number; speed?: number }) {
+  const [displayed, setDisplayed] = useState("");
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    setDisplayed("");
+    setStarted(false);
+    const t = setTimeout(() => setStarted(true), delay);
+    return () => clearTimeout(t);
+  }, [text, delay]);
+
+  useEffect(() => {
+    if (!started || displayed.length >= text.length) return;
+    const t = setTimeout(() => setDisplayed(text.slice(0, displayed.length + 1)), speed);
+    return () => clearTimeout(t);
+  }, [started, displayed, text, speed]);
+
+  return (
+    <>
+      {displayed}
+      {started && displayed.length < text.length && (
+        <span style={{ opacity: 0.5, animation: "blink-caret 0.8s step-end infinite" }}>▎</span>
+      )}
+    </>
+  );
+}
+
+
 /** Syncs overlay open state into the DepthShift context */
 function DepthShiftSync({ active }: { active: boolean }) {
   const { setOverlayActive } = useDepthShift();
@@ -624,7 +652,7 @@ export default function HologramOsPage() {
                         animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
                       }}
                     >
-                      {getLumenSubtitle()}
+                      <TypewriterText text={getLumenSubtitle()} />
                     </p>
                   </button>
                 </div>
