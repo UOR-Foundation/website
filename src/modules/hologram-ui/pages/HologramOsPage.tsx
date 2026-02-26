@@ -251,50 +251,6 @@ export default function HologramOsPage() {
            *  These remain visible regardless of what opens above
            * ══════════════════════════════════════════════════════════ */}
           <HologramFrame layer={1} label="chrome" interactive={false} opacity={layerNav.layerOpacity(1)} style={{ transform: `scale(${layerNav.layerScale(1)})`, transition: "opacity 0.5s, transform 0.5s" }}>
-            {/* Background Mode Toggle — top right */}
-            <div
-              className="absolute top-[3vh] right-[3vw] animate-fade-in transition-all duration-700"
-              style={{
-                pointerEvents: "auto",
-                opacity: "var(--focus-chrome-opacity, 1)",
-                filter: "blur(var(--focus-blur-chrome, 0px))",
-              }}
-            >
-              <div
-                className="flex items-center gap-0.5 px-2 py-1.5 rounded-full transition-all duration-700"
-                style={{
-                  background: bgMode === "white" ? "hsla(30, 8%, 40%, 0.06)" : "hsla(30, 8%, 90%, 0.06)",
-                  border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 40%, 0.1)" : "hsla(38, 15%, 70%, 0.08)"}`,
-                  backdropFilter: "blur(16px)",
-                  WebkitBackdropFilter: "blur(16px)",
-                }}
-              >
-                {BG_MODES.map(({ mode, label }) => {
-                  const isActive = bgMode === mode;
-                  const dotColor = isActive
-                    ? (bgMode === "white" ? "hsla(30, 10%, 25%, 0.7)" : "hsla(38, 35%, 75%, 0.85)")
-                    : (bgMode === "white" ? "hsla(30, 8%, 50%, 0.25)" : "hsla(38, 15%, 70%, 0.2)");
-                  return (
-                    <button
-                      key={mode}
-                      onClick={() => setBgMode(mode)}
-                      className="relative group flex items-center justify-center w-5 h-5 rounded-full transition-all duration-500"
-                      aria-label={`Switch to ${label} background`}
-                    >
-                      <div
-                        className="w-[5px] h-[5px] rounded-full transition-all duration-700 ease-in-out"
-                        style={{
-                          background: dotColor,
-                          transform: isActive ? "scale(1.3)" : "scale(1)",
-                          boxShadow: isActive ? `0 0 8px 1px ${dotColor}` : "none",
-                        }}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Day Progress Ring — bottom right */}
             <div
               className="absolute bottom-[3vh] right-[3vw] animate-fade-in flex flex-col items-center gap-3"
