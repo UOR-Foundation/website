@@ -5,6 +5,7 @@
  * Simplified to 3 core familiar items: Home, Apps, Profile.
  * Higher contrast for visibility against dark backgrounds.
  * New Chat button at top, Settings at bottom.
+ * Keyboard shortcut hints displayed inline.
  */
 
 import { useCallback } from "react";
@@ -27,17 +28,33 @@ const S = {
   font: "'DM Sans', system-ui, sans-serif",
 } as const;
 
+/* ── Shortcut badge component ───────────────────────────────── */
+function ShortcutBadge({ keys }: { keys: string }) {
+  return (
+    <span
+      className="ml-auto text-[10px] tracking-[0.15em] uppercase font-medium opacity-40 shrink-0"
+      style={{
+        fontFamily: S.font,
+        color: S.textMuted,
+      }}
+    >
+      {keys}
+    </span>
+  );
+}
+
 /* ── Core Navigation — 3 familiar items ─────────────────────── */
 interface NavItem {
   label: string;
   icon: React.ElementType;
   path: string;
+  shortcut: string; // display hint
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home",     icon: Home,       path: "/hologram-console" },
-  { label: "Apps",     icon: LayoutGrid, path: "/console/apps" },
-  { label: "Profile",  icon: User,       path: "/your-space" },
+  { label: "Home",     icon: Home,       path: "/hologram-console", shortcut: "⌘ 1" },
+  { label: "Apps",     icon: LayoutGrid, path: "/console/apps",     shortcut: "⌘ 2" },
+  { label: "Profile",  icon: User,       path: "/your-space",       shortcut: "⌘ 3" },
 ];
 
 /* ── Props ─────────────────────────────────────────────────── */
@@ -90,12 +107,13 @@ export default function DesktopOsSidebar({
             >
               <Plus className="w-4 h-4" style={{ color: S.gold }} />
               <span>New chat</span>
+              <ShortcutBadge keys="⌘ N" />
             </button>
             <button
               onClick={onToggle}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/[0.06]"
               style={{ color: S.textMuted }}
-              title="Collapse sidebar"
+              title="Collapse sidebar (⌘ \)"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -105,7 +123,7 @@ export default function DesktopOsSidebar({
             onClick={onToggle}
             className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center transition-colors hover:bg-white/[0.06]"
             style={{ background: S.surfaceHover, border: `1px solid ${S.border}` }}
-            title="Expand sidebar"
+            title="Expand sidebar (⌘ \)"
           >
             <ChevronLeft className="w-4.5 h-4.5 rotate-180" style={{ color: S.gold }} />
           </button>
@@ -134,7 +152,7 @@ export default function DesktopOsSidebar({
               onMouseLeave={(e) => {
                 if (!active) e.currentTarget.style.background = active ? S.surfaceActive : "transparent";
               }}
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? `${item.label} (${item.shortcut})` : undefined}
             >
               <item.icon
                 className="w-5 h-5 shrink-0"
@@ -142,7 +160,10 @@ export default function DesktopOsSidebar({
                 style={{ color: active ? S.gold : S.textMuted }}
               />
               {!collapsed && (
-                <span className="text-[14px] font-light">{item.label}</span>
+                <>
+                  <span className="text-[14px] font-light">{item.label}</span>
+                  <ShortcutBadge keys={item.shortcut} />
+                </>
               )}
             </button>
           );
@@ -163,10 +184,15 @@ export default function DesktopOsSidebar({
             style={{ color: S.text, fontFamily: S.font }}
             onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-            title={collapsed ? "Replay Guide" : undefined}
+            title={collapsed ? "Replay Guide (⌘ ?)" : undefined}
           >
             <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
-            {!collapsed && <span className="text-[14px] font-light">Replay Guide</span>}
+            {!collapsed && (
+              <>
+                <span className="text-[14px] font-light">Replay Guide</span>
+                <ShortcutBadge keys="⌘ ?" />
+              </>
+            )}
           </button>
         )}
         <button
@@ -177,10 +203,15 @@ export default function DesktopOsSidebar({
           style={{ color: S.text, fontFamily: S.font }}
           onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={collapsed ? "Messages" : undefined}
+          title={collapsed ? "Messages (⌘ M)" : undefined}
         >
           <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
-          {!collapsed && <span className="text-[14px] font-light">Messages</span>}
+          {!collapsed && (
+            <>
+              <span className="text-[14px] font-light">Messages</span>
+              <ShortcutBadge keys="⌘ M" />
+            </>
+          )}
         </button>
         <button
           onClick={() => navigate("/settings")}
@@ -190,10 +221,15 @@ export default function DesktopOsSidebar({
           style={{ color: S.text, fontFamily: S.font }}
           onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={collapsed ? "Settings" : undefined}
+          title={collapsed ? "Settings (⌘ ,)" : undefined}
         >
           <Settings className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
-          {!collapsed && <span className="text-[14px] font-light">Settings</span>}
+          {!collapsed && (
+            <>
+              <span className="text-[14px] font-light">Settings</span>
+              <ShortcutBadge keys="⌘ ," />
+            </>
+          )}
         </button>
 
       </div>
