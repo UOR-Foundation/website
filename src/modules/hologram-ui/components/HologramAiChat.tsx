@@ -820,9 +820,9 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at 50% 60%, hsla(30, 10%, 5%, 0.65) 0%, hsla(25, 8%, 3%, 0.88) 70%, hsla(20, 6%, 2%, 0.95) 100%)",
-          backdropFilter: "blur(24px) saturate(0.55) brightness(0.7)",
-          WebkitBackdropFilter: "blur(24px) saturate(0.55) brightness(0.7)",
+          background: "radial-gradient(ellipse at 50% 60%, hsla(30, 10%, 5%, 0.25) 0%, hsla(25, 8%, 3%, 0.4) 70%, hsla(20, 6%, 2%, 0.5) 100%)",
+          backdropFilter: "blur(8px) saturate(0.8) brightness(0.85)",
+          WebkitBackdropFilter: "blur(8px) saturate(0.8) brightness(0.85)",
           animation: "lumen-backdrop-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both, lumen-converge 8s cubic-bezier(0.25, 0.1, 0.25, 1) 0.3s both",
           transformOrigin: "50% 45%",
         }}
