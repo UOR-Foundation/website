@@ -8,8 +8,9 @@
  * pressing Escape.
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -94,17 +95,31 @@ export default function LegalPanel({ open, initialTab = "privacy", onClose, bgMo
             exit={{ y: "100%" }}
             transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
           >
-            {/* Handle bar — drag indicator */}
-            <button
-              onClick={onClose}
-              className="w-full flex justify-center pt-4 pb-3 cursor-pointer group"
-              aria-label="Close"
-            >
-              <div
-                className="w-10 h-[3px] rounded-full transition-all duration-300 group-hover:w-14"
-                style={{ background: P.handleBar }}
-              />
-            </button>
+            {/* Handle bar + close icon */}
+            <div className="flex items-center justify-between px-6 pt-4 pb-3">
+              <div className="w-7" />
+              <button
+                onClick={onClose}
+                className="cursor-pointer group"
+                aria-label="Close"
+              >
+                <div
+                  className="w-10 h-[3px] rounded-full transition-all duration-300 group-hover:w-14"
+                  style={{ background: P.handleBar }}
+                />
+              </button>
+              <button
+                onClick={onClose}
+                className="w-7 h-7 flex items-center justify-center rounded-full transition-all duration-300 hover:scale-110"
+                style={{
+                  background: isDark ? "hsla(0, 0%, 100%, 0.05)" : "hsla(0, 0%, 0%, 0.04)",
+                  color: P.textMuted,
+                }}
+                aria-label="Collapse"
+              >
+                <ChevronDown size={14} strokeWidth={1.5} />
+              </button>
+            </div>
 
             {/* Tab switcher */}
             <div
