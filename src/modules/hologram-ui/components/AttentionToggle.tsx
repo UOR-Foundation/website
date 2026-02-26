@@ -21,7 +21,7 @@ export default function AttentionToggle() {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       aria-label={`Focus ${isFocus ? "On" : "Off"}. Click to toggle.`}
-      className="absolute right-5 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 select-none transition-all duration-500"
+      className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 select-none transition-all duration-500"
       style={{
         zIndex: 60,
         opacity: hovered ? 1 : 0.9,
