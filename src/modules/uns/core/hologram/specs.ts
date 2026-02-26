@@ -4542,22 +4542,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // compilation across simulators and real hardware.
 
   // ── Standards Bodies ────────────────────────────────────────────────────
-
-  // IEEE Quantum Standards (P7130, P7131, etc.) — terminology, energy
-  // efficiency, benchmarks, simulators for the quantum industry.
-  ["ieee-quantum", {
-    project: ({ hex }) => `urn:uor:quantum:ieee:${hex}`,
-    fidelity: "lossless",
-    spec: "https://standards.ieee.org/initiatives/quantum/",
-  }],
-
-  // IEC/ISO JTC 3 — Joint Technical Committee on Quantum Technologies
-  // Broad scope: quantum computing, simulation, communication, sensing.
-  ["iec-iso-jtc3", {
-    project: ({ hex }) => `urn:uor:quantum:jtc3:${hex}`,
-    fidelity: "lossless",
-    spec: "https://www.iso.org/committee/9900819.html",
-  }],
+  // PRUNED: ieee-quantum and iec-iso-jtc3 removed — standards bodies
+  // are meta-organizations, not content-addressable artifacts. Their
+  // specs are already covered by concrete projections (openqasm3, qir, etc.).
 
   // ── Gate / Circuit-Level Languages ──────────────────────────────────────
 
@@ -4657,27 +4644,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ── File Formats ───────────────────────────────────────────────────────
-
-  // .qasm — OpenQASM source files
-  ["qasm-file", {
-    project: ({ hex }) => `urn:uor:quantum:file:qasm:${hex}`,
-    fidelity: "lossless",
-    spec: "https://openqasm.com/",
-  }],
-
-  // .quil — Quil program files
-  ["quil-file", {
-    project: ({ hex }) => `urn:uor:quantum:file:quil:${hex}`,
-    fidelity: "lossless",
-    spec: "https://quil-lang.github.io/",
-  }],
-
-  // .qs — Q# source files
-  ["qs-file", {
-    project: ({ hex }) => `urn:uor:quantum:file:qs:${hex}`,
-    fidelity: "lossless",
-    spec: "https://learn.microsoft.com/en-us/azure/quantum/",
-  }],
+  // PRUNED: qasm-file, quil-file, qs-file removed — file extensions are
+  // transport concerns, not semantic identities. The content is already
+  // addressed by the language projections (openqasm3, quil, qsharp).
 
   // QPY — Qiskit's binary serialization for QuantumCircuit objects.
   // Captures the full circuit including metadata, parameters, and layout.
