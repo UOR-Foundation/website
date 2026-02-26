@@ -124,9 +124,9 @@ export default function DesktopOsSidebar({
               </svg>
               {/* SVG wordmark — matches main page geometric logo */}
               <svg
-                viewBox="0 0 520 40"
+                viewBox="0 0 360 40"
                 className="select-none"
-                style={{ width: "120px", height: "auto", opacity: 0.85 }}
+                style={{ width: "140px", height: "auto", opacity: 0.9 }}
               >
                 <g
                   fill="none"
