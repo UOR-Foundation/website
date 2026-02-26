@@ -299,12 +299,12 @@
   article { max-width: none; padding: 0.5in; }
 }
 
-/* ── Ken Burns — barely perceptible life ─────────────────────────── */
+/* ── Ken Burns — slow immersive forward drift ────────────────────── */
 @keyframes ken-burns {
   0% {
     transform: scale(1) translate(0, 0);
   }
   100% {
-    transform: scale(1.06) translate(-0.5%, -0.8%);
+    transform: scale(1.12) translate(-0.4%, -0.6%);
   }
 }
