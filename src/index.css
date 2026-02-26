@@ -434,6 +434,20 @@
   44% { opacity: 0.6; }
 }
 
+/* ── Lumen glyph entrance ─────────────────────────────────────────── */
+@keyframes lumen-ring-enter {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes lumen-dot-enter {
+  0%   { transform: scale(0); opacity: 0; box-shadow: 0 0 0 hsla(38, 50%, 55%, 0); }
+  40%  { transform: scale(0); opacity: 0; box-shadow: 0 0 0 hsla(38, 50%, 55%, 0); }
+  70%  { transform: scale(1.8); opacity: 1; box-shadow: 0 0 40px hsla(38, 50%, 55%, 0.6), 0 0 80px hsla(38, 50%, 55%, 0.2); }
+  100% { transform: scale(1); opacity: 1; box-shadow: 0 0 24px hsla(38, 50%, 55%, 0.35); }
+}
+
 /* ── Lumen AI slide-out panel ─────────────────────────────────────── */
 @keyframes lumen-slide-in {
   from {

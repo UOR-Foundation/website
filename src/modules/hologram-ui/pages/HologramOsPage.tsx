@@ -649,7 +649,7 @@ export default function HologramOsPage() {
                           width: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
                           height: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
                           border: `1px solid ${bgMode === "white" ? "hsla(38, 30%, 50%, 0.2)" : "hsla(38, 25%, 75%, 0.2)"}`,
-                          animation: "ambient-glow-breathe 6s ease-in-out infinite",
+                          animation: "lumen-ring-enter 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, ambient-glow-breathe 6s ease-in-out 3s infinite",
                         }}
                       />
                       {/* Inner dot — alive */}
@@ -664,7 +664,7 @@ export default function HologramOsPage() {
                           boxShadow: bgMode === "white"
                             ? "0 0 20px hsla(38, 40%, 50%, 0.4)"
                             : "0 0 24px hsla(38, 50%, 55%, 0.35)",
-                          animation: "heartbeat-love 2.4s ease-in-out infinite",
+                          animation: "lumen-dot-enter 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, heartbeat-love 2.4s ease-in-out 3.2s infinite",
                         }}
                       />
                     </div>
