@@ -613,26 +613,22 @@ export default function HologramOsPage() {
                   {welcomeName}.
                 </h1>
 
-                {/* Vertical line divider — hedosophia-inspired expand from center */}
-                <div className="flex justify-center pt-[2vh] pb-[1vh]">
+                {/* Vertical line — Hedosophia-inspired, grows from top */}
+                <div className="flex justify-center pt-[3vh] pb-[2vh]">
                   <div
-                    className="relative flex items-center justify-center transition-all duration-500"
-                    style={{ height: isFocus ? "clamp(80px, 10vh, 160px)" : "clamp(60px, 8vh, 120px)" }}
-                  >
-                    <div
-                      style={{
-                        width: "1px",
-                        height: "100%",
-                        background: bgMode === "white"
-                          ? "hsla(0, 0%, 20%, 0.35)"
-                          : bgMode === "dark"
-                            ? "hsla(38, 15%, 75%, 0.35)"
-                            : "hsla(0, 0%, 100%, 0.6)",
-                        transformOrigin: "center center",
-                        animation: "line-expand 2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both",
-                      }}
-                    />
-                  </div>
+                    style={{
+                      height: isFocus ? "clamp(100px, 14vh, 200px)" : "clamp(80px, 10vh, 150px)",
+                      width: "1px",
+                      background: bgMode === "white"
+                        ? "hsla(0, 0%, 20%, 0.15)"
+                        : bgMode === "dark"
+                          ? "hsla(0, 0%, 80%, 0.15)"
+                          : "hsla(0, 0%, 100%, 0.15)",
+                      transformOrigin: "top center",
+                      animation: "line-expand 2.8s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both",
+                      transition: "height 0.5s ease",
+                    }}
+                  />
                 </div>
 
                 {/* Lumen AI — the magic moment, the only CTA */}
