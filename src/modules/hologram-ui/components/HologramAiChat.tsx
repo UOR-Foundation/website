@@ -816,14 +816,17 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       <div
         className="fixed top-0 right-0 bottom-0 z-[60] flex flex-col pointer-events-auto"
         style={{
-          width: "min(420px, 85vw)",
-          background: "transparent",
-          borderLeft: "1px solid hsla(38, 15%, 40%, 0.08)",
+          width: "min(380px, 82vw)",
+          background: "hsla(25, 10%, 6%, 0.92)",
+          backdropFilter: "blur(40px) saturate(0.85)",
+          WebkitBackdropFilter: "blur(40px) saturate(0.85)",
+          borderLeft: "1px solid hsla(38, 15%, 35%, 0.1)",
+          boxShadow: "-8px 0 40px hsla(25, 10%, 3%, 0.4)",
           animation: "lumen-slide-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both",
         }}
       >
         {/* ── Header — whisper-quiet ────────────────────────────────── */}
-        <div className="flex items-center justify-between px-5 py-3.5 flex-shrink-0" style={{ background: "hsla(25, 10%, 8%, 0.75)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderBottom: "1px solid hsla(38, 15%, 30%, 0.08)" }}>
+        <div className="flex items-center justify-between px-5 py-3.5 flex-shrink-0" style={{ borderBottom: "1px solid hsla(38, 15%, 30%, 0.08)" }}>
           <div className="flex items-center gap-2.5">
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center"
