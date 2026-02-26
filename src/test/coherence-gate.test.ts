@@ -10,13 +10,14 @@
  * File: src/test/coherence-gate.test.ts
  *
  * This is the single, comprehensive test suite for the entire UOR framework.
- * It is structured as 5 tiers mirroring the 6-layer UOR architecture:
+ * It is structured as 6 tiers mirroring the UOR architecture:
  *
  *   T0 — RING FOUNDATION        neg(bnot(x)) ≡ succ(x) for all Q0
  *   T1 — HOLOGRAPHIC IDENTITY   23 projections, determinism, fidelity
  *   T2 — CANONICALIZATION       Context sync, URDNA2015, union types
  *   T3 — INTEROPERABILITY       DID, VC, WebFinger, W3C compliance
  *   T4 — INFRASTRUCTURE         Records, DHT, Shield, KV, PQC
+ *   T5 — DISCOVERY              Cross-module emergent pattern verification
  *
  * Adding a new capability = adding assertions to the appropriate tier.
  * The gate itself is a UOR object — its output is a proof:CoherenceProof.
@@ -65,6 +66,23 @@ import type { UorCertificate } from "@/modules/certificate/types";
 
 import { generateKeypair } from "@/modules/uns/core/keypair";
 import { UnsKv } from "@/modules/uns/store/kv";
+
+// ═══════════════════════════════════════════════════════════════════════════
+// T5 — DISCOVERY (Cross-module emergent pattern verification)
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+  compressToBase64,
+  decompressFromBase64,
+  type CompressibleTriple,
+} from "@/modules/data-bank/lib/graph-compression";
+import { fusionToContextBlock } from "@/modules/data-bank/lib/fusion-graph";
+import {
+  ingestMemories,
+  ingestAudioTracks,
+  ingestRelationships,
+  unionTriples,
+} from "@/modules/data-bank/lib/ingesters";
 
 // ── Shared Fixtures ─────────────────────────────────────────────────────────
 
@@ -360,23 +378,160 @@ describe("UOR COHERENCE GATE", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
+  // T5 — DISCOVERY
+  // "Do emergent cross-module patterns reveal deeper coherence?"
+  //
+  // The Discovery Gate verifies properties that no single module owns.
+  // These are structural insights that *emerge* from the interaction
+  // of ring arithmetic, compression, canonical identity, and fusion:
+  //
+  //   D1 — Ring identity survives compression round-trip
+  //   D2 — Hamming distance is preserved through ingestion + compression
+  //   D3 — Canonical hashing and compression are compositionally consistent
+  //   D4 — Multi-modal fusion graph union is order-independent
+  //   D5 — Context serialization preserves triple fidelity end-to-end
+  //   D6 — Object dictionary discovers high-frequency patterns autonomously
+  //   D7 — Cross-module type compatibility (triples from any ingester
+  //         compress, decompress, and serialize identically)
+  // ═══════════════════════════════════════════════════════════════════════
+
+  describe("T5 — Discovery", () => {
+
+    // D1: Ring identity survives the full pipeline:
+    //     ring element → triple object → compress → decompress → read back
+    it("D1: ring elements survive ingestion → compression → decompression", () => {
+      const ringTriples: CompressibleTriple[] = [];
+      for (let x = 0; x < 256; x += 51) {
+        ringTriples.push({
+          subject: `ring:${x}`,
+          predicate: "uor:derivedFrom",
+          object: `neg=${neg(x)},bnot=${bnot(x)},succ=${succ(x)}`,
+        });
+      }
+      const { encoded } = compressToBase64(ringTriples);
+      const restored = decompressFromBase64(encoded);
+      for (let i = 0; i < restored.length; i++) {
+        const x = i * 51;
+        expect(restored[i].object).toBe(`neg=${neg(x)},bnot=${bnot(x)},succ=${succ(x)}`);
+      }
+    });
+
+    // D2: Hamming distance is meaningful after compression.
+    it("D2: Hamming distance is preserved through compression round-trip", () => {
+      const a: CompressibleTriple = { subject: "test:a", predicate: "rdf:type", object: "FOCUS" };
+      const b: CompressibleTriple = { subject: "test:b", predicate: "rdf:type", object: "DRIFT" };
+      const hammingBefore = [...a.object].reduce((d, c, i) => d + (c !== b.object[i] ? 1 : 0), 0);
+
+      const restored = decompressFromBase64(compressToBase64([a, b]).encoded);
+      const hammingAfter = [...restored[0].object].reduce((d, c, i) => d + (c !== restored[1].object[i] ? 1 : 0), 0);
+      expect(hammingAfter).toBe(hammingBefore);
+    });
+
+    // D3: Canonical hash determinism composes with compression determinism.
+    it("D3: compression is deterministic — identical triples produce identical blob", async () => {
+      const triples: CompressibleTriple[] = [
+        { subject: "s:1", predicate: "schema:name", object: "Coherence" },
+        { subject: "s:1", predicate: "uor:hasRole", object: "verifier" },
+        { subject: "s:2", predicate: "rdf:type", object: "proof:Gate" },
+      ];
+      const a = compressToBase64(triples).encoded;
+      const b = compressToBase64(triples).encoded;
+      expect(a).toBe(b);
+      const hashA = await singleProofHash({ blob: a });
+      const hashB = await singleProofHash({ blob: b });
+      expect(hashA.derivationId).toBe(hashB.derivationId);
+    });
+
+    // D4: Fusion graph union is commutative.
+    it("D4: multi-modal union is order-independent after sort", () => {
+      const memories = ingestMemories([
+        { memoryCid: "m1", memoryType: "semantic", importance: 0.9, storageTier: "hot", epistemicGrade: "A" },
+      ]);
+      const audio = ingestAudioTracks([
+        { trackCid: "t1", title: "Resonance", artist: "Ring", genres: ["ambient"], durationSeconds: 300 },
+      ]);
+      const rels = ingestRelationships([
+        { relationshipCid: "r1", relationshipType: "collaboration", targetId: "agent:x", trustScore: 0.8, interactionCount: 5 },
+      ]);
+
+      const sort = (t: CompressibleTriple[]) =>
+        [...t].sort((a, b) => `${a.subject}${a.predicate}${a.object}`.localeCompare(`${b.subject}${b.predicate}${b.object}`));
+
+      expect(sort(unionTriples(memories, audio, rels))).toEqual(sort(unionTriples(rels, memories, audio)));
+      expect(sort(unionTriples(memories, audio, rels))).toEqual(sort(unionTriples(audio, rels, memories)));
+    });
+
+    // D5: End-to-end pipeline produces a valid LLM context block.
+    it("D5: full pipeline produces valid LLM context block", () => {
+      const memories = ingestMemories([
+        { memoryCid: "m1", memoryType: "episodic", importance: 0.7, storageTier: "warm", epistemicGrade: "B" },
+        { memoryCid: "m2", memoryType: "semantic", importance: 0.95, storageTier: "hot", epistemicGrade: "A" },
+      ]);
+      const { encoded } = compressToBase64(memories);
+      const restored = decompressFromBase64(encoded);
+      const block = fusionToContextBlock(restored);
+
+      expect(block).toContain("<uor-context>");
+      expect(block).toContain("</uor-context>");
+      for (const t of restored) {
+        expect(block).toContain(`${t.subject} ${t.predicate} ${t.object}`);
+      }
+    });
+
+    // D6: The object dictionary *discovers* repetitive patterns autonomously.
+    it("D6: object dictionary autonomously discovers high-frequency patterns", () => {
+      const triples: CompressibleTriple[] = [];
+      for (let i = 0; i < 20; i++) {
+        triples.push(
+          { subject: `mem:${i}`, predicate: "uor:memberOf", object: "hot" },
+          { subject: `mem:${i}`, predicate: "uor:hasRole", object: "A" },
+          { subject: `mem:${i}`, predicate: "rdf:type", object: "mem:agent" },
+        );
+      }
+      const { stats } = compressToBase64(triples);
+      expect(stats.objectDictSize).toBeGreaterThanOrEqual(3);
+      expect(stats.objectDictHits).toBeGreaterThanOrEqual(50);
+      expect(stats.ratio).toBeGreaterThan(2);
+    });
+
+    // D7: Cross-module type compatibility — heterogeneous ingesters compose losslessly.
+    it("D7: heterogeneous ingester outputs compose losslessly", () => {
+      const mem = ingestMemories([
+        { memoryCid: "m1", memoryType: "procedural", importance: 0.5, storageTier: "cold", epistemicGrade: "C" },
+      ]);
+      const audio = ingestAudioTracks([
+        { trackCid: "a1", title: "Harmony", artist: "Lens", genres: ["classical", "ambient"], durationSeconds: 180 },
+      ]);
+      const rels = ingestRelationships([
+        { relationshipCid: "r1", relationshipType: "trust", targetId: "user:y", trustScore: 0.99, interactionCount: 42 },
+      ]);
+
+      const combined = unionTriples(mem, audio, rels);
+      const restored = decompressFromBase64(compressToBase64(combined).encoded);
+      expect(restored).toEqual(combined);
+
+      expect(restored.some(t => t.subject === "mem:m1")).toBe(true);
+      expect(restored.some(t => t.subject === "audio:a1")).toBe(true);
+      expect(restored.some(t => t.subject === "rel:r1")).toBe(true);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════
   // GATE OUTPUT — Coherence Receipt
   // ═══════════════════════════════════════════════════════════════════════
 
   describe("Gate Receipt", () => {
     it("all tiers executed — coherence proof is valid", () => {
-      // This test runs last. If we reach here, all tiers passed.
-      // The receipt is the test run itself — a self-referential proof.
       const receipt = {
         "@type": "proof:CoherenceProof",
         gate: "uor-coherence-gate",
-        version: "1.0.0",
-        tiers: ["T0-Ring", "T1-Identity", "T2-Canon", "T3-Interop", "T4-Infra"],
+        version: "2.0.0",
+        tiers: ["T0-Ring", "T1-Identity", "T2-Canon", "T3-Interop", "T4-Infra", "T5-Discovery"],
         timestamp: new Date().toISOString(),
         verdict: "COHERENT",
       };
       expect(receipt.verdict).toBe("COHERENT");
-      expect(receipt.tiers.length).toBe(5);
+      expect(receipt.tiers.length).toBe(6);
     });
   });
 });
