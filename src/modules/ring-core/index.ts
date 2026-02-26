@@ -106,3 +106,13 @@ export {
   saveReasoningProof, loadReasoningProofs, loadProofById, getProofStats,
 } from "./proof-persistence";
 export type { PersistedProof } from "./proof-persistence";
+
+// ── Phase 8: Proof-Gated Inference ──────────────────────────────────────
+export {
+  decomposeToClaims, batchLookupProofs, composeFragments,
+  storeClaims, buildPrivateFragments, planPGI,
+  DEFAULT_PGI_CONFIG,
+} from "./proof-gated-inference";
+export type {
+  ClaimSlot, ProofLookupResult, PGIResult, PGIConfig,
+} from "./proof-gated-inference";
