@@ -625,7 +625,9 @@ export default function HologramOsPage() {
                         height: "100%",
                         background: bgMode === "white"
                           ? "hsla(0, 0%, 20%, 0.35)"
-                          : "hsla(38, 15%, 75%, 0.35)",
+                          : bgMode === "dark"
+                            ? "hsla(38, 15%, 75%, 0.35)"
+                            : "hsla(0, 0%, 100%, 0.6)",
                         transformOrigin: "center center",
                         animation: "line-expand 2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both",
                       }}
