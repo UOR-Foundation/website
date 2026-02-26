@@ -254,14 +254,11 @@ export default function DesktopOsSidebar({
           style={{ color: S.text, fontFamily: S.font }}
           onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={collapsed ? `Settings (${MOD_KEY} S)` : undefined}
+          title={collapsed ? "Settings" : undefined}
         >
           <Settings className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
           {!collapsed && (
-            <>
-              <span className="text-[14px] font-light">Settings</span>
-              <ShortcutBadge keys="⌘ S" />
-            </>
+            <span className="text-[14px] font-light">Settings</span>
           )}
         </button>
 
