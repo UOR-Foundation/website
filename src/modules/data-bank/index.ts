@@ -41,3 +41,19 @@ export {
   type FusionGraphStats,
   type FusionGraphResult,
 } from "./lib/fusion-graph";
+export {
+  ingestAudioTracks,
+  ingestAudioFeatures,
+  ingestMemories,
+  ingestProofs,
+  ingestCheckpoints,
+  ingestRelationships,
+  unionTriples,
+  type AudioTrackInput,
+  type AudioFeatureInput,
+  type MemoryInput,
+  type ReasoningProofInput,
+  type ProofStepInput,
+  type SessionCheckpointInput,
+  type RelationshipInput,
+} from "./lib/ingesters";
