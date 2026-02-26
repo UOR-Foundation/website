@@ -120,7 +120,7 @@ export default function HologramBrowser({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="flex flex-col h-full"
+      className="flex flex-col h-full w-full"
       style={{ background: P.bg, fontFamily: P.font }}
     >
       {/* ── Chrome Bar ──────────────────────────────────────────── */}
@@ -297,7 +297,7 @@ export default function HologramBrowser({ onClose }: { onClose: () => void }) {
 
         {page && !loading && (
           <article
-            className="px-8 py-8 max-w-[800px] mx-auto"
+            className="px-12 py-10 max-w-[960px] mx-auto"
             style={{ color: P.text }}
           >
             {/* Page title bar */}
