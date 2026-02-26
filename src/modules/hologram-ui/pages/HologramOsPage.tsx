@@ -442,14 +442,20 @@ export default function HologramOsPage() {
 
             {/* Welcome — centered */}
             <div className="absolute inset-0 flex flex-col items-center justify-center px-8">
-              <div className="text-center max-w-2xl space-y-[2.5vh] animate-fade-in" style={{ pointerEvents: "auto" }}>
+              <div
+                className="text-center space-y-[2.5vh] animate-fade-in transition-all duration-500 ease-out"
+                style={{
+                  pointerEvents: "auto",
+                  maxWidth: isFocus ? "56rem" : "42rem",
+                }}
+              >
                 <p
-                  className="tracking-[0.25em] uppercase transition-colors duration-300"
+                  className="tracking-[0.25em] uppercase transition-all duration-500"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     color: P.greeting,
                     fontWeight: 400,
-                    fontSize: "clamp(13px, 1.4vw, 18px)",
+                    fontSize: isFocus ? "clamp(15px, 1.6vw, 22px)" : "clamp(13px, 1.4vw, 18px)",
                     letterSpacing: "0.25em",
                   }}
                 >
@@ -457,13 +463,13 @@ export default function HologramOsPage() {
                 </p>
 
                 <h1
-                  className="leading-[1.08] transition-colors duration-300"
+                  className="leading-[1.08] transition-all duration-500"
                   style={{
                     fontFamily: "'Playfair Display', serif",
                     fontWeight: 300,
                     color: P.heading,
                     letterSpacing: "-0.01em",
-                    fontSize: "clamp(36px, 4.5vw, 76px)",
+                    fontSize: isFocus ? "clamp(48px, 6vw, 96px)" : "clamp(36px, 4.5vw, 76px)",
                   }}
                 >
                   Welcome{contextHints.length > 0 ? " back" : " home"},
@@ -474,8 +480,8 @@ export default function HologramOsPage() {
                 {/* Vertical line divider — hedosophia-inspired expand from center */}
                 <div className="flex justify-center pt-[2vh] pb-[1vh]">
                   <div
-                    className="relative flex items-center justify-center"
-                    style={{ height: "clamp(60px, 8vh, 120px)" }}
+                    className="relative flex items-center justify-center transition-all duration-500"
+                    style={{ height: isFocus ? "clamp(80px, 10vh, 160px)" : "clamp(60px, 8vh, 120px)" }}
                   >
                     <div
                       style={{
@@ -493,7 +499,7 @@ export default function HologramOsPage() {
 
                 {/* Context interest pills */}
                 {contextHints.length > 0 && (
-                  <div className="flex items-center justify-center gap-2 animate-fade-in pb-[1vh]">
+                  <div className="flex items-center justify-center gap-3 animate-fade-in pb-[1vh]">
                     {contextHints.map((hint) => (
                       <button
                         key={hint}
@@ -501,15 +507,15 @@ export default function HologramOsPage() {
                           setChatPrompt(`Tell me more about ${hint} — what should I explore next?`);
                           setChatOpen(true);
                         }}
-                        className="transition-all duration-200 hover:scale-105"
+                        className="transition-all duration-300 hover:scale-105"
                         style={{
                           fontFamily: "'DM Sans', system-ui, sans-serif",
-                          fontSize: "clamp(8px, 0.6vw, 10px)",
+                          fontSize: isFocus ? "clamp(10px, 0.7vw, 12px)" : "clamp(8px, 0.6vw, 10px)",
                           letterSpacing: "0.2em",
                           textTransform: "uppercase" as const,
                           fontWeight: 300,
                           color: bgMode === "white" ? "hsla(0, 0%, 30%, 0.5)" : "hsla(0, 0%, 80%, 0.4)",
-                          padding: "3px 10px",
+                          padding: isFocus ? "5px 14px" : "3px 10px",
                           borderRadius: "100px",
                           border: `1px solid ${bgMode === "white" ? "hsla(0, 0%, 30%, 0.12)" : "hsla(0, 0%, 70%, 0.1)"}`,
                           background: bgMode === "white" ? "hsla(0, 0%, 90%, 0.4)" : "hsla(0, 0%, 15%, 0.25)",
@@ -526,16 +532,18 @@ export default function HologramOsPage() {
                 <div>
                   <button
                     onClick={goConsole}
-                    className="inline-flex items-center transition-all duration-300"
+                    className="inline-flex items-center transition-all duration-500"
                     style={{
                       fontFamily: "'DM Sans', system-ui, sans-serif",
                       fontWeight: 300,
-                      fontSize: "clamp(11px, 0.8vw, 13px)",
+                      fontSize: isFocus ? "clamp(12px, 1vw, 15px)" : "clamp(11px, 0.8vw, 13px)",
                       letterSpacing: "0.3em",
                       textTransform: "uppercase" as const,
                       color: P.cta,
                       border: `1px solid ${P.ctaBorder}`,
-                      padding: "clamp(12px, 1.2vw, 16px) clamp(32px, 3vw, 48px)",
+                      padding: isFocus
+                        ? "clamp(14px, 1.5vw, 20px) clamp(40px, 4vw, 64px)"
+                        : "clamp(12px, 1.2vw, 16px) clamp(32px, 3vw, 48px)",
                       background: "transparent",
                     }}
                     onMouseEnter={(e) => {
@@ -557,11 +565,11 @@ export default function HologramOsPage() {
 
             {/* AI Chat Pill — bottom center */}
             <div
-              className="absolute bottom-[3.5vh] left-1/2 -translate-x-1/2 transition-all duration-300 ease-out"
+              className="absolute bottom-[3.5vh] left-1/2 -translate-x-1/2 transition-all duration-500 ease-out"
               style={{
-                pointerEvents: isFocus ? "none" : "auto",
-                opacity: isFocus ? 0 : 1,
-                transform: isFocus ? "translate(-50%, 10px)" : "translate(-50%, 0)",
+                pointerEvents: "auto",
+                opacity: isFocus ? 0.7 : 1,
+                transform: isFocus ? "translate(-50%, 0) scale(0.95)" : "translate(-50%, 0)",
               }}
             >
               <button
