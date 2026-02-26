@@ -15,6 +15,7 @@ import {
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
+import DataBankIndicator from "./DataBankIndicator";
 
 /* ── Tooltip wrapper ───────────────────────────────────────── */
 function IconTooltip({ label, children, show }: { label: string; children: React.ReactNode; show: boolean }) {
@@ -260,6 +261,7 @@ export default function DesktopOsSidebar({
             {expanded && <span className="text-[14px] font-light">Messages</span>}
           </button>
         </IconTooltip>
+        <DataBankIndicator expanded={expanded} bgMode={bgMode} />
         <IconTooltip label="Settings" show={!expanded}>
           <button
             onClick={() => navigate("/settings")}
