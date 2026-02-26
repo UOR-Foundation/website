@@ -105,11 +105,12 @@ export default function DesktopOsSidebar({
     [location.pathname],
   );
 
-  /** Collapse first, then fire the action after the sidebar animation completes */
+  /** Collapse and fire action simultaneously — no sequential delay */
   const collapseAndDo = useCallback((action: () => void) => {
     if (expanded) {
       setExpanded(false);
-      setTimeout(action, 320); // matches the 300ms cubic-bezier transition
+      // Fire immediately so the content panel expands in sync with sidebar collapse
+      requestAnimationFrame(() => action());
     } else {
       action();
     }
@@ -126,7 +127,7 @@ export default function DesktopOsSidebar({
         background: "var(--sb-bg)",
         borderRight: "1px solid var(--sb-border)",
         willChange: "width",
-        transition: "width 300ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+        transition: "width 350ms cubic-bezier(0.4, 0, 0.2, 1)",
         fontFamily: "'DM Sans', system-ui, sans-serif",
       } as React.CSSProperties}
     >
