@@ -337,3 +337,25 @@
   32% { opacity: 0.9; }
   44% { opacity: 0.6; }
 }
+
+/* ── Lumen AI overlay — smooth, human, no parallax ───────────────── */
+@keyframes lumen-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes lumen-backdrop-in {
+  from { opacity: 0; backdrop-filter: blur(0px) saturate(1); }
+  to   { opacity: 1; backdrop-filter: blur(20px) saturate(0.65); }
+}
+
+@keyframes lumen-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

@@ -812,12 +812,22 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const isFocus = attention.preset === "focus";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center animate-fade-in">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-[60] flex items-center justify-center" style={{ animation: "lumen-overlay-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
+      <div
+        className="absolute inset-0"
+        onClick={onClose}
+        style={{
+          background: "radial-gradient(ellipse at 50% 40%, hsla(30, 10%, 6%, 0.78) 0%, hsla(25, 8%, 4%, 0.93) 100%)",
+          backdropFilter: "blur(20px) saturate(0.65)",
+          WebkitBackdropFilter: "blur(20px) saturate(0.65)",
+          animation: "lumen-backdrop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
+        }}
+      />
 
       <div
-        className="relative flex flex-col overflow-hidden shadow-2xl animate-scale-in transition-all duration-700 ease-in-out"
+        className="relative flex flex-col overflow-hidden shadow-2xl transition-all duration-700 ease-in-out"
         style={{
+          animation: "lumen-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both",
           width: isFocus ? "100%" : undefined,
           maxWidth: isFocus ? "100%" : "42rem",
           maxHeight: isFocus ? "100vh" : "min(88vh, 800px)",
