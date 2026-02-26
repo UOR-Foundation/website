@@ -118,7 +118,7 @@ function palette(m: BgMode) {
   // image mode — dark wordmark for legibility over bright landscapes
   return {
     wordmark: "hsla(0, 0%, 8%, 0.85)",
-    greeting: "hsla(0, 0%, 95%, 0.8)",
+    greeting: "hsla(0, 0%, 8%, 0.8)",
     heading:  "hsla(0, 0%, 100%, 0.95)",
     sub:      "hsla(38, 12%, 90%, 0.75)",
     cta:      "hsla(38, 15%, 92%, 0.85)",
