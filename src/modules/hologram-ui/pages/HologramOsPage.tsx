@@ -684,7 +684,7 @@ export default function HologramOsPage() {
 
                     {/* Name — Lumen */}
                     <span
-                      className="tracking-[0.35em] uppercase transition-all duration-700"
+                      className="tracking-[0.2em] transition-all duration-700"
                       style={{
                         fontFamily: "'DM Sans', system-ui, sans-serif",
                         fontWeight: 400,
