@@ -640,6 +640,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             scaffold: scaffoldPrompt,
             screenContext: privateSession ? undefined : screenCtx.getPromptContext(),
             observerBriefing: privateSession ? undefined : (observer.promptText || undefined),
+            conversationContext: privateSession ? undefined : (history.getConversationContext() || undefined),
           }),
         });
 

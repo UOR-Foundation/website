@@ -223,7 +223,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold, screenContext, observerBriefing } = await req.json();
+    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold, screenContext, observerBriefing, conversationContext } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -243,17 +243,22 @@ serve(async (req) => {
     // Inject symbolic scaffold if provided (neuro-symbolic mode)
     const scaffoldPrompt = scaffold ? `\n\n${scaffold}` : "";
 
-    // Inject screen context awareness if provided
+    // Inject screen context awareness if provided — SILENT by default
     const contextAwareness = screenContext
-      ? `\n\n═══ AMBIENT CONTEXT (what the user is currently viewing/experiencing) ═══\n${screenContext}\n═══ END AMBIENT CONTEXT ═══\nYou are aware of what the user is currently viewing. If their question relates to the content they're experiencing, reference it naturally. If they've selected text, they're likely asking about that specific selection. Be contextually intelligent — don't repeat the context back verbatim, but use it to give precisely relevant answers.`
+      ? `\n\n═══ AMBIENT CONTEXT (background awareness only) ═══\n${screenContext}\n═══ END AMBIENT CONTEXT ═══\nYou have background awareness of what the user is currently viewing. DO NOT reference it unless their question is clearly about it. If they ask about something unrelated to the screen, ignore this context entirely. Only weave it in when it genuinely helps answer what they asked. Never open with "I see you're looking at…" or similar.`
       : "";
 
-    // Inject observer companion briefing if provided
+    // Inject observer companion briefing if provided — SILENT by default
     const observerAwareness = observerBriefing
-      ? `\n\n═══ YOUR AWARENESS (what you know about this user's patterns, interests, and session) ═══\n${observerBriefing}\n═══ END AWARENESS ═══\nYou have quiet awareness of the user's interests, how they spend their time, their active tasks, and whether they recently returned from a focus session. Use this naturally — if they ask "what did I miss?" reference their focus debrief. If they seem stuck, gently offer a pattern you've noticed. Never list this data unprompted or present it as a report. Weave it into your responses the way a thoughtful friend would — someone who knows you well and pays attention.`
+      ? `\n\n═══ BACKGROUND AWARENESS (silent context about this user) ═══\n${observerBriefing}\n═══ END BACKGROUND AWARENESS ═══\nYou have quiet background awareness of the user's patterns and session. This is for your internal use ONLY — to give better, more relevant answers. NEVER reference this awareness directly. Do not say things like "I notice you've been…" or "Based on your patterns…". Use it silently, the way a thoughtful friend would — they just know you, they don't announce it.`
       : "";
 
-    const systemPrompt = CONSTITUTIONAL_DIRECTIVE + personaPrompt + skillFragment + knowledge + scaffoldPrompt + contextAwareness + observerAwareness;
+    // Inject persistent conversation context (authenticated users only)
+    const conversationCtx = conversationContext
+      ? `\n\n═══ RELATIONSHIP CONTEXT (what you know from past conversations) ═══\n${conversationContext}\n═══ END RELATIONSHIP CONTEXT ═══\n`
+      : "";
+
+    const systemPrompt = CONSTITUTIONAL_DIRECTIVE + personaPrompt + skillFragment + knowledge + scaffoldPrompt + contextAwareness + observerAwareness + conversationCtx;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

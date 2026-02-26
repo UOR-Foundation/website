@@ -186,6 +186,23 @@ export function useAiChatHistory() {
     await updateConversationTitle(convId, title);
   }, [updateConversationTitle]);
 
+  /**
+   * Build a lightweight context summary from recent conversations.
+   * Returns topic titles from past conversations so the AI understands
+   * what the user has previously discussed — without sending full message content.
+   * Authenticated users only; returns empty string for guests.
+   */
+  const getConversationContext = useCallback((): string => {
+    if (!userId || conversations.length <= 1) return "";
+    // Use recent conversation titles (excluding the active one) as a lightweight signal
+    const recent = conversations
+      .filter(c => c.id !== activeConversationId)
+      .slice(0, 15)
+      .map(c => c.title);
+    if (recent.length === 0) return "";
+    return `The user has previously discussed these topics with you (most recent first): ${recent.join("; ")}. Use this to understand their interests and context silently — never enumerate these topics back to the user.`;
+  }, [userId, conversations, activeConversationId]);
+
   return {
     conversations,
     activeConversationId,
@@ -200,5 +217,6 @@ export function useAiChatHistory() {
     loadMessages,
     saveMessage,
     autoTitle,
+    getConversationContext,
   };
 }
