@@ -381,7 +381,7 @@ export default function HologramOsPage() {
           }}
         >
           {/* Focus toggle — lives inside content area so it shifts with Lumen */}
-          <AttentionToggle />
+          <AttentionToggle bgMode={bgMode} />
           {/* ══════════════════════════════════════════════════════════
            *  FRAME 0 — Canvas Layer (background, imagery, veils)
            * ══════════════════════════════════════════════════════════ */}
@@ -510,7 +510,7 @@ export default function HologramOsPage() {
               >
                 <GripVertical className="w-3 h-3" style={{ color: "hsla(0, 0%, 80%, 0.6)" }} />
               </div>
-              <DayProgressRing balance={triadicActivity.balance ?? undefined} />
+              <DayProgressRing balance={triadicActivity.balance ?? undefined} bgMode={bgMode} />
             </div>
           </HologramFrame>
 

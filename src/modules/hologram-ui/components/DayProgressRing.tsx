@@ -36,14 +36,16 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 interface DayProgressRingProps {
   balance?: TriadicBalance;
   activePhase?: TriadicPhase | null;
+  bgMode?: "image" | "white" | "dark";
 }
 
-export default function DayProgressRing({ balance: externalBalance, activePhase }: DayProgressRingProps) {
+export default function DayProgressRing({ balance: externalBalance, activePhase, bgMode = "dark" }: DayProgressRingProps) {
   const [progress, setProgress] = useState(getDayProgress);
   const [hovered, setHovered] = useState(false);
   const [night, setNight] = useState(isNightTime);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const attention = useAttentionMode();
+  const isWhite = bgMode === "white";
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setIsLoggedIn(!!data.session));
@@ -65,7 +67,6 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
   const displayBalance = useMemo<TriadicBalance>(() => {
     if (!isLoggedIn) return ZERO_BALANCE;
     if (externalBalance) return externalBalance;
-    // Default time-of-day balance for logged-in users
     const hour = new Date().getHours();
     if (hour < 12) return { learn: 0.45, work: 0.30, play: 0.25 };
     if (hour < 18) return { learn: 0.25, work: 0.50, play: 0.25 };
@@ -73,15 +74,11 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
   }, [externalBalance, isLoggedIn]);
 
   const pct = Math.round(progress * 100);
-
   const report = useMemo(() => computeBalance(displayBalance), [displayBalance]);
 
-  // Build segment data: each phase occupies a proportional arc of the filled portion
-  // For unauthenticated users, show a single neutral arc representing elapsed day time
   const totalFilled = CIRCUMFERENCE * progress;
   const segments = useMemo(() => {
     if (!isLoggedIn) {
-      // Single neutral segment for the full day progress
       return [{ phase: "learn" as TriadicPhase, length: totalFilled, offset: 0, neutral: true }];
     }
     let offset = 0;
@@ -93,7 +90,6 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
     });
   }, [progress, displayBalance, totalFilled, isLoggedIn]);
 
-  // Leading dot position (end of the filled arc)
   const displayAngle = 2 * Math.PI * progress;
   const dotCx = SIZE / 2 + RADIUS * Math.cos(displayAngle);
   const dotCy = SIZE / 2 + RADIUS * Math.sin(displayAngle);
@@ -118,18 +114,17 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
             cy={SIZE / 2}
             r={RADIUS}
             fill="none"
-            stroke="hsla(38, 12%, 60%, 0.08)"
+            stroke={isWhite ? "hsla(0, 0%, 15%, 0.1)" : "hsla(38, 12%, 60%, 0.08)"}
             strokeWidth={STROKE}
           />
 
-          {/* Colored segments — layered with dash offsets */}
+          {/* Colored segments */}
           {segments.map(({ phase, length, offset, neutral }) => {
             if (length <= 0) return null;
             const phaseDef = PHASES[phase];
-            // Unauthenticated: soft silver-blue neutral arc
             const strokeColor = neutral
-              ? "hsla(220, 12%, 72%, 0.45)"
-              : `hsla(${phaseDef.hue}, 40%, 60%, 0.8)`;
+              ? (isWhite ? "hsla(0, 0%, 30%, 0.4)" : "hsla(220, 12%, 72%, 0.45)")
+              : `hsla(${phaseDef.hue}, 40%, ${isWhite ? "40" : "60"}%, 0.8)`;
             return (
               <circle
                 key={neutral ? "neutral" : phase}
@@ -147,12 +142,12 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
             );
           })}
 
-          {/* Leading glow dot — separate layer to avoid blur bleeding into text */}
+          {/* Leading glow dot */}
           <circle
             cx={dotCx}
             cy={dotCy}
             r={2.5}
-            fill="hsla(38, 40%, 65%, 0.7)"
+            fill={isWhite ? "hsla(38, 40%, 45%, 0.8)" : "hsla(38, 40%, 65%, 0.7)"}
             style={{
               transition: "cx 0.6s ease-out, cy 0.6s ease-out",
               animation: "dot-heartbeat 1.6s ease-in-out infinite",
@@ -164,7 +159,9 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
         <div
           className="absolute inset-0 rounded-full pointer-events-none"
           style={{
-            background: "radial-gradient(circle, hsla(38, 35%, 55%, 0.06) 0%, transparent 70%)",
+            background: isWhite
+              ? "radial-gradient(circle, hsla(38, 30%, 40%, 0.04) 0%, transparent 70%)"
+              : "radial-gradient(circle, hsla(38, 35%, 55%, 0.06) 0%, transparent 70%)",
             animation: "ring-breathe 6s ease-in-out infinite",
           }}
         />
@@ -177,7 +174,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
                 className="text-[18px] leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  color: "hsla(220, 20%, 80%, 0.8)",
+                  color: isWhite ? "hsla(0, 0%, 15%, 0.7)" : "hsla(220, 20%, 80%, 0.8)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
                 }}
@@ -189,7 +186,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
                   className="text-[8px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
-                    color: "hsla(220, 15%, 75%, 0.5)",
+                    color: isWhite ? "hsla(0, 0%, 15%, 0.5)" : "hsla(220, 15%, 75%, 0.5)",
                     fontWeight: 500,
                   }}
                 >
@@ -203,7 +200,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
                 className="text-[22px] font-light leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  color: "hsla(38, 15%, 94%, 0.95)",
+                  color: isWhite ? "hsla(0, 0%, 15%, 0.85)" : "hsla(38, 15%, 94%, 0.95)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
                 }}
@@ -215,7 +212,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
                   className="text-[10px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
-                    color: "hsla(38, 15%, 82%, 0.55)",
+                    color: isWhite ? "hsla(0, 0%, 15%, 0.5)" : "hsla(38, 15%, 82%, 0.55)",
                     fontWeight: 500,
                   }}
                 >
@@ -229,23 +226,20 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
 
       {/* Dynamic label — context-aware prompts */}
       {(() => {
-        // Determine if we have enough data for rebalancing prompts
         const totalWeight = displayBalance.learn + displayBalance.work + displayBalance.play;
         const hasSufficientData = externalBalance !== undefined && totalWeight > 0;
 
-        // Smart rebalancing prompts — human, warm, actionable
-         const getRebalancePrompt = (): { label: string; color: string } => {
-           if (!isLoggedIn) {
-             return { label: "Your day", color: "hsla(38, 15%, 85%, 0.75)" };
-           }
-           if (night) {
-             return { label: "Rest well", color: "hsla(220, 15%, 78%, 0.6)" };
-           }
+        const getRebalancePrompt = (): { label: string; color: string } => {
+          if (!isLoggedIn) {
+            return { label: "Your day", color: isWhite ? "hsla(0, 0%, 15%, 0.6)" : "hsla(38, 15%, 85%, 0.75)" };
+          }
+          if (night) {
+            return { label: "Rest well", color: isWhite ? "hsla(0, 0%, 15%, 0.5)" : "hsla(220, 15%, 78%, 0.6)" };
+          }
           if (!hasSufficientData) {
-            return { label: "Your day", color: "hsla(38, 15%, 85%, 0.75)" };
+            return { label: "Your day", color: isWhite ? "hsla(0, 0%, 15%, 0.6)" : "hsla(38, 15%, 85%, 0.75)" };
           }
 
-          // If actively doing something, show that
           if (activePhase) {
             const phaseLabels: Record<TriadicPhase, string> = {
               learn: "Discovering",
@@ -254,48 +248,38 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
             };
             return {
               label: phaseLabels[activePhase],
-              color: `hsla(${PHASES[activePhase].hue}, 35%, 75%, 0.85)`,
+              color: isWhite
+                ? `hsla(${PHASES[activePhase].hue}, 40%, 35%, 0.85)`
+                : `hsla(${PHASES[activePhase].hue}, 35%, 75%, 0.85)`,
             };
           }
 
-          // Check for imbalance — only suggest when data shows clear skew
           const { dominant, neglected } = report;
 
           if (dominant && neglected) {
-            // Strong imbalance: dominant+neglected both flagged
             const prompts: Partial<Record<TriadicPhase, Partial<Record<TriadicPhase, string>>>> = {
-              work: {
-                learn: "Try something new",
-                play: "Take a moment to reflect",
-              },
-              learn: {
-                work: "Put ideas into action",
-                play: "Step back and enjoy",
-              },
-              play: {
-                learn: "Feed your curiosity",
-                work: "Channel this energy",
-              },
+              work: { learn: "Try something new", play: "Take a moment to reflect" },
+              learn: { work: "Put ideas into action", play: "Step back and enjoy" },
+              play: { learn: "Feed your curiosity", work: "Channel this energy" },
             };
             const prompt = prompts[dominant]?.[neglected] ?? "Your day";
-            return { label: prompt, color: "hsla(25, 25%, 75%, 0.8)" };
+            return { label: prompt, color: isWhite ? "hsla(25, 25%, 35%, 0.7)" : "hsla(25, 25%, 75%, 0.8)" };
           }
 
           if (dominant) {
-            // Mild imbalance: only dominant flagged
             const nudges: Record<TriadicPhase, string> = {
               work: "Pause and breathe",
               learn: "Create something",
               play: "Focus your energy",
             };
-            return { label: nudges[dominant], color: "hsla(25, 25%, 75%, 0.75)" };
+            return { label: nudges[dominant], color: isWhite ? "hsla(25, 25%, 35%, 0.65)" : "hsla(25, 25%, 75%, 0.75)" };
           }
 
           if (report.coherent) {
-            return { label: "Your day", color: "hsla(38, 15%, 85%, 0.75)" };
+            return { label: "Your day", color: isWhite ? "hsla(0, 0%, 15%, 0.6)" : "hsla(38, 15%, 85%, 0.75)" };
           }
 
-          return { label: "Your day", color: "hsla(38, 15%, 85%, 0.75)" };
+          return { label: "Your day", color: isWhite ? "hsla(0, 0%, 15%, 0.6)" : "hsla(38, 15%, 85%, 0.75)" };
         };
 
         const { label, color } = getRebalancePrompt();
@@ -314,7 +298,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
         );
       })()}
 
-      {/* Phase legend — appears on hover for all users */}
+      {/* Phase legend — appears on hover */}
       <div
         className="absolute -top-16 left-1/2 -translate-x-1/2 flex gap-5 transition-all duration-300 pointer-events-none"
         style={{
@@ -330,7 +314,9 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
                 className="text-[13px] font-light leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  color: `hsla(${PHASES[phase].hue}, 35%, 72%, 0.95)`,
+                  color: isWhite
+                    ? `hsla(${PHASES[phase].hue}, 40%, 35%, 0.9)`
+                    : `hsla(${PHASES[phase].hue}, 35%, 72%, 0.95)`,
                   letterSpacing: "0.02em",
                   textRendering: "geometricPrecision",
                   WebkitFontSmoothing: "antialiased" as any,
@@ -342,7 +328,9 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
                 className="text-[10px] tracking-[0.2em] uppercase leading-none"
                 style={{
                   fontFamily: "'DM Sans', system-ui, sans-serif",
-                  color: `hsla(${PHASES[phase].hue}, 30%, 75%, 0.9)`,
+                  color: isWhite
+                    ? `hsla(${PHASES[phase].hue}, 35%, 30%, 0.8)`
+                    : `hsla(${PHASES[phase].hue}, 30%, 75%, 0.9)`,
                   fontWeight: 500,
                   textRendering: "geometricPrecision",
                   WebkitFontSmoothing: "antialiased" as any,
@@ -354,9 +342,6 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
           );
         })}
       </div>
-
-
-      {/* Keyframes moved to index.css for zero-recalc mounting */}
     </div>
   );
 }
