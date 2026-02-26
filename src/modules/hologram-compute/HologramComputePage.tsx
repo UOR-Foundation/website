@@ -25,6 +25,7 @@ import {
 } from "@/modules/hologram-ui";
 import { getOrchestrator, type ProviderSnapshot } from "@/modules/hologram-compute";
 import type { GpuBenchmarkResult } from "@/modules/uns/core/hologram/gpu";
+import ConstantTimeBenchmark from "./ConstantTimeBenchmark";
 
 // ── Palette ─────────────────────────────────────────────────────────────────
 
@@ -520,6 +521,9 @@ export default function HologramComputePage() {
             ))}
           </div>
         </section>
+
+        {/* Constant-Time Benchmark Demo */}
+        <ConstantTimeBenchmark />
 
         {/* LUT Engine */}
         {localSnap && <LutEnginePanel snap={localSnap} />}
