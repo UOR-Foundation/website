@@ -30,6 +30,7 @@ import { DIRECTIONS } from "./polytree";
 import type { ProjectionInput } from "./index";
 import { getHologramGpu, getLutEngine, UorLutEngine, type HologramGpu, type GpuBenchmarkResult } from "./gpu";
 import { getAiEngine, RECOMMENDED_MODELS, type AiTask, type AiProgressCallback } from "./ai-engine";
+import { execReason, createReasoningSession, type ReasoningSession } from "@/modules/ring-core/reason-command";
 
 /** Fill a Uint8Array with random bytes (chunked to respect Web Crypto 65536-byte limit). */
 function fillRandom(buf: Uint8Array): void {
@@ -127,6 +128,7 @@ const COMMANDS: Record<string, CommandDef> = {
   load:    { usage: "load",                    description: "Restore saved processes" },
   gpu:     { usage: "gpu <sub>",               description: "GPU device (info|bench|matmul|relu|lut)" },
   ai:      { usage: "ai <sub>",                description: "AI inference (load|run|models|info|unload)" },
+  reason:  { usage: "reason <sub>",            description: "Reasoning (run|status|explain|certify|strategy|reset)" },
   grep:    { usage: "grep <pattern>",          description: "Filter lines matching pattern" },
   head:    { usage: "head [-n N]",             description: "Show first N lines (default 10)" },
   tail:    { usage: "tail [-n N]",             description: "Show last N lines (default 10)" },
@@ -160,6 +162,7 @@ function resolvePid(engine: HologramEngine, partial: string): string {
 export class VShell {
   readonly engine: HologramEngine;
   private state: ShellState;
+  private reasoningSession: ReasoningSession;
 
   /** External blueprint map for persistence (injected by consumer). */
   blueprintMap: Map<string, ExecutableBlueprint>;
@@ -174,6 +177,7 @@ export class VShell {
   ) {
     this.engine = engine;
     this.blueprintMap = new Map();
+    this.reasoningSession = createReasoningSession();
     this.state = {
       selectedPid: initialState?.selectedPid ?? null,
       history: initialState?.history ?? [],
@@ -254,6 +258,24 @@ export class VShell {
       return subs
         .filter(s => s.startsWith(partial))
         .map(s => `ai ${s}`);
+    }
+
+    // Reason subcommands
+    if (cmd === "reason" && parts.length === 2) {
+      const subs = ["run", "status", "explain", "certify", "strategy", "reset"];
+      const partial = parts[1];
+      return subs
+        .filter(s => s.startsWith(partial))
+        .map(s => `reason ${s}`);
+    }
+
+    // Reason strategy completions
+    if (cmd === "reason" && parts.length === 3 && parts[1] === "strategy") {
+      const strategies = ["dfs", "bfs", "spiral", "composed"];
+      const partial = parts[2];
+      return strategies
+        .filter(s => s.startsWith(partial))
+        .map(s => `reason strategy ${s}`);
     }
 
     // AI load model name completion
@@ -464,6 +486,10 @@ export class VShell {
 
         case "ai":
           await this.cmdAi(args, out, info, err, effects);
+          break;
+
+        case "reason":
+          this.cmdReason(args, lines, effects);
           break;
 
         // Filter commands used standalone (with no pipe input)
@@ -1264,5 +1290,22 @@ export class VShell {
         err(`Unknown ai subcommand: ${sub}`);
         info("  Usage: ai load [model] | run <prompt> | models | info | unload");
     }
+  }
+
+  // ── Reason Command ──────────────────────────────────────────────────────
+
+  private cmdReason(
+    args: string[],
+    lines: ShellLine[],
+    _effects: ShellEffects,
+  ): void {
+    const result = execReason(args, this.reasoningSession);
+    lines.push(...result.lines);
+    this.reasoningSession = result.session;
+  }
+
+  /** Get the current reasoning session (for dashboard rendering). */
+  getReasoningSession(): ReasoningSession {
+    return this.reasoningSession;
   }
 }
