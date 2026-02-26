@@ -7,7 +7,9 @@
  */
 
 import { motion, AnimatePresence } from "framer-motion";
+import { GripVertical } from "lucide-react";
 import { getLayerLabel, type LayerNavState } from "../hooks/useLayerNav";
+import { useDraggablePosition } from "../hooks/useDraggablePosition";
 
 const LAYERS = [0, 1, 2, 3];
 
@@ -23,11 +25,31 @@ interface LayerNavHUDProps {
 }
 
 export default function LayerNavHUD({ nav }: LayerNavHUDProps) {
+  const drag = useDraggablePosition({
+    storageKey: "hologram-pos:layer-nav",
+    defaultPos: { x: typeof window !== "undefined" ? window.innerWidth - 220 : 1000, y: 16 },
+  });
+
   return (
     <div
-      className="fixed top-4 right-4 z-[9998] flex items-center gap-1.5"
-      style={{ fontFamily: "'DM Sans', monospace, system-ui" }}
+      className="fixed z-[9998] flex items-center gap-1.5"
+      style={{
+        fontFamily: "'DM Sans', monospace, system-ui",
+        left: drag.pos.x,
+        top: drag.pos.y,
+        touchAction: "none",
+        userSelect: "none",
+      }}
     >
+      {/* Drag grip */}
+      <div
+        className="flex items-center justify-center cursor-grab active:cursor-grabbing mr-0.5 opacity-30 hover:opacity-60 transition-opacity"
+        {...drag.handlers}
+        title="Drag to reposition"
+      >
+        <GripVertical className="w-3 h-3" style={{ color: "hsla(0, 0%, 100%, 0.5)" }} />
+      </div>
+
       {LAYERS.map((layer) => {
         const active = nav.focusedLayer === layer;
         const color = LAYER_COLORS[layer];

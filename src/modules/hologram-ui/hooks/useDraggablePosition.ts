@@ -24,6 +24,11 @@ interface UseDraggablePositionOptions {
   defaultPos: DragPosition;
   /** If provided, clamp position within these bounds (viewport-relative) */
   padding?: number;
+  /**
+   * "absolute" (default): pos is left/top from viewport edge.
+   * "offset": pos is a delta from the element's natural position (returns translate style).
+   */
+  mode?: "absolute" | "offset";
 }
 
 function load(key: string): DragPosition | null {
@@ -46,6 +51,7 @@ export function useDraggablePosition({
   storageKey,
   defaultPos,
   padding = 8,
+  mode = "absolute",
 }: UseDraggablePositionOptions) {
   const [pos, setPos] = useState<DragPosition>(() => load(storageKey) ?? defaultPos);
   const dragging = useRef(false);
@@ -105,11 +111,16 @@ export function useDraggablePosition({
   /** True if pointer moved since last pointerdown (used to suppress click) */
   const wasDragged = useCallback(() => moved.current, []);
 
+  const style = mode === "offset"
+    ? { transform: `translate(${pos.x}px, ${pos.y}px)` } as React.CSSProperties
+    : { left: pos.x, top: pos.y } as React.CSSProperties;
+
   return {
     pos,
-    style: { left: pos.x, top: pos.y } as React.CSSProperties,
+    style,
     handlers: { onPointerDown },
     resetPosition,
     wasDragged,
+    isDragging: () => dragging.current,
   };
 }
