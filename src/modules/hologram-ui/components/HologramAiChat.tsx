@@ -900,7 +900,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               <Sparkles className="w-3.5 h-3.5" style={{ color: P.goldLight }} />
             </div>
             <span
-              className="text-[11px] font-medium tracking-[0.2em] uppercase"
+              className="text-[13px] font-medium tracking-[0.18em] uppercase"
               style={{ fontFamily: P.font, color: "hsla(38, 15%, 75%, 0.4)" }}
             >
               Lumen
@@ -962,7 +962,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           {messages.filter((m) => m.role === "system").map((msg) => (
             <div key={msg.id} className="flex justify-center mb-4 animate-[message-fade-in_0.5s_ease-out_both]">
               <p
-                className="text-[11px] px-3.5 py-1 rounded-full"
+                className="text-[13px] px-4 py-1.5 rounded-full"
                 style={{ color: P.textMuted, background: "hsla(38, 30%, 30%, 0.1)" }}
               >
                 {msg.content}
@@ -994,7 +994,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                   />
                 ))}
               </div>
-              <span className="text-[11px] tracking-wider" style={{ color: P.textDim, fontFamily: P.font }}>
+              <span className="text-[13px] tracking-wider" style={{ color: P.textDim, fontFamily: P.font }}>
                 Thinking…
               </span>
             </div>
@@ -1039,14 +1039,14 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                   }}
                 />
                 <span
-                  className="text-[11px] tracking-wide truncate"
+                  className="text-[13px] tracking-wide truncate"
                   style={{ color: P.textMuted, fontFamily: P.font }}
                 >
                   {selectedText ? "Selected: " : "Viewing: "}
                   <span style={{ color: P.text }}>{contextLabel}</span>
                 </span>
                 <span
-                  className="text-[10px] tracking-wider ml-auto shrink-0"
+                  className="text-[12px] tracking-wider ml-auto shrink-0"
                   style={{ color: P.textDimmer }}
                 >
                   {digest.section}
@@ -1397,7 +1397,7 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
           {/* Minimal metadata — just source indicator */}
           {meta && !isStreaming && (meta as any).inferenceSource && (
             <div className="mt-1.5 px-1 animate-in fade-in duration-500" style={{ animationDelay: "200ms", animationFillMode: "both" }}>
-              <span className="text-[11px] tracking-wider" style={{
+              <span className="text-[12px] tracking-wider" style={{
                 color: (meta as any).inferenceSource === "cache" ? P.goldMuted : P.textDim,
                 fontFamily: P.font,
               }}>
