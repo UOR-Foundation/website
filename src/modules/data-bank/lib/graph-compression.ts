@@ -41,6 +41,15 @@ const PREDICATE_DICT: readonly string[] = [
   "schema:name",            // 17
   "schema:description",     // 18
   "schema:url",             // 19
+  "delta:set",              // 20
+  "delta:delete",           // 21
+  "delta:base",             // 22
+  "delta:snapshot",         // 23
+  "delta:sequence",         // 24
+  "delta:zone",             // 25
+  "delta:hScore",           // 26
+  "delta:phi",              // 27
+  "delta:memCount",         // 28
 ] as const;
 
 const PREDICATE_TO_ID = new Map<string, number>(

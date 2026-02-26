@@ -17,3 +17,14 @@ export {
   type CompressibleTriple,
   type CompressionStats,
 } from "./lib/graph-compression";
+export {
+  diffObjects,
+  snapshotToTriples,
+  deltaToTriples,
+  applyDelta,
+  reconstructChain,
+  compressSessionChain,
+  decompressSessionChain,
+  DELTA_PREDICATES,
+  type DeltaChainStats,
+} from "./lib/delta-compression";
