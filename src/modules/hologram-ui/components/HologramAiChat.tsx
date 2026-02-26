@@ -48,6 +48,7 @@ import {
   type NeuroSymbolicResult,
 } from "@/modules/ring-core/neuro-symbolic";
 import AnnotatedResponse from "@/components/reasoning/EpistemicBadge";
+import { getFusionContextBlock } from "@/modules/data-bank/lib/fusion-graph";
 import TrustScoreBar from "@/components/reasoning/TrustScoreBar";
 import TrustTrendBar from "@/components/reasoning/TrustTrendBar";
 import { useSavedResponses } from "@/hooks/useSavedResponses";
@@ -622,6 +623,28 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         }
       }
 
+      // ── Fusion Graph: assemble holographic context surface ──
+      let fusionContextBlock: string | undefined;
+      if (!privateSession && history.isAuthenticated) {
+        try {
+          const userId = history.activeConversationId ? undefined : undefined;
+          // Use the authenticated user's ID from Supabase session
+          const { data: { session } } = await (await import("@/integrations/supabase/client")).supabase.auth.getSession();
+          if (session?.user?.id) {
+            const fusion = await getFusionContextBlock(session.user.id, { maxAgeMs: 5 * 60 * 1000 });
+            fusionContextBlock = fusion.block;
+            if (!fusion.fromCache) {
+              console.debug(
+                `[FusionGraph] Assembled for AI context: ${fusion.stats.totalTriples} triples across [${fusion.stats.modalities.join(", ")}], ` +
+                `${fusion.stats.compression.ratio.toFixed(1)}x compression`
+              );
+            }
+          }
+        } catch (e) {
+          console.warn("[FusionGraph] Failed to assemble context:", e);
+        }
+      }
+
       const doStream = async (extraMessages: Array<{role: string; content: string}> = [], scaffoldPrompt?: string, curvatureMonitor?: StreamingCurvatureMonitor): Promise<string> => {
         const resp = await fetch(STREAM_URL, {
           method: "POST",
@@ -643,6 +666,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             screenContext: privateSession ? undefined : screenCtx.getPromptContext(),
             observerBriefing: privateSession ? undefined : (observer.promptText || undefined),
             conversationContext: privateSession ? undefined : (history.getConversationContext() || undefined),
+            fusionContext: fusionContextBlock || undefined,
           }),
         });
 
