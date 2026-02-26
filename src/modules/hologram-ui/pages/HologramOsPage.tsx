@@ -261,17 +261,6 @@ export default function HologramOsPage() {
               }}
             >
               <div className="flex flex-col items-center gap-2">
-                <span
-                  className="text-[8px] tracking-[0.2em] uppercase font-medium transition-colors duration-500"
-                  style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
-                    color: bgMode === "white"
-                      ? "hsla(0, 0%, 30%, 0.5)"
-                      : bgMode === "dark" ? "hsla(0, 0%, 80%, 0.4)" : "hsla(38, 15%, 80%, 0.35)",
-                  }}
-                >
-                  Scene
-                </span>
                 <div
                   className="flex items-center gap-0.5 px-2 py-1.5 rounded-full transition-all duration-700"
                   style={{
@@ -305,6 +294,17 @@ export default function HologramOsPage() {
                     );
                   })}
                 </div>
+                <span
+                  className="text-[8px] tracking-[0.15em] uppercase font-medium transition-colors duration-500"
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    color: bgMode === "white"
+                      ? "hsla(0, 0%, 55%, 0.45)"
+                      : "hsla(0, 0%, 70%, 0.5)",
+                  }}
+                >
+                  Theme
+                </span>
               </div>
             </div>
 
