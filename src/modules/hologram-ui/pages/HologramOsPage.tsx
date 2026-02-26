@@ -173,6 +173,39 @@ export default function HologramOsPage() {
   const P = useMemo(() => palette(bgMode), [bgMode]);
   const isFocus = attention.preset === "focus";
 
+  // ── Global keyboard shortcuts ──────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Ignore when typing in inputs
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) return;
+
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+
+      switch (e.key) {
+        case "1": e.preventDefault(); navigate("/hologram-console"); break;
+        case "2": e.preventDefault(); navigate("/console/apps"); break;
+        case "3": e.preventDefault(); navigate("/your-space"); break;
+        case "n": case "N": e.preventDefault(); setChatOpen(true); break;
+        case "l": case "L": e.preventDefault(); setChatOpen(true); break;
+        case "m": case "M": e.preventDefault(); /* TODO: open messages */ break;
+        case ",": e.preventDefault(); navigate("/settings"); break;
+        case "\\": e.preventDefault(); setSidebarCollapsed(p => !p); break;
+        case "/": case "?":
+          if (e.shiftKey || e.key === "?") {
+            e.preventDefault();
+            localStorage.removeItem("hologram:onboarding-seen");
+            setReplayGuide(c => c + 1);
+            setChatOpen(true);
+          }
+          break;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [navigate]);
+
   // ── Mobile: iOS homescreen ──
   if (isMobile) return <MobileOsShell />;
 
@@ -522,6 +555,16 @@ export default function HologramOsPage() {
                   }}
                 >
                   Lumen AI
+                </span>
+                <span
+                  className="tracking-[0.15em] uppercase font-medium opacity-40"
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    color: P.pillText,
+                    fontSize: "10px",
+                  }}
+                >
+                  ⌘ L
                 </span>
 
                 {journalEntryCount > 0 && (
