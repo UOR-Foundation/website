@@ -28,3 +28,16 @@ export {
   DELTA_PREDICATES,
   type DeltaChainStats,
 } from "./lib/delta-compression";
+export {
+  assembleFusionGraph,
+  persistFusionGraph,
+  loadFusionGraph,
+  fusionToContextBlock,
+  getFusionContextBlock,
+  projectAudio,
+  projectProofs,
+  projectMemories,
+  projectContext,
+  type FusionGraphStats,
+  type FusionGraphResult,
+} from "./lib/fusion-graph";
