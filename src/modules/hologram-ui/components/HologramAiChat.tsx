@@ -40,6 +40,13 @@ import {
   getAiEngine,
   RECOMMENDED_MODELS,
 } from "@/modules/uns/core/hologram/ai-engine";
+import {
+  buildScaffold,
+  processResponse,
+  DEFAULT_CONFIG,
+  type NeuroSymbolicResult,
+} from "@/modules/ring-core/neuro-symbolic";
+import AnnotatedResponse from "@/components/reasoning/EpistemicBadge";
 
 // ── Cloud AI Models (instant, no download) ─────────────────────────────────
 const CLOUD_MODELS = [
@@ -92,6 +99,15 @@ interface ChatMessage {
     gpuAccelerated?: boolean;
     inputCid?: string;
     outputCid?: string;
+    inferenceSource?: "cache" | "local" | "cloud";
+    neuroSymbolic?: {
+      claims: import("@/modules/ring-core/neuro-symbolic").AnnotatedClaim[];
+      overallGrade: import("@/modules/ring-core/neuro-symbolic").EpistemicGrade;
+      iterations: number;
+      converged: boolean;
+      curvature: number;
+      proofId: string;
+    };
   };
 }
 
@@ -402,65 +418,94 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         return;
       }
 
-      // ── Path 3: Cloud Fallback (Lovable AI Gateway) ──────────
+      // ── Path 3: Cloud + Neuro-Symbolic Co-Reasoning ────────
       const STREAM_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hologram-ai-stream`;
+      const skillId = activeSkill?.id || selectedPersona.defaultSkillId;
+      const isReasoningSkill = skillId === "reason" || skillId === "research" || skillId === "debug";
 
-      const resp = await fetch(STREAM_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
-          messages: [
-            // Send full conversation history for context
-            ...messages
-              .filter((m) => m.role !== "system")
-              .map((m) => ({ role: m.role, content: m.content })),
-            { role: "user", content: text },
-          ],
-          model: selectedCloudModel,
-          personaId: selectedPersona.id,
-          skillId: activeSkill?.id || selectedPersona.defaultSkillId,
-          knowledgeDistillation: distillKnowledge(activeSkill?.id || selectedPersona.defaultSkillId),
-        }),
-      });
+      // DEDUCTIVE: Build symbolic scaffold (client-side, instant)
+      const scaffold = isReasoningSkill ? buildScaffold(text) : null;
 
-      if (!resp.ok) {
-        const errBody = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
-        throw new Error(errBody.error || `Cloud AI error: ${resp.status}`);
-      }
+      const doStream = async (extraMessages: Array<{role: string; content: string}> = [], scaffoldPrompt?: string): Promise<string> => {
+        const resp = await fetch(STREAM_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            messages: [
+              ...messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content })),
+              { role: "user", content: text },
+              ...extraMessages,
+            ],
+            model: selectedCloudModel,
+            personaId: selectedPersona.id,
+            skillId,
+            knowledgeDistillation: distillKnowledge(skillId),
+            scaffold: scaffoldPrompt,
+          }),
+        });
 
-      if (!resp.body) throw new Error("No response stream");
+        if (!resp.ok) {
+          const errBody = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+          throw new Error(errBody.error || `Cloud AI error: ${resp.status}`);
+        }
+        if (!resp.body) throw new Error("No response stream");
 
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let streamDone = false;
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+        let done = false;
+        while (!done) {
+          const { done: d, value } = await reader.read();
+          if (d) break;
+          buf += decoder.decode(value, { stream: true });
+          let idx: number;
+          while ((idx = buf.indexOf("\n")) !== -1) {
+            let line = buf.slice(0, idx);
+            buf = buf.slice(idx + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (line.startsWith(":") || line.trim() === "" || !line.startsWith("data: ")) continue;
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") { done = true; break; }
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const c = parsed.choices?.[0]?.delta?.content as string | undefined;
+              if (c) { streamedText += c; updateAssistant(streamedText); }
+            } catch { buf = line + "\n" + buf; break; }
+          }
+        }
+        return streamedText;
+      };
+
       const start = performance.now();
 
-      while (!streamDone) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
+      // INDUCTIVE: Stream LLM response (with scaffold if reasoning)
+      await doStream([], scaffold?.promptFragment);
 
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") { streamDone = true; break; }
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) { streamedText += content; updateAssistant(streamedText); }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
+      // ABDUCTIVE: Measure curvature & annotate (if reasoning mode)
+      let nsResult: NeuroSymbolicResult | null = null;
+      if (scaffold && streamedText.length > 20) {
+        let iteration = 0;
+        let currentResponse = streamedText;
+        while (iteration < DEFAULT_CONFIG.maxIterations) {
+          const { report, refinementPrompt, result } = processResponse(scaffold, currentResponse, iteration);
+          if (result) { nsResult = result; break; }
+          if (refinementPrompt) {
+            // Re-prompt LLM with constraint violations
+            streamedText = "";
+            currentResponse = await doStream([
+              { role: "assistant", content: currentResponse },
+              { role: "user", content: refinementPrompt },
+            ], scaffold.promptFragment);
           }
+          iteration++;
+        }
+        // Fallback if loop exhausted
+        if (!nsResult) {
+          const { result } = processResponse(scaffold, currentResponse, iteration);
+          nsResult = result;
         }
       }
 
@@ -468,13 +513,23 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       const tokCount = streamedText.split(/\s+/).length;
       const finalContent = streamedText || "(empty response)";
 
-      const meta = {
+      const meta: ChatMessage["meta"] = {
         inferenceTimeMs: elapsed,
         tokensGenerated: tokCount,
         gpuAccelerated: false,
         inputCid: "",
         outputCid: "",
         inferenceSource: "cloud" as const,
+        ...(nsResult && {
+          neuroSymbolic: {
+            claims: nsResult.claims,
+            overallGrade: nsResult.overallGrade,
+            iterations: nsResult.iterations,
+            converged: nsResult.converged,
+            curvature: nsResult.finalCurvature,
+            proofId: nsResult.proof.proofId,
+          },
+        }),
       };
 
       setMessages((prev) =>
@@ -486,7 +541,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
       // Cache write for future O(1) replay
       getInputHash(text, modelId).then((proof) => {
-        meta.inputCid = proof.cid;
+        if (meta) meta.inputCid = proof.cid;
         writeInferenceCache({
           inputHash: proof.hashHex,
           inputCanonical: proof.nquads,
@@ -969,6 +1024,16 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
               >
                 {content}
               </p>
+            ) : meta?.neuroSymbolic && !isStreaming ? (
+              <div style={{ fontFamily: P.font }}>
+                <AnnotatedResponse
+                  claims={meta.neuroSymbolic.claims}
+                  overallGrade={meta.neuroSymbolic.overallGrade}
+                  iterations={meta.neuroSymbolic.iterations}
+                  converged={meta.neuroSymbolic.converged}
+                  curvature={meta.neuroSymbolic.curvature}
+                />
+              </div>
             ) : (
               <div
                 className="text-[15px] leading-[1.7] prose prose-sm prose-invert max-w-none"
