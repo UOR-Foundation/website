@@ -1,0 +1,322 @@
+/**
+ * Hologram Compute — Provider Abstraction Layer
+ * ══════════════════════════════════════════════
+ *
+ * A provider-agnostic compute substrate that unifies:
+ *   - Local compute  (WebGPU + LUT constant-time engine)
+ *   - Cloud compute  (future: GPU cloud providers)
+ *   - P2P compute    (future: peer-contributed resources)
+ *
+ * The key insight: all compute is expressed as typed operations
+ * on content-addressed data. The provider is just the "where" —
+ * the operation semantics are identical regardless of substrate.
+ *
+ * Architecture:
+ *   ComputeProvider (interface)
+ *     ├── LocalGpuProvider   — WebGPU + UOR LUT engine
+ *     ├── CloudProvider      — (future) remote GPU clusters
+ *     └── PeerProvider       — (future) federated peer mesh
+ *
+ *   ComputeOrchestrator
+ *     └── Selects optimal provider per-job (locality, cost, latency)
+ *
+ * @module hologram-compute/providers
+ */
+
+import { getHologramGpu, type GpuDeviceInfo, type GpuBenchmarkResult } from "@/modules/uns/core/hologram/gpu";
+import { getLutEngine, type LutApplyResult, type CriticalIdentityProof, type LutEngineInfo } from "@/modules/uns/core/hologram/gpu";
+
+// ── Provider Types ──────────────────────────────────────────────────────────
+
+export type ProviderKind = "local" | "cloud" | "peer";
+export type ProviderStatus = "offline" | "initializing" | "ready" | "degraded" | "error";
+
+/** Capability flags for a compute provider. */
+export interface ComputeCapabilities {
+  readonly matmul: boolean;
+  readonly lutApply: boolean;
+  readonly inference: boolean;
+  readonly customShader: boolean;
+  readonly maxBufferBytes: number;
+  readonly maxWorkgroups: number;
+  readonly estimatedGflops: number;
+  readonly estimatedBandwidthGBps: number;
+}
+
+/** A snapshot of provider health + metrics. */
+export interface ProviderSnapshot {
+  readonly kind: ProviderKind;
+  readonly id: string;
+  readonly name: string;
+  readonly status: ProviderStatus;
+  readonly capabilities: ComputeCapabilities;
+  readonly deviceInfo: GpuDeviceInfo | null;
+  readonly lutInfo: LutEngineInfo | null;
+  readonly benchmarkResult: GpuBenchmarkResult | null;
+  readonly criticalIdentity: CriticalIdentityProof | null;
+  readonly lastUpdated: string;
+  /** Estimated cost per GFLOP-second (0 for local). */
+  readonly costPerGflopS: number;
+  /** Estimated tokens/sec for inference (0 if unknown). */
+  readonly estimatedTokPerSec: number;
+}
+
+/** A compute job submitted to the orchestrator. */
+export interface ComputeJob {
+  readonly id: string;
+  readonly type: "matmul" | "lut" | "shader" | "inference";
+  readonly inputSizeBytes: number;
+  readonly priority: "low" | "normal" | "high";
+  readonly preferredProvider?: ProviderKind;
+}
+
+/** Result of a compute job. */
+export interface ComputeJobResult {
+  readonly jobId: string;
+  readonly provider: ProviderKind;
+  readonly providerId: string;
+  readonly timeMs: number;
+  readonly gpuAccelerated: boolean;
+  readonly outputSizeBytes: number;
+}
+
+// ── Provider Interface ──────────────────────────────────────────────────────
+
+export interface ComputeProvider {
+  readonly kind: ProviderKind;
+  readonly id: string;
+  readonly name: string;
+  init(): Promise<ProviderSnapshot>;
+  snapshot(): Promise<ProviderSnapshot>;
+  benchmark(): Promise<GpuBenchmarkResult | null>;
+  destroy(): void;
+}
+
+// ── Local GPU Provider ──────────────────────────────────────────────────────
+
+export class LocalGpuProvider implements ComputeProvider {
+  readonly kind: ProviderKind = "local";
+  readonly id = "local:webgpu";
+  readonly name = "Local vGPU";
+
+  private _snapshot: ProviderSnapshot | null = null;
+
+  async init(): Promise<ProviderSnapshot> {
+    const gpu = getHologramGpu();
+    const lut = getLutEngine();
+
+    const deviceInfo = await gpu.init();
+    const lutInfo = await lut.info();
+    const criticalIdentity = await lut.verifyCriticalIdentity();
+
+    const caps: ComputeCapabilities = {
+      matmul: gpu.isReady,
+      lutApply: true, // always available (CPU fallback)
+      inference: gpu.isReady,
+      customShader: gpu.isReady,
+      maxBufferBytes: deviceInfo.maxBufferSize,
+      maxWorkgroups: deviceInfo.maxComputeInvocations,
+      estimatedGflops: 0,
+      estimatedBandwidthGBps: 0,
+    };
+
+    this._snapshot = {
+      kind: "local",
+      id: this.id,
+      name: this.name,
+      status: gpu.isReady ? "ready" : lutInfo.criticalIdentityHolds ? "degraded" : "error",
+      capabilities: caps,
+      deviceInfo,
+      lutInfo,
+      benchmarkResult: null,
+      criticalIdentity,
+      lastUpdated: new Date().toISOString(),
+      costPerGflopS: 0,
+      estimatedTokPerSec: 0,
+    };
+
+    return this._snapshot;
+  }
+
+  async snapshot(): Promise<ProviderSnapshot> {
+    if (!this._snapshot) return this.init();
+    return this._snapshot;
+  }
+
+  async benchmark(): Promise<GpuBenchmarkResult | null> {
+    const gpu = getHologramGpu();
+    await gpu.init();
+    if (!gpu.isReady) return null;
+
+    const result = await gpu.benchmark();
+
+    // Update snapshot with benchmark data
+    if (this._snapshot) {
+      this._snapshot = {
+        ...this._snapshot,
+        benchmarkResult: result,
+        capabilities: {
+          ...this._snapshot.capabilities,
+          estimatedGflops: result.matmulGflops,
+          estimatedBandwidthGBps: result.bandwidthGBps,
+        },
+        // Rough inference estimate: ~1 tok/sec per GFLOP for small models
+        estimatedTokPerSec: Math.round(result.matmulGflops * 8),
+        lastUpdated: new Date().toISOString(),
+      };
+    }
+
+    return result;
+  }
+
+  destroy(): void {
+    getHologramGpu().destroy();
+    this._snapshot = null;
+  }
+}
+
+// ── Cloud Provider (Stub) ───────────────────────────────────────────────────
+
+export class CloudProvider implements ComputeProvider {
+  readonly kind: ProviderKind = "cloud";
+  readonly id = "cloud:hologram";
+  readonly name = "Hologram Cloud";
+
+  async init(): Promise<ProviderSnapshot> {
+    return {
+      kind: "cloud",
+      id: this.id,
+      name: this.name,
+      status: "offline",
+      capabilities: {
+        matmul: false, lutApply: false, inference: false, customShader: false,
+        maxBufferBytes: 0, maxWorkgroups: 0, estimatedGflops: 0, estimatedBandwidthGBps: 0,
+      },
+      deviceInfo: null, lutInfo: null, benchmarkResult: null, criticalIdentity: null,
+      lastUpdated: new Date().toISOString(),
+      costPerGflopS: 0,
+      estimatedTokPerSec: 0,
+    };
+  }
+
+  async snapshot(): Promise<ProviderSnapshot> { return this.init(); }
+  async benchmark(): Promise<null> { return null; }
+  destroy(): void {}
+}
+
+// ── Peer Provider (Stub) ────────────────────────────────────────────────────
+
+export class PeerProvider implements ComputeProvider {
+  readonly kind: ProviderKind = "peer";
+  readonly id = "peer:mesh";
+  readonly name = "Peer Network";
+
+  async init(): Promise<ProviderSnapshot> {
+    return {
+      kind: "peer",
+      id: this.id,
+      name: this.name,
+      status: "offline",
+      capabilities: {
+        matmul: false, lutApply: false, inference: false, customShader: false,
+        maxBufferBytes: 0, maxWorkgroups: 0, estimatedGflops: 0, estimatedBandwidthGBps: 0,
+      },
+      deviceInfo: null, lutInfo: null, benchmarkResult: null, criticalIdentity: null,
+      lastUpdated: new Date().toISOString(),
+      costPerGflopS: 0,
+      estimatedTokPerSec: 0,
+    };
+  }
+
+  async snapshot(): Promise<ProviderSnapshot> { return this.init(); }
+  async benchmark(): Promise<null> { return null; }
+  destroy(): void {}
+}
+
+// ── Compute Orchestrator ────────────────────────────────────────────────────
+
+/**
+ * The Hologram Compute Orchestrator.
+ *
+ * Manages all registered providers and selects the optimal one
+ * per-job based on locality, cost, and latency heuristics.
+ *
+ * Today: routes everything to LocalGpuProvider.
+ * Tomorrow: smart routing across local → cloud → peer mesh.
+ */
+export class ComputeOrchestrator {
+  private providers: ComputeProvider[] = [];
+  private snapshots = new Map<string, ProviderSnapshot>();
+
+  constructor() {
+    // Register all provider types
+    this.providers = [
+      new LocalGpuProvider(),
+      new CloudProvider(),
+      new PeerProvider(),
+    ];
+  }
+
+  /** Initialize all providers and collect snapshots. */
+  async init(): Promise<ProviderSnapshot[]> {
+    const results = await Promise.all(
+      this.providers.map(async (p) => {
+        const snap = await p.init();
+        this.snapshots.set(p.id, snap);
+        return snap;
+      }),
+    );
+    return results;
+  }
+
+  /** Get all provider snapshots. */
+  async allSnapshots(): Promise<ProviderSnapshot[]> {
+    if (this.snapshots.size === 0) await this.init();
+    return [...this.snapshots.values()];
+  }
+
+  /** Get best available provider for a job type. */
+  bestProvider(jobType: ComputeJob["type"]): ComputeProvider | null {
+    // Priority: local (free) → cloud → peer
+    for (const p of this.providers) {
+      const snap = this.snapshots.get(p.id);
+      if (!snap || snap.status === "offline" || snap.status === "error") continue;
+      if (jobType === "matmul" && snap.capabilities.matmul) return p;
+      if (jobType === "lut" && snap.capabilities.lutApply) return p;
+      if (jobType === "inference" && snap.capabilities.inference) return p;
+      if (jobType === "shader" && snap.capabilities.customShader) return p;
+    }
+    return null;
+  }
+
+  /** Run benchmark on a specific provider. */
+  async benchmarkProvider(providerId: string): Promise<GpuBenchmarkResult | null> {
+    const provider = this.providers.find(p => p.id === providerId);
+    if (!provider) return null;
+    const result = await provider.benchmark();
+    if (result) {
+      const snap = await provider.snapshot();
+      this.snapshots.set(provider.id, snap);
+    }
+    return result;
+  }
+
+  /** Get the local provider (always available). */
+  get local(): LocalGpuProvider {
+    return this.providers[0] as LocalGpuProvider;
+  }
+
+  destroy(): void {
+    this.providers.forEach(p => p.destroy());
+    this.snapshots.clear();
+  }
+}
+
+// ── Singleton ───────────────────────────────────────────────────────────────
+
+let _orchestrator: ComputeOrchestrator | null = null;
+
+export function getOrchestrator(): ComputeOrchestrator {
+  if (!_orchestrator) _orchestrator = new ComputeOrchestrator();
+  return _orchestrator;
+}
