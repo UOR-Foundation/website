@@ -58,6 +58,7 @@ export interface BrowserNavState {
   showHistory: boolean;
   viewMode: ViewMode;
   popupsBlocked: boolean;
+  privateRelay: boolean;
 }
 
 export interface BrowserNavActions {
@@ -76,6 +77,7 @@ export interface BrowserNavActions {
   selectHistoryEntry: (idx: number) => void;
   toggleViewMode: () => void;
   togglePopups: () => void;
+  togglePrivateRelay: () => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
 }
 
@@ -91,6 +93,7 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
   const [showHistory, setShowHistory] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("live");
   const [popupsBlocked, setPopupsBlocked] = useState(true);
+  const [privateRelay, setPrivateRelay] = useState(true);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Refs for stable callbacks
@@ -285,10 +288,13 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
   const togglePopups = useCallback(() => {
     setPopupsBlocked((b) => !b);
   }, []);
+  const togglePrivateRelay = useCallback(() => {
+    setPrivateRelay((b) => !b);
+  }, []);
 
   const state: BrowserNavState = {
     url, loading, error, page, searchResults, searchQuery,
-    history, historyIdx, showHistory, viewMode, popupsBlocked,
+    history, historyIdx, showHistory, viewMode, popupsBlocked, privateRelay,
   };
 
   const actions: BrowserNavActions = {
@@ -296,7 +302,7 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
     search: searchFn, handleSubmit, handleLinkClick,
     setShowHistory, clearHistory, prefetch,
     saveScrollPosition, getScrollPosition, selectHistoryEntry,
-    toggleViewMode, togglePopups, inputRef,
+    toggleViewMode, togglePopups, togglePrivateRelay, inputRef,
   };
 
   return [state, actions];

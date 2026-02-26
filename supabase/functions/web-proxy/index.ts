@@ -1,10 +1,12 @@
 /**
- * web-proxy — Transparent reverse proxy for the Hologram browser.
+ * web-proxy — Private Relay proxy for the Hologram browser.
  *
- * Fetches any URL server-side, strips frame-blocking headers
- * (X-Frame-Options, CSP frame-ancestors), and rewrites relative
- * asset URLs to absolute so the page renders correctly inside
- * an iframe served from our domain.
+ * Fetches any URL server-side with full privacy hygiene:
+ *   • Strips X-Frame-Options, CSP frame-ancestors (iframe embedding)
+ *   • Strips Set-Cookie (no third-party tracking)
+ *   • Normalizes User-Agent (anti-fingerprinting)
+ *   • Sends no Referer to upstream
+ *   • Injects <base> tag for correct relative URL resolution
  *
  * Usage:  GET /web-proxy?url=https://google.com
  */
@@ -15,11 +17,27 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-/** Headers that prevent iframe embedding — we strip all of these. */
-const STRIPPED_HEADERS = new Set([
+/** Normalized UA — generic enough to blend in, modern enough to get full content. */
+const RELAY_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+
+/** Response headers we strip for privacy + iframe compatibility. */
+const STRIPPED_RESPONSE_HEADERS = new Set([
+  // Frame-blocking
   'x-frame-options',
   'content-security-policy',
   'content-security-policy-report-only',
+  // Tracking
+  'set-cookie',
+  'set-cookie2',
+  // Hop-by-hop / encoding
+  'transfer-encoding',
+  'connection',
+  'keep-alive',
+  // Fingerprinting
+  'server',
+  'x-powered-by',
+  'via',
 ]);
 
 /** Inject a <base> tag so relative URLs resolve against the original origin. */
@@ -27,7 +45,6 @@ function injectBaseTag(html: string, baseUrl: string): string {
   const origin = new URL(baseUrl);
   const base = `${origin.protocol}//${origin.host}`;
 
-  // If a <base> tag already exists, replace its href
   if (/<base\s/i.test(html)) {
     return html.replace(
       /(<base\s[^>]*href=["'])[^"']*(["'])/i,
@@ -35,14 +52,12 @@ function injectBaseTag(html: string, baseUrl: string): string {
     );
   }
 
-  // Otherwise inject one right after <head>
   const headMatch = html.match(/<head[^>]*>/i);
   if (headMatch) {
     const idx = html.indexOf(headMatch[0]) + headMatch[0].length;
     return html.slice(0, idx) + `<base href="${base}/">` + html.slice(idx);
   }
 
-  // Fallback: prepend
   return `<base href="${base}/">` + html;
 }
 
@@ -62,7 +77,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate URL
     let parsed: URL;
     try {
       parsed = new URL(targetUrl);
@@ -73,7 +87,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Only allow http(s)
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       return new Response(
         JSON.stringify({ error: 'Only HTTP/HTTPS URLs are supported' }),
@@ -81,33 +94,37 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch the target page
+    // ── Privacy-hardened upstream request ──
+    // No Referer, no cookies, normalized UA, minimal accept headers
     const upstream = await fetch(targetUrl, {
       headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
+        'User-Agent': RELAY_UA,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Sec-GPC': '1',
+        // Explicitly NO Referer, NO Cookie, NO Authorization
       },
       redirect: 'follow',
     });
 
-    // Build clean response headers — strip frame-blockers, pass through the rest
+    // ── Build sanitized response headers ──
     const responseHeaders = new Headers(corsHeaders);
     for (const [key, value] of upstream.headers.entries()) {
-      if (STRIPPED_HEADERS.has(key.toLowerCase())) continue;
-      // Don't forward hop-by-hop or encoding headers
-      if (['transfer-encoding', 'connection', 'keep-alive'].includes(key.toLowerCase())) continue;
+      if (STRIPPED_RESPONSE_HEADERS.has(key.toLowerCase())) continue;
       responseHeaders.set(key, value);
     }
 
+    // Add privacy-affirming headers
+    responseHeaders.set('Referrer-Policy', 'no-referrer');
+    responseHeaders.set('X-Hologram-Relay', 'active');
+
     const contentType = upstream.headers.get('content-type') || '';
 
-    // For HTML responses, inject <base> tag for correct asset resolution
     if (contentType.includes('text/html')) {
       let html = await upstream.text();
       html = injectBaseTag(html, targetUrl);
-
       responseHeaders.set('Content-Type', contentType);
       return new Response(html, {
         status: upstream.status,
@@ -115,7 +132,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // For non-HTML (images, CSS, JS, etc.), stream through directly
     return new Response(upstream.body, {
       status: upstream.status,
       headers: responseHeaders,

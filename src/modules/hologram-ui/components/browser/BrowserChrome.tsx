@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { ArrowLeft, ArrowRight, RotateCw, X, ExternalLink, Loader2, Search, Sparkles, Clock, Globe, BookOpen, ShieldCheck, ShieldOff } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCw, X, ExternalLink, Loader2, Search, Sparkles, Clock, Globe, BookOpen, ShieldCheck, ShieldOff, Lock, LockOpen } from "lucide-react";
 import { P, isUrl } from "./browser-palette";
 import { type BrowserNavState, type BrowserNavActions } from "./useBrowserNavigation";
 
@@ -39,8 +39,8 @@ interface BrowserChromeProps {
 }
 
 export default function BrowserChrome({ state, actions, onClose, onSendToLumen }: BrowserChromeProps) {
-  const { url, loading, page, historyIdx, history, showHistory, viewMode, popupsBlocked } = state;
-  const { setUrl, goBack, goForward, navigate, setShowHistory, toggleViewMode, togglePopups, inputRef } = actions;
+  const { url, loading, page, historyIdx, history, showHistory, viewMode, popupsBlocked, privateRelay } = state;
+  const { setUrl, goBack, goForward, navigate, setShowHistory, toggleViewMode, togglePopups, togglePrivateRelay, inputRef } = actions;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +122,21 @@ export default function BrowserChrome({ state, actions, onClose, onSendToLumen }
           {popupsBlocked ? <ShieldCheck className="w-3.5 h-3.5" /> : <ShieldOff className="w-3.5 h-3.5" />}
         </IconBtn>
       )}
+
+      {/* Private Relay indicator */}
+      <button
+        onClick={togglePrivateRelay}
+        title={privateRelay ? "Private Relay ON · IP hidden, cookies blocked, headers sanitized" : "Private Relay OFF · Direct connection"}
+        className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-light transition-all duration-200"
+        style={{
+          color: privateRelay ? "hsl(152, 50%, 60%)" : P.textMuted,
+          border: `1px solid ${privateRelay ? "hsla(152, 50%, 60%, 0.2)" : P.border}`,
+          background: privateRelay ? "hsla(152, 50%, 60%, 0.06)" : "transparent",
+        }}
+      >
+        {privateRelay ? <Lock className="w-3 h-3" /> : <LockOpen className="w-3 h-3" />}
+        {privateRelay ? "Relay" : "Direct"}
+      </button>
 
       {page && (
         <IconBtn onClick={() => window.open(page.url, "_blank")} title="Open externally">

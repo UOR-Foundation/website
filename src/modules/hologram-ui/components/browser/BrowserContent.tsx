@@ -27,7 +27,7 @@ interface BrowserContentProps {
 }
 
 export default function BrowserContent({ state, actions }: BrowserContentProps) {
-  const { page, loading, error, searchResults, searchQuery, url, viewMode, popupsBlocked } = state;
+  const { page, loading, error, searchResults, searchQuery, url, viewMode, popupsBlocked, privateRelay } = state;
   const { navigate, handleLinkClick, prefetch, saveScrollPosition, getScrollPosition, setUrl } = actions;
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevUrlRef = useRef<string | null>(null);
@@ -236,17 +236,20 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
         </div>
       )}
 
-      {/* Page Content — Live Mode (fully interactive via proxy) */}
+      {/* Page Content — Live Mode (fully interactive) */}
       {page && !loading && viewMode === "live" && (
         <iframe
-          key={`live-${page.url}-${popupsBlocked}`}
-          src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-proxy?url=${encodeURIComponent(page.url)}`}
+          key={`live-${page.url}-${popupsBlocked}-${privateRelay}`}
+          src={privateRelay
+            ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-proxy?url=${encodeURIComponent(page.url)}`
+            : page.url
+          }
           sandbox={`allow-same-origin allow-scripts allow-forms allow-modals${popupsBlocked ? "" : " allow-popups allow-popups-to-escape-sandbox"}`}
           allow="clipboard-write; encrypted-media"
           className="w-full h-full border-none"
           style={{ background: "#fff" }}
           title={page.title}
-          referrerPolicy="no-referrer"
+          referrerPolicy={privateRelay ? "no-referrer" : "strict-origin-when-cross-origin"}
         />
       )}
 
