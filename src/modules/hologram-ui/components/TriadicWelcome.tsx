@@ -106,29 +106,34 @@ export default function TriadicWelcome({
   if (isOverview) {
     return (
       <div
-        className="relative flex flex-col items-center justify-center h-full gap-8 py-8"
+        className="relative flex flex-col h-full px-1"
         style={{
           animation: animDirection === "enter"
             ? "triadic-slide-in-left 0.4s cubic-bezier(0.22, 1, 0.36, 1) both"
             : "triadic-slide-out-left 0.28s cubic-bezier(0.55, 0, 1, 0.45) both",
         }}
       >
-        {/* Greeting */}
-        <div className="text-center space-y-2">
+        {/* Greeting — generous top space */}
+        <div className="flex-1 flex flex-col justify-end pb-6 px-4">
           <h2
-            className="text-2xl font-light tracking-wide"
+            className="text-[clamp(22px,5vw,28px)] font-light leading-snug tracking-wide"
             style={{ fontFamily: P.fontDisplay, color: P.text }}
           >
-            How would you like to begin?
+            How would you like
+            <br />
+            to begin?
           </h2>
-          <p className="text-xs max-w-xs mx-auto" style={{ color: P.textDim }}>
+          <p
+            className="text-[13px] mt-3 leading-relaxed"
+            style={{ color: P.textDim }}
+          >
             Choose a mode of engagement
           </p>
         </div>
 
-        {/* Three phase cards */}
-        <div className="w-full max-w-md space-y-2 px-2">
-          {PHASE_ORDER.map((phase) => {
+        {/* Three phase cards — generous sizing */}
+        <div className="flex-[1.6] flex flex-col justify-start gap-2.5 px-2 pb-4">
+          {PHASE_ORDER.map((phase, i) => {
             const phaseDef = PHASES[phase];
             const desc = PHASE_DESCRIPTIONS[phase];
             const personaCount = personasByPhase[phase].filter(p => p.minStage <= creatorStage).length;
@@ -138,46 +143,48 @@ export default function TriadicWelcome({
               <button
                 key={phase}
                 onClick={() => selectPhase(phase)}
-                className="w-full group relative flex items-center gap-5 px-5 py-4 rounded-2xl text-left transition-all duration-500 hover:scale-[1.01]"
+                className="w-full group relative flex items-center gap-4 px-5 py-5 rounded-2xl text-left transition-all duration-500 hover:scale-[1.01]"
                 style={{
                   background: isCurrentPhase
-                    ? `hsla(${phaseDef.hue}, 30%, 35%, 0.12)`
-                    : "hsla(30, 8%, 22%, 0.4)",
+                    ? `hsla(${phaseDef.hue}, 30%, 35%, 0.14)`
+                    : "hsla(30, 8%, 22%, 0.45)",
                   border: `1px solid ${isCurrentPhase
-                    ? `hsla(${phaseDef.hue}, 30%, 50%, 0.2)`
+                    ? `hsla(${phaseDef.hue}, 30%, 50%, 0.22)`
                     : P.borderLight
                   }`,
+                  animation: "stagger-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
+                  animationDelay: `${200 + i * 100}ms`,
                 }}
               >
                 {/* Phase indicator line */}
                 <div
-                  className="w-[3px] h-10 rounded-full flex-shrink-0 transition-all duration-500"
+                  className="w-[3px] self-stretch rounded-full flex-shrink-0 transition-all duration-500"
                   style={{
-                    background: `hsla(${phaseDef.hue}, 35%, 55%, ${isCurrentPhase ? 0.7 : 0.3})`,
+                    background: `hsla(${phaseDef.hue}, 35%, 55%, ${isCurrentPhase ? 0.7 : 0.35})`,
                   }}
                 />
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-baseline gap-2.5">
                     <span
-                      className="text-base font-light tracking-wide capitalize"
+                      className="text-[17px] font-light tracking-wide capitalize"
                       style={{
                         fontFamily: P.fontDisplay,
-                        color: `hsla(${phaseDef.hue}, 28%, 75%, 0.9)`,
+                        color: `hsla(${phaseDef.hue}, 28%, 78%, 0.95)`,
                       }}
                     >
                       {phase}
                     </span>
                     <span
-                      className="text-[10px] tracking-[0.15em] uppercase"
+                      className="text-[10px] tracking-[0.18em] uppercase"
                       style={{ color: P.textDimmer }}
                     >
                       {desc.verb}
                     </span>
                   </div>
                   <p
-                    className="text-[11px] mt-1 leading-relaxed"
-                    style={{ color: P.textDim }}
+                    className="text-[12.5px] mt-1.5 leading-relaxed"
+                    style={{ color: P.textMuted }}
                   >
                     {desc.invitation}
                   </p>
@@ -186,7 +193,7 @@ export default function TriadicWelcome({
                 {/* Persona count */}
                 <div className="flex-shrink-0 text-right">
                   <span
-                    className="text-[10px] tabular-nums"
+                    className="text-[11px] tabular-nums"
                     style={{ color: P.textDimmer }}
                   >
                     {personaCount} {personaCount === 1 ? "guide" : "guides"}
@@ -198,9 +205,11 @@ export default function TriadicWelcome({
         </div>
 
         {/* Current selection indicator */}
-        <p className="text-[10px] tracking-wider" style={{ color: P.textDimmer }}>
-          Active · {selectedPersona.name}
-        </p>
+        <div className="flex justify-center pb-3">
+          <p className="text-[11px] tracking-wider" style={{ color: P.textDimmer }}>
+            Active · {selectedPersona.name}
+          </p>
+        </div>
 
         {/* First-time onboarding overlay */}
         {showOnboarding && (
