@@ -39,6 +39,9 @@ export function useFrameTilt(options: TiltOptions = {}): Transform3D {
     maxShift = 0,
   } = options;
 
+  // Fast bail: if maxTilt and maxShift are both 0, no work needed
+  const isDisabled = maxTilt === 0 && maxShift === 0 && zShift === 0;
+
   const [transform, setTransform] = useState<Transform3D>({ ...IDENTITY_TRANSFORM });
   const target = useRef({ rx: 0, ry: 0, nx: 0, ny: 0 });
   const current = useRef({ rx: 0, ry: 0, nx: 0, ny: 0 });
@@ -63,8 +66,11 @@ export function useFrameTilt(options: TiltOptions = {}): Transform3D {
   );
 
   useEffect(() => {
+    // Skip entire RAF loop and mouse listener when disabled
+    if (isDisabled) return;
     if (disableOnTouch && "ontouchstart" in window) return;
 
+    active.current = true;
     window.addEventListener("mousemove", onMove, { passive: true });
 
     const tick = () => {
@@ -93,7 +99,7 @@ export function useFrameTilt(options: TiltOptions = {}): Transform3D {
       cancelAnimationFrame(rafId.current);
       window.removeEventListener("mousemove", onMove);
     };
-  }, [onMove, smoothing, zShift, disableOnTouch, invert, maxShift]);
+  }, [onMove, smoothing, zShift, disableOnTouch, invert, maxShift, isDisabled]);
 
   return transform;
 }
