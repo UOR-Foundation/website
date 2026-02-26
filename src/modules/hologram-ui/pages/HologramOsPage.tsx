@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
+import HologramBrowser from "@/modules/hologram-ui/components/HologramBrowser";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
@@ -198,6 +199,7 @@ export default function HologramOsPage() {
   const isMobile = useIsMobile();
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [browserOpen, setBrowserOpen] = useState(false);
   const [pillGlow, setPillGlow] = useState(false);
   const [ambientState, setAmbientState] = useState<AmbientState>({ playing: false, loading: false, stationHue: "220", stationName: "" });
   const lumenPillDrag = useDraggablePosition({ storageKey: "hologram-pos:lumen-pill", defaultPos: { x: 0, y: 0 }, mode: "offset", snapSize: { width: 160, height: 44 } });
@@ -348,6 +350,7 @@ export default function HologramOsPage() {
           <DesktopOsSidebar
             onNewChat={() => setChatOpen(true)}
             onOpenChat={() => setChatOpen(true)}
+            onOpenBrowser={() => { setBrowserOpen(true); setChatOpen(false); }}
             onReplayGuide={() => setShortcutsOpen(true)}
             hintOpacity={mastery.hintOpacity}
           />
@@ -886,6 +889,17 @@ export default function HologramOsPage() {
       />
       {/* FrameDebugOverlay removed for cleaner UI */}
       <AmbientPlayer lumenOffset={chatOpen ? lumenPanel.width : 0} onStateChange={setAmbientState} />
+      {/* ── Browser Panel (full-bleed overlay) ── */}
+      {browserOpen && (
+        <OverlayFrame layer={3} open={browserOpen}>
+          <div
+            className="fixed inset-0 z-[500] flex"
+            style={{ background: "hsl(25, 8%, 10%)" }}
+          >
+            <HologramBrowser onClose={() => setBrowserOpen(false)} />
+          </div>
+        </OverlayFrame>
+      )}
       <SnapGuideOverlay />
     </HologramViewport>
   );
