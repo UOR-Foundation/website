@@ -15,7 +15,7 @@ import ReactMarkdown from "react-markdown";
 import type { AnnotatedClaim, EpistemicGrade } from "@/modules/ring-core/neuro-symbolic";
 import {
   ChevronDown, ChevronUp, Shield, ShieldAlert, AlertTriangle,
-  Lightbulb, ArrowRight, CheckCircle2, Info,
+  Lightbulb, ArrowRight, CheckCircle2, Info, ExternalLink,
 } from "lucide-react";
 
 // ── Grade Styling (warm tones matching Hologram palette) ──────────────────
@@ -63,6 +63,44 @@ const P = {
 } as const;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
+
+/** Turn a source string into a clickable search URL when it references a real source. */
+function getSourceUrl(source: string): string | null {
+  if (!source) return null;
+  const s = source.trim();
+  // Already a URL
+  if (/^https?:\/\//i.test(s)) return s;
+  // Internal/generated sources — not linkable
+  if (/^(scaffold|llm-generated|ring-core|internal|cache|local)/i.test(s)) return null;
+  if (s.length < 8) return null;
+  // Real-sounding sources → Google Scholar search
+  return `https://scholar.google.com/scholar?q=${encodeURIComponent(s)}`;
+}
+
+/** Render a source string, clickable when it references a real source. */
+function SourceLink({ source, color }: { source: string; color?: string }) {
+  const url = getSourceUrl(source);
+  if (!url) {
+    return <span style={{ color: color ?? P.textMuted }}>{source}</span>;
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 transition-opacity hover:opacity-80"
+      style={{
+        color: color ?? P.goldMuted,
+        textDecoration: "none",
+        borderBottom: `1px solid hsla(38, 30%, 50%, 0.2)`,
+      }}
+      title={`Search for: ${source}`}
+    >
+      {source}
+      <ExternalLink className="w-2.5 h-2.5 inline-block flex-shrink-0" style={{ opacity: 0.6 }} />
+    </a>
+  );
+}
 
 function isLowTrust(grade: EpistemicGrade): boolean {
   return grade === "C" || grade === "D";
@@ -175,7 +213,8 @@ function ClaimTooltip({ claim, onClose }: { claim: AnnotatedClaim; onClose: () =
       </div>
       <div className="px-3.5 py-2.5 space-y-1.5">
         <div className="text-[11px]" style={{ color: P.textMuted }}>
-          <span style={{ color: P.text }}>Source:</span> {claim.source}
+          <span style={{ color: P.text }}>Source: </span>
+          <SourceLink source={claim.source} />
         </div>
         <div className="text-[11px]" style={{ color: P.textMuted }}>
           <span style={{ color: P.text }}>Curvature:</span> {(claim.curvature * 100).toFixed(1)}%
