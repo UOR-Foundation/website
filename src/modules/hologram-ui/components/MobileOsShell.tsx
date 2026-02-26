@@ -255,9 +255,10 @@ export default function MobileOsShell() {
           <div
             className="w-px my-6"
             style={{
-              height: "clamp(28px, 6vh, 56px)",
+              height: "clamp(40px, 8vh, 72px)",
               background: "linear-gradient(to bottom, transparent, hsla(38, 20%, 65%, 0.25), transparent)",
-              animation: "breathe-line 4s ease-in-out infinite",
+              animation: "breathe-line 4s ease-in-out infinite, line-extend 1.8s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both",
+              transformOrigin: "top",
             }}
           />
 
@@ -265,7 +266,11 @@ export default function MobileOsShell() {
           <button
             onClick={handleLumenPress}
             className="relative flex items-center justify-center mb-4 active:scale-95 transition-transform duration-300"
-            style={{ width: 72, height: 72 }}
+            style={{
+              width: 72,
+              height: 72,
+              animation: "portal-emanate 0.8s cubic-bezier(0.22, 1, 0.36, 1) 2.4s both",
+            }}
             aria-label="Open LUMEN AI"
           >
             {/* Outer breathing ring */}
@@ -273,7 +278,7 @@ export default function MobileOsShell() {
               className="absolute inset-0 rounded-full"
               style={{
                 border: "1px solid hsla(38, 25%, 65%, 0.15)",
-                animation: "portal-breathe 4s ease-in-out infinite",
+                animation: "portal-breathe 4s ease-in-out infinite 3.2s",
               }}
             />
             {/* Secondary ring — offset phase */}
@@ -282,7 +287,7 @@ export default function MobileOsShell() {
               style={{
                 inset: -6,
                 border: "1px solid hsla(38, 25%, 65%, 0.06)",
-                animation: "portal-breathe 4s ease-in-out infinite 2s",
+                animation: "portal-breathe 4s ease-in-out infinite 5.2s",
               }}
             />
             {/* Inner glow */}
@@ -483,6 +488,15 @@ export default function MobileOsShell() {
         @keyframes breathe-line {
           0%, 100% { opacity: 0.3; transform: scaleY(1); }
           50% { opacity: 0.6; transform: scaleY(1.15); }
+        }
+        @keyframes line-extend {
+          0% { clip-path: inset(0 0 100% 0); opacity: 0; }
+          100% { clip-path: inset(0 0 0% 0); opacity: 1; }
+        }
+        @keyframes portal-emanate {
+          0% { transform: scale(0); opacity: 0; }
+          40% { transform: scale(0.15); opacity: 0.8; }
+          100% { transform: scale(1); opacity: 1; }
         }
         @keyframes gentle-float {
           0%, 100% { transform: translateY(0); opacity: 0.25; }
