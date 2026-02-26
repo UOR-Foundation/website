@@ -116,3 +116,11 @@ export {
 export type {
   ClaimSlot, ProofLookupResult, PGIResult, PGIConfig,
 } from "./proof-gated-inference";
+
+// ── Phase 8b: Proof Pre-Computation ─────────────────────────────────────
+export {
+  COMMON_PATTERNS, DOMAIN_TERMS, TERM_PAIRS,
+  generateQueryInstances, precomputeScaffold,
+  runPrecomputation, getPrecomputeStats,
+} from "./proof-precompute";
+export type { QueryPattern, PrecomputeResult, BatchResult } from "./proof-precompute";
