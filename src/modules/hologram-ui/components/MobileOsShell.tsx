@@ -220,7 +220,7 @@ export default function MobileOsShell() {
       <div className="relative z-10 flex flex-col h-full">
 
         {/* Top: Branding — whisper quiet */}
-        <div className="flex items-center justify-center pt-[env(safe-area-inset-top,16px)] mt-4">
+        <div className="flex items-center justify-center pt-[env(safe-area-inset-top,16px)] mt-8">
           <p
             className="text-[9px] tracking-[0.6em] uppercase"
             style={{ color: "hsla(38, 15%, 85%, 0.35)", fontFamily: P.font }}
