@@ -89,3 +89,14 @@ export {
   execReason, createReasoningSession, getTriAxisPanels,
 } from "./reason-command";
 export type { ReasoningSession } from "./reason-command";
+
+// ── v2 Neuro-Symbolic Co-Reasoning ──────────────────────────────────────
+export {
+  buildScaffold, measureCurvatureAndAnnotate, formatAnnotatedResponse,
+  overallGrade, buildRefinementPrompt, processResponse,
+  DEFAULT_CONFIG,
+} from "./neuro-symbolic";
+export type {
+  EpistemicGrade, AnnotatedClaim, SymbolicScaffold,
+  CurvatureReport, NeuroSymbolicResult, NeuroSymbolicConfig,
+} from "./neuro-symbolic";
