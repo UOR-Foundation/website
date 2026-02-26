@@ -579,6 +579,59 @@ export type Database = {
           },
         ]
       }
+      saved_responses: {
+        Row: {
+          claims: Json
+          converged: boolean
+          conversation_id: string | null
+          created_at: string
+          curvature: number
+          epistemic_grade: string
+          id: string
+          iterations: number
+          message_content: string
+          note: string | null
+          user_id: string
+          user_query: string | null
+        }
+        Insert: {
+          claims?: Json
+          converged?: boolean
+          conversation_id?: string | null
+          created_at?: string
+          curvature?: number
+          epistemic_grade?: string
+          id?: string
+          iterations?: number
+          message_content: string
+          note?: string | null
+          user_id: string
+          user_query?: string | null
+        }
+        Update: {
+          claims?: Json
+          converged?: boolean
+          conversation_id?: string | null
+          created_at?: string
+          curvature?: number
+          epistemic_grade?: string
+          id?: string
+          iterations?: number
+          message_content?: string
+          note?: string | null
+          user_id?: string
+          user_query?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_responses_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       uor_bindings: {
         Row: {
           address: string

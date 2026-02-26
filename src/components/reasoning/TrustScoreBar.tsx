@@ -5,7 +5,7 @@
  *   1. Chain of thought (per-claim grades + sources)
  *   2. "Improve Trust" actions (suggest sources, alternatives, refine question)
  *
- * Low-trust responses (C/D) are visually flagged with warm amber/red accents.
+ * Grade A/B responses can be bookmarked for future reference.
  */
 
 import { useState, useCallback } from "react";
@@ -13,6 +13,7 @@ import type { AnnotatedClaim, EpistemicGrade } from "@/modules/ring-core/neuro-s
 import {
   Shield, ShieldAlert, ChevronDown, ChevronUp,
   Search, RefreshCw, Lightbulb, ExternalLink, BookOpen,
+  Bookmark, BookmarkCheck,
 } from "lucide-react";
 
 // ── Grade Palette ──────────────────────────────────────────────────────────
@@ -36,20 +37,19 @@ const P = {
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface TrustScoreBarProps {
-  /** Overall grade for this response */
   grade: EpistemicGrade;
-  /** Per-claim annotations (optional — if present, chain of thought is available) */
   claims?: AnnotatedClaim[];
-  /** Number of D→I→A iterations */
   iterations?: number;
-  /** Whether reasoning converged */
   converged?: boolean;
-  /** Curvature measure */
   curvature?: number;
-  /** Callback to send a follow-up message to improve trust */
   onSendFollowUp?: (prompt: string) => void;
-  /** The original user query (for building follow-up prompts) */
   userQuery?: string;
+  /** Content of the AI message (needed for bookmarking) */
+  messageContent?: string;
+  /** Whether this response is already bookmarked */
+  isBookmarked?: boolean;
+  /** Callback to save/unsave this response */
+  onToggleBookmark?: () => void;
 }
 
 // ── Improve Trust Suggestions ──────────────────────────────────────────────
@@ -151,12 +151,16 @@ export default function TrustScoreBar({
   curvature,
   onSendFollowUp,
   userQuery,
+  messageContent,
+  isBookmarked,
+  onToggleBookmark,
 }: TrustScoreBarProps) {
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<"chain" | "improve">("chain");
 
   const g = GRADE[grade];
   const isLow = grade === "C" || grade === "D";
+  const isHighTrust = grade === "A" || grade === "B";
   const hasClaims = claims && claims.length > 0;
   const groundedCount = claims?.filter((c) => c.grade <= "B").length ?? 0;
   const totalClaims = claims?.length ?? 0;
@@ -210,6 +214,20 @@ export default function TrustScoreBar({
             : isLow ? "Ungraded response — tap to learn more" : "Trust score available"
           }
         </span>
+
+        {/* Bookmark (Grade A/B only) */}
+        {isHighTrust && onToggleBookmark && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleBookmark(); }}
+            className="p-0.5 rounded transition-colors hover:bg-white/[0.06]"
+            title={isBookmarked ? "Remove bookmark" : "Save this response"}
+          >
+            {isBookmarked
+              ? <BookmarkCheck className="w-3.5 h-3.5" style={{ color: GRADE.A.color }} />
+              : <Bookmark className="w-3.5 h-3.5" style={{ color: P.textDim }} />
+            }
+          </button>
+        )}
 
         {/* Expand chevron */}
         {expanded
