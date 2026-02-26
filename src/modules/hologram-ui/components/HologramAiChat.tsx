@@ -74,6 +74,7 @@ import {
 import { useAiChatHistory, type Conversation } from "@/modules/hologram-ui/hooks/useAiChatHistory";
 import { useContextProjection } from "@/modules/hologram-ui/hooks/useContextProjection";
 import { extractTopicTags } from "@/modules/hologram-ui/engine/extractTopicTags";
+import { useScreenContext } from "@/modules/hologram-ui/hooks/useScreenContext";
 
 // ── Palette constants ──────────────────────────────────────────────────────
 
@@ -162,6 +163,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const history = useAiChatHistory();
   const journal = useFocusJournal();
   const ctx = useContextProjection();
+  const screenCtx = useScreenContext();
 
   // Fire-and-forget: enrich context graph from conversation text
   const enrichContext = useCallback((userText: string, aiText: string) => {
@@ -537,6 +539,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             skillId,
             knowledgeDistillation: distillKnowledge(skillId),
             scaffold: scaffoldPrompt,
+            screenContext: screenCtx.getPromptContext(),
           }),
         });
 
@@ -1008,6 +1011,50 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         {/* ── Input Bar — bottom-anchored, centered ────────────────── */}
         <div className="flex justify-center px-4 pb-6 pt-2 flex-shrink-0 pointer-events-auto">
           <div className="w-full max-w-2xl">
+
+          {/* ── Context Awareness Chip ─────────────────────────── */}
+          {(() => {
+            const digest = screenCtx.getDigest();
+            const selectedText = digest.selectedText;
+            const topBeacon = digest.beacons[0];
+            const contextLabel = selectedText
+              ? `"${selectedText.slice(0, 60)}${selectedText.length > 60 ? "…" : ""}"`
+              : topBeacon
+                ? `${topBeacon.title}`
+                : null;
+            if (!contextLabel && !digest.hasContext) return null;
+            return (
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 mb-2 rounded-xl transition-all"
+                style={{
+                  background: "hsla(38, 20%, 20%, 0.3)",
+                  border: "1px solid hsla(38, 30%, 40%, 0.15)",
+                }}
+              >
+                <div
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{
+                    background: selectedText ? P.goldLight : P.goldMuted,
+                    boxShadow: selectedText ? `0 0 6px ${P.goldLight}` : "none",
+                  }}
+                />
+                <span
+                  className="text-[11px] tracking-wide truncate"
+                  style={{ color: P.textMuted, fontFamily: P.font }}
+                >
+                  {selectedText ? "Selected: " : "Viewing: "}
+                  <span style={{ color: P.text }}>{contextLabel}</span>
+                </span>
+                <span
+                  className="text-[10px] tracking-wider ml-auto shrink-0"
+                  style={{ color: P.textDimmer }}
+                >
+                  {digest.section}
+                </span>
+              </div>
+            );
+          })()}
+
           <div
             className="rounded-2xl overflow-visible transition-all"
             style={{

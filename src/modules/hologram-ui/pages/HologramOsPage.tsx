@@ -39,6 +39,7 @@ import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 import { useFocusJournal } from "@/modules/hologram-ui/hooks/useFocusJournal";
 import { useContextProjection } from "@/modules/hologram-ui/hooks/useContextProjection";
 import { useShortcutMastery } from "@/modules/hologram-ui/hooks/useShortcutMastery";
+import { useContextBeacon } from "@/modules/hologram-ui/hooks/useScreenContext";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -177,6 +178,19 @@ export default function HologramOsPage() {
   const [replayGuide, setReplayGuide] = useState(0);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const ctx = useContextProjection();
+
+  // Register context beacon so Lumini.AI knows what the user is viewing
+  useContextBeacon({
+    id: "hologram-home",
+    title: `Hologram Home — ${greeting}`,
+    summary: `User is on the Hologram OS welcome screen. Background: ${bgMode}. ${attention.preset === "focus" ? "Focus mode is active." : ""}`,
+    contentType: "dashboard",
+    metadata: {
+      creatorStage: triadicActivity.creatorStage,
+      focusMode: attention.preset === "focus",
+      bgMode,
+    },
+  });
   const contentTilt = useFrameTilt({ maxTilt: 0, smoothing: 0, maxShift: 0 });
   const canvasTilt = useFrameTilt({ maxTilt: 0, smoothing: 0, maxShift: 0 });
   const layerNav = useLayerNav();
