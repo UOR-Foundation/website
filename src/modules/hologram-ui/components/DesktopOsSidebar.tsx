@@ -41,15 +41,16 @@ function detectMac(): boolean {
 const MOD_KEY = detectMac() ? "⌘" : "Ctrl";
 
 /* ── Shortcut badge component ───────────────────────────────── */
-function ShortcutBadge({ keys }: { keys: string }) {
-  // Replace ⌘ placeholder with OS-appropriate modifier
+function ShortcutBadge({ keys, opacity = 1 }: { keys: string; opacity?: number }) {
+  if (opacity <= 0) return null;
   const display = keys.replace("⌘", MOD_KEY);
   return (
     <span
-      className="ml-auto text-[10px] tracking-[0.15em] uppercase font-medium opacity-40 shrink-0"
+      className="ml-auto text-[10px] tracking-[0.15em] uppercase font-medium shrink-0 transition-opacity duration-700"
       style={{
         fontFamily: S.font,
         color: S.textMuted,
+        opacity: opacity * 0.4,
       }}
     >
       {display}
@@ -78,6 +79,7 @@ interface DesktopOsSidebarProps {
   onNewChat: () => void;
   onOpenChat: () => void;
   onReplayGuide?: () => void;
+  hintOpacity?: (key: string) => number;
 }
 
 /* ── Component ─────────────────────────────────────────────── */
@@ -86,6 +88,7 @@ export default function DesktopOsSidebar({
   onToggle,
   onNewChat,
   onReplayGuide,
+  hintOpacity,
 }: DesktopOsSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -257,7 +260,7 @@ export default function DesktopOsSidebar({
             {!collapsed && (
               <>
                 <span className="text-[14px] font-light">Help</span>
-                <ShortcutBadge keys="⌘ /" />
+                <ShortcutBadge keys="⌘ /" opacity={hintOpacity?.("/") ?? 1} />
               </>
             )}
           </button>
@@ -276,7 +279,7 @@ export default function DesktopOsSidebar({
           {!collapsed && (
             <>
               <span className="text-[14px] font-light">Messages</span>
-              <ShortcutBadge keys="⌘ M" />
+              <ShortcutBadge keys="⌘ M" opacity={hintOpacity?.("m") ?? 1} />
             </>
           )}
         </button>
