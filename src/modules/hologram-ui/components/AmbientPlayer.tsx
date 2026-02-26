@@ -17,7 +17,6 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical } from "lucide-react";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
-import { SystemEventBus } from "@/modules/observable/system-event-bus";
 
 // ── Palette (consistent with OS) ──────────────────────────────────────────
 const P = {
@@ -45,13 +44,13 @@ export interface AmbientStation {
 }
 
 const STATIONS: AmbientStation[] = [
-  // Focus & Flow
+  // Focus & Flow — using highest quality AAC streams (256kbps)
   {
     id: "drone-zone",
     name: "Drone Zone",
     description: "Atmospheric textures with minimal beats",
     category: "focus",
-    streamUrl: "https://ice2.somafm.com/dronezone-128-mp3",
+    streamUrl: "https://ice2.somafm.com/dronezone-256-mp3",
     color: "220",
   },
   {
@@ -59,7 +58,7 @@ const STATIONS: AmbientStation[] = [
     name: "Deep Space One",
     description: "Deep ambient electronic & space music",
     category: "focus",
-    streamUrl: "https://ice2.somafm.com/deepspaceone-128-mp3",
+    streamUrl: "https://ice2.somafm.com/deepspaceone-256-mp3",
     color: "260",
   },
   {
@@ -67,7 +66,7 @@ const STATIONS: AmbientStation[] = [
     name: "Groove Salad",
     description: "Ambient & downtempo with a groove",
     category: "focus",
-    streamUrl: "https://ice2.somafm.com/groovesalad-128-mp3",
+    streamUrl: "https://ice2.somafm.com/groovesalad-256-mp3",
     color: "140",
   },
   {
@@ -75,7 +74,7 @@ const STATIONS: AmbientStation[] = [
     name: "Fluid",
     description: "Smooth instrumental jazz & bossa nova",
     category: "focus",
-    streamUrl: "https://ice2.somafm.com/fluid-128-mp3",
+    streamUrl: "https://ice2.somafm.com/fluid-256-mp3",
     color: "30",
   },
   // Nature & Calm
@@ -84,7 +83,7 @@ const STATIONS: AmbientStation[] = [
     name: "Mission Control",
     description: "NASA comm with ambient music",
     category: "nature",
-    streamUrl: "https://ice2.somafm.com/missioncontrol-128-mp3",
+    streamUrl: "https://ice2.somafm.com/missioncontrol-256-mp3",
     color: "200",
   },
   {
@@ -92,7 +91,7 @@ const STATIONS: AmbientStation[] = [
     name: "SleepBot",
     description: "Ambient soundscapes for deep relaxation",
     category: "nature",
-    streamUrl: "https://ice2.somafm.com/vaporwaves-128-mp3",
+    streamUrl: "https://ice2.somafm.com/vaporwaves-256-mp3",
     color: "280",
   },
 ];
@@ -139,10 +138,6 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   const [muted, setMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pillRef = useRef<HTMLDivElement>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const streamTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Draggable position — default to bottom-left
   const drag = useDraggablePosition({
@@ -162,7 +157,10 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   // Initialize audio element
   useEffect(() => {
     const audio = new Audio();
-    audio.crossOrigin = "anonymous";
+    // Don't set crossOrigin — SomaFM doesn't serve CORS headers.
+    // Visualization via Web Audio API requires same-origin, but
+    // reliable playback is more important. We use CSS animations
+    // for the equalizer instead.
     audio.volume = volume;
     audio.preload = "none";
     audioRef.current = audio;
@@ -170,32 +168,16 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     const onPlaying = () => {
       setLoading(false);
       setPlaying(true);
-      // Try to set up Web Audio API for visualization (non-critical)
-      tryConnectAnalyser(audio);
     };
     const onWaiting = () => setLoading(true);
     const onError = (e: Event) => {
-      console.warn("Ambient audio error:", (e.target as HTMLAudioElement)?.error);
+      const mediaError = (e.target as HTMLAudioElement)?.error;
+      console.warn("Ambient audio error:", mediaError?.message || mediaError);
       setLoading(false);
       setPlaying(false);
-      stopSystemStream();
-      // If CORS failed with crossOrigin="anonymous", retry without it
-      // (lose visualization but gain playback)
-      if (audio.crossOrigin === "anonymous" && audio.src) {
-        console.log("Retrying stream without CORS for playback...");
-        audio.crossOrigin = "";
-        const src = audio.src;
-        audio.src = "";
-        audio.load();
-        setTimeout(() => {
-          audio.src = src;
-          audio.load();
-          audio.play().catch(() => {});
-        }, 100);
-      }
     };
-    const onEnded = () => { setPlaying(false); stopSystemStream(); };
-    const onPause = () => { stopSystemStream(); };
+    const onEnded = () => { setPlaying(false); };
+    const onPause = () => {};
 
     audio.addEventListener("playing", onPlaying);
     audio.addEventListener("waiting", onWaiting);
@@ -212,64 +194,9 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
       audio.pause();
       audio.removeAttribute("src");
       audio.load();
-      stopSystemStream();
-      sourceNodeRef.current = null;
-      analyserRef.current = null;
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
-        audioCtxRef.current = null;
-      }
     };
   }, []);
 
-  // Try to connect Web Audio API for visualization — non-critical, graceful fallback
-  const tryConnectAnalyser = useCallback((audio: HTMLAudioElement) => {
-    stopSystemStream();
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new AudioContext();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === "suspended") ctx.resume();
-
-      // Only create source node once per audio element — it throws if called twice
-      if (!sourceNodeRef.current) {
-        const source = ctx.createMediaElementSource(audio);
-        const analyser = ctx.createAnalyser();
-        analyser.fftSize = 64;
-        source.connect(analyser);
-        analyser.connect(ctx.destination);
-        sourceNodeRef.current = source;
-        analyserRef.current = analyser;
-      }
-
-      const analyser = analyserRef.current!;
-      const freqData = new Uint8Array(analyser.frequencyBinCount);
-      const timeData = new Uint8Array(analyser.frequencyBinCount);
-
-      streamTimerRef.current = setInterval(() => {
-        if (!analyserRef.current) return;
-        analyserRef.current.getByteFrequencyData(freqData);
-        analyserRef.current.getByteTimeDomainData(timeData);
-        SystemEventBus.emit(
-          "hologram",
-          "ambient:frequency",
-          new Uint8Array(freqData),
-          new Uint8Array(timeData),
-        );
-      }, 200);
-    } catch (err) {
-      // Visualization failed (likely CORS) — audio still plays fine
-      console.info("Ambient visualizer unavailable (CORS), playback continues:", err);
-    }
-  }, []);
-
-  const stopSystemStream = useCallback(() => {
-    if (streamTimerRef.current) {
-      clearInterval(streamTimerRef.current);
-      streamTimerRef.current = null;
-    }
-  }, []);
 
   // Sync volume
   useEffect(() => {
@@ -283,18 +210,10 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
       const audio = audioRef.current;
       if (!audio) return;
 
-      // Stop current stream
-      stopSystemStream();
       audio.pause();
-
       setStation(s);
       setLoading(true);
       setPlaying(false);
-
-      // Unlock audio context immediately within user gesture
-      if (audioCtxRef.current?.state === "suspended") {
-        audioCtxRef.current.resume().catch(() => {});
-      }
 
       // Set source and play — immediate, within the user click gesture
       audio.src = s.streamUrl;
@@ -316,15 +235,10 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     if (!audio) return;
     if (playing || loading) {
       audio.pause();
-      stopSystemStream();
       setPlaying(false);
       setLoading(false);
     } else {
       setLoading(true);
-      // Resume audio context within user gesture
-      if (audioCtxRef.current?.state === "suspended") {
-        audioCtxRef.current.resume().catch(() => {});
-      }
       audio.src = station.streamUrl;
       audio.load();
       audio.play().catch((err) => {
@@ -559,19 +473,22 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
               boxShadow: "0 4px 20px hsla(0, 0%, 0%, 0.3)",
             }}
           >
-            {/* Frequency visualizer ring */}
+            {/* Breathing glow ring when playing */}
             <AnimatePresence>
               {playing && (
                 <motion.div
-                  key="freq-ring"
+                  key="glow-ring"
                   initial={{ opacity: 0, scale: 0.85 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.85 }}
                   transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                  className="absolute inset-0 pointer-events-none"
-                >
-                  <FrequencyRing analyserRef={analyserRef} hue={station.color} />
-                </motion.div>
+                  className="absolute rounded-full pointer-events-none"
+                  style={{
+                    inset: -4,
+                    border: `1.5px solid hsla(${station.color}, 40%, 55%, 0.25)`,
+                    animation: "ambient-glow-breathe 3s ease-in-out infinite",
+                  }}
+                />
               )}
             </AnimatePresence>
             {/* Drag grip */}
@@ -622,77 +539,6 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-// ── Frequency Visualizer Ring ─────────────────────────────────────────────
-function FrequencyRing({ analyserRef, hue }: { analyserRef: React.RefObject<AnalyserNode | null>; hue: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef = useRef<number>(0);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const SIZE = 160; // canvas logical size
-    canvas.width = SIZE;
-    canvas.height = SIZE;
-
-    const freqData = new Uint8Array(32);
-
-    const draw = () => {
-      rafRef.current = requestAnimationFrame(draw);
-      ctx.clearRect(0, 0, SIZE, SIZE);
-
-      const analyser = analyserRef.current;
-      if (!analyser) return;
-      analyser.getByteFrequencyData(freqData);
-
-      const cx = SIZE / 2;
-      const cy = SIZE / 2;
-      const baseRadius = 34;
-      const bars = freqData.length;
-
-      for (let i = 0; i < bars; i++) {
-        const angle = (i / bars) * Math.PI * 2 - Math.PI / 2;
-        const val = freqData[i] / 255;
-        const barLen = 4 + val * 18;
-        const alpha = 0.25 + val * 0.55;
-
-        const x1 = cx + Math.cos(angle) * baseRadius;
-        const y1 = cy + Math.sin(angle) * baseRadius;
-        const x2 = cx + Math.cos(angle) * (baseRadius + barLen);
-        const y2 = cy + Math.sin(angle) * (baseRadius + barLen);
-
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.strokeStyle = `hsla(${hue}, 50%, 60%, ${alpha})`;
-        ctx.lineWidth = 2.5;
-        ctx.lineCap = "round";
-        ctx.stroke();
-      }
-    };
-
-    rafRef.current = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [analyserRef, hue]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute pointer-events-none"
-      style={{
-        width: 160,
-        height: 160,
-        left: "50%",
-        top: "50%",
-        transform: "translate(-50%, -50%)",
-        opacity: 0.85,
-      }}
-    />
   );
 }
 
