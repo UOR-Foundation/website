@@ -640,14 +640,23 @@ export default function HologramOsPage() {
                 >
                   <button
                     onClick={() => { setChatPrompt(""); setChatOpen(true); }}
-                    className="group flex flex-col items-center transition-all duration-700 hover:scale-[1.03]"
+                    className="group flex flex-col items-center transition-all duration-700"
                     style={{ cursor: "pointer", background: "none", border: "none", gap: isFocus ? "clamp(20px, 3vh, 36px)" : "clamp(16px, 2.5vh, 28px)" }}
                   >
                     {/* Breathing glyph — the heart of Lumen */}
                     <div className="relative flex items-center justify-center" style={{ width: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)", height: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)" }}>
+                      {/* Hover bloom — outer aura that appears on hover */}
+                      <div
+                        className="absolute rounded-full opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-[1.6] transition-all duration-[1200ms] ease-out"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          border: `1px solid ${bgMode === "white" ? "hsla(38, 30%, 50%, 0.08)" : "hsla(38, 25%, 75%, 0.06)"}`,
+                        }}
+                      />
                       {/* Outer ring — soft pulse */}
                       <div
-                        className="absolute rounded-full transition-all duration-700 group-hover:scale-125"
+                        className="absolute rounded-full transition-all duration-[900ms] ease-out group-hover:scale-110"
                         style={{
                           width: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
                           height: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
@@ -657,7 +666,7 @@ export default function HologramOsPage() {
                       />
                       {/* Inner dot — alive */}
                       <div
-                        className="rounded-full transition-all duration-700 group-hover:scale-110"
+                        className="lumen-dot-hover rounded-full transition-all duration-[900ms] ease-out"
                         style={{
                           width: isFocus ? "clamp(8px, 0.8vw, 12px)" : "clamp(6px, 0.6vw, 10px)",
                           height: isFocus ? "clamp(8px, 0.8vw, 12px)" : "clamp(6px, 0.6vw, 10px)",

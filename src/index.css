@@ -421,6 +421,11 @@
   100% { transform: scaleY(1); opacity: 0.15; }
 }
 
+/* Lumen dot hover glow — warm bloom */
+.group:hover .lumen-dot-hover {
+  box-shadow: 0 0 32px hsla(38, 50%, 55%, 0.55), 0 0 64px hsla(38, 50%, 55%, 0.2) !important;
+}
+
 @keyframes ring-breathe {
   0%, 100% { opacity: 0.5; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.06); }
