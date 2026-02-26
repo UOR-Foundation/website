@@ -15,13 +15,14 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical, BarChart3, Database, Activity, Hexagon } from "lucide-react";
+import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical, BarChart3, Database, Activity, Hexagon, Orbit } from "lucide-react";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
 import { getAudioEngine, type AudioEngineState, FeatureAggregator, generateTrackCid, persistAnalysis } from "@/modules/audio";
 import type { HarmonicLensFrame } from "@/modules/audio";
 import StratumVisualizer from "./StratumVisualizer";
 import CurvatureTimeSeries from "./CurvatureTimeSeries";
 import GenreRadar from "./GenreRadar";
+import ObservableSpaceRadar from "./ObservableSpaceRadar";
 
 // ── Palette (consistent with OS) ──────────────────────────────────────────
 const P = {
@@ -144,6 +145,7 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   const [showVisualizer, setShowVisualizer] = useState(false);
   const [showCurvature, setShowCurvature] = useState(false);
   const [showGenre, setShowGenre] = useState(false);
+  const [showObservable, setShowObservable] = useState(false);
   const [cacheStats, setCacheStats] = useState({ entries: 0, totalBytes: 0, maxBytes: 1, utilization: 0 });
   const [currentFrame, setCurrentFrame] = useState<HarmonicLensFrame | null>(null);
   const engineRef = useRef(getAudioEngine());
@@ -366,6 +368,14 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
                   <Hexagon className="w-3.5 h-3.5" />
                 </button>
                 <button
+                  onClick={() => setShowObservable((v) => !v)}
+                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-white/[0.08]"
+                  style={{ color: showObservable ? P.goldLight : P.textMuted }}
+                  title="Observable Space (7 Metrics)"
+                >
+                  <Orbit className="w-3.5 h-3.5" />
+                </button>
+                <button
                   onClick={() => setExpanded(false)}
                   className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-white/[0.08]"
                   style={{ color: P.textMuted }}
@@ -545,6 +555,13 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
             {/* Genre Fingerprint Radar */}
             <GenreRadar
               visible={showGenre && (playing || loading)}
+              stationHue={station.color}
+              frame={currentFrame}
+            />
+
+            {/* Observable Space — 7 UOR Metrics */}
+            <ObservableSpaceRadar
+              visible={showObservable && (playing || loading)}
               stationHue={station.color}
               frame={currentFrame}
             />
