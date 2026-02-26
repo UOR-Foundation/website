@@ -662,8 +662,8 @@ export default function HologramOsPage() {
                 letterSpacing: "0.15em",
                 textTransform: "uppercase" as const,
                 color: bgMode === "white"
-                  ? "hsla(0, 0%, 40%, 0.35)"
-                  : "hsla(0, 0%, 100%, 0.2)",
+                  ? "hsla(30, 10%, 35%, 0.55)"
+                  : "hsla(38, 15%, 85%, 0.55)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
@@ -677,8 +677,8 @@ export default function HologramOsPage() {
                 height: "2px",
                 borderRadius: "50%",
                 background: bgMode === "white"
-                  ? "hsla(0, 0%, 40%, 0.2)"
-                  : "hsla(0, 0%, 100%, 0.12)",
+                  ? "hsla(30, 10%, 35%, 0.3)"
+                  : "hsla(38, 15%, 85%, 0.3)",
               }}
             />
             <button
@@ -690,8 +690,8 @@ export default function HologramOsPage() {
                 letterSpacing: "0.15em",
                 textTransform: "uppercase" as const,
                 color: bgMode === "white"
-                  ? "hsla(0, 0%, 40%, 0.35)"
-                  : "hsla(0, 0%, 100%, 0.2)",
+                  ? "hsla(30, 10%, 35%, 0.55)"
+                  : "hsla(38, 15%, 85%, 0.55)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
