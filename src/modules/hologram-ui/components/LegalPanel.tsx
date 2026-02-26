@@ -214,15 +214,15 @@ const InlineLink = ({ href, children, P }: { href: string; children: React.React
 );
 
 const Section = ({ title, children, P, fontDisplay }: { title: string; children: React.ReactNode; P: ReturnType<typeof palette>; fontDisplay: string }) => (
-  <section className="mb-10">
+  <section className="mb-12">
     <h2
-      className="text-base font-light tracking-wide mb-4"
+      className="text-lg font-light tracking-wide mb-5"
       style={{ fontFamily: fontDisplay, color: P.heading }}
     >
       {title}
     </h2>
     <div
-      className="space-y-3 text-[14px] leading-[1.9]"
+      className="space-y-4 text-[16px] leading-[2]"
       style={{ color: P.text }}
     >
       {children}
@@ -236,219 +236,268 @@ function PrivacyContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fon
   return (
     <article>
       <h1
-        className="text-xl font-light tracking-wide mb-2"
+        className="text-2xl font-light tracking-wide mb-2"
         style={{ fontFamily: fontDisplay, color: P.heading }}
       >
         Privacy Policy
       </h1>
-      <p className="text-[12px] tracking-wider uppercase mb-10" style={{ color: P.textMuted }}>
+      <p className="text-[13px] tracking-wider uppercase mb-5" style={{ color: P.textMuted }}>
         Last updated: February 2026
       </p>
+      <p
+        className="text-[16px] leading-[2] mb-12"
+        style={{ color: P.text }}
+      >
+        Your privacy is not a feature we offer — it is the foundation Hologram is built on.
+        This policy explains, in plain language, what information we collect, how we use it,
+        and the rights you have over it.
+      </p>
 
-      <Section title="1. Information We Collect" P={P} fontDisplay={fontDisplay}>
+      <Section title="1. What We Collect" P={P} fontDisplay={fontDisplay}>
         <p>
-          We collect information you provide directly, such as when you create an account,
-          use our services, or communicate with us. This may include your name, email address,
-          and usage data.
+          When you create an account, we collect the information you provide — such as your
+          email address and display name. This is used solely to identify you and secure
+          your account.
         </p>
         <p>
-          We also collect certain information automatically when you use our platform,
-          including device information, log data, and interaction patterns to improve
-          your experience.
+          As you use Hologram, we collect basic usage information — such as when you last
+          signed in and which features you interact with. This helps us understand how the
+          platform is being used so we can improve it.
+        </p>
+        <p>
+          We do not collect information from third parties, and we do not build profiles
+          about you based on your activity elsewhere on the internet.
         </p>
       </Section>
 
-      <Section title="2. How We Use Your Information" P={P} fontDisplay={fontDisplay}>
+      <Section title="2. How We Use It" P={P} fontDisplay={fontDisplay}>
         <p>
-          Your information helps us provide, maintain, and improve our services. We use it to
-          personalise your experience, communicate with you, and ensure the security of our platform.
+          We use your information for three purposes:
+        </p>
+        <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>To run the platform</strong> — authenticating your identity, storing your data, and keeping your space secure.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>To improve your experience</strong> — understanding which features are useful and which need work.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>To communicate with you</strong> — sending important updates about your account or the platform, never marketing.</span>
+          </li>
+        </ul>
+      </Section>
+
+      <Section title="3. What We Never Do" P={P} fontDisplay={fontDisplay}>
+        <p>
+          We do not sell your data. We do not share it with advertisers. We do not use
+          third-party trackers. We do not build behavioural profiles. We do not monetise
+          your personal information in any way.
         </p>
         <p>
-          We do not sell your personal information. We may share aggregated, anonymised data
-          for research and analytical purposes.
+          There is no advertising on Hologram, and there never will be.
         </p>
       </Section>
 
-      <Section title="3. Data Security" P={P} fontDisplay={fontDisplay}>
+      <Section title="4. How We Protect It" P={P} fontDisplay={fontDisplay}>
         <p>
-          We implement appropriate technical and organisational measures to protect your
-          personal data against unauthorised access, alteration, disclosure, or destruction.
+          Your data is protected using industry-standard encryption, both when it is stored
+          and when it is transmitted. Access to our systems is tightly controlled and
+          regularly audited.
+        </p>
+        <p>
+          Your identity within Hologram is built on a unique, permanent address that only
+          you control. This means even we cannot impersonate you or access your private space
+          without your permission.
         </p>
       </Section>
 
-      <Section title="4. Your Rights" P={P} fontDisplay={fontDisplay}>
+      <Section title="5. Your Rights" P={P} fontDisplay={fontDisplay}>
         <p>
-          You have the right to access, correct, or delete your personal data at any time.
-          You may also request a copy of the data we hold about you or withdraw your consent
-          to processing.
+          You have the right to:
         </p>
+        <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>See your data</strong> — request a complete copy of everything we store about you.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Correct your data</strong> — update or fix any information that is inaccurate.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Delete your data</strong> — remove your account and all associated information permanently.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Withdraw consent</strong> — stop any data processing at any time, with immediate effect.</span>
+          </li>
+        </ul>
       </Section>
 
-      <Section title="5. Contact" P={P} fontDisplay={fontDisplay}>
+      <Section title="6. Contact Us" P={P} fontDisplay={fontDisplay}>
         <p>
-          If you have questions about this Privacy Policy, please reach out through our
-          community channels or contact us directly.
+          If you have any questions about this policy or how your data is handled, please
+          reach out through our community channels. We are committed to being transparent
+          and responsive.
         </p>
       </Section>
     </article>
   );
 }
-
 // ── Terms of Use (template) ────────────────────────────────────────────────
 
 function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontDisplay: string }) {
   return (
     <article>
       <h1
-        className="text-xl font-light tracking-wide mb-2"
+        className="text-2xl font-light tracking-wide mb-2"
         style={{ fontFamily: fontDisplay, color: P.heading }}
       >
         Your Terms
       </h1>
-      <p className="text-[12px] tracking-wider uppercase mb-4" style={{ color: P.textMuted }}>
+      <p className="text-[13px] tracking-wider uppercase mb-5" style={{ color: P.textMuted }}>
         Last updated: February 2026
       </p>
       <p
-        className="text-[13px] leading-[1.9] mb-10 italic"
-        style={{ color: P.textMuted }}
+        className="text-[16px] leading-[2] mb-12"
+        style={{ color: P.text }}
       >
-        Hologram is built on a simple principle: you define the terms under which your data is
-        shared — not us, not applications, not third parties. This approach is inspired by and
-        aligned with the{" "}
-        <InlineLink href="https://myterms.info/" P={P}>IEEE 7012-2025 standard (MyTerms)</InlineLink>,
-        a global framework for machine-readable personal privacy terms.
+        Most platforms ask you to accept their terms. Hologram works differently.
+        Here, you set the terms — and applications must agree to yours before they
+        can access your data. This idea is inspired by a global privacy standard called{" "}
+        <InlineLink href="https://myterms.info/" P={P}>MyTerms</InlineLink>{" "}
+        (formally known as IEEE 7012), which puts individuals in control of how their
+        personal information is shared.
       </p>
 
-      <Section title="1. Your Space, Your Rules" P={P} fontDisplay={fontDisplay}>
+      <Section title="1. You Own Your Space" P={P} fontDisplay={fontDisplay}>
         <p>
-          Hologram provides you with a personal, private space. When you create an identity here,
-          you gain complete ownership over three things:
+          When you join Hologram, you get a private, personal space. Think of it as your
+          digital home. Inside this space, you have complete control over three things:
         </p>
-        <ul className="space-y-2 pl-1 mt-2" style={{ listStyle: "none" }}>
-          <li className="flex gap-2 items-start">
-            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Your Identity</strong> — A cryptographically unique address derived from your credentials, belonging solely to you. No platform can revoke or reassign it.</span>
+        <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Your identity</strong> — a unique, permanent address that belongs to you and only you. No company can take it away or pretend to be you.</span>
           </li>
-          <li className="flex gap-2 items-start">
-            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Your Data</strong> — Everything you create, store, or generate within Hologram is yours. We do not mine, sell, or monetise your personal data.</span>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Your data</strong> — everything you create, save, or do within Hologram belongs to you. We never sell it, mine it, or use it for advertising.</span>
           </li>
-          <li className="flex gap-2 items-start">
-            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Your Network</strong> — The relationships and connections you build are private by default. You choose who sees what, and under what conditions.</span>
-          </li>
-        </ul>
-      </Section>
-
-      <Section title="2. How Terms Work in Hologram" P={P} fontDisplay={fontDisplay}>
-        <p>
-          Unlike traditional platforms where you accept a company's terms, Hologram inverts this
-          relationship. You define your own terms as structured, machine-readable objects —
-          following the principles of the{" "}
-          <InlineLink href="https://myterms.info/ieee7012-standards/" P={P}>IEEE 7012 standard</InlineLink>.
-          These terms travel with your identity and govern every interaction.
-        </p>
-        <p>
-          When an application, service, or agent wants to interact with you or access your data,
-          it must first accept <em style={{ color: P.tabActive }}>your</em> terms — not the other way around.
-          This creates a transparent, equitable exchange where you always know what is being
-          shared, with whom, and why.
-        </p>
-      </Section>
-
-      <Section title="3. What You Control" P={P} fontDisplay={fontDisplay}>
-        <p>
-          Through your{" "}
-          <InlineLink href="/your-space/preferences" P={P}>personal preferences</InlineLink>,
-          you can define:
-        </p>
-        <ul className="space-y-2 pl-1 mt-2" style={{ listStyle: "none" }}>
-          <li className="flex gap-2 items-start">
-            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Data sharing boundaries</strong> — Which categories of personal data (if any) may be shared with applications and services.</span>
-          </li>
-          <li className="flex gap-2 items-start">
-            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Interaction permissions</strong> — Whether agents and services may contact you, and under what circumstances.</span>
-          </li>
-          <li className="flex gap-2 items-start">
-            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Retention policies</strong> — How long any shared data may be retained by third parties before it must be deleted.</span>
-          </li>
-          <li className="flex gap-2 items-start">
-            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Consent withdrawal</strong> — The ability to revoke access at any time, with immediate effect across all connected services.</span>
-          </li>
-        </ul>
-        <p className="mt-3">
-          These preferences are stored as content-addressed, cryptographically signed objects within
-          the{" "}
-          <InlineLink href="/standard" P={P}>UOR Framework</InlineLink>,
-          ensuring they are tamper-proof and verifiable.
-        </p>
-      </Section>
-
-      <Section title="4. No Surveillance" P={P} fontDisplay={fontDisplay}>
-        <p>
-          Hologram does not track you across sessions. There are no third-party trackers, no
-          behavioural profiling, and no advertising identifiers. Your activity within your space
-          is yours alone — visible only to you unless you explicitly choose to share it.
-        </p>
-        <p>
-          This is not a policy choice that can be reversed. It is an architectural guarantee,
-          built into the protocol layer of the platform.
-        </p>
-      </Section>
-
-      <Section title="5. The Hologram Ecosystem" P={P} fontDisplay={fontDisplay}>
-        <p>
-          Applications and experiences within the Hologram ecosystem operate under a simple
-          contract: they must respect your terms to participate. If an application cannot
-          operate within your stated boundaries, it will not have access to your data.
-        </p>
-        <p>
-          This creates an environment where trust is the default — not something extracted
-          through lengthy legal documents that no one reads.
-        </p>
-      </Section>
-
-      <Section title="6. Implementation" P={P} fontDisplay={fontDisplay}>
-        <p>
-          Your terms are implemented through three layers:
-        </p>
-        <ul className="space-y-2 pl-1 mt-2" style={{ listStyle: "none" }}>
-          <li className="flex gap-2 items-start">
-            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>1</span>
-            <span><strong style={{ color: P.heading }}>Identity Layer</strong> — Your sovereign identity, derived from the UOR Framework, serves as the root of all permissions.</span>
-          </li>
-          <li className="flex gap-2 items-start">
-            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>2</span>
-            <span><strong style={{ color: P.heading }}>Terms Layer</strong> — Your preferences are canonicalised using URDNA2015 and hashed via SHA-256, creating an immutable, machine-readable terms object aligned with IEEE 7012.</span>
-          </li>
-          <li className="flex gap-2 items-start">
-            <span style={{ color: P.tabActive, fontSize: "8px", marginTop: "7px" }}>3</span>
-            <span><strong style={{ color: P.heading }}>Enforcement Layer</strong> — Every data exchange is gated by your terms object. Services must present a valid acceptance receipt before access is granted.</span>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Your connections</strong> — the people, apps, and services you connect with are private by default. You decide who can see what.</span>
           </li>
         </ul>
       </Section>
 
-      <Section title="7. Your Preferences" P={P} fontDisplay={fontDisplay}>
+      <Section title="2. You Set the Rules" P={P} fontDisplay={fontDisplay}>
         <p>
-          You can review and update your personal terms at any time from your{" "}
+          On most platforms, you click "I agree" to a long legal document you probably
+          did not read. That document protects the company, not you.
+        </p>
+        <p>
+          Hologram reverses this. You write the rules. When an app or service wants to
+          work with your data, it must agree to <em style={{ color: P.tabActive }}>your</em> terms
+          first. If it cannot meet your conditions, it simply does not get access. This
+          follows the principles of the{" "}
+          <InlineLink href="https://myterms.info/ieee7012-standards/" P={P}>MyTerms standard</InlineLink>,
+          which was designed to make personal data exchange transparent and fair.
+        </p>
+      </Section>
+
+      <Section title="3. What You Decide" P={P} fontDisplay={fontDisplay}>
+        <p>
+          In your{" "}
+          <InlineLink href="/your-space/preferences" P={P}>Preferences</InlineLink>,
+          you can set clear boundaries around:
+        </p>
+        <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>What you share</strong> — choose exactly which types of information apps can see. You can share as much or as little as you like.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Who can contact you</strong> — decide whether services and agents are allowed to reach out to you, and under what conditions.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>How long data is kept</strong> — set time limits on how long anyone else can hold onto information you have shared with them.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span><strong style={{ color: P.heading }}>Taking it back</strong> — withdraw access at any time. When you do, every connected service is notified immediately.</span>
+          </li>
+        </ul>
+      </Section>
+
+      <Section title="4. No Tracking, Ever" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Hologram does not track your behaviour. There are no hidden trackers watching
+          what you click, no profiles being built about your habits, and no advertising
+          identifiers following you around.
+        </p>
+        <p>
+          This is not just a policy — it is built into the way the platform works. It
+          cannot be quietly changed or reversed.
+        </p>
+      </Section>
+
+      <Section title="5. Apps Must Earn Your Trust" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Every application and experience within Hologram operates under a simple rule:
+          it must respect your terms to participate. If an app cannot work within the
+          boundaries you have set, it will not have access to your data. Full stop.
+        </p>
+        <p>
+          This means trust is the default — not something buried in fine print.
+        </p>
+      </Section>
+
+      <Section title="6. How It Works Behind the Scenes" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Your terms are enforced automatically through three layers:
+        </p>
+        <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>1</span>
+            <span><strong style={{ color: P.heading }}>Your identity</strong> — your unique Hologram address acts as the master key. Every permission flows from it.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>2</span>
+            <span><strong style={{ color: P.heading }}>Your terms</strong> — your preferences are converted into a secure, tamper-proof record that machines can read and enforce automatically.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>3</span>
+            <span><strong style={{ color: P.heading }}>Enforcement</strong> — before any app or service can access your data, it must prove it has accepted your current terms. No exceptions.</span>
+          </li>
+        </ul>
+      </Section>
+
+      <Section title="7. Updating Your Preferences" P={P} fontDisplay={fontDisplay}>
+        <p>
+          You can review and change your terms whenever you like from your{" "}
           <InlineLink href="/your-space/preferences" P={P}>Preferences</InlineLink>{" "}
-          section within Your Space. Changes take effect immediately across all connected
-          applications and services.
+          page. Any changes take effect immediately across all connected applications
+          and services — no waiting, no delays.
         </p>
       </Section>
 
-      <Section title="8. Open Standard" P={P} fontDisplay={fontDisplay}>
+      <Section title="8. Built on an Open Standard" P={P} fontDisplay={fontDisplay}>
         <p>
-          This approach is built on open standards. The privacy terms standard is
-          documented at{" "}
-          <InlineLink href="https://myterms.info/" P={P}>myterms.info</InlineLink>.
+          The way Hologram handles your terms is based on{" "}
+          <InlineLink href="https://myterms.info/" P={P}>MyTerms</InlineLink>,
+          a published global standard for personal privacy. It is not proprietary
+          technology — it is an open framework that anyone can adopt.
         </p>
         <p>
-          We believe privacy should not be a feature — it should be the foundation.
+          We believe privacy should not be a feature you hope for. It should be something
+          you can see, control, and trust.
         </p>
       </Section>
     </article>
