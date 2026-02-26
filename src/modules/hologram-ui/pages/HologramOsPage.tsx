@@ -144,8 +144,8 @@ export default function HologramOsPage() {
   const attention = useAttentionMode();
   const [replayGuide, setReplayGuide] = useState(0);
   const ctx = useContextProjection();
-  const contentTilt = useFrameTilt({ maxTilt: 2.5, smoothing: 0.06 });
-  const canvasTilt = useFrameTilt({ maxTilt: 1.2, smoothing: 0.04, invert: true, maxShift: 12 });
+  const contentTilt = useFrameTilt({ maxTilt: 0, smoothing: 0, maxShift: 0 });
+  const canvasTilt = useFrameTilt({ maxTilt: 0, smoothing: 0, maxShift: 0 });
   const layerNav = useLayerNav();
 
   // Derive top interests for contextual suggestions (max 3)
