@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Globe, ArrowLeft, ArrowRight, RotateCw, X, ExternalLink, Loader2, Search } from "lucide-react";
+import { Globe, ArrowLeft, ArrowRight, RotateCw, X, ExternalLink, Loader2, Search, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { firecrawlApi } from "@/lib/api/firecrawl";
 
@@ -34,7 +34,12 @@ interface HistoryEntry {
   links: string[];
 }
 
-export default function HologramBrowser({ onClose }: { onClose: () => void }) {
+interface BrowserProps {
+  onClose: () => void;
+  onSendToLumen?: (context: { title: string; url: string; markdown: string }) => void;
+}
+
+export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps) {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -185,6 +190,30 @@ export default function HologramBrowser({ onClose }: { onClose: () => void }) {
             />
           </div>
         </form>
+
+        {/* Send to Lumen */}
+        {page && onSendToLumen && (
+          <button
+            onClick={() => onSendToLumen({ title: page.title, url: page.url, markdown: page.markdown })}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-light transition-all duration-200"
+            style={{
+              color: P.gold,
+              border: `1px solid ${P.border}`,
+              background: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "hsla(38, 25%, 30%, 0.2)";
+              e.currentTarget.style.borderColor = P.borderFocus;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.borderColor = P.border;
+            }}
+          >
+            <Sparkles className="w-3 h-3" />
+            Send to Lumen
+          </button>
+        )}
 
         {/* Open externally */}
         {page && (

@@ -896,7 +896,15 @@ export default function HologramOsPage() {
             className="fixed inset-0 z-[500] flex"
             style={{ background: "hsl(25, 8%, 10%)" }}
           >
-            <HologramBrowser onClose={() => setBrowserOpen(false)} />
+            <HologramBrowser
+              onClose={() => setBrowserOpen(false)}
+              onSendToLumen={({ title, url, markdown }) => {
+                const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) + "\n\n…[truncated]" : markdown;
+                setChatPrompt(`I'm reading "${title}" (${url}). Here's the page content:\n\n${truncated}\n\nPlease summarize the key points and insights from this page.`);
+                setBrowserOpen(false);
+                setChatOpen(true);
+              }}
+            />
           </div>
         </OverlayFrame>
       )}
