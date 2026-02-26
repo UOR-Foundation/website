@@ -654,28 +654,20 @@ export default function HologramOsPage() {
                   >
                     {/* Breathing glyph — the heart of Lumen */}
                     <div className="relative flex items-center justify-center" style={{ width: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)", height: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)" }}>
-                      {/* Hover bloom — outer aura that appears on hover */}
+                      {/* Outer ring — gentle hover: just a quiet opacity lift */}
                       <div
-                        className="absolute rounded-full opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-[1.6] transition-all duration-[1200ms] ease-out"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          border: `1px solid ${bgMode === "white" ? "hsla(38, 30%, 50%, 0.08)" : "hsla(38, 25%, 75%, 0.06)"}`,
-                        }}
-                      />
-                      {/* Outer ring — soft pulse */}
-                      <div
-                        className="absolute rounded-full transition-all duration-[900ms] ease-out group-hover:scale-110"
+                        className="absolute rounded-full transition-all duration-[1400ms] ease-out group-hover:opacity-100"
                         style={{
                           width: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
                           height: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
+                          opacity: 0.7,
                           border: `1px solid ${bgMode === "white" ? "hsla(38, 30%, 50%, 0.2)" : "hsla(38, 25%, 75%, 0.2)"}`,
                           animation: "lumen-ring-enter 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, ambient-glow-breathe 6s ease-in-out 3s infinite",
                         }}
                       />
-                      {/* Inner dot — alive */}
+                      {/* Inner dot — on hover, glow warms slightly */}
                       <div
-                        className="lumen-dot-hover rounded-full transition-all duration-[900ms] ease-out"
+                        className="lumen-dot-hover rounded-full transition-all duration-[1400ms] ease-out"
                         style={{
                           width: isFocus ? "clamp(8px, 0.8vw, 12px)" : "clamp(6px, 0.6vw, 10px)",
                           height: isFocus ? "clamp(8px, 0.8vw, 12px)" : "clamp(6px, 0.6vw, 10px)",
@@ -692,7 +684,7 @@ export default function HologramOsPage() {
 
                     {/* Name — Lumen */}
                     <span
-                      className="tracking-[0.35em] uppercase transition-all duration-500 group-hover:tracking-[0.45em]"
+                      className="tracking-[0.35em] uppercase transition-all duration-700"
                       style={{
                         fontFamily: "'DM Sans', system-ui, sans-serif",
                         fontWeight: 400,
