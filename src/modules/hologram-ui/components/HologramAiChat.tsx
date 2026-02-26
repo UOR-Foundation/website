@@ -15,7 +15,7 @@ import type { TriadicPhase, CreatorStage } from "@/modules/hologram-ui/sovereign
 import {
   X, Send, Loader2, Cpu, Sparkles, MessageSquare,
   Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap, User, Lock,
-  Eye, EyeOff, BookmarkCheck,
+  Eye, EyeOff, BookmarkCheck, Settings, History, BookOpen, Link2, Camera, Paperclip, ImagePlus,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import TriadicWelcome from "@/modules/hologram-ui/components/TriadicWelcome";
@@ -167,7 +167,11 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const modelPickerRef = useRef<HTMLDivElement>(null);
+  const inputMenuRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const acceleratorRef = useRef(getAccelerator());
+  const [showInputMenu, setShowInputMenu] = useState(false);
+  const [attachments, setAttachments] = useState<{ name: string; type: string; url: string }[]>([]);
 
   const ai = getAiEngine();
   const savedResponses = useSavedResponses();
@@ -1347,6 +1351,40 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               boxShadow: "0 4px 20px hsla(25, 10%, 5%, 0.4)",
             }}
           >
+            {/* Attachment preview strip */}
+            {attachments.length > 0 && (
+              <div className="flex items-center gap-2 px-4 pt-3 pb-1 overflow-x-auto">
+                {attachments.map((att, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs shrink-0 group"
+                    style={{
+                      background: "hsla(30, 8%, 20%, 0.6)",
+                      border: `1px solid ${P.borderLight}`,
+                      color: P.text,
+                      fontFamily: P.font,
+                    }}
+                  >
+                    {att.type === "image" ? (
+                      <ImagePlus className="w-3.5 h-3.5" style={{ color: P.goldMuted }} />
+                    ) : att.type === "link" ? (
+                      <Link2 className="w-3.5 h-3.5" style={{ color: P.goldMuted }} />
+                    ) : (
+                      <Paperclip className="w-3.5 h-3.5" style={{ color: P.goldMuted }} />
+                    )}
+                    <span className="max-w-[120px] truncate">{att.name}</span>
+                    <button
+                      onClick={() => setAttachments(prev => prev.filter((_, i) => i !== idx))}
+                      className="w-4 h-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/[0.1]"
+                      style={{ color: P.textDim }}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Text input area */}
             <div className="px-4 pt-3.5 pb-2.5">
               <textarea
@@ -1368,7 +1406,110 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             </div>
 
             {/* Bottom toolbar */}
-            <div className="flex items-center justify-end px-3 pb-2.5">
+            <div className="flex items-center justify-between px-3 pb-2.5">
+
+              {/* Left: Plus menu */}
+              <div className="flex items-center gap-1">
+                <div className="relative" ref={inputMenuRef}>
+                  <button
+                    onClick={() => setShowInputMenu(p => !p)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-white/[0.06]"
+                    style={{
+                      color: showInputMenu ? P.goldLight : P.textDim,
+                      transform: showInputMenu ? "rotate(45deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s ease, color 0.2s ease",
+                    }}
+                    title="Add content"
+                  >
+                    <Plus className="w-4.5 h-4.5" strokeWidth={1.8} />
+                  </button>
+
+                  {showInputMenu && (
+                    <div
+                      className="fixed inset-0 z-[200]"
+                      onClick={() => setShowInputMenu(false)}
+                    >
+                      <div
+                        className="absolute w-56 rounded-xl overflow-hidden shadow-2xl animate-[message-fade-in_0.15s_ease-out_both]"
+                        style={{
+                          bottom: `${window.innerHeight - (inputMenuRef.current?.getBoundingClientRect().top ?? 0) + 8}px`,
+                          left: `${inputMenuRef.current?.getBoundingClientRect().left ?? 0}px`,
+                          background: "hsl(28, 10%, 13%)",
+                          border: "1px solid hsla(38, 15%, 30%, 0.25)",
+                          boxShadow: "0 -12px 50px hsla(0, 0%, 0%, 0.5), 0 0 0 1px hsla(38, 15%, 20%, 0.15)",
+                        }}
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <div className="py-1.5">
+                          {[
+                            { icon: Settings, label: "Lumen AI settings", shortcut: "Ctrl .", action: () => { setShowInputMenu(false); /* TODO: open settings */ } },
+                            { icon: History, label: "History", action: () => { setShowInputMenu(false); setShowHistory(true); } },
+                            { icon: BookOpen, label: "Knowledge", action: () => { setShowInputMenu(false); setShowSaved(true); } },
+                            { icon: Link2, label: "Add reference", subtitle: "Paste a URL or link", action: () => {
+                              setShowInputMenu(false);
+                              const url = prompt("Paste a URL to reference:");
+                              if (url?.trim()) {
+                                setAttachments(prev => [...prev, { name: url.trim(), type: "link", url: url.trim() }]);
+                              }
+                            }},
+                            { icon: Camera, label: "Take a screenshot", action: () => {
+                              setShowInputMenu(false);
+                              // Capture the viewport as context
+                              setInput(prev => prev + (prev ? "\n" : "") + "[Screenshot of current view attached]");
+                            }},
+                            { icon: Paperclip, label: "Attach", subtitle: "Upload a file", action: () => {
+                              setShowInputMenu(false);
+                              fileInputRef.current?.click();
+                            }},
+                          ].map((item, idx) => (
+                            <button
+                              key={idx}
+                              onClick={item.action}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-white/[0.04]"
+                            >
+                              <item.icon className="w-4 h-4 flex-shrink-0" style={{ color: P.textDim }} strokeWidth={1.6} />
+                              <div className="min-w-0 flex-1">
+                                <span className="text-[13px] block" style={{ color: P.text, fontFamily: P.font }}>
+                                  {item.label}
+                                </span>
+                                {(item as any).subtitle && (
+                                  <span className="text-[11px] block mt-0.5" style={{ color: P.textDim }}>
+                                    {(item as any).subtitle}
+                                  </span>
+                                )}
+                              </div>
+                              {(item as any).shortcut && (
+                                <span className="text-[11px] tracking-wider" style={{ color: P.textDim }}>
+                                  {(item as any).shortcut}
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept="image/*,.pdf,.txt,.md,.csv,.json"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setAttachments(prev => [...prev, {
+                        name: file.name,
+                        type: file.type.startsWith("image/") ? "image" : "file",
+                        url: URL.createObjectURL(file),
+                      }]);
+                    }
+                    e.target.value = "";
+                  }}
+                />
+              </div>
 
               <div className="flex items-center gap-2">
                 {/* Model selector dropdown */}
