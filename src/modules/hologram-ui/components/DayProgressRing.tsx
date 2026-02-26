@@ -60,38 +60,39 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
     }, 10_000);
     return () => clearInterval(id);
   }, []);
-
-  const pct = Math.round(progress * 100);
-
   const ZERO_BALANCE: TriadicBalance = { learn: 0, work: 0, play: 0 };
 
-  const balance = useMemo<TriadicBalance>(() => {
+  const displayBalance = useMemo<TriadicBalance>(() => {
+    if (!isLoggedIn) return ZERO_BALANCE;
     if (externalBalance) return externalBalance;
-    // Default time-of-day balance for all users (logged in or not)
+    // Default time-of-day balance for logged-in users
     const hour = new Date().getHours();
     if (hour < 12) return { learn: 0.45, work: 0.30, play: 0.25 };
     if (hour < 18) return { learn: 0.25, work: 0.50, play: 0.25 };
     return { learn: 0.20, work: 0.30, play: 0.50 };
-  }, [externalBalance]);
+  }, [externalBalance, isLoggedIn]);
 
-  const report = useMemo(() => computeBalance(balance), [balance]);
+  const pct = isLoggedIn ? Math.round(progress * 100) : 0;
+
+  const report = useMemo(() => computeBalance(displayBalance), [displayBalance]);
 
   // Build segment data: each phase occupies a proportional arc of the filled portion
-  const totalFilled = CIRCUMFERENCE * progress;
+  const displayProgress = isLoggedIn ? progress : 0;
+  const totalFilled = CIRCUMFERENCE * displayProgress;
   const segments = useMemo(() => {
     let offset = 0;
     return PHASE_ORDER.map((phase) => {
-      const segLen = totalFilled * balance[phase];
+      const segLen = totalFilled * displayBalance[phase];
       const seg = { phase, length: segLen, offset };
       offset += segLen;
       return seg;
     });
-  }, [progress, balance, totalFilled]);
+  }, [displayProgress, displayBalance, totalFilled]);
 
   // Leading dot position (end of the filled arc)
-  const leadingAngle = 2 * Math.PI * progress;
-  const dotCx = SIZE / 2 + RADIUS * Math.cos(leadingAngle);
-  const dotCy = SIZE / 2 + RADIUS * Math.sin(leadingAngle);
+  const displayAngle = 2 * Math.PI * displayProgress;
+  const dotCx = SIZE / 2 + RADIUS * Math.cos(displayAngle);
+  const dotCy = SIZE / 2 + RADIUS * Math.sin(displayAngle);
 
   return (
     <div
@@ -138,15 +139,14 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
             );
           })}
 
-          {/* Leading glow dot */}
+          {/* Leading glow dot — separate layer to avoid blur bleeding into text */}
           <circle
             cx={dotCx}
             cy={dotCy}
-            r={3.5}
-            fill="hsla(38, 40%, 65%, 0.5)"
+            r={2.5}
+            fill="hsla(38, 40%, 65%, 0.7)"
             style={{
               transition: "cx 0.6s ease-out, cy 0.6s ease-out",
-              filter: "blur(2px)",
               animation: "dot-heartbeat 1.6s ease-in-out infinite",
             }}
           />
@@ -162,7 +162,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
         />
 
         {/* Center — percentage + OF DAY */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-[8px]">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-[8px]" style={{ textRendering: "geometricPrecision", WebkitFontSmoothing: "antialiased" as any }}>
           {night ? (
             <>
               <span
@@ -222,7 +222,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
       {/* Dynamic label — context-aware prompts */}
       {(() => {
         // Determine if we have enough data for rebalancing prompts
-        const totalWeight = balance.learn + balance.work + balance.play;
+        const totalWeight = displayBalance.learn + displayBalance.work + displayBalance.play;
         const hasSufficientData = externalBalance !== undefined && totalWeight > 0;
 
         // Smart rebalancing prompts — human, warm, actionable
@@ -315,25 +315,27 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
         }}
       >
         {PHASE_ORDER.map((phase) => {
-          const phasePct = Math.round(balance[phase] * 100);
+          const phasePct = Math.round(displayBalance[phase] * 100);
           return (
             <div key={phase} className="flex flex-col items-center gap-1">
               <span
                 className="text-[13px] font-light leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  color: `hsla(${PHASES[phase].hue}, 35%, 72%, 0.9)`,
+                  color: `hsla(${PHASES[phase].hue}, 35%, 72%, 0.95)`,
                   letterSpacing: "0.02em",
+                  textRendering: "geometricPrecision",
                 }}
               >
                 {phasePct}%
               </span>
               <span
-                className="text-[9px] tracking-[0.25em] uppercase leading-none"
+                className="text-[10px] tracking-[0.2em] uppercase leading-none"
                 style={{
                   fontFamily: "'DM Sans', system-ui, sans-serif",
-                  color: `hsla(${PHASES[phase].hue}, 30%, 75%, 0.85)`,
-                  fontWeight: 400,
+                  color: `hsla(${PHASES[phase].hue}, 30%, 75%, 0.9)`,
+                  fontWeight: 500,
+                  textRendering: "geometricPrecision",
                 }}
               >
                 {phase}
