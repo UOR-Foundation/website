@@ -123,6 +123,32 @@ export default function MobileOsShell() {
   const parallax = useParallax();
   const { greeting, name } = useGreeting();
 
+  /* ── Swipe-up gesture for drawer ─────────────────────────── */
+  const touchStartY = useRef<number | null>(null);
+  const touchStartTime = useRef<number>(0);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Only detect swipes starting in the bottom 120px of the screen
+    const y = e.touches[0].clientY;
+    if (y > window.innerHeight - 120) {
+      touchStartY.current = y;
+      touchStartTime.current = Date.now();
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const dy = touchStartY.current - e.changedTouches[0].clientY;
+    const dt = Date.now() - touchStartTime.current;
+    touchStartY.current = null;
+
+    // Swipe up: at least 40px distance, under 400ms, or slow drag > 80px
+    if ((dy > 40 && dt < 400) || dy > 80) {
+      setDrawerOpen(true);
+      heartbeatHaptic();
+    }
+  }, []);
+
   // Random whisper on mount
   const [whisper] = useState(() => WHISPERS[Math.floor(Math.random() * WHISPERS.length)]);
   const typed = useTypewriter(whisper, 50, 1800);
@@ -157,7 +183,9 @@ export default function MobileOsShell() {
   return (
     <div
       className="fixed inset-0 flex flex-col select-none overflow-hidden"
-      style={{ touchAction: "none", overscrollBehavior: "none" }}
+      style={{ touchAction: "pan-x", overscrollBehavior: "none" }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* ── Layer 0: Background — living landscape ──────────── */}
       <div
