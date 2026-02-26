@@ -36,17 +36,31 @@ function IconTooltip({ label, children, show }: { label: string; children: React
   );
 }
 
-/* ── Palette ───────────────────────────────────────────────── */
-const S = {
-  bg: "hsl(25, 8%, 10%)",
-  surfaceHover: "hsla(38, 12%, 90%, 0.08)",
-  surfaceActive: "hsla(38, 20%, 85%, 0.12)",
-  border: "hsla(38, 12%, 70%, 0.1)",
-  text: "hsl(38, 10%, 88%)",
-  textMuted: "hsl(38, 8%, 60%)",
-  gold: "hsl(38, 40%, 65%)",
-  font: "'DM Sans', system-ui, sans-serif",
-} as const;
+/* ── Palette — adapts to bgMode ────────────────────────────── */
+function getS(bgMode: "image" | "white" | "dark") {
+  if (bgMode === "white") return {
+    bg: "hsl(0, 0%, 97%)",
+    surfaceHover: "hsla(0, 0%, 0%, 0.04)",
+    surfaceActive: "hsla(0, 0%, 0%, 0.08)",
+    border: "hsla(0, 0%, 0%, 0.08)",
+    text: "hsl(0, 0%, 15%)",
+    textMuted: "hsl(0, 0%, 45%)",
+    gold: "hsl(38, 35%, 42%)",
+    font: "'DM Sans', system-ui, sans-serif",
+    logoFilter: "invert(1) brightness(0.15)",
+  } as const;
+  return {
+    bg: "hsl(25, 8%, 10%)",
+    surfaceHover: "hsla(38, 12%, 90%, 0.08)",
+    surfaceActive: "hsla(38, 20%, 85%, 0.12)",
+    border: "hsla(38, 12%, 70%, 0.1)",
+    text: "hsl(38, 10%, 88%)",
+    textMuted: "hsl(38, 8%, 60%)",
+    gold: "hsl(38, 40%, 65%)",
+    font: "'DM Sans', system-ui, sans-serif",
+    logoFilter: "brightness(1.1)",
+  } as const;
+}
 
 /* ── OS-aware modifier key ──────────────────────────────────── */
 function detectMac(): boolean {
@@ -81,6 +95,7 @@ interface DesktopOsSidebarProps {
   onOpenBrowser?: () => void;
   onReplayGuide?: () => void;
   hintOpacity?: (key: string) => number;
+  bgMode?: "image" | "white" | "dark";
 }
 
 /* ── Component ─────────────────────────────────────────────── */
@@ -89,7 +104,9 @@ export default function DesktopOsSidebar({
   onOpenBrowser,
   onReplayGuide,
   hintOpacity,
+  bgMode = "image",
 }: DesktopOsSidebarProps) {
+  const S = getS(bgMode);
   const navigate = useNavigate();
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
@@ -120,7 +137,7 @@ export default function DesktopOsSidebar({
                 src={hologramLogo}
                 alt="Hologram"
                 className="w-7 h-7 object-contain shrink-0"
-                style={{ imageRendering: "auto", filter: "brightness(1.1)" }}
+                style={{ imageRendering: "auto", filter: S.logoFilter }}
               />
               <svg
                 viewBox="0 0 360 40"
@@ -174,7 +191,7 @@ export default function DesktopOsSidebar({
               src={hologramLogo}
               alt="Hologram"
               className="w-5 h-5 object-contain absolute transition-opacity duration-200 group-hover/logo:opacity-0"
-              style={{ imageRendering: "auto", filter: "brightness(1.1)" }}
+              style={{ imageRendering: "auto", filter: S.logoFilter }}
             />
             <PanelLeftOpen
               className="w-5 h-5 absolute transition-opacity duration-200 opacity-0 group-hover/logo:opacity-100"

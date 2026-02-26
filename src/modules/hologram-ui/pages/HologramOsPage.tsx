@@ -366,6 +366,7 @@ export default function HologramOsPage() {
             onOpenBrowser={() => { setBrowserOpen(true); setChatOpen(false); }}
             onReplayGuide={() => setShortcutsOpen(true)}
             hintOpacity={mastery.hintOpacity}
+            bgMode={bgMode}
           />
         </div>
 
