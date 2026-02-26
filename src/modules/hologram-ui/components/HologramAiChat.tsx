@@ -883,7 +883,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             className="flex items-center gap-1.5 px-4 py-1.5 overflow-x-auto no-scrollbar"
             style={{ borderBottom: `1px solid ${P.borderLight}` }}
           >
-            <span className="text-[10px] tracking-wider flex-shrink-0 mr-1" style={{ color: P.textDimmer }}>
+            <span className="text-[12px] tracking-wider flex-shrink-0 mr-1" style={{ color: P.textDim }}>
               {selectedPersona.name}
             </span>
             {AGENT_SKILLS.filter(s => s.phase === selectedPersona.phase).map((skill) => {
@@ -893,19 +893,16 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 <button
                   key={skill.id}
                   onClick={() => setActiveSkill(isActive && activeSkill ? null : skill)}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] flex-shrink-0 transition-all"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] flex-shrink-0 transition-all"
                   style={{
                     background: isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.2)` : "transparent",
                     border: `1px solid ${isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.35)` : "transparent"}`,
-                    color: isActive ? phaseDef.color : P.textDimmer,
+                    color: isActive ? phaseDef.color : P.textDim,
                   }}
                   title={skill.description}
                 >
                   <span>{skill.icon}</span>
                   {skill.name}
-                  {getSourceCount(skill.id) > 0 && (
-                    <span className="text-[9px] opacity-50">·{getSourceCount(skill.id)}</span>
-                  )}
                 </button>
               );
             })}
@@ -1027,7 +1024,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 <div className="relative" ref={modelPickerRef}>
                   <button
                     onClick={() => setShowModelPicker((p) => !p)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/[0.06]"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors hover:bg-white/[0.06]"
                     style={{ color: P.textMuted }}
                   >
                     <Cloud className="w-3.5 h-3.5" style={{ color: ai.isReady ? P.goldMuted : P.goldMuted }} />
@@ -1042,21 +1039,22 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                     <ChevronDown className="w-3 h-3" style={{ color: P.textDim }} />
                   </button>
 
-                  {/* Dropdown */}
+                  {/* Dropdown — opens upward, high z-index, solid background */}
                   {showModelPicker && (
                     <div
-                      className="absolute bottom-full mb-2 right-0 w-72 rounded-xl overflow-hidden shadow-2xl animate-[message-fade-in_0.2s_ease-out_both]"
+                      className="absolute bottom-full mb-2 right-0 w-72 rounded-xl overflow-hidden shadow-2xl z-[100] animate-[message-fade-in_0.2s_ease-out_both]"
                       style={{
-                        background: "hsl(30, 8%, 18%)",
+                        background: "hsl(30, 8%, 14%)",
                         border: `1px solid ${P.border}`,
+                        boxShadow: "0 -8px 40px hsla(0, 0%, 0%, 0.5)",
                       }}
                     >
-                      <div className="px-3 py-2.5" style={{ borderBottom: `1px solid ${P.borderLight}` }}>
-                        <p className="text-xs font-medium tracking-wider uppercase" style={{ color: P.textDim }}>
-                          Available Models
+                      <div className="px-4 py-3" style={{ borderBottom: `1px solid ${P.borderLight}` }}>
+                        <p className="text-[13px] font-medium" style={{ color: P.text }}>
+                          Choose a model
                         </p>
                       </div>
-                      <div className="py-1">
+                      <div className="py-1.5 max-h-[280px] overflow-y-auto">
                         {CLOUD_MODELS.map((m) => {
                           const isActive = selectedCloudModel === m.id && !ai.isReady;
                           return (
@@ -1065,22 +1063,22 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                               onClick={() => {
                                 selectCloudModel(m.id);
                               }}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-white/[0.05]"
+                              className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.06]"
                             >
                               <div
-                                className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
-                                style={{ background: isActive ? P.goldBg : "hsla(30, 8%, 26%, 0.6)" }}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ background: isActive ? P.goldBg : "hsla(30, 8%, 22%, 0.8)" }}
                               >
                                 {isActive
-                                  ? <Check className="w-3.5 h-3.5" style={{ color: P.goldLight }} />
-                                  : <Cloud className="w-3.5 h-3.5" style={{ color: P.textDim }} />
+                                  ? <Check className="w-4 h-4" style={{ color: P.goldLight }} />
+                                  : <Cloud className="w-4 h-4" style={{ color: P.textMuted }} />
                                 }
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium" style={{ color: isActive ? P.goldLight : P.text }}>
+                                <p className="text-[14px] font-medium" style={{ color: isActive ? P.goldLight : P.text }}>
                                   {m.label}
                                 </p>
-                                <p className="text-[11px]" style={{ color: P.textDim }}>
+                                <p className="text-[12px] mt-0.5" style={{ color: P.textMuted }}>
                                   {m.desc}
                                 </p>
                               </div>
