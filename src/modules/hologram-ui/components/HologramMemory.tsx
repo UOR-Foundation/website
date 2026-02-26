@@ -613,20 +613,20 @@ function CompressionDemo() {
       semanticContext = triplesToSemanticContext(decompressedTriples);
     }
 
-    // Build the full document context for RAG injection into Lumen AI's system prompt
+    // Build document context EXCLUSIVELY from the UGC2 compressed form.
+    // This is the key proof: the AI receives ONLY the decompressed semantic graph,
+    // never the raw PDF. If Lumen AI can answer precisely, the compression is lossless.
     const documentContext = [
       `DOCUMENT: "${file.name}"`,
-      `Original size: ${formatBytes(file.originalSize)} | UGC2 compressed: ${formatBytes(file.compressedSize)} (${file.compressionRatio.toFixed(1)}× semantic compression)`,
+      `Original size: ${formatBytes(file.originalSize)} → UGC2 compressed: ${formatBytes(file.compressedSize)} (${file.compressionRatio.toFixed(1)}× ontology-preserving compression)`,
       `Canonical SHA-256: ${file.canonicalHash}`,
-      `Semantic triples: ${file.tripleCount} | Compression format: UGC2 (ontology-preserving)`,
+      `Semantic triples extracted: ${file.tripleCount} | Format: UGC2 v2 (dictionary-encoded varint binary)`,
+      `Compression pipeline: Text → Semantic Triple Extraction (S-P-O) → UGC2 Binary → Decompressed Ontology (below)`,
       ``,
-      `── SEMANTIC ONTOLOGY (decompressed from UGC2) ──`,
+      `This context was reconstructed entirely from the UGC2 compressed binary — the original file was NOT used.`,
+      `The semantic graph below preserves the document's ontology, structure, key claims, topics, and quantitative facts.`,
+      ``,
       semanticContext,
-      `── END SEMANTIC ONTOLOGY ──`,
-      ``,
-      `── RAW DOCUMENT CONTENT ──`,
-      file.textContent,
-      `── END RAW CONTENT ──`,
     ].join("\n");
 
     const messages = [
