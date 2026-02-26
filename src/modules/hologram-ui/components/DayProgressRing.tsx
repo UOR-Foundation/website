@@ -204,7 +204,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
               </span>
               {attention.showExpanded && (
                 <span
-                  className="text-[8px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
+                  className="text-[10px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     color: "hsla(38, 15%, 82%, 0.55)",
