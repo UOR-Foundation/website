@@ -84,7 +84,7 @@ export default function LegalPanel({ open, initialTab = "privacy", onClose, bgMo
           <motion.div
             className="fixed bottom-0 left-0 right-0 z-[61] flex flex-col"
             style={{
-              maxHeight: "85vh",
+              top: "clamp(80px, 12vh, 140px)",
               background: P.bg,
               borderTop: `1px solid ${P.border}`,
               borderRadius: "20px 20px 0 0",
