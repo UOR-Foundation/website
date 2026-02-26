@@ -228,34 +228,37 @@ export default function TriadicWelcome({
 
   return (
     <div
-      className="flex flex-col h-full py-6"
+      className="flex flex-col h-full"
       style={{
         animation: animDirection === "enter"
           ? "triadic-slide-in-right 0.4s cubic-bezier(0.22, 1, 0.36, 1) both"
           : "triadic-slide-out-right 0.28s cubic-bezier(0.55, 0, 1, 0.45) both",
       }}
     >
-      {/* Back + Phase Header */}
-      <div className="px-6 mb-6">
+      {/* Back button */}
+      <div className="px-5 pt-5 pb-2">
         <button
           onClick={goBack}
-          className="flex items-center gap-1.5 mb-4 transition-colors duration-300 hover:opacity-80"
+          className="flex items-center gap-2 transition-colors duration-300 hover:opacity-80"
           style={{ color: P.textMuted }}
         >
           <ChevronLeft className="w-4 h-4" />
-          <span className="text-[10px] tracking-[0.2em] uppercase" style={{ fontFamily: P.font }}>
+          <span className="text-[11px] tracking-[0.18em] uppercase" style={{ fontFamily: P.font }}>
             All phases
           </span>
         </button>
+      </div>
 
-        <div className="flex items-center gap-3 mb-2">
+      {/* Phase Header — generous spacing */}
+      <div className="flex-1 flex flex-col justify-end px-6 pb-5">
+        <div className="flex items-start gap-4">
           <div
-            className="w-[3px] h-8 rounded-full"
+            className="w-[3px] h-10 rounded-full mt-1 flex-shrink-0"
             style={{ background: `hsla(${phaseDef.hue}, 35%, 55%, 0.7)` }}
           />
           <div>
             <h2
-              className="text-xl font-light tracking-wide capitalize"
+              className="text-[clamp(22px,5vw,26px)] font-light tracking-wide capitalize leading-snug"
               style={{
                 fontFamily: P.fontDisplay,
                 color: `hsla(${phaseDef.hue}, 28%, 78%, 0.95)`,
@@ -263,19 +266,19 @@ export default function TriadicWelcome({
             >
               {focusedPhase}
             </h2>
-            <p className="text-[11px] mt-0.5" style={{ color: P.textDim }}>
+            <p className="text-[13px] mt-2 leading-relaxed" style={{ color: P.textDim }}>
               {desc.essence}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Personas */}
-      <div className="px-6 mb-5">
-        <p className="text-[10px] tracking-[0.2em] uppercase mb-2.5" style={{ color: P.textDimmer }}>
+      {/* Personas — bigger cards */}
+      <div className="flex-[1.4] flex flex-col px-5">
+        <p className="text-[11px] tracking-[0.2em] uppercase mb-3" style={{ color: P.textDimmer }}>
           Guides
         </p>
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {phasePersonas.map((persona, i) => {
             const isActive = selectedPersona.id === persona.id;
             const locked = persona.minStage > creatorStage;
@@ -285,7 +288,7 @@ export default function TriadicWelcome({
                 key={persona.id}
                 onClick={() => !locked && onSelectPersona(persona)}
                 disabled={locked}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-500 ${
+                className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all duration-500 ${
                   locked ? "opacity-35 cursor-not-allowed" : "hover:scale-[1.005]"
                 }`}
                 style={{
@@ -297,33 +300,33 @@ export default function TriadicWelcome({
                     : P.borderLight
                   }`,
                   animation: "stagger-fade-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
-                  animationDelay: `${120 + i * 70}ms`,
+                  animationDelay: `${120 + i * 80}ms`,
                 }}
               >
                 <span
-                  className="text-sm flex-shrink-0"
+                  className="text-base flex-shrink-0"
                   style={{ color: locked ? P.textDimmer : phaseDef.color }}
                 >
                   {locked ? <Lock className="w-4 h-4" /> : persona.icon}
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-xs font-medium" style={{ color: isActive ? P.goldLight : P.text }}>
+                    <p className="text-[13px] font-medium" style={{ color: isActive ? P.goldLight : P.text }}>
                       {persona.name}
                     </p>
                     {locked && (
-                      <span className="text-[9px]" style={{ color: P.textDimmer }}>
+                      <span className="text-[10px]" style={{ color: P.textDimmer }}>
                         Stage {persona.minStage}+
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] mt-0.5" style={{ color: P.textDim }}>
+                  <p className="text-[11.5px] mt-1 leading-relaxed" style={{ color: P.textDim }}>
                     {persona.subtitle}
                   </p>
                 </div>
                 {isActive && (
                   <div
-                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ background: phaseDef.color }}
                   />
                 )}
@@ -333,21 +336,21 @@ export default function TriadicWelcome({
         </div>
       </div>
 
-      {/* Skills for this phase */}
-      <div className="px-6">
-        <p className="text-[10px] tracking-[0.2em] uppercase mb-2.5" style={{ color: P.textDimmer }}>
+      {/* Skills — slightly larger pills */}
+      <div className="px-5 pt-4 pb-6">
+        <p className="text-[11px] tracking-[0.2em] uppercase mb-3" style={{ color: P.textDimmer }}>
           Skills
         </p>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {phaseSkills.map((skill, i) => {
             const isActive = (activeSkill?.id || selectedPersona.defaultSkillId) === skill.id;
-            const baseDelay = 120 + phasePersonas.length * 70;
+            const baseDelay = 120 + phasePersonas.length * 80;
 
             return (
               <button
                 key={skill.id}
                 onClick={() => onSelectSkill(isActive && activeSkill ? null : skill)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] transition-all duration-300 hover:scale-[1.03]"
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-[12px] transition-all duration-300 hover:scale-[1.03]"
                 style={{
                   background: isActive
                     ? `hsla(${phaseDef.hue}, 35%, 40%, 0.25)`
@@ -362,10 +365,10 @@ export default function TriadicWelcome({
                 }}
                 title={skill.description}
               >
-                <span className="text-[10px]">{skill.icon}</span>
+                <span className="text-[11px]">{skill.icon}</span>
                 {skill.name}
                 {getSourceCount(skill.id) > 0 && (
-                  <span className="text-[9px] opacity-50">·{getSourceCount(skill.id)}</span>
+                  <span className="text-[10px] opacity-50">·{getSourceCount(skill.id)}</span>
                 )}
               </button>
             );
