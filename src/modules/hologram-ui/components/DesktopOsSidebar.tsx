@@ -9,7 +9,7 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Home, LayoutGrid, User,
+  Home, LayoutGrid, User, Globe,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
 } from "lucide-react";
 
@@ -77,6 +77,7 @@ const EXPANDED_W = 220;
 interface DesktopOsSidebarProps {
   onNewChat: () => void;
   onOpenChat: () => void;
+  onOpenBrowser?: () => void;
   onReplayGuide?: () => void;
   hintOpacity?: (key: string) => number;
 }
@@ -84,6 +85,7 @@ interface DesktopOsSidebarProps {
 /* ── Component ─────────────────────────────────────────────── */
 export default function DesktopOsSidebar({
   onNewChat,
+  onOpenBrowser,
   onReplayGuide,
   hintOpacity,
 }: DesktopOsSidebarProps) {
@@ -226,6 +228,24 @@ export default function DesktopOsSidebar({
             </IconTooltip>
           );
         })}
+
+        {/* Browser — special action button, not a route */}
+        {onOpenBrowser && (
+          <IconTooltip label="Browser" show={!expanded}>
+            <button
+              onClick={onOpenBrowser}
+              className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
+                !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+              }`}
+              style={{ color: S.text, fontFamily: S.font }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            >
+              <Globe className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: S.textMuted }} />
+              {expanded && <span className="text-[14px] font-light whitespace-nowrap">Browser</span>}
+            </button>
+          </IconTooltip>
+        )}
       </div>
 
       {/* ── Bottom: Settings + Help ───────────────────────────── */}
