@@ -16,6 +16,7 @@ import {
 } from "@/modules/hologram-ui/sovereign-creator";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 import { getDayWindowProgress, isNightTime } from "@/modules/hologram-ui/hooks/useGreeting";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── Day progress ───────────────────────────────────────────────────────────
 
@@ -41,7 +42,16 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
   const [progress, setProgress] = useState(getDayProgress);
   const [hovered, setHovered] = useState(false);
   const [night, setNight] = useState(isNightTime);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const attention = useAttentionMode();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setIsLoggedIn(!!data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -53,13 +63,16 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
 
   const pct = Math.round(progress * 100);
 
+  const ZERO_BALANCE: TriadicBalance = { learn: 0, work: 0, play: 0 };
+
   const balance = useMemo<TriadicBalance>(() => {
+    if (!isLoggedIn) return ZERO_BALANCE;
     if (externalBalance) return externalBalance;
     const hour = new Date().getHours();
     if (hour < 12) return { learn: 0.45, work: 0.30, play: 0.25 };
     if (hour < 18) return { learn: 0.25, work: 0.50, play: 0.25 };
     return { learn: 0.20, work: 0.30, play: 0.50 };
-  }, [externalBalance]);
+  }, [externalBalance, isLoggedIn]);
 
   const report = useMemo(() => computeBalance(balance), [balance]);
 
@@ -213,10 +226,13 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
         const hasSufficientData = externalBalance !== undefined && totalWeight > 0;
 
         // Smart rebalancing prompts — human, warm, actionable
-        const getRebalancePrompt = (): { label: string; color: string } => {
-          if (night) {
-            return { label: "Rest well", color: "hsla(220, 15%, 78%, 0.6)" };
-          }
+         const getRebalancePrompt = (): { label: string; color: string } => {
+           if (!isLoggedIn) {
+             return { label: "Your day", color: "hsla(38, 15%, 85%, 0.75)" };
+           }
+           if (night) {
+             return { label: "Rest well", color: "hsla(220, 15%, 78%, 0.6)" };
+           }
           if (!hasSufficientData) {
             return { label: "Your day", color: "hsla(38, 15%, 85%, 0.75)" };
           }
