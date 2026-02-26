@@ -16,7 +16,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { GripVertical } from "lucide-react";
+
+import WidgetHoverActions from "@/modules/hologram-ui/components/WidgetHoverActions";
 import { useNavigate } from "react-router-dom";
 import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
@@ -245,6 +246,24 @@ export default function HologramOsPage() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const ctx = useContextProjection();
 
+  // ── Widget visibility (persisted) ──────────────────────────────────────
+  const WIDGET_STORAGE_KEY = "hologram-hidden-widgets";
+  const [hiddenWidgets, setHiddenWidgets] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(WIDGET_STORAGE_KEY);
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch { return new Set(); }
+  });
+  const removeWidget = useCallback((id: string) => {
+    setHiddenWidgets(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      localStorage.setItem(WIDGET_STORAGE_KEY, JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
+  const isWidgetVisible = useCallback((id: string) => !hiddenWidgets.has(id), [hiddenWidgets]);
+
   // Register context beacon so Lumini.AI knows what the user is viewing
   useContextBeacon({
     id: "hologram-home",
@@ -382,7 +401,19 @@ export default function HologramOsPage() {
           }}
         >
           {/* Focus toggle — lives inside content area so it shifts with Lumen */}
-          <AttentionToggle bgMode={bgMode} />
+          {isWidgetVisible("focus-toggle") && (
+            <WidgetHoverActions
+              widgetId="focus-toggle"
+              onRemove={removeWidget}
+              showMove={false}
+              showSettings={false}
+              bgMode={bgMode}
+              className="absolute right-10 top-1/2 -translate-y-1/2 z-[60]"
+              position="top-left"
+            >
+              <AttentionToggle bgMode={bgMode} />
+            </WidgetHoverActions>
+          )}
           {/* ══════════════════════════════════════════════════════════
            *  FRAME 0 — Canvas Layer (background, imagery, veils)
            * ══════════════════════════════════════════════════════════ */}
@@ -433,6 +464,7 @@ export default function HologramOsPage() {
            * ══════════════════════════════════════════════════════════ */}
           <HologramFrame layer={1} label="chrome" interactive opacity={layerNav.layerOpacity(1)} style={{ transform: `scale(${layerNav.layerScale(1)})`, transition: "opacity 0.7s ease, transform 0.7s ease", zIndex: 400, pointerEvents: "none" }}>
             {/* Background Mode Toggle — top right */}
+            {isWidgetVisible("style-toggle") && (
             <div
               className="absolute top-[3vh] right-6 animate-fade-in transition-all duration-300 ease-out"
               style={{
@@ -442,6 +474,14 @@ export default function HologramOsPage() {
                 filter: "blur(var(--focus-blur-chrome, 0px))",
               }}
             >
+              <WidgetHoverActions
+                widgetId="style-toggle"
+                onRemove={removeWidget}
+                showMove={false}
+                showSettings={false}
+                bgMode={bgMode}
+                position="top-left"
+              >
               <div className="flex flex-col items-center gap-2">
                 <div
                   className="flex items-center gap-1 px-3 py-2 rounded-full transition-all duration-300"
@@ -491,9 +531,12 @@ export default function HologramOsPage() {
                   Style
                 </span>
               </div>
+              </WidgetHoverActions>
             </div>
+            )}
 
             {/* Day Progress Ring — bottom right, draggable */}
+            {isWidgetVisible("day-ring") && (
             <div
               className="absolute bottom-[3vh] right-12 animate-fade-in flex items-center gap-2 transition-all duration-300 ease-out"
               style={{
@@ -506,15 +549,18 @@ export default function HologramOsPage() {
                 userSelect: "none",
               }}
             >
-              <div
-                className="cursor-grab active:cursor-grabbing opacity-0 hover:opacity-40 transition-opacity duration-300"
-                {...dayRingDrag.handlers}
-                title="Drag to reposition"
+              <WidgetHoverActions
+                widgetId="day-ring"
+                onRemove={removeWidget}
+                dragHandlers={dayRingDrag.handlers}
+                showSettings={false}
+                bgMode={bgMode}
+                position="top-center"
               >
-                <GripVertical className="w-3 h-3" style={{ color: "hsla(0, 0%, 80%, 0.6)" }} />
-              </div>
-              <DayProgressRing balance={triadicActivity.balance ?? undefined} bgMode={bgMode} />
+                <DayProgressRing balance={triadicActivity.balance ?? undefined} bgMode={bgMode} />
+              </WidgetHoverActions>
             </div>
+            )}
           </HologramFrame>
 
           {/* ══════════════════════════════════════════════════════════
@@ -814,7 +860,9 @@ export default function HologramOsPage() {
         isResizing={lumenPanel.isResizing}
       />
       {/* FrameDebugOverlay removed for cleaner UI */}
-      <AmbientPlayer lumenOffset={chatOpen ? lumenPanel.width : 0} onStateChange={setAmbientState} />
+      {isWidgetVisible("ambient-player") && (
+        <AmbientPlayer lumenOffset={chatOpen ? lumenPanel.width : 0} onStateChange={setAmbientState} />
+      )}
       {/* ── Browser Panel — opens to the right of sidebar ── */}
       {browserOpen && (
         <div

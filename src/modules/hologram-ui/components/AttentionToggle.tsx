@@ -26,7 +26,7 @@ export default function AttentionToggle({ bgMode = "dark" }: AttentionToggleProp
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       aria-label={`Focus ${isFocus ? "On" : "Off"}. Click to toggle.`}
-      className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 select-none transition-all duration-500"
+      className="flex flex-col items-center gap-3 select-none transition-all duration-500"
       style={{
         zIndex: 60,
         opacity: 1,
