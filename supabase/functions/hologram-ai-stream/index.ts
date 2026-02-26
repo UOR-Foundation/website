@@ -203,7 +203,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold } = await req.json();
+    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold, screenContext } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -222,7 +222,13 @@ serve(async (req) => {
 
     // Inject symbolic scaffold if provided (neuro-symbolic mode)
     const scaffoldPrompt = scaffold ? `\n\n${scaffold}` : "";
-    const systemPrompt = personaPrompt + skillFragment + knowledge + scaffoldPrompt;
+
+    // Inject screen context awareness if provided
+    const contextAwareness = screenContext
+      ? `\n\n═══ AMBIENT CONTEXT (what the user is currently viewing/experiencing) ═══\n${screenContext}\n═══ END AMBIENT CONTEXT ═══\nYou are aware of what the user is currently viewing. If their question relates to the content they're experiencing, reference it naturally. If they've selected text, they're likely asking about that specific selection. Be contextually intelligent — don't repeat the context back verbatim, but use it to give precisely relevant answers.`
+      : "";
+
+    const systemPrompt = personaPrompt + skillFragment + knowledge + scaffoldPrompt + contextAwareness;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

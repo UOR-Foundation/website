@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { initializeRegistry } from "@/lib/uor-registry";
 import { AttentionProvider } from "@/modules/hologram-ui/hooks/useAttentionMode";
+import { ScreenContextProvider } from "@/modules/hologram-ui/hooks/useScreenContext";
 import FocusVignette from "@/modules/hologram-ui/components/FocusVignette";
 import { FocusJournalProvider } from "@/modules/hologram-ui/hooks/useFocusJournal";
 import FocusJournalOverlay from "@/modules/hologram-ui/components/FocusJournalOverlay";
@@ -153,6 +154,7 @@ const App = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScreenContextProvider>
         <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<IndexPage />} />
@@ -267,6 +269,7 @@ const App = () => {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
+        </ScreenContextProvider>
       </BrowserRouter>
     </TooltipProvider>
     </FocusJournalProvider>
