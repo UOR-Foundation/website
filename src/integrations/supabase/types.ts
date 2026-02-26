@@ -427,6 +427,7 @@ export type Database = {
           claimed_at: string
           display_name: string | null
           id: string
+          privacy_rules: Json | null
           session_cid: string | null
           session_derivation_id: string | null
           session_issued_at: string | null
@@ -442,6 +443,7 @@ export type Database = {
           claimed_at?: string
           display_name?: string | null
           id?: string
+          privacy_rules?: Json | null
           session_cid?: string | null
           session_derivation_id?: string | null
           session_issued_at?: string | null
@@ -457,6 +459,7 @@ export type Database = {
           claimed_at?: string
           display_name?: string | null
           id?: string
+          privacy_rules?: Json | null
           session_cid?: string | null
           session_derivation_id?: string | null
           session_issued_at?: string | null

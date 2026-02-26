@@ -6,13 +6,15 @@
  * Lives inside Your Space as the privacy command centre.
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   ShieldCheck, Eye, EyeOff, Clock, Lock, Unlock,
   ChevronDown, ChevronUp, FileText, Download,
   ToggleLeft, ToggleRight, Info, AlertTriangle, Check,
+  CloudOff, Cloud, Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -259,16 +261,62 @@ interface PrivacySettingsPanelProps {
 export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
   const [rules, setRules] = useState<DataCategoryRule[]>(loadRules);
   const [showPolicy, setShowPolicy] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load from DB on mount if authenticated
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      setUserId(user.id);
+      const { data } = await supabase
+        .from("profiles")
+        .select("privacy_rules")
+        .eq("user_id", user.id)
+        .single();
+      if (!cancelled && data?.privacy_rules) {
+        const dbRules = data.privacy_rules as unknown as DataCategoryRule[];
+        // Merge with defaults to pick up any new categories
+        const merged = DEFAULT_CATEGORIES.map(def => {
+          const stored = dbRules.find((r: DataCategoryRule) => r.id === def.id);
+          return stored ? { ...def, ...stored } : def;
+        });
+        setRules(merged);
+        saveRules(merged); // sync localStorage too
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Debounced save to DB
+  const persistToDB = useCallback((nextRules: DataCategoryRule[]) => {
+    saveRules(nextRules); // always save localStorage immediately
+    if (!userId) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setSaved(false);
+    debounceRef.current = setTimeout(async () => {
+      setSyncing(true);
+      await supabase
+        .from("profiles")
+        .update({ privacy_rules: nextRules as any })
+        .eq("user_id", userId);
+      setSyncing(false);
+      setSaved(true);
+    }, 800);
+  }, [userId]);
 
   const updateRule = useCallback((id: string, patch: Partial<DataCategoryRule>) => {
     setRules(prev => {
       const next = prev.map(r => r.id === id ? { ...r, ...patch } : r);
-      saveRules(next);
+      persistToDB(next);
       return next;
     });
-    setSaved(false);
-  }, []);
+  }, [persistToDB]);
 
   const toggleDisclosure = useCallback((id: string) => {
     setRules(prev => {
@@ -277,11 +325,10 @@ export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
           ? { ...r, disclosed: !r.disclosed, allowedPurposes: !r.disclosed ? r.allowedPurposes : [] }
           : r
       );
-      saveRules(next);
+      persistToDB(next);
       return next;
     });
-    setSaved(false);
-  }, []);
+  }, [persistToDB]);
 
   const togglePurpose = useCallback((catId: string, purposeId: string) => {
     setRules(prev => {
@@ -295,18 +342,16 @@ export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
             : [...r.allowedPurposes, purposeId],
         };
       });
-      saveRules(next);
+      persistToDB(next);
       return next;
     });
-    setSaved(false);
-  }, []);
+  }, [persistToDB]);
 
   const blockAll = useCallback(() => {
     const next = rules.map(r => ({ ...r, disclosed: false, allowedPurposes: [], retention: "never" as RetentionOption }));
     setRules(next);
-    saveRules(next);
-    setSaved(false);
-  }, [rules]);
+    persistToDB(next);
+  }, [rules, persistToDB]);
 
   // Generate policy JSON
   const policyDocument = useMemo(() => {
@@ -351,11 +396,27 @@ export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
         <div className="p-2.5 rounded-xl bg-emerald-500/10 shrink-0">
           <ShieldCheck className="w-5 h-5 text-emerald-500" />
         </div>
-        <div>
+        <div className="flex-1">
           <h3 className="text-foreground font-body text-base font-semibold">Privacy Settings</h3>
           <p className="text-muted-foreground text-xs font-body mt-0.5">
             Everything is private by default. Selectively disclose what you choose, to whom, and for how long.
           </p>
+        </div>
+        {/* Sync status */}
+        <div className="shrink-0 mt-1">
+          {syncing ? (
+            <span className="flex items-center gap-1 text-[10px] font-body text-muted-foreground">
+              <Loader2 size={10} className="animate-spin" /> Saving…
+            </span>
+          ) : userId ? (
+            <span className="flex items-center gap-1 text-[10px] font-body text-emerald-500">
+              <Cloud size={10} /> {saved ? "Synced" : ""}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-[10px] font-body text-muted-foreground" title="Sign in to sync across devices">
+              <CloudOff size={10} /> Local only
+            </span>
+          )}
         </div>
       </div>
 
