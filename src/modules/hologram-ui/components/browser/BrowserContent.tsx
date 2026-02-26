@@ -236,11 +236,11 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
         </div>
       )}
 
-      {/* Page Content — Live Mode (fully interactive iframe) */}
+      {/* Page Content — Live Mode (fully interactive via proxy) */}
       {page && !loading && viewMode === "live" && (
         <iframe
           key={`live-${page.url}-${popupsBlocked}`}
-          src={page.url}
+          src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-proxy?url=${encodeURIComponent(page.url)}`}
           sandbox={`allow-same-origin allow-scripts allow-forms allow-modals${popupsBlocked ? "" : " allow-popups allow-popups-to-escape-sandbox"}`}
           allow="clipboard-write; encrypted-media"
           className="w-full h-full border-none"
