@@ -210,7 +210,7 @@ export default function DesktopOsSidebar({
             style={{ color: S.text, fontFamily: S.font }}
             onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-            title={collapsed ? "Help (⌘ /)" : undefined}  
+            title={collapsed ? `Help (${MOD_KEY} /)` : undefined}  
           >
             <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
             {!collapsed && (
@@ -229,7 +229,7 @@ export default function DesktopOsSidebar({
           style={{ color: S.text, fontFamily: S.font }}
           onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={collapsed ? "Messages (⌘ M)" : undefined}
+          title={collapsed ? `Messages (${MOD_KEY} M)` : undefined}
         >
           <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
           {!collapsed && (
@@ -247,7 +247,7 @@ export default function DesktopOsSidebar({
           style={{ color: S.text, fontFamily: S.font }}
           onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={collapsed ? "Settings (⌘ S)" : undefined}
+          title={collapsed ? `Settings (${MOD_KEY} S)` : undefined}
         >
           <Settings className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
           {!collapsed && (
