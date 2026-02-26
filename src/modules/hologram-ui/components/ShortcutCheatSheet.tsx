@@ -35,6 +35,7 @@ const SHORTCUTS: Shortcut[] = [
   { keys: [MOD, "M"], label: "Messages", section: "Communication" },
   // View
   { keys: [MOD, "F"], label: "Toggle Focus Mode", section: "View" },
+  { keys: [MOD, "W"], label: "Hide / Show Widgets", section: "View" },
   { keys: [MOD, "Y"], label: "Cycle Style", section: "View" },
   { keys: [MOD, "⇧", "A"], label: "Ambient Music", section: "View" },
   
