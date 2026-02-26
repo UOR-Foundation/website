@@ -13,6 +13,7 @@ export {
   frameCatastrophe,
   AudioSegmentCache,
   globalSegmentCache,
+  STATIONS,
 } from "@/modules/audio";
 
 export type {
@@ -25,4 +26,6 @@ export type {
   AudioEngineState,
   AudioEngineEvents,
   SegmentCacheConfig,
+  AmbientStation,
+  AmbientState,
 } from "@/modules/audio";
