@@ -75,6 +75,7 @@ import { useAiChatHistory, type Conversation } from "@/modules/hologram-ui/hooks
 import { useContextProjection } from "@/modules/hologram-ui/hooks/useContextProjection";
 import { extractTopicTags } from "@/modules/hologram-ui/engine/extractTopicTags";
 import { useScreenContext } from "@/modules/hologram-ui/hooks/useScreenContext";
+import { useObserverCompanion } from "@/modules/hologram-ui/hooks/useObserverCompanion";
 
 // ── Palette constants ──────────────────────────────────────────────────────
 
@@ -164,6 +165,11 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const journal = useFocusJournal();
   const ctx = useContextProjection();
   const screenCtx = useScreenContext();
+  const observer = useObserverCompanion({
+    profile: ctx.profile,
+    pendingTLDR: journal.pendingTLDR,
+    sessionSNR: null,
+  });
 
   // Fire-and-forget: enrich context graph from conversation text
   const enrichContext = useCallback((userText: string, aiText: string) => {
@@ -540,6 +546,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             knowledgeDistillation: distillKnowledge(skillId),
             scaffold: scaffoldPrompt,
             screenContext: screenCtx.getPromptContext(),
+            observerBriefing: observer.promptText || undefined,
           }),
         });
 
