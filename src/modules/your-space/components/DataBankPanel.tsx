@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useDataBank } from "@/modules/data-bank";
 import { supabase } from "@/integrations/supabase/client";
+import { FusionGraphCard } from "./FusionGraphCard";
 
 interface SlotInfo {
   key: string;
@@ -207,6 +208,11 @@ export const DataBankPanel = ({ isDark }: DataBankPanelProps) => {
             ))}
           </div>
         )}
+      </div>
+
+      {/* ── Fusion Graph ──────────────────────────────── */}
+      <div className="p-3 rounded-lg border border-border bg-card">
+        <FusionGraphCard />
       </div>
 
       {/* ── Actions ─────────────────────────────────── */}
