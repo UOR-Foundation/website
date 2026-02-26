@@ -124,3 +124,15 @@ export {
   runPrecomputation, getPrecomputeStats,
 } from "./proof-precompute";
 export type { QueryPattern, PrecomputeResult, BatchResult } from "./proof-precompute";
+
+// ── Phase 9: Inference Accelerator ──────────────────────────────────────
+export {
+  getAccelerator,
+  InferenceAccelerator,
+  InferenceL0Cache,
+  SpeculativePrefetcher,
+  streamOptimized,
+  lutFingerprint,
+  memoizedBuildScaffold,
+} from "./inference-accelerator";
+export type { AcceleratedResult } from "./inference-accelerator";

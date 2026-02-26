@@ -54,6 +54,10 @@ import {
   storeClaims,
   type PGIResult,
 } from "@/modules/ring-core/proof-gated-inference";
+import {
+  getAccelerator,
+  streamOptimized,
+} from "@/modules/ring-core/inference-accelerator";
 
 // ── Cloud AI Models (instant, no download) ─────────────────────────────────
 const CLOUD_MODELS = [
@@ -145,6 +149,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const modelPickerRef = useRef<HTMLDivElement>(null);
+  const acceleratorRef = useRef(getAccelerator());
 
   const ai = getAiEngine();
   const attention = useAttentionMode();
@@ -350,21 +355,62 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     };
 
     try {
-      // ── Path 1: Cache Hit (O(1), ~200 tok/s) ──────────────────
+      // ── Accelerated Resolution (L0→L3 tiers) ─────────────────
+      const acc = acceleratorRef.current;
+      const resolved = await acc.resolve(text);
+
+      if (resolved.text && (resolved.source === "l0-memory" || resolved.source === "prefetch" || resolved.source === "l2-proof-store")) {
+        // Instant replay — L0 memory (<0.1ms) or prefetched/proof-store
+        const start = performance.now();
+        const isL0 = resolved.source === "l0-memory";
+        await new Promise<void>((resolve) => {
+          streamOptimized(
+            resolved.text!,
+            (chunk) => { streamedText += chunk; updateAssistant(streamedText); },
+            resolve,
+            { tokensPerSecond: isL0 ? 800 : 600, instant: false },
+          );
+        });
+        const elapsed = Math.round(performance.now() - start);
+        const tokCount = resolved.text!.split(/\s+/).length;
+
+        const meta: ChatMessage["meta"] = {
+          inferenceTimeMs: elapsed,
+          tokensGenerated: tokCount,
+          gpuAccelerated: false,
+          inputCid: `acc:${resolved.source}`,
+          outputCid: `resolution:${resolved.resolutionTimeUs}μs`,
+          inferenceSource: "cache" as const,
+        };
+
+        setMessages((prev) =>
+          prev.map((m) => m.id === assistantId ? { ...m, content: resolved.text!, meta } : m),
+        );
+        if (convId) history.saveMessage(convId, "assistant", resolved.text!, meta as Record<string, unknown>);
+        journal.log({ message: resolved.text!.slice(0, 120), source: "chat", tags: [selectedPersona.phase, activeSkill?.id ?? "general"].filter(Boolean) as string[], phase: selectedPersona.phase, priority: "medium" }, !open);
+        enrichContext(text, resolved.text!);
+        setIsGenerating(false);
+        return;
+      }
+
+      // ── Path 1: Full query-level cache (legacy, kept as fallback) ──
       const cacheHit = await checkInferenceCache(text, modelId);
 
       if (cacheHit) {
         const start = performance.now();
         await new Promise<void>((resolve) => {
-          replayAsStream(
+          streamOptimized(
             cacheHit.output,
-            (token) => { streamedText += token; updateAssistant(streamedText); },
+            (chunk) => { streamedText += chunk; updateAssistant(streamedText); },
             resolve,
-            5, // ~200 tok/s
+            { tokensPerSecond: 500 },
           );
         });
         const elapsed = Math.round(performance.now() - start);
         const tokCount = cacheHit.output.split(/\s+/).length;
+
+        // Populate L0 for future instant replay
+        acc.cacheResult(text, cacheHit.output, cacheHit.epistemicGrade);
 
         const meta = {
           inferenceTimeMs: elapsed,
@@ -410,7 +456,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         journal.log({ message: finalContent.slice(0, 120), source: "chat", tags: [selectedPersona.phase, activeSkill?.id ?? "general"].filter(Boolean) as string[], phase: selectedPersona.phase, priority: "medium" }, !open);
         enrichContext(text, finalContent);
 
-        // Cache write (fire-and-forget)
+        // Populate L0 + DB cache (fire-and-forget)
+        acc.cacheResult(text, finalContent, "B");
         getInputHash(text, modelId).then((proof) => {
           writeInferenceCache({
             inputHash: proof.hashHex,
@@ -430,14 +477,24 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       const skillId = activeSkill?.id || selectedPersona.defaultSkillId;
       const isReasoningSkill = skillId === "reason" || skillId === "research" || skillId === "debug";
 
-      // DEDUCTIVE: Build symbolic scaffold (client-side, instant)
-      const scaffold = isReasoningSkill ? buildScaffold(text) : null;
+      // DEDUCTIVE: Use accelerator's memoized scaffold (L1 cache)
+      const scaffold = isReasoningSkill ? resolved.scaffold : null;
 
-      // PGI: Decompose into claims and batch-lookup proof store
+      // PGI: Use accelerator's pre-resolved lookup if available, else fresh
       let pgiPlan: Awaited<ReturnType<typeof planPGI>> | null = null;
       if (scaffold) {
         try {
-          pgiPlan = await planPGI(scaffold);
+          if (resolved.lookup) {
+            // Already resolved by accelerator — skip redundant DB call
+            pgiPlan = {
+              claims: resolved.claims,
+              lookup: resolved.lookup,
+              privateFragments: resolved.lookup.misses.map(m => m.constraint.description),
+              config: { quantum: 0, cacheNewProofs: true, minCacheGrade: "B" as const },
+            };
+          } else {
+            pgiPlan = await planPGI(scaffold);
+          }
         } catch {
           // Graceful degradation — fall through to full LLM
         }
@@ -507,12 +564,15 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           .map(h => h.cachedOutput)
           .join(" ");
 
-        // Stream cached text first (instant, private)
-        for (const word of cachedText.split(/(\s+)/)) {
-          streamedText += word;
-          updateAssistant(streamedText);
-          await new Promise(r => setTimeout(r, 3)); // ~300 tok/s feel
-        }
+        // Stream cached text at high speed via rAF optimizer
+        await new Promise<void>((resolve) => {
+          streamOptimized(
+            cachedText,
+            (chunk) => { streamedText += chunk; updateAssistant(streamedText); },
+            resolve,
+            { tokensPerSecond: 700 },
+          );
+        });
 
         // Now stream only the miss fragments to LLM
         const liveFragments: Array<{ claimIndex: number; text: string; grade: import("@/modules/ring-core/neuro-symbolic").EpistemicGrade }> = [];
@@ -603,7 +663,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         saveReasoningProof(nsResult, convId).catch(() => {});
       }
 
-      // Cache write for future O(1) replay (full query level)
+      // Populate L0 + DB cache for future O(1) replay
+      acc.cacheResult(text, finalContent, nsResult?.overallGrade ?? "B");
       getInputHash(text, modelId).then((proof) => {
         if (meta) meta.inputCid = proof.cid;
         writeInferenceCache({
@@ -905,7 +966,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               <textarea
                 ref={inputRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => { setInput(e.target.value); acceleratorRef.current.prefetcher.onInput(e.target.value); }}
                 onKeyDown={handleKeyDown}
                 placeholder={ai.isReady ? "Ask anything…" : "Ask anything — cloud AI is always ready…"}
                 disabled={isGenerating}
