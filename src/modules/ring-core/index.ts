@@ -83,3 +83,9 @@ export {
 export type {
   StrategyNode, StrategyStepResult, ScheduleResult, ScheduleConfig,
 } from "./strategy-scheduler";
+
+// ── v2 Reasoning Command ─────────────────────────────────────────────────
+export {
+  execReason, createReasoningSession, getTriAxisPanels,
+} from "./reason-command";
+export type { ReasoningSession } from "./reason-command";
