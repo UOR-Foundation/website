@@ -17,6 +17,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical } from "lucide-react";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
+import { SystemEventBus } from "@/modules/observable/system-event-bus";
 
 // ── Palette (consistent with OS) ──────────────────────────────────────────
 const P = {
@@ -138,6 +139,9 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   const [muted, setMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pillRef = useRef<HTMLDivElement>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const streamTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Draggable position — default to bottom-left
   const drag = useDraggablePosition({
@@ -154,32 +158,89 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     onStateChange?.({ playing, loading, stationHue: station.color, stationName: station.name });
   }, [playing, loading, station, onStateChange]);
 
-  // Initialize audio element — no crossOrigin (SomaFM doesn't send CORS headers)
+  // Initialize audio element
   useEffect(() => {
     const audio = new Audio();
     audio.volume = volume;
     audio.preload = "none";
     audioRef.current = audio;
 
-    const onPlaying = () => { setLoading(false); setPlaying(true); };
+    const onPlaying = () => {
+      setLoading(false);
+      setPlaying(true);
+      // Start streaming frequency data to SystemEventBus
+      startSystemStream(audio);
+    };
     const onWaiting = () => setLoading(true);
-    const onError = () => { setLoading(false); setPlaying(false); };
-    const onEnded = () => { setPlaying(false); };
+    const onError = () => { setLoading(false); setPlaying(false); stopSystemStream(); };
+    const onEnded = () => { setPlaying(false); stopSystemStream(); };
+    const onPause = () => { stopSystemStream(); };
 
     audio.addEventListener("playing", onPlaying);
     audio.addEventListener("waiting", onWaiting);
     audio.addEventListener("error", onError);
     audio.addEventListener("ended", onEnded);
+    audio.addEventListener("pause", onPause);
 
     return () => {
       audio.removeEventListener("playing", onPlaying);
       audio.removeEventListener("waiting", onWaiting);
       audio.removeEventListener("error", onError);
       audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("pause", onPause);
       audio.pause();
       audio.removeAttribute("src");
       audio.load();
+      stopSystemStream();
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current = null;
+      }
     };
+  }, []);
+
+  // Stream audio frequency data into the SystemEventBus
+  const startSystemStream = useCallback((audio: HTMLAudioElement) => {
+    stopSystemStream();
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") ctx.resume();
+
+      const source = ctx.createMediaElementSource(audio);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 64; // 32 frequency bins — compact
+      source.connect(analyser);
+      analyser.connect(ctx.destination);
+      analyserRef.current = analyser;
+
+      const freqData = new Uint8Array(analyser.frequencyBinCount);
+      const timeData = new Uint8Array(analyser.frequencyBinCount);
+
+      // Emit frequency snapshots every 200ms
+      streamTimerRef.current = setInterval(() => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteFrequencyData(freqData);
+        analyserRef.current.getByteTimeDomainData(timeData);
+        SystemEventBus.emit(
+          "hologram",
+          "ambient:frequency",
+          new Uint8Array(freqData),
+          new Uint8Array(timeData),
+        );
+      }, 200);
+    } catch (err) {
+      console.warn("Ambient system stream setup failed:", err);
+    }
+  }, []);
+
+  const stopSystemStream = useCallback(() => {
+    if (streamTimerRef.current) {
+      clearInterval(streamTimerRef.current);
+      streamTimerRef.current = null;
+    }
   }, []);
 
   // Sync volume
@@ -272,6 +333,9 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     return () => window.removeEventListener("keydown", handler, true);
   }, [playing, loading, togglePlayback, playStation, station]);
 
+  // Determine if panel should open upward (when near bottom of viewport)
+  const openUpward = drag.pos.y > (typeof window !== "undefined" ? window.innerHeight * 0.45 : 400);
+
   return (
     <div
       ref={pillRef}
@@ -288,12 +352,13 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
           // ── Expanded Panel ──────────────────────────────────────────
           <motion.div
             key="expanded"
-            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            initial={{ opacity: 0, y: openUpward ? -8 : 8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            exit={{ opacity: 0, y: openUpward ? -8 : 8, scale: 0.95 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="w-[280px] rounded-2xl overflow-hidden"
             style={{
+              ...(openUpward ? { position: "absolute", bottom: 0 } : {}),
               background: P.surface,
               backdropFilter: "blur(40px) saturate(1.3)",
               WebkitBackdropFilter: "blur(40px) saturate(1.3)",
