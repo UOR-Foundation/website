@@ -34,6 +34,7 @@ import { useTriadicActivity } from "@/modules/hologram-ui/hooks/useTriadicActivi
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 import { useFocusJournal } from "@/modules/hologram-ui/hooks/useFocusJournal";
 import { useContextProjection } from "@/modules/hologram-ui/hooks/useContextProjection";
+import { useShortcutMastery } from "@/modules/hologram-ui/hooks/useShortcutMastery";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -153,6 +154,7 @@ export default function HologramOsPage() {
   const { greeting, name } = useGreeting();
   const triadicActivity = useTriadicActivity();
   const attention = useAttentionMode();
+  const mastery = useShortcutMastery();
   const [replayGuide, setReplayGuide] = useState(0);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const ctx = useContextProjection();
@@ -196,23 +198,25 @@ export default function HologramOsPage() {
 
       switch (e.key) {
         // ⌘L — Lumen AI (L = Lumen)
-        case "l": case "L": e.preventDefault(); setChatOpen(true); break;
+        case "l": case "L": e.preventDefault(); mastery.record("l"); setChatOpen(true); break;
         // ⌘B — Toggle sidebar (B = Bar/sidebar)
-        case "b": case "B": e.preventDefault(); setSidebarCollapsed(p => !p); break;
+        case "b": case "B": e.preventDefault(); mastery.record("b"); setSidebarCollapsed(p => !p); break;
         // ⌘F — Toggle focus mode (F = Focus)
-        case "f": case "F": e.preventDefault(); attention.toggle(); break;
+        case "f": case "F": e.preventDefault(); mastery.record("f"); attention.toggle(); break;
         // ⌘T — Cycle style (T = Theme/Style)
         case "t": case "T":
           e.preventDefault();
+          mastery.record("t");
           setBgMode(BG_MODES[(BG_MODES.findIndex(b => b.mode === bgMode) + 1) % BG_MODES.length].mode);
           break;
         // ⌘M — Messages (M = Messages)
-        case "m": case "M": e.preventDefault(); /* TODO: open messages */ break;
+        case "m": case "M": e.preventDefault(); mastery.record("m"); /* TODO: open messages */ break;
         // ⌘H — Home (H = Home)
-        case "h": case "H": e.preventDefault(); navigate("/hologram-console"); break;
+        case "h": case "H": e.preventDefault(); mastery.record("h"); navigate("/hologram-console"); break;
         // ⌘/ — Shortcut cheat sheet
         case "/":
           e.preventDefault();
+          mastery.record("/");
           setShortcutsOpen(prev => !prev);
           break;
       }
@@ -252,6 +256,7 @@ export default function HologramOsPage() {
             onNewChat={() => setChatOpen(true)}
             onOpenChat={() => setChatOpen(true)}
             onReplayGuide={() => setShortcutsOpen(true)}
+            hintOpacity={mastery.hintOpacity}
           />
         </div>
 
@@ -604,16 +609,19 @@ export default function HologramOsPage() {
                 >
                   Lumen AI
                 </span>
-                <span
-                  className="tracking-[0.15em] uppercase font-medium opacity-40"
-                  style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
-                    color: P.pillText,
-                    fontSize: "10px",
-                  }}
-                >
-                  {MOD_LABEL} L
-                </span>
+                {mastery.hintOpacity("l") > 0 && (
+                  <span
+                    className="tracking-[0.15em] uppercase font-medium transition-opacity duration-700"
+                    style={{
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      color: P.pillText,
+                      fontSize: "10px",
+                      opacity: mastery.hintOpacity("l") * 0.4,
+                    }}
+                  >
+                    {MOD_LABEL} L
+                  </span>
+                )}
 
                 {journalEntryCount > 0 && (
                   <span
