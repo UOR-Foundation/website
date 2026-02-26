@@ -443,10 +443,8 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
 
       <Section title="8. Open Standard" P={P} fontDisplay={fontDisplay}>
         <p>
-          This approach is built on open standards and open-source technology. The underlying
-          framework is publicly available at{" "}
-          <InlineLink href="https://github.com/UOR-Foundation" P={P}>github.com/UOR-Foundation</InlineLink>,
-          and the privacy terms standard is documented at{" "}
+          This approach is built on open standards. The privacy terms standard is
+          documented at{" "}
           <InlineLink href="https://myterms.info/" P={P}>myterms.info</InlineLink>.
         </p>
         <p>
