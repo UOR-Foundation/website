@@ -122,12 +122,46 @@ export default function DesktopOsSidebar({
                 <line x1="20" y1="7" x2="20" y2="21" />
                 <line x1="8" y1="14" x2="20" y2="14" />
               </svg>
-              <span
-                className="text-[13px] tracking-[0.3em] uppercase font-light"
-                style={{ fontFamily: S.font, color: S.text }}
+              {/* SVG wordmark — matches main page geometric logo */}
+              <svg
+                viewBox="0 0 520 40"
+                className="select-none"
+                style={{ width: "120px", height: "auto", opacity: 0.85 }}
               >
-                Hologram
-              </span>
+                <g
+                  fill="none"
+                  stroke={S.text}
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {/* H */}
+                  <line x1="10" y1="6" x2="10" y2="34" />
+                  <line x1="30" y1="6" x2="30" y2="34" />
+                  <line x1="10" y1="20" x2="30" y2="20" />
+                  {/* O */}
+                  <ellipse cx="60" cy="20" rx="14" ry="14" />
+                  {/* L */}
+                  <line x1="94" y1="6" x2="94" y2="34" />
+                  <line x1="94" y1="34" x2="114" y2="34" />
+                  {/* O */}
+                  <ellipse cx="144" cy="20" rx="14" ry="14" />
+                  {/* G */}
+                  <path d="M 198 12 A 14 14 0 1 0 198 28 L 198 20 L 188 20" />
+                  {/* R */}
+                  <line x1="222" y1="6" x2="222" y2="34" />
+                  <path d="M 222 6 L 236 6 A 7 7 0 0 1 236 20 L 222 20" />
+                  <line x1="232" y1="20" x2="242" y2="34" />
+                  {/* A */}
+                  <line x1="266" y1="34" x2="280" y2="6" />
+                  <line x1="280" y1="6" x2="294" y2="34" />
+                  {/* M */}
+                  <line x1="318" y1="34" x2="318" y2="6" />
+                  <line x1="318" y1="6" x2="334" y2="22" />
+                  <line x1="334" y1="22" x2="350" y2="6" />
+                  <line x1="350" y1="6" x2="350" y2="34" />
+                </g>
+              </svg>
             </div>
             <button
               onClick={onToggle}
