@@ -201,8 +201,8 @@ export default function HologramOsPage() {
         case "b": case "B": e.preventDefault(); setSidebarCollapsed(p => !p); break;
         // ⌘F — Toggle focus mode (F = Focus)
         case "f": case "F": e.preventDefault(); attention.toggle(); break;
-        // ⌘E — Cycle style (E = Environment)
-        case "e": case "E":
+        // ⌘T — Cycle theme (T = Theme)
+        case "t": case "T":
           e.preventDefault();
           setBgMode(BG_MODES[(BG_MODES.findIndex(b => b.mode === bgMode) + 1) % BG_MODES.length].mode);
           break;
@@ -358,7 +358,7 @@ export default function HologramOsPage() {
                       : "hsla(0, 0%, 70%, 0.5)",
                   }}
                 >
-                  Style
+                  Theme
                 </span>
                 <span
                   className="text-[9px] tracking-[0.15em] uppercase font-medium transition-colors duration-300"
@@ -369,7 +369,7 @@ export default function HologramOsPage() {
                       : "hsla(0, 0%, 70%, 0.3)",
                   }}
                 >
-                  {MOD_LABEL} E
+                  {MOD_LABEL} T
                 </span>
               </div>
             </div>
