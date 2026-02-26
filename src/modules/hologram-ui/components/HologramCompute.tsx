@@ -193,7 +193,7 @@ export default function HologramCompute({ onClose }: HologramComputeProps) {
                 Performance Proof
               </h2>
               <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
-                Live benchmark comparing standard compute against the Virtual GPU.
+                Live benchmark comparing standard compute against the Hologram Virtual GPU.
                 All data computed in real-time in your browser.
               </p>
             </div>
@@ -316,7 +316,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
           <div className="space-y-2">
             <ResourceRow
               icon={<IconCpu size={16} />}
-              label="Virtual GPU"
+              label="Hologram Virtual GPU"
               value={isOnline ? "Active" : "Starting…"}
               on={isOnline}
               detail={snap?.deviceInfo?.adapterName || "Browser compute engine"}
@@ -455,7 +455,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
         <div className="space-y-1">
           <h3 className="text-base font-medium" style={{ color: P.text }}>See the proof</h3>
           <p className="text-sm" style={{ color: P.muted }}>
-            Run a live benchmark and watch the Virtual GPU outperform standard compute by 100×+
+            Run a live benchmark and watch the Hologram Virtual GPU outperform standard compute by 100×+
           </p>
         </div>
         <IconArrowRight size={20} style={{ color: P.gold }} />
