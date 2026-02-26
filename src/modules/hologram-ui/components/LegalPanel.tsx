@@ -239,7 +239,7 @@ function PrivacyContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fon
         className="text-2xl font-light tracking-wide mb-2"
         style={{ fontFamily: fontDisplay, color: P.heading }}
       >
-        Privacy Policy
+        Privacy by Default
       </h1>
       <p className="text-[13px] tracking-wider uppercase mb-5" style={{ color: P.textMuted }}>
         Last updated: February 2026
@@ -248,101 +248,68 @@ function PrivacyContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fon
         className="text-[16px] leading-[2] mb-12"
         style={{ color: P.text }}
       >
-        Your privacy is not a feature we offer — it is the foundation Hologram is built on.
-        This policy explains, in plain language, what information we collect, how we use it,
-        and the rights you have over it.
+        Most platforms write a privacy policy to protect themselves. Hologram is different — we give you the infrastructure and tools to create your own. Privacy is not a feature we bolt on. It is the architecture itself.
       </p>
 
-      <Section title="1. What We Collect" P={P} fontDisplay={fontDisplay}>
+      <Section title="1. Our Default: Store Nothing" P={P} fontDisplay={fontDisplay}>
         <p>
-          When you create an account, we collect the information you provide — such as your
-          email address and display name. This is used solely to identify you and secure
-          your account.
+          By default, Hologram aims to store as little information about you as possible. Your identity is derived from your email handle, which we use only to verify you are you — we do not store it as personal data or use it to build a profile about you.
         </p>
         <p>
-          As you use Hologram, we collect basic usage information — such as when you last
-          signed in and which features you interact with. This helps us understand how the
-          platform is being used so we can improve it.
-        </p>
-        <p>
-          We do not collect information from third parties, and we do not build profiles
-          about you based on your activity elsewhere on the internet.
+          There is no hidden data collection. No behavioural tracking. No advertising profiles. No third-party analytics. The platform is designed from the ground up to function without needing to know who you are beyond what you choose to share.
         </p>
       </Section>
 
-      <Section title="2. How We Use It" P={P} fontDisplay={fontDisplay}>
+      <Section title="2. Zero-Knowledge by Design" P={P} fontDisplay={fontDisplay}>
         <p>
-          We use your information for three purposes:
+          Hologram is built on zero-knowledge principles. This means you can prove things about yourself — that your identity is valid, that you meet a requirement, that you hold a credential — without disclosing the underlying information.
+        </p>
+        <p>
+          Think of it like proving you are over 18 without showing your date of birth, or confirming you are a member without revealing your name. The platform's architecture makes this the default, not an option you have to enable.
+        </p>
+      </Section>
+
+      <Section title="3. Selective Disclosure: You Choose What to Reveal" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Your information is private by default. Sharing anything requires an active, deliberate choice on your part. Hologram uses a layered disclosure model:
         </p>
         <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>To run the platform</strong> — authenticating your identity, storing your data, and keeping your space secure.</span>
+            <span><strong style={{ color: P.heading }}>Default: fully private</strong> — nothing is shared with anyone. No application, service, or user can see your information unless you grant access.</span>
           </li>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>To improve your experience</strong> — understanding which features are useful and which need work.</span>
+            <span><strong style={{ color: P.heading }}>Step-by-step opt out</strong> — revealing information is a graduated process. You choose what to share, with whom, and for how long. Each step requires your explicit action.</span>
           </li>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>To communicate with you</strong> — sending important updates about your account or the platform, never marketing.</span>
+            <span><strong style={{ color: P.heading }}>Revocable at any time</strong> — any disclosure you make can be withdrawn. Access you have granted can be removed. You are always in control.</span>
           </li>
         </ul>
       </Section>
 
-      <Section title="3. What We Never Do" P={P} fontDisplay={fontDisplay}>
+      <Section title="4. Your Privacy Policy, Not Ours" P={P} fontDisplay={fontDisplay}>
         <p>
-          We do not sell your data. We do not share it with advertisers. We do not use
-          third-party trackers. We do not build behavioural profiles. We do not monetise
-          your personal information in any way.
+          Hologram provides programmatic tools for you to define your own privacy policy. Rather than accepting a document written by a company to protect itself, you create rules that protect you.
         </p>
         <p>
-          There is no advertising on Hologram, and there never will be.
-        </p>
-      </Section>
-
-      <Section title="4. How We Protect It" P={P} fontDisplay={fontDisplay}>
-        <p>
-          Your data is protected using industry-standard encryption, both when it is stored
-          and when it is transmitted. Access to our systems is tightly controlled and
-          regularly audited.
+          These tools allow you to specify what data you are willing to share, under what conditions, with which applications, and for how long. When an application wants to interact with your information, it must meet <em style={{ color: P.tabActive }}>your</em> terms — not the other way around.
         </p>
         <p>
-          Your identity within Hologram is built on a unique, permanent address that only
-          you control. This means even we cannot impersonate you or access your private space
-          without your permission.
+          This is the foundation of Hologram's privacy architecture: you write the rules, and the system enforces them.
         </p>
       </Section>
 
-      <Section title="5. Your Rights" P={P} fontDisplay={fontDisplay}>
+      <Section title="5. What We Never Do" P={P} fontDisplay={fontDisplay}>
         <p>
-          You have the right to:
+          We do not sell your data. We do not share it with advertisers. We do not use third-party trackers. We do not build behavioural profiles. We do not monetise your personal information in any way. There is no advertising on Hologram, and there never will be.
         </p>
-        <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
-          <li className="flex gap-2.5 items-start">
-            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>See your data</strong> — request a complete copy of everything we store about you.</span>
-          </li>
-          <li className="flex gap-2.5 items-start">
-            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Correct your data</strong> — update or fix any information that is inaccurate.</span>
-          </li>
-          <li className="flex gap-2.5 items-start">
-            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Delete your data</strong> — remove your account and all associated information permanently.</span>
-          </li>
-          <li className="flex gap-2.5 items-start">
-            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Withdraw consent</strong> — stop any data processing at any time, with immediate effect.</span>
-          </li>
-        </ul>
       </Section>
 
-      <Section title="6. Contact Us" P={P} fontDisplay={fontDisplay}>
+      <Section title="6. Contact" P={P} fontDisplay={fontDisplay}>
         <p>
-          If you have any questions about this policy or how your data is handled, please
-          reach out through our community channels. We are committed to being transparent
-          and responsive.
+          If you have questions about how privacy works on Hologram or need help configuring your privacy settings, reach out through our community channels. We are committed to transparency.
         </p>
       </Section>
     </article>
