@@ -768,7 +768,7 @@ export default function HologramOsPage() {
                       style={{
                         fontFamily: "'DM Sans', system-ui, sans-serif",
                         fontWeight: 400,
-                        fontSize: isFocus ? "clamp(11px, 0.9vw, 14px)" : "clamp(10px, 0.75vw, 12px)",
+                        fontSize: isFocus ? "clamp(13px, 1.1vw, 16px)" : "clamp(12px, 0.9vw, 14px)",
                         color: bgMode === "white"
                           ? "hsla(0, 0%, 15%, 0.85)"
                           : "hsla(38, 15%, 88%, 0.7)",
@@ -784,7 +784,7 @@ export default function HologramOsPage() {
                         fontFamily: "'Playfair Display', serif",
                         fontWeight: 300,
                         fontStyle: "italic",
-                        fontSize: isFocus ? "clamp(12px, 1vw, 18px)" : "clamp(11px, 0.85vw, 15px)",
+                        fontSize: isFocus ? "clamp(15px, 1.2vw, 22px)" : "clamp(14px, 1vw, 18px)",
                         color: bgMode === "white" ? "hsla(0, 0%, 15%, 0.7)" : "hsla(38, 12%, 85%, 0.6)",
                         maxWidth: "30ch",
                         lineHeight: 1.6,
