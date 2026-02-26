@@ -348,11 +348,20 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       { id: assistantId, role: "assistant", content: "", timestamp: new Date() },
     ]);
 
+    // Throttled update — batch rapid token arrivals into smooth word-level updates
+    let updateTimer: ReturnType<typeof requestAnimationFrame> | null = null;
+    let pendingText = "";
     const updateAssistant = (newText: string) => {
       streamedText = newText;
-      setMessages((prev) =>
-        prev.map((m) => m.id === assistantId ? { ...m, content: streamedText } : m),
-      );
+      pendingText = newText;
+      if (!updateTimer) {
+        updateTimer = requestAnimationFrame(() => {
+          updateTimer = null;
+          setMessages((prev) =>
+            prev.map((m) => m.id === assistantId ? { ...m, content: pendingText } : m),
+          );
+        });
+      }
     };
 
     try {
@@ -626,12 +635,19 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           const { report, refinementPrompt, result } = processResponse(scaffold, currentResponse, iteration);
           if (result) { nsResult = result; break; }
           if (refinementPrompt) {
-            // Re-prompt LLM with constraint violations
-            streamedText = "";
+            // Re-prompt LLM with constraint violations — DON'T reset streamedText
+            // Instead, append a visual separator and continue streaming
+            const separator = "\n\n";
+            streamedText += separator;
+            updateAssistant(streamedText);
+            // Stream the refinement seamlessly on top of existing text
+            const prevLen = streamedText.length;
             currentResponse = await doStream([
               { role: "assistant", content: currentResponse },
               { role: "user", content: refinementPrompt },
             ], scaffold.promptFragment);
+            // Use only the new part for the next iteration's analysis
+            currentResponse = streamedText.slice(prevLen).trim() || currentResponse;
           }
           iteration++;
         }
@@ -934,18 +950,23 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             ))}
           </div>
 
-          {isGenerating && (
-            <div className="flex items-center gap-2 px-3 py-3 mt-2">
-              <div className="flex gap-1">
+          {isGenerating && !messages.some(m => m.role === "assistant" && m.content) && (
+            <div className="flex items-center gap-3 px-3 py-4 mt-2 animate-in fade-in duration-500">
+              <div className="flex gap-1.5">
                 {[0, 1, 2].map((i) => (
                   <div
                     key={i}
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: P.gold, animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
+                    className="w-1 h-1 rounded-full"
+                    style={{
+                      background: P.goldMuted,
+                      animation: `pulse 1.8s ease-in-out ${i * 0.25}s infinite`,
+                    }}
                   />
                 ))}
               </div>
-              <span className="text-xs" style={{ color: P.textDim }}>Generating…</span>
+              <span className="text-[11px] tracking-wider" style={{ color: P.textDim, fontFamily: P.font }}>
+                Thinking…
+              </span>
             </div>
           )}
 
@@ -1166,10 +1187,11 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
               </div>
             ) : (
               <div
-                className="text-[15px] leading-[1.7] prose prose-sm prose-invert max-w-none"
+                className="text-[15px] leading-[1.8] prose prose-sm prose-invert max-w-none"
                 style={{
                   color: "hsl(30, 12%, 78%)",
                   fontFamily: P.font,
+                  textRendering: "optimizeLegibility",
                   ['--tw-prose-headings' as string]: P.text,
                   ['--tw-prose-bold' as string]: P.text,
                   ['--tw-prose-code' as string]: P.goldLight,
@@ -1180,6 +1202,71 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
               >
                 <ReactMarkdown
                   components={{
+                    h1: ({ children }) => (
+                      <h1
+                        className="text-lg font-medium tracking-wide mt-4 mb-2"
+                        style={{ fontFamily: P.fontDisplay, color: P.text }}
+                      >
+                        {children}
+                      </h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2
+                        className="text-base font-medium tracking-wide mt-3 mb-1.5"
+                        style={{ fontFamily: P.fontDisplay, color: P.text }}
+                      >
+                        {children}
+                      </h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3
+                        className="text-sm font-medium tracking-wider uppercase mt-3 mb-1"
+                        style={{ color: P.goldMuted, letterSpacing: "0.1em" }}
+                      >
+                        {children}
+                      </h3>
+                    ),
+                    p: ({ children }) => (
+                      <p className="mb-2.5 last:mb-0" style={{ lineHeight: "1.8" }}>{children}</p>
+                    ),
+                    strong: ({ children }) => (
+                      <strong style={{ color: P.text, fontWeight: 600 }}>{children}</strong>
+                    ),
+                    em: ({ children }) => (
+                      <em style={{ color: P.goldLight, fontStyle: "italic" }}>{children}</em>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="space-y-1.5 my-2.5 pl-1" style={{ listStyle: "none" }}>{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="space-y-1.5 my-2.5 pl-1" style={{ listStyle: "none", counterReset: "item" }}>{children}</ol>
+                    ),
+                    li: ({ children }) => (
+                      <li className="flex gap-2 items-start text-[15px]" style={{ color: "hsl(30, 12%, 78%)" }}>
+                        <span
+                          className="flex-shrink-0 mt-[7px]"
+                          style={{ color: P.goldMuted, fontSize: "6px" }}
+                        >
+                          ◆
+                        </span>
+                        <span>{children}</span>
+                      </li>
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote
+                        className="my-3 pl-4 py-1"
+                        style={{
+                          borderLeft: `2px solid ${P.goldMuted}`,
+                          color: P.textMuted,
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {children}
+                      </blockquote>
+                    ),
+                    hr: () => (
+                      <hr className="my-4 border-none" style={{ height: "1px", background: P.border }} />
+                    ),
                     code: ({ children, className, ...props }) => {
                       const isBlock = className?.includes("language-");
                       return isBlock ? (
@@ -1187,10 +1274,12 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
                           style={{
                             background: "hsla(30, 8%, 12%, 0.8)",
                             border: `1px solid ${P.borderLight}`,
-                            borderRadius: "8px",
-                            padding: "12px 16px",
+                            borderRadius: "10px",
+                            padding: "14px 18px",
                             overflowX: "auto",
                             fontSize: "13px",
+                            lineHeight: "1.6",
+                            margin: "12px 0",
                           }}
                         >
                           <code className={className} {...props}>{children}</code>
@@ -1221,6 +1310,7 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
                     style={{
                       background: P.gold,
                       animation: "blink-caret 0.8s steps(2) infinite",
+                      borderRadius: "1px",
                     }}
                   />
                 )}
@@ -1228,39 +1318,34 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
             )}
           </div>
 
-          {/* Inference metadata */}
-          {meta && (
-            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 px-1">
+          {/* Inference metadata — clean, minimal */}
+          {meta && !isStreaming && (
+            <div
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 px-1 animate-in fade-in duration-500"
+              style={{ animationDelay: "200ms", animationFillMode: "both" }}
+            >
               {(meta as any).inferenceSource && (
-                <span className="text-[11px] font-mono" style={{
+                <span className="text-[10px] tracking-wider font-medium" style={{
                   color: (meta as any).inferenceSource === "cache" ? P.goldLight
-                       : (meta as any).inferenceSource === "cloud" ? "hsl(200, 50%, 60%)"
+                       : (meta as any).inferenceSource === "cloud" ? "hsl(200, 45%, 60%)"
                        : P.textDim,
+                  fontFamily: P.font,
                 }}>
-                  {(meta as any).inferenceSource === "cache" ? "⚡ Cache"
+                  {(meta as any).inferenceSource === "cache" ? "⚡ Cached"
                    : (meta as any).inferenceSource === "cloud" ? "☁ Cloud"
                    : "⬡ Local"}
                 </span>
               )}
               {meta.inferenceTimeMs !== undefined && (
-                <span className="text-[11px] font-mono" style={{ color: P.textDim }}>
-                  {meta.inferenceTimeMs}ms
+                <span className="text-[10px] tracking-wider" style={{ color: P.textDim, fontFamily: P.font }}>
+                  {meta.inferenceTimeMs < 1000
+                    ? `${meta.inferenceTimeMs}ms`
+                    : `${(meta.inferenceTimeMs / 1000).toFixed(1)}s`}
                 </span>
               )}
               {meta.tokensGenerated !== undefined && (
-                <span className="text-[11px] font-mono" style={{ color: P.textDim }}>
-                  ~{meta.tokensGenerated} tok
-                  {meta.inferenceTimeMs ? ` · ${Math.round(meta.tokensGenerated / (meta.inferenceTimeMs / 1000))}/s` : ""}
-                </span>
-              )}
-              {meta.gpuAccelerated && (
-                <span className="text-[11px] font-mono" style={{ color: P.gold }}>
-                  WebGPU ✓
-                </span>
-              )}
-              {meta.outputCid && (
-                <span className="text-[11px] font-mono" style={{ color: P.textDimmer }}>
-                  {meta.outputCid.slice(0, 16)}…
+                <span className="text-[10px] tracking-wider" style={{ color: P.textDim, fontFamily: P.font }}>
+                  ~{meta.tokensGenerated} tokens
                 </span>
               )}
             </div>
