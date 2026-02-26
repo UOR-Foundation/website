@@ -316,7 +316,7 @@ export default function HologramOsPage() {
           <HologramFrame layer={1} label="chrome" interactive opacity={layerNav.layerOpacity(1)} style={{ transform: `scale(${layerNav.layerScale(1)})`, transition: "opacity 0.7s ease, transform 0.7s ease", zIndex: 400, pointerEvents: "none" }}>
             {/* Background Mode Toggle — top right */}
             <div
-              className="absolute top-[3vh] right-[3vw] animate-fade-in transition-all duration-300 ease-out"
+              className="absolute top-[3vh] right-6 animate-fade-in transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
@@ -375,7 +375,7 @@ export default function HologramOsPage() {
 
             {/* Day Progress Ring — bottom right */}
             <div
-              className="absolute bottom-[3vh] right-[3vw] animate-fade-in flex flex-col items-center gap-3 transition-all duration-300 ease-out"
+              className="absolute bottom-[3vh] right-6 animate-fade-in flex flex-col items-center gap-3 transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
