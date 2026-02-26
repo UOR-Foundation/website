@@ -1067,25 +1067,25 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             if (privateSession) {
               return (
                 <div
-                  className="flex items-center gap-2.5 px-3.5 py-2 mb-2 rounded-xl transition-all"
+                  className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl transition-all"
                   style={{
                     background: "hsla(30, 10%, 15%, 0.5)",
                     border: "1px solid hsla(38, 15%, 30%, 0.12)",
                   }}
                 >
                   <EyeOff
-                    className="w-3.5 h-3.5 shrink-0"
+                    className="w-4 h-4 shrink-0"
                     style={{ color: P.textDim }}
                   />
                   <span
-                    className="text-[12px] tracking-wide"
+                    className="text-[14px] tracking-wide"
                     style={{ color: P.textDim, fontFamily: P.font }}
                   >
                     Private session · Lumen is not observing
                   </span>
                   <button
                     onClick={() => setPrivateSession(false)}
-                    className="ml-auto text-[11px] tracking-wider px-2.5 py-1 rounded-lg transition-all duration-200"
+                    className="ml-auto text-[13px] tracking-wider px-3 py-1.5 rounded-lg transition-all duration-200"
                     style={{
                       color: P.goldMuted,
                       background: "hsla(38, 30%, 40%, 0.08)",
@@ -1116,7 +1116,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             if (!contextLabel && !digest.hasContext) return null;
             return (
               <div
-                className="flex items-center gap-2.5 px-3.5 py-2 mb-2 rounded-xl transition-all"
+                className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl transition-all"
                 style={{
                   background: "hsla(38, 20%, 20%, 0.3)",
                   border: "1px solid hsla(38, 30%, 40%, 0.15)",
@@ -1124,7 +1124,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               >
                 {/* Breathing observation dot */}
                 <div
-                  className="w-2 h-2 rounded-full shrink-0"
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
                   style={{
                     background: P.goldMuted,
                     boxShadow: `0 0 6px hsla(38, 50%, 50%, 0.3)`,
@@ -1133,7 +1133,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 />
                 <div className="flex flex-col min-w-0 flex-1">
                   <span
-                    className="text-[12px] tracking-wide truncate"
+                    className="text-[14px] tracking-wide truncate"
                     style={{ color: P.textMuted, fontFamily: P.font }}
                   >
                     {selectedText ? (
@@ -1151,14 +1151,14 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                     )}
                   </span>
                   <span
-                    className="text-[10px] tracking-wide"
+                    className="text-[12px] tracking-wide"
                     style={{ color: P.textDimmer, fontFamily: P.font }}
                   >
                     Lumen sees your screen context to give better answers
                   </span>
                 </div>
                 <span
-                  className="text-[11px] tracking-wider shrink-0"
+                  className="text-[13px] tracking-wider shrink-0"
                   style={{ color: P.textDimmer }}
                 >
                   {digest.section}
@@ -1166,7 +1166,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 {/* Private session toggle */}
                 <button
                   onClick={() => setPrivateSession(true)}
-                  className="shrink-0 p-1.5 rounded-lg transition-all duration-200"
+                  className="shrink-0 p-2 rounded-lg transition-all duration-200"
                   style={{
                     color: P.textDim,
                     background: "transparent",
@@ -1181,7 +1181,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                   }}
                   title="Go private — stop Lumen from observing this session"
                 >
-                  <EyeOff className="w-3.5 h-3.5" />
+                  <EyeOff className="w-4 h-4" />
                 </button>
               </div>
             );
