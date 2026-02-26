@@ -31,6 +31,7 @@ const SHORTCUTS: Shortcut[] = [
   { keys: [MOD, "B"], label: "Toggle Sidebar", section: "Navigation" },
   // Communication
   { keys: [MOD, "L"], label: "Open Lumen AI", section: "Communication" },
+  { keys: [MOD, "⇧", "V"], label: "Voice Input", section: "Communication" },
   { keys: [MOD, "M"], label: "Messages", section: "Communication" },
   // View
   { keys: [MOD, "F"], label: "Toggle Focus Mode", section: "View" },
