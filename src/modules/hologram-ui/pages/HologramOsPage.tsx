@@ -620,7 +620,7 @@ export default function HologramOsPage() {
                     fontWeight: 300,
                     color: P.heading,
                     letterSpacing: "-0.01em",
-                    fontSize: isFocus ? "clamp(36px, 5vw, 88px)" : "clamp(28px, 3.8vw, 68px)",
+                    fontSize: isFocus ? "clamp(42px, 5.5vw, 96px)" : "clamp(34px, 4.4vw, 76px)",
                   }}
                 >
                   Welcome{contextHints.length > 0 ? " back" : " home"},
