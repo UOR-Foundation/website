@@ -105,6 +105,16 @@ export default function DesktopOsSidebar({
     [location.pathname],
   );
 
+  /** Collapse first, then fire the action after the sidebar animation completes */
+  const collapseAndDo = useCallback((action: () => void) => {
+    if (expanded) {
+      setExpanded(false);
+      setTimeout(action, 320); // matches the 300ms cubic-bezier transition
+    } else {
+      action();
+    }
+  }, [expanded]);
+
   const w = expanded ? EXPANDED_W : COLLAPSED_W;
 
   return (
@@ -198,7 +208,7 @@ export default function DesktopOsSidebar({
           return (
             <IconTooltip key={item.path} label={item.label} show={!expanded}>
               <button
-                onClick={() => navigate(item.path)}
+                onClick={() => collapseAndDo(() => navigate(item.path))}
                 className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                   !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
                 } ${active ? "sidebar-nav-active" : ""}`}
@@ -224,7 +234,7 @@ export default function DesktopOsSidebar({
         {onOpenBrowser && (
           <IconTooltip label="Web" show={!expanded}>
             <button
-              onClick={onOpenBrowser}
+              onClick={() => collapseAndDo(onOpenBrowser)}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                 !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
               }`}
@@ -239,7 +249,7 @@ export default function DesktopOsSidebar({
         {/* Memory */}
         <IconTooltip label="Memory" show={!expanded}>
           <button
-            onClick={() => onOpenMemory?.()}
+            onClick={() => collapseAndDo(() => onOpenMemory?.())}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
             }`}
@@ -253,7 +263,7 @@ export default function DesktopOsSidebar({
         {/* Compute */}
         <IconTooltip label="Compute" show={!expanded}>
           <button
-            onClick={() => onOpenCompute?.()}
+            onClick={() => collapseAndDo(() => onOpenCompute?.())}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
             }`}
@@ -270,7 +280,7 @@ export default function DesktopOsSidebar({
         {onReplayGuide && (
           <IconTooltip label={`Help (${MOD_KEY} /)`} show={!expanded}>
             <button
-              onClick={onReplayGuide}
+              onClick={() => collapseAndDo(() => onReplayGuide?.())}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                 !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
               }`}
@@ -295,7 +305,7 @@ export default function DesktopOsSidebar({
         </IconTooltip>
         <IconTooltip label="Settings" show={!expanded}>
           <button
-            onClick={() => navigate("/settings")}
+            onClick={() => collapseAndDo(() => navigate("/settings"))}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
             }`}
