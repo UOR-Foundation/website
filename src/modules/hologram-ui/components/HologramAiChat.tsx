@@ -186,9 +186,21 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     ? ai.active!.modelId.split("/").pop()
     : CLOUD_MODELS.find((m) => m.id === selectedCloudModel)?.label ?? "Gemini 3 Flash";
 
-  // Auto-scroll
+  // Auto-scroll — gentle, only when user is near the bottom (not reading above)
+  const isNearBottomRef = useRef(true);
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const threshold = 120;
+    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+  }, []);
+
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (!scrollRef.current || !isNearBottomRef.current) return;
+    scrollRef.current.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [messages]);
 
   // Focus input & handle initialPrompt
@@ -953,7 +965,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         {/* Skill bar removed — cleaner, less clutter */}
 
         {/* ── Messages / Welcome ─────────────────────────────────────── */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5 lumen-scroll">
+        <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-5 py-5 lumen-scroll">
           {!hasMessages && !isLoadingModel && (
             <TriadicWelcome
               key={replayGuideKey}
@@ -1270,7 +1282,7 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
               </div>
             ) : (
               <div
-                className="text-[15px] leading-[1.8] prose prose-sm prose-invert max-w-none"
+                className={`text-[15px] leading-[1.8] prose prose-sm prose-invert max-w-none ${isStreaming ? "streaming-reveal" : ""}`}
                 style={{
                   color: "hsl(30, 12%, 78%)",
                   fontFamily: P.font,
