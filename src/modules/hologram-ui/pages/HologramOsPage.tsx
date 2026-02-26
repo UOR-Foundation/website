@@ -22,6 +22,7 @@ import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaim
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
+import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
 import HologramFrame, { HologramViewport, OverlayFrame, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
 import FrameDebugOverlay from "@/modules/hologram-ui/components/FrameDebugOverlay";
@@ -143,6 +144,7 @@ export default function HologramOsPage() {
   const triadicActivity = useTriadicActivity();
   const attention = useAttentionMode();
   const [replayGuide, setReplayGuide] = useState(0);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const ctx = useContextProjection();
   const contentTilt = useFrameTilt({ maxTilt: 0, smoothing: 0, maxShift: 0 });
   const canvasTilt = useFrameTilt({ maxTilt: 0, smoothing: 0, maxShift: 0 });
@@ -193,12 +195,10 @@ export default function HologramOsPage() {
         case "m": case "M": e.preventDefault(); /* TODO: open messages */ break;
         // ⌘H — Home (H = Home)
         case "h": case "H": e.preventDefault(); navigate("/hologram-console"); break;
-        // ⌘/ — Help guide (universal help convention)
+        // ⌘/ — Shortcut cheat sheet
         case "/":
           e.preventDefault();
-          localStorage.removeItem("hologram:onboarding-seen");
-          setReplayGuide(c => c + 1);
-          setChatOpen(true);
+          setShortcutsOpen(prev => !prev);
           break;
       }
     };
@@ -236,11 +236,7 @@ export default function HologramOsPage() {
             onToggle={() => setSidebarCollapsed((p) => !p)}
             onNewChat={() => setChatOpen(true)}
             onOpenChat={() => setChatOpen(true)}
-            onReplayGuide={() => {
-              localStorage.removeItem("hologram:onboarding-seen");
-              setReplayGuide((c) => c + 1);
-              setChatOpen(true);
-            }}
+            onReplayGuide={() => setShortcutsOpen(true)}
           />
         </div>
 
@@ -622,6 +618,7 @@ export default function HologramOsPage() {
        *  Inside the viewport so depth recession triggers on lower frames
        * ════════════════════════════════════════════════════════════════ */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
+      <ShortcutCheatSheet open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <HologramAiChat
         open={chatOpen}
         onClose={() => { setChatOpen(false); setChatPrompt(""); }}
