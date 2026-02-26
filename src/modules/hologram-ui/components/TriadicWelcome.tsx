@@ -113,26 +113,44 @@ export default function TriadicWelcome({
             : "triadic-slide-out-left 0.28s cubic-bezier(0.55, 0, 1, 0.45) both",
         }}
       >
-        {/* Greeting */}
-        <div className="flex flex-col justify-end pb-8 px-7 pt-6">
+        {/* Greeting — scales with viewport */}
+        <div
+          className="flex flex-col justify-end px-7"
+          style={{ paddingTop: "clamp(12px, 2vh, 24px)", paddingBottom: "clamp(12px, 2.5vh, 32px)" }}
+        >
           <h2
-            className="text-[clamp(26px,5.5vw,34px)] font-light leading-[1.3] tracking-[0.03em]"
-            style={{ fontFamily: P.fontDisplay, color: P.text }}
+            className="font-light leading-[1.25] tracking-[0.03em]"
+            style={{
+              fontFamily: P.fontDisplay,
+              color: P.text,
+              fontSize: "clamp(22px, 3.5vh, 34px)",
+            }}
           >
             What would you like
             <br />
             to focus on?
           </h2>
           <p
-            className="text-[15px] mt-4 leading-[1.7] tracking-[0.01em]"
-            style={{ color: P.textDim, fontFamily: P.font }}
+            className="leading-[1.7] tracking-[0.01em]"
+            style={{
+              color: P.textDim,
+              fontFamily: P.font,
+              fontSize: "clamp(12px, 1.8vh, 15px)",
+              marginTop: "clamp(6px, 1.2vh, 16px)",
+            }}
           >
             Choose a mode to begin
           </p>
         </div>
 
-        {/* Three phase cards */}
-        <div className="flex-1 flex flex-col justify-start gap-4 px-5 pb-6">
+        {/* Three phase cards — flex-1 fills remaining space */}
+        <div
+          className="flex-1 flex flex-col justify-start px-5"
+          style={{
+            gap: "clamp(8px, 1.5vh, 16px)",
+            paddingBottom: "clamp(8px, 1.5vh, 24px)",
+          }}
+        >
           {PHASE_ORDER.map((phase, i) => {
             const phaseDef = PHASES[phase];
             const desc = PHASE_DESCRIPTIONS[phase];
@@ -143,8 +161,10 @@ export default function TriadicWelcome({
               <button
                 key={phase}
                 onClick={() => selectPhase(phase)}
-                className="w-full group relative flex items-center gap-5 px-6 py-6 rounded-2xl text-left transition-all duration-500 hover:scale-[1.008]"
+                className="w-full group relative flex items-center rounded-2xl text-left transition-all duration-500 hover:scale-[1.008]"
                 style={{
+                  gap: "clamp(10px, 2vh, 20px)",
+                  padding: "clamp(12px, 2vh, 24px) clamp(14px, 2vh, 24px)",
                   background: isCurrentPhase
                     ? `hsla(${phaseDef.hue}, 25%, 30%, 0.12)`
                     : "hsla(28, 10%, 17%, 0.4)",
@@ -167,24 +187,34 @@ export default function TriadicWelcome({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-3">
                     <span
-                      className="text-[22px] font-light tracking-[0.04em] capitalize"
+                      className="font-light tracking-[0.04em] capitalize"
                       style={{
                         fontFamily: P.fontDisplay,
                         color: `hsla(${phaseDef.hue}, 25%, 76%, 0.95)`,
+                        fontSize: "clamp(16px, 2.5vh, 22px)",
                       }}
                     >
                       {phase}
                     </span>
                     <span
-                      className="text-[12px] tracking-[0.2em] uppercase"
-                      style={{ color: P.textDimmer, fontFamily: P.font }}
+                      className="tracking-[0.2em] uppercase"
+                      style={{
+                        color: P.textDimmer,
+                        fontFamily: P.font,
+                        fontSize: "clamp(9px, 1.3vh, 12px)",
+                      }}
                     >
                       {desc.verb}
                     </span>
                   </div>
                   <p
-                    className="text-[14px] mt-2 leading-[1.7]"
-                    style={{ color: P.textMuted, fontFamily: P.font }}
+                    className="leading-[1.65]"
+                    style={{
+                      color: P.textMuted,
+                      fontFamily: P.font,
+                      fontSize: "clamp(11px, 1.6vh, 14px)",
+                      marginTop: "clamp(4px, 0.8vh, 8px)",
+                    }}
                   >
                     {desc.invitation}
                   </p>
@@ -193,8 +223,12 @@ export default function TriadicWelcome({
                 {/* Persona count */}
                 <div className="flex-shrink-0 text-right">
                   <span
-                    className="text-[13px] tabular-nums tracking-wide"
-                    style={{ color: P.textDimmer, fontFamily: P.font }}
+                    className="tabular-nums tracking-wide"
+                    style={{
+                      color: P.textDimmer,
+                      fontFamily: P.font,
+                      fontSize: "clamp(10px, 1.4vh, 13px)",
+                    }}
                   >
                     {personaCount} {personaCount === 1 ? "guide" : "guides"}
                   </span>
@@ -205,10 +239,20 @@ export default function TriadicWelcome({
         </div>
 
         {/* Current selection indicator */}
-        <div className="flex justify-center pb-5 pt-2">
+        <div
+          className="flex justify-center"
+          style={{
+            paddingBottom: "clamp(8px, 1.5vh, 20px)",
+            paddingTop: "clamp(4px, 0.8vh, 8px)",
+          }}
+        >
           <p
-            className="text-[12px] tracking-[0.2em] uppercase"
-            style={{ color: P.textDimmer, fontFamily: P.font }}
+            className="tracking-[0.2em] uppercase"
+            style={{
+              color: P.textDimmer,
+              fontFamily: P.font,
+              fontSize: "clamp(9px, 1.2vh, 12px)",
+            }}
           >
             Active guide · {selectedPersona.name}
           </p>
