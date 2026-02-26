@@ -26,6 +26,8 @@ import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSh
 import LegalPanel from "@/modules/hologram-ui/components/LegalPanel";
 import HologramFrame, { HologramViewport, OverlayFrame, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
+import ModularSnapGrid from "@/modules/hologram-ui/components/ModularSnapGrid";
+import { useModularPanel } from "@/modules/hologram-ui/hooks/useModularPanel";
 import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
 import FrameDebugOverlay from "@/modules/hologram-ui/components/FrameDebugOverlay";
 import LayerNavHUD from "@/modules/hologram-ui/components/LayerNavHUD";
@@ -141,6 +143,13 @@ export default function HologramOsPage() {
   const isMobile = useIsMobile();
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const lumenPanel = useModularPanel({
+    storageKey: "lumen-ai",
+    defaultWidth: 340,
+    constraints: { minWidth: 280, maxWidth: 600 },
+    snap: true,
+    dockSide: "right",
+  });
   const [chatPrompt, setChatPrompt] = useState("");
   const [legalOpen, setLegalOpen] = useState(false);
   const [legalTab, setLegalTab] = useState<"privacy" | "terms">("privacy");
@@ -266,13 +275,13 @@ export default function HologramOsPage() {
 
         {/* Main viewport area — contains canvas + chrome + content frames */}
         <div
-          className="flex-1 relative overflow-hidden transition-all ease-in-out z-0"
+          className={`flex-1 relative overflow-hidden z-0 ${lumenPanel.isResizing ? "" : "transition-all ease-in-out"}`}
           style={{
             opacity: departing ? 0 : 1,
             transform: departing ? "scale(1.02)" : isFocus ? "scale(1.03)" : "scale(1)",
             filter: departing ? "blur(4px)" : "none",
-            transitionDuration: isFocus ? "600ms" : "400ms",
-            marginRight: chatOpen ? "min(340px, 82vw)" : "0px",
+            transitionDuration: lumenPanel.isResizing ? "0ms" : isFocus ? "600ms" : "400ms",
+            marginRight: chatOpen ? `${lumenPanel.width}px` : "0px",
           }}
         >
           {/* Focus toggle — lives inside content area so it shifts with Lumen */}
@@ -716,6 +725,7 @@ export default function HologramOsPage() {
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
       <ShortcutCheatSheet open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <LegalPanel open={legalOpen} initialTab={legalTab} onClose={() => setLegalOpen(false)} bgMode={bgMode === "white" ? "white" : "dark"} />
+      <ModularSnapGrid visible={lumenPanel.isResizing} />
       <HologramAiChat
         open={chatOpen}
         onClose={() => { setChatOpen(false); setChatPrompt(""); }}
@@ -723,6 +733,9 @@ export default function HologramOsPage() {
         creatorStage={triadicActivity.creatorStage}
         replayGuideKey={replayGuide}
         initialPrompt={chatPrompt}
+        panelWidth={lumenPanel.width}
+        resizeHandleProps={lumenPanel.resizeHandleProps}
+        isResizing={lumenPanel.isResizing}
       />
       {/* FrameDebugOverlay removed for cleaner UI */}
     </HologramViewport>

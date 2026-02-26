@@ -372,3 +372,17 @@
   scrollbar-width: thin;
   scrollbar-color: hsla(38, 20%, 40%, 0.18) transparent;
 }
+
+/* ── Modular panel resize handle ─────────────────────────────────────── */
+.hologram-resize-handle {
+  touch-action: none;
+}
+.hologram-resize-handle:hover > div,
+.hologram-resize-handle[data-resizing="true"] > div {
+  opacity: 1 !important;
+}
+.hologram-resize-handle[data-resizing="true"] > div {
+  background: hsla(38, 50%, 60%, 0.5) !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+}

@@ -130,11 +130,17 @@ interface HologramAiChatProps {
   replayGuideKey?: number;
   /** Pre-seed the input with a prompt when opening */
   initialPrompt?: string;
+  /** Panel width (controlled by modular panel hook) */
+  panelWidth?: number;
+  /** Resize handle props from useModularPanel */
+  resizeHandleProps?: Record<string, any>;
+  /** Whether the panel is being resized */
+  isResizing?: boolean;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export default function HologramAiChat({ open, onClose, onPhaseChange, creatorStage = 1, replayGuideKey = 0, initialPrompt }: HologramAiChatProps) {
+export default function HologramAiChat({ open, onClose, onPhaseChange, creatorStage = 1, replayGuideKey = 0, initialPrompt, panelWidth, resizeHandleProps, isResizing }: HologramAiChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -816,10 +822,31 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       <div
         className="fixed top-0 right-0 bottom-0 z-[60] flex pointer-events-auto"
         style={{
-          width: "min(340px, 82vw)",
-          animation: "lumen-slide-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both",
+          width: panelWidth ? `${panelWidth}px` : "min(340px, 82vw)",
+          animation: isResizing ? "none" : "lumen-slide-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both",
+          transition: isResizing ? "none" : undefined,
         }}
       >
+        {/* ── Resize handle — left edge drag strip ─────────────────── */}
+        {resizeHandleProps && (
+          <div
+            {...resizeHandleProps}
+            className="absolute top-0 bottom-0 -left-[3px] w-[7px] z-[62] group flex items-center justify-center"
+            style={{
+              ...resizeHandleProps.style,
+            }}
+          >
+            {/* Visual indicator — thin gold line on hover */}
+            <div
+              className="w-[2px] h-16 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100"
+              style={{
+                background: "hsla(38, 40%, 55%, 0.4)",
+                boxShadow: "0 0 8px hsla(38, 40%, 55%, 0.15)",
+              }}
+            />
+          </div>
+        )}
+
         {/* Close arrow moved inside panel body below */}
 
         <div
