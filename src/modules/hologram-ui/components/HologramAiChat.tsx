@@ -878,36 +878,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           </div>
         </div>
 
-        {/* ── Skill Bar ──────────────────────────────────────────────── */}
-        {hasMessages && (
-          <div
-            className="flex items-center gap-1.5 px-4 py-1.5 flex-wrap flex-shrink-0"
-          >
-            <span className="text-[11px] tracking-wider flex-shrink-0 mr-1" style={{ color: P.textDim }}>
-              {selectedPersona.name}
-            </span>
-            {AGENT_SKILLS.filter(s => s.phase === selectedPersona.phase).map((skill) => {
-              const isActive = (activeSkill?.id || selectedPersona.defaultSkillId) === skill.id;
-              const phaseDef = PHASES[skill.phase];
-              return (
-                <button
-                  key={skill.id}
-                  onClick={() => setActiveSkill(isActive && activeSkill ? null : skill)}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] flex-shrink-0 transition-all"
-                  style={{
-                    background: isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.2)` : "transparent",
-                    border: `1px solid ${isActive ? `hsla(${phaseDef.hue}, 40%, 40%, 0.35)` : "transparent"}`,
-                    color: isActive ? phaseDef.color : P.textDim,
-                  }}
-                  title={skill.description}
-                >
-                  <span>{skill.icon}</span>
-                  {skill.name}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {/* Skill bar removed — cleaner, less clutter */}
 
         {/* ── Messages / Welcome ─────────────────────────────────────── */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
@@ -992,7 +963,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 value={input}
                 onChange={(e) => { setInput(e.target.value); acceleratorRef.current.prefetcher.onInput(e.target.value); }}
                 onKeyDown={handleKeyDown}
-                placeholder={ai.isReady ? "Ask anything…" : "Ask anything — cloud AI is always ready…"}
+                placeholder="Ask anything…"
                 disabled={isGenerating}
                 rows={1}
                 className="w-full bg-transparent border-none outline-none resize-none text-[15px] placeholder:opacity-40 leading-relaxed"
@@ -1005,20 +976,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             </div>
 
             {/* Bottom toolbar */}
-            <div className="flex items-center justify-between px-3 pb-2.5">
-              <div className="flex items-center gap-1">
-                {/* Plus / attachment button */}
-                <button
-                  onClick={() => {
-                    if (!ai.isReady && !isLoadingModel) setShowModelPicker((p) => !p);
-                  }}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/[0.08]"
-                  style={{ color: P.textMuted }}
-                  title={ai.isReady ? "Attach" : "Load model"}
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
+            <div className="flex items-center justify-end px-3 pb-2.5">
 
               <div className="flex items-center gap-2">
                 {/* Model selector dropdown */}
@@ -1115,15 +1073,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             </div>
           </div>
 
-          {/* Subtle status line */}
-          <div className="flex items-center justify-between mt-1.5 px-2">
-            <p className="text-[11px] tracking-wider" style={{ color: P.textDimmer }}>
-              {ai.isReady ? "Private · On-device · Content-addressed" : "Cloud AI · Content-addressed · Cached"}
-            </p>
-            {history.isAuthenticated && history.activeConversationId && (
-              <p className="text-[11px] tracking-wider" style={{ color: P.goldMuted }}>● Saving</p>
-            )}
-          </div>
+          {/* Status footer removed — cleaner */}
           </div>
         </div>
       </div>
@@ -1150,14 +1100,14 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} animate-[message-fade-in_0.5s_ease-out_both]`}>
-      <div className="flex gap-3 max-w-[90%]">
+      <div className="flex gap-2.5 max-w-[92%]">
         {/* Avatar for assistant */}
         {!isUser && (
           <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
             style={{ background: P.goldBg }}
           >
-            <Sparkles className="w-3.5 h-3.5" style={{ color: P.goldLight }} />
+            <Sparkles className="w-3 h-3" style={{ color: P.goldLight }} />
           </div>
         )}
 
@@ -1333,36 +1283,17 @@ function MessageBubble({ message, isStreaming = false }: { message: ChatMessage;
             )}
           </div>
 
-          {/* Inference metadata — clean, minimal */}
-          {meta && !isStreaming && (
-            <div
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 px-1 animate-in fade-in duration-500"
-              style={{ animationDelay: "200ms", animationFillMode: "both" }}
-            >
-              {(meta as any).inferenceSource && (
-                <span className="text-[10px] tracking-wider font-medium" style={{
-                  color: (meta as any).inferenceSource === "cache" ? P.goldLight
-                       : (meta as any).inferenceSource === "cloud" ? "hsl(200, 45%, 60%)"
-                       : P.textDim,
-                  fontFamily: P.font,
-                }}>
-                  {(meta as any).inferenceSource === "cache" ? "⚡ Cached"
-                   : (meta as any).inferenceSource === "cloud" ? "☁ Cloud"
-                   : "⬡ Local"}
-                </span>
-              )}
-              {meta.inferenceTimeMs !== undefined && (
-                <span className="text-[10px] tracking-wider" style={{ color: P.textDim, fontFamily: P.font }}>
-                  {meta.inferenceTimeMs < 1000
-                    ? `${meta.inferenceTimeMs}ms`
-                    : `${(meta.inferenceTimeMs / 1000).toFixed(1)}s`}
-                </span>
-              )}
-              {meta.tokensGenerated !== undefined && (
-                <span className="text-[10px] tracking-wider" style={{ color: P.textDim, fontFamily: P.font }}>
-                  ~{meta.tokensGenerated} tokens
-                </span>
-              )}
+          {/* Minimal metadata — just source indicator */}
+          {meta && !isStreaming && (meta as any).inferenceSource && (
+            <div className="mt-1.5 px-1 animate-in fade-in duration-500" style={{ animationDelay: "200ms", animationFillMode: "both" }}>
+              <span className="text-[11px] tracking-wider" style={{
+                color: (meta as any).inferenceSource === "cache" ? P.goldMuted : P.textDim,
+                fontFamily: P.font,
+              }}>
+                {(meta as any).inferenceSource === "cache" ? "⚡ Instant"
+                 : (meta as any).inferenceSource === "cloud" ? "☁ Cloud"
+                 : "⬡ Local"}
+              </span>
             </div>
           )}
         </div>
