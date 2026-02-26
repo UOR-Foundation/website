@@ -629,7 +629,7 @@ export default function HologramOsPage() {
                       width: 0,
                       borderLeft: `1px solid ${
                         bgMode === "white"
-                          ? "hsla(0, 0%, 10%, 0.35)"
+                          ? "hsla(0, 0%, 10%, 0.45)"
                           : bgMode === "dark"
                             ? "hsla(0, 0%, 85%, 0.3)"
                             : "hsla(0, 0%, 95%, 0.35)"
@@ -690,7 +690,7 @@ export default function HologramOsPage() {
                         fontWeight: 400,
                         fontSize: isFocus ? "clamp(12px, 1vw, 15px)" : "clamp(11px, 0.85vw, 13px)",
                         color: bgMode === "white"
-                          ? "hsla(30, 10%, 25%, 0.7)"
+                          ? "hsla(0, 0%, 15%, 0.85)"
                           : "hsla(38, 15%, 88%, 0.7)",
                       }}
                     >
@@ -705,7 +705,7 @@ export default function HologramOsPage() {
                         fontWeight: 300,
                         fontStyle: "italic",
                         fontSize: isFocus ? "clamp(14px, 1.2vw, 20px)" : "clamp(12px, 1vw, 17px)",
-                        color: bgMode === "white" ? "hsla(0, 0%, 25%, 0.6)" : "hsla(38, 12%, 85%, 0.6)",
+                        color: bgMode === "white" ? "hsla(0, 0%, 15%, 0.7)" : "hsla(38, 12%, 85%, 0.6)",
                         maxWidth: "30ch",
                         lineHeight: 1.6,
                         animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
