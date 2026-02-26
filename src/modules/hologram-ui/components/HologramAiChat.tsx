@@ -359,10 +359,10 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       const acc = acceleratorRef.current;
       const resolved = await acc.resolve(text);
 
-      if (resolved.text && (resolved.source === "l0-memory" || resolved.source === "prefetch" || resolved.source === "l2-proof-store")) {
+      if (resolved.text && (resolved.source === "l0-memory" || resolved.source === "l0-semantic" || resolved.source === "prefetch" || resolved.source === "l2-proof-store")) {
         // Instant replay — L0 memory (<0.1ms) or prefetched/proof-store
         const start = performance.now();
-        const isL0 = resolved.source === "l0-memory";
+        const isL0 = resolved.source === "l0-memory" || resolved.source === "l0-semantic";
         await new Promise<void>((resolve) => {
           streamOptimized(
             resolved.text!,
@@ -374,11 +374,15 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         const elapsed = Math.round(performance.now() - start);
         const tokCount = resolved.text!.split(/\s+/).length;
 
+        const semanticInfo = resolved.source === "l0-semantic" && resolved.semanticMatch
+          ? ` ≈${Math.round((resolved.semanticSimilarity ?? 0) * 100)}% "${resolved.semanticMatch.slice(0, 40)}"`
+          : "";
+
         const meta: ChatMessage["meta"] = {
           inferenceTimeMs: elapsed,
           tokensGenerated: tokCount,
           gpuAccelerated: false,
-          inputCid: `acc:${resolved.source}`,
+          inputCid: `acc:${resolved.source}${semanticInfo}`,
           outputCid: `resolution:${resolved.resolutionTimeUs}μs`,
           inferenceSource: "cache" as const,
         };

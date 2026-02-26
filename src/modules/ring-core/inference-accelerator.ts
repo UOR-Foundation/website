@@ -2,13 +2,14 @@
  * UOR v2.0.0 — Inference Accelerator
  * ═════════════════════════════════════════════════════════════════════════════
  *
- * Five-tier acceleration architecture that makes inference feel instant:
+ * Six-tier acceleration architecture that makes inference feel instant:
  *
- *   L0  In-Memory LRU Cache    — 0ms, no network, no hashing
- *   L1  Scaffold Memoization   — 0ms, deterministic pure function cache  
- *   L2  LUT-Accelerated Hash   — <0.1ms via Z/256Z ring lookups
- *   L3  Speculative Prefetch   — pre-warm cache while user types
- *   L4  Streaming Optimizer     — rAF-batched token emission at 60fps
+ *   L0   In-Memory LRU Cache     — 0ms, exact fingerprint match
+ *   L0.5 Semantic Similarity     — <0.1ms, trigram cosine nearest-neighbor
+ *   L1   Scaffold Memoization    — 0ms, deterministic pure function cache  
+ *   L2   LUT-Accelerated Hash    — <0.1ms via Z/256Z ring lookups
+ *   L3   Speculative Prefetch    — pre-warm cache while user types
+ *   L4   Streaming Optimizer     — rAF-batched token emission at 60fps
  *
  * Key insight: The Holographic Principle applied to inference itself.
  * Every computation is a projection of a content-addressed canonical form.
@@ -20,6 +21,7 @@
 
 import { buildScaffold, type SymbolicScaffold } from "./neuro-symbolic";
 import { decomposeToClaims, batchLookupProofs, type ClaimSlot, type ProofLookupResult } from "./proof-gated-inference";
+import { SemanticIndex } from "./semantic-similarity";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // L0 — In-Memory LRU Cache (zero latency)
@@ -320,7 +322,7 @@ export interface AcceleratedResult {
   /** The response text (from cache or to be filled by LLM). */
   text: string | null;
   /** Source of the result. */
-  source: "l0-memory" | "l2-proof-store" | "prefetch" | "miss";
+  source: "l0-memory" | "l0-semantic" | "l2-proof-store" | "prefetch" | "miss";
   /** Scaffold (always available, from L1 memoization). */
   scaffold: SymbolicScaffold;
   /** Decomposed claims. */
@@ -329,6 +331,10 @@ export interface AcceleratedResult {
   lookup: ProofLookupResult | null;
   /** Time to first result in microseconds. */
   resolutionTimeUs: number;
+  /** Semantic similarity score (if L0.5 hit). */
+  semanticSimilarity?: number;
+  /** Original query that was semantically matched. */
+  semanticMatch?: string;
 }
 
 /**
@@ -342,6 +348,7 @@ export interface AcceleratedResult {
  */
 export class InferenceAccelerator {
   readonly l0 = new InferenceL0Cache(256);
+  readonly semanticIndex = new SemanticIndex(256, 0.78);
   readonly prefetcher = new SpeculativePrefetcher(this.l0);
 
   /**
@@ -363,6 +370,27 @@ export class InferenceAccelerator {
         lookup: null,
         resolutionTimeUs: Math.round((performance.now() - start) * 1000),
       };
+    }
+
+    // ── L0.5: Semantic similarity check (<0.1ms) ─────────────
+    const semanticHit = this.semanticIndex.findNearest(query);
+    if (semanticHit) {
+      const cachedEntry = this.l0.get(semanticHit.cacheKey);
+      if (cachedEntry) {
+        // Also store under the new fingerprint for future exact match
+        this.l0.set(fingerprint, cachedEntry.output, cachedEntry.grade);
+        this.semanticIndex.add(query, fingerprint);
+        return {
+          text: cachedEntry.output,
+          source: "l0-semantic",
+          scaffold: memoizedBuildScaffold(query, quantum),
+          claims: [],
+          lookup: null,
+          resolutionTimeUs: Math.round((performance.now() - start) * 1000),
+          semanticSimilarity: semanticHit.similarity,
+          semanticMatch: semanticHit.matchedQuery,
+        };
+      }
     }
 
     // ── L3: Check speculative prefetch ───────────────────────
@@ -426,14 +454,16 @@ export class InferenceAccelerator {
   cacheResult(query: string, output: string, grade: string): void {
     const fingerprint = lutFingerprint(query);
     this.l0.set(fingerprint, output, grade);
+    this.semanticIndex.add(query, fingerprint);
   }
 
   /**
    * Get acceleration stats for UI display.
    */
-  stats(): { l0Size: number; scaffoldCacheSize: number } {
+  stats(): { l0Size: number; semanticIndexSize: number; scaffoldCacheSize: number } {
     return {
       l0Size: this.l0.size,
+      semanticIndexSize: this.semanticIndex.size,
       scaffoldCacheSize: scaffoldCache.size,
     };
   }
