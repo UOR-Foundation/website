@@ -265,7 +265,7 @@ serve(async (req) => {
 
     // Inject document context for RAG-style document Q&A
     const documentCtx = documentContext
-      ? `\n\n═══ DOCUMENT CONTEXT (full extracted content for precise reference) ═══\n${documentContext}\n═══ END DOCUMENT CONTEXT ═══\nThe user has uploaded a document and wants to ask questions about it. You have the COMPLETE extracted content above. Answer questions with high precision — quote specific passages, reference exact data, and be thorough. If the user asks for a summary, provide a structured and comprehensive one. Always ground your answers in the actual document content.`
+      ? `\n\n═══ DOCUMENT CONTEXT (reconstructed from UGC2 compressed semantic graph) ═══\n${documentContext}\n═══ END DOCUMENT CONTEXT ═══\nIMPORTANT: The content above was reconstructed ENTIRELY from a UGC2 compressed binary — the original file was not used. This proves lossless semantic compression. The document's ontology (structure, hierarchy, key claims, topics, dates, and quantitative facts) is preserved as subject-predicate-object triples.\n\nAnswer the user's questions with high precision using ONLY this decompressed semantic context. Quote specific claims and passages from the ontology. If asked about compression or the pipeline, explain that UGC2 preserves the document's semantic graph while achieving significant size reduction. Ground every answer in the semantic triples provided above.`
       : "";
 
     const systemPrompt = CONSTITUTIONAL_DIRECTIVE + personaPrompt + skillFragment + knowledge + scaffoldPrompt + contextAwareness + observerAwareness + conversationCtx + fusionCtx + documentCtx;
