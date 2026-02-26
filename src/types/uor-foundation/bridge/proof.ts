@@ -1,20 +1,24 @@
 /**
  * UOR Foundation v2.0.0 — bridge::proof
  *
- * Kernel-produced verification proofs.
+ * Kernel-produced verification proofs with typed witness data.
  *
- * @see spec/src/namespaces/proof.rs
+ * @see foundation/src/bridge/proof.rs
  * @namespace proof/
  */
 
 /**
  * WitnessData — evidence supporting a proof.
+ * Now strongly typed with witness_type and witness_content
+ * per v2.0.0 spec.
  */
 export interface WitnessData {
   /** Witness identifier. */
   witnessId(): string;
-  /** The data being witnessed (serialized). */
-  data(): string;
+  /** Witness type discriminator (e.g., "coherence", "identity", "involution"). */
+  witnessType(): string;
+  /** Serialized witness content (canonical form). */
+  witnessContent(): string;
   /** Timestamp of witness creation. */
   timestamp(): string;
 }
@@ -31,6 +35,8 @@ export interface Proof {
   quantum(): number;
   /** Supporting witness data. */
   witness(): WitnessData;
+  /** The algebraic identity this proof establishes (null if not an identity proof). */
+  provesIdentity(): string | null;
 }
 
 /**
@@ -53,6 +59,8 @@ export interface CoherenceProof extends Proof {
  * @disjoint CoherenceProof
  */
 export interface CriticalIdentityProof extends Proof {
+  /** Always references the critical identity. */
+  provesIdentity(): "neg(bnot(x)) = succ(x)";
   /** Number of ring elements tested. */
   testedCount(): number;
   /** Number that passed. */

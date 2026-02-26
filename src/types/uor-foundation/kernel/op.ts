@@ -1,9 +1,14 @@
 /**
  * UOR Foundation v2.0.0 — kernel::op
  *
- * 10 primitive operations, dihedral symmetry, and the critical identity.
+ * 10 primitive operations, dihedral symmetry, the critical identity,
+ * and the canonical OP_META table (commutativity + involution metadata).
  *
- * @see spec/src/namespaces/op.rs
+ * NOTE: The Rust v2.0.0 crate returns false for all is_commutative/is_involution
+ * calls — this is a known codegen bug. Our metadata here is AHEAD of the
+ * Rust crate and captures the correct algebraic properties.
+ *
+ * @see foundation/src/kernel/op.rs
  * @namespace op/
  */
 
@@ -20,6 +25,8 @@ export interface Operation {
   geometricCharacter(): GeometricCharacter;
   /** Whether this operation is its own inverse (f∘f = id). */
   isInvolution(): boolean;
+  /** Whether this operation commutes (f(x,y) = f(y,x)). Only meaningful for binary ops. */
+  isCommutative(): boolean;
   /** Arity: 1 for unary, 2 for binary. */
   arity(): number;
 }
@@ -57,8 +64,8 @@ export interface Involution extends UnaryOp {
  * Identity — the identity operation (f(x) = x for all x).
  */
 export interface IdentityOp extends UnaryOp {
-  /** Always "Identity". */
-  name(): "Neg"; // identity is expressed as neg∘neg
+  /** Always "Neg"; identity is expressed as neg∘neg. */
+  name(): "Neg";
   isInvolution(): true;
 }
 
@@ -119,4 +126,34 @@ export const OP_GEOMETRY: Record<PrimitiveOp, GeometricCharacter> = {
   Xor:  "HypercubeTranslation",
   And:  "HypercubeProjection",
   Or:   "HypercubeJoin",
+};
+
+// ── OP_META — algebraic properties ─────────────────────────────────────────
+
+/** Metadata per PrimitiveOp: arity, commutativity, involution, geometric character. */
+export interface OpMeta {
+  arity: 1 | 2;
+  isCommutative: boolean;
+  isInvolution: boolean;
+  character: GeometricCharacter;
+}
+
+/**
+ * Canonical operation metadata table.
+ *
+ * The Rust v2.0.0 codegen returns false for isCommutative and isInvolution
+ * on all ops — that is a codegen placeholder. This table captures the
+ * mathematically correct values.
+ */
+export const OP_META: Record<PrimitiveOp, OpMeta> = {
+  Neg:  { arity: 1, isCommutative: false, isInvolution: true,  character: "RingReflection" },
+  Bnot: { arity: 1, isCommutative: false, isInvolution: true,  character: "HypercubeReflection" },
+  Succ: { arity: 1, isCommutative: false, isInvolution: false, character: "Rotation" },
+  Pred: { arity: 1, isCommutative: false, isInvolution: false, character: "RotationInverse" },
+  Add:  { arity: 2, isCommutative: true,  isInvolution: false, character: "Translation" },
+  Sub:  { arity: 2, isCommutative: false, isInvolution: false, character: "Translation" },
+  Mul:  { arity: 2, isCommutative: true,  isInvolution: false, character: "Scaling" },
+  Xor:  { arity: 2, isCommutative: true,  isInvolution: false, character: "HypercubeTranslation" },
+  And:  { arity: 2, isCommutative: true,  isInvolution: false, character: "HypercubeProjection" },
+  Or:   { arity: 2, isCommutative: true,  isInvolution: false, character: "HypercubeJoin" },
 };

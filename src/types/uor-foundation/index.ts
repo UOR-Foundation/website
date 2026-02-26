@@ -1,8 +1,13 @@
 /**
  * UOR Foundation v2.0.0 — Barrel Export
  *
- * Single entry point for all 82 interfaces, 5 enums, and 5 named individuals.
+ * Single entry point for all interfaces, 5 enums, and named individuals.
  * Transcribed 1:1 from the Rust uor-foundation crate.
+ *
+ * 14 canonical namespaces across Tri-Space:
+ *   Kernel (3):  u/, schema/, op/
+ *   Bridge (8):  query/, resolver/, partition/, observable/, proof/, derivation/, trace/, cert/
+ *   User   (3):  type/, morphism/, state/
  *
  * @version 2.0.0
  * @see https://github.com/UOR-Foundation/UOR-Framework
@@ -40,7 +45,8 @@ export type {
 } from "./kernel";
 
 export { PI1, ZERO } from "./kernel/schema";
-export { CRITICAL_IDENTITY, D2N, OP_GEOMETRY } from "./kernel/op";
+export { CRITICAL_IDENTITY, D2N, OP_GEOMETRY, OP_META } from "./kernel/op";
+export type { OpMeta } from "./kernel/op";
 
 // ── Bridge Space ───────────────────────────────────────────────────────────
 export type {
