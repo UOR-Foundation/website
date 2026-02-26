@@ -79,7 +79,7 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
     try {
       const result = await firecrawlApi.scrape(formatted, {
         formats: ["markdown", "links"],
-        onlyMainContent: false,
+        onlyMainContent: true,
       });
 
       if (!result.success) {
@@ -495,15 +495,15 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
 
         {page && !loading && (
           <article
-            className="px-12 py-10 max-w-[960px] mx-auto"
+            className="px-8 md:px-16 py-10 max-w-[1100px] mx-auto w-full"
             style={{ color: P.text }}
           >
             {/* Page title bar */}
-            <div className="mb-6 pb-4" style={{ borderBottom: `1px solid ${P.border}` }}>
-              <h1 className="text-[20px] font-light tracking-tight" style={{ color: P.text }}>
+            <div className="mb-8 pb-5" style={{ borderBottom: `1px solid ${P.border}` }}>
+              <h1 className="text-[24px] font-light tracking-tight" style={{ color: P.text }}>
                 {page.title}
               </h1>
-              <p className="text-[11px] font-light mt-1 truncate" style={{ color: P.textMuted }}>
+              <p className="text-[11px] font-light mt-1.5 truncate" style={{ color: P.textMuted }}>
                 {page.url}
               </p>
             </div>
@@ -540,37 +540,42 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
                     </a>
                   ),
                   h1: ({ children }) => (
-                    <h1 className="text-[22px] font-light tracking-tight mt-8 mb-4" style={{ color: P.text, lineHeight: 1.3 }}>
+                    <h1 className="text-[26px] font-light tracking-tight mt-10 mb-5" style={{ color: P.text, lineHeight: 1.25 }}>
                       {children}
                     </h1>
                   ),
                   h2: ({ children }) => (
-                    <h2 className="text-[18px] font-light tracking-tight mt-7 mb-3" style={{ color: P.text, lineHeight: 1.35 }}>
+                    <h2 className="text-[20px] font-light tracking-tight mt-8 mb-4" style={{ color: P.text, lineHeight: 1.3, borderBottom: `1px solid ${P.border}`, paddingBottom: 8 }}>
                       {children}
                     </h2>
                   ),
                   h3: ({ children }) => (
-                    <h3 className="text-[15px] font-medium mt-6 mb-2" style={{ color: P.text }}>
+                    <h3 className="text-[17px] font-medium mt-6 mb-3" style={{ color: P.text }}>
                       {children}
                     </h3>
                   ),
+                  h4: ({ children }) => (
+                    <h4 className="text-[15px] font-medium mt-5 mb-2" style={{ color: P.text }}>
+                      {children}
+                    </h4>
+                  ),
                   p: ({ children }) => (
-                    <p className="text-[14px] font-light leading-[1.75] mb-4" style={{ color: "hsl(38, 10%, 80%)" }}>
+                    <p className="text-[15px] font-light leading-[1.8] mb-5" style={{ color: "hsl(38, 10%, 82%)" }}>
                       {children}
                     </p>
                   ),
                   ul: ({ children }) => (
-                    <ul className="space-y-1.5 mb-4 ml-4 list-disc" style={{ color: P.textMuted }}>
+                    <ul className="space-y-2 mb-5 ml-5 list-disc" style={{ color: P.textMuted }}>
                       {children}
                     </ul>
                   ),
                   ol: ({ children }) => (
-                    <ol className="space-y-1.5 mb-4 ml-4 list-decimal" style={{ color: P.textMuted }}>
+                    <ol className="space-y-2 mb-5 ml-5 list-decimal" style={{ color: P.textMuted }}>
                       {children}
                     </ol>
                   ),
                   li: ({ children }) => (
-                    <li className="text-[13px] font-light leading-relaxed" style={{ color: "hsl(38, 10%, 78%)" }}>
+                    <li className="text-[14px] font-light leading-[1.7]" style={{ color: "hsl(38, 10%, 80%)" }}>
                       {children}
                     </li>
                   ),
@@ -618,13 +623,20 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
                     <hr className="my-8 border-none h-px" style={{ background: P.border }} />
                   ),
                   img: ({ src, alt }) => (
-                    <img
-                      src={src}
-                      alt={alt || ""}
-                      className="max-w-full rounded-lg my-4"
-                      style={{ border: `1px solid ${P.border}` }}
-                      loading="lazy"
-                    />
+                    <figure className="my-6">
+                      <img
+                        src={src}
+                        alt={alt || ""}
+                        className="max-w-full rounded-lg"
+                        style={{ border: `1px solid ${P.border}` }}
+                        loading="lazy"
+                      />
+                      {alt && (
+                        <figcaption className="mt-2 text-[11px] font-light text-center" style={{ color: P.textMuted }}>
+                          {alt}
+                        </figcaption>
+                      )}
+                    </figure>
                   ),
                   table: ({ children }) => (
                     <div className="overflow-x-auto my-4">
