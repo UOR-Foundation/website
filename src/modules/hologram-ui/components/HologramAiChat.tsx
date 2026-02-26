@@ -10,6 +10,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { TriadicPhase, CreatorStage } from "@/modules/hologram-ui/sovereign-creator";
 import {
   X, Send, Loader2, Cpu, Sparkles, MessageSquare,
@@ -1062,12 +1063,18 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           <div className="w-full max-w-2xl">
 
           {/* ── Context Awareness Chip ─────────────────────────── */}
+          <AnimatePresence mode="wait">
           {(() => {
             // Private session — show minimal chip
             if (privateSession) {
               return (
-                <div
-                  className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl transition-all"
+                <motion.div
+                  key="private"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl"
                   style={{
                     background: "hsla(30, 10%, 15%, 0.5)",
                     border: "1px solid hsla(38, 15%, 30%, 0.12)",
@@ -1101,7 +1108,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                   >
                     Resume
                   </button>
-                </div>
+                </motion.div>
               );
             }
 
@@ -1115,8 +1122,13 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 : null;
             if (!contextLabel && !digest.hasContext) return null;
             return (
-              <div
-                className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl transition-all"
+              <motion.div
+                key="observing"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl"
                 style={{
                   background: "hsla(38, 20%, 20%, 0.3)",
                   border: "1px solid hsla(38, 30%, 40%, 0.15)",
@@ -1183,9 +1195,10 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 >
                   <EyeOff className="w-4 h-4" />
                 </button>
-              </div>
+              </motion.div>
             );
           })()}
+          </AnimatePresence>
 
           <div
             className="rounded-2xl overflow-visible transition-all"
