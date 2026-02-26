@@ -20,7 +20,7 @@ export default function AttentionToggle() {
       onClick={toggle}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      aria-label={`Focus Mode ${isFocus ? "On" : "Off"}. Click to toggle.`}
+      aria-label={`Focus ${isFocus ? "On" : "Off"}. Click to toggle.`}
       className="fixed right-5 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 select-none transition-all duration-500"
       style={{
         zIndex: 60,
@@ -38,7 +38,7 @@ export default function AttentionToggle() {
             : "hsla(0, 0%, 78%, 0.7)",
         }}
       >
-        Focus Mode
+        Focus
       </span>
 
       {/* Toggle track — vertical */}
