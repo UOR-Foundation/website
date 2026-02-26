@@ -78,6 +78,7 @@ interface DesktopOsSidebarProps {
   onNewChat: () => void;
   onOpenChat: () => void;
   onOpenBrowser?: () => void;
+  onOpenCompute?: () => void;
   onReplayGuide?: () => void;
   hintOpacity?: (key: string) => number;
   bgMode?: "image" | "white" | "dark";
@@ -87,6 +88,7 @@ interface DesktopOsSidebarProps {
 export default function DesktopOsSidebar({
   onNewChat,
   onOpenBrowser,
+  onOpenCompute,
   onReplayGuide,
   hintOpacity,
   bgMode = "image",
@@ -238,16 +240,16 @@ export default function DesktopOsSidebar({
         {/* Compute */}
         <IconTooltip label="Compute" show={!expanded}>
           <button
-            onClick={() => navigate("/hologram-compute")}
+            onClick={() => onOpenCompute?.()}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
-            } ${isActive("/hologram-compute") ? "sidebar-nav-active" : ""}`}
+            }`}
             style={{
-              color: isActive("/hologram-compute") ? "var(--sb-gold)" : "var(--sb-text)",
-              background: isActive("/hologram-compute") ? "var(--sb-active)" : "transparent",
+              color: "var(--sb-text)",
+              background: "transparent",
             }}
           >
-            <Cpu className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: isActive("/hologram-compute") ? "var(--sb-gold)" : "var(--sb-muted)" }} />
+            <Cpu className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
             {expanded && <span className="text-[14px] font-light whitespace-nowrap">Compute</span>}
           </button>
         </IconTooltip>
