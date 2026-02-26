@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { UserContextProfile } from "./signalRelevance";
 import { saveContextProfile, loadContextProfile } from "./signalRelevance";
 import { writeSlot, readSlot } from "@/modules/data-bank/lib/sync";
+import { compressToBase64, decompressFromBase64, type CompressibleTriple } from "@/modules/data-bank/lib/graph-compression";
 
 // ── Predicates ──────────────────────────────────────────────────────────
 
@@ -104,23 +105,39 @@ export async function fetchAndProject(userId: string): Promise<UserContextProfil
     .limit(MAX_TRIPLES);
 
   if (error || !data || data.length === 0) {
-    // Try Data Bank L2 before falling back to localStorage L1
-    const banked = await readSlot(userId, "context-profile");
+    // Try compressed Data Bank L2 before localStorage L1
+    const banked = await readSlot(userId, "context-triples");
     if (banked?.value) {
       try {
-        const profile = JSON.parse(banked.value) as UserContextProfile;
-        saveContextProfile(profile); // warm L1
+        const triples = decompressFromBase64(banked.value);
+        const profile = projectProfile(triples);
+        saveContextProfile(profile);
         return profile;
       } catch { /* fall through */ }
     }
-    return loadContextProfile(); // L1 fallback
+    // Legacy: try uncompressed profile slot
+    const legacySlot = await readSlot(userId, "context-profile");
+    if (legacySlot?.value) {
+      try {
+        const profile = JSON.parse(legacySlot.value) as UserContextProfile;
+        saveContextProfile(profile);
+        return profile;
+      } catch { /* fall through */ }
+    }
+    return loadContextProfile();
   }
 
-  const profile = projectProfile(data as Triple[]);
-  saveContextProfile(profile); // L1 cache
+  const triples = data as Triple[];
+  const profile = projectProfile(triples);
+  saveContextProfile(profile);
 
-  // L2: persist encrypted projection to Data Bank (fire-and-forget)
-  writeSlot(userId, "context-profile", JSON.stringify(profile)).catch(() => {});
+  // L2: store compressed triples (fire-and-forget)
+  const { encoded, stats } = compressToBase64(triples as CompressibleTriple[]);
+  console.debug(
+    `[DataBank] Context graph compressed: ${stats.tripleCount} triples, ` +
+    `${stats.rawBytes}B → ${stats.compressedBytes}B (${stats.ratio.toFixed(1)}x)`
+  );
+  writeSlot(userId, "context-triples", encoded).catch(() => {});
 
   return profile;
 }
