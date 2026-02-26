@@ -65,9 +65,9 @@ const MOD_KEY = (() => {
 interface NavItem { label: string; icon: React.ElementType; path: string }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home",    icon: Home,       path: "/hologram-console" },
-  { label: "Apps",    icon: LayoutGrid, path: "/console/apps" },
-  { label: "Profile", icon: User,       path: "/your-space" },
+  { label: "Home",     icon: Home,       path: "/hologram-console" },
+  { label: "Apps",     icon: LayoutGrid, path: "/console/apps" },
+  { label: "My Space", icon: User,       path: "/your-space" },
 ];
 
 const COLLAPSED_W = 68;
@@ -220,9 +220,9 @@ export default function DesktopOsSidebar({
           );
         })}
 
-        {/* Browser (Internet) */}
+        {/* Web */}
         {onOpenBrowser && (
-          <IconTooltip label="Browser" show={!expanded}>
+          <IconTooltip label="Web" show={!expanded}>
             <button
               onClick={onOpenBrowser}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
@@ -231,27 +231,10 @@ export default function DesktopOsSidebar({
               style={{ color: "var(--sb-text)" }}
             >
               <Globe className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
-              {expanded && <span className="text-[14px] font-light whitespace-nowrap">Browser</span>}
+              {expanded && <span className="text-[14px] font-light whitespace-nowrap">Web</span>}
             </button>
           </IconTooltip>
         )}
-
-        {/* Storage (Data Bank) */}
-        <DataBankIndicator expanded={expanded} bgMode={bgMode} />
-
-        {/* Compute */}
-        <IconTooltip label="Compute" show={!expanded}>
-          <button
-            onClick={() => onOpenCompute?.()}
-            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
-            }`}
-            style={{ color: "var(--sb-text)", background: "transparent" }}
-          >
-            <Cpu className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
-            {expanded && <span className="text-[14px] font-light whitespace-nowrap">Compute</span>}
-          </button>
-        </IconTooltip>
 
         {/* Memory */}
         <IconTooltip label="Memory" show={!expanded}>
@@ -264,6 +247,20 @@ export default function DesktopOsSidebar({
           >
             <Database className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
             {expanded && <span className="text-[14px] font-light whitespace-nowrap">Memory</span>}
+          </button>
+        </IconTooltip>
+
+        {/* Compute */}
+        <IconTooltip label="Compute" show={!expanded}>
+          <button
+            onClick={() => onOpenCompute?.()}
+            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+            }`}
+            style={{ color: "var(--sb-text)", background: "transparent" }}
+          >
+            <Cpu className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
+            {expanded && <span className="text-[14px] font-light whitespace-nowrap">Compute</span>}
           </button>
         </IconTooltip>
       </div>
@@ -293,7 +290,7 @@ export default function DesktopOsSidebar({
             style={{ color: "var(--sb-text)" }}
           >
             <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
-            {expanded && <span className="text-[14px] font-light">Messages</span>}
+            {expanded && <span className="text-[14px] font-light">Inbox</span>}
           </button>
         </IconTooltip>
         <IconTooltip label="Settings" show={!expanded}>
