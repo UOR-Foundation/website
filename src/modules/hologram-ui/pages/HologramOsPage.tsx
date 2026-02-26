@@ -236,8 +236,8 @@ export default function HologramOsPage() {
   // ── Desktop: Layered frame stack ──
   return (
     <HologramViewport className="h-screen bg-background">
-      {/* Depth-shift trigger: recede lower frames when overlays open */}
-      <DepthShiftSync active={chatOpen || claimOpen} />
+      {/* Depth-shift trigger: recede lower frames only for claim overlay */}
+      <DepthShiftSync active={claimOpen} />
       {/* LayerNavHUD removed — focus toggle handles mode switching */}
 
       <div className="flex h-full overflow-hidden">
