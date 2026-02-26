@@ -172,7 +172,7 @@ export default function HologramCompute({ onClose }: HologramComputeProps) {
                 Performance Proof
               </h2>
               <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                Live benchmark comparing standard compute against the Hologram LUT engine.
+                Live benchmark comparing standard compute against the Virtual GPU.
                 All data computed in real-time in your browser.
               </p>
             </div>
