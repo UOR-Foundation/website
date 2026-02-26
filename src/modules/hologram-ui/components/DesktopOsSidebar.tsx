@@ -129,7 +129,7 @@ export default function DesktopOsSidebar({
               <svg
                 viewBox="0 0 360 40"
                 className="select-none"
-                style={{ width: "140px", height: "auto", opacity: 0.9 }}
+                style={{ width: "115px", height: "auto", opacity: 0.9 }}
               >
                 <g
                   fill="none"
