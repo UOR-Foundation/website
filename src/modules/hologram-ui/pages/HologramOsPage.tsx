@@ -27,7 +27,7 @@ import LegalPanel from "@/modules/hologram-ui/components/LegalPanel";
 import HologramFrame, { HologramViewport, OverlayFrame, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
 import ModularSnapGrid from "@/modules/hologram-ui/components/ModularSnapGrid";
-import AmbientPlayer from "@/modules/hologram-ui/components/AmbientPlayer";
+import AmbientPlayer, { type AmbientState } from "@/modules/hologram-ui/components/AmbientPlayer";
 import { useModularPanel } from "@/modules/hologram-ui/hooks/useModularPanel";
 import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
 import FrameDebugOverlay from "@/modules/hologram-ui/components/FrameDebugOverlay";
@@ -146,6 +146,7 @@ export default function HologramOsPage() {
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [pillGlow, setPillGlow] = useState(false);
+  const [ambientState, setAmbientState] = useState<AmbientState>({ playing: false, loading: false, stationHue: "220", stationName: "" });
   const lumenPanel = useModularPanel({
     storageKey: "lumen-ai",
     defaultWidth: 340,
@@ -328,6 +329,15 @@ export default function HologramOsPage() {
                 style={{
                   background:
                     "linear-gradient(to bottom, hsla(30, 8%, 12%, 0.15) 0%, hsla(30, 6%, 10%, 0.08) 35%, hsla(25, 10%, 8%, 0.55) 100%)",
+                }}
+              />
+              {/* Ambient music glow — subtle color wash */}
+              <div
+                className="absolute inset-0 pointer-events-none transition-opacity duration-[2s] ease-in-out"
+                style={{
+                  opacity: ambientState.playing ? 1 : 0,
+                  background: `radial-gradient(ellipse 120% 80% at 50% 100%, hsla(${ambientState.stationHue}, 40%, 35%, 0.12) 0%, hsla(${ambientState.stationHue}, 30%, 25%, 0.06) 40%, transparent 70%)`,
+                  animation: ambientState.playing ? "ambient-glow-breathe 8s ease-in-out infinite" : "none",
                 }}
               />
             </div>
@@ -755,7 +765,7 @@ export default function HologramOsPage() {
         isResizing={lumenPanel.isResizing}
       />
       {/* FrameDebugOverlay removed for cleaner UI */}
-      <AmbientPlayer lumenOffset={chatOpen ? lumenPanel.width : 0} />
+      <AmbientPlayer lumenOffset={chatOpen ? lumenPanel.width : 0} onStateChange={setAmbientState} />
     </HologramViewport>
   );
 }
