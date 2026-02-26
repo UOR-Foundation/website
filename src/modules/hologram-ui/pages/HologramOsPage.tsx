@@ -295,7 +295,7 @@ export default function HologramOsPage() {
                   })}
                 </div>
                 <span
-                  className="text-[8px] tracking-[0.15em] uppercase font-medium transition-colors duration-500"
+                  className="text-[10px] tracking-[0.35em] uppercase font-medium transition-colors duration-500"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     color: bgMode === "white"
