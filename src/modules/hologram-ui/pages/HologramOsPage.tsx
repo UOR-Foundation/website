@@ -491,7 +491,7 @@ export default function HologramOsPage() {
                 viewBox="0 0 360 40"
                 className="transition-opacity duration-300 select-none"
                 style={{
-                  width: "clamp(260px, 28vw, 420px)",
+                  width: "clamp(200px, 22vw, 340px)",
                   height: "auto",
                   opacity: 0.85,
                 }}
