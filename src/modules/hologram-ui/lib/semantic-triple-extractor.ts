@@ -1,10 +1,16 @@
 /**
- * Semantic Triple Extractor — Rich Ontological Decomposition
- * ═══════════════════════════════════════════════════════════
+ * Semantic Triple Extractor — Multi-Dimensional Ontological Decomposition
+ * ════════════════════════════════════════════════════════════════════════
  *
  * Converts raw document text into ontological triples (subject-predicate-object)
- * that preserve the document's full semantic structure, hierarchy, definitions,
- * relationships, and actionable meaning.
+ * that preserve the document's full semantic structure across MULTIPLE DIMENSIONS:
+ *
+ *   Surface layer:  metadata, sections, key sentences, topics
+ *   Definitional:   "X is Y" patterns, terminology, value propositions
+ *   Logical:        causal chains, conditional logic, contrasts
+ *   Rhetorical:     analogies, metaphors, prescriptive guidance, questions
+ *   Structural:     list items, hierarchy, document archetype
+ *   Relational:     concept links, actor-role mappings
  *
  * Design principle: The compressed form must be *richer* than a summary.
  * An LLM reading the decompressed triples should understand the document
@@ -27,17 +33,24 @@ interface DocumentSection {
 // ── Core extractor ──────────────────────────────────────────────────────────
 
 /**
- * Extract semantic triples from document text.
+ * Extract semantic triples from document text across all dimensions.
  *
  * Extraction layers:
- *  1. Document-level metadata (title, type, word count, abstract)
- *  2. Hierarchical sections (headings → subsections)
- *  3. Definitions ("X is Y" patterns → schema:Concept triples)
- *  4. Key claims/sentences as semantic propositions (generous limits)
- *  5. List items / bullet points (often carry core actionable content)
- *  6. Actor–role relationships and conceptual links
- *  7. Named entities, topics, and terminology
- *  8. Numerical facts, percentages, and dates
+ *  1.  Document-level metadata (title, author, word count, abstract, archetype)
+ *  2.  Hierarchical sections (headings → subsections)
+ *  3.  Definitions ("X is Y" → schema:Concept triples)
+ *  4.  Key claims/sentences (generous limits, scored by information density)
+ *  5.  List items / bullet points (actionable content)
+ *  6.  Value propositions ("Value: ...")
+ *  7.  Causal chains (if→then, because→therefore)
+ *  8.  Prescriptive guidance (should, must, recommended)
+ *  9.  Analogies & metaphors (conceptual bridges)
+ *  10. Contrasts & tensions (what the document argues against)
+ *  11. Conditional logic (situational advice)
+ *  12. Rhetorical questions (questions the document poses)
+ *  13. Actor–role relationships and conceptual links
+ *  14. Named entities, topics, terminology, and acronyms
+ *  15. Numerical facts, percentages, and dates
  */
 export function extractSemanticTriples(
   text: string,
@@ -53,13 +66,23 @@ export function extractSemanticTriples(
   const words = text.split(/\s+/).filter(Boolean);
   triples.push({ subject: docId, predicate: "delta:memCount", object: String(words.length) });
 
-  // Extract abstract/opening paragraph
+  // Abstract
   const abstract = extractAbstract(text);
   if (abstract) {
     triples.push({ subject: docId, predicate: "schema:abstract", object: abstract });
   }
 
-  // 2. Detect and extract sections
+  // Author
+  const author = extractAuthor(text);
+  if (author) {
+    triples.push({ subject: docId, predicate: "schema:author", object: author });
+  }
+
+  // Document archetype (meta-classification)
+  const archetype = classifyDocumentArchetype(text);
+  triples.push({ subject: docId, predicate: "uor:hasRole", object: archetype });
+
+  // 2. Sections
   const sections = extractSections(text);
 
   if (sections.length > 0) {
@@ -72,7 +95,7 @@ export function extractSemanticTriples(
       triples.push({ subject: docId, predicate: "uor:memberOf", object: sectionId });
       triples.push({ subject: sectionId, predicate: "delta:hScore", object: String(section.level) });
 
-      // Extract key sentences — generous limit for richness
+      // Key sentences — generous limit
       const sentences = extractKeySentences(section.content, 12);
       for (let j = 0; j < sentences.length; j++) {
         const claimId = `claim:${section.index}.${j}`;
@@ -81,7 +104,7 @@ export function extractSemanticTriples(
         triples.push({ subject: sectionId, predicate: "uor:derivedFrom", object: claimId });
       }
 
-      // Extract definitions from this section
+      // Definitions
       const defs = extractDefinitions(section.content);
       for (let j = 0; j < defs.length; j++) {
         const defId = `def:${section.index}.${j}`;
@@ -91,7 +114,7 @@ export function extractSemanticTriples(
         triples.push({ subject: sectionId, predicate: "uor:derivedFrom", object: defId });
       }
 
-      // Extract list items (bullet points carry actionable content)
+      // List items
       const listItems = extractListItems(section.content);
       for (let j = 0; j < listItems.length; j++) {
         const itemId = `item:${section.index}.${j}`;
@@ -100,7 +123,7 @@ export function extractSemanticTriples(
         triples.push({ subject: sectionId, predicate: "uor:derivedFrom", object: itemId });
       }
 
-      // Extract value propositions ("Value: ...")
+      // Value propositions
       const values = extractValueProps(section.content);
       for (let j = 0; j < values.length; j++) {
         const valId = `val:${section.index}.${j}`;
@@ -108,9 +131,65 @@ export function extractSemanticTriples(
         triples.push({ subject: valId, predicate: "schema:description", object: values[j] });
         triples.push({ subject: sectionId, predicate: "uor:derivedFrom", object: valId });
       }
+
+      // ── Subtle dimensions (per-section) ──
+
+      // Causal chains
+      const causals = extractCausalChains(section.content);
+      for (let j = 0; j < causals.length; j++) {
+        const cId = `causal:${section.index}.${j}`;
+        triples.push({ subject: cId, predicate: "rdf:type", object: "schema:CausalClaim" });
+        triples.push({ subject: cId, predicate: "schema:description", object: causals[j] });
+        triples.push({ subject: sectionId, predicate: "uor:derivedFrom", object: cId });
+      }
+
+      // Prescriptive guidance
+      const prescriptives = extractPrescriptiveGuidance(section.content);
+      for (let j = 0; j < prescriptives.length; j++) {
+        const pId = `guide:${section.index}.${j}`;
+        triples.push({ subject: pId, predicate: "rdf:type", object: "schema:Recommendation" });
+        triples.push({ subject: pId, predicate: "schema:description", object: prescriptives[j] });
+        triples.push({ subject: sectionId, predicate: "uor:derivedFrom", object: pId });
+      }
+
+      // Analogies & metaphors
+      const analogies = extractAnalogies(section.content);
+      for (let j = 0; j < analogies.length; j++) {
+        const aId = `analogy:${section.index}.${j}`;
+        triples.push({ subject: aId, predicate: "rdf:type", object: "schema:Analogy" });
+        triples.push({ subject: aId, predicate: "schema:description", object: analogies[j] });
+        triples.push({ subject: sectionId, predicate: "uor:derivedFrom", object: aId });
+      }
+
+      // Contrasts & tensions
+      const contrasts = extractContrasts(section.content);
+      for (let j = 0; j < contrasts.length; j++) {
+        const ctId = `contrast:${section.index}.${j}`;
+        triples.push({ subject: ctId, predicate: "rdf:type", object: "schema:Contrast" });
+        triples.push({ subject: ctId, predicate: "schema:description", object: contrasts[j] });
+        triples.push({ subject: sectionId, predicate: "uor:derivedFrom", object: ctId });
+      }
+
+      // Conditional logic
+      const conditionals = extractConditionals(section.content);
+      for (let j = 0; j < conditionals.length; j++) {
+        const condId = `cond:${section.index}.${j}`;
+        triples.push({ subject: condId, predicate: "rdf:type", object: "schema:Conditional" });
+        triples.push({ subject: condId, predicate: "schema:description", object: conditionals[j] });
+        triples.push({ subject: sectionId, predicate: "uor:derivedFrom", object: condId });
+      }
+
+      // Rhetorical questions
+      const questions = extractRhetoricalQuestions(section.content);
+      for (let j = 0; j < questions.length; j++) {
+        const qId = `question:${section.index}.${j}`;
+        triples.push({ subject: qId, predicate: "rdf:type", object: "schema:Question" });
+        triples.push({ subject: qId, predicate: "schema:description", object: questions[j] });
+        triples.push({ subject: sectionId, predicate: "uor:derivedFrom", object: qId });
+      }
     }
   } else {
-    // Flat document — extract key sentences directly
+    // Flat document
     triples.push({ subject: docId, predicate: "schema:description", object: "Unstructured document" });
     const sentences = extractKeySentences(text, 40);
     for (let i = 0; i < sentences.length; i++) {
@@ -119,7 +198,6 @@ export function extractSemanticTriples(
       triples.push({ subject: claimId, predicate: "schema:description", object: sentences[i] });
       triples.push({ subject: docId, predicate: "uor:derivedFrom", object: claimId });
     }
-
     const defs = extractDefinitions(text);
     for (let i = 0; i < defs.length; i++) {
       const defId = `def:${i}`;
@@ -128,15 +206,37 @@ export function extractSemanticTriples(
       triples.push({ subject: defId, predicate: "schema:description", object: defs[i].definition });
       triples.push({ subject: docId, predicate: "uor:derivedFrom", object: defId });
     }
+    // Subtle dimensions for flat docs
+    const causals = extractCausalChains(text);
+    for (let i = 0; i < causals.length; i++) {
+      const cId = `causal:${i}`;
+      triples.push({ subject: cId, predicate: "rdf:type", object: "schema:CausalClaim" });
+      triples.push({ subject: cId, predicate: "schema:description", object: causals[i] });
+      triples.push({ subject: docId, predicate: "uor:derivedFrom", object: cId });
+    }
+    const prescriptives = extractPrescriptiveGuidance(text);
+    for (let i = 0; i < prescriptives.length; i++) {
+      const pId = `guide:${i}`;
+      triples.push({ subject: pId, predicate: "rdf:type", object: "schema:Recommendation" });
+      triples.push({ subject: pId, predicate: "schema:description", object: prescriptives[i] });
+      triples.push({ subject: docId, predicate: "uor:derivedFrom", object: pId });
+    }
+    const analogies = extractAnalogies(text);
+    for (let i = 0; i < analogies.length; i++) {
+      const aId = `analogy:${i}`;
+      triples.push({ subject: aId, predicate: "rdf:type", object: "schema:Analogy" });
+      triples.push({ subject: aId, predicate: "schema:description", object: analogies[i] });
+      triples.push({ subject: docId, predicate: "uor:derivedFrom", object: aId });
+    }
   }
 
-  // 3. Extract named entities and topics
+  // 13. Named entities and topics
   const topics = extractTopics(text);
   for (const topic of topics) {
     triples.push({ subject: docId, predicate: "uor:interestedIn", object: topic });
   }
 
-  // 4. Extract conceptual relationships between entities
+  // 14. Conceptual relationships
   const relationships = extractConceptRelationships(text, topics);
   for (const rel of relationships) {
     triples.push({ subject: rel.from, predicate: "uor:interactedWith", object: rel.to });
@@ -145,164 +245,87 @@ export function extractSemanticTriples(
     }
   }
 
-  // 5. Extract numerical facts
+  // 15. Numerical facts
   const facts = extractNumericalFacts(text);
   for (const fact of facts) {
     triples.push({ subject: docId, predicate: "uor:observes", object: fact });
   }
 
-  // 6. Extract dates
+  // 16. Dates
   const dates = extractDates(text);
   for (const date of dates) {
     triples.push({ subject: docId, predicate: "uor:createdAt", object: date });
   }
 
-  // 7. Extract author/attribution
-  const author = extractAuthor(text);
-  if (author) {
-    triples.push({ subject: docId, predicate: "schema:author", object: author });
-  }
-
   return triples;
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// SURFACE LAYER EXTRACTORS
+// ════════════════════════════════════════════════════════════════════════════
 
 // ── Abstract extraction ─────────────────────────────────────────────────────
 
 function extractAbstract(text: string): string | null {
-  // Look for an "Abstract" section
   const abstractMatch = text.match(/(?:^|\n)\s*(?:#+\s*)?Abstract\s*\n+([\s\S]{50,800}?)(?:\n\s*(?:#+|[A-Z]{2,})|\n{3,})/i);
   if (abstractMatch) return abstractMatch[1].replace(/\s+/g, " ").trim();
-
-  // Fall back to first substantial paragraph
   const paragraphs = text.split(/\n{2,}/).map(p => p.trim()).filter(p => p.length > 80);
   if (paragraphs.length > 0 && paragraphs[0].length < 600) return paragraphs[0].replace(/\s+/g, " ");
-
   return null;
 }
 
 // ── Author extraction ───────────────────────────────────────────────────────
 
 function extractAuthor(text: string): string | null {
-  // Look for author patterns near the top of the document
   const top = text.slice(0, 1000);
   const authorMatch = top.match(/(?:by|author|written by)[:\s]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/i);
   if (authorMatch) return authorMatch[1];
-
-  // Look for a standalone name line near the top (Name\nDate pattern)
   const lines = top.split("\n").map(l => l.trim()).filter(Boolean);
   for (let i = 0; i < Math.min(lines.length, 10); i++) {
-    const line = lines[i];
-    if (/^[A-Z][a-z]+\s+[A-Z][a-z]+$/.test(line) && line.length < 40) {
-      return line;
+    if (/^[A-Z][a-z]+\s+[A-Z][a-z]+$/.test(lines[i]) && lines[i].length < 40) {
+      return lines[i];
     }
   }
   return null;
 }
 
-// ── Definition extraction ───────────────────────────────────────────────────
+// ── Document archetype classification ───────────────────────────────────────
 
-interface DefinitionEntry {
-  term: string;
-  definition: string;
-}
+function classifyDocumentArchetype(text: string): string {
+  const lower = text.toLowerCase();
+  const signals: Record<string, number> = {
+    "Framework/Methodology Paper": 0,
+    "Research Paper": 0,
+    "Strategic Whitepaper": 0,
+    "Technical Documentation": 0,
+    "Business Proposal": 0,
+    "Educational Guide": 0,
+  };
 
-function extractDefinitions(text: string): DefinitionEntry[] {
-  const defs: DefinitionEntry[] = [];
-  const seen = new Set<string>();
+  // Framework signals
+  if (/framework|methodology|model|system|approach/i.test(lower)) signals["Framework/Methodology Paper"] += 3;
+  if (/component|actor|phase|stage|step|process/i.test(lower)) signals["Framework/Methodology Paper"] += 2;
 
-  // Pattern 1: "X is/are Y" at sentence start
-  const isPatterns = text.match(/[A-Z][A-Za-z\s]{2,40}?\s+(?:is|are)\s+(?:a|an|the)?\s*[a-z].{15,250}?[.!]/g) ?? [];
-  for (const match of isPatterns) {
-    const parts = match.match(/^(.+?)\s+(?:is|are)\s+(.+)$/);
-    if (parts && parts[1].length < 50 && !seen.has(parts[1].trim().toLowerCase())) {
-      seen.add(parts[1].trim().toLowerCase());
-      defs.push({ term: parts[1].trim(), definition: match.trim() });
-    }
-  }
+  // Research signals
+  if (/abstract|hypothesis|conclusion|findings|methodology|literature/i.test(lower)) signals["Research Paper"] += 3;
+  if (/study|experiment|data|analysis|results/i.test(lower)) signals["Research Paper"] += 2;
 
-  // Pattern 2: "X — definition" or "X: definition"
-  const colonPatterns = text.match(/[A-Z][A-Za-z\s]{2,30}?(?:—|:)\s+[A-Z].{20,300}?[.!]/g) ?? [];
-  for (const match of colonPatterns) {
-    const parts = match.match(/^(.+?)(?:—|:)\s+(.+)$/);
-    if (parts && parts[1].length < 40 && !seen.has(parts[1].trim().toLowerCase())) {
-      seen.add(parts[1].trim().toLowerCase());
-      defs.push({ term: parts[1].trim(), definition: match.trim() });
-    }
-  }
+  // Whitepaper signals
+  if (/whitepaper|white paper|vision|ecosystem|protocol|token|decentralized/i.test(lower)) signals["Strategic Whitepaper"] += 3;
+  if (/scale|growth|adoption|incentiv/i.test(lower)) signals["Strategic Whitepaper"] += 2;
 
-  // Pattern 3: "defined as", "refers to", "means"
-  const defPhrases = text.match(/[A-Z][A-Za-z\s]{2,40}?\s+(?:can be defined as|is defined as|refers to|means|consists of)\s+.{15,300}?[.!]/g) ?? [];
-  for (const match of defPhrases) {
-    const parts = match.match(/^(.+?)\s+(?:can be defined as|is defined as|refers to|means|consists of)\s+(.+)$/);
-    if (parts && !seen.has(parts[1].trim().toLowerCase())) {
-      seen.add(parts[1].trim().toLowerCase());
-      defs.push({ term: parts[1].trim(), definition: match.trim() });
-    }
-  }
+  // Technical doc signals
+  if (/api|sdk|install|configuration|endpoint|parameter/i.test(lower)) signals["Technical Documentation"] += 3;
+  if (/function|class|interface|module|import/i.test(lower)) signals["Technical Documentation"] += 2;
 
-  return defs.slice(0, 25);
-}
+  // Business proposal signals
+  if (/proposal|budget|timeline|deliverable|scope|pricing/i.test(lower)) signals["Business Proposal"] += 3;
 
-// ── List item extraction ────────────────────────────────────────────────────
+  // Educational guide signals
+  if (/learn|tutorial|example|exercise|chapter|lesson/i.test(lower)) signals["Educational Guide"] += 3;
 
-function extractListItems(text: string): string[] {
-  const items: string[] = [];
-
-  // Match bullet points (-, •, *, numbered)
-  const lines = text.split("\n");
-  for (const line of lines) {
-    const trimmed = line.trim();
-    const bulletMatch = trimmed.match(/^(?:[-•*]|\d+[.)]\s)\s*(.{15,500})$/);
-    if (bulletMatch) {
-      items.push(bulletMatch[1].trim());
-    }
-  }
-
-  return items.slice(0, 30);
-}
-
-// ── Value proposition extraction ────────────────────────────────────────────
-
-function extractValueProps(text: string): string[] {
-  const props: string[] = [];
-
-  // "Value:" pattern common in structured documents
-  const valueMatches = text.match(/Value:\s*(.{20,400}?)(?:\n\n|\n#|$)/g) ?? [];
-  for (const match of valueMatches) {
-    const cleaned = match.replace(/^Value:\s*/, "").trim();
-    if (cleaned.length > 20) props.push(cleaned);
-  }
-
-  return props.slice(0, 10);
-}
-
-// ── Concept relationship extraction ─────────────────────────────────────────
-
-interface ConceptRelation {
-  from: string;
-  to: string;
-  context?: string;
-}
-
-function extractConceptRelationships(text: string, topics: string[]): ConceptRelation[] {
-  const relations: ConceptRelation[] = [];
-  if (topics.length < 2) return relations;
-
-  const sentences = text.replace(/\n+/g, " ").split(/(?<=[.!?])\s+/);
-
-  for (const sentence of sentences) {
-    if (sentence.length < 20 || sentence.length > 400) continue;
-    const found: string[] = [];
-    for (const topic of topics) {
-      if (sentence.includes(topic)) found.push(topic);
-      if (found.length >= 2) break;
-    }
-    if (found.length >= 2) {
-      relations.push({ from: found[0], to: found[1], context: sentence.trim() });
-    }
-  }
-
-  return relations.slice(0, 15);
+  const best = Object.entries(signals).sort((a, b) => b[1] - a[1])[0];
+  return best[1] > 0 ? best[0] : "General Document";
 }
 
 // ── Section extraction ──────────────────────────────────────────────────────
@@ -317,17 +340,11 @@ function extractSections(text: string): DocumentSection[] {
 
   for (const line of lines) {
     const trimmed = line.trim();
-    if (!trimmed) {
-      currentContent.push("");
-      continue;
-    }
+    if (!trimmed) { currentContent.push(""); continue; }
 
-    // Markdown heading
     const mdMatch = trimmed.match(/^(#{1,6})\s+(.+)/);
-    // ALL-CAPS heading
     const capsMatch = !mdMatch && trimmed.length > 5 && trimmed.length < 100 &&
       trimmed === trimmed.toUpperCase() && /[A-Z]{2,}/.test(trimmed);
-    // Title-case line
     const titleMatch = !mdMatch && !capsMatch && trimmed.length < 80 &&
       !trimmed.endsWith(".") && !trimmed.endsWith(",") &&
       /^[A-Z][a-zA-Z\s:–—-]{4,}$/.test(trimmed) &&
@@ -336,10 +353,8 @@ function extractSections(text: string): DocumentSection[] {
     if (mdMatch || capsMatch || titleMatch) {
       if (currentHeading) {
         sections.push({
-          heading: currentHeading,
-          level: currentLevel,
-          content: currentContent.join("\n").trim(),
-          index: sectionIndex++,
+          heading: currentHeading, level: currentLevel,
+          content: currentContent.join("\n").trim(), index: sectionIndex++,
         });
       }
       currentHeading = mdMatch ? mdMatch[2] : trimmed;
@@ -350,16 +365,12 @@ function extractSections(text: string): DocumentSection[] {
     }
   }
 
-  // Flush last section (lower threshold to capture short closing sections)
   if (currentHeading && currentContent.join("").trim().length > 10) {
     sections.push({
-      heading: currentHeading,
-      level: currentLevel,
-      content: currentContent.join("\n").trim(),
-      index: sectionIndex,
+      heading: currentHeading, level: currentLevel,
+      content: currentContent.join("\n").trim(), index: sectionIndex,
     });
   }
-
   return sections;
 }
 
@@ -376,16 +387,17 @@ function extractKeySentences(text: string, maxCount: number): string[] {
 
   const scored = sentences.map((s, i) => {
     let score = 0;
-    score += Math.min(s.length / 80, 2.0); // length bonus (higher ceiling)
-    if (/\d+/.test(s)) score += 1.0; // numerical content
-    if (/[A-Z][a-z]+\s+[A-Z]/.test(s)) score += 0.6; // proper nouns
-    if (i < 3) score += 0.8; // opening sentences (often thesis)
-    if (i === sentences.length - 1) score += 0.5; // closing sentence
-    if (/however|therefore|because|although|furthermore|moreover|instead|rather/i.test(s)) score += 0.7; // discourse
-    if (/define|means|refers to|is a|consists of|can be/i.test(s)) score += 1.2; // definitions
-    if (/important|critical|key|essential|necessary|must|should/i.test(s)) score += 0.9; // importance markers
-    if (/can|enable|allow|facilitate|leverage|scale|grow/i.test(s)) score += 0.5; // capability claims
-    if (/not|without|cannot|impossible|challenge|difficult/i.test(s)) score += 0.6; // constraints/challenges
+    score += Math.min(s.length / 80, 2.0);
+    if (/\d+/.test(s)) score += 1.0;
+    if (/[A-Z][a-z]+\s+[A-Z]/.test(s)) score += 0.6;
+    if (i < 3) score += 0.8;
+    if (i === sentences.length - 1) score += 0.5;
+    if (/however|therefore|because|although|furthermore|moreover|instead|rather/i.test(s)) score += 0.7;
+    if (/define|means|refers to|is a|consists of|can be/i.test(s)) score += 1.2;
+    if (/important|critical|key|essential|necessary|must|should/i.test(s)) score += 0.9;
+    if (/can|enable|allow|facilitate|leverage|scale|grow/i.test(s)) score += 0.5;
+    if (/not|without|cannot|impossible|challenge|difficult/i.test(s)) score += 0.6;
+    if (/result|lead|cause|effect|impact|consequence/i.test(s)) score += 0.6;
     return { sentence: s, score, index: i };
   });
 
@@ -394,27 +406,210 @@ function extractKeySentences(text: string, maxCount: number): string[] {
   return sentences.filter((_, i) => topIndices.has(i));
 }
 
-// ── Topic extraction ────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// DEFINITIONAL LAYER EXTRACTORS
+// ════════════════════════════════════════════════════════════════════════════
+
+interface DefinitionEntry { term: string; definition: string; }
+
+function extractDefinitions(text: string): DefinitionEntry[] {
+  const defs: DefinitionEntry[] = [];
+  const seen = new Set<string>();
+
+  // "X is/are Y"
+  const isPatterns = text.match(/[A-Z][A-Za-z\s]{2,40}?\s+(?:is|are)\s+(?:a|an|the)?\s*[a-z].{15,250}?[.!]/g) ?? [];
+  for (const match of isPatterns) {
+    const parts = match.match(/^(.+?)\s+(?:is|are)\s+(.+)$/);
+    if (parts && parts[1].length < 50 && !seen.has(parts[1].trim().toLowerCase())) {
+      seen.add(parts[1].trim().toLowerCase());
+      defs.push({ term: parts[1].trim(), definition: match.trim() });
+    }
+  }
+
+  // "X — definition" or "X: definition"
+  const colonPatterns = text.match(/[A-Z][A-Za-z\s]{2,30}?(?:—|:)\s+[A-Z].{20,300}?[.!]/g) ?? [];
+  for (const match of colonPatterns) {
+    const parts = match.match(/^(.+?)(?:—|:)\s+(.+)$/);
+    if (parts && parts[1].length < 40 && !seen.has(parts[1].trim().toLowerCase())) {
+      seen.add(parts[1].trim().toLowerCase());
+      defs.push({ term: parts[1].trim(), definition: match.trim() });
+    }
+  }
+
+  // "defined as", "refers to"
+  const defPhrases = text.match(/[A-Z][A-Za-z\s]{2,40}?\s+(?:can be defined as|is defined as|refers to|means|consists of)\s+.{15,300}?[.!]/g) ?? [];
+  for (const match of defPhrases) {
+    const parts = match.match(/^(.+?)\s+(?:can be defined as|is defined as|refers to|means|consists of)\s+(.+)$/);
+    if (parts && !seen.has(parts[1].trim().toLowerCase())) {
+      seen.add(parts[1].trim().toLowerCase());
+      defs.push({ term: parts[1].trim(), definition: match.trim() });
+    }
+  }
+
+  return defs.slice(0, 25);
+}
+
+function extractListItems(text: string): string[] {
+  const items: string[] = [];
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    const bulletMatch = trimmed.match(/^(?:[-•*]|\d+[.)]\s)\s*(.{15,500})$/);
+    if (bulletMatch) items.push(bulletMatch[1].trim());
+  }
+  return items.slice(0, 30);
+}
+
+function extractValueProps(text: string): string[] {
+  const props: string[] = [];
+  const valueMatches = text.match(/Value:\s*(.{20,400}?)(?:\n\n|\n#|$)/g) ?? [];
+  for (const match of valueMatches) {
+    const cleaned = match.replace(/^Value:\s*/, "").trim();
+    if (cleaned.length > 20) props.push(cleaned);
+  }
+  return props.slice(0, 10);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// LOGICAL LAYER EXTRACTORS — The "subtle dimensions"
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Extract causal chains: if→then, because→therefore, leads to, results in.
+ * These encode the document's argumentative logic.
+ */
+function extractCausalChains(text: string): string[] {
+  const sentences = text.replace(/\n+/g, " ").split(/(?<=[.!?])\s+/);
+  const causal: string[] = [];
+
+  for (const s of sentences) {
+    const t = s.trim();
+    if (t.length < 25 || t.length > 500) continue;
+    if (/\b(?:if\s+.{5,}(?:then|,\s*it\s+will|,\s*they\s+will|,\s*this))/i.test(t) ||
+        /\b(?:because|since|as a result|therefore|consequently|thus|hence)\b/i.test(t) ||
+        /\b(?:leads? to|results? in|causes?|enables?|creates?)\s+(?:a |an |the )?[a-z]/i.test(t)) {
+      causal.push(t);
+    }
+  }
+
+  // Deduplicate by checking overlap
+  const unique = deduplicateSentences(causal);
+  return unique.slice(0, 10);
+}
+
+/**
+ * Extract prescriptive guidance: should, must, recommended, it is important.
+ * These encode the document's actionable directives.
+ */
+function extractPrescriptiveGuidance(text: string): string[] {
+  const sentences = text.replace(/\n+/g, " ").split(/(?<=[.!?])\s+/);
+  const guidance: string[] = [];
+
+  for (const s of sentences) {
+    const t = s.trim();
+    if (t.length < 25 || t.length > 500) continue;
+    if (/\b(?:should|must|ought to|need to|it is (?:important|critical|essential|recommended|necessary))\b/i.test(t) &&
+        !/\?$/.test(t)) { // exclude questions
+      guidance.push(t);
+    }
+  }
+
+  return deduplicateSentences(guidance).slice(0, 12);
+}
+
+/**
+ * Extract analogies and metaphors: "think of X as Y", "acts as", "like a".
+ * These encode conceptual bridges that aid understanding.
+ */
+function extractAnalogies(text: string): string[] {
+  const sentences = text.replace(/\n+/g, " ").split(/(?<=[.!?])\s+/);
+  const analogies: string[] = [];
+
+  for (const s of sentences) {
+    const t = s.trim();
+    if (t.length < 20 || t.length > 400) continue;
+    if (/\b(?:think of\s+.+?\s+as|acts? as\s+(?:a |an )|serves? as\s+(?:a |an )|like a\s+|similar to\s+|analogous to|can be thought of as|functions? as|operates? as|borrowing\s+(?:a |from ))/i.test(t)) {
+      analogies.push(t);
+    }
+  }
+
+  return deduplicateSentences(analogies).slice(0, 8);
+}
+
+/**
+ * Extract contrasts and tensions: rather than, instead of, unlike, however.
+ * These encode what the document argues *against* — often the most
+ * revealing dimension for understanding the author's position.
+ */
+function extractContrasts(text: string): string[] {
+  const sentences = text.replace(/\n+/g, " ").split(/(?<=[.!?])\s+/);
+  const contrasts: string[] = [];
+
+  for (const s of sentences) {
+    const t = s.trim();
+    if (t.length < 25 || t.length > 500) continue;
+    if (/\b(?:rather than|instead of|unlike|in contrast|on the other hand|however|whereas|while\s+.{5,},|but\s+(?:rather|instead)|not\s+.{3,}\s+but\s+rather|do not want|is not\s+(?:the )?(?:most |only )?(?:optimal|best|appropriate))/i.test(t)) {
+      contrasts.push(t);
+    }
+  }
+
+  return deduplicateSentences(contrasts).slice(0, 8);
+}
+
+/**
+ * Extract conditional logic: if/when/depending on situational advice.
+ * These encode context-dependent recommendations.
+ */
+function extractConditionals(text: string): string[] {
+  const sentences = text.replace(/\n+/g, " ").split(/(?<=[.!?])\s+/);
+  const conditionals: string[] = [];
+
+  for (const s of sentences) {
+    const t = s.trim();
+    if (t.length < 30 || t.length > 500) continue;
+    if (/\b(?:if (?:a |an |the |given )|when .{5,}(?:,|then)|depending on|provided that|in the case|assuming|where .{3,}(?:,\s*(?:it|they|the)))/i.test(t) &&
+        !/\?$/.test(t)) {
+      conditionals.push(t);
+    }
+  }
+
+  return deduplicateSentences(conditionals).slice(0, 10);
+}
+
+/**
+ * Extract rhetorical questions the document poses.
+ * These often frame the document's central inquiry and thesis.
+ */
+function extractRhetoricalQuestions(text: string): string[] {
+  const sentences = text.replace(/\n+/g, " ").split(/(?<=[?])\s+/);
+  const questions: string[] = [];
+
+  for (const s of sentences) {
+    const t = s.trim();
+    if (t.length < 15 || t.length > 300 || !t.endsWith("?")) continue;
+    // Filter out form/UI questions (e.g., "Name?", "Email?")
+    if (t.split(/\s+/).length >= 4) {
+      questions.push(t);
+    }
+  }
+
+  return questions.slice(0, 8);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// RELATIONAL LAYER EXTRACTORS
+// ════════════════════════════════════════════════════════════════════════════
 
 function extractTopics(text: string): string[] {
-  // Multi-word capitalized phrases
   const phraseMatches = text.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+/g) ?? [];
   const freq = new Map<string, number>();
   for (const p of phraseMatches) {
-    if (p.length > 5 && p.length < 60) {
-      freq.set(p, (freq.get(p) ?? 0) + 1);
-    }
+    if (p.length > 5 && p.length < 60) freq.set(p, (freq.get(p) ?? 0) + 1);
   }
-
-  // Also extract single important capitalized words (acronyms, key terms)
   const acronyms = text.match(/\b[A-Z]{2,6}\b/g) ?? [];
-  const skipAcronyms = new Set(["THE", "AND", "FOR", "NOT", "BUT", "ARE", "WAS", "HAS", "HAD", "ITS", "CAN", "MAY", "HOW", "WHY", "WHO"]);
+  const skip = new Set(["THE", "AND", "FOR", "NOT", "BUT", "ARE", "WAS", "HAS", "HAD", "ITS", "CAN", "MAY", "HOW", "WHY", "WHO", "PUT", "USE"]);
   for (const a of acronyms) {
-    if (!skipAcronyms.has(a) && a.length >= 3) {
-      freq.set(a, (freq.get(a) ?? 0) + 1);
-    }
+    if (!skip.has(a) && a.length >= 3) freq.set(a, (freq.get(a) ?? 0) + 1);
   }
-
   return Array.from(freq.entries())
     .filter(([, count]) => count >= 2)
     .sort((a, b) => b[1] - a[1])
@@ -422,51 +617,84 @@ function extractTopics(text: string): string[] {
     .map(([topic]) => topic);
 }
 
-// ── Numerical fact extraction ───────────────────────────────────────────────
+interface ConceptRelation { from: string; to: string; context?: string; }
+
+function extractConceptRelationships(text: string, topics: string[]): ConceptRelation[] {
+  const relations: ConceptRelation[] = [];
+  if (topics.length < 2) return relations;
+  const sentences = text.replace(/\n+/g, " ").split(/(?<=[.!?])\s+/);
+  for (const sentence of sentences) {
+    if (sentence.length < 20 || sentence.length > 400) continue;
+    const found: string[] = [];
+    for (const topic of topics) {
+      if (sentence.includes(topic)) found.push(topic);
+      if (found.length >= 2) break;
+    }
+    if (found.length >= 2) {
+      relations.push({ from: found[0], to: found[1], context: sentence.trim() });
+    }
+  }
+  return relations.slice(0, 15);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// QUANTITATIVE LAYER EXTRACTORS
+// ════════════════════════════════════════════════════════════════════════════
 
 function extractNumericalFacts(text: string): string[] {
   const sentences = text.split(/(?<=[.!?])\s+/);
   const facts: string[] = [];
-
   for (const s of sentences) {
-    const trimmed = s.trim();
-    if (trimmed.length < 15 || trimmed.length > 300) continue;
-    if (/\d+[%,.]?\d*\s*(?:percent|million|billion|thousand|times|×|x\b|hours?|days?|years?|bytes?|KB|MB|GB|TB)/i.test(trimmed)) {
-      facts.push(trimmed);
+    const t = s.trim();
+    if (t.length < 15 || t.length > 300) continue;
+    if (/\d+[%,.]?\d*\s*(?:percent|million|billion|thousand|times|×|x\b|hours?|days?|years?|bytes?|KB|MB|GB|TB)/i.test(t)) {
+      facts.push(t);
     }
   }
-
   return facts.slice(0, 15);
 }
 
-// ── Date extraction ─────────────────────────────────────────────────────────
-
 function extractDates(text: string): string[] {
-  const datePatterns = [
+  const patterns = [
     /\b\d{4}-\d{2}-\d{2}\b/g,
     /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b/gi,
     /\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b/gi,
     /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b/gi,
   ];
-
   const dates = new Set<string>();
-  for (const pattern of datePatterns) {
-    const matches = text.match(pattern) ?? [];
-    for (const m of matches) dates.add(m);
+  for (const p of patterns) {
+    for (const m of (text.match(p) ?? [])) dates.add(m);
   }
-
   return Array.from(dates).slice(0, 12);
 }
 
-// ── Reconstruct semantic context from triples (for AI injection) ────────────
+// ════════════════════════════════════════════════════════════════════════════
+// UTILITY
+// ════════════════════════════════════════════════════════════════════════════
+
+/** Remove near-duplicate sentences (one is a substring of another) */
+function deduplicateSentences(sentences: string[]): string[] {
+  const result: string[] = [];
+  for (const s of sentences) {
+    const isDup = result.some(existing =>
+      existing.includes(s) || s.includes(existing)
+    );
+    if (!isDup) result.push(s);
+  }
+  return result;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// REHYDRATION — Reconstruct semantic context from triples
+// ════════════════════════════════════════════════════════════════════════════
 
 /**
  * Converts decompressed triples back into a structured semantic context
  * suitable for LLM system prompt injection.
  *
- * This is the "rehydration" step: triples → rich ontological narrative
- * that preserves document structure, definitions, relationships, and claims.
- * The output should read as a comprehensive briefing document.
+ * This is the "rehydration" step: triples → rich ontological narrative.
+ * The output reads as a comprehensive, multi-dimensional briefing document
+ * organized by semantic layer for maximum LLM comprehension.
  */
 export function triplesToSemanticContext(triples: CompressibleTriple[]): string {
   const lines: string[] = [];
@@ -489,10 +717,12 @@ export function triplesToSemanticContext(triples: CompressibleTriple[]): string 
     const wordCount = docTriples.find(t => t.predicate === "delta:memCount")?.object;
     const author = docTriples.find(t => t.predicate === "schema:author")?.object;
     const abstract = docTriples.find(t => t.predicate === "schema:abstract")?.object;
+    const archetype = docTriples.find(t => t.predicate === "uor:hasRole")?.object;
 
     lines.push(`═══ ${name} ═══`);
     const meta: string[] = [];
     if (author) meta.push(`Author: ${author}`);
+    if (archetype) meta.push(`Type: ${archetype}`);
     if (wordCount) meta.push(`${wordCount} words`);
     if (meta.length) lines.push(meta.join(" | "));
     lines.push("");
@@ -539,49 +769,44 @@ export function triplesToSemanticContext(triples: CompressibleTriple[]): string 
       lines.push("");
     }
 
-    // Sections with definitions, claims, list items, and value propositions
+    // ── Sections with all child types ──
     const sectionIds = docTriples
       .filter(t => t.predicate === "uor:memberOf")
       .map(t => t.object);
 
-    const sectionNodes = sectionIds
-      .map(id => {
-        const sTriples = bySubject.get(id);
-        if (!sTriples) return null;
-        const heading = sTriples.find(t => t.predicate === "schema:name")?.object ?? id;
-        const level = parseInt(sTriples.find(t => t.predicate === "delta:hScore")?.object ?? "2");
-        const childIds = sTriples.filter(t => t.predicate === "uor:derivedFrom").map(t => t.object);
+    const sectionNodes = sectionIds.map(id => {
+      const sTriples = bySubject.get(id);
+      if (!sTriples) return null;
+      const heading = sTriples.find(t => t.predicate === "schema:name")?.object ?? id;
+      const level = parseInt(sTriples.find(t => t.predicate === "delta:hScore")?.object ?? "2");
+      const childIds = sTriples.filter(t => t.predicate === "uor:derivedFrom").map(t => t.object);
 
-        const claims: string[] = [];
-        const definitions: { term: string; definition: string }[] = [];
-        const listItems: string[] = [];
-        const valueProps: string[] = [];
+      const children: Record<string, { desc: string; name?: string }[]> = {
+        "schema:Claim": [],
+        "schema:Concept": [],
+        "schema:ListItem": [],
+        "schema:ValueProposition": [],
+        "schema:CausalClaim": [],
+        "schema:Recommendation": [],
+        "schema:Analogy": [],
+        "schema:Contrast": [],
+        "schema:Conditional": [],
+        "schema:Question": [],
+      };
 
-        for (const cid of childIds) {
-          const cTriples = bySubject.get(cid);
-          if (!cTriples) continue;
-          const type = cTriples.find(t => t.predicate === "rdf:type")?.object;
-          const desc = cTriples.find(t => t.predicate === "schema:description")?.object;
-          const nameVal = cTriples.find(t => t.predicate === "schema:name")?.object;
-
-          if (type === "schema:Concept" && nameVal && desc) {
-            definitions.push({ term: nameVal, definition: desc });
-          } else if (type === "schema:ListItem" && desc) {
-            listItems.push(desc);
-          } else if (type === "schema:ValueProposition" && desc) {
-            valueProps.push(desc);
-          } else if (type === "schema:Claim" && desc) {
-            claims.push(desc);
-          }
+      for (const cid of childIds) {
+        const cTriples = bySubject.get(cid);
+        if (!cTriples) continue;
+        const type = cTriples.find(t => t.predicate === "rdf:type")?.object ?? "schema:Claim";
+        const desc = cTriples.find(t => t.predicate === "schema:description")?.object;
+        const nameVal = cTriples.find(t => t.predicate === "schema:name")?.object;
+        if (desc && children[type]) {
+          children[type].push({ desc, name: nameVal });
         }
+      }
 
-        return { heading, level, claims, definitions, listItems, valueProps };
-      })
-      .filter(Boolean) as {
-        heading: string; level: number; claims: string[];
-        definitions: { term: string; definition: string }[];
-        listItems: string[]; valueProps: string[];
-      }[];
+      return { heading, level, children };
+    }).filter(Boolean) as { heading: string; level: number; children: Record<string, { desc: string; name?: string }[]> }[];
 
     if (sectionNodes.length) {
       lines.push("─── DOCUMENT STRUCTURE ───");
@@ -591,29 +816,26 @@ export function triplesToSemanticContext(triples: CompressibleTriple[]): string 
         const prefix = sec.level <= 1 ? "══" : sec.level === 2 ? "──" : "  ·";
         lines.push(`${prefix} ${sec.heading}`);
 
-        if (sec.definitions.length) {
-          for (const def of sec.definitions) {
-            lines.push(`    [DEFINITION] ${def.term}: ${def.definition}`);
+        // Render each dimension with clear labels
+        const renderDim = (key: string, label: string, bullet: string) => {
+          const items = sec.children[key];
+          if (!items?.length) return;
+          for (const item of items) {
+            const namePrefix = item.name ? `${item.name}: ` : "";
+            lines.push(`    ${bullet} ${namePrefix}${item.desc}`);
           }
-        }
+        };
 
-        if (sec.valueProps.length) {
-          for (const vp of sec.valueProps) {
-            lines.push(`    [VALUE] ${vp}`);
-          }
-        }
-
-        if (sec.claims.length) {
-          for (const claim of sec.claims) {
-            lines.push(`    ${claim}`);
-          }
-        }
-
-        if (sec.listItems.length) {
-          for (const item of sec.listItems) {
-            lines.push(`    • ${item}`);
-          }
-        }
+        renderDim("schema:Concept", "Definitions", "[DEF]");
+        renderDim("schema:ValueProposition", "Value", "[VALUE]");
+        renderDim("schema:Question", "Questions", "[Q]");
+        renderDim("schema:Claim", "Claims", "");
+        renderDim("schema:CausalClaim", "Causation", "[CAUSE]");
+        renderDim("schema:Recommendation", "Guidance", "[SHOULD]");
+        renderDim("schema:Analogy", "Analogy", "[≈]");
+        renderDim("schema:Contrast", "Contrast", "[VS]");
+        renderDim("schema:Conditional", "Conditional", "[IF]");
+        renderDim("schema:ListItem", "Items", "•");
 
         lines.push("");
       }
@@ -623,32 +845,37 @@ export function triplesToSemanticContext(triples: CompressibleTriple[]): string 
     const directClaims = docTriples
       .filter(t => t.predicate === "uor:derivedFrom")
       .map(t => {
-        const childTriples = bySubject.get(t.object);
-        if (!childTriples) return null;
-        const type = childTriples.find(ct => ct.predicate === "rdf:type")?.object;
-        const desc = childTriples.find(ct => ct.predicate === "schema:description")?.object;
-        const nameVal = childTriples.find(ct => ct.predicate === "schema:name")?.object;
+        const ct = bySubject.get(t.object);
+        if (!ct) return null;
+        const type = ct.find(c => c.predicate === "rdf:type")?.object;
+        const desc = ct.find(c => c.predicate === "schema:description")?.object;
+        const nameVal = ct.find(c => c.predicate === "schema:name")?.object;
         return { type, desc, name: nameVal };
       })
-      .filter(Boolean) as { type: string | undefined; desc: string | undefined; name: string | undefined }[];
+      .filter(Boolean) as { type?: string; desc?: string; name?: string }[];
 
-    const plainClaims = directClaims.filter(c => c.type === "schema:Claim" && c.desc);
-    const plainDefs = directClaims.filter(c => c.type === "schema:Concept" && c.name && c.desc);
+    // Group by type for flat docs
+    const dimLabels: Record<string, string> = {
+      "schema:Concept": "KEY DEFINITIONS",
+      "schema:Claim": "KEY PASSAGES",
+      "schema:CausalClaim": "CAUSAL LOGIC",
+      "schema:Recommendation": "PRESCRIPTIVE GUIDANCE",
+      "schema:Analogy": "ANALOGIES & METAPHORS",
+      "schema:Contrast": "CONTRASTS & TENSIONS",
+    };
 
-    if (plainDefs.length) {
-      lines.push("KEY DEFINITIONS:");
-      for (const def of plainDefs) {
-        lines.push(`  [${def.name}] ${def.desc}`);
+    if (!sectionNodes.length && directClaims.length) {
+      for (const [type, label] of Object.entries(dimLabels)) {
+        const items = directClaims.filter(c => c.type === type && c.desc);
+        if (items.length) {
+          lines.push(`${label}:`);
+          for (const item of items) {
+            const namePrefix = item.name ? `[${item.name}] ` : "  • ";
+            lines.push(`${namePrefix}${item.desc}`);
+          }
+          lines.push("");
+        }
       }
-      lines.push("");
-    }
-
-    if (plainClaims.length && !sectionNodes.length) {
-      lines.push("KEY PASSAGES:");
-      for (const claim of plainClaims) {
-        lines.push(`  • ${claim.desc}`);
-      }
-      lines.push("");
     }
   }
 
