@@ -43,19 +43,19 @@ const P = {
 
 const PHASE_DESCRIPTIONS: Record<TriadicPhase, { verb: string; essence: string; invitation: string }> = {
   learn: {
-    verb: "Perceive",
-    essence: "Vision arises. Meaning is received and structured.",
-    invitation: "Explore ideas, research, reason, and understand",
+    verb: "Explore",
+    essence: "Understand before you build. Research and connect the dots.",
+    invitation: "Research, read, reason, and deepen your understanding",
   },
   work: {
     verb: "Build",
-    essence: "Vision is enacted. Potential is actualized.",
-    invitation: "Plan, code, review, and bring ideas to life",
+    essence: "Turn your ideas into reality. Plan, create, and ship.",
+    invitation: "Plan, code, design, and bring your projects to life",
   },
   play: {
-    verb: "Discover",
-    essence: "Results are witnessed. Feedback enriches vision.",
-    invitation: "Create freely, reflect, connect, and transform",
+    verb: "Create",
+    essence: "Experiment without pressure. Play leads to breakthroughs.",
+    invitation: "Brainstorm, remix, reflect, and discover new possibilities",
   },
 };
 
@@ -119,15 +119,15 @@ export default function TriadicWelcome({
             className="text-[clamp(26px,5.5vw,34px)] font-light leading-snug tracking-wide"
             style={{ fontFamily: P.fontDisplay, color: P.text }}
           >
-            How would you like
+            What would you like
             <br />
-            to begin?
+            to focus on?
           </h2>
           <p
             className="text-[15px] mt-4 leading-relaxed"
             style={{ color: P.textDim }}
           >
-            Choose a mode of engagement
+            Pick a mode to get started
           </p>
         </div>
 
@@ -207,7 +207,7 @@ export default function TriadicWelcome({
         {/* Current selection indicator */}
         <div className="flex justify-center pb-4">
           <p className="text-[13px] tracking-wider" style={{ color: P.textDimmer }}>
-            Active · {selectedPersona.name}
+            Currently using · {selectedPersona.name}
           </p>
         </div>
 

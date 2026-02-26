@@ -32,23 +32,23 @@ interface Step {
 const STEPS: Step[] = [
   {
     phase: null,
-    title: "Your sovereign rhythm",
-    body: "Hologram organizes your creative energy into three harmonious modes — each one essential to the whole.",
+    title: "Three modes, one flow",
+    body: "Lumini helps you stay focused by organizing your work into three simple modes — each designed for a different kind of thinking.",
   },
   {
     phase: "learn",
-    title: "Learn · Perceive",
-    body: "Where vision arises. Research, reason, and absorb new understanding. This is the receptive, contemplative mode.",
+    title: "Learn",
+    body: "When you need to understand something deeply — research, study, or explore new ideas. This is where clarity begins.",
   },
   {
     phase: "work",
-    title: "Work · Build",
-    body: "Where vision is enacted. Plan, code, and bring ideas into form. This is the focused, productive mode.",
+    title: "Work",
+    body: "When it's time to get things done — plan, build, and ship your projects. This is where ideas become real.",
   },
   {
     phase: "play",
-    title: "Play · Discover",
-    body: "Where results are witnessed. Create freely, reflect, and let curiosity guide you. This is the expansive, joyful mode.",
+    title: "Play",
+    body: "When you want to think freely — brainstorm, experiment, and discover new connections. This is where breakthroughs happen.",
   },
 ];
 
