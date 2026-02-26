@@ -392,7 +392,7 @@ export default function HologramOsPage() {
                 <g
                   fill="none"
                   stroke={P.wordmark}
-                  strokeWidth="1.3"
+                  strokeWidth="2.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
