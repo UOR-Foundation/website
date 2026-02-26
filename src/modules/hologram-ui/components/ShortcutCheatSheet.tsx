@@ -34,7 +34,7 @@ const SHORTCUTS: Shortcut[] = [
   { keys: [MOD, "M"], label: "Messages", section: "Communication" },
   // View
   { keys: [MOD, "F"], label: "Toggle Focus Mode", section: "View" },
-  { keys: [MOD, "T"], label: "Cycle Theme", section: "View" },
+  
   // System
   { keys: [MOD, "/"], label: "Shortcut Cheat Sheet", section: "System" },
 ];
