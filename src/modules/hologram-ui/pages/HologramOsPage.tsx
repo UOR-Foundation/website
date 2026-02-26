@@ -115,9 +115,9 @@ function palette(m: BgMode) {
     dotPulse: "hsl(0, 0%, 80%)",
     bg:       "hsl(0, 0%, 5%)",
   };
-  // image mode — text must read clearly over photography
+  // image mode — dark wordmark for legibility over bright landscapes
   return {
-    wordmark: "hsla(0, 0%, 98%, 0.9)",
+    wordmark: "hsla(0, 0%, 8%, 0.85)",
     greeting: "hsla(0, 0%, 95%, 0.8)",
     heading:  "hsla(0, 0%, 100%, 0.95)",
     sub:      "hsla(38, 12%, 90%, 0.75)",
@@ -522,7 +522,7 @@ export default function HologramOsPage() {
           <HologramFrame layer={2} label="content" interactive={false} transform={contentTilt} opacity={layerNav.layerOpacity(2)} style={{ transform: `scale(${layerNav.layerScale(2)})`, transition: "opacity 0.5s, transform 0.5s" }}>
             {/* Logo — top center */}
             <div
-              className="absolute top-[clamp(12px,2.5vh,32px)] left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-300 ease-out"
+              className="absolute top-[3vh] left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
