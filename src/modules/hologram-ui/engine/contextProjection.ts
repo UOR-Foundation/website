@@ -26,6 +26,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { UserContextProfile } from "./signalRelevance";
 import { saveContextProfile, loadContextProfile } from "./signalRelevance";
+import { writeSlot, readSlot } from "@/modules/data-bank/lib/sync";
 
 // ── Predicates ──────────────────────────────────────────────────────────
 
@@ -103,11 +104,24 @@ export async function fetchAndProject(userId: string): Promise<UserContextProfil
     .limit(MAX_TRIPLES);
 
   if (error || !data || data.length === 0) {
-    return loadContextProfile(); // graceful fallback
+    // Try Data Bank L2 before falling back to localStorage L1
+    const banked = await readSlot(userId, "context-profile");
+    if (banked?.value) {
+      try {
+        const profile = JSON.parse(banked.value) as UserContextProfile;
+        saveContextProfile(profile); // warm L1
+        return profile;
+      } catch { /* fall through */ }
+    }
+    return loadContextProfile(); // L1 fallback
   }
 
   const profile = projectProfile(data as Triple[]);
-  saveContextProfile(profile); // sync localStorage cache
+  saveContextProfile(profile); // L1 cache
+
+  // L2: persist encrypted projection to Data Bank (fire-and-forget)
+  writeSlot(userId, "context-profile", JSON.stringify(profile)).catch(() => {});
+
   return profile;
 }
 
