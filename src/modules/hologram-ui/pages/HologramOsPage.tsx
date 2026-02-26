@@ -151,13 +151,6 @@ export default function HologramOsPage() {
     snap: true,
     dockSide: "right",
   });
-  const sidebarPanel = useModularPanel({
-    storageKey: "sidebar",
-    defaultWidth: 240,
-    constraints: { minWidth: 68, maxWidth: 360 },
-    snap: true,
-    dockSide: "left",
-  });
   const [chatPrompt, setChatPrompt] = useState("");
   const [legalOpen, setLegalOpen] = useState(false);
   const [legalTab, setLegalTab] = useState<"privacy" | "terms">("privacy");
@@ -232,8 +225,7 @@ export default function HologramOsPage() {
       switch (e.key) {
         // ⌘L — Lumen AI (L = Lumen)
         case "l": case "L": e.preventDefault(); mastery.record("l"); setChatOpen(true); break;
-        // ⌘B — Toggle sidebar (B = Bar/sidebar)
-        case "b": case "B": e.preventDefault(); mastery.record("b"); sidebarPanel.setWidth(sidebarPanel.width < 120 ? 240 : 68); break;
+        // ⌘B — reserved for sidebar (handled internally now)
         // ⌘F — Toggle focus mode (F = Focus)
         case "f": case "F": e.preventDefault(); mastery.record("f"); attention.toggle(); break;
         // ⌘Y — Cycle style (Y = stYle)
@@ -285,7 +277,6 @@ export default function HologramOsPage() {
           }}
         >
           <DesktopOsSidebar
-            panel={sidebarPanel}
             onNewChat={() => setChatOpen(true)}
             onOpenChat={() => setChatOpen(true)}
             onReplayGuide={() => setShortcutsOpen(true)}
@@ -745,7 +736,7 @@ export default function HologramOsPage() {
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
       <ShortcutCheatSheet open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <LegalPanel open={legalOpen} initialTab={legalTab} onClose={() => setLegalOpen(false)} bgMode={bgMode === "white" ? "white" : "dark"} />
-      <ModularSnapGrid visible={lumenPanel.isResizing || sidebarPanel.isResizing} />
+      <ModularSnapGrid visible={lumenPanel.isResizing} />
       <HologramAiChat
         open={chatOpen}
         onClose={() => { setChatOpen(false); setChatPrompt(""); }}
