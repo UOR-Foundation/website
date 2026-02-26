@@ -29,7 +29,16 @@ const S = {
 } as const;
 
 /* ── OS-aware modifier key ──────────────────────────────────── */
-const MOD_KEY = typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? "⌘" : "Ctrl";
+function detectMac(): boolean {
+  if (typeof navigator === "undefined") return false;
+  // Modern API first
+  if ("userAgentData" in navigator && (navigator as any).userAgentData?.platform) {
+    return /mac/i.test((navigator as any).userAgentData.platform);
+  }
+  // Fallback: check both platform and userAgent
+  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent);
+}
+const MOD_KEY = detectMac() ? "⌘" : "Ctrl";
 
 /* ── Shortcut badge component ───────────────────────────────── */
 function ShortcutBadge({ keys }: { keys: string }) {

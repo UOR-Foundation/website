@@ -9,8 +9,14 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const isMac =
-  typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+function detectMac(): boolean {
+  if (typeof navigator === "undefined") return false;
+  if ("userAgentData" in navigator && (navigator as any).userAgentData?.platform) {
+    return /mac/i.test((navigator as any).userAgentData.platform);
+  }
+  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent);
+}
+const isMac = detectMac();
 const MOD = isMac ? "⌘" : "Ctrl";
 
 interface Shortcut {
