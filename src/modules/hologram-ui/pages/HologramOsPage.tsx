@@ -23,6 +23,7 @@ import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
+import LegalPanel from "@/modules/hologram-ui/components/LegalPanel";
 import HologramFrame, { HologramViewport, OverlayFrame, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
 import FrameDebugOverlay from "@/modules/hologram-ui/components/FrameDebugOverlay";
@@ -140,6 +141,8 @@ export default function HologramOsPage() {
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatPrompt, setChatPrompt] = useState("");
+  const [legalOpen, setLegalOpen] = useState(false);
+  const [legalTab, setLegalTab] = useState<"privacy" | "terms">("privacy");
   const { entryCount: journalEntryCount } = useFocusJournal();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [bgMode, setBgModeState] = useState<BgMode>(() => {
@@ -650,8 +653,8 @@ export default function HologramOsPage() {
               transition: "opacity 0.7s ease, filter 0.7s ease",
             }}
           >
-            <a
-              href="/privacy"
+            <button
+              onClick={() => { setLegalTab("privacy"); setLegalOpen(true); }}
               className="transition-opacity duration-500 hover:opacity-70"
               style={{
                 fontFamily: "'DM Sans', system-ui, sans-serif",
@@ -661,11 +664,13 @@ export default function HologramOsPage() {
                 color: bgMode === "white"
                   ? "hsla(0, 0%, 40%, 0.35)"
                   : "hsla(0, 0%, 100%, 0.2)",
-                textDecoration: "none",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
               }}
             >
               Privacy Policy
-            </a>
+            </button>
             <span
               style={{
                 width: "2px",
@@ -676,8 +681,8 @@ export default function HologramOsPage() {
                   : "hsla(0, 0%, 100%, 0.12)",
               }}
             />
-            <a
-              href="/terms"
+            <button
+              onClick={() => { setLegalTab("terms"); setLegalOpen(true); }}
               className="transition-opacity duration-500 hover:opacity-70"
               style={{
                 fontFamily: "'DM Sans', system-ui, sans-serif",
@@ -687,11 +692,13 @@ export default function HologramOsPage() {
                 color: bgMode === "white"
                   ? "hsla(0, 0%, 40%, 0.35)"
                   : "hsla(0, 0%, 100%, 0.2)",
-                textDecoration: "none",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
               }}
             >
               Terms of Use
-            </a>
+            </button>
           </div>
 
           {/* Keyframes moved to index.css for zero-recalc mounting */}
@@ -704,6 +711,7 @@ export default function HologramOsPage() {
        * ════════════════════════════════════════════════════════════════ */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
       <ShortcutCheatSheet open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <LegalPanel open={legalOpen} initialTab={legalTab} onClose={() => setLegalOpen(false)} bgMode={bgMode === "white" ? "white" : "dark"} />
       <HologramAiChat
         open={chatOpen}
         onClose={() => { setChatOpen(false); setChatPrompt(""); }}
