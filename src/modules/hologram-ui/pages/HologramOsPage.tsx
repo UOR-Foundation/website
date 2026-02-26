@@ -512,7 +512,7 @@ export default function HologramOsPage() {
                     fontSize: "clamp(11px, 0.8vw, 13px)",
                   }}
                 >
-                  Hologram Intelligence
+                  Luminal AI
                 </span>
 
                 {journalEntryCount > 0 && (
