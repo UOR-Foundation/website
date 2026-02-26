@@ -1534,13 +1534,53 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
 
 // ── Message Bubble ─────────────────────────────────────────────────────────
 
+function useReadingProgress(ref: React.RefObject<HTMLDivElement | null>) {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      const viewH = window.innerHeight;
+      if (rect.height <= viewH) { setProgress(1); return; }
+      const visible = Math.max(0, Math.min(rect.bottom, viewH) - Math.max(rect.top, 0));
+      const scrolled = Math.max(0, viewH - rect.top);
+      const pct = Math.min(1, Math.max(0, scrolled / rect.height));
+      setProgress(pct);
+    };
+    // Listen on nearest scrollable ancestor
+    const scroller = el.closest("[class*='overflow']") ?? window;
+    const target = scroller === window ? window : scroller;
+    target.addEventListener("scroll", update, { passive: true });
+    update();
+    return () => target.removeEventListener("scroll", update);
+  }, [ref]);
+  return progress;
+}
+
 function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery, isBookmarked, onToggleBookmark }: { message: ChatMessage; isStreaming?: boolean; onSendFollowUp?: (prompt: string) => void; userQuery?: string; isBookmarked?: boolean; onToggleBookmark?: () => void }) {
   const { role, content, meta } = message;
   const isUser = role === "user";
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const progress = useReadingProgress(bubbleRef);
+  const showProgress = !isUser && content.length > 400;
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} animate-[message-fade-in_0.5s_ease-out_both]`}>
-      <div className="flex gap-2.5 max-w-[92%]">
+      <div className="flex gap-2.5 max-w-[92%] relative">
+        {/* Reading progress — subtle left-edge line for long assistant messages */}
+        {showProgress && (
+          <div
+            className="absolute left-0 top-0 w-[2px] rounded-full transition-opacity duration-500"
+            style={{
+              height: `${progress * 100}%`,
+              background: `linear-gradient(180deg, ${P.goldLight}, ${P.goldMuted})`,
+              opacity: progress > 0 && progress < 1 ? 0.6 : 0,
+              marginLeft: "-6px",
+            }}
+          />
+        )}
+
         {/* Avatar for assistant */}
         {!isUser && (
           <div
@@ -1551,7 +1591,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
           </div>
         )}
 
-        <div className="min-w-0">
+        <div className="min-w-0" ref={bubbleRef}>
           <div
             className="px-4 py-3 rounded-2xl"
             style={
