@@ -562,10 +562,19 @@ function CompressionDemo() {
     setChatMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setStreaming(true);
 
-    const systemContext = `You are analyzing a document that has been canonicalized and compressed using the Hologram memory system. Here is the document content:\n\n---\nFilename: ${file.name}\nOriginal size: ${formatBytes(file.originalSize)}\nCompressed to: ${formatBytes(file.compressedSize)} (${file.compressionRatio.toFixed(1)}× compression)\nCanonical hash: ${file.canonicalHash.slice(0, 16)}…\n---\n\n${file.textContent}\n\n---\nAnswer questions about this document concisely and accurately. Reference specific content when possible.`;
+    // Build the full document context for RAG injection into Lumen AI's system prompt
+    const documentContext = [
+      `DOCUMENT: "${file.name}"`,
+      `Original size: ${formatBytes(file.originalSize)} | Compressed to: ${formatBytes(file.compressedSize)} (${file.compressionRatio.toFixed(1)}× lossless compression)`,
+      `Canonical SHA-256: ${file.canonicalHash}`,
+      `Word count: ${file.wordCount.toLocaleString()}`,
+      ``,
+      `── BEGIN FULL DOCUMENT CONTENT ──`,
+      file.textContent,
+      `── END FULL DOCUMENT CONTENT ──`,
+    ].join("\n");
 
     const messages = [
-      { role: "system", content: systemContext },
       ...chatMessages.map(m => ({ role: m.role, content: m.content })),
       { role: "user", content: userMsg },
     ];
@@ -579,7 +588,7 @@ function CompressionDemo() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ messages, persona: "analyst" }),
+          body: JSON.stringify({ messages, personaId: "analyst", documentContext }),
         }
       );
 
