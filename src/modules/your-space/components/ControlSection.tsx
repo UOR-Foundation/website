@@ -4,11 +4,12 @@
  */
 
 import { useState } from "react";
-import { Settings, ShieldCheck, Star, Plus, ChevronRight, ExternalLink } from "lucide-react";
+import { Settings, ShieldCheck, Star, Plus, ChevronRight, ExternalLink, DatabaseZap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpaceCard } from "./SpaceCard";
 import { SortableSection } from "./SortableSection";
 import { PrivacySettingsPanel } from "./PrivacySettingsPanel";
+import { DataBankPanel } from "./DataBankPanel";
 
 interface ControlSectionProps {
   isDark: boolean;
@@ -99,13 +100,23 @@ export const ControlSection = ({ isDark, votes, onVote }: ControlSectionProps) =
         </div>
       </SpaceCard>
     ),
+    databank: (
+      <SpaceCard
+        title="Data Bank"
+        icon={<DatabaseZap className="text-foreground" size={16} />}
+        isDark={isDark}
+        moduleSlug="data-bank"
+      >
+        <DataBankPanel isDark={isDark} />
+      </SpaceCard>
+    ),
   };
 
   return (
     <div>
       <h2 className="text-foreground font-body text-xl font-semibold mb-6">Control Your Experience</h2>
       <SortableSection
-        initialOrder={["operations", "privacy", "marketplace"]}
+        initialOrder={["operations", "privacy", "databank", "marketplace"]}
         cards={cards}
         storageKey="uor-space-control-order"
       />
