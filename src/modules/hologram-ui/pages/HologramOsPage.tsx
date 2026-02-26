@@ -454,8 +454,8 @@ export default function HologramOsPage() {
                   {BG_MODES.map(({ mode, label }) => {
                     const isActive = bgMode === mode;
                     const dotColor = isActive
-                      ? (bgMode === "white" ? "hsla(0, 0%, 15%, 0.8)" : "hsla(0, 0%, 85%, 0.85)")
-                      : (bgMode === "white" ? "hsla(0, 0%, 40%, 0.3)" : "hsla(0, 0%, 70%, 0.25)");
+                      ? (bgMode === "white" ? "hsla(0, 0%, 10%, 0.85)" : "hsla(0, 0%, 85%, 0.85)")
+                      : (bgMode === "white" ? "hsla(0, 0%, 10%, 0.35)" : "hsla(0, 0%, 70%, 0.25)");
                     return (
                       <button
                         key={mode}
@@ -481,7 +481,7 @@ export default function HologramOsPage() {
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     fontSize: "clamp(11px, 0.8vw, 13px)",
                     color: bgMode === "white"
-                      ? "hsla(0, 0%, 55%, 0.45)"
+                      ? "hsla(0, 0%, 15%, 0.55)"
                       : "hsla(0, 0%, 70%, 0.5)",
                   }}
                 >
@@ -661,7 +661,7 @@ export default function HologramOsPage() {
                           width: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
                           height: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
                           opacity: 0.7,
-                          border: `1px solid ${bgMode === "white" ? "hsla(38, 30%, 50%, 0.2)" : "hsla(38, 25%, 75%, 0.2)"}`,
+                          border: `1px solid ${bgMode === "white" ? "hsla(0, 0%, 10%, 0.45)" : "hsla(38, 25%, 75%, 0.2)"}`,
                           animation: "lumen-ring-enter 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, ambient-glow-breathe 6s ease-in-out 3s infinite",
                         }}
                       />
@@ -738,7 +738,7 @@ export default function HologramOsPage() {
                 letterSpacing: "0.15em",
                 textTransform: "uppercase" as const,
                 color: bgMode === "white"
-                  ? "hsla(30, 10%, 35%, 0.55)"
+                  ? "hsla(0, 0%, 15%, 0.6)"
                   : "hsla(38, 15%, 85%, 0.55)",
                 background: "none",
                 border: "none",
@@ -753,7 +753,7 @@ export default function HologramOsPage() {
                 height: "2px",
                 borderRadius: "50%",
                 background: bgMode === "white"
-                  ? "hsla(30, 10%, 35%, 0.3)"
+                  ? "hsla(0, 0%, 15%, 0.4)"
                   : "hsla(38, 15%, 85%, 0.3)",
               }}
             />
@@ -766,7 +766,7 @@ export default function HologramOsPage() {
                 letterSpacing: "0.15em",
                 textTransform: "uppercase" as const,
                 color: bgMode === "white"
-                  ? "hsla(30, 10%, 35%, 0.55)"
+                  ? "hsla(0, 0%, 15%, 0.6)"
                   : "hsla(38, 15%, 85%, 0.55)",
                 background: "none",
                 border: "none",
