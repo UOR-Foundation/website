@@ -172,11 +172,11 @@ function TypewriterText({ text, delay = 2400, speed = 45 }: { text: string; dela
   }, [started, displayed, text, speed]);
 
   return (
-    <span style={{ position: "relative", display: "inline" }}>
-      {/* Invisible full text reserves the final layout height — no jumps */}
-      <span style={{ visibility: "hidden" }} aria-hidden="true">{text}</span>
-      {/* Visible typed portion overlaid exactly on top */}
-      <span style={{ position: "absolute", left: 0, top: 0 }}>
+    <span style={{ position: "relative", display: "block", textAlign: "center" }}>
+      {/* Invisible full text reserves layout height */}
+      <span style={{ visibility: "hidden", display: "block" }} aria-hidden="true">{text}</span>
+      {/* Visible typed text — same block flow, overlaid */}
+      <span style={{ position: "absolute", inset: 0, display: "block", textAlign: "center" }}>
         {displayed}
         {started && !done && (
           <span style={{ opacity: 0.5, animation: "blink-caret 0.8s step-end infinite" }}>▎</span>
