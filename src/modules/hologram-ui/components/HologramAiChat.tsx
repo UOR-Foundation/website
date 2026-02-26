@@ -15,7 +15,7 @@ import type { TriadicPhase, CreatorStage } from "@/modules/hologram-ui/sovereign
 import {
   X, Send, Loader2, Cpu, Sparkles, MessageSquare,
   Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap, User, Lock,
-  Eye, EyeOff,
+  Eye, EyeOff, BookmarkCheck,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import TriadicWelcome from "@/modules/hologram-ui/components/TriadicWelcome";
@@ -83,6 +83,7 @@ import { useScreenContext } from "@/modules/hologram-ui/hooks/useScreenContext";
 import { useObserverCompanion } from "@/modules/hologram-ui/hooks/useObserverCompanion";
 import { useWhisperTranscription } from "@/modules/hologram-ui/hooks/useWhisperTranscription";
 import { Mic, MicOff } from "lucide-react";
+import SavedResponsesPanel from "@/modules/hologram-ui/components/SavedResponsesPanel";
 
 // ── Palette constants ──────────────────────────────────────────────────────
 
@@ -156,6 +157,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const [isLoadingModel, setIsLoadingModel] = useState(false);
   const [loadProgress, setLoadProgress] = useState("");
   const [showHistory, setShowHistory] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [selectedModelIdx, setSelectedModelIdx] = useState<number | null>(null);
   const [selectedCloudModel, setSelectedCloudModel] = useState<string>(CLOUD_MODELS[0].id);
@@ -847,6 +849,19 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
   if (!open) return null;
 
+  // ── Saved Responses Panel ─────────────────────────────────────────────
+  if (showSaved) {
+    return (
+      <SavedResponsesPanel
+        onBack={() => setShowSaved(false)}
+        onLoadResponse={(content, query) => {
+          setShowSaved(false);
+          // Could optionally scroll to or highlight the response
+        }}
+      />
+    );
+  }
+
   // ── History Sidebar ──────────────────────────────────────────────────
 
   if (showHistory) {
@@ -1034,6 +1049,16 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                     {history.conversations.length > 9 ? "9+" : history.conversations.length}
                   </span>
                 )}
+              </button>
+            )}
+            {history.isAuthenticated && (
+              <button
+                onClick={() => setShowSaved(true)}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-white/[0.06]"
+                style={{ color: P.textMuted }}
+                title="Saved responses"
+              >
+                <BookmarkCheck className="w-3.5 h-3.5" />
               </button>
             )}
             <button
