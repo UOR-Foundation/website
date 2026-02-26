@@ -326,7 +326,7 @@ export default function HologramOsPage() {
       if (!mod) return;
 
       switch (e.key) {
-        // ⌘L — Lumen AI (L = Lumen)
+        // ⌘L — LUMEN AI (L = Lumen)
         case "l": case "L": e.preventDefault(); mastery.record("l"); setChatOpen(true); break;
         // ⌘B — reserved for sidebar (handled internally now)
         // ⌘F — Toggle focus mode (F = Focus)
@@ -693,7 +693,7 @@ export default function HologramOsPage() {
                   />
                 </div>
 
-                {/* Lumen AI — the magic moment, the only CTA */}
+                {/* LUMEN AI — the magic moment, the only CTA */}
                 <div
                   className="flex flex-col items-center"
                   style={{

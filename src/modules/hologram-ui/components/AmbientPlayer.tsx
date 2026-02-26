@@ -107,7 +107,7 @@ export interface AmbientState {
 }
 
 interface AmbientPlayerProps {
-  /** When Lumen AI is open, offset the pill */
+  /** When LUMEN AI is open, offset the pill */
   lumenOffset?: number;
   /** Report ambient state changes for visual effects */
   onStateChange?: (state: AmbientState) => void;

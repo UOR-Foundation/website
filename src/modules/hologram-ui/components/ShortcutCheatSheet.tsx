@@ -30,7 +30,7 @@ const SHORTCUTS: Shortcut[] = [
   { keys: [MOD, "H"], label: "Go Home", section: "Navigation" },
   { keys: [MOD, "B"], label: "Toggle Sidebar", section: "Navigation" },
   // Communication
-  { keys: [MOD, "L"], label: "Open Lumen AI", section: "Communication" },
+  { keys: [MOD, "L"], label: "Open LUMEN AI", section: "Communication" },
   { keys: [MOD, "⇧", "V"], label: "Voice Input", section: "Communication" },
   { keys: [MOD, "M"], label: "Messages", section: "Communication" },
   // View
