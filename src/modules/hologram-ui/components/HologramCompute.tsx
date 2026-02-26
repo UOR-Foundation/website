@@ -21,7 +21,7 @@ import ConstantTimeBenchmark from "@/modules/hologram-compute/ConstantTimeBenchm
 // ── Palette (matches browser panel styling) ─────────────────────────────────
 
 const P = {
-  bg: "hsla(25, 8%, 8%, 0.92)",
+  bg: "hsl(25, 8%, 8%)",
   border: "hsla(38, 12%, 70%, 0.1)",
   font: "'DM Sans', system-ui, sans-serif",
   card: "hsla(25, 8%, 12%, 0.6)",

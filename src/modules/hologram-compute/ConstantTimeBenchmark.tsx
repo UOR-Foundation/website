@@ -1,16 +1,9 @@
 /**
- * Constant-Time Compute Demo
- * ══════════════════════════
+ * Constant-Time Compute Demo — Hologram OS Native
+ * ═════════════════════════════════════════════════
  *
- * Two benchmark modes proving the hologram LUT engine advantage:
- *
- *   Tab 1 — Chain Depth: Fixed 1M elements, increasing op chain (1→128)
- *            Standard = O(N), Hologram = O(1)
- *
- *   Tab 2 — Data Scale: Fixed 64-op chain, increasing data (100K→10M)
- *            Standard = O(N·D), Hologram = O(D)  (linear in data only)
- *
- * All data is REAL — computed live in the browser via actual TypedArray ops.
+ * Restyled to match the Hologram OS palette with a dramatic
+ * side-by-side comparison proving O(1) vs O(N) scaling.
  *
  * @module hologram-compute/ConstantTimeBenchmark
  */
@@ -18,6 +11,23 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { IconPlayerPlay, IconFlame, IconClock } from "@tabler/icons-react";
 import { UorLutEngine } from "@/modules/uns/core/hologram/gpu";
+
+// ── Hologram OS Palette ─────────────────────────────────────────────────────
+
+const P = {
+  bg: "hsl(25, 8%, 8%)",
+  card: "hsla(25, 8%, 12%, 0.6)",
+  cardBorder: "hsla(38, 12%, 70%, 0.08)",
+  text: "hsl(38, 10%, 88%)",
+  muted: "hsl(38, 8%, 55%)",
+  gold: "hsl(38, 40%, 65%)",
+  dim: "hsl(38, 8%, 35%)",
+  green: "hsl(152, 44%, 50%)",
+  red: "hsl(0, 55%, 55%)",
+  border: "hsla(38, 12%, 70%, 0.1)",
+  font: "'DM Sans', system-ui, sans-serif",
+  serif: "'Playfair Display', serif",
+};
 
 // ── Shared Config ───────────────────────────────────────────────────────────
 
@@ -49,17 +59,7 @@ function getTableCycle(): Uint8Array[] {
   return TABLE_CACHE;
 }
 
-// ── Chart Palette ───────────────────────────────────────────────────────────
-
-const C_STD = "hsl(0, 55%, 55%)";
-const C_HOLO = "hsl(38, 55%, 55%)";
-const C_GRID = "hsl(38, 8%, 25%)";
-const C_TEXT = "hsl(38, 8%, 60%)";
-const C_AXIS = "hsl(38, 8%, 40%)";
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TAB 1 — Chain Depth Benchmark (existing)
-// ═══════════════════════════════════════════════════════════════════════════
+// ── Benchmark Logic ─────────────────────────────────────────────────────────
 
 const CHAIN_DEPTHS = [1, 2, 4, 8, 16, 32, 64, 128];
 const CHAIN_DATA_SIZE = 1_000_000;
@@ -110,10 +110,6 @@ function runChainBenchmark(chainDepth: number): ChainPoint {
   };
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TAB 2 — Data Scale Benchmark (new)
-// ═══════════════════════════════════════════════════════════════════════════
-
 const DATA_SIZES = [100_000, 500_000, 1_000_000, 5_000_000, 10_000_000];
 const FIXED_CHAIN_DEPTH = 64;
 
@@ -137,7 +133,6 @@ function runScaleBenchmark(dataSize: number): ScalePoint {
   for (let i = 0; i < dataSize; i++) input[i] = i & 0xFF;
   const tables = getTableCycle();
 
-  // Standard: apply 64 chained operations sequentially
   const stdData = new Uint8Array(input);
   const stdStart = performance.now();
   for (let op = 0; op < FIXED_CHAIN_DEPTH; op++) {
@@ -146,7 +141,6 @@ function runScaleBenchmark(dataSize: number): ScalePoint {
   }
   const standardMs = performance.now() - stdStart;
 
-  // Hologram: compose once (amortized), then single pass
   const composeStart = performance.now();
   const chain: Uint8Array[] = [];
   for (let op = 0; op < FIXED_CHAIN_DEPTH; op++) chain.push(tables[op % tables.length]);
@@ -175,7 +169,7 @@ function runScaleBenchmark(dataSize: number): ScalePoint {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SVG Chart — Generic dual-line chart
+// SVG Chart — Native Hologram palette
 // ═══════════════════════════════════════════════════════════════════════════
 
 const CHART_W = 640;
@@ -198,7 +192,7 @@ interface DualLineChartProps {
 function DualLineChart({
   xValues, xLabels, stdValues, holoValues, xAxisLabel, yAxisLabel,
   stdLabel = "Standard Compute",
-  holoLabel = "Hologram vGPU",
+  holoLabel = "Hologram LUT",
 }: DualLineChartProps) {
   const maxMs = Math.max(...stdValues, 1);
   const maxX = Math.max(...xValues, 1);
@@ -218,44 +212,59 @@ function DualLineChart({
 
   return (
     <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full" style={{ maxWidth: 700 }}>
+      <defs>
+        <linearGradient id="std-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={P.red} stopOpacity="0.15" />
+          <stop offset="100%" stopColor={P.red} stopOpacity="0.02" />
+        </linearGradient>
+        <linearGradient id="holo-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={P.gold} stopOpacity="0.12" />
+          <stop offset="100%" stopColor={P.gold} stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+
       {gridLines.map((g, i) => (
         <g key={i}>
-          <line x1={PAD.left} y1={g.y} x2={CHART_W - PAD.right} y2={g.y} stroke={C_GRID} strokeWidth={0.5} strokeDasharray="4,4" />
-          <text x={PAD.left - 8} y={g.y + 3} textAnchor="end" fill={C_TEXT} fontSize={9} fontFamily="monospace">{g.label}</text>
+          <line x1={PAD.left} y1={g.y} x2={CHART_W - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.4} />
+          <text x={PAD.left - 8} y={g.y + 3} textAnchor="end" fill={P.muted} fontSize={9} fontFamily="'DM Sans', monospace">{g.label}</text>
         </g>
       ))}
 
       {xValues.map((x, i) => (
-        <text key={i} x={xScale(x)} y={CHART_H - PAD.bottom + 18} textAnchor="middle" fill={C_TEXT} fontSize={9} fontFamily="monospace">
+        <text key={i} x={xScale(x)} y={CHART_H - PAD.bottom + 18} textAnchor="middle" fill={P.muted} fontSize={9} fontFamily="'DM Sans', monospace">
           {xLabels[i]}
         </text>
       ))}
 
-      <text x={CHART_W / 2} y={CHART_H - 5} textAnchor="middle" fill={C_AXIS} fontSize={10}>{xAxisLabel}</text>
-      <text x={14} y={CHART_H / 2} textAnchor="middle" fill={C_AXIS} fontSize={10} transform={`rotate(-90, 14, ${CHART_H / 2})`}>{yAxisLabel}</text>
+      <text x={CHART_W / 2} y={CHART_H - 5} textAnchor="middle" fill={P.dim} fontSize={10} fontFamily={P.font}>{xAxisLabel}</text>
+      <text x={14} y={CHART_H / 2} textAnchor="middle" fill={P.dim} fontSize={10} fontFamily={P.font} transform={`rotate(-90, 14, ${CHART_H / 2})`}>{yAxisLabel}</text>
 
-      {/* Standard fill */}
+      {/* Standard — dramatic rising line */}
       <polygon
         points={`${xScale(xValues[0])},${yScale(0)} ${stdPath} ${xScale(xValues[xValues.length - 1])},${yScale(0)}`}
-        fill={C_STD} fillOpacity={0.08}
+        fill="url(#std-fill)"
       />
-      <polyline points={stdPath} fill="none" stroke={C_STD} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={stdPath} fill="none" stroke={P.red} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       {xValues.map((x, i) => (
-        <circle key={`s-${i}`} cx={xScale(x)} cy={yScale(stdValues[i])} r={4} fill={C_STD} />
+        <circle key={`s-${i}`} cx={xScale(x)} cy={yScale(stdValues[i])} r={4} fill={P.red} />
       ))}
 
-      {/* Hologram line */}
-      <polyline points={holoPath} fill="none" stroke={C_HOLO} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+      {/* Hologram — flat gold line */}
+      <polygon
+        points={`${xScale(xValues[0])},${yScale(0)} ${holoPath} ${xScale(xValues[xValues.length - 1])},${yScale(0)}`}
+        fill="url(#holo-fill)"
+      />
+      <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       {xValues.map((x, i) => (
-        <circle key={`h-${i}`} cx={xScale(x)} cy={yScale(holoValues[i])} r={4} fill={C_HOLO} />
+        <circle key={`h-${i}`} cx={xScale(x)} cy={yScale(holoValues[i])} r={4} fill={P.gold} />
       ))}
 
       {/* Legend */}
       <g transform={`translate(${PAD.left + 10}, ${PAD.top + 5})`}>
-        <rect x={0} y={0} width={10} height={3} rx={1} fill={C_STD} />
-        <text x={14} y={4} fill={C_TEXT} fontSize={9}>{stdLabel}</text>
-        <rect x={0} y={14} width={10} height={3} rx={1} fill={C_HOLO} />
-        <text x={14} y={18} fill={C_TEXT} fontSize={9}>{holoLabel}</text>
+        <rect x={0} y={0} width={10} height={3} rx={1} fill={P.red} />
+        <text x={14} y={4} fill={P.muted} fontSize={9} fontFamily={P.font}>{stdLabel}</text>
+        <rect x={0} y={14} width={10} height={3} rx={1} fill={P.gold} />
+        <text x={14} y={18} fill={P.muted} fontSize={9} fontFamily={P.font}>{holoLabel}</text>
       </g>
     </svg>
   );
@@ -264,46 +273,32 @@ function DualLineChart({
 // ── Throughput Gauge ─────────────────────────────────────────────────────────
 
 interface ThroughputLive {
-  elemPerSec: number;   // millions
-  opsPerSec: number;    // millions
+  elemPerSec: number;
+  opsPerSec: number;
   phase: "std" | "holo";
   label: string;
 }
 
 const GAUGE_R = 52;
 const GAUGE_STROKE = 7;
-const GAUGE_CIRC = Math.PI * GAUGE_R; // half-circle
+const GAUGE_CIRC = Math.PI * GAUGE_R;
 
 function ThroughputGauge({ data }: { data: ThroughputLive }) {
-  // Normalize to 0–1 range (cap at 2000 M elem/s for gauge)
   const maxElem = 2000;
   const fill = Math.min(data.elemPerSec / maxElem, 1);
   const dashOffset = GAUGE_CIRC * (1 - fill);
-  const gaugeColor = data.phase === "holo" ? C_HOLO : C_STD;
+  const gaugeColor = data.phase === "holo" ? P.gold : P.red;
 
   return (
-    <div className="rounded-lg bg-secondary/30 p-4 animate-fade-in">
+    <div className="rounded-xl p-4" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
       <div className="flex items-center gap-6 justify-center flex-wrap">
-        {/* SVG gauge */}
         <div className="relative" style={{ width: 120, height: 68 }}>
           <svg viewBox="0 0 120 68" className="w-full h-full">
-            {/* Background arc */}
+            <path d="M 8 64 A 52 52 0 0 1 112 64" fill="none" stroke={P.dim} strokeWidth={GAUGE_STROKE} strokeLinecap="round" opacity={0.3} />
             <path
               d="M 8 64 A 52 52 0 0 1 112 64"
-              fill="none"
-              stroke="hsl(var(--border))"
-              strokeWidth={GAUGE_STROKE}
-              strokeLinecap="round"
-            />
-            {/* Fill arc */}
-            <path
-              d="M 8 64 A 52 52 0 0 1 112 64"
-              fill="none"
-              stroke={gaugeColor}
-              strokeWidth={GAUGE_STROKE}
-              strokeLinecap="round"
-              strokeDasharray={GAUGE_CIRC}
-              strokeDashoffset={dashOffset}
+              fill="none" stroke={gaugeColor} strokeWidth={GAUGE_STROKE} strokeLinecap="round"
+              strokeDasharray={GAUGE_CIRC} strokeDashoffset={dashOffset}
               style={{ transition: "stroke-dashoffset 0.3s ease-out, stroke 0.2s" }}
             />
           </svg>
@@ -311,26 +306,25 @@ function ThroughputGauge({ data }: { data: ThroughputLive }) {
             <span className="text-lg font-bold font-mono tabular-nums" style={{ color: gaugeColor }}>
               {data.elemPerSec < 10 ? data.elemPerSec.toFixed(1) : Math.round(data.elemPerSec)}
             </span>
-            <span className="text-[8px] text-muted-foreground uppercase tracking-wider">M elem/s</span>
+            <span className="text-[8px] uppercase tracking-wider" style={{ color: P.muted }}>M elem/s</span>
           </div>
         </div>
 
-        {/* Live stats */}
         <div className="space-y-2 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: gaugeColor }} />
-            <span className="text-muted-foreground">Phase:</span>
-            <span className="font-semibold text-foreground">{data.phase === "holo" ? "Hologram" : "Standard"}</span>
+            <span style={{ color: P.muted }}>Phase:</span>
+            <span className="font-semibold" style={{ color: P.text }}>{data.phase === "holo" ? "Hologram" : "Standard"}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">Throughput: </span>
-            <span className="font-mono font-semibold text-foreground tabular-nums">
+            <span style={{ color: P.muted }}>Throughput: </span>
+            <span className="font-mono font-semibold tabular-nums" style={{ color: P.text }}>
               {data.opsPerSec < 10 ? data.opsPerSec.toFixed(1) : Math.round(data.opsPerSec)} M ops/s
             </span>
           </div>
           <div>
-            <span className="text-muted-foreground">Running: </span>
-            <span className="font-mono text-foreground">{data.label}</span>
+            <span style={{ color: P.muted }}>Running: </span>
+            <span className="font-mono" style={{ color: P.text }}>{data.label}</span>
           </div>
         </div>
       </div>
@@ -357,8 +351,8 @@ export default function ConstantTimeBenchmark() {
 
   const emitThroughput = useCallback((dataSize: number, chainDepth: number, ms: number, phase: "std" | "holo", label: string) => {
     const totalOps = phase === "holo" ? dataSize : dataSize * chainDepth;
-    const elemPerSec = (dataSize / Math.max(ms, 0.01)) / 1000; // millions
-    const opsPerSec = (totalOps / Math.max(ms, 0.01)) / 1000;  // millions
+    const elemPerSec = (dataSize / Math.max(ms, 0.01)) / 1000;
+    const opsPerSec = (totalOps / Math.max(ms, 0.01)) / 1000;
     setThroughput({ elemPerSec, opsPerSec, phase, label });
   }, []);
 
@@ -370,14 +364,10 @@ export default function ConstantTimeBenchmark() {
       if (cancelRef.current) break;
       setProgress(`${depth} ops`);
       await new Promise(r => setTimeout(r, 50));
-
-      // Emit standard phase throughput
-      const stdStart = performance.now();
       const point = runChainBenchmark(depth);
       emitThroughput(CHAIN_DATA_SIZE, depth, point.standardMs, "std", `${depth} ops`);
       await new Promise(r => setTimeout(r, 30));
       emitThroughput(CHAIN_DATA_SIZE, depth, point.hologramMs, "holo", `${depth} ops`);
-
       setChainPoints(prev => [...prev, point]);
     }
     setChainState("done");
@@ -393,12 +383,10 @@ export default function ConstantTimeBenchmark() {
       const label = formatSize(size);
       setProgress(label);
       await new Promise(r => setTimeout(r, 80));
-
       const point = runScaleBenchmark(size);
       emitThroughput(size, FIXED_CHAIN_DEPTH, point.standardMs, "std", label);
       await new Promise(r => setTimeout(r, 30));
       emitThroughput(size, FIXED_CHAIN_DEPTH, point.hologramMs, "holo", label);
-
       setScalePoints(prev => [...prev, point]);
     }
     setScaleState("done");
@@ -410,149 +398,152 @@ export default function ConstantTimeBenchmark() {
   const isRunning = chainState === "running" || scaleState === "running";
   const currentState = tab === "chain" ? chainState : scaleState;
   const currentPoints = tab === "chain" ? chainPoints : scalePoints;
-
   const chainMax = chainPoints.length > 0 ? Math.max(...chainPoints.map(p => p.speedup)) : 0;
   const scaleMax = scalePoints.length > 0 ? Math.max(...scalePoints.map(p => p.speedup)) : 0;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5 space-y-5">
-      {/* Header + Tabs */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <IconFlame size={16} style={{ color: C_HOLO }} />
-            Constant-Time Compute — Live Proof
-          </h3>
-          <div className="inline-flex rounded-lg border border-border overflow-hidden">
-            <button
-              onClick={() => setTab("chain")}
-              className="px-3 py-1.5 text-[11px] font-medium transition-colors"
-              style={{
-                background: tab === "chain" ? "hsl(var(--foreground))" : "transparent",
-                color: tab === "chain" ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
-              }}
-            >
-              Chain Depth
-            </button>
-            <button
-              onClick={() => setTab("scale")}
-              className="px-3 py-1.5 text-[11px] font-medium transition-colors"
-              style={{
-                background: tab === "scale" ? "hsl(var(--foreground))" : "transparent",
-                color: tab === "scale" ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
-              }}
-            >
-              Data Scale
-            </button>
+    <div className="space-y-8" style={{ fontFamily: P.font }}>
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <div className="flex items-end justify-between flex-wrap gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <IconFlame size={16} style={{ color: P.gold }} />
+            <span className="text-[11px] font-mono uppercase tracking-widest" style={{ color: P.muted }}>
+              Live Benchmark
+            </span>
           </div>
         </div>
 
-        <button
-          onClick={tab === "chain" ? runChain : runScale}
-          disabled={isRunning}
-          className="px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
-        >
-          {isRunning ? (
-            <>
-              <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              {progress}…
-            </>
-          ) : (
-            <>
-              <IconPlayerPlay size={14} />
-              {currentState === "done" ? "Run Again" : "Run Benchmark"}
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Tab toggle */}
+          <div
+            className="inline-flex items-center rounded-full p-0.5 gap-0.5"
+            style={{ border: `1px solid ${P.cardBorder}`, background: P.card }}
+          >
+            {(["chain", "scale"] as BenchTab[]).map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className="px-3.5 py-1 rounded-full text-[11px] font-medium transition-all duration-300"
+                style={{
+                  background: tab === t ? "hsla(38, 40%, 65%, 0.15)" : "transparent",
+                  color: tab === t ? P.gold : P.muted,
+                }}
+              >
+                {t === "chain" ? "Chain Depth" : "Data Scale"}
+              </button>
+            ))}
+          </div>
+
+          {/* Run button */}
+          <button
+            onClick={tab === "chain" ? runChain : runScale}
+            disabled={isRunning}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-medium transition-all duration-300 disabled:opacity-50"
+            style={{ background: P.gold, color: P.bg }}
+          >
+            {isRunning ? (
+              <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />{progress}…</>
+            ) : (
+              <><IconPlayerPlay size={14} />{currentState === "done" ? "Run Again" : "Run Benchmark"}</>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Tab description when idle */}
+      {/* ── Side-by-side comparison (idle state) ──────────────── */}
       {currentState === "idle" && (
-        <div className="rounded-lg bg-secondary/30 p-4 space-y-3">
-          {tab === "chain" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-1 rounded-full" style={{ background: C_STD }} />
-                  <span className="text-xs font-semibold text-foreground">Standard Compute</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Applies each operation sequentially. 128 ops = 128 full passes over 1M elements. Time grows linearly.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-1 rounded-full" style={{ background: C_HOLO }} />
-                  <span className="text-xs font-semibold text-foreground">Hologram vGPU</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Composes all ops into one 256-byte LUT. 128 ops = 1 table lookup per element. Time stays flat.
-                </p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Standard */}
+          <div className="rounded-xl p-6 space-y-4" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full" style={{ background: P.red }} />
+              <h3 className="text-[14px] font-medium" style={{ color: P.text }}>Standard Compute</h3>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-1 rounded-full" style={{ background: C_STD }} />
-                  <span className="text-xs font-semibold text-foreground">Standard Compute</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  64 chained ops × N elements. Each 10× data increase means 10× more work per operation × 64 passes. Grows steeply.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-1 rounded-full" style={{ background: C_HOLO }} />
-                  <span className="text-xs font-semibold text-foreground">Hologram vGPU</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  LUT composed once (64 ops → 1 table). Only 1 pass over data regardless of chain depth. Scales linearly with data only.
-                </p>
-              </div>
+            <div className="space-y-1">
+              <p className="text-[40px] font-light font-mono tabular-nums leading-none" style={{ color: P.red }}>
+                O(N)
+              </p>
+              <p className="text-[11px] leading-relaxed" style={{ color: P.muted }}>
+                {tab === "chain"
+                  ? "Each operation requires a full pass over all elements. 128 ops = 128× the work. Time grows linearly with chain depth."
+                  : "64 chained operations × N elements. Every 10× more data = 10× more work per operation × 64 passes."}
+              </p>
             </div>
-          )}
+            <div className="pt-2 border-t" style={{ borderColor: P.cardBorder }}>
+              <p className="text-[10px] font-mono" style={{ color: P.dim }}>
+                {tab === "chain" ? "1M elements × N sequential ops" : "64 ops × N elements sequentially"}
+              </p>
+            </div>
+          </div>
+
+          {/* Hologram */}
+          <div className="rounded-xl p-6 space-y-4" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full" style={{ background: P.gold }} />
+              <h3 className="text-[14px] font-medium" style={{ color: P.text }}>Hologram LUT Engine</h3>
+            </div>
+            <div className="space-y-1">
+              <p className="text-[40px] font-light font-mono tabular-nums leading-none" style={{ color: P.gold }}>
+                O(1)
+              </p>
+              <p className="text-[11px] leading-relaxed" style={{ color: P.muted }}>
+                {tab === "chain"
+                  ? "All operations compose into one 256-byte lookup table. 128 ops = 1 table lookup per element. Time stays flat."
+                  : "LUT composed once (64 ops → 1 table). Only 1 pass over data regardless of chain depth. Scales with data only."}
+              </p>
+            </div>
+            <div className="pt-2 border-t" style={{ borderColor: P.cardBorder }}>
+              <p className="text-[10px] font-mono" style={{ color: P.dim }}>
+                {tab === "chain" ? "1M elements × 1 composed table" : "1 composed table × N elements"}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Live throughput gauge */}
+      {/* ── Live throughput gauge ─────────────────────────────── */}
       {isRunning && throughput && <ThroughputGauge data={throughput} />}
 
-      {/* Chart */}
+      {/* ── Chart ─────────────────────────────────────────────── */}
       {tab === "chain" && chainPoints.length > 0 && (
-        <DualLineChart
-          xValues={chainPoints.map(p => p.chainDepth)}
-          xLabels={chainPoints.map(p => `${p.chainDepth}`)}
-          stdValues={chainPoints.map(p => p.standardMs)}
-          holoValues={chainPoints.map(p => p.hologramMs)}
-          xAxisLabel="Chained Operations"
-          yAxisLabel="Time (ms)"
-          stdLabel="Standard — O(N × D)"
-          holoLabel="Hologram — O(D) constant in N"
-        />
+        <div className="rounded-xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <DualLineChart
+            xValues={chainPoints.map(p => p.chainDepth)}
+            xLabels={chainPoints.map(p => `${p.chainDepth}`)}
+            stdValues={chainPoints.map(p => p.standardMs)}
+            holoValues={chainPoints.map(p => p.hologramMs)}
+            xAxisLabel="Chained Operations"
+            yAxisLabel="Time (ms)"
+            stdLabel="Standard — O(N × D)"
+            holoLabel="Hologram — O(D) constant in N"
+          />
+        </div>
       )}
 
       {tab === "scale" && scalePoints.length > 0 && (
-        <DualLineChart
-          xValues={scalePoints.map(p => p.dataSize)}
-          xLabels={scalePoints.map(p => p.label)}
-          stdValues={scalePoints.map(p => p.standardMs)}
-          holoValues={scalePoints.map(p => p.hologramMs)}
-          xAxisLabel="Data Size (elements)"
-          yAxisLabel="Time (ms)"
-          stdLabel="Standard — 64 passes × N"
-          holoLabel="Hologram — 1 pass × N"
-        />
+        <div className="rounded-xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <DualLineChart
+            xValues={scalePoints.map(p => p.dataSize)}
+            xLabels={scalePoints.map(p => p.label)}
+            stdValues={scalePoints.map(p => p.standardMs)}
+            holoValues={scalePoints.map(p => p.hologramMs)}
+            xAxisLabel="Data Size (elements)"
+            yAxisLabel="Time (ms)"
+            stdLabel="Standard — 64 passes × N"
+            holoLabel="Hologram — 1 pass × N"
+          />
+        </div>
       )}
 
-      {/* Summary cards */}
+      {/* ── Summary cards ─────────────────────────────────────── */}
       {tab === "chain" && chainPoints.length > 0 && (() => {
         const last = chainPoints[chainPoints.length - 1];
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <SummaryCard value={`${chainMax.toFixed(0)}×`} label="Peak Speedup" color={C_HOLO} />
-            <SummaryCard value={`${last.standardMs.toFixed(1)} ms`} label={`Standard @ ${last.chainDepth} ops`} color={C_STD} />
-            <SummaryCard value={`${last.hologramMs.toFixed(1)} ms`} label={`Hologram @ ${last.chainDepth} ops`} color={C_HOLO} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <SummaryCard value={`${chainMax.toFixed(0)}×`} label="Peak Speedup" color={P.gold} accent />
+            <SummaryCard value={`${last.standardMs.toFixed(1)} ms`} label={`Standard @ ${last.chainDepth} ops`} color={P.red} />
+            <SummaryCard value={`${last.hologramMs.toFixed(1)} ms`} label={`Hologram @ ${last.chainDepth} ops`} color={P.gold} />
             <SummaryCard value={`${last.composeMs.toFixed(2)} ms`} label="Table Compose" />
           </div>
         );
@@ -564,54 +555,51 @@ export default function ConstantTimeBenchmark() {
         const stdGrowth = last.standardMs / Math.max(first.standardMs, 0.01);
         const holoGrowth = last.hologramMs / Math.max(first.hologramMs, 0.01);
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <SummaryCard value={`${scaleMax.toFixed(0)}×`} label="Peak Speedup" color={C_HOLO} />
-            <SummaryCard value={`${stdGrowth.toFixed(0)}×`} label={`Std growth ${first.label}→${last.label}`} color={C_STD} />
-            <SummaryCard value={`${holoGrowth.toFixed(1)}×`} label={`Holo growth ${first.label}→${last.label}`} color={C_HOLO} />
-            <SummaryCard value={`${last.applyMs.toFixed(1)} ms`} label={`Holo apply @ ${last.label}`} color={C_HOLO} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <SummaryCard value={`${scaleMax.toFixed(0)}×`} label="Peak Speedup" color={P.gold} accent />
+            <SummaryCard value={`${stdGrowth.toFixed(0)}×`} label={`Std growth ${first.label}→${last.label}`} color={P.red} />
+            <SummaryCard value={`${holoGrowth.toFixed(1)}×`} label={`Holo growth ${first.label}→${last.label}`} color={P.gold} />
+            <SummaryCard value={`${last.applyMs.toFixed(1)} ms`} label={`Holo apply @ ${last.label}`} color={P.gold} />
           </div>
         );
       })()}
 
-      {/* Detailed results table */}
+      {/* ── Results table ─────────────────────────────────────── */}
       {currentState === "done" && currentPoints.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-[10px] font-mono">
+        <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${P.cardBorder}` }}>
+          <table className="w-full text-[10px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-2 px-2 text-muted-foreground font-medium">
-                  {tab === "chain" ? "Ops" : "Data Size"}
+              <tr style={{ background: P.card }}>
+                <th className="text-left py-2.5 px-3 font-medium" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>
+                  {tab === "chain" ? "Ops" : "Data"}
                 </th>
-                <th className="text-right py-2 px-2 font-medium" style={{ color: C_STD }}>Standard (ms)</th>
-                <th className="text-right py-2 px-2 font-medium" style={{ color: C_HOLO }}>Hologram (ms)</th>
+                <th className="text-right py-2.5 px-3 font-medium" style={{ color: P.red, borderBottom: `1px solid ${P.cardBorder}` }}>Standard</th>
+                <th className="text-right py-2.5 px-3 font-medium" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>Hologram</th>
                 {tab === "scale" && (
-                  <th className="text-right py-2 px-2 text-muted-foreground font-medium">Apply (ms)</th>
+                  <th className="text-right py-2.5 px-3 font-medium" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Apply</th>
                 )}
-                <th className="text-right py-2 px-2 text-muted-foreground font-medium">Compose (ms)</th>
-                <th className="text-right py-2 px-2 text-muted-foreground font-medium">Speedup</th>
-                <th className="text-right py-2 px-2 text-muted-foreground font-medium">Checksum</th>
+                <th className="text-right py-2.5 px-3 font-medium" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Compose</th>
+                <th className="text-right py-2.5 px-3 font-medium" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
               </tr>
             </thead>
             <tbody>
-              {tab === "chain" && chainPoints.map(p => (
-                <tr key={p.chainDepth} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
-                  <td className="py-1.5 px-2 text-foreground font-semibold">{p.chainDepth}</td>
-                  <td className="py-1.5 px-2 text-right" style={{ color: C_STD }}>{p.standardMs.toFixed(2)}</td>
-                  <td className="py-1.5 px-2 text-right" style={{ color: C_HOLO }}>{p.hologramMs.toFixed(2)}</td>
-                  <td className="py-1.5 px-2 text-right text-muted-foreground">{p.composeMs.toFixed(3)}</td>
-                  <td className="py-1.5 px-2 text-right text-foreground font-semibold">{p.speedup.toFixed(1)}×</td>
-                  <td className="py-1.5 px-2 text-right text-muted-foreground">{p.checksum}</td>
+              {tab === "chain" && chainPoints.map((p, i) => (
+                <tr key={p.chainDepth} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
+                  <td className="py-2 px-3 font-semibold" style={{ color: P.text }}>{p.chainDepth}</td>
+                  <td className="py-2 px-3 text-right" style={{ color: P.red }}>{p.standardMs.toFixed(2)}</td>
+                  <td className="py-2 px-3 text-right" style={{ color: P.gold }}>{p.hologramMs.toFixed(2)}</td>
+                  <td className="py-2 px-3 text-right" style={{ color: P.muted }}>{p.composeMs.toFixed(3)}</td>
+                  <td className="py-2 px-3 text-right font-semibold" style={{ color: P.text }}>{p.speedup.toFixed(1)}×</td>
                 </tr>
               ))}
-              {tab === "scale" && scalePoints.map(p => (
-                <tr key={p.dataSize} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
-                  <td className="py-1.5 px-2 text-foreground font-semibold">{p.label}</td>
-                  <td className="py-1.5 px-2 text-right" style={{ color: C_STD }}>{p.standardMs.toFixed(2)}</td>
-                  <td className="py-1.5 px-2 text-right" style={{ color: C_HOLO }}>{p.hologramMs.toFixed(2)}</td>
-                  <td className="py-1.5 px-2 text-right text-muted-foreground">{p.applyMs.toFixed(2)}</td>
-                  <td className="py-1.5 px-2 text-right text-muted-foreground">{p.composeMs.toFixed(3)}</td>
-                  <td className="py-1.5 px-2 text-right text-foreground font-semibold">{p.speedup.toFixed(1)}×</td>
-                  <td className="py-1.5 px-2 text-right text-muted-foreground">{p.checksum}</td>
+              {tab === "scale" && scalePoints.map((p, i) => (
+                <tr key={p.dataSize} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
+                  <td className="py-2 px-3 font-semibold" style={{ color: P.text }}>{p.label}</td>
+                  <td className="py-2 px-3 text-right" style={{ color: P.red }}>{p.standardMs.toFixed(2)}</td>
+                  <td className="py-2 px-3 text-right" style={{ color: P.gold }}>{p.hologramMs.toFixed(2)}</td>
+                  <td className="py-2 px-3 text-right" style={{ color: P.muted }}>{p.applyMs.toFixed(2)}</td>
+                  <td className="py-2 px-3 text-right" style={{ color: P.muted }}>{p.composeMs.toFixed(3)}</td>
+                  <td className="py-2 px-3 text-right font-semibold" style={{ color: P.text }}>{p.speedup.toFixed(1)}×</td>
                 </tr>
               ))}
             </tbody>
@@ -619,18 +607,19 @@ export default function ConstantTimeBenchmark() {
         </div>
       )}
 
-      {/* Footer */}
+      {/* ── Footer ────────────────────────────────────────────── */}
       {currentState === "done" && (
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground pt-2 border-t border-border/50">
+        <div className="flex items-center gap-2 text-[10px] pt-2" style={{ color: P.dim, borderTop: `1px solid ${P.cardBorder}` }}>
           <IconClock size={12} />
-          All values computed live via TypedArray ops in this browser tab. Checksums verify both paths produce identical output.
+          All values computed live in this browser. Both paths produce identical output (checksum-verified).
         </div>
       )}
     </div>
   );
 }
 
-/** Animated counter hook — counts from 0 to target over ~800ms with easeOut. */
+// ── Animated counter hook ───────────────────────────────────────────────────
+
 function useCountUp(target: number, duration = 800): number {
   const [current, setCurrent] = useState(0);
   const prevTarget = useRef(0);
@@ -639,18 +628,14 @@ function useCountUp(target: number, duration = 800): number {
     if (target === prevTarget.current) return;
     prevTarget.current = target;
     const start = performance.now();
-    const from = 0;
     let raf: number;
-
     const tick = (now: number) => {
       const elapsed = now - start;
       const t = Math.min(elapsed / duration, 1);
-      // easeOutExpo
       const ease = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-      setCurrent(from + (target - from) * ease);
+      setCurrent(0 + (target - 0) * ease);
       if (t < 1) raf = requestAnimationFrame(tick);
     };
-
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [target, duration]);
@@ -658,7 +643,6 @@ function useCountUp(target: number, duration = 800): number {
   return current;
 }
 
-/** Parse a numeric value and suffix from strings like "392×", "1.5 ms", "~38" */
 function parseValueParts(value: string): { num: number; prefix: string; suffix: string; decimals: number } {
   const match = value.match(/^([~]?)(\d+\.?\d*)\s*(.*)$/);
   if (!match) return { num: 0, prefix: "", suffix: value, decimals: 0 };
@@ -667,7 +651,7 @@ function parseValueParts(value: string): { num: number; prefix: string; suffix: 
   return { num: parseFloat(numStr), prefix: match[1], suffix: match[3] ? ` ${match[3]}` : "", decimals };
 }
 
-function SummaryCard({ value, label, color }: { value: string; label: string; color?: string }) {
+function SummaryCard({ value, label, color, accent }: { value: string; label: string; color?: string; accent?: boolean }) {
   const { num, prefix, suffix, decimals } = parseValueParts(value);
   const animated = useCountUp(num);
   const display = num > 0
@@ -675,9 +659,15 @@ function SummaryCard({ value, label, color }: { value: string; label: string; co
     : value;
 
   return (
-    <div className="text-center p-3 rounded-lg bg-secondary/30">
-      <p className="text-xl font-bold font-mono tabular-nums" style={{ color: color ?? "hsl(var(--foreground))" }}>{display}</p>
-      <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-1">{label}</p>
+    <div
+      className="text-center p-4 rounded-xl"
+      style={{
+        background: accent ? "hsla(38, 40%, 65%, 0.08)" : P.card,
+        border: `1px solid ${accent ? "hsla(38, 40%, 65%, 0.15)" : P.cardBorder}`,
+      }}
+    >
+      <p className="text-2xl font-bold font-mono tabular-nums" style={{ color: color ?? P.text }}>{display}</p>
+      <p className="text-[9px] uppercase tracking-wider mt-1.5" style={{ color: P.muted }}>{label}</p>
     </div>
   );
 }
