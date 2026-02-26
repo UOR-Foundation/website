@@ -76,6 +76,8 @@ import { useContextProjection } from "@/modules/hologram-ui/hooks/useContextProj
 import { extractTopicTags } from "@/modules/hologram-ui/engine/extractTopicTags";
 import { useScreenContext } from "@/modules/hologram-ui/hooks/useScreenContext";
 import { useObserverCompanion } from "@/modules/hologram-ui/hooks/useObserverCompanion";
+import { useWhisperTranscription } from "@/modules/hologram-ui/hooks/useWhisperTranscription";
+import { Mic, MicOff } from "lucide-react";
 
 // ── Palette constants ──────────────────────────────────────────────────────
 
@@ -170,6 +172,32 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     pendingTLDR: journal.pendingTLDR,
     sessionSNR: null,
   });
+
+  // ── Voice-to-text (Whisper) ──────────────────────────────────────────
+  const whisper = useWhisperTranscription({
+    onTranscript: useCallback((text: string) => {
+      setInput((prev) => {
+        const sep = prev.trim() ? " " : "";
+        return prev + sep + text;
+      });
+      // Focus input after transcription
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }, []),
+  });
+
+  // ⌘+Shift+V keyboard shortcut for voice input
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === "v" || e.key === "V")) {
+        e.preventDefault();
+        e.stopPropagation();
+        whisper.toggleRecording();
+      }
+    };
+    window.addEventListener("keydown", handler, true);
+    return () => window.removeEventListener("keydown", handler, true);
+  }, [open, whisper.toggleRecording]);
 
   // Fire-and-forget: enrich context graph from conversation text
   const enrichContext = useCallback((userText: string, aiText: string) => {
@@ -1091,7 +1119,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 value={input}
                 onChange={(e) => { setInput(e.target.value); acceleratorRef.current.prefetcher.onInput(e.target.value); }}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask anything…"
+                placeholder={whisper.isRecording ? "Listening…" : whisper.isTranscribing ? "Transcribing…" : "Ask anything…"}
                 disabled={isGenerating}
                 rows={2}
                 className="w-full bg-transparent border-none outline-none resize-none text-[15px] placeholder:opacity-30 leading-loose block py-2"
@@ -1185,6 +1213,52 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                     </div>
                   )}
                 </div>
+
+                {/* Voice input button */}
+                <button
+                  onClick={whisper.toggleRecording}
+                  disabled={isGenerating || whisper.isTranscribing}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all relative"
+                  style={{
+                    background: whisper.isRecording
+                      ? "hsla(0, 55%, 50%, 0.2)"
+                      : whisper.isTranscribing
+                        ? P.goldBg
+                        : "transparent",
+                    color: whisper.isRecording
+                      ? "hsl(0, 55%, 60%)"
+                      : whisper.isTranscribing
+                        ? P.goldLight
+                        : P.textDim,
+                  }}
+                  title={
+                    whisper.isRecording
+                      ? "Stop recording (⌘⇧V)"
+                      : whisper.isTranscribing
+                        ? "Transcribing…"
+                        : whisper.isLoading
+                          ? `Loading model… ${whisper.loadProgress}%`
+                          : "Voice input (⌘⇧V)"
+                  }
+                >
+                  {whisper.isRecording ? (
+                    <>
+                      <MicOff className="w-4 h-4" />
+                      {/* Pulsing ring */}
+                      <span
+                        className="absolute inset-0 rounded-lg animate-ping"
+                        style={{
+                          background: "hsla(0, 55%, 50%, 0.15)",
+                          animationDuration: "1.5s",
+                        }}
+                      />
+                    </>
+                  ) : whisper.isTranscribing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Mic className="w-4 h-4" />
+                  )}
+                </button>
 
                 {/* Send button */}
                 <button
