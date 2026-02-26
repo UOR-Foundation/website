@@ -150,11 +150,17 @@ export default function HologramOsPage() {
     snap: true,
     dockSide: "right",
   });
+  const sidebarPanel = useModularPanel({
+    storageKey: "sidebar",
+    defaultWidth: 240,
+    constraints: { minWidth: 68, maxWidth: 360 },
+    snap: true,
+    dockSide: "left",
+  });
   const [chatPrompt, setChatPrompt] = useState("");
   const [legalOpen, setLegalOpen] = useState(false);
   const [legalTab, setLegalTab] = useState<"privacy" | "terms">("privacy");
   const { entryCount: journalEntryCount } = useFocusJournal();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [bgMode, setBgModeState] = useState<BgMode>(() => {
     const saved = localStorage.getItem("hologram-bg-mode");
     return saved === "white" || saved === "dark" || saved === "image" ? saved : "image";
@@ -213,7 +219,7 @@ export default function HologramOsPage() {
         // ⌘L — Lumen AI (L = Lumen)
         case "l": case "L": e.preventDefault(); mastery.record("l"); setChatOpen(true); break;
         // ⌘B — Toggle sidebar (B = Bar/sidebar)
-        case "b": case "B": e.preventDefault(); mastery.record("b"); setSidebarCollapsed(p => !p); break;
+        case "b": case "B": e.preventDefault(); mastery.record("b"); sidebarPanel.setWidth(sidebarPanel.width < 120 ? 240 : 68); break;
         // ⌘F — Toggle focus mode (F = Focus)
         case "f": case "F": e.preventDefault(); mastery.record("f"); attention.toggle(); break;
         // ⌘Y — Cycle style (Y = stYle)
@@ -256,16 +262,16 @@ export default function HologramOsPage() {
          *  Sidebar + Focus toggle sit here, unaffected by content below
          * ════════════════════════════════════════════════════════════════ */}
         <div
-          className="shrink-0 transition-all duration-300 ease-out overflow-hidden"
+          className="shrink-0 overflow-visible"
           style={{
             width: isFocus ? 0 : undefined,
             opacity: isFocus ? 0 : 1,
             pointerEvents: isFocus ? "none" : "auto",
+            transition: isFocus ? "all 300ms ease-out" : "none",
           }}
         >
           <DesktopOsSidebar
-            collapsed={isFocus ? true : sidebarCollapsed}
-            onToggle={() => setSidebarCollapsed((p) => !p)}
+            panel={sidebarPanel}
             onNewChat={() => setChatOpen(true)}
             onOpenChat={() => setChatOpen(true)}
             onReplayGuide={() => setShortcutsOpen(true)}
@@ -725,7 +731,7 @@ export default function HologramOsPage() {
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
       <ShortcutCheatSheet open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <LegalPanel open={legalOpen} initialTab={legalTab} onClose={() => setLegalOpen(false)} bgMode={bgMode === "white" ? "white" : "dark"} />
-      <ModularSnapGrid visible={lumenPanel.isResizing} />
+      <ModularSnapGrid visible={lumenPanel.isResizing || sidebarPanel.isResizing} />
       <HologramAiChat
         open={chatOpen}
         onClose={() => { setChatOpen(false); setChatPrompt(""); }}
