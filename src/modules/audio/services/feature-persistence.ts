@@ -2,13 +2,16 @@
  * Feature Persistence Service — Cross-Session Audio Analysis Storage
  * ═══════════════════════════════════════════════════════════════════
  *
- * Bridges the HarmonicLens real-time analysis pipeline to the
- * audio_tracks / audio_features / audio_segments tables.
+ * Bridges the HarmonicLens / CurvatureLens real-time analysis pipeline
+ * to the audio_tracks / audio_features tables.
  *
- * Write path:  HarmonicLens frame → aggregate → persist
+ * Every persisted feature carries:
+ *   - A derivation_id linking to the lens proof chain
+ *   - A lens_id identifying the producing lens version
+ *   - A confidence score reflecting epistemic grade
+ *
+ * Write path:  Lens frames → aggregate → derive → persist
  * Read path:   track_cid → load cached features → skip re-analysis
- *
- * All persistence is keyed by content-addressed track CID.
  *
  * @module audio/services/feature-persistence
  * @namespace audio/
@@ -39,22 +42,44 @@ export interface AggregatedFeatures {
   cascadeLength: number;
   /** Stratum histogram averaged across all frames */
   avgHistogram: number[];
+  /** Derivation ID for this aggregation. */
+  derivationId: string;
+  /** Dominant epistemic grade across frames. */
+  epistemicGrade: "A" | "C";
+}
+
+// ── Derivation utility ────────────────────────────────────────────────────
+
+function deriveAggregationId(
+  trackCid: string,
+  frameCount: number,
+  meanRms: number,
+): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < trackCid.length; i++) {
+    hash = (hash ^ trackCid.charCodeAt(i)) * 0x01000193;
+  }
+  hash = (hash ^ frameCount) * 0x01000193;
+  hash = (hash ^ Math.round(meanRms * 10000)) * 0x01000193;
+  const hex = (hash >>> 0).toString(16).padStart(8, "0");
+  return `urn:uor:derivation:aggregation:${hex}`;
 }
 
 // ── Feature Aggregator ─────────────────────────────────────────────────────
 
 /**
- * Accumulates HarmonicLensFrames and computes aggregate features.
- * Call `push()` per frame, then `aggregate()` to extract features.
+ * Accumulates HarmonicLensFrames and computes aggregate features
+ * with derivation chains. Each aggregation carries a deterministic
+ * derivation ID computed from the content-addressed inputs.
  */
 export class FeatureAggregator {
   private frames: HarmonicLensFrame[] = [];
-  private cascadeDir: number = 0; // 1 = rising, -1 = falling, 0 = start
+  private cascadeDir: number = 0;
   private cascadeLen: number = 0;
   private maxCascade: number = 0;
+  private gradeACounts: number = 0;
 
   push(frame: HarmonicLensFrame): void {
-    // Track cascade (consecutive same-direction energy changes)
     if (this.frames.length > 0) {
       const prev = this.frames[this.frames.length - 1];
       const dir = frame.rmsEnergy > prev.rmsEnergy ? 1 : -1;
@@ -66,6 +91,7 @@ export class FeatureAggregator {
         this.cascadeLen = 1;
       }
     }
+    if (frame.epistemicGrade === "A") this.gradeACounts++;
     this.frames.push(frame);
   }
 
@@ -73,7 +99,7 @@ export class FeatureAggregator {
     return this.frames.length;
   }
 
-  aggregate(): AggregatedFeatures {
+  aggregate(trackCid: string = ""): AggregatedFeatures {
     const n = this.frames.length || 1;
     let sumStratum = 0, sumRms = 0, sumCurvature = 0, peakCurvature = 0, sumCentroid = 0;
     const histAccum = new Array(17).fill(0);
@@ -91,16 +117,21 @@ export class FeatureAggregator {
 
     const histTotal = Math.max(histAccum.reduce((a, b) => a + b, 0), 1);
     const avgHistogram = histAccum.map((v) => v / histTotal);
+    const meanRms = sumRms / n;
+    const epistemicGrade = this.gradeACounts > n / 2 ? "A" as const : "C" as const;
+    const derivationId = deriveAggregationId(trackCid, n, meanRms);
 
     return {
       meanStratum: sumStratum / n,
-      meanRms: sumRms / n,
+      meanRms,
       meanCurvature: sumCurvature / n,
       peakCurvature,
       centroidMean: sumCentroid / n,
       frameCount: n,
       cascadeLength: Math.max(this.maxCascade, this.cascadeLen),
       avgHistogram,
+      derivationId,
+      epistemicGrade,
     };
   }
 
@@ -109,12 +140,13 @@ export class FeatureAggregator {
     this.cascadeDir = 0;
     this.cascadeLen = 0;
     this.maxCascade = 0;
+    this.gradeACounts = 0;
   }
 }
 
 // ── Persistence Functions ──────────────────────────────────────────────────
 
-/** Generate a deterministic CID from source URI (content-addressed). */
+/** Generate a deterministic CID from source URI (SHA-256 content-addressed). */
 export async function generateTrackCid(sourceUri: string): Promise<string> {
   const data = new TextEncoder().encode(sourceUri);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
@@ -156,7 +188,7 @@ export async function loadFeatures(trackCid: string): Promise<AudioFeatureData[]
 
 /**
  * Persist a track and its aggregated features.
- * Upserts the track (by CID), then inserts feature rows.
+ * Every feature row carries a derivation_id linking to the proof chain.
  */
 export async function persistAnalysis(
   track: PersistedTrack,
@@ -173,6 +205,7 @@ export async function persistAnalysis(
         source_uri: track.sourceUri,
         format: track.format as any,
         genres: track.genres,
+        derivation_id: features.derivationId,
       }],
       { onConflict: "track_cid" },
     );
@@ -182,15 +215,16 @@ export async function persistAnalysis(
     return false;
   }
 
-  // Build feature rows
+  // Build feature rows with derivation chains
+  const confidence = features.epistemicGrade === "A" ? 1.0 : 0.6;
   const featureRows = [
-    { feature_id: "stratum:mean", label: "Mean Stratum", value: features.meanStratum, unit: "σ", confidence: 1, lens_id: "lens:harmonic" },
-    { feature_id: "rms:mean", label: "Mean RMS Energy", value: features.meanRms, unit: "amplitude", confidence: 1, lens_id: "lens:harmonic" },
-    { feature_id: "curvature:mean", label: "Mean Curvature", value: features.meanCurvature, unit: "κ", confidence: 1, lens_id: "lens:curvature" },
-    { feature_id: "curvature:peak", label: "Peak Curvature", value: features.peakCurvature, unit: "κ", confidence: 1, lens_id: "lens:curvature" },
-    { feature_id: "centroid:mean", label: "Spectral Centroid", value: features.centroidMean, unit: "bin", confidence: 1, lens_id: "lens:harmonic" },
-    { feature_id: "cascade:max", label: "Max Cascade Length", value: features.cascadeLength, unit: "frames", confidence: 1, lens_id: "lens:cascade" },
-    { feature_id: "frame:count", label: "Total Frames Analyzed", value: features.frameCount, unit: "frames", confidence: 1, lens_id: "lens:harmonic" },
+    { feature_id: "stratum:mean", label: "Mean Stratum", value: features.meanStratum, unit: "σ", confidence, lens_id: "lens:harmonic:v2", derivation_id: `${features.derivationId}:stratum` },
+    { feature_id: "rms:mean", label: "Mean RMS Energy", value: features.meanRms, unit: "amplitude", confidence, lens_id: "lens:harmonic:v2", derivation_id: `${features.derivationId}:rms` },
+    { feature_id: "curvature:mean", label: "Mean Curvature", value: features.meanCurvature, unit: "κ", confidence, lens_id: "lens:curvature:v2", derivation_id: `${features.derivationId}:curvature:mean` },
+    { feature_id: "curvature:peak", label: "Peak Curvature", value: features.peakCurvature, unit: "κ", confidence, lens_id: "lens:curvature:v2", derivation_id: `${features.derivationId}:curvature:peak` },
+    { feature_id: "centroid:mean", label: "Spectral Centroid", value: features.centroidMean, unit: "bin", confidence, lens_id: "lens:harmonic:v2", derivation_id: `${features.derivationId}:centroid` },
+    { feature_id: "cascade:max", label: "Max Cascade Length", value: features.cascadeLength, unit: "frames", confidence, lens_id: "lens:cascade:v1", derivation_id: `${features.derivationId}:cascade` },
+    { feature_id: "frame:count", label: "Total Frames Analyzed", value: features.frameCount, unit: "frames", confidence: 1.0, lens_id: "lens:harmonic:v2", derivation_id: `${features.derivationId}:count` },
   ];
 
   // Delete old features for this track, then insert fresh
@@ -211,6 +245,7 @@ export async function persistAnalysis(
         unit: f.unit,
         frame_range: [0, features.frameCount],
         lens_id: f.lens_id,
+        derivation_id: f.derivation_id,
       })),
     );
 
@@ -219,5 +254,38 @@ export async function persistAnalysis(
     return false;
   }
 
+  return true;
+}
+
+/**
+ * Persist raw AudioFeatureData from lens extractFeatures() directly.
+ * Used for fine-grained per-frame feature persistence.
+ */
+export async function persistRawFeatures(
+  trackCid: string,
+  features: AudioFeatureData[],
+): Promise<boolean> {
+  if (features.length === 0) return true;
+
+  const { error } = await supabase
+    .from("audio_features")
+    .insert(
+      features.map((f) => ({
+        track_cid: trackCid,
+        feature_id: f.featureId,
+        label: f.label,
+        value: f.value,
+        confidence: f.confidence,
+        unit: f.unit,
+        frame_range: f.frameRange,
+        lens_id: f.lensId,
+        derivation_id: f.derivationId,
+      })),
+    );
+
+  if (error) {
+    console.warn("[FeaturePersistence] Raw feature insert failed:", error.message);
+    return false;
+  }
   return true;
 }

@@ -2,7 +2,7 @@
  * audio module barrel export.
  *
  * @namespace audio/
- * @version 2.0.0
+ * @version 3.0.0 — derivation chain upgrade
  */
 
 // Types
@@ -28,7 +28,7 @@ export { analyzeFrame, frameCurvature, frameCatastrophe } from "./frame-analyzer
 export { AudioEngine, getAudioEngine } from "./engine";
 export type { AudioEngineConfig } from "./engine";
 
-// Lenses
+// Lenses (v2 — with derivation chains)
 export { HarmonicLens } from "./lenses/harmonic-lens";
 export type { HarmonicLensFrame } from "./lenses/harmonic-lens";
 export { CurvatureLens } from "./lenses/curvature-lens";
@@ -37,5 +37,5 @@ export { GenreFingerprint, GENRE_REGIONS } from "./lenses/genre-fingerprint";
 export type { GenreCoordinate, GenreClassification, GenreRegion } from "./lenses/genre-fingerprint";
 
 // Services
-export { FeatureAggregator, generateTrackCid, persistAnalysis, loadFeatures, hasPersistedFeatures } from "./services/feature-persistence";
+export { FeatureAggregator, generateTrackCid, persistAnalysis, loadFeatures, hasPersistedFeatures, persistRawFeatures } from "./services/feature-persistence";
 export type { PersistedTrack, AggregatedFeatures } from "./services/feature-persistence";
