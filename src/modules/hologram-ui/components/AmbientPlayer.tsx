@@ -15,9 +15,10 @@
 
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical } from "lucide-react";
+import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical, BarChart3 } from "lucide-react";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
 import { getAudioEngine, type AudioEngineState } from "@/modules/audio";
+import StratumVisualizer from "./StratumVisualizer";
 
 // ── Palette (consistent with OS) ──────────────────────────────────────────
 const P = {
@@ -137,6 +138,7 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   );
   const [volume, setVolume] = useState(() => prefs.current.volume);
   const [muted, setMuted] = useState(false);
+  const [showVisualizer, setShowVisualizer] = useState(false);
   const engineRef = useRef(getAudioEngine());
   const pillRef = useRef<HTMLDivElement>(null);
 
@@ -299,13 +301,23 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
                   Ambient
                 </span>
               </div>
-              <button
-                onClick={() => setExpanded(false)}
-                className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-white/[0.08]"
-                style={{ color: P.textMuted }}
-              >
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setShowVisualizer((v) => !v)}
+                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-white/[0.08]"
+                  style={{ color: showVisualizer ? P.goldLight : P.textMuted }}
+                  title="Stratum Histogram"
+                >
+                  <BarChart3 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setExpanded(false)}
+                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-white/[0.08]"
+                  style={{ color: P.textMuted }}
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
             {/* Now Playing */}
@@ -422,6 +434,13 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
                 {Math.round((muted ? 0 : volume) * 100)}%
               </span>
             </div>
+
+            {/* Stratum Histogram Visualizer */}
+            <StratumVisualizer
+              playing={playing}
+              stationHue={station.color}
+              visible={showVisualizer && (playing || loading)}
+            />
           </motion.div>
         ) : (
           // ── Collapsed Pill ──────────────────────────────────────────
