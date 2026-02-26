@@ -253,9 +253,47 @@ export default function TrustScoreBar({
             <div className="p-3 space-y-1 max-h-[300px] overflow-y-auto lumen-scroll">
               {hasClaims ? (
                 <>
+                  {/* Reasoning trace header */}
+                  <div className="flex items-center gap-2 pb-2 mb-1" style={{ borderBottom: `1px solid ${P.border}` }}>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: GRADE.A.color }} />
+                      <span className="text-[10px] tracking-wider uppercase font-medium" style={{ color: P.textDim }}>
+                        Symbolic Decomposition
+                      </span>
+                    </div>
+                    <span className="text-[10px] ml-auto" style={{ color: P.textDim }}>
+                      {claims!.length} claims extracted
+                    </span>
+                  </div>
+
+                  {/* Grade distribution bar */}
+                  <div className="flex items-center gap-1 py-1.5">
+                    {(["A", "B", "C", "D"] as const).map((gr) => {
+                      const count = claims!.filter(c => c.grade === gr).length;
+                      if (count === 0) return null;
+                      const pct = (count / totalClaims) * 100;
+                      const s = GRADE[gr];
+                      return (
+                        <div
+                          key={gr}
+                          className="h-1.5 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${pct}%`,
+                            background: s.color,
+                            opacity: 0.7,
+                            minWidth: "8px",
+                          }}
+                          title={`Grade ${gr}: ${count} claim${count > 1 ? "s" : ""} (${pct.toFixed(0)}%)`}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* Claim rows */}
                   {claims!.map((claim, i) => (
                     <ClaimRow key={i} claim={claim} index={i} />
                   ))}
+
                   {/* Proof summary */}
                   <div className="flex items-center gap-3 pt-2 mt-2 text-[10px] flex-wrap" style={{ borderTop: `1px solid ${P.border}` }}>
                     <span className="flex items-center gap-1 px-2 py-1 rounded font-medium" style={{ background: g.bg, color: g.color }}>
