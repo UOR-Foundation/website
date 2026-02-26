@@ -6,7 +6,7 @@
  * factory so they're never recreated.
  */
 
-import { useRef, useEffect, useCallback, useMemo } from "react";
+import { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import { Globe, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { P, type HistoryEntry, formatTimeAgo } from "./browser-palette";
@@ -31,13 +31,23 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
   const { navigate, handleLinkClick, prefetch, saveScrollPosition, getScrollPosition, setUrl } = actions;
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevUrlRef = useRef<string | null>(null);
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [contentVisible, setContentVisible] = useState(false);
+
+  // ── Fade-in trigger when page loads ──
+  useEffect(() => {
+    if (page && !loading) {
+      setContentVisible(false);
+      const t = requestAnimationFrame(() => setContentVisible(true));
+      return () => cancelAnimationFrame(t);
+    }
+  }, [page?.url, loading]);
 
   // ── Restore scroll position when page changes ──
   useEffect(() => {
     if (page && scrollRef.current) {
       const savedScroll = getScrollPosition(page.url);
       if (prevUrlRef.current !== page.url) {
-        // Small delay to let content render before scrolling
         requestAnimationFrame(() => {
           scrollRef.current?.scrollTo({ top: savedScroll, behavior: "instant" as any });
         });
@@ -46,10 +56,13 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
     }
   }, [page?.url, getScrollPosition]);
 
-  // ── Save scroll on scroll events ──
+  // ── Save scroll + update reading progress ──
   const handleScroll = useCallback(() => {
     if (page && scrollRef.current) {
       saveScrollPosition(page.url, scrollRef.current.scrollTop);
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      const max = scrollHeight - clientHeight;
+      setReadingProgress(max > 0 ? Math.min(scrollTop / max, 1) : 0);
     }
   }, [page?.url, saveScrollPosition]);
 
@@ -267,15 +280,36 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
 
       {/* Page Content — Reader Mode (markdown) */}
       {page && !loading && (viewMode === "reader" || (viewMode === "fidelity" && !page.rawHtml)) && (
-        <article className="px-8 md:px-14 py-8 max-w-[1000px] mx-auto w-full animate-fade-in" style={{ color: P.text }}>
-          <div className="mb-6 pb-4" style={{ borderBottom: `1px solid ${P.border}` }}>
-            <h1 className="text-[22px] font-light tracking-tight" style={{ color: P.text }}>{page.title}</h1>
-            <p className="text-[10px] font-light mt-1 truncate" style={{ color: P.textMuted }}>{page.url}</p>
+        <>
+          {/* Reading progress bar */}
+          <div className="sticky top-0 z-10 h-[2px] w-full" style={{ background: "transparent" }}>
+            <div
+              className="h-full transition-[width] duration-150 ease-out"
+              style={{
+                width: `${readingProgress * 100}%`,
+                background: `linear-gradient(90deg, ${P.gold}, hsla(38, 40%, 65%, 0.3))`,
+                boxShadow: readingProgress > 0 ? `0 0 8px hsla(38, 40%, 65%, 0.3)` : "none",
+              }}
+            />
           </div>
-          <div className="hologram-prose">
-            <ReactMarkdown components={markdownComponents}>{page.markdown}</ReactMarkdown>
-          </div>
-        </article>
+          <article
+            className="px-8 md:px-14 py-8 max-w-[1000px] mx-auto w-full"
+            style={{
+              color: P.text,
+              opacity: contentVisible ? 1 : 0,
+              transform: contentVisible ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.4s cubic-bezier(0.16,1,0.3,1)",
+            }}
+          >
+            <div className="mb-6 pb-4" style={{ borderBottom: `1px solid ${P.border}` }}>
+              <h1 className="text-[22px] font-light tracking-tight" style={{ color: P.text }}>{page.title}</h1>
+              <p className="text-[10px] font-light mt-1 truncate" style={{ color: P.textMuted }}>{page.url}</p>
+            </div>
+            <div className="hologram-prose">
+              <ReactMarkdown components={markdownComponents}>{page.markdown}</ReactMarkdown>
+            </div>
+          </article>
+        </>
       )}
     </div>
   );
