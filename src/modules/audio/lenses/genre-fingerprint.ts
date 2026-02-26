@@ -6,7 +6,7 @@
  * orthogonal axes:
  *   X = Cascade Length     (rhythmic momentum / groove)
  *   Y = Mean Curvature     (harmonic tension / complexity)
- *   Z = Histogram Variance (timbral diversity)
+ *   Z = Hamming Distance   (bit-level textural change rate)
  *
  * Genre IS a region in this space — not a label, but a coordinate.
  *
@@ -22,8 +22,8 @@ export interface GenreCoordinate {
   cascade: number;
   /** Mean curvature (harmonic complexity). Normalized [0, 1]. */
   curvature: number;
-  /** Histogram variance (timbral diversity). Normalized [0, 1]. */
-  timbre: number;
+  /** Mean Hamming distance (bit-level textural change). Normalized [0, 1]. */
+  hamming: number;
 }
 
 /** Known genre regions in observable space. */
@@ -55,42 +55,42 @@ export const GENRE_REGIONS: GenreRegion[] = [
   {
     id: "ambient",
     label: "Ambient",
-    center: { cascade: 0.7, curvature: 0.1, timbre: 0.3 },
+    center: { cascade: 0.7, curvature: 0.1, hamming: 0.15 },
     radius: 0.35,
     color: "220",
   },
   {
     id: "drone",
     label: "Drone",
-    center: { cascade: 0.9, curvature: 0.05, timbre: 0.15 },
+    center: { cascade: 0.9, curvature: 0.05, hamming: 0.08 },
     radius: 0.25,
     color: "260",
   },
   {
     id: "downtempo",
     label: "Downtempo",
-    center: { cascade: 0.5, curvature: 0.3, timbre: 0.5 },
+    center: { cascade: 0.5, curvature: 0.3, hamming: 0.4 },
     radius: 0.3,
     color: "140",
   },
   {
     id: "jazz",
     label: "Jazz",
-    center: { cascade: 0.25, curvature: 0.6, timbre: 0.7 },
+    center: { cascade: 0.25, curvature: 0.6, hamming: 0.65 },
     radius: 0.3,
     color: "30",
   },
   {
     id: "space",
     label: "Space",
-    center: { cascade: 0.8, curvature: 0.15, timbre: 0.45 },
+    center: { cascade: 0.8, curvature: 0.15, hamming: 0.25 },
     radius: 0.3,
     color: "200",
   },
   {
     id: "electronic",
     label: "Electronic",
-    center: { cascade: 0.4, curvature: 0.45, timbre: 0.6 },
+    center: { cascade: 0.4, curvature: 0.45, hamming: 0.55 },
     radius: 0.3,
     color: "280",
   },
@@ -139,21 +139,14 @@ export class GenreFingerprint {
     for (const f of this.frames) curvatureSum += f.curvature;
     const curvature = Math.min(1, (curvatureSum / n) / 0.3);
 
-    // Timbre: histogram variance (how spread out is the stratum distribution)
-    const avgHist = new Array(17).fill(0);
-    for (const f of this.frames) {
-      for (let i = 0; i < 17; i++) avgHist[i] += (f.stratumHistogram[i] || 0);
-    }
-    const histTotal = Math.max(avgHist.reduce((a, b) => a + b, 0), 1);
-    const histNorm = avgHist.map((v) => v / histTotal);
-    const histMean = histNorm.reduce((a, b) => a + b, 0) / 17;
-    let histVar = 0;
-    for (const v of histNorm) histVar += (v - histMean) ** 2;
-    histVar /= 17;
-    // Normalize variance: 0.005+ = 1.0
-    const timbre = Math.min(1, histVar / 0.005);
+    // Hamming: mean inter-frame Hamming distance on Z/256Z.
+    // hammingFromPrev is popcount(currentByte XOR prevByte), range [0, 8].
+    // Normalize: 4+ bits flipping per frame = 1.0 (high textural change).
+    let hammingSum = 0;
+    for (const f of this.frames) hammingSum += f.hammingFromPrev;
+    const hamming = Math.min(1, (hammingSum / n) / 4);
 
-    return { cascade, curvature, timbre };
+    return { cascade, curvature, hamming };
   }
 
   /** Classify the current audio against known genre regions. */
@@ -167,7 +160,7 @@ export class GenreFingerprint {
       const d = Math.sqrt(
         (coord.cascade - region.center.cascade) ** 2 +
         (coord.curvature - region.center.curvature) ** 2 +
-        (coord.timbre - region.center.timbre) ** 2
+        (coord.hamming - region.center.hamming) ** 2
       );
       if (d < closestDist) {
         closestDist = d;

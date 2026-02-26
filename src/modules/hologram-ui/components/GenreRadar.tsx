@@ -33,9 +33,9 @@ const RADIUS = 32;
 
 // Triangle vertices for 3 axes (cascade, curvature, timbre)
 const AXES = [
-  { angle: -Math.PI / 2, label: "Cascade" },           // top
-  { angle: -Math.PI / 2 + (2 * Math.PI / 3), label: "Curvature" },  // bottom-right
-  { angle: -Math.PI / 2 + (4 * Math.PI / 3), label: "Timbre" },     // bottom-left
+  { angle: -Math.PI / 2, label: "Cascade" },
+  { angle: -Math.PI / 2 + (2 * Math.PI / 3), label: "Curvature" },
+  { angle: -Math.PI / 2 + (4 * Math.PI / 3), label: "Hamming" },
 ];
 
 function axisPoint(axisIndex: number, value: number): { x: number; y: number } {
@@ -65,7 +65,7 @@ export default function GenreRadar({ visible, stationHue, frame }: GenreRadarPro
   if (!classification) return null;
 
   const { coordinate, genre, confidence } = classification;
-  const values = [coordinate.cascade, coordinate.curvature, coordinate.timbre];
+  const values = [coordinate.cascade, coordinate.curvature, coordinate.hamming];
   const hue = parseInt(stationHue) || 220;
 
   // Build radar polygon path
@@ -172,7 +172,7 @@ export default function GenreRadar({ visible, stationHue, frame }: GenreRadarPro
             <div className="flex items-center justify-between mt-1 pt-1.5" style={{ borderTop: `1px solid ${VP.border}` }}>
               <CoordValue label="Cascade" value={coordinate.cascade} />
               <CoordValue label="Curvature" value={coordinate.curvature} />
-              <CoordValue label="Timbre" value={coordinate.timbre} />
+              <CoordValue label="Hamming" value={coordinate.hamming} />
             </div>
           </div>
         </motion.div>
