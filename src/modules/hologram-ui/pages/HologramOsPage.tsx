@@ -547,6 +547,58 @@ export default function HologramOsPage() {
                   </div>
                 </div>
 
+                {/* Meet Lumen — gentle invitation */}
+                <div
+                  className="flex flex-col items-center gap-[1.8vh]"
+                  style={{
+                    animation: "stagger-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.4s both",
+                  }}
+                >
+                  <button
+                    onClick={() => { setChatPrompt(""); setChatOpen(true); }}
+                    className="group flex flex-col items-center gap-[1.2vh] transition-all duration-700 hover:scale-[1.02]"
+                    style={{ cursor: "pointer", background: "none", border: "none" }}
+                  >
+                    {/* Breathing glyph */}
+                    <span
+                      className="block transition-all duration-700 group-hover:scale-110"
+                      style={{
+                        fontSize: isFocus ? "clamp(28px, 3vw, 44px)" : "clamp(22px, 2.4vw, 36px)",
+                        color: bgMode === "white" ? "hsla(38, 30%, 45%, 0.5)" : "hsla(38, 25%, 70%, 0.4)",
+                        animation: "ambient-glow-breathe 6s ease-in-out infinite",
+                        lineHeight: 1,
+                      }}
+                    >
+                      ◎
+                    </span>
+                    <p
+                      className="tracking-[0.35em] uppercase transition-all duration-500"
+                      style={{
+                        fontFamily: "'DM Sans', system-ui, sans-serif",
+                        fontWeight: 300,
+                        fontSize: isFocus ? "clamp(11px, 0.9vw, 14px)" : "clamp(9px, 0.7vw, 12px)",
+                        color: bgMode === "white" ? "hsla(0, 0%, 25%, 0.45)" : "hsla(38, 15%, 75%, 0.4)",
+                      }}
+                    >
+                      Meet Lumen
+                    </p>
+                    <p
+                      className="tracking-[0.08em] transition-all duration-500"
+                      style={{
+                        fontFamily: "'Playfair Display', serif",
+                        fontWeight: 300,
+                        fontStyle: "italic",
+                        fontSize: isFocus ? "clamp(14px, 1.2vw, 20px)" : "clamp(12px, 1vw, 17px)",
+                        color: bgMode === "white" ? "hsla(0, 0%, 30%, 0.4)" : "hsla(38, 12%, 72%, 0.35)",
+                        maxWidth: "28ch",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      Your quiet companion, here whenever you are ready.
+                    </p>
+                  </button>
+                </div>
+
                 {/* Context interest pills */}
                 {contextHints.length > 0 && (
                   <div className="flex items-center justify-center gap-3 animate-fade-in pb-[1vh]">
