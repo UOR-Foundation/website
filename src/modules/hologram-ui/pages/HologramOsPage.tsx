@@ -59,54 +59,54 @@ const BG_MODES: { mode: BgMode; dot: string; dotActive: string; label: string }[
   { mode: "dark",  dot: "hsla(0, 0%, 30%, 0.5)", dotActive: "hsl(30, 6%, 12%)", label: "Dark" },
 ];
 
-/** Palette per mode — all text/chrome adapts */
+/** Palette per mode — all text/chrome adapts for maximum contrast */
 function palette(m: BgMode) {
   if (m === "white") return {
-    wordmark: "hsla(38, 15%, 88%, 0.9)",
-    greeting: "hsla(0, 0%, 8%, 0.7)",
-    heading:  "hsla(38, 12%, 92%, 0.92)",
-    sub:      "hsla(38, 10%, 72%, 0.5)",
-    cta:      "hsla(38, 12%, 78%, 0.6)",
-    ctaBorder:"hsla(38, 12%, 50%, 0.2)",
-    ctaHoverBg: "hsla(38, 12%, 50%, 0.08)",
-    ctaHoverText: "hsla(38, 15%, 92%, 0.85)",
-    ctaHoverBorder: "hsla(38, 12%, 50%, 0.3)",
-    pill:     "hsla(30, 8%, 15%, 0.6)",
-    pillBorder: "hsla(38, 12%, 40%, 0.1)",
-    pillText: "hsla(38, 10%, 75%, 0.45)",
-    dotPulse: "hsl(38, 40%, 55%)",
-    bg:       "hsl(0, 0%, 4%)",
+    wordmark: "hsla(0, 0%, 15%, 0.85)",
+    greeting: "hsla(0, 0%, 10%, 0.7)",
+    heading:  "hsla(0, 0%, 8%, 0.9)",
+    sub:      "hsla(0, 0%, 25%, 0.6)",
+    cta:      "hsla(0, 0%, 20%, 0.7)",
+    ctaBorder:"hsla(0, 0%, 20%, 0.25)",
+    ctaHoverBg: "hsla(0, 0%, 10%, 0.06)",
+    ctaHoverText: "hsla(0, 0%, 5%, 0.9)",
+    ctaHoverBorder: "hsla(0, 0%, 10%, 0.4)",
+    pill:     "hsla(0, 0%, 95%, 0.7)",
+    pillBorder: "hsla(0, 0%, 75%, 0.3)",
+    pillText: "hsla(0, 0%, 25%, 0.6)",
+    dotPulse: "hsl(0, 0%, 30%)",
+    bg:       "hsl(0, 0%, 100%)",
   };
   if (m === "dark") return {
-    wordmark: "hsla(38, 15%, 88%, 0.9)",
+    wordmark: "hsla(0, 0%, 92%, 0.85)",
     greeting: "hsla(0, 0%, 100%, 0.65)",
-    heading:  "hsla(38, 12%, 90%, 0.9)",
-    sub:      "hsla(38, 10%, 70%, 0.45)",
-    cta:      "hsla(38, 12%, 75%, 0.55)",
-    ctaBorder:"hsla(38, 12%, 50%, 0.18)",
-    ctaHoverBg: "hsla(38, 12%, 50%, 0.08)",
-    ctaHoverText: "hsla(38, 15%, 90%, 0.85)",
-    ctaHoverBorder: "hsla(38, 12%, 50%, 0.3)",
-    pill:     "hsla(30, 8%, 8%, 0.6)",
-    pillBorder: "hsla(38, 12%, 40%, 0.1)",
-    pillText: "hsla(38, 10%, 72%, 0.4)",
-    dotPulse: "hsl(38, 40%, 55%)",
-    bg:       "hsl(30, 6%, 7%)",
+    heading:  "hsla(0, 0%, 95%, 0.92)",
+    sub:      "hsla(0, 0%, 80%, 0.55)",
+    cta:      "hsla(0, 0%, 85%, 0.65)",
+    ctaBorder:"hsla(0, 0%, 70%, 0.2)",
+    ctaHoverBg: "hsla(0, 0%, 100%, 0.06)",
+    ctaHoverText: "hsla(0, 0%, 95%, 0.9)",
+    ctaHoverBorder: "hsla(0, 0%, 80%, 0.35)",
+    pill:     "hsla(0, 0%, 10%, 0.6)",
+    pillBorder: "hsla(0, 0%, 30%, 0.15)",
+    pillText: "hsla(0, 0%, 80%, 0.55)",
+    dotPulse: "hsl(0, 0%, 75%)",
+    bg:       "hsl(0, 0%, 5%)",
   };
   // image mode
   return {
-    wordmark: "hsla(30, 8%, 10%, 0.9)",
+    wordmark: "hsla(0, 0%, 10%, 0.85)",
     greeting: "hsla(0, 0%, 8%, 0.65)",
-    heading:  "hsla(38, 15%, 92%, 0.92)",
-    sub:      "hsla(38, 12%, 78%, 0.5)",
-    cta:      "hsla(38, 15%, 82%, 0.6)",
+    heading:  "hsla(38, 15%, 95%, 0.92)",
+    sub:      "hsla(38, 12%, 80%, 0.55)",
+    cta:      "hsla(38, 15%, 85%, 0.65)",
     ctaBorder:"hsla(38, 15%, 70%, 0.2)",
     ctaHoverBg: "hsla(38, 15%, 70%, 0.08)",
-    ctaHoverText: "hsla(38, 15%, 90%, 0.85)",
+    ctaHoverText: "hsla(38, 15%, 95%, 0.9)",
     ctaHoverBorder: "hsla(38, 15%, 70%, 0.35)",
     pill:     "hsla(30, 8%, 10%, 0.5)",
     pillBorder: "hsla(38, 15%, 60%, 0.08)",
-    pillText: "hsla(38, 12%, 78%, 0.45)",
+    pillText: "hsla(38, 12%, 80%, 0.5)",
     dotPulse: "hsl(38, 40%, 55%)",
     bg:       "transparent",
   };
@@ -266,8 +266,8 @@ export default function HologramOsPage() {
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     color: bgMode === "white"
-                      ? "hsla(30, 8%, 30%, 0.45)"
-                      : "hsla(38, 15%, 80%, 0.35)",
+                      ? "hsla(0, 0%, 30%, 0.5)"
+                      : bgMode === "dark" ? "hsla(0, 0%, 80%, 0.4)" : "hsla(38, 15%, 80%, 0.35)",
                   }}
                 >
                   Scene
@@ -275,8 +275,8 @@ export default function HologramOsPage() {
                 <div
                   className="flex items-center gap-0.5 px-2 py-1.5 rounded-full transition-all duration-700"
                   style={{
-                    background: bgMode === "white" ? "hsla(30, 8%, 40%, 0.06)" : "hsla(30, 8%, 90%, 0.06)",
-                    border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 40%, 0.1)" : "hsla(38, 15%, 70%, 0.08)"}`,
+                    background: bgMode === "white" ? "hsla(0, 0%, 40%, 0.06)" : "hsla(0, 0%, 90%, 0.06)",
+                    border: `1px solid ${bgMode === "white" ? "hsla(0, 0%, 40%, 0.12)" : "hsla(0, 0%, 70%, 0.08)"}`,
                     backdropFilter: "blur(16px)",
                     WebkitBackdropFilter: "blur(16px)",
                   }}
@@ -284,8 +284,8 @@ export default function HologramOsPage() {
                   {BG_MODES.map(({ mode, label }) => {
                     const isActive = bgMode === mode;
                     const dotColor = isActive
-                      ? (bgMode === "white" ? "hsla(30, 10%, 25%, 0.7)" : "hsla(38, 35%, 75%, 0.85)")
-                      : (bgMode === "white" ? "hsla(30, 8%, 50%, 0.25)" : "hsla(38, 15%, 70%, 0.2)");
+                      ? (bgMode === "white" ? "hsla(0, 0%, 15%, 0.8)" : "hsla(0, 0%, 85%, 0.85)")
+                      : (bgMode === "white" ? "hsla(0, 0%, 40%, 0.3)" : "hsla(0, 0%, 70%, 0.25)");
                     return (
                       <button
                         key={mode}
@@ -382,7 +382,7 @@ export default function HologramOsPage() {
                     className="animate-fade-in transition-colors duration-700"
                     style={{
                       fontFamily: "'DM Sans', system-ui, sans-serif",
-                      color: bgMode === "white" ? "hsla(30, 8%, 40%, 0.5)" : "hsla(38, 15%, 80%, 0.45)",
+                      color: P.sub,
                       fontWeight: 300,
                       fontSize: "clamp(10px, 0.7vw, 12px)",
                       letterSpacing: "0.15em",
@@ -403,9 +403,9 @@ export default function HologramOsPage() {
                       style={{
                         height: "100%",
                         background: `linear-gradient(to bottom, transparent 0%, ${
-                          bgMode === "white" ? "hsla(30, 8%, 30%, 0.2)" : "hsla(38, 20%, 80%, 0.2)"
+                          bgMode === "white" ? "hsla(0, 0%, 20%, 0.2)" : "hsla(0, 0%, 80%, 0.2)"
                         } 40%, ${
-                          bgMode === "white" ? "hsla(30, 8%, 30%, 0.2)" : "hsla(38, 20%, 80%, 0.2)"
+                          bgMode === "white" ? "hsla(0, 0%, 20%, 0.2)" : "hsla(0, 0%, 80%, 0.2)"
                         } 60%, transparent 100%)`,
                         animation: "line-reveal 2.5s ease-out forwards",
                       }}
@@ -430,11 +430,11 @@ export default function HologramOsPage() {
                           letterSpacing: "0.2em",
                           textTransform: "uppercase" as const,
                           fontWeight: 300,
-                          color: bgMode === "white" ? "hsla(30, 8%, 40%, 0.4)" : "hsla(38, 15%, 80%, 0.35)",
+                          color: bgMode === "white" ? "hsla(0, 0%, 30%, 0.5)" : "hsla(0, 0%, 80%, 0.4)",
                           padding: "3px 10px",
                           borderRadius: "100px",
-                          border: `1px solid ${bgMode === "white" ? "hsla(30, 8%, 40%, 0.1)" : "hsla(38, 15%, 70%, 0.1)"}`,
-                          background: bgMode === "white" ? "hsla(30, 8%, 90%, 0.3)" : "hsla(30, 8%, 20%, 0.2)",
+                          border: `1px solid ${bgMode === "white" ? "hsla(0, 0%, 30%, 0.12)" : "hsla(0, 0%, 70%, 0.1)"}`,
+                          background: bgMode === "white" ? "hsla(0, 0%, 90%, 0.4)" : "hsla(0, 0%, 15%, 0.25)",
                           backdropFilter: "blur(8px)",
                           cursor: "pointer",
                         }}
