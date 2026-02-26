@@ -347,17 +347,28 @@ export default function HologramOsPage() {
               }}
             >
               <span
-                className="transition-colors duration-300"
+                className="transition-colors duration-300 select-none"
                 style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontWeight: 400,
-                  fontSize: "clamp(20px, 2vw, 30px)",
-                  letterSpacing: "0.55em",
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontWeight: 300,
+                  fontSize: "clamp(16px, 1.6vw, 24px)",
+                  letterSpacing: "0.45em",
                   textTransform: "uppercase" as const,
                   color: P.wordmark,
                 }}
               >
-                Hologram
+                {"H O L O G R A M".split(" ").map((letter, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      display: "inline-block",
+                      fontWeight: letter === "O" || letter === "A" ? 200 : 300,
+                      letterSpacing: "0.12em",
+                    }}
+                  >
+                    {letter}
+                  </span>
+                ))}
               </span>
             </div>
 
