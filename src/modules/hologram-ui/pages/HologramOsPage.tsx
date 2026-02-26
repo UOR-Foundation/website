@@ -785,19 +785,6 @@ export default function HologramOsPage() {
                 >
                   Lumen AI
                 </span>
-                {mastery.hintOpacity("l") > 0 && (
-                  <span
-                    className="tracking-[0.15em] uppercase font-medium transition-opacity duration-700"
-                    style={{
-                      fontFamily: "'DM Sans', system-ui, sans-serif",
-                      color: P.pillText,
-                      fontSize: "10px",
-                      opacity: mastery.hintOpacity("l") * 0.4,
-                    }}
-                  >
-                    {MOD_LABEL} L
-                  </span>
-                )}
 
                 {journalEntryCount > 0 && (
                   <span
