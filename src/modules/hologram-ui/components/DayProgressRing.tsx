@@ -145,7 +145,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
         />
 
         {/* Center — percentage + OF DAY */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-[6px]">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-[8px]">
           <span
             className="text-[22px] font-light leading-none"
             style={{
@@ -159,11 +159,11 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
           </span>
           {attention.showExpanded && (
             <span
-              className="text-[6.5px] tracking-[0.2em] uppercase leading-none transition-opacity duration-700"
+              className="text-[8px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
               style={{
                 fontFamily: "'DM Sans', system-ui, sans-serif",
-                color: "hsla(38, 15%, 80%, 0.4)",
-                fontWeight: 400,
+                color: "hsla(38, 15%, 82%, 0.55)",
+                fontWeight: 500,
               }}
             >
               of day
@@ -181,7 +181,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
         // Smart rebalancing prompts — human, warm, actionable
         const getRebalancePrompt = (): { label: string; color: string } => {
           if (!hasSufficientData) {
-            return { label: "Your day", color: "hsla(38, 15%, 80%, 0.6)" };
+            return { label: "Your day", color: "hsla(38, 15%, 85%, 0.75)" };
           }
 
           // If actively doing something, show that
@@ -193,7 +193,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
             };
             return {
               label: phaseLabels[activePhase],
-              color: `hsla(${PHASES[activePhase].hue}, 30%, 72%, 0.7)`,
+              color: `hsla(${PHASES[activePhase].hue}, 35%, 75%, 0.85)`,
             };
           }
 
@@ -217,7 +217,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
               },
             };
             const prompt = prompts[dominant]?.[neglected] ?? "Your day";
-            return { label: prompt, color: "hsla(25, 25%, 70%, 0.7)" };
+            return { label: prompt, color: "hsla(25, 25%, 75%, 0.8)" };
           }
 
           if (dominant) {
@@ -227,25 +227,25 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
               learn: "Create something",
               play: "Focus your energy",
             };
-            return { label: nudges[dominant], color: "hsla(25, 25%, 70%, 0.65)" };
+            return { label: nudges[dominant], color: "hsla(25, 25%, 75%, 0.75)" };
           }
 
           if (report.coherent) {
-            return { label: "Your day", color: "hsla(38, 15%, 80%, 0.6)" };
+            return { label: "Your day", color: "hsla(38, 15%, 85%, 0.75)" };
           }
 
-          return { label: "Your day", color: "hsla(38, 15%, 80%, 0.6)" };
+          return { label: "Your day", color: "hsla(38, 15%, 85%, 0.75)" };
         };
 
         const { label, color } = getRebalancePrompt();
 
         return (
           <span
-            className="text-[9px] tracking-[0.4em] uppercase transition-all duration-700"
+            className="text-[10px] tracking-[0.35em] uppercase transition-all duration-700"
             style={{
               fontFamily: "'DM Sans', system-ui, sans-serif",
               color,
-              fontWeight: 400,
+              fontWeight: 500,
             }}
           >
             {label}
