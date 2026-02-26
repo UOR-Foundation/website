@@ -521,7 +521,7 @@ export default function HologramOsPage() {
           <HologramFrame layer={2} label="content" interactive={false} transform={contentTilt} opacity={layerNav.layerOpacity(2)} style={{ transform: `scale(${layerNav.layerScale(2)})`, transition: "opacity 0.5s, transform 0.5s" }}>
             {/* Logo — top center */}
             <div
-              className="absolute top-[3vh] left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-300 ease-out"
+              className="absolute top-[clamp(12px,2.5vh,32px)] left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
@@ -533,7 +533,7 @@ export default function HologramOsPage() {
                 viewBox="0 0 360 40"
                 className="transition-opacity duration-300 select-none"
                 style={{
-                  width: "clamp(200px, 22vw, 340px)",
+                  width: "clamp(160px, 18vw, 320px)",
                   height: "auto",
                   opacity: 0.85,
                 }}
@@ -586,11 +586,15 @@ export default function HologramOsPage() {
             {/* Welcome — centered */}
             <div className="absolute inset-0 flex flex-col items-center justify-center px-8">
               <div
-                className="text-center space-y-[3.5vh] animate-fade-in transition-all duration-500 ease-out"
+                className="text-center animate-fade-in transition-all duration-500 ease-out"
                 style={{
                   textShadow: bgMode === "image" ? "0 1px 8px hsla(0, 0%, 0%, 0.5), 0 0 30px hsla(0, 0%, 0%, 0.2)" : "none",
                   pointerEvents: "auto",
                   maxWidth: isFocus ? "56rem" : "42rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: isFocus ? "clamp(16px, 2.5vh, 32px)" : "clamp(10px, 1.8vh, 24px)",
                 }}
               >
                 <p
@@ -599,7 +603,7 @@ export default function HologramOsPage() {
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     color: P.greeting,
                     fontWeight: 400,
-                    fontSize: isFocus ? "clamp(15px, 1.6vw, 22px)" : "clamp(13px, 1.4vw, 18px)",
+                    fontSize: isFocus ? "clamp(13px, 1.2vw, 20px)" : "clamp(11px, 1vw, 16px)",
                     letterSpacing: "0.25em",
                   }}
                 >
@@ -613,7 +617,7 @@ export default function HologramOsPage() {
                     fontWeight: 300,
                     color: P.heading,
                     letterSpacing: "-0.01em",
-                    fontSize: isFocus ? "clamp(48px, 6vw, 96px)" : "clamp(36px, 4.5vw, 76px)",
+                    fontSize: isFocus ? "clamp(36px, 5vw, 88px)" : "clamp(28px, 3.8vw, 68px)",
                   }}
                 >
                   Welcome{contextHints.length > 0 ? " back" : " home"},
@@ -622,17 +626,17 @@ export default function HologramOsPage() {
                 </h1>
 
                 {/* Vertical line — expands from center point, up and down */}
-                <div className="flex justify-center pt-[3vh] pb-[2vh]">
+                <div className="flex justify-center">
                   <div
                     style={{
-                      height: isFocus ? "clamp(100px, 14vh, 200px)" : "clamp(80px, 10vh, 150px)",
+                      height: isFocus ? "clamp(60px, 8vh, 160px)" : "clamp(40px, 6vh, 110px)",
                       width: 0,
                       borderLeft: `1px solid ${
                         bgMode === "white"
                           ? "hsla(0, 0%, 10%, 0.45)"
                           : bgMode === "dark"
                             ? "hsla(0, 0%, 85%, 0.3)"
-                            : "hsla(0, 0%, 95%, 0.35)"
+                            : "hsla(0, 0%, 5%, 0.4)"
                       }`,
                       transformOrigin: "center center",
                       animation: "line-expand 3s cubic-bezier(0.22, 1, 0.36, 1) 0.8s both",
@@ -642,7 +646,7 @@ export default function HologramOsPage() {
 
                 {/* Lumen AI — the magic moment, the only CTA */}
                 <div
-                  className="flex flex-col items-center gap-[1.8vh]"
+                  className="flex flex-col items-center"
                   style={{
                     animation: "stagger-fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both",
                   }}
@@ -650,18 +654,24 @@ export default function HologramOsPage() {
                   <button
                     onClick={() => { setChatPrompt(""); setChatOpen(true); }}
                     className="group flex flex-col items-center transition-all duration-700"
-                    style={{ cursor: "pointer", background: "none", border: "none", gap: isFocus ? "clamp(20px, 3vh, 36px)" : "clamp(16px, 2.5vh, 28px)" }}
+                    style={{ cursor: "pointer", background: "none", border: "none", gap: isFocus ? "clamp(14px, 2vh, 28px)" : "clamp(10px, 1.5vh, 20px)" }}
                   >
                     {/* Breathing glyph — the heart of Lumen */}
-                    <div className="relative flex items-center justify-center" style={{ width: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)", height: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)" }}>
+                    <div className="relative flex items-center justify-center" style={{ width: isFocus ? "clamp(48px, 5vw, 80px)" : "clamp(40px, 4vw, 64px)", height: isFocus ? "clamp(48px, 5vw, 80px)" : "clamp(40px, 4vw, 64px)" }}>
                       {/* Outer ring — gentle hover: just a quiet opacity lift */}
                       <div
                         className="absolute rounded-full transition-all duration-[1400ms] ease-out group-hover:opacity-100"
                         style={{
-                          width: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
-                          height: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
-                          opacity: 0.7,
-                          border: `1px solid ${bgMode === "white" ? "hsla(0, 0%, 10%, 0.45)" : "hsla(38, 25%, 75%, 0.2)"}`,
+                          width: isFocus ? "clamp(48px, 5vw, 80px)" : "clamp(40px, 4vw, 64px)",
+                          height: isFocus ? "clamp(48px, 5vw, 80px)" : "clamp(40px, 4vw, 64px)",
+                          opacity: 0.85,
+                          border: `1px solid ${
+                            bgMode === "white"
+                              ? "hsla(0, 0%, 10%, 0.45)"
+                              : bgMode === "dark"
+                                ? "hsla(38, 25%, 75%, 0.25)"
+                                : "hsla(0, 0%, 5%, 0.4)"
+                          }`,
                           animation: "lumen-ring-enter 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, ambient-glow-breathe 6s ease-in-out 3s infinite",
                         }}
                       />
@@ -688,7 +698,7 @@ export default function HologramOsPage() {
                       style={{
                         fontFamily: "'DM Sans', system-ui, sans-serif",
                         fontWeight: 400,
-                        fontSize: isFocus ? "clamp(12px, 1vw, 15px)" : "clamp(11px, 0.85vw, 13px)",
+                        fontSize: isFocus ? "clamp(11px, 0.9vw, 14px)" : "clamp(10px, 0.75vw, 12px)",
                         color: bgMode === "white"
                           ? "hsla(0, 0%, 15%, 0.85)"
                           : "hsla(38, 15%, 88%, 0.7)",
@@ -704,7 +714,7 @@ export default function HologramOsPage() {
                         fontFamily: "'Playfair Display', serif",
                         fontWeight: 300,
                         fontStyle: "italic",
-                        fontSize: isFocus ? "clamp(14px, 1.2vw, 20px)" : "clamp(12px, 1vw, 17px)",
+                        fontSize: isFocus ? "clamp(12px, 1vw, 18px)" : "clamp(11px, 0.85vw, 15px)",
                         color: bgMode === "white" ? "hsla(0, 0%, 15%, 0.7)" : "hsla(38, 12%, 85%, 0.6)",
                         maxWidth: "30ch",
                         lineHeight: 1.6,
