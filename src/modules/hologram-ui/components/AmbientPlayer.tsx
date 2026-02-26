@@ -225,7 +225,7 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     const agg = aggregatorRef.current;
     if (agg.frameCount < 30) return; // Need at least ~1s of data
     const trackCid = await generateTrackCid(s.streamUrl);
-    const features = agg.aggregate();
+    const features = agg.aggregate(trackCid);
     persistAnalysis(
       { trackCid, title: s.name, artist: "SomaFM", sourceUri: s.streamUrl, format: { codec: "mp3", sampleRate: 44100 }, genres: [s.category] },
       features,
