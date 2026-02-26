@@ -182,7 +182,7 @@ export default function HologramOsPage() {
     <HologramViewport className="h-screen bg-background">
       {/* Depth-shift trigger: recede lower frames when overlays open */}
       <DepthShiftSync active={chatOpen || claimOpen} />
-      <LayerNavHUD nav={layerNav} />
+      {/* LayerNavHUD removed — focus toggle handles mode switching */}
 
       <div className="flex h-full overflow-hidden">
         {/* ════════════════════════════════════════════════════════════════
@@ -550,7 +550,7 @@ export default function HologramOsPage() {
         replayGuideKey={replayGuide}
         initialPrompt={chatPrompt}
       />
-      <FrameDebugOverlay />
+      {/* FrameDebugOverlay removed for cleaner UI */}
     </HologramViewport>
   );
 }
