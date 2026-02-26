@@ -444,32 +444,33 @@ export default function HologramOsPage() {
             >
               <div className="flex flex-col items-center gap-2">
                 <div
-                  className="flex items-center gap-0.5 px-2 py-1.5 rounded-full transition-all duration-300"
+                  className="flex items-center gap-1 px-3 py-2 rounded-full transition-all duration-300"
                   style={{
-                    background: bgMode === "white" ? "hsla(0, 0%, 40%, 0.06)" : "hsla(0, 0%, 90%, 0.06)",
-                    border: `1px solid ${bgMode === "white" ? "hsla(0, 0%, 40%, 0.12)" : "hsla(0, 0%, 70%, 0.08)"}`,
-                    backdropFilter: "blur(16px)",
-                    WebkitBackdropFilter: "blur(16px)",
+                    background: bgMode === "white" ? "hsla(0, 0%, 40%, 0.1)" : "hsla(0, 0%, 10%, 0.45)",
+                    border: `1px solid ${bgMode === "white" ? "hsla(0, 0%, 40%, 0.18)" : "hsla(0, 0%, 80%, 0.18)"}`,
+                    backdropFilter: "blur(24px)",
+                    WebkitBackdropFilter: "blur(24px)",
+                    boxShadow: "0 2px 12px hsla(0, 0%, 0%, 0.25)",
                   }}
                 >
                   {BG_MODES.map(({ mode, label }) => {
                     const isActive = bgMode === mode;
                     const dotColor = isActive
-                      ? (bgMode === "white" ? "hsla(0, 0%, 10%, 0.85)" : "hsla(0, 0%, 85%, 0.85)")
-                      : (bgMode === "white" ? "hsla(0, 0%, 10%, 0.35)" : "hsla(0, 0%, 70%, 0.25)");
+                      ? (bgMode === "white" ? "hsla(0, 0%, 10%, 0.95)" : "hsla(0, 0%, 95%, 0.95)")
+                      : (bgMode === "white" ? "hsla(0, 0%, 10%, 0.45)" : "hsla(0, 0%, 80%, 0.45)");
                     return (
                       <button
                         key={mode}
                         onClick={() => setBgMode(mode)}
-                        className="relative group flex items-center justify-center w-5 h-5 rounded-full transition-all duration-300"
+                        className="relative group flex items-center justify-center w-6 h-6 rounded-full transition-all duration-300"
                         aria-label={`Switch to ${label} background`}
                       >
                         <div
-                          className="w-[5px] h-[5px] rounded-full transition-all duration-300 ease-out"
+                          className="w-[6px] h-[6px] rounded-full transition-all duration-300 ease-out"
                           style={{
                             background: dotColor,
-                            transform: isActive ? "scale(1.3)" : "scale(1)",
-                            boxShadow: isActive ? `0 0 8px 1px ${dotColor}` : "none",
+                            transform: isActive ? "scale(1.4)" : "scale(1)",
+                            boxShadow: isActive ? `0 0 10px 2px ${dotColor}` : "none",
                           }}
                         />
                       </button>
@@ -477,13 +478,14 @@ export default function HologramOsPage() {
                   })}
                 </div>
                 <span
-                  className="tracking-[0.2em] uppercase font-light transition-colors duration-300"
+                  className="tracking-[0.2em] uppercase font-medium transition-colors duration-300"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
                     fontSize: "clamp(11px, 0.8vw, 13px)",
                     color: bgMode === "white"
-                      ? "hsla(0, 0%, 15%, 0.55)"
-                      : "hsla(0, 0%, 70%, 0.5)",
+                      ? "hsla(0, 0%, 15%, 0.7)"
+                      : "hsla(0, 0%, 85%, 0.75)",
+                    textShadow: bgMode === "white" ? "none" : "0 1px 4px hsla(0, 0%, 0%, 0.5)",
                   }}
                 >
                   Style
