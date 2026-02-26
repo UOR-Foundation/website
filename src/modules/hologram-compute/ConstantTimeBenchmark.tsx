@@ -411,7 +411,7 @@ export default function ConstantTimeBenchmark() {
                   color: tab === t ? P.gold : P.muted,
                 }}
               >
-                {t === "chain" ? "Chain Depth" : "Data Scale"}
+                {t === "chain" ? "Complexity" : "Scale"}
               </button>
             ))}
           </div>
@@ -431,6 +431,13 @@ export default function ConstantTimeBenchmark() {
           </button>
         </div>
       </div>
+
+      {/* Tab explanation */}
+      <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
+        {tab === "chain"
+          ? "Complexity — Increases the number of chained operations on a fixed dataset. Shows how performance scales as tasks get harder."
+          : "Scale — Increases the amount of data processed with a fixed set of operations. Shows how performance scales with volume."}
+      </p>
 
       {/* ── Side-by-side comparison (idle state) ──────────────── */}
       {currentState === "idle" && (
