@@ -190,10 +190,10 @@ export default function HologramCompute({ onClose }: HologramComputeProps) {
                 className="text-xl font-light"
                 style={{ color: P.text, fontFamily: P.serif }}
               >
-                Performance Proof
+                Compute Benchmarks
               </h2>
               <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
-                Live benchmark comparing standard compute against the Hologram Virtual GPU.
+                Live benchmarks comparing standard compute against the Hologram Virtual GPU.
                 All data computed in real-time in your browser.
               </p>
             </div>
