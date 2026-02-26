@@ -282,7 +282,7 @@
 .streaming-reveal > :nth-last-child(2) { animation-delay: 0ms; }
 .streaming-reveal > :nth-last-child(n+3) { animation: none; opacity: 1; }
 
-
+.project-card-glow {
   position: relative;
   overflow: hidden;
 }
