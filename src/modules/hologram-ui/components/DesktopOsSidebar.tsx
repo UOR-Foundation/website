@@ -13,6 +13,28 @@ import {
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
 } from "lucide-react";
 
+/* ── Tooltip wrapper for collapsed icon buttons ────────────── */
+function IconTooltip({ label, children, show }: { label: string; children: React.ReactNode; show: boolean }) {
+  if (!show) return <>{children}</>;
+  return (
+    <div className="relative group/tip">
+      {children}
+      <div
+        className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 rounded-lg text-[13px] font-light whitespace-nowrap opacity-0 scale-95 group-hover/tip:opacity-100 group-hover/tip:scale-100 transition-all duration-200 z-50"
+        style={{
+          background: "hsl(25, 10%, 16%)",
+          color: "hsl(38, 15%, 85%)",
+          border: "1px solid hsla(38, 12%, 70%, 0.15)",
+          boxShadow: "0 8px 24px -6px hsla(25, 15%, 5%, 0.5)",
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+        }}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
 /* ── Palette ───────────────────────────────────────────────── */
 const S = {
   bg: "hsl(25, 8%, 10%)",
@@ -174,34 +196,34 @@ export default function DesktopOsSidebar({
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.path);
           return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
-                !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
-              }`}
-              style={{
-                color: active ? S.gold : S.text,
-                background: active ? S.surfaceActive : "transparent",
-                fontFamily: S.font,
-              }}
-              onMouseEnter={(e) => {
-                if (!active) e.currentTarget.style.background = S.surfaceHover;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = active ? S.surfaceActive : "transparent";
-              }}
-              title={!expanded ? item.label : undefined}
-            >
-              <item.icon
-                className="w-5 h-5 shrink-0"
-                strokeWidth={1.5}
-                style={{ color: active ? S.gold : S.textMuted }}
-              />
-              {expanded && (
-                <span className="text-[14px] font-light whitespace-nowrap">{item.label}</span>
-              )}
-            </button>
+            <IconTooltip key={item.path} label={item.label} show={!expanded}>
+              <button
+                onClick={() => navigate(item.path)}
+                className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
+                  !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+                }`}
+                style={{
+                  color: active ? S.gold : S.text,
+                  background: active ? S.surfaceActive : "transparent",
+                  fontFamily: S.font,
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) e.currentTarget.style.background = S.surfaceHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = active ? S.surfaceActive : "transparent";
+                }}
+              >
+                <item.icon
+                  className="w-5 h-5 shrink-0"
+                  strokeWidth={1.5}
+                  style={{ color: active ? S.gold : S.textMuted }}
+                />
+                {expanded && (
+                  <span className="text-[14px] font-light whitespace-nowrap">{item.label}</span>
+                )}
+              </button>
+            </IconTooltip>
           );
         })}
       </div>
@@ -212,46 +234,49 @@ export default function DesktopOsSidebar({
         style={{ borderTop: `1px solid ${S.border}` }}
       >
         {onReplayGuide && (
+          <IconTooltip label={`Help (${MOD_KEY} /)`} show={!expanded}>
+            <button
+              onClick={onReplayGuide}
+              className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
+                !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+              }`}
+              style={{ color: S.text, fontFamily: S.font }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            >
+              <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
+              {expanded && <span className="text-[14px] font-light">Help</span>}
+            </button>
+          </IconTooltip>
+        )}
+        <IconTooltip label={`Messages (${MOD_KEY} M)`} show={!expanded}>
           <button
-            onClick={onReplayGuide}
+            onClick={() => {}}
             className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
               !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
             }`}
             style={{ color: S.text, fontFamily: S.font }}
             onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-            title={!expanded ? `Help (${MOD_KEY} /)` : undefined}
           >
-            <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
-            {expanded && <span className="text-[14px] font-light">Help</span>}
+            <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
+            {expanded && <span className="text-[14px] font-light">Messages</span>}
           </button>
-        )}
-        <button
-          onClick={() => {}}
-          className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
-            !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
-          }`}
-          style={{ color: S.text, fontFamily: S.font }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={!expanded ? `Messages (${MOD_KEY} M)` : undefined}
-        >
-          <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
-          {expanded && <span className="text-[14px] font-light">Messages</span>}
-        </button>
-        <button
-          onClick={() => navigate("/settings")}
-          className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
-            !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
-          }`}
-          style={{ color: S.text, fontFamily: S.font }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-          title={!expanded ? "Settings" : undefined}
-        >
-          <Settings className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
-          {expanded && <span className="text-[14px] font-light">Settings</span>}
-        </button>
+        </IconTooltip>
+        <IconTooltip label="Settings" show={!expanded}>
+          <button
+            onClick={() => navigate("/settings")}
+            className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
+              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+            }`}
+            style={{ color: S.text, fontFamily: S.font }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          >
+            <Settings className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
+            {expanded && <span className="text-[14px] font-light">Settings</span>}
+          </button>
+        </IconTooltip>
       </div>
     </aside>
   );
