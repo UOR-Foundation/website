@@ -1,5 +1,8 @@
 project_id = "erwfuxphwcvynxhfbvql"
 
+[functions.audio-stream-proxy]
+verify_jwt = false
+
 [functions.uor-verify]
 verify_jwt = false
 

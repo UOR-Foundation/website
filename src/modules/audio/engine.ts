@@ -41,6 +41,7 @@ export class AudioEngine {
 
     this.audio = new Audio();
     this.audio.preload = "none";
+    this.audio.crossOrigin = "anonymous"; // Enable Web Audio AnalyserNode reads
 
     // Wire up state events
     this.audio.addEventListener("playing", () => this.setState("playing"));
@@ -183,12 +184,31 @@ export class AudioEngine {
   }
 
   private playNative(url: string): void {
-    this.audio.src = url;
+    // Route through CORS proxy for cross-origin streams so AnalyserNode gets real data
+    const proxiedUrl = this.proxyUrl(url);
+    this.audio.src = proxiedUrl;
     this.audio.load();
     this.audio.play().catch((err) => {
       console.warn("[AudioEngine] Native playback failed:", err);
       this.setState("error");
     });
+  }
+
+  /**
+   * Route known cross-origin stream URLs through our CORS proxy edge function.
+   * This enables the Web Audio AnalyserNode to read real frequency data
+   * instead of returning silence (Grade-C fallback).
+   */
+  private proxyUrl(url: string): string {
+    try {
+      const parsed = new URL(url);
+      const proxyHosts = ["somafm.com", "ice2.somafm.com", "ice1.somafm.com", "ice4.somafm.com", "ice6.somafm.com"];
+      if (proxyHosts.some(h => parsed.hostname === h || parsed.hostname.endsWith("." + h))) {
+        const base = import.meta.env.VITE_SUPABASE_URL || `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co`;
+        return `${base}/functions/v1/audio-stream-proxy?url=${encodeURIComponent(url)}`;
+      }
+    } catch {}
+    return url;
   }
 
   private destroyHls(): void {
