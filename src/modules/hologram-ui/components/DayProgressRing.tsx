@@ -15,12 +15,12 @@ import {
   type TriadicPhase,
 } from "@/modules/hologram-ui/sovereign-creator";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
+import { getDayWindowProgress, isNightTime } from "@/modules/hologram-ui/hooks/useGreeting";
 
 // ── Day progress ───────────────────────────────────────────────────────────
 
 function getDayProgress(): number {
-  const now = new Date();
-  return (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()) / 86400;
+  return getDayWindowProgress();
 }
 
 // ── Ring geometry ──────────────────────────────────────────────────────────
@@ -40,10 +40,14 @@ interface DayProgressRingProps {
 export default function DayProgressRing({ balance: externalBalance, activePhase }: DayProgressRingProps) {
   const [progress, setProgress] = useState(getDayProgress);
   const [hovered, setHovered] = useState(false);
+  const [night, setNight] = useState(isNightTime);
   const attention = useAttentionMode();
 
   useEffect(() => {
-    const id = setInterval(() => setProgress(getDayProgress()), 10_000);
+    const id = setInterval(() => {
+      setProgress(getDayProgress());
+      setNight(isNightTime());
+    }, 10_000);
     return () => clearInterval(id);
   }, []);
 
@@ -146,28 +150,58 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
 
         {/* Center — percentage + OF DAY */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-[8px]">
-          <span
-            className="text-[22px] font-light leading-none"
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              color: "hsla(38, 15%, 94%, 0.95)",
-              fontWeight: 300,
-              letterSpacing: "0.02em",
-            }}
-          >
-            {pct}%
-          </span>
-          {attention.showExpanded && (
-            <span
-              className="text-[8px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
-              style={{
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                color: "hsla(38, 15%, 82%, 0.55)",
-                fontWeight: 500,
-              }}
-            >
-              of day
-            </span>
+          {night ? (
+            <>
+              <span
+                className="text-[18px] leading-none"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  color: "hsla(220, 20%, 80%, 0.8)",
+                  fontWeight: 300,
+                  letterSpacing: "0.02em",
+                }}
+              >
+                ☽
+              </span>
+              {attention.showExpanded && (
+                <span
+                  className="text-[8px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    color: "hsla(220, 15%, 75%, 0.5)",
+                    fontWeight: 500,
+                  }}
+                >
+                  Night
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              <span
+                className="text-[22px] font-light leading-none"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  color: "hsla(38, 15%, 94%, 0.95)",
+                  fontWeight: 300,
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {pct}%
+              </span>
+              {attention.showExpanded && (
+                <span
+                  className="text-[8px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    color: "hsla(38, 15%, 82%, 0.55)",
+                    fontWeight: 500,
+                  }}
+                >
+                  of day
+                </span>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -180,6 +214,9 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
 
         // Smart rebalancing prompts — human, warm, actionable
         const getRebalancePrompt = (): { label: string; color: string } => {
+          if (night) {
+            return { label: "Rest well", color: "hsla(220, 15%, 78%, 0.6)" };
+          }
           if (!hasSufficientData) {
             return { label: "Your day", color: "hsla(38, 15%, 85%, 0.75)" };
           }
