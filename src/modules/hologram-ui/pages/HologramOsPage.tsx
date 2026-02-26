@@ -379,30 +379,59 @@ export default function HologramOsPage() {
                 transform: isFocus ? "translateY(-10px)" : "translateY(0)",
               }}
             >
-              <span
-                className="transition-colors duration-300 select-none"
+              {/* SVG wordmark — geometric, open-A, ĀMAN-inspired */}
+              <svg
+                viewBox="0 0 520 40"
+                className="transition-opacity duration-300 select-none"
                 style={{
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  fontWeight: 300,
-                  fontSize: "clamp(16px, 1.6vw, 24px)",
-                  letterSpacing: "0.45em",
-                  textTransform: "uppercase" as const,
-                  color: P.wordmark,
+                  width: "clamp(260px, 28vw, 420px)",
+                  height: "auto",
+                  opacity: 0.85,
                 }}
+                aria-label="Hologram"
               >
-                {"H O L O G R A M".split(" ").map((letter, i) => (
-                  <span
-                    key={i}
-                    style={{
-                      display: "inline-block",
-                      fontWeight: letter === "O" || letter === "A" ? 200 : 300,
-                      letterSpacing: "0.12em",
-                    }}
-                  >
-                    {letter}
-                  </span>
-                ))}
-              </span>
+                {/* All strokes use currentColor for theme adaptation */}
+                <g
+                  fill="none"
+                  stroke={P.wordmark}
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {/* H */}
+                  <line x1="10" y1="6" x2="10" y2="34" />
+                  <line x1="30" y1="6" x2="30" y2="34" />
+                  <line x1="10" y1="20" x2="30" y2="20" />
+
+                  {/* O */}
+                  <ellipse cx="60" cy="20" rx="14" ry="14" />
+
+                  {/* L */}
+                  <line x1="94" y1="6" x2="94" y2="34" />
+                  <line x1="94" y1="34" x2="114" y2="34" />
+
+                  {/* O */}
+                  <ellipse cx="144" cy="20" rx="14" ry="14" />
+
+                  {/* G */}
+                  <path d="M 198 12 A 14 14 0 1 0 198 28 L 198 20 L 188 20" />
+
+                  {/* R */}
+                  <line x1="222" y1="6" x2="222" y2="34" />
+                  <path d="M 222 6 L 236 6 A 7 7 0 0 1 236 20 L 222 20" />
+                  <line x1="232" y1="20" x2="242" y2="34" />
+
+                  {/* A — open, no crossbar (ĀMAN style) */}
+                  <line x1="266" y1="34" x2="280" y2="6" />
+                  <line x1="280" y1="6" x2="294" y2="34" />
+
+                  {/* M — geometric peaked */}
+                  <line x1="318" y1="34" x2="318" y2="6" />
+                  <line x1="318" y1="6" x2="334" y2="22" />
+                  <line x1="334" y1="22" x2="350" y2="6" />
+                  <line x1="350" y1="6" x2="350" y2="34" />
+                </g>
+              </svg>
             </div>
 
             {/* Welcome — centered */}
