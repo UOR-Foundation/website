@@ -72,25 +72,29 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
     return { learn: 0.20, work: 0.30, play: 0.50 };
   }, [externalBalance, isLoggedIn]);
 
-  const pct = isLoggedIn ? Math.round(progress * 100) : 0;
+  const pct = Math.round(progress * 100);
 
   const report = useMemo(() => computeBalance(displayBalance), [displayBalance]);
 
   // Build segment data: each phase occupies a proportional arc of the filled portion
-  const displayProgress = isLoggedIn ? progress : 0;
-  const totalFilled = CIRCUMFERENCE * displayProgress;
+  // For unauthenticated users, show a single neutral arc representing elapsed day time
+  const totalFilled = CIRCUMFERENCE * progress;
   const segments = useMemo(() => {
+    if (!isLoggedIn) {
+      // Single neutral segment for the full day progress
+      return [{ phase: "learn" as TriadicPhase, length: totalFilled, offset: 0, neutral: true }];
+    }
     let offset = 0;
     return PHASE_ORDER.map((phase) => {
       const segLen = totalFilled * displayBalance[phase];
-      const seg = { phase, length: segLen, offset };
+      const seg = { phase, length: segLen, offset, neutral: false };
       offset += segLen;
       return seg;
     });
-  }, [displayProgress, displayBalance, totalFilled]);
+  }, [progress, displayBalance, totalFilled, isLoggedIn]);
 
   // Leading dot position (end of the filled arc)
-  const displayAngle = 2 * Math.PI * displayProgress;
+  const displayAngle = 2 * Math.PI * progress;
   const dotCx = SIZE / 2 + RADIUS * Math.cos(displayAngle);
   const dotCy = SIZE / 2 + RADIUS * Math.sin(displayAngle);
 
@@ -119,17 +123,21 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
           />
 
           {/* Colored segments — layered with dash offsets */}
-          {segments.map(({ phase, length, offset }) => {
+          {segments.map(({ phase, length, offset, neutral }) => {
             if (length <= 0) return null;
             const phaseDef = PHASES[phase];
+            // Unauthenticated: soft silver-blue neutral arc
+            const strokeColor = neutral
+              ? "hsla(220, 12%, 72%, 0.45)"
+              : `hsla(${phaseDef.hue}, 40%, 60%, 0.8)`;
             return (
               <circle
-                key={phase}
+                key={neutral ? "neutral" : phase}
                 cx={SIZE / 2}
                 cy={SIZE / 2}
                 r={RADIUS}
                 fill="none"
-                stroke={`hsla(${phaseDef.hue}, 40%, 60%, 0.8)`}
+                stroke={strokeColor}
                 strokeWidth={STROKE}
                 strokeLinecap="butt"
                 strokeDasharray={`${length} ${CIRCUMFERENCE - length}`}
@@ -306,44 +314,46 @@ export default function DayProgressRing({ balance: externalBalance, activePhase 
         );
       })()}
 
-      {/* Phase legend — appears on hover, above the ring */}
-      <div
-        className="absolute -top-16 left-1/2 -translate-x-1/2 flex gap-5 transition-all duration-300 pointer-events-none"
-        style={{
-          opacity: hovered && attention.showExpanded ? 1 : 0,
-          transform: `translateX(-50%) translateY(${hovered && attention.showExpanded ? "0" : "6px"})`,
-        }}
-      >
-        {PHASE_ORDER.map((phase) => {
-          const phasePct = Math.round(displayBalance[phase] * 100);
-          return (
-            <div key={phase} className="flex flex-col items-center gap-1">
-              <span
-                className="text-[13px] font-light leading-none"
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  color: `hsla(${PHASES[phase].hue}, 35%, 72%, 0.95)`,
-                  letterSpacing: "0.02em",
-                  textRendering: "geometricPrecision",
-                }}
-              >
-                {phasePct}%
-              </span>
-              <span
-                className="text-[10px] tracking-[0.2em] uppercase leading-none"
-                style={{
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  color: `hsla(${PHASES[phase].hue}, 30%, 75%, 0.9)`,
-                  fontWeight: 500,
-                  textRendering: "geometricPrecision",
-                }}
-              >
-                {phase}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      {/* Phase legend — appears on hover, only for logged-in users */}
+      {isLoggedIn && (
+        <div
+          className="absolute -top-16 left-1/2 -translate-x-1/2 flex gap-5 transition-all duration-300 pointer-events-none"
+          style={{
+            opacity: hovered && attention.showExpanded ? 1 : 0,
+            transform: `translateX(-50%) translateY(${hovered && attention.showExpanded ? "0" : "6px"})`,
+          }}
+        >
+          {PHASE_ORDER.map((phase) => {
+            const phasePct = Math.round(displayBalance[phase] * 100);
+            return (
+              <div key={phase} className="flex flex-col items-center gap-1">
+                <span
+                  className="text-[13px] font-light leading-none"
+                  style={{
+                    fontFamily: "'Playfair Display', serif",
+                    color: `hsla(${PHASES[phase].hue}, 35%, 72%, 0.95)`,
+                    letterSpacing: "0.02em",
+                    textRendering: "geometricPrecision",
+                  }}
+                >
+                  {phasePct}%
+                </span>
+                <span
+                  className="text-[10px] tracking-[0.2em] uppercase leading-none"
+                  style={{
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    color: `hsla(${PHASES[phase].hue}, 30%, 75%, 0.9)`,
+                    fontWeight: 500,
+                    textRendering: "geometricPrecision",
+                  }}
+                >
+                  {phase}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
 
       {/* Keyframes moved to index.css for zero-recalc mounting */}
