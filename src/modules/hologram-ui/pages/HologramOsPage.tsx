@@ -314,7 +314,7 @@ export default function HologramOsPage() {
                       : "hsla(0, 0%, 70%, 0.5)",
                   }}
                 >
-                  Theme
+                  Style
                 </span>
               </div>
             </div>
