@@ -293,7 +293,7 @@ export default function HologramOsPage() {
                 alt="Serene landscape with misty mountains and tranquil water"
                 className="w-full h-full object-cover"
                 style={{
-                  animation: bgMode === "image" ? "ken-burns-breathe 25s cubic-bezier(0.25, 0.1, 0.25, 1) forwards" : "none",
+                  animation: bgMode === "image" ? "ken-burns-breathe 27s cubic-bezier(0.25, 0.1, 0.25, 1) forwards" : "none",
                 }}
               />
               {/* Gradient veil */}
