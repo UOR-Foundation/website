@@ -144,14 +144,14 @@ function ConsumerView({ snap, onBenchmark, benchmarking }: {
         )}
       </section>
 
-      {/* Constant-time proof — simplified label */}
-      <section className="space-y-3">
-        <div className="text-center space-y-1">
-          <h2 className="font-serif text-xl text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
+      {/* Constant-time proof */}
+      <section className="space-y-2">
+        <div className="text-center space-y-0.5">
+          <h2 className="font-serif text-lg text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
             See the difference
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Standard compute slows down with complexity. Hologram stays instant.
+          <p className="text-xs text-muted-foreground">
+            Standard compute slows linearly with complexity. The Hologram vGPU stays constant.
           </p>
         </div>
         <ConstantTimeBenchmark />
