@@ -2,7 +2,7 @@
  * audio module barrel export.
  *
  * @namespace audio/
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 // Types
@@ -31,3 +31,11 @@ export type { AudioEngineConfig } from "./engine";
 // Lenses
 export { HarmonicLens } from "./lenses/harmonic-lens";
 export type { HarmonicLensFrame } from "./lenses/harmonic-lens";
+export { CurvatureLens } from "./lenses/curvature-lens";
+export type { CurvaturePoint, CatastropheEvent, CurvatureLensState } from "./lenses/curvature-lens";
+export { GenreFingerprint, GENRE_REGIONS } from "./lenses/genre-fingerprint";
+export type { GenreCoordinate, GenreClassification, GenreRegion } from "./lenses/genre-fingerprint";
+
+// Services
+export { FeatureAggregator, generateTrackCid, persistAnalysis, loadFeatures, hasPersistedFeatures } from "./services/feature-persistence";
+export type { PersistedTrack, AggregatedFeatures } from "./services/feature-persistence";

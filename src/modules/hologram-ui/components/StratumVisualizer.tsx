@@ -54,9 +54,11 @@ interface StratumVisualizerProps {
   stationHue: string;
   /** Whether the visualizer panel is visible. */
   visible: boolean;
+  /** Callback fired with each analyzed frame (for downstream lenses). */
+  onFrame?: (frame: HarmonicLensFrame) => void;
 }
 
-export default function StratumVisualizer({ playing, stationHue, visible }: StratumVisualizerProps) {
+export default function StratumVisualizer({ playing, stationHue, visible, onFrame }: StratumVisualizerProps) {
   const lensRef = useRef<HarmonicLens | null>(null);
   const rafRef = useRef<number>(0);
   const [frame, setFrame] = useState<HarmonicLensFrame | null>(null);
@@ -104,9 +106,10 @@ export default function StratumVisualizer({ playing, stationHue, visible }: Stra
         lastTime = now;
         const lens = lensRef.current;
         if (lens) {
-          const f = lens.read();
+        const f = lens.read();
           setFrame(f);
           setIsReal(lens.isRealData);
+          onFrame?.(f);
         }
       }
       rafRef.current = requestAnimationFrame(throttledTick);

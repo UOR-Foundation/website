@@ -15,10 +15,13 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical, BarChart3, Database } from "lucide-react";
+import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical, BarChart3, Database, Activity, Hexagon } from "lucide-react";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
-import { getAudioEngine, type AudioEngineState } from "@/modules/audio";
+import { getAudioEngine, type AudioEngineState, FeatureAggregator, generateTrackCid, persistAnalysis } from "@/modules/audio";
+import type { HarmonicLensFrame } from "@/modules/audio";
 import StratumVisualizer from "./StratumVisualizer";
+import CurvatureTimeSeries from "./CurvatureTimeSeries";
+import GenreRadar from "./GenreRadar";
 
 // ── Palette (consistent with OS) ──────────────────────────────────────────
 const P = {
@@ -139,8 +142,12 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   const [volume, setVolume] = useState(() => prefs.current.volume);
   const [muted, setMuted] = useState(false);
   const [showVisualizer, setShowVisualizer] = useState(false);
+  const [showCurvature, setShowCurvature] = useState(false);
+  const [showGenre, setShowGenre] = useState(false);
   const [cacheStats, setCacheStats] = useState({ entries: 0, totalBytes: 0, maxBytes: 1, utilization: 0 });
+  const [currentFrame, setCurrentFrame] = useState<HarmonicLensFrame | null>(null);
   const engineRef = useRef(getAudioEngine());
+  const aggregatorRef = useRef(new FeatureAggregator());
   const pillRef = useRef<HTMLDivElement>(null);
 
   // Draggable position — default to bottom-left
@@ -205,14 +212,36 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     engineRef.current.setVolume(muted ? 0 : volume);
   }, [volume, muted]);
 
+  // Handle frame from StratumVisualizer → relay to CurvatureLens & GenreRadar + aggregate for persistence
+  const handleFrame = useCallback((frame: HarmonicLensFrame) => {
+    setCurrentFrame(frame);
+    aggregatorRef.current.push(frame);
+  }, []);
+
+  // Persist aggregated features when switching stations or stopping
+  const persistCurrentAnalysis = useCallback(async (s: AmbientStation) => {
+    const agg = aggregatorRef.current;
+    if (agg.frameCount < 30) return; // Need at least ~1s of data
+    const trackCid = await generateTrackCid(s.streamUrl);
+    const features = agg.aggregate();
+    persistAnalysis(
+      { trackCid, title: s.name, artist: "SomaFM", sourceUri: s.streamUrl, format: { codec: "mp3", sampleRate: 44100 }, genres: [s.category] },
+      features,
+    ).catch(() => {});
+  }, []);
+
   const playStation = useCallback(
     (s: AmbientStation) => {
+      // Persist previous station's analysis before switching
+      if (playing) persistCurrentAnalysis(station);
+      aggregatorRef.current.reset();
+      setCurrentFrame(null);
       setStation(s);
       setLoading(true);
       setPlaying(false);
       engineRef.current.play(s.streamUrl);
     },
-    [],
+    [playing, station, persistCurrentAnalysis],
   );
 
   const togglePlayback = useCallback(() => {
@@ -319,6 +348,22 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
                   title="Stratum Histogram"
                 >
                   <BarChart3 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setShowCurvature((v) => !v)}
+                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-white/[0.08]"
+                  style={{ color: showCurvature ? P.goldLight : P.textMuted }}
+                  title="Curvature κ Time-Series"
+                >
+                  <Activity className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setShowGenre((v) => !v)}
+                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-white/[0.08]"
+                  style={{ color: showGenre ? P.goldLight : P.textMuted }}
+                  title="Genre Fingerprint"
+                >
+                  <Hexagon className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => setExpanded(false)}
@@ -487,6 +532,21 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
               playing={playing}
               stationHue={station.color}
               visible={showVisualizer && (playing || loading)}
+              onFrame={handleFrame}
+            />
+
+            {/* Curvature Time-Series */}
+            <CurvatureTimeSeries
+              visible={showCurvature && (playing || loading)}
+              stationHue={station.color}
+              frame={currentFrame}
+            />
+
+            {/* Genre Fingerprint Radar */}
+            <GenreRadar
+              visible={showGenre && (playing || loading)}
+              stationHue={station.color}
+              frame={currentFrame}
             />
           </motion.div>
         ) : (
