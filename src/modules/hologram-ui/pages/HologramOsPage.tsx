@@ -197,10 +197,15 @@ export default function HologramOsPage() {
       switch (e.key) {
         // ⌘L — Lumen AI (L = Lumen)
         case "l": case "L": e.preventDefault(); setChatOpen(true); break;
-        // ⌘B — Toggle sidebar (B = Bar/sidebar, standard convention)
+        // ⌘B — Toggle sidebar (B = Bar/sidebar)
         case "b": case "B": e.preventDefault(); setSidebarCollapsed(p => !p); break;
-        // ⌘S — Settings (S = Settings)
-        case "s": case "S": e.preventDefault(); navigate("/settings"); break;
+        // ⌘F — Toggle focus mode (F = Focus)
+        case "f": case "F": e.preventDefault(); attention.toggle(); break;
+        // ⌘S — Cycle style (S = Style: image → white → dark)
+        case "s": case "S":
+          e.preventDefault();
+          setBgMode(BG_MODES[(BG_MODES.findIndex(b => b.mode === bgMode) + 1) % BG_MODES.length].mode);
+          break;
         // ⌘M — Messages (M = Messages)
         case "m": case "M": e.preventDefault(); /* TODO: open messages */ break;
         // ⌘H — Home (H = Home)

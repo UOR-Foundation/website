@@ -29,10 +29,12 @@ const SHORTCUTS: Shortcut[] = [
   // Navigation
   { keys: [MOD, "H"], label: "Go Home", section: "Navigation" },
   { keys: [MOD, "B"], label: "Toggle Sidebar", section: "Navigation" },
-  { keys: [MOD, "S"], label: "Settings", section: "Navigation" },
   // Communication
   { keys: [MOD, "L"], label: "Open Lumen AI", section: "Communication" },
   { keys: [MOD, "M"], label: "Messages", section: "Communication" },
+  // View
+  { keys: [MOD, "F"], label: "Toggle Focus Mode", section: "View" },
+  { keys: [MOD, "S"], label: "Cycle Style", section: "View" },
   // System
   { keys: [MOD, "/"], label: "Shortcut Cheat Sheet", section: "System" },
 ];
