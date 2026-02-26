@@ -48,6 +48,12 @@ import {
 } from "@/modules/ring-core/neuro-symbolic";
 import AnnotatedResponse from "@/components/reasoning/EpistemicBadge";
 import { saveReasoningProof } from "@/modules/ring-core/proof-persistence";
+import {
+  planPGI,
+  composeFragments,
+  storeClaims,
+  type PGIResult,
+} from "@/modules/ring-core/proof-gated-inference";
 
 // ── Cloud AI Models (instant, no download) ─────────────────────────────────
 const CLOUD_MODELS = [
@@ -419,13 +425,23 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         return;
       }
 
-      // ── Path 3: Cloud + Neuro-Symbolic Co-Reasoning ────────
+      // ── Path 3: Cloud + Proof-Gated Inference ────────────
       const STREAM_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hologram-ai-stream`;
       const skillId = activeSkill?.id || selectedPersona.defaultSkillId;
       const isReasoningSkill = skillId === "reason" || skillId === "research" || skillId === "debug";
 
       // DEDUCTIVE: Build symbolic scaffold (client-side, instant)
       const scaffold = isReasoningSkill ? buildScaffold(text) : null;
+
+      // PGI: Decompose into claims and batch-lookup proof store
+      let pgiPlan: Awaited<ReturnType<typeof planPGI>> | null = null;
+      if (scaffold) {
+        try {
+          pgiPlan = await planPGI(scaffold);
+        } catch {
+          // Graceful degradation — fall through to full LLM
+        }
+      }
 
       const doStream = async (extraMessages: Array<{role: string; content: string}> = [], scaffoldPrompt?: string): Promise<string> => {
         const resp = await fetch(STREAM_URL, {
@@ -482,8 +498,50 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
       const start = performance.now();
 
-      // INDUCTIVE: Stream LLM response (with scaffold if reasoning)
-      await doStream([], scaffold?.promptFragment);
+      // ── PGI Path: Replay cached claims, only send misses to LLM ──
+      let pgiResult: PGIResult | null = null;
+      if (pgiPlan && pgiPlan.lookup.hits.length > 0) {
+        // Replay cached fragments instantly
+        const cachedText = pgiPlan.lookup.hits
+          .sort((a, b) => a.index - b.index)
+          .map(h => h.cachedOutput)
+          .join(" ");
+
+        // Stream cached text first (instant, private)
+        for (const word of cachedText.split(/(\s+)/)) {
+          streamedText += word;
+          updateAssistant(streamedText);
+          await new Promise(r => setTimeout(r, 3)); // ~300 tok/s feel
+        }
+
+        // Now stream only the miss fragments to LLM
+        const liveFragments: Array<{ claimIndex: number; text: string; grade: import("@/modules/ring-core/neuro-symbolic").EpistemicGrade }> = [];
+        if (pgiPlan.lookup.misses.length > 0) {
+          for (let i = 0; i < pgiPlan.privateFragments.length; i++) {
+            const miss = pgiPlan.lookup.misses[i];
+            const prevText = streamedText;
+            // Send decontextualized fragment (privacy-preserving)
+            await doStream([{ role: "user", content: pgiPlan.privateFragments[i] }], scaffold?.promptFragment);
+            const newText = streamedText.slice(prevText.length).trim();
+            if (newText) {
+              liveFragments.push({ claimIndex: miss.index, text: newText, grade: "C" });
+            }
+          }
+        }
+
+        // Compose via tensor product
+        pgiResult = composeFragments(
+          pgiPlan.lookup.hits,
+          liveFragments,
+          scaffold?.quantum ?? 0,
+        );
+
+        // Store new claim-level proofs (fire-and-forget)
+        storeClaims(pgiPlan.claims, liveFragments).catch(() => {});
+      } else {
+        // No PGI hits — fall back to standard D→I→A loop
+        await doStream([], scaffold?.promptFragment);
+      }
 
       // ABDUCTIVE: Measure curvature & annotate (if reasoning mode)
       let nsResult: NeuroSymbolicResult | null = null;
@@ -523,12 +581,12 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         inferenceSource: "cloud" as const,
         ...(nsResult && {
           neuroSymbolic: {
-            claims: nsResult.claims,
+            claims: pgiResult ? pgiResult.claims : nsResult.claims,
             overallGrade: nsResult.overallGrade,
             iterations: nsResult.iterations,
             converged: nsResult.converged,
             curvature: nsResult.finalCurvature,
-            proofId: nsResult.proof.proofId,
+            proofId: pgiResult ? pgiResult.proof.proofId : nsResult.proof.proofId,
           },
         }),
       };
@@ -545,7 +603,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         saveReasoningProof(nsResult, convId).catch(() => {});
       }
 
-      // Cache write for future O(1) replay
+      // Cache write for future O(1) replay (full query level)
       getInputHash(text, modelId).then((proof) => {
         if (meta) meta.inputCid = proof.cid;
         writeInferenceCache({
@@ -553,7 +611,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           inputCanonical: proof.nquads,
           outputText: finalContent,
           toolName: `cloud:${selectedCloudModel}`,
-          epistemicGrade: "B",
+          epistemicGrade: nsResult?.overallGrade ?? "B",
         });
       });
 
