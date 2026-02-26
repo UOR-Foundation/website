@@ -16,6 +16,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { GripVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
@@ -41,6 +42,7 @@ import { useFocusJournal } from "@/modules/hologram-ui/hooks/useFocusJournal";
 import { useContextProjection } from "@/modules/hologram-ui/hooks/useContextProjection";
 import { useShortcutMastery } from "@/modules/hologram-ui/hooks/useShortcutMastery";
 import { useContextBeacon } from "@/modules/hologram-ui/hooks/useScreenContext";
+import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -147,6 +149,8 @@ export default function HologramOsPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [pillGlow, setPillGlow] = useState(false);
   const [ambientState, setAmbientState] = useState<AmbientState>({ playing: false, loading: false, stationHue: "220", stationName: "" });
+  const lumenPillDrag = useDraggablePosition({ storageKey: "hologram-pos:lumen-pill", defaultPos: { x: 0, y: 0 }, mode: "offset" });
+  const dayRingDrag = useDraggablePosition({ storageKey: "hologram-pos:day-ring", defaultPos: { x: 0, y: 0 }, mode: "offset" });
   const lumenPanel = useModularPanel({
     storageKey: "lumen-ai",
     defaultWidth: 340,
@@ -408,15 +412,26 @@ export default function HologramOsPage() {
               </div>
             </div>
 
-            {/* Day Progress Ring — bottom right */}
+            {/* Day Progress Ring — bottom right, draggable */}
             <div
-              className="absolute bottom-[3vh] right-6 animate-fade-in flex flex-col items-center gap-3 transition-all duration-300 ease-out"
+              className="absolute bottom-[3vh] right-6 animate-fade-in flex items-center gap-2 transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
-                transform: isFocus ? "translateY(10px)" : "translateY(0)",
+                transform: isFocus
+                  ? `translate(${dayRingDrag.pos.x}px, ${dayRingDrag.pos.y + 10}px)`
+                  : `translate(${dayRingDrag.pos.x}px, ${dayRingDrag.pos.y}px)`,
+                touchAction: "none",
+                userSelect: "none",
               }}
             >
+              <div
+                className="cursor-grab active:cursor-grabbing opacity-0 hover:opacity-40 transition-opacity duration-300"
+                {...dayRingDrag.handlers}
+                title="Drag to reposition"
+              >
+                <GripVertical className="w-3 h-3" style={{ color: "hsla(0, 0%, 80%, 0.6)" }} />
+              </div>
               <DayProgressRing balance={triadicActivity.balance ?? undefined} />
             </div>
           </HologramFrame>
@@ -665,29 +680,42 @@ export default function HologramOsPage() {
               </div>
             </div>
 
-            {/* AI Chat Pill — bottom center */}
+            {/* AI Chat Pill — bottom center, draggable */}
             <div
-              className={`absolute bottom-[6vh] left-1/2 -translate-x-1/2 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${chatOpen ? "pointer-events-none opacity-0 translate-y-6 scale-90" : "opacity-100 translate-y-0 scale-100"}`}
+              className={`absolute bottom-[6vh] left-1/2 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${chatOpen ? "pointer-events-none opacity-0 scale-90" : "opacity-100 scale-100"}`}
               style={{
                 pointerEvents: "auto",
                 opacity: isFocus ? 0.7 : 1,
-                transform: isFocus ? "translate(-50%, 0) scale(0.95)" : "translate(-50%, 0)",
+                transform: isFocus
+                  ? `translate(calc(-50% + ${lumenPillDrag.pos.x}px), ${lumenPillDrag.pos.y}px) scale(0.95)`
+                  : `translate(calc(-50% + ${lumenPillDrag.pos.x}px), ${lumenPillDrag.pos.y}px)`,
+                touchAction: "none",
+                userSelect: "none",
               }}
             >
-              <button
-                onClick={() => setChatOpen(true)}
-                className="relative flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-300 hover:scale-105 group"
-                style={{
-                  background: P.pill,
-                  backdropFilter: "blur(24px)",
-                  WebkitBackdropFilter: "blur(24px)",
-                  border: `1px solid ${P.pillBorder}`,
-                  boxShadow: pillGlow
-                    ? "0 0 20px hsla(38, 50%, 50%, 0.35), 0 0 40px hsla(38, 50%, 50%, 0.15), 0 0 60px hsla(38, 50%, 50%, 0.05)"
-                    : "none",
-                  animation: pillGlow ? "pill-glow-pulse 1.8s ease-out both" : "none",
-                }}
-              >
+              <div className="flex items-center gap-1">
+                {/* Drag grip */}
+                <div
+                  className="cursor-grab active:cursor-grabbing opacity-0 hover:opacity-40 transition-opacity duration-300 p-1"
+                  {...lumenPillDrag.handlers}
+                  title="Drag to reposition"
+                >
+                  <GripVertical className="w-3 h-3" style={{ color: "hsla(0, 0%, 80%, 0.6)" }} />
+                </div>
+                <button
+                  onClick={() => { if (!lumenPillDrag.wasDragged()) setChatOpen(true); }}
+                  className="relative flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-300 hover:scale-105 group"
+                  style={{
+                    background: P.pill,
+                    backdropFilter: "blur(24px)",
+                    WebkitBackdropFilter: "blur(24px)",
+                    border: `1px solid ${P.pillBorder}`,
+                    boxShadow: pillGlow
+                      ? "0 0 20px hsla(38, 50%, 50%, 0.35), 0 0 40px hsla(38, 50%, 50%, 0.15), 0 0 60px hsla(38, 50%, 50%, 0.05)"
+                      : "none",
+                    animation: pillGlow ? "pill-glow-pulse 1.8s ease-out both" : "none",
+                  }}
+                >
                 <div
                   className="w-1.5 h-1.5 rounded-full group-hover:scale-150 transition-transform duration-200"
                   style={{
@@ -733,6 +761,7 @@ export default function HologramOsPage() {
                   </span>
                 )}
               </button>
+              </div>
             </div>
           </HologramFrame>
 
