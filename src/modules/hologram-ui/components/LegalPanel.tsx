@@ -324,7 +324,7 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
         className="text-2xl font-light tracking-wide mb-2"
         style={{ fontFamily: fontDisplay, color: P.heading }}
       >
-        Your Terms
+        Terms of Use
       </h1>
       <p className="text-[13px] tracking-wider uppercase mb-5" style={{ color: P.textMuted }}>
         Last updated: February 2026
@@ -333,138 +333,139 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
         className="text-[16px] leading-[2] mb-12"
         style={{ color: P.text }}
       >
-        Most platforms ask you to accept their terms. Hologram works differently.
-        Here, you set the terms — and applications must agree to yours before they
-        can access your data. This idea is inspired by a global privacy standard called{" "}
-        <InlineLink href="https://myterms.info/" P={P}>MyTerms</InlineLink>{" "}
-        (formally known as IEEE 7012), which puts individuals in control of how their
-        personal information is shared.
+        Polygram is built on a simple premise: your information is yours. We do not
+        write terms to protect ourselves from you. We build infrastructure that
+        protects you — and gives you the tools to define your own terms for how
+        applications interact with your data.
       </p>
 
-      <Section title="1. You Own Your Space" P={P} fontDisplay={fontDisplay}>
+      <Section title="1. Privacy Is the Default" P={P} fontDisplay={fontDisplay}>
         <p>
-          When you join Hologram, you get a private, personal space. Think of it as your
-          digital home. Inside this space, you have complete control over three things:
+          When you use Polygram, privacy is not something you opt into — it is where
+          you start. By default, we store the absolute minimum: your identity is
+          anchored to your email handle, which we do not retain on our servers. No
+          profiles are built, no behaviour is tracked, no data is mined.
+        </p>
+        <p>
+          To share anything about yourself, you must actively choose to do so. Every
+          piece of information you reveal is a deliberate, reversible decision — not
+          a checkbox buried in a settings page.
+        </p>
+      </Section>
+
+      <Section title="2. Zero-Knowledge Verification" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Polygram enables you to prove things about yourself — your age, your
+          credentials, your membership — without disclosing the underlying information.
+          Applications can confirm what they need to know without ever seeing what
+          they do not need to know.
+        </p>
+        <p>
+          This means you can participate fully in digital experiences while revealing
+          nothing more than what is strictly necessary. Verification without exposure.
+        </p>
+      </Section>
+
+      <Section title="3. Selective Disclosure — You Choose" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Traditional platforms operate on an all-or-nothing model: accept our terms
+          or leave. Polygram reverses this entirely. You decide:
         </p>
         <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Your identity</strong> — a unique, permanent address that belongs to you and only you. No company can take it away or pretend to be you.</span>
+            <span><strong style={{ color: P.heading }}>What to reveal</strong> — share specific attributes without exposing the full picture. An app can know you are over 18 without knowing your date of birth.</span>
           </li>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Your data</strong> — everything you create, save, or do within Hologram belongs to you. We never sell it, mine it, or use it for advertising.</span>
+            <span><strong style={{ color: P.heading }}>To whom</strong> — each application or service must request access individually. No blanket permissions, no cascading consent.</span>
           </li>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Your connections</strong> — the people, apps, and services you connect with are private by default. You decide who can see what.</span>
+            <span><strong style={{ color: P.heading }}>When and for how long</strong> — set time-limited disclosures that automatically expire. You can revoke access at any moment, and connected services are notified immediately.</span>
           </li>
         </ul>
       </Section>
 
-      <Section title="2. You Set the Rules" P={P} fontDisplay={fontDisplay}>
+      <Section title="4. Your Terms, Not Ours" P={P} fontDisplay={fontDisplay}>
         <p>
-          On most platforms, you click "I agree" to a long legal document you probably
-          did not read. That document protects the company, not you.
+          Polygram gives you the programmatic tools to create your own machine-readable
+          privacy policy. This is not a template you fill in — it is a real, enforceable
+          set of rules that applications must accept before they can interact with your data.
         </p>
         <p>
-          Hologram reverses this. You write the rules. When an app or service wants to
-          work with your data, it must agree to <em style={{ color: P.tabActive }}>your</em> terms
-          first. If it cannot meet your conditions, it simply does not get access. This
-          follows the principles of the{" "}
-          <InlineLink href="https://myterms.info/ieee7012-standards/" P={P}>MyTerms standard</InlineLink>,
-          which was designed to make personal data exchange transparent and fair.
-        </p>
-      </Section>
-
-      <Section title="3. What You Decide" P={P} fontDisplay={fontDisplay}>
-        <p>
-          In your{" "}
-          <InlineLink href="/your-space/preferences" P={P}>Preferences</InlineLink>,
-          you can set clear boundaries around:
-        </p>
-        <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
-          <li className="flex gap-2.5 items-start">
-            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>What you share</strong> — choose exactly which types of information apps can see. You can share as much or as little as you like.</span>
-          </li>
-          <li className="flex gap-2.5 items-start">
-            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Who can contact you</strong> — decide whether services and agents are allowed to reach out to you, and under what conditions.</span>
-          </li>
-          <li className="flex gap-2.5 items-start">
-            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>How long data is kept</strong> — set time limits on how long anyone else can hold onto information you have shared with them.</span>
-          </li>
-          <li className="flex gap-2.5 items-start">
-            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
-            <span><strong style={{ color: P.heading }}>Taking it back</strong> — withdraw access at any time. When you do, every connected service is notified immediately.</span>
-          </li>
-        </ul>
-      </Section>
-
-      <Section title="4. No Tracking, Ever" P={P} fontDisplay={fontDisplay}>
-        <p>
-          Hologram does not track your behaviour. There are no hidden trackers watching
-          what you click, no profiles being built about your habits, and no advertising
-          identifiers following you around.
-        </p>
-        <p>
-          This is not just a policy — it is built into the way the platform works. It
-          cannot be quietly changed or reversed.
+          This approach is inspired by the{" "}
+          <InlineLink href="https://myterms.info/" P={P}>MyTerms</InlineLink>{" "}
+          standard (IEEE 7012), which was designed to put individuals — not corporations —
+          in control of personal data exchange. When an app cannot meet your conditions,
+          it simply does not get access.
         </p>
       </Section>
 
-      <Section title="5. Apps Must Earn Your Trust" P={P} fontDisplay={fontDisplay}>
+      <Section title="5. Opting Out of Privacy" P={P} fontDisplay={fontDisplay}>
         <p>
-          Every application and experience within Hologram operates under a simple rule:
-          it must respect your terms to participate. If an app cannot work within the
-          boundaries you have set, it will not have access to your data. Full stop.
-        </p>
-        <p>
-          This means trust is the default — not something buried in fine print.
-        </p>
-      </Section>
-
-      <Section title="6. How It Works Behind the Scenes" P={P} fontDisplay={fontDisplay}>
-        <p>
-          Your terms are enforced automatically through three layers:
+          Privacy on Polygram is not a setting you turn on. It is the foundation you
+          would have to deliberately step away from. Revealing information requires
+          explicit, incremental steps:
         </p>
         <ul className="space-y-3 pl-1 mt-3" style={{ listStyle: "none" }}>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>1</span>
-            <span><strong style={{ color: P.heading }}>Your identity</strong> — your unique Hologram address acts as the master key. Every permission flows from it.</span>
+            <span>You choose to share a specific piece of information.</span>
           </li>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>2</span>
-            <span><strong style={{ color: P.heading }}>Your terms</strong> — your preferences are converted into a secure, tamper-proof record that machines can read and enforce automatically.</span>
+            <span>You choose who receives it.</span>
           </li>
           <li className="flex gap-2.5 items-start">
             <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>3</span>
-            <span><strong style={{ color: P.heading }}>Enforcement</strong> — before any app or service can access your data, it must prove it has accepted your current terms. No exceptions.</span>
+            <span>You choose how long they can keep it.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>4</span>
+            <span>You can reverse any of these decisions at any time.</span>
+          </li>
+        </ul>
+        <p className="mt-4">
+          There is no "share everything" button. Every disclosure is a conscious act.
+        </p>
+      </Section>
+
+      <Section title="6. What We Commit To" P={P} fontDisplay={fontDisplay}>
+        <ul className="space-y-3 pl-1" style={{ listStyle: "none" }}>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span>We will never sell, trade, or monetise your personal information.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span>We will never build behavioural profiles or serve targeted advertising.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span>We will never use your data to train AI models without your explicit, informed, revocable consent.</span>
+          </li>
+          <li className="flex gap-2.5 items-start">
+            <span style={{ color: P.tabActive, fontSize: "9px", marginTop: "9px" }}>◆</span>
+            <span>We will continue to minimise our own data footprint — storing less, not more, over time.</span>
           </li>
         </ul>
       </Section>
 
-      <Section title="7. Updating Your Preferences" P={P} fontDisplay={fontDisplay}>
+      <Section title="7. Built on an Open Standard" P={P} fontDisplay={fontDisplay}>
         <p>
-          You can review and change your terms whenever you like from your{" "}
-          <InlineLink href="/your-space/preferences" P={P}>Preferences</InlineLink>{" "}
-          page. Any changes take effect immediately across all connected applications
-          and services — no waiting, no delays.
+          The infrastructure behind your personal terms is based on{" "}
+          <InlineLink href="https://myterms.info/" P={P}>MyTerms</InlineLink>{" "}
+          (IEEE 7012), a published global standard for machine-readable personal privacy.
+          It is not proprietary — it is open, auditable, and designed so that privacy
+          is something you can see, control, and trust.
         </p>
       </Section>
 
-      <Section title="8. Built on an Open Standard" P={P} fontDisplay={fontDisplay}>
+      <Section title="8. Contact" P={P} fontDisplay={fontDisplay}>
         <p>
-          The way Hologram handles your terms is based on{" "}
-          <InlineLink href="https://myterms.info/" P={P}>MyTerms</InlineLink>,
-          a published global standard for personal privacy. It is not proprietary
-          technology — it is an open framework that anyone can adopt.
-        </p>
-        <p>
-          We believe privacy should not be a feature you hope for. It should be something
-          you can see, control, and trust.
+          Questions about these terms or your privacy? Reach us at{" "}
+          <InlineLink href="mailto:privacy@polygram.me" P={P}>privacy@polygram.me</InlineLink>.
         </p>
       </Section>
     </article>
