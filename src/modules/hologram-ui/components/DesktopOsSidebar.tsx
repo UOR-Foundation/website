@@ -66,7 +66,6 @@ interface NavItem { label: string; icon: React.ElementType; path: string }
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home",    icon: Home,       path: "/hologram-console" },
-  { label: "Compute", icon: Cpu,        path: "/hologram-compute" },
   { label: "Apps",    icon: LayoutGrid, path: "/console/apps" },
   { label: "Profile", icon: User,       path: "/your-space" },
 ];
@@ -217,7 +216,7 @@ export default function DesktopOsSidebar({
           );
         })}
 
-        {/* Browser */}
+        {/* Browser (Internet) */}
         {onOpenBrowser && (
           <IconTooltip label="Browser" show={!expanded}>
             <button
@@ -232,6 +231,26 @@ export default function DesktopOsSidebar({
             </button>
           </IconTooltip>
         )}
+
+        {/* Storage (Data Bank) */}
+        <DataBankIndicator expanded={expanded} bgMode={bgMode} />
+
+        {/* Compute */}
+        <IconTooltip label="Compute" show={!expanded}>
+          <button
+            onClick={() => navigate("/hologram-compute")}
+            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+            } ${isActive("/hologram-compute") ? "sidebar-nav-active" : ""}`}
+            style={{
+              color: isActive("/hologram-compute") ? "var(--sb-gold)" : "var(--sb-text)",
+              background: isActive("/hologram-compute") ? "var(--sb-active)" : "transparent",
+            }}
+          >
+            <Cpu className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: isActive("/hologram-compute") ? "var(--sb-gold)" : "var(--sb-muted)" }} />
+            {expanded && <span className="text-[14px] font-light whitespace-nowrap">Compute</span>}
+          </button>
+        </IconTooltip>
       </div>
 
       {/* ── Bottom: Settings + Help ───────────────────────────── */}
@@ -262,7 +281,6 @@ export default function DesktopOsSidebar({
             {expanded && <span className="text-[14px] font-light">Messages</span>}
           </button>
         </IconTooltip>
-        <DataBankIndicator expanded={expanded} bgMode={bgMode} />
         <IconTooltip label="Settings" show={!expanded}>
           <button
             onClick={() => navigate("/settings")}
