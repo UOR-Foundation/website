@@ -641,6 +641,59 @@ export default function HologramOsPage() {
             </div>
           </HologramFrame>
 
+          {/* ── Subtle legal links — Hedosophia-inspired ── */}
+          <div
+            className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-6 z-10"
+            style={{
+              opacity: "var(--focus-chrome-opacity, 1)",
+              filter: "blur(var(--focus-blur-chrome, 0px))",
+              transition: "opacity 0.7s ease, filter 0.7s ease",
+            }}
+          >
+            <a
+              href="/privacy"
+              className="transition-opacity duration-500 hover:opacity-70"
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: "10px",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase" as const,
+                color: bgMode === "white"
+                  ? "hsla(0, 0%, 40%, 0.35)"
+                  : "hsla(0, 0%, 100%, 0.2)",
+                textDecoration: "none",
+              }}
+            >
+              Privacy Policy
+            </a>
+            <span
+              style={{
+                width: "2px",
+                height: "2px",
+                borderRadius: "50%",
+                background: bgMode === "white"
+                  ? "hsla(0, 0%, 40%, 0.2)"
+                  : "hsla(0, 0%, 100%, 0.12)",
+              }}
+            />
+            <a
+              href="/terms"
+              className="transition-opacity duration-500 hover:opacity-70"
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: "10px",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase" as const,
+                color: bgMode === "white"
+                  ? "hsla(0, 0%, 40%, 0.35)"
+                  : "hsla(0, 0%, 100%, 0.2)",
+                textDecoration: "none",
+              }}
+            >
+              Terms of Use
+            </a>
+          </div>
+
           {/* Keyframes moved to index.css for zero-recalc mounting */}
         </div>
       </div>
