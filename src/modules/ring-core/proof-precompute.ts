@@ -23,6 +23,68 @@ import { buildScaffold } from "./neuro-symbolic";
 import { decomposeToClaims, type ClaimSlot } from "./proof-gated-inference";
 import { supabase } from "@/integrations/supabase/client";
 
+// ── Dynamic Vocabulary Extraction ──────────────────────────────────────────
+
+/**
+ * Extract domain-specific terms from the live knowledge graph tables.
+ * Pulls from: predicates, graph IRIs, lens names, derivation terms.
+ */
+export async function fetchDomainVocabulary(): Promise<{
+  terms: string[];
+  pairs: Array<[string, string]>;
+}> {
+  const [predicates, graphs, lenses, derivations] = await Promise.all([
+    supabase.from("uor_triples").select("predicate").limit(500),
+    supabase.from("uor_triples").select("graph_iri").limit(100),
+    supabase.from("lens_blueprints").select("name, description").limit(50),
+    supabase.from("uor_derivations").select("original_term, canonical_term").limit(100),
+  ]);
+
+  const extracted = new Set<string>();
+
+  // Extract human-readable predicate names (strip namespace prefixes)
+  for (const row of predicates.data ?? []) {
+    const pred = row.predicate as string;
+    const clean = pred.replace(/^(schema|proof|partition|rdf|rdfs|u):/, "");
+    if (clean.length >= 3 && clean.length <= 40 && !/^[A-Z0-9]+$/.test(clean)) {
+      extracted.add(clean.replace(/([A-Z])/g, " $1").trim().toLowerCase());
+    }
+  }
+
+  // Extract graph IRI labels
+  for (const row of graphs.data ?? []) {
+    const iri = row.graph_iri as string;
+    const match = iri.match(/graph:([^:]+)/);
+    if (match) extracted.add(match[1]);
+  }
+
+  // Extract lens blueprint names and key terms from descriptions
+  for (const row of lenses.data ?? []) {
+    if (row.name) extracted.add(row.name as string);
+    const desc = (row.description as string) ?? "";
+    // Pull capitalized multi-word terms from descriptions
+    const phrases = desc.match(/[A-Z][a-z]+(?:\s[A-Z][a-z]+)+/g);
+    if (phrases) phrases.forEach(p => extracted.add(p));
+  }
+
+  // Extract derivation operation names
+  for (const row of derivations.data ?? []) {
+    const orig = row.original_term as string;
+    const op = orig.match(/^(\w+)\(/);
+    if (op && op[1].length >= 3) extracted.add(op[1]);
+  }
+
+  const dynamicTerms = Array.from(extracted).filter(t => t.length >= 3);
+
+  // Build dynamic pairs from first 16 terms (8 pairs)
+  const dynamicPairs: Array<[string, string]> = [];
+  for (let i = 0; i + 1 < dynamicTerms.length && dynamicPairs.length < 8; i += 2) {
+    dynamicPairs.push([dynamicTerms[i], dynamicTerms[i + 1]]);
+  }
+
+  return { terms: dynamicTerms, pairs: dynamicPairs };
+}
+
 // ── Pattern Templates ──────────────────────────────────────────────────────
 
 export interface QueryPattern {
@@ -225,7 +287,33 @@ export async function runPrecomputation(
   onProgress?: (done: number, total: number) => void,
 ): Promise<BatchResult> {
   const start = performance.now();
-  const instances = generateQueryInstances();
+
+  // Merge static terms with live KG vocabulary
+  let mergedTerms = [...DOMAIN_TERMS];
+  let mergedPairs = [...TERM_PAIRS];
+  try {
+    const dynamic = await fetchDomainVocabulary();
+    const termSet = new Set(mergedTerms.map(t => t.toLowerCase()));
+    for (const t of dynamic.terms) {
+      if (!termSet.has(t.toLowerCase())) {
+        mergedTerms.push(t);
+        termSet.add(t.toLowerCase());
+      }
+    }
+    const pairSet = new Set(mergedPairs.map(([a, b]) => `${a}|${b}`));
+    for (const p of dynamic.pairs) {
+      const key = `${p[0]}|${p[1]}`;
+      if (!pairSet.has(key)) {
+        mergedPairs.push(p);
+        pairSet.add(key);
+      }
+    }
+    console.log(`[precompute] merged ${dynamic.terms.length} KG terms, ${dynamic.pairs.length} KG pairs`);
+  } catch (e) {
+    console.warn("[precompute] KG vocabulary fetch failed, using static terms only:", e);
+  }
+
+  const instances = generateQueryInstances(COMMON_PATTERNS, mergedTerms, mergedPairs);
   const results: PrecomputeResult[] = [];
   let totalClaims = 0;
   let newClaimsStored = 0;

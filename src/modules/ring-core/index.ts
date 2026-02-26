@@ -120,7 +120,7 @@ export type {
 // ── Phase 8b: Proof Pre-Computation ─────────────────────────────────────
 export {
   COMMON_PATTERNS, DOMAIN_TERMS, TERM_PAIRS,
-  generateQueryInstances, precomputeScaffold,
+  fetchDomainVocabulary, generateQueryInstances, precomputeScaffold,
   runPrecomputation, getPrecomputeStats,
 } from "./proof-precompute";
 export type { QueryPattern, PrecomputeResult, BatchResult } from "./proof-precompute";
