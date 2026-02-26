@@ -881,7 +881,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         {/* ── Skill Bar ──────────────────────────────────────────────── */}
         {hasMessages && (
           <div
-            className="flex items-center gap-1.5 px-4 py-1.5 overflow-x-auto no-scrollbar flex-shrink-0"
+            className="flex items-center gap-1.5 px-4 py-1.5 flex-wrap flex-shrink-0"
           >
             <span className="text-[11px] tracking-wider flex-shrink-0 mr-1" style={{ color: P.textDim }}>
               {selectedPersona.name}
