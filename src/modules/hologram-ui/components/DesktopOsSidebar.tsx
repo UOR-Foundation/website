@@ -99,7 +99,7 @@ export default function DesktopOsSidebar({
 
   return (
     <aside
-      className={`flex flex-col h-full ${w} transition-all duration-300 ease-out shrink-0`}
+      className={`flex flex-col h-full ${w} transition-all duration-300 ease-out shrink-0 ${collapsed ? "group/sidebar" : ""}`}
       style={{
         background: S.bg,
         borderRight: `1px solid ${S.border}`,
@@ -150,7 +150,7 @@ export default function DesktopOsSidebar({
               width="20" height="20" viewBox="0 0 28 28"
               fill="none" stroke={S.gold} strokeWidth="1.3"
               strokeLinecap="round" strokeLinejoin="round"
-              className="absolute transition-opacity duration-200 group-hover/logo:opacity-0"
+              className="absolute transition-opacity duration-200 group-hover/sidebar:opacity-0"
             >
               <line x1="8" y1="7" x2="8" y2="21" />
               <line x1="20" y1="7" x2="20" y2="21" />
@@ -158,7 +158,7 @@ export default function DesktopOsSidebar({
             </svg>
             {/* Expand icon — on hover */}
             <PanelLeftOpen
-              className="w-5 h-5 absolute transition-opacity duration-200 opacity-0 group-hover/logo:opacity-100"
+              className="w-5 h-5 absolute transition-opacity duration-200 opacity-0 group-hover/sidebar:opacity-100"
               strokeWidth={1.4}
               style={{ color: S.gold }}
             />
