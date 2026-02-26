@@ -97,9 +97,18 @@ const STATIONS: AmbientStation[] = [
 
 // ── Component ──────────────────────────────────────────────────────────────
 
+export interface AmbientState {
+  playing: boolean;
+  loading: boolean;
+  stationHue: string;
+  stationName: string;
+}
+
 interface AmbientPlayerProps {
   /** When Lumen AI is open, offset the pill */
   lumenOffset?: number;
+  /** Report ambient state changes for visual effects */
+  onStateChange?: (state: AmbientState) => void;
 }
 
 const STORAGE_KEY = "hologram-ambient-prefs";
@@ -116,7 +125,7 @@ function savePrefs(stationId: string, volume: number) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ stationId, volume })); } catch {}
 }
 
-export default function AmbientPlayer({ lumenOffset = 0 }: AmbientPlayerProps) {
+export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: AmbientPlayerProps) {
   const prefs = useRef(loadPrefs());
   const [expanded, setExpanded] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -131,6 +140,11 @@ export default function AmbientPlayer({ lumenOffset = 0 }: AmbientPlayerProps) {
 
   // Persist prefs on change
   useEffect(() => { savePrefs(station.id, volume); }, [station, volume]);
+
+  // Report state to parent for visual effects
+  useEffect(() => {
+    onStateChange?.({ playing, loading, stationHue: station.color, stationName: station.name });
+  }, [playing, loading, station, onStateChange]);
 
   // Initialize audio element — no crossOrigin (SomaFM doesn't send CORS headers)
   useEffect(() => {
@@ -475,6 +489,10 @@ eqStyle.textContent = `
   @keyframes ambient-eq {
     0% { transform: scaleY(0.4); }
     100% { transform: scaleY(1); }
+  }
+  @keyframes ambient-glow-breathe {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
   }
 `;
 if (!document.querySelector("[data-ambient-eq]")) {
