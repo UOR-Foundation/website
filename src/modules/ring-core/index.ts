@@ -136,3 +136,12 @@ export {
   memoizedBuildScaffold,
 } from "./inference-accelerator";
 export type { AcceleratedResult } from "./inference-accelerator";
+
+// ── Semantic Similarity ──────────────────────────────────────────────────
+export {
+  normalizeQuery,
+  trigramVectorize,
+  cosineSimilarity,
+  SemanticIndex,
+} from "./semantic-similarity";
+export type { SparseVector, SemanticEntry } from "./semantic-similarity";
