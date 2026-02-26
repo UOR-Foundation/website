@@ -203,10 +203,10 @@ export default function HologramOsPage() {
         case "b": case "B": e.preventDefault(); mastery.record("b"); setSidebarCollapsed(p => !p); break;
         // ⌘F — Toggle focus mode (F = Focus)
         case "f": case "F": e.preventDefault(); mastery.record("f"); attention.toggle(); break;
-        // ⌘T — Cycle style (T = Theme/Style)
-        case "t": case "T":
+        // ⌘Y — Cycle style (Y = stYle)
+        case "y": case "Y":
           e.preventDefault();
-          mastery.record("t");
+          mastery.record("y");
           setBgMode(BG_MODES[(BG_MODES.findIndex(b => b.mode === bgMode) + 1) % BG_MODES.length].mode);
           break;
         // ⌘M — Messages (M = Messages)
