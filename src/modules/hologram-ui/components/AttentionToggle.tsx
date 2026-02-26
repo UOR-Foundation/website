@@ -24,7 +24,7 @@ export default function AttentionToggle() {
       className="fixed right-5 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 select-none transition-all duration-500"
       style={{
         zIndex: 60,
-        opacity: hovered ? 1 : 0.75,
+        opacity: hovered ? 1 : 0.9,
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
@@ -34,8 +34,8 @@ export default function AttentionToggle() {
         style={{
           writingMode: "vertical-rl",
           color: isFocus
-            ? "hsla(200, 70%, 72%, 0.9)"
-            : "hsla(0, 0%, 70%, 0.5)",
+            ? "hsla(200, 70%, 78%, 1)"
+            : "hsla(0, 0%, 78%, 0.7)",
         }}
       >
         Focus Mode
@@ -48,9 +48,9 @@ export default function AttentionToggle() {
           width: 16,
           height: 34,
           background: isFocus
-            ? "hsla(200, 60%, 50%, 0.3)"
-            : "hsla(0, 0%, 50%, 0.1)",
-          border: `1px solid ${isFocus ? "hsla(200, 60%, 60%, 0.4)" : "hsla(0, 0%, 50%, 0.15)"}`,
+            ? "hsla(200, 60%, 50%, 0.4)"
+            : "hsla(0, 0%, 50%, 0.15)",
+          border: `1px solid ${isFocus ? "hsla(200, 60%, 60%, 0.5)" : "hsla(0, 0%, 50%, 0.25)"}`,
           backdropFilter: "blur(8px)",
           WebkitBackdropFilter: "blur(8px)",
         }}
@@ -63,8 +63,8 @@ export default function AttentionToggle() {
             height: 10,
             top: isFocus ? 20 : 2,
             background: isFocus
-              ? "hsla(200, 70%, 65%, 0.95)"
-              : "hsla(0, 0%, 60%, 0.35)",
+              ? "hsla(200, 70%, 65%, 1)"
+              : "hsla(0, 0%, 65%, 0.5)",
             boxShadow: isFocus
               ? "0 0 10px 2px hsla(200, 70%, 60%, 0.4)"
               : "none",
@@ -78,8 +78,8 @@ export default function AttentionToggle() {
         style={{
           writingMode: "vertical-rl",
           color: isFocus
-            ? "hsla(200, 70%, 72%, 0.9)"
-            : "hsla(0, 0%, 55%, 0.45)",
+            ? "hsla(200, 70%, 78%, 1)"
+            : "hsla(0, 0%, 75%, 0.7)",
         }}
       >
         {isFocus ? "On" : "Off"}

@@ -195,6 +195,7 @@ export default function HologramOsPage() {
           style={{
             width: isFocus ? 0 : undefined,
             opacity: isFocus ? 0 : 1,
+            pointerEvents: isFocus ? "none" : "auto",
           }}
         >
           <DesktopOsSidebar
