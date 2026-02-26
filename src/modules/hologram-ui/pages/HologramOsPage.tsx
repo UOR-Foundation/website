@@ -183,14 +183,16 @@ export default function HologramOsPage() {
       if (!mod) return;
 
       switch (e.key) {
-        // ⌘K — Lumen AI (universal command, K = right-hand home row)
-        case "k": case "K": e.preventDefault(); setChatOpen(true); break;
-        // ⌘B — Toggle sidebar (standard, B = left-hand near modifier)
+        // ⌘L — Lumen AI (L = Lumen)
+        case "l": case "L": e.preventDefault(); setChatOpen(true); break;
+        // ⌘B — Toggle sidebar (B = Bar/sidebar, standard convention)
         case "b": case "B": e.preventDefault(); setSidebarCollapsed(p => !p); break;
-        // ⌘, — Settings (macOS universal)
-        case ",": e.preventDefault(); navigate("/settings"); break;
-        // ⌘. — Messages (paired with settings, same finger zone)
-        case ".": e.preventDefault(); /* TODO: open messages */ break;
+        // ⌘S — Settings (S = Settings)
+        case "s": case "S": e.preventDefault(); navigate("/settings"); break;
+        // ⌘M — Messages (M = Messages)
+        case "m": case "M": e.preventDefault(); /* TODO: open messages */ break;
+        // ⌘H — Home (H = Home)
+        case "h": case "H": e.preventDefault(); navigate("/hologram-console"); break;
         // ⌘/ — Help guide (universal help convention)
         case "/":
           e.preventDefault();
