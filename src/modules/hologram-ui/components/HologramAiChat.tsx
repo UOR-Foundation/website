@@ -1115,11 +1115,11 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             const digest = screenCtx.getDigest();
             const selectedText = digest.selectedText;
             const topBeacon = digest.beacons[0];
+            // Use just the section name — strip page titles and greetings for focus
+            const sectionName = digest.section || (topBeacon?.title?.split(/\s*[—–-]\s*/)[0]?.replace(/^Hologram\s*/i, "").trim()) || null;
             const contextLabel = selectedText
               ? `"${selectedText.slice(0, 60)}${selectedText.length > 60 ? "…" : ""}"`
-              : topBeacon
-                ? `${topBeacon.title}`
-                : null;
+              : sectionName || null;
             if (!contextLabel && !digest.hasContext) return null;
             return (
               <motion.div
@@ -1169,12 +1169,6 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                     Lumen sees your screen context to give better answers
                   </span>
                 </div>
-                <span
-                  className="text-[13px] tracking-wider shrink-0"
-                  style={{ color: P.textDimmer }}
-                >
-                  {digest.section}
-                </span>
                 {/* Private session toggle */}
                 <button
                   onClick={() => setPrivateSession(true)}
