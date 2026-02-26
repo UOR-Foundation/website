@@ -11,7 +11,7 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Home, LayoutGrid, User, Globe,
+  Home, LayoutGrid, User, Globe, Cpu,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
@@ -66,6 +66,7 @@ interface NavItem { label: string; icon: React.ElementType; path: string }
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home",    icon: Home,       path: "/hologram-console" },
+  { label: "Compute", icon: Cpu,        path: "/hologram-compute" },
   { label: "Apps",    icon: LayoutGrid, path: "/console/apps" },
   { label: "Profile", icon: User,       path: "/your-space" },
 ];
