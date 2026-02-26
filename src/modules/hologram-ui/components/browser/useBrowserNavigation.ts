@@ -44,7 +44,7 @@ async function fetchPage(url: string): Promise<HistoryEntry> {
   };
 }
 
-export type ViewMode = "fidelity" | "reader";
+export type ViewMode = "live" | "fidelity" | "reader";
 
 export interface BrowserNavState {
   url: string;
@@ -57,6 +57,7 @@ export interface BrowserNavState {
   historyIdx: number;
   showHistory: boolean;
   viewMode: ViewMode;
+  popupsBlocked: boolean;
 }
 
 export interface BrowserNavActions {
@@ -74,6 +75,7 @@ export interface BrowserNavActions {
   getScrollPosition: (url: string) => number;
   selectHistoryEntry: (idx: number) => void;
   toggleViewMode: () => void;
+  togglePopups: () => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
 }
 
@@ -87,7 +89,8 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [showHistory, setShowHistory] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("fidelity");
+  const [viewMode, setViewMode] = useState<ViewMode>("live");
+  const [popupsBlocked, setPopupsBlocked] = useState(true);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Refs for stable callbacks
@@ -272,12 +275,20 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
   }, []);
 
   const toggleViewMode = useCallback(() => {
-    setViewMode((m) => (m === "fidelity" ? "reader" : "fidelity"));
+    setViewMode((m) => {
+      if (m === "live") return "fidelity";
+      if (m === "fidelity") return "reader";
+      return "live";
+    });
+  }, []);
+
+  const togglePopups = useCallback(() => {
+    setPopupsBlocked((b) => !b);
   }, []);
 
   const state: BrowserNavState = {
     url, loading, error, page, searchResults, searchQuery,
-    history, historyIdx, showHistory, viewMode,
+    history, historyIdx, showHistory, viewMode, popupsBlocked,
   };
 
   const actions: BrowserNavActions = {
@@ -285,7 +296,7 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
     search: searchFn, handleSubmit, handleLinkClick,
     setShowHistory, clearHistory, prefetch,
     saveScrollPosition, getScrollPosition, selectHistoryEntry,
-    toggleViewMode, inputRef,
+    toggleViewMode, togglePopups, inputRef,
   };
 
   return [state, actions];

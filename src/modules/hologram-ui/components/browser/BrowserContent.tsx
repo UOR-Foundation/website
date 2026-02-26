@@ -27,7 +27,7 @@ interface BrowserContentProps {
 }
 
 export default function BrowserContent({ state, actions }: BrowserContentProps) {
-  const { page, loading, error, searchResults, searchQuery, url, viewMode } = state;
+  const { page, loading, error, searchResults, searchQuery, url, viewMode, popupsBlocked } = state;
   const { navigate, handleLinkClick, prefetch, saveScrollPosition, getScrollPosition, setUrl } = actions;
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevUrlRef = useRef<string | null>(null);
@@ -236,12 +236,26 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
         </div>
       )}
 
-      {/* Page Content — Fidelity Mode (pixel-perfect iframe) */}
+      {/* Page Content — Live Mode (fully interactive iframe) */}
+      {page && !loading && viewMode === "live" && (
+        <iframe
+          key={`live-${page.url}-${popupsBlocked}`}
+          src={page.url}
+          sandbox={`allow-same-origin allow-scripts allow-forms allow-modals${popupsBlocked ? "" : " allow-popups allow-popups-to-escape-sandbox"}`}
+          allow="clipboard-write; encrypted-media"
+          className="w-full h-full border-none"
+          style={{ background: "#fff" }}
+          title={page.title}
+          referrerPolicy="no-referrer"
+        />
+      )}
+
+      {/* Page Content — Fidelity Mode (pixel-perfect static snapshot) */}
       {page && !loading && viewMode === "fidelity" && page.rawHtml && (
         <iframe
-          key={page.url}
+          key={`fidelity-${page.url}`}
           srcDoc={page.rawHtml}
-          sandbox="allow-same-origin allow-scripts allow-popups"
+          sandbox={`allow-same-origin allow-scripts${popupsBlocked ? "" : " allow-popups"}`}
           className="w-full h-full border-none"
           style={{ background: "#fff" }}
           title={page.title}
@@ -249,7 +263,7 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
       )}
 
       {/* Page Content — Reader Mode (markdown) */}
-      {page && !loading && (viewMode === "reader" || !page.rawHtml) && (
+      {page && !loading && (viewMode === "reader" || (viewMode === "fidelity" && !page.rawHtml)) && (
         <article className="px-8 md:px-14 py-8 max-w-[1000px] mx-auto w-full animate-fade-in" style={{ color: P.text }}>
           <div className="mb-6 pb-4" style={{ borderBottom: `1px solid ${P.border}` }}>
             <h1 className="text-[22px] font-light tracking-tight" style={{ color: P.text }}>{page.title}</h1>
