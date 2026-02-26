@@ -149,7 +149,6 @@ const App = () => {
     <FocusJournalProvider>
     <FocusVignette />
     <FocusJournalOverlay />
-    <AttentionToggle />
     <TooltipProvider>
       <Toaster />
       <Sonner />
