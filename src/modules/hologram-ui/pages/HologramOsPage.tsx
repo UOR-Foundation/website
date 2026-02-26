@@ -219,7 +219,7 @@ export default function HologramOsPage() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [navigate]);
+  }, [navigate, attention, bgMode, setBgMode]);
 
   // ── Mobile: iOS homescreen ──
   if (isMobile) return <MobileOsShell />;
