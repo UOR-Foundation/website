@@ -9,7 +9,7 @@
  */
 
 import { UorModule } from "@/modules/core/uor-module";
-import { applyTransform, type MorphismKind, type MappingRule, type TransformRecord } from "./transform";
+import { applyTransform, enforceDisjointConstraints, type MorphismKind, type MappingRule, type TransformRecord } from "./transform";
 import { contentAddress } from "@/modules/identity";
 import type { UORRing } from "@/modules/ring-core/ring";
 
@@ -44,9 +44,12 @@ export class MorphismModule extends UorModule<TransformRecord> {
       targetQuantum: targetRing.quantum,
       kind,
       rules,
-      fidelityPreserved: kind === "Isometry" || kind === "Embedding",
+      fidelityPreserved: kind === "Isometry" || kind === "Embedding" || kind === "Identity",
       timestamp: new Date().toISOString(),
     };
+
+    // ── Disjoint constraint enforcement (v2.0.0) ───────────────────────
+    enforceDisjointConstraints(record);
 
     // Observe: input byte = low byte of source, output byte = low byte of target
     this.observe(

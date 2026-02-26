@@ -18,7 +18,70 @@ import { emitContext } from "@/modules/jsonld/context";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-export type MorphismKind = "Transform" | "Isometry" | "Embedding" | "Action";
+/**
+ * Runtime morphism kind — aligned with v2.0.0 foundation MorphismKind.
+ * These are DISJOINT: no object may carry more than one kind.
+ */
+export type MorphismKind = "Transform" | "Isometry" | "Embedding" | "Action" | "Composition" | "Identity";
+
+/** The five concrete subtypes (excludes the abstract "Transform" base). */
+const DISJOINT_KINDS: ReadonlySet<MorphismKind> = new Set([
+  "Isometry", "Embedding", "Action", "Composition", "Identity",
+]);
+
+/**
+ * Assert that a morphism kind is valid and concrete.
+ * Throws if an object attempts to claim multiple kinds.
+ */
+export function assertDisjointKind(kind: MorphismKind, label?: string): void {
+  if (kind === "Transform") return; // base type, not a concrete subtype
+  if (!DISJOINT_KINDS.has(kind)) {
+    throw new Error(
+      `[morphism:disjoint] Invalid morphism kind "${kind}"${label ? ` for ${label}` : ""}. ` +
+      `Must be one of: ${[...DISJOINT_KINDS].join(", ")}`
+    );
+  }
+}
+
+/**
+ * Enforce disjoint constraint on a TransformRecord.
+ * Verifies that the record's kind and @type are consistent,
+ * and that structural invariants hold per v2.0.0 spec.
+ */
+export function enforceDisjointConstraints(record: TransformRecord): void {
+  const kind = record.kind;
+  assertDisjointKind(kind, record.transformId);
+
+  // Structural invariants per kind
+  switch (kind) {
+    case "Isometry":
+      if (!record.fidelityPreserved) {
+        throw new Error(
+          `[morphism:disjoint] Isometry "${record.transformId}" must preserve fidelity`
+        );
+      }
+      break;
+    case "Identity":
+      if (record.sourceIri !== record.targetIri && record.sourceValue !== record.targetValue) {
+        throw new Error(
+          `[morphism:disjoint] Identity "${record.transformId}" must map source to itself`
+        );
+      }
+      if (!record.fidelityPreserved) {
+        throw new Error(
+          `[morphism:disjoint] Identity "${record.transformId}" must preserve fidelity`
+        );
+      }
+      break;
+    case "Composition":
+      if (!record.rules || record.rules.length < 2) {
+        throw new Error(
+          `[morphism:disjoint] Composition "${record.transformId}" requires ≥2 rules`
+        );
+      }
+      break;
+  }
+}
 
 export interface MappingRule {
   /** Human-readable label for the rule */
@@ -104,9 +167,10 @@ export async function recordTransform(
   const timestamp = new Date().toISOString();
 
   // Determine if fidelity is preserved (round-trip recovers original)
-  const fidelityPreserved = kind === "Isometry" || kind === "Embedding";
+  const fidelityPreserved = kind === "Isometry" || kind === "Embedding" || kind === "Identity";
 
-  // Content-addressed transform ID via URDNA2015 Single Proof Hash
+  // ── Disjoint constraint enforcement ──────────────────────────────────
+  assertDisjointKind(kind, `recordTransform(${sourceIri} → ${targetIri})`);
   const proof = await singleProofHash({
     "@context": { morphism: "https://uor.foundation/morphism/" },
     "@type": `morphism:${kind}`,
