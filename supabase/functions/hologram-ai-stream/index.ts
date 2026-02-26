@@ -203,7 +203,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold, screenContext } = await req.json();
+    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold, screenContext, observerBriefing } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -228,7 +228,12 @@ serve(async (req) => {
       ? `\n\n═══ AMBIENT CONTEXT (what the user is currently viewing/experiencing) ═══\n${screenContext}\n═══ END AMBIENT CONTEXT ═══\nYou are aware of what the user is currently viewing. If their question relates to the content they're experiencing, reference it naturally. If they've selected text, they're likely asking about that specific selection. Be contextually intelligent — don't repeat the context back verbatim, but use it to give precisely relevant answers.`
       : "";
 
-    const systemPrompt = personaPrompt + skillFragment + knowledge + scaffoldPrompt + contextAwareness;
+    // Inject observer companion briefing if provided
+    const observerAwareness = observerBriefing
+      ? `\n\n═══ OBSERVER COMPANION (ambient awareness about the user's patterns, interests, and session health) ═══\n${observerBriefing}\n═══ END OBSERVER ═══\nYou have ambient awareness of the user's interest patterns, phase balance, active tasks, and any focus session debriefs. Use this naturally: if the user asks "what did I miss?" reference the focus debrief. If they seem stuck, gently reference patterns. Never list this data unprompted — weave it into your responses when relevant. You are a thoughtful companion, not a dashboard.`
+      : "";
+
+    const systemPrompt = personaPrompt + skillFragment + knowledge + scaffoldPrompt + contextAwareness + observerAwareness;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
