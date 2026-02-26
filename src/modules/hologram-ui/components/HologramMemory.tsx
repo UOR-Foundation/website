@@ -632,21 +632,21 @@ function CompressionDemo() {
   }, [chatInput, file, streaming, chatMessages]);
 
   return (
-    <div className="px-6 lg:px-10 py-8 space-y-8">
+    <div className="px-6 md:px-8 lg:px-10 py-8 space-y-8 flex flex-col min-h-full">
       {/* Header */}
       <div className="space-y-2">
-        <h2 className="text-xl font-light" style={{ color: P.text, fontFamily: P.serif }}>
+        <h2 className="text-xl md:text-2xl font-light" style={{ color: P.text, fontFamily: P.serif }}>
           Compression + RAG Demo
         </h2>
-        <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
-          Drop any file to see it canonicalized, compressed, and become instantly searchable with AI.
+        <p className="text-sm md:text-base leading-relaxed" style={{ color: P.muted }}>
+          Drop any file to see it canonicalized, compressed, and become instantly searchable with Lumen AI.
         </p>
       </div>
 
       {/* Drop zone */}
       {!file && !processing && (
         <div
-          className="rounded-xl p-12 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-300"
+          className="rounded-xl p-12 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-300 flex-1"
           style={{
             background: dragging ? "hsla(38, 40%, 65%, 0.08)" : P.card,
             border: `2px dashed ${dragging ? P.gold : P.cardBorder}`,
@@ -659,10 +659,10 @@ function CompressionDemo() {
         >
           <IconUpload size={40} style={{ color: dragging ? P.gold : P.dim }} />
           <div className="text-center space-y-1">
-            <p className="text-lg font-medium" style={{ color: P.text }}>
+            <p className="text-lg md:text-xl font-medium" style={{ color: P.text }}>
               {dragging ? "Drop it here" : "Drop a file or click to browse"}
             </p>
-            <p className="text-sm" style={{ color: P.muted }}>PDF, text, code — any file works</p>
+            <p className="text-sm md:text-base" style={{ color: P.muted }}>PDF, text, code — any file works</p>
           </div>
           <input
             ref={fileInputRef}
@@ -678,7 +678,7 @@ function CompressionDemo() {
       {processing && (
         <div className="rounded-xl p-12 flex flex-col items-center justify-center gap-4" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
           <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
-          <p className="text-sm" style={{ color: P.muted }}>Canonicalizing and compressing…</p>
+          <p className="text-sm md:text-base" style={{ color: P.muted }}>Canonicalizing and compressing…</p>
         </div>
       )}
 
@@ -686,7 +686,7 @@ function CompressionDemo() {
       {file && (
         <>
           {/* Compression results */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <MetricCard value={formatBytes(file.originalSize)} unit="" label="Original" sublabel="Raw file size" />
             <MetricCard value={formatBytes(file.compressedSize)} unit="" label="Compressed" sublabel="Canonical form" accent />
             <MetricCard value={`${file.compressionRatio.toFixed(0)}×`} unit="smaller" label="Compression" sublabel="Lossless encoding" accent />
@@ -694,45 +694,44 @@ function CompressionDemo() {
           </div>
 
           {/* Canonical hash */}
-          <div className="rounded-xl p-5 space-y-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <div className="rounded-xl p-5 md:p-6 space-y-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>Canonical Identity</h3>
+              <h3 className="text-sm md:text-base font-semibold tracking-widest uppercase" style={{ color: P.muted }}>Canonical Identity</h3>
               <div className="flex items-center gap-2">
                 <IconCircleCheck size={14} style={{ color: P.green }} />
-                <span className="text-xs" style={{ color: P.green }}>Verified</span>
+                <span className="text-xs md:text-sm" style={{ color: P.green }}>Verified</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <code className="text-sm font-mono flex-1 truncate" style={{ color: P.gold }}>{file.canonicalHash}</code>
+              <code className="text-sm md:text-base font-mono flex-1 truncate" style={{ color: P.gold }}>{file.canonicalHash}</code>
               <CopyButton text={file.canonicalHash} />
             </div>
-            <p className="text-xs" style={{ color: P.dim }}>
+            <p className="text-xs md:text-sm" style={{ color: P.dim }}>
               SHA-256 content hash — uniquely identifies this file regardless of where or how it's stored.
-              Any modification, no matter how small, produces a completely different hash.
             </p>
           </div>
 
           {/* Visual comparison bar */}
-          <div className="rounded-xl p-5 space-y-4" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-            <h3 className="text-xs font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
+          <div className="rounded-xl p-5 md:p-6 space-y-4" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+            <h3 className="text-sm md:text-base font-semibold tracking-widest uppercase" style={{ color: P.muted }}>
               Size Comparison
             </h3>
             <div className="space-y-3">
               <div className="space-y-1">
-                <div className="flex justify-between text-xs">
+                <div className="flex justify-between text-xs md:text-sm">
                   <span style={{ color: P.red }}>Original</span>
                   <span style={{ color: P.muted }}>{formatBytes(file.originalSize)}</span>
                 </div>
-                <div className="h-6 rounded-full overflow-hidden" style={{ background: "hsla(0, 55%, 55%, 0.1)" }}>
+                <div className="h-6 md:h-7 rounded-full overflow-hidden" style={{ background: "hsla(0, 55%, 55%, 0.1)" }}>
                   <div className="h-full rounded-full" style={{ width: "100%", background: P.red }} />
                 </div>
               </div>
               <div className="space-y-1">
-                <div className="flex justify-between text-xs">
+                <div className="flex justify-between text-xs md:text-sm">
                   <span style={{ color: P.gold }}>Hologram Canonical</span>
                   <span style={{ color: P.muted }}>{formatBytes(file.compressedSize)}</span>
                 </div>
-                <div className="h-6 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.1)" }}>
+                <div className="h-6 md:h-7 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.1)" }}>
                   <div
                     className="h-full rounded-full transition-all duration-1000 ease-out"
                     style={{
@@ -745,27 +744,27 @@ function CompressionDemo() {
             </div>
           </div>
 
-          {/* RAG Chat */}
-          <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${P.cardBorder}` }}>
-            <div className="px-5 py-3 flex items-center gap-3" style={{ background: P.card, borderBottom: `1px solid ${P.cardBorder}` }}>
-              <IconBrain size={16} style={{ color: P.gold }} />
+          {/* RAG Chat — Lumen AI powered */}
+          <div className="rounded-xl overflow-hidden flex-1 flex flex-col" style={{ border: `1px solid ${P.cardBorder}` }}>
+            <div className="px-5 py-4 flex items-center gap-3" style={{ background: P.card, borderBottom: `1px solid ${P.cardBorder}` }}>
+              <IconBrain size={18} style={{ color: P.gold }} />
               <div>
-                <h3 className="text-sm font-medium" style={{ color: P.text }}>Ask about this document</h3>
-                <p className="text-xs" style={{ color: P.dim }}>
-                  Lumen AI can search and reason over the compressed content — proof that nothing was lost
+                <h3 className="text-base md:text-lg font-medium" style={{ color: P.text }}>Ask about this document</h3>
+                <p className="text-xs md:text-sm" style={{ color: P.dim }}>
+                  Powered by Lumen AI — search and reason over compressed content, proof that nothing was lost
                 </p>
               </div>
             </div>
 
             {/* Messages */}
             <div
-              className="max-h-80 overflow-y-auto px-5 py-4 space-y-4"
-              style={{ background: "hsla(25, 8%, 6%, 0.6)", minHeight: 120 }}
+              className="flex-1 overflow-y-auto px-5 py-4 space-y-4"
+              style={{ background: "hsla(25, 8%, 6%, 0.6)", minHeight: 200 }}
             >
               {chatMessages.length === 0 && (
-                <div className="text-center py-8 space-y-2">
-                  <IconBrain size={24} style={{ color: P.dim, margin: "0 auto" }} />
-                  <p className="text-sm" style={{ color: P.dim }}>
+                <div className="text-center py-10 space-y-3">
+                  <IconBrain size={28} style={{ color: P.dim, margin: "0 auto" }} />
+                  <p className="text-base md:text-lg" style={{ color: P.dim }}>
                     Ask anything about "{file.name}"
                   </p>
                   <div className="flex flex-wrap justify-center gap-2 pt-2">
@@ -773,7 +772,7 @@ function CompressionDemo() {
                       <button
                         key={q}
                         onClick={() => { setChatInput(q); }}
-                        className="px-3 py-1.5 rounded-full text-xs transition-all duration-200 hover:opacity-80"
+                        className="px-4 py-2 rounded-full text-sm transition-all duration-200 hover:opacity-80"
                         style={{ background: P.card, color: P.muted, border: `1px solid ${P.cardBorder}` }}
                       >
                         {q}
@@ -785,7 +784,7 @@ function CompressionDemo() {
               {chatMessages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
-                    className="max-w-[80%] rounded-xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap"
+                    className="max-w-[80%] rounded-xl px-4 py-3 text-sm md:text-base leading-relaxed whitespace-pre-wrap"
                     style={{
                       background: msg.role === "user" ? "hsla(38, 40%, 65%, 0.12)" : P.card,
                       color: P.text,
@@ -804,7 +803,7 @@ function CompressionDemo() {
 
             {/* Input */}
             <div
-              className="px-4 py-3 flex items-center gap-3"
+              className="px-4 py-3.5 flex items-center gap-3"
               style={{ background: P.card, borderTop: `1px solid ${P.cardBorder}` }}
             >
               <input
@@ -813,7 +812,7 @@ function CompressionDemo() {
                 onChange={e => setChatInput(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                 placeholder="Ask about the document…"
-                className="flex-1 bg-transparent text-sm outline-none placeholder:opacity-40"
+                className="flex-1 bg-transparent text-sm md:text-base outline-none placeholder:opacity-40"
                 style={{ color: P.text, fontFamily: P.font }}
                 disabled={streaming}
               />
@@ -823,7 +822,7 @@ function CompressionDemo() {
                 className="p-2 rounded-lg transition-all duration-200 disabled:opacity-30"
                 style={{ color: P.gold }}
               >
-                <IconSend size={16} />
+                <IconSend size={18} />
               </button>
             </div>
           </div>
@@ -832,7 +831,7 @@ function CompressionDemo() {
           <div className="text-center">
             <button
               onClick={() => { setFile(null); setChatMessages([]); }}
-              className="text-sm transition-colors duration-200"
+              className="text-sm md:text-base transition-colors duration-200"
               style={{ color: P.muted }}
             >
               Try another file
