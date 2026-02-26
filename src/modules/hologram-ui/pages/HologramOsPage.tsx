@@ -528,7 +528,7 @@ export default function HologramOsPage() {
                     fontSize: "clamp(11px, 0.8vw, 13px)",
                   }}
                 >
-                  Luminal AI
+                  Lumen AI
                 </span>
 
                 {journalEntryCount > 0 && (
