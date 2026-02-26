@@ -23,6 +23,7 @@ import {
   recordDomainVisit,
   recordInteraction,
 } from "../engine/contextProjection";
+import { writeSlot } from "@/modules/data-bank/lib/sync";
 
 export interface ContextProjectionHandle {
   /** The projected user context profile */
@@ -78,6 +79,8 @@ export function useContextProjection(): ContextProjectionHandle {
     try {
       const projected = await fetchAndProject(userId);
       if (mounted.current) setProfile(projected);
+      // Persist to Data Bank L2 (encrypted, multi-device)
+      writeSlot(userId, "context-profile", JSON.stringify(projected)).catch(() => {});
     } finally {
       if (mounted.current) setLoading(false);
     }
