@@ -260,7 +260,7 @@ export default function HologramOsPage() {
            *  Background mode toggle, Day progress ring
            *  These remain visible regardless of what opens above
            * ══════════════════════════════════════════════════════════ */}
-          <HologramFrame layer={1} label="chrome" interactive={false} opacity={layerNav.layerOpacity(1)} style={{ transform: `scale(${layerNav.layerScale(1)})`, transition: "opacity 0.7s ease, transform 0.7s ease" }}>
+          <HologramFrame layer={1} label="chrome" interactive opacity={layerNav.layerOpacity(1)} style={{ transform: `scale(${layerNav.layerScale(1)})`, transition: "opacity 0.7s ease, transform 0.7s ease" }}>
             {/* Background Mode Toggle — top right */}
             <div
               className="absolute top-[3vh] right-[3vw] animate-fade-in transition-all duration-700 ease-in-out"
