@@ -627,7 +627,7 @@ export default function HologramOsPage() {
                   </div>
                 </div>
 
-                {/* Meet Lumen — gentle, time-aware invitation */}
+                {/* Lumen AI — the magic moment, the only CTA */}
                 <div
                   className="flex flex-col items-center gap-[1.8vh]"
                   style={{
@@ -636,21 +636,54 @@ export default function HologramOsPage() {
                 >
                   <button
                     onClick={() => { setChatPrompt(""); setChatOpen(true); }}
-                    className="group flex flex-col items-center gap-[1.2vh] transition-all duration-700 hover:scale-[1.02]"
+                    className="group flex flex-col items-center gap-[2vh] transition-all duration-700 hover:scale-[1.03]"
                     style={{ cursor: "pointer", background: "none", border: "none" }}
                   >
-                    {/* Breathing glyph — slower, more meditative */}
+                    {/* Breathing glyph — the heart of Lumen */}
+                    <div className="relative flex items-center justify-center">
+                      {/* Outer ring — soft pulse */}
+                      <div
+                        className="absolute rounded-full transition-all duration-700 group-hover:scale-125"
+                        style={{
+                          width: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
+                          height: isFocus ? "clamp(64px, 6vw, 88px)" : "clamp(52px, 5vw, 72px)",
+                          border: `1px solid ${bgMode === "white" ? "hsla(38, 30%, 50%, 0.15)" : "hsla(38, 25%, 70%, 0.12)"}`,
+                          animation: "ambient-glow-breathe 6s ease-in-out infinite",
+                        }}
+                      />
+                      {/* Inner dot — alive */}
+                      <div
+                        className="rounded-full transition-all duration-700 group-hover:scale-110"
+                        style={{
+                          width: isFocus ? "clamp(8px, 0.8vw, 12px)" : "clamp(6px, 0.6vw, 10px)",
+                          height: isFocus ? "clamp(8px, 0.8vw, 12px)" : "clamp(6px, 0.6vw, 10px)",
+                          background: bgMode === "white"
+                            ? "hsla(38, 40%, 50%, 0.6)"
+                            : "hsla(38, 50%, 60%, 0.5)",
+                          boxShadow: bgMode === "white"
+                            ? "0 0 20px hsla(38, 40%, 50%, 0.3)"
+                            : "0 0 24px hsla(38, 50%, 55%, 0.25)",
+                          animation: "heartbeat-love 2.4s ease-in-out infinite",
+                        }}
+                      />
+                    </div>
+
+                    {/* Name — Lumen */}
                     <span
-                      className="block transition-all duration-700 group-hover:scale-110"
+                      className="tracking-[0.35em] uppercase transition-all duration-500 group-hover:tracking-[0.45em]"
                       style={{
-                        fontSize: isFocus ? "clamp(28px, 3vw, 44px)" : "clamp(22px, 2.4vw, 36px)",
-                        color: bgMode === "white" ? "hsla(38, 30%, 45%, 0.5)" : "hsla(38, 25%, 70%, 0.4)",
-                        animation: "ambient-glow-breathe 8s ease-in-out infinite",
-                        lineHeight: 1,
+                        fontFamily: "'DM Sans', system-ui, sans-serif",
+                        fontWeight: 300,
+                        fontSize: isFocus ? "clamp(12px, 1vw, 15px)" : "clamp(11px, 0.85vw, 13px)",
+                        color: bgMode === "white"
+                          ? "hsla(30, 10%, 30%, 0.5)"
+                          : "hsla(38, 15%, 78%, 0.45)",
                       }}
                     >
-                      ◎
+                      Lumen AI
                     </span>
+
+                    {/* Typewriter subtitle */}
                     <p
                       className="tracking-[0.08em] transition-all duration-500"
                       style={{
@@ -658,7 +691,7 @@ export default function HologramOsPage() {
                         fontWeight: 300,
                         fontStyle: "italic",
                         fontSize: isFocus ? "clamp(14px, 1.2vw, 20px)" : "clamp(12px, 1vw, 17px)",
-                        color: bgMode === "white" ? "hsla(0, 0%, 30%, 0.45)" : "hsla(38, 12%, 72%, 0.4)",
+                        color: bgMode === "white" ? "hsla(0, 0%, 30%, 0.4)" : "hsla(38, 12%, 72%, 0.35)",
                         maxWidth: "30ch",
                         lineHeight: 1.6,
                         animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
@@ -668,143 +701,9 @@ export default function HologramOsPage() {
                     </p>
                   </button>
                 </div>
-
-                {/* Context interest pills */}
-                {contextHints.length > 0 && (
-                  <div className="flex items-center justify-center gap-3 animate-fade-in pb-[1vh]">
-                    {contextHints.map((hint) => (
-                      <button
-                        key={hint}
-                        onClick={() => {
-                          setChatPrompt(`Tell me more about ${hint} — what should I explore next?`);
-                          setChatOpen(true);
-                        }}
-                        className="transition-all duration-300 hover:scale-105"
-                        style={{
-                          fontFamily: "'DM Sans', system-ui, sans-serif",
-                          fontSize: isFocus ? "clamp(10px, 0.7vw, 12px)" : "clamp(8px, 0.6vw, 10px)",
-                          letterSpacing: "0.2em",
-                          textTransform: "uppercase" as const,
-                          fontWeight: 300,
-                          color: bgMode === "white" ? "hsla(0, 0%, 30%, 0.5)" : "hsla(0, 0%, 80%, 0.4)",
-                          padding: isFocus ? "5px 14px" : "3px 10px",
-                          borderRadius: "100px",
-                          border: `1px solid ${bgMode === "white" ? "hsla(0, 0%, 30%, 0.12)" : "hsla(0, 0%, 70%, 0.1)"}`,
-                          background: bgMode === "white" ? "hsla(0, 0%, 90%, 0.4)" : "hsla(0, 0%, 15%, 0.25)",
-                          backdropFilter: "blur(8px)",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {hint}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <div>
-                  <button
-                    onClick={goConsole}
-                    className="inline-flex items-center transition-all duration-500"
-                    style={{
-                      fontFamily: "'DM Sans', system-ui, sans-serif",
-                      fontWeight: 300,
-                      fontSize: isFocus ? "clamp(12px, 1vw, 15px)" : "clamp(11px, 0.8vw, 13px)",
-                      letterSpacing: "0.3em",
-                      textTransform: "uppercase" as const,
-                      color: P.cta,
-                      border: `1px solid ${P.ctaBorder}`,
-                      padding: isFocus
-                        ? "clamp(14px, 1.5vw, 20px) clamp(40px, 4vw, 64px)"
-                        : "clamp(12px, 1.2vw, 16px) clamp(32px, 3vw, 48px)",
-                      background: "transparent",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = P.ctaHoverBg;
-                      e.currentTarget.style.color = P.ctaHoverText;
-                      e.currentTarget.style.borderColor = P.ctaHoverBorder;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.color = P.cta;
-                      e.currentTarget.style.borderColor = P.ctaBorder;
-                    }}
-                  >
-                    Enter
-                  </button>
-                </div>
               </div>
             </div>
 
-            {/* AI Chat Pill — bottom center, draggable */}
-            <div
-              className={`absolute bottom-[6vh] left-1/2 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${chatOpen ? "pointer-events-none opacity-0 scale-90" : "opacity-100 scale-100"}`}
-              style={{
-                pointerEvents: "auto",
-                opacity: isFocus ? 0.7 : 1,
-                transform: isFocus
-                  ? `translate(calc(-50% + ${lumenPillDrag.pos.x}px), ${lumenPillDrag.pos.y}px) scale(0.95)`
-                  : `translate(calc(-50% + ${lumenPillDrag.pos.x}px), ${lumenPillDrag.pos.y}px)`,
-                touchAction: "none",
-                userSelect: "none",
-              }}
-            >
-              <div className="flex items-center gap-1">
-                {/* Drag grip */}
-                <div
-                  className="cursor-grab active:cursor-grabbing opacity-0 hover:opacity-40 transition-opacity duration-300 p-1"
-                  {...lumenPillDrag.handlers}
-                  title="Drag to reposition"
-                >
-                  <GripVertical className="w-3 h-3" style={{ color: "hsla(0, 0%, 80%, 0.6)" }} />
-                </div>
-                <button
-                  onClick={() => { if (!lumenPillDrag.wasDragged()) setChatOpen(true); }}
-                  className="relative flex items-center gap-3 px-7 py-3 rounded-full transition-all duration-300 hover:scale-105 group"
-                  style={{
-                    background: P.pill,
-                    backdropFilter: "blur(24px)",
-                    WebkitBackdropFilter: "blur(24px)",
-                    border: `1px solid ${P.pillBorder}`,
-                    boxShadow: pillGlow
-                      ? "0 0 20px hsla(38, 50%, 50%, 0.35), 0 0 40px hsla(38, 50%, 50%, 0.15), 0 0 60px hsla(38, 50%, 50%, 0.05)"
-                      : "none",
-                    animation: pillGlow ? "pill-glow-pulse 1.8s ease-out both" : "none",
-                  }}
-                >
-                <div
-                  className="w-1.5 h-1.5 rounded-full group-hover:scale-150 transition-transform duration-200"
-                  style={{
-                    background: P.dotPulse,
-                    animation: "heartbeat-love 1.6s ease-in-out infinite",
-                  }}
-                />
-                <span
-                  className="tracking-[0.2em] font-light transition-colors duration-300"
-                  style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
-                    color: P.pillText,
-                    fontSize: "clamp(11px, 0.8vw, 13px)",
-                  }}
-                >
-                  Lumen AI
-                </span>
-
-                {journalEntryCount > 0 && (
-                  <span
-                    className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold tabular-nums animate-in zoom-in-50 duration-200"
-                    style={{
-                      background: "hsl(38, 50%, 50%)",
-                      color: "hsl(38, 10%, 98%)",
-                      boxShadow: "0 2px 8px hsla(38, 50%, 40%, 0.4)",
-                      fontFamily: "'DM Sans', system-ui, sans-serif",
-                    }}
-                  >
-                    {journalEntryCount > 99 ? "99+" : journalEntryCount}
-                  </span>
-                )}
-              </button>
-              </div>
-            </div>
           </HologramFrame>
 
           {/* ── Subtle legal links — Hedosophia-inspired ── */}
