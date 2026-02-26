@@ -8,6 +8,7 @@ import { Settings, ShieldCheck, Star, Plus, ChevronRight, ExternalLink } from "l
 import { useNavigate } from "react-router-dom";
 import { SpaceCard } from "./SpaceCard";
 import { SortableSection } from "./SortableSection";
+import { PrivacySettingsPanel } from "./PrivacySettingsPanel";
 
 interface ControlSectionProps {
   isDark: boolean;
@@ -77,44 +78,8 @@ export const ControlSection = ({ isDark, votes, onVote }: ControlSectionProps) =
         icon={<ShieldCheck className="text-foreground" size={16} />}
         isDark={isDark}
         moduleSlug="privacy"
-        expandedContent={
-          <div className="space-y-3">
-            <h4 className="text-foreground font-body text-sm font-semibold">Your Privacy Document</h4>
-            <p className="text-muted-foreground text-sm font-body leading-relaxed">
-              Your privacy rules produce a tamper-proof address through UOR. Apps must accept this exact address before accessing your data.
-            </p>
-            <button
-              onClick={() => navigate("/projects/uor-privacy")}
-              className="flex items-center gap-2 text-primary text-sm font-body font-medium hover:underline cursor-pointer"
-            >
-              Learn more about UOR Privacy <ExternalLink size={12} />
-            </button>
-          </div>
-        }
       >
-        <div className="space-y-3">
-          <div className="p-3.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10">
-            <div className="flex items-center gap-2 mb-1.5">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-              <span className="text-sm font-body font-semibold text-emerald-600 dark:text-emerald-400">
-                Default: Block everything
-              </span>
-            </div>
-            <p className="text-sm font-body text-muted-foreground">
-              Only explicitly allowed purposes are permitted.
-            </p>
-          </div>
-          <button
-            onClick={() => navigate("/projects/uor-privacy")}
-            className="w-full text-left p-3.5 border border-border hover:border-primary/30 rounded-lg transition-colors group cursor-pointer"
-          >
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="w-4 h-4 text-muted-foreground" />
-              <span className="text-foreground text-sm font-body font-medium">Configure Privacy Rules</span>
-              <ChevronRight className="w-3.5 h-3.5 ml-auto text-muted-foreground" />
-            </div>
-          </button>
-        </div>
+        <PrivacySettingsPanel isDark={isDark} />
       </SpaceCard>
     ),
     marketplace: (
