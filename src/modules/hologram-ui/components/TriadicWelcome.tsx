@@ -27,16 +27,16 @@ import { Lock, ChevronLeft } from "lucide-react";
 // ── Palette (matches HologramAiChat) ──────────────────────────────────────
 
 const P = {
-  surface: "hsla(30, 8%, 22%, 0.8)",
-  surfaceHover: "hsla(38, 30%, 30%, 0.25)",
-  border: "hsla(38, 30%, 30%, 0.25)",
-  borderLight: "hsla(38, 30%, 30%, 0.15)",
-  goldLight: "hsl(38, 60%, 60%)",
-  goldMuted: "hsl(38, 40%, 45%)",
-  text: "hsl(38, 20%, 85%)",
-  textMuted: "hsl(30, 10%, 60%)",
-  textDim: "hsl(30, 10%, 50%)",
-  textDimmer: "hsl(30, 10%, 45%)",
+  surface: "hsla(28, 10%, 17%, 0.7)",
+  surfaceHover: "hsla(38, 18%, 28%, 0.18)",
+  border: "hsla(38, 20%, 28%, 0.22)",
+  borderLight: "hsla(38, 18%, 28%, 0.14)",
+  goldLight: "hsl(38, 50%, 62%)",
+  goldMuted: "hsl(38, 35%, 48%)",
+  text: "hsl(38, 22%, 88%)",
+  textMuted: "hsl(32, 12%, 64%)",
+  textDim: "hsl(30, 8%, 52%)",
+  textDimmer: "hsl(30, 8%, 44%)",
   fontDisplay: "'Playfair Display', serif",
   font: "'DM Sans', sans-serif",
 } as const;
@@ -114,9 +114,9 @@ export default function TriadicWelcome({
         }}
       >
         {/* Greeting */}
-        <div className="flex flex-col justify-end pb-5 px-5 pt-4">
+        <div className="flex flex-col justify-end pb-8 px-7 pt-6">
           <h2
-            className="text-[clamp(28px,6vw,36px)] font-light leading-snug tracking-wide"
+            className="text-[clamp(26px,5.5vw,34px)] font-light leading-[1.3] tracking-[0.03em]"
             style={{ fontFamily: P.fontDisplay, color: P.text }}
           >
             What would you like
@@ -124,15 +124,15 @@ export default function TriadicWelcome({
             to focus on?
           </h2>
           <p
-            className="text-[16px] mt-3 leading-relaxed"
-            style={{ color: P.textDim }}
+            className="text-[15px] mt-4 leading-[1.7] tracking-[0.01em]"
+            style={{ color: P.textDim, fontFamily: P.font }}
           >
-            Pick a mode to get started
+            Choose a mode to begin
           </p>
         </div>
 
         {/* Three phase cards */}
-        <div className="flex-1 flex flex-col justify-start gap-3 px-3 pb-4">
+        <div className="flex-1 flex flex-col justify-start gap-4 px-5 pb-6">
           {PHASE_ORDER.map((phase, i) => {
             const phaseDef = PHASES[phase];
             const desc = PHASE_DESCRIPTIONS[phase];
@@ -143,48 +143,48 @@ export default function TriadicWelcome({
               <button
                 key={phase}
                 onClick={() => selectPhase(phase)}
-                className="w-full group relative flex items-center gap-4 px-5 py-5 rounded-2xl text-left transition-all duration-500 hover:scale-[1.01]"
+                className="w-full group relative flex items-center gap-5 px-6 py-6 rounded-2xl text-left transition-all duration-500 hover:scale-[1.008]"
                 style={{
                   background: isCurrentPhase
-                    ? `hsla(${phaseDef.hue}, 30%, 35%, 0.14)`
-                    : "hsla(30, 8%, 22%, 0.45)",
+                    ? `hsla(${phaseDef.hue}, 25%, 30%, 0.12)`
+                    : "hsla(28, 10%, 17%, 0.4)",
                   border: `1px solid ${isCurrentPhase
-                    ? `hsla(${phaseDef.hue}, 30%, 50%, 0.22)`
+                    ? `hsla(${phaseDef.hue}, 25%, 45%, 0.2)`
                     : P.borderLight
                   }`,
                   animation: "stagger-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
-                  animationDelay: `${200 + i * 100}ms`,
+                  animationDelay: `${250 + i * 120}ms`,
                 }}
               >
                 {/* Phase indicator line */}
                 <div
-                  className="w-[3px] self-stretch rounded-full flex-shrink-0 transition-all duration-500"
+                  className="w-[2px] self-stretch rounded-full flex-shrink-0 transition-all duration-600"
                   style={{
-                    background: `hsla(${phaseDef.hue}, 35%, 55%, ${isCurrentPhase ? 0.7 : 0.35})`,
+                    background: `hsla(${phaseDef.hue}, 30%, 55%, ${isCurrentPhase ? 0.65 : 0.3})`,
                   }}
                 />
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2.5">
+                  <div className="flex items-baseline gap-3">
                     <span
-                      className="text-[22px] font-light tracking-wide capitalize"
+                      className="text-[22px] font-light tracking-[0.04em] capitalize"
                       style={{
                         fontFamily: P.fontDisplay,
-                        color: `hsla(${phaseDef.hue}, 28%, 78%, 0.95)`,
+                        color: `hsla(${phaseDef.hue}, 25%, 76%, 0.95)`,
                       }}
                     >
                       {phase}
                     </span>
                     <span
-                      className="text-[13px] tracking-[0.16em] uppercase"
-                      style={{ color: P.textDimmer }}
+                      className="text-[12px] tracking-[0.2em] uppercase"
+                      style={{ color: P.textDimmer, fontFamily: P.font }}
                     >
                       {desc.verb}
                     </span>
                   </div>
                   <p
-                    className="text-[15px] mt-1.5 leading-relaxed"
-                    style={{ color: P.textMuted }}
+                    className="text-[14px] mt-2 leading-[1.7]"
+                    style={{ color: P.textMuted, fontFamily: P.font }}
                   >
                     {desc.invitation}
                   </p>
@@ -193,8 +193,8 @@ export default function TriadicWelcome({
                 {/* Persona count */}
                 <div className="flex-shrink-0 text-right">
                   <span
-                    className="text-[14px] tabular-nums"
-                    style={{ color: P.textDimmer }}
+                    className="text-[13px] tabular-nums tracking-wide"
+                    style={{ color: P.textDimmer, fontFamily: P.font }}
                   >
                     {personaCount} {personaCount === 1 ? "guide" : "guides"}
                   </span>
@@ -205,9 +205,12 @@ export default function TriadicWelcome({
         </div>
 
         {/* Current selection indicator */}
-        <div className="flex justify-center pb-3 pt-1">
-          <p className="text-[14px] tracking-wider" style={{ color: P.textDimmer }}>
-            Currently using · {selectedPersona.name}
+        <div className="flex justify-center pb-5 pt-2">
+          <p
+            className="text-[12px] tracking-[0.2em] uppercase"
+            style={{ color: P.textDimmer, fontFamily: P.font }}
+          >
+            Active guide · {selectedPersona.name}
           </p>
         </div>
 
@@ -250,23 +253,26 @@ export default function TriadicWelcome({
       </div>
 
       {/* Phase Header */}
-      <div className="px-6 pt-6 pb-8">
-        <div className="flex items-start gap-4">
+      <div className="px-7 pt-8 pb-10">
+        <div className="flex items-start gap-5">
           <div
-            className="w-[3px] h-10 rounded-full mt-1.5 flex-shrink-0"
-            style={{ background: `hsla(${phaseDef.hue}, 35%, 55%, 0.7)` }}
+            className="w-[2px] h-10 rounded-full mt-2 flex-shrink-0"
+            style={{ background: `hsla(${phaseDef.hue}, 30%, 55%, 0.6)` }}
           />
           <div>
             <h2
-              className="text-[clamp(26px,5.5vw,34px)] font-light tracking-wide capitalize leading-snug"
+              className="text-[clamp(24px,5vw,32px)] font-light tracking-[0.04em] capitalize leading-[1.3]"
               style={{
                 fontFamily: P.fontDisplay,
-                color: `hsla(${phaseDef.hue}, 28%, 78%, 0.95)`,
+                color: `hsla(${phaseDef.hue}, 25%, 76%, 0.95)`,
               }}
             >
               {focusedPhase}
             </h2>
-            <p className="text-[16px] mt-2 leading-relaxed max-w-[280px]" style={{ color: P.textDim }}>
+            <p
+              className="text-[15px] mt-3 leading-[1.75] max-w-[280px]"
+              style={{ color: P.textDim, fontFamily: P.font }}
+            >
               {desc.essence}
             </p>
           </div>
@@ -274,8 +280,8 @@ export default function TriadicWelcome({
       </div>
 
       {/* Guides */}
-      <div className="px-5 pb-8">
-        <p className="text-[13px] tracking-[0.18em] uppercase mb-4 px-1" style={{ color: P.textDimmer }}>
+      <div className="px-6 pb-10">
+        <p className="text-[11px] tracking-[0.22em] uppercase mb-5 px-1" style={{ color: P.textDimmer, fontFamily: P.font }}>
           Choose a guide
         </p>
         <div className="space-y-3">
@@ -297,19 +303,19 @@ export default function TriadicWelcome({
                 key={persona.id}
                 onClick={() => !locked && onSelectPersona(persona)}
                 disabled={locked}
-                className={`w-full flex items-center gap-4 px-5 py-5 rounded-2xl text-left transition-all duration-500 ${
-                  locked ? "opacity-35 cursor-not-allowed" : "hover:scale-[1.005]"
+                className={`w-full flex items-center gap-5 px-6 py-6 rounded-2xl text-left transition-all duration-500 ${
+                  locked ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.005]"
                 }`}
                 style={{
                   background: isActive
-                    ? `hsla(${phaseDef.hue}, 30%, 35%, 0.18)`
+                    ? `hsla(${phaseDef.hue}, 25%, 30%, 0.15)`
                     : P.surface,
                   border: `${borderWidth}px solid ${isActive
-                    ? `hsla(${phaseDef.hue}, 35%, 50%, ${activeBorderAlpha})`
+                    ? `hsla(${phaseDef.hue}, 28%, 45%, ${activeBorderAlpha})`
                     : P.borderLight
                   }`,
-                  animation: "stagger-fade-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
-                  animationDelay: `${120 + i * 80}ms`,
+                  animation: "stagger-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
+                  animationDelay: `${150 + i * 100}ms`,
                 }}
               >
                 <span
@@ -329,7 +335,7 @@ export default function TriadicWelcome({
                       </span>
                     )}
                   </div>
-                  <p className="text-[14px] mt-1 leading-relaxed" style={{ color: P.textDim }}>
+                  <p className="text-[14px] mt-1.5 leading-[1.7]" style={{ color: P.textDim, fontFamily: P.font }}>
                     {persona.subtitle}
                   </p>
                 </div>
@@ -357,8 +363,8 @@ export default function TriadicWelcome({
       </div>
 
       {/* Skills */}
-      <div className="px-5 pb-8">
-        <p className="text-[13px] tracking-[0.18em] uppercase mb-4 px-1" style={{ color: P.textDimmer }}>
+      <div className="px-6 pb-10">
+        <p className="text-[11px] tracking-[0.22em] uppercase mb-5 px-1" style={{ color: P.textDimmer, fontFamily: P.font }}>
           Available skills
         </p>
         <div className="flex flex-wrap gap-2.5">
