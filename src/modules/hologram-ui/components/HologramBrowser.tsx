@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Globe, ArrowLeft, ArrowRight, RotateCw, X, ExternalLink, Loader2, Search, Sparkles } from "lucide-react";
+import { Globe, ArrowLeft, ArrowRight, RotateCw, X, ExternalLink, Loader2, Search, Sparkles, Clock, PanelLeftClose, PanelLeft, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { firecrawlApi, type SearchResult } from "@/lib/api/firecrawl";
 
@@ -27,11 +27,20 @@ const P = {
   font: "'DM Sans', system-ui, sans-serif",
 } as const;
 
+function formatTimeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  if (diff < 60_000) return "just now";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
 interface HistoryEntry {
   url: string;
   title: string;
   markdown: string;
   links: string[];
+  visitedAt: number;
 }
 
 interface BrowserProps {
@@ -48,6 +57,7 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
+  const [showHistory, setShowHistory] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -83,7 +93,7 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
       const title = d?.metadata?.title || formatted;
       const links = d?.links || [];
 
-      const entry: HistoryEntry = { url: formatted, title, markdown, links };
+      const entry: HistoryEntry = { url: formatted, title, markdown, links, visitedAt: Date.now() };
       setPage(entry);
 
       const newHistory = [...history.slice(0, historyIdx + 1), entry];
@@ -269,6 +279,18 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
           </a>
         )}
 
+        {/* History toggle */}
+        <button
+          onClick={() => setShowHistory((v) => !v)}
+          className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
+          style={{ color: showHistory ? P.gold : P.textMuted }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = P.surfaceHover; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          title="Browsing history"
+        >
+          <Clock className="w-3.5 h-3.5" />
+        </button>
+
         {/* Close */}
         <button
           onClick={onClose}
@@ -281,8 +303,81 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
         </button>
       </div>
 
-      {/* ── Content Area ────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto lumen-scroll">
+      {/* ── Body: History sidebar + Content ──────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* ── History Sidebar ── */}
+        {showHistory && (
+          <div
+            className="shrink-0 overflow-y-auto lumen-scroll flex flex-col"
+            style={{
+              width: 260,
+              background: P.surface,
+              borderRight: `1px solid ${P.border}`,
+            }}
+          >
+            <div className="flex items-center justify-between px-4 py-3 shrink-0" style={{ borderBottom: `1px solid ${P.border}` }}>
+              <span className="text-[11px] font-light uppercase tracking-widest" style={{ color: P.textMuted }}>History</span>
+              {history.length > 0 && (
+                <button
+                  onClick={() => { setHistory([]); setHistoryIdx(-1); }}
+                  className="flex items-center gap-1 text-[10px] font-light px-1.5 py-0.5 rounded transition-colors"
+                  style={{ color: P.textMuted }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = P.gold; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = P.textMuted; }}
+                >
+                  <Trash2 className="w-3 h-3" /> Clear
+                </button>
+              )}
+            </div>
+
+            {history.length === 0 && (
+              <div className="flex-1 flex items-center justify-center px-4">
+                <p className="text-[12px] font-light text-center" style={{ color: P.textMuted }}>
+                  No pages visited yet
+                </p>
+              </div>
+            )}
+
+            <div className="flex-1 py-1">
+              {[...history].reverse().map((entry, i) => {
+                const realIdx = history.length - 1 - i;
+                const isActive = realIdx === historyIdx;
+                return (
+                  <button
+                    key={`${entry.url}-${entry.visitedAt}`}
+                    onClick={() => {
+                      setHistoryIdx(realIdx);
+                      setPage(entry);
+                      setUrl(entry.url);
+                      setSearchResults(null);
+                      setSearchQuery(null);
+                    }}
+                    className="w-full text-left px-4 py-2.5 transition-all duration-150"
+                    style={{
+                      background: isActive ? "hsla(38, 15%, 25%, 0.2)" : "transparent",
+                      borderLeft: isActive ? `2px solid ${P.gold}` : "2px solid transparent",
+                    }}
+                    onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = P.surfaceHover; }}
+                    onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <p
+                      className="text-[12px] font-light truncate mb-0.5"
+                      style={{ color: isActive ? P.gold : P.text }}
+                    >
+                      {entry.title}
+                    </p>
+                    <p className="text-[10px] font-light truncate" style={{ color: P.textMuted }}>
+                      {new URL(entry.url).hostname} · {formatTimeAgo(entry.visitedAt)}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Content Area ────────────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto lumen-scroll">
         {!page && !loading && !error && !searchResults && (
           <div className="flex flex-col items-center justify-center h-full gap-6 px-6">
             <div
@@ -571,6 +666,7 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
           </article>
         )}
       </div>
+      </div>{/* end flex body */}
     </div>
   );
 }
