@@ -11,7 +11,7 @@ import {
   ShieldCheck, Eye, EyeOff, Clock, Lock, Unlock,
   ChevronDown, ChevronUp, FileText, Download,
   ToggleLeft, ToggleRight, Info, AlertTriangle, Check,
-  CloudOff, Cloud, Loader2,
+  CloudOff, Cloud, Loader2, GitCompareArrows, ArrowRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -261,9 +261,11 @@ interface PrivacySettingsPanelProps {
 export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
   const [rules, setRules] = useState<DataCategoryRule[]>(loadRules);
   const [showPolicy, setShowPolicy] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
   const [saved, setSaved] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [lastSavedRules, setLastSavedRules] = useState<DataCategoryRule[]>(loadRules);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load from DB on mount if authenticated
@@ -286,6 +288,7 @@ export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
           return stored ? { ...def, ...stored } : def;
         });
         setRules(merged);
+        setLastSavedRules(merged);
         saveRules(merged); // sync localStorage too
       }
     };
@@ -307,6 +310,7 @@ export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
         .eq("user_id", userId);
       setSyncing(false);
       setSaved(true);
+      setLastSavedRules(nextRules);
     }, 800);
   }, [userId]);
 
@@ -387,6 +391,52 @@ export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
     URL.revokeObjectURL(url);
   }, [policyDocument]);
 
+  // ── Diff computation ──────────────────────────────────────────────
+  const diffs = useMemo(() => {
+    const changes: Array<{
+      category: string;
+      icon: string;
+      field: string;
+      from: string;
+      to: string;
+      type: "added" | "removed" | "changed";
+    }> = [];
+
+    for (const rule of rules) {
+      const prev = lastSavedRules.find(r => r.id === rule.id);
+      if (!prev) continue;
+
+      if (prev.disclosed !== rule.disclosed) {
+        changes.push({
+          category: rule.label, icon: rule.icon, field: "Disclosure",
+          from: prev.disclosed ? "Disclosed" : "Private",
+          to: rule.disclosed ? "Disclosed" : "Private",
+          type: rule.disclosed ? "added" : "removed",
+        });
+      }
+      if (prev.retention !== rule.retention) {
+        changes.push({
+          category: rule.label, icon: rule.icon, field: "Retention",
+          from: RETENTION_LABELS[prev.retention],
+          to: RETENTION_LABELS[rule.retention],
+          type: "changed",
+        });
+      }
+      const addedPurposes = rule.allowedPurposes.filter(p => !prev.allowedPurposes.includes(p));
+      const removedPurposes = prev.allowedPurposes.filter(p => !rule.allowedPurposes.includes(p));
+      for (const p of addedPurposes) {
+        const label = PURPOSES.find(x => x.id === p)?.label ?? p;
+        changes.push({ category: rule.label, icon: rule.icon, field: "Purpose", from: "—", to: label, type: "added" });
+      }
+      for (const p of removedPurposes) {
+        const label = PURPOSES.find(x => x.id === p)?.label ?? p;
+        changes.push({ category: rule.label, icon: rule.icon, field: "Purpose", from: label, to: "—", type: "removed" });
+      }
+    }
+    return changes;
+  }, [rules, lastSavedRules]);
+
+  const hasChanges = diffs.length > 0;
   const disclosedCount = rules.filter(r => r.disclosed).length;
 
   return (
@@ -424,7 +474,7 @@ export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
       <PrivacyMeter rules={rules} />
 
       {/* Quick actions */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           onClick={blockAll}
           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-body font-medium bg-muted/50 text-muted-foreground hover:text-foreground border border-transparent hover:border-border transition-all cursor-pointer"
@@ -437,6 +487,19 @@ export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
         >
           <FileText size={12} /> {showPolicy ? "Hide Policy" : "View My Policy"}
         </button>
+        {hasChanges && (
+          <button
+            onClick={() => setShowDiff(!showDiff)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-body font-medium border transition-all cursor-pointer ${
+              showDiff
+                ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/15"
+            }`}
+          >
+            <GitCompareArrows size={12} />
+            {diffs.length} {diffs.length === 1 ? "Change" : "Changes"}
+          </button>
+        )}
         {showPolicy && (
           <button
             onClick={downloadPolicy}
@@ -446,6 +509,51 @@ export const PrivacySettingsPanel = ({ isDark }: PrivacySettingsPanelProps) => {
           </button>
         )}
       </div>
+
+      {/* ── Changes Diff Panel ──────────────────────────────────────── */}
+      <AnimatePresence>
+        {showDiff && hasChanges && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <GitCompareArrows size={14} className="text-amber-500" />
+                <span className="text-foreground font-body text-sm font-semibold">Unsaved Changes</span>
+                <span className="text-[10px] font-body text-muted-foreground ml-auto">
+                  {diffs.length} {diffs.length === 1 ? "change" : "changes"} pending
+                </span>
+              </div>
+              {diffs.map((d, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-card/60 border border-border text-xs font-body animate-fade-in"
+                  style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
+                >
+                  <span className="text-sm">{d.icon}</span>
+                  <span className="text-foreground font-medium min-w-[70px]">{d.category}</span>
+                  <span className="text-muted-foreground">{d.field}</span>
+                  <span className={`ml-auto flex items-center gap-1.5 ${
+                    d.type === "removed" ? "text-red-400" : d.type === "added" ? "text-emerald-400" : "text-amber-400"
+                  }`}>
+                    <span className={`line-through opacity-60 ${d.type === "removed" ? "text-red-400" : "text-muted-foreground"}`}>
+                      {d.from}
+                    </span>
+                    <ArrowRight size={10} className="text-muted-foreground shrink-0" />
+                    <span className={d.type === "added" ? "text-emerald-400 font-medium" : d.type === "removed" ? "text-red-400 font-medium" : "text-foreground font-medium"}>
+                      {d.to}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Generated Policy Preview */}
       <AnimatePresence>
