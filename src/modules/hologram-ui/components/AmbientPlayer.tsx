@@ -15,7 +15,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical, BarChart3, Database, Activity, Hexagon, Orbit } from "lucide-react";
+import { Music, Pause, Play, Volume2, VolumeX, ChevronDown, GripVertical, BarChart3, Database, Activity, Hexagon, Orbit, RotateCcw } from "lucide-react";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
 import { getAudioEngine, type AudioEngineState, FeatureAggregator, generateTrackCid, persistAnalysis } from "@/modules/audio";
 import type { HarmonicLensFrame } from "@/modules/audio";
@@ -23,6 +23,7 @@ import StratumVisualizer from "./StratumVisualizer";
 import CurvatureTimeSeries from "./CurvatureTimeSeries";
 import GenreRadar from "./GenreRadar";
 import ObservableSpaceRadar from "./ObservableSpaceRadar";
+import HolonomyVisualizer from "./HolonomyVisualizer";
 
 // ── Palette (consistent with OS) ──────────────────────────────────────────
 const P = {
@@ -146,6 +147,7 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
   const [showCurvature, setShowCurvature] = useState(false);
   const [showGenre, setShowGenre] = useState(false);
   const [showObservable, setShowObservable] = useState(false);
+  const [showHolonomy, setShowHolonomy] = useState(false);
   const [cacheStats, setCacheStats] = useState({ entries: 0, totalBytes: 0, maxBytes: 1, utilization: 0 });
   const [currentFrame, setCurrentFrame] = useState<HarmonicLensFrame | null>(null);
   const engineRef = useRef(getAudioEngine());
@@ -376,6 +378,14 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
                   <Orbit className="w-3.5 h-3.5" />
                 </button>
                 <button
+                  onClick={() => setShowHolonomy((v) => !v)}
+                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-white/[0.08]"
+                  style={{ color: showHolonomy ? P.goldLight : P.textMuted }}
+                  title="Holonomy · Tonal Drift"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+                <button
                   onClick={() => setExpanded(false)}
                   className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-white/[0.08]"
                   style={{ color: P.textMuted }}
@@ -562,6 +572,13 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
             {/* Observable Space — 7 UOR Metrics */}
             <ObservableSpaceRadar
               visible={showObservable && (playing || loading)}
+              stationHue={station.color}
+              frame={currentFrame}
+            />
+
+            {/* Holonomy — Tonal Drift Ring */}
+            <HolonomyVisualizer
+              visible={showHolonomy && (playing || loading)}
               stationHue={station.color}
               frame={currentFrame}
             />
