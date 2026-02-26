@@ -165,9 +165,16 @@ class FrameRegistry {
     };
   }
 
+  private pendingNotify = false;
+
   private notify(): void {
-    const snap = this.snapshot();
-    this.listeners.forEach((fn) => fn(snap));
+    if (this.pendingNotify) return;
+    this.pendingNotify = true;
+    queueMicrotask(() => {
+      this.pendingNotify = false;
+      const snap = this.snapshot();
+      this.listeners.forEach((fn) => fn(snap));
+    });
   }
 }
 

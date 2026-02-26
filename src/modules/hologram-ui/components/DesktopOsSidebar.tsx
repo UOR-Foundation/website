@@ -2,8 +2,10 @@
  * DesktopOsSidebar — Always-collapsed icon sidebar
  * ═══════════════════════════════════════════════════
  *
- * Fixed-width icon rail. Click the logo to expand inline;
- * no drag-to-resize handle.
+ * Performance optimized:
+ *   - All hover effects via CSS custom properties + :hover (zero JS)
+ *   - Static style objects hoisted to module scope
+ *   - will-change: width for compositor-promoted expansion
  */
 
 import { useCallback, useState } from "react";
@@ -14,70 +16,52 @@ import {
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 
-/* ── Tooltip wrapper for collapsed icon buttons ────────────── */
+/* ── Tooltip wrapper ───────────────────────────────────────── */
 function IconTooltip({ label, children, show }: { label: string; children: React.ReactNode; show: boolean }) {
   if (!show) return <>{children}</>;
   return (
     <div className="relative group/tip">
       {children}
-      <div
-        className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 rounded-lg text-[13px] font-light whitespace-nowrap opacity-0 scale-95 group-hover/tip:opacity-100 group-hover/tip:scale-100 transition-all duration-200 z-50"
-        style={{
-          background: "hsl(25, 10%, 16%)",
-          color: "hsl(38, 15%, 85%)",
-          border: "1px solid hsla(38, 12%, 70%, 0.15)",
-          boxShadow: "0 8px 24px -6px hsla(25, 15%, 5%, 0.5)",
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-        }}
-      >
+      <div className="sidebar-tooltip pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 rounded-lg text-[13px] font-light whitespace-nowrap opacity-0 scale-95 group-hover/tip:opacity-100 group-hover/tip:scale-100 transition-all duration-200 z-50">
         {label}
       </div>
     </div>
   );
 }
 
-/* ── Palette — adapts to bgMode ────────────────────────────── */
-function getS(bgMode: "image" | "white" | "dark") {
+/* ── Palette — CSS variables set on the sidebar root ────────── */
+function getPaletteVars(bgMode: "image" | "white" | "dark") {
   if (bgMode === "white") return {
-    bg: "hsl(0, 0%, 97%)",
-    surfaceHover: "hsla(0, 0%, 0%, 0.04)",
-    surfaceActive: "hsla(0, 0%, 0%, 0.08)",
-    border: "hsla(0, 0%, 0%, 0.08)",
-    text: "hsl(0, 0%, 15%)",
-    textMuted: "hsl(0, 0%, 45%)",
-    gold: "hsl(38, 35%, 42%)",
-    font: "'DM Sans', system-ui, sans-serif",
-    logoFilter: "invert(1) brightness(0.15)",
-  } as const;
+    "--sb-bg": "hsl(0, 0%, 97%)",
+    "--sb-hover": "hsla(0, 0%, 0%, 0.04)",
+    "--sb-active": "hsla(0, 0%, 0%, 0.08)",
+    "--sb-border": "hsla(0, 0%, 0%, 0.08)",
+    "--sb-text": "hsl(0, 0%, 15%)",
+    "--sb-muted": "hsl(0, 0%, 45%)",
+    "--sb-gold": "hsl(38, 35%, 42%)",
+  } as Record<string, string>;
   return {
-    bg: "hsl(25, 8%, 10%)",
-    surfaceHover: "hsla(38, 12%, 90%, 0.08)",
-    surfaceActive: "hsla(38, 20%, 85%, 0.12)",
-    border: "hsla(38, 12%, 70%, 0.1)",
-    text: "hsl(38, 10%, 88%)",
-    textMuted: "hsl(38, 8%, 60%)",
-    gold: "hsl(38, 40%, 65%)",
-    font: "'DM Sans', system-ui, sans-serif",
-    logoFilter: "brightness(1.1)",
-  } as const;
+    "--sb-bg": "hsl(25, 8%, 10%)",
+    "--sb-hover": "hsla(38, 12%, 90%, 0.08)",
+    "--sb-active": "hsla(38, 20%, 85%, 0.12)",
+    "--sb-border": "hsla(38, 12%, 70%, 0.1)",
+    "--sb-text": "hsl(38, 10%, 88%)",
+    "--sb-muted": "hsl(38, 8%, 60%)",
+    "--sb-gold": "hsl(38, 40%, 65%)",
+  } as Record<string, string>;
 }
 
 /* ── OS-aware modifier key ──────────────────────────────────── */
-function detectMac(): boolean {
-  if (typeof navigator === "undefined") return false;
+const MOD_KEY = (() => {
+  if (typeof navigator === "undefined") return "Ctrl";
   if ("userAgentData" in navigator && (navigator as any).userAgentData?.platform) {
-    return /mac/i.test((navigator as any).userAgentData.platform);
+    return /mac/i.test((navigator as any).userAgentData.platform) ? "⌘" : "Ctrl";
   }
-  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent);
-}
-const MOD_KEY = detectMac() ? "⌘" : "Ctrl";
+  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent) ? "⌘" : "Ctrl";
+})();
 
 /* ── Nav items ─────────────────────────────────────────────── */
-interface NavItem {
-  label: string;
-  icon: React.ElementType;
-  path: string;
-}
+interface NavItem { label: string; icon: React.ElementType; path: string }
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home",    icon: Home,       path: "/hologram-console" },
@@ -106,7 +90,7 @@ export default function DesktopOsSidebar({
   hintOpacity,
   bgMode = "image",
 }: DesktopOsSidebarProps) {
-  const S = getS(bgMode);
+  const paletteVars = getPaletteVars(bgMode);
   const navigate = useNavigate();
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
@@ -120,13 +104,16 @@ export default function DesktopOsSidebar({
 
   return (
     <aside
-      className="flex flex-col h-full shrink-0 relative"
+      className="sidebar-root flex flex-col h-full shrink-0 relative"
       style={{
+        ...paletteVars,
         width: `${w}px`,
-        background: S.bg,
-        borderRight: `1px solid ${S.border}`,
+        background: "var(--sb-bg)",
+        borderRight: "1px solid var(--sb-border)",
+        willChange: "width",
         transition: "width 300ms cubic-bezier(0.34, 1.56, 0.64, 1)",
-      }}
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+      } as React.CSSProperties}
     >
       {/* ── Top: Logo / toggle ─────────────────────────────────── */}
       <div className="flex items-center justify-between px-3 pt-5 pb-6">
@@ -145,7 +132,7 @@ export default function DesktopOsSidebar({
               >
                 <g
                   fill="none"
-                  stroke={S.text}
+                  stroke="var(--sb-text)"
                   strokeWidth="2.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -172,18 +159,17 @@ export default function DesktopOsSidebar({
             </div>
             <button
               onClick={() => setExpanded(false)}
-              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/[0.06]"
-              style={{ color: S.textMuted }}
+              className="sidebar-btn w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ color: "var(--sb-muted)" }}
               title={`Collapse sidebar (${MOD_KEY} B)`}
             >
               <PanelLeftClose className="w-4 h-4" />
             </button>
           </>
         ) : (
-        <button
+          <button
             onClick={() => setExpanded(true)}
-            className="group/logo w-11 h-11 mx-auto rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 relative"
-            style={{ background: S.surfaceActive, border: `1px solid ${S.border}` }}
+            className="group/logo sidebar-logo-btn w-11 h-11 mx-auto rounded-xl flex items-center justify-center transition-transform duration-200 hover:scale-105 relative"
             title={`Expand sidebar (${MOD_KEY} B)`}
           >
             <HologramLogo
@@ -194,7 +180,7 @@ export default function DesktopOsSidebar({
             <PanelLeftOpen
               className="w-5 h-5 absolute transition-opacity duration-200 opacity-0 group-hover/logo:opacity-100"
               strokeWidth={1.4}
-              style={{ color: S.gold }}
+              style={{ color: "var(--sb-gold)" }}
             />
           </button>
         )}
@@ -208,25 +194,18 @@ export default function DesktopOsSidebar({
             <IconTooltip key={item.path} label={item.label} show={!expanded}>
               <button
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
+                className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                   !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
-                }`}
+                } ${active ? "sidebar-nav-active" : ""}`}
                 style={{
-                  color: active ? S.gold : S.text,
-                  background: active ? S.surfaceActive : "transparent",
-                  fontFamily: S.font,
-                }}
-                onMouseEnter={(e) => {
-                  if (!active) e.currentTarget.style.background = S.surfaceHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = active ? S.surfaceActive : "transparent";
+                  color: active ? "var(--sb-gold)" : "var(--sb-text)",
+                  background: active ? "var(--sb-active)" : "transparent",
                 }}
               >
                 <item.icon
                   className="w-5 h-5 shrink-0"
                   strokeWidth={1.5}
-                  style={{ color: active ? S.gold : S.textMuted }}
+                  style={{ color: active ? "var(--sb-gold)" : "var(--sb-muted)" }}
                 />
                 {expanded && (
                   <span className="text-[14px] font-light whitespace-nowrap">{item.label}</span>
@@ -236,19 +215,17 @@ export default function DesktopOsSidebar({
           );
         })}
 
-        {/* Browser — special action button, not a route */}
+        {/* Browser */}
         {onOpenBrowser && (
           <IconTooltip label="Browser" show={!expanded}>
             <button
               onClick={onOpenBrowser}
-              className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
+              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                 !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
               }`}
-              style={{ color: S.text, fontFamily: S.font }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              style={{ color: "var(--sb-text)" }}
             >
-              <Globe className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: S.textMuted }} />
+              <Globe className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
               {expanded && <span className="text-[14px] font-light whitespace-nowrap">Browser</span>}
             </button>
           </IconTooltip>
@@ -256,22 +233,17 @@ export default function DesktopOsSidebar({
       </div>
 
       {/* ── Bottom: Settings + Help ───────────────────────────── */}
-      <div
-        className="px-2.5 py-4 space-y-1"
-        style={{ borderTop: `1px solid ${S.border}` }}
-      >
+      <div className="px-2.5 py-4 space-y-1" style={{ borderTop: "1px solid var(--sb-border)" }}>
         {onReplayGuide && (
           <IconTooltip label={`Help (${MOD_KEY} /)`} show={!expanded}>
             <button
               onClick={onReplayGuide}
-              className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
+              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                 !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
               }`}
-              style={{ color: S.text, fontFamily: S.font }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              style={{ color: "var(--sb-text)" }}
             >
-              <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
+              <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
               {expanded && <span className="text-[14px] font-light">Help</span>}
             </button>
           </IconTooltip>
@@ -279,28 +251,24 @@ export default function DesktopOsSidebar({
         <IconTooltip label={`Messages (${MOD_KEY} M)`} show={!expanded}>
           <button
             onClick={() => {}}
-            className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
+            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
             }`}
-            style={{ color: S.text, fontFamily: S.font }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            style={{ color: "var(--sb-text)" }}
           >
-            <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
+            <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
             {expanded && <span className="text-[14px] font-light">Messages</span>}
           </button>
         </IconTooltip>
         <IconTooltip label="Settings" show={!expanded}>
           <button
             onClick={() => navigate("/settings")}
-            className={`w-full flex items-center gap-3 rounded-xl transition-all duration-200 ${
+            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
             }`}
-            style={{ color: S.text, fontFamily: S.font }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = S.surfaceHover; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            style={{ color: "var(--sb-text)" }}
           >
-            <Settings className="w-5 h-5" strokeWidth={1.5} style={{ color: S.textMuted }} />
+            <Settings className="w-5 h-5" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
             {expanded && <span className="text-[14px] font-light">Settings</span>}
           </button>
         </IconTooltip>
