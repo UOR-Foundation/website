@@ -3,7 +3,7 @@
  * ══════════════════════════════════════════════════════════
  *
  * Vertically oriented toggle fixed to the right edge of the viewport.
- * Binary: Open (diffuse) ↔ Focus (deep).
+ * Shows "Focus Mode" label with OFF/ON state.
  */
 
 import { useState } from "react";
@@ -20,25 +20,25 @@ export default function AttentionToggle() {
       onClick={toggle}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      aria-label={`${isFocus ? "Focus" : "Open"} mode. Click to switch.`}
+      aria-label={`Focus Mode ${isFocus ? "On" : "Off"}. Click to toggle.`}
       className="fixed right-5 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 select-none transition-all duration-500"
       style={{
         zIndex: 60,
-        opacity: hovered ? 1 : 0.7,
+        opacity: hovered ? 1 : 0.75,
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
-      {/* Label — rotated vertically */}
+      {/* "Focus Mode" label — vertical */}
       <span
-        className="text-[10px] font-semibold tracking-[0.2em] uppercase transition-colors duration-500"
+        className="text-[8px] font-medium tracking-[0.2em] uppercase transition-colors duration-500"
         style={{
           writingMode: "vertical-rl",
           color: isFocus
-            ? "hsla(38, 45%, 75%, 0.9)"
-            : "hsla(220, 15%, 80%, 0.55)",
+            ? "hsla(200, 70%, 72%, 0.9)"
+            : "hsla(0, 0%, 70%, 0.5)",
         }}
       >
-        {isFocus ? "Focus" : "Open"}
+        Focus Mode
       </span>
 
       {/* Toggle track — vertical */}
@@ -48,9 +48,9 @@ export default function AttentionToggle() {
           width: 16,
           height: 34,
           background: isFocus
-            ? "hsla(38, 35%, 55%, 0.25)"
-            : "hsla(220, 15%, 50%, 0.12)",
-          border: `1px solid ${isFocus ? "hsla(38, 30%, 60%, 0.35)" : "hsla(220, 15%, 40%, 0.2)"}`,
+            ? "hsla(200, 60%, 50%, 0.3)"
+            : "hsla(0, 0%, 50%, 0.1)",
+          border: `1px solid ${isFocus ? "hsla(200, 60%, 60%, 0.4)" : "hsla(0, 0%, 50%, 0.15)"}`,
           backdropFilter: "blur(8px)",
           WebkitBackdropFilter: "blur(8px)",
         }}
@@ -63,14 +63,27 @@ export default function AttentionToggle() {
             height: 10,
             top: isFocus ? 20 : 2,
             background: isFocus
-              ? "hsla(38, 45%, 68%, 0.95)"
-              : "hsla(220, 15%, 70%, 0.4)",
+              ? "hsla(200, 70%, 65%, 0.95)"
+              : "hsla(0, 0%, 60%, 0.35)",
             boxShadow: isFocus
-              ? "0 0 8px 1px hsla(38, 50%, 65%, 0.3)"
+              ? "0 0 10px 2px hsla(200, 70%, 60%, 0.4)"
               : "none",
           }}
         />
       </div>
+
+      {/* OFF / ON label — vertical */}
+      <span
+        className="text-[8px] font-semibold tracking-[0.15em] uppercase transition-colors duration-500"
+        style={{
+          writingMode: "vertical-rl",
+          color: isFocus
+            ? "hsla(200, 70%, 72%, 0.9)"
+            : "hsla(0, 0%, 55%, 0.45)",
+        }}
+      >
+        {isFocus ? "On" : "Off"}
+      </span>
     </button>
   );
 }
