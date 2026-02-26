@@ -621,7 +621,7 @@ export default function HologramOsPage() {
                   {welcomeName}.
                 </h1>
 
-                {/* Vertical line — Hedosophia style: border-left, grows from top */}
+                {/* Vertical line — expands from center point, up and down */}
                 <div className="flex justify-center pt-[3vh] pb-[2vh]">
                   <div
                     style={{
@@ -634,7 +634,7 @@ export default function HologramOsPage() {
                             ? "hsla(0, 0%, 85%, 0.3)"
                             : "hsla(0, 0%, 95%, 0.35)"
                       }`,
-                      transformOrigin: "top center",
+                      transformOrigin: "center center",
                       animation: "line-expand 3s cubic-bezier(0.22, 1, 0.36, 1) 0.8s both",
                     }}
                   />
