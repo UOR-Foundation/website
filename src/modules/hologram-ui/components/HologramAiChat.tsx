@@ -1,11 +1,10 @@
 /**
- * Hologram AI Chat — Claude-Inspired Conversation Interface
- * ══════════════════════════════════════════════════════════
+ * Lumen AI Chat — In-System Intelligence Panel
+ * ══════════════════════════════════════════════
  *
- * A serene, focused chat overlay for conversing with locally-running
- * ONNX models via the Hologram AI Engine. Inspired by Claude's clean
- * input design: model selector, attachment button, and streaming tokens
- * with warm charcoal panels, gold accents, and Playfair Display typography.
+ * A serene, focused slide-out assistant for conversing with
+ * cloud AI models via the Lumen AI engine. Warm charcoal panels,
+ * gold accents, and Playfair Display typography.
  *
  * @module hologram-ui/components/HologramAiChat
  */
