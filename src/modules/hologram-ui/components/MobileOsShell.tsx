@@ -309,16 +309,16 @@ export default function MobileOsShell() {
 
           {/* Label */}
           <p
-            className="text-[12px] tracking-[0.4em] uppercase mb-2"
+            className="text-[14px] tracking-[0.4em] uppercase mb-2"
             style={{ color: "hsla(38, 20%, 75%, 0.5)", fontFamily: P.font }}
           >
-            Lumen AI
+            LUMEN AI
           </p>
 
           {/* Typewriter whisper */}
           <div className="h-5 flex items-center justify-center">
             <p
-              className="text-[16px] font-light italic text-center"
+              className="text-[18px] font-light italic text-center"
               style={{
                 fontFamily: P.fontDisplay,
                 color: "hsla(38, 15%, 80%, 0.55)",

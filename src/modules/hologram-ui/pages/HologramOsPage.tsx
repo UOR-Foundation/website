@@ -753,7 +753,7 @@ export default function HologramOsPage() {
                           : "hsla(38, 15%, 88%, 0.7)",
                       }}
                     >
-                      Lumen AI
+                      LUMEN AI
                     </span>
 
                     {/* Typewriter subtitle */}
