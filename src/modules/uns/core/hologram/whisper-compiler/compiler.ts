@@ -257,24 +257,26 @@ export async function compileWhisperModel(
     })));
 
     // ── Phase 4: Store tensors ───────────────────────────────────────
+    const allModelTensors = extractAllTensors(model);
+
     onProgress?.({
       phase: "store",
-      message: `Dehydrating ${t} tensors (${model.graph.initializers.length})...`,
+      message: `Dehydrating ${t} tensors (${allModelTensors.length})...`,
       progress: (ti * 0.5 + 0.3) / targets.length,
     });
 
     console.log(
-      `[WhisperCompiler] 💾 Storing ${model.graph.initializers.length} tensors...`
+      `[WhisperCompiler] 💾 Storing ${allModelTensors.length} tensors...`
     );
 
     const tensors = await store.storeTensors(
-      model.graph.initializers,
+      allModelTensors,
       (stored, total) => {
         onProgress?.({
           phase: "store",
           message: `${t}: tensor ${stored}/${total}`,
           progress: (ti * 0.5 + 0.3 + (0.2 * stored) / total) / targets.length,
-          detail: model.graph.initializers[stored - 1]?.name,
+          detail: allModelTensors[stored - 1]?.name,
         });
       },
     );
