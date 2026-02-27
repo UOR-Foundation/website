@@ -65,19 +65,27 @@ export class ProtoReader {
 
     while (this.pos < this.end) {
       const byte = this.buf[this.pos++];
-      result |= (byte & 0x7f) << shift;
+
+      if (shift < 28) {
+        result |= (byte & 0x7f) << shift;
+      } else {
+        // For shifts >= 28, use multiplication to avoid 32-bit truncation
+        result += (byte & 0x7f) * (2 ** shift);
+      }
 
       if (!(byte & 0x80)) {
         return result >>> 0;
       }
 
       shift += 7;
-      if (shift > 35) {
-        throw new Error(`[ProtoReader] Varint too long at pos ${this.pos}`);
+      if (shift > 63) {
+        // Consume remaining continuation bytes and return what we have
+        while (this.pos < this.end && this.buf[this.pos] & 0x80) this.pos++;
+        if (this.pos < this.end) this.pos++; // consume final byte
+        return result >>> 0;
       }
     }
 
-    // Instead of throwing, return what we have — handles truncated varints at message boundaries
     return result >>> 0;
   }
 
