@@ -11,7 +11,7 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
@@ -21,8 +21,9 @@ const StabilizerProofPanel = React.lazy(() => import("@/modules/quantum/componen
 const QuantumRadarPanel = React.lazy(() => import("@/modules/quantum/components/QuantumRadarPanel"));
 const AlphaRefinementPanel = React.lazy(() => import("@/modules/quantum/components/AlphaRefinementPanel"));
 const Subgraph153Panel = React.lazy(() => import("@/modules/quantum/components/Subgraph153Panel"));
+const GeometricQubitPanel = React.lazy(() => import("@/modules/quantum/components/GeometricQubitPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ export default function QuantumDashboardPage() {
     { key: "radar", label: "Quantum Radar", icon: <Radar size={12} /> },
     { key: "alpha", label: "α Refinement", icon: <Zap size={12} /> },
     { key: "153-link", label: "153-Link", icon: <Triangle size={12} /> },
+    { key: "geo-qubit", label: "Geo Qubit", icon: <Orbit size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -50,6 +52,7 @@ export default function QuantumDashboardPage() {
     radar: "Initializing quantum radar sweep…",
     alpha: "Computing QED loop corrections from graph invariants…",
     "153-link": "Searching 22-vertex subgraphs for T(17) = 153 edges…",
+    "geo-qubit": "Projecting qubits from Atlas symplectic manifold…",
   };
 
   return (
@@ -107,7 +110,8 @@ export default function QuantumDashboardPage() {
            tab === "proof" ? <StabilizerProofPanel /> :
            tab === "radar" ? <QuantumRadarPanel /> :
            tab === "alpha" ? <AlphaRefinementPanel /> :
-           <Subgraph153Panel />}
+           tab === "153-link" ? <Subgraph153Panel /> :
+           <GeometricQubitPanel />}
         </Suspense>
       </div>
     </div>
@@ -229,6 +233,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "β₁", value: "132 = 4×3×11" },
       ],
     },
+    {
+      key: "geo-qubit" as Tab,
+      title: "Geometric Qubit Emulator",
+      phase: "Phase 18",
+      icon: <Orbit size={24} />,
+      color: "hsl(280,60%,65%)",
+      description: "Souriau's geometric quantization on the Atlas substrate. Working qubits projected from mirror pairs, gates via braiding holonomy, particle statistics (boson/fermion/anyon) emergent from sign class structure.",
+      stats: [
+        { label: "Qubits", value: "1–4" },
+        { label: "Gates", value: "X Y Z H S T CX" },
+        { label: "Statistics", value: "3 types" },
+        { label: "Tests", value: "14" },
+      ],
+    },
   ];
 
   return (
@@ -304,6 +322,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "done", label: "Phase 15: Circuit Compiler — algorithm → Atlas gate sequences (12 tests)" },
             { status: "done", label: "Phase 16: Stabilizer Proof — Atlas₉₆ ≅ Stab₃/~ bijection (7 steps)" },
             { status: "done", label: "Phase 17: Quantum Radar — real-time network coherence monitor (12 tests)" },
+            { status: "done", label: "Phase 18: Geometric Qubit Emulator — Souriau quantization + braiding gates (14 tests)" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>
