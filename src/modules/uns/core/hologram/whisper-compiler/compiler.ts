@@ -15,6 +15,7 @@
 
 import { parseOnnxModel, summarizeModel } from "./onnx-parser";
 import { getWeightStore } from "./weight-store";
+import { fetchViaProxy } from "../model-proxy";
 import type {
   OnnxModel,
   OnnxNode,
@@ -42,7 +43,7 @@ const ONNX_FILES = {
   decoder: "onnx/decoder_model_merged.onnx",
 } as const;
 
-const HF_BASE = "https://huggingface.co/onnx-community/whisper-tiny.en/resolve/main";
+const MODEL_ID = "onnx-community/whisper-tiny.en";
 
 // ── Attribute Extraction Helpers ───────────────────────────────────────────
 
@@ -238,18 +239,17 @@ export async function compileWhisperModel(
   for (let ti = 0; ti < targets.length; ti++) {
     const t = targets[ti];
     const onnxFile = ONNX_FILES[t];
-    const url = `${HF_BASE}/${onnxFile}`;
 
-    // ── Phase 1: Download ────────────────────────────────────────────
+    // ── Phase 1: Download via model proxy ────────────────────────────
     onProgress?.({
       phase: "download",
       message: `Downloading ${t} model...`,
       progress: (ti * 0.5) / targets.length,
-      detail: url,
+      detail: onnxFile,
     });
 
-    console.log(`[WhisperCompiler] ⬇ Downloading: ${url}`);
-    const response = await fetch(url);
+    console.log(`[WhisperCompiler] ⬇ Downloading via proxy: ${onnxFile}`);
+    const response = await fetchViaProxy(onnxFile, MODEL_ID);
     if (!response.ok) {
       throw new Error(`Failed to download ${t}: HTTP ${response.status}`);
     }
@@ -293,26 +293,26 @@ export async function compileWhisperModel(
       )?.externalData?.location;
 
       if (extFile) {
-        const dataUrl = `${HF_BASE}/${ONNX_FILES[t]}_data`;
+        const dataFile = `${ONNX_FILES[t]}_data`;
         onProgress?.({
           phase: "download",
           message: `Downloading ${t} weight data...`,
           progress: (ti * 0.5 + 0.15) / targets.length,
-          detail: dataUrl,
+          detail: dataFile,
         });
 
-        console.log(`[WhisperCompiler] ⬇ Downloading external data: ${dataUrl}`);
-        const dataResponse = await fetch(dataUrl);
+        console.log(`[WhisperCompiler] ⬇ Downloading external data via proxy: ${dataFile}`);
+        const dataResponse = await fetchViaProxy(dataFile, MODEL_ID);
         if (!dataResponse.ok) {
-          // Try alternate naming: encoder_model.onnx.data
-          const altUrl = `${HF_BASE}/onnx/${extFile}`;
-          console.log(`[WhisperCompiler] ⬇ Retrying: ${altUrl}`);
-          const altResponse = await fetch(altUrl);
+          // Try alternate naming: onnx/<extFile>
+          const altFile = `onnx/${extFile}`;
+          console.log(`[WhisperCompiler] ⬇ Retrying: ${altFile}`);
+          const altResponse = await fetchViaProxy(altFile, MODEL_ID);
           if (altResponse.ok) {
             externalDataBuffer = await altResponse.arrayBuffer();
           } else {
             throw new Error(
-              `Failed to download external data for ${t}: tried ${dataUrl} and ${altUrl}`
+              `Failed to download external data for ${t}: tried ${dataFile} and ${altFile}`
             );
           }
         } else {

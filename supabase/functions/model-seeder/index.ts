@@ -1,21 +1,19 @@
 /**
- * model-seeder — Transparent Caching Proxy
- * ═══════════════════════════════════════════
+ * model-seeder — Universal Caching Proxy for HuggingFace Models
+ * ══════════════════════════════════════════════════════════════
  *
- * Acts as a lazy-caching proxy for Whisper ONNX model files.
+ * Transparent lazy-caching proxy for any allowed HuggingFace model.
  * On each request:
- *   1. Check if the file already exists in our storage bucket
- *   2. If cached → 302 redirect to the public bucket URL (zero overhead)
+ *   1. Check if the file exists in our storage bucket
+ *   2. If cached → 302 redirect to the public bucket URL
  *   3. If missing → download from HuggingFace, cache to bucket, then redirect
  *
- * This means the first request for each file triggers a one-time download,
- * and all subsequent requests are instant redirects. The client never
- * needs to know whether the file was cached or freshly seeded.
+ * Supports multiple models via ?model= param.
  *
  * Usage:
- *   GET /model-seeder?file=onnx/encoder_model_fp16.onnx
- *   GET /model-seeder?file=tokenizer.json
- *   GET /model-seeder?seed=all   (pre-seed all model files)
+ *   GET ?file=onnx/encoder_model_fp16.onnx                              → default model
+ *   GET ?file=config.json&model=onnx-community/whisper-base             → specific model
+ *   GET ?seed=all                                                       → pre-seed default
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -29,11 +27,18 @@ const corsHeaders = {
 
 const BUCKET = "app-assets";
 const PREFIX = "whisper-models";
-const MODEL_ID = "onnx-community/whisper-tiny.en";
-const HF_BASE = `https://huggingface.co/${MODEL_ID}/resolve/main`;
+const DEFAULT_MODEL = "onnx-community/whisper-tiny.en";
 
-/** All files needed for Whisper tiny.en (fp16 + q8 variants) */
-const ALL_FILES = [
+/** Allowed model IDs (security: prevent arbitrary HF proxying) */
+const ALLOWED_MODELS = new Set([
+  "onnx-community/whisper-tiny.en",
+  "onnx-community/whisper-base",
+  "onnx-community/whisper-base.en",
+  "openai/whisper-tiny.en",
+]);
+
+/** Default files to seed for whisper-tiny.en */
+const DEFAULT_SEED_FILES = [
   "config.json",
   "tokenizer.json",
   "tokenizer_config.json",
@@ -59,20 +64,25 @@ serve(async (req) => {
   const reqUrl = new URL(req.url);
   const file = reqUrl.searchParams.get("file");
   const seedAll = reqUrl.searchParams.get("seed");
+  const modelParam = reqUrl.searchParams.get("model");
+
+  // Resolve model ID — validate against allowlist
+  const modelId = modelParam && ALLOWED_MODELS.has(modelParam)
+    ? modelParam
+    : DEFAULT_MODEL;
 
   // ── Batch seed mode ──────────────────────────────────────────────
   if (seedAll === "all") {
     const results: Record<string, string> = {};
-    for (const f of ALL_FILES) {
+    for (const f of DEFAULT_SEED_FILES) {
       try {
-        const status = await seedFile(supabase, supabaseUrl, f);
-        results[f] = status;
+        results[f] = await seedFile(supabase, supabaseUrl, modelId, f);
       } catch (e) {
         results[f] = `error: ${e.message}`;
       }
     }
     return new Response(
-      JSON.stringify({ status: "complete", results }),
+      JSON.stringify({ status: "complete", model: modelId, results }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
@@ -82,87 +92,63 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: "Missing ?file= param",
-        usage: "GET ?file=onnx/encoder_model_fp16.onnx or ?seed=all",
-        available: ALL_FILES,
+        usage: "GET ?file=onnx/encoder_model_fp16.onnx[&model=onnx-community/whisper-base]",
+        models: [...ALLOWED_MODELS],
+        defaultFiles: DEFAULT_SEED_FILES,
       }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
-  const storageKey = `${PREFIX}/${MODEL_ID}/resolve/main/${file}`;
+  const storageKey = `${PREFIX}/${modelId}/resolve/main/${file}`;
   const publicUrl = `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${storageKey}`;
 
-  // 1. Check if file exists in storage (quick HEAD-like check)
-  const { data: listData } = await supabase.storage
-    .from(BUCKET)
-    .list(`${PREFIX}/${MODEL_ID}/resolve/main/${file.includes("/") ? file.substring(0, file.lastIndexOf("/")) : ""}`, {
-      search: file.includes("/") ? file.substring(file.lastIndexOf("/") + 1) : file,
-      limit: 1,
-    });
+  // 1. Check cache via public URL HEAD
+  try {
+    const headRes = await fetch(publicUrl, { method: "HEAD" });
+    if (headRes.ok) {
+      return new Response(null, {
+        status: 302,
+        headers: { ...corsHeaders, Location: publicUrl, "X-Model-Cache": "hit" },
+      });
+    }
+  } catch { /* not cached */ }
 
-  if (listData && listData.length > 0) {
-    // File exists → redirect to public URL (instant, no processing)
+  // 2. Cache miss → seed from HuggingFace
+  console.log(`[model-seeder] Cache miss: ${modelId}/${file}`);
+  try {
+    await seedFile(supabase, supabaseUrl, modelId, file);
     return new Response(null, {
       status: 302,
-      headers: {
-        ...corsHeaders,
-        Location: publicUrl,
-        "X-Model-Cache": "hit",
-      },
+      headers: { ...corsHeaders, Location: publicUrl, "X-Model-Cache": "miss-then-seeded" },
     });
+  } catch (e) {
+    return new Response(
+      JSON.stringify({ file, model: modelId, status: "error", error: e.message }),
+      { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
-
-  // 2. File not cached → download from HuggingFace and seed
-  console.log(`[model-seeder] Cache miss: ${file} — downloading from HuggingFace...`);
-  const status = await seedFile(supabase, supabaseUrl, file);
-
-  if (status === "seeded" || status === "cached") {
-    // Now redirect to the freshly cached file
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...corsHeaders,
-        Location: publicUrl,
-        "X-Model-Cache": "miss-then-seeded",
-      },
-    });
-  }
-
-  return new Response(
-    JSON.stringify({ file, status: "error", error: status }),
-    { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-  );
 });
 
-/**
- * Download a file from HuggingFace and upload to our storage bucket.
- * Returns "seeded", "cached", or an error string.
- */
 async function seedFile(
   supabase: ReturnType<typeof createClient>,
   supabaseUrl: string,
+  modelId: string,
   file: string,
 ): Promise<string> {
-  const storageKey = `${PREFIX}/${MODEL_ID}/resolve/main/${file}`;
-  const sourceUrl = `${HF_BASE}/${file}`;
-
-  // Double-check cache (for batch mode)
+  const storageKey = `${PREFIX}/${modelId}/resolve/main/${file}`;
   const publicUrl = `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${storageKey}`;
+  const sourceUrl = `https://huggingface.co/${modelId}/resolve/main/${file}`;
+
+  // Double-check cache
   try {
     const headRes = await fetch(publicUrl, { method: "HEAD" });
     if (headRes.ok) return "cached";
-  } catch {
-    // Not cached, continue
-  }
+  } catch { /* continue */ }
 
   // Download from HuggingFace
-  const res = await fetch(sourceUrl, {
-    headers: { "User-Agent": "HologramVGPU/1.0" },
-  });
-
-  if (!res.ok) {
-    throw new Error(`HuggingFace HTTP ${res.status} for ${file}`);
-  }
+  const res = await fetch(sourceUrl, { headers: { "User-Agent": "HologramVGPU/1.0" } });
+  if (!res.ok) throw new Error(`HF HTTP ${res.status} for ${modelId}/${file}`);
 
   const bytes = await res.arrayBuffer();
   const sizeMB = (bytes.byteLength / 1024 / 1024).toFixed(2);
@@ -170,15 +156,10 @@ async function seedFile(
 
   const { error: uploadErr } = await supabase.storage
     .from(BUCKET)
-    .upload(storageKey, new Blob([bytes], { type: ct }), {
-      contentType: ct,
-      upsert: true,
-    });
+    .upload(storageKey, new Blob([bytes], { type: ct }), { contentType: ct, upsert: true });
 
-  if (uploadErr) {
-    throw new Error(`Upload failed: ${uploadErr.message}`);
-  }
+  if (uploadErr) throw new Error(`Upload failed: ${uploadErr.message}`);
 
-  console.log(`[model-seeder] ✅ Seeded: ${file} (${sizeMB}MB)`);
+  console.log(`[model-seeder] ✅ ${modelId}/${file} (${sizeMB}MB)`);
   return "seeded";
 }

@@ -24,6 +24,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { installModelProxy } from "@/modules/uns/core/hologram/model-proxy";
 
 export type WakeWordStatus =
   | "off"         // Not listening at all
@@ -56,13 +57,19 @@ async function getWakeWordPipeline() {
   if (wakeWordPipelineLoading) return wakeWordPipelineLoading;
   wakeWordPipelineLoading = (async () => {
     const { pipeline } = await import("@huggingface/transformers");
-    const transcriber = await pipeline(
-      "automatic-speech-recognition",
-      "onnx-community/whisper-base",
-      { dtype: "q8", device: "wasm" },
-    );
-    wakeWordPipeline = transcriber;
-    return transcriber;
+    // Install model proxy so all HF fetches route through our caching proxy
+    const restoreFetch = installModelProxy();
+    try {
+      const transcriber = await pipeline(
+        "automatic-speech-recognition",
+        "onnx-community/whisper-base",
+        { dtype: "q8", device: "wasm" },
+      );
+      wakeWordPipeline = transcriber;
+      return transcriber;
+    } finally {
+      restoreFetch();
+    }
   })();
   return wakeWordPipelineLoading;
 }
