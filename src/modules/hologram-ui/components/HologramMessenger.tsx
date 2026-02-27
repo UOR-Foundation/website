@@ -220,19 +220,61 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
   }, []);
 
   const isZeroInbox = stats.unread === 0;
+  const [replyOpen, setReplyOpen] = useState(false);
 
-  // Keyboard
+  // Keyboard — Superhuman-style
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement)?.tagName === "INPUT") return;
-      if (e.key === "Escape") { onClose(); return; }
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+      // Escape: close reply → close reading pane → close messenger
+      if (e.key === "Escape") {
+        if (replyOpen) { setReplyOpen(false); return; }
+        if (selectedId) { setSelectedId(null); return; }
+        onClose();
+        return;
+      }
+
+      // Arrow keys: navigate list
+      if (e.key === "ArrowDown" || e.key === "j" || e.key === "J") {
+        e.preventDefault();
+        const idx = selectedId ? filtered.findIndex(m => m.id === selectedId) : -1;
+        const next = filtered[idx + 1];
+        if (next) { setSelectedId(next.id); markRead(next.id); }
+        else if (!selectedId && filtered.length > 0) { setSelectedId(filtered[0].id); markRead(filtered[0].id); }
+        return;
+      }
+      if (e.key === "ArrowUp" || e.key === "k" || e.key === "K") {
+        e.preventDefault();
+        const idx = selectedId ? filtered.findIndex(m => m.id === selectedId) : filtered.length;
+        const prev = filtered[idx - 1];
+        if (prev) { setSelectedId(prev.id); markRead(prev.id); }
+        return;
+      }
+
       if (!selectedId) return;
-      if (e.key === "e" || e.key === "E") { e.preventDefault(); archiveMessage(selectedId); }
-      if (e.key === "s" || e.key === "S") { e.preventDefault(); toggleStar(selectedId); }
+
+      // E — archive / done
+      if (e.key === "e" || e.key === "E") {
+        e.preventDefault();
+        const idx = filtered.findIndex(m => m.id === selectedId);
+        archiveMessage(selectedId);
+        // Auto-advance to next message
+        const nextAfterArchive = filtered[idx + 1] ?? filtered[idx - 1];
+        if (nextAfterArchive && nextAfterArchive.id !== selectedId) setSelectedId(nextAfterArchive.id);
+        return;
+      }
+      // S — star
+      if (e.key === "s" || e.key === "S") { e.preventDefault(); toggleStar(selectedId); return; }
+      // R — reply
+      if (e.key === "r" || e.key === "R") { e.preventDefault(); setReplyOpen(true); return; }
+      // Enter — open reading pane (same as select)
+      if (e.key === "Enter") { e.preventDefault(); return; }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selectedId, archiveMessage, toggleStar, onClose]);
+  }, [selectedId, filtered, archiveMessage, toggleStar, markRead, onClose, replyOpen]);
 
   // Phase tab config
   const tabs: { key: TriadicPhase; label: string; count: number }[] = [
@@ -386,13 +428,13 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
               exit={{ opacity: 0, x: 16 }}
               transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
-              <ContactPanel message={selected} P={P} />
+              <ContactPanel message={selected} P={P} replyOpen={replyOpen} onCloseReply={() => setReplyOpen(false)} />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* ── Footer ── */}
+      {/* ── Footer with keyboard hints ── */}
       <div
         className="flex items-center justify-between px-5 h-[38px] shrink-0"
         style={{ borderTop: `1px solid ${P.divider}` }}
@@ -405,16 +447,32 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
             );
           })}
         </div>
-        <div className="flex items-center gap-4">
-          <span style={{ fontSize: "10px", letterSpacing: "0.12em", color: P.dim, textTransform: "uppercase", fontWeight: 500 }}>
-            Hologram
-          </span>
-          <button className="flex items-center justify-center" style={{ color: P.dim }}>
-            <IconCornerUpLeft size={13} />
-          </button>
-          <button className="flex items-center justify-center" style={{ color: P.dim }}>
-            <IconSettings size={13} />
-          </button>
+        <div className="flex items-center gap-1.5">
+          {[
+            { key: "↑↓", label: "navigate" },
+            { key: "E", label: "done" },
+            { key: "S", label: "star" },
+            { key: "R", label: "reply" },
+            { key: "esc", label: "back" },
+          ].map(h => (
+            <div key={h.key} className="flex items-center gap-1 mr-2">
+              <kbd
+                className="inline-flex items-center justify-center rounded px-1 h-[18px]"
+                style={{
+                  fontSize: "10px",
+                  fontFamily: "monospace",
+                  fontWeight: 600,
+                  color: P.dim,
+                  background: P.surfaceHover,
+                  border: `1px solid ${P.divider}`,
+                  minWidth: "18px",
+                }}
+              >
+                {h.key}
+              </kbd>
+              <span style={{ fontSize: "10px", color: P.dim }}>{h.label}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -583,8 +641,9 @@ function MessageRow({
 
 // ── Contact Panel — Superhuman-style right sidebar ──────────────────────────
 
-function ContactPanel({ message: m, P }: { message: Message; P: ReturnType<typeof palette> }) {
+function ContactPanel({ message: m, P, replyOpen, onCloseReply }: { message: Message; P: ReturnType<typeof palette>; replyOpen: boolean; onCloseReply: () => void }) {
   const cfg = PLATFORM_CFG[m.platform];
+  const [replyText, setReplyText] = useState("");
 
   return (
     <div className="flex flex-col h-full" style={{ background: P.bg }}>
@@ -593,8 +652,6 @@ function ContactPanel({ message: m, P }: { message: Message; P: ReturnType<typeo
         <h3 style={{ fontSize: "18px", fontWeight: 600, color: P.text, marginBottom: "12px", fontFamily: SERIF }}>
           {m.from.split(",")[0]}
         </h3>
-
-        {/* Avatar + info */}
         <div className="flex items-start gap-3 mb-4">
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
@@ -616,7 +673,6 @@ function ContactPanel({ message: m, P }: { message: Message; P: ReturnType<typeo
             )}
           </div>
         </div>
-
         {m.bio && (
           <p style={{ fontSize: "13px", lineHeight: 1.6, color: P.textSecondary, fontWeight: 300 }}>
             {m.bio}
@@ -633,15 +689,7 @@ function ContactPanel({ message: m, P }: { message: Message; P: ReturnType<typeo
         {m.recentThreads ? (
           <div className="space-y-1.5">
             {m.recentThreads.map((t, i) => (
-              <div
-                key={i}
-                className="truncate cursor-pointer transition-colors duration-150"
-                style={{
-                  fontSize: "12.5px",
-                  color: P.muted,
-                  paddingLeft: "4px",
-                }}
-              >
+              <div key={i} className="truncate cursor-pointer" style={{ fontSize: "12.5px", color: P.muted, paddingLeft: "4px" }}>
                 {t}
               </div>
             ))}
@@ -659,7 +707,7 @@ function ContactPanel({ message: m, P }: { message: Message; P: ReturnType<typeo
           </div>
           <div className="space-y-2">
             {m.socialLinks.map((s, i) => {
-              const icon = s.type === "Twitter" ? "𝕏" : s.type === "LinkedIn" ? "in" : s.type === "Facebook" ? "f" : "•";
+              const icon = s.type === "Twitter" ? "𝕏" : s.type === "LinkedIn" ? "in" : "•";
               return (
                 <div key={i} className="flex items-center gap-2.5">
                   <span style={{ fontSize: "12px", fontWeight: 600, color: P.muted, width: "14px", textAlign: "center" }}>{icon}</span>
@@ -682,17 +730,66 @@ function ContactPanel({ message: m, P }: { message: Message; P: ReturnType<typeo
         <p style={{ fontSize: "13px", lineHeight: 1.7, color: P.textSecondary, fontWeight: 300 }}>
           {m.preview}
         </p>
-
         {m.actionLabel && (
-          <div
-            className="flex items-center gap-2 mt-4 px-3 py-2 rounded-lg"
-            style={{ background: P.accentSoft, border: `1px solid ${P.accent}20` }}
-          >
+          <div className="flex items-center gap-2 mt-4 px-3 py-2 rounded-lg" style={{ background: P.accentSoft, border: `1px solid ${P.accent}20` }}>
             <IconSparkles size={13} style={{ color: P.accent }} />
             <span style={{ fontSize: "12px", fontWeight: 500, color: P.accent }}>{m.actionLabel}</span>
           </div>
         )}
       </div>
+
+      {/* Reply composer */}
+      <AnimatePresence>
+        {replyOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden shrink-0"
+            style={{ borderTop: `1px solid ${P.divider}` }}
+          >
+            <div className="px-5 py-3">
+              <div className="flex items-center gap-2 mb-2">
+                <IconCornerUpLeft size={12} style={{ color: P.accent }} />
+                <span style={{ fontSize: "11px", color: P.accent, fontWeight: 500 }}>Reply to {m.from.split(",")[0]}</span>
+                <button onClick={onCloseReply} className="ml-auto" style={{ color: P.dim }}>
+                  <IconX size={12} />
+                </button>
+              </div>
+              <textarea
+                autoFocus
+                value={replyText}
+                onChange={e => setReplyText(e.target.value)}
+                placeholder="Write your reply…"
+                rows={3}
+                className="w-full resize-none rounded-lg px-3 py-2 outline-none"
+                style={{
+                  background: P.surface,
+                  border: `1px solid ${P.divider}`,
+                  color: P.text,
+                  fontSize: "13px",
+                  fontFamily: FONT,
+                  lineHeight: 1.6,
+                }}
+                onKeyDown={e => {
+                  if (e.key === "Escape") { e.stopPropagation(); onCloseReply(); }
+                }}
+              />
+              <div className="flex items-center justify-between mt-2">
+                <span style={{ fontSize: "10px", color: P.dim }}>⌘ Enter to send</span>
+                <button
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors"
+                  style={{ background: P.accent, color: "white", fontSize: "12px", fontWeight: 500 }}
+                >
+                  <IconSend size={12} />
+                  Send
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Brand */}
       <div className="px-6 py-3 shrink-0 flex items-center justify-center" style={{ borderTop: `1px solid ${P.divider}` }}>
