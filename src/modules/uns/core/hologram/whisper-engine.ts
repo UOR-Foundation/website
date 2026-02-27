@@ -182,9 +182,10 @@ export class WhisperEngine {
         console.log("[Whisper] vGPU init failed → WASM fallback:", err);
       }
 
-      // Use fp32 on WebGPU for maximum accuracy, q8 (quantized) on WASM for speed.
+      // fp16 on WebGPU: best accuracy/size tradeoff (59MB decoder vs 119MB fp32).
+      // q8 on WASM: smallest, fast, good enough for speech.
       // Both variants are pre-seeded in our storage bucket.
-      const dtype = this._device === "webgpu" ? "fp32" : "q8";
+      const dtype = this._device === "webgpu" ? "fp16" : "q8";
 
       this._onProgress?.({ status: "downloading", progress: 0 });
 
