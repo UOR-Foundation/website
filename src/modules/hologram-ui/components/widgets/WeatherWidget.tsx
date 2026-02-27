@@ -179,11 +179,31 @@ async function fetchCity(lat: number, lon: number): Promise<string> {
 }
 
 async function fetchIpLocation(): Promise<{ lat: number; lon: number; city: string } | null> {
-  try {
-    const res = await fetch("https://ipapi.co/json/");
-    const d = await res.json();
-    if (d.latitude && d.longitude) return { lat: d.latitude, lon: d.longitude, city: d.city || "" };
-  } catch { /* silent */ }
+  // Try multiple IP geolocation services for reliability
+  const services = [
+    async () => {
+      const res = await fetch("https://ipapi.co/json/");
+      const d = await res.json();
+      if (d.latitude && d.longitude) return { lat: d.latitude, lon: d.longitude, city: d.city || "" };
+      return null;
+    },
+    async () => {
+      const res = await fetch("https://ip-api.com/json/?fields=lat,lon,city");
+      const d = await res.json();
+      if (d.lat && d.lon) return { lat: d.lat, lon: d.lon, city: d.city || "" };
+      return null;
+    },
+    async () => {
+      // Ultimate fallback: use a default location (New York)
+      return { lat: 40.71, lon: -74.01, city: "New York" };
+    },
+  ];
+  for (const svc of services) {
+    try {
+      const result = await svc();
+      if (result) return result;
+    } catch { /* try next */ }
+  }
   return null;
 }
 
@@ -212,8 +232,10 @@ export default function WeatherWidget() {
       navigator.geolocation.getCurrentPosition(
         (pos) => { if (!cancelled) load(pos.coords.latitude, pos.coords.longitude); },
         () => { if (!cancelled) fromIp(); },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 300_000 }
+        { enableHighAccuracy: false, timeout: 3000, maximumAge: 600_000 }
       );
+      // Safety net: if geolocation hangs without calling either callback
+      setTimeout(() => { if (!cancelled && !weather) fromIp(); }, 3500);
     } else {
       fromIp();
     }
