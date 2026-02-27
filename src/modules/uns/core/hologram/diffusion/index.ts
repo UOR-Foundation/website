@@ -2,29 +2,51 @@
  * Hologram Diffusion Engine — Module Barrel
  * ══════════════════════════════════════════
  *
- * Sovereign browser-native Stable Diffusion 1.5 pipeline.
- * Runs entirely via ONNX Runtime Web + WebGPU — zero server dependency
- * after model files are seeded via model-seeder.
+ * Sovereign, zero-dependency Stable Diffusion 1.5 in the browser.
+ *
+ * Architecture:
+ *   ONNX → onnx-parser (inline protobuf) → weight-store (SHA-256 CIDs)
+ *     → compute graph → WGSL kernels (WebGPU) + CPU fallback
+ *
+ * No onnxruntime. No npm AI dependencies. Pure Hologram.
+ *
+ * The same infrastructure that runs Whisper STT now runs image generation.
+ * Content-addressing provides natural compression through deduplication:
+ * identical tensors across repeated UNet blocks share a single CID.
  *
  * Usage:
- *   import { DiffusionPipeline } from "./diffusion";
+ *   import { DiffusionPipeline, compileDiffusionModel } from "./diffusion";
  *
+ *   // One-time compilation (downloads ONNX, stores content-addressed weights)
+ *   await compileDiffusionModel({ onProgress: console.log });
+ *
+ *   // Inference (pure WGSL kernels, zero external deps)
  *   const pipeline = new DiffusionPipeline();
  *   await pipeline.load(onProgress);
  *   const result = await pipeline.generate("a cat in space", undefined, onProgress);
- *   // result.imageData → canvas rendering
- *
- * Architecture (Holographic Projection):
- *   Prompt → singleProofHash(prompt) → promptCid
- *   promptCid → cache check → hit? instant replay : generate + cache
  *
  * @module uns/core/hologram/diffusion
  */
 
+// Compiler (ONNX → Hologram)
+export {
+  compileDiffusionModel,
+  isDiffusionCompiled,
+  loadCompiledDiffusion,
+  deleteCompiledDiffusion,
+} from "./compiler";
+export type { DiffusionCompileOptions } from "./compiler";
+
+// Pipeline (native inference)
 export { DiffusionPipeline } from "./pipeline";
+
+// Scheduler
 export { PndmScheduler, generateLatentNoise } from "./scheduler";
+
+// Tokenizer
 export { ClipTokenizer } from "./clip-tokenizer";
 
+// Types
 export type {
   DiffusionConfig,
   DiffusionPhase,

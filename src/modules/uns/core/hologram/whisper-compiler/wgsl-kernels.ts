@@ -927,6 +927,318 @@ export function cpuFusedAttention(
   return output;
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// ── Stable Diffusion Kernels (Conv2D, GroupNorm, SiLU, Upsample) ──────
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── Conv2D ────────────────────────────────────────────────────────────────
+// output[b,oc,oh,ow] = bias[oc] + Σ_ic Σ_kh Σ_kw weight[oc,ic,kh,kw] × input[b,ic,ih,iw]
+// Each thread computes one output element.
+
+export const WGSL_CONV2D = /* wgsl */ `
+struct Params {
+  batch: u32,
+  c_in: u32,
+  c_out: u32,
+  in_h: u32,
+  in_w: u32,
+  out_h: u32,
+  out_w: u32,
+  kernel_h: u32,
+  kernel_w: u32,
+  stride_h: u32,
+  stride_w: u32,
+  pad_h: u32,
+  pad_w: u32,
+  has_bias: u32,
+  _p0: u32,
+  _p1: u32,
+}
+@group(0) @binding(0) var<uniform> params: Params;
+@group(0) @binding(1) var<storage, read> input: array<f32>;
+@group(0) @binding(2) var<storage, read> weight: array<f32>;
+@group(0) @binding(3) var<storage, read> bias: array<f32>;
+@group(0) @binding(4) var<storage, read_write> output: array<f32>;
+
+@compute @workgroup_size(256)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+  let idx = gid.x;
+  let spatial = params.out_h * params.out_w;
+  let total = params.batch * params.c_out * spatial;
+  if (idx >= total) { return; }
+
+  let b = idx / (params.c_out * spatial);
+  let rem = idx % (params.c_out * spatial);
+  let oc = rem / spatial;
+  let s = rem % spatial;
+  let oh = s / params.out_w;
+  let ow = s % params.out_w;
+
+  var sum: f32 = 0.0;
+  if (params.has_bias != 0u) { sum = bias[oc]; }
+
+  for (var ic: u32 = 0u; ic < params.c_in; ic = ic + 1u) {
+    let w_base = oc * params.c_in * params.kernel_h * params.kernel_w + ic * params.kernel_h * params.kernel_w;
+    let i_base = b * params.c_in * params.in_h * params.in_w + ic * params.in_h * params.in_w;
+
+    for (var kh: u32 = 0u; kh < params.kernel_h; kh = kh + 1u) {
+      let ih = i32(oh * params.stride_h) - i32(params.pad_h) + i32(kh);
+      if (ih < 0 || ih >= i32(params.in_h)) { continue; }
+
+      for (var kw: u32 = 0u; kw < params.kernel_w; kw = kw + 1u) {
+        let iw = i32(ow * params.stride_w) - i32(params.pad_w) + i32(kw);
+        if (iw < 0 || iw >= i32(params.in_w)) { continue; }
+
+        sum = sum + weight[w_base + kh * params.kernel_w + kw] * input[i_base + u32(ih) * params.in_w + u32(iw)];
+      }
+    }
+  }
+
+  output[idx] = sum;
+}
+`;
+
+// ── Group Normalization ───────────────────────────────────────────────────
+// y = gamma * (x - mean) / sqrt(var + eps) + beta
+// Groups the channels: each group of (C/G) channels shares mean/var.
+// Used in SD UNet (32 groups typically).
+
+export const WGSL_GROUP_NORM = /* wgsl */ `
+struct Params {
+  batch: u32,
+  channels: u32,
+  spatial: u32,  // H * W
+  groups: u32,
+  eps: f32,
+  _p0: u32,
+  _p1: u32,
+  _p2: u32,
+}
+@group(0) @binding(0) var<uniform> params: Params;
+@group(0) @binding(1) var<storage, read> input: array<f32>;
+@group(0) @binding(2) var<storage, read> gamma: array<f32>;
+@group(0) @binding(3) var<storage, read> beta: array<f32>;
+@group(0) @binding(4) var<storage, read_write> output: array<f32>;
+
+@compute @workgroup_size(256)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+  let idx = gid.x;
+  let total = params.batch * params.groups;
+  if (idx >= total) { return; }
+
+  let b = idx / params.groups;
+  let g = idx % params.groups;
+  let cpg = params.channels / params.groups;  // channels per group
+  let group_size = cpg * params.spatial;
+
+  // Compute mean
+  var mean: f32 = 0.0;
+  for (var c: u32 = 0u; c < cpg; c = c + 1u) {
+    let ch = g * cpg + c;
+    let base = b * params.channels * params.spatial + ch * params.spatial;
+    for (var s: u32 = 0u; s < params.spatial; s = s + 1u) {
+      mean = mean + input[base + s];
+    }
+  }
+  mean = mean / f32(group_size);
+
+  // Compute variance
+  var variance: f32 = 0.0;
+  for (var c: u32 = 0u; c < cpg; c = c + 1u) {
+    let ch = g * cpg + c;
+    let base = b * params.channels * params.spatial + ch * params.spatial;
+    for (var s: u32 = 0u; s < params.spatial; s = s + 1u) {
+      let diff = input[base + s] - mean;
+      variance = variance + diff * diff;
+    }
+  }
+  variance = variance / f32(group_size);
+  let inv_std = 1.0 / sqrt(variance + params.eps);
+
+  // Normalize
+  for (var c: u32 = 0u; c < cpg; c = c + 1u) {
+    let ch = g * cpg + c;
+    let base = b * params.channels * params.spatial + ch * params.spatial;
+    for (var s: u32 = 0u; s < params.spatial; s = s + 1u) {
+      let normalized = (input[base + s] - mean) * inv_std;
+      output[base + s] = gamma[ch] * normalized + beta[ch];
+    }
+  }
+}
+`;
+
+// ── SiLU (Swish) Activation ───────────────────────────────────────────────
+// SiLU(x) = x * sigmoid(x) = x / (1 + exp(-x))
+// Used in SD UNet's residual blocks instead of GELU.
+
+export const WGSL_SILU = /* wgsl */ `
+@group(0) @binding(0) var<storage, read> input: array<f32>;
+@group(0) @binding(1) var<storage, read_write> output: array<f32>;
+
+@compute @workgroup_size(256)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+  let idx = gid.x;
+  if (idx >= arrayLength(&input)) { return; }
+  let x = input[idx];
+  output[idx] = x / (1.0 + exp(-x));
+}
+`;
+
+// ── Nearest-Neighbor Upsample 2× ──────────────────────────────────────────
+// input [B,C,H,W] → output [B,C,2H,2W]
+// Used in SD UNet's upsampling path.
+
+export const WGSL_UPSAMPLE2X = /* wgsl */ `
+struct Params {
+  batch: u32,
+  channels: u32,
+  in_h: u32,
+  in_w: u32,
+  _p0: u32,
+  _p1: u32,
+  _p2: u32,
+  _p3: u32,
+}
+@group(0) @binding(0) var<uniform> params: Params;
+@group(0) @binding(1) var<storage, read> input: array<f32>;
+@group(0) @binding(2) var<storage, read_write> output: array<f32>;
+
+@compute @workgroup_size(256)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+  let idx = gid.x;
+  let out_h = params.in_h * 2u;
+  let out_w = params.in_w * 2u;
+  let total = params.batch * params.channels * out_h * out_w;
+  if (idx >= total) { return; }
+
+  let spatial_out = out_h * out_w;
+  let bc = idx / spatial_out;
+  let s = idx % spatial_out;
+  let oh = s / out_w;
+  let ow = s % out_w;
+
+  // Nearest-neighbor: divide by 2
+  let ih = oh / 2u;
+  let iw = ow / 2u;
+
+  let in_spatial = params.in_h * params.in_w;
+  output[idx] = input[bc * in_spatial + ih * params.in_w + iw];
+}
+`;
+
+// ── CPU Fallbacks for SD Kernels ──────────────────────────────────────────
+
+export function cpuConv2d(
+  input: Float32Array, weight: Float32Array, bias: Float32Array | null,
+  batch: number, cIn: number, cOut: number,
+  inH: number, inW: number,
+  kernelH: number, kernelW: number,
+  strideH: number, strideW: number,
+  padH: number, padW: number,
+): Float32Array {
+  const outH = Math.floor((inH + 2 * padH - kernelH) / strideH) + 1;
+  const outW = Math.floor((inW + 2 * padW - kernelW) / strideW) + 1;
+  const output = new Float32Array(batch * cOut * outH * outW);
+
+  for (let b = 0; b < batch; b++) {
+    for (let oc = 0; oc < cOut; oc++) {
+      const bVal = bias ? bias[oc] : 0;
+      for (let oh = 0; oh < outH; oh++) {
+        for (let ow = 0; ow < outW; ow++) {
+          let sum = bVal;
+          for (let ic = 0; ic < cIn; ic++) {
+            const wBase = oc * cIn * kernelH * kernelW + ic * kernelH * kernelW;
+            const iBase = b * cIn * inH * inW + ic * inH * inW;
+            for (let kh = 0; kh < kernelH; kh++) {
+              const ih = oh * strideH - padH + kh;
+              if (ih < 0 || ih >= inH) continue;
+              for (let kw = 0; kw < kernelW; kw++) {
+                const iw = ow * strideW - padW + kw;
+                if (iw < 0 || iw >= inW) continue;
+                sum += weight[wBase + kh * kernelW + kw] * input[iBase + ih * inW + iw];
+              }
+            }
+          }
+          output[b * cOut * outH * outW + oc * outH * outW + oh * outW + ow] = sum;
+        }
+      }
+    }
+  }
+  return output;
+}
+
+export function cpuGroupNorm(
+  input: Float32Array, gamma: Float32Array, beta: Float32Array,
+  batch: number, channels: number, spatial: number, groups: number,
+  eps = 1e-5,
+): Float32Array {
+  const output = new Float32Array(input.length);
+  const cpg = channels / groups;
+
+  for (let b = 0; b < batch; b++) {
+    for (let g = 0; g < groups; g++) {
+      const groupSize = cpg * spatial;
+      let mean = 0;
+      for (let c = 0; c < cpg; c++) {
+        const ch = g * cpg + c;
+        const base = b * channels * spatial + ch * spatial;
+        for (let s = 0; s < spatial; s++) mean += input[base + s];
+      }
+      mean /= groupSize;
+
+      let variance = 0;
+      for (let c = 0; c < cpg; c++) {
+        const ch = g * cpg + c;
+        const base = b * channels * spatial + ch * spatial;
+        for (let s = 0; s < spatial; s++) {
+          const diff = input[base + s] - mean;
+          variance += diff * diff;
+        }
+      }
+      variance /= groupSize;
+      const invStd = 1 / Math.sqrt(variance + eps);
+
+      for (let c = 0; c < cpg; c++) {
+        const ch = g * cpg + c;
+        const base = b * channels * spatial + ch * spatial;
+        for (let s = 0; s < spatial; s++) {
+          output[base + s] = gamma[ch] * ((input[base + s] - mean) * invStd) + beta[ch];
+        }
+      }
+    }
+  }
+  return output;
+}
+
+export function cpuSilu(input: Float32Array): Float32Array {
+  const output = new Float32Array(input.length);
+  for (let i = 0; i < input.length; i++) {
+    const x = input[i];
+    output[i] = x / (1 + Math.exp(-x));
+  }
+  return output;
+}
+
+export function cpuUpsample2x(
+  input: Float32Array, batch: number, channels: number, inH: number, inW: number,
+): Float32Array {
+  const outH = inH * 2;
+  const outW = inW * 2;
+  const output = new Float32Array(batch * channels * outH * outW);
+  for (let bc = 0; bc < batch * channels; bc++) {
+    for (let oh = 0; oh < outH; oh++) {
+      for (let ow = 0; ow < outW; ow++) {
+        const ih = Math.floor(oh / 2);
+        const iw = Math.floor(ow / 2);
+        output[bc * outH * outW + oh * outW + ow] = input[bc * inH * inW + ih * inW + iw];
+      }
+    }
+  }
+  return output;
+}
+
+// ── Combined Kernel Registry ──────────────────────────────────────────────
+
 export const WHISPER_KERNELS = {
   matmul: WGSL_MATMUL,
   layer_norm: WGSL_LAYER_NORM,
@@ -939,4 +1251,17 @@ export const WHISPER_KERNELS = {
   batched_fused_attn: WGSL_BATCHED_FUSED_ATTN,
 } as const;
 
+export const DIFFUSION_KERNELS = {
+  conv2d: WGSL_CONV2D,
+  group_norm: WGSL_GROUP_NORM,
+  silu: WGSL_SILU,
+  upsample2x: WGSL_UPSAMPLE2X,
+  // Shared with Whisper:
+  matmul: WGSL_MATMUL,
+  softmax: WGSL_SOFTMAX,
+  fused_attn: WGSL_FUSED_ATTN,
+  batched_fused_attn: WGSL_BATCHED_FUSED_ATTN,
+} as const;
+
 export type WhisperKernelName = keyof typeof WHISPER_KERNELS;
+export type DiffusionKernelName = keyof typeof DIFFUSION_KERNELS;
