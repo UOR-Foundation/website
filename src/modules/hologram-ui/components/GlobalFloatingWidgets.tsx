@@ -25,7 +25,7 @@ export default function GlobalFloatingWidgets() {
         style={{
           position: "fixed",
           bottom: "28px",
-          right: "28px",
+          right: "68px",
           zIndex: 8500,
           pointerEvents: "auto",
         }}
@@ -37,7 +37,7 @@ export default function GlobalFloatingWidgets() {
       <div
         style={{
           position: "fixed",
-          right: "16px",
+          right: "56px",
           top: "50%",
           transform: "translateY(-50%)",
           zIndex: 8500,
