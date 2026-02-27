@@ -33,6 +33,7 @@ interface UseVoiceSynthesisOptions {
 }
 
 const ELEVENLABS_TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`;
+const SILENT_PRIMER_AUDIO = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
 
 export function useVoiceSynthesis({
   engine = "web-speech",
@@ -48,12 +49,45 @@ export function useVoiceSynthesis({
   const statusRef = useRef<VoiceSynthStatus>("idle");
   const [currentEngine, setCurrentEngine] = useState<VoiceEngine>(engine);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const abortRef = useRef(false);
+  const playbackPrimedRef = useRef(false);
 
   const updateStatus = useCallback((s: VoiceSynthStatus) => {
     statusRef.current = s;
     setStatus(s);
+  }, []);
+
+  const revokeAudioUrl = useCallback(() => {
+    if (!audioUrlRef.current) return;
+    URL.revokeObjectURL(audioUrlRef.current);
+    audioUrlRef.current = null;
+  }, []);
+
+  /** Prime audio output in direct user-gesture context (fixes autoplay gating on some browsers) */
+  const primeForPlayback = useCallback(() => {
+    if (playbackPrimedRef.current) return;
+
+    playbackPrimedRef.current = true;
+    const primer = audioRef.current ?? new Audio(SILENT_PRIMER_AUDIO);
+    primer.muted = true;
+    primer.volume = 0;
+    primer.setAttribute("playsinline", "true");
+    primer.preload = "auto";
+    audioRef.current = primer;
+
+    primer.play().then(() => {
+      primer.pause();
+      primer.currentTime = 0;
+      primer.muted = false;
+      primer.volume = 1;
+    }).catch(() => {
+      playbackPrimedRef.current = false;
+      primer.muted = false;
+      primer.volume = 1;
+      if (audioRef.current === primer) audioRef.current = null;
+    });
   }, []);
 
   // Clean up on unmount
@@ -137,6 +171,13 @@ export function useVoiceSynthesis({
     if (abortRef.current) return;
 
     updateStatus("loading");
+
+    // Reuse a single audio element (once primed, browsers are less likely to gate playback)
+    const audio = audioRef.current ?? new Audio();
+    audio.setAttribute("playsinline", "true");
+    audio.preload = "auto";
+    audioRef.current = audio;
+
     try {
       const response = await fetch(ELEVENLABS_TTS_URL, {
         method: "POST",
@@ -152,13 +193,16 @@ export function useVoiceSynthesis({
         // Fall back to Web Speech
         console.warn("[VoiceSynth] ElevenLabs unavailable, falling back to Web Speech");
         setCurrentEngine("web-speech");
+        updateStatus("idle");
         speakWebSpeech(text);
         return;
       }
 
       const audioBlob = await response.blob();
+      revokeAudioUrl();
       const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
+      audioUrlRef.current = audioUrl;
+      audio.src = audioUrl;
 
       audio.onplay = () => {
         updateStatus("speaking");
@@ -167,27 +211,30 @@ export function useVoiceSynthesis({
 
       audio.onended = () => {
         updateStatus("idle");
-        URL.revokeObjectURL(audioUrl);
+        revokeAudioUrl();
         onEnd?.();
       };
 
       audio.onerror = () => {
         updateStatus("idle");
-        URL.revokeObjectURL(audioUrl);
+        revokeAudioUrl();
         onError?.("Audio playback failed");
       };
 
-      audioRef.current = audio;
-
-      if (!abortRef.current) {
-        await audio.play();
+      if (abortRef.current) {
+        updateStatus("idle");
+        return;
       }
+
+      await audio.play();
     } catch (err) {
       console.warn("[VoiceSynth] ElevenLabs error, falling back:", err);
+      updateStatus("idle");
+      revokeAudioUrl();
       setCurrentEngine("web-speech");
       speakWebSpeech(text);
     }
-  }, [voiceId, speakWebSpeech, onStart, onEnd, onError]);
+  }, [voiceId, speakWebSpeech, onStart, onEnd, onError, updateStatus, revokeAudioUrl]);
 
   /** Primary speak function — routes to the active engine */
   const speak = useCallback((text: string) => {
@@ -203,11 +250,12 @@ export function useVoiceSynthesis({
       .trim();
 
     if (currentEngine === "elevenlabs") {
+      primeForPlayback();
       speakElevenLabs(clean);
     } else {
       speakWebSpeech(clean);
     }
-  }, [currentEngine, speakElevenLabs, speakWebSpeech]);
+  }, [currentEngine, primeForPlayback, speakElevenLabs, speakWebSpeech]);
 
   /** Stop all speech immediately */
   const stop = useCallback(() => {
@@ -217,15 +265,16 @@ export function useVoiceSynthesis({
     window.speechSynthesis?.cancel();
     utteranceRef.current = null;
 
-    // Stop ElevenLabs audio
+    // Stop ElevenLabs audio (keep element for future primed playback)
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
-      audioRef.current = null;
+      audioRef.current.removeAttribute("src");
     }
+    revokeAudioUrl();
 
     updateStatus("idle");
-  }, []);
+  }, [revokeAudioUrl, updateStatus]);
 
   /** Toggle engine */
   const setEngine = useCallback((e: VoiceEngine) => {
@@ -236,6 +285,7 @@ export function useVoiceSynthesis({
   return {
     speak,
     stop,
+    primeForPlayback,
     status,
     statusRef,
     isSpeaking: status === "speaking",
