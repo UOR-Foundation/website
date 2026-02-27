@@ -22,6 +22,7 @@ import {
   IconSend, IconFlame, IconCornerUpLeft,
   IconDotsVertical, IconPencil, IconSettings,
   IconCalendarEvent, IconBrain, IconUsers, IconUserPlus,
+  IconLink,
 } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -29,6 +30,7 @@ import zeroInboxReward from "@/assets/zero-inbox-reward.jpg";
 import MessengerCalendar, { type CalendarEvent } from "./messenger/MessengerCalendar";
 import MessengerAIPanel from "./messenger/MessengerAIPanel";
 import MessengerIntroductions from "./messenger/MessengerIntroductions";
+import MessengerScheduling, { type MeetingType, type Booking } from "./messenger/MessengerScheduling";
 
 // ── Palette by mode ─────────────────────────────────────────────────────────
 
@@ -82,7 +84,7 @@ const SERIF = "'Playfair Display', serif";
 
 type TriadicPhase = "all" | "learn" | "work" | "play";
 type Platform = "email" | "telegram" | "whatsapp" | "linkedin" | "discord" | "signal";
-type MessengerView = "inbox" | "calendar" | "ai" | "introductions";
+type MessengerView = "inbox" | "calendar" | "ai" | "introductions" | "scheduling";
 
 interface Message {
   id: string;
@@ -257,6 +259,86 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
   // Introduction state
   const [introductions, setIntroductions] = useState<any[]>([]);
 
+  // Scheduling state (Calendly-like)
+  const [meetingTypes, setMeetingTypes] = useState<MeetingType[]>([
+    {
+      id: "mt-1",
+      title: "Quick Chat",
+      description: "A brief 15-minute catch-up or introduction call.",
+      durationMinutes: 15,
+      color: "hsl(220, 80%, 56%)",
+      locationType: "video",
+      slug: "quick-chat",
+      isActive: true,
+      maxBookingsPerDay: 8,
+      bufferMinutes: 5,
+      availabilityWindows: [
+        { day: 1, start: "09:00", end: "17:00" },
+        { day: 2, start: "09:00", end: "17:00" },
+        { day: 3, start: "09:00", end: "17:00" },
+        { day: 4, start: "09:00", end: "17:00" },
+        { day: 5, start: "09:00", end: "17:00" },
+      ],
+    },
+    {
+      id: "mt-2",
+      title: "Product Demo",
+      description: "Deep dive into the Hologram platform — see constant-time computation in action.",
+      durationMinutes: 45,
+      color: "hsl(265, 55%, 60%)",
+      locationType: "video",
+      locationDetail: "Zoom",
+      slug: "product-demo",
+      isActive: true,
+      maxBookingsPerDay: 3,
+      bufferMinutes: 15,
+      availabilityWindows: [
+        { day: 1, start: "10:00", end: "16:00" },
+        { day: 3, start: "10:00", end: "16:00" },
+        { day: 5, start: "10:00", end: "16:00" },
+      ],
+    },
+    {
+      id: "mt-3",
+      title: "1:1 Strategy Session",
+      description: "In-depth discussion on partnerships, integration, or investment.",
+      durationMinutes: 60,
+      color: "hsl(38, 70%, 50%)",
+      locationType: "video",
+      slug: "strategy-session",
+      isActive: true,
+      maxBookingsPerDay: 2,
+      bufferMinutes: 15,
+      availabilityWindows: [
+        { day: 2, start: "09:00", end: "12:00" },
+        { day: 4, start: "14:00", end: "17:00" },
+      ],
+    },
+  ]);
+  const [schedulingBookings, setSchedulingBookings] = useState<Booking[]>([
+    {
+      id: "sb-1",
+      meetingTypeId: "mt-1",
+      inviteeName: "Elena Vasquez",
+      inviteeEmail: "elena@arcanecapital.com",
+      startTime: new Date(2026, 2, 2, 10, 0),
+      endTime: new Date(2026, 2, 2, 10, 15),
+      status: "confirmed",
+      createdAt: new Date(2026, 1, 27),
+    },
+    {
+      id: "sb-2",
+      meetingTypeId: "mt-2",
+      inviteeName: "Sundar Pichai",
+      inviteeEmail: "sundar@google.com",
+      startTime: new Date(2026, 2, 3, 14, 0),
+      endTime: new Date(2026, 2, 3, 14, 45),
+      status: "confirmed",
+      notes: "Deep-dive on Hologram + Vertex AI integration",
+      createdAt: new Date(2026, 1, 26),
+    },
+  ]);
+
   const filtered = useMemo(() => {
     let list = messages;
     if (phase !== "all") list = list.filter(m => m.phase === phase);
@@ -323,6 +405,20 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
   // Introduction handlers
   const handleCreateIntro = useCallback((intro: any) => {
     setIntroductions(prev => [...prev, { ...intro, id: `intro-${Date.now()}`, status: "sent", createdAt: new Date() }]);
+  }, []);
+
+  // Scheduling handlers
+  const handleCreateMeetingType = useCallback((mt: Omit<MeetingType, "id">) => {
+    setMeetingTypes(prev => [...prev, { ...mt, id: `mt-${Date.now()}` }]);
+  }, []);
+  const handleUpdateMeetingType = useCallback((id: string, updates: Partial<MeetingType>) => {
+    setMeetingTypes(prev => prev.map(mt => mt.id === id ? { ...mt, ...updates } : mt));
+  }, []);
+  const handleDeleteMeetingType = useCallback((id: string) => {
+    setMeetingTypes(prev => prev.filter(mt => mt.id !== id));
+  }, []);
+  const handleCancelBooking = useCallback((id: string) => {
+    setSchedulingBookings(prev => prev.map(b => b.id === id ? { ...b, status: "cancelled" as const } : b));
   }, []);
 
   // Contacts derived from messages
@@ -400,6 +496,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
   // View switcher config
   const viewTabs: { key: MessengerView; icon: typeof IconMail; label: string }[] = [
     { key: "inbox", icon: IconMail, label: "Inbox" },
+    { key: "scheduling", icon: IconLink, label: "Schedule" },
     { key: "calendar", icon: IconCalendarEvent, label: "Calendar" },
     { key: "ai", icon: IconBrain, label: "Lumen" },
     { key: "introductions", icon: IconUsers, label: "Intros" },
@@ -638,6 +735,24 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
             />
           </div>
         )}
+
+        {activeView === "scheduling" && (
+          <div className="flex-1">
+            <MessengerScheduling
+              P={P}
+              font={FONT}
+              serif={SERIF}
+              meetingTypes={meetingTypes}
+              bookings={schedulingBookings}
+              events={calendarEvents}
+              onCreateMeetingType={handleCreateMeetingType}
+              onUpdateMeetingType={handleUpdateMeetingType}
+              onDeleteMeetingType={handleDeleteMeetingType}
+              onCancelBooking={handleCancelBooking}
+              onAskLumen={(prompt) => { setActiveView("ai"); }}
+            />
+          </div>
+        )}
       </div>
 
       {/* ── Footer ── */}
@@ -686,6 +801,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
               {activeView === "calendar" && `${calendarEvents.length} events`}
               {activeView === "ai" && "Private context · Encrypted graph"}
               {activeView === "introductions" && `${introductions.length} introductions`}
+              {activeView === "scheduling" && `${meetingTypes.filter(m => m.isActive).length} active · ${schedulingBookings.filter(b => b.status === "confirmed").length} booked`}
             </span>
           )}
         </div>
