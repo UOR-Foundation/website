@@ -1,120 +1,51 @@
 /**
- * useWakeWord — "Hey Lumen" Wake Word Detection
- * ═══════════════════════════════════════════════
+ * useWakeWord — Pluggable Wake Word Detection Hook
+ * ═════════════════════════════════════════════════
  *
- * Always-listening microphone monitor that detects the wake phrase
- * "Hey Lumen" using client-side Whisper transcription on short
- * audio windows. When detected, fires `onWake()` to trigger
- * the voice conversation loop.
+ * Auto-selects the best wake word engine:
+ *   1. Porcupine (if AccessKey available) — <20ms, ~1MB WASM
+ *   2. Whisper VAD (sovereign fallback)   — ~2-3s, no API keys
  *
- * Architecture:
- *  1. Continuous mic stream at low quality (for efficiency)
- *  2. Voice Activity Detection (VAD) via audio level threshold
- *  3. When speech detected, buffer 2-3 seconds of audio
- *  4. Run Whisper on the short buffer
- *  5. If transcript contains the wake phrase → fire callback
- *  6. Return to passive listening
- *
- * Privacy:
- *  - All processing is 100% client-side (Whisper WASM)
- *  - No audio leaves the browser until wake word is confirmed
- *  - User must explicitly enable always-listening mode
+ * The detected wake word triggers `onWake()` which activates
+ * the Whisper STT → Lumen AI → Piper TTS voice pipeline.
  *
  * @module hologram-ui/hooks/useWakeWord
  */
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { installModelProxy } from "@/modules/uns/core/hologram/model-proxy";
+import {
+  createWakeWordEngine,
+  type IWakeWordEngine,
+  type WakeWordStatus,
+  type WakeWordBackend,
+  type WakeWordDetection,
+} from "@/modules/uns/core/hologram/wake-word";
+import { supabase } from "@/integrations/supabase/client";
 
-export type WakeWordStatus =
-  | "off"         // Not listening at all
-  | "standby"     // Mic open, waiting for speech
-  | "detecting"   // Speech detected, buffering audio
-  | "checking"    // Running Whisper on captured audio
-  | "cooldown";   // Brief pause after check before re-listening
+export type { WakeWordStatus } from "@/modules/uns/core/hologram/wake-word";
 
 interface UseWakeWordOptions {
   /** Callback when wake word is detected */
   onWake: () => void;
-  /** The wake phrase to listen for */
+  /** The wake phrase (for Whisper VAD fallback) */
   wakePhrase?: string;
-  /** Audio level threshold to trigger speech detection (0-1) */
-  vadThreshold?: number;
-  /** How long to buffer speech before checking (ms) */
-  captureWindowMs?: number;
-  /** Cooldown between checks (ms) */
-  cooldownMs?: number;
   /** Whether wake word detection is enabled */
   enabled?: boolean;
+  /** Force a specific backend */
+  forceBackend?: "porcupine" | "whisper-vad";
+  /** Porcupine keywords (built-in or custom) */
+  porcupineKeywords?: Array<
+    | { builtin: string; sensitivity?: number }
+    | { base64: string; label: string; sensitivity?: number }
+  >;
 }
 
-// Reuse singleton pipeline from useWhisperTranscription
-let wakeWordPipeline: any = null;
-let wakeWordPipelineLoading: Promise<any> | null = null;
-
-async function getWakeWordPipeline() {
-  if (wakeWordPipeline) return wakeWordPipeline;
-  if (wakeWordPipelineLoading) return wakeWordPipelineLoading;
-  wakeWordPipelineLoading = (async () => {
-    const { pipeline } = await import("@huggingface/transformers");
-    // Install model proxy so all HF fetches route through our caching proxy
-    const restoreFetch = installModelProxy();
-    try {
-      const transcriber = await pipeline(
-        "automatic-speech-recognition",
-        "onnx-community/whisper-base",
-        { dtype: "q8", device: "wasm" },
-      );
-      wakeWordPipeline = transcriber;
-      return transcriber;
-    } finally {
-      restoreFetch();
-    }
-  })();
-  return wakeWordPipelineLoading;
-}
-
-/** Convert audio blob to Float32 PCM at 16kHz */
-async function blobToPCM(blob: Blob): Promise<Float32Array> {
-  const arrayBuf = await blob.arrayBuffer();
-  const ctx = new OfflineAudioContext(1, 1, 16000);
-  const decoded = await ctx.decodeAudioData(arrayBuf);
-  const offlineCtx = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
-  const source = offlineCtx.createBufferSource();
-  source.buffer = decoded;
-  source.connect(offlineCtx.destination);
-  source.start();
-  const rendered = await offlineCtx.startRendering();
-  return rendered.getChannelData(0);
-}
-
-/** Fuzzy match for wake phrase in transcript */
-function containsWakePhrase(transcript: string, phrase: string): boolean {
-  const t = transcript.toLowerCase().replace(/[^a-z\s]/g, "").trim();
-  const p = phrase.toLowerCase().replace(/[^a-z\s]/g, "").trim();
-
-  // Exact substring
-  if (t.includes(p)) return true;
-
-  // Common Whisper mishearings of "hey lumen"
-  const variants = [
-    "hey lumen", "hey luman", "hey looman", "hey lumin",
-    "hey lemon", "hey loman", "a lumen", "hey lumun",
-    "hei lumen", "hey limon", "hey lumen.", "hey, lumen",
-    "helumen", "hey loom in", "halo men", "hey lumen!",
-  ];
-  return variants.some(v => t.includes(v));
-}
-
-/** Play a short synthesized chime using Web Audio API */
+/** Play a short ascending chime on wake detection */
 function playWakeChime() {
   try {
     const ctx = new AudioContext();
     const now = ctx.currentTime;
-
-    // Two-tone ascending chime (C5 → E5)
-    const notes = [523.25, 659.25];
-    notes.forEach((freq, i) => {
+    [523.25, 659.25].forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
@@ -126,244 +57,140 @@ function playWakeChime() {
       osc.start(now + i * 0.1);
       osc.stop(now + i * 0.1 + 0.3);
     });
-
-    // Clean up context after chime
     setTimeout(() => ctx.close().catch(() => {}), 600);
+  } catch {}
+}
+
+/** Fetch Picovoice AccessKey from edge function */
+async function fetchPorcupineAccessKey(): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("picovoice-access-key");
+    if (error || !data?.accessKey) return null;
+    return data.accessKey;
   } catch {
-    // Audio context may be blocked — silent fallback
+    return null;
   }
 }
 
 export function useWakeWord({
   onWake,
   wakePhrase = "hey lumen",
-  vadThreshold = 0.06,
-  captureWindowMs = 2500,
-  cooldownMs = 1500,
   enabled = false,
+  forceBackend,
+  porcupineKeywords,
 }: UseWakeWordOptions) {
   const [status, setStatus] = useState<WakeWordStatus>("off");
   const [audioLevel, setAudioLevel] = useState(0);
   const [wakeDetected, setWakeDetected] = useState(false);
+  const [activeBackend, setActiveBackend] = useState<WakeWordBackend | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
 
-  const streamRef = useRef<MediaStream | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const rafRef = useRef<number | null>(null);
-  const speechStartRef = useRef<number | null>(null);
-  const activeRef = useRef(false);
-  const statusRef = useRef<WakeWordStatus>("off");
+  const engineRef = useRef<IWakeWordEngine | null>(null);
+  const onWakeRef = useRef(onWake);
+  onWakeRef.current = onWake;
 
-  const updateStatus = useCallback((s: WakeWordStatus) => {
-    statusRef.current = s;
-    setStatus(s);
+  const stopListening = useCallback(async () => {
+    if (engineRef.current) {
+      await engineRef.current.stop();
+    }
+    setStatus("off");
+    setAudioLevel(0);
   }, []);
 
-  /** Stop everything and release resources */
-  const stopListening = useCallback(() => {
-    activeRef.current = false;
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
-    if (recorderRef.current?.state === "recording") {
-      recorderRef.current.stop();
-    }
-    recorderRef.current = null;
-    streamRef.current?.getTracks().forEach(t => t.stop());
-    streamRef.current = null;
-    if (audioCtxRef.current?.state !== "closed") {
-      audioCtxRef.current?.close().catch(() => {});
-    }
-    audioCtxRef.current = null;
-    analyserRef.current = null;
-    setAudioLevel(0);
-    updateStatus("off");
-  }, [updateStatus]);
+  const startListening = useCallback(async () => {
+    if (engineRef.current?.status !== "off") return;
 
-  /** Process captured audio through Whisper */
-  const checkForWakeWord = useCallback(async (chunks: Blob[]) => {
-    if (!activeRef.current || chunks.length === 0) {
-      updateStatus("standby");
+    // If engine isn't ready, initialize it
+    if (!engineRef.current.isReady) {
+      const ok = await engineRef.current.init({
+        onDetection: (detection: WakeWordDetection) => {
+          console.log(`[useWakeWord] 🎯 ${detection.backend}: "${detection.keyword}"`);
+          playWakeChime();
+          setWakeDetected(true);
+          setTimeout(() => setWakeDetected(false), 400);
+          onWakeRef.current();
+        },
+        onStatusChange: (s) => setStatus(s),
+        onError: (err) => {
+          console.error("[useWakeWord]", err);
+          setInitError(err);
+        },
+        onAudioLevel: (level) => setAudioLevel(level),
+      });
+      if (!ok) return;
+    }
+
+    await engineRef.current.start();
+  }, []);
+
+  // Initialize engine when enabled changes
+  useEffect(() => {
+    if (!enabled) {
+      stopListening();
       return;
     }
 
-    updateStatus("checking");
-    try {
-      const blob = new Blob(chunks, { type: "audio/webm" });
-      const pcm = await blobToPCM(blob);
-      const transcriber = await getWakeWordPipeline();
-      const result = await transcriber(pcm, {
-        chunk_length_s: 5,
-        stride_length_s: 1,
-        return_timestamps: false,
+    let cancelled = false;
+
+    (async () => {
+      // Fetch Porcupine access key
+      const accessKey = forceBackend === "whisper-vad" ? null : await fetchPorcupineAccessKey();
+
+      if (cancelled) return;
+
+      // Create engine with auto-selection
+      const engine = createWakeWordEngine({
+        accessKey: accessKey ?? undefined,
+        porcupineKeywords: porcupineKeywords as any,
+        whisperConfig: { wakePhrase },
+        forceBackend,
       });
 
-      const text = (result?.text ?? "").trim();
-      if (text && containsWakePhrase(text, wakePhrase)) {
-        console.log("[WakeWord] 🎯 Detected:", text);
-        // Chime + haptic flash before triggering
-        playWakeChime();
-        setWakeDetected(true);
-        // Brief visual moment before starting conversation
-        await new Promise(r => setTimeout(r, 400));
-        setWakeDetected(false);
-        onWake();
-        // Brief cooldown after wake to avoid double-trigger
-        updateStatus("cooldown");
-        await new Promise(r => setTimeout(r, cooldownMs * 2));
+      engineRef.current = engine;
+      setActiveBackend(engine.backend);
+      setInitError(null);
+
+      // Init and start
+      const ok = await engine.init({
+        onDetection: (detection: WakeWordDetection) => {
+          console.log(`[useWakeWord] 🎯 ${detection.backend}: "${detection.keyword}"`);
+          playWakeChime();
+          setWakeDetected(true);
+          setTimeout(() => setWakeDetected(false), 400);
+          onWakeRef.current();
+        },
+        onStatusChange: (s) => { if (!cancelled) setStatus(s); },
+        onError: (err) => {
+          console.error("[useWakeWord]", err);
+          if (!cancelled) setInitError(err);
+        },
+        onAudioLevel: (level) => { if (!cancelled) setAudioLevel(level); },
+      });
+
+      if (ok && !cancelled) {
+        await engine.start();
       }
-    } catch (err) {
-      console.error("[WakeWord] Check error:", err);
-    }
+    })();
 
-    if (activeRef.current) {
-      updateStatus("standby");
-    }
-  }, [wakePhrase, onWake, cooldownMs, updateStatus]);
+    return () => {
+      cancelled = true;
+      engineRef.current?.destroy();
+      engineRef.current = null;
+    };
+  }, [enabled, forceBackend, wakePhrase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** Start always-listening mode */
-  const startListening = useCallback(async () => {
-    if (activeRef.current) return;
-
-    try {
-      // Pre-load Whisper
-      await getWakeWordPipeline();
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 },
-      });
-
-      if (!stream) return;
-      streamRef.current = stream;
-      activeRef.current = true;
-      updateStatus("standby");
-
-      const audioCtx = new AudioContext();
-      audioCtxRef.current = audioCtx;
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.5;
-      source.connect(analyser);
-      analyserRef.current = analyser;
-
-      // Set up recorder for capture
-      const recorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : "audio/webm",
-      });
-      recorderRef.current = recorder;
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        const captured = [...chunksRef.current];
-        chunksRef.current = [];
-
-        if (activeRef.current && statusRef.current === "detecting") {
-          await checkForWakeWord(captured);
-
-          // Restart recording for next detection cycle
-          if (activeRef.current && recorderRef.current && streamRef.current) {
-            try {
-              chunksRef.current = [];
-              recorderRef.current = new MediaRecorder(streamRef.current, {
-                mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-                  ? "audio/webm;codecs=opus"
-                  : "audio/webm",
-              });
-              recorderRef.current.ondataavailable = (ev) => {
-                if (ev.data.size > 0) chunksRef.current.push(ev.data);
-              };
-              recorderRef.current.onstop = recorder.onstop;
-            } catch {
-              // Stream may have ended
-            }
-          }
-        }
-      };
-
-      // VAD monitoring loop
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      const tick = () => {
-        if (!activeRef.current) return;
-
-        analyser.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-        const level = sum / dataArray.length / 255;
-        setAudioLevel(level);
-
-        const now = Date.now();
-
-        if (statusRef.current === "standby") {
-          // Speech onset detection
-          if (level > vadThreshold) {
-            speechStartRef.current = now;
-            updateStatus("detecting");
-            chunksRef.current = [];
-            try {
-              recorderRef.current?.start(100);
-            } catch {
-              // May already be recording
-            }
-          }
-        } else if (statusRef.current === "detecting") {
-          // Check if we've captured enough audio
-          if (speechStartRef.current && now - speechStartRef.current > captureWindowMs) {
-            speechStartRef.current = null;
-            try {
-              if (recorderRef.current?.state === "recording") {
-                recorderRef.current.stop(); // triggers onstop → checkForWakeWord
-              }
-            } catch {
-              updateStatus("standby");
-            }
-          }
-        }
-
-        rafRef.current = requestAnimationFrame(tick);
-      };
-
-      rafRef.current = requestAnimationFrame(tick);
-    } catch (err) {
-      console.error("[WakeWord] Start error:", err);
-      activeRef.current = false;
-      updateStatus("off");
-    }
-  }, [vadThreshold, captureWindowMs, checkForWakeWord, updateStatus]);
-
-  /** Toggle always-listening on/off */
-  const toggle = useCallback(() => {
-    if (activeRef.current) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  }, [startListening, stopListening]);
-
-  // Auto-enable/disable based on `enabled` prop
-  useEffect(() => {
-    if (enabled && !activeRef.current) {
-      startListening();
-    } else if (!enabled && activeRef.current) {
-      stopListening();
-    }
-  }, [enabled, startListening, stopListening]);
-
-  // Cleanup
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      activeRef.current = false;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      streamRef.current?.getTracks().forEach(t => t.stop());
-      audioCtxRef.current?.close().catch(() => {});
+      engineRef.current?.destroy();
+      engineRef.current = null;
     };
   }, []);
+
+  const toggle = useCallback(() => {
+    if (status !== "off") stopListening();
+    else startListening();
+  }, [status, startListening, stopListening]);
 
   return {
     status,
@@ -373,6 +200,8 @@ export function useWakeWord({
     isDetecting: status === "detecting",
     isChecking: status === "checking",
     wakeDetected,
+    activeBackend,
+    initError,
     toggle,
     startListening,
     stopListening,
