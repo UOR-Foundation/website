@@ -17,7 +17,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useVoiceConversation, type VoiceConversationState } from "../hooks/useVoiceConversation";
 import { useVoiceCoherence, type VoiceCoherenceMetrics } from "../hooks/useVoiceCoherence";
 import { useWakeWord } from "../hooks/useWakeWord";
-import { Mic, Square, Volume2, Waves, Ear, EarOff } from "lucide-react";
+import { Mic, Square, Volume2, Waves, Ear, EarOff, Radio } from "lucide-react";
+
+const LONG_PRESS_MS = 600;
 
 interface VoiceOrbProps {
   screenContext?: string;
@@ -82,6 +84,7 @@ export default function VoiceOrb({
 }: VoiceOrbProps) {
   const [hovered, setHovered] = useState(false);
   const [alwaysListening, setAlwaysListening] = useState(false);
+  const [listenMode, setListenMode] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<VoiceCoherenceMetrics>({
     intensity: 0, steadiness: 1, pace: 0, coherence: 1, hue: 150, label: "silent",
@@ -89,6 +92,8 @@ export default function VoiceOrb({
 
   const coherence = useVoiceCoherence();
   const metricsRafRef = useRef<number | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPressRef = useRef(false);
 
   const voice = useVoiceConversation({
     voiceEngine: "piper",
@@ -114,6 +119,35 @@ export default function VoiceOrb({
     }
     voice.toggle();
   }, [voice.toggle, voice.isIdle, voice.injectContext, chatContext]);
+
+  // Long-press handlers for listen mode
+  const handlePointerDown = useCallback(() => {
+    didLongPressRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      didLongPressRef.current = true;
+      setListenMode(prev => {
+        const next = !prev;
+        console.log(`[VoiceOrb] Listen mode ${next ? "ON" : "OFF"}`);
+        return next;
+      });
+    }, LONG_PRESS_MS);
+  }, []);
+
+  const handlePointerUp = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    // If it was a long press, don't fire the click toggle
+  }, []);
+
+  const handleClick = useCallback(() => {
+    if (didLongPressRef.current) {
+      didLongPressRef.current = false;
+      return; // swallow click after long-press
+    }
+    handleVoiceToggle();
+  }, [handleVoiceToggle]);
 
   // Analyze audio level while listening
   useEffect(() => {
@@ -164,13 +198,14 @@ export default function VoiceOrb({
   }, [voice.isListening, voice.state, metrics]);
 
   const Icon = useMemo(() => {
+    if (listenMode && voice.isIdle) return Radio;
     switch (voice.state) {
       case "idle": return Mic;
       case "listening": return Square;
       case "speaking": return Volume2;
       default: return Waves;
     }
-  }, [voice.state]);
+  }, [voice.state, listenMode]);
 
   // Waveform bars
   const waveBars = useMemo(() => {
@@ -293,10 +328,13 @@ export default function VoiceOrb({
 
       {/* The Orb */}
       <button
-        onClick={handleVoiceToggle}
+        onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
         className="relative group cursor-pointer select-none"
         style={{ touchAction: "none" }}
-        aria-label={STATE_LABELS[voice.state]}
+        aria-label={listenMode ? "Listen mode active" : STATE_LABELS[voice.state]}
       >
         {/* Wake word sentinel ring */}
         <AnimatePresence>
@@ -413,26 +451,46 @@ export default function VoiceOrb({
           style={{
             width: "44px",
             height: "44px",
-            background: coherenceBg,
+            background: listenMode && voice.isIdle
+              ? "hsla(145, 12%, 12%, 0.85)"
+              : coherenceBg,
             border: `1.5px solid ${
-              alwaysListening && voice.isIdle
-                ? `hsla(185, 35%, 55%, ${wakeWord.isDetecting ? 0.55 : 0.35})`
-                : coherenceRing
+              listenMode && voice.isIdle
+                ? "hsla(145, 45%, 50%, 0.55)"
+                : alwaysListening && voice.isIdle
+                  ? `hsla(185, 35%, 55%, ${wakeWord.isDetecting ? 0.55 : 0.35})`
+                  : coherenceRing
             }`,
             backdropFilter: "blur(16px)",
             WebkitBackdropFilter: "blur(16px)",
-            boxShadow: voice.isListening
-              ? `0 0 ${12 + metrics.intensity * 20}px ${coherenceGlow}, inset 0 0 ${6 + metrics.intensity * 8}px ${coherenceGlow}`
-              : voice.isActive
-                ? `0 0 24px ${STATE_COLORS[voice.state].glow}, inset 0 0 10px ${STATE_COLORS[voice.state].glow}`
-                : alwaysListening && voice.isIdle
-                  ? "0 0 12px hsla(185, 30%, 50%, 0.08)"
-                  : hovered
-                    ? "0 0 12px hsla(38, 30%, 50%, 0.08)"
-                    : "0 2px 8px hsla(0, 0%, 0%, 0.2)",
+            boxShadow: listenMode && voice.isIdle
+              ? "0 0 18px hsla(145, 40%, 45%, 0.15), inset 0 0 8px hsla(145, 35%, 45%, 0.08)"
+              : voice.isListening
+                ? `0 0 ${12 + metrics.intensity * 20}px ${coherenceGlow}, inset 0 0 ${6 + metrics.intensity * 8}px ${coherenceGlow}`
+                : voice.isActive
+                  ? `0 0 24px ${STATE_COLORS[voice.state].glow}, inset 0 0 10px ${STATE_COLORS[voice.state].glow}`
+                  : alwaysListening && voice.isIdle
+                    ? "0 0 12px hsla(185, 30%, 50%, 0.08)"
+                    : hovered
+                      ? "0 0 12px hsla(38, 30%, 50%, 0.08)"
+                      : "0 2px 8px hsla(0, 0%, 0%, 0.2)",
             transition: "background 0.3s ease, border-color 0.15s ease, box-shadow 0.15s ease",
           }}
         >
+          {/* Listen mode breathing ring */}
+          {listenMode && voice.isIdle && (
+            <motion.div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              animate={{
+                boxShadow: [
+                  "0 0 0 0 hsla(145, 40%, 50%, 0.2)",
+                  "0 0 0 6px hsla(145, 40%, 50%, 0.0)",
+                ],
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+            />
+          )}
+
           {/* Thinking/Processing spinner */}
           {(voice.isThinking || voice.isProcessing) && (
             <div
@@ -465,13 +523,15 @@ export default function VoiceOrb({
               size={16}
               strokeWidth={1.5}
               style={{
-                color: voice.isActive
-                  ? "hsla(38, 20%, 92%, 0.9)"
-                  : alwaysListening
-                    ? "hsla(185, 20%, 85%, 0.65)"
-                    : hovered
-                      ? "hsla(38, 20%, 85%, 0.75)"
-                      : "hsla(38, 15%, 75%, 0.45)",
+                color: listenMode && voice.isIdle
+                  ? "hsla(145, 35%, 70%, 0.85)"
+                  : voice.isActive
+                    ? "hsla(38, 20%, 92%, 0.9)"
+                    : alwaysListening
+                      ? "hsla(185, 20%, 85%, 0.65)"
+                      : hovered
+                        ? "hsla(38, 20%, 85%, 0.75)"
+                        : "hsla(38, 15%, 75%, 0.45)",
                 transition: "color 0.4s ease",
               }}
             />
@@ -493,15 +553,17 @@ export default function VoiceOrb({
               fontFamily: "'DM Sans', system-ui, sans-serif",
               fontSize: "9px",
               fontWeight: 500,
-              color: voice.isListening && metrics.label !== "silent"
-                ? `hsla(${metrics.hue}, 30%, 75%, 0.7)`
-                : alwaysListening && voice.isIdle
-                  ? "hsla(185, 15%, 75%, 0.55)"
-                  : voice.isActive
-                    ? "hsla(38, 15%, 85%, 0.65)"
-                    : hovered
-                      ? "hsla(38, 15%, 80%, 0.45)"
-                      : "hsla(38, 15%, 75%, 0.25)",
+              color: listenMode && voice.isIdle
+                ? "hsla(145, 30%, 70%, 0.7)"
+                : voice.isListening && metrics.label !== "silent"
+                  ? `hsla(${metrics.hue}, 30%, 75%, 0.7)`
+                  : alwaysListening && voice.isIdle
+                    ? "hsla(185, 15%, 75%, 0.55)"
+                    : voice.isActive
+                      ? "hsla(38, 15%, 85%, 0.65)"
+                      : hovered
+                        ? "hsla(38, 15%, 80%, 0.45)"
+                        : "hsla(38, 15%, 75%, 0.25)",
               transition: "color 0.3s ease",
             }}
           >
@@ -515,13 +577,15 @@ export default function VoiceOrb({
                 }}
               />
             )}
-            {alwaysListening && voice.isIdle
-              ? wakeWord.isChecking ? "Checking…"
-                : wakeWord.isDetecting ? "Hearing…"
-                : `${wakeWord.activeBackend === "porcupine" ? "🦔" : "🎤"} Hi Lumen`
-              : voice.isListening && metrics.label !== "silent"
-                ? COHERENCE_LABELS[metrics.label]
-                : STATE_LABELS[voice.state]
+            {listenMode && voice.isIdle
+              ? "Listen Mode"
+              : alwaysListening && voice.isIdle
+                ? wakeWord.isChecking ? "Checking…"
+                  : wakeWord.isDetecting ? "Hearing…"
+                  : `${wakeWord.activeBackend === "porcupine" ? "🦔" : "🎤"} Hi Lumen`
+                : voice.isListening && metrics.label !== "silent"
+                  ? COHERENCE_LABELS[metrics.label]
+                  : STATE_LABELS[voice.state]
             }
             {voice.isActive && (
               <>
