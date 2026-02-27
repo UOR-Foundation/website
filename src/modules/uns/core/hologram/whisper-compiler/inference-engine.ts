@@ -56,35 +56,6 @@ const MAX_TOKENS = 224;
 
 // ── Tensor Ops (CPU-only, for non-dispatchable ops) ────────────────────────
 
-/** Conv1D: input [C_in, L], weight [C_out, C_in, K], bias [C_out] → output [C_out, L'] */
-function conv1d(
-  input: Float32Array, weight: Float32Array, bias: Float32Array | null,
-  cIn: number, cOut: number, kernelSize: number, length: number,
-  stride = 1, padding = 0,
-): Float32Array {
-  const outLen = Math.floor((length + 2 * padding - kernelSize) / stride) + 1;
-  const output = new Float32Array(cOut * outLen);
-
-  for (let oc = 0; oc < cOut; oc++) {
-    const b = bias ? bias[oc] : 0;
-    for (let ol = 0; ol < outLen; ol++) {
-      let sum = b;
-      for (let ic = 0; ic < cIn; ic++) {
-        const wOff = oc * cIn * kernelSize + ic * kernelSize;
-        const iBase = ic * length;
-        for (let k = 0; k < kernelSize; k++) {
-          const il = ol * stride - padding + k;
-          if (il >= 0 && il < length) {
-            sum += weight[wOff + k] * input[iBase + il];
-          }
-        }
-      }
-      output[oc * outLen + ol] = sum;
-    }
-  }
-  return output;
-}
-
 /** Transpose [rows, cols] → [cols, rows] */
 function transpose2d(data: Float32Array, rows: number, cols: number): Float32Array {
   const out = new Float32Array(rows * cols);
@@ -237,16 +208,16 @@ export class WhisperEngine {
   private async encodeAudio(mel: Float32Array): Promise<Float32Array> {
     const T_mel = N_FRAMES;
 
-    // Conv1: [80, 3000] → [384, 3000] (CPU — conv1d not yet GPU-dispatched)
-    let x = conv1d(
+    // Conv1: [80, 3000] → [384, 3000] (GPU-accelerated)
+    let x = await this.dispatch.conv1d(
       mel, this.w("conv1.weight"), this.tryW("conv1.bias"),
       N_MELS, D_MODEL, 3, T_mel, 1, 1,
     );
     x = await this.dispatch.gelu(x);
 
-    // Conv2: [384, 3000] → [384, 1500] (stride=2)
+    // Conv2: [384, 3000] → [384, 1500] (stride=2, GPU-accelerated)
     const T_conv1 = T_mel;
-    x = conv1d(
+    x = await this.dispatch.conv1d(
       x, this.w("conv2.weight"), this.tryW("conv2.bias"),
       D_MODEL, D_MODEL, 3, T_conv1, 2, 1,
     );

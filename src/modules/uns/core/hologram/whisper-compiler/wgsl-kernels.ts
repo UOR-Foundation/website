@@ -246,6 +246,62 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
 }
 `;
 
+// ── Conv1D ─────────────────────────────────────────────────────────────────
+// output[oc, ol] = bias[oc] + Σ_ic Σ_k weight[oc, ic, k] × input[ic, ol*stride - padding + k]
+// Each thread computes one (oc, ol) element.
+
+export const WGSL_CONV1D = /* wgsl */ `
+struct Params {
+  c_in: u32,
+  c_out: u32,
+  kernel_size: u32,
+  in_length: u32,
+  out_length: u32,
+  stride: u32,
+  padding: u32,
+  has_bias: u32,
+}
+@group(0) @binding(0) var<uniform> params: Params;
+@group(0) @binding(1) var<storage, read> input: array<f32>;
+@group(0) @binding(2) var<storage, read> weight: array<f32>;
+@group(0) @binding(3) var<storage, read> bias: array<f32>;
+@group(0) @binding(4) var<storage, read_write> output: array<f32>;
+
+@compute @workgroup_size(256)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+  let idx = gid.x;
+  let total = params.c_out * params.out_length;
+  if (idx >= total) { return; }
+
+  let oc = idx / params.out_length;
+  let ol = idx % params.out_length;
+
+  var sum: f32 = 0.0;
+  if (params.has_bias != 0u) {
+    sum = bias[oc];
+  }
+
+  let K = params.kernel_size;
+  let L = params.in_length;
+  let S = params.stride;
+  let P = params.padding;
+
+  for (var ic: u32 = 0u; ic < params.c_in; ic = ic + 1u) {
+    let wOff = oc * params.c_in * K + ic * K;
+    let iBase = ic * L;
+    for (var k: u32 = 0u; k < K; k = k + 1u) {
+      let il_signed = i32(ol * S) - i32(P) + i32(k);
+      if (il_signed >= 0 && il_signed < i32(L)) {
+        sum = sum + weight[wOff + k] * input[iBase + u32(il_signed)];
+      }
+    }
+  }
+
+  output[oc * params.out_length + ol] = sum;
+}
+`;
+
+
 // ── CPU Reference Implementations ──────────────────────────────────────────
 // Used for verification and as fallback when WebGPU is unavailable.
 
@@ -355,6 +411,33 @@ export function cpuScaledDotProductAttention(
   return output;
 }
 
+export function cpuConv1d(
+  input: Float32Array, weight: Float32Array, bias: Float32Array | null,
+  cIn: number, cOut: number, kernelSize: number, length: number,
+  stride = 1, padding = 0,
+): Float32Array {
+  const outLen = Math.floor((length + 2 * padding - kernelSize) / stride) + 1;
+  const output = new Float32Array(cOut * outLen);
+  for (let oc = 0; oc < cOut; oc++) {
+    const b = bias ? bias[oc] : 0;
+    for (let ol = 0; ol < outLen; ol++) {
+      let sum = b;
+      for (let ic = 0; ic < cIn; ic++) {
+        const wOff = oc * cIn * kernelSize + ic * kernelSize;
+        const iBase = ic * length;
+        for (let k = 0; k < kernelSize; k++) {
+          const il = ol * stride - padding + k;
+          if (il >= 0 && il < length) {
+            sum += weight[wOff + k] * input[iBase + il];
+          }
+        }
+      }
+      output[oc * outLen + ol] = sum;
+    }
+  }
+  return output;
+}
+
 // ── Kernel Registry ────────────────────────────────────────────────────────
 
 export const WHISPER_KERNELS = {
@@ -363,6 +446,7 @@ export const WHISPER_KERNELS = {
   gelu: WGSL_GELU,
   softmax: WGSL_SOFTMAX,
   sdpa: WGSL_SDPA,
+  conv1d: WGSL_CONV1D,
 } as const;
 
 export type WhisperKernelName = keyof typeof WHISPER_KERNELS;

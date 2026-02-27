@@ -22,11 +22,13 @@ import {
   WGSL_GELU,
   WGSL_SOFTMAX,
   WGSL_SDPA,
+  WGSL_CONV1D,
   cpuMatmul,
   cpuLayerNorm,
   cpuGelu,
   cpuSoftmax,
   cpuScaledDotProductAttention,
+  cpuConv1d,
 } from "./wgsl-kernels";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -244,6 +246,55 @@ export class GpuDispatch {
     } catch {
       this._cpuOps++;
       return cpuGelu(input);
+    }
+  }
+
+  // ── Conv1D (GPU-accelerated) ──────────────────────────────────────────
+  // input [C_in, L], weight [C_out, C_in, K], bias [C_out] → output [C_out, L']
+
+  async conv1d(
+    input: Float32Array, weight: Float32Array, bias: Float32Array | null,
+    cIn: number, cOut: number, kernelSize: number, length: number,
+    stride = 1, padding = 0,
+  ): Promise<Float32Array> {
+    const outLen = Math.floor((length + 2 * padding - kernelSize) / stride) + 1;
+    const totalElements = cOut * outLen;
+
+    // Skip GPU for small convolutions
+    if (!this._available || totalElements < 4096) {
+      this._cpuOps++;
+      return cpuConv1d(input, weight, bias, cIn, cOut, kernelSize, length, stride, padding);
+    }
+
+    try {
+      // Uniforms: 8 u32s = 32 bytes
+      const uniforms = new ArrayBuffer(32);
+      const view = new Uint32Array(uniforms);
+      view[0] = cIn;
+      view[1] = cOut;
+      view[2] = kernelSize;
+      view[3] = length;
+      view[4] = outLen;
+      view[5] = stride;
+      view[6] = padding;
+      view[7] = bias ? 1 : 0;
+
+      // If no bias, pass a dummy single-element buffer
+      const biasBuffer = bias ?? new Float32Array(1);
+      const outputSize = totalElements * 4;
+      const wgX = Math.ceil(totalElements / 256);
+
+      const result = await this.gpu.compute(
+        WGSL_CONV1D, [input, weight, biasBuffer], outputSize,
+        [wgX, 1, 1], uniforms,
+      );
+
+      this._gpuOps++;
+      this._totalGpuMs += result.computeTimeMs;
+      return result.output;
+    } catch {
+      this._cpuOps++;
+      return cpuConv1d(input, weight, bias, cIn, cOut, kernelSize, length, stride, padding);
     }
   }
 
