@@ -62,6 +62,7 @@ export function useVoiceConversation({
   onError,
 }: UseVoiceConversationOptions = {}) {
   const [state, setState] = useState<VoiceConversationState>("idle");
+  const stateRef = useRef<VoiceConversationState>("idle");
   const [lastTranscript, setLastTranscript] = useState("");
   const [lastResponse, setLastResponse] = useState("");
   const [audioLevel, setAudioLevel] = useState(0);
@@ -69,6 +70,7 @@ export function useVoiceConversation({
   const conversationHistory = useRef<{ role: "user" | "assistant"; content: string }[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const hasGreetedRef = useRef(false);
+  const greetingInProgressRef = useRef(false);
 
   // Recording state
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -82,17 +84,23 @@ export function useVoiceConversation({
   const pipelineRef = useRef<any>(null);
 
   const updateState = useCallback((s: VoiceConversationState) => {
+    stateRef.current = s;
     setState(s);
     onStateChange?.(s);
   }, [onStateChange]);
 
-  // TTS output
+  // TTS output — onEnd/onStart skip during greeting to avoid state conflicts
   const tts = useVoiceSynthesis({
     engine: voiceEngine,
     rate: 0.95,
-    onStart: () => updateState("speaking"),
-    onEnd: () => updateState("idle"),
+    onStart: () => {
+      if (!greetingInProgressRef.current) updateState("speaking");
+    },
+    onEnd: () => {
+      if (!greetingInProgressRef.current) updateState("idle");
+    },
     onError: (err) => {
+      greetingInProgressRef.current = false;
       updateState("idle");
       onError?.(`Voice output error: ${err}`);
     },
@@ -208,25 +216,40 @@ export function useVoiceConversation({
 
   /** Start listening — begins the voice loop */
   const startListening = useCallback(async () => {
-    if (state !== "idle") return;
+    if (stateRef.current !== "idle" && !greetingInProgressRef.current) return;
 
     try {
       // On first activation, greet the user warmly before listening
       if (!hasGreetedRef.current) {
         hasGreetedRef.current = true;
+        greetingInProgressRef.current = true;
         const greeting = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
         updateState("speaking");
         setLastResponse(greeting);
         conversationHistory.current.push({ role: "assistant", content: greeting });
 
+        console.log("[VoiceConversation] 🎙️ Playing greeting:", greeting);
+
         // Speak the greeting and wait for TTS to finish
+        tts.speak(greeting);
+
+        // Wait for the audio to actually finish playing
         await new Promise<void>((resolve) => {
-          tts.speak(greeting);
-          setTimeout(resolve, 4000);
+          const check = setInterval(() => {
+            if (tts.statusRef.current === "idle") {
+              clearInterval(check);
+              resolve();
+            }
+          }, 200);
+          // Safety timeout
+          setTimeout(() => { clearInterval(check); resolve(); }, 8000);
         });
 
+        greetingInProgressRef.current = false;
+        console.log("[VoiceConversation] ✅ Greeting complete, transitioning to listening");
+
         // Small breath before listening
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 300));
       }
 
       updateState("listening");
@@ -339,7 +362,7 @@ export function useVoiceConversation({
       onError?.(err instanceof Error ? err.message : "Could not start listening");
       updateState("idle");
     }
-  }, [state, updateState, ensureWhisper, audioToFloat32, queryLumen, tts, onExchange, onError]);
+  }, [updateState, ensureWhisper, audioToFloat32, queryLumen, tts, onExchange, onError]);
 
   /** Stop listening — triggers the processing chain */
   const stopListening = useCallback(() => {
@@ -370,7 +393,8 @@ export function useVoiceConversation({
 
   /** Toggle: start listening if idle, stop listening if listening, cancel if thinking/speaking */
   const toggle = useCallback(() => {
-    switch (state) {
+    const s = stateRef.current;
+    switch (s) {
       case "idle":
         startListening();
         break;
@@ -383,7 +407,7 @@ export function useVoiceConversation({
         cancel();
         break;
     }
-  }, [state, startListening, stopListening, cancel]);
+  }, [startListening, stopListening, cancel]);
 
   /** Clear conversation history */
   const clearHistory = useCallback(() => {
