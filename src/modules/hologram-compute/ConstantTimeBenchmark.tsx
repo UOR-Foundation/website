@@ -289,8 +289,8 @@ function formatNum(n: number): string {
 // SVG Comparison Chart
 // ══════════════════════════════════════════════════════════════════════════════
 
-const CW = 480;
-const CH = 170;
+const CW = 520;
+const CH = 200;
 const PAD = { top: 24, right: 20, bottom: 36, left: 48 };
 const IW = CW - PAD.left - PAD.right;
 const IH = CH - PAD.top - PAD.bottom;
@@ -372,44 +372,51 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// Speedup Circle
+// Live Speedup Circle — single large real-time multiplier
 // ══════════════════════════════════════════════════════════════════════════════
 
-function SpeedupCircle({ value, label, maxValue, color, suffix }: { value: number; label: string; maxValue: number; color: string; suffix?: string }) {
-  const animValue = useCountUp(value, 600);
-  const sz = 64;
-  const strokeW = 3;
+function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: number }) {
+  const animValue = useCountUp(value, 800);
+  const sz = 140;
+  const strokeW = 5;
   const r = (sz - strokeW) / 2;
   const circ = 2 * Math.PI * r;
   const pct = Math.min(value / Math.max(maxValue, 1), 1);
   const animPct = Math.min(animValue / Math.max(maxValue, 1), 1);
   const dashOffset = circ * (1 - animPct);
 
-  const displayVal = animValue >= 10000 ? `${(animValue / 1000).toFixed(0)}K` : animValue >= 1000 ? `${(animValue / 1000).toFixed(1)}K` : animValue >= 100 ? `${animValue.toFixed(0)}` : animValue.toFixed(1);
-  const unit = suffix !== undefined ? suffix : "×";
+  const displayVal = animValue >= 10000
+    ? `${(animValue / 1000).toFixed(0)}K`
+    : animValue >= 1000
+    ? `${(animValue / 1000).toFixed(1)}K`
+    : animValue >= 100
+    ? `${animValue.toFixed(0)}`
+    : animValue >= 10
+    ? `${animValue.toFixed(1)}`
+    : animValue.toFixed(2);
 
   return (
     <div className="relative flex flex-col items-center">
       <div className="relative" style={{ width: sz, height: sz }}>
         <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} className="transform -rotate-90">
-          <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.15} />
+          <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.1} />
           <circle
             cx={sz / 2} cy={sz / 2} r={r}
-            fill="none" stroke={color} strokeWidth={strokeW} strokeLinecap="round"
+            fill="none" stroke={P.gold} strokeWidth={strokeW} strokeLinecap="round"
             strokeDasharray={circ} strokeDashoffset={dashOffset}
             style={{
-              transition: "stroke-dashoffset 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
-              filter: pct > 0.5 ? `drop-shadow(0 0 6px ${color})` : "none",
+              transition: "stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
+              filter: pct > 0.3 ? `drop-shadow(0 0 10px hsla(38, 40%, 65%, 0.5))` : "none",
             }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color, fontSize: value >= 10000 ? 11 : value >= 1000 ? 13 : 15 }}>
-            {value > 0 ? `${displayVal}${unit}` : "—"}
+          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color: P.gold, fontSize: 32 }}>
+            {value > 0 ? `${displayVal}×` : "—"}
           </span>
+          <span className="text-[11px] font-medium mt-1" style={{ color: P.muted }}>faster</span>
         </div>
       </div>
-      <span className="text-[9px] font-medium mt-0.5" style={{ color: P.muted }}>{label}</span>
     </div>
   );
 }
@@ -639,110 +646,64 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
         </div>
       )}
 
-      {/* ── Chart + Stats (side by side) ── */}
+      {/* ── Chart + Live Speedup (equal width, side by side) ── */}
       {points.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-2" style={{ maxHeight: "260px" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {/* Chart */}
-          <div className="rounded-xl p-2" style={{ background: P.card, border: `1px solid ${P.cardBorder}`, maxHeight: "260px" }}>
+          <div className="rounded-xl p-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             <ComparisonChart
               points={points}
               baselineMs={points.map(p => isCpu ? p.stdMs : p.gpuMs)}
               holoMs={points.map(p => p.holoMs)}
               baselineColor={baseColor}
-              baselineLabel={isCpu ? "CPU — O(N³) single-thread" : "GPU — O(N³) parallel compute"}
+              baselineLabel={isCpu ? "CPU — O(N³)" : "GPU — O(N³)"}
             />
           </div>
 
-          {/* Stats sidebar — 3 hero metrics */}
-          <div className="rounded-xl p-2 flex flex-col gap-1.5 overflow-hidden" style={{ background: P.card, border: `1px solid ${P.cardBorder}`, maxHeight: "260px" }}>
-            {/* Three hero circles */}
-            <div className="grid grid-cols-3 gap-1">
-              <SpeedupCircle
-                value={peakSpeedup}
-                label="Speed"
-                maxValue={isCpu ? sizes[sizes.length - 1] * 2 : sizes[sizes.length - 1]}
-                color={P.gold}
-              />
-              <SpeedupCircle
-                value={peakEnergySaved}
-                label="Energy Saved"
-                maxValue={100}
-                color={P.green}
-                suffix="%"
-              />
-              <SpeedupCircle
-                value={peakHoloTokSec}
-                label="Infer/sec"
-                maxValue={peakHoloTokSec * 1.2}
-                color={P.blue}
-                suffix=""
-              />
-            </div>
+          {/* Live Speedup Panel */}
+          <div className="rounded-xl p-4 flex flex-col items-center justify-center gap-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+            {/* Single large speedup circle */}
+            <LiveSpeedupCircle value={peakSpeedup} maxValue={isCpu ? sizes[sizes.length - 1] * 2 : sizes[sizes.length - 1]} />
 
-            {/* Value propositions */}
-            <div className="rounded-lg p-2 text-center space-y-0.5" style={{ background: `${P.gold}08`, border: `1px solid ${P.gold}15` }}>
-              <p className="text-[10px] font-semibold" style={{ color: P.gold }}>
-                {isCpu ? "GPU-class speed on a CPU" : "Faster than real GPU hardware"}
+            {/* Key message */}
+            <div className="text-center space-y-1 max-w-[220px]">
+              <p className="text-sm font-semibold" style={{ color: P.gold }}>
+                {isCpu ? "GPU-class speed, no GPU needed" : "Speeds up any existing GPU"}
               </p>
-              <p className="text-[9px]" style={{ color: P.muted }}>
+              <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
                 {isCpu
-                  ? "No GPU required — vGPU delivers GPU-equivalent throughput on any device"
-                  : "Even thousands of parallel GPU cores can't beat pre-computed retrieval"
-                }
+                  ? "Delivers GPU-equivalent throughput on a single CPU thread."
+                  : "Works on top of your existing hardware — instant results via pre-computed retrieval."}
               </p>
             </div>
 
-            {/* Runtime bars */}
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-mono w-7 shrink-0 text-right font-medium" style={{ color: baseColor }}>{baseLabel}</span>
-                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: `${baseColor}14` }}>
+            {/* Runtime comparison bars */}
+            <div className="w-full space-y-1.5 px-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono w-8 shrink-0 text-right font-medium" style={{ color: baseColor }}>{baseLabel}</span>
+                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: `${baseColor}14` }}>
                   <div className="h-full rounded-full" style={{ width: "100%", background: baseColor }} />
                 </div>
-                <span className="text-[9px] font-mono w-14 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(1)}s` : `${totalBaseMs.toFixed(0)}ms`}</span>
+                <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(1)}s` : `${totalBaseMs.toFixed(0)}ms`}</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-mono w-7 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
-                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.08)" }}>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono w-8 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
+                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.08)" }}>
                   <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 6px hsla(38, 40%, 65%, 0.4)" }} />
                 </div>
-                <span className="text-[9px] font-mono w-14 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs.toFixed(1)}ms</span>
+                <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs.toFixed(1)}ms</span>
               </div>
             </div>
 
-            {/* Energy savings */}
-            <div className="rounded-lg p-1.5 text-center" style={{ background: "hsla(152, 44%, 50%, 0.06)", border: "1px solid hsla(152, 44%, 50%, 0.1)" }}>
-              <p className="text-sm font-mono font-bold" style={{ color: P.green }}>{computeEliminated}%</p>
-              <p className="text-[8px] uppercase tracking-widest font-bold" style={{ color: P.dim }}>compute eliminated</p>
-              {totalEnergySavedPj > 0 && (
-                <p className="text-[8px] font-mono mt-0.5" style={{ color: P.dim }}>
-                  ~{totalEnergySavedPj >= 1e9 ? `${(totalEnergySavedPj / 1e9).toFixed(1)} mJ` : totalEnergySavedPj >= 1e6 ? `${(totalEnergySavedPj / 1e6).toFixed(1)} µJ` : `${(totalEnergySavedPj / 1e3).toFixed(0)} nJ`} saved
-                  <span className="opacity-60"> (at 1 pJ/MAC)</span>
-                </p>
-              )}
-            </div>
-
-            {/* Pre-compute info */}
-            {precomputeMs > 0 && (
-              <div className="text-center space-y-0.5">
-                <p className="text-[8px] font-mono" style={{ color: P.dim }}>{cacheEntries} entries · {formatBytes(cacheBytes)}</p>
-                <p className="text-[8px] font-medium" style={{ color: precomputeMethod === "gpu" ? P.blue : P.gold }}>
-                  {precomputeMethod === "gpu" ? "vGPU → GPU (WebGPU)" : "vGPU → CPU (64KB LUT)"}
-                </p>
-              </div>
-            )}
-
-            {/* Integrity status */}
-            <div className="rounded-lg p-1 text-center" style={{
+            {/* Verified badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{
               background: anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.06)" : "hsla(152, 44%, 50%, 0.06)",
-              border: `1px solid ${anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.1)" : "hsla(152, 44%, 50%, 0.1)"}`,
+              border: `1px solid ${anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.12)" : "hsla(152, 44%, 50%, 0.12)"}`,
             }}>
-              <div className="flex items-center justify-center gap-1">
-                <IconCheck size={10} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
-                <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
-                  {anyIntegrityIssue ? "MISMATCH" : "ALL VERIFIED"}
-                </span>
-              </div>
+              <IconCheck size={12} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
+              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
+                {anyIntegrityIssue ? "MISMATCH" : "ALL VERIFIED"}
+              </span>
             </div>
           </div>
         </div>
