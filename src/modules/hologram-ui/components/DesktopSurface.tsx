@@ -317,9 +317,9 @@ export default function DesktopSurface({
         </div>
       )}
 
-      {/* ── Chrome: Frame-exclusive widget (bottom-left) ── */}
+      {/* ── Chrome: Frame-exclusive widget (bottom-left, aligned with Day Ring) ── */}
       <div
-        className="absolute bottom-[3.5vh] left-8 z-[400]"
+        className="absolute bottom-[3vh] left-24 z-[400]"
         style={{
           opacity: isFocus ? 0 : 1,
           pointerEvents: isFocus ? "none" : "auto",
