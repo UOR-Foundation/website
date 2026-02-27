@@ -69,11 +69,13 @@ export {
   WGSL_GELU,
   WGSL_SOFTMAX,
   WGSL_SDPA,
+  WGSL_CONV1D,
   cpuMatmul,
   cpuLayerNorm,
   cpuGelu,
   cpuSoftmax,
   cpuScaledDotProductAttention,
+  cpuConv1d,
 } from "./wgsl-kernels";
 export type { WhisperKernelName } from "./wgsl-kernels";
 
