@@ -254,21 +254,10 @@ export default function DesktopSurface({
         </div>
       )}
 
-      {/* ── Chrome: Focus Toggle ─────────────────── */}
-      {isWidgetVisible("focus-toggle") && (
-        <div className="absolute right-20 top-1/2 -translate-y-1/2 z-[400]">
-          <WidgetHoverActions
-            widgetId="focus-toggle"
-            onRemove={removeWidget}
-            showMove={false}
-            showSettings={false}
-            bgMode={mode}
-            position="top-left"
-          >
-            <AttentionToggle bgMode={mode} />
-          </WidgetHoverActions>
-        </div>
-      )}
+      {/* ── Chrome: Focus Toggle — ALWAYS visible, never removable ── */}
+      <div className="absolute right-20 top-1/2 -translate-y-1/2 z-[400]">
+        <AttentionToggle bgMode={mode} />
+      </div>
 
       {/* ── Chrome: Frame-exclusive widget (bottom-left, aligned with Day Ring) ── */}
       <div
