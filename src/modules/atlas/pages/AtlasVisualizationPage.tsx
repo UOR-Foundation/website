@@ -2,20 +2,25 @@
  * Atlas Visualization Page
  * ════════════════════════
  *
- * Full-screen interactive Atlas of Resonance Classes
- * with Universal Model Fingerprint and Cross-Model Translation panels.
+ * Full-screen interactive Atlas of Resonance Classes with panels for:
+ * - Graph visualization (96 vertices, 256 edges)
+ * - Universal Model Fingerprint
+ * - Cross-Model Translation
+ * - F₄ Quotient Compression
+ *
  * Accessible at /atlas route.
  */
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BarChart3, Network, ArrowLeftRight } from "lucide-react";
+import { ArrowLeft, BarChart3, Network, ArrowLeftRight, Minimize2 } from "lucide-react";
 
 const AtlasGraph = React.lazy(() => import("@/modules/atlas/components/AtlasGraph"));
 const ModelFingerprintPanel = React.lazy(() => import("@/modules/atlas/components/ModelFingerprintCard"));
 const TranslationPanel = React.lazy(() => import("@/modules/atlas/components/TranslationPanel"));
+const CompressionPanel = React.lazy(() => import("@/modules/atlas/components/CompressionPanel"));
 
-type Tab = "graph" | "fingerprint" | "translation";
+type Tab = "graph" | "fingerprint" | "translation" | "compression";
 
 export default function AtlasVisualizationPage() {
   const navigate = useNavigate();
@@ -25,12 +30,14 @@ export default function AtlasVisualizationPage() {
     { key: "graph", label: "Graph", icon: <Network size={12} /> },
     { key: "fingerprint", label: "Fingerprint", icon: <BarChart3 size={12} /> },
     { key: "translation", label: "Translation", icon: <ArrowLeftRight size={12} /> },
+    { key: "compression", label: "Compression", icon: <Minimize2 size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
     graph: "Constructing 96-vertex Atlas…",
     fingerprint: "Computing model fingerprints…",
     translation: "Running cross-model translations…",
+    compression: "Analyzing τ-mirror symmetry…",
   };
 
   return (
@@ -83,13 +90,11 @@ export default function AtlasVisualizationPage() {
         }>
           {tab === "graph" ? (
             <AtlasGraph width={1200} height={800} />
-          ) : tab === "fingerprint" ? (
-            <div className="h-full overflow-y-auto">
-              <ModelFingerprintPanel />
-            </div>
           ) : (
             <div className="h-full overflow-y-auto">
-              <TranslationPanel />
+              {tab === "fingerprint" ? <ModelFingerprintPanel /> :
+               tab === "translation" ? <TranslationPanel /> :
+               <CompressionPanel />}
             </div>
           )}
         </Suspense>

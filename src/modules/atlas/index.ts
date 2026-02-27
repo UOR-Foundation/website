@@ -134,3 +134,17 @@ export type {
   CrossModelTranslationReport,
   TranslationInvariant,
 } from "./translation";
+
+// F₄ Quotient Compression — τ-mirror symmetry analysis (Phase 7)
+export {
+  analyzeCompression,
+  runCompressionAnalysis,
+} from "./compression";
+export type {
+  WeightBlock,
+  MirrorPattern,
+  MirrorPairAnalysis,
+  CompressionProfile,
+  CompressionReport,
+  CompressionInvariant,
+} from "./compression";
