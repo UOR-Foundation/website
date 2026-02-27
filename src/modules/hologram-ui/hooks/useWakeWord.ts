@@ -99,6 +99,34 @@ function containsWakePhrase(transcript: string, phrase: string): boolean {
   return variants.some(v => t.includes(v));
 }
 
+/** Play a short synthesized chime using Web Audio API */
+function playWakeChime() {
+  try {
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+
+    // Two-tone ascending chime (C5 → E5)
+    const notes = [523.25, 659.25];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0, now + i * 0.1);
+      gain.gain.linearRampToValueAtTime(0.12, now + i * 0.1 + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.25);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + i * 0.1);
+      osc.stop(now + i * 0.1 + 0.3);
+    });
+
+    // Clean up context after chime
+    setTimeout(() => ctx.close().catch(() => {}), 600);
+  } catch {
+    // Audio context may be blocked — silent fallback
+  }
+}
+
 export function useWakeWord({
   onWake,
   wakePhrase = "hey lumen",
@@ -109,6 +137,7 @@ export function useWakeWord({
 }: UseWakeWordOptions) {
   const [status, setStatus] = useState<WakeWordStatus>("off");
   const [audioLevel, setAudioLevel] = useState(0);
+  const [wakeDetected, setWakeDetected] = useState(false);
 
   const streamRef = useRef<MediaStream | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -166,6 +195,12 @@ export function useWakeWord({
       const text = (result?.text ?? "").trim();
       if (text && containsWakePhrase(text, wakePhrase)) {
         console.log("[WakeWord] 🎯 Detected:", text);
+        // Chime + haptic flash before triggering
+        playWakeChime();
+        setWakeDetected(true);
+        // Brief visual moment before starting conversation
+        await new Promise(r => setTimeout(r, 400));
+        setWakeDetected(false);
         onWake();
         // Brief cooldown after wake to avoid double-trigger
         updateStatus("cooldown");
@@ -330,6 +365,7 @@ export function useWakeWord({
     isStandby: status === "standby",
     isDetecting: status === "detecting",
     isChecking: status === "checking",
+    wakeDetected,
     toggle,
     startListening,
     stopListening,
