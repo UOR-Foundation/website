@@ -291,6 +291,47 @@ export default function VoiceOrb({
           )}
         </AnimatePresence>
 
+        {/* Wake detection ripple — haptic-style expanding ring on recognition */}
+        <AnimatePresence>
+          {wakeWord.wakeDetected && (
+            <>
+              <motion.div
+                key="ripple-1"
+                initial={{ opacity: 0.6, scale: 1 }}
+                animate={{ opacity: 0, scale: 3.5 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.7, ease: "easeOut" }}
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  border: "2px solid hsla(185, 50%, 60%, 0.5)",
+                }}
+              />
+              <motion.div
+                key="ripple-2"
+                initial={{ opacity: 0.4, scale: 1 }}
+                animate={{ opacity: 0, scale: 2.8 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.08 }}
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  border: "1.5px solid hsla(185, 45%, 55%, 0.35)",
+                }}
+              />
+              {/* Flash the orb itself */}
+              <motion.div
+                key="flash"
+                initial={{ opacity: 0.5 }}
+                animate={{ opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  background: "radial-gradient(circle, hsla(185, 50%, 60%, 0.25) 0%, transparent 70%)",
+                }}
+              />
+            </>
+          )}
+        </AnimatePresence>
+
         {/* Observer awareness halo */}
         {hasObserver && (
           <div
