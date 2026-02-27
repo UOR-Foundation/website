@@ -12,6 +12,7 @@
  */
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useScreenTheme } from "@/modules/hologram-ui/hooks/useScreenTheme";
 import {
   IconX, IconStar, IconClock, IconCheck,
   IconChevronRight, IconArchive, IconSearch,
@@ -202,19 +203,8 @@ interface HologramMessengerProps {
 }
 
 export default function HologramMessenger({ onClose }: HologramMessengerProps) {
-  // Messenger has its own independent theme — does NOT affect the Hologram portal
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem("hologram-messenger-theme");
-    return saved === "light" ? "light" : "dark";
-  });
-
-  const toggleMode = useCallback(() => {
-    setMode(prev => {
-      const next = prev === "dark" ? "light" : "dark";
-      localStorage.setItem("hologram-messenger-theme", next);
-      return next;
-    });
-  }, []);
+  // Cascading theme: follows portal in white/dark mode, independent in image mode
+  const { mode, toggle: toggleMode, canToggle: canToggleTheme } = useScreenTheme({ screenId: "messenger" });
 
   const P = palette(mode);
   const [phase, setPhase] = useState<TriadicPhase>("all");
@@ -482,7 +472,8 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
             <IconSearch size={18} strokeWidth={1.5} />
           </button>
 
-          {/* Theme toggle */}
+          {/* Theme toggle — only shown when portal is in image mode */}
+          {canToggleTheme && (
           <button
             onClick={toggleMode}
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
@@ -495,6 +486,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             )}
           </button>
+          )}
 
           {/* Close */}
           <button
