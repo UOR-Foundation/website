@@ -216,64 +216,7 @@ export default function DesktopSurface({
         )}
       </div>
 
-      {/* ── Chrome: style toggle ─────────────────── */}
-      <div
-        className="absolute top-[3vh] right-6 z-[400]"
-        style={{
-          opacity: isFocus ? 0 : 1,
-          pointerEvents: isFocus ? "none" : "auto",
-          transition: "opacity 300ms ease-out, transform 300ms ease-out",
-          transform: isFocus ? "translateY(-10px)" : "translateY(0)",
-        }}
-      >
-        <div className="flex flex-col items-center gap-2">
-          <div
-            className="flex items-center gap-1 px-3 py-2 rounded-full"
-            style={{
-              background: mode === "white" ? "hsla(0, 0%, 40%, 0.1)" : "hsla(0, 0%, 10%, 0.45)",
-              border: `1px solid ${mode === "white" ? "hsla(0, 0%, 40%, 0.18)" : "hsla(0, 0%, 80%, 0.18)"}`,
-              backdropFilter: "blur(24px)",
-              WebkitBackdropFilter: "blur(24px)",
-              boxShadow: "0 2px 12px hsla(0, 0%, 0%, 0.25)",
-            }}
-          >
-            {BG_MODES.map(({ mode: m, label }) => {
-              const active = mode === m;
-              const dotColor = active
-                ? (mode === "white" ? "hsla(0, 0%, 10%, 0.95)" : "hsla(0, 0%, 95%, 0.95)")
-                : (mode === "white" ? "hsla(0, 0%, 10%, 0.45)" : "hsla(0, 0%, 80%, 0.45)");
-              return (
-                <button
-                  key={m}
-                  onClick={() => onSwitchDesktop(m)}
-                  className="relative flex items-center justify-center w-6 h-6 rounded-full"
-                  aria-label={`Switch to ${label} desktop`}
-                >
-                  <div
-                    className="w-[6px] h-[6px] rounded-full transition-all duration-300 ease-out"
-                    style={{
-                      background: dotColor,
-                      transform: active ? "scale(1.4)" : "scale(1)",
-                      boxShadow: active ? `0 0 10px 2px ${dotColor}` : "none",
-                    }}
-                  />
-                </button>
-              );
-            })}
-          </div>
-          <span
-            className="tracking-[0.2em] uppercase font-medium transition-colors duration-300"
-            style={{
-              fontFamily: "'DM Sans', system-ui, sans-serif",
-              fontSize: "clamp(11px, 0.8vw, 13px)",
-              color: mode === "white" ? "hsla(0, 0%, 15%, 0.7)" : "hsla(0, 0%, 85%, 0.75)",
-              textShadow: mode === "white" ? "none" : "0 1px 4px hsla(0, 0%, 0%, 0.5)",
-            }}
-          >
-            Frame
-          </span>
-        </div>
-      </div>
+      {/* Top-right style toggle removed — frame switching now at bottom center */}
 
       {/* ── Chrome: Day Ring ──────────────────────── */}
       {isWidgetVisible("day-ring") && (
@@ -505,41 +448,55 @@ export default function DesktopSurface({
         </div>
       </div>
 
-      {/* ── Desktop indicator dots (Mission Control) ─ */}
+      {/* ── Frame switcher (bottom center) ────────── */}
       <div
-        className="absolute bottom-14 left-0 right-0 flex items-center justify-center gap-2 z-10"
+        className="absolute bottom-14 left-0 right-0 flex flex-col items-center gap-2 z-10"
         style={{
           opacity: isFocus ? 0 : 1,
           transition: "opacity 0.7s ease",
         }}
       >
-        {(["image", "white", "dark"] as DesktopId[]).map((m) => {
-          const active = mode === m;
-          const dotColor = mode === "white"
-            ? "hsla(0, 0%, 10%, 0.8)"
-            : "hsla(0, 0%, 95%, 0.8)";
-          const inactiveColor = mode === "white"
-            ? "hsla(0, 0%, 10%, 0.2)"
-            : "hsla(0, 0%, 95%, 0.2)";
-          return (
-            <button
-              key={m}
-              onClick={() => onSwitchDesktop(m)}
-              className="p-1"
-              aria-label={`Switch to ${m} frame`}
-            >
-              <div
-                className="rounded-full transition-all duration-500 ease-out"
-                style={{
-                  width: active ? 8 : 5,
-                  height: active ? 8 : 5,
-                  background: active ? dotColor : inactiveColor,
-                  boxShadow: active ? `0 0 6px 1px ${dotColor}` : "none",
-                }}
-              />
-            </button>
-          );
-        })}
+        <span
+          style={{
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontSize: "9px",
+            letterSpacing: "0.3em",
+            textTransform: "uppercase",
+            fontWeight: 500,
+            color: mode === "white" ? "hsla(0, 0%, 15%, 0.45)" : "hsla(0, 0%, 90%, 0.4)",
+          }}
+        >
+          Frame
+        </span>
+        <div className="flex items-center gap-2.5">
+          {(["image", "white", "dark"] as DesktopId[]).map((m) => {
+            const active = mode === m;
+            const dotColor = mode === "white"
+              ? "hsla(0, 0%, 10%, 0.8)"
+              : "hsla(0, 0%, 95%, 0.8)";
+            const inactiveColor = mode === "white"
+              ? "hsla(0, 0%, 10%, 0.2)"
+              : "hsla(0, 0%, 95%, 0.2)";
+            return (
+              <button
+                key={m}
+                onClick={() => onSwitchDesktop(m)}
+                className="p-1.5 group/dot"
+                aria-label={`Switch to ${m === "image" ? "Landscape" : m === "white" ? "Light" : "Dark"} frame`}
+              >
+                <div
+                  className="rounded-full transition-all duration-500 ease-out group-hover/dot:scale-150"
+                  style={{
+                    width: active ? 8 : 5,
+                    height: active ? 8 : 5,
+                    background: active ? dotColor : inactiveColor,
+                    boxShadow: active ? `0 0 8px 2px ${dotColor}` : "none",
+                  }}
+                />
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Legal links ──────────────────────────── */}
