@@ -11,12 +11,13 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
+const QLinuxKernelPanel = React.lazy(() => import("@/modules/quantum/components/QLinuxKernelPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -26,12 +27,14 @@ export default function QuantumDashboardPage() {
     { key: "overview", label: "Overview", icon: <Cpu size={12} /> },
     { key: "isa", label: "Quantum ISA", icon: <Atom size={12} /> },
     { key: "topo-qubit", label: "Topological Qubit", icon: <Hexagon size={12} /> },
+    { key: "q-linux", label: "Q-Linux Kernel", icon: <Terminal size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
     overview: "Loading quantum dashboard…",
     isa: "Mapping quantum gate architecture…",
     "topo-qubit": "Instantiating topological qubits…",
+    "q-linux": "Booting Q-Linux kernel…",
   };
 
   return (
@@ -83,7 +86,8 @@ export default function QuantumDashboardPage() {
         }>
           {tab === "overview" ? <QuantumOverview onNavigate={setTab} /> :
            tab === "isa" ? <QuantumISAPanel /> :
-           <TopologicalQubitPanel />}
+           tab === "topo-qubit" ? <TopologicalQubitPanel /> :
+           <QLinuxKernelPanel />}
         </Suspense>
       </div>
     </div>
@@ -118,6 +122,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "α⁻¹", value: "140.73" },
         { label: "Qubits", value: "48" },
         { label: "Anyon types", value: "4" },
+        { label: "Tests", value: "14/14 ✓" },
+      ],
+    },
+    {
+      key: "q-linux" as Tab,
+      title: "Q-Linux Kernel",
+      phase: "Phase 14",
+      icon: <Terminal size={24} />,
+      color: "hsl(200,60%,60%)",
+      description: "Quantum process scheduling using Hologram dehydrate/rehydrate. Quantum states as content-addressed objects — frozen, teleported across mesh nodes, and resumed with perfect fidelity.",
+      stats: [
+        { label: "Syscalls", value: "10" },
+        { label: "Mesh Nodes", value: "4" },
+        { label: "Policies", value: "4" },
         { label: "Tests", value: "14/14 ✓" },
       ],
     },
@@ -192,7 +210,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "done", label: "Phase 11: Topological Qubit — α derivation + qubit instantiation (14 tests)" },
             { status: "next", label: "Phase 12: QED loop corrections — close the 2.7% α gap" },
             { status: "next", label: "Phase 13: Quantum error correction simulator" },
-            { status: "next", label: "Phase 14: Q-Linux kernel specification" },
+            { status: "done", label: "Phase 14: Q-Linux Kernel — quantum process scheduling (14 tests)" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>
