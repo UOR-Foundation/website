@@ -638,6 +638,63 @@ export type Database = {
         }
         Relationships: []
       }
+      meeting_types: {
+        Row: {
+          availability_windows: Json
+          buffer_minutes: number | null
+          color: string
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          location_detail: string | null
+          location_type: string
+          max_bookings_per_day: number | null
+          questions: Json | null
+          slug: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          availability_windows?: Json
+          buffer_minutes?: number | null
+          color?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          location_detail?: string | null
+          location_type?: string
+          max_bookings_per_day?: number | null
+          questions?: Json | null
+          slug: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          availability_windows?: Json
+          buffer_minutes?: number | null
+          color?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          location_detail?: string | null
+          location_type?: string
+          max_bookings_per_day?: number | null
+          questions?: Json | null
+          slug?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       messenger_context_graph: {
         Row: {
           confidence: number
@@ -923,6 +980,65 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduling_bookings: {
+        Row: {
+          answers: Json | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          created_at: string
+          end_time: string
+          host_user_id: string
+          id: string
+          invitee_email: string
+          invitee_name: string
+          meeting_type_id: string
+          notes: string | null
+          start_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          answers?: Json | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          end_time: string
+          host_user_id: string
+          id?: string
+          invitee_email: string
+          invitee_name: string
+          meeting_type_id: string
+          notes?: string | null
+          start_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          end_time?: string
+          host_user_id?: string
+          id?: string
+          invitee_email?: string
+          invitee_name?: string
+          meeting_type_id?: string
+          notes?: string | null
+          start_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduling_bookings_meeting_type_id_fkey"
+            columns: ["meeting_type_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_types"
             referencedColumns: ["id"]
           },
         ]
