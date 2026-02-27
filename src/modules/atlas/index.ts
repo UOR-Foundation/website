@@ -100,3 +100,17 @@ export type {
   UniversalInvariant,
   ConvergenceReport,
 } from "./convergence";
+
+// Universal Model Fingerprint — Atlas nutritional label for LLMs
+export {
+  fingerprint,
+  fingerprintAll,
+  generateFingerprintReport,
+} from "./fingerprint";
+export type {
+  ModelFingerprint,
+  OperationProfile,
+  StructuralSignature,
+  FingerprintReport,
+  FamilyProfile,
+} from "./fingerprint";
