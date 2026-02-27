@@ -44,3 +44,17 @@ export {
   constructExceptionalChain, analyzeE8RootStructure,
 } from "./groups";
 export type { ExceptionalGroup, ExceptionalGroupChain, E8RootAnalysis } from "./groups";
+
+// Boundary investigation: 256 − 240 = 16 = Ext(2) + Unit(2) + G₂(12)
+export {
+  identifyBoundaryElements,
+  verifyG2Correspondence,
+  runBoundaryInvestigation,
+} from "./boundary";
+export type {
+  BoundaryElement,
+  BoundaryDecomposition,
+  G2BoundaryCorrespondence,
+  G2StructuralTest,
+  BoundaryReport,
+} from "./boundary";
