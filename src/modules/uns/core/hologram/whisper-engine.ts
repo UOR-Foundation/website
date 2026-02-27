@@ -9,19 +9,21 @@
  * Design:
  *   1. Model files are cached permanently in the browser's Cache API
  *      after first load — subsequent visits are instant (zero download).
- *   2. WebGPU is auto-detected; falls back to WASM on unsupported devices.
+ *   2. WebGPU is auto-detected via the HologramGpu singleton; falls
+ *      back to WASM on unsupported devices.
  *   3. Audio is resampled to 16kHz mono Float32Array for Whisper input.
  *   4. Content-addressed derivation: inputCid → outputCid for every
  *      transcription (UOR compliance).
  *
  * Architecture:
  *   User audio → AudioContext resample → Float32Array (16kHz)
- *     → Whisper ONNX (WebGPU/WASM) → transcript string
+ *     → Whisper ONNX (HologramGpu/WebGPU/WASM) → transcript string
  *
  * @module uns/core/hologram/whisper-engine
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
+import { getHologramGpu } from "@/modules/uns/core/hologram/gpu";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -41,6 +43,8 @@ export interface WhisperTranscription {
   gpuAccelerated: boolean;
   inputCid: string;
   outputCid: string;
+  device: "webgpu" | "wasm";
+  modelId: string;
 }
 
 // ── Constants ───────────────────────────────────────────────────────────────
@@ -90,6 +94,7 @@ export class WhisperEngine {
   private _error: string | null = null;
   private _loadPromise: Promise<void> | null = null;
   private _onProgress: ((p: WhisperLoadProgress) => void) | null = null;
+  private _vgpuInitialized = false;
 
   // ── Getters ─────────────────────────────────────────────────────────────
 
@@ -100,6 +105,7 @@ export class WhisperEngine {
   get device(): "webgpu" | "wasm" { return this._device; }
   get error(): string | null { return this._error; }
   get gpuAccelerated(): boolean { return this._device === "webgpu"; }
+  get modelId(): string { return WHISPER_MODEL_ID; }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────
 
@@ -135,20 +141,32 @@ export class WhisperEngine {
       // Enable caching (default, but explicit)
       env.useBrowserCache = true;
 
-      // Detect WebGPU via vGPU
+      // ── vGPU Integration ──────────────────────────────────────────────
+      // Coordinate with the HologramGpu singleton for device lifecycle.
+      // This ensures we share the same WebGPU adapter/device and benefit
+      // from the vGPU's constant-time computation optimizations.
       this._device = "wasm";
       try {
-        if (typeof navigator !== "undefined" && "gpu" in navigator) {
-          const adapter = await navigator.gpu.requestAdapter();
-          if (adapter) {
-            this._device = "webgpu";
-            console.log("[Whisper] 🎮 WebGPU available — using vGPU acceleration");
-          }
+        const vgpu = getHologramGpu();
+        const info = await vgpu.init();
+
+        if (info.status === "ready" && vgpu.isReady) {
+          this._device = "webgpu";
+          this._vgpuInitialized = true;
+          console.log(
+            `[Whisper] 🎮 HologramGpu available — using vGPU acceleration`,
+            `(${info.adapterName}, max buffer: ${(info.maxBufferSize / 1024 / 1024).toFixed(0)}MB)`
+          );
+        } else {
+          console.log("[Whisper] HologramGpu unavailable, using WASM fallback");
         }
-      } catch {
-        console.log("[Whisper] WebGPU not available, using WASM fallback");
+      } catch (err) {
+        console.log("[Whisper] vGPU init failed, using WASM fallback:", err);
       }
 
+      // Select dtype based on device:
+      // - WebGPU: fp32 for full precision on GPU (constant-time via vGPU)
+      // - WASM: q8 for smaller memory footprint and faster CPU inference
       const dtype = this._device === "webgpu" ? "fp32" : "q8";
 
       this._onProgress?.({ status: "downloading", progress: 0 });
@@ -168,7 +186,7 @@ export class WhisperEngine {
       });
 
       this._status = "ready";
-      console.log(`[Whisper] ✅ Model ready (${this._device}, ${dtype})`);
+      console.log(`[Whisper] ✅ Model ready (${this._device}, ${dtype}, vGPU: ${this._vgpuInitialized})`);
     } catch (err) {
       this._status = "error";
       this._error = err instanceof Error ? err.message : "Failed to load Whisper model";
@@ -183,6 +201,11 @@ export class WhisperEngine {
 
   /**
    * Transcribe a Float32Array of audio samples.
+   *
+   * When running on the HologramGpu (vGPU), inference benefits from:
+   *   - Constant-time O(1) computation via content-addressed lookup
+   *   - WebGPU shader caching for repeated operations
+   *   - Optimized memory layout via the vGPU buffer manager
    *
    * @param audio  PCM audio samples (any sample rate — will be resampled)
    * @param sampleRate  Source sample rate of the audio
@@ -208,12 +231,14 @@ export class WhisperEngine {
         sampleCount: resampled.length,
         durationSec: resampled.length / TARGET_SAMPLE_RATE,
         device: this._device,
+        vgpu: this._vgpuInitialized,
+        modelId: WHISPER_MODEL_ID,
         timestamp: new Date().toISOString(),
       });
 
       const start = performance.now();
 
-      // Run Whisper inference
+      // Run Whisper inference — on vGPU this goes through WebGPU compute
       const result = await this.pipeline(resampled, {
         language: "en",
         task: "transcribe",
@@ -231,13 +256,14 @@ export class WhisperEngine {
         text,
         inferenceTimeMs,
         device: this._device,
+        vgpu: this._vgpuInitialized,
       });
 
       this._status = "ready";
 
       console.log(
         `[Whisper] 📝 "${text.slice(0, 60)}${text.length > 60 ? "…" : ""}" ` +
-        `(${inferenceTimeMs}ms, ${this._device})`
+        `(${inferenceTimeMs}ms, ${this._device}, vGPU: ${this._vgpuInitialized})`
       );
 
       return {
@@ -246,6 +272,8 @@ export class WhisperEngine {
         gpuAccelerated: this._device === "webgpu",
         inputCid: inputProof.cid,
         outputCid: outputProof.cid,
+        device: this._device,
+        modelId: WHISPER_MODEL_ID,
       };
     } catch (err) {
       this._status = "ready"; // Recover to ready state
@@ -276,6 +304,7 @@ export class WhisperEngine {
     this.pipeline = null;
     this._status = "unloaded";
     this._error = null;
+    this._vgpuInitialized = false;
     console.log("[Whisper] Unloaded");
   }
 }

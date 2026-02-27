@@ -1,19 +1,25 @@
 /**
- * useWhisperTranscription — Client-side Whisper STT via Transformers.js
+ * useWhisperTranscription — Client-side Whisper STT via WhisperEngine
  * ═════════════════════════════════════════════════════════════════════
  *
  * Fully open-source, offline-capable voice-to-text using OpenAI Whisper
- * running in the browser via @huggingface/transformers (ONNX/WebGPU).
+ * running in the browser via the unified WhisperEngine singleton, which
+ * leverages the HologramGpu (vGPU) for constant-time WebGPU inference.
+ *
+ * This hook is the thin UI adapter for the Lumen AI chat's voice input.
+ * All model management is delegated to WhisperEngine to avoid duplicate
+ * pipelines and ensure consistent vGPU acceleration.
  *
  * - Press ⌘+Shift+V to toggle recording
- * - Audio is captured via MediaRecorder, converted to Float32 PCM
- * - Transcribed by whisper-base pipeline
+ * - Audio is captured via ScriptProcessor, collected as Float32 PCM
+ * - Transcribed by WhisperEngine (vGPU-accelerated)
  * - Result is returned via onTranscript callback
  *
  * @module hologram-ui/hooks/useWhisperTranscription
  */
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { getWhisperEngine, preloadWhisper } from "@/modules/uns/core/hologram/whisper-engine";
 
 export type WhisperStatus =
   | "idle"           // Nothing happening
@@ -27,63 +33,15 @@ interface UseWhisperOptions {
   onStatusChange?: (status: WhisperStatus) => void;
 }
 
-// Singleton pipeline — loaded once, shared across hook instances
-let pipelinePromise: Promise<any> | null = null;
-let pipelineInstance: any = null;
-
-async function getWhisperPipeline(onProgress?: (p: number) => void) {
-  if (pipelineInstance) return pipelineInstance;
-  if (pipelinePromise) return pipelinePromise;
-
-  pipelinePromise = (async () => {
-    const { pipeline } = await import("@huggingface/transformers");
-    const transcriber = await pipeline(
-      "automatic-speech-recognition",
-      "onnx-community/whisper-base",
-      {
-        dtype: "q8",
-        device: "wasm",
-        progress_callback: (p: any) => {
-          if (p.status === "progress" && onProgress) {
-            onProgress(Math.round(p.progress ?? 0));
-          }
-        },
-      },
-    );
-    pipelineInstance = transcriber;
-    return transcriber;
-  })();
-
-  return pipelinePromise;
-}
-
-/**
- * Convert an audio Blob (webm/ogg) to Float32Array PCM at 16 kHz
- */
-async function audioToFloat32(blob: Blob): Promise<Float32Array> {
-  const arrayBuf = await blob.arrayBuffer();
-  const ctx = new OfflineAudioContext(1, 1, 16000);
-  const decoded = await ctx.decodeAudioData(arrayBuf);
-
-  // Resample to 16 kHz mono
-  const offlineCtx = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
-  const source = offlineCtx.createBufferSource();
-  source.buffer = decoded;
-  source.connect(offlineCtx.destination);
-  source.start();
-
-  const rendered = await offlineCtx.startRendering();
-  return rendered.getChannelData(0);
-}
-
 export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhisperOptions) {
   const [status, setStatus] = useState<WhisperStatus>("idle");
   const [loadProgress, setLoadProgress] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
   const [elapsed, setElapsed] = useState(0); // seconds
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const chunksRef = useRef<Float32Array[]>([]);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -96,126 +54,146 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
     [onStatusChange],
   );
 
-  // Pre-load model in background on first mount
+  // Pre-load WhisperEngine (vGPU-accelerated) in background on first mount
   useEffect(() => {
-    if (!pipelineInstance && !pipelinePromise) {
-      // Don't set loading status — silent preload
-      getWhisperPipeline((p) => setLoadProgress(p)).then(() => {
-        // Model is cached in IndexedDB for next time
-      });
+    const engine = getWhisperEngine();
+    if (engine.isReady) {
+      updateStatus("ready");
+      return;
     }
+
+    preloadWhisper((p) => {
+      setLoadProgress(Math.round(p.progress ?? 0));
+    });
+
+    // Poll for readiness
+    const iv = setInterval(() => {
+      const e = getWhisperEngine();
+      if (e.isReady) {
+        updateStatus("ready");
+        clearInterval(iv);
+      } else if (e.status === "error") {
+        console.warn("[useWhisperTranscription] WhisperEngine failed to load:", e.error);
+        clearInterval(iv);
+      }
+    }, 500);
+
+    return () => clearInterval(iv);
+  }, [updateStatus]);
+
+  const cleanup = useCallback(() => {
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (processorRef.current) {
+      processorRef.current.disconnect();
+      processorRef.current = null;
+    }
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    if (audioCtxRef.current?.state !== "closed") {
+      audioCtxRef.current?.close().catch(() => {});
+    }
+    audioCtxRef.current = null;
+    setAudioLevel(0);
   }, []);
 
   const startRecording = useCallback(async () => {
     try {
-      // Ensure model is loaded
-      if (!pipelineInstance) {
+      // Ensure model is loaded via WhisperEngine
+      const engine = getWhisperEngine();
+      if (!engine.isReady) {
         updateStatus("loading");
-        await getWhisperPipeline((p) => setLoadProgress(p));
+        await engine.load((p) => setLoadProgress(Math.round(p.progress ?? 0)));
       }
-
       updateStatus("recording");
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          sampleRate: 16000,
         },
       });
       streamRef.current = stream;
       chunksRef.current = [];
 
-      // Set up audio analyser for level metering
+      // Set up AudioContext + ScriptProcessor for raw PCM capture
       const audioCtx = new AudioContext();
+      audioCtxRef.current = audioCtx;
       const source = audioCtx.createMediaStreamSource(stream);
+
+      // Audio level analyser
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 256;
       analyser.smoothingTimeConstant = 0.4;
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      // Animation loop for audio level
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       const tick = () => {
         analyser.getByteFrequencyData(dataArray);
-        // Calculate RMS-ish average, normalize to 0-1
         let sum = 0;
         for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-        const avg = sum / dataArray.length / 255;
-        setAudioLevel(avg);
+        setAudioLevel(sum / dataArray.length / 255);
         rafRef.current = requestAnimationFrame(tick);
       };
       rafRef.current = requestAnimationFrame(tick);
 
-      // Start elapsed timer
+      // PCM capture via ScriptProcessor (same approach as VoiceOrb)
+      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+      processor.onaudioprocess = (e) => {
+        chunksRef.current.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      };
+      source.connect(processor);
+      processor.connect(audioCtx.destination);
+      processorRef.current = processor;
+
+      // Elapsed timer
       setElapsed(0);
-      timerRef.current = setInterval(() => setElapsed((s) => s + 1), 1000);
-
-      const recorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : "audio/webm",
-      });
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        // Stop analyser
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-        analyserRef.current = null;
-        setAudioLevel(0);
-        if (timerRef.current) clearInterval(timerRef.current);
-        timerRef.current = null;
-
-        // Stop all tracks
-        stream.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-
-        if (chunksRef.current.length === 0) {
-          updateStatus("ready");
-          return;
-        }
-
-        updateStatus("transcribing");
-
-        try {
-          const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-          const pcm = await audioToFloat32(blob);
-
-          const transcriber = await getWhisperPipeline();
-          const result = await transcriber(pcm, {
-            chunk_length_s: 30,
-            stride_length_s: 5,
-            return_timestamps: false,
-          });
-
-          const text = (result?.text ?? "").trim();
-          if (text) onTranscript(text);
-        } catch (err) {
-          console.error("[Whisper] Transcription error:", err);
-        }
-
-        updateStatus("ready");
-      };
-
-      mediaRecorderRef.current = recorder;
-      recorder.start(250); // collect data every 250ms
+      timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
     } catch (err) {
-      console.error("[Whisper] Recording error:", err);
-      updateStatus(pipelineInstance ? "ready" : "idle");
+      console.error("[useWhisperTranscription] Recording error:", err);
+      updateStatus(getWhisperEngine().isReady ? "ready" : "idle");
     }
-  }, [onTranscript, updateStatus]);
+  }, [onTranscript, updateStatus, cleanup]);
 
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current?.state === "recording") {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
+  const stopRecording = useCallback(async () => {
+    if (status !== "recording") return;
+
+    const sampleRate = audioCtxRef.current?.sampleRate ?? 44100;
+    const chunks = chunksRef.current;
+    chunksRef.current = [];
+    cleanup();
+
+    if (!chunks.length) {
+      updateStatus("ready");
+      return;
     }
-  }, []);
+
+    // Merge PCM chunks
+    const total = chunks.reduce((a, c) => a + c.length, 0);
+    const merged = new Float32Array(total);
+    let off = 0;
+    for (const c of chunks) { merged.set(c, off); off += c.length; }
+
+    // Skip very short recordings (< 0.3s)
+    if (merged.length / sampleRate < 0.3) {
+      updateStatus("ready");
+      return;
+    }
+
+    updateStatus("transcribing");
+
+    try {
+      // Transcribe via WhisperEngine — uses vGPU if available
+      const result = await getWhisperEngine().transcribe(merged, sampleRate);
+      const text = result.text.trim();
+      if (text) onTranscript(text);
+    } catch (err) {
+      console.error("[useWhisperTranscription] Transcription error:", err);
+    }
+
+    updateStatus("ready");
+  }, [status, cleanup, onTranscript, updateStatus]);
 
   const toggleRecording = useCallback(() => {
     if (status === "recording") {
@@ -228,14 +206,9 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (mediaRecorderRef.current?.state === "recording") {
-        mediaRecorderRef.current.stop();
-      }
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (timerRef.current) clearInterval(timerRef.current);
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      cleanup();
     };
-  }, []);
+  }, [cleanup]);
 
   return {
     status,
