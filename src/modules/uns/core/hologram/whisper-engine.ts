@@ -126,9 +126,9 @@ export class WhisperEngine {
       env.useBrowserCache = true;
       env.allowRemoteModels = true;
 
-      // ── Self-hosted fetch interceptor ─────────────────────────────────
-      // Route HuggingFace CDN requests to our own storage bucket.
-      // Model files are pre-seeded via whisper-model-seeder edge function.
+      // ── Self-hosted fetch interceptor with HuggingFace fallback ────────
+      // Try our storage bucket first (self-hosted, no external deps).
+      // If file isn't cached there, fall back to HuggingFace directly.
       const HF_DOMAINS = ["huggingface.co", "hf.co", "cdn-lfs.huggingface.co", "cdn-lfs-us-1.huggingface.co"];
       const originalFetch = globalThis.fetch;
       const selfHostedFetch: typeof fetch = async (input, init) => {
@@ -143,11 +143,21 @@ export class WhisperEngine {
             const parsed = new URL(url);
             const path = parsed.pathname.replace(/^\//, "");
             const selfHostedUrl = `${SELF_HOSTED_MODEL_BASE}/${path}`;
-            console.log(`[Whisper] 📦 Self-hosted: ${url.split("/").pop()}`);
-            return originalFetch(selfHostedUrl, init);
+            const fileName = url.split("/").pop();
+
+            // Try self-hosted first
+            const selfHostedRes = await originalFetch(selfHostedUrl, { method: "HEAD" });
+            if (selfHostedRes.ok) {
+              console.log(`[Whisper] 📦 Self-hosted: ${fileName}`);
+              return originalFetch(selfHostedUrl, init);
+            }
           } catch {
-            // Fallback to original URL if parsing fails
+            // Self-hosted check failed, fall through
           }
+
+          // Fall back to HuggingFace directly
+          console.log(`[Whisper] 🌐 HuggingFace fallback: ${url.split("/").pop()}`);
+          return originalFetch(input, init);
         }
         return originalFetch(input, init);
       };
@@ -172,9 +182,9 @@ export class WhisperEngine {
         console.log("[Whisper] vGPU init failed → WASM fallback:", err);
       }
 
-      // Always use quantized models — smaller, faster, and our storage bucket
-      // has the quantized ONNX files pre-seeded (not the fp32 variants).
-      const dtype = "q8";
+      // Use fp32 on WebGPU for maximum accuracy, q8 (quantized) on WASM for speed.
+      // Both variants are pre-seeded in our storage bucket.
+      const dtype = this._device === "webgpu" ? "fp32" : "q8";
 
       this._onProgress?.({ status: "downloading", progress: 0 });
 
