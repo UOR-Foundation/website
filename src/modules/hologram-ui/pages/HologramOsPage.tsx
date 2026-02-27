@@ -440,7 +440,7 @@ export default function HologramOsPage() {
               showMove={false}
               showSettings={false}
               bgMode={bgMode}
-              className="absolute right-10 top-1/2 -translate-y-1/2 z-[60]"
+              className="absolute right-20 top-1/2 -translate-y-1/2 z-[60]"
               position="top-left"
             >
               <AttentionToggle bgMode={bgMode} />
@@ -563,7 +563,7 @@ export default function HologramOsPage() {
             {/* Day Progress Ring — bottom right, draggable */}
             {isWidgetVisible("day-ring") && (
             <div
-              className="absolute bottom-[3vh] right-12 animate-fade-in flex items-center gap-2 transition-all duration-300 ease-out"
+              className="absolute bottom-[3vh] right-24 animate-fade-in flex items-center gap-2 transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
