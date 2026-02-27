@@ -459,8 +459,8 @@ export default function DesktopSurface({
         <span
           style={{
             fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontSize: "9px",
-            letterSpacing: "0.3em",
+            fontSize: "12px",
+            letterSpacing: "0.35em",
             textTransform: "uppercase",
             fontWeight: 500,
             color: mode === "white" ? "hsla(0, 0%, 15%, 0.45)" : "hsla(0, 0%, 90%, 0.4)",
