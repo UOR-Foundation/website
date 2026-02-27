@@ -516,7 +516,9 @@ export default function VoiceOrb({
               />
             )}
             {alwaysListening && voice.isIdle
-              ? wakeWord.isChecking ? "Checking…" : wakeWord.isDetecting ? "Hearing…" : "Hey Lumen"
+              ? wakeWord.isChecking ? "Checking…"
+                : wakeWord.isDetecting ? "Hearing…"
+                : `${wakeWord.activeBackend === "porcupine" ? "🦔" : "🎤"} Hey Lumen`
               : voice.isListening && metrics.label !== "silent"
                 ? COHERENCE_LABELS[metrics.label]
                 : STATE_LABELS[voice.state]
@@ -578,7 +580,10 @@ export default function VoiceOrb({
           onClick={toggleAlwaysListening}
           className="group/ear relative"
           aria-label={alwaysListening ? "Disable wake word" : "Enable wake word (Hey Lumen)"}
-          title={alwaysListening ? "Always listening — say 'Hey Lumen'" : "Enable hands-free: 'Hey Lumen'"}
+          title={alwaysListening
+            ? `Always listening via ${wakeWord.activeBackend === "porcupine" ? "Porcupine" : "Whisper VAD"} — say 'Hey Lumen'`
+            : "Enable hands-free: 'Hey Lumen'"
+          }
           style={{ touchAction: "none" }}
         >
           <motion.div
