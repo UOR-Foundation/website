@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, ClipboardCopy, Mic, MicOff, Play, Volume2, XCircle } from "lucide-react";
+import { CheckCircle2, ClipboardCopy, Cpu, Mic, MicOff, Play, Volume2, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioCapture } from "@/modules/hologram-ui/hooks/useAudioCapture";
 import { getWhisperEngine } from "@/modules/uns/core/hologram/whisper-engine";
 import { isNativeSttAvailable, recognizeNative } from "@/modules/uns/core/hologram/native-stt";
 import { useVoiceSynthesis } from "@/modules/hologram-ui/hooks/useVoiceSynthesis";
 import { decrypt, deriveEncryptionKey, encrypt } from "@/modules/data-bank/lib/encryption";
+import {
+  compileWhisperModel,
+  isWhisperCompiled,
+  loadCompiledWhisper,
+  deleteCompiledWhisper,
+  type CompileProgress,
+  type HologramCompiledModel,
+} from "@/modules/uns/core/hologram/whisper-compiler";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -149,6 +157,13 @@ export default function LumenVoiceDebugPage() {
   const [copied, setCopied] = useState(false);
   const [autoTestPhase, setAutoTestPhase] = useState<string | null>(null);
 
+  // Compiler state
+  const [compilerBusy, setCompilerBusy] = useState(false);
+  const [compilerProgress, setCompilerProgress] = useState<CompileProgress | null>(null);
+  const [compiledModel, setCompiledModel] = useState<HologramCompiledModel | null>(null);
+  const [compilerError, setCompilerError] = useState<string | null>(null);
+  const [isCompiled, setIsCompiled] = useState<boolean | null>(null);
+
   const logsRef = useRef<DebugLog[]>([]);
 
   const addLog = useCallback((message: string) => {
@@ -161,7 +176,69 @@ export default function LumenVoiceDebugPage() {
     supabase.auth.getUser().then(({ data }) => {
       setUserSeed(`lumen-debug:${data.user?.id ?? "anon"}`);
     });
+    // Check if Whisper is already compiled
+    isWhisperCompiled("both").then(setIsCompiled).catch(() => setIsCompiled(false));
   }, []);
+
+  const runCompile = useCallback(async (target: "encoder" | "decoder" | "both" = "both", force = false) => {
+    setCompilerBusy(true);
+    setCompilerError(null);
+    setCompilerProgress(null);
+    addLog(`═══════ WHISPER COMPILER STARTED (target: ${target}, force: ${force}) ═══════`);
+    try {
+      const model = await compileWhisperModel({
+        target,
+        force,
+        onProgress: (p) => {
+          setCompilerProgress(p);
+          addLog(`[Compiler] ${p.phase}: ${p.message}${p.detail ? ` (${p.detail})` : ""} — ${Math.round(p.progress * 100)}%`);
+        },
+      });
+      setCompiledModel(model);
+      setIsCompiled(true);
+      addLog(
+        `═══════ COMPILATION COMPLETE ═══════\n` +
+        `  Manifest CID: ${model.manifestCid.slice(0, 24)}…\n` +
+        `  Tensors: ${model.tensors.length}\n` +
+        `  Parameters: ${model.totalParameters.toLocaleString()}\n` +
+        `  Weight size: ${(model.totalWeightBytes / 1024 / 1024).toFixed(1)} MB\n` +
+        `  Graph nodes: ${model.graph.length}\n` +
+        `  Encoder layers: ${model.meta.encoderLayers}, Decoder layers: ${model.meta.decoderLayers}\n` +
+        `  Attention heads: ${model.meta.attentionHeads}, Hidden size: ${model.meta.hiddenSize}`
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setCompilerError(msg);
+      addLog(`═══════ COMPILATION FAILED: ${msg} ═══════`);
+    } finally {
+      setCompilerBusy(false);
+    }
+  }, [addLog]);
+
+  const runDeleteCompiled = useCallback(async () => {
+    try {
+      await deleteCompiledWhisper("both");
+      setCompiledModel(null);
+      setIsCompiled(false);
+      addLog("[Compiler] Compiled model deleted from storage.");
+    } catch (err) {
+      addLog(`[Compiler] Delete failed: ${err instanceof Error ? err.message : "unknown"}`);
+    }
+  }, [addLog]);
+
+  const loadExistingManifest = useCallback(async () => {
+    try {
+      const model = await loadCompiledWhisper("both");
+      if (model) {
+        setCompiledModel(model);
+        addLog(`[Compiler] Loaded existing manifest: ${model.tensors.length} tensors, ${model.graph.length} nodes`);
+      } else {
+        addLog("[Compiler] No compiled model found.");
+      }
+    } catch (err) {
+      addLog(`[Compiler] Load failed: ${err instanceof Error ? err.message : "unknown"}`);
+    }
+  }, [addLog]);
 
   const stopRef = useRef<(() => Promise<void>) | null>(null);
 
@@ -651,7 +728,197 @@ export default function LumenVoiceDebugPage() {
           </div>
         </section>
 
-        {/* ── Report Output ─────────────────────────────────────────────── */}
+        {/* ── Whisper Compiler ──────────────────────────────────────────── */}
+        <section className="rounded-xl border-2 border-accent/40 bg-card p-5 space-y-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Cpu className="h-5 w-5 text-accent-foreground" /> ONNX → Hologram Compiler
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Downloads Whisper ONNX once, parses protobuf with zero dependencies, dehydrates all weight tensors into content-addressed Hologram storage. After compilation, ONNX is no longer needed.
+          </p>
+
+          {/* Status */}
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+              isCompiled === null ? "bg-muted text-muted-foreground" :
+              isCompiled ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+            }`}>
+              {isCompiled === null ? "Checking…" : isCompiled ? "✅ Compiled" : "Not compiled"}
+            </span>
+            {compilerBusy && compilerProgress && (
+              <span className="text-xs text-muted-foreground">
+                {compilerProgress.phase}: {compilerProgress.message} ({Math.round(compilerProgress.progress * 100)}%)
+              </span>
+            )}
+          </div>
+
+          {/* Progress bar */}
+          {compilerBusy && compilerProgress && (
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full bg-primary transition-all duration-300"
+                style={{ width: `${Math.round(compilerProgress.progress * 100)}%` }}
+              />
+            </div>
+          )}
+
+          {/* Error */}
+          {compilerError && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              {compilerError}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void runCompile("encoder")}
+              disabled={compilerBusy}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium disabled:opacity-50 hover:bg-muted"
+            >
+              {compilerBusy ? "Compiling…" : "Compile Encoder"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void runCompile("decoder")}
+              disabled={compilerBusy}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium disabled:opacity-50 hover:bg-muted"
+            >
+              {compilerBusy ? "Compiling…" : "Compile Decoder"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void runCompile("both")}
+              disabled={compilerBusy}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-50"
+            >
+              {compilerBusy ? "Compiling…" : "▶ Compile Both (Full)"}
+            </button>
+            {isCompiled && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => void loadExistingManifest()}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
+                >
+                  Load Manifest
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void runCompile("both", true)}
+                  disabled={compilerBusy}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium disabled:opacity-50 hover:bg-muted"
+                >
+                  Force Recompile
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void runDeleteCompiled()}
+                  className="inline-flex items-center gap-2 rounded-lg border border-destructive/30 text-destructive px-4 py-2 text-sm font-medium hover:bg-destructive/10"
+                >
+                  Delete Compiled
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Compiled model details */}
+          {compiledModel && (
+            <div className="rounded-lg border border-border bg-background p-4 space-y-3">
+              <h3 className="text-sm font-semibold">Compiled Model Manifest</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Manifest CID</p>
+                  <p className="font-mono break-all">{compiledModel.manifestCid.slice(0, 32)}…</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Parameters</p>
+                  <p className="font-mono">{compiledModel.totalParameters.toLocaleString()}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Weight Size</p>
+                  <p className="font-mono">{(compiledModel.totalWeightBytes / 1024 / 1024).toFixed(1)} MB</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Graph Nodes</p>
+                  <p className="font-mono">{compiledModel.graph.length}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Tensors</p>
+                  <p className="font-mono">{compiledModel.tensors.length}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Architecture</p>
+                  <p className="font-mono">{compiledModel.meta.encoderLayers}E / {compiledModel.meta.decoderLayers}D / {compiledModel.meta.attentionHeads}H / {compiledModel.meta.hiddenSize}d</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Vocab Size</p>
+                  <p className="font-mono">{compiledModel.meta.vocabSize.toLocaleString()}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Compiled At</p>
+                  <p className="font-mono">{new Date(compiledModel.compiledAt).toLocaleString()}</p>
+                </div>
+              </div>
+
+              {/* Op breakdown */}
+              <details className="text-xs">
+                <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                  Op breakdown ({compiledModel.graph.length} nodes)
+                </summary>
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-1">
+                  {Object.entries(
+                    compiledModel.graph.reduce<Record<string, number>>((acc, n) => {
+                      acc[n.op] = (acc[n.op] ?? 0) + 1;
+                      return acc;
+                    }, {})
+                  )
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([op, count]) => (
+                      <div key={op} className="flex justify-between rounded px-2 py-0.5 bg-muted">
+                        <span className="font-mono">{op}</span>
+                        <span className="text-muted-foreground">{count}</span>
+                      </div>
+                    ))}
+                </div>
+              </details>
+
+              {/* Tensor list */}
+              <details className="text-xs">
+                <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                  Tensor inventory ({compiledModel.tensors.length} tensors, {(compiledModel.totalWeightBytes / 1024 / 1024).toFixed(1)} MB)
+                </summary>
+                <div className="mt-2 max-h-60 overflow-auto rounded border border-border">
+                  <table className="w-full text-xs">
+                    <thead className="sticky top-0 bg-muted">
+                      <tr>
+                        <th className="text-left px-2 py-1">Name</th>
+                        <th className="text-left px-2 py-1">Shape</th>
+                        <th className="text-left px-2 py-1">Type</th>
+                        <th className="text-right px-2 py-1">Size</th>
+                        <th className="text-left px-2 py-1">CID</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {compiledModel.tensors.map((t) => (
+                        <tr key={t.cid} className="border-t border-border hover:bg-muted/50">
+                          <td className="px-2 py-1 font-mono max-w-48 truncate">{t.name}</td>
+                          <td className="px-2 py-1 font-mono">[{t.dims.join("×")}]</td>
+                          <td className="px-2 py-1">{t.dtypeName}</td>
+                          <td className="px-2 py-1 text-right font-mono">{(t.byteLength / 1024).toFixed(1)}KB</td>
+                          <td className="px-2 py-1 font-mono text-muted-foreground">{t.cid.slice(0, 12)}…</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            </div>
+          )}
+        </section>
+
+
         {report && (
           <section className="rounded-xl border border-border bg-card p-4 space-y-3">
             <div className="flex items-center justify-between">

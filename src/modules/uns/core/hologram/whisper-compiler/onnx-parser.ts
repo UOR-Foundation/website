@@ -28,9 +28,14 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
   let name = "";
   let rawData: Uint8Array | null = null;
   let floatData: Float32Array | null = null;
+  let int32Data: Int32Array | null = null;
+  let int64Len = 0;
+  let doubleData: Float64Array | null = null;
+  const fieldsSeen: number[] = [];
 
   let tag;
   while ((tag = reader.readTag()) !== null) {
+    fieldsSeen.push(tag.field);
     switch (tag.field) {
       case 1: // repeated int64 dims (packed or unpacked)
         if (tag.wire === WireType.LENGTH_DELIMITED) {
@@ -48,14 +53,38 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
         if (tag.wire === WireType.LENGTH_DELIMITED) {
           floatData = reader.readPackedFloat32();
         } else {
-          // Unpacked single float (unlikely but handle gracefully)
-          const f = reader.readFloat32();
-          floatData = new Float32Array([f]);
+          floatData = new Float32Array([reader.readFloat32()]);
+        }
+        break;
+
+      case 5: // repeated int32 int32_data (packed)
+        if (tag.wire === WireType.LENGTH_DELIMITED) {
+          int32Data = reader.readPackedInt32();
+        } else {
+          reader.skip(tag.wire);
+        }
+        break;
+
+      case 7: // repeated int64 int64_data (packed)
+        if (tag.wire === WireType.LENGTH_DELIMITED) {
+          const vals = reader.readPackedVarint64();
+          int64Len = vals.length;
+        } else {
+          reader.readVarint64AsNumber();
+          int64Len++;
         }
         break;
 
       case 8: // string name
         name = reader.readString();
+        break;
+
+      case 10: // repeated double double_data (packed)
+        if (tag.wire === WireType.LENGTH_DELIMITED) {
+          doubleData = reader.readPackedFloat64();
+        } else {
+          reader.skip(tag.wire);
+        }
         break;
 
       case 13: // bytes raw_data (zero-copy view)
@@ -75,12 +104,24 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
   } else if (floatData && floatData.length > 0) {
     // Convert float_data to raw bytes
     finalRawData = new Uint8Array(floatData.buffer, floatData.byteOffset, floatData.byteLength);
+  } else if (int32Data && int32Data.length > 0) {
+    finalRawData = new Uint8Array(int32Data.buffer, int32Data.byteOffset, int32Data.byteLength);
+  } else if (doubleData && doubleData.length > 0) {
+    finalRawData = new Uint8Array(doubleData.buffer, doubleData.byteOffset, doubleData.byteLength);
   } else {
     finalRawData = new Uint8Array(0);
   }
 
-  const bytesPerElement = DTYPE_BYTE_SIZE[dataType] ?? 4;
-  const elementCount = dims.reduce((a, b) => a * b, 1);
+  const elementCount = dims.length > 0 ? dims.reduce((a, b) => a * b, 1) : 0;
+
+  // Debug: log when tensor has dims but no data
+  if (elementCount > 0 && finalRawData.byteLength === 0) {
+    const uniqueFields = [...new Set(fieldsSeen)];
+    console.warn(
+      `[OnnxParser] Tensor "${name}" has ${elementCount} elements but 0 bytes. ` +
+      `Fields seen: [${uniqueFields.join(",")}], dims: [${dims}], dataType: ${dataType}`
+    );
+  }
 
   return { name, dims, dataType, rawData: finalRawData, elementCount };
 }
