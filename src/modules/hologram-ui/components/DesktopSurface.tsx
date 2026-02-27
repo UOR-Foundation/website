@@ -447,7 +447,7 @@ export default function DesktopSurface({
             {/* Voice Orb — Human ↔ Hologram voice interface */}
             <div
               style={{
-                marginTop: "clamp(16px, 2vh, 32px)",
+                marginTop: "clamp(28px, 4vh, 56px)",
                 animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.6s both",
                 opacity: isFocus ? 0 : 1,
                 pointerEvents: isFocus ? "none" : "auto",
