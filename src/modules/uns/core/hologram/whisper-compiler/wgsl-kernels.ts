@@ -301,6 +301,191 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
 }
 `;
 
+// ── Mel Spectrogram (STFT Power → Mel Filterbank) ─────────────────────────
+// Each thread computes one (mel_bin, frame) element.
+// Input: windowed audio frames [nFrames × fftSize] (pre-windowed on CPU)
+// Filterbank: [nMels × nFreqs] (triangular mel filters, flattened)
+// Output: [nMels × nFrames] (log-mel spectrogram before normalization)
+//
+// The FFT is done per-frame in shared memory using a radix-2 Cooley-Tukey.
+// fftSize MUST be 512 (hardcoded for Whisper).
+
+export const WGSL_MEL_SPEC = /* wgsl */ `
+struct Params {
+  n_frames: u32,
+  fft_size: u32,   // 512
+  n_freqs: u32,    // 257
+  n_mels: u32,     // 80
+  n_fft: u32,      // 400 (window length before zero-pad)
+  hop_length: u32,  // 160
+  _p0: u32,
+  _p1: u32,
+}
+@group(0) @binding(0) var<uniform> params: Params;
+@group(0) @binding(1) var<storage, read> audio: array<f32>;       // padded audio [n_samples]
+@group(0) @binding(2) var<storage, read> window_fn: array<f32>;   // hann window [n_fft]
+@group(0) @binding(3) var<storage, read> filterbank: array<f32>;  // [n_mels × n_freqs]
+@group(0) @binding(4) var<storage, read_write> output: array<f32>; // [n_mels × n_frames]
+
+// Twiddle factors for 512-point FFT (precomputed on CPU)
+@group(0) @binding(5) var<storage, read> twiddle_re: array<f32>;  // cos(-2πk/N) for each stage
+@group(0) @binding(6) var<storage, read> twiddle_im: array<f32>;  // sin(-2πk/N) for each stage
+
+// Each workgroup processes ONE frame.
+// 256 threads per workgroup cooperatively compute the FFT and mel bands.
+var<workgroup> fft_re: array<f32, 512>;
+var<workgroup> fft_im: array<f32, 512>;
+
+@compute @workgroup_size(256)
+fn main(
+  @builtin(workgroup_id) wid: vec3<u32>,
+  @builtin(local_invocation_id) lid: vec3<u32>,
+) {
+  let frame = wid.x;
+  if (frame >= params.n_frames) { return; }
+  let tid = lid.x;
+
+  let audio_start = frame * params.hop_length;
+
+  // ── Load & window audio into shared memory (2 elements per thread) ──
+  let idx0 = tid;
+  let idx1 = tid + 256u;
+
+  // Apply Hann window and zero-pad
+  if (idx0 < params.n_fft) {
+    fft_re[idx0] = audio[audio_start + idx0] * window_fn[idx0];
+  } else {
+    fft_re[idx0] = 0.0;
+  }
+  fft_im[idx0] = 0.0;
+
+  if (idx1 < params.fft_size) {
+    if (idx1 < params.n_fft) {
+      fft_re[idx1] = audio[audio_start + idx1] * window_fn[idx1];
+    } else {
+      fft_re[idx1] = 0.0;
+    }
+    fft_im[idx1] = 0.0;
+  }
+
+  workgroupBarrier();
+
+  // ── Bit-reversal permutation ────────────────────────────────────────
+  // Each thread swaps its two indices if needed
+  let N = params.fft_size; // 512
+  let bits = 9u; // log2(512)
+
+  // Bit-reverse function inline
+  var rev0: u32 = 0u;
+  var tmp0 = idx0;
+  for (var b: u32 = 0u; b < bits; b = b + 1u) {
+    rev0 = (rev0 << 1u) | (tmp0 & 1u);
+    tmp0 = tmp0 >> 1u;
+  }
+  var rev1: u32 = 0u;
+  var tmp1 = idx1;
+  for (var b: u32 = 0u; b < bits; b = b + 1u) {
+    rev1 = (rev1 << 1u) | (tmp1 & 1u);
+    tmp1 = tmp1 >> 1u;
+  }
+
+  workgroupBarrier();
+
+  // Swap for bit-reversal (copy through temporaries)
+  let re0 = fft_re[idx0]; let im0 = fft_im[idx0];
+  let re1 = fft_re[idx1]; let im1 = fft_im[idx1];
+
+  workgroupBarrier();
+
+  if (idx0 < rev0) {
+    fft_re[rev0] = re0; fft_im[rev0] = im0;
+    fft_re[idx0] = fft_re[rev0]; // will be overwritten below
+  }
+  // Simpler: just do a full copy-out/copy-in via shared memory
+  // Actually, the canonical GPU approach is to read from source position:
+  // For correctness with parallel swaps, we use a two-pass approach.
+
+  // PASS 1: Store originals
+  workgroupBarrier();
+
+  // Correct bit-reversal: read from reversed index
+  let src_re0 = fft_re[rev0]; let src_im0 = fft_im[rev0];
+  var src_re1: f32 = 0.0; var src_im1: f32 = 0.0;
+  if (idx1 < N) {
+    src_re1 = fft_re[rev1]; src_im1 = fft_im[rev1];
+  }
+
+  workgroupBarrier();
+
+  fft_re[idx0] = src_re0; fft_im[idx0] = src_im0;
+  if (idx1 < N) {
+    fft_re[idx1] = src_re1; fft_im[idx1] = src_im1;
+  }
+
+  workgroupBarrier();
+
+  // ── Butterfly stages ────────────────────────────────────────────────
+  // 9 stages for N=512: len = 2,4,8,...,512
+  var twiddle_offset: u32 = 0u;
+  for (var stage: u32 = 0u; stage < bits; stage = stage + 1u) {
+    let len = 1u << (stage + 1u);      // 2,4,8,...,512
+    let half_len = 1u << stage;         // 1,2,4,...,256
+
+    // Each thread processes two butterfly pairs
+    for (var pass: u32 = 0u; pass < 2u; pass = pass + 1u) {
+      let i = select(idx0, idx1, pass == 1u);
+      if (i >= N) { continue; }
+
+      let block = i / len;
+      let pos = i % len;
+
+      if (pos < half_len) {
+        let a = block * len + pos;
+        let b_idx = a + half_len;
+
+        let tw_idx = twiddle_offset + pos;
+        let tw_re = twiddle_re[tw_idx];
+        let tw_im = twiddle_im[tw_idx];
+
+        let br = fft_re[b_idx];
+        let bi = fft_im[b_idx];
+
+        let t_re = br * tw_re - bi * tw_im;
+        let t_im = br * tw_im + bi * tw_re;
+
+        fft_re[b_idx] = fft_re[a] - t_re;
+        fft_im[b_idx] = fft_im[a] - t_im;
+        fft_re[a] = fft_re[a] + t_re;
+        fft_im[a] = fft_im[a] + t_im;
+      }
+    }
+
+    twiddle_offset = twiddle_offset + half_len;
+    workgroupBarrier();
+  }
+
+  // ── Power spectrum → mel filterbank ─────────────────────────────────
+  // Each thread computes ceil(n_mels / 256) mel bands for this frame
+  let mels_per_thread = (params.n_mels + 255u) / 256u;
+
+  for (var mi: u32 = 0u; mi < mels_per_thread; mi = mi + 1u) {
+    let m = tid * mels_per_thread + mi;
+    if (m >= params.n_mels) { break; }
+
+    var sum: f32 = 0.0;
+    let fb_offset = m * params.n_freqs;
+
+    for (var k: u32 = 0u; k < params.n_freqs; k = k + 1u) {
+      let power = fft_re[k] * fft_re[k] + fft_im[k] * fft_im[k];
+      sum = sum + filterbank[fb_offset + k] * power;
+    }
+
+    // Store in [n_mels × n_frames] row-major
+    output[m * params.n_frames + frame] = sum;
+  }
+}
+`;
+
 
 // ── CPU Reference Implementations ──────────────────────────────────────────
 // Used for verification and as fallback when WebGPU is unavailable.
@@ -447,6 +632,7 @@ export const WHISPER_KERNELS = {
   softmax: WGSL_SOFTMAX,
   sdpa: WGSL_SDPA,
   conv1d: WGSL_CONV1D,
+  mel_spec: WGSL_MEL_SPEC,
 } as const;
 
 export type WhisperKernelName = keyof typeof WHISPER_KERNELS;

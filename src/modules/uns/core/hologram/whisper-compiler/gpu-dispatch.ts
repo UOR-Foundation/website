@@ -23,6 +23,7 @@ import {
   WGSL_SOFTMAX,
   WGSL_SDPA,
   WGSL_CONV1D,
+  WGSL_MEL_SPEC,
   cpuMatmul,
   cpuLayerNorm,
   cpuGelu,
@@ -30,6 +31,10 @@ import {
   cpuScaledDotProductAttention,
   cpuConv1d,
 } from "./wgsl-kernels";
+import {
+  computeMelSpectrogram as cpuMelSpectrogram,
+  SAMPLE_RATE, N_FFT, HOP_LENGTH, N_MELS, N_FRAMES, N_SAMPLES,
+} from "./mel-spectrogram";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -425,6 +430,132 @@ export class GpuDispatch {
       }
     }
     return out;
+  }
+
+  // ── Mel Spectrogram (GPU-accelerated STFT) ────────────────────────────
+
+  /** Precomputed twiddle factors for 512-point FFT */
+  private _twiddleRe: Float32Array | null = null;
+  private _twiddleIm: Float32Array | null = null;
+  private _hannWindow: Float32Array | null = null;
+  private _melFilterbank: Float32Array | null = null;
+
+  private buildTwiddleFactors(): { re: Float32Array; im: Float32Array } {
+    const total = 511; // sum(2^s for s=0..8)
+    const re = new Float32Array(total);
+    const im = new Float32Array(total);
+    let offset = 0;
+    for (let stage = 0; stage < 9; stage++) {
+      const len = 1 << (stage + 1);
+      const halfLen = 1 << stage;
+      for (let k = 0; k < halfLen; k++) {
+        const angle = (-2 * Math.PI * k) / len;
+        re[offset + k] = Math.cos(angle);
+        im[offset + k] = Math.sin(angle);
+      }
+      offset += halfLen;
+    }
+    return { re, im };
+  }
+
+  private getHannWindow(): Float32Array {
+    if (!this._hannWindow) {
+      this._hannWindow = new Float32Array(N_FFT);
+      for (let i = 0; i < N_FFT; i++) {
+        this._hannWindow[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / N_FFT));
+      }
+    }
+    return this._hannWindow;
+  }
+
+  private getMelFilterbank(): Float32Array {
+    if (!this._melFilterbank) {
+      const N_FREQS = 257;
+      const hzToMel = (hz: number) => 2595 * Math.log10(1 + hz / 700);
+      const melToHz = (mel: number) => 700 * (10 ** (mel / 2595) - 1);
+      const melLow = hzToMel(0);
+      const melHigh = hzToMel(SAMPLE_RATE / 2);
+      const melPoints = new Float32Array(N_MELS + 2);
+      for (let i = 0; i < N_MELS + 2; i++) {
+        melPoints[i] = melLow + ((melHigh - melLow) * i) / (N_MELS + 1);
+      }
+      const binFreqs = new Float32Array(N_MELS + 2);
+      for (let i = 0; i < N_MELS + 2; i++) {
+        binFreqs[i] = (melToHz(melPoints[i]) * 512) / SAMPLE_RATE;
+      }
+      this._melFilterbank = new Float32Array(N_MELS * N_FREQS);
+      for (let m = 0; m < N_MELS; m++) {
+        const lo = binFreqs[m], mid = binFreqs[m + 1], hi = binFreqs[m + 2];
+        for (let k = 0; k < N_FREQS; k++) {
+          let val = 0;
+          if (k >= lo && k <= mid && mid > lo) val = (k - lo) / (mid - lo);
+          else if (k >= mid && k <= hi && hi > mid) val = (hi - k) / (hi - mid);
+          const melWidth = melToHz(melPoints[m + 2]) - melToHz(melPoints[m]);
+          if (melWidth > 0) val *= 2.0 / melWidth;
+          this._melFilterbank[m * N_FREQS + k] = val;
+        }
+      }
+    }
+    return this._melFilterbank;
+  }
+
+  /**
+   * GPU-accelerated mel spectrogram: 3000 frames × 512-point FFT × 80 mel bands.
+   * Falls back to CPU if WebGPU unavailable.
+   */
+  async melSpectrogram(audio: Float32Array): Promise<Float32Array> {
+    if (!this._available) {
+      this._cpuOps++;
+      return cpuMelSpectrogram(audio);
+    }
+
+    try {
+      const start = performance.now();
+      const padded = new Float32Array(N_SAMPLES);
+      padded.set(audio.subarray(0, Math.min(audio.length, N_SAMPLES)));
+
+      if (!this._twiddleRe) {
+        const tw = this.buildTwiddleFactors();
+        this._twiddleRe = tw.re;
+        this._twiddleIm = tw.im;
+      }
+      const hannWindow = this.getHannWindow();
+      const filterbank = this.getMelFilterbank();
+
+      const FFT_SIZE = 512;
+      const N_FREQS = 257;
+      const uniforms = new ArrayBuffer(32);
+      const uView = new Uint32Array(uniforms);
+      uView[0] = N_FRAMES; uView[1] = FFT_SIZE; uView[2] = N_FREQS;
+      uView[3] = N_MELS; uView[4] = N_FFT; uView[5] = HOP_LENGTH;
+      uView[6] = 0; uView[7] = 0;
+
+      const outputSize = N_MELS * N_FRAMES * 4;
+      const result = await this.gpu.compute(
+        WGSL_MEL_SPEC,
+        [padded, hannWindow, filterbank, this._twiddleRe!, this._twiddleIm!],
+        outputSize,
+        [N_FRAMES, 1, 1],
+        uniforms,
+      );
+
+      // Log-mel normalization (tiny — keep on CPU)
+      const mel = result.output;
+      for (let i = 0; i < mel.length; i++) mel[i] = Math.log10(Math.max(mel[i], 1e-10));
+      let maxVal = -Infinity;
+      for (let i = 0; i < mel.length; i++) if (mel[i] > maxVal) maxVal = mel[i];
+      for (let i = 0; i < mel.length; i++) mel[i] = (Math.max(mel[i], maxVal - 8.0) + 4.0) / 4.0;
+
+      const elapsed = Math.round(performance.now() - start);
+      console.log(`[GpuDispatch] 🎵 Mel spectrogram GPU: ${elapsed}ms (${N_MELS}×${N_FRAMES})`);
+      this._gpuOps++;
+      this._totalGpuMs += result.computeTimeMs;
+      return mel;
+    } catch (e) {
+      console.warn("[GpuDispatch] Mel spectrogram GPU failed, CPU fallback:", e);
+      this._cpuOps++;
+      return cpuMelSpectrogram(audio);
+    }
   }
 
   /**
