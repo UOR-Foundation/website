@@ -1,14 +1,14 @@
 /**
  * useVoiceSynthesis — Text-to-Speech for Hologram
  * ═══════════════════════════════════════════════
- * 
- * Two modes:
- *  1. Web Speech API (default) — free, instant, fully client-side
- *  2. ElevenLabs (premium)     — natural voices via edge function
- * 
- * The hook auto-detects if ElevenLabs is available and falls back gracefully.
- * All voice output is ephemeral — no audio is stored or transmitted beyond TTS.
- * 
+ *
+ * Two engines:
+ *  1. Web Speech API (free, instant, client-side)
+ *  2. ElevenLabs (premium, natural voices via edge function)
+ *
+ * Key design: `speak()` returns a Promise that resolves when speech ends.
+ * This eliminates polling and callback spaghetti.
+ *
  * @module hologram-ui/hooks/useVoiceSynthesis
  */
 
@@ -19,13 +19,11 @@ export type VoiceSynthStatus = "idle" | "speaking" | "loading";
 
 interface UseVoiceSynthesisOptions {
   engine?: VoiceEngine;
-  /** ElevenLabs voice ID — defaults to "onwK4e9ZLuTAKqWW03F9" (Daniel, warm male) */
+  /** ElevenLabs voice ID — defaults to Daniel (warm male) */
   voiceId?: string;
   /** Web Speech voice name preference */
   webVoiceName?: string;
-  /** Speech rate for Web Speech API (0.5 - 2.0) */
   rate?: number;
-  /** Speech pitch for Web Speech API (0 - 2) */
   pitch?: number;
   onStart?: () => void;
   onEnd?: () => void;
@@ -33,7 +31,6 @@ interface UseVoiceSynthesisOptions {
 }
 
 const ELEVENLABS_TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`;
-const SILENT_PRIMER_AUDIO = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
 
 export function useVoiceSynthesis({
   engine = "web-speech",
@@ -46,202 +43,172 @@ export function useVoiceSynthesis({
   onError,
 }: UseVoiceSynthesisOptions = {}) {
   const [status, setStatus] = useState<VoiceSynthStatus>("idle");
-  const statusRef = useRef<VoiceSynthStatus>("idle");
   const [currentEngine, setCurrentEngine] = useState<VoiceEngine>(engine);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const abortRef = useRef(false);
-  const playbackPrimedRef = useRef(false);
 
-  const updateStatus = useCallback((s: VoiceSynthStatus) => {
-    statusRef.current = s;
-    setStatus(s);
+  const setIdle = useCallback(() => setStatus("idle"), []);
+
+  const revokeUrl = useCallback(() => {
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
   }, []);
 
-  const revokeAudioUrl = useCallback(() => {
-    if (!audioUrlRef.current) return;
-    URL.revokeObjectURL(audioUrlRef.current);
-    audioUrlRef.current = null;
-  }, []);
+  // Cleanup on unmount
+  useEffect(() => () => { stop(); }, []);
 
-  /** Prime audio output in direct user-gesture context (fixes autoplay gating on some browsers) */
-  const primeForPlayback = useCallback(() => {
-    if (playbackPrimedRef.current) return;
+  /** Pick best Web Speech voice */
+  const getWebVoice = useCallback((): SpeechSynthesisVoice | null => {
+    const voices = window.speechSynthesis?.getVoices() ?? [];
+    if (!voices.length) return null;
 
-    playbackPrimedRef.current = true;
-    const primer = audioRef.current ?? new Audio(SILENT_PRIMER_AUDIO);
-    primer.muted = true;
-    primer.volume = 0;
-    primer.setAttribute("playsinline", "true");
-    primer.preload = "auto";
-    audioRef.current = primer;
+    if (webVoiceName) {
+      const m = voices.find(v => v.name.toLowerCase().includes(webVoiceName.toLowerCase()));
+      if (m) return m;
+    }
 
-    primer.play().then(() => {
-      primer.pause();
-      primer.currentTime = 0;
-      primer.muted = false;
-      primer.volume = 1;
-    }).catch(() => {
-      playbackPrimedRef.current = false;
-      primer.muted = false;
-      primer.volume = 1;
-      if (audioRef.current === primer) audioRef.current = null;
+    for (const name of ["Google UK English Male", "Google UK English Female", "Daniel", "Samantha", "Alex", "Karen"]) {
+      const m = voices.find(v => v.name.includes(name));
+      if (m) return m;
+    }
+    return voices.find(v => v.lang.startsWith("en")) || voices[0];
+  }, [webVoiceName]);
+
+  /** Ensure voices are loaded (they load async in some browsers) */
+  const ensureVoices = useCallback((): Promise<void> => {
+    return new Promise((resolve) => {
+      const voices = window.speechSynthesis?.getVoices() ?? [];
+      if (voices.length > 0) { resolve(); return; }
+      const handler = () => {
+        window.speechSynthesis.removeEventListener("voiceschanged", handler);
+        resolve();
+      };
+      window.speechSynthesis.addEventListener("voiceschanged", handler);
+      // Safety timeout — some browsers never fire voiceschanged
+      setTimeout(() => {
+        window.speechSynthesis.removeEventListener("voiceschanged", handler);
+        resolve();
+      }, 2000);
     });
   }, []);
 
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      stop();
-    };
-  }, []);
-
-  /** Pick the best available Web Speech voice */
-  const getWebVoice = useCallback((): SpeechSynthesisVoice | null => {
-    const voices = window.speechSynthesis?.getVoices() ?? [];
-    if (voices.length === 0) return null;
-
-    // Try user preference first
-    if (webVoiceName) {
-      const match = voices.find(v => v.name.toLowerCase().includes(webVoiceName.toLowerCase()));
-      if (match) return match;
-    }
-
-    // Prefer high-quality English voices
-    const preferred = [
-      "Google UK English Male",
-      "Google UK English Female",
-      "Daniel",
-      "Samantha",
-      "Alex",
-      "Karen",
-    ];
-
-    for (const name of preferred) {
-      const match = voices.find(v => v.name.includes(name));
-      if (match) return match;
-    }
-
-    // Fall back to any English voice
-    const english = voices.find(v => v.lang.startsWith("en"));
-    return english || voices[0];
-  }, [webVoiceName]);
-
-  /** Speak via Web Speech API */
-  const speakWebSpeech = useCallback((text: string) => {
-    if (!window.speechSynthesis) {
-      onError?.("Web Speech API not supported in this browser");
-      return;
-    }
-
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voice = getWebVoice();
-    if (voice) utterance.voice = voice;
-    utterance.rate = rate;
-    utterance.pitch = pitch;
-    utterance.volume = 0.85;
-
-    utterance.onstart = () => {
-      updateStatus("speaking");
-      onStart?.();
-    };
-
-    utterance.onend = () => {
-      updateStatus("idle");
-      onEnd?.();
-    };
-
-    utterance.onerror = (e) => {
-      if (e.error !== "canceled") {
-        updateStatus("idle");
-        onError?.(e.error);
-      }
-    };
-
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-  }, [getWebVoice, rate, pitch, onStart, onEnd, onError]);
-
-  /** Speak via ElevenLabs edge function */
-  const speakElevenLabs = useCallback(async (text: string) => {
-    if (abortRef.current) return;
-
-    updateStatus("loading");
-
-    // Reuse a single audio element (once primed, browsers are less likely to gate playback)
-    const audio = audioRef.current ?? new Audio();
-    audio.setAttribute("playsinline", "true");
-    audio.preload = "auto";
-    audioRef.current = audio;
-
-    try {
-      const response = await fetch(ELEVENLABS_TTS_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ text, voiceId }),
-      });
-
-      if (!response.ok) {
-        // Fall back to Web Speech
-        console.warn("[VoiceSynth] ElevenLabs unavailable, falling back to Web Speech");
-        setCurrentEngine("web-speech");
-        updateStatus("idle");
-        speakWebSpeech(text);
+  /** Speak via Web Speech — returns Promise that resolves when done */
+  const speakWebSpeech = useCallback((text: string): Promise<void> => {
+    return new Promise(async (resolve) => {
+      if (!window.speechSynthesis) {
+        onError?.("Web Speech API not supported");
+        resolve();
         return;
       }
 
-      const audioBlob = await response.blob();
-      revokeAudioUrl();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      audioUrlRef.current = audioUrl;
-      audio.src = audioUrl;
+      window.speechSynthesis.cancel();
+      await ensureVoices();
 
-      audio.onplay = () => {
-        updateStatus("speaking");
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voice = getWebVoice();
+      if (voice) utterance.voice = voice;
+      utterance.rate = rate;
+      utterance.pitch = pitch;
+      utterance.volume = 0.85;
+
+      utterance.onstart = () => {
+        setStatus("speaking");
         onStart?.();
       };
 
-      audio.onended = () => {
-        updateStatus("idle");
-        revokeAudioUrl();
+      utterance.onend = () => {
+        setIdle();
         onEnd?.();
+        resolve();
       };
 
-      audio.onerror = () => {
-        updateStatus("idle");
-        revokeAudioUrl();
-        onError?.("Audio playback failed");
+      utterance.onerror = (e) => {
+        if (e.error !== "canceled") {
+          setIdle();
+          onError?.(e.error);
+        }
+        resolve();
       };
 
-      if (abortRef.current) {
-        updateStatus("idle");
-        return;
+      window.speechSynthesis.speak(utterance);
+    });
+  }, [getWebVoice, ensureVoices, rate, pitch, onStart, onEnd, onError, setIdle]);
+
+  /** Speak via ElevenLabs — returns Promise that resolves when done */
+  const speakElevenLabs = useCallback((text: string): Promise<void> => {
+    return new Promise(async (resolve) => {
+      if (abortRef.current) { resolve(); return; }
+      setStatus("loading");
+
+      try {
+        const response = await fetch(ELEVENLABS_TTS_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text, voiceId }),
+        });
+
+        if (!response.ok) {
+          console.warn("[TTS] ElevenLabs unavailable, falling back to Web Speech");
+          setCurrentEngine("web-speech");
+          setIdle();
+          resolve(speakWebSpeech(text));
+          return;
+        }
+
+        if (abortRef.current) { setIdle(); resolve(); return; }
+
+        const blob = await response.blob();
+        revokeUrl();
+        const url = URL.createObjectURL(blob);
+        audioUrlRef.current = url;
+
+        // Create a fresh Audio element each time — simplest cross-browser approach
+        const audio = new Audio(url);
+        audio.setAttribute("playsinline", "true");
+        audioRef.current = audio;
+
+        audio.onplay = () => {
+          setStatus("speaking");
+          onStart?.();
+        };
+
+        audio.onended = () => {
+          setIdle();
+          revokeUrl();
+          onEnd?.();
+          resolve();
+        };
+
+        audio.onerror = () => {
+          setIdle();
+          revokeUrl();
+          onError?.("Audio playback failed");
+          resolve();
+        };
+
+        await audio.play();
+      } catch (err) {
+        console.warn("[TTS] ElevenLabs error, falling back:", err);
+        setIdle();
+        revokeUrl();
+        setCurrentEngine("web-speech");
+        resolve(speakWebSpeech(text));
       }
+    });
+  }, [voiceId, speakWebSpeech, onStart, onEnd, onError, setIdle, revokeUrl]);
 
-      await audio.play();
-    } catch (err) {
-      console.warn("[VoiceSynth] ElevenLabs error, falling back:", err);
-      updateStatus("idle");
-      revokeAudioUrl();
-      setCurrentEngine("web-speech");
-      speakWebSpeech(text);
-    }
-  }, [voiceId, speakWebSpeech, onStart, onEnd, onError, updateStatus, revokeAudioUrl]);
-
-  /** Primary speak function — routes to the active engine */
-  const speak = useCallback((text: string) => {
-    if (!text.trim()) return;
+  /** Primary speak — cleans text, routes to active engine, returns Promise */
+  const speak = useCallback((text: string): Promise<void> => {
+    if (!text.trim()) return Promise.resolve();
     abortRef.current = false;
 
-    // Clean up text for better TTS: strip markdown artifacts
     const clean = text
       .replace(/[*_`#>]/g, "")
       .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
@@ -250,33 +217,27 @@ export function useVoiceSynthesis({
       .trim();
 
     if (currentEngine === "elevenlabs") {
-      primeForPlayback();
-      speakElevenLabs(clean);
+      return speakElevenLabs(clean);
     } else {
-      speakWebSpeech(clean);
+      return speakWebSpeech(clean);
     }
-  }, [currentEngine, primeForPlayback, speakElevenLabs, speakWebSpeech]);
+  }, [currentEngine, speakElevenLabs, speakWebSpeech]);
 
   /** Stop all speech immediately */
   const stop = useCallback(() => {
     abortRef.current = true;
-    
-    // Stop Web Speech
     window.speechSynthesis?.cancel();
-    utteranceRef.current = null;
 
-    // Stop ElevenLabs audio (keep element for future primed playback)
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.currentTime = 0;
       audioRef.current.removeAttribute("src");
+      audioRef.current = null;
     }
-    revokeAudioUrl();
+    revokeUrl();
+    setIdle();
+  }, [revokeUrl, setIdle]);
 
-    updateStatus("idle");
-  }, [revokeAudioUrl, updateStatus]);
-
-  /** Toggle engine */
+  /** Switch engine */
   const setEngine = useCallback((e: VoiceEngine) => {
     stop();
     setCurrentEngine(e);
@@ -285,9 +246,7 @@ export function useVoiceSynthesis({
   return {
     speak,
     stop,
-    primeForPlayback,
     status,
-    statusRef,
     isSpeaking: status === "speaking",
     isLoading: status === "loading",
     currentEngine,
