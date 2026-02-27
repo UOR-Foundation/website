@@ -16,13 +16,19 @@
  *  - When observer context is present, a subtle outer halo indicates
  *    ambient intelligence is active — Lumen is contextually aware.
  *
+ * Wake word ("Hey Lumen"):
+ *  - Toggle always-listening mode with the ear icon
+ *  - Passive mic monitoring with VAD → triggers voice loop hands-free
+ *  - Subtle cyan sentinel ring when active
+ *
  * @module hologram-ui/components/VoiceOrb
  */
 
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useVoiceConversation, type VoiceConversationState } from "../hooks/useVoiceConversation";
-import { Mic, Square, Volume2, Waves } from "lucide-react";
+import { useWakeWord } from "../hooks/useWakeWord";
+import { Mic, Square, Volume2, Waves, Ear, EarOff } from "lucide-react";
 
 interface VoiceOrbProps {
   /** Screen context for ambient awareness */
@@ -81,6 +87,7 @@ export default function VoiceOrb({
   onExchange,
 }: VoiceOrbProps) {
   const [hovered, setHovered] = useState(false);
+  const [alwaysListening, setAlwaysListening] = useState(false);
 
   const voice = useVoiceConversation({
     voiceEngine: "web-speech",
@@ -90,6 +97,17 @@ export default function VoiceOrb({
     fusionContext,
     onExchange,
     onError: (err) => console.warn("[VoiceOrb]", err),
+  });
+
+  // Wake word detection — triggers startListening hands-free
+  const wakeWord = useWakeWord({
+    onWake: useCallback(() => {
+      if (voice.isIdle) {
+        console.log("[VoiceOrb] 🎯 Wake word detected — starting conversation");
+        voice.startListening();
+      }
+    }, [voice.isIdle, voice.startListening]),
+    enabled: alwaysListening && voice.isIdle, // Only listen for wake word when idle
   });
 
   const colors = STATE_COLORS[voice.state];
@@ -152,6 +170,11 @@ export default function VoiceOrb({
     );
   }, [voice.isSpeaking]);
 
+  const toggleAlwaysListening = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAlwaysListening(prev => !prev);
+  }, []);
+
   return (
     <div
       className="flex flex-col items-center gap-2"
@@ -178,7 +201,6 @@ export default function VoiceOrb({
               boxShadow: "0 8px 32px hsla(0, 0%, 0%, 0.4)",
             }}
           >
-            {/* User's words */}
             {voice.lastTranscript && (
               <p
                 style={{
@@ -194,7 +216,6 @@ export default function VoiceOrb({
               </p>
             )}
 
-            {/* Lumen's response */}
             {voice.lastResponse && (voice.isThinking || voice.isSpeaking) && (
               <p
                 style={{
@@ -212,7 +233,6 @@ export default function VoiceOrb({
               </p>
             )}
 
-            {/* Observer context indicator */}
             {hasObserver && voice.isActive && (
               <div
                 className="flex items-center gap-1.5 mt-2 pt-2"
@@ -251,7 +271,27 @@ export default function VoiceOrb({
         style={{ touchAction: "none" }}
         aria-label={STATE_LABELS[voice.state]}
       >
-        {/* Observer awareness halo — outermost ring, only when observer context is present */}
+        {/* Wake word sentinel ring — outermost, subtle cyan pulse when always-listening */}
+        <AnimatePresence>
+          {alwaysListening && voice.isIdle && (
+            <motion.div
+              initial={{ opacity: 0, scale: 2.0 }}
+              animate={{ opacity: 1, scale: 2.8 }}
+              exit={{ opacity: 0, scale: 2.0 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                background: `radial-gradient(circle, hsla(185, 40%, 50%, ${
+                  wakeWord.isDetecting ? 0.12 : wakeWord.isChecking ? 0.18 : 0.04
+                }) 0%, transparent 70%)`,
+                animation: "ring-breathe 4s ease-in-out infinite",
+                transition: "background 0.5s ease",
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Observer awareness halo */}
         {hasObserver && (
           <div
             className="absolute inset-0 rounded-full pointer-events-none"
@@ -282,14 +322,20 @@ export default function VoiceOrb({
             width: "44px",
             height: "44px",
             background: colors.bg,
-            border: `1.5px solid ${colors.ring}`,
+            border: `1.5px solid ${
+              alwaysListening && voice.isIdle
+                ? `hsla(185, 35%, 55%, ${wakeWord.isDetecting ? 0.55 : 0.35})`
+                : colors.ring
+            }`,
             backdropFilter: "blur(16px)",
             WebkitBackdropFilter: "blur(16px)",
             boxShadow: voice.isActive
               ? `0 0 24px ${colors.glow}, inset 0 0 10px ${colors.glow}`
-              : hovered
-                ? `0 0 12px hsla(38, 30%, 50%, 0.08)`
-                : "0 2px 8px hsla(0, 0%, 0%, 0.2)",
+              : alwaysListening && voice.isIdle
+                ? `0 0 12px hsla(185, 30%, 50%, 0.08)`
+                : hovered
+                  ? `0 0 12px hsla(38, 30%, 50%, 0.08)`
+                  : "0 2px 8px hsla(0, 0%, 0%, 0.2)",
           }}
         >
           {/* Thinking/Processing spinner */}
@@ -306,6 +352,18 @@ export default function VoiceOrb({
             />
           )}
 
+          {/* Wake word checking spinner */}
+          {alwaysListening && voice.isIdle && wakeWord.isChecking && (
+            <div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                border: "1.5px solid transparent",
+                borderTopColor: "hsla(185, 40%, 55%, 0.5)",
+                animation: "spin 0.8s linear infinite",
+              }}
+            />
+          )}
+
           {/* Icon, waveform, or speak bars */}
           {voice.isListening ? (
             waveBars
@@ -318,9 +376,11 @@ export default function VoiceOrb({
               style={{
                 color: voice.isActive
                   ? "hsla(38, 20%, 92%, 0.9)"
-                  : hovered
-                    ? "hsla(38, 20%, 85%, 0.75)"
-                    : "hsla(38, 15%, 75%, 0.45)",
+                  : alwaysListening
+                    ? "hsla(185, 20%, 85%, 0.65)"
+                    : hovered
+                      ? "hsla(38, 20%, 85%, 0.75)"
+                      : "hsla(38, 15%, 75%, 0.45)",
                 transition: "color 0.4s ease",
               }}
             />
@@ -328,29 +388,96 @@ export default function VoiceOrb({
         </div>
       </button>
 
-      {/* State label */}
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={voice.state}
-          initial={{ opacity: 0, y: 2 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -2 }}
-          transition={{ duration: 0.25 }}
-          className="tracking-[0.15em] uppercase"
-          style={{
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontSize: "9px",
-            fontWeight: 500,
-            color: voice.isActive
-              ? "hsla(38, 15%, 85%, 0.65)"
-              : hovered
-                ? "hsla(38, 15%, 80%, 0.45)"
-                : "hsla(38, 15%, 75%, 0.25)",
-          }}
+      {/* State label + always-listening toggle */}
+      <div className="flex items-center gap-2">
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={voice.state + (alwaysListening ? "-al" : "")}
+            initial={{ opacity: 0, y: 2 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -2 }}
+            transition={{ duration: 0.25 }}
+            className="tracking-[0.15em] uppercase"
+            style={{
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontSize: "9px",
+              fontWeight: 500,
+              color: alwaysListening && voice.isIdle
+                ? "hsla(185, 15%, 75%, 0.55)"
+                : voice.isActive
+                  ? "hsla(38, 15%, 85%, 0.65)"
+                  : hovered
+                    ? "hsla(38, 15%, 80%, 0.45)"
+                    : "hsla(38, 15%, 75%, 0.25)",
+            }}
+          >
+            {alwaysListening && voice.isIdle
+              ? wakeWord.isChecking ? "Checking…" : wakeWord.isDetecting ? "Hearing…" : "Hey Lumen"
+              : STATE_LABELS[voice.state]
+            }
+          </motion.span>
+        </AnimatePresence>
+
+        {/* Always-listening toggle */}
+        <button
+          onClick={toggleAlwaysListening}
+          className="group/ear relative"
+          aria-label={alwaysListening ? "Disable wake word" : "Enable wake word (Hey Lumen)"}
+          title={alwaysListening ? "Always listening — say 'Hey Lumen'" : "Enable hands-free: 'Hey Lumen'"}
+          style={{ touchAction: "none" }}
         >
-          {STATE_LABELS[voice.state]}
-        </motion.span>
-      </AnimatePresence>
+          <motion.div
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+            className="flex items-center justify-center rounded-full"
+            style={{
+              width: "22px",
+              height: "22px",
+              background: alwaysListening
+                ? "hsla(185, 25%, 20%, 0.6)"
+                : "hsla(0, 0%, 15%, 0.3)",
+              border: `1px solid ${
+                alwaysListening
+                  ? "hsla(185, 30%, 50%, 0.3)"
+                  : "hsla(38, 15%, 40%, 0.15)"
+              }`,
+              transition: "all 0.3s ease",
+            }}
+          >
+            {alwaysListening ? (
+              <Ear
+                size={10}
+                strokeWidth={1.5}
+                style={{ color: "hsla(185, 30%, 65%, 0.8)" }}
+              />
+            ) : (
+              <EarOff
+                size={10}
+                strokeWidth={1.5}
+                style={{ color: "hsla(38, 10%, 60%, 0.35)" }}
+              />
+            )}
+          </motion.div>
+
+          {/* Subtle pulse when actively listening for wake word */}
+          {alwaysListening && voice.isIdle && (
+            <motion.div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              animate={{
+                boxShadow: [
+                  "0 0 0 0 hsla(185, 35%, 50%, 0.15)",
+                  "0 0 0 4px hsla(185, 35%, 50%, 0.0)",
+                ],
+              }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeOut",
+              }}
+            />
+          )}
+        </button>
+      </div>
 
       {/* Elapsed timer — only while listening */}
       <AnimatePresence>
