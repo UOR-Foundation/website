@@ -22,16 +22,7 @@ import { OnnxDataType, DTYPE_BYTE_SIZE } from "./types";
 
 // ── TensorProto (field numbers from onnx.proto3) ───────────────────────────
 
-let _tensorDebugCount = 0;
-
-/** Reset debug counter — call before parsing initializers to capture their fields */
-export function resetTensorDebug(): void {
-  _tensorDebugCount = 0;
-}
-
 function parseTensorProto(reader: ProtoReader): OnnxTensor {
-  const isDebug = _tensorDebugCount < 5;
-  _tensorDebugCount++;
   const dims: number[] = [];
   let dataType: number = OnnxDataType.FLOAT;
   let name = "";
@@ -42,10 +33,8 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
   let doubleData: Float64Array | null = null;
   let externalData: { location: string; offset: number; length: number } | undefined;
 
-  const fieldsHit: number[] = [];
   let tag;
   while ((tag = reader.readTag()) !== null) {
-    if (isDebug) fieldsHit.push(tag.field);
     switch (tag.field) {
       case 1: // repeated int64 dims (packed or unpacked)
         if (tag.wire === WireType.LENGTH_DELIMITED) {
@@ -97,6 +86,10 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
         name = reader.readString();
         break;
 
+      case 9: // bytes raw_data (some ONNX exporters use field 9 instead of 13)
+        rawData = reader.readBytes();
+        break;
+
       case 10: // repeated double double_data (packed)
         if (tag.wire === WireType.LENGTH_DELIMITED) {
           doubleData = reader.readPackedFloat64();
@@ -115,7 +108,6 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
 
       case 13: // bytes raw_data (zero-copy view)
         rawData = reader.readBytes();
-        if (isDebug) console.log(`[TensorDebug] field 13 raw_data: ${rawData.byteLength} bytes, remaining: ${reader.remaining}`);
         break;
 
       case 14: { // repeated StringStringEntryProto external_data
@@ -159,10 +151,6 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
   }
 
   const elementCount = dims.length > 0 ? dims.reduce((a, b) => a * b, 1) : 0;
-
-  if (isDebug) {
-    console.log(`[TensorDebug] "${name}" fields: [${fieldsHit}], dims: [${dims}], dtype: ${dataType}, rawBytes: ${finalRawData.byteLength}, elements: ${elementCount}`);
-  }
 
   return { name, dims, dataType, rawData: finalRawData, elementCount, externalData };
 }
@@ -279,27 +267,13 @@ function parseGraphProto(reader: ProtoReader): OnnxGraph {
   const initializers: OnnxTensor[] = [];
   const inputNames: string[] = [];
   const outputNames: string[] = [];
-  let initializerDebugReset = false;
 
   let tag;
   while ((tag = reader.readTag()) !== null) {
     switch (tag.field) {
       case 1:  nodes.push(parseNodeProto(reader.subReader())); break;
       case 2:  name = reader.readString(); break;
-      case 5: {
-        // Reset debug counter on first initializer to capture their fields
-        if (!initializerDebugReset) {
-          console.log(`[GraphDebug] First initializer at reader pos ${reader.position}, remaining: ${reader.remaining}`);
-          resetTensorDebug();
-          initializerDebugReset = true;
-        }
-        const sub = reader.subReader();
-        if (initializers.length < 3) {
-          console.log(`[GraphDebug] Initializer sub-reader: ${sub.remaining} bytes`);
-        }
-        initializers.push(parseTensorProto(sub));
-        break;
-      }
+      case 5:  initializers.push(parseTensorProto(reader.subReader())); break;
       case 11: inputNames.push(parseValueInfoName(reader.subReader())); break;
       case 12: outputNames.push(parseValueInfoName(reader.subReader())); break;
       default: reader.skip(tag.wire);
