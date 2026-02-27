@@ -78,7 +78,12 @@ function detectHardware(): HardwareInfo {
 // Benchmark Configuration
 // ══════════════════════════════════════════════════════════════════════════════
 
-const SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 640, 768, 1024, 1280];
+/** CPU demo sizes — capped at 1280 to keep single-thread runtime reasonable */
+const CPU_SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 640, 768, 1024, 1280];
+/** GPU demo sizes — pushed much larger to dramatize O(N³) vs O(N²) gap */
+const GPU_SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1280, 1536, 2048];
+/** Union of all sizes for precomputation */
+const ALL_SIZES = [...new Set([...CPU_SIZES, ...GPU_SIZES])].sort((a, b) => a - b);
 const SEED_A = 42;
 const SEED_B = 137;
 
@@ -469,7 +474,8 @@ function DemoStats({ points, isRunning, currentSize, precomputeMs, precomputeMet
   const animBaseTok = useCountUp(last ? (demoType === "cpu" ? last.stdTokSec : last.gpuTokSec) : 0, 500);
   const animHoloTok = useCountUp(last?.holoTokSec ?? 0, 500);
 
-  const maxSpeedup = SIZES[SIZES.length - 1];
+  const demoSizes = demoType === "cpu" ? CPU_SIZES : GPU_SIZES;
+  const maxSpeedup = demoSizes[demoSizes.length - 1];
 
   const hardwareRoute = precomputeMethod === "gpu"
     ? "vGPU → GPU (WebGPU)"
@@ -579,9 +585,9 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
 
     summary: {
       verdict: allChecksOk && allSha256Match ? "PASS — All outputs are byte-identical across all methods" : "FAIL — Output mismatch detected",
-      matrixSizesTested: SIZES.length,
-      largestMatrix: `${SIZES[SIZES.length - 1]}×${SIZES[SIZES.length - 1]}`,
-      largestOps: SIZES[SIZES.length - 1] ** 3,
+      matrixSizesTested: points.length,
+      largestMatrix: `${points[points.length - 1]?.n ?? 0}×${points[points.length - 1]?.n ?? 0}`,
+      largestOps: (points[points.length - 1]?.n ?? 0) ** 3,
       peakSpeedupVsCpu: `${Math.max(...points.map((p) => p.speedupVsCpu)).toFixed(1)}×`,
       peakSpeedupVsGpu: hasGpu ? `${Math.max(...points.filter(p => p.gpuAvailable).map((p) => p.speedupVsGpu)).toFixed(1)}×` : "N/A — WebGPU unavailable",
       totalCpuTimeMs: round(totalCpuMs),
@@ -597,7 +603,7 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
       prngSeedB: SEED_B,
       matrixGeneration: `seededMatrix(N, seed + N): Mulberry32(seed + N) → N² values → floor(random() × 256) → Uint8Array`,
       matrixArithmetic: "INT8 modular: C[i][j] = Σₖ A[i][k] × B[k][j] mod 256",
-      sizes: SIZES,
+      sizes: ALL_SIZES,
     },
 
     environment: {
@@ -826,7 +832,7 @@ export default function ConstantTimeBenchmark() {
   const precompute = useCallback(async () => {
     if (cacheRef.current) return; // already precomputed
     const cache = new HologramComputeCache();
-    await cache.precompute(SIZES, SEED_A, SEED_B, (_i, n, method) => {
+    await cache.precompute(ALL_SIZES, SEED_A, SEED_B, (_i, n, method) => {
       setCurrentSize(`crystallizing ${n}×${n} [${method}]`);
     });
     setPrecomputeMs(cache.precomputeTimeMs);
@@ -851,9 +857,10 @@ export default function ConstantTimeBenchmark() {
 
     const cache = cacheRef.current!;
 
-    for (let i = 0; i < SIZES.length; i++) {
+    const demoSizes = demo === "cpu" ? CPU_SIZES : GPU_SIZES;
+    for (let i = 0; i < demoSizes.length; i++) {
       if (cancelRef.current) break;
-      const n = SIZES[i];
+      const n = demoSizes[i];
       setCurrentSize(`${n}×${n}`);
       await new Promise((r) => setTimeout(r, 30));
 
@@ -1028,7 +1035,7 @@ export default function ConstantTimeBenchmark() {
               </div>
               <p className="text-3xl font-light font-mono leading-none" style={{ color: P.red }}>O(N³)</p>
               <p className="text-[12px]" style={{ color: P.muted }}>
-                Single {hw.jsEngine} thread. {hw.cpuCores}-core {hw.cpuArch}. {formatOps(SIZES[SIZES.length - 1] ** 3)} ops at N={SIZES[SIZES.length - 1]}.
+                Single {hw.jsEngine} thread. {hw.cpuCores}-core {hw.cpuArch}. {formatOps(CPU_SIZES[CPU_SIZES.length - 1] ** 3)} ops at N={CPU_SIZES[CPU_SIZES.length - 1]}.
               </p>
             </div>
             <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
@@ -1050,7 +1057,7 @@ export default function ConstantTimeBenchmark() {
             <div className="w-7 h-7 mx-auto border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
             <p className="text-sm font-medium" style={{ color: P.gold }}>Pre-computing all results…</p>
             <p className="text-[13px]" style={{ color: P.muted }}>
-              {SIZES.length} sizes up to {SIZES[SIZES.length - 1]}². Using {hw.webgpuAvailable ? "GPU via WebGPU" : "CPU with 64KB lookup table"}.
+              {ALL_SIZES.length} sizes up to {ALL_SIZES[ALL_SIZES.length - 1]}². Using {hw.webgpuAvailable ? "GPU via WebGPU" : "CPU with 64KB lookup table"}.
             </p>
           </div>
         )}
@@ -1188,7 +1195,7 @@ export default function ConstantTimeBenchmark() {
               </div>
               <p className="text-3xl font-light font-mono leading-none" style={{ color: P.blue }}>O(N³)</p>
               <p className="text-[12px]" style={{ color: P.muted }}>
-                Real WebGPU compute shader. Thousands of parallel cores. Same cubic math, massively parallel.
+                Real WebGPU compute shader. Thousands of parallel cores. Up to N={GPU_SIZES[GPU_SIZES.length - 1]} — {formatOps(GPU_SIZES[GPU_SIZES.length - 1] ** 3)} ops.
               </p>
             </div>
             <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
@@ -1372,7 +1379,7 @@ export default function ConstantTimeBenchmark() {
                 {allChecksOk ? "All outputs identical" : "Mismatch"}
               </div>
               <span className="text-[12px]" style={{ color: P.muted }}>
-                {hw.jsEngine} · {hw.cpuCores} cores · {hw.webgpuAvailable ? "WebGPU ✓" : "No GPU"} · {SIZES.length} sizes
+                {hw.jsEngine} · {hw.cpuCores} cores · {hw.webgpuAvailable ? "WebGPU ✓" : "No GPU"} · {ALL_SIZES.length} sizes
               </span>
             </div>
             <button
