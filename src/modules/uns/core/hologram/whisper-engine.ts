@@ -57,6 +57,21 @@ const WHISPER_MODEL_ID = "onnx-community/whisper-tiny.en";
 const WHISPER_TASK = "automatic-speech-recognition";
 const TARGET_SAMPLE_RATE = 16000;
 
+/**
+ * Self-hosted model proxy URL — routes HuggingFace CDN requests
+ * through our own edge function, which caches model files in our
+ * storage bucket for permanent, reliable, zero-external-dependency access.
+ */
+const MODEL_PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whisper-model-proxy`;
+
+/** Domains that should be routed through our proxy */
+const HF_DOMAINS = [
+  "huggingface.co",
+  "hf.co",
+  "cdn-lfs.huggingface.co",
+  "cdn-lfs-us-1.huggingface.co",
+];
+
 // ── Audio Utilities ─────────────────────────────────────────────────────────
 
 /**
@@ -136,17 +151,33 @@ export class WhisperEngine {
       // Dynamic import — only loads Transformers.js when Whisper is needed
       const { pipeline: createPipeline, env } = await import("@huggingface/transformers");
 
-      // Use HuggingFace CDN; Cache API handles persistence
+      // Configure for self-hosted model serving
       env.allowLocalModels = false;
-      // Enable caching (default, but explicit)
       env.useBrowserCache = true;
-      // Allow remote models from HuggingFace
       env.allowRemoteModels = true;
 
+      // ── Fetch interceptor ─────────────────────────────────────────────
+      // Route all HuggingFace CDN requests through our self-hosted proxy
+      // edge function. The proxy caches files in our storage bucket,
+      // ensuring zero external dependency after first load.
+      const originalFetch = globalThis.fetch;
+      const proxyFetch: typeof fetch = async (input, init) => {
+        let url = "";
+        if (typeof input === "string") url = input;
+        else if (input instanceof URL) url = input.toString();
+        else if (input instanceof Request) url = input.url;
+
+        const isHfUrl = HF_DOMAINS.some((d) => url.includes(d));
+        if (isHfUrl && MODEL_PROXY_URL) {
+          const proxiedUrl = `${MODEL_PROXY_URL}?url=${encodeURIComponent(url)}`;
+          console.log(`[Whisper] 🔄 Routing through Hologram proxy: ${url.split("/").pop()}`);
+          return originalFetch(proxiedUrl, init);
+        }
+        return originalFetch(input, init);
+      };
+      globalThis.fetch = proxyFetch;
+
       // ── vGPU Integration ──────────────────────────────────────────────
-      // Coordinate with the HologramGpu singleton for device lifecycle.
-      // This ensures we share the same WebGPU adapter/device and benefit
-      // from the vGPU's constant-time computation optimizations.
       this._device = "wasm";
       try {
         const vgpu = getHologramGpu();
@@ -166,9 +197,6 @@ export class WhisperEngine {
         console.log("[Whisper] vGPU init failed, using WASM fallback:", err);
       }
 
-      // Select dtype based on device:
-      // - WebGPU: fp32 for full precision on GPU (constant-time via vGPU)
-      // - WASM: q8 for smaller memory footprint and faster CPU inference
       const dtype = this._device === "webgpu" ? "fp32" : "q8";
 
       this._onProgress?.({ status: "downloading", progress: 0 });
@@ -186,6 +214,9 @@ export class WhisperEngine {
           });
         },
       });
+
+      // Restore original fetch after model is loaded
+      globalThis.fetch = originalFetch;
 
       this._status = "ready";
       console.log(`[Whisper] ✅ Model ready (${this._device}, ${dtype}, vGPU: ${this._vgpuInitialized})`);
