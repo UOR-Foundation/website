@@ -172,7 +172,9 @@ export class WhisperEngine {
         console.log("[Whisper] vGPU init failed → WASM fallback:", err);
       }
 
-      const dtype = this._device === "webgpu" ? "fp32" : "q8";
+      // Always use quantized models — smaller, faster, and our storage bucket
+      // has the quantized ONNX files pre-seeded (not the fp32 variants).
+      const dtype = "q8";
 
       this._onProgress?.({ status: "downloading", progress: 0 });
 
