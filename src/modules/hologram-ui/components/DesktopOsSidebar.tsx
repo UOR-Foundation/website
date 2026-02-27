@@ -135,6 +135,17 @@ export default function DesktopOsSidebar({
         fontFamily: "'DM Sans', system-ui, sans-serif",
       } as React.CSSProperties}
     >
+      {/* Ambient projection glow along the right edge */}
+      <div
+        className="absolute top-0 bottom-0 pointer-events-none"
+        style={{
+          right: -6,
+          width: 12,
+          background: "linear-gradient(to right, hsla(38, 30%, 60%, 0.08), transparent)",
+          filter: "blur(4px)",
+          zIndex: 1,
+        }}
+      />
       {/* ── Top: Logo / toggle ─────────────────────────────────── */}
       <div className="flex items-center justify-between px-3 pt-5 pb-6">
         {expanded ? (
