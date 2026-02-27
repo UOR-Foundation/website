@@ -552,11 +552,11 @@ export default function VoiceOrb({
         </div>
       </button>
 
-      {/* State label + coherence feedback + always-listening toggle */}
+      {/* State label + STT engine badge + coherence feedback + toggle */}
       <div className="flex items-center gap-2">
         <AnimatePresence mode="wait">
           <motion.span
-            key={voice.state + (alwaysListening ? "-al" : "") + (voice.isListening ? `-${metrics.label}` : "")}
+            key={voice.state + (alwaysListening ? "-al" : "") + (voice.isListening ? `-${metrics.label}` : "") + voice.sttEngine}
             initial={{ opacity: 0, y: 2 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -2 }}
@@ -596,6 +596,31 @@ export default function VoiceOrb({
                 ? COHERENCE_LABELS[metrics.label]
                 : STATE_LABELS[voice.state]
             }
+            {/* STT engine badge */}
+            {voice.isActive && (
+              <span
+                style={{
+                  fontSize: "7px",
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  padding: "1px 4px",
+                  borderRadius: "4px",
+                  background: voice.sttEngine === "whisper"
+                    ? "hsla(160, 35%, 25%, 0.5)"
+                    : "hsla(38, 25%, 25%, 0.4)",
+                  color: voice.sttEngine === "whisper"
+                    ? "hsla(160, 40%, 70%, 0.8)"
+                    : "hsla(38, 20%, 65%, 0.6)",
+                  border: `1px solid ${
+                    voice.sttEngine === "whisper"
+                      ? "hsla(160, 30%, 45%, 0.25)"
+                      : "hsla(38, 20%, 40%, 0.15)"
+                  }`,
+                }}
+              >
+                {voice.sttEngine === "whisper" ? "WHISPER·vGPU" : "NATIVE"}
+              </span>
+            )}
           </motion.span>
         </AnimatePresence>
 
