@@ -166,3 +166,24 @@ export type {
   QuantumISAReport,
   QuantumISATest,
 } from "./quantum-isa";
+
+// Topological Qubit — geometric α derivation & qubit instantiation (Phase 11)
+export {
+  constructManifold22,
+  deriveAlpha,
+  computeTriclinicSlant,
+  instantiateQubits,
+  computeBraids,
+  runTopologicalQubitAnalysis,
+} from "./topological-qubit";
+export type {
+  ManifoldNode,
+  Manifold22,
+  ManifoldLink,
+  AlphaDerivation,
+  TriclinicSlant,
+  TopologicalQubitState,
+  BraidOperation,
+  TopologicalQubitReport,
+  TopologicalQubitTest,
+} from "./topological-qubit";

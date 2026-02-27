@@ -14,15 +14,16 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BarChart3, Network, ArrowLeftRight, Minimize2, Atom } from "lucide-react";
+import { ArrowLeft, BarChart3, Network, ArrowLeftRight, Minimize2, Atom, Hexagon } from "lucide-react";
 
 const AtlasGraph = React.lazy(() => import("@/modules/atlas/components/AtlasGraph"));
 const ModelFingerprintPanel = React.lazy(() => import("@/modules/atlas/components/ModelFingerprintCard"));
 const TranslationPanel = React.lazy(() => import("@/modules/atlas/components/TranslationPanel"));
 const CompressionPanel = React.lazy(() => import("@/modules/atlas/components/CompressionPanel"));
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
+const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
 
-type Tab = "graph" | "fingerprint" | "translation" | "compression" | "quantum";
+type Tab = "graph" | "fingerprint" | "translation" | "compression" | "quantum" | "topo-qubit";
 
 export default function AtlasVisualizationPage() {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ export default function AtlasVisualizationPage() {
     { key: "translation", label: "Translation", icon: <ArrowLeftRight size={12} /> },
     { key: "compression", label: "Compression", icon: <Minimize2 size={12} /> },
     { key: "quantum", label: "Quantum", icon: <Atom size={12} /> },
+    { key: "topo-qubit", label: "Topo-Qubit", icon: <Hexagon size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -42,6 +44,7 @@ export default function AtlasVisualizationPage() {
     translation: "Running cross-model translations…",
     compression: "Analyzing τ-mirror symmetry…",
     quantum: "Mapping quantum gate architecture…",
+    "topo-qubit": "Instantiating topological qubits…",
   };
 
   return (
@@ -99,7 +102,8 @@ export default function AtlasVisualizationPage() {
               {tab === "fingerprint" ? <ModelFingerprintPanel /> :
                tab === "translation" ? <TranslationPanel /> :
                tab === "compression" ? <CompressionPanel /> :
-               <QuantumISAPanel />}
+               tab === "quantum" ? <QuantumISAPanel /> :
+               <TopologicalQubitPanel />}
             </div>
           )}
         </Suspense>
