@@ -35,8 +35,8 @@ const ALLOWED_MODELS = new Set([
   "onnx-community/whisper-base",
   "onnx-community/whisper-base.en",
   "openai/whisper-tiny.en",
-  // Stable Diffusion 1.5 — browser-optimized ONNX (WebNN/WebGPU)
-  "microsoft/stable-diffusion-v1.5-webnn",
+  // Stable Diffusion 1.5 — ONNX (onnx-community, fp32)
+  "onnx-community/stable-diffusion-v1-5-ONNX",
 ]);
 
 /** Default files to seed for whisper-tiny.en */
@@ -51,6 +51,27 @@ const DEFAULT_SEED_FILES = [
   "onnx/encoder_model_quantized.onnx",
   "onnx/decoder_model_merged_quantized.onnx",
 ];
+
+/** SD 1.5 ONNX files to seed (onnx-community, ~4.1GB total) */
+const SD15_SEED_FILES = [
+  "model_index.json",
+  "tokenizer/vocab.json",
+  "tokenizer/merges.txt",
+  "tokenizer/tokenizer_config.json",
+  "tokenizer/special_tokens_map.json",
+  "scheduler/scheduler_config.json",
+  "text_encoder/model.onnx",         // ~493MB
+  "vae_decoder/model.onnx",          // ~198MB
+  "unet/model.onnx",                 // ~1MB (graph only)
+  "unet/weights.pb",                 // ~3.4GB (external weights)
+];
+
+/** Model → seed file mapping */
+const SEED_MANIFESTS: Record<string, { model: string; files: string[] }> = {
+  all: { model: DEFAULT_MODEL, files: DEFAULT_SEED_FILES },
+  whisper: { model: DEFAULT_MODEL, files: DEFAULT_SEED_FILES },
+  diffusion: { model: "onnx-community/stable-diffusion-v1-5-ONNX", files: SD15_SEED_FILES },
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -73,18 +94,26 @@ serve(async (req) => {
     ? modelParam
     : DEFAULT_MODEL;
 
-  // ── Batch seed mode ──────────────────────────────────────────────
-  if (seedAll === "all") {
+  // ── Batch seed mode (?seed=all|whisper|diffusion) ────────────────
+  if (seedAll) {
+    const manifest = SEED_MANIFESTS[seedAll];
+    if (!manifest) {
+      return new Response(
+        JSON.stringify({ error: `Unknown seed target: ${seedAll}`, available: Object.keys(SEED_MANIFESTS) }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const seedModel = manifest.model;
     const results: Record<string, string> = {};
-    for (const f of DEFAULT_SEED_FILES) {
+    for (const f of manifest.files) {
       try {
-        results[f] = await seedFile(supabase, supabaseUrl, modelId, f);
+        results[f] = await seedFile(supabase, supabaseUrl, seedModel, f);
       } catch (e) {
         results[f] = `error: ${e.message}`;
       }
     }
     return new Response(
-      JSON.stringify({ status: "complete", model: modelId, results }),
+      JSON.stringify({ status: "complete", model: seedModel, target: seedAll, results }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }

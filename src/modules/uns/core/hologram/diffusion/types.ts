@@ -27,7 +27,7 @@ export interface DiffusionConfig {
 }
 
 export const DEFAULT_DIFFUSION_CONFIG: DiffusionConfig = {
-  modelId: "microsoft/stable-diffusion-v1.5-webnn",
+  modelId: "onnx-community/stable-diffusion-v1-5-ONNX",
   numSteps: 20,
   guidanceScale: 7.5,
   width: 512,
@@ -106,15 +106,15 @@ export interface ModelFileManifest {
 }
 
 /** File manifest for microsoft/stable-diffusion-v1.5-webnn */
-export const SD15_WEBNN_MANIFEST: ModelFileManifest = {
-  modelId: "microsoft/stable-diffusion-v1.5-webnn",
+export const SD15_ONNX_MANIFEST: ModelFileManifest = {
+  modelId: "onnx-community/stable-diffusion-v1-5-ONNX",
   files: {
-    textEncoder: "text-encoder.onnx",
-    unet: "unet.onnx",
-    vaeDecoder: "vae-decoder.onnx",
+    textEncoder: "text_encoder/model.onnx",
+    unet: "unet/model.onnx",
+    vaeDecoder: "vae_decoder/model.onnx",
     tokenizer: "tokenizer/vocab.json",
     tokenizerConfig: "tokenizer/merges.txt",
     schedulerConfig: "scheduler/scheduler_config.json",
   },
-  totalSizeMB: 2048, // ~2GB fp16
+  totalSizeMB: 4100, // ~4.1GB fp32
 };
