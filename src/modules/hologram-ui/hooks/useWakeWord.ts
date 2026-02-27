@@ -33,10 +33,11 @@ interface UseWakeWordOptions {
   enabled?: boolean;
   /** Force a specific backend */
   forceBackend?: "porcupine" | "whisper-vad";
-  /** Porcupine keywords (built-in or custom) */
+  /** Porcupine keywords (built-in, base64, or publicPath custom .ppn) */
   porcupineKeywords?: Array<
     | { builtin: string; sensitivity?: number }
     | { base64: string; label: string; sensitivity?: number }
+    | { publicPath: string; label: string; sensitivity?: number }
   >;
 }
 
