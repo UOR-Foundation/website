@@ -148,3 +148,21 @@ export type {
   CompressionReport,
   CompressionInvariant,
 } from "./compression";
+
+// Quantum ISA — Atlas → Quantum gate mapping (Phase 10)
+export {
+  mapVerticesToGates,
+  tierDistribution as quantumTierDistribution,
+  buildMeshNetwork,
+  runQuantumISAVerification,
+} from "./quantum-isa";
+export type {
+  GateTier,
+  GateFamily,
+  QuantumGate,
+  VertexGateMapping,
+  MeshNode,
+  EntanglementLink,
+  QuantumISAReport,
+  QuantumISATest,
+} from "./quantum-isa";

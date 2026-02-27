@@ -7,20 +7,22 @@
  * - Universal Model Fingerprint
  * - Cross-Model Translation
  * - F₄ Quotient Compression
+ * - Quantum ISA Mapping
  *
  * Accessible at /atlas route.
  */
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BarChart3, Network, ArrowLeftRight, Minimize2 } from "lucide-react";
+import { ArrowLeft, BarChart3, Network, ArrowLeftRight, Minimize2, Atom } from "lucide-react";
 
 const AtlasGraph = React.lazy(() => import("@/modules/atlas/components/AtlasGraph"));
 const ModelFingerprintPanel = React.lazy(() => import("@/modules/atlas/components/ModelFingerprintCard"));
 const TranslationPanel = React.lazy(() => import("@/modules/atlas/components/TranslationPanel"));
 const CompressionPanel = React.lazy(() => import("@/modules/atlas/components/CompressionPanel"));
+const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 
-type Tab = "graph" | "fingerprint" | "translation" | "compression";
+type Tab = "graph" | "fingerprint" | "translation" | "compression" | "quantum";
 
 export default function AtlasVisualizationPage() {
   const navigate = useNavigate();
@@ -31,6 +33,7 @@ export default function AtlasVisualizationPage() {
     { key: "fingerprint", label: "Fingerprint", icon: <BarChart3 size={12} /> },
     { key: "translation", label: "Translation", icon: <ArrowLeftRight size={12} /> },
     { key: "compression", label: "Compression", icon: <Minimize2 size={12} /> },
+    { key: "quantum", label: "Quantum", icon: <Atom size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -38,6 +41,7 @@ export default function AtlasVisualizationPage() {
     fingerprint: "Computing model fingerprints…",
     translation: "Running cross-model translations…",
     compression: "Analyzing τ-mirror symmetry…",
+    quantum: "Mapping quantum gate architecture…",
   };
 
   return (
@@ -94,7 +98,8 @@ export default function AtlasVisualizationPage() {
             <div className="h-full overflow-y-auto">
               {tab === "fingerprint" ? <ModelFingerprintPanel /> :
                tab === "translation" ? <TranslationPanel /> :
-               <CompressionPanel />}
+               tab === "compression" ? <CompressionPanel /> :
+               <QuantumISAPanel />}
             </div>
           )}
         </Suspense>
