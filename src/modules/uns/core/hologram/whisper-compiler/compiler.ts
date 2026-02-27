@@ -274,9 +274,16 @@ export async function compileWhisperModel(
     console.log(summarizeModel(model));
 
     // Check if model uses external data files
+    const initSample = model.graph.initializers.slice(0, 3).map(i => ({
+      name: i.name, dims: i.dims, bytes: i.rawData.byteLength, 
+      ext: i.externalData, elCount: i.elementCount
+    }));
+    console.log(`[WhisperCompiler] Initializer sample (first 3):`, JSON.stringify(initSample));
+    
     const hasExternalData = model.graph.initializers.some(
       (init) => init.externalData?.location
     );
+    console.log(`[WhisperCompiler] hasExternalData: ${hasExternalData}, initializer count: ${model.graph.initializers.length}`);
     let externalDataBuffer: ArrayBuffer | undefined;
 
     if (hasExternalData) {
