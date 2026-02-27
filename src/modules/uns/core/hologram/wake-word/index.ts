@@ -53,7 +53,7 @@ export function createWakeWordEngine(
   // Force specific backend
   if (forceBackend === "porcupine" && accessKey) {
     console.log("[WakeWord] Forced: Porcupine");
-    const defaultKeyword = { publicPath: "/hi-lumina_en_wasm_v3_0_0.ppn", label: "Hi Lumina", sensitivity: 0.65 };
+    const defaultKeyword = { publicPath: "/Hi-Lumen_en_wasm_v4_0_0.zip", label: "Hi Lumen", sensitivity: 0.65 };
     return new PorcupineWakeWordEngine({
       accessKey,
       keywords: porcupineKeywords ?? [defaultKeyword],
@@ -68,7 +68,7 @@ export function createWakeWordEngine(
   // Auto-select: Porcupine if we have a key, else Whisper VAD
   if (accessKey) {
     console.log("[WakeWord] Auto-selected: Porcupine (access key available)");
-    const defaultKeyword = { publicPath: "/hi-lumina_en_wasm_v3_0_0.ppn", label: "Hi Lumina", sensitivity: 0.65 };
+    const defaultKeyword = { publicPath: "/Hi-Lumen_en_wasm_v4_0_0.zip", label: "Hi Lumen", sensitivity: 0.65 };
     return new PorcupineWakeWordEngine({
       accessKey,
       keywords: porcupineKeywords ?? [defaultKeyword],

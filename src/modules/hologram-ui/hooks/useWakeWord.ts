@@ -75,7 +75,7 @@ async function fetchPorcupineAccessKey(): Promise<string | null> {
 
 export function useWakeWord({
   onWake,
-  wakePhrase = "hey lumen",
+  wakePhrase = "hi lumen",
   enabled = false,
   forceBackend,
   porcupineKeywords,

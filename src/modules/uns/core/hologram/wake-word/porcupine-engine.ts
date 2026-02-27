@@ -17,6 +17,21 @@ import type {
   WakeWordEngineCallbacks,
   WakeWordStatus,
 } from "./types";
+import { unzipSync } from "fflate";
+
+/** Extract .ppn from a zip, return base64 */
+async function extractPpnFromZip(url: string): Promise<string> {
+  const res = await fetch(url);
+  const buf = new Uint8Array(await res.arrayBuffer());
+  const files = unzipSync(buf);
+  const ppnKey = Object.keys(files).find(k => k.endsWith(".ppn"));
+  if (!ppnKey) throw new Error("No .ppn file found in zip");
+  const ppnBytes = files[ppnKey];
+  // Convert to base64
+  let binary = "";
+  for (let i = 0; i < ppnBytes.length; i++) binary += String.fromCharCode(ppnBytes[i]);
+  return btoa(binary);
+}
 
 // Built-in keywords from Porcupine
 const PORCUPINE_BUILTINS = [
@@ -75,25 +90,35 @@ export class PorcupineWakeWordEngine implements IWakeWordEngine {
 
       // Map keywords to Porcupine's expected types
       type BuiltInKeywordType = import("@picovoice/porcupine-web").BuiltInKeyword;
-      const keywords: Array<PorcupineKeywordType | BuiltInKeywordType> =
-        this._config.keywords.map(kw => {
+      const keywords: Array<PorcupineKeywordType | BuiltInKeywordType> = [];
+      for (const kw of this._config.keywords) {
           if ("builtin" in kw) {
             const enumKey = kw.builtin.replace(/\s/g, "") as keyof typeof BuiltInKeyword;
-            return BuiltInKeyword[enumKey];
-          }
-          if ("publicPath" in kw) {
-            return {
-              publicPath: kw.publicPath,
+            keywords.push(BuiltInKeyword[enumKey]);
+          } else if ("publicPath" in kw) {
+            // If it's a .zip, extract the .ppn and use base64
+            if (kw.publicPath.endsWith(".zip")) {
+              const b64 = await extractPpnFromZip(kw.publicPath);
+              keywords.push({
+                base64: b64,
+                label: kw.label,
+                sensitivity: kw.sensitivity ?? 0.65,
+              } as PorcupineKeywordType);
+            } else {
+              keywords.push({
+                publicPath: kw.publicPath,
+                label: kw.label,
+                sensitivity: kw.sensitivity ?? 0.65,
+              } as PorcupineKeywordType);
+            }
+          } else {
+            keywords.push({
+              base64: kw.base64,
               label: kw.label,
               sensitivity: kw.sensitivity ?? 0.65,
-            } as PorcupineKeywordType;
+            } as PorcupineKeywordType);
           }
-          return {
-            base64: kw.base64,
-            label: kw.label,
-            sensitivity: kw.sensitivity ?? 0.65,
-          } as PorcupineKeywordType;
-        });
+      }
 
       // Model — use default English model from public directory
       const model: PorcupineModelType = this._config.model ?? {
