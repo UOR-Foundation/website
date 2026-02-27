@@ -11,15 +11,16 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
 const QLinuxKernelPanel = React.lazy(() => import("@/modules/quantum/components/QLinuxKernelPanel"));
 const CircuitCompilerPanel = React.lazy(() => import("@/modules/quantum/components/CircuitCompilerPanel"));
 const StabilizerProofPanel = React.lazy(() => import("@/modules/quantum/components/StabilizerProofPanel"));
+const QuantumRadarPanel = React.lazy(() => import("@/modules/quantum/components/QuantumRadarPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export default function QuantumDashboardPage() {
     { key: "q-linux", label: "Q-Linux Kernel", icon: <Terminal size={12} /> },
     { key: "compiler", label: "Circuit Compiler", icon: <Workflow size={12} /> },
     { key: "proof", label: "Stabilizer Proof", icon: <BookOpen size={12} /> },
+    { key: "radar", label: "Quantum Radar", icon: <Radar size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -41,6 +43,7 @@ export default function QuantumDashboardPage() {
     "q-linux": "Booting Q-Linux kernel…",
     compiler: "Initializing circuit compiler…",
     proof: "Constructing stabilizer correspondence proof…",
+    radar: "Initializing quantum radar sweep…",
   };
 
   return (
@@ -95,7 +98,8 @@ export default function QuantumDashboardPage() {
            tab === "topo-qubit" ? <TopologicalQubitPanel /> :
            tab === "q-linux" ? <QLinuxKernelPanel /> :
            tab === "compiler" ? <CircuitCompilerPanel /> :
-           <StabilizerProofPanel />}
+           tab === "proof" ? <StabilizerProofPanel /> :
+           <QuantumRadarPanel />}
         </Suspense>
       </div>
     </div>
@@ -175,6 +179,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "Status", value: "QED ✓" },
       ],
     },
+    {
+      key: "radar" as Tab,
+      title: "Quantum Radar",
+      phase: "Phase 17",
+      icon: <Radar size={24} />,
+      color: "hsl(160,60%,50%)",
+      description: "Real-time network coherence monitor with radar-sweep visualization. Tracks qubit fidelity, error rates, T₂ decay, and entanglement link quality across all 4 mesh nodes.",
+      stats: [
+        { label: "Nodes", value: "4" },
+        { label: "Qubits", value: "192" },
+        { label: "Links", value: "6" },
+        { label: "Tests", value: "12/12 ✓" },
+      ],
+    },
   ];
 
   return (
@@ -249,6 +267,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "done", label: "Phase 14: Q-Linux Kernel — quantum process scheduling (14 tests)" },
             { status: "done", label: "Phase 15: Circuit Compiler — algorithm → Atlas gate sequences (12 tests)" },
             { status: "done", label: "Phase 16: Stabilizer Proof — Atlas₉₆ ≅ Stab₃/~ bijection (7 steps)" },
+            { status: "done", label: "Phase 17: Quantum Radar — real-time network coherence monitor (12 tests)" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>
