@@ -2,15 +2,11 @@
  * useVoiceConversation — Unified Voice Loop Orchestrator
  * ═══════════════════════════════════════════════════════
  *
- * Single-entity voice interface for Lumen AI:
- *   AudioWorklet capture → Whisper ONNX (vGPU) → Lumen AI Stream → Web Speech TTS
- *   Native STT fallback while Whisper loads
+ * Native-first voice interface for Lumen AI:
+ *   Native SpeechRecognition (primary) → Lumen AI Stream → Web Speech TTS
+ *   Whisper ONNX (only if cached) as optional upgrade
  *
- * v2 improvements:
- *   - AudioWorklet capture (zero-jank, off main thread)
- *   - Built-in VAD: auto-stops after 1.5s silence
- *   - Idle-time Whisper warm-start
- *   - Proactive mic permission check
+ * AudioWorklet runs in parallel for VAD, level metering, voiceprint.
  *
  * States: idle → listening → processing → thinking → speaking → idle
  *
@@ -20,7 +16,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useVoiceSynthesis, type VoiceEngine } from "./useVoiceSynthesis";
 import { useAudioCapture } from "./useAudioCapture";
-import { getWhisperEngine, preloadWhisper, type WhisperLoadProgress } from "@/modules/uns/core/hologram/whisper-engine";
+import { getWhisperEngine } from "@/modules/uns/core/hologram/whisper-engine";
+import { isNativeSttAvailable, recognizeNative } from "@/modules/uns/core/hologram/native-stt";
 
 export type VoiceConversationState =
   | "idle"
@@ -42,7 +39,7 @@ interface UseVoiceConversationOptions {
   onExchange?: (userText: string, assistantText: string) => void;
   onStateChange?: (state: VoiceConversationState) => void;
   onError?: (error: string) => void;
-  onWhisperProgress?: (progress: WhisperLoadProgress) => void;
+  onWhisperProgress?: (progress: { status: string; progress?: number }) => void;
 }
 
 const STREAM_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hologram-ai-stream`;
@@ -125,35 +122,24 @@ export function useVoiceConversation({
     onLevel: setAudioLevel,
   });
 
-  // ── Idle-time Whisper warm-start ──────────────────────────────────────
+  // ── Engine availability (native-first, no CDN preload) ─────────────────
   useEffect(() => {
     const engine = getWhisperEngine();
-    if (engine.isReady) { setSttEngine("whisper"); return; }
-
-    const startPreload = () => {
-      preloadWhisper((p) => {
-        setWhisperProgress(Math.round(p.progress ?? 0));
-        onWhisperProgress?.(p);
-      });
-    };
-
-    // Use requestIdleCallback for non-blocking preload
-    if ("requestIdleCallback" in window) {
-      const id = requestIdleCallback(() => startPreload(), { timeout: 5000 });
-      const iv = setInterval(() => {
-        if (engine.isReady) { setSttEngine("whisper"); clearInterval(iv); }
-        else if (engine.status === "error") { setSttEngine("native"); clearInterval(iv); }
-      }, 500);
-      return () => { cancelIdleCallback(id); clearInterval(iv); };
-    } else {
-      const to = setTimeout(startPreload, 1000);
-      const iv = setInterval(() => {
-        if (engine.isReady) { setSttEngine("whisper"); clearInterval(iv); }
-        else if (engine.status === "error") { setSttEngine("native"); clearInterval(iv); }
-      }, 500);
-      return () => { clearTimeout(to); clearInterval(iv); };
+    if (engine.isReady) {
+      setSttEngine("whisper");
+      console.log("[Voice] Whisper ONNX cached — using as primary");
+      return;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Default to native SpeechRecognition (instant, browser-native)
+    if (isNativeSttAvailable()) {
+      setSttEngine("native");
+      console.log("[Voice] Using native SpeechRecognition (zero download)");
+    } else {
+      setSttEngine("native");
+      console.warn("[Voice] No STT engine available");
+    }
+  }, []);
 
   // ── Cleanup ─────────────────────────────────────────────────────────────
 
