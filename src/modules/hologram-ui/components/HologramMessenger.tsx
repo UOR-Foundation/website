@@ -293,7 +293,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
     >
       {/* ── Header bar ── */}
       <header
-        className="flex items-center justify-between px-5 h-[52px] shrink-0"
+        className="flex items-center justify-between px-5 h-[56px] shrink-0"
         style={{ borderBottom: `1px solid ${P.divider}` }}
       >
         <div className="flex items-center gap-6">
@@ -316,14 +316,14 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
                   style={{
                     color: active ? P.text : P.muted,
                     fontWeight: active ? 600 : 400,
-                    fontSize: "14px",
+                    fontSize: "15px",
                     background: active ? "transparent" : "transparent",
                   }}
                 >
                   {label}
                   <span
                     style={{
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontWeight: 400,
                       color: active ? P.textSecondary : P.dim,
                       fontVariantNumeric: "tabular-nums",
@@ -341,8 +341,8 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
           {/* Zero inbox indicator */}
           {isZeroInbox && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md mr-2" style={{ background: `${P.green}15` }}>
-              <IconTrophy size={13} style={{ color: P.green }} />
-              <span style={{ fontSize: "11px", fontWeight: 600, color: P.green }}>Zero Inbox</span>
+              <IconTrophy size={15} style={{ color: P.green }} />
+              <span style={{ fontSize: "12px", fontWeight: 600, color: P.green }}>Zero Inbox</span>
             </div>
           )}
 
@@ -352,7 +352,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
             style={{ color: P.muted }}
             title="Compose"
           >
-            <IconPencil size={16} strokeWidth={1.5} />
+            <IconPencil size={18} strokeWidth={1.5} />
           </button>
 
           {/* Search */}
@@ -361,7 +361,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
             style={{ color: P.muted }}
             title="Search"
           >
-            <IconSearch size={16} strokeWidth={1.5} />
+            <IconSearch size={18} strokeWidth={1.5} />
           </button>
 
           {/* Theme toggle */}
@@ -376,9 +376,9 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
             title={`Switch to ${mode === "light" ? "dark" : "light"} mode`}
           >
             {mode === "light" ? (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             ) : (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             )}
           </button>
 
@@ -388,7 +388,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
             style={{ color: P.muted }}
           >
-            <IconX size={16} strokeWidth={1.5} />
+            <IconX size={18} strokeWidth={1.5} />
           </button>
         </div>
       </header>
@@ -438,14 +438,14 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
 
       {/* ── Footer with keyboard hints ── */}
       <div
-        className="flex items-center justify-between px-5 h-[38px] shrink-0"
+        className="flex items-center justify-between px-5 h-[44px] shrink-0"
         style={{ borderTop: `1px solid ${P.divider}` }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {(Object.keys(PLATFORM_CFG) as Platform[]).map(p => {
             const cfg = PLATFORM_CFG[p];
             return (
-              <cfg.icon key={p} size={13} style={{ color: P.dim, opacity: 0.7 }} />
+              <cfg.icon key={p} size={16} style={{ color: P.dim, opacity: 0.8 }} />
             );
           })}
         </div>
@@ -459,20 +459,20 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
           ].map(h => (
             <div key={h.key} className="flex items-center gap-1 mr-2">
               <kbd
-                className="inline-flex items-center justify-center rounded px-1 h-[18px]"
+                className="inline-flex items-center justify-center rounded px-1.5 h-[22px]"
                 style={{
-                  fontSize: "10px",
+                  fontSize: "11px",
                   fontFamily: "monospace",
                   fontWeight: 600,
                   color: P.dim,
                   background: P.surfaceHover,
                   border: `1px solid ${P.divider}`,
-                  minWidth: "18px",
+                  minWidth: "22px",
                 }}
               >
                 {h.key}
               </kbd>
-              <span style={{ fontSize: "10px", color: P.dim }}>{h.label}</span>
+              <span style={{ fontSize: "11px", color: P.dim }}>{h.label}</span>
             </div>
           ))}
         </div>
@@ -509,7 +509,7 @@ function MessageRow({
       style={{
         background: selected ? P.rowSelected : hovered ? P.surfaceHover : "transparent",
         borderBottom: `1px solid ${P.divider}`,
-        minHeight: "44px",
+        minHeight: "50px",
         paddingLeft: "16px",
         paddingRight: "16px",
       }}
@@ -520,14 +520,14 @@ function MessageRow({
       {/* Unread dot */}
       <div className="w-4 shrink-0 flex items-center justify-center">
         {m.unread && (
-          <div className="w-[7px] h-[7px] rounded-full" style={{ background: P.accent }} />
+          <div className="w-[8px] h-[8px] rounded-full" style={{ background: P.accent }} />
         )}
       </div>
 
       {/* Platform icon (subtle) */}
       {m.platform !== "email" && (
-        <div className="w-5 shrink-0 flex items-center justify-center mr-1">
-          <cfg.icon size={12} style={{ color: cfg.color, opacity: 0.6 }} />
+        <div className="w-6 shrink-0 flex items-center justify-center mr-1.5">
+          <cfg.icon size={15} style={{ color: cfg.color, opacity: 0.7 }} />
         </div>
       )}
 
@@ -535,8 +535,8 @@ function MessageRow({
       <div
         className="shrink-0 truncate"
         style={{
-          width: "160px",
-          fontSize: "13.5px",
+          width: "175px",
+          fontSize: "15px",
           fontWeight: m.unread ? 600 : 400,
           color: m.unread ? P.text : P.textSecondary,
           paddingRight: "12px",
@@ -548,7 +548,7 @@ function MessageRow({
       {/* Tag */}
       {m.tag && (
         <span
-          className="shrink-0 px-[6px] py-[1px] rounded text-[10px] font-semibold mr-2"
+          className="shrink-0 px-[7px] py-[2px] rounded text-[11px] font-semibold mr-2"
           style={{
             background: `${m.tag.color}20`,
             color: m.tag.color,
@@ -564,7 +564,7 @@ function MessageRow({
         <span
           className="truncate"
           style={{
-            fontSize: "13px",
+            fontSize: "14.5px",
             fontWeight: m.unread ? 600 : 400,
             color: m.unread ? P.text : P.textSecondary,
           }}
@@ -574,7 +574,7 @@ function MessageRow({
         <span
           className="truncate flex-1"
           style={{
-            fontSize: "13px",
+            fontSize: "14px",
             fontWeight: 300,
             color: P.muted,
           }}
@@ -589,42 +589,42 @@ function MessageRow({
           <div className="flex items-center gap-0.5">
             <button
               onClick={e => { e.stopPropagation(); onArchive(); }}
-              className="w-7 h-7 rounded flex items-center justify-center transition-opacity"
+              className="w-8 h-8 rounded flex items-center justify-center transition-opacity"
               style={{ color: P.muted }}
               title="Done (E)"
             >
-              <IconCheck size={14} />
+              <IconCheck size={17} />
             </button>
             <button
               onClick={e => { e.stopPropagation(); }}
-              className="w-7 h-7 rounded flex items-center justify-center"
+              className="w-8 h-8 rounded flex items-center justify-center"
               style={{ color: P.muted }}
               title="Remind me"
             >
-              <IconClock size={14} />
+              <IconClock size={17} />
             </button>
             <button
               onClick={e => { e.stopPropagation(); onToggleStar(); }}
-              className="w-7 h-7 rounded flex items-center justify-center"
+              className="w-8 h-8 rounded flex items-center justify-center"
               style={{ color: m.starred ? P.gold : P.muted }}
               title="Star (S)"
             >
-              <IconStar size={14} fill={m.starred ? P.gold : "none"} />
+              <IconStar size={17} fill={m.starred ? P.gold : "none"} />
             </button>
           </div>
         ) : (
           <>
             {m.threadCount && m.threadCount > 1 && (
               <span
-                className="w-5 h-5 rounded flex items-center justify-center mr-1"
-                style={{ background: P.accentSoft, fontSize: "10px", fontWeight: 600, color: P.accent }}
+                className="w-6 h-6 rounded flex items-center justify-center mr-1"
+                style={{ background: P.accentSoft, fontSize: "11px", fontWeight: 600, color: P.accent }}
               >
                 {m.threadCount}
               </span>
             )}
             <span
               style={{
-                fontSize: "12px",
+                fontSize: "13px",
                 color: P.dim,
                 fontVariantNumeric: "tabular-nums",
                 whiteSpace: "nowrap",
@@ -651,7 +651,7 @@ function ContactPanel({ message: m, P, replyOpen, onCloseReply }: { message: Mes
     <div className="flex flex-col h-full" style={{ background: P.bg }}>
       {/* Contact header */}
       <div className="px-6 pt-6 pb-5" style={{ borderBottom: `1px solid ${P.divider}` }}>
-        <h3 style={{ fontSize: "18px", fontWeight: 600, color: P.text, marginBottom: "12px", fontFamily: SERIF }}>
+        <h3 style={{ fontSize: "20px", fontWeight: 600, color: P.text, marginBottom: "12px", fontFamily: SERIF }}>
           {m.from.split(",")[0]}
         </h3>
         <div className="flex items-start gap-3 mb-4">
@@ -668,15 +668,15 @@ function ContactPanel({ message: m, P, replyOpen, onCloseReply }: { message: Mes
           </div>
           <div className="min-w-0">
             {m.email && (
-              <div style={{ fontSize: "13px", color: P.accent, marginBottom: "2px" }}>{m.email}</div>
+              <div style={{ fontSize: "14px", color: P.accent, marginBottom: "2px" }}>{m.email}</div>
             )}
             {m.location && (
-              <div style={{ fontSize: "12px", color: P.muted }}>{m.location}</div>
+              <div style={{ fontSize: "13px", color: P.muted }}>{m.location}</div>
             )}
           </div>
         </div>
         {m.bio && (
-          <p style={{ fontSize: "13px", lineHeight: 1.6, color: P.textSecondary, fontWeight: 300 }}>
+          <p style={{ fontSize: "14px", lineHeight: 1.7, color: P.textSecondary, fontWeight: 300 }}>
             {m.bio}
           </p>
         )}
@@ -685,19 +685,19 @@ function ContactPanel({ message: m, P, replyOpen, onCloseReply }: { message: Mes
       {/* Recent threads */}
       <div className="px-6 py-4" style={{ borderBottom: `1px solid ${P.divider}` }}>
         <div className="flex items-center gap-2 mb-3">
-          <cfg.icon size={14} style={{ color: cfg.color }} />
-          <span style={{ fontSize: "13px", fontWeight: 500, color: P.text }}>{cfg.label}</span>
+          <cfg.icon size={16} style={{ color: cfg.color }} />
+          <span style={{ fontSize: "14px", fontWeight: 500, color: P.text }}>{cfg.label}</span>
         </div>
         {m.recentThreads ? (
           <div className="space-y-1.5">
             {m.recentThreads.map((t, i) => (
-              <div key={i} className="truncate cursor-pointer" style={{ fontSize: "12.5px", color: P.muted, paddingLeft: "4px" }}>
+              <div key={i} className="truncate cursor-pointer" style={{ fontSize: "13.5px", color: P.muted, paddingLeft: "4px" }}>
                 {t}
               </div>
             ))}
           </div>
         ) : (
-          <div style={{ fontSize: "12px", color: P.dim, fontStyle: "italic" }}>No recent threads</div>
+          <div style={{ fontSize: "13px", color: P.dim, fontStyle: "italic" }}>No recent threads</div>
         )}
       </div>
 
@@ -705,15 +705,15 @@ function ContactPanel({ message: m, P, replyOpen, onCloseReply }: { message: Mes
       {m.socialLinks && m.socialLinks.length > 0 && (
         <div className="px-6 py-4" style={{ borderBottom: `1px solid ${P.divider}` }}>
           <div className="flex items-center gap-2 mb-3">
-            <span style={{ fontSize: "12px", color: P.dim, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em" }}>Social</span>
+            <span style={{ fontSize: "13px", color: P.dim, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em" }}>Social</span>
           </div>
           <div className="space-y-2">
             {m.socialLinks.map((s, i) => {
               const icon = s.type === "Twitter" ? "𝕏" : s.type === "LinkedIn" ? "in" : "•";
               return (
                 <div key={i} className="flex items-center gap-2.5">
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: P.muted, width: "14px", textAlign: "center" }}>{icon}</span>
-                  <span style={{ fontSize: "13px", color: P.textSecondary }}>{s.handle}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: P.muted, width: "16px", textAlign: "center" }}>{icon}</span>
+                  <span style={{ fontSize: "14px", color: P.textSecondary }}>{s.handle}</span>
                 </div>
               );
             })}
@@ -724,18 +724,18 @@ function ContactPanel({ message: m, P, replyOpen, onCloseReply }: { message: Mes
       {/* Message preview */}
       <div className="flex-1 px-6 py-4 overflow-y-auto">
         <div className="flex items-center gap-2 mb-3">
-          <span style={{ fontSize: "12px", color: P.dim, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em" }}>Message</span>
+          <span style={{ fontSize: "13px", color: P.dim, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em" }}>Message</span>
         </div>
-        <h4 style={{ fontSize: "14px", fontWeight: 500, color: P.text, marginBottom: "8px", lineHeight: 1.4 }}>
+        <h4 style={{ fontSize: "15px", fontWeight: 500, color: P.text, marginBottom: "8px", lineHeight: 1.5 }}>
           {m.subject}
         </h4>
-        <p style={{ fontSize: "13px", lineHeight: 1.7, color: P.textSecondary, fontWeight: 300 }}>
+        <p style={{ fontSize: "14px", lineHeight: 1.75, color: P.textSecondary, fontWeight: 300 }}>
           {m.preview}
         </p>
         {m.actionLabel && (
           <div className="flex items-center gap-2 mt-4 px-3 py-2 rounded-lg" style={{ background: P.accentSoft, border: `1px solid ${P.accent}20` }}>
-            <IconSparkles size={13} style={{ color: P.accent }} />
-            <span style={{ fontSize: "12px", fontWeight: 500, color: P.accent }}>{m.actionLabel}</span>
+            <IconSparkles size={15} style={{ color: P.accent }} />
+            <span style={{ fontSize: "13px", fontWeight: 500, color: P.accent }}>{m.actionLabel}</span>
           </div>
         )}
       </div>
