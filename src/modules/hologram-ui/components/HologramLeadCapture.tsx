@@ -92,6 +92,7 @@ export default function HologramLeadCapture() {
   const [useCase, setUseCase] = useState("");
   const useCaseRef = useRef("");
   const [submitted, setSubmitted] = useState(false);
+  const [alreadyOnList, setAlreadyOnList] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -124,7 +125,15 @@ export default function HologramLeadCapture() {
         const { error: dbError } = await supabase
           .from("lead_submissions")
           .insert({ email: email.trim(), use_case: useCaseRef.current || null });
-        if (dbError) throw dbError;
+        if (dbError) {
+          // Unique constraint violation — email already exists
+          if (dbError.code === "23505" || dbError.message?.includes("duplicate")) {
+            setSubmitted(true);
+            setAlreadyOnList(true);
+            return;
+          }
+          throw dbError;
+        }
         setSubmitted(true);
       } catch (e: any) {
         setError(e?.message || "Something went wrong. Please try again.");
@@ -205,15 +214,25 @@ export default function HologramLeadCapture() {
               fontWeight: 400,
             }}
           >
-            Thank you
+            {alreadyOnList ? "You\u2019re already on the list" : "Thank you"}
           </h1>
           <p
             className="text-lg leading-relaxed"
             style={{ color: "hsla(38, 10%, 80%, 0.7)" }}
           >
-            We'll be in touch when things are ready.
-            <br />
-            Something meaningful is taking shape.
+            {alreadyOnList ? (
+              <>
+                We have your email — no need to sign up again.
+                <br />
+                We\u2019ll reach out when things are ready.
+              </>
+            ) : (
+              <>
+                We'll be in touch when things are ready.
+                <br />
+                Something meaningful is taking shape.
+              </>
+            )}
           </p>
         </motion.div>
       </div>
