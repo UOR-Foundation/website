@@ -170,6 +170,8 @@ export default function VoiceOrb({
       didLongPressRef.current = true;
       setListenMode(prev => {
         const next = !prev;
+        // Haptic feedback on mobile
+        if (navigator.vibrate) navigator.vibrate(next ? 30 : [15, 30, 15]);
         console.log(`[VoiceOrb] Listen mode ${next ? "ON" : "OFF"}`);
         if (next) {
           // Request mic permission and start capturing for ambient listening
