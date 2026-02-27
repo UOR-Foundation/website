@@ -44,8 +44,9 @@ export default function LumenFloatingPill() {
       }}
       style={{
         position: "fixed",
-        bottom: "48px",
+        bottom: "64px",
         left: "50%",
+        transform: "translateX(-50%)",
         zIndex: 9000,
         cursor: drag.isDragging() ? "grabbing" : "pointer",
         userSelect: "none",
