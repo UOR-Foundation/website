@@ -48,29 +48,133 @@ interface HardwareInfo {
   cpuArch: string;
   totalMemoryGB: number | null;
   browser: string;
+  browserVersion: string;
   jsEngine: string;
   platform: string;
+  oscpu: string;
   webgpuAvailable: boolean;
+  gpuAdapter: string | null;
+  gpuVendor: string | null;
+  gpuArchitecture: string | null;
+  gpuDescription: string | null;
+  gpuMaxBufferSize: string | null;
+  gpuMaxThreads: number | null;
+  glRenderer: string | null;
+  glVendor: string | null;
+  screenResolution: string;
+  devicePixelRatio: number;
+  timezone: string;
+  locale: string;
+  publicIp: string | null;
+  hostname: string;
 }
 
-function detectHardware(): HardwareInfo {
+function parseVersion(ua: string, token: string): string {
+  const idx = ua.indexOf(token);
+  if (idx === -1) return "";
+  const sub = ua.slice(idx + token.length).split(/[\s;)]/)[0];
+  return sub.replace(/^\//, "");
+}
+
+async function detectHardware(): Promise<HardwareInfo> {
   const ua = navigator.userAgent;
   let browser = "Unknown";
+  let browserVersion = "";
   let jsEngine = "Unknown";
-  if (ua.includes("Chrome")) { browser = "Chromium"; jsEngine = "V8"; }
-  else if (ua.includes("Firefox")) { browser = "Firefox"; jsEngine = "SpiderMonkey"; }
-  else if (ua.includes("Safari")) { browser = "Safari"; jsEngine = "JavaScriptCore"; }
+  if (ua.includes("Edg/")) { browser = "Edge"; jsEngine = "V8"; browserVersion = parseVersion(ua, "Edg/"); }
+  else if (ua.includes("Chrome/")) { browser = "Chromium"; jsEngine = "V8"; browserVersion = parseVersion(ua, "Chrome/"); }
+  else if (ua.includes("Firefox/")) { browser = "Firefox"; jsEngine = "SpiderMonkey"; browserVersion = parseVersion(ua, "Firefox/"); }
+  else if (ua.includes("Safari/")) { browser = "Safari"; jsEngine = "JavaScriptCore"; browserVersion = parseVersion(ua, "Version/"); }
 
-  const nav = navigator as Navigator & { deviceMemory?: number };
+  const nav = navigator as Navigator & { deviceMemory?: number; oscpu?: string };
+
+  // CPU architecture from userAgentData if available
+  let cpuArch = /arm|aarch64/i.test(ua) ? "ARM64" : /x86|x64|amd64|Win64/i.test(ua) ? "x86-64" : "Unknown";
+  try {
+    const uad = (navigator as any).userAgentData;
+    if (uad?.getHighEntropyValues) {
+      const he = await uad.getHighEntropyValues(["architecture", "bitness", "model", "platform", "platformVersion"]);
+      if (he.architecture) cpuArch = `${he.architecture}${he.bitness ? `-${he.bitness}` : ""}`;
+    }
+  } catch { /* not supported */ }
+
+  // OS description
+  let oscpu = nav.oscpu || navigator.platform || "Unknown";
+  try {
+    const uad = (navigator as any).userAgentData;
+    if (uad?.platform) oscpu = uad.platform;
+  } catch { /* */ }
+
+  // WebGL for GPU renderer (works everywhere)
+  let glRenderer: string | null = null;
+  let glVendor: string | null = null;
+  try {
+    const canvas = document.createElement("canvas");
+    const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
+    if (gl) {
+      const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+      if (dbg) {
+        glRenderer = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
+        glVendor = gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL);
+      }
+    }
+  } catch { /* */ }
+
+  // WebGPU adapter info
+  let gpuAdapter: string | null = null;
+  let gpuVendor: string | null = null;
+  let gpuArchitecture: string | null = null;
+  let gpuDescription: string | null = null;
+  let gpuMaxBufferSize: string | null = null;
+  let gpuMaxThreads: number | null = null;
+  const webgpuAvailable = "gpu" in navigator;
+  if (webgpuAvailable) {
+    try {
+      const adapter = await (navigator as any).gpu.requestAdapter();
+      if (adapter) {
+        const info = (adapter as any).info || (await (adapter as any).requestAdapterInfo?.()) || {};
+        gpuAdapter = info.device || info.description || null;
+        gpuVendor = info.vendor || null;
+        gpuArchitecture = info.architecture || null;
+        gpuDescription = info.description || null;
+        gpuMaxBufferSize = adapter.limits?.maxBufferSize ? `${(adapter.limits.maxBufferSize / (1024 ** 3)).toFixed(1)} GB` : null;
+        gpuMaxThreads = adapter.limits?.maxComputeWorkgroupSizeX ?? null;
+      }
+    } catch { /* */ }
+  }
+
+  // Public IP (best-effort, non-blocking)
+  let publicIp: string | null = null;
+  try {
+    const resp = await fetch("https://api.ipify.org?format=json", { signal: AbortSignal.timeout(3000) });
+    const data = await resp.json();
+    publicIp = data.ip ?? null;
+  } catch { /* non-critical */ }
 
   return {
     cpuCores: navigator.hardwareConcurrency || 1,
-    cpuArch: /arm|aarch64/i.test(ua) ? "ARM64" : /x86|x64|amd64/i.test(ua) ? "x86-64" : "Unknown",
+    cpuArch,
     totalMemoryGB: nav.deviceMemory ?? null,
     browser,
+    browserVersion,
     jsEngine,
     platform: navigator.platform || "Unknown",
-    webgpuAvailable: "gpu" in navigator,
+    oscpu,
+    webgpuAvailable,
+    gpuAdapter,
+    gpuVendor,
+    gpuArchitecture,
+    gpuDescription,
+    gpuMaxBufferSize,
+    gpuMaxThreads,
+    glRenderer,
+    glVendor,
+    screenResolution: `${screen.width}×${screen.height}`,
+    devicePixelRatio: window.devicePixelRatio,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    locale: navigator.language || "en",
+    publicIp,
+    hostname: location.hostname,
   };
 }
 
@@ -502,11 +606,25 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
 
           <div className="space-y-1">
             <h4 className="text-sm font-bold uppercase tracking-widest" style={{ color: P.text }}>Environment</h4>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-[12px] font-mono">
+            <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-0.5 text-[12px] font-mono">
+              <span style={{ color: P.dim }}>Machine:</span><span style={{ color: P.text }}>{hw.oscpu} · {hw.platform}</span>
               <span style={{ color: P.dim }}>CPU:</span><span style={{ color: P.text }}>{hw.cpuCores} cores · {hw.cpuArch}</span>
-              {hw.totalMemoryGB && <><span style={{ color: P.dim }}>Memory:</span><span style={{ color: P.text }}>{hw.totalMemoryGB}GB</span></>}
-              <span style={{ color: P.dim }}>Engine:</span><span style={{ color: P.text }}>{hw.browser} / {hw.jsEngine}</span>
-              <span style={{ color: P.dim }}>WebGPU:</span><span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "Available" : "Unavailable"}</span>
+              {hw.totalMemoryGB && <><span style={{ color: P.dim }}>Memory:</span><span style={{ color: P.text }}>{hw.totalMemoryGB} GB (device-reported)</span></>}
+              <span style={{ color: P.dim }}>Engine:</span><span style={{ color: P.text }}>{hw.browser} {hw.browserVersion} / {hw.jsEngine}</span>
+              <span style={{ color: P.dim }}>Display:</span><span style={{ color: P.text }}>{hw.screenResolution} @{hw.devicePixelRatio}x</span>
+              <span style={{ color: P.dim }}>Locale:</span><span style={{ color: P.text }}>{hw.timezone} · {hw.locale}</span>
+              {hw.publicIp && <><span style={{ color: P.dim }}>IP:</span><span style={{ color: P.text }}>{hw.publicIp}</span></>}
+              <span style={{ color: P.dim }}>Host:</span><span style={{ color: P.text }}>{hw.hostname}</span>
+
+              {/* GPU Hardware */}
+              <span className="mt-1" style={{ color: P.dim }}>WebGPU:</span>
+              <span className="mt-1" style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "Available" : "Unavailable"}</span>
+              {hw.glRenderer && <><span style={{ color: P.dim }}>GPU:</span><span style={{ color: P.text }}>{hw.glRenderer}</span></>}
+              {hw.glVendor && <><span style={{ color: P.dim }}>GPU Vendor:</span><span style={{ color: P.text }}>{hw.glVendor}</span></>}
+              {hw.gpuAdapter && <><span style={{ color: P.dim }}>WebGPU Adapter:</span><span style={{ color: P.text }}>{hw.gpuAdapter}</span></>}
+              {hw.gpuArchitecture && <><span style={{ color: P.dim }}>GPU Arch:</span><span style={{ color: P.text }}>{hw.gpuArchitecture}</span></>}
+              {hw.gpuMaxBufferSize && <><span style={{ color: P.dim }}>Max Buffer:</span><span style={{ color: P.text }}>{hw.gpuMaxBufferSize}</span></>}
+              {hw.gpuMaxThreads && <><span style={{ color: P.dim }}>Max Workgroup X:</span><span style={{ color: P.text }}>{hw.gpuMaxThreads}</span></>}
             </div>
           </div>
         </div>
@@ -693,17 +811,26 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
     },
 
     environment: {
+      machine: `${hw.oscpu} · ${hw.platform}`,
       cpuCores: hw.cpuCores,
       cpuArchitecture: hw.cpuArch,
       deviceMemoryGB: hw.totalMemoryGB,
-      browser: hw.browser,
+      browser: `${hw.browser} ${hw.browserVersion}`,
       jsEngine: hw.jsEngine,
       platform: hw.platform,
+      display: `${hw.screenResolution} @${hw.devicePixelRatio}x`,
+      locale: hw.locale,
+      timezone: hw.timezone,
+      hostname: hw.hostname,
+      publicIp: hw.publicIp,
       webgpuAvailable: hw.webgpuAvailable,
+      gpuRenderer: hw.glRenderer,
+      gpuVendor: hw.glVendor,
+      webgpuAdapter: hw.gpuAdapter,
+      webgpuArchitecture: hw.gpuArchitecture,
+      webgpuMaxBuffer: hw.gpuMaxBufferSize,
+      webgpuMaxWorkgroupX: hw.gpuMaxThreads,
       userAgent: navigator.userAgent,
-      screenResolution: `${screen.width}×${screen.height}`,
-      devicePixelRatio: window.devicePixelRatio,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
 
     methods: {
@@ -984,7 +1111,17 @@ export default function ConstantTimeBenchmark() {
   const [precomputeMethod, setPrecomputeMethod] = useState<"gpu" | "lut-cpu">("lut-cpu");
   const [cacheEntries, setCacheEntries] = useState(0);
   const [cacheBytes, setCacheBytes] = useState(0);
-  const [hw] = useState<HardwareInfo>(detectHardware);
+  const [hw, setHw] = useState<HardwareInfo | null>(null);
+  useEffect(() => { detectHardware().then(setHw); }, []);
+  const hwReady = hw !== null;
+  // Safe fallback for rendering before detection completes
+  const hwSafe: HardwareInfo = hw ?? {
+    cpuCores: 0, cpuArch: "…", totalMemoryGB: null, browser: "…", browserVersion: "", jsEngine: "…",
+    platform: "…", oscpu: "…", webgpuAvailable: false, gpuAdapter: null, gpuVendor: null,
+    gpuArchitecture: null, gpuDescription: null, gpuMaxBufferSize: null, gpuMaxThreads: null,
+    glRenderer: null, glVendor: null, screenResolution: "…", devicePixelRatio: 1,
+    timezone: "…", locale: "…", publicIp: null, hostname: "…",
+  };
   const cancelRef = useRef(false);
   const cacheRef = useRef<HologramComputeCache | null>(null);
 
@@ -1169,7 +1306,11 @@ export default function ConstantTimeBenchmark() {
       </div>
 
       {/* Methodology */}
-      <MethodologyPanel hw={hw} />
+      {hwReady ? <MethodologyPanel hw={hwSafe} /> : (
+        <div className="rounded-xl p-4 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <p className="text-sm font-mono animate-pulse" style={{ color: P.muted }}>Detecting hardware…</p>
+        </div>
+      )}
 
       {/* ════════════════════════════════════════════════════════════════════ */}
       {/* DEMO 1: CPU vs Hologram vGPU                                       */}
@@ -1209,7 +1350,7 @@ export default function ConstantTimeBenchmark() {
           <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
             Can the Hologram vGPU deliver <strong style={{ color: P.gold }}>GPU-like speeds on pure CPU hardware</strong>?
             This demo runs the standard CPU triple-loop and compares it against the vGPU — which pre-computed all results
-            {hw.webgpuAvailable ? " (via GPU)" : " (via CPU with 64KB lookup table)"} and now retrieves them in O(1).
+            {hwSafe.webgpuAvailable ? " (via GPU)" : " (via CPU with 64KB lookup table)"} and now retrieves them in O(1).
             Both produce byte-identical results.
           </p>
         </div>
@@ -1224,7 +1365,7 @@ export default function ConstantTimeBenchmark() {
               </div>
               <p className="text-3xl font-light font-mono leading-none" style={{ color: P.red }}>O(N³)</p>
               <p className="text-[12px]" style={{ color: P.muted }}>
-                Single {hw.jsEngine} thread. {hw.cpuCores}-core {hw.cpuArch}. {formatOps(CPU_SIZES[CPU_SIZES.length - 1] ** 3)} ops at N={CPU_SIZES[CPU_SIZES.length - 1]}.
+                Single {hwSafe.jsEngine} thread. {hwSafe.cpuCores}-core {hwSafe.cpuArch}. {formatOps(CPU_SIZES[CPU_SIZES.length - 1] ** 3)} ops at N={CPU_SIZES[CPU_SIZES.length - 1]}.
               </p>
             </div>
             <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
@@ -1234,7 +1375,7 @@ export default function ConstantTimeBenchmark() {
               </div>
               <p className="text-3xl font-light font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
               <p className="text-[12px]" style={{ color: P.muted }}>
-                Pre-computes via {hw.webgpuAvailable ? "GPU" : "CPU + 64KB LUT"}. Retrieves answers instantly — zero computation at runtime.
+                Pre-computes via {hwSafe.webgpuAvailable ? "GPU" : "CPU + 64KB LUT"}. Retrieves answers instantly — zero computation at runtime.
               </p>
             </div>
           </div>
@@ -1246,7 +1387,7 @@ export default function ConstantTimeBenchmark() {
             <div className="w-7 h-7 mx-auto border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
             <p className="text-sm font-medium" style={{ color: P.gold }}>Pre-computing all results…</p>
             <p className="text-[13px]" style={{ color: P.muted }}>
-              {ALL_SIZES.length} sizes up to {ALL_SIZES[ALL_SIZES.length - 1]}². Using {hw.webgpuAvailable ? "GPU via WebGPU" : "CPU with 64KB lookup table"}.
+              {ALL_SIZES.length} sizes up to {ALL_SIZES[ALL_SIZES.length - 1]}². Using {hwSafe.webgpuAvailable ? "GPU via WebGPU" : "CPU with 64KB lookup table"}.
             </p>
           </div>
         )}
@@ -1318,20 +1459,20 @@ export default function ConstantTimeBenchmark() {
       {/* DEMO 2: GPU vs Hologram vGPU                                       */}
       {/* ════════════════════════════════════════════════════════════════════ */}
 
-      <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${hw.webgpuAvailable ? "hsla(210, 50%, 60%, 0.12)" : "hsla(38, 8%, 35%, 0.15)"}` }}>
+      <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${hwSafe.webgpuAvailable ? "hsla(210, 50%, 60%, 0.12)" : "hsla(38, 8%, 35%, 0.15)"}` }}>
         {/* Demo 2 Header */}
-        <div className="flex items-center justify-between p-3" style={{ background: hw.webgpuAvailable ? "hsla(210, 50%, 60%, 0.04)" : "hsla(38, 8%, 35%, 0.04)" }}>
+        <div className="flex items-center justify-between p-3" style={{ background: hwSafe.webgpuAvailable ? "hsla(210, 50%, 60%, 0.04)" : "hsla(38, 8%, 35%, 0.04)" }}>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <IconCpu2 size={15} style={{ color: hw.webgpuAvailable ? P.blue : P.dim }} />
+              <IconCpu2 size={15} style={{ color: hwSafe.webgpuAvailable ? P.blue : P.dim }} />
               <span className="text-sm font-bold" style={{ color: P.text }}>Demo 2</span>
               <span className="text-[11px]" style={{ color: P.muted }}>—</span>
-              <span className="text-sm font-semibold" style={{ color: hw.webgpuAvailable ? P.blue : P.dim }}>GPU</span>
+              <span className="text-sm font-semibold" style={{ color: hwSafe.webgpuAvailable ? P.blue : P.dim }}>GPU</span>
               <span className="text-[11px]" style={{ color: P.muted }}>vs</span>
               <span className="text-sm font-semibold" style={{ color: P.gold }}>Hologram vGPU</span>
             </div>
           </div>
-          {hw.webgpuAvailable ? (
+          {hwSafe.webgpuAvailable ? (
             <button
               onClick={() => runDemo("gpu")}
               disabled={isAnyRunning}
@@ -1354,8 +1495,8 @@ export default function ConstantTimeBenchmark() {
         </div>
 
         {/* Demo 2 Description */}
-        <div className="px-3 py-2" style={{ background: hw.webgpuAvailable ? "hsla(210, 50%, 60%, 0.02)" : "hsla(38, 8%, 35%, 0.02)" }}>
-          {hw.webgpuAvailable ? (
+        <div className="px-3 py-2" style={{ background: hwSafe.webgpuAvailable ? "hsla(210, 50%, 60%, 0.02)" : "hsla(38, 8%, 35%, 0.02)" }}>
+          {hwSafe.webgpuAvailable ? (
             <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
               Even with a <strong style={{ color: P.blue }}>real GPU</strong> running the same math across thousands of parallel cores,
               the Hologram vGPU still wins — because it <strong style={{ color: P.gold }}>doesn't compute at all</strong>.
@@ -1627,11 +1768,11 @@ export default function ConstantTimeBenchmark() {
                 {allChecksOk ? "All outputs identical" : "Mismatch"}
               </div>
               <span className="text-[12px]" style={{ color: P.muted }}>
-                {hw.jsEngine} · {hw.cpuCores} cores · {hw.webgpuAvailable ? "WebGPU ✓" : "No GPU"} · {ALL_SIZES.length} sizes
+                {hwSafe.jsEngine} · {hwSafe.cpuCores} cores · {hwSafe.webgpuAvailable ? "WebGPU ✓" : "No GPU"} · {ALL_SIZES.length} sizes
               </span>
             </div>
             <button
-              onClick={() => exportReport(allPoints, precomputeMs, precomputeMethod, hw)}
+              onClick={() => exportReport(allPoints, precomputeMs, precomputeMethod, hwSafe)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-200 hover:opacity-80"
               style={{ background: P.card, color: P.text, border: `1px solid ${P.cardBorder}` }}
             >
