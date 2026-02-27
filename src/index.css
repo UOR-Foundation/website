@@ -465,28 +465,35 @@
   }
 }
 
-/* ── Lumen AI custom scrollbar — ethereal, minimal ────────────────── */
-.lumen-scroll::-webkit-scrollbar {
-  width: 5px;
+/* ── Global elegant scrollbar — applies everywhere ────────────────── */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-.lumen-scroll::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: transparent;
 }
-.lumen-scroll::-webkit-scrollbar-thumb {
-  background: hsla(38, 20%, 40%, 0.18);
+*::-webkit-scrollbar-thumb {
+  background: hsla(38, 20%, 40%, 0.15);
   border-radius: 999px;
-  transition: background 0.3s;
 }
-.lumen-scroll::-webkit-scrollbar-thumb:hover {
-  background: hsla(38, 25%, 50%, 0.3);
+*::-webkit-scrollbar-thumb:hover {
+  background: hsla(38, 25%, 50%, 0.28);
 }
-.lumen-scroll::-webkit-scrollbar-thumb:active {
-  background: hsla(38, 30%, 55%, 0.4);
+*::-webkit-scrollbar-thumb:active {
+  background: hsla(38, 30%, 55%, 0.38);
 }
-.lumen-scroll {
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+* {
   scrollbar-width: thin;
-  scrollbar-color: hsla(38, 20%, 40%, 0.18) transparent;
+  scrollbar-color: hsla(38, 20%, 40%, 0.15) transparent;
 }
+
+/* ── Lumen AI scrollbar variant (same style, kept for explicit use) ── */
+.lumen-scroll::-webkit-scrollbar { width: 5px; }
+.lumen-scroll::-webkit-scrollbar-thumb { background: hsla(38, 20%, 40%, 0.18); }
 
 /* ── Modular panel resize handle ─────────────────────────────────────── */
 .hologram-resize-handle {
