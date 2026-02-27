@@ -9,11 +9,11 @@
  * @module hologram-compute/HologramComputePage
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
-  IconCpu, IconBolt, IconBrain, IconChartBar, IconServer,
-  IconCloudComputing, IconUsers, IconArrowRight, IconPlayerPlay,
-  IconCircleCheck, IconFlame, IconActivity, IconBoltFilled,
+  IconCpu, IconBolt, IconBrain, IconServer,
+  IconCloudComputing, IconUsers, IconArrowRight,
+  IconCircleCheck, IconFlame, IconBoltFilled,
 } from "@tabler/icons-react";
 import { PageShell } from "@/modules/hologram-ui";
 import { getOrchestrator, type ProviderSnapshot } from "@/modules/hologram-compute";
@@ -58,16 +58,10 @@ function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => voi
 // CONSUMER VIEW — Aman-inspired tranquility
 // ═══════════════════════════════════════════════════════════════════════════
 
-function ConsumerView({ snap, onBenchmark, benchmarking }: {
+function ConsumerView({ snap }: {
   snap: ProviderSnapshot | undefined;
-  onBenchmark: () => void;
-  benchmarking: boolean;
 }) {
-  const mops = snap?.cpuBenchmarkResult?.lutMopsPerSec ?? 0;
-  const gflops = snap?.benchmarkResult?.matmulGflops ?? 0;
-  const bw = snap?.benchmarkResult?.bandwidthGBps ?? snap?.cpuBenchmarkResult?.lutThroughputGBps ?? 0;
   const tables = snap?.lutInfo?.tableCount ?? 0;
-  const tokSec = snap?.estimatedTokPerSec ?? 0;
   const isOnline = snap?.status === "ready" || snap?.status === "degraded";
 
   return (
@@ -89,59 +83,14 @@ function ConsumerView({ snap, onBenchmark, benchmarking }: {
         </div>
       </section>
 
-      {/* Three key metrics — big, serene, scannable */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
-        <MetricPill
-          value={gflops > 0 ? `${gflops.toFixed(0)}` : mops > 0 ? `${mops.toFixed(0)}M` : "—"}
-          unit={gflops > 0 ? "GFLOPS" : "ops/sec"}
-          label="Processing Power"
-        />
-        <MetricPill
-          value={bw > 0 ? bw.toFixed(1) : "—"}
-          unit="GB/s"
-          label="Throughput"
-        />
-        <MetricPill
-          value={tokSec > 0 ? `~${tokSec}` : "—"}
-          unit="tok/s"
-          label="AI Speed"
-        />
-      </section>
-
       {/* Simple resource summary */}
       <section className="max-w-xl mx-auto space-y-6">
         <div className="grid grid-cols-2 gap-4">
           <ResourceRow icon={<IconCpu size={18} />} label="Compute Engine" value={isOnline ? "Active" : "—"} accent={isOnline} />
           <ResourceRow icon={<IconBolt size={18} />} label="LUT Tables" value={tables > 0 ? `${tables} loaded` : "—"} accent={tables > 0} />
-          <ResourceRow icon={<IconBrain size={18} />} label="AI Inference" value={tokSec > 0 ? "Ready" : "Awaiting benchmark"} accent={tokSec > 0} />
+          <ResourceRow icon={<IconBrain size={18} />} label="AI Inference" value={isOnline ? "Ready" : "Awaiting init"} accent={isOnline} />
           <ResourceRow icon={<IconBoltFilled size={18} />} label="Cost" value="$0 / forever" accent />
         </div>
-      </section>
-
-      {/* Benchmark CTA */}
-      <section className="text-center">
-        <button
-          onClick={onBenchmark}
-          disabled={benchmarking}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 bg-foreground text-background hover:opacity-90 disabled:opacity-50"
-        >
-          {benchmarking ? (
-            <>
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              Measuring…
-            </>
-          ) : (
-            <>
-              <IconPlayerPlay size={16} />
-              {mops > 0 || gflops > 0 ? "Re-measure" : "Measure your device"}
-            </>
-          )}
-        </button>
-        {(mops > 0 || gflops > 0) && (
-          <p className="text-xs text-muted-foreground mt-3">
-            Last measured {snap?.lastUpdated ? new Date(snap.lastUpdated).toLocaleTimeString() : "just now"}
-          </p>
-        )}
       </section>
 
       {/* Constant-time proof */}
@@ -217,24 +166,17 @@ function ResourceRow({ icon, label, value, accent }: {
 // DEVELOPER VIEW — Nebius-style infrastructure dashboard
 // ═══════════════════════════════════════════════════════════════════════════
 
-function DeveloperView({ snapshots, localSnap, onBenchmark, benchmarking }: {
+function DeveloperView({ snapshots, localSnap }: {
   snapshots: ProviderSnapshot[];
   localSnap: ProviderSnapshot | undefined;
-  onBenchmark: () => void;
-  benchmarking: boolean;
 }) {
-  const gpu = localSnap?.benchmarkResult;
-  const cpu = localSnap?.cpuBenchmarkResult;
-
   return (
     <div className="space-y-8">
-      {/* Top metrics bar */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      {/* Top status bar */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <DevStat label="Status" value={localSnap?.status === "ready" ? "Online" : localSnap?.status === "degraded" ? "CPU Mode" : "—"} color={sc(localSnap?.status ?? "")} />
-        <DevStat label="GFLOPS" value={gpu?.matmulGflops.toFixed(1) ?? (cpu ? `${cpu.lutMopsPerSec.toFixed(0)}M ops/s` : "—")} />
-        <DevStat label="Bandwidth" value={gpu?.bandwidthGBps.toFixed(1) ?? cpu?.lutThroughputGBps.toFixed(2) ?? "—"} unit="GB/s" />
         <DevStat label="LUT Tables" value={`${localSnap?.lutInfo?.tableCount ?? 0}`} unit={`× ${localSnap?.lutInfo?.tableSize ?? 256}`} />
-        <DevStat label="Inference" value={localSnap?.estimatedTokPerSec ? `~${localSnap.estimatedTokPerSec}` : "—"} unit="tok/s" />
+        <DevStat label="Cache" value={localSnap?.lutInfo ? `${(localSnap.lutInfo.cacheSizeBytes / 1024).toFixed(1)}K` : "—"} unit="bytes" />
       </div>
 
       {/* Compute Services — Nebius-style featured cards */}
@@ -246,9 +188,6 @@ function DeveloperView({ snapshots, localSnap, onBenchmark, benchmarking }: {
             title="Virtual Machines"
             desc="WebGPU-accelerated compute with constant-time LUT engine. Auto-fallback to CPU."
             status="active"
-            action="Run Benchmark"
-            onClick={onBenchmark}
-            loading={benchmarking}
           />
           <ServiceCard
             icon={<IconCloudComputing size={22} />}
@@ -405,9 +344,8 @@ function DevStat({ label, value, unit, color }: { label: string; value: string; 
   );
 }
 
-function ServiceCard({ icon, title, desc, status, action, onClick, loading }: {
+function ServiceCard({ icon, title, desc, status }: {
   icon: React.ReactNode; title: string; desc: string; status: "active" | "planned";
-  action?: string; onClick?: () => void; loading?: boolean;
 }) {
   const isActive = status === "active";
   return (
@@ -424,20 +362,6 @@ function ServiceCard({ icon, title, desc, status, action, onClick, loading }: {
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
         <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{desc}</p>
       </div>
-      {action && onClick && (
-        <button
-          onClick={onClick}
-          disabled={loading}
-          className="flex items-center gap-2 text-xs font-medium text-foreground hover:text-primary transition-colors disabled:opacity-50"
-        >
-          {loading ? (
-            <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <IconActivity size={14} />
-          )}
-          {loading ? "Running…" : action}
-        </button>
-      )}
     </div>
   );
 }
@@ -493,7 +417,6 @@ function ProviderDetail({ snap }: { snap: ProviderSnapshot }) {
 export default function HologramComputePage() {
   const [snapshots, setSnapshots] = useState<ProviderSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
-  const [benchmarking, setBenchmarking] = useState(false);
   const [mode, setMode] = useState<Mode>("consumer");
 
   useEffect(() => {
@@ -508,14 +431,6 @@ export default function HologramComputePage() {
 
   const localSnap = useMemo(() => snapshots.find(s => s.kind === "local"), [snapshots]);
 
-  const runBenchmark = useCallback(async () => {
-    setBenchmarking(true);
-    const orch = getOrchestrator();
-    await orch.benchmarkProvider("local:webgpu");
-    const snaps = await orch.allSnapshots();
-    setSnapshots(snaps);
-    setBenchmarking(false);
-  }, []);
 
   const [entered, setEntered] = useState(false);
   useEffect(() => {
@@ -551,9 +466,9 @@ export default function HologramComputePage() {
         headerRight={<ModeToggle mode={mode} onChange={setMode} />}
       >
         {mode === "consumer" ? (
-          <ConsumerView snap={localSnap} onBenchmark={runBenchmark} benchmarking={benchmarking} />
+          <ConsumerView snap={localSnap} />
         ) : (
-          <DeveloperView snapshots={snapshots} localSnap={localSnap} onBenchmark={runBenchmark} benchmarking={benchmarking} />
+          <DeveloperView snapshots={snapshots} localSnap={localSnap} />
         )}
 
         {/* Footer */}
