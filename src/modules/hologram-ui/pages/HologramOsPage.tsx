@@ -242,45 +242,37 @@ export default function HologramOsPage() {
 
   // ── Holographic projection transition ──────────────────────────────
   // The screen is a projection surface emanating from the sidebar.
-  // Style changes sweep left→right like a new hologram being cast.
+  // Style transitions use a layered approach: the old background layer sits on top
+  // and retracts right→left via clip-path, smoothly revealing the new style underneath.
   const [transitioning, setTransitioning] = useState(false);
-  const [transitionColor, setTransitionColor] = useState("hsl(0, 0%, 100%)");
-  const [transitionPhase, setTransitionPhase] = useState<"idle" | "sweep" | "hold">("idle");
-  
-
-  const TRANSITION_COLORS: Record<BgMode, string> = {
-    image: "hsla(30, 15%, 12%, 0.97)",
-    white: "hsla(0, 0%, 98%, 0.97)",
-    dark: "hsla(0, 0%, 4%, 0.97)",
-  };
+  const [transitionPhase, setTransitionPhase] = useState<"idle" | "retract">("idle");
+  const [prevBgMode, setPrevBgMode] = useState<BgMode | null>(null);
 
   const setBgMode = useCallback((m: BgMode) => {
     if (m === bgMode) return;
 
-    // New style color sweeps in from right, covering the old style
-    setTransitionColor(TRANSITION_COLORS[m]);
+    // Preserve the old mode so we can render it as the top layer
+    setPrevBgMode(bgMode);
     setTransitioning(true);
     setTransitionPhase("idle");
 
-    // Start the sweep on the next frame so clip-path transition triggers
+    // Switch to new style immediately — it renders underneath the old layer
+    setBgModeState(m);
+    localStorage.setItem("hologram-bg-mode", m);
+
+    // On next frame, start retracting the old layer right→left
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        setTransitionPhase("sweep");
+        setTransitionPhase("retract");
       });
     });
 
-    // When sweep fully covers viewport (~1800ms), switch actual style underneath
-    setTimeout(() => {
-      setBgModeState(m);
-      localStorage.setItem("hologram-bg-mode", m);
-      setTransitionPhase("hold");
-    }, 1800);
-
-    // Brief hold then cleanup — curtain fades away to reveal real content
+    // Cleanup after retraction completes
     setTimeout(() => {
       setTransitioning(false);
       setTransitionPhase("idle");
-    }, 2100);
+      setPrevBgMode(null);
+    }, 2200);
   }, [bgMode]);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
@@ -472,46 +464,53 @@ export default function HologramOsPage() {
             marginRight: chatOpen ? `${lumenPanel.width}px` : "0px",
           }}
         >
-          {/* ── Holographic retraction — old frame retracts to bottom-left origin ── */}
-          {transitioning && (
+          {/* ── Old-style layer — retracts right→left to reveal new style underneath ── */}
+          {transitioning && prevBgMode !== null && (
             <div
               className="absolute inset-0 pointer-events-none overflow-hidden"
-              style={{ zIndex: 9999 }}
+              style={{
+                zIndex: 9999,
+                clipPath: transitionPhase === "retract"
+                  ? "inset(0 100% 0 0)"
+                  : "inset(0 0 0 0)",
+                transition: transitionPhase === "retract"
+                  ? "clip-path 2000ms cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+                  : "none",
+              }}
             >
-              {/* New-style curtain — sweeps in from right, revealing new style */}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: transitionColor,
-                  clipPath: transitionPhase === "sweep" || transitionPhase === "hold"
-                    ? "inset(0 0 0 0)"
-                    : "inset(0 0 0 100%)",
-                  transition: transitionPhase === "sweep"
-                    ? "clip-path 1800ms cubic-bezier(0.25, 0.46, 0.45, 0.94)"
-                    : transitionPhase === "hold"
-                      ? "opacity 300ms ease-out"
-                      : "none",
-                  opacity: transitionPhase === "hold" ? 0 : 1,
-                }}
-              />
+              {/* Render the old background as a full layer */}
+              <div className="absolute inset-0" style={{
+                background: prevBgMode === "image" ? "transparent"
+                  : prevBgMode === "white" ? palette("white").bg
+                  : palette("dark").bg,
+              }}>
+                {prevBgMode === "image" && (
+                  <>
+                    <img
+                      src={heroLandscape}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background: "linear-gradient(to bottom, hsla(30, 8%, 12%, 0.15) 0%, hsla(30, 6%, 10%, 0.08) 35%, hsla(25, 10%, 8%, 0.55) 100%)",
+                      }}
+                    />
+                  </>
+                )}
+              </div>
 
-              {/* Soft warm leading edge at the sweep wavefront */}
+              {/* Soft warm edge glow at the retraction wavefront */}
               <div
                 style={{
                   position: "absolute",
                   top: 0,
                   bottom: 0,
-                  width: "100px",
-                  background: "linear-gradient(to left, transparent, hsla(38, 30%, 65%, 0.06), transparent)",
-                  filter: "blur(20px)",
-                  left: transitionPhase === "sweep" || transitionPhase === "hold"
-                    ? "-100px"
-                    : "100%",
-                  opacity: transitionPhase === "sweep" ? 1 : 0,
-                  transition: transitionPhase === "sweep"
-                    ? "left 1800ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 400ms ease-out"
-                    : "none",
+                  width: "80px",
+                  left: 0,
+                  background: "linear-gradient(to right, hsla(38, 30%, 65%, 0.08), transparent)",
+                  filter: "blur(16px)",
                 }}
               />
             </div>
@@ -534,15 +533,15 @@ export default function HologramOsPage() {
            *  FRAME 0 — Canvas Layer (background, imagery, veils)
            * ══════════════════════════════════════════════════════════ */}
           <HologramFrame layer={0} label="canvas" interactive={false} transform={canvasTilt} opacity={layerNav.layerOpacity(0)} style={{ transform: `scale(${layerNav.layerScale(0)})`, transition: "opacity 0.5s, transform 0.5s" }}>
-            {/* Solid background for white/dark modes */}
+            {/* Solid background for white/dark modes — no transition, layered approach handles it */}
             <div
-              className="absolute inset-0 transition-all duration-1000 ease-in-out"
+              className="absolute inset-0"
               style={{ background: P.bg, opacity: bgMode === "image" ? 0 : 1 }}
             />
 
             {/* Background Image — slow Ken Burns for life */}
             <div
-              className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+              className="absolute inset-0"
               style={{ opacity: bgMode === "image" ? 1 : 0 }}
             >
               <img
