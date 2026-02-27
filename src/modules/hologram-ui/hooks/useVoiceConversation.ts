@@ -218,6 +218,9 @@ export function useVoiceConversation({
   const startListening = useCallback(async () => {
     if (stateRef.current !== "idle" && !greetingInProgressRef.current) return;
 
+    // Prime audio output inside user interaction flow to avoid autoplay gating
+    tts.primeForPlayback();
+
     try {
       // On first activation, greet the user warmly before listening
       if (!hasGreetedRef.current) {
