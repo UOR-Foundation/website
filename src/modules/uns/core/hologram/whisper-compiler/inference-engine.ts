@@ -22,7 +22,7 @@
 
 import { getWeightStore, type HologramWeightStore } from "./weight-store";
 import { loadCompiledWhisper } from "./compiler";
-import { computeMelSpectrogram, N_MELS, N_FRAMES } from "./mel-spectrogram";
+import { N_MELS, N_FRAMES } from "./mel-spectrogram";
 import { cpuGelu } from "./wgsl-kernels";
 import {
   getGpuDispatch,
@@ -495,9 +495,9 @@ export class WhisperEngine {
     this.dispatch.resetStats();
     const t0 = performance.now();
 
-    // Phase 1: Mel spectrogram (CPU — FFT)
+    // Phase 1: Mel spectrogram (GPU-accelerated STFT when WebGPU available)
     onProgress?.({ phase: "mel", message: "Computing mel spectrogram...", progress: 0.05 });
-    const mel = computeMelSpectrogram(audio);
+    const mel = await this.dispatch.melSpectrogram(audio);
     console.log(`[WhisperEngine] Mel: ${N_MELS}×${N_FRAMES}`);
 
     // Phase 2: Encoder (GPU-accelerated)

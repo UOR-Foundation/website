@@ -71,6 +71,7 @@ export {
   WGSL_SOFTMAX,
   WGSL_SDPA,
   WGSL_CONV1D,
+  WGSL_MEL_SPEC,
   cpuMatmul,
   cpuLayerNorm,
   cpuGelu,
