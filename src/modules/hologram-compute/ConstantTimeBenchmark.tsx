@@ -124,34 +124,107 @@ function round(v: number): number {
 
 const CW = 560;
 const CH = 220;
+const CH_SMALL = 140;
 const PAD = { top: 30, right: 24, bottom: 44, left: 56 };
 const IW = CW - PAD.left - PAD.right;
 const IH = CH - PAD.top - PAD.bottom;
+const IH_SMALL = CH_SMALL - PAD.top - PAD.bottom;
 
 interface ChartProps {
   points: BenchPoint[];
   mode: "complexity" | "throughput";
 }
 
+// ── Single-series mini chart for bandwidth mode ──
+
+function MiniChart({ points, vals, color, label, gradientId, glow }: {
+  points: BenchPoint[];
+  vals: number[];
+  color: string;
+  label: string;
+  gradientId: string;
+  glow?: boolean;
+}) {
+  const xVals = points.map((p) => p.n);
+  const maxY = Math.max(...vals, 1);
+  const minX = Math.min(...xVals);
+  const maxX = Math.max(...xVals);
+  const xS = (v: number) => PAD.left + ((v - minX) / (maxX - minX || 1)) * IW;
+  const yS = (v: number) => PAD.top + IH_SMALL - (v / maxY) * IH_SMALL;
+  const path = xVals.map((x, i) => `${xS(x)},${yS(vals[i])}`).join(" ");
+  const yTicks = 3;
+  const gridLines = Array.from({ length: yTicks + 1 }, (_, i) => {
+    const v = (maxY / yTicks) * i;
+    return { y: yS(v), label: formatNum(v) };
+  });
+  const peakVal = Math.max(...vals);
+
+  return (
+    <div className="rounded-lg p-2" style={{ background: "hsla(25, 8%, 10%, 0.5)", border: `1px solid ${P.cardBorder}` }}>
+      <div className="flex items-center justify-between mb-1 px-1">
+        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color }}>{label}</span>
+        <span className="text-[10px] font-mono" style={{ color }}>{formatNum(peakVal)} tok/s peak</span>
+      </div>
+      <svg viewBox={`0 0 ${CW} ${CH_SMALL}`} className="w-full" style={{ height: 110 }}>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.01" />
+          </linearGradient>
+          {glow && (
+            <filter id={`glow-${gradientId}`}>
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          )}
+        </defs>
+        {gridLines.map((g, i) => (
+          <g key={i}>
+            <line x1={PAD.left} y1={g.y} x2={CW - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.2} />
+            <text x={PAD.left - 8} y={g.y + 3} textAnchor="end" fill={P.muted} fontSize={8} fontFamily="'DM Sans', monospace">{g.label}</text>
+          </g>
+        ))}
+        {xVals.map((x, i) => (
+          i % 3 === 0 || i === xVals.length - 1 ? (
+            <text key={i} x={xS(x)} y={CH_SMALL - PAD.bottom + 12} textAnchor="middle" fill={P.muted} fontSize={7} fontFamily="'DM Sans', monospace">{x}</text>
+          ) : null
+        ))}
+        <polygon points={`${xS(xVals[0])},${yS(0)} ${path} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill={`url(#${gradientId})`} />
+        <polyline points={path} fill="none" stroke={color} strokeWidth={glow ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" filter={glow ? `url(#glow-${gradientId})` : undefined} />
+        {xVals.map((x, i) => (
+          <circle key={i} cx={xS(x)} cy={yS(vals[i])} r={glow ? 3 : 2.5} fill={color} stroke={P.bg} strokeWidth={1} />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
 function BenchChart({ points, mode }: ChartProps) {
   if (points.length === 0) return null;
 
   const xVals = points.map((p) => p.n);
+  const hasGpu = points.some((p) => p.gpuAvailable);
 
-  let stdVals: number[], gpuVals: number[], holoVals: number[];
-  if (mode === "complexity") {
-    stdVals = points.map((p) => p.stdMs);
-    gpuVals = points.map((p) => p.gpuMs);
-    holoVals = points.map((p) => p.holoMs);
-  } else {
-    // Throughput: show peak tok/s at each dimension (running max = streaming bandwidth ceiling)
+  // ── Bandwidth mode: three separate charts with independent Y-axes ──
+  if (mode === "throughput") {
     let peakStd = 0, peakGpu = 0, peakHolo = 0;
-    stdVals = points.map((p) => { peakStd = Math.max(peakStd, p.stdTokSec); return peakStd; });
-    gpuVals = points.map((p) => { peakGpu = Math.max(peakGpu, p.gpuTokSec); return peakGpu; });
-    holoVals = points.map((p) => { peakHolo = Math.max(peakHolo, p.holoTokSec); return peakHolo; });
+    const stdVals = points.map((p) => { peakStd = Math.max(peakStd, p.stdTokSec); return peakStd; });
+    const gpuVals = points.map((p) => { peakGpu = Math.max(peakGpu, p.gpuTokSec); return peakGpu; });
+    const holoVals = points.map((p) => { peakHolo = Math.max(peakHolo, p.holoTokSec); return peakHolo; });
+
+    return (
+      <div className="space-y-2">
+        <MiniChart points={points} vals={stdVals} color={P.red} label="CPU" gradientId="bw-std" />
+        {hasGpu && <MiniChart points={points} vals={gpuVals} color={P.blue} label="GPU" gradientId="bw-gpu" />}
+        <MiniChart points={points} vals={holoVals} color={P.gold} label="Hologram vGPU" gradientId="bw-holo" glow />
+      </div>
+    );
   }
 
-  const hasGpu = points.some((p) => p.gpuAvailable);
+  // ── Complexity mode: combined 3-line chart ──
+  const stdVals = points.map((p) => p.stdMs);
+  const gpuVals = points.map((p) => p.gpuMs);
+  const holoVals = points.map((p) => p.holoMs);
 
   const allVals = [...stdVals, ...(hasGpu ? gpuVals : []), ...holoVals];
   const maxY = Math.max(...allVals, 1);
@@ -171,9 +244,6 @@ function BenchChart({ points, mode }: ChartProps) {
     const v = (maxY / yTicks) * i;
     return { y: yS(v), label: formatNum(v) };
   });
-
-  const yLabel = mode === "complexity" ? "Runtime (ms)" : "Peak Tokens / sec";
-  const xLabel = "Matrix Dimension N";
 
   return (
     <svg viewBox={`0 0 ${CW} ${CH}`} className="w-full h-full">
@@ -196,7 +266,6 @@ function BenchChart({ points, mode }: ChartProps) {
         </filter>
       </defs>
 
-      {/* Grid */}
       {gridLines.map((g, i) => (
         <g key={i}>
           <line x1={PAD.left} y1={g.y} x2={CW - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.2} />
@@ -204,25 +273,21 @@ function BenchChart({ points, mode }: ChartProps) {
         </g>
       ))}
 
-      {/* X ticks */}
       {xVals.map((x, i) => (
         i % 2 === 0 || i === xVals.length - 1 ? (
           <text key={i} x={xS(x)} y={CH - PAD.bottom + 14} textAnchor="middle" fill={P.muted} fontSize={8} fontFamily="'DM Sans', monospace">{x}</text>
         ) : null
       ))}
 
-      {/* Axis labels */}
-      <text x={CW / 2} y={CH - 4} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily={P.font} fontWeight="500">{xLabel}</text>
-      <text x={12} y={CH / 2} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily={P.font} fontWeight="500" transform={`rotate(-90, 12, ${CH / 2})`}>{yLabel}</text>
+      <text x={CW / 2} y={CH - 4} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily={P.font} fontWeight="500">Matrix Dimension N</text>
+      <text x={12} y={CH / 2} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily={P.font} fontWeight="500" transform={`rotate(-90, 12, ${CH / 2})`}>Runtime (ms)</text>
 
-      {/* Standard CPU — area + line */}
       <polygon points={`${xS(xVals[0])},${yS(0)} ${stdPath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#std-area)" />
       <polyline points={stdPath} fill="none" stroke={P.red} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       {xVals.map((x, i) => (
         <circle key={`s${i}`} cx={xS(x)} cy={yS(stdVals[i])} r={2.5} fill={P.red} stroke={P.bg} strokeWidth={1} />
       ))}
 
-      {/* WebGPU — area + line */}
       {hasGpu && (
         <>
           <polygon points={`${xS(xVals[0])},${yS(0)} ${gpuPath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#gpu-area)" />
@@ -233,14 +298,12 @@ function BenchChart({ points, mode }: ChartProps) {
         </>
       )}
 
-      {/* Hologram — area + line with glow */}
       <polygon points={`${xS(xVals[0])},${yS(0)} ${holoPath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#holo-area)" />
       <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-gold)" />
       {xVals.map((x, i) => (
         <circle key={`h${i}`} cx={xS(x)} cy={yS(holoVals[i])} r={3} fill={P.gold} stroke={P.bg} strokeWidth={1} />
       ))}
 
-      {/* Legend */}
       <g transform={`translate(${PAD.left + 8}, ${PAD.top + 4})`}>
         <rect x={0} y={0} width={12} height={2.5} rx={1} fill={P.red} />
         <text x={18} y={5} fill={P.text} fontSize={9} fontFamily={P.font} fontWeight="500">CPU — O(N³) single-thread</text>
