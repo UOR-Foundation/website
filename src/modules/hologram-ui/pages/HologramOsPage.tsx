@@ -245,7 +245,7 @@ export default function HologramOsPage() {
   // Style changes sweep left→right like a new hologram being cast.
   const [transitioning, setTransitioning] = useState(false);
   const [transitionColor, setTransitionColor] = useState("hsl(0, 0%, 100%)");
-  const [transitionPhase, setTransitionPhase] = useState<"idle" | "bloom" | "hold" | "fade">("idle");
+  const [transitionPhase, setTransitionPhase] = useState<"idle" | "cover" | "retract">("idle");
   
 
   const TRANSITION_COLORS: Record<BgMode, string> = {
@@ -257,29 +257,27 @@ export default function HologramOsPage() {
   const setBgMode = useCallback((m: BgMode) => {
     if (m === bgMode) return;
 
-    // Holographic projection: single right→left sweep (returning to sidebar origin)
-    setTransitionColor(TRANSITION_COLORS[m]);
+    // Capture the OLD style's color as the curtain
+    setTransitionColor(TRANSITION_COLORS[bgMode]);
     setTransitioning(true);
-    setTransitionPhase("bloom");
+    setTransitionPhase("cover");
 
-    // Phase 1: sweep right→left covers viewport (0–1100ms)
-    // Phase 2: hold — switch style behind the curtain, then reveal by continuing sweep
-    setTimeout(() => {
-      setTransitionPhase("hold");
-      setBgModeState(m);
-      localStorage.setItem("hologram-bg-mode", m);
-    }, 1100);
+    // Immediately switch the actual style underneath the curtain
+    setBgModeState(m);
+    localStorage.setItem("hologram-bg-mode", m);
 
-    // Phase 3: curtain continues sweeping left to reveal new style
-    setTimeout(() => {
-      setTransitionPhase("fade");
-    }, 1400);
+    // After a single frame (to let the curtain render at full coverage), retract it
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTransitionPhase("retract");
+      });
+    });
 
-    // Phase 4: cleanup
+    // Cleanup after retraction completes
     setTimeout(() => {
       setTransitioning(false);
       setTransitionPhase("idle");
-    }, 2600);
+    }, 2000);
   }, [bgMode]);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
@@ -471,51 +469,35 @@ export default function HologramOsPage() {
             marginRight: chatOpen ? `${lumenPanel.width}px` : "0px",
           }}
         >
-          {/* ── Holographic projection sweep — emanates from sidebar ── */}
+          {/* ── Holographic retraction — old frame retracts to bottom-left origin ── */}
           {transitioning && (
             <div
               className="absolute inset-0 pointer-events-none overflow-hidden"
               style={{ zIndex: 9999 }}
             >
-              {/* Projection surface — right→left sweep returning to sidebar */}
+              {/* Old-style curtain — retracts diagonally toward bottom-left (sidebar origin) */}
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
                   background: transitionColor,
-                  clipPath: transitionPhase === "bloom" || transitionPhase === "hold"
-                    ? "inset(0 0 0 0)"
-                    : transitionPhase === "fade"
-                      ? "inset(0 100% 0 0)"
-                      : "inset(0 0 0 100%)",
-                  transition: transitionPhase === "bloom"
-                    ? "clip-path 1100ms cubic-bezier(0.25, 0.46, 0.45, 0.94)"
-                    : transitionPhase === "fade"
-                      ? "clip-path 1200ms cubic-bezier(0.39, 0.575, 0.565, 1)"
-                      : "none",
+                  clipPath: transitionPhase === "cover"
+                    ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+                    : "polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)",
+                  transition: transitionPhase === "retract"
+                    ? "clip-path 1600ms cubic-bezier(0.4, 0, 0.2, 1)"
+                    : "none",
                 }}
               />
 
-              {/* Soft leading edge — warm light at the wavefront, moving right→left */}
+              {/* Soft warm edge glow along the retreating diagonal */}
               <div
                 style={{
                   position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  width: "120px",
-                  background: "linear-gradient(to left, transparent, hsla(38, 30%, 65%, 0.07), transparent)",
-                  right: transitionPhase === "bloom" || transitionPhase === "hold"
-                    ? "100%"
-                    : transitionPhase === "fade"
-                      ? "calc(100% + 120px)"
-                      : "-120px",
-                  opacity: transitionPhase === "idle" ? 0 : 1,
-                  transition: transitionPhase === "bloom"
-                    ? "right 1100ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 300ms ease-out"
-                    : transitionPhase === "fade"
-                      ? "right 1200ms cubic-bezier(0.39, 0.575, 0.565, 1), opacity 800ms ease-out"
-                      : "none",
-                  filter: "blur(30px)",
+                  inset: 0,
+                  background: "radial-gradient(ellipse at 0% 100%, hsla(38, 30%, 65%, 0.06) 0%, transparent 50%)",
+                  opacity: transitionPhase === "retract" ? 1 : 0,
+                  transition: "opacity 600ms ease-out 200ms",
                 }}
               />
             </div>
