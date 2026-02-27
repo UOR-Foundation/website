@@ -45,23 +45,46 @@ interface CacheEntry {
   config: DiffusionConfig;
   seed: number;
   createdAt: number;
+  lastAccessedAt: number;
 }
+
+/** Default max cached images before LRU eviction kicks in */
+const DEFAULT_MAX_CACHE_ENTRIES = 50;
 
 /**
  * Content-addressed inference cache backed by IndexedDB.
  * Maps prompt CID → image CID → raw image bytes for O(1) replay.
+ * LRU eviction ensures IndexedDB doesn't grow unbounded.
  */
 class DiffusionInferenceCache {
   private db: IDBDatabase | null = null;
+  private maxEntries: number;
+
+  constructor(maxEntries = DEFAULT_MAX_CACHE_ENTRIES) {
+    this.maxEntries = maxEntries;
+  }
+
+  /** Update max entries at runtime */
+  setMaxEntries(n: number) { this.maxEntries = Math.max(1, n); }
+  getMaxEntries() { return this.maxEntries; }
 
   async init(): Promise<void> {
     if (this.db) return;
     return new Promise((resolve, reject) => {
-      const req = indexedDB.open(CACHE_DB_NAME, CACHE_DB_VERSION);
-      req.onupgradeneeded = () => {
+      // Bump version to 2 for schema migration (adding lastAccessedAt index)
+      const req = indexedDB.open(CACHE_DB_NAME, 2);
+      req.onupgradeneeded = (event) => {
         const db = req.result;
         if (!db.objectStoreNames.contains(CACHE_STORE_INDEX)) {
-          db.createObjectStore(CACHE_STORE_INDEX, { keyPath: "promptCid" });
+          const store = db.createObjectStore(CACHE_STORE_INDEX, { keyPath: "promptCid" });
+          store.createIndex("by_last_accessed", "lastAccessedAt", { unique: false });
+        } else if (event.oldVersion < 2) {
+          // Migrate: add index on existing store
+          const tx = (event.target as IDBOpenDBRequest).transaction!;
+          const store = tx.objectStore(CACHE_STORE_INDEX);
+          if (!store.indexNames.contains("by_last_accessed")) {
+            store.createIndex("by_last_accessed", "lastAccessedAt", { unique: false });
+          }
         }
         if (!db.objectStoreNames.contains(CACHE_STORE_BLOBS)) {
           db.createObjectStore(CACHE_STORE_BLOBS);
@@ -72,10 +95,6 @@ class DiffusionInferenceCache {
     });
   }
 
-  /**
-   * Compute a canonical CID for a diffusion prompt + config.
-   * Identical prompt + config + seed → same CID → cache hit.
-   */
   async promptCid(prompt: string, negativePrompt: string, config: DiffusionConfig, seed: number): Promise<string> {
     const proof = await singleProofHash({
       "@context": { diffusion: "https://uor.foundation/diffusion/" },
@@ -92,11 +111,7 @@ class DiffusionInferenceCache {
     return proof.cid;
   }
 
-  /**
-   * Compute a canonical CID for raw image data.
-   */
   async imageCid(imageData: ImageData): Promise<string> {
-    // Hash raw RGBA bytes for content identity
     const hashBuf = await crypto.subtle.digest("SHA-256", imageData.data.buffer);
     const hashArr = new Uint8Array(hashBuf);
     const hex = Array.from(hashArr, b => b.toString(16).padStart(2, "0")).join("");
@@ -104,16 +119,19 @@ class DiffusionInferenceCache {
   }
 
   /**
-   * Look up a cached result by prompt CID. Returns null on miss.
+   * Look up a cached result by prompt CID. Updates lastAccessedAt on hit.
    */
   async lookup(pCid: string): Promise<{ entry: CacheEntry; imageData: ImageData } | null> {
     await this.init();
     return new Promise((resolve) => {
-      const tx = this.db!.transaction([CACHE_STORE_INDEX, CACHE_STORE_BLOBS], "readonly");
+      const tx = this.db!.transaction([CACHE_STORE_INDEX, CACHE_STORE_BLOBS], "readwrite");
       const idxReq = tx.objectStore(CACHE_STORE_INDEX).get(pCid);
       idxReq.onsuccess = () => {
         const entry = idxReq.result as CacheEntry | undefined;
         if (!entry) { resolve(null); return; }
+        // Touch: update lastAccessedAt for LRU
+        entry.lastAccessedAt = Date.now();
+        tx.objectStore(CACHE_STORE_INDEX).put(entry);
         const blobReq = tx.objectStore(CACHE_STORE_BLOBS).get(entry.imageCid);
         blobReq.onsuccess = () => {
           const raw = blobReq.result as { width: number; height: number; data: ArrayBuffer } | undefined;
@@ -128,10 +146,11 @@ class DiffusionInferenceCache {
   }
 
   /**
-   * Store a generated image in the cache.
+   * Store a generated image. Evicts LRU entries if over maxEntries.
    */
   async store(pCid: string, iCid: string, imageData: ImageData, config: DiffusionConfig, seed: number): Promise<void> {
     await this.init();
+    const now = Date.now();
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction([CACHE_STORE_INDEX, CACHE_STORE_BLOBS], "readwrite");
       const entry: CacheEntry = {
@@ -139,34 +158,63 @@ class DiffusionInferenceCache {
         imageCid: iCid,
         config,
         seed,
-        createdAt: Date.now(),
+        createdAt: now,
+        lastAccessedAt: now,
       };
       tx.objectStore(CACHE_STORE_INDEX).put(entry);
       tx.objectStore(CACHE_STORE_BLOBS).put(
         { width: imageData.width, height: imageData.height, data: imageData.data.buffer.slice(0) },
         iCid,
       );
-      tx.oncomplete = () => resolve();
+      tx.oncomplete = () => {
+        // Evict after commit so the new entry is already persisted
+        this.evictIfNeeded().then(() => resolve());
+      };
       tx.onerror = () => reject(tx.error);
     });
   }
 
   /**
-   * Get cache stats (entry count).
+   * LRU eviction — delete oldest-accessed entries until count ≤ maxEntries.
    */
-  async stats(): Promise<{ entries: number }> {
+  private async evictIfNeeded(): Promise<void> {
+    const { entries } = await this.stats();
+    if (entries <= this.maxEntries) return;
+
+    const toEvict = entries - this.maxEntries;
+    return new Promise((resolve) => {
+      const tx = this.db!.transaction([CACHE_STORE_INDEX, CACHE_STORE_BLOBS], "readwrite");
+      const store = tx.objectStore(CACHE_STORE_INDEX);
+      const index = store.index("by_last_accessed");
+      // Cursor walks ascending (oldest first)
+      const cursorReq = index.openCursor();
+      let evicted = 0;
+
+      cursorReq.onsuccess = () => {
+        const cursor = cursorReq.result;
+        if (!cursor || evicted >= toEvict) { resolve(); return; }
+        const entry = cursor.value as CacheEntry;
+        // Delete the image blob
+        tx.objectStore(CACHE_STORE_BLOBS).delete(entry.imageCid);
+        // Delete the index entry
+        cursor.delete();
+        evicted++;
+        cursor.continue();
+      };
+      cursorReq.onerror = () => resolve();
+    });
+  }
+
+  async stats(): Promise<{ entries: number; maxEntries: number }> {
     await this.init();
     return new Promise((resolve) => {
       const tx = this.db!.transaction(CACHE_STORE_INDEX, "readonly");
       const req = tx.objectStore(CACHE_STORE_INDEX).count();
-      req.onsuccess = () => resolve({ entries: req.result });
-      req.onerror = () => resolve({ entries: 0 });
+      req.onsuccess = () => resolve({ entries: req.result, maxEntries: this.maxEntries });
+      req.onerror = () => resolve({ entries: 0, maxEntries: this.maxEntries });
     });
   }
 
-  /**
-   * Clear all cached entries.
-   */
   async clear(): Promise<void> {
     await this.init();
     return new Promise((resolve, reject) => {
