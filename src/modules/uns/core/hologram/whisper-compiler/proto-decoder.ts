@@ -122,6 +122,7 @@ export class ProtoReader {
 
   /** Read a little-endian float32 */
   readFloat32(): number {
+    if (this.pos + 4 > this.end) { this.pos = this.end; return 0; }
     const val = this.view.getFloat32(this.pos, true);
     this.pos += 4;
     return val;
@@ -129,6 +130,7 @@ export class ProtoReader {
 
   /** Read a little-endian float64 */
   readFloat64(): number {
+    if (this.pos + 8 > this.end) { this.pos = this.end; return 0; }
     const val = this.view.getFloat64(this.pos, true);
     this.pos += 8;
     return val;
@@ -136,6 +138,7 @@ export class ProtoReader {
 
   /** Read a little-endian uint32 */
   readFixed32(): number {
+    if (this.pos + 4 > this.end) { this.pos = this.end; return 0; }
     const val = this.view.getUint32(this.pos, true);
     this.pos += 4;
     return val;
@@ -143,6 +146,7 @@ export class ProtoReader {
 
   /** Read a little-endian int32 */
   readSfixed32(): number {
+    if (this.pos + 4 > this.end) { this.pos = this.end; return 0; }
     const val = this.view.getInt32(this.pos, true);
     this.pos += 4;
     return val;
@@ -157,10 +161,13 @@ export class ProtoReader {
    */
   readBytes(): Uint8Array {
     const len = this.readVarint();
-    if (this.pos + len > this.end) {
-      throw new Error(
-        `[ProtoReader] Bytes overflow: need ${len}, have ${this.remaining}`
-      );
+    const available = this.end - this.pos;
+    if (len > available) {
+      // Clamp to available bytes instead of throwing
+      const clamped = Math.max(0, available);
+      const bytes = new Uint8Array(this.buf.buffer, this.buf.byteOffset + this.pos, clamped);
+      this.pos = this.end;
+      return bytes;
     }
     const bytes = new Uint8Array(this.buf.buffer, this.buf.byteOffset + this.pos, len);
     this.pos += len;
@@ -226,13 +233,10 @@ export class ProtoReader {
    */
   subReader(): ProtoReader {
     const len = this.readVarint();
-    if (this.pos + len > this.end) {
-      throw new Error(
-        `[ProtoReader] Sub-message overflow: need ${len}, have ${this.remaining}`
-      );
-    }
-    const sub = new ProtoReader(this.buf.buffer as ArrayBuffer, this.buf.byteOffset + this.pos, len);
-    this.pos += len;
+    const available = this.end - this.pos;
+    const clamped = Math.min(len, Math.max(0, available));
+    const sub = new ProtoReader(this.buf.buffer as ArrayBuffer, this.buf.byteOffset + this.pos, clamped);
+    this.pos += clamped;
     return sub;
   }
 
