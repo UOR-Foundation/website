@@ -186,9 +186,9 @@ function runScaleBenchmark(dataSize: number): ScalePoint {
 // SVG Chart
 // ═══════════════════════════════════════════════════════════════════════════
 
-const CHART_W = 480;
-const CHART_H = 200;
-const PAD = { top: 24, right: 16, bottom: 36, left: 46 };
+const CHART_W = 560;
+const CHART_H = 280;
+const PAD = { top: 32, right: 24, bottom: 48, left: 56 };
 const INNER_W = CHART_W - PAD.left - PAD.right;
 const INNER_H = CHART_H - PAD.top - PAD.bottom;
 
@@ -218,14 +218,14 @@ function DualLineChart({
   const stdPath = xValues.map((x, i) => `${xScale(x)},${yScale(stdValues[i])}`).join(" ");
   const holoPath = xValues.map((x, i) => `${xScale(x)},${yScale(holoValues[i])}`).join(" ");
 
-  const yTicks = 4;
+  const yTicks = 5;
   const gridLines = Array.from({ length: yTicks + 1 }, (_, i) => {
     const ms = (maxMs / yTicks) * i;
     return { y: yScale(ms), label: ms < 10 ? ms.toFixed(1) : ms.toFixed(0) };
   });
 
   return (
-    <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full">
+    <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full h-full">
       <defs>
         <linearGradient id="std-fill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={P.red} stopOpacity="0.18" />
@@ -239,28 +239,34 @@ function DualLineChart({
 
       {gridLines.map((g, i) => (
         <g key={i}>
-          <line x1={PAD.left} y1={g.y} x2={CHART_W - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.3} />
-          <text x={PAD.left - 8} y={g.y + 3} textAnchor="end" fill={P.muted} fontSize={9} fontFamily="'DM Sans', monospace">{g.label}</text>
+          <line x1={PAD.left} y1={g.y} x2={CHART_W - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.25} />
+          <text x={PAD.left - 10} y={g.y + 4} textAnchor="end" fill={P.muted} fontSize={11} fontFamily="'DM Sans', monospace">{g.label}</text>
         </g>
       ))}
 
+      {/* X-axis line */}
+      <line x1={PAD.left} y1={PAD.top + INNER_H} x2={CHART_W - PAD.right} y2={PAD.top + INNER_H} stroke={P.dim} strokeWidth={0.5} opacity={0.4} />
+
       {xValues.map((x, i) => (
-        <text key={i} x={xScale(x)} y={CHART_H - PAD.bottom + 14} textAnchor="middle" fill={P.muted} fontSize={9} fontFamily="'DM Sans', monospace">
-          {xLabels[i]}
-        </text>
+        <g key={i}>
+          <line x1={xScale(x)} y1={PAD.top + INNER_H} x2={xScale(x)} y2={PAD.top + INNER_H + 4} stroke={P.dim} strokeWidth={0.5} opacity={0.4} />
+          <text x={xScale(x)} y={CHART_H - PAD.bottom + 18} textAnchor="middle" fill={P.muted} fontSize={11} fontFamily="'DM Sans', monospace">
+            {xLabels[i]}
+          </text>
+        </g>
       ))}
 
-      <text x={CHART_W / 2} y={CHART_H - 4} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily={P.font}>{xAxisLabel}</text>
-      <text x={10} y={CHART_H / 2} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily={P.font} transform={`rotate(-90, 10, ${CHART_H / 2})`}>{yAxisLabel}</text>
+      <text x={CHART_W / 2} y={CHART_H - 6} textAnchor="middle" fill={P.dim} fontSize={11} fontFamily={P.font} fontWeight="500">{xAxisLabel}</text>
+      <text x={14} y={CHART_H / 2} textAnchor="middle" fill={P.dim} fontSize={11} fontFamily={P.font} fontWeight="500" transform={`rotate(-90, 14, ${CHART_H / 2})`}>{yAxisLabel}</text>
 
       {/* Standard — rising line */}
       <polygon
         points={`${xScale(xValues[0])},${yScale(0)} ${stdPath} ${xScale(xValues[xValues.length - 1])},${yScale(0)}`}
         fill="url(#std-fill)"
       />
-      <polyline points={stdPath} fill="none" stroke={P.red} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={stdPath} fill="none" stroke={P.red} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       {xValues.map((x, i) => (
-        <circle key={`s-${i}`} cx={xScale(x)} cy={yScale(stdValues[i])} r={3} fill={P.red} />
+        <circle key={`s-${i}`} cx={xScale(x)} cy={yScale(stdValues[i])} r={4} fill={P.red} stroke="hsl(25, 8%, 8%)" strokeWidth={1.5} />
       ))}
 
       {/* Hologram — flat gold line */}
@@ -268,17 +274,17 @@ function DualLineChart({
         points={`${xScale(xValues[0])},${yScale(0)} ${holoPath} ${xScale(xValues[xValues.length - 1])},${yScale(0)}`}
         fill="url(#holo-fill)"
       />
-      <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       {xValues.map((x, i) => (
-        <circle key={`h-${i}`} cx={xScale(x)} cy={yScale(holoValues[i])} r={3} fill={P.gold} />
+        <circle key={`h-${i}`} cx={xScale(x)} cy={yScale(holoValues[i])} r={4} fill={P.gold} stroke="hsl(25, 8%, 8%)" strokeWidth={1.5} />
       ))}
 
       {/* Legend */}
-      <g transform={`translate(${PAD.left + 8}, ${PAD.top + 4})`}>
-        <rect x={0} y={0} width={10} height={3} rx={1} fill={P.red} />
-        <text x={14} y={5} fill={P.muted} fontSize={10} fontFamily={P.font}>{stdLabel}</text>
-        <rect x={0} y={14} width={10} height={3} rx={1} fill={P.gold} />
-        <text x={14} y={19} fill={P.muted} fontSize={10} fontFamily={P.font}>{holoLabel}</text>
+      <g transform={`translate(${PAD.left + 12}, ${PAD.top + 6})`}>
+        <rect x={0} y={0} width={12} height={3} rx={1.5} fill={P.red} />
+        <text x={18} y={6} fill={P.text} fontSize={12} fontFamily={P.font} fontWeight="500">{stdLabel}</text>
+        <rect x={0} y={18} width={12} height={3} rx={1.5} fill={P.gold} />
+        <text x={18} y={24} fill={P.text} fontSize={12} fontFamily={P.font} fontWeight="500">{holoLabel}</text>
       </g>
     </svg>
   );
@@ -302,10 +308,10 @@ function EfficiencyAmplifier({ speedup, stdTotalMs, holoTotalMs, pointCount, isR
   const animatedWaste = useCountUp(stdTotalMs - holoTotalMs, 600);
   const animatedEfficiency = useCountUp(Math.min((1 - holoTotalMs / Math.max(stdTotalMs, 0.01)) * 100, 99.9), 600);
 
-  // Radial gauge parameters
-  const R = 62;
-  const CX = 80;
-  const CY = 72;
+  // Radial gauge parameters — larger for visibility
+  const R = 90;
+  const CX = 120;
+  const CY = 105;
   const START_ANGLE = 135;
   const END_ANGLE = 405;
   const ARC_SPAN = END_ANGLE - START_ANGLE;
@@ -328,63 +334,63 @@ function EfficiencyAmplifier({ speedup, stdTotalMs, holoTotalMs, pointCount, isR
   const wasteRatio = Math.max(Math.round(stdTotalMs / Math.max(holoTotalMs, 0.01)), 1);
 
   return (
-    <div className="rounded-xl p-3 flex flex-col items-center justify-between h-full" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-      {/* Radial gauge — compact */}
-      <svg viewBox="0 0 160 120" className="w-full" style={{ maxWidth: 160 }}>
+    <div className="rounded-xl p-5 flex flex-col items-center justify-between h-full" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+      {/* Radial gauge — large and prominent */}
+      <svg viewBox="0 0 240 175" className="w-full" style={{ maxWidth: 280 }}>
         <defs>
           <linearGradient id="gauge-glow" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor={P.gold} stopOpacity="0.6" />
             <stop offset="100%" stopColor="hsl(38, 60%, 75%)" stopOpacity="1" />
           </linearGradient>
         </defs>
-        <path d={arcPath(START_ANGLE, END_ANGLE, R)} fill="none" stroke={P.dim} strokeWidth={5} strokeLinecap="round" opacity={0.3} />
+        <path d={arcPath(START_ANGLE, END_ANGLE, R)} fill="none" stroke={P.dim} strokeWidth={6} strokeLinecap="round" opacity={0.25} />
         {speedup > 0 && (
-          <path d={arcPath(START_ANGLE, currentAngle, R)} fill="none" stroke="url(#gauge-glow)" strokeWidth={5} strokeLinecap="round" />
+          <path d={arcPath(START_ANGLE, currentAngle, R)} fill="none" stroke="url(#gauge-glow)" strokeWidth={6} strokeLinecap="round" />
         )}
-        <text x={CX} y={CY - 6} textAnchor="middle" fill={P.gold} fontSize={26} fontFamily="'DM Sans', monospace" fontWeight="300">
+        <text x={CX} y={CY - 8} textAnchor="middle" fill={P.gold} fontSize={38} fontFamily="'DM Sans', monospace" fontWeight="300">
           {speedup > 0 ? `${animatedSpeedup.toFixed(0)}×` : "—"}
         </text>
-        <text x={CX} y={CY + 8} textAnchor="middle" fill={P.muted} fontSize={8} fontFamily={P.font}>
+        <text x={CX} y={CY + 12} textAnchor="middle" fill={P.muted} fontSize={11} fontFamily={P.font} fontWeight="500">
           {speedup > 0 ? "peak speedup" : "awaiting data"}
         </text>
-        {[0, 0.5, 1].map((t, i) => {
+        {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
           const a = START_ANGLE + ARC_SPAN * t;
-          const outer = toXY(a, R + 9);
-          return <text key={i} x={outer.x} y={outer.y + 2} textAnchor="middle" fill={P.dim} fontSize={7} fontFamily="'DM Sans', monospace">{Math.round(MAX_SPEEDUP * t)}×</text>;
+          const outer = toXY(a, R + 12);
+          return <text key={i} x={outer.x} y={outer.y + 3} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily="'DM Sans', monospace">{Math.round(MAX_SPEEDUP * t)}×</text>;
         })}
       </svg>
 
-      {/* Compact stats */}
-      <div className="w-full space-y-2">
-        <div className="flex gap-2">
-          <div className="flex-1 rounded-lg px-3 py-2" style={{ background: "hsla(0, 55%, 55%, 0.06)", border: `1px solid hsla(0, 55%, 55%, 0.1)` }}>
-            <p className="text-[9px] uppercase tracking-widest font-medium mb-0.5" style={{ color: P.red }}>Wasted</p>
-            <p className="text-base font-mono font-light tabular-nums leading-tight" style={{ color: P.red }}>
+      {/* Stats cards */}
+      <div className="w-full space-y-3 mt-2">
+        <div className="flex gap-3">
+          <div className="flex-1 rounded-xl px-4 py-3" style={{ background: "hsla(0, 55%, 55%, 0.06)", border: `1px solid hsla(0, 55%, 55%, 0.1)` }}>
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: P.red }}>Wasted</p>
+            <p className="text-xl font-mono font-light tabular-nums leading-tight" style={{ color: P.red }}>
               {stdTotalMs > 0 ? `${animatedWaste.toFixed(0)}ms` : "—"}
             </p>
-            <p className="text-[9px] mt-0.5" style={{ color: P.dim }}>{stdTotalMs > 0 ? `${wasteRatio}× excess` : ""}</p>
+            <p className="text-[11px] mt-1" style={{ color: P.dim }}>{stdTotalMs > 0 ? `${wasteRatio}× excess` : ""}</p>
           </div>
-          <div className="flex-1 rounded-lg px-3 py-2" style={{ background: "hsla(38, 40%, 65%, 0.06)", border: `1px solid hsla(38, 40%, 65%, 0.1)` }}>
-            <p className="text-[9px] uppercase tracking-widest font-medium mb-0.5" style={{ color: P.gold }}>Efficiency</p>
-            <p className="text-base font-mono font-light tabular-nums leading-tight" style={{ color: P.gold }}>
+          <div className="flex-1 rounded-xl px-4 py-3" style={{ background: "hsla(38, 40%, 65%, 0.06)", border: `1px solid hsla(38, 40%, 65%, 0.1)` }}>
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: P.gold }}>Efficiency</p>
+            <p className="text-xl font-mono font-light tabular-nums leading-tight" style={{ color: P.gold }}>
               {stdTotalMs > 0 ? `${animatedEfficiency.toFixed(1)}%` : "—"}
             </p>
-            <p className="text-[9px] mt-0.5" style={{ color: P.dim }}>{stdTotalMs > 0 ? "work eliminated" : ""}</p>
+            <p className="text-[11px] mt-1" style={{ color: P.dim }}>{stdTotalMs > 0 ? "work eliminated" : ""}</p>
           </div>
         </div>
 
         {/* Pipeline bars */}
         {pointCount > 0 && (
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[8px] font-mono w-7 shrink-0 text-right" style={{ color: P.red }}>STD</span>
-              <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "hsla(0, 55%, 55%, 0.08)" }}>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono w-8 shrink-0 text-right font-medium" style={{ color: P.red }}>STD</span>
+              <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 55%, 55%, 0.08)" }}>
                 <div className="h-full rounded-full transition-all duration-500" style={{ width: "100%", background: P.red }} />
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[8px] font-mono w-7 shrink-0 text-right" style={{ color: P.gold }}>vGPU</span>
-              <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.08)" }}>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono w-8 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
+              <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.08)" }}>
                 <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.max(100 / Math.max(speedup, 1), 1.5)}%`, background: P.gold }} />
               </div>
             </div>
@@ -393,9 +399,9 @@ function EfficiencyAmplifier({ speedup, stdTotalMs, holoTotalMs, pointCount, isR
       </div>
 
       {isRunning && (
-        <div className="flex items-center gap-1.5 mt-2">
-          <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: P.gold }} />
-          <span className="text-[9px]" style={{ color: P.muted }}>Computing…</span>
+        <div className="flex items-center gap-2 mt-3">
+          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: P.gold }} />
+          <span className="text-[11px] font-medium" style={{ color: P.muted }}>Computing…</span>
         </div>
       )}
     </div>
@@ -508,7 +514,7 @@ export default function ConstantTimeBenchmark() {
   const holoTotalMs = currentPoints.reduce((s, p) => s + p.hologramMs, 0);
 
   return (
-    <div className="space-y-3" style={{ fontFamily: P.font }}>
+    <div className="space-y-5" style={{ fontFamily: P.font }}>
       {/* ── Header row ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
@@ -555,7 +561,7 @@ export default function ConstantTimeBenchmark() {
 
       {/* Description — what operations are performed */}
       <div className="space-y-1">
-        <p className="text-xs leading-relaxed" style={{ color: P.muted }}>
+        <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
           {tab === "chain"
             ? `Chains 1→512 byte-level operations (negate, bitwise NOT, increment, decrement, double, square, XOR 0xAA) over ${(CHAIN_DATA_SIZE / 1_000_000).toFixed(0)}M elements. Standard compute re-scans every element per operation; the Hologram vGPU collapses the entire chain into a single 256-byte lookup table.`
             : `Applies 128 chained byte operations (negate → NOT → increment → … → XOR) across datasets from 100K to 20M elements. Standard compute scales linearly; the vGPU applies one pre-composed table in a single pass.`}
@@ -590,8 +596,8 @@ export default function ConstantTimeBenchmark() {
 
       {/* ── Chart + Efficiency Amplifier (balanced 50/50) ─────── */}
       {currentPoints.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <div className="rounded-xl p-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="rounded-xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             {tab === "chain" ? (
               <DualLineChart
                 xValues={chainPoints.map(p => p.chainDepth)}
@@ -630,35 +636,35 @@ export default function ConstantTimeBenchmark() {
       {/* ── Compact results table ─────────────────────────────── */}
       {currentState === "done" && currentPoints.length > 0 && (
         <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${P.cardBorder}` }}>
-          <table className="w-full text-[11px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
+          <table className="w-full text-[13px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
             <thead>
               <tr style={{ background: P.card }}>
-                <th className="text-left py-1.5 px-3 font-medium" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>
+                <th className="text-left py-2.5 px-4 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>
                   {tab === "chain" ? "Ops" : "Data"}
                 </th>
-                <th className="text-right py-1.5 px-3 font-medium" style={{ color: P.red, borderBottom: `1px solid ${P.cardBorder}` }}>Standard</th>
-                <th className="text-right py-1.5 px-3 font-medium" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU</th>
-                <th className="text-right py-1.5 px-3 font-medium" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Compose</th>
-                <th className="text-right py-1.5 px-3 font-medium" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
+                <th className="text-right py-2.5 px-4 font-semibold" style={{ color: P.red, borderBottom: `1px solid ${P.cardBorder}` }}>Standard</th>
+                <th className="text-right py-2.5 px-4 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU</th>
+                <th className="text-right py-2.5 px-4 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Compose</th>
+                <th className="text-right py-2.5 px-4 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
               </tr>
             </thead>
             <tbody>
               {tab === "chain" && chainPoints.map((p, i) => (
                 <tr key={p.chainDepth} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
-                  <td className="py-1 px-3 font-semibold" style={{ color: P.text }}>{p.chainDepth}</td>
-                  <td className="py-1 px-3 text-right" style={{ color: P.red }}>{p.standardMs.toFixed(2)}</td>
-                  <td className="py-1 px-3 text-right" style={{ color: P.gold }}>{p.hologramMs.toFixed(2)}</td>
-                  <td className="py-1 px-3 text-right" style={{ color: P.muted }}>{p.composeMs.toFixed(3)}</td>
-                  <td className="py-1 px-3 text-right font-bold" style={{ color: P.text }}>{p.speedup.toFixed(1)}×</td>
+                  <td className="py-2 px-4 font-semibold" style={{ color: P.text }}>{p.chainDepth}</td>
+                  <td className="py-2 px-4 text-right" style={{ color: P.red }}>{p.standardMs.toFixed(2)}</td>
+                  <td className="py-2 px-4 text-right" style={{ color: P.gold }}>{p.hologramMs.toFixed(2)}</td>
+                  <td className="py-2 px-4 text-right" style={{ color: P.muted }}>{p.composeMs.toFixed(3)}</td>
+                  <td className="py-2 px-4 text-right font-bold" style={{ color: P.text }}>{p.speedup.toFixed(1)}×</td>
                 </tr>
               ))}
               {tab === "scale" && scalePoints.map((p, i) => (
                 <tr key={p.dataSize} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
-                  <td className="py-1 px-3 font-semibold" style={{ color: P.text }}>{p.label}</td>
-                  <td className="py-1 px-3 text-right" style={{ color: P.red }}>{p.standardMs.toFixed(2)}</td>
-                  <td className="py-1 px-3 text-right" style={{ color: P.gold }}>{p.hologramMs.toFixed(2)}</td>
-                  <td className="py-1 px-3 text-right" style={{ color: P.muted }}>{p.composeMs.toFixed(3)}</td>
-                  <td className="py-1 px-3 text-right font-bold" style={{ color: P.text }}>{p.speedup.toFixed(1)}×</td>
+                  <td className="py-2 px-4 font-semibold" style={{ color: P.text }}>{p.label}</td>
+                  <td className="py-2 px-4 text-right" style={{ color: P.red }}>{p.standardMs.toFixed(2)}</td>
+                  <td className="py-2 px-4 text-right" style={{ color: P.gold }}>{p.hologramMs.toFixed(2)}</td>
+                  <td className="py-2 px-4 text-right" style={{ color: P.muted }}>{p.composeMs.toFixed(3)}</td>
+                  <td className="py-2 px-4 text-right font-bold" style={{ color: P.text }}>{p.speedup.toFixed(1)}×</td>
                 </tr>
               ))}
             </tbody>
@@ -668,27 +674,27 @@ export default function ConstantTimeBenchmark() {
 
       {/* ── Footer: Verification + Export ─────────────────────── */}
       {currentState === "done" && (
-        <div className="flex items-center justify-between flex-wrap gap-3 pt-2" style={{ borderTop: `1px solid ${P.cardBorder}` }}>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between flex-wrap gap-3 pt-3" style={{ borderTop: `1px solid ${P.cardBorder}` }}>
+          <div className="flex items-center gap-3">
             <div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[13px] font-medium"
               style={{
                 background: checksumMatch ? "hsla(152, 44%, 50%, 0.1)" : "hsla(0, 55%, 55%, 0.1)",
                 color: checksumMatch ? P.green : P.red,
                 border: `1px solid ${checksumMatch ? "hsla(152, 44%, 50%, 0.2)" : "hsla(0, 55%, 55%, 0.2)"}`,
               }}
             >
-              <IconCheck size={13} />
+              <IconCheck size={15} />
               {checksumMatch ? "Byte-identical outputs" : "Mismatch"}
             </div>
-            <span className="text-[11px]" style={{ color: P.muted }}>Computed live</span>
+            <span className="text-[13px]" style={{ color: P.muted }}>Computed live</span>
           </div>
           <button
             onClick={() => exportBenchmark(tab, chainPoints, scalePoints)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all duration-200 hover:opacity-80"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium transition-all duration-200 hover:opacity-80"
             style={{ background: P.card, color: P.text, border: `1px solid ${P.cardBorder}` }}
           >
-            <IconDownload size={13} />
+            <IconDownload size={15} />
             Export JSON
           </button>
         </div>
