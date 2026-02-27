@@ -90,7 +90,7 @@ export default function VoiceOrb({
   const [alwaysListening, setAlwaysListening] = useState(false);
 
   const voice = useVoiceConversation({
-    voiceEngine: "web-speech",
+    voiceEngine: "elevenlabs",
     personaId,
     screenContext,
     observerBriefing,

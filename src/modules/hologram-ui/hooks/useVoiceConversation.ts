@@ -50,7 +50,7 @@ interface UseVoiceConversationOptions {
 const STREAM_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hologram-ai-stream`;
 
 export function useVoiceConversation({
-  voiceEngine = "web-speech",
+  voiceEngine = "elevenlabs",
   personaId = "hologram",
   skillId,
   cloudModel = "google/gemini-3-flash-preview",
@@ -151,6 +151,7 @@ export function useVoiceConversation({
         screenContext,
         observerBriefing,
         fusionContext,
+        voiceMode: true,
       }),
       signal: controller.signal,
     });

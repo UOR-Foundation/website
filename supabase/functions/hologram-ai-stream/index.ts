@@ -223,7 +223,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold, screenContext, observerBriefing, conversationContext, fusionContext, documentContext } = await req.json();
+    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold, screenContext, observerBriefing, conversationContext, fusionContext, documentContext, voiceMode } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -268,7 +268,24 @@ serve(async (req) => {
       ? `\n\n═══ DOCUMENT CONTEXT (reconstructed from UGC2 compressed semantic graph) ═══\n${documentContext}\n═══ END DOCUMENT CONTEXT ═══\nIMPORTANT: The content above was reconstructed ENTIRELY from a UGC2 compressed binary — the original file was not used. This proves lossless semantic compression. The document's ontology (structure, hierarchy, key claims, topics, dates, and quantitative facts) is preserved as subject-predicate-object triples.\n\nAnswer the user's questions with high precision using ONLY this decompressed semantic context. Quote specific claims and passages from the ontology. If asked about compression or the pipeline, explain that UGC2 preserves the document's semantic graph while achieving significant size reduction. Ground every answer in the semantic triples provided above.`
       : "";
 
-    const systemPrompt = CONSTITUTIONAL_DIRECTIVE + personaPrompt + skillFragment + knowledge + scaffoldPrompt + contextAwareness + observerAwareness + conversationCtx + fusionCtx + documentCtx;
+    // Voice mode overlay — when speaking aloud, responses must be conversational
+    const voiceOverlay = voiceMode
+      ? `\n\n═══ VOICE MODE ACTIVE ═══\n` +
+        `You are speaking aloud to the user through voice. Adapt your responses for spoken conversation:\n` +
+        `- Keep responses SHORT and natural — 2-4 sentences maximum unless the user asks for detail.\n` +
+        `- Use a warm, gentle, conversational tone — like a trusted companion speaking softly.\n` +
+        `- NEVER use markdown formatting, bullet points, numbered lists, headers, code blocks, or special characters.\n` +
+        `- NEVER use asterisks, backticks, brackets, or any formatting symbols.\n` +
+        `- Speak in flowing, natural sentences. Use pauses (commas, periods) for rhythm.\n` +
+        `- Be present, not performative. Don't over-explain. Let silence be comfortable.\n` +
+        `- When uncertain, acknowledge it simply: "I'm not sure about that" rather than hedging at length.\n` +
+        `- Mirror the energy of a calm, grounded friend — never rushed, never overwhelming.\n` +
+        `- If the user seems to be in a flow state or focused, be extra brief and supportive.\n` +
+        `- Close thoughts gently. Don't end with questions unless the conversation naturally calls for one.\n` +
+        `═══ END VOICE MODE ═══\n`
+      : "";
+
+    const systemPrompt = CONSTITUTIONAL_DIRECTIVE + personaPrompt + skillFragment + knowledge + scaffoldPrompt + voiceOverlay + contextAwareness + observerAwareness + conversationCtx + fusionCtx + documentCtx;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
