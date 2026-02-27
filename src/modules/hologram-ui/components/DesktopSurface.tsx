@@ -267,7 +267,7 @@ export default function DesktopSurface({
               textShadow: mode === "white" ? "none" : "0 1px 4px hsla(0, 0%, 0%, 0.5)",
             }}
           >
-            Style
+            Frame
           </span>
         </div>
       </div>
