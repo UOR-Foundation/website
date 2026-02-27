@@ -50,6 +50,10 @@ export { parseOnnxModel, summarizeModel } from "./onnx-parser";
 // Weight store
 export { HologramWeightStore, getWeightStore } from "./weight-store";
 
+// Tokenizer (decode token IDs → text)
+export { WhisperTokenizer, getWhisperTokenizer } from "./tokenizer";
+export type { TokenizerInfo } from "./tokenizer";
+
 // Proto decoder (exposed for testing)
 export { ProtoReader } from "./proto-decoder";
 
