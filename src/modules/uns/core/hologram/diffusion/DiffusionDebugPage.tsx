@@ -174,7 +174,7 @@ export default function DiffusionDebugPage() {
             Delete Compiled
           </button>
           <button onClick={clearCache} className="px-3 py-1.5 text-xs rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition">
-            Clear Cache ({cacheCount})
+            Clear Cache ({cacheCount}/{50} LRU)
           </button>
         </div>
 
