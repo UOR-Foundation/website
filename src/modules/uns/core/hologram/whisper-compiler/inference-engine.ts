@@ -31,6 +31,7 @@ import {
   type KvCache,
   createKvCache,
 } from "./gpu-dispatch";
+import { getWhisperTokenizer, type WhisperTokenizer } from "./tokenizer";
 import type { HologramCompiledModel, HologramTensorDescriptor } from "./types";
 
 // ── Whisper tiny.en Architecture Constants ─────────────────────────────────
@@ -491,9 +492,26 @@ export class WhisperEngine {
    *
    * @param audio - 16kHz mono Float32Array PCM samples
    * @param onProgress - Optional progress callback
-   * @returns Array of generated token IDs (decode with tokenizer)
+   * @returns Decoded English text
    */
   async transcribe(
+    audio: Float32Array,
+    onProgress?: (p: InferenceProgress) => void,
+  ): Promise<string> {
+    const tokenIds = await this.transcribeRaw(audio, onProgress);
+
+    // Decode token IDs → text via GPT-2 BPE tokenizer
+    const tokenizer = getWhisperTokenizer();
+    if (!tokenizer.loaded) await tokenizer.load();
+    const text = tokenizer.decode(tokenIds);
+    console.log(`[WhisperEngine] Decoded text: "${text.trim()}"`);
+    return text.trim();
+  }
+
+  /**
+   * Same as transcribe() but returns raw token IDs instead of decoded text.
+   */
+  async transcribeRaw(
     audio: Float32Array,
     onProgress?: (p: InferenceProgress) => void,
   ): Promise<number[]> {
