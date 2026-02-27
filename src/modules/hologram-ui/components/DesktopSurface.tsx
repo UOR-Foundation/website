@@ -23,6 +23,7 @@ import type { DesktopId } from "../hooks/useDesktopState";
 import WeatherWidget from "./widgets/WeatherWidget";
 import ProductivityTimerWidget from "./widgets/ProductivityTimerWidget";
 import AmbientMoodWidget from "./widgets/AmbientMoodWidget";
+import VoiceOrb from "./VoiceOrb";
 
 /* ── Palette ───────────────────────────────────────── */
 function palette(m: DesktopId) {
@@ -444,6 +445,19 @@ export default function DesktopSurface({
                 <TypewriterText text={getLumenSubtitle()} />
               </p>
             </button>
+
+            {/* Voice Orb — Human ↔ Hologram voice interface */}
+            <div
+              style={{
+                marginTop: "clamp(16px, 2vh, 32px)",
+                animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.6s both",
+                opacity: isFocus ? 0 : 1,
+                pointerEvents: isFocus ? "none" : "auto",
+                transition: "opacity 300ms",
+              }}
+            >
+              <VoiceOrb personaId="hologram" />
+            </div>
           </div>
         </div>
       </div>
