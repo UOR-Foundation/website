@@ -31,11 +31,10 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
   let int32Data: Int32Array | null = null;
   let int64Len = 0;
   let doubleData: Float64Array | null = null;
-  const fieldsSeen: number[] = [];
+  let externalData: { location: string; offset: number; length: number } | undefined;
 
   let tag;
   while ((tag = reader.readTag()) !== null) {
-    fieldsSeen.push(tag.field);
     switch (tag.field) {
       case 1: // repeated int64 dims (packed or unpacked)
         if (tag.wire === WireType.LENGTH_DELIMITED) {
@@ -79,6 +78,23 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
         name = reader.readString();
         break;
 
+      case 9: { // repeated StringStringEntryProto external_data
+        // Parse the key-value pair submessage
+        const sub = reader.subReader();
+        let key = "", value = "";
+        let stag;
+        while ((stag = sub.readTag()) !== null) {
+          if (stag.field === 1) key = sub.readString();
+          else if (stag.field === 2) value = sub.readString();
+          else sub.skip(stag.wire);
+        }
+        if (!externalData) externalData = { location: "", offset: 0, length: 0 };
+        if (key === "location") externalData.location = value;
+        else if (key === "offset") externalData.offset = parseInt(value, 10) || 0;
+        else if (key === "length") externalData.length = parseInt(value, 10) || 0;
+        break;
+      }
+
       case 10: // repeated double double_data (packed)
         if (tag.wire === WireType.LENGTH_DELIMITED) {
           doubleData = reader.readPackedFloat64();
@@ -102,7 +118,6 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
   if (rawData && rawData.byteLength > 0) {
     finalRawData = rawData;
   } else if (floatData && floatData.length > 0) {
-    // Convert float_data to raw bytes
     finalRawData = new Uint8Array(floatData.buffer, floatData.byteOffset, floatData.byteLength);
   } else if (int32Data && int32Data.length > 0) {
     finalRawData = new Uint8Array(int32Data.buffer, int32Data.byteOffset, int32Data.byteLength);
@@ -114,16 +129,7 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
 
   const elementCount = dims.length > 0 ? dims.reduce((a, b) => a * b, 1) : 0;
 
-  // Debug: log when tensor has dims but no data
-  if (elementCount > 0 && finalRawData.byteLength === 0) {
-    const uniqueFields = [...new Set(fieldsSeen)];
-    console.warn(
-      `[OnnxParser] Tensor "${name}" has ${elementCount} elements but 0 bytes. ` +
-      `Fields seen: [${uniqueFields.join(",")}], dims: [${dims}], dataType: ${dataType}`
-    );
-  }
-
-  return { name, dims, dataType, rawData: finalRawData, elementCount };
+  return { name, dims, dataType, rawData: finalRawData, elementCount, externalData };
 }
 
 // ── AttributeProto ─────────────────────────────────────────────────────────

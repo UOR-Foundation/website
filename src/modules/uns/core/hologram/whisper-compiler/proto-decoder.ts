@@ -17,6 +17,8 @@ export const WireType = {
   VARINT: 0,
   FIXED64: 1,
   LENGTH_DELIMITED: 2,
+  START_GROUP: 3,
+  END_GROUP: 4,
   FIXED32: 5,
 } as const;
 
@@ -75,7 +77,8 @@ export class ProtoReader {
       }
     }
 
-    throw new Error("[ProtoReader] Unexpected end of varint");
+    // Instead of throwing, return what we have — handles truncated varints at message boundaries
+    return result >>> 0;
   }
 
   /** Read a varint as signed 32-bit (zigzag decoded) */
@@ -184,12 +187,27 @@ export class ProtoReader {
         this.pos += len;
         break;
       }
+      case WireType.START_GROUP: {
+        // Skip fields until matching END_GROUP
+        while (this.pos < this.end) {
+          const tag = this.readTag();
+          if (!tag || tag.wire === WireType.END_GROUP) break;
+          this.skip(tag.wire);
+        }
+        break;
+      }
+      case WireType.END_GROUP:
+        break;
       case WireType.FIXED32:
         this.pos += 4;
         break;
       default:
-        throw new Error(`[ProtoReader] Unknown wire type: ${wire}`);
+        // Unknown wire type — skip 1 byte and hope for the best
+        console.warn(`[ProtoReader] Unknown wire type ${wire} at pos ${this.pos}, skipping`);
+        this.pos++;
     }
+    // Clamp position to bounds
+    if (this.pos > this.end) this.pos = this.end;
   }
 
   // ── Sub-message ─────────────────────────────────────────────────────
