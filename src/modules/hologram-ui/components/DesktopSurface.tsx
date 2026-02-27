@@ -450,7 +450,7 @@ export default function DesktopSurface({
 
       {/* ── Frame switcher (bottom center) ────────── */}
       <div
-        className="absolute bottom-14 left-0 right-0 flex flex-col items-center gap-2 z-10"
+        className="absolute bottom-14 left-0 right-0 flex flex-col items-center gap-2 z-[500]"
         style={{
           opacity: isFocus ? 0 : 1,
           transition: "opacity 0.7s ease",
