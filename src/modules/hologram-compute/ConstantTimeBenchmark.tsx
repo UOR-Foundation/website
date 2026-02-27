@@ -821,35 +821,78 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
 
 function ForensicPanel({ points, precomputeMethod, precomputeMs }: { points: BenchPoint[]; precomputeMethod: "gpu" | "lut-cpu"; precomputeMs: number }) {
   const [expanded, setExpanded] = useState(false);
-  const allSha256Match = points.every((p) => p.sha256Cpu === p.sha256Holo);
   const hasGpu = points.some(p => p.gpuAvailable);
 
+  // Separate match checks: CPU↔vGPU always, GPU↔vGPU only when GPU data exists
+  const cpuVgpuMatch = points.every((p) => p.sha256Cpu === p.sha256Holo);
+  const gpuVgpuMatch = !hasGpu || points.every((p) => !p.gpuAvailable || p.sha256Gpu === p.sha256Holo);
+  const gpuCpuMatch = !hasGpu || points.every((p) => !p.gpuAvailable || p.sha256Gpu === p.sha256Cpu);
+  const allMatch = cpuVgpuMatch && gpuVgpuMatch;
+
+  // Count verified vs unverified per column
+  const gpuVerifiedCount = points.filter(p => p.gpuAvailable && p.sha256Gpu !== "N/A").length;
+  const gpuTotalPoints = points.length;
+
+  const copyHashTable = () => {
+    const header = ["N", "SHA-256 (CPU)", hasGpu ? "SHA-256 (GPU)" : null, "SHA-256 (vGPU)", "CPU=vGPU", hasGpu ? "GPU=vGPU" : null].filter(Boolean).join("\t");
+    const rows = points.map(p => {
+      const cols = [
+        p.n.toString(),
+        p.sha256Cpu,
+        hasGpu ? (p.gpuAvailable ? p.sha256Gpu : "NOT_RUN") : null,
+        p.sha256Holo,
+        p.sha256Cpu === p.sha256Holo ? "MATCH" : "MISMATCH",
+        hasGpu ? (p.gpuAvailable ? (p.sha256Gpu === p.sha256Holo ? "MATCH" : "MISMATCH") : "N/A") : null,
+      ].filter(v => v !== null);
+      return cols.join("\t");
+    });
+    const text = [header, ...rows].join("\n");
+    navigator.clipboard.writeText(text);
+  };
+
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${allSha256Match ? "hsla(152, 44%, 50%, 0.15)" : "hsla(0, 55%, 55%, 0.15)"}` }}>
+    <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${allMatch ? "hsla(152, 44%, 50%, 0.15)" : "hsla(0, 55%, 55%, 0.15)"}` }}>
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between p-3 text-left transition-colors hover:opacity-90"
         style={{ background: P.card }}
       >
         <div className="flex items-center gap-2">
-          <IconCheck size={14} style={{ color: allSha256Match ? P.green : P.red }} />
+          <IconCheck size={14} style={{ color: allMatch ? P.green : P.red }} />
           <span className="text-sm font-semibold" style={{ color: P.text }}>SHA-256 Byte Identity Proof</span>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded-full" style={{
-            background: allSha256Match ? "hsla(152, 44%, 50%, 0.1)" : "hsla(0, 55%, 55%, 0.1)",
-            color: allSha256Match ? P.green : P.red,
+            background: allMatch ? "hsla(152, 44%, 50%, 0.1)" : "hsla(0, 55%, 55%, 0.1)",
+            color: allMatch ? P.green : P.red,
           }}>
-            {allSha256Match ? "ALL MATCH" : "MISMATCH"}
+            {allMatch ? "ALL MATCH" : "MISMATCH DETECTED"}
           </span>
+          {hasGpu && gpuVerifiedCount < gpuTotalPoints && (
+            <span className="text-[9px] font-mono px-2 py-0.5 rounded-full" style={{ background: "hsla(38, 50%, 50%, 0.1)", color: P.gold }}>
+              GPU: {gpuVerifiedCount}/{gpuTotalPoints} verified
+            </span>
+          )}
         </div>
         <span className="text-xs font-mono" style={{ color: P.dim }}>{expanded ? "▼" : "▶"}</span>
       </button>
 
       {expanded && (
         <div className="p-4 pt-0 space-y-3" style={{ background: P.card }}>
-          <p className="text-[12px] leading-relaxed pt-3" style={{ color: P.muted }}>
-            Each result matrix is hashed with <strong style={{ color: P.text }}>SHA-256</strong>.
-            Match = byte-identical with probability 1 − 2⁻²⁵⁶.
-          </p>
+          <div className="flex items-center justify-between pt-3">
+            <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
+              Each result matrix is hashed with <strong style={{ color: P.text }}>SHA-256</strong>.
+              Match = byte-identical with probability 1 − 2⁻²⁵⁶.
+              {hasGpu && gpuVerifiedCount < gpuTotalPoints && (
+                <span style={{ color: P.gold }}> {gpuTotalPoints - gpuVerifiedCount} rows had no GPU computation (CPU-only demo).</span>
+              )}
+            </p>
+            <button
+              onClick={copyHashTable}
+              className="text-[10px] px-2 py-1 rounded font-medium shrink-0 ml-3 hover:opacity-80 transition-opacity"
+              style={{ background: "hsla(210, 50%, 60%, 0.1)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}
+            >
+              Copy TSV
+            </button>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-[11px] font-mono">
               <thead>
@@ -858,21 +901,35 @@ function ForensicPanel({ points, precomputeMethod, precomputeMs }: { points: Ben
                   <th className="text-left py-1 px-2" style={{ color: P.red }}>SHA-256 (CPU)</th>
                   {hasGpu && <th className="text-left py-1 px-2" style={{ color: P.blue }}>SHA-256 (GPU)</th>}
                   <th className="text-left py-1 px-2" style={{ color: P.gold }}>SHA-256 (vGPU)</th>
-                  <th className="text-center py-1 px-2" style={{ color: P.green }}>✓</th>
+                  <th className="text-center py-1 px-2" style={{ color: P.green }}>CPU=vGPU</th>
+                  {hasGpu && <th className="text-center py-1 px-2" style={{ color: P.blue }}>GPU=vGPU</th>}
                 </tr>
               </thead>
               <tbody>
-                {points.map((p, i) => (
-                  <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
-                    <td className="py-1 px-2 font-bold" style={{ color: P.text }}>{p.n}</td>
-                    <td className="py-1 px-2" style={{ color: P.muted }}>{p.sha256Cpu.slice(0, 16)}…</td>
-                    {hasGpu && <td className="py-1 px-2" style={{ color: P.muted }}>{p.gpuAvailable ? p.sha256Gpu.slice(0, 16) + "…" : "—"}</td>}
-                    <td className="py-1 px-2" style={{ color: P.muted }}>{p.sha256Holo.slice(0, 16)}…</td>
-                    <td className="py-1 px-2 text-center text-sm" style={{ color: p.sha256Cpu === p.sha256Holo ? P.green : P.red }}>
-                      {p.sha256Cpu === p.sha256Holo ? "✓" : "✗"}
-                    </td>
-                  </tr>
-                ))}
+                {points.map((p, i) => {
+                  const cpuMatch = p.sha256Cpu === p.sha256Holo;
+                  const gpuMatch = p.gpuAvailable && p.sha256Gpu !== "N/A" ? p.sha256Gpu === p.sha256Holo : null;
+                  return (
+                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
+                      <td className="py-1 px-2 font-bold" style={{ color: P.text }}>{p.n}</td>
+                      <td className="py-1 px-2" style={{ color: P.muted }}>{p.sha256Cpu.slice(0, 16)}…</td>
+                      {hasGpu && (
+                        <td className="py-1 px-2" style={{ color: p.gpuAvailable && p.sha256Gpu !== "N/A" ? P.muted : P.dim }}>
+                          {p.gpuAvailable && p.sha256Gpu !== "N/A" ? p.sha256Gpu.slice(0, 16) + "…" : "NOT RUN"}
+                        </td>
+                      )}
+                      <td className="py-1 px-2" style={{ color: P.muted }}>{p.sha256Holo.slice(0, 16)}…</td>
+                      <td className="py-1 px-2 text-center text-sm" style={{ color: cpuMatch ? P.green : P.red }}>
+                        {cpuMatch ? "✓" : "✗"}
+                      </td>
+                      {hasGpu && (
+                        <td className="py-1 px-2 text-center text-sm" style={{ color: gpuMatch === null ? P.dim : gpuMatch ? P.green : P.red }}>
+                          {gpuMatch === null ? "—" : gpuMatch ? "✓" : "✗"}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
