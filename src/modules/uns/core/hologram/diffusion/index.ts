@@ -58,5 +58,5 @@ export type {
 
 export {
   DEFAULT_DIFFUSION_CONFIG,
-  SD15_WEBNN_MANIFEST,
+  SD15_ONNX_MANIFEST,
 } from "./types";
