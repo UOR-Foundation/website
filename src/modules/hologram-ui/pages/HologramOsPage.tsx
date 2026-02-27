@@ -475,29 +475,35 @@ export default function HologramOsPage() {
               className="absolute inset-0 pointer-events-none overflow-hidden"
               style={{ zIndex: 9999 }}
             >
-              {/* Old-style curtain — retracts diagonally toward bottom-left (sidebar origin) */}
+              {/* Old-style curtain — retracts horizontally right-to-left into the sidebar */}
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
                   background: transitionColor,
                   clipPath: transitionPhase === "cover"
-                    ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
-                    : "polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)",
+                    ? "inset(0 0 0 0)"
+                    : "inset(0 100% 0 0)",
                   transition: transitionPhase === "retract"
                     ? "clip-path 1600ms cubic-bezier(0.4, 0, 0.2, 1)"
                     : "none",
                 }}
               />
 
-              {/* Soft warm edge glow along the retreating diagonal */}
+              {/* Soft warm leading edge moving left with the retraction */}
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  background: "radial-gradient(ellipse at 0% 100%, hsla(38, 30%, 65%, 0.06) 0%, transparent 50%)",
+                  top: 0,
+                  bottom: 0,
+                  width: "100px",
+                  background: "linear-gradient(to left, transparent, hsla(38, 30%, 65%, 0.06), transparent)",
+                  filter: "blur(20px)",
+                  right: transitionPhase === "cover" ? "100%" : "calc(100% + 100px)",
                   opacity: transitionPhase === "retract" ? 1 : 0,
-                  transition: "opacity 600ms ease-out 200ms",
+                  transition: transitionPhase === "retract"
+                    ? "right 1600ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms ease-out"
+                    : "none",
                 }}
               />
             </div>
