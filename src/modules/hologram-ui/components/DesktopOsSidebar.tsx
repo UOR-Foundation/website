@@ -131,7 +131,7 @@ export default function DesktopOsSidebar({
         background: "var(--sb-bg)",
         borderRight: "1px solid var(--sb-border)",
         willChange: "width",
-        transition: "width 350ms cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: "width 350ms cubic-bezier(0.4, 0, 0.2, 1), background 500ms ease, border-color 500ms ease, color 500ms ease",
         fontFamily: "'DM Sans', system-ui, sans-serif",
       } as React.CSSProperties}
     >
