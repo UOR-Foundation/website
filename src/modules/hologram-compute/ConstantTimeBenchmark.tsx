@@ -1084,7 +1084,7 @@ export default function ConstantTimeBenchmark() {
         {/* Demo 1 Bandwidth — 3-column side-by-side */}
         {cpuPoints.length > 0 && view === "throughput" && (
           <div className="p-3" style={{ background: "hsla(0, 55%, 55%, 0.02)" }}>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-1">
               <BandwidthColumnChart
                 points={cpuPoints}
                 vals={cpuPoints.map(p => p.stdTokSec)}
@@ -1092,14 +1092,18 @@ export default function ConstantTimeBenchmark() {
                 label="CPU"
                 gradientId="bw-cpu-d1"
               />
+              {(() => { const cpuPeak = Math.max(...cpuPoints.map(p => p.stdTokSec), 1); const holoPeak = Math.max(...cpuPoints.map(p => p.holoTokSec), 1); const ratio = (holoPeak / cpuPeak).toFixed(0); return <div className="flex flex-col items-center justify-center shrink-0 px-1"><span className="text-[10px] font-mono font-bold" style={{ color: P.gold }}>{ratio}×</span><span className="text-[7px] uppercase tracking-wider" style={{ color: P.muted }}>faster</span></div>; })()}
               {cpuPoints.some(p => p.gpuAvailable) && (
-                <BandwidthColumnChart
-                  points={cpuPoints}
-                  vals={cpuPoints.map(p => p.gpuTokSec)}
-                  color={P.blue}
-                  label="GPU"
-                  gradientId="bw-gpu-d1"
-                />
+                <>
+                  <BandwidthColumnChart
+                    points={cpuPoints}
+                    vals={cpuPoints.map(p => p.gpuTokSec)}
+                    color={P.blue}
+                    label="GPU"
+                    gradientId="bw-gpu-d1"
+                  />
+                  {(() => { const gpuPeak = Math.max(...cpuPoints.map(p => p.gpuTokSec), 1); const holoPeak = Math.max(...cpuPoints.map(p => p.holoTokSec), 1); const ratio = (holoPeak / gpuPeak).toFixed(0); return <div className="flex flex-col items-center justify-center shrink-0 px-1"><span className="text-[10px] font-mono font-bold" style={{ color: P.gold }}>{ratio}×</span><span className="text-[7px] uppercase tracking-wider" style={{ color: P.muted }}>faster</span></div>; })()}
+                </>
               )}
               <BandwidthColumnChart
                 points={cpuPoints}
@@ -1237,7 +1241,7 @@ export default function ConstantTimeBenchmark() {
         {/* Demo 2 Bandwidth — 3-column side-by-side */}
         {hw.webgpuAvailable && gpuPoints.length > 0 && view === "throughput" && (
           <div className="p-3" style={{ background: "hsla(210, 50%, 60%, 0.02)" }}>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-1">
               <BandwidthColumnChart
                 points={gpuPoints}
                 vals={gpuPoints.map(p => p.stdTokSec)}
@@ -1245,6 +1249,7 @@ export default function ConstantTimeBenchmark() {
                 label="CPU"
                 gradientId="bw-cpu-d2"
               />
+              {(() => { const cpuPeak = Math.max(...gpuPoints.map(p => p.stdTokSec), 1); const holoPeak = Math.max(...gpuPoints.map(p => p.holoTokSec), 1); const ratio = (holoPeak / cpuPeak).toFixed(0); return <div className="flex flex-col items-center justify-center shrink-0 px-1"><span className="text-[10px] font-mono font-bold" style={{ color: P.gold }}>{ratio}×</span><span className="text-[7px] uppercase tracking-wider" style={{ color: P.muted }}>faster</span></div>; })()}
               <BandwidthColumnChart
                 points={gpuPoints}
                 vals={gpuPoints.map(p => p.gpuTokSec)}
@@ -1252,6 +1257,7 @@ export default function ConstantTimeBenchmark() {
                 label="GPU"
                 gradientId="bw-gpu-d2"
               />
+              {(() => { const gpuPeak = Math.max(...gpuPoints.map(p => p.gpuTokSec), 1); const holoPeak = Math.max(...gpuPoints.map(p => p.holoTokSec), 1); const ratio = (holoPeak / gpuPeak).toFixed(0); return <div className="flex flex-col items-center justify-center shrink-0 px-1"><span className="text-[10px] font-mono font-bold" style={{ color: P.gold }}>{ratio}×</span><span className="text-[7px] uppercase tracking-wider" style={{ color: P.muted }}>faster</span></div>; })()}
               <BandwidthColumnChart
                 points={gpuPoints}
                 vals={gpuPoints.map(p => p.holoTokSec)}
