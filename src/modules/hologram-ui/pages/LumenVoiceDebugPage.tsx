@@ -3,6 +3,7 @@ import { CheckCircle2, ClipboardCopy, Mic, MicOff, Play, Volume2, XCircle } from
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioCapture } from "@/modules/hologram-ui/hooks/useAudioCapture";
 import { getWhisperEngine } from "@/modules/uns/core/hologram/whisper-engine";
+import { isNativeSttAvailable, recognizeNative } from "@/modules/uns/core/hologram/native-stt";
 import { useVoiceSynthesis } from "@/modules/hologram-ui/hooks/useVoiceSynthesis";
 import { decrypt, deriveEncryptionKey, encrypt } from "@/modules/data-bank/lib/encryption";
 
@@ -452,7 +453,7 @@ export default function LumenVoiceDebugPage() {
       steps.push({ name: "Voiceprint Derivation + Pre-Encryption", status: "skip", durationMs: 0, detail: "Skipped (no audio captured)" });
     }
 
-    // Step 7: Whisper STT
+    // Step 7: Whisper STT (with native fallback)
     if (capturedAudio) {
       await step("Whisper STT (in-browser ONNX)", async () => {
         const result = await runWhisper(capturedAudio!);
@@ -468,6 +469,26 @@ export default function LumenVoiceDebugPage() {
           },
         };
       });
+
+      // If Whisper failed, try native SpeechRecognition as fallback
+      const whisperStep = steps.find(s => s.name === "Whisper STT (in-browser ONNX)");
+      if (whisperStep?.status === "fail") {
+        await step("Native SpeechRecognition Fallback (live)", async () => {
+          if (!isNativeSttAvailable()) throw new Error("SpeechRecognition API not available");
+          addLog("  Starting native STT — please speak now…");
+          const result = await recognizeNative({ timeoutMs: 8000 });
+          const text = result.text.trim();
+          if (text) setTranscript(text);
+          return {
+            detail: `Native STT: "${text.slice(0, 100)}" (confidence: ${(result.confidence * 100).toFixed(1)}%)`,
+            data: {
+              transcript: text,
+              confidence: result.confidence,
+              engine: result.engine,
+            },
+          };
+        });
+      }
     } else {
       steps.push({ name: "Whisper STT (in-browser ONNX)", status: "skip", durationMs: 0, detail: "Skipped (no audio)" });
     }
