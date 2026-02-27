@@ -35,6 +35,7 @@ export {
   lutMatmul,
   standardMatmul,
   gpuMatmul,
+  gpuLastPath,
   HologramComputeCache,
   seededMatrix,
   fingerprint,
