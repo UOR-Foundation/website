@@ -501,7 +501,7 @@ export default function DesktopSurface({
 
       {/* ── Legal links ──────────────────────────── */}
       <div
-        className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-6 z-10"
+        className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-6 z-[501]"
         style={{
           opacity: isFocus ? 0 : 1,
           transition: "opacity 0.7s ease",
