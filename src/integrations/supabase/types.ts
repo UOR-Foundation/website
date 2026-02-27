@@ -289,6 +289,51 @@ export type Database = {
         }
         Relationships: []
       }
+      atlas_verification_proofs: {
+        Row: {
+          all_passed: boolean
+          canonical_timestamp: string
+          created_at: string
+          derivation_hash: string
+          id: string
+          phase: string
+          proof_id: string
+          summary: string
+          test_results: Json
+          test_suite: string
+          tests_passed: number
+          tests_total: number
+        }
+        Insert: {
+          all_passed?: boolean
+          canonical_timestamp: string
+          created_at?: string
+          derivation_hash: string
+          id?: string
+          phase: string
+          proof_id: string
+          summary: string
+          test_results?: Json
+          test_suite: string
+          tests_passed?: number
+          tests_total?: number
+        }
+        Update: {
+          all_passed?: boolean
+          canonical_timestamp?: string
+          created_at?: string
+          derivation_hash?: string
+          id?: string
+          phase?: string
+          proof_id?: string
+          summary?: string
+          test_results?: Json
+          test_suite?: string
+          tests_passed?: number
+          tests_total?: number
+        }
+        Relationships: []
+      }
       audio_features: {
         Row: {
           confidence: number
