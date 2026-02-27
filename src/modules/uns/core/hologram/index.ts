@@ -301,3 +301,10 @@ export type {
   GpuBenchmarkResult,
   ShaderName,
 } from "./gpu";
+
+// ── STT Engine (/dev/stt) ─────────────────────────────────────────────────
+// Unified speech-to-text with privacy-aware strategy selection.
+// Whisper ONNX (local) or native SpeechRecognition (cloud).
+
+export { HologramSttEngine, getHologramStt, isSttAvailable } from "./stt-engine";
+export type { SttStrategy, SttPrivacyLevel, SttResult, SttEngineInfo } from "./stt-engine";

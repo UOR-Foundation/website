@@ -1,23 +1,16 @@
 /**
- * Native STT — Browser SpeechRecognition Wrapper
- * ════════════════════════════════════════════════
+ * Native STT — Browser SpeechRecognition Utilities
+ * ═════════════════════════════════════════════════
  *
- * Fallback STT engine using the browser's built-in SpeechRecognition API
- * (Web Speech API). Used when Whisper ONNX model fails to load (e.g.,
- * network restrictions blocking HuggingFace CDN).
+ * Low-level utilities for the browser's Web Speech API.
+ * Used by HologramSttEngine as the "cloud" privacy tier.
  *
- * This provides immediate, zero-download speech-to-text that works
- * in all modern Chromium browsers without any model files.
+ * ⚠️ PRIVACY NOTE: Audio is processed by the browser vendor's cloud
+ * service (e.g., Google for Chrome). For fully sovereign STT,
+ * use Whisper ONNX via HologramSttEngine.
  *
  * @module uns/core/hologram/native-stt
  */
-
-export interface NativeSttResult {
-  text: string;
-  confidence: number;
-  engine: "native-speech-recognition";
-  isFinal: boolean;
-}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SpeechRecognitionCtor = new () => any;
@@ -34,13 +27,16 @@ export function isNativeSttAvailable(): boolean {
   return !!getSpeechRecognitionCtor();
 }
 
+export interface NativeSttResult {
+  text: string;
+  confidence: number;
+  engine: "native-speech-recognition";
+  isFinal: boolean;
+}
+
 /**
- * Run native SpeechRecognition on an active microphone.
- * Returns a promise that resolves with the transcript once speech ends.
- *
- * @param options.timeoutMs  Max time to listen (default 10000ms)
- * @param options.lang       Language code (default "en-US")
- * @param options.onInterim  Called with interim results for live feedback
+ * One-shot native SpeechRecognition. Resolves with transcript.
+ * ⚠️ Audio leaves the device for cloud processing.
  */
 export function recognizeNative(options: {
   timeoutMs?: number;
@@ -51,10 +47,7 @@ export function recognizeNative(options: {
 
   return new Promise((resolve, reject) => {
     const Ctor = getSpeechRecognitionCtor();
-    if (!Ctor) {
-      reject(new Error("SpeechRecognition API not available in this browser"));
-      return;
-    }
+    if (!Ctor) return reject(new Error("SpeechRecognition not available"));
 
     const recognition = new Ctor();
     recognition.lang = lang;
@@ -64,62 +57,36 @@ export function recognizeNative(options: {
 
     let settled = false;
     const timeout = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        recognition.stop();
-        reject(new Error("Native STT timed out"));
-      }
+      if (!settled) { settled = true; recognition.stop(); reject(new Error("Native STT timed out")); }
     }, timeoutMs);
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: any) => {
       let finalText = "";
       let bestConfidence = 0;
-
       for (let i = 0; i < event.results.length; i++) {
         const result = event.results[i];
-        const alt = result[0];
         if (result.isFinal) {
-          finalText += alt.transcript;
-          bestConfidence = Math.max(bestConfidence, alt.confidence);
+          finalText += result[0].transcript;
+          bestConfidence = Math.max(bestConfidence, result[0].confidence);
         } else {
-          onInterim?.(alt.transcript);
+          onInterim?.(result[0].transcript);
         }
       }
-
       if (finalText && !settled) {
         settled = true;
         clearTimeout(timeout);
-        resolve({
-          text: finalText.trim(),
-          confidence: bestConfidence,
-          engine: "native-speech-recognition",
-          isFinal: true,
-        });
+        resolve({ text: finalText.trim(), confidence: bestConfidence, engine: "native-speech-recognition", isFinal: true });
       }
     };
 
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      if (!settled) {
-        settled = true;
-        clearTimeout(timeout);
-        reject(new Error(`Native STT error: ${event.error}`));
-      }
+    recognition.onerror = (event: any) => {
+      if (!settled) { settled = true; clearTimeout(timeout); reject(new Error(`Native STT: ${event.error}`)); }
     };
 
     recognition.onend = () => {
-      if (!settled) {
-        settled = true;
-        clearTimeout(timeout);
-        reject(new Error("Native STT ended without result"));
-      }
+      if (!settled) { settled = true; clearTimeout(timeout); reject(new Error("No speech detected")); }
     };
 
-    try {
-      recognition.start();
-    } catch (err) {
-      settled = true;
-      clearTimeout(timeout);
-      reject(err);
-    }
+    try { recognition.start(); } catch (err) { settled = true; clearTimeout(timeout); reject(err); }
   });
 }

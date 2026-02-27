@@ -7,17 +7,13 @@
  * acceleration through the Hologram vGPU.
  *
  * Design:
- *   1. Model files are cached permanently in the browser's Cache API
- *      after first load — subsequent visits are instant (zero download).
- *   2. WebGPU is auto-detected via the HologramGpu singleton; falls
- *      back to WASM on unsupported devices.
- *   3. Audio is resampled to 16kHz mono Float32Array for Whisper input.
- *   4. Content-addressed derivation: inputCid → outputCid for every
- *      transcription (UOR compliance).
+ *   1. Model files are served from our own storage bucket
+ *      (self-hosted, zero external CDN dependencies)
+ *   2. Browser Cache API stores files permanently after first load
+ *   3. WebGPU auto-detected via HologramGpu; WASM fallback
+ *   4. Content-addressed derivation: inputCid → outputCid (UOR)
  *
- * Architecture:
- *   User audio → AudioContext resample → Float32Array (16kHz)
- *     → Whisper ONNX (HologramGpu/WebGPU/WASM) → transcript string
+ * Privacy: Audio never leaves the browser. All inference is local.
  *
  * @module uns/core/hologram/whisper-engine
  */
@@ -49,35 +45,18 @@ export interface WhisperTranscription {
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-/**
- * Whisper tiny.en — English-only, ~40MB quantized, optimal for real-time STT.
- * Pre-optimized for Transformers.js + WebGPU by onnx-community.
- */
 const WHISPER_MODEL_ID = "onnx-community/whisper-tiny.en";
 const WHISPER_TASK = "automatic-speech-recognition";
 const TARGET_SAMPLE_RATE = 16000;
 
 /**
- * Self-hosted model proxy URL — routes HuggingFace CDN requests
- * through our own edge function, which caches model files in our
- * storage bucket for permanent, reliable, zero-external-dependency access.
+ * Self-hosted model files URL prefix.
+ * Model files are stored in our storage bucket under whisper-models/.
  */
-const MODEL_PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whisper-model-proxy`;
-
-/** Domains that should be routed through our proxy */
-const HF_DOMAINS = [
-  "huggingface.co",
-  "hf.co",
-  "cdn-lfs.huggingface.co",
-  "cdn-lfs-us-1.huggingface.co",
-];
+const SELF_HOSTED_MODEL_BASE = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/app-assets/whisper-models`;
 
 // ── Audio Utilities ─────────────────────────────────────────────────────────
 
-/**
- * Resample audio to 16kHz mono Float32Array as required by Whisper.
- * Uses OfflineAudioContext for high-quality resampling.
- */
 async function resampleTo16kHz(
   audioData: Float32Array,
   sourceSampleRate: number,
@@ -111,8 +90,6 @@ export class WhisperEngine {
   private _onProgress: ((p: WhisperLoadProgress) => void) | null = null;
   private _vgpuInitialized = false;
 
-  // ── Getters ─────────────────────────────────────────────────────────────
-
   get status(): WhisperStatus { return this._status; }
   get isReady(): boolean { return this._status === "ready"; }
   get isLoading(): boolean { return this._status === "loading"; }
@@ -122,14 +99,9 @@ export class WhisperEngine {
   get gpuAccelerated(): boolean { return this._device === "webgpu"; }
   get modelId(): string { return WHISPER_MODEL_ID; }
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────
-
   /**
-   * Load the Whisper model. Safe to call multiple times —
-   * returns the existing promise if already loading.
-   *
-   * After first load, the browser's Cache API stores all model files
-   * permanently. Subsequent calls resolve near-instantly from cache.
+   * Load the Whisper model. Safe to call multiple times.
+   * Model files are served from our own storage bucket.
    */
   async load(onProgress?: (p: WhisperLoadProgress) => void): Promise<void> {
     if (this._status === "ready") return;
@@ -148,34 +120,38 @@ export class WhisperEngine {
     this._error = null;
 
     try {
-      // Dynamic import — only loads Transformers.js when Whisper is needed
       const { pipeline: createPipeline, env } = await import("@huggingface/transformers");
 
-      // Configure for self-hosted model serving
       env.allowLocalModels = false;
       env.useBrowserCache = true;
       env.allowRemoteModels = true;
 
-      // ── Fetch interceptor ─────────────────────────────────────────────
-      // Route all HuggingFace CDN requests through our self-hosted proxy
-      // edge function. The proxy caches files in our storage bucket,
-      // ensuring zero external dependency after first load.
+      // ── Self-hosted fetch interceptor ─────────────────────────────────
+      // Route HuggingFace CDN requests to our own storage bucket.
+      // Model files are pre-seeded via whisper-model-seeder edge function.
+      const HF_DOMAINS = ["huggingface.co", "hf.co", "cdn-lfs.huggingface.co", "cdn-lfs-us-1.huggingface.co"];
       const originalFetch = globalThis.fetch;
-      const proxyFetch: typeof fetch = async (input, init) => {
+      const selfHostedFetch: typeof fetch = async (input, init) => {
         let url = "";
         if (typeof input === "string") url = input;
         else if (input instanceof URL) url = input.toString();
         else if (input instanceof Request) url = input.url;
 
-        const isHfUrl = HF_DOMAINS.some((d) => url.includes(d));
-        if (isHfUrl && MODEL_PROXY_URL) {
-          const proxiedUrl = `${MODEL_PROXY_URL}?url=${encodeURIComponent(url)}`;
-          console.log(`[Whisper] 🔄 Routing through Hologram proxy: ${url.split("/").pop()}`);
-          return originalFetch(proxiedUrl, init);
+        const isHfUrl = HF_DOMAINS.some(d => url.includes(d));
+        if (isHfUrl) {
+          try {
+            const parsed = new URL(url);
+            const path = parsed.pathname.replace(/^\//, "");
+            const selfHostedUrl = `${SELF_HOSTED_MODEL_BASE}/${path}`;
+            console.log(`[Whisper] 📦 Self-hosted: ${url.split("/").pop()}`);
+            return originalFetch(selfHostedUrl, init);
+          } catch {
+            // Fallback to original URL if parsing fails
+          }
         }
         return originalFetch(input, init);
       };
-      globalThis.fetch = proxyFetch;
+      globalThis.fetch = selfHostedFetch;
 
       // ── vGPU Integration ──────────────────────────────────────────────
       this._device = "wasm";
@@ -187,14 +163,13 @@ export class WhisperEngine {
           this._device = "webgpu";
           this._vgpuInitialized = true;
           console.log(
-            `[Whisper] 🎮 HologramGpu available — using vGPU acceleration`,
-            `(${info.adapterName}, max buffer: ${(info.maxBufferSize / 1024 / 1024).toFixed(0)}MB)`
+            `[Whisper] 🎮 vGPU ready (${info.adapterName}, ${(info.maxBufferSize / 1024 / 1024).toFixed(0)}MB buffer)`
           );
         } else {
-          console.log("[Whisper] HologramGpu unavailable, using WASM fallback");
+          console.log("[Whisper] vGPU unavailable → WASM fallback");
         }
       } catch (err) {
-        console.log("[Whisper] vGPU init failed, using WASM fallback:", err);
+        console.log("[Whisper] vGPU init failed → WASM fallback:", err);
       }
 
       const dtype = this._device === "webgpu" ? "fp32" : "q8";
@@ -215,11 +190,11 @@ export class WhisperEngine {
         },
       });
 
-      // Restore original fetch after model is loaded
+      // Restore original fetch after model loading
       globalThis.fetch = originalFetch;
 
       this._status = "ready";
-      console.log(`[Whisper] ✅ Model ready (${this._device}, ${dtype}, vGPU: ${this._vgpuInitialized})`);
+      console.log(`[Whisper] ✅ Ready (${this._device}, ${dtype}, vGPU: ${this._vgpuInitialized})`);
     } catch (err) {
       this._status = "error";
       this._error = err instanceof Error ? err.message : "Failed to load Whisper model";
@@ -230,19 +205,8 @@ export class WhisperEngine {
     }
   }
 
-  // ── Transcription ─────────────────────────────────────────────────────
-
   /**
-   * Transcribe a Float32Array of audio samples.
-   *
-   * When running on the HologramGpu (vGPU), inference benefits from:
-   *   - Constant-time O(1) computation via content-addressed lookup
-   *   - WebGPU shader caching for repeated operations
-   *   - Optimized memory layout via the vGPU buffer manager
-   *
-   * @param audio  PCM audio samples (any sample rate — will be resampled)
-   * @param sampleRate  Source sample rate of the audio
-   * @returns Transcription with text, timing, and UOR derivation proof
+   * Transcribe audio. Audio never leaves the browser.
    */
   async transcribe(
     audio: Float32Array,
@@ -255,10 +219,8 @@ export class WhisperEngine {
     this._status = "transcribing";
 
     try {
-      // Resample to 16kHz if needed
       const resampled = await resampleTo16kHz(audio, sampleRate);
 
-      // Content-address the input audio (hash a summary, not entire audio)
       const inputProof = await singleProofHash({
         "@type": "uor:WhisperInput",
         sampleCount: resampled.length,
@@ -271,7 +233,6 @@ export class WhisperEngine {
 
       const start = performance.now();
 
-      // Run Whisper inference — on vGPU this goes through WebGPU compute
       const result = await this.pipeline(resampled, {
         language: "en",
         task: "transcribe",
@@ -282,7 +243,6 @@ export class WhisperEngine {
       const inferenceTimeMs = Math.round((performance.now() - start) * 100) / 100;
       const text = (result?.text ?? "").trim();
 
-      // Content-address the output
       const outputProof = await singleProofHash({
         "@type": "uor:WhisperOutput",
         inputCid: inputProof.cid,
@@ -309,14 +269,13 @@ export class WhisperEngine {
         modelId: WHISPER_MODEL_ID,
       };
     } catch (err) {
-      this._status = "ready"; // Recover to ready state
+      this._status = "ready";
       throw err;
     }
   }
 
   /**
    * Transcribe from a Blob (e.g., from MediaRecorder).
-   * Decodes the audio and resamples automatically.
    */
   async transcribeBlob(blob: Blob): Promise<WhisperTranscription> {
     const arrayBuffer = await blob.arrayBuffer();
@@ -327,8 +286,6 @@ export class WhisperEngine {
     await audioCtx.close();
     return this.transcribe(channelData, sampleRate);
   }
-
-  // ── Cleanup ───────────────────────────────────────────────────────────
 
   async unload(): Promise<void> {
     if (this.pipeline && typeof this.pipeline.dispose === "function") {
@@ -346,21 +303,15 @@ export class WhisperEngine {
 
 let _instance: WhisperEngine | null = null;
 
-/** Get the singleton Whisper engine instance. */
 export function getWhisperEngine(): WhisperEngine {
   if (!_instance) _instance = new WhisperEngine();
   return _instance;
 }
 
-/**
- * Pre-load the Whisper model in the background.
- * Call this early (e.g., on page load) so the model is ready
- * before the user clicks "Speak".
- */
 export function preloadWhisper(onProgress?: (p: WhisperLoadProgress) => void): void {
   const engine = getWhisperEngine();
   if (engine.isReady || engine.isLoading) return;
   engine.load(onProgress).catch((err) => {
-    console.warn("[Whisper] Background preload failed (will retry on demand):", err);
+    console.warn("[Whisper] Background preload failed:", err);
   });
 }
