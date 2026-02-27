@@ -83,7 +83,7 @@ import { extractTopicTags } from "@/modules/hologram-ui/engine/extractTopicTags"
 import { useScreenContext } from "@/modules/hologram-ui/hooks/useScreenContext";
 import { useObserverCompanion } from "@/modules/hologram-ui/hooks/useObserverCompanion";
 import { useWhisperTranscription } from "@/modules/hologram-ui/hooks/useWhisperTranscription";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, Brain } from "lucide-react";
 import SavedResponsesPanel from "@/modules/hologram-ui/components/SavedResponsesPanel";
 
 // ── Palette constants ──────────────────────────────────────────────────────
@@ -1370,6 +1370,65 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             );
           })()}
           </AnimatePresence>
+
+          {/* ── Context Topics Indicator (voice vs text) ───────── */}
+          {!privateSession && (() => {
+            const topics = history.getContextTopics();
+            if (topics.length === 0) return null;
+            const voiceCount = topics.filter(t => t.source === "voice").length;
+            const textCount = topics.filter(t => t.source === "text").length;
+            return (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="mb-2 rounded-xl overflow-hidden"
+                style={{
+                  background: "hsla(30, 10%, 12%, 0.5)",
+                  border: "1px solid hsla(38, 15%, 30%, 0.1)",
+                }}
+              >
+                <details className="group">
+                  <summary
+                    className="flex items-center gap-2 px-3 py-2 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden"
+                    style={{ fontFamily: P.font }}
+                  >
+                    <Brain className="w-3.5 h-3.5" style={{ color: P.goldMuted }} />
+                    <span className="text-[11px] tracking-wider" style={{ color: P.textDim }}>
+                      Context from
+                    </span>
+                    {voiceCount > 0 && (
+                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] tracking-wider font-semibold" style={{ background: "hsla(0, 35%, 45%, 0.15)", color: "hsl(0, 40%, 62%)" }}>
+                        <Mic className="w-2.5 h-2.5" /> {voiceCount} voice
+                      </span>
+                    )}
+                    {textCount > 0 && (
+                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] tracking-wider font-semibold" style={{ background: "hsla(38, 30%, 40%, 0.12)", color: P.goldMuted }}>
+                        <MessageSquare className="w-2.5 h-2.5" /> {textCount} text
+                      </span>
+                    )}
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform group-open:rotate-180" style={{ color: P.textDimmer }} />
+                  </summary>
+                  <div className="px-3 pb-2 flex flex-wrap gap-1.5">
+                    {topics.map((t, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] tracking-wide"
+                        style={{
+                          background: t.source === "voice" ? "hsla(0, 30%, 40%, 0.1)" : "hsla(38, 20%, 30%, 0.1)",
+                          color: t.source === "voice" ? "hsl(0, 35%, 65%)" : P.textMuted,
+                          border: `1px solid ${t.source === "voice" ? "hsla(0, 30%, 40%, 0.15)" : "hsla(38, 20%, 30%, 0.12)"}`,
+                          fontFamily: P.font,
+                        }}
+                      >
+                        {t.source === "voice" ? <Mic className="w-2.5 h-2.5" /> : <MessageSquare className="w-2.5 h-2.5" />}
+                        {t.title.length > 35 ? t.title.slice(0, 35) + "…" : t.title}
+                      </span>
+                    ))}
+                  </div>
+                </details>
+              </motion.div>
+            );
+          })()}
 
           <div
             className="rounded-2xl overflow-visible transition-all"

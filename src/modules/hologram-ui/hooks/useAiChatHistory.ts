@@ -194,13 +194,24 @@ export function useAiChatHistory() {
    */
   const getConversationContext = useCallback((): string => {
     if (!userId || conversations.length <= 1) return "";
-    // Use recent conversation titles (excluding the active one) as a lightweight signal
     const recent = conversations
       .filter(c => c.id !== activeConversationId)
       .slice(0, 15)
       .map(c => c.title);
     if (recent.length === 0) return "";
     return `The user has previously discussed these topics with you (most recent first): ${recent.join("; ")}. Use this to understand their interests and context silently — never enumerate these topics back to the user.`;
+  }, [userId, conversations, activeConversationId]);
+
+  /** Structured context topics with voice/text source for UI display. */
+  const getContextTopics = useCallback((): { title: string; source: "voice" | "text" }[] => {
+    if (!userId || conversations.length <= 1) return [];
+    return conversations
+      .filter(c => c.id !== activeConversationId)
+      .slice(0, 10)
+      .map(c => ({
+        title: c.title,
+        source: (c.model_id === "voice" ? "voice" : "text") as "voice" | "text",
+      }));
   }, [userId, conversations, activeConversationId]);
 
   return {
@@ -218,5 +229,6 @@ export function useAiChatHistory() {
     saveMessage,
     autoTitle,
     getConversationContext,
+    getContextTopics,
   };
 }
