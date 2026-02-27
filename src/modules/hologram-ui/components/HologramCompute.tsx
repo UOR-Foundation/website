@@ -184,10 +184,10 @@ export default function HologramCompute({ onClose }: HologramComputeProps) {
             <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
           </div>
         ) : view === "demo" ? (
-          <div className="px-6 lg:px-10 py-8 space-y-6">
-            <div className="space-y-2">
+          <div className="px-6 lg:px-10 py-6 space-y-4">
+            <div className="space-y-1">
               <h2
-                className="text-xl font-light"
+                className="text-lg font-light"
                 style={{ color: P.text, fontFamily: P.serif }}
               >
                 Compute Benchmarks
