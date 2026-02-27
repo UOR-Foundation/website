@@ -239,10 +239,48 @@ export default function HologramOsPage() {
     const saved = localStorage.getItem("hologram-bg-mode");
     return saved === "white" || saved === "dark" || saved === "image" ? saved : "image";
   });
+
+  // ── Delightful transition state ──────────────────────────────────────
+  const [transitioning, setTransitioning] = useState(false);
+  const [transitionColor, setTransitionColor] = useState("hsl(0, 0%, 100%)");
+  const [transitionPhase, setTransitionPhase] = useState<"idle" | "bloom" | "hold" | "fade">("idle");
+  const [contentBreathe, setContentBreathe] = useState(false);
+
+  const TRANSITION_COLORS: Record<BgMode, string> = {
+    image: "hsla(30, 15%, 25%, 0.95)",
+    white: "hsl(0, 0%, 100%)",
+    dark: "hsl(0, 0%, 5%)",
+  };
+
   const setBgMode = useCallback((m: BgMode) => {
-    setBgModeState(m);
-    localStorage.setItem("hologram-bg-mode", m);
-  }, []);
+    if (m === bgMode) return;
+
+    // Start the transition ballet
+    setTransitionColor(TRANSITION_COLORS[m]);
+    setTransitioning(true);
+    setTransitionPhase("bloom");
+    setContentBreathe(true);
+
+    // Phase 1: bloom expands (0–500ms)
+    // Phase 2: hold — switch the actual mode under the veil (500ms)
+    setTimeout(() => {
+      setTransitionPhase("hold");
+      setBgModeState(m);
+      localStorage.setItem("hologram-bg-mode", m);
+    }, 480);
+
+    // Phase 3: fade — reveal the new mode (800ms)
+    setTimeout(() => {
+      setTransitionPhase("fade");
+    }, 700);
+
+    // Phase 4: cleanup
+    setTimeout(() => {
+      setTransitioning(false);
+      setTransitionPhase("idle");
+      setContentBreathe(false);
+    }, 1400);
+  }, [bgMode]);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
   const triadicActivity = useTriadicActivity();
@@ -426,12 +464,60 @@ export default function HologramOsPage() {
           className={`flex-1 relative overflow-hidden z-0 ${lumenPanel.isResizing ? "" : "transition-all ease-in-out"}`}
           style={{
             opacity: departing ? 0 : 1,
-            transform: departing ? "scale(1.02)" : isFocus ? "scale(1.03)" : "scale(1)",
-            filter: departing ? "blur(4px)" : "none",
-            transitionDuration: lumenPanel.isResizing ? "0ms" : isFocus ? "600ms" : "400ms",
+            transform: departing
+              ? "scale(1.02)"
+              : contentBreathe
+                ? "scale(0.985)"
+                : isFocus ? "scale(1.03)" : "scale(1)",
+            filter: departing ? "blur(4px)" : contentBreathe ? "blur(1px)" : "none",
+            transitionDuration: lumenPanel.isResizing ? "0ms" : contentBreathe ? "700ms" : isFocus ? "600ms" : "400ms",
+            transitionTimingFunction: contentBreathe ? "cubic-bezier(0.4, 0, 0.2, 1)" : undefined,
             marginRight: chatOpen ? `${lumenPanel.width}px` : "0px",
           }}
         >
+          {/* ── Style transition overlay — radial iris bloom ────────── */}
+          {transitioning && (
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ zIndex: 9999 }}
+            >
+              {/* Radial bloom circle */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  width: "200vmax",
+                  height: "200vmax",
+                  borderRadius: "50%",
+                  background: transitionColor,
+                  transform: transitionPhase === "bloom" || transitionPhase === "hold"
+                    ? "translate(-50%, -50%) scale(1)"
+                    : transitionPhase === "fade"
+                      ? "translate(-50%, -50%) scale(1)"
+                      : "translate(-50%, -50%) scale(0)",
+                  opacity: transitionPhase === "fade" ? 0 : transitionPhase === "idle" ? 0 : 1,
+                  transition: transitionPhase === "bloom"
+                    ? "transform 600ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease-out"
+                    : transitionPhase === "fade"
+                      ? "opacity 700ms cubic-bezier(0.4, 0, 0.2, 1)"
+                      : "transform 0ms",
+                }}
+              />
+              {/* Luminance flash — brief brightening like eyes adjusting */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: bgMode === "dark"
+                    ? "radial-gradient(ellipse at center, hsla(38, 20%, 30%, 0.15), transparent 70%)"
+                    : "radial-gradient(ellipse at center, hsla(0, 0%, 100%, 0.2), transparent 70%)",
+                  opacity: transitionPhase === "hold" ? 1 : 0,
+                  transition: "opacity 400ms ease-in-out",
+                }}
+              />
+            </div>
+          )}
           {/* Focus toggle — lives inside content area so it shifts with Lumen */}
           {isWidgetVisible("focus-toggle") && (
             <WidgetHoverActions
