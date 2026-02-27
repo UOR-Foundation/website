@@ -365,8 +365,8 @@ export default function HologramOsPage() {
           break;
         // ⌘M — Messages (M = Messages)
         case "m": case "M": e.preventDefault(); mastery.record("m"); setMessengerOpen(true); break;
-        // ⌘H — Home (H = Home)
-        case "h": case "H": e.preventDefault(); mastery.record("h"); navigate("/hologram-console"); break;
+        // ⌘H — Home (H = Home) — close all screens, return to welcome
+        case "h": case "H": e.preventDefault(); mastery.record("h"); setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); break;
         // ⌘W — Toggle all widgets
         case "w": case "W": e.preventDefault(); mastery.record("w"); toggleAllWidgets(); break;
         // ⌘/ — Shortcut cheat sheet
@@ -414,6 +414,7 @@ export default function HologramOsPage() {
             onOpenCompute={() => { setComputeOpen(true); setChatOpen(false); setBrowserOpen(false); setMemoryOpen(false); setMessengerOpen(false); }}
             onOpenMemory={() => { setMemoryOpen(true); setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMessengerOpen(false); }}
             onOpenMessenger={() => { setMessengerOpen(true); setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); }}
+            onGoHome={() => { setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); }}
             onReplayGuide={() => setShortcutsOpen(true)}
             hintOpacity={mastery.hintOpacity}
             bgMode={bgMode}

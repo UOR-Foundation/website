@@ -81,6 +81,7 @@ interface DesktopOsSidebarProps {
   onOpenCompute?: () => void;
   onOpenMemory?: () => void;
   onOpenMessenger?: () => void;
+  onGoHome?: () => void;
   onReplayGuide?: () => void;
   hintOpacity?: (key: string) => number;
   bgMode?: "image" | "white" | "dark";
@@ -93,6 +94,7 @@ export default function DesktopOsSidebar({
   onOpenCompute,
   onOpenMemory,
   onOpenMessenger,
+  onGoHome,
   onReplayGuide,
   hintOpacity,
   bgMode = "image",
@@ -211,7 +213,13 @@ export default function DesktopOsSidebar({
           return (
             <IconTooltip key={item.path} label={item.label} show={!expanded}>
               <button
-                onClick={() => collapseAndDo(() => navigate(item.path))}
+                onClick={() => collapseAndDo(() => {
+                  if (item.label === "Home" && onGoHome) {
+                    onGoHome();
+                  } else {
+                    navigate(item.path);
+                  }
+                })}
                 className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                   !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
                 } ${active ? "sidebar-nav-active" : ""}`}
