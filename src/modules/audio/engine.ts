@@ -85,9 +85,9 @@ export class AudioEngine {
     if (isHls && Hls.isSupported()) {
       await this.playHls(url);
     } else if (isHls && this.audio.canPlayType("application/vnd.apple.mpegurl")) {
-      this.playNative(url);
+      await this.playNative(url);
     } else {
-      this.playNative(url);
+      await this.playNative(url);
     }
   }
 
@@ -183,15 +183,34 @@ export class AudioEngine {
     });
   }
 
-  private playNative(url: string): void {
-    // Route through CORS proxy for cross-origin streams so AnalyserNode gets real data
+  private async playNative(url: string): Promise<void> {
+    // Try CORS proxy first for AnalyserNode access, fall back to direct URL
     const proxiedUrl = this.proxyUrl(url);
-    this.audio.src = proxiedUrl;
+    const useProxy = proxiedUrl !== url;
+
+    if (useProxy) {
+      try {
+        // Quick HEAD check to see if proxy is available
+        const probe = await fetch(proxiedUrl, { method: "HEAD" }).catch(() => null);
+        if (probe && probe.ok) {
+          this.audio.src = proxiedUrl;
+          this.audio.load();
+          try { await this.audio.play(); return; } catch {}
+        }
+      } catch {}
+      console.warn("[AudioEngine] Proxy unavailable, using direct stream (AnalyserNode will be silent)");
+    }
+
+    // Direct stream — works for playback but AnalyserNode gets silence (CORS)
+    this.audio.crossOrigin = ""; // Remove crossOrigin for direct streams
+    this.audio.src = url;
     this.audio.load();
-    this.audio.play().catch((err) => {
+    try {
+      await this.audio.play();
+    } catch (err) {
       console.warn("[AudioEngine] Native playback failed:", err);
       this.setState("error");
-    });
+    }
   }
 
   /**
