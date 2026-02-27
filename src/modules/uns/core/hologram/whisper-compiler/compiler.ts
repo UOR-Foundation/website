@@ -38,9 +38,15 @@ const WHISPER_MODEL_ID = "whisper-tiny-en";
  * ONNX model files for Whisper tiny.en.
  * We compile the fp16 variant for maximum WebGPU accuracy.
  */
+/**
+ * Use quantized ONNX variants — they're 3-5× smaller than fp32,
+ * stay within edge-function memory limits (~22MB encoder, ~51MB decoder),
+ * and are already pre-seeded in our storage bucket.
+ * INT8 quantization has negligible accuracy loss for Whisper.
+ */
 const ONNX_FILES = {
-  encoder: "onnx/encoder_model.onnx",
-  decoder: "onnx/decoder_model_merged.onnx",
+  encoder: "onnx/encoder_model_quantized.onnx",
+  decoder: "onnx/decoder_model_merged_quantized.onnx",
 } as const;
 
 const MODEL_ID = "onnx-community/whisper-tiny.en";

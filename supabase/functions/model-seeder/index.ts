@@ -150,15 +150,45 @@ async function seedFile(
   const res = await fetch(sourceUrl, { headers: { "User-Agent": "HologramVGPU/1.0" } });
   if (!res.ok) throw new Error(`HF HTTP ${res.status} for ${modelId}/${file}`);
 
-  const bytes = await res.arrayBuffer();
-  const sizeMB = (bytes.byteLength / 1024 / 1024).toFixed(2);
   const ct = file.endsWith(".json") ? "application/json" : "application/octet-stream";
 
-  const { error: uploadErr } = await supabase.storage
-    .from(BUCKET)
-    .upload(storageKey, new Blob([bytes], { type: ct }), { contentType: ct, upsert: true });
+  // Stream directly to storage using the REST API to avoid buffering
+  // the entire file in memory (prevents "Memory limit exceeded" for large ONNX files)
+  const contentLength = res.headers.get("content-length");
+  const sizeMB = contentLength ? (parseInt(contentLength) / 1024 / 1024).toFixed(2) : "unknown";
 
-  if (uploadErr) throw new Error(`Upload failed: ${uploadErr.message}`);
+  // For files under 50MB, use the JS client (simpler)
+  // For larger files, stream via the REST API with the raw body
+  const bodySize = contentLength ? parseInt(contentLength) : 0;
+
+  if (bodySize > 0 && bodySize < 50 * 1024 * 1024) {
+    // Small-enough file: buffer and upload via client
+    const bytes = await res.arrayBuffer();
+    const { error: uploadErr } = await supabase.storage
+      .from(BUCKET)
+      .upload(storageKey, new Blob([bytes], { type: ct }), { contentType: ct, upsert: true });
+    if (uploadErr) throw new Error(`Upload failed: ${uploadErr.message}`);
+  } else {
+    // Large file or unknown size: stream the body directly to Storage REST API
+    const uploadUrl = `${supabaseUrl}/storage/v1/object/${BUCKET}/${storageKey}`;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${serviceKey}`,
+        "Content-Type": ct,
+        "x-upsert": "true",
+        ...(contentLength ? { "Content-Length": contentLength } : {}),
+      },
+      body: res.body, // stream directly — no buffering!
+    });
+
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      throw new Error(`Streaming upload failed (${uploadRes.status}): ${errText}`);
+    }
+  }
 
   console.log(`[model-seeder] ✅ ${modelId}/${file} (${sizeMB}MB)`);
   return "seeded";
