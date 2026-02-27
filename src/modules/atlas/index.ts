@@ -114,3 +114,23 @@ export type {
   FingerprintReport,
   FamilyProfile,
 } from "./fingerprint";
+
+// Cross-Model Translation — Atlas R₈ universal translation layer (Phase 6)
+export {
+  createTestEmbedding,
+  decomposeToAtlas,
+  reconstructFromAtlas,
+  computeFidelity,
+  translate,
+  translatePair,
+  runCrossModelTranslation,
+} from "./translation";
+export type {
+  EmbeddingVector,
+  AtlasCoordinate,
+  TranslationResult as CrossModelTranslationResult,
+  TranslationFidelity,
+  TranslationPairReport,
+  CrossModelTranslationReport,
+  TranslationInvariant,
+} from "./translation";
