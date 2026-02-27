@@ -26,21 +26,21 @@ interface Shortcut {
 }
 
 const SHORTCUTS: Shortcut[] = [
-  // Navigation
-  { keys: [MOD, "H"], label: "Go Home", section: "Navigation" },
-  { keys: [MOD, "B"], label: "Toggle Sidebar", section: "Navigation" },
+  // Navigation — punctuation keys avoid ALL browser collisions
+  { keys: [MOD, "."], label: "Go Home", section: "Navigation" },
+  { keys: [MOD, "\\"], label: "Toggle Sidebar", section: "Navigation" },
   // Communication
-  { keys: [MOD, "L"], label: "Open LUMEN AI", section: "Communication" },
-  { keys: [MOD, "⇧", "V"], label: "Voice Input", section: "Communication" },
-  { keys: [MOD, "M"], label: "Messages", section: "Communication" },
+  { keys: [MOD, ";"], label: "Open LUMEN AI", section: "Communication" },
+  { keys: [MOD, "'"], label: "Voice Input", section: "Communication" },
+  { keys: [MOD, ","], label: "Messages", section: "Communication" },
   // View
-  { keys: [MOD, "F"], label: "Toggle Focus Mode", section: "View" },
-  { keys: [MOD, "W"], label: "Hide / Show Widgets", section: "View" },
-  { keys: [MOD, "Y"], label: "Cycle Style", section: "View" },
-  { keys: [MOD, "⇧", "A"], label: "Ambient Music", section: "View" },
-  
+  { keys: [MOD, "]"], label: "Toggle Focus Mode", section: "View" },
+  { keys: [MOD, "["], label: "Cycle Style", section: "View" },
+  { keys: [MOD, "⇧", ";"], label: "Ambient Music", section: "View" },
+
   // System
   { keys: [MOD, "/"], label: "Shortcut Cheat Sheet", section: "System" },
+  { keys: [MOD, "⇧", "."], label: "Reset Layout", section: "System" },
 ];
 
 const sections = [...new Set(SHORTCUTS.map((s) => s.section))];
