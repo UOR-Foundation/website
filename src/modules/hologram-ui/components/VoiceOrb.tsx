@@ -177,7 +177,8 @@ export default function VoiceOrb({
 
   return (
     <div
-      className="flex flex-col items-center gap-2"
+      className="relative flex flex-col items-center gap-2"
+      style={{ minHeight: "70px" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
