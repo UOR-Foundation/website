@@ -129,9 +129,20 @@ function BenchChart({ points, mode }: ChartProps) {
   if (points.length === 0) return null;
 
   const xVals = points.map((p) => p.n);
-  const stdVals = mode === "complexity" ? points.map((p) => p.stdMs) : points.map((p) => p.stdTokSec);
-  const gpuVals = mode === "complexity" ? points.map((p) => p.gpuMs) : points.map((p) => p.gpuTokSec);
-  const holoVals = mode === "complexity" ? points.map((p) => p.holoMs) : points.map((p) => p.holoTokSec);
+
+  let stdVals: number[], gpuVals: number[], holoVals: number[];
+  if (mode === "complexity") {
+    stdVals = points.map((p) => p.stdMs);
+    gpuVals = points.map((p) => p.gpuMs);
+    holoVals = points.map((p) => p.holoMs);
+  } else {
+    // Throughput: show peak tok/s at each dimension (running max = streaming bandwidth ceiling)
+    let peakStd = 0, peakGpu = 0, peakHolo = 0;
+    stdVals = points.map((p) => { peakStd = Math.max(peakStd, p.stdTokSec); return peakStd; });
+    gpuVals = points.map((p) => { peakGpu = Math.max(peakGpu, p.gpuTokSec); return peakGpu; });
+    holoVals = points.map((p) => { peakHolo = Math.max(peakHolo, p.holoTokSec); return peakHolo; });
+  }
+
   const hasGpu = points.some((p) => p.gpuAvailable);
 
   const allVals = [...stdVals, ...(hasGpu ? gpuVals : []), ...holoVals];
@@ -153,7 +164,7 @@ function BenchChart({ points, mode }: ChartProps) {
     return { y: yS(v), label: formatNum(v) };
   });
 
-  const yLabel = mode === "complexity" ? "Runtime (ms)" : "Tokens / sec";
+  const yLabel = mode === "complexity" ? "Runtime (ms)" : "Peak Tokens / sec";
   const xLabel = "Matrix Dimension N";
 
   return (
@@ -718,7 +729,7 @@ export default function ConstantTimeBenchmark() {
                 }}
               >
                 {m === "complexity" ? <IconClock size={11} /> : <IconBolt size={11} />}
-                {m === "complexity" ? "Time" : "Throughput"}
+                {m === "complexity" ? "Runtime" : "Bandwidth"}
               </button>
             ))}
           </div>
@@ -744,7 +755,7 @@ export default function ConstantTimeBenchmark() {
       <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
         {view === "complexity"
           ? <>Three approaches to the same matrix multiplication. <strong style={{ color: P.red }}>CPU</strong> recomputes O(N³). <strong style={{ color: P.blue }}>GPU</strong> parallelizes O(N³) across thousands of cores. <strong style={{ color: P.gold }}>Hologram vGPU</strong> retrieves the precomputed result in ~constant time. All produce byte-identical outputs.</>
-          : <>Equivalent <strong style={{ color: P.text }}>inference tokens/sec</strong>. CPU collapses as N grows. GPU scales better but still degrades. Hologram maintains throughput — retrieval is independent of computation size.</>}
+          : <>Maximum streaming bandwidth in <strong style={{ color: P.text }}>tokens/sec</strong>. This is the ceiling for real-time AI inference. <strong style={{ color: P.red }}>CPU</strong> peaks early and stays low. <strong style={{ color: P.blue }}>GPU</strong> is faster but still hardware-bound. <strong style={{ color: P.gold }}>Hologram vGPU</strong> sustains orders-of-magnitude higher throughput — enabling real-time streaming AI on any device.</>}
       </p>
 
       {/* Methodology */}
