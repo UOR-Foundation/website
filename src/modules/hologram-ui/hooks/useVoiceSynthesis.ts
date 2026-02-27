@@ -245,7 +245,7 @@ export function useVoiceSynthesis({
     });
   }, [voiceId, speakWebSpeech, onStart, onEnd, onError, setIdle, revokeUrl]);
 
-  /** Primary speak — cleans text, routes to active engine, returns Promise */
+  /** Primary speak — always uses Web Speech for simplicity & reliability */
   const speak = useCallback(async (text: string): Promise<void> => {
     if (!text.trim()) return;
     abortRef.current = false;
@@ -260,12 +260,9 @@ export function useVoiceSynthesis({
       .replace(/\n/g, " ")
       .trim();
 
-    if (currentEngine === "elevenlabs") {
-      await speakElevenLabs(clean);
-    } else {
-      await speakWebSpeech(clean);
-    }
-  }, [currentEngine, primeAudioOutput, speakElevenLabs, speakWebSpeech]);
+    // Always use Web Speech — ElevenLabs disabled for now
+    await speakWebSpeech(clean);
+  }, [primeAudioOutput, speakWebSpeech]);
 
   /** Stop all speech immediately */
   const stop = useCallback(() => {
