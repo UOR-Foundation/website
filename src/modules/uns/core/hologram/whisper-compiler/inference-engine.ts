@@ -298,8 +298,10 @@ export class WhisperEngine {
     this.selfAttnCache = [];
     this.crossAttnCache = [];
     for (let i = 0; i < N_DECODER_LAYERS; i++) {
-      this.selfAttnCache.push(createKvCache(N_HEADS));
-      this.crossAttnCache.push(createKvCache(N_HEADS));
+      // Self-attention: grows with decoder tokens (max 448 + prompt)
+      this.selfAttnCache.push(createKvCache(N_HEADS, MAX_DECODER_POSITIONS + 8, D_HEAD));
+      // Cross-attention: fixed at encoder length (1500), computed once
+      this.crossAttnCache.push(createKvCache(N_HEADS, N_FRAMES / 2 + 8, D_HEAD));
     }
     this.tokenEmbedT = null;
   }

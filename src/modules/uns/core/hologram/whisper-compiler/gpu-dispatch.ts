@@ -46,37 +46,56 @@ export interface GpuDispatchStats {
  * Stores K and V as [nHeads][seqSoFar × dHead].
  */
 export interface KvCache {
-  /** Cached keys per head: nHeads arrays, each [cachedLen × dHead] */
+  /** Cached keys per head: nHeads arrays, each pre-allocated [maxLen × dHead] */
   k: Float32Array[];
-  /** Cached values per head: nHeads arrays, each [cachedLen × dHead] */
+  /** Cached values per head: nHeads arrays, each pre-allocated [maxLen × dHead] */
   v: Float32Array[];
   /** Number of cached positions */
   len: number;
+  /** Pre-allocated capacity (positions) */
+  capacity: number;
+  /** Head dimension */
+  dHead: number;
 }
 
-export function createKvCache(nHeads: number): KvCache {
+/** Max decoder positions for Whisper */
+const KV_CACHE_MAX_POSITIONS = 512;
+/** Head dimension for Whisper tiny.en */
+const KV_CACHE_D_HEAD = 64;
+
+export function createKvCache(nHeads: number, maxPositions = KV_CACHE_MAX_POSITIONS, dHead = KV_CACHE_D_HEAD): KvCache {
   return {
-    k: Array.from({ length: nHeads }, () => new Float32Array(0)),
-    v: Array.from({ length: nHeads }, () => new Float32Array(0)),
+    // Pre-allocate full capacity — zero-copy appends via subarray views
+    k: Array.from({ length: nHeads }, () => new Float32Array(maxPositions * dHead)),
+    v: Array.from({ length: nHeads }, () => new Float32Array(maxPositions * dHead)),
     len: 0,
+    capacity: maxPositions,
+    dHead,
   };
 }
 
-/** Append new K/V rows to existing cache, returns updated cache */
+/** Append new K/V rows to existing cache — zero-copy when within capacity */
 function appendKv(cache: KvCache, headIdx: number, newK: Float32Array, newV: Float32Array, dHead: number, newLen: number): void {
-  const oldK = cache.k[headIdx];
-  const oldV = cache.v[headIdx];
-  const totalLen = cache.len + newLen;
+  const writeOffset = cache.len * dHead;
 
-  const mergedK = new Float32Array(totalLen * dHead);
-  mergedK.set(oldK, 0);
-  mergedK.set(newK, cache.len * dHead);
-  cache.k[headIdx] = mergedK;
+  if (cache.len + newLen <= cache.capacity) {
+    // Fast path: write into pre-allocated buffer (no allocation)
+    cache.k[headIdx].set(newK, writeOffset);
+    cache.v[headIdx].set(newV, writeOffset);
+  } else {
+    // Rare fallback: grow buffer (should not happen with proper capacity)
+    const totalLen = cache.len + newLen;
+    const mergedK = new Float32Array(totalLen * dHead);
+    mergedK.set(cache.k[headIdx].subarray(0, cache.len * dHead), 0);
+    mergedK.set(newK, writeOffset);
+    cache.k[headIdx] = mergedK;
 
-  const mergedV = new Float32Array(totalLen * dHead);
-  mergedV.set(oldV, 0);
-  mergedV.set(newV, cache.len * dHead);
-  cache.v[headIdx] = mergedV;
+    const mergedV = new Float32Array(totalLen * dHead);
+    mergedV.set(cache.v[headIdx].subarray(0, cache.len * dHead), 0);
+    mergedV.set(newV, writeOffset);
+    cache.v[headIdx] = mergedV;
+    cache.capacity = totalLen;
+  }
 }
 
 // ── GPU Dispatch Singleton ─────────────────────────────────────────────────
@@ -90,6 +109,11 @@ export class GpuDispatch {
   private _gpuOps = 0;
   private _cpuOps = 0;
   private _totalGpuMs = 0;
+
+  // ── Weight Transpose Cache ──────────────────────────────────────────
+  // Key: original Float32Array reference, Value: transposed [K,M] → [M,K]
+  // Eliminates ~4,000 redundant transpose ops per transcription.
+  private _transposeCache = new WeakMap<Float32Array, Float32Array>();
 
   // Minimum matrix dimension to bother sending to GPU
   // (small ops have too much dispatch overhead)
@@ -377,12 +401,18 @@ export class GpuDispatch {
     input: Float32Array, weight: Float32Array, bias: Float32Array | null,
     N: number, K: number, M: number,
   ): Promise<Float32Array> {
-    // Transpose weight [M, K] → [K, M]
-    const wT = new Float32Array(K * M);
-    for (let m = 0; m < M; m++) {
-      for (let k = 0; k < K; k++) {
-        wT[k * M + m] = weight[m * K + k];
+    // Cache the transposed weight matrix — same weights are reused
+    // hundreds of times across decoder steps. WeakMap ensures GC
+    // when the weight array is released on engine.dispose().
+    let wT = this._transposeCache.get(weight);
+    if (!wT) {
+      wT = new Float32Array(K * M);
+      for (let m = 0; m < M; m++) {
+        for (let k = 0; k < K; k++) {
+          wT[k * M + m] = weight[m * K + k];
+        }
       }
+      this._transposeCache.set(weight, wT);
     }
 
     const out = await this.matmul(input, wT, N, M, K);
@@ -598,8 +628,9 @@ export class GpuDispatch {
         }
       }
 
-      const KhFull = cache.k[h]; // [fullLen × dHead]
-      const VhFull = cache.v[h]; // [fullLen × dHead]
+      // Use subarray view into pre-allocated buffer (no copy)
+      const KhFull = cache.k[h].subarray(0, fullLen * dHead);
+      const VhFull = cache.v[h].subarray(0, fullLen * dHead);
 
       // Transpose K: [fullLen, dHead] → [dHead, fullLen]
       const KhT = new Float32Array(dHead * fullLen);
@@ -685,8 +716,8 @@ export class GpuDispatch {
         }
       }
 
-      const KhFull = cache.k[h];
-      const VhFull = cache.v[h];
+      const KhFull = cache.k[h].subarray(0, cache.len * dHead);
+      const VhFull = cache.v[h].subarray(0, cache.len * dHead);
       const cachedLen = cache.len;
 
       const KhT = new Float32Array(dHead * cachedLen);
