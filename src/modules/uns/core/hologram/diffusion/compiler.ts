@@ -39,7 +39,7 @@ import { DTYPE_BYTE_SIZE } from "../whisper-compiler/types";
 
 const COMPILER_VERSION = "1.0.0-diffusion";
 const SD_MODEL_ID = "sd15-hologram";
-const HF_MODEL_ID = "onnx-community/stable-diffusion-v1-5-ONNX";
+const HF_MODEL_ID = "nmkd/stable-diffusion-1.5-onnx-fp16";
 
 /** SD 1.5 ONNX components */
 const SD_COMPONENTS = {

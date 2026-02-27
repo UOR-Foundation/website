@@ -52,8 +52,22 @@ const DEFAULT_SEED_FILES = [
   "onnx/decoder_model_merged_quantized.onnx",
 ];
 
-/** SD 1.5 ONNX files to seed (onnx-community, ~4.1GB total) */
-const SD15_SEED_FILES = [
+/** SD 1.5 FP16 ONNX files to seed (nmkd, ~2GB total) */
+const SD15_FP16_SEED_FILES = [
+  "model_index.json",
+  "tokenizer/vocab.json",
+  "tokenizer/merges.txt",
+  "tokenizer/tokenizer_config.json",
+  "tokenizer/special_tokens_map.json",
+  "scheduler/scheduler_config.json",
+  "text_encoder/model.onnx",         // ~246MB fp16
+  "vae_decoder/model.onnx",          // ~99MB fp16
+  "unet/model.onnx",                 // ~1MB (graph only)
+  "unet/weights.pb",                 // ~1.7GB fp16 (external weights)
+];
+
+/** SD 1.5 FP32 ONNX files to seed (onnx-community, ~4.1GB total) */
+const SD15_FP32_SEED_FILES = [
   "model_index.json",
   "tokenizer/vocab.json",
   "tokenizer/merges.txt",
@@ -70,7 +84,8 @@ const SD15_SEED_FILES = [
 const SEED_MANIFESTS: Record<string, { model: string; files: string[] }> = {
   all: { model: DEFAULT_MODEL, files: DEFAULT_SEED_FILES },
   whisper: { model: DEFAULT_MODEL, files: DEFAULT_SEED_FILES },
-  diffusion: { model: "onnx-community/stable-diffusion-v1-5-ONNX", files: SD15_SEED_FILES },
+  diffusion: { model: "nmkd/stable-diffusion-1.5-onnx-fp16", files: SD15_FP16_SEED_FILES },
+  "diffusion-fp32": { model: "onnx-community/stable-diffusion-v1-5-ONNX", files: SD15_FP32_SEED_FILES },
 };
 
 serve(async (req) => {
