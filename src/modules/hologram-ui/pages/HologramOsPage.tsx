@@ -2,24 +2,20 @@
  * Hologram OS — Welcome Screen
  * ═════════════════════════════
  *
- * Desktop: Sidebar + full-bleed sanctuary hero (Aman-inspired).
+ * Desktop: Sidebar + multi-desktop stack (Windows-style virtual desktops).
  * Mobile: iOS-style homescreen shell.
  *
- * Architecture: Multi-frame layer stack
- *   Frame 0 (Canvas)  — Background imagery, Ken Burns, gradient veils
- *   Frame 1 (Chrome)  — Sidebar, Focus toggle, Day ring, BG mode dots
- *   Frame 2 (Content) — Welcome text, CTA, interest pills, chat pill
- *   Frame 3 (Overlay) — AI Chat, Claim overlay
+ * Architecture: Three complete desktops rendered simultaneously.
+ * Switching = clip-path peel on the departing layer, revealing the next.
+ * Each desktop has independent widget state (positions, visibility).
  *
  * Design language: extreme restraint, muted earth tones,
  * generous whitespace, ultra-light serif, barely-there chrome.
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
-import WidgetHoverActions from "@/modules/hologram-ui/components/WidgetHoverActions";
 import { useNavigate } from "react-router-dom";
-import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 import BrowserProjection from "@/modules/hologram-ui/components/BrowserProjection";
@@ -30,25 +26,20 @@ import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
 import LegalPanel from "@/modules/hologram-ui/components/LegalPanel";
-import HologramFrame, { HologramViewport, OverlayFrame, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
-import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
+import { HologramViewport, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import ModularSnapGrid from "@/modules/hologram-ui/components/ModularSnapGrid";
 import SnapGuideOverlay from "@/modules/hologram-ui/components/SnapGuideOverlay";
 import AmbientPlayer, { type AmbientState } from "@/modules/hologram-ui/components/AmbientPlayer";
 import { useModularPanel } from "@/modules/hologram-ui/hooks/useModularPanel";
-import { useFrameTilt } from "@/modules/hologram-ui/hooks/useFrameTilt";
-import FrameDebugOverlay from "@/modules/hologram-ui/components/FrameDebugOverlay";
-import LayerNavHUD from "@/modules/hologram-ui/components/LayerNavHUD";
-import { useLayerNav } from "@/modules/hologram-ui/hooks/useLayerNav";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
-import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 import { useTriadicActivity } from "@/modules/hologram-ui/hooks/useTriadicActivity";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 import { useFocusJournal } from "@/modules/hologram-ui/hooks/useFocusJournal";
 import { useContextProjection } from "@/modules/hologram-ui/hooks/useContextProjection";
 import { useShortcutMastery } from "@/modules/hologram-ui/hooks/useShortcutMastery";
 import { useContextBeacon } from "@/modules/hologram-ui/hooks/useScreenContext";
-import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
+import DesktopSurface from "@/modules/hologram-ui/components/DesktopSurface";
+import { useDesktopState, type DesktopId } from "@/modules/hologram-ui/hooks/useDesktopState";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -65,143 +56,6 @@ function useIsMobile(breakpoint = 640) {
   return mobile;
 }
 
-// ── OS-aware modifier label ──────────────────────────────────────────────────
-function _detectMac(): boolean {
-  if (typeof navigator === "undefined") return false;
-  if ("userAgentData" in navigator && (navigator as any).userAgentData?.platform) {
-    return /mac/i.test((navigator as any).userAgentData.platform);
-  }
-  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) || /Macintosh/i.test(navigator.userAgent);
-}
-const MOD_LABEL = _detectMac() ? "⌘" : "Ctrl";
-
-// ── Background Modes ────────────────────────────────────────────────────────
-
-type BgMode = "image" | "white" | "dark";
-
-const BG_MODES: { mode: BgMode; dot: string; dotActive: string; label: string }[] = [
-  { mode: "image", dot: "hsla(38, 25%, 65%, 0.35)", dotActive: "hsl(38, 40%, 60%)", label: "Landscape" },
-  { mode: "white", dot: "hsla(0, 0%, 30%, 0.5)", dotActive: "hsl(0, 0%, 15%)", label: "Light" },
-  { mode: "dark",  dot: "hsla(0, 0%, 30%, 0.5)", dotActive: "hsl(30, 6%, 12%)", label: "Dark" },
-];
-
-/** Palette per mode — all text/chrome adapts for maximum contrast */
-function palette(m: BgMode) {
-  if (m === "white") return {
-    wordmark: "hsla(0, 0%, 15%, 0.85)",
-    greeting: "hsla(0, 0%, 10%, 0.75)",
-    heading:  "hsla(0, 0%, 5%, 0.92)",
-    sub:      "hsla(0, 0%, 20%, 0.7)",
-    cta:      "hsla(0, 0%, 15%, 0.8)",
-    ctaBorder:"hsla(0, 0%, 20%, 0.3)",
-    ctaHoverBg: "hsla(0, 0%, 10%, 0.06)",
-    ctaHoverText: "hsla(0, 0%, 5%, 0.95)",
-    ctaHoverBorder: "hsla(0, 0%, 10%, 0.5)",
-    pill:     "hsla(0, 0%, 95%, 0.7)",
-    pillBorder: "hsla(0, 0%, 75%, 0.3)",
-    pillText: "hsla(0, 0%, 25%, 0.7)",
-    dotPulse: "hsl(0, 0%, 30%)",
-    bg:       "hsl(0, 0%, 100%)",
-  };
-  if (m === "dark") return {
-    wordmark: "hsla(0, 0%, 92%, 0.9)",
-    greeting: "hsla(0, 0%, 100%, 0.75)",
-    heading:  "hsla(0, 0%, 97%, 0.95)",
-    sub:      "hsla(0, 0%, 85%, 0.7)",
-    cta:      "hsla(0, 0%, 90%, 0.8)",
-    ctaBorder:"hsla(0, 0%, 70%, 0.25)",
-    ctaHoverBg: "hsla(0, 0%, 100%, 0.08)",
-    ctaHoverText: "hsla(0, 0%, 97%, 0.95)",
-    ctaHoverBorder: "hsla(0, 0%, 80%, 0.4)",
-    pill:     "hsla(0, 0%, 10%, 0.6)",
-    pillBorder: "hsla(0, 0%, 30%, 0.15)",
-    pillText: "hsla(0, 0%, 85%, 0.7)",
-    dotPulse: "hsl(0, 0%, 80%)",
-    bg:       "hsl(0, 0%, 5%)",
-  };
-  // image mode — dark wordmark for legibility over bright landscapes
-  return {
-    wordmark: "hsla(0, 0%, 8%, 0.85)",
-    greeting: "hsla(0, 0%, 8%, 0.8)",
-    heading:  "hsla(0, 0%, 100%, 0.95)",
-    sub:      "hsla(38, 12%, 90%, 0.75)",
-    cta:      "hsla(38, 15%, 92%, 0.85)",
-    ctaBorder:"hsla(38, 15%, 80%, 0.3)",
-    ctaHoverBg: "hsla(38, 15%, 70%, 0.1)",
-    ctaHoverText: "hsla(38, 15%, 98%, 0.95)",
-    ctaHoverBorder: "hsla(38, 15%, 80%, 0.45)",
-    pill:     "hsla(30, 8%, 10%, 0.5)",
-    pillBorder: "hsla(38, 15%, 60%, 0.08)",
-    pillText: "hsla(38, 12%, 90%, 0.7)",
-    dotPulse: "hsl(38, 45%, 60%)",
-    bg:       "transparent",
-  };
-}
-
-// ── Time-aware Lumen subtitle ───────────────────────────────────────────────
-function getLumenSubtitle(): string {
-  const h = new Date().getHours();
-  if (h >= 22 || h < 5)  return "Wind down. I\u2019m here if you need me.";
-  if (h >= 5 && h < 7)   return "The world is still quiet. A good time to think.";
-  if (h >= 7 && h < 10)  return "A fresh start. What matters to you today?";
-  if (h >= 10 && h < 12) return "Your companion, here whenever you\u2019re ready.";
-  if (h >= 12 && h < 14) return "Take a breath. I\u2019ll be here when you return.";
-  if (h >= 14 && h < 17) return "Deep in the day. Let\u2019s make it count.";
-  if (h >= 17 && h < 20) return "The day is unwinding. Reflect, or keep going.";
-  return "Evening light. A gentle space to explore.";
-}
-
-// ── Typewriter text — human-paced, contemplative reveal ─────────────────────
-function TypewriterText({ text, delay = 3200, speed = 80 }: { text: string; delay?: number; speed?: number }) {
-  const [displayed, setDisplayed] = useState("");
-  const [started, setStarted] = useState(false);
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    setDisplayed("");
-    setStarted(false);
-    setDone(false);
-    const t = setTimeout(() => setStarted(true), delay);
-    return () => clearTimeout(t);
-  }, [text, delay]);
-
-  useEffect(() => {
-    if (!started || displayed.length >= text.length) return;
-    const nextChar = text[displayed.length];
-    // Variable pacing — pauses feel like thought
-    let charDelay = speed + Math.random() * speed * 0.6; // gentle variation
-    if (nextChar === "." || nextChar === "!" || nextChar === "?") charDelay = speed * 6; // breath after sentence
-    else if (nextChar === ",") charDelay = speed * 3; // pause at comma
-    else if (nextChar === " " && Math.random() > 0.6) charDelay = speed * 2; // occasional word pause
-    else if (nextChar === "\u2019" || nextChar === "'") charDelay = speed * 1.5; // apostrophe pause
-
-    const t = setTimeout(() => {
-      const next = text.slice(0, displayed.length + 1);
-      setDisplayed(next);
-      if (next.length >= text.length) setDone(true);
-    }, charDelay);
-    return () => clearTimeout(t);
-  }, [started, displayed, text, speed]);
-
-  return (
-    <span style={{ position: "relative", display: "block", textAlign: "center" }}>
-      {/* Invisible full text reserves layout height */}
-      <span style={{ visibility: "hidden", display: "block" }} aria-hidden="true">{text}</span>
-      {/* Visible typed text — same block flow, overlaid */}
-      <span style={{ position: "absolute", inset: 0, display: "block", textAlign: "center" }}>
-        {displayed}
-        {started && !done && (
-          <span style={{ opacity: 0.5, animation: "blink-caret 0.8s step-end infinite" }}>▎</span>
-        )}
-        {done && (
-          <span style={{ animation: "blink-caret 0.8s step-end 2, fade-out 0.6s ease-out 1.6s forwards", opacity: 0.5 }}>▎</span>
-        )}
-      </span>
-    </span>
-  );
-}
-
-
 /** Syncs overlay open state into the DepthShift context */
 function DepthShiftSync({ active }: { active: boolean }) {
   const { setOverlayActive } = useDepthShift();
@@ -210,6 +64,9 @@ function DepthShiftSync({ active }: { active: boolean }) {
   }, [active, setOverlayActive]);
   return null;
 }
+
+// ── Desktop ordering: determines z-index stack ──────────────────────────────
+const ALL_DESKTOPS: DesktopId[] = ["image", "white", "dark"];
 
 export default function HologramOsPage() {
   const navigate = useNavigate();
@@ -220,10 +77,7 @@ export default function HologramOsPage() {
   const [computeOpen, setComputeOpen] = useState(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [messengerOpen, setMessengerOpen] = useState(false);
-  const [pillGlow, setPillGlow] = useState(false);
   const [ambientState, setAmbientState] = useState<AmbientState>({ playing: false, loading: false, stationHue: "220", stationName: "" });
-  const lumenPillDrag = useDraggablePosition({ storageKey: "hologram-pos:lumen-pill", defaultPos: { x: 0, y: 0 }, mode: "offset", snapSize: { width: 160, height: 44 } });
-  const dayRingDrag = useDraggablePosition({ storageKey: "hologram-pos:day-ring", defaultPos: { x: 0, y: 0 }, mode: "offset", snapSize: { width: 64, height: 64 } });
   const lumenPanel = useModularPanel({
     storageKey: "lumen-ai",
     defaultWidth: 340,
@@ -235,127 +89,66 @@ export default function HologramOsPage() {
   const [legalOpen, setLegalOpen] = useState(false);
   const [legalTab, setLegalTab] = useState<"privacy" | "terms">("privacy");
   const { entryCount: journalEntryCount } = useFocusJournal();
-  const [bgMode, setBgModeState] = useState<BgMode>(() => {
+
+  // ── Active desktop ────────────────────────────────────────────────────────
+  const [activeDesktop, setActiveDesktop] = useState<DesktopId>(() => {
     const saved = localStorage.getItem("hologram-bg-mode");
     return saved === "white" || saved === "dark" || saved === "image" ? saved : "image";
   });
 
-  // ── Holographic projection transition ──────────────────────────────
-  // The screen is a projection surface emanating from the sidebar.
-  // Style transitions use a layered approach: the old background layer sits on top
-  // and retracts right→left via clip-path, smoothly revealing the new style underneath.
-  const [transitioning, setTransitioning] = useState(false);
-  const [transitionPhase, setTransitionPhase] = useState<"idle" | "retract">("idle");
-  const [prevBgMode, setPrevBgMode] = useState<BgMode | null>(null);
+  // ── Transition state ──────────────────────────────────────────────────────
+  // departingDesktop = the one being peeled away (clip-path animating out)
+  const [departingDesktop, setDepartingDesktop] = useState<DesktopId | null>(null);
 
-  const setBgMode = useCallback((m: BgMode) => {
-    if (m === bgMode) return;
+  const switchDesktop = useCallback((target: DesktopId) => {
+    if (target === activeDesktop || departingDesktop) return;
 
-    // Preserve the old mode so we can render it as the top layer
-    setPrevBgMode(bgMode);
-    setTransitioning(true);
-    setTransitionPhase("idle");
+    // The current active desktop becomes the departing (peeling) layer
+    setDepartingDesktop(activeDesktop);
+    // Immediately set new active — it's already rendered underneath
+    setActiveDesktop(target);
+    localStorage.setItem("hologram-bg-mode", target);
 
-    // Switch to new style immediately — it renders underneath the old layer
-    setBgModeState(m);
-    localStorage.setItem("hologram-bg-mode", m);
+    // After animation completes, clear departing state
+    setTimeout(() => setDepartingDesktop(null), 2000);
+  }, [activeDesktop, departingDesktop]);
 
-    // On next frame, start retracting the old layer right→left
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setTransitionPhase("retract");
-      });
-    });
+  // Per-desktop widget states
+  const imageWidgets = useDesktopState("image");
+  const whiteWidgets = useDesktopState("white");
+  const darkWidgets = useDesktopState("dark");
+  const widgetStates = { image: imageWidgets, white: whiteWidgets, dark: darkWidgets };
 
-    // Cleanup after retraction completes
-    setTimeout(() => {
-      setTransitioning(false);
-      setTransitionPhase("idle");
-      setPrevBgMode(null);
-    }, 2200);
-  }, [bgMode]);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
   const triadicActivity = useTriadicActivity();
   const attention = useAttentionMode();
   const mastery = useShortcutMastery();
-  const [replayGuide, setReplayGuide] = useState(0);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const ctx = useContextProjection();
+  const isFocus = attention.preset === "focus";
 
-  // ── Widget visibility (persisted) ──────────────────────────────────────
-  const WIDGET_STORAGE_KEY = "hologram-hidden-widgets";
-  const [hiddenWidgets, setHiddenWidgets] = useState<Set<string>>(() => {
-    try {
-      const raw = localStorage.getItem(WIDGET_STORAGE_KEY);
-      return raw ? new Set(JSON.parse(raw)) : new Set();
-    } catch { return new Set(); }
-  });
-  const removeWidget = useCallback((id: string) => {
-    setHiddenWidgets(prev => {
-      const next = new Set(prev);
-      next.add(id);
-      localStorage.setItem(WIDGET_STORAGE_KEY, JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
+  // ── Auto-hide widgets in focus mode ────────────────────────────────────
+  useEffect(() => {
+    widgetStates[activeDesktop].setAllHidden(isFocus);
+  }, [isFocus, activeDesktop]);
 
-  // ── Global widget hide/show toggle ─────────────────────────────────────
-  const [allWidgetsHidden, setAllWidgetsHidden] = useState(false);
-  const toggleAllWidgets = useCallback(() => setAllWidgetsHidden(prev => !prev), []);
-
-  const isWidgetVisible = useCallback(
-    (id: string) => !allWidgetsHidden && !hiddenWidgets.has(id),
-    [hiddenWidgets, allWidgetsHidden],
-  );
-
-  // Register context beacon so Lumini.AI knows what the user is viewing
-  useContextBeacon({
-    id: "hologram-home",
-    title: `Hologram Home — ${greeting}`,
-    summary: `User is on the Hologram OS welcome screen. Background: ${bgMode}. ${attention.preset === "focus" ? "Focus mode is active." : ""}`,
-    contentType: "dashboard",
-    metadata: {
-      creatorStage: triadicActivity.creatorStage,
-      focusMode: attention.preset === "focus",
-      bgMode,
-    },
-  });
-  const contentTilt = useFrameTilt({ maxTilt: 0, smoothing: 0, maxShift: 0 });
-  const canvasTilt = useFrameTilt({ maxTilt: 0, smoothing: 0, maxShift: 0 });
-  const layerNav = useLayerNav();
-
-  // Derive top interests for contextual suggestions (max 3)
+  // Context hints
   const contextHints = useMemo(() => {
     const entries = Object.entries(ctx.profile.interests);
     if (entries.length === 0) return [];
-    return entries
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 3)
-      .map(([tag]) => tag.replace(/-/g, " "));
+    return entries.sort(([, a], [, b]) => b - a).slice(0, 3).map(([tag]) => tag.replace(/-/g, " "));
   }, [ctx.profile.interests]);
 
-  // Derive dominant phase
-  const dominantPhase = useMemo(() => {
-    const { learn, work, play } = ctx.profile.phaseAffinity;
-    if (learn > work && learn > play) return "learning";
-    if (work > learn && work > play) return "building";
-    return "exploring";
-  }, [ctx.profile.phaseAffinity]);
+  useContextBeacon({
+    id: "hologram-home",
+    title: `Hologram Home — ${greeting}`,
+    summary: `User is on the Hologram OS welcome screen. Desktop: ${activeDesktop}. ${isFocus ? "Focus mode is active." : ""}`,
+    contentType: "dashboard",
+    metadata: { bgMode: activeDesktop, focusMode: isFocus },
+  });
 
-  const goConsole = useCallback(() => {
-    setDeparting(true);
-    setTimeout(() => navigate("/hologram-console"), 900);
-  }, [navigate]);
-  const P = useMemo(() => palette(bgMode), [bgMode]);
-  const isFocus = attention.preset === "focus";
-
-  // ── Auto-hide widgets in focus mode, restore when leaving ───────────────
-  useEffect(() => {
-    setAllWidgetsHidden(isFocus);
-  }, [isFocus]);
-
-  // ── Listen for global lumen:open event (from LumenFloatingPill) ────────
+  // ── Listen for global lumen:open event ─────────────────────────────────
   useEffect(() => {
     const handler = () => setChatOpen(true);
     window.addEventListener("lumen:open", handler);
@@ -370,11 +163,9 @@ export default function HologramOsPage() {
 
       const mod = e.metaKey || e.ctrlKey;
 
-      // Ctrl+Shift+. — Reset all element positions (safe, no browser collision)
+      // Ctrl+Shift+. — Reset all element positions
       if (mod && e.shiftKey && e.key === ">") {
         e.preventDefault();
-        lumenPillDrag.resetPosition();
-        dayRingDrag.resetPosition();
         Object.keys(localStorage).filter(k => k.startsWith("hologram-pos:")).forEach(k => localStorage.removeItem(k));
         window.location.reload();
         return;
@@ -383,51 +174,47 @@ export default function HologramOsPage() {
       if (!mod) return;
 
       switch (e.key) {
-        // Ctrl+; — LUMEN AI (semicolon = "ask;")
         case ";": e.preventDefault(); mastery.record(";"); setChatOpen(true); break;
-        // Ctrl+] — Toggle Focus Mode (bracket = toggle)
         case "]": e.preventDefault(); mastery.record("]"); attention.toggle(); break;
-        // Ctrl+[ — Cycle style (bracket pair)
         case "[":
           e.preventDefault();
           mastery.record("[");
-          setBgMode(BG_MODES[(BG_MODES.findIndex(b => b.mode === bgMode) + 1) % BG_MODES.length].mode);
+          const nextIdx = (ALL_DESKTOPS.indexOf(activeDesktop) + 1) % ALL_DESKTOPS.length;
+          switchDesktop(ALL_DESKTOPS[nextIdx]);
           break;
-        // Ctrl+, — Messages (comma = conversation)
         case ",": e.preventDefault(); mastery.record(","); setMessengerOpen(true); break;
-        // Ctrl+. — Go Home (period = full stop = home)
         case ".": e.preventDefault(); mastery.record("."); setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); break;
-        // Ctrl+\ — Toggle sidebar (backslash = divider)
-        case "\\": e.preventDefault(); mastery.record("\\"); toggleAllWidgets(); break;
-        // Ctrl+/ — Shortcut cheat sheet (safe, no browser collision)
-        case "/":
-          e.preventDefault();
-          mastery.record("/");
-          setShortcutsOpen(prev => !prev);
-          break;
+        case "\\": e.preventDefault(); mastery.record("\\"); widgetStates[activeDesktop].toggleAllWidgets(); break;
+        case "/": e.preventDefault(); mastery.record("/"); setShortcutsOpen(prev => !prev); break;
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [navigate, attention, bgMode, setBgMode, toggleAllWidgets]);
+  }, [navigate, attention, activeDesktop, switchDesktop]);
 
   // ── Mobile: iOS homescreen ──
   if (isMobile) return <MobileOsShell />;
 
   const welcomeName = name || "traveller";
 
-  // ── Desktop: Layered frame stack ──
+  /**
+   * Z-index ordering for the desktop stack:
+   * - Active desktop: z=200 (underneath departing)
+   * - Departing desktop: z=300 (on top, being peeled away)
+   * - All others: z=100 (pre-rendered but hidden behind)
+   */
+  function desktopZ(mode: DesktopId): number {
+    if (mode === departingDesktop) return 300;
+    if (mode === activeDesktop) return 200;
+    return 100;
+  }
+
   return (
     <HologramViewport className="h-screen bg-background">
-      {/* Depth-shift trigger: recede lower frames only for claim overlay */}
       <DepthShiftSync active={claimOpen} />
-      {/* LayerNavHUD removed — focus toggle handles mode switching */}
 
       <div className="flex h-full overflow-hidden">
-        {/* ════════════════════════════════════════════════════════════════
-         *  FRAME 1 — Chrome Layer (always visible, highest priority)
-         *  Sidebar + Focus toggle sit here, unaffected by content below
-         * ════════════════════════════════════════════════════════════════ */}
+        {/* ══ Sidebar (Chrome Layer) ═══════════════════════════════ */}
         <div
           className="shrink-0 overflow-visible"
           style={{
@@ -447,531 +234,94 @@ export default function HologramOsPage() {
             onGoHome={() => { setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); }}
             onReplayGuide={() => setShortcutsOpen(true)}
             hintOpacity={mastery.hintOpacity}
-            bgMode={bgMode}
+            bgMode={activeDesktop}
           />
         </div>
 
-        {/* Main viewport area — contains canvas + chrome + content frames */}
+        {/* ══ Multi-Desktop Stack ═════════════════════════════════ */}
         <div
           className={`flex-1 relative overflow-hidden z-0 ${lumenPanel.isResizing ? "" : "transition-all ease-in-out"}`}
           style={{
             opacity: departing ? 0 : 1,
-            transform: departing
-              ? "scale(1.02)"
-              : isFocus ? "scale(1.03)" : "scale(1)",
+            transform: departing ? "scale(1.02)" : isFocus ? "scale(1.03)" : "scale(1)",
             filter: departing ? "blur(4px)" : "none",
             transitionDuration: lumenPanel.isResizing ? "0ms" : isFocus ? "600ms" : "400ms",
             marginRight: chatOpen ? `${lumenPanel.width}px` : "0px",
           }}
         >
-          {/* ── Old-style layer — retracts right→left to reveal new style underneath ── */}
-          {transitioning && prevBgMode !== null && (
-            <div
-              className="absolute inset-0 pointer-events-none overflow-hidden"
-              style={{
-                zIndex: 9999,
-                clipPath: transitionPhase === "retract"
-                  ? "inset(0 100% 0 0)"
-                  : "inset(0 0 0 0)",
-                transition: transitionPhase === "retract"
-                  ? "clip-path 2000ms cubic-bezier(0.25, 0.46, 0.45, 0.94)"
-                  : "none",
-              }}
-            >
-              {/* Render the old background as a full layer */}
-              <div className="absolute inset-0" style={{
-                background: prevBgMode === "image" ? "transparent"
-                  : prevBgMode === "white" ? palette("white").bg
-                  : palette("dark").bg,
-              }}>
-                {prevBgMode === "image" && (
-                  <>
-                    <img
-                      src={heroLandscape}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background: "linear-gradient(to bottom, hsla(30, 8%, 12%, 0.15) 0%, hsla(30, 6%, 10%, 0.08) 35%, hsla(25, 10%, 8%, 0.55) 100%)",
-                      }}
-                    />
-                  </>
-                )}
-              </div>
+          {/* All three desktops are always rendered. Active on top. */}
+          {ALL_DESKTOPS.map((mode) => {
+            const isDep = mode === departingDesktop;
+            const isAct = mode === activeDesktop;
+            const ws = widgetStates[mode];
 
-              {/* Soft warm edge glow at the retraction wavefront */}
+            return (
               <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  width: "80px",
-                  left: 0,
-                  background: "linear-gradient(to right, hsla(38, 30%, 65%, 0.08), transparent)",
-                  filter: "blur(16px)",
-                }}
-              />
-            </div>
-          )}
-          {/* Focus toggle — lives inside content area so it shifts with Lumen */}
-          {isWidgetVisible("focus-toggle") && (
-            <WidgetHoverActions
-              widgetId="focus-toggle"
-              onRemove={removeWidget}
-              showMove={false}
-              showSettings={false}
-              bgMode={bgMode}
-              className="absolute right-20 top-1/2 -translate-y-1/2 z-[60]"
-              position="top-left"
-            >
-              <AttentionToggle bgMode={bgMode} />
-            </WidgetHoverActions>
-          )}
-          {/* ══════════════════════════════════════════════════════════
-           *  FRAME 0 — Canvas Layer (background, imagery, veils)
-           * ══════════════════════════════════════════════════════════ */}
-          <HologramFrame layer={0} label="canvas" interactive={false} transform={canvasTilt} opacity={layerNav.layerOpacity(0)} style={{ transform: `scale(${layerNav.layerScale(0)})`, transition: "opacity 0.5s, transform 0.5s" }}>
-            {/* Solid background for white/dark modes — no transition, layered approach handles it */}
-            <div
-              className="absolute inset-0"
-              style={{ background: P.bg, opacity: bgMode === "image" ? 0 : 1 }}
-            />
-
-            {/* Background Image — slow Ken Burns for life */}
-            <div
-              className="absolute inset-0"
-              style={{ opacity: bgMode === "image" ? 1 : 0 }}
-            >
-              <img
-                src={heroLandscape}
-                alt="Serene landscape with misty mountains and tranquil water"
-                className="w-full h-full object-cover"
-                style={{
-                  animation: bgMode === "image" ? "ken-burns-breathe 42s cubic-bezier(0.25, 0.1, 0.25, 1) forwards" : "none",
-                }}
-              />
-              {/* Gradient veil */}
-              <div
+                key={mode}
                 className="absolute inset-0"
                 style={{
-                  background:
-                    "linear-gradient(to bottom, hsla(30, 8%, 12%, 0.15) 0%, hsla(30, 6%, 10%, 0.08) 35%, hsla(25, 10%, 8%, 0.55) 100%)",
-                }}
-              />
-              {/* Ambient music glow — subtle color wash */}
-              <div
-                className="absolute inset-0 pointer-events-none transition-opacity duration-[2s] ease-in-out"
-                style={{
-                  opacity: ambientState.playing ? 1 : 0,
-                  background: `radial-gradient(ellipse 120% 80% at 50% 100%, hsla(${ambientState.stationHue}, 40%, 35%, 0.12) 0%, hsla(${ambientState.stationHue}, 30%, 25%, 0.06) 40%, transparent 70%)`,
-                  animation: ambientState.playing ? "ambient-glow-breathe 8s ease-in-out infinite" : "none",
-                }}
-              />
-            </div>
-          </HologramFrame>
-
-          {/* ══════════════════════════════════════════════════════════
-           *  FRAME 1 — Chrome Layer (persistent UI controls)
-           *  Background mode toggle, Day progress ring
-           *  These remain visible regardless of what opens above
-           * ══════════════════════════════════════════════════════════ */}
-          <HologramFrame layer={1} label="chrome" interactive opacity={layerNav.layerOpacity(1)} style={{ transform: `scale(${layerNav.layerScale(1)})`, transition: "opacity 0.7s ease, transform 0.7s ease", zIndex: 400, pointerEvents: "none" }}>
-            {/* Background Mode Toggle — top right (always visible, not dismissible) */}
-            {(
-            <div
-              className="absolute top-[3vh] right-6 animate-fade-in transition-all duration-300 ease-out"
-              style={{
-                pointerEvents: isFocus ? "none" : "auto",
-                opacity: isFocus ? 0 : 1,
-                transform: isFocus ? "translateY(-10px)" : "translateY(0)",
-                filter: "blur(var(--focus-blur-chrome, 0px))",
-              }}
-            >
-              <>
-              <div className="flex flex-col items-center gap-2">
-                <div
-                  className="flex items-center gap-1 px-3 py-2 rounded-full transition-all duration-300"
-                  style={{
-                    background: bgMode === "white" ? "hsla(0, 0%, 40%, 0.1)" : "hsla(0, 0%, 10%, 0.45)",
-                    border: `1px solid ${bgMode === "white" ? "hsla(0, 0%, 40%, 0.18)" : "hsla(0, 0%, 80%, 0.18)"}`,
-                    backdropFilter: "blur(24px)",
-                    WebkitBackdropFilter: "blur(24px)",
-                    boxShadow: "0 2px 12px hsla(0, 0%, 0%, 0.25)",
-                  }}
-                >
-                  {BG_MODES.map(({ mode, label }) => {
-                    const isActive = bgMode === mode;
-                    const dotColor = isActive
-                      ? (bgMode === "white" ? "hsla(0, 0%, 10%, 0.95)" : "hsla(0, 0%, 95%, 0.95)")
-                      : (bgMode === "white" ? "hsla(0, 0%, 10%, 0.45)" : "hsla(0, 0%, 80%, 0.45)");
-                    return (
-                      <button
-                        key={mode}
-                        onClick={() => setBgMode(mode)}
-                        className="relative group flex items-center justify-center w-6 h-6 rounded-full transition-all duration-300"
-                        aria-label={`Switch to ${label} background`}
-                      >
-                        <div
-                          className="w-[6px] h-[6px] rounded-full transition-all duration-300 ease-out"
-                          style={{
-                            background: dotColor,
-                            transform: isActive ? "scale(1.4)" : "scale(1)",
-                            boxShadow: isActive ? `0 0 10px 2px ${dotColor}` : "none",
-                          }}
-                        />
-                      </button>
-                    );
-                  })}
-                </div>
-                <span
-                  className="tracking-[0.2em] uppercase font-medium transition-colors duration-300"
-                  style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
-                    fontSize: "clamp(11px, 0.8vw, 13px)",
-                    color: bgMode === "white"
-                      ? "hsla(0, 0%, 15%, 0.7)"
-                      : "hsla(0, 0%, 85%, 0.75)",
-                    textShadow: bgMode === "white" ? "none" : "0 1px 4px hsla(0, 0%, 0%, 0.5)",
-                  }}
-                >
-                  Style
-                </span>
-              </div>
-              </>
-            </div>
-            )}
-
-            {/* Day Progress Ring — bottom right, draggable */}
-            {isWidgetVisible("day-ring") && (
-            <div
-              className="absolute bottom-[3vh] right-24 animate-fade-in flex items-center gap-2 transition-all duration-300 ease-out"
-              style={{
-                pointerEvents: isFocus ? "none" : "auto",
-                opacity: isFocus ? 0 : 1,
-                transform: isFocus
-                  ? `translate(${dayRingDrag.pos.x}px, ${dayRingDrag.pos.y + 10}px)`
-                  : `translate(${dayRingDrag.pos.x}px, ${dayRingDrag.pos.y}px)`,
-                touchAction: "none",
-                userSelect: "none",
-              }}
-            >
-              <WidgetHoverActions
-                widgetId="day-ring"
-                onRemove={removeWidget}
-                dragHandlers={dayRingDrag.handlers}
-                showSettings={false}
-                bgMode={bgMode}
-                position="top-center"
-              >
-                <DayProgressRing balance={triadicActivity.balance ?? undefined} bgMode={bgMode} />
-              </WidgetHoverActions>
-            </div>
-            )}
-          </HologramFrame>
-
-          {/* ══════════════════════════════════════════════════════════
-           *  FRAME 2 — Content Layer (welcome text, CTA, pills)
-           *  The primary interactive surface for the welcome screen
-           * ══════════════════════════════════════════════════════════ */}
-          <HologramFrame layer={2} label="content" interactive={false} transform={contentTilt} opacity={layerNav.layerOpacity(2)} style={{ transform: `scale(${layerNav.layerScale(2)})`, transition: "opacity 0.5s, transform 0.5s" }}>
-            {/* Logo — top center */}
-            <div
-              className="absolute top-[5vh] left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-300 ease-out"
-              style={{
-                pointerEvents: isFocus ? "none" : "auto",
-                opacity: isFocus ? 0 : 1,
-                transform: isFocus ? "translateY(-10px)" : "translateY(0)",
-              }}
-            >
-              {/* SVG wordmark — geometric, open-A, ĀMAN-inspired */}
-              <svg
-                viewBox="0 0 360 40"
-                className="transition-opacity duration-300 select-none"
-                style={{
-                  width: "clamp(160px, 18vw, 320px)",
-                  height: "auto",
-                  opacity: 0.85,
-                }}
-                aria-label="Hologram"
-              >
-                {/* All strokes use currentColor for theme adaptation */}
-                <g
-                  fill="none"
-                  stroke={P.wordmark}
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {/* H */}
-                  <line x1="10" y1="6" x2="10" y2="34" />
-                  <line x1="30" y1="6" x2="30" y2="34" />
-                  <line x1="10" y1="20" x2="30" y2="20" />
-
-                  {/* O */}
-                  <ellipse cx="60" cy="20" rx="14" ry="14" />
-
-                  {/* L */}
-                  <line x1="94" y1="6" x2="94" y2="34" />
-                  <line x1="94" y1="34" x2="114" y2="34" />
-
-                  {/* O */}
-                  <ellipse cx="144" cy="20" rx="14" ry="14" />
-
-                  {/* G */}
-                  <path d="M 198 12 A 14 14 0 1 0 198 28 L 198 20 L 188 20" />
-
-                  {/* R */}
-                  <line x1="222" y1="6" x2="222" y2="34" />
-                  <path d="M 222 6 L 236 6 A 7 7 0 0 1 236 20 L 222 20" />
-                  <line x1="232" y1="20" x2="242" y2="34" />
-
-                  {/* A — open, no crossbar (ĀMAN style) */}
-                  <line x1="266" y1="34" x2="280" y2="6" />
-                  <line x1="280" y1="6" x2="294" y2="34" />
-
-                  {/* M — geometric peaked */}
-                  <line x1="318" y1="34" x2="318" y2="6" />
-                  <line x1="318" y1="6" x2="334" y2="22" />
-                  <line x1="334" y1="22" x2="350" y2="6" />
-                  <line x1="350" y1="6" x2="350" y2="34" />
-                </g>
-              </svg>
-            </div>
-
-            {/* Welcome — centered */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center px-8">
-              <div
-                className="text-center animate-fade-in transition-all duration-500 ease-out"
-                style={{
-                  textShadow: bgMode === "image" ? "0 1px 8px hsla(0, 0%, 0%, 0.5), 0 0 30px hsla(0, 0%, 0%, 0.2)" : "none",
-                  pointerEvents: "auto",
-                  maxWidth: isFocus ? "56rem" : "42rem",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: isFocus ? "clamp(16px, 2.5vh, 32px)" : "clamp(10px, 1.8vh, 24px)",
+                  zIndex: desktopZ(mode),
+                  // Departing desktop peels away left-to-right
+                  clipPath: isDep ? "inset(0 100% 0 0)" : "inset(0 0 0 0)",
+                  transition: isDep
+                    ? "clip-path 2000ms cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+                    : "none",
+                  willChange: isDep ? "clip-path" : "auto",
                 }}
               >
-                <p
-                  className="tracking-[0.25em] uppercase transition-all duration-500"
-                  style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
-                    color: P.greeting,
-                    fontWeight: 400,
-                    fontSize: isFocus ? "clamp(13px, 1.2vw, 20px)" : "clamp(11px, 1vw, 16px)",
-                    letterSpacing: "0.25em",
-                  }}
-                >
-                  {greeting}
-                </p>
+                <DesktopSurface
+                  mode={mode}
+                  isActive={isAct && !departingDesktop}
+                  isDeparting={isDep}
+                  greeting={greeting}
+                  welcomeName={welcomeName}
+                  isFocus={isFocus}
+                  contextHints={contextHints}
+                  onOpenChat={() => { setChatPrompt(""); setChatOpen(true); }}
+                  onSwitchDesktop={switchDesktop}
+                  onOpenLegal={(tab) => { setLegalTab(tab); setLegalOpen(true); }}
+                  isWidgetVisible={ws.isWidgetVisible}
+                  removeWidget={ws.removeWidget}
+                  ambientState={mode === "image" ? ambientState : undefined}
+                />
 
-                <h1
-                  className="leading-[1.08] transition-all duration-500"
-                  style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontWeight: 300,
-                    color: P.heading,
-                    letterSpacing: "-0.01em",
-                    fontSize: isFocus ? "clamp(42px, 5.5vw, 96px)" : "clamp(34px, 4.4vw, 76px)",
-                  }}
-                >
-                  Welcome{contextHints.length > 0 ? " back" : " home"},
-                  <br />
-                  {welcomeName}.
-                </h1>
-
-                {/* Vertical line — expands from center point, up and down */}
-                <div className="flex justify-center">
+                {/* Wavefront glow at the leading edge of the peel */}
+                {isDep && (
                   <div
+                    className="absolute top-0 bottom-0 left-0 pointer-events-none"
                     style={{
-                      height: isFocus ? "clamp(60px, 8vh, 160px)" : "clamp(40px, 6vh, 110px)",
-                      width: 0,
-                      borderLeft: `1px solid ${
-                        bgMode === "white"
-                          ? "hsla(0, 0%, 10%, 0.45)"
-                          : bgMode === "dark"
-                            ? "hsla(0, 0%, 85%, 0.3)"
-                            : "hsla(0, 0%, 5%, 0.4)"
-                      }`,
-                      transformOrigin: "center center",
-                      animation: "line-expand 3s cubic-bezier(0.22, 1, 0.36, 1) 0.8s both",
+                      width: "80px",
+                      background: "linear-gradient(to right, hsla(38, 30%, 65%, 0.08), transparent)",
+                      filter: "blur(16px)",
+                      zIndex: 1,
                     }}
                   />
-                </div>
-
-                {/* LUMEN AI — the magic moment, the only CTA */}
-                <div
-                  className="flex flex-col items-center"
-                  style={{
-                    animation: "stagger-fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both",
-                  }}
-                >
-                  <button
-                    onClick={() => { setChatPrompt(""); setChatOpen(true); }}
-                    className="group flex flex-col items-center transition-all duration-700"
-                    style={{ cursor: "pointer", background: "none", border: "none", gap: isFocus ? "clamp(14px, 2vh, 28px)" : "clamp(10px, 1.5vh, 20px)" }}
-                  >
-                    {/* Breathing glyph — the heart of Lumen */}
-                    <div className="relative flex items-center justify-center" style={{ width: isFocus ? "clamp(48px, 5vw, 80px)" : "clamp(40px, 4vw, 64px)", height: isFocus ? "clamp(48px, 5vw, 80px)" : "clamp(40px, 4vw, 64px)" }}>
-                      {/* Outer ring — gentle hover: just a quiet opacity lift */}
-                      <div
-                        className="absolute rounded-full transition-all duration-[1400ms] ease-out group-hover:opacity-100"
-                        style={{
-                          width: isFocus ? "clamp(48px, 5vw, 80px)" : "clamp(40px, 4vw, 64px)",
-                          height: isFocus ? "clamp(48px, 5vw, 80px)" : "clamp(40px, 4vw, 64px)",
-                          opacity: 0.85,
-                          border: `1px solid ${
-                            bgMode === "white"
-                              ? "hsla(0, 0%, 10%, 0.45)"
-                              : bgMode === "dark"
-                                ? "hsla(38, 25%, 75%, 0.25)"
-                                : "hsla(0, 0%, 5%, 0.4)"
-                          }`,
-                          animation: "lumen-ring-enter 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, ambient-glow-breathe 6s ease-in-out 3s infinite",
-                        }}
-                      />
-                      {/* Inner dot — on hover, glow warms slightly */}
-                      <div
-                        className="lumen-dot-hover rounded-full transition-all duration-[1400ms] ease-out"
-                        style={{
-                          width: isFocus ? "clamp(8px, 0.8vw, 12px)" : "clamp(6px, 0.6vw, 10px)",
-                          height: isFocus ? "clamp(8px, 0.8vw, 12px)" : "clamp(6px, 0.6vw, 10px)",
-                          background: bgMode === "white"
-                            ? "hsla(38, 45%, 50%, 0.75)"
-                            : "hsla(38, 50%, 60%, 0.7)",
-                          boxShadow: bgMode === "white"
-                            ? "0 0 20px hsla(38, 40%, 50%, 0.4)"
-                            : "0 0 24px hsla(38, 50%, 55%, 0.35)",
-                          animation: "lumen-dot-enter 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, heartbeat-love 2.4s ease-in-out 3.2s infinite",
-                        }}
-                      />
-                    </div>
-
-                    {/* Name — Lumen */}
-                    <span
-                      className="tracking-[0.2em] transition-all duration-700"
-                      style={{
-                        fontFamily: "'DM Sans', system-ui, sans-serif",
-                        fontWeight: 400,
-                        fontSize: isFocus ? "clamp(13px, 1.1vw, 16px)" : "clamp(12px, 0.9vw, 14px)",
-                        color: bgMode === "white"
-                          ? "hsla(0, 0%, 15%, 0.85)"
-                          : "hsla(38, 15%, 88%, 0.7)",
-                      }}
-                    >
-                      LUMEN AI
-                    </span>
-
-                    {/* Typewriter subtitle */}
-                    <p
-                      className="tracking-[0.08em] transition-all duration-500"
-                      style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontWeight: 300,
-                        fontStyle: "italic",
-                        fontSize: isFocus ? "clamp(15px, 1.2vw, 22px)" : "clamp(14px, 1vw, 18px)",
-                        color: bgMode === "white" ? "hsla(0, 0%, 15%, 0.7)" : "hsla(38, 12%, 85%, 0.6)",
-                        maxWidth: "30ch",
-                        lineHeight: 1.6,
-                        animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
-                      }}
-                    >
-                      <TypewriterText text={getLumenSubtitle()} />
-                    </p>
-                  </button>
-                </div>
+                )}
               </div>
-            </div>
-
-          </HologramFrame>
-
-          {/* ── Subtle legal links — Hedosophia-inspired ── */}
-          <div
-            className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-6 z-10"
-            style={{
-              opacity: "var(--focus-chrome-opacity, 1)",
-              filter: "blur(var(--focus-blur-chrome, 0px))",
-              transition: "opacity 0.7s ease, filter 0.7s ease",
-            }}
-          >
-            <button
-              onClick={() => { setLegalTab("privacy"); setLegalOpen(true); }}
-              className="transition-opacity duration-500 hover:opacity-70"
-              style={{
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                fontSize: "10px",
-                letterSpacing: "0.15em",
-                textTransform: "uppercase" as const,
-                color: bgMode === "white"
-                  ? "hsla(0, 0%, 15%, 0.6)"
-                  : "hsla(38, 15%, 85%, 0.55)",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              Privacy Policy
-            </button>
-            <span
-              style={{
-                width: "2px",
-                height: "2px",
-                borderRadius: "50%",
-                background: bgMode === "white"
-                  ? "hsla(0, 0%, 15%, 0.4)"
-                  : "hsla(38, 15%, 85%, 0.3)",
-              }}
-            />
-            <button
-              onClick={() => { setLegalTab("terms"); setLegalOpen(true); }}
-              className="transition-opacity duration-500 hover:opacity-70"
-              style={{
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                fontSize: "10px",
-                letterSpacing: "0.15em",
-                textTransform: "uppercase" as const,
-                color: bgMode === "white"
-                  ? "hsla(0, 0%, 15%, 0.6)"
-                  : "hsla(38, 15%, 85%, 0.55)",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              Terms of Use
-            </button>
-          </div>
-
-          {/* Keyframes moved to index.css for zero-recalc mounting */}
+            );
+          })}
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════
-       *  FRAME 3 — Overlay Layer (modals, chat, claim)
-       *  Inside the viewport so depth recession triggers on lower frames
-       * ════════════════════════════════════════════════════════════════ */}
+      {/* ══ Overlay Layer (modals, chat, projections) ════════════ */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
       <ShortcutCheatSheet open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
-      <LegalPanel open={legalOpen} initialTab={legalTab} onClose={() => setLegalOpen(false)} bgMode={bgMode === "white" ? "white" : "dark"} />
+      <LegalPanel open={legalOpen} initialTab={legalTab} onClose={() => setLegalOpen(false)} bgMode={activeDesktop === "white" ? "white" : "dark"} />
       <ModularSnapGrid visible={lumenPanel.isResizing} />
       <HologramAiChat
         open={chatOpen}
-        onClose={() => { setChatOpen(false); setChatPrompt(""); setPillGlow(true); setTimeout(() => setPillGlow(false), 1800); }}
+        onClose={() => { setChatOpen(false); setChatPrompt(""); }}
         onPhaseChange={triadicActivity.setActivePhase}
         creatorStage={triadicActivity.creatorStage}
-        replayGuideKey={replayGuide}
+        replayGuideKey={0}
         initialPrompt={chatPrompt}
         panelWidth={lumenPanel.width}
         resizeHandleProps={lumenPanel.resizeHandleProps}
         isResizing={lumenPanel.isResizing}
       />
-      {/* FrameDebugOverlay removed for cleaner UI */}
-      {isWidgetVisible("ambient-player") && (
+      {widgetStates[activeDesktop].isWidgetVisible("ambient-player") && (
         <AmbientPlayer lumenOffset={chatOpen ? lumenPanel.width : 0} onStateChange={setAmbientState} />
       )}
-      {/* ── Browser Panel — projection from sidebar ── */}
       <BrowserProjection
         open={browserOpen}
         onClose={() => setBrowserOpen(false)}
@@ -982,21 +332,9 @@ export default function HologramOsPage() {
           setChatOpen(true);
         }}
       />
-      {/* ── Compute Panel — projection from sidebar ── */}
-      <ComputeProjection
-        open={computeOpen}
-        onClose={() => setComputeOpen(false)}
-      />
-      {/* ── Memory Panel — projection from sidebar ── */}
-      <MemoryProjection
-        open={memoryOpen}
-        onClose={() => setMemoryOpen(false)}
-      />
-      {/* ── Messenger Panel — projection from sidebar ── */}
-      <MessengerProjection
-        open={messengerOpen}
-        onClose={() => setMessengerOpen(false)}
-      />
+      <ComputeProjection open={computeOpen} onClose={() => setComputeOpen(false)} />
+      <MemoryProjection open={memoryOpen} onClose={() => setMemoryOpen(false)} />
+      <MessengerProjection open={messengerOpen} onClose={() => setMessengerOpen(false)} />
       <SnapGuideOverlay />
     </HologramViewport>
   );
