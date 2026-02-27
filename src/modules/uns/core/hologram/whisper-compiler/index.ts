@@ -37,6 +37,22 @@ export { HologramWeightStore, getWeightStore } from "./weight-store";
 // Proto decoder (exposed for testing)
 export { ProtoReader } from "./proto-decoder";
 
+// WGSL inference kernels (Phase 2)
+export {
+  WHISPER_KERNELS,
+  WGSL_MATMUL,
+  WGSL_LAYER_NORM,
+  WGSL_GELU,
+  WGSL_SOFTMAX,
+  WGSL_SDPA,
+  cpuMatmul,
+  cpuLayerNorm,
+  cpuGelu,
+  cpuSoftmax,
+  cpuScaledDotProductAttention,
+} from "./wgsl-kernels";
+export type { WhisperKernelName } from "./wgsl-kernels";
+
 // Types
 export type {
   OnnxTensor,
