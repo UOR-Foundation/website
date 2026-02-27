@@ -68,6 +68,7 @@ export function useVoiceConversation({
   const [elapsed, setElapsed] = useState(0);
   const conversationHistory = useRef<{ role: "user" | "assistant"; content: string }[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const hasGreetedRef = useRef(false);
 
   // Recording state
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -196,11 +197,38 @@ export function useVoiceConversation({
     return fullText;
   }, [cloudModel, personaId, skillId, screenContext, observerBriefing, fusionContext]);
 
+  /** Warm greetings — gentle, balanced, human-first */
+  const GREETINGS = [
+    "I'm here. Take your time.",
+    "Hello. I'm listening whenever you're ready.",
+    "Present and listening. What's on your mind?",
+    "I'm with you. Speak when it feels right.",
+    "Here. No rush — I'm all ears.",
+  ];
+
   /** Start listening — begins the voice loop */
   const startListening = useCallback(async () => {
     if (state !== "idle") return;
 
     try {
+      // On first activation, greet the user warmly before listening
+      if (!hasGreetedRef.current) {
+        hasGreetedRef.current = true;
+        const greeting = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
+        updateState("speaking");
+        setLastResponse(greeting);
+        conversationHistory.current.push({ role: "assistant", content: greeting });
+
+        // Speak the greeting and wait for TTS to finish
+        await new Promise<void>((resolve) => {
+          tts.speak(greeting);
+          setTimeout(resolve, 4000);
+        });
+
+        // Small breath before listening
+        await new Promise(r => setTimeout(r, 400));
+      }
+
       updateState("listening");
 
       // Ensure Whisper is loaded
