@@ -71,3 +71,32 @@ export type {
   MorphismMapReport,
   MorphismMapTest,
 } from "./morphism-map";
+
+// Observer Bridge: zone-driven morphism selection (Phase 4)
+export {
+  selectMorphism,
+  computeTranslation,
+  runObserverBridgeVerification,
+} from "./observer-bridge";
+export type {
+  ObserverZone,
+  ObserverState,
+  MorphismSelection,
+  TranslationRequest,
+  TranslationResult,
+  ObserverBridgeReport,
+} from "./observer-bridge";
+
+// Convergence Test: LLM → Atlas substrate mapping (Phase 5)
+export {
+  MODEL_CATALOG,
+  decomposeModel,
+  verifyUniversalInvariants,
+  runConvergenceTest,
+} from "./convergence";
+export type {
+  ModelArchitecture,
+  AtlasDecomposition,
+  UniversalInvariant,
+  ConvergenceReport,
+} from "./convergence";
