@@ -2,44 +2,34 @@
  * VoiceOrb — Human ↔ Hologram Voice Interface
  * ═══════════════════════════════════════════════
  *
- * A breathing, organic orb that serves as the voice conversation interface.
- * Sits near the Lumen AI pill. Tap to speak, tap again to stop.
- *
  * Visual states:
  *  - idle:       Subtle breathing glow, minimal presence
- *  - listening:  Warm pulse, waveform reacts to voice amplitude
+ *  - listening:  Coherence-spectrum aura + intensity-responsive pulsation
  *  - processing: Contemplative shimmer (transcribing)
  *  - thinking:   Golden orbital animation (Lumen reasoning)
  *  - speaking:   Rhythmic pulse synced to speech output
  *
- * Observer layer:
- *  - When observer context is present, a subtle outer halo indicates
- *    ambient intelligence is active — Lumen is contextually aware.
- *
- * Wake word ("Hey Lumen"):
- *  - Toggle always-listening mode with the ear icon
- *  - Passive mic monitoring with VAD → triggers voice loop hands-free
- *  - Subtle cyan sentinel ring when active
+ * Listening feedback:
+ *  - Expanding rings pulse with voice intensity
+ *  - Color shifts on a spectrum: green-gold (harmonious) → amber → red (erratic)
+ *  - Waveform bars inherit coherence color
+ *  - A subtle label shows speech quality feedback
  *
  * @module hologram-ui/components/VoiceOrb
  */
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useVoiceConversation, type VoiceConversationState } from "../hooks/useVoiceConversation";
+import { useVoiceCoherence, type VoiceCoherenceMetrics } from "../hooks/useVoiceCoherence";
 import { useWakeWord } from "../hooks/useWakeWord";
 import { Mic, Square, Volume2, Waves, Ear, EarOff } from "lucide-react";
 
 interface VoiceOrbProps {
-  /** Screen context for ambient awareness */
   screenContext?: string;
-  /** Observer briefing */
   observerBriefing?: string;
-  /** Fusion context */
   fusionContext?: string;
-  /** Persona ID */
   personaId?: string;
-  /** Called when a voice exchange completes */
   onExchange?: (userText: string, assistantText: string) => void;
 }
 
@@ -79,6 +69,14 @@ const STATE_COLORS: Record<VoiceConversationState, { ring: string; glow: string;
   },
 };
 
+/* ── Coherence label map ─────────────────── */
+const COHERENCE_LABELS: Record<VoiceCoherenceMetrics["label"], string> = {
+  harmonious: "Clear",
+  moderate: "Steady",
+  erratic: "Slow down",
+  silent: "",
+};
+
 export default function VoiceOrb({
   screenContext,
   observerBriefing,
@@ -88,6 +86,12 @@ export default function VoiceOrb({
 }: VoiceOrbProps) {
   const [hovered, setHovered] = useState(false);
   const [alwaysListening, setAlwaysListening] = useState(false);
+  const [metrics, setMetrics] = useState<VoiceCoherenceMetrics>({
+    intensity: 0, steadiness: 1, pace: 0, coherence: 1, hue: 150, label: "silent",
+  });
+
+  const coherence = useVoiceCoherence();
+  const metricsRafRef = useRef<number | null>(null);
 
   const voice = useVoiceConversation({
     voiceEngine: "elevenlabs",
@@ -99,19 +103,62 @@ export default function VoiceOrb({
     onError: (err) => console.warn("[VoiceOrb]", err),
   });
 
-  // Wake word detection — triggers startListening hands-free
+  // Analyze audio level on every frame while listening
+  useEffect(() => {
+    if (!voice.isListening) {
+      coherence.reset();
+      setMetrics({ intensity: 0, steadiness: 1, pace: 0, coherence: 1, hue: 150, label: "silent" });
+      return;
+    }
+
+    let active = true;
+    const tick = () => {
+      if (!active) return;
+      const m = coherence.analyze(voice.audioLevel);
+      setMetrics(m);
+      metricsRafRef.current = requestAnimationFrame(tick);
+    };
+    metricsRafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      active = false;
+      if (metricsRafRef.current) cancelAnimationFrame(metricsRafRef.current);
+    };
+  }, [voice.isListening, voice.audioLevel, coherence]);
+
   const wakeWord = useWakeWord({
     onWake: useCallback(() => {
       if (voice.isIdle) {
-        console.log("[VoiceOrb] 🎯 Wake word detected — starting conversation");
+        console.log("[VoiceOrb] 🎯 Wake word detected");
         voice.startListening();
       }
     }, [voice.isIdle, voice.startListening]),
-    enabled: alwaysListening && voice.isIdle, // Only listen for wake word when idle
+    enabled: alwaysListening && voice.isIdle,
   });
 
-  const colors = STATE_COLORS[voice.state];
   const hasObserver = !!(observerBriefing && observerBriefing.length > 10);
+
+  // Derived coherence-driven colors (only active during listening)
+  const coherenceRing = useMemo(() => {
+    if (!voice.isListening) return STATE_COLORS[voice.state].ring;
+    const { hue, coherence: c, intensity } = metrics;
+    const sat = 40 + c * 20;
+    const light = 50 + intensity * 10;
+    const alpha = 0.4 + intensity * 0.4;
+    return `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
+  }, [voice.isListening, voice.state, metrics]);
+
+  const coherenceGlow = useMemo(() => {
+    if (!voice.isListening) return STATE_COLORS[voice.state].glow;
+    const { hue, intensity } = metrics;
+    return `hsla(${hue}, 45%, 50%, ${0.05 + intensity * 0.2})`;
+  }, [voice.isListening, voice.state, metrics]);
+
+  const coherenceBg = useMemo(() => {
+    if (!voice.isListening) return STATE_COLORS[voice.state].bg;
+    const { hue } = metrics;
+    return `hsla(${hue}, 8%, 10%, 0.85)`;
+  }, [voice.isListening, voice.state, metrics]);
 
   const Icon = useMemo(() => {
     switch (voice.state) {
@@ -122,30 +169,33 @@ export default function VoiceOrb({
     }
   }, [voice.state]);
 
-  // Natural waveform bars for listening state
+  // Waveform bars — color-coded by coherence
   const waveBars = useMemo(() => {
     if (!voice.isListening) return null;
+    const { hue, coherence: c, intensity } = metrics;
     const barHeights = [0.2, 0.5, 1.0, 0.7, 0.35];
     return (
       <div className="flex items-center gap-[2px] h-4">
         {barHeights.map((offset, i) => {
-          const height = Math.max(3, Math.round(voice.audioLevel * offset * 18));
+          const height = Math.max(3, Math.round(intensity * offset * 20));
+          const sat = 40 + c * 25;
+          const alpha = 0.35 + intensity * 0.65;
           return (
             <motion.div
               key={i}
               className="rounded-full"
               animate={{ height }}
-              transition={{ duration: 0.08, ease: "easeOut" }}
+              transition={{ duration: 0.06, ease: "easeOut" }}
               style={{
-                width: "2px",
-                background: `hsla(0, 50%, 62%, ${0.4 + voice.audioLevel * 0.6})`,
+                width: "2.5px",
+                background: `hsla(${hue}, ${sat}%, 62%, ${alpha})`,
               }}
             />
           );
         })}
       </div>
     );
-  }, [voice.isListening, voice.audioLevel]);
+  }, [voice.isListening, metrics]);
 
   // Speaking rhythm bars
   const speakBars = useMemo(() => {
@@ -158,12 +208,7 @@ export default function VoiceOrb({
             className="rounded-full"
             style={{ width: "2px", background: "hsla(200, 40%, 62%, 0.7)" }}
             animate={{ height: [4, 12, 6, 14, 4] }}
-            transition={{
-              duration: 1.2,
-              repeat: Infinity,
-              delay: i * 0.12,
-              ease: "easeInOut",
-            }}
+            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.12, ease: "easeInOut" }}
           />
         ))}
       </div>
@@ -175,6 +220,9 @@ export default function VoiceOrb({
     setAlwaysListening(prev => !prev);
   }, []);
 
+  // Pulse ring scale based on voice intensity
+  const pulseScale = voice.isListening ? 1.4 + metrics.intensity * 1.2 : 1.8;
+
   return (
     <div
       className="relative flex flex-col items-center gap-2"
@@ -182,7 +230,7 @@ export default function VoiceOrb({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Transcript overlay — appears above when active */}
+      {/* Transcript overlay */}
       <AnimatePresence>
         {voice.isActive && (voice.lastTranscript || voice.lastResponse) && (
           <motion.div
@@ -203,62 +251,44 @@ export default function VoiceOrb({
             }}
           >
             {voice.lastTranscript && (
-              <p
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: "11px",
-                  color: "hsla(38, 12%, 70%, 0.5)",
-                  marginBottom: voice.lastResponse ? "8px" : 0,
-                  lineHeight: 1.55,
-                  fontStyle: "italic",
-                }}
-              >
+              <p style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "11px",
+                color: "hsla(38, 12%, 70%, 0.5)",
+                marginBottom: voice.lastResponse ? "8px" : 0,
+                lineHeight: 1.55,
+                fontStyle: "italic",
+              }}>
                 "{voice.lastTranscript}"
               </p>
             )}
-
             {voice.lastResponse && (voice.isThinking || voice.isSpeaking) && (
-              <p
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: "12px",
-                  fontWeight: 300,
-                  color: "hsla(38, 15%, 90%, 0.85)",
-                  lineHeight: 1.6,
-                  maxHeight: "120px",
-                  overflow: "hidden",
-                }}
-              >
+              <p style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: "12px",
+                fontWeight: 300,
+                color: "hsla(38, 15%, 90%, 0.85)",
+                lineHeight: 1.6,
+                maxHeight: "120px",
+                overflow: "hidden",
+              }}>
                 {voice.lastResponse.slice(0, 250)}
                 {voice.lastResponse.length > 250 ? "…" : ""}
               </p>
             )}
-
             {hasObserver && voice.isActive && (
-              <div
-                className="flex items-center gap-1.5 mt-2 pt-2"
-                style={{ borderTop: "1px solid hsla(38, 20%, 30%, 0.1)" }}
-              >
-                <div
-                  className="rounded-full"
-                  style={{
-                    width: "4px",
-                    height: "4px",
-                    background: "hsla(150, 40%, 55%, 0.6)",
-                    animation: "heartbeat-love 3s ease-in-out infinite",
-                  }}
-                />
-                <span
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: "9px",
-                    letterSpacing: "0.12em",
-                    color: "hsla(150, 30%, 65%, 0.45)",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Observer active
-                </span>
+              <div className="flex items-center gap-1.5 mt-2 pt-2" style={{ borderTop: "1px solid hsla(38, 20%, 30%, 0.1)" }}>
+                <div className="rounded-full" style={{
+                  width: "4px", height: "4px",
+                  background: "hsla(150, 40%, 55%, 0.6)",
+                  animation: "heartbeat-love 3s ease-in-out infinite",
+                }} />
+                <span style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: "9px", letterSpacing: "0.12em",
+                  color: "hsla(150, 30%, 65%, 0.45)",
+                  textTransform: "uppercase",
+                }}>Observer active</span>
               </div>
             )}
           </motion.div>
@@ -272,7 +302,7 @@ export default function VoiceOrb({
         style={{ touchAction: "none" }}
         aria-label={STATE_LABELS[voice.state]}
       >
-        {/* Wake word sentinel ring — outermost, subtle cyan pulse when always-listening */}
+        {/* Wake word sentinel ring */}
         <AnimatePresence>
           {alwaysListening && voice.isIdle && (
             <motion.div
@@ -292,41 +322,78 @@ export default function VoiceOrb({
           )}
         </AnimatePresence>
 
-        {/* Wake detection ripple — haptic-style expanding ring on recognition */}
+        {/* Wake detection ripple */}
         <AnimatePresence>
           {wakeWord.wakeDetected && (
             <>
-              <motion.div
-                key="ripple-1"
-                initial={{ opacity: 0.6, scale: 1 }}
-                animate={{ opacity: 0, scale: 3.5 }}
-                exit={{ opacity: 0 }}
+              <motion.div key="ripple-1"
+                initial={{ opacity: 0.6, scale: 1 }} animate={{ opacity: 0, scale: 3.5 }} exit={{ opacity: 0 }}
                 transition={{ duration: 0.7, ease: "easeOut" }}
                 className="absolute inset-0 rounded-full pointer-events-none"
-                style={{
-                  border: "2px solid hsla(185, 50%, 60%, 0.5)",
-                }}
+                style={{ border: "2px solid hsla(185, 50%, 60%, 0.5)" }}
               />
-              <motion.div
-                key="ripple-2"
-                initial={{ opacity: 0.4, scale: 1 }}
-                animate={{ opacity: 0, scale: 2.8 }}
-                exit={{ opacity: 0 }}
+              <motion.div key="ripple-2"
+                initial={{ opacity: 0.4, scale: 1 }} animate={{ opacity: 0, scale: 2.8 }} exit={{ opacity: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut", delay: 0.08 }}
                 className="absolute inset-0 rounded-full pointer-events-none"
-                style={{
-                  border: "1.5px solid hsla(185, 45%, 55%, 0.35)",
-                }}
+                style={{ border: "1.5px solid hsla(185, 45%, 55%, 0.35)" }}
               />
-              {/* Flash the orb itself */}
-              <motion.div
-                key="flash"
-                initial={{ opacity: 0.5 }}
-                animate={{ opacity: 0 }}
+              <motion.div key="flash"
+                initial={{ opacity: 0.5 }} animate={{ opacity: 0 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="absolute inset-0 rounded-full pointer-events-none"
+                style={{ background: "radial-gradient(circle, hsla(185, 50%, 60%, 0.25) 0%, transparent 70%)" }}
+              />
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* ── Listening: Coherence-spectrum pulsating rings ── */}
+        <AnimatePresence>
+          {voice.isListening && metrics.label !== "silent" && (
+            <>
+              {/* Primary intensity ring — breathes with voice amplitude */}
+              <motion.div
+                key="pulse-ring-1"
+                initial={{ opacity: 0, scale: 1 }}
+                animate={{
+                  opacity: [0.3 + metrics.intensity * 0.4, 0.1],
+                  scale: [1.2, pulseScale],
+                }}
+                exit={{ opacity: 0, scale: 1 }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: "easeOut" }}
+                className="absolute inset-0 rounded-full pointer-events-none"
                 style={{
-                  background: "radial-gradient(circle, hsla(185, 50%, 60%, 0.25) 0%, transparent 70%)",
+                  border: `1.5px solid hsla(${metrics.hue}, 45%, 58%, ${0.3 + metrics.intensity * 0.5})`,
+                }}
+              />
+              {/* Secondary softer ring — staggered */}
+              <motion.div
+                key="pulse-ring-2"
+                initial={{ opacity: 0, scale: 1 }}
+                animate={{
+                  opacity: [0.15 + metrics.intensity * 0.2, 0.0],
+                  scale: [1.1, pulseScale * 0.85],
+                }}
+                exit={{ opacity: 0, scale: 1 }}
+                transition={{ duration: 1.0, repeat: Infinity, ease: "easeOut", delay: 0.15 }}
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  border: `1px solid hsla(${metrics.hue}, 40%, 55%, ${0.15 + metrics.intensity * 0.3})`,
+                }}
+              />
+              {/* Radial glow — coherence-colored ambient field */}
+              <motion.div
+                key="coherence-glow"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  transform: `scale(${1.6 + metrics.intensity * 0.6})`,
+                  background: `radial-gradient(circle, hsla(${metrics.hue}, 45%, 50%, ${0.06 + metrics.intensity * 0.12}) 0%, transparent 70%)`,
+                  transition: "transform 0.15s ease-out, background 0.3s ease",
                 }}
               />
             </>
@@ -346,38 +413,41 @@ export default function VoiceOrb({
           />
         )}
 
-        {/* Outer glow */}
+        {/* Outer glow — uses coherence color during listening */}
         <div
           className="absolute inset-0 rounded-full pointer-events-none"
           style={{
-            transform: "scale(1.8)",
-            background: `radial-gradient(circle, ${colors.glow} 0%, transparent 70%)`,
-            animation: voice.isActive ? "ring-breathe 3s ease-in-out infinite" : undefined,
-            transition: "background 0.6s ease",
+            transform: `scale(${voice.isListening ? 1.5 + metrics.intensity * 0.5 : 1.8})`,
+            background: `radial-gradient(circle, ${coherenceGlow} 0%, transparent 70%)`,
+            animation: voice.isActive && !voice.isListening ? "ring-breathe 3s ease-in-out infinite" : undefined,
+            transition: "transform 0.15s ease-out, background 0.3s ease",
           }}
         />
 
-        {/* Ring */}
+        {/* Main Ring — border color shifts with coherence */}
         <div
-          className="relative flex items-center justify-center rounded-full transition-all duration-500"
+          className="relative flex items-center justify-center rounded-full"
           style={{
             width: "44px",
             height: "44px",
-            background: colors.bg,
+            background: coherenceBg,
             border: `1.5px solid ${
               alwaysListening && voice.isIdle
                 ? `hsla(185, 35%, 55%, ${wakeWord.isDetecting ? 0.55 : 0.35})`
-                : colors.ring
+                : coherenceRing
             }`,
             backdropFilter: "blur(16px)",
             WebkitBackdropFilter: "blur(16px)",
-            boxShadow: voice.isActive
-              ? `0 0 24px ${colors.glow}, inset 0 0 10px ${colors.glow}`
-              : alwaysListening && voice.isIdle
-                ? `0 0 12px hsla(185, 30%, 50%, 0.08)`
-                : hovered
-                  ? `0 0 12px hsla(38, 30%, 50%, 0.08)`
-                  : "0 2px 8px hsla(0, 0%, 0%, 0.2)",
+            boxShadow: voice.isListening
+              ? `0 0 ${12 + metrics.intensity * 20}px ${coherenceGlow}, inset 0 0 ${6 + metrics.intensity * 8}px ${coherenceGlow}`
+              : voice.isActive
+                ? `0 0 24px ${STATE_COLORS[voice.state].glow}, inset 0 0 10px ${STATE_COLORS[voice.state].glow}`
+                : alwaysListening && voice.isIdle
+                  ? "0 0 12px hsla(185, 30%, 50%, 0.08)"
+                  : hovered
+                    ? "0 0 12px hsla(38, 30%, 50%, 0.08)"
+                    : "0 2px 8px hsla(0, 0%, 0%, 0.2)",
+            transition: "background 0.3s ease, border-color 0.15s ease, box-shadow 0.15s ease",
           }}
         >
           {/* Thinking/Processing spinner */}
@@ -430,32 +500,49 @@ export default function VoiceOrb({
         </div>
       </button>
 
-      {/* State label + always-listening toggle */}
+      {/* State label + coherence feedback + always-listening toggle */}
       <div className="flex items-center gap-2">
         <AnimatePresence mode="wait">
           <motion.span
-            key={voice.state + (alwaysListening ? "-al" : "")}
+            key={voice.state + (alwaysListening ? "-al" : "") + (voice.isListening ? `-${metrics.label}` : "")}
             initial={{ opacity: 0, y: 2 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -2 }}
             transition={{ duration: 0.25 }}
-            className="tracking-[0.15em] uppercase"
+            className="tracking-[0.15em] uppercase flex items-center gap-1.5"
             style={{
               fontFamily: "'DM Sans', system-ui, sans-serif",
               fontSize: "9px",
               fontWeight: 500,
-              color: alwaysListening && voice.isIdle
-                ? "hsla(185, 15%, 75%, 0.55)"
-                : voice.isActive
-                  ? "hsla(38, 15%, 85%, 0.65)"
-                  : hovered
-                    ? "hsla(38, 15%, 80%, 0.45)"
-                    : "hsla(38, 15%, 75%, 0.25)",
+              color: voice.isListening && metrics.label !== "silent"
+                ? `hsla(${metrics.hue}, 30%, 75%, 0.7)`
+                : alwaysListening && voice.isIdle
+                  ? "hsla(185, 15%, 75%, 0.55)"
+                  : voice.isActive
+                    ? "hsla(38, 15%, 85%, 0.65)"
+                    : hovered
+                      ? "hsla(38, 15%, 80%, 0.45)"
+                      : "hsla(38, 15%, 75%, 0.25)",
+              transition: "color 0.3s ease",
             }}
           >
+            {/* Coherence indicator dot during listening */}
+            {voice.isListening && metrics.label !== "silent" && (
+              <span
+                className="rounded-full inline-block"
+                style={{
+                  width: "4px",
+                  height: "4px",
+                  background: `hsla(${metrics.hue}, 50%, 60%, 0.8)`,
+                  transition: "background 0.3s ease",
+                }}
+              />
+            )}
             {alwaysListening && voice.isIdle
               ? wakeWord.isChecking ? "Checking…" : wakeWord.isDetecting ? "Hearing…" : "Hey Lumen"
-              : STATE_LABELS[voice.state]
+              : voice.isListening && metrics.label !== "silent"
+                ? COHERENCE_LABELS[metrics.label]
+                : STATE_LABELS[voice.state]
             }
           </motion.span>
         </AnimatePresence>
@@ -487,21 +574,12 @@ export default function VoiceOrb({
             }}
           >
             {alwaysListening ? (
-              <Ear
-                size={10}
-                strokeWidth={1.5}
-                style={{ color: "hsla(185, 30%, 65%, 0.8)" }}
-              />
+              <Ear size={10} strokeWidth={1.5} style={{ color: "hsla(185, 30%, 65%, 0.8)" }} />
             ) : (
-              <EarOff
-                size={10}
-                strokeWidth={1.5}
-                style={{ color: "hsla(38, 10%, 60%, 0.35)" }}
-              />
+              <EarOff size={10} strokeWidth={1.5} style={{ color: "hsla(38, 10%, 60%, 0.35)" }} />
             )}
           </motion.div>
 
-          {/* Subtle pulse when actively listening for wake word */}
           {alwaysListening && voice.isIdle && (
             <motion.div
               className="absolute inset-0 rounded-full pointer-events-none"
@@ -511,11 +589,7 @@ export default function VoiceOrb({
                   "0 0 0 4px hsla(185, 35%, 50%, 0.0)",
                 ],
               }}
-              transition={{
-                duration: 2.5,
-                repeat: Infinity,
-                ease: "easeOut",
-              }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
             />
           )}
         </button>
@@ -532,8 +606,9 @@ export default function VoiceOrb({
               fontFamily: "'DM Sans', monospace",
               fontSize: "10px",
               fontWeight: 400,
-              color: "hsla(0, 50%, 60%, 0.6)",
+              color: `hsla(${metrics.hue}, 40%, 60%, 0.6)`,
               letterSpacing: "0.05em",
+              transition: "color 0.3s ease",
             }}
           >
             {Math.floor(voice.elapsed / 60)}:{String(voice.elapsed % 60).padStart(2, "0")}
