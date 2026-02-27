@@ -316,7 +316,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
           <div className="space-y-2">
             <ResourceRow
               icon={<IconCpu size={16} />}
-              label="Hologram Virtual GPU"
+              label="Virtual GPU"
               value={isOnline ? "Active" : "Starting…"}
               on={isOnline}
               detail={snap?.deviceInfo?.adapterName || "Browser compute engine"}
@@ -326,7 +326,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
               label="Lookup Tables"
               value={tables > 0 ? `${tables} loaded` : "Loading…"}
               on={tables > 0}
-              detail="Pre-computed operations for instant results"
+              detail="Pre-computed answer tables — instant results, no recalculation"
             />
             <ResourceRow
               icon={<IconBrain size={16} />}
@@ -337,10 +337,10 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
             />
             <ResourceRow
               icon={<IconShieldCheck size={16} />}
-              label="Integrity Check"
+              label="Result Verification"
               value={snap?.criticalIdentity?.holds ? "Verified" : "Pending"}
               on={snap?.criticalIdentity?.holds ?? false}
-              detail="Mathematical proof that computations are correct"
+              detail="Confirms every cached result matches a full recomputation"
             />
           </div>
         </section>
@@ -455,7 +455,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
         <div className="space-y-1">
           <h3 className="text-base font-medium" style={{ color: P.text }}>See the proof</h3>
           <p className="text-sm" style={{ color: P.muted }}>
-            Run a live benchmark and watch the Hologram Virtual GPU outperform standard compute by 100×+
+            Run a live benchmark and watch pre-computed lookups outperform standard compute by 100×+
           </p>
         </div>
         <IconArrowRight size={20} style={{ color: P.gold }} />
@@ -485,7 +485,7 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
         <StatCell label="Status" value={localSnap?.status === "ready" ? "Online" : localSnap?.status === "degraded" ? "CPU Mode" : "—"} color={sc(localSnap?.status ?? "")} />
         <StatCell label="GFLOPS" value={gpu?.matmulGflops.toFixed(1) ?? (cpu ? `${cpu.lutMopsPerSec.toFixed(0)}M` : "—")} />
         <StatCell label="Bandwidth" value={gpu?.bandwidthGBps.toFixed(1) ?? cpu?.lutThroughputGBps.toFixed(2) ?? "—"} unit="GB/s" />
-        <StatCell label="LUT Tables" value={`${localSnap?.lutInfo?.tableCount ?? 0}`} unit={`× ${localSnap?.lutInfo?.tableSize ?? 256}`} />
+        <StatCell label="Lookup Tables" value={`${localSnap?.lutInfo?.tableCount ?? 0}`} unit={`× ${localSnap?.lutInfo?.tableSize ?? 256}`} />
         <StatCell label="Inference" value={localSnap?.estimatedTokPerSec ? `~${localSnap.estimatedTokPerSec}` : "—"} unit="tok/s" />
       </section>
 
@@ -495,8 +495,8 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <ProCard
             icon={<IconCpu size={20} />}
-            title="Local vGPU"
-            desc="WebGPU compute with constant-time LUT engine. Auto CPU fallback."
+            title="Local GPU"
+            desc="GPU-accelerated compute with pre-computed lookup tables. Falls back to CPU automatically."
             active
             action="Run Benchmark"
             onClick={onBenchmark}
@@ -504,13 +504,13 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
           />
           <ProCard
             icon={<IconCloudComputing size={20} />}
-            title="GPU Clusters"
-            desc="NVIDIA H100 / B200 cloud integration. Unified API."
+            title="Cloud GPUs"
+            desc="Remote GPU clusters (H100, B200) via unified API. Same code, more power."
           />
           <ProCard
             icon={<IconUsers size={20} />}
-            title="Peer Compute"
-            desc="Federated GPU mesh. Contribute and consume cycles."
+            title="Peer Network"
+            desc="Share compute with peers. Contribute idle GPU cycles, use theirs when needed."
           />
         </div>
       </section>
@@ -528,7 +528,7 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
       {/* LUT Engine */}
       {localSnap?.lutInfo && (
         <section className="space-y-3">
-          <SectionTitle>Constant-Time Engine</SectionTitle>
+          <SectionTitle>Pre-computed Engine</SectionTitle>
           <div className="rounded-xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div>
@@ -550,7 +550,7 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
                   </p>
                   <IconCircleCheck size={14} style={{ color: localSnap.lutInfo.criticalIdentityHolds ? P.green : "hsl(0, 55%, 55%)" }} />
                 </div>
-                <p className="text-xs mt-1" style={{ color: P.muted }}>Critical Identity</p>
+                <p className="text-xs mt-1" style={{ color: P.muted }}>Integrity</p>
               </div>
             </div>
           </div>
@@ -562,12 +562,12 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
         <SectionTitle>Workloads</SectionTitle>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
           {[
-            { name: "MatMul", desc: "Matrix multiplication", badge: "WGSL" },
-            { name: "ReLU", desc: "Activation function", badge: "WGSL" },
-            { name: "Softmax", desc: "Probability distribution", badge: "WGSL" },
-            { name: "LUT Apply", desc: "Parallel table lookup", badge: "WGSL" },
-            { name: "Vec Add", desc: "Vector addition", badge: "WGSL" },
-            { name: "Hash Viz", desc: "Identity visualization", badge: "WGSL" },
+            { name: "MatMul", desc: "Matrix multiplication", badge: "GPU" },
+            { name: "ReLU", desc: "Activation function", badge: "GPU" },
+            { name: "Softmax", desc: "Probability normalization", badge: "GPU" },
+            { name: "Table Lookup", desc: "Pre-computed value retrieval", badge: "GPU" },
+            { name: "Vec Add", desc: "Vector addition", badge: "GPU" },
+            { name: "Fingerprint", desc: "Content hashing", badge: "GPU" },
           ].map(s => (
             <div
               key={s.name}
@@ -600,7 +600,7 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
           style={{ color: P.gold }}
         >
           <IconChartBar size={14} />
-          View live performance proof
+          View live benchmark
           <IconArrowRight size={12} />
         </button>
       </section>
@@ -753,11 +753,11 @@ function ProviderCard({ snap }: { snap: ProviderSnapshot }) {
       {isActive && snap.cpuBenchmarkResult && (
         <div className="flex gap-4 text-xs md:text-sm pt-2" style={{ borderTop: `1px solid ${P.cardBorder}` }}>
           <div>
-            <span style={{ color: P.muted }}>LUT</span>
+          <span style={{ color: P.muted }}>Lookups</span>
             <p className="font-mono" style={{ color: P.text }}>{snap.cpuBenchmarkResult.lutMopsPerSec.toFixed(0)}M ops/s</p>
           </div>
           <div>
-            <span style={{ color: P.muted }}>BW</span>
+            <span style={{ color: P.muted }}>Throughput</span>
             <p className="font-mono" style={{ color: P.text }}>{snap.cpuBenchmarkResult.lutThroughputGBps.toFixed(2)} GB/s</p>
           </div>
         </div>

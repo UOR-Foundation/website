@@ -314,9 +314,9 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
           How It Works
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-          <HowCard step="1" title="Capture" desc="Every interaction is encoded into a universal canonical form — one format that works everywhere." />
-          <HowCard step="2" title="Compress" desc="Intelligent compression removes redundancy while keeping every bit of meaning. Nothing is ever lost." />
-          <HowCard step="3" title="Encrypt" desc="Your data is encrypted on your device before it ever leaves. Only you hold the decryption keys." />
+          <HowCard step="1" title="Capture" desc="Every interaction is converted into a standard format — one structure that works everywhere." />
+          <HowCard step="2" title="Compress" desc="Smart compression removes redundancy while keeping every bit of meaning. Nothing is ever lost." />
+          <HowCard step="3" title="Encrypt" desc="Your data is encrypted on your device before it goes anywhere. Only you hold the keys." />
         </div>
       </section>
 
@@ -329,7 +329,7 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
         <div className="space-y-1">
           <h3 className="text-base md:text-lg font-medium" style={{ color: P.text }}>Try it yourself</h3>
           <p className="text-sm md:text-base" style={{ color: P.muted }}>
-            Drop a PDF and watch it get compressed, canonicalized, and become AI-searchable — instantly
+            Drop a PDF and watch it get compressed and become AI-searchable — instantly
           </p>
         </div>
         <IconArrowRight size={20} style={{ color: P.gold }} />
@@ -360,22 +360,22 @@ function ProMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => void }) 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <TierCard
             icon={<IconFlame size={20} />}
-            title="L1 — Hot"
-            desc="localStorage + in-memory. Sub-millisecond access. Active context window."
+            title="Fast Access"
+            desc="In-memory + local storage. Sub-millisecond. Active conversations and context."
             count={stats.tierBreakdown.hot}
             active
           />
           <TierCard
             icon={<IconCloudComputing size={20} />}
-            title="L2 — Warm"
-            desc="Cloud sync. Cross-device continuity. Encrypted at rest."
+            title="Synced Storage"
+            desc="Cloud-synced across devices. Encrypted at rest. Seamless continuity."
             count={stats.tierBreakdown.warm}
             active
           />
           <TierCard
             icon={<IconArchive size={20} />}
-            title="L3 — Cold"
-            desc="Content-addressed archive. CID-based retrieval. Resilient storage."
+            title="Deep Archive"
+            desc="Long-term compressed storage. Hash-based retrieval. Resilient and verifiable."
             count={stats.tierBreakdown.cold}
             active
           />
@@ -392,12 +392,12 @@ function ProMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => void }) 
               <p className="text-xs md:text-sm mt-1" style={{ color: P.muted }}>Compression Ratio</p>
             </div>
             <div>
-              <p className="text-lg md:text-xl font-mono font-light" style={{ color: P.text }}>UGC2</p>
-              <p className="text-xs md:text-sm mt-1" style={{ color: P.muted }}>Format</p>
+              <p className="text-lg md:text-xl font-mono font-light" style={{ color: P.text }}>Binary</p>
+              <p className="text-xs md:text-sm mt-1" style={{ color: P.muted }}>Output Format</p>
             </div>
             <div>
-              <p className="text-lg md:text-xl font-mono font-light" style={{ color: P.text }}>URDNA2015</p>
-              <p className="text-xs md:text-sm mt-1" style={{ color: P.muted }}>Canonicalization</p>
+              <p className="text-lg md:text-xl font-mono font-light" style={{ color: P.text }}>Standardized</p>
+              <p className="text-xs md:text-sm mt-1" style={{ color: P.muted }}>Normalization</p>
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -415,12 +415,12 @@ function ProMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => void }) 
         <SectionTitle>Data Types</SectionTitle>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
           {[
-            { name: "Sessions", desc: "Conversation chains", badge: "Delta" },
-            { name: "Memories", desc: "Semantic knowledge", badge: "UGC2" },
-            { name: "Proofs", desc: "Reasoning traces", badge: "CID" },
-            { name: "Certificates", desc: "Identity verification", badge: "X.509" },
-            { name: "Contexts", desc: "Frame bindings", badge: "JSON-LD" },
-            { name: "Preferences", desc: "User configuration", badge: "AES" },
+            { name: "Conversations", desc: "Chat history and threads", badge: "Incremental" },
+            { name: "Knowledge", desc: "Learned facts and context", badge: "Compressed" },
+            { name: "Reasoning", desc: "Step-by-step logic traces", badge: "Hashed" },
+            { name: "Identity", desc: "Authentication and verification", badge: "Signed" },
+            { name: "Context", desc: "Active state and relationships", badge: "Structured" },
+            { name: "Preferences", desc: "Your settings and choices", badge: "Encrypted" },
           ].map(s => (
             <div
               key={s.name}
@@ -618,13 +618,13 @@ function CompressionDemo() {
     // never the raw PDF. If Lumen AI can answer precisely, the compression is lossless.
     const documentContext = [
       `DOCUMENT: "${file.name}"`,
-      `Original size: ${formatBytes(file.originalSize)} → UGC2 compressed: ${formatBytes(file.compressedSize)} (${file.compressionRatio.toFixed(1)}× ontology-preserving compression)`,
+      `Original size: ${formatBytes(file.originalSize)} → Compressed: ${formatBytes(file.compressedSize)} (${file.compressionRatio.toFixed(1)}× lossless compression)`,
       `Canonical SHA-256: ${file.canonicalHash}`,
-      `Semantic triples extracted: ${file.tripleCount} | Format: UGC2 v2 (dictionary-encoded varint binary)`,
-      `Compression pipeline: Text → Semantic Triple Extraction (S-P-O) → UGC2 Binary → Decompressed Ontology (below)`,
+      `Structured facts extracted: ${file.tripleCount} | Format: compressed binary (dictionary-encoded)`,
+      `Pipeline: Text → Knowledge Extraction (subject-predicate-object) → Binary Compression → Decompressed Graph (below)`,
       ``,
-      `This context was reconstructed entirely from the UGC2 compressed binary — the original file was NOT used.`,
-      `The semantic graph below preserves the document's ontology, structure, key claims, topics, and quantitative facts.`,
+      `This context was reconstructed entirely from the compressed binary — the original file was NOT used.`,
+      `The knowledge graph below preserves the document's structure, key claims, topics, and factual data.`,
       ``,
       semanticContext,
     ].join("\n");
@@ -703,7 +703,7 @@ function CompressionDemo() {
           Compression + RAG Demo
         </h2>
         <p className="text-sm md:text-base leading-relaxed" style={{ color: P.muted }}>
-          Drop any file to see it canonicalized, compressed, and become instantly searchable with Lumen AI.
+          Drop any file to see it compressed and become instantly searchable with AI.
         </p>
       </div>
 
@@ -742,7 +742,7 @@ function CompressionDemo() {
       {processing && (
         <div className="rounded-xl p-12 flex flex-col items-center justify-center gap-4" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
           <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
-          <p className="text-sm md:text-base" style={{ color: P.muted }}>Extracting semantic triples → UGC2 compression…</p>
+          <p className="text-sm md:text-base" style={{ color: P.muted }}>Extracting knowledge → compressing…</p>
         </div>
       )}
 
@@ -752,16 +752,16 @@ function CompressionDemo() {
           {/* Compression results */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
             <MetricCard value={formatBytes(file.originalSize)} unit="" label="Original" sublabel="Raw file size" />
-            <MetricCard value={formatBytes(file.compressedSize)} unit="" label="UGC2 Compressed" sublabel="Semantic graph binary" accent />
-            <MetricCard value={`${file.compressionRatio.toFixed(0)}×`} unit="smaller" label="Compression" sublabel="Ontology-preserving" accent />
-            <MetricCard value={`${file.tripleCount}`} unit="triples" label="Semantic Graph" sublabel="Subject-predicate-object" />
-            <MetricCard value={`${file.ugcStats?.objectDictHits ?? 0}`} unit="hits" label="Dict Efficiency" sublabel={`${file.ugcStats?.objectDictSize ?? 0} dict entries`} />
+            <MetricCard value={formatBytes(file.compressedSize)} unit="" label="Compressed" sublabel="Knowledge graph binary" accent />
+            <MetricCard value={`${file.compressionRatio.toFixed(0)}×`} unit="smaller" label="Compression" sublabel="Lossless — meaning preserved" accent />
+            <MetricCard value={`${file.tripleCount}`} unit="facts" label="Knowledge Extracted" sublabel="Structured subject-predicate-object" />
+            <MetricCard value={`${file.ugcStats?.objectDictHits ?? 0}`} unit="hits" label="Dictionary Reuse" sublabel={`${file.ugcStats?.objectDictSize ?? 0} unique terms`} />
           </div>
 
           {/* Canonical hash */}
           <div className="rounded-xl p-5 md:p-6 space-y-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             <div className="flex items-center justify-between">
-              <h3 className="text-sm md:text-base font-semibold tracking-widest uppercase" style={{ color: P.muted }}>Canonical Identity</h3>
+              <h3 className="text-sm md:text-base font-semibold tracking-widest uppercase" style={{ color: P.muted }}>File Fingerprint</h3>
               <div className="flex items-center gap-2">
                 <IconCircleCheck size={14} style={{ color: P.green }} />
                 <span className="text-xs md:text-sm" style={{ color: P.green }}>Verified</span>
@@ -772,7 +772,7 @@ function CompressionDemo() {
               <CopyButton text={file.canonicalHash} />
             </div>
             <p className="text-xs md:text-sm" style={{ color: P.dim }}>
-              SHA-256 content hash — uniquely identifies this file regardless of where or how it's stored.
+              SHA-256 hash — a unique fingerprint for this exact file content, anywhere it's stored.
             </p>
           </div>
 
@@ -786,9 +786,9 @@ function CompressionDemo() {
               <div className="space-y-2.5">
                 {[
                   { step: "1", label: "Text Extraction", detail: `${file.wordCount.toLocaleString()} words extracted` },
-                  { step: "2", label: "Triple Extraction", detail: `${file.tripleCount} semantic triples (S-P-O)` },
-                  { step: "3", label: "UGC2 Compression", detail: `Dictionary: ${file.ugcStats?.subjectDictSize ?? 0} subjects, ${file.ugcStats?.objectDictSize ?? 0} objects` },
-                  { step: "4", label: "Lumen AI Context", detail: "Ontology decompressed → structured prompt" },
+                  { step: "2", label: "Knowledge Extraction", detail: `${file.tripleCount} structured facts identified` },
+                  { step: "3", label: "Compression", detail: `Dictionary: ${file.ugcStats?.subjectDictSize ?? 0} subjects, ${file.ugcStats?.objectDictSize ?? 0} objects` },
+                  { step: "4", label: "AI-Ready Context", detail: "Decompressed knowledge graph → structured prompt" },
                 ].map(s => (
                   <div key={s.step} className="flex items-center gap-3">
                     <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "hsla(38, 40%, 65%, 0.15)", color: P.gold }}>{s.step}</span>
@@ -819,7 +819,7 @@ function CompressionDemo() {
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: P.gold }}>UGC2 Semantic Graph</span>
+                    <span style={{ color: P.gold }}>Compressed Knowledge Graph</span>
                     <span style={{ color: P.muted }}>{formatBytes(file.compressedSize)}</span>
                   </div>
                   <div className="h-5 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.1)" }}>
@@ -834,8 +834,8 @@ function CompressionDemo() {
                 </div>
               </div>
               <p className="text-xs leading-relaxed" style={{ color: P.dim }}>
-                Like LEANN's graph-based recomputation: store the semantic structure, not raw embeddings.
-                Ontology, predicates, and claims are preserved in the compressed form.
+                Stores the structured knowledge graph, not raw text. All facts, relationships,
+                and claims are preserved in the compressed form.
               </p>
             </div>
           </div>
@@ -847,7 +847,7 @@ function CompressionDemo() {
               <div>
                 <h3 className="text-base md:text-lg font-medium" style={{ color: P.text }}>Ask about this document</h3>
                 <p className="text-xs md:text-sm" style={{ color: P.dim }}>
-                  Lumen AI reads the decompressed UGC2 semantic graph — {file.tripleCount} triples with ontology intact
+                  AI reads from the decompressed knowledge graph — {file.tripleCount} structured facts, all meaning preserved
                 </p>
               </div>
             </div>
