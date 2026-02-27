@@ -42,11 +42,15 @@ const MODEL_FILES = [
   "tokenizer.json",
   "tokenizer_config.json",
   "preprocessor_config.json",
-  // ONNX model shards (quantized q8 for WASM, fp32 for WebGPU)
+  // ONNX model shards — three tiers:
+  //   fp16  → WebGPU high-accuracy (59MB decoder, 16MB encoder)
+  //   q8    → WASM fallback (30MB decoder, 10MB encoder)
+  //   fp32  → encoder only (33MB, already seeded; decoder too large for edge fn)
   "onnx/encoder_model.onnx",
   "onnx/encoder_model_quantized.onnx",
-  "onnx/decoder_model_merged.onnx",
+  "onnx/encoder_model_fp16.onnx",
   "onnx/decoder_model_merged_quantized.onnx",
+  "onnx/decoder_model_merged_fp16.onnx",
 ];
 
 function guessContentType(path: string): string {
@@ -92,7 +96,7 @@ serve(async (req) => {
       continue;
     }
 
-    // Download from HuggingFace — stream directly to storage to avoid OOM
+    // Download from HuggingFace and upload to storage
     console.log(`[seeder] ⬇ Downloading: ${sourceUrl}`);
     try {
       const res = await fetch(sourceUrl, {
@@ -105,25 +109,21 @@ serve(async (req) => {
         continue;
       }
 
-      const contentLength = parseInt(res.headers.get("content-length") ?? "0", 10);
-      const sizeMB = (contentLength / 1024 / 1024).toFixed(2);
-      const contentType = guessContentType(file);
+      const bytes = await res.arrayBuffer();
+      const sizeMB = (bytes.byteLength / 1024 / 1024).toFixed(2);
+      totalBytes += bytes.byteLength;
 
-      // Stream the response body directly to storage upload
-      // This avoids buffering the entire file in memory (prevents OOM for large ONNX files)
+      const contentType = guessContentType(file);
+      const blob = new Blob([bytes], { type: contentType });
+
       const { error: uploadErr } = await supabase.storage
         .from(BUCKET)
-        .upload(storageKey, res.body!, {
-          contentType,
-          upsert: true,
-          duplex: "half",
-        } as any);
+        .upload(storageKey, blob, { contentType, upsert: true });
 
       if (uploadErr) {
         results.push({ file, status: "error", error: uploadErr.message });
         console.error(`[seeder] ✗ Upload failed ${file}:`, uploadErr.message);
       } else {
-        totalBytes += contentLength;
         results.push({ file, status: "seeded", sizeMB });
         console.log(`[seeder] ✓ Seeded: ${file} (${sizeMB}MB)`);
       }
