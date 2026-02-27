@@ -19,6 +19,7 @@ import { PageShell } from "@/modules/hologram-ui";
 import { getOrchestrator, type ProviderSnapshot } from "@/modules/hologram-compute";
 import ConstantTimeBenchmark from "./ConstantTimeBenchmark";
 import BitTableBenchmark from "./BitTableBenchmark";
+import TransformerAttentionDemo from "./TransformerAttentionDemo";
 
 // ── Shared ──────────────────────────────────────────────────────────────────
 
@@ -189,6 +190,19 @@ function ConsumerView({ snap }: {
           </p>
         </div>
         <BitTableBenchmark />
+      </section>
+
+      {/* Transformer Attention Demo */}
+      <section className="space-y-2">
+        <div className="text-center space-y-0.5">
+          <h2 className="font-serif text-lg text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Multiply-free transformer inference
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            A complete attention layer running entirely on 1KB of bit-plane lookups — zero multiply instructions.
+          </p>
+        </div>
+        <TransformerAttentionDemo />
       </section>
 
       {/* Constant-time proof */}
