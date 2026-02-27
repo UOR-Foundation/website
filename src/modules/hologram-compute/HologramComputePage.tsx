@@ -68,19 +68,19 @@ function ConsumerView({ snap }: {
     <div className="space-y-12">
       {/* Hero — single sentence value prop */}
       <section className="text-center space-y-4 py-8">
-        <h1 className="font-serif text-3xl md:text-4xl text-foreground tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-          Your compute, everywhere
-        </h1>
-        <p className="text-base text-muted-foreground max-w-md mx-auto leading-relaxed">
-          Instant AI processing that runs directly on your device.
-          No cloud bills. No data leaves your machine.
-        </p>
-        <div className="flex items-center justify-center gap-2 pt-2">
+        <div className="flex items-center justify-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ background: sc(snap?.status ?? "offline") }} />
-          <span className="text-sm text-muted-foreground">
-            {isOnline ? "Active" : "Initializing"}
+          <span className="text-sm" style={{ color: sc(snap?.status ?? "offline") }}>
+            {isOnline ? "Online" : "Initializing"}
           </span>
         </div>
+        <h1 className="font-serif text-3xl md:text-4xl text-foreground tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+          Ultra-fast AI on your device
+        </h1>
+        <p className="text-base text-muted-foreground max-w-md mx-auto leading-relaxed">
+          Your data never leaves your machine. No cloud bills. No waiting.
+          Everything happens right here, powered by your own hardware.
+        </p>
       </section>
 
       {/* Simple resource summary */}
