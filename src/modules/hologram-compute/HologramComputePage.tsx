@@ -20,6 +20,7 @@ import { getOrchestrator, type ProviderSnapshot } from "@/modules/hologram-compu
 import ConstantTimeBenchmark from "./ConstantTimeBenchmark";
 import BitTableBenchmark from "./BitTableBenchmark";
 import TransformerAttentionDemo from "./TransformerAttentionDemo";
+import CoQuantBenchmark from "./CoQuantBenchmark";
 
 // ── Shared ──────────────────────────────────────────────────────────────────
 
@@ -203,6 +204,19 @@ function ConsumerView({ snap }: {
           </p>
         </div>
         <TransformerAttentionDemo />
+      </section>
+
+      {/* Discovery 3 — CoQuant LUT Benchmark */}
+      <section className="space-y-2">
+        <div className="text-center space-y-0.5">
+          <h2 className="font-serif text-lg text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
+            GPU texture-accelerated linear layers
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            A 256-byte LUT replaces every multiply with a GPU texture fetch — up to 4096×4096 weight matrices.
+          </p>
+        </div>
+        <CoQuantBenchmark />
       </section>
 
       {/* Constant-time proof */}
