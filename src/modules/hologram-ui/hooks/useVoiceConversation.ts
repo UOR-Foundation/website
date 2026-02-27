@@ -2,12 +2,12 @@
  * useVoiceConversation — Full Voice Loop Orchestrator
  * ════════════════════════════════════════════════════
  *
- * Chains: Whisper STT → Lumen AI Streaming → TTS
+ * Uses the browser's native SpeechRecognition API (zero downloads,
+ * cross-platform: Chrome, Safari, Edge, mobile browsers).
  *
- * States: idle → listening → processing → thinking → speaking → idle
+ * Chains: Native STT → Lumen AI Streaming → TTS
  *
- * Key simplification: TTS.speak() returns a Promise, so greeting
- * and response playback are just `await tts.speak(text)`.
+ * States: idle → listening → thinking → speaking → idle
  *
  * @module hologram-ui/hooks/useVoiceConversation
  */
@@ -45,8 +45,14 @@ const GREETINGS = [
   "Here. No rush — I'm all ears.",
 ];
 
+/** Get the native SpeechRecognition constructor (cross-browser) */
+function getSpeechRecognition() {
+  const w = window as any;
+  return (w.SpeechRecognition || w.webkitSpeechRecognition || null) as (new () => any) | null;
+}
+
 export function useVoiceConversation({
-  voiceEngine = "elevenlabs",
+  voiceEngine = "web-speech",
   personaId = "hologram",
   skillId,
   cloudModel = "google/gemini-3-flash-preview",
@@ -67,14 +73,16 @@ export function useVoiceConversation({
   const abortControllerRef = useRef<AbortController | null>(null);
   const hasGreetedRef = useRef(false);
 
-  // Recording refs
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  // Native STT refs
+  const recognitionRef = useRef<any>(null);
+  const transcriptAccRef = useRef("");
+
+  // Audio level metering refs
   const streamRef = useRef<MediaStream | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const rafRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pipelineRef = useRef<any>(null);
 
   const updateState = useCallback((s: VoiceConversationState) => {
     stateRef.current = s;
@@ -82,7 +90,6 @@ export function useVoiceConversation({
     onStateChange?.(s);
   }, [onStateChange]);
 
-  // TTS — callbacks only fire for non-greeting speech
   const tts = useVoiceSynthesis({
     engine: voiceEngine,
     rate: 0.95,
@@ -91,33 +98,6 @@ export function useVoiceConversation({
       onError?.(`Voice output error: ${err}`);
     },
   });
-
-  /** Lazy-load Whisper */
-  const ensureWhisper = useCallback(async () => {
-    if (pipelineRef.current) return pipelineRef.current;
-    const { pipeline } = await import("@huggingface/transformers");
-    const transcriber = await pipeline(
-      "automatic-speech-recognition",
-      "onnx-community/whisper-base",
-      { dtype: "q8", device: "wasm" },
-    );
-    pipelineRef.current = transcriber;
-    return transcriber;
-  }, []);
-
-  /** Convert audio blob → Float32 PCM at 16kHz */
-  const audioToFloat32 = useCallback(async (blob: Blob): Promise<Float32Array> => {
-    const arrayBuf = await blob.arrayBuffer();
-    const ctx = new OfflineAudioContext(1, 1, 16000);
-    const decoded = await ctx.decodeAudioData(arrayBuf);
-    const offlineCtx = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
-    const source = offlineCtx.createBufferSource();
-    source.buffer = decoded;
-    source.connect(offlineCtx.destination);
-    source.start();
-    const rendered = await offlineCtx.startRendering();
-    return rendered.getChannelData(0);
-  }, []);
 
   /** Stream query to Lumen AI */
   const queryLumen = useCallback(async (userText: string): Promise<string> => {
@@ -183,21 +163,74 @@ export function useVoiceConversation({
     return fullText;
   }, [cloudModel, personaId, skillId, screenContext, observerBriefing, fusionContext]);
 
-  /** Clean up recording resources */
+  /** Clean up all recording/recognition resources */
   const cleanupRecording = useCallback(() => {
+    // Stop recognition
+    try { recognitionRef.current?.abort(); } catch {}
+    recognitionRef.current = null;
+
+    // Stop audio level metering
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
     analyserRef.current = null;
     setAudioLevel(0);
+
+    // Stop timer
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
+
+    // Stop media stream
     streamRef.current?.getTracks().forEach(t => t.stop());
     streamRef.current = null;
+
+    // Close audio context
+    if (audioCtxRef.current?.state !== "closed") {
+      void audioCtxRef.current?.close();
+    }
+    audioCtxRef.current = null;
   }, []);
+
+  /** Process a completed transcript — think → speak */
+  const processTranscript = useCallback(async (transcript: string) => {
+    if (!transcript.trim()) {
+      updateState("idle");
+      return;
+    }
+
+    setLastTranscript(transcript);
+
+    try {
+      updateState("thinking");
+      setLastResponse("");
+      const response = await queryLumen(transcript);
+
+      if (!response.trim()) {
+        updateState("idle");
+        return;
+      }
+
+      updateState("speaking");
+      await tts.speak(response);
+      updateState("idle");
+
+      onExchange?.(transcript, response);
+    } catch (err) {
+      console.error("[Voice] Processing error:", err);
+      onError?.(err instanceof Error ? err.message : "Voice conversation error");
+      updateState("idle");
+    }
+  }, [updateState, queryLumen, tts, onExchange, onError]);
 
   /** Start listening — the main entry point */
   const startListening = useCallback(async () => {
     if (stateRef.current !== "idle") return;
+
+    // Check native STT support
+    const SpeechRec = getSpeechRecognition();
+    if (!SpeechRec) {
+      onError?.("Speech recognition is not supported in this browser. Please use Chrome, Safari, or Edge.");
+      return;
+    }
 
     try {
       // First activation: greet the user
@@ -209,126 +242,133 @@ export function useVoiceConversation({
         conversationHistory.current.push({ role: "assistant", content: greeting });
 
         console.log("[Voice] Playing greeting:", greeting);
-        await tts.speak(greeting);  // ← Promise resolves when audio ends
+        await tts.speak(greeting);
 
         console.log("[Voice] Greeting done, opening mic");
-        await new Promise(r => setTimeout(r, 300)); // brief pause
+        await new Promise(r => setTimeout(r, 300));
       }
 
       updateState("listening");
+      transcriptAccRef.current = "";
 
-      // Load Whisper in parallel with mic access
-      const [, stream] = await Promise.all([
-        ensureWhisper(),
-        navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 },
-        }),
-      ]);
+      // Get mic stream for audio level metering (visual feedback)
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true },
+        });
+      } catch (micErr: any) {
+        if (micErr?.name === "NotAllowedError") {
+          onError?.("Microphone permission denied");
+        } else if (micErr?.name === "NotFoundError") {
+          onError?.("No microphone found");
+        } else {
+          onError?.("Could not access microphone");
+        }
+        updateState("idle");
+        return;
+      }
 
       streamRef.current = stream;
-      chunksRef.current = [];
 
-      // Audio level metering
-      const audioCtx = new AudioContext();
-      const src = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.4;
-      src.connect(analyser);
-      analyserRef.current = analyser;
+      // Audio level metering for visual feedback
+      try {
+        const audioCtx = new AudioContext();
+        audioCtxRef.current = audioCtx;
+        const src = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.4;
+        src.connect(analyser);
+        analyserRef.current = analyser;
 
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      const tick = () => {
-        analyser.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-        setAudioLevel(sum / dataArray.length / 255);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const tick = () => {
+          analyser.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+          setAudioLevel(sum / dataArray.length / 255);
+          rafRef.current = requestAnimationFrame(tick);
+        };
         rafRef.current = requestAnimationFrame(tick);
-      };
-      rafRef.current = requestAnimationFrame(tick);
+      } catch {
+        // Non-fatal: level metering is optional visual feedback
+      }
 
       // Timer
       setElapsed(0);
       timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
 
-      const recorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : "audio/webm",
-      });
+      // Start native SpeechRecognition
+      const recognition = new SpeechRec();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+      recognition.maxAlternatives = 1;
 
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        let interim = "";
+        let final = "";
+        for (let i = 0; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            final += result[0].transcript;
+          } else {
+            interim += result[0].transcript;
+          }
+        }
+
+        transcriptAccRef.current = final;
+        // Show live transcript (final + interim)
+        setLastTranscript((final + " " + interim).trim());
       };
 
-      recorder.onstop = async () => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.warn("[Voice] Recognition error:", event.error);
+        // "aborted" and "no-speech" are non-fatal
+        if (event.error === "aborted" || event.error === "no-speech") return;
+        cleanupRecording();
+        onError?.(`Speech recognition error: ${event.error}`);
+        updateState("idle");
+      };
+
+      recognition.onend = () => {
+        // Only process if we're still in listening state (not cancelled)
+        if (stateRef.current !== "listening") return;
+        const transcript = transcriptAccRef.current.trim();
         cleanupRecording();
 
-        if (chunksRef.current.length === 0) {
-          updateState("idle");
-          return;
-        }
-
-        // Transcribe
-        updateState("processing");
-        try {
-          const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-          const pcm = await audioToFloat32(blob);
-          const transcriber = await ensureWhisper();
-          const result = await transcriber(pcm, {
-            chunk_length_s: 30,
-            stride_length_s: 5,
-            return_timestamps: false,
-          });
-
-          const transcript = (result?.text ?? "").trim();
-          if (!transcript) { updateState("idle"); return; }
-
-          setLastTranscript(transcript);
-
-          // Think
-          updateState("thinking");
-          setLastResponse("");
-          const response = await queryLumen(transcript);
-
-          if (!response.trim()) { updateState("idle"); return; }
-
-          // Speak the response
-          updateState("speaking");
-          await tts.speak(response);
-          updateState("idle");
-
-          onExchange?.(transcript, response);
-        } catch (err) {
-          console.error("[Voice] Error:", err);
-          onError?.(err instanceof Error ? err.message : "Voice conversation error");
+        if (transcript) {
+          updateState("processing");
+          processTranscript(transcript);
+        } else {
           updateState("idle");
         }
       };
 
-      mediaRecorderRef.current = recorder;
-      recorder.start(250);
+      recognitionRef.current = recognition;
+      recognition.start();
+
     } catch (err) {
       console.error("[Voice] Start error:", err);
+      cleanupRecording();
       onError?.(err instanceof Error ? err.message : "Could not start listening");
       updateState("idle");
     }
-  }, [updateState, ensureWhisper, audioToFloat32, queryLumen, tts, cleanupRecording, onExchange, onError]);
+  }, [updateState, tts, cleanupRecording, processTranscript, onError]);
 
-  /** Stop listening — triggers processing chain */
+  /** Stop listening — triggers processing chain via recognition.onend */
   const stopListening = useCallback(() => {
-    if (mediaRecorderRef.current?.state === "recording") {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
+    try {
+      recognitionRef.current?.stop(); // fires onend → processTranscript
+    } catch {
+      cleanupRecording();
+      updateState("idle");
     }
-  }, []);
+  }, [cleanupRecording, updateState]);
 
   /** Cancel everything */
   const cancel = useCallback(() => {
-    if (mediaRecorderRef.current?.state === "recording") {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
-    }
     cleanupRecording();
     abortControllerRef.current?.abort();
     tts.stop();
