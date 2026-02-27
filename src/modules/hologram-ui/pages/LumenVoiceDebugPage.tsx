@@ -16,6 +16,14 @@ import {
   type HologramCompiledModel,
   type ModelVariant,
 } from "@/modules/uns/core/hologram/whisper-compiler";
+import {
+  getPiperTtsEngine,
+  PIPER_VOICES,
+  DEFAULT_VOICE_ID as PIPER_DEFAULT_VOICE,
+  type PiperStatus,
+  type PiperDownloadProgress,
+} from "@/modules/uns/core/hologram/piper-tts";
+import type { VoiceId as PiperVoiceId } from "@diffusionstudio/vits-web";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -255,9 +263,59 @@ export default function LumenVoiceDebugPage() {
   });
 
   const tts = useVoiceSynthesis({
-    engine: "web-speech",
+    engine: "piper",
     onError: (error) => addLog(`TTS error: ${error}`),
+    onStart: () => addLog("TTS started speaking"),
+    onEnd: () => addLog("TTS finished speaking"),
   });
+
+  // Piper TTS debug state
+  const [piperStatus, setPiperStatus] = useState<PiperStatus>("unloaded");
+  const [piperProgress, setPiperProgress] = useState<PiperDownloadProgress | null>(null);
+  const [piperVoice, setPiperVoice] = useState<PiperVoiceId>(PIPER_DEFAULT_VOICE);
+  const [piperCached, setPiperCached] = useState<string[]>([]);
+  const [piperBusy, setPiperBusy] = useState(false);
+  const [piperTestText, setPiperTestText] = useState("The sovereign voice loop is complete. Whisper hears, Lumen thinks, and Piper speaks.");
+
+  const piperEngine = useMemo(() => getPiperTtsEngine(), []);
+
+  useEffect(() => {
+    const unsub = piperEngine.subscribe(() => {
+      setPiperStatus(piperEngine.status);
+      setPiperProgress(piperEngine.downloadProgress);
+      setPiperCached(piperEngine.cachedVoices);
+    });
+    piperEngine.refreshCachedVoices();
+    return unsub;
+  }, [piperEngine]);
+
+  const loadPiperVoice = useCallback(async () => {
+    setPiperBusy(true);
+    addLog(`[Piper] Loading voice: ${piperVoice}…`);
+    try {
+      await piperEngine.loadVoice(piperVoice);
+      addLog(`[Piper] Voice loaded: ${piperVoice} ✓`);
+    } catch (err) {
+      addLog(`[Piper] Load error: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setPiperBusy(false);
+    }
+  }, [piperEngine, piperVoice, addLog]);
+
+  const testPiperSpeak = useCallback(async () => {
+    setPiperBusy(true);
+    addLog(`[Piper] Synthesizing: "${piperTestText.slice(0, 50)}…"`);
+    const t0 = performance.now();
+    try {
+      await piperEngine.speak(piperTestText, piperVoice);
+      const ms = Math.round(performance.now() - t0);
+      addLog(`[Piper] Spoke in ${ms}ms ✓`);
+    } catch (err) {
+      addLog(`[Piper] Speak error: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setPiperBusy(false);
+    }
+  }, [piperEngine, piperVoice, piperTestText, addLog]);
 
   const support = useMemo(getPlatformSupport, []);
 
@@ -942,6 +1000,52 @@ export default function LumenVoiceDebugPage() {
           )}
         </section>
 
+
+        {/* ── Piper TTS (Sovereign) ───────────────────────────────────── */}
+        <section className="rounded-xl border border-border bg-card p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">🗣️ Piper TTS — Sovereign Voice</h2>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+              {piperStatus === "ready" ? "✓ Ready" : piperStatus === "downloading" ? "⬇ Downloading…" : piperStatus === "synthesizing" ? "🔊 Speaking…" : piperStatus === "error" ? "✗ Error" : "○ Not loaded"}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">Client-side neural TTS via ONNX Runtime Web. Models cached in OPFS. Completes the sovereign voice loop with Whisper STT.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {PIPER_VOICES.map((v) => (
+              <button key={v.id} type="button" onClick={() => setPiperVoice(v.id as PiperVoiceId)}
+                className="rounded-lg border p-3 text-left text-xs transition-all"
+                style={{ borderColor: piperVoice === v.id ? "hsl(var(--primary))" : undefined, background: piperVoice === v.id ? "hsl(var(--primary) / 0.06)" : undefined }}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-medium">{v.label}</span>
+                  <span className="text-muted-foreground">~{v.sizeMb}MB</span>
+                </div>
+                <p className="text-muted-foreground">{v.description}</p>
+                {piperCached.includes(v.id) && <span className="mt-1 inline-block text-xs text-primary">● Cached</span>}
+              </button>
+            ))}
+          </div>
+          {piperStatus === "downloading" && piperProgress && (
+            <div className="space-y-1">
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div className="h-full bg-primary transition-all" style={{ width: `${piperProgress.percent}%` }} />
+              </div>
+              <p className="text-xs text-muted-foreground">Downloading… {piperProgress.percent}%</p>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={loadPiperVoice} disabled={piperBusy || piperStatus === "downloading"}
+              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm disabled:opacity-50">
+              <Cpu className="h-4 w-4" /> {piperCached.includes(piperVoice) ? "Re-load Voice" : "Download & Load"}
+            </button>
+            <button type="button" onClick={testPiperSpeak} disabled={piperBusy || piperStatus !== "ready"}
+              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm disabled:opacity-50">
+              <Volume2 className="h-4 w-4" /> Speak Test
+            </button>
+          </div>
+          <textarea value={piperTestText} onChange={(e) => setPiperTestText(e.target.value)} placeholder="Enter text for Piper to speak…"
+            className="w-full min-h-16 rounded-lg border border-border bg-background p-3 text-sm outline-none resize-y" />
+          {piperCached.length > 0 && <div className="text-xs text-muted-foreground"><span className="font-medium">Cached:</span> {piperCached.join(", ")}</div>}
+        </section>
 
         {report && (
           <section className="rounded-xl border border-border bg-card p-4 space-y-3">

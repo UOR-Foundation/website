@@ -14,13 +14,18 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 
-export type VoiceEngine = "web-speech" | "elevenlabs";
+import { getPiperTtsEngine, DEFAULT_VOICE_ID as PIPER_DEFAULT_VOICE } from "@/modules/uns/core/hologram/piper-tts";
+import type { VoiceId as PiperVoiceId } from "@diffusionstudio/vits-web";
+
+export type VoiceEngine = "web-speech" | "elevenlabs" | "piper";
 export type VoiceSynthStatus = "idle" | "speaking" | "loading";
 
 interface UseVoiceSynthesisOptions {
   engine?: VoiceEngine;
   /** ElevenLabs voice ID — defaults to Daniel (warm male) */
   voiceId?: string;
+  /** Piper voice ID — defaults to Lessac High */
+  piperVoiceId?: PiperVoiceId;
   /** Web Speech voice name preference */
   webVoiceName?: string;
   rate?: number;
@@ -35,6 +40,7 @@ const ELEVENLABS_TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/el
 export function useVoiceSynthesis({
   engine = "web-speech",
   voiceId = "onwK4e9ZLuTAKqWW03F9",
+  piperVoiceId = PIPER_DEFAULT_VOICE,
   webVoiceName,
   rate = 0.95,
   pitch = 1.0,
@@ -245,7 +251,63 @@ export function useVoiceSynthesis({
     });
   }, [voiceId, speakWebSpeech, onStart, onEnd, onError, setIdle, revokeUrl]);
 
-  /** Primary speak — always uses Web Speech for simplicity & reliability */
+  /** Speak via Piper — fully local ONNX inference */
+  const speakPiper = useCallback((text: string): Promise<void> => {
+    return new Promise(async (resolve) => {
+      if (abortRef.current) { resolve(); return; }
+      setStatus("loading");
+
+      try {
+        const piper = getPiperTtsEngine();
+        if (!piper.isReady) await piper.loadVoice(piperVoiceId);
+
+        if (abortRef.current) { setIdle(); resolve(); return; }
+
+        const wav = await piper.synthesize(text, piperVoiceId);
+
+        if (abortRef.current) { setIdle(); resolve(); return; }
+
+        revokeUrl();
+        const url = URL.createObjectURL(wav);
+        audioUrlRef.current = url;
+
+        const audio = new Audio(url);
+        audio.preload = "auto";
+        audio.volume = 1;
+        audioRef.current = audio;
+
+        audio.onplay = () => {
+          setStatus("speaking");
+          onStart?.();
+        };
+
+        audio.onended = () => {
+          setIdle();
+          revokeUrl();
+          onEnd?.();
+          resolve();
+        };
+
+        audio.onerror = () => {
+          setIdle();
+          revokeUrl();
+          console.warn("[TTS] Piper audio playback failed, falling back to Web Speech");
+          setCurrentEngine("web-speech");
+          resolve(speakWebSpeech(text));
+        };
+
+        await audio.play();
+      } catch (err) {
+        console.warn("[TTS] Piper error, falling back to Web Speech:", err);
+        setIdle();
+        revokeUrl();
+        setCurrentEngine("web-speech");
+        resolve(speakWebSpeech(text));
+      }
+    });
+  }, [piperVoiceId, speakWebSpeech, onStart, onEnd, onError, setIdle, revokeUrl]);
+
+  /** Primary speak — routes to active engine with graceful fallback */
   const speak = useCallback(async (text: string): Promise<void> => {
     if (!text.trim()) return;
     abortRef.current = false;
@@ -260,9 +322,17 @@ export function useVoiceSynthesis({
       .replace(/\n/g, " ")
       .trim();
 
-    // Always use Web Speech — ElevenLabs disabled for now
-    await speakWebSpeech(clean);
-  }, [primeAudioOutput, speakWebSpeech]);
+    switch (currentEngine) {
+      case "piper":
+        await speakPiper(clean);
+        break;
+      case "elevenlabs":
+        await speakElevenLabs(clean);
+        break;
+      default:
+        await speakWebSpeech(clean);
+    }
+  }, [primeAudioOutput, currentEngine, speakPiper, speakElevenLabs, speakWebSpeech]);
 
   /** Stop all speech immediately */
   const stop = useCallback(() => {
