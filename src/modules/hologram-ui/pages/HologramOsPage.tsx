@@ -245,7 +245,7 @@ export default function HologramOsPage() {
   // Style changes sweep left→right like a new hologram being cast.
   const [transitioning, setTransitioning] = useState(false);
   const [transitionColor, setTransitionColor] = useState("hsl(0, 0%, 100%)");
-  const [transitionPhase, setTransitionPhase] = useState<"idle" | "cover" | "retract">("idle");
+  const [transitionPhase, setTransitionPhase] = useState<"idle" | "sweep" | "hold">("idle");
   
 
   const TRANSITION_COLORS: Record<BgMode, string> = {
@@ -257,27 +257,30 @@ export default function HologramOsPage() {
   const setBgMode = useCallback((m: BgMode) => {
     if (m === bgMode) return;
 
-    // Capture the OLD style's color as the curtain
-    setTransitionColor(TRANSITION_COLORS[bgMode]);
+    // New style color sweeps in from right, covering the old style
+    setTransitionColor(TRANSITION_COLORS[m]);
     setTransitioning(true);
-    setTransitionPhase("cover");
+    setTransitionPhase("idle");
 
-    // Immediately switch the actual style underneath the curtain
-    setBgModeState(m);
-    localStorage.setItem("hologram-bg-mode", m);
-
-    // After a single frame (to let the curtain render at full coverage), retract it
+    // Start the sweep on the next frame so clip-path transition triggers
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        setTransitionPhase("retract");
+        setTransitionPhase("sweep");
       });
     });
 
-    // Cleanup after retraction completes
+    // When sweep fully covers viewport (~1800ms), switch actual style underneath
+    setTimeout(() => {
+      setBgModeState(m);
+      localStorage.setItem("hologram-bg-mode", m);
+      setTransitionPhase("hold");
+    }, 1800);
+
+    // Brief hold then cleanup — curtain fades away to reveal real content
     setTimeout(() => {
       setTransitioning(false);
       setTransitionPhase("idle");
-    }, 2000);
+    }, 2100);
   }, [bgMode]);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
@@ -475,22 +478,25 @@ export default function HologramOsPage() {
               className="absolute inset-0 pointer-events-none overflow-hidden"
               style={{ zIndex: 9999 }}
             >
-              {/* Old-style curtain — retracts horizontally right-to-left into the sidebar */}
+              {/* New-style curtain — sweeps in from right, revealing new style */}
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
                   background: transitionColor,
-                  clipPath: transitionPhase === "cover"
+                  clipPath: transitionPhase === "sweep" || transitionPhase === "hold"
                     ? "inset(0 0 0 0)"
-                    : "inset(0 100% 0 0)",
-                  transition: transitionPhase === "retract"
-                    ? "clip-path 1600ms cubic-bezier(0.4, 0, 0.2, 1)"
-                    : "none",
+                    : "inset(0 0 0 100%)",
+                  transition: transitionPhase === "sweep"
+                    ? "clip-path 1800ms cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+                    : transitionPhase === "hold"
+                      ? "opacity 300ms ease-out"
+                      : "none",
+                  opacity: transitionPhase === "hold" ? 0 : 1,
                 }}
               />
 
-              {/* Soft warm leading edge moving left with the retraction */}
+              {/* Soft warm leading edge at the sweep wavefront */}
               <div
                 style={{
                   position: "absolute",
@@ -499,10 +505,12 @@ export default function HologramOsPage() {
                   width: "100px",
                   background: "linear-gradient(to left, transparent, hsla(38, 30%, 65%, 0.06), transparent)",
                   filter: "blur(20px)",
-                  right: transitionPhase === "cover" ? "100%" : "calc(100% + 100px)",
-                  opacity: transitionPhase === "retract" ? 1 : 0,
-                  transition: transitionPhase === "retract"
-                    ? "right 1600ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms ease-out"
+                  left: transitionPhase === "sweep" || transitionPhase === "hold"
+                    ? "-100px"
+                    : "100%",
+                  opacity: transitionPhase === "sweep" ? 1 : 0,
+                  transition: transitionPhase === "sweep"
+                    ? "left 1800ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 400ms ease-out"
                     : "none",
                 }}
               />
