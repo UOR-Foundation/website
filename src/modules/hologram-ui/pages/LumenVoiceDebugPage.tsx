@@ -453,47 +453,42 @@ export default function LumenVoiceDebugPage() {
       steps.push({ name: "Voiceprint Derivation + Pre-Encryption", status: "skip", durationMs: 0, detail: "Skipped (no audio captured)" });
     }
 
-    // Step 7: Whisper STT (with native fallback)
-    if (capturedAudio) {
-      await step("Whisper STT (in-browser ONNX)", async () => {
-        const result = await runWhisper(capturedAudio!);
-        if (!result) throw new Error("Whisper returned null");
+    // Step 7: Native SpeechRecognition (PRIMARY — browser-native, zero download)
+    await step("Native SpeechRecognition (Primary STT)", async () => {
+      if (!isNativeSttAvailable()) throw new Error("SpeechRecognition API not available");
+      addLog("  Starting native STT — please speak now…");
+      const result = await recognizeNative({ timeoutMs: 8000 });
+      const text = result.text.trim();
+      if (text) setTranscript(text);
+      return {
+        detail: `"${text.slice(0, 100)}" (confidence: ${(result.confidence * 100).toFixed(1)}%, engine: ${result.engine})`,
+        data: {
+          transcript: text,
+          confidence: result.confidence,
+          engine: result.engine,
+          charCount: text.length,
+        },
+      };
+    });
+
+    // Step 8: Whisper ONNX status check (optional, only if cached)
+    await step("Whisper ONNX Cache Check", async () => {
+      const engine = getWhisperEngine();
+      const cached = engine.isReady;
+      if (cached && capturedAudio) {
+        const out = await engine.transcribe(capturedAudio.audio, capturedAudio.sampleRate);
         return {
-          detail: `"${result.text.slice(0, 100)}${result.text.length > 100 ? "…" : ""}" (${result.inferenceMs}ms)`,
-          data: {
-            transcript: result.text,
-            inferenceMs: result.inferenceMs,
-            device: result.device,
-            modelId: result.modelId,
-            charCount: result.text.length,
-          },
+          detail: `Whisper cached & working: "${out.text.slice(0, 60)}" (${out.inferenceTimeMs}ms, ${out.device})`,
+          data: { cached: true, text: out.text, inferenceMs: out.inferenceTimeMs, device: out.device },
         };
-      });
-
-      // If Whisper failed, try native SpeechRecognition as fallback
-      const whisperStep = steps.find(s => s.name === "Whisper STT (in-browser ONNX)");
-      if (whisperStep?.status === "fail") {
-        await step("Native SpeechRecognition Fallback (live)", async () => {
-          if (!isNativeSttAvailable()) throw new Error("SpeechRecognition API not available");
-          addLog("  Starting native STT — please speak now…");
-          const result = await recognizeNative({ timeoutMs: 8000 });
-          const text = result.text.trim();
-          if (text) setTranscript(text);
-          return {
-            detail: `Native STT: "${text.slice(0, 100)}" (confidence: ${(result.confidence * 100).toFixed(1)}%)`,
-            data: {
-              transcript: text,
-              confidence: result.confidence,
-              engine: result.engine,
-            },
-          };
-        });
       }
-    } else {
-      steps.push({ name: "Whisper STT (in-browser ONNX)", status: "skip", durationMs: 0, detail: "Skipped (no audio)" });
-    }
-
-    // Step 8: TTS output
+      return {
+        detail: cached
+          ? "Whisper ONNX cached (no audio to test)"
+          : `Whisper not cached (status: ${engine.status}, error: ${engine.error ?? "none"}) — using native STT as primary`,
+        data: { cached, status: engine.status, error: engine.error },
+      };
+    });
     const ttsText = transcript || "LUMEN voice debug test complete.";
     await step("Browser TTS (Web Speech API)", async () => {
       const voices = getVoiceList();
@@ -508,13 +503,6 @@ export default function LumenVoiceDebugPage() {
       };
     });
 
-    // Step 9: Native SpeechRecognition probe
-    await step("Native SpeechRecognition Probe", async () => {
-      const w = window as Window & { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown };
-      const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition;
-      if (!Ctor) throw new Error("SpeechRecognition API not available");
-      return { detail: "SpeechRecognition constructor available (not activated — needs active mic gesture)" };
-    });
 
     // ── Generate report ──────────────────────────────────────────────────
 

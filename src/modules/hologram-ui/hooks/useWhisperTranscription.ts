@@ -1,29 +1,33 @@
 /**
- * useWhisperTranscription — Client-side Whisper STT via WhisperEngine
- * ═════════════════════════════════════════════════════════════════════
+ * useHologramStt — Native-First Speech-to-Text for Hologram
+ * ══════════════════════════════════════════════════════════
  *
- * Fully open-source, offline-capable voice-to-text using OpenAI Whisper
- * running in the browser via the unified WhisperEngine singleton, which
- * leverages the HologramGpu (vGPU) for constant-time WebGPU inference.
+ * Fully browser-native, zero-external-dependency STT using the
+ * built-in SpeechRecognition API as the PRIMARY engine.
  *
- * Improvements over v1:
- *   - AudioWorklet capture (off main thread, zero jank)
- *   - Built-in VAD: auto-stops after 1.5s of silence
- *   - Idle-time Whisper warm-start via requestIdleCallback
- *   - Navigator permissions query for proactive mic status
+ * Architecture:
+ *   1. Native SpeechRecognition (primary) — instant, no downloads,
+ *      runs entirely in the browser's speech engine
+ *   2. Whisper ONNX (optional upgrade) — only if model is already
+ *      cached in browser Cache API from a previous session
+ *
+ * AudioWorklet capture runs in parallel for:
+ *   - Voiceprint derivation (privacy-preserving biometrics)
+ *   - VAD silence detection (hands-free auto-stop)
+ *   - Audio level metering (waveform UI)
  *
  * @module hologram-ui/hooks/useWhisperTranscription
  */
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { getWhisperEngine, preloadWhisper } from "@/modules/uns/core/hologram/whisper-engine";
+import { getWhisperEngine } from "@/modules/uns/core/hologram/whisper-engine";
 import { isNativeSttAvailable, recognizeNative } from "@/modules/uns/core/hologram/native-stt";
 import { useAudioCapture } from "@/modules/hologram-ui/hooks/useAudioCapture";
 
 export type WhisperStatus =
   | "idle"           // Nothing happening
-  | "loading"        // Model downloading / warming up
-  | "ready"          // Model loaded, waiting
+  | "loading"        // Checking engine availability
+  | "ready"          // Engine available, waiting
   | "recording"      // Actively capturing audio
   | "transcribing";  // Processing captured audio
 
@@ -42,8 +46,11 @@ export function useWhisperTranscription({
   const [status, setStatus] = useState<WhisperStatus>("idle");
   const [loadProgress, setLoadProgress] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+  const [sttEngine, setSttEngine] = useState<"native" | "whisper">("native");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statusRef = useRef<WhisperStatus>("idle");
+  const nativeRecRef = useRef<any>(null);
+  const nativeTranscriptRef = useRef("");
 
   const updateStatus = useCallback(
     (s: WhisperStatus) => {
@@ -60,76 +67,89 @@ export function useWhisperTranscription({
   const capture = useAudioCapture({
     silenceAutoStopSec,
     onSilence: () => {
-      // Only auto-stop if we're recording
       if (statusRef.current === "recording") {
         autoStopRef.current?.();
       }
     },
   });
 
-  // ── Idle-time Whisper warm-start ─────────────────────────────────────
-  // Pre-load model during browser idle periods so first mic click is instant
+  // ── Engine availability check (no preloading from CDN) ──────────────
   useEffect(() => {
+    // Check if Whisper is already cached from a previous session
     const engine = getWhisperEngine();
     if (engine.isReady) {
+      setSttEngine("whisper");
       updateStatus("ready");
+      console.log("[HologramSTT] Whisper ONNX cached — using as primary engine");
       return;
     }
 
-    const startPreload = () => {
-      preloadWhisper((p) => {
-        setLoadProgress(Math.round(p.progress ?? 0));
-      });
-    };
-
-    // Use requestIdleCallback for non-blocking preload
-    if ("requestIdleCallback" in window) {
-      const id = requestIdleCallback(() => startPreload(), { timeout: 5000 });
-      // Poll for readiness
-      const iv = setInterval(() => {
-        const e = getWhisperEngine();
-        if (e.isReady) { updateStatus("ready"); clearInterval(iv); }
-        else if (e.status === "error") { clearInterval(iv); }
-      }, 500);
-      return () => { cancelIdleCallback(id); clearInterval(iv); };
+    // Default: use native SpeechRecognition (instant, no download)
+    if (isNativeSttAvailable()) {
+      setSttEngine("native");
+      updateStatus("ready");
+      console.log("[HologramSTT] Using native SpeechRecognition (browser-native, zero download)");
     } else {
-      // Fallback: start after short delay
-      const to = setTimeout(startPreload, 1000);
-      const iv = setInterval(() => {
-        const e = getWhisperEngine();
-        if (e.isReady) { updateStatus("ready"); clearInterval(iv); }
-        else if (e.status === "error") { clearInterval(iv); }
-      }, 500);
-      return () => { clearTimeout(to); clearInterval(iv); };
+      updateStatus("idle");
+      console.warn("[HologramSTT] No STT engine available");
     }
   }, [updateStatus]);
 
   const startRecording = useCallback(async () => {
     try {
-      // Ensure model is loaded
-      const engine = getWhisperEngine();
-      if (!engine.isReady) {
-        updateStatus("loading");
-        await engine.load((p) => setLoadProgress(Math.round(p.progress ?? 0)));
-      }
       updateStatus("recording");
 
-      // Start AudioWorklet-based capture (user gesture preserved)
+      // Start AudioWorklet capture for level metering + VAD + voiceprint
       await capture.start();
+
+      // If using native STT, also start SpeechRecognition in parallel
+      if (sttEngine === "native" && isNativeSttAvailable()) {
+        const w = window as any;
+        const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition;
+        if (Ctor) {
+          const recognition = new Ctor();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = "en-US";
+          nativeTranscriptRef.current = "";
+
+          recognition.onresult = (event: any) => {
+            let final = "";
+            for (let i = 0; i < event.results.length; i++) {
+              if (event.results[i].isFinal) {
+                final += event.results[i][0].transcript;
+              }
+            }
+            nativeTranscriptRef.current = final;
+          };
+
+          recognition.onerror = (event: any) => {
+            if (event.error !== "aborted" && event.error !== "no-speech") {
+              console.warn("[HologramSTT] Native STT error:", event.error);
+            }
+          };
+
+          nativeRecRef.current = recognition;
+          recognition.start();
+        }
+      }
 
       // Elapsed timer
       setElapsed(0);
       timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
     } catch (err) {
-      console.error("[useWhisperTranscription] Recording error:", err);
-      updateStatus(getWhisperEngine().isReady ? "ready" : "idle");
+      console.error("[HologramSTT] Recording error:", err);
+      updateStatus("ready");
     }
-  }, [updateStatus, capture]);
+  }, [updateStatus, capture, sttEngine]);
 
   const stopRecording = useCallback(async () => {
     if (statusRef.current !== "recording") return;
 
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+
+    // Stop native recognition
+    try { nativeRecRef.current?.stop(); } catch {}
 
     const result = await capture.stop();
 
@@ -141,27 +161,37 @@ export function useWhisperTranscription({
     updateStatus("transcribing");
 
     try {
-      const engine = getWhisperEngine();
-      if (engine.isReady) {
-        // Primary path: Whisper ONNX (in-browser, vGPU accelerated)
-        const transcription = await engine.transcribe(result.audio, result.sampleRate);
-        const text = transcription.text.trim();
-        if (text) onTranscript(text);
+      if (sttEngine === "whisper") {
+        // Whisper path (only if model was already cached)
+        const engine = getWhisperEngine();
+        if (engine.isReady) {
+          const transcription = await engine.transcribe(result.audio, result.sampleRate);
+          const text = transcription.text.trim();
+          if (text) onTranscript(text);
+          updateStatus("ready");
+          return;
+        }
+      }
+
+      // Native path: use accumulated transcript from SpeechRecognition
+      const nativeText = nativeTranscriptRef.current.trim();
+      if (nativeText) {
+        onTranscript(nativeText);
       } else if (isNativeSttAvailable()) {
-        // Fallback path: Native SpeechRecognition API
-        console.log("[useWhisperTranscription] Whisper unavailable, using native SpeechRecognition fallback");
-        const native = await recognizeNative({ timeoutMs: 8000 });
-        const text = native.text.trim();
-        if (text) onTranscript(text);
-      } else {
-        console.warn("[useWhisperTranscription] No STT engine available");
+        // Fallback: run one-shot recognition
+        try {
+          const native = await recognizeNative({ timeoutMs: 6000 });
+          if (native.text.trim()) onTranscript(native.text.trim());
+        } catch (err) {
+          console.warn("[HologramSTT] Native fallback failed:", err);
+        }
       }
     } catch (err) {
-      console.error("[useWhisperTranscription] Transcription error:", err);
+      console.error("[HologramSTT] Transcription error:", err);
     }
 
     updateStatus("ready");
-  }, [capture, onTranscript, updateStatus]);
+  }, [capture, onTranscript, updateStatus, sttEngine]);
 
   // Wire up VAD auto-stop
   autoStopRef.current = stopRecording;
@@ -177,6 +207,7 @@ export function useWhisperTranscription({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      try { nativeRecRef.current?.abort(); } catch {}
       capture.cancel();
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -190,6 +221,7 @@ export function useWhisperTranscription({
     isRecording: status === "recording",
     isTranscribing: status === "transcribing",
     isLoading: status === "loading",
+    sttEngine,
     toggleRecording,
     startRecording,
     stopRecording,
