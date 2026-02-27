@@ -202,21 +202,18 @@ interface HologramMessengerProps {
 }
 
 export default function HologramMessenger({ onClose }: HologramMessengerProps) {
-  // Read bgMode from localStorage to derive light/dark
+  // Messenger has its own independent theme — does NOT affect the Hologram portal
   const [mode, setMode] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem("hologram-bg-mode");
-    return saved === "white" ? "light" : "dark";
+    const saved = localStorage.getItem("hologram-messenger-theme");
+    return saved === "light" ? "light" : "dark";
   });
 
-  // Listen for changes
-  useEffect(() => {
-    const check = () => {
-      const saved = localStorage.getItem("hologram-bg-mode");
-      setMode(saved === "white" ? "light" : "dark");
-    };
-    window.addEventListener("storage", check);
-    const interval = setInterval(check, 1000);
-    return () => { window.removeEventListener("storage", check); clearInterval(interval); };
+  const toggleMode = useCallback(() => {
+    setMode(prev => {
+      const next = prev === "dark" ? "light" : "dark";
+      localStorage.setItem("hologram-messenger-theme", next);
+      return next;
+    });
   }, []);
 
   const P = palette(mode);
@@ -487,11 +484,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
 
           {/* Theme toggle */}
           <button
-            onClick={() => {
-              const next = mode === "light" ? "dark" : "light";
-              setMode(next);
-              localStorage.setItem("hologram-bg-mode", next === "light" ? "white" : "dark");
-            }}
+            onClick={toggleMode}
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
             style={{ color: P.muted }}
             title={`Switch to ${mode === "light" ? "dark" : "light"} mode`}
