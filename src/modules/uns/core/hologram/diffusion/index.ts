@@ -53,10 +53,14 @@ export type {
   DiffusionProgress,
   DiffusionResult,
   DiffusionSessions,
+  DiffusionPrecision,
   ModelFileManifest,
 } from "./types";
 
 export {
   DEFAULT_DIFFUSION_CONFIG,
   SD15_ONNX_MANIFEST,
+  SD15_ONNX_FP16_MANIFEST,
+  SD15_ONNX_FP32_MANIFEST,
+  getSD15Manifest,
 } from "./types";
