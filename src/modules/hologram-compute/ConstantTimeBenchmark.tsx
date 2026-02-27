@@ -289,9 +289,9 @@ function formatNum(n: number): string {
 // SVG Comparison Chart
 // ══════════════════════════════════════════════════════════════════════════════
 
-const CW = 560;
-const CH = 200;
-const PAD = { top: 28, right: 24, bottom: 40, left: 56 };
+const CW = 480;
+const CH = 170;
+const PAD = { top: 24, right: 20, bottom: 36, left: 48 };
 const IW = CW - PAD.left - PAD.right;
 const IH = CH - PAD.top - PAD.bottom;
 
@@ -377,8 +377,8 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 
 function SpeedupCircle({ value, label, maxValue, color, suffix }: { value: number; label: string; maxValue: number; color: string; suffix?: string }) {
   const animValue = useCountUp(value, 600);
-  const sz = 80;
-  const strokeW = 3.5;
+  const sz = 64;
+  const strokeW = 3;
   const r = (sz - strokeW) / 2;
   const circ = 2 * Math.PI * r;
   const pct = Math.min(value / Math.max(maxValue, 1), 1);
@@ -404,7 +404,7 @@ function SpeedupCircle({ value, label, maxValue, color, suffix }: { value: numbe
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color, fontSize: value >= 10000 ? 14 : value >= 1000 ? 16 : 18 }}>
+          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color, fontSize: value >= 10000 ? 11 : value >= 1000 ? 13 : 15 }}>
             {value > 0 ? `${displayVal}${unit}` : "—"}
           </span>
         </div>
@@ -571,7 +571,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* ── Run Button + Description ── */}
       <div className="flex items-start justify-between gap-4 p-3 rounded-xl" style={{ background: `${baseColor}08`, border: `1px solid ${baseColor}1A` }}>
         <div className="flex-1 min-w-0">
@@ -641,9 +641,9 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
 
       {/* ── Chart + Stats (side by side) ── */}
       {points.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-2" style={{ maxHeight: "260px" }}>
           {/* Chart */}
-          <div className="rounded-xl p-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <div className="rounded-xl p-2" style={{ background: P.card, border: `1px solid ${P.cardBorder}`, maxHeight: "260px" }}>
             <ComparisonChart
               points={points}
               baselineMs={points.map(p => isCpu ? p.stdMs : p.gpuMs)}
@@ -654,7 +654,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           </div>
 
           {/* Stats sidebar — 3 hero metrics */}
-          <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <div className="rounded-xl p-2 flex flex-col gap-1.5 overflow-hidden" style={{ background: P.card, border: `1px solid ${P.cardBorder}`, maxHeight: "260px" }}>
             {/* Three hero circles */}
             <div className="grid grid-cols-3 gap-1">
               <SpeedupCircle
@@ -752,7 +752,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
       {state === "done" && points.length > 0 && (
         <>
           {/* LINPACK methodology + export */}
-          <div className="rounded-xl p-3 space-y-1.5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <div className="rounded-xl p-2 space-y-1" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             <div className="flex items-center justify-between gap-2">
               <span className="text-[11px] uppercase tracking-widest font-bold" style={{ color: baseColor }}>
                 {baseLabel} vs Hologram vGPU — LINPACK Results
@@ -773,18 +773,18 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           </div>
 
           {/* Data table */}
-          <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: `1px solid ${P.cardBorder}` }}>
-            <table className="w-full text-[12px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
+          <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: `1px solid ${P.cardBorder}`, maxHeight: "240px", overflowY: "auto" }}>
+            <table className="w-full text-[11px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
               <thead>
-                <tr style={{ background: P.card }}>
-                  <th className="text-left py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
-                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
-                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: baseColor, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel} ms</th>
-                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
-                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
-                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>Energy Saved</th>
-                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Infer/s</th>
-                  <th className="text-center py-1.5 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>SHA ✓</th>
+                <tr style={{ background: P.card, position: "sticky", top: 0, zIndex: 1 }}>
+                  <th className="text-left py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
+                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
+                  <th className="text-right py-1 px-2 font-semibold" style={{ color: baseColor, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel} ms</th>
+                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
+                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
+                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>Energy</th>
+                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Infer/s</th>
+                  <th className="text-center py-1 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>SHA</th>
                 </tr>
               </thead>
               <tbody>
@@ -995,18 +995,18 @@ function ScalingExponent({ points, demoType }: { points: BenchPoint[]; demoType:
 
   return (
     <div className="grid grid-cols-2 gap-2">
-      <div className="rounded-xl p-2.5 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-        <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: baseColor }}>{baseLabel} Scaling Exponent</p>
-        <p className="text-xl font-mono font-light mt-0.5" style={{ color: baseColor }}>{baseExp.toFixed(2)}</p>
-        <p className="text-[10px] mt-0.5" style={{ color: baseExpOk ? P.dim : P.red }}>
-          {baseExpOk ? "Expected: ~3.0 for O(N³)" : `⚠ Unexpected (expected ~3.0) — may indicate ${isCpu ? "JIT optimization" : "GPU scheduling"} effects`}
+      <div className="rounded-xl p-2 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: baseColor }}>{baseLabel} Scaling</p>
+        <p className="text-lg font-mono font-light" style={{ color: baseColor }}>{baseExp.toFixed(2)}</p>
+        <p className="text-[10px]" style={{ color: baseExpOk ? P.dim : P.red }}>
+          {baseExpOk ? "Expected ~3.0 for O(N³)" : `⚠ Unexpected — ${isCpu ? "JIT" : "GPU"} effects`}
         </p>
       </div>
-      <div className="rounded-xl p-2.5 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-        <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: P.gold }}>vGPU Scaling Exponent</p>
-        <p className="text-xl font-mono font-light mt-0.5" style={{ color: P.gold }}>{holoExp.toFixed(2)}</p>
-        <p className="text-[10px] mt-0.5" style={{ color: holoExpOk ? P.dim : P.red }}>
-          {holoExpOk ? "Expected: ~0 for O(1)" : "⚠ Unexpected (expected ~0) — investigate cache retrieval overhead"}
+      <div className="rounded-xl p-2 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: P.gold }}>vGPU Scaling</p>
+        <p className="text-lg font-mono font-light" style={{ color: P.gold }}>{holoExp.toFixed(2)}</p>
+        <p className="text-[10px]" style={{ color: holoExpOk ? P.dim : P.red }}>
+          {holoExpOk ? "Expected ~0 for O(1)" : "⚠ Unexpected — check retrieval"}
         </p>
       </div>
     </div>
@@ -1262,7 +1262,7 @@ export default function ConstantTimeBenchmark() {
   const isAnyRunning = cpuState === "running" || cpuState === "precomputing" || gpuState === "running" || gpuState === "precomputing";
 
   return (
-    <div className="space-y-3" style={{ fontFamily: P.font }}>
+    <div className="space-y-2" style={{ fontFamily: P.font }}>
       {/* Header + Tab Toggle */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
