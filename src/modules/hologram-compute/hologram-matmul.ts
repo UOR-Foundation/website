@@ -1128,4 +1128,235 @@ export class HologramComputeCache {
   retrieve(a: Uint8Array, b: Uint8Array, n: number): Uint8Array | null {
     return this.cache.get(fingerprint(a, b, n)) ?? null;
   }
+
+  // ─── Discovery 2: Per-Layer Centroid Caching ────────────────────
+  //
+  // Learn K typical activation patterns per transformer layer and
+  // cache their outputs. At inference time, find the nearest centroid
+  // via L1 distance and return the cached output — O(K·D) lookup
+  // instead of O(D²) matmul.
+
+  private centroids = new Map<string, CentroidEntry[]>();
+  private centroidStats: CentroidCacheStats = {
+    layers: 0,
+    totalCentroids: 0,
+    hits: 0,
+    misses: 0,
+    avgDistOnHit: 0,
+  };
+
+  get centroidCacheStats(): CentroidCacheStats {
+    return { ...this.centroidStats };
+  }
+
+  /**
+   * Learn K centroids for a transformer layer from training activations.
+   *
+   * Uses mini-batch k-means: O(iterations × K × samples × dim).
+   * After learning, each centroid's output is precomputed via the
+   * co-quantized LUT path (Discovery 3) or standard matmul.
+   *
+   * @param layerId   Unique layer name (e.g. "layer_0.qkv")
+   * @param samples   Training activation vectors [S × dim] row-major
+   * @param weights   Layer weight matrix [outDim × dim] row-major
+   * @param dim       Activation vector dimension
+   * @param outDim    Output dimension
+   * @param k         Number of centroids (default 16)
+   * @param iterations  K-means iterations (default 8)
+   */
+  learnCentroids(
+    layerId: string,
+    samples: Uint8Array,
+    weights: Uint8Array,
+    dim: number,
+    outDim: number,
+    k = 16,
+    iterations = 8,
+  ): void {
+    const sampleCount = Math.floor(samples.length / dim);
+    const actualK = Math.min(k, sampleCount);
+
+    // Initialize centroids by picking evenly-spaced samples
+    const centers = new Array<Float32Array>(actualK);
+    for (let i = 0; i < actualK; i++) {
+      const idx = Math.floor((i * sampleCount) / actualK);
+      const c = new Float32Array(dim);
+      for (let d = 0; d < dim; d++) c[d] = samples[idx * dim + d];
+      centers[i] = c;
+    }
+
+    // Assignment buffer
+    const assignments = new Uint16Array(sampleCount);
+
+    // Mini-batch k-means
+    for (let iter = 0; iter < iterations; iter++) {
+      // Assign each sample to nearest centroid (L1 distance)
+      for (let s = 0; s < sampleCount; s++) {
+        let bestDist = Infinity;
+        let bestC = 0;
+        const sOff = s * dim;
+        for (let c = 0; c < actualK; c++) {
+          let dist = 0;
+          for (let d = 0; d < dim; d++) {
+            dist += Math.abs(samples[sOff + d] - centers[c][d]);
+          }
+          if (dist < bestDist) { bestDist = dist; bestC = c; }
+        }
+        assignments[s] = bestC;
+      }
+
+      // Recompute centroids
+      const sums = Array.from({ length: actualK }, () => new Float32Array(dim));
+      const counts = new Uint32Array(actualK);
+      for (let s = 0; s < sampleCount; s++) {
+        const c = assignments[s];
+        counts[c]++;
+        const sOff = s * dim;
+        for (let d = 0; d < dim; d++) sums[c][d] += samples[sOff + d];
+      }
+      for (let c = 0; c < actualK; c++) {
+        if (counts[c] === 0) continue;
+        for (let d = 0; d < dim; d++) centers[c][d] = sums[c][d] / counts[c];
+      }
+    }
+
+    // Quantize centroids to Uint8 and precompute outputs
+    const entries: CentroidEntry[] = [];
+    for (let c = 0; c < actualK; c++) {
+      const activation = new Uint8Array(dim);
+      for (let d = 0; d < dim; d++) activation[d] = Math.round(centers[c][d]) & 0xff;
+
+      // Compute output: y = W · activation (via LUT matmul)
+      const output = this.computeLayerOutput(activation, weights, dim, outDim);
+      entries.push({ centroid: activation, output, hitCount: 0 });
+    }
+
+    this.centroids.set(layerId, entries);
+    this.centroidStats.layers = this.centroids.size;
+    this.centroidStats.totalCentroids = Array.from(this.centroids.values())
+      .reduce((s, e) => s + e.length, 0);
+  }
+
+  /**
+   * Retrieve cached output for the nearest centroid.
+   *
+   * Finds the closest centroid via L1 distance. If within threshold,
+   * returns the precomputed output (O(K·D) instead of O(D·outD)).
+   *
+   * @param layerId      Layer identifier
+   * @param activation   Input activation vector [dim]
+   * @param threshold    Max L1 distance per dimension (default 8)
+   * @returns            Cached output or null if no close centroid
+   */
+  retrieveCentroid(
+    layerId: string,
+    activation: Uint8Array,
+    threshold = 8,
+  ): CentroidRetrievalResult | null {
+    const entries = this.centroids.get(layerId);
+    if (!entries || entries.length === 0) {
+      this.centroidStats.misses++;
+      return null;
+    }
+
+    const dim = activation.length;
+    let bestDist = Infinity;
+    let bestIdx = -1;
+
+    for (let i = 0; i < entries.length; i++) {
+      let dist = 0;
+      const c = entries[i].centroid;
+      for (let d = 0; d < dim; d++) {
+        dist += Math.abs(activation[d] - c[d]);
+      }
+      const avgDist = dist / dim;
+      if (avgDist < bestDist) { bestDist = avgDist; bestIdx = i; }
+    }
+
+    if (bestDist > threshold || bestIdx < 0) {
+      this.centroidStats.misses++;
+      return null;
+    }
+
+    entries[bestIdx].hitCount++;
+    this.centroidStats.hits++;
+    // Running average of distance on hit
+    const totalHits = this.centroidStats.hits;
+    this.centroidStats.avgDistOnHit =
+      ((this.centroidStats.avgDistOnHit * (totalHits - 1)) + bestDist) / totalHits;
+
+    return {
+      output: entries[bestIdx].output,
+      centroidIndex: bestIdx,
+      distance: bestDist,
+      hitCount: entries[bestIdx].hitCount,
+    };
+  }
+
+  /** List all centroids for a layer. */
+  getCentroids(layerId: string): CentroidEntry[] | null {
+    return this.centroids.get(layerId) ?? null;
+  }
+
+  /** Get all layer IDs that have centroids. */
+  get centroidLayerIds(): string[] {
+    return Array.from(this.centroids.keys());
+  }
+
+  /** Internal: compute a single layer output via LUT matmul. */
+  private computeLayerOutput(
+    activation: Uint8Array,
+    weights: Uint8Array,
+    dim: number,
+    outDim: number,
+  ): Uint8Array {
+    const out = new Uint8Array(outDim);
+    for (let r = 0; r < outDim; r++) {
+      let sum = 0;
+      const rowOff = r * dim;
+      for (let c = 0; c < dim; c++) {
+        sum = (sum + MUL_TABLE[(weights[rowOff + c] << 8) | activation[c]]) & 0xff;
+      }
+      out[r] = sum;
+    }
+    return out;
+  }
+}
+
+// ── Discovery 2 Types ─────────────────────────────────────────────
+
+/** A single centroid entry: learned activation pattern + precomputed output. */
+export interface CentroidEntry {
+  /** Quantized centroid activation vector. */
+  centroid: Uint8Array;
+  /** Precomputed layer output for this centroid. */
+  output: Uint8Array;
+  /** Number of times this centroid was matched at inference. */
+  hitCount: number;
+}
+
+/** Result of a centroid cache lookup. */
+export interface CentroidRetrievalResult {
+  /** Precomputed output vector. */
+  output: Uint8Array;
+  /** Index of the matched centroid. */
+  centroidIndex: number;
+  /** Average L1 distance per dimension to the centroid. */
+  distance: number;
+  /** Total hits on this centroid. */
+  hitCount: number;
+}
+
+/** Aggregate statistics for centroid caching. */
+export interface CentroidCacheStats {
+  /** Number of layers with learned centroids. */
+  layers: number;
+  /** Total centroids across all layers. */
+  totalCentroids: number;
+  /** Cache hits (activation matched a centroid within threshold). */
+  hits: number;
+  /** Cache misses. */
+  misses: number;
+  /** Running average L1 distance on hits. */
+  avgDistOnHit: number;
 }
