@@ -1,12 +1,15 @@
 /**
  * Atlas Module — Public API
  *
- * Re-exports the Atlas construction and R₈ bridge verification.
+ * The Atlas of Resonance Classes and its categorical unfolding into
+ * the five exceptional Lie groups: G₂ ⊂ F₄ ⊂ E₆ ⊂ E₇ ⊂ E₈.
  */
 
+// Atlas construction
 export { Atlas, getAtlas, ATLAS_VERTEX_COUNT, ATLAS_EDGE_COUNT_EXPECTED } from "./atlas";
 export type { AtlasLabel, AtlasVertex } from "./atlas";
 
+// R₈ ↔ Atlas bridge
 export {
   computeR8Partition,
   runBridgeVerification,
@@ -26,3 +29,18 @@ export type {
   ExceptionalGroupCorrespondence,
   BridgeVerificationReport,
 } from "./bridge";
+
+// Cartan matrices and Dynkin diagrams
+export {
+  cartanMatrix, isValidCartan, isSimplyLaced, isSymmetricCartan,
+  cartanDeterminant, toDynkinDiagram,
+  CARTAN_G2, CARTAN_F4, CARTAN_E6, CARTAN_E7, CARTAN_E8,
+} from "./cartan";
+export type { CartanMatrix, DynkinDiagram, DynkinBond } from "./cartan";
+
+// Exceptional group constructions
+export {
+  constructG2, constructF4, constructE6, constructE7, constructE8,
+  constructExceptionalChain, analyzeE8RootStructure,
+} from "./groups";
+export type { ExceptionalGroup, ExceptionalGroupChain, E8RootAnalysis } from "./groups";
