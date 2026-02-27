@@ -54,9 +54,9 @@ export { HologramWeightStore, getWeightStore } from "./weight-store";
 export { WhisperTokenizer, getWhisperTokenizer } from "./tokenizer";
 export type { TokenizerInfo } from "./tokenizer";
 
-// GPU dispatch (Phase 4)
-export { GpuDispatch, getGpuDispatch } from "./gpu-dispatch";
-export type { GpuDispatchStats } from "./gpu-dispatch";
+// GPU dispatch (Phase 4) + KV-cache
+export { GpuDispatch, getGpuDispatch, createKvCache } from "./gpu-dispatch";
+export type { GpuDispatchStats, KvCache } from "./gpu-dispatch";
 
 // Proto decoder (exposed for testing)
 export { ProtoReader } from "./proto-decoder";

@@ -39,6 +39,44 @@ export interface GpuDispatchStats {
   available: boolean;
 }
 
+/**
+ * Per-layer KV cache for incremental attention.
+ * Stores K and V as [nHeads][seqSoFar × dHead].
+ */
+export interface KvCache {
+  /** Cached keys per head: nHeads arrays, each [cachedLen × dHead] */
+  k: Float32Array[];
+  /** Cached values per head: nHeads arrays, each [cachedLen × dHead] */
+  v: Float32Array[];
+  /** Number of cached positions */
+  len: number;
+}
+
+export function createKvCache(nHeads: number): KvCache {
+  return {
+    k: Array.from({ length: nHeads }, () => new Float32Array(0)),
+    v: Array.from({ length: nHeads }, () => new Float32Array(0)),
+    len: 0,
+  };
+}
+
+/** Append new K/V rows to existing cache, returns updated cache */
+function appendKv(cache: KvCache, headIdx: number, newK: Float32Array, newV: Float32Array, dHead: number, newLen: number): void {
+  const oldK = cache.k[headIdx];
+  const oldV = cache.v[headIdx];
+  const totalLen = cache.len + newLen;
+
+  const mergedK = new Float32Array(totalLen * dHead);
+  mergedK.set(oldK, 0);
+  mergedK.set(newK, cache.len * dHead);
+  cache.k[headIdx] = mergedK;
+
+  const mergedV = new Float32Array(totalLen * dHead);
+  mergedV.set(oldV, 0);
+  mergedV.set(newV, cache.len * dHead);
+  cache.v[headIdx] = mergedV;
+}
+
 // ── GPU Dispatch Singleton ─────────────────────────────────────────────────
 
 export class GpuDispatch {
@@ -436,6 +474,183 @@ export class GpuDispatch {
 
       const weights = await this.softmax(scores, decLen, encLen);
       const headOut = await this.matmul(weights, Vh, decLen, dHead, encLen);
+
+      for (let t = 0; t < decLen; t++) {
+        for (let d = 0; d < dHead; d++) {
+          attnOut[t * dModel + headOff + d] = headOut[t * dHead + d];
+        }
+      }
+    }
+
+    return this.linear(attnOut, outW, outB, decLen, dModel, dModel);
+  }
+  // ── KV-Cached Self-Attention ─────────────────────────────────────────
+  //
+  // Only computes Q/K/V for the NEW token(s), appends K/V to cache,
+  // then attends over the full cached sequence.
+  // Reduces per-step complexity from O(T² · D) to O(T · D).
+
+  /**
+   * Incremental self-attention with KV-cache.
+   * `input` is [newLen, dModel] (typically newLen=1 for autoregressive).
+   * `cache` accumulates K/V across steps.
+   */
+  async cachedSelfAttention(
+    input: Float32Array, newLen: number,
+    qW: Float32Array, qB: Float32Array,
+    kW: Float32Array, kB: Float32Array | null,
+    vW: Float32Array, vB: Float32Array,
+    outW: Float32Array, outB: Float32Array,
+    nHeads: number, dModel: number, dHead: number,
+    cache: KvCache,
+    causal: boolean,
+  ): Promise<Float32Array> {
+    // Project only new tokens
+    const Q = await this.linear(input, qW, qB, newLen, dModel, dModel);
+    const Knew = await this.linear(input, kW, kB, newLen, dModel, dModel);
+    const Vnew = await this.linear(input, vW, vB, newLen, dModel, dModel);
+
+    const attnOut = new Float32Array(newLen * dModel);
+
+    for (let h = 0; h < nHeads; h++) {
+      const headOff = h * dHead;
+
+      // Extract new Q/K/V for this head
+      const Qh = new Float32Array(newLen * dHead);
+      const KhNew = new Float32Array(newLen * dHead);
+      const VhNew = new Float32Array(newLen * dHead);
+
+      for (let t = 0; t < newLen; t++) {
+        for (let d = 0; d < dHead; d++) {
+          Qh[t * dHead + d] = Q[t * dModel + headOff + d];
+          KhNew[t * dHead + d] = Knew[t * dModel + headOff + d];
+          VhNew[t * dHead + d] = Vnew[t * dModel + headOff + d];
+        }
+      }
+
+      // Append to cache
+      appendKv(cache, h, KhNew, VhNew, dHead, newLen);
+    }
+
+    // Update cache length (only once, after all heads appended)
+    const fullLen = cache.len + newLen;
+    cache.len = fullLen;
+
+    // Now attend: Q_new [newLen, dHead] × K_cached^T [dHead, fullLen]
+    for (let h = 0; h < nHeads; h++) {
+      const headOff = h * dHead;
+
+      const Qh = new Float32Array(newLen * dHead);
+      for (let t = 0; t < newLen; t++) {
+        for (let d = 0; d < dHead; d++) {
+          Qh[t * dHead + d] = Q[t * dModel + headOff + d];
+        }
+      }
+
+      const KhFull = cache.k[h]; // [fullLen × dHead]
+      const VhFull = cache.v[h]; // [fullLen × dHead]
+
+      // Transpose K: [fullLen, dHead] → [dHead, fullLen]
+      const KhT = new Float32Array(dHead * fullLen);
+      for (let t = 0; t < fullLen; t++) {
+        for (let d = 0; d < dHead; d++) {
+          KhT[d * fullLen + t] = KhFull[t * dHead + d];
+        }
+      }
+
+      // Scores: [newLen, fullLen]
+      const scores = await this.matmul(Qh, KhT, newLen, fullLen, dHead);
+      const scale = 1 / Math.sqrt(dHead);
+      for (let i = 0; i < scores.length; i++) scores[i] *= scale;
+
+      // Causal mask: for position (cache.len - newLen + i), mask out j > (cache.len - newLen + i)
+      if (causal) {
+        const basePos = fullLen - newLen;
+        for (let i = 0; i < newLen; i++) {
+          for (let j = basePos + i + 1; j < fullLen; j++) {
+            scores[i * fullLen + j] = -1e9;
+          }
+        }
+      }
+
+      const weights = await this.softmax(scores, newLen, fullLen);
+      const headOut = await this.matmul(weights, VhFull, newLen, dHead, fullLen);
+
+      for (let t = 0; t < newLen; t++) {
+        for (let d = 0; d < dHead; d++) {
+          attnOut[t * dModel + headOff + d] = headOut[t * dHead + d];
+        }
+      }
+    }
+
+    return this.linear(attnOut, outW, outB, newLen, dModel, dModel);
+  }
+
+  /**
+   * Cached cross-attention: K/V from encoder are computed once
+   * and stored in cache. Only Q is computed per decoder step.
+   */
+  async cachedCrossAttention(
+    input: Float32Array, decLen: number,
+    encOutput: Float32Array, encLen: number,
+    qW: Float32Array, qB: Float32Array,
+    kW: Float32Array, kB: Float32Array | null,
+    vW: Float32Array, vB: Float32Array,
+    outW: Float32Array, outB: Float32Array,
+    nHeads: number, dModel: number, dHead: number,
+    cache: KvCache,
+  ): Promise<Float32Array> {
+    // Only compute encoder K/V on first call (cache.len === 0)
+    if (cache.len === 0) {
+      const K = await this.linear(encOutput, kW, kB, encLen, dModel, dModel);
+      const V = await this.linear(encOutput, vW, vB, encLen, dModel, dModel);
+
+      for (let h = 0; h < nHeads; h++) {
+        const headOff = h * dHead;
+        const Kh = new Float32Array(encLen * dHead);
+        const Vh = new Float32Array(encLen * dHead);
+        for (let t = 0; t < encLen; t++) {
+          for (let d = 0; d < dHead; d++) {
+            Kh[t * dHead + d] = K[t * dModel + headOff + d];
+            Vh[t * dHead + d] = V[t * dModel + headOff + d];
+          }
+        }
+        cache.k[h] = Kh;
+        cache.v[h] = Vh;
+      }
+      cache.len = encLen;
+    }
+
+    // Only Q changes each step
+    const Q = await this.linear(input, qW, qB, decLen, dModel, dModel);
+    const attnOut = new Float32Array(decLen * dModel);
+
+    for (let h = 0; h < nHeads; h++) {
+      const headOff = h * dHead;
+      const Qh = new Float32Array(decLen * dHead);
+      for (let t = 0; t < decLen; t++) {
+        for (let d = 0; d < dHead; d++) {
+          Qh[t * dHead + d] = Q[t * dModel + headOff + d];
+        }
+      }
+
+      const KhFull = cache.k[h];
+      const VhFull = cache.v[h];
+      const cachedLen = cache.len;
+
+      const KhT = new Float32Array(dHead * cachedLen);
+      for (let t = 0; t < cachedLen; t++) {
+        for (let d = 0; d < dHead; d++) {
+          KhT[d * cachedLen + t] = KhFull[t * dHead + d];
+        }
+      }
+
+      const scores = await this.matmul(Qh, KhT, decLen, cachedLen, dHead);
+      const scale = 1 / Math.sqrt(dHead);
+      for (let i = 0; i < scores.length; i++) scores[i] *= scale;
+
+      const weights = await this.softmax(scores, decLen, cachedLen);
+      const headOut = await this.matmul(weights, VhFull, decLen, dHead, cachedLen);
 
       for (let t = 0; t < decLen; t++) {
         for (let d = 0; d < dHead; d++) {

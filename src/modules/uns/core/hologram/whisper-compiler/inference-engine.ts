@@ -1,20 +1,21 @@
 /**
- * Whisper Inference Engine — Phase 3 + Phase 4 (GPU-Accelerated)
+ * Whisper Inference Engine — Phase 3 + Phase 4 (GPU) + KV-Cache
  * ══════════════════════════════════════════════════════════════
  *
  * Runs Whisper tiny.en inference using compiled weights from
  * the Hologram weight store. GPU-accelerated via HologramGpu
  * WGSL kernels with automatic CPU fallback.
  *
+ * KV-Cache: Decoder self-attention and cross-attention caches
+ * eliminate redundant K/V computation across autoregressive steps,
+ * reducing per-step complexity from O(T²·D) to O(T·D).
+ * Cross-attention K/V are computed once from encoder output.
+ *
  * Architecture (Whisper tiny.en):
  *   Encoder: Conv1D(80→384,k=3) → GELU → Conv1D(384→384,k=3,s=2) → GELU
  *            → positional → 4× TransformerBlock → LayerNorm
  *   Decoder: TokenEmbed + PosEmbed → 4× TransformerBlock (with cross-attn)
  *            → LayerNorm → lm_head (logits)
- *
- * Phase 4: All MatMul, LayerNorm, GELU, Softmax, and Attention ops
- * are dispatched through GpuDispatch → HologramGpu WGSL kernels,
- * providing 10-50× speedup over CPU on supported hardware.
  *
  * @module uns/core/hologram/whisper-compiler/inference-engine
  */
@@ -23,7 +24,13 @@ import { getWeightStore, type HologramWeightStore } from "./weight-store";
 import { loadCompiledWhisper } from "./compiler";
 import { computeMelSpectrogram, N_MELS, N_FRAMES } from "./mel-spectrogram";
 import { cpuGelu } from "./wgsl-kernels";
-import { getGpuDispatch, type GpuDispatch, type GpuDispatchStats } from "./gpu-dispatch";
+import {
+  getGpuDispatch,
+  type GpuDispatch,
+  type GpuDispatchStats,
+  type KvCache,
+  createKvCache,
+} from "./gpu-dispatch";
 import type { HologramCompiledModel, HologramTensorDescriptor } from "./types";
 
 // ── Whisper tiny.en Architecture Constants ─────────────────────────────────
@@ -124,6 +131,13 @@ export class WhisperEngine {
   private tensorIndex = new Map<string, HologramTensorDescriptor>();
   private ready = false;
   private dispatch: GpuDispatch;
+
+  // ── KV-Cache State ────────────────────────────────────────────────
+  // Per-layer caches for self-attention and cross-attention
+  private selfAttnCache: KvCache[] = [];
+  private crossAttnCache: KvCache[] = [];
+  // Pre-transposed token embedding for LM head (computed once per transcribe)
+  private tokenEmbedT: Float32Array | null = null;
 
   constructor() {
     this.store = getWeightStore();
@@ -305,32 +319,57 @@ export class WhisperEngine {
     return x;
   }
 
-  // ── Decoder Forward Pass (GPU-accelerated) ─────────────────────────
+  // ── KV-Cache Management ─────────────────────────────────────────────
 
+  /** Reset all decoder caches (call before each new transcription) */
+  private resetCaches(): void {
+    this.selfAttnCache = [];
+    this.crossAttnCache = [];
+    for (let i = 0; i < N_DECODER_LAYERS; i++) {
+      this.selfAttnCache.push(createKvCache(N_HEADS));
+      this.crossAttnCache.push(createKvCache(N_HEADS));
+    }
+    this.tokenEmbedT = null;
+  }
+
+  // ── Decoder Forward Pass (KV-Cached, GPU-accelerated) ──────────────
+
+  /**
+   * Run decoder on new token(s) only, using KV-cache.
+   *
+   * - Prefill: pass all prompt tokens at once (newTokens = [SOT, en, transcribe, notimestamps])
+   * - Incremental: pass one token at a time (newTokens = [lastPredicted])
+   *
+   * `posOffset` is the position index for the first new token.
+   */
   private async decoderStep(
-    tokens: number[],
+    newTokens: number[],
+    posOffset: number,
     encoderOutput: Float32Array,
     encLen: number,
   ): Promise<Float32Array> {
-    const T = tokens.length;
+    const T = newTokens.length;
 
-    // Token + positional embedding (CPU — small lookup)
+    // Token + positional embedding (CPU — tiny lookup)
     const tokenEmbed = this.w("embed_tokens.weight");
-    let x = embedding(tokenEmbed, D_MODEL, tokens);
+    let x = embedding(tokenEmbed, D_MODEL, newTokens);
     const posEmbed = this.w("embed_positions.weight");
     for (let t = 0; t < T; t++) {
+      const pos = posOffset + t;
       for (let d = 0; d < D_MODEL; d++) {
-        x[t * D_MODEL + d] += posEmbed[t * D_MODEL + d];
+        x[t * D_MODEL + d] += posEmbed[pos * D_MODEL + d];
       }
     }
 
-    // Decoder blocks (GPU-accelerated)
+    // Decoder blocks with KV-cache
     for (let layer = 0; layer < N_DECODER_LAYERS; layer++) {
       const prefix = `layers.${layer}`;
-      x = await this.decoderBlock(x, T, encoderOutput, encLen, prefix);
+      x = await this.decoderBlockCached(
+        x, T, encoderOutput, encLen, prefix, layer,
+      );
     }
 
-    // Final layer norm (GPU)
+    // Final layer norm (only the new tokens)
     x = await this.dispatch.layerNorm(
       x,
       this.w("layer_norm.weight"),
@@ -338,34 +377,38 @@ export class WhisperEngine {
       T, D_MODEL, EPS,
     );
 
-    // LM head: project last token to vocab logits (GPU matmul)
+    // LM head: project last new token → vocab logits
     const lastHidden = x.subarray((T - 1) * D_MODEL, T * D_MODEL);
-    // lastHidden [1, D_MODEL] × tokenEmbed^T [D_MODEL, VOCAB] → [1, VOCAB]
+
+    // Cache the transposed token embedding (only transpose once)
+    if (!this.tokenEmbedT) {
+      this.tokenEmbedT = transpose2d(tokenEmbed, VOCAB_SIZE, D_MODEL);
+    }
+
     const logits = await this.dispatch.matmul(
-      lastHidden,
-      transpose2d(tokenEmbed, VOCAB_SIZE, D_MODEL),
+      lastHidden, this.tokenEmbedT,
       1, VOCAB_SIZE, D_MODEL,
     );
 
     return logits;
   }
 
-  private async decoderBlock(
-    x: Float32Array, decLen: number,
+  private async decoderBlockCached(
+    x: Float32Array, newLen: number,
     encOutput: Float32Array, encLen: number,
-    prefix: string,
+    prefix: string, layerIdx: number,
   ): Promise<Float32Array> {
-    // Causal self-attention (GPU)
+    // ── Causal self-attention with KV-cache ──────────────────────────
     let residual = new Float32Array(x);
     x = await this.dispatch.layerNorm(
       x,
       this.w(`${prefix}.self_attn_layer_norm.weight`),
       this.w(`${prefix}.self_attn_layer_norm.bias`),
-      decLen, D_MODEL, EPS,
+      newLen, D_MODEL, EPS,
     );
 
-    x = await this.dispatch.multiHeadAttention(
-      x, decLen,
+    x = await this.dispatch.cachedSelfAttention(
+      x, newLen,
       this.w(`${prefix}.self_attn.q_proj.weight`),
       this.w(`${prefix}.self_attn.q_proj.bias`),
       this.w(`${prefix}.self_attn.k_proj.weight`),
@@ -375,21 +418,22 @@ export class WhisperEngine {
       this.w(`${prefix}.self_attn.out_proj.weight`),
       this.w(`${prefix}.self_attn.out_proj.bias`),
       N_HEADS, D_MODEL, D_HEAD,
+      this.selfAttnCache[layerIdx],
       true, // causal
     );
     addInPlace(x, residual);
 
-    // Cross-attention (GPU)
+    // ── Cross-attention with cached encoder K/V ─────────────────────
     residual = new Float32Array(x);
     x = await this.dispatch.layerNorm(
       x,
       this.w(`${prefix}.encoder_attn_layer_norm.weight`),
       this.w(`${prefix}.encoder_attn_layer_norm.bias`),
-      decLen, D_MODEL, EPS,
+      newLen, D_MODEL, EPS,
     );
 
-    x = await this.dispatch.crossAttention(
-      x, decLen,
+    x = await this.dispatch.cachedCrossAttention(
+      x, newLen,
       encOutput, encLen,
       this.w(`${prefix}.encoder_attn.q_proj.weight`),
       this.w(`${prefix}.encoder_attn.q_proj.bias`),
@@ -400,21 +444,22 @@ export class WhisperEngine {
       this.w(`${prefix}.encoder_attn.out_proj.weight`),
       this.w(`${prefix}.encoder_attn.out_proj.bias`),
       N_HEADS, D_MODEL, D_HEAD,
+      this.crossAttnCache[layerIdx],
     );
     addInPlace(x, residual);
 
-    // FFN (GPU)
+    // ── FFN ──────────────────────────────────────────────────────────
     residual = new Float32Array(x);
     x = await this.dispatch.layerNorm(
       x,
       this.w(`${prefix}.final_layer_norm.weight`),
       this.w(`${prefix}.final_layer_norm.bias`),
-      decLen, D_MODEL, EPS,
+      newLen, D_MODEL, EPS,
     );
 
-    x = await this.dispatch.linear(x, this.w(`${prefix}.fc1.weight`), this.tryW(`${prefix}.fc1.bias`), decLen, D_MODEL, D_MLP);
+    x = await this.dispatch.linear(x, this.w(`${prefix}.fc1.weight`), this.tryW(`${prefix}.fc1.bias`), newLen, D_MODEL, D_MLP);
     x = await this.dispatch.gelu(x);
-    x = await this.dispatch.linear(x, this.w(`${prefix}.fc2.weight`), this.tryW(`${prefix}.fc2.bias`), decLen, D_MLP, D_MODEL);
+    x = await this.dispatch.linear(x, this.w(`${prefix}.fc2.weight`), this.tryW(`${prefix}.fc2.bias`), newLen, D_MLP, D_MODEL);
     addInPlace(x, residual);
 
     return x;
@@ -472,15 +517,22 @@ export class WhisperEngine {
     const encLen = N_FRAMES / 2;
     console.log(`[WhisperEngine] Encoder: ${encLen}×${D_MODEL} in ${encMs}ms (${this.dispatch.available ? "GPU" : "CPU"})`);
 
-    // Phase 3: Decoder (GPU-accelerated autoregressive)
-    onProgress?.({ phase: "decoder", message: "Decoding tokens...", progress: 0.5 });
-    const tokens: number[] = [SOT, LANG_EN, TRANSCRIBE, NO_TIMESTAMPS];
+    // Phase 3: Decoder (KV-cached, GPU-accelerated autoregressive)
+    onProgress?.({ phase: "decoder", message: "Decoding tokens (KV-cached)...", progress: 0.5 });
+    const promptTokens = [SOT, LANG_EN, TRANSCRIBE, NO_TIMESTAMPS];
+    const tokens = [...promptTokens];
+
+    // Reset KV caches for this transcription
+    this.resetCaches();
+
+    // Prefill: process all prompt tokens at once (populates caches)
+    const prefillStart = performance.now();
+    let logits = await this.decoderStep(promptTokens, 0, encoderOutput, encLen);
+    const prefillMs = Math.round(performance.now() - prefillStart);
+    console.log(`[WhisperEngine] Prefill: ${promptTokens.length} tokens in ${prefillMs}ms`);
 
     for (let step = 0; step < MAX_TOKENS; step++) {
-      const stepStart = performance.now();
-      const logits = await this.decoderStep(tokens, encoderOutput, encLen);
       const nextToken = this.greedyDecode(logits);
-      const stepMs = Math.round(performance.now() - stepStart);
 
       if (nextToken === EOT) {
         console.log(`[WhisperEngine] EOT at step ${step}`);
@@ -488,6 +540,12 @@ export class WhisperEngine {
       }
 
       tokens.push(nextToken);
+
+      // Incremental: only process the new token (O(T·D) instead of O(T²·D))
+      const stepStart = performance.now();
+      logits = await this.decoderStep([nextToken], tokens.length - 1, encoderOutput, encLen);
+      const stepMs = Math.round(performance.now() - stepStart);
+
       onProgress?.({
         phase: "decoder",
         message: `Token ${step + 1}: ${nextToken}`,
@@ -542,12 +600,15 @@ export class WhisperEngine {
     };
   }
 
-  /** Release all loaded weights from memory */
+  /** Release all loaded weights and caches from memory */
   dispose(): void {
     this.weights.clear();
     this.tensorIndex.clear();
     this.manifest = null;
     this.ready = false;
+    this.selfAttnCache = [];
+    this.crossAttnCache = [];
+    this.tokenEmbedT = null;
   }
 }
 
