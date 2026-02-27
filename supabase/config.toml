@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.firecrawl-scrape]
 verify_jwt = false
+
+[functions.whisper-model-proxy]
+verify_jwt = false

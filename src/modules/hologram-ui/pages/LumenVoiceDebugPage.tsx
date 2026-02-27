@@ -471,23 +471,52 @@ export default function LumenVoiceDebugPage() {
       };
     });
 
-    // Step 8: Whisper ONNX status check (optional, only if cached)
-    await step("Whisper ONNX Cache Check", async () => {
+    // Step 8: Whisper ONNX via self-hosted proxy
+    await step("Whisper ONNX (Self-Hosted Proxy)", async () => {
       const engine = getWhisperEngine();
-      const cached = engine.isReady;
-      if (cached && capturedAudio) {
-        const out = await engine.transcribe(capturedAudio.audio, capturedAudio.sampleRate);
+      if (engine.isReady) {
+        // Already cached — test transcription
+        if (capturedAudio) {
+          const out = await engine.transcribe(capturedAudio.audio, capturedAudio.sampleRate);
+          return {
+            detail: `Whisper cached & working: "${out.text.slice(0, 60)}" (${out.inferenceTimeMs}ms, ${out.device})`,
+            data: { cached: true, text: out.text, inferenceMs: out.inferenceTimeMs, device: out.device },
+          };
+        }
+        return { detail: "Whisper ONNX cached (no audio to test)", data: { cached: true } };
+      }
+
+      // Try loading through self-hosted proxy
+      addLog("  Loading Whisper via self-hosted proxy (model files cached in our storage)…");
+      try {
+        await engine.load((p) => {
+          setWhisperProgress(Math.round(p.progress ?? 0));
+          if (p.file) addLog(`  📦 ${p.status}: ${p.file} (${Math.round(p.progress ?? 0)}%)`);
+        });
+        setWhisperStatus("ready");
+
+        if (capturedAudio) {
+          const out = await engine.transcribe(capturedAudio.audio, capturedAudio.sampleRate);
+          return {
+            detail: `Whisper loaded via proxy & transcribed: "${out.text.slice(0, 60)}" (${out.inferenceTimeMs}ms, ${out.device}, vGPU: ${engine.gpuAccelerated})`,
+            data: {
+              text: out.text, inferenceMs: out.inferenceTimeMs,
+              device: out.device, vgpu: engine.gpuAccelerated,
+              modelId: engine.modelId, proxy: "self-hosted",
+            },
+          };
+        }
         return {
-          detail: `Whisper cached & working: "${out.text.slice(0, 60)}" (${out.inferenceTimeMs}ms, ${out.device})`,
-          data: { cached: true, text: out.text, inferenceMs: out.inferenceTimeMs, device: out.device },
+          detail: `Whisper loaded via self-hosted proxy (${engine.device}, vGPU: ${engine.gpuAccelerated})`,
+          data: { cached: false, device: engine.device, vgpu: engine.gpuAccelerated, proxy: "self-hosted" },
+        };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "unknown";
+        return {
+          detail: `Whisper proxy load failed: ${msg} — native STT remains primary`,
+          data: { cached: false, error: msg, status: engine.status, nativeFallback: true },
         };
       }
-      return {
-        detail: cached
-          ? "Whisper ONNX cached (no audio to test)"
-          : `Whisper not cached (status: ${engine.status}, error: ${engine.error ?? "none"}) — using native STT as primary`,
-        data: { cached, status: engine.status, error: engine.error },
-      };
     });
     const ttsText = transcript || "LUMEN voice debug test complete.";
     await step("Browser TTS (Web Speech API)", async () => {
