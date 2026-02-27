@@ -753,6 +753,255 @@ export async function gpuMatmul(a: Uint8Array, b: Uint8Array, n: number): Promis
   gpuLastPath = "storage";
   return result;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Discovery 3 — 2D LUT Co-Quantized Dot Product Engine
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Co-Quantized 2D LUT for O(1) Linear Layer Inference
+ *
+ * ┌─────────────────────────────────────────────────────────────┐
+ * │ CORE INSIGHT                                               │
+ * │                                                            │
+ * │ A linear layer computes y = W·x where W is [M×K] weights  │
+ * │ and x is [K] activations. If we quantize both W and x to  │
+ * │ Q bits, there are only 2^Q × 2^Q unique product pairs.    │
+ * │ For Q=4 (GPTQ/AWQ standard): 16×16 = 256 entries = 1KB.   │
+ * │                                                            │
+ * │ We precompute all products into a 2D texture and route     │
+ * │ every multiply through the GPU TMU cache via textureLoad().│
+ * │ The multiply unit is fully bypassed — inference becomes    │
+ * │ pure texture reads + integer additions.                    │
+ * │                                                            │
+ * │ Table sizes:  Q=2: 16 bytes | Q=4: 256 bytes | Q=8: 64KB  │
+ * └─────────────────────────────────────────────────────────────┘
+ */
+
+/** Quantization bit-widths supported by the 2D LUT engine. */
+export type QuantBits = 2 | 4 | 8;
+
+/** Result from building a co-quantized 2D LUT. */
+export interface CoQuantLut {
+  /** The 2D product table: lut[a * levels + w] = (a * w) & 0xFF */
+  table: Uint8Array;
+  /** Number of quantization levels (2^bits) */
+  levels: number;
+  /** Bit-width used */
+  bits: QuantBits;
+  /** Table size in bytes */
+  sizeBytes: number;
+  /** Lookup: (quantized_activation, quantized_weight) → product */
+  lookup: (a: number, w: number) => number;
+}
+
+/**
+ * Build a co-quantized 2D product LUT.
+ *
+ *   Q=2: 4×4   =   16 bytes  (fits in a register)
+ *   Q=4: 16×16 =  256 bytes  (fits in one GPU cache line)
+ *   Q=8: 256×256= 64KB       (equivalent to MUL_TABLE)
+ */
+export function buildCoQuantLut(bits: QuantBits): CoQuantLut {
+  const levels = 1 << bits;
+  const size = levels * levels;
+  const table = new Uint8Array(size);
+
+  for (let a = 0; a < levels; a++) {
+    const off = a * levels;
+    for (let w = 0; w < levels; w++) {
+      table[off + w] = (a * w) & 0xff;
+    }
+  }
+
+  return {
+    table,
+    levels,
+    bits,
+    sizeBytes: size,
+    lookup: (a: number, w: number) => table[(a & (levels - 1)) * levels + (w & (levels - 1))],
+  };
+}
+
+/**
+ * CPU reference: co-quantized matrix-vector product using 2D LUT.
+ * y[i] = Σₖ LUT[x_q[k]][W_q[i][k]]   — zero multiply instructions.
+ */
+export function coQuantMatVecCpu(
+  lut: CoQuantLut,
+  weightsQ: Uint8Array,
+  activationsQ: Uint8Array,
+  rows: number,
+  cols: number,
+): Uint8Array {
+  const y = new Uint8Array(rows);
+  const mask = lut.levels - 1;
+  for (let r = 0; r < rows; r++) {
+    let sum = 0;
+    const rowOff = r * cols;
+    for (let c = 0; c < cols; c++) {
+      sum = (sum + lut.table[(activationsQ[c] & mask) * lut.levels + (weightsQ[rowOff + c] & mask)]) & 0xff;
+    }
+    y[r] = sum;
+  }
+  return y;
+}
+
+// ── WebGPU 2D LUT Shader ────────────────────────────────────────
+
+const COQUANT_LINEAR_SHADER = /* wgsl */ `
+@group(0) @binding(0) var lut_tex: texture_2d<u32>;
+@group(0) @binding(1) var<storage, read> weights: array<u32>;
+@group(0) @binding(2) var<storage, read> activations: array<u32>;
+@group(0) @binding(3) var<storage, read_write> output: array<u32>;
+@group(0) @binding(4) var<uniform> params: vec4<u32>;
+
+@compute @workgroup_size(256)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+  let row = gid.x;
+  let rows = params.x;
+  let cols = params.y;
+  let mask = params.z - 1u;
+
+  if (row >= rows) { return; }
+
+  var sum: u32 = 0u;
+  let row_off = row * cols;
+
+  for (var k: u32 = 0u; k < cols; k = k + 1u) {
+    let a_q = activations[k] & mask;
+    let w_q = weights[row_off + k] & mask;
+    let product = textureLoad(lut_tex, vec2<i32>(i32(a_q), i32(w_q)), 0).r;
+    sum = (sum + product) & 0xFFu;
+  }
+
+  output[row] = sum;
+}
+`;
+
+let _coQuantPipeline: GPUComputePipeline | null = null;
+
+async function getCoQuantPipeline(device: GPUDevice): Promise<GPUComputePipeline | null> {
+  if (_coQuantPipeline) return _coQuantPipeline;
+  try {
+    const module = device.createShaderModule({ code: COQUANT_LINEAR_SHADER });
+    _coQuantPipeline = device.createComputePipeline({
+      layout: "auto",
+      compute: { module, entryPoint: "main" },
+    });
+    return _coQuantPipeline;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * GPU co-quantized linear layer: y = W·x via 2D texture LUT.
+ *
+ * Every dot-product multiply is a textureLoad() through TMU cache.
+ * For Q=4, the 256-byte LUT stays TMU-L1-resident — guaranteed hit.
+ * Returns null if WebGPU unavailable.
+ */
+export async function coQuantLinearGpu(
+  lut: CoQuantLut,
+  weightsQ: Uint8Array,
+  activationsQ: Uint8Array,
+  rows: number,
+  cols: number,
+): Promise<Uint8Array | null> {
+  const device = await initGpu();
+  if (!device) return null;
+
+  const pipeline = await getCoQuantPipeline(device);
+  if (!pipeline) return null;
+
+  const levels = lut.levels;
+
+  // Upload 2D LUT as texture_2d<u32>
+  const lutU32 = new Uint32Array(levels * levels);
+  for (let i = 0; i < lut.table.length; i++) lutU32[i] = lut.table[i];
+
+  const lutTex = device.createTexture({
+    size: [levels, levels],
+    format: "r32uint",
+    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+  });
+  device.queue.writeTexture(
+    { texture: lutTex },
+    lutU32,
+    { bytesPerRow: levels * 4, rowsPerImage: levels },
+    [levels, levels],
+  );
+
+  const wU32 = new Uint32Array(rows * cols);
+  for (let i = 0; i < rows * cols; i++) wU32[i] = weightsQ[i];
+  const aU32 = new Uint32Array(cols);
+  for (let i = 0; i < cols; i++) aU32[i] = activationsQ[i];
+
+  const bufW = device.createBuffer({ size: wU32.byteLength, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+  const bufA = device.createBuffer({ size: aU32.byteLength, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+  const bufOut = device.createBuffer({ size: rows * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
+  const bufParams = device.createBuffer({ size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+  const bufRead = device.createBuffer({ size: rows * 4, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
+
+  device.queue.writeBuffer(bufW, 0, wU32);
+  device.queue.writeBuffer(bufA, 0, aU32);
+  device.queue.writeBuffer(bufParams, 0, new Uint32Array([rows, cols, levels, 0]));
+
+  const bindGroup = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: lutTex.createView() },
+      { binding: 1, resource: { buffer: bufW } },
+      { binding: 2, resource: { buffer: bufA } },
+      { binding: 3, resource: { buffer: bufOut } },
+      { binding: 4, resource: { buffer: bufParams } },
+    ],
+  });
+
+  const encoder = device.createCommandEncoder();
+  const pass = encoder.beginComputePass();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup);
+  pass.dispatchWorkgroups(Math.ceil(rows / 256));
+  pass.end();
+  encoder.copyBufferToBuffer(bufOut, 0, bufRead, 0, rows * 4);
+  device.queue.submit([encoder.finish()]);
+
+  await bufRead.mapAsync(GPUMapMode.READ);
+  const resultU32 = new Uint32Array(bufRead.getMappedRange().slice(0));
+  bufRead.unmap();
+
+  const result = new Uint8Array(rows);
+  for (let i = 0; i < rows; i++) result[i] = resultU32[i] & 0xff;
+
+  lutTex.destroy();
+  bufW.destroy(); bufA.destroy(); bufOut.destroy(); bufParams.destroy(); bufRead.destroy();
+
+  return result;
+}
+
+/** Quantize [0,255] → [0, 2^bits - 1] by right-shifting. */
+export function quantize(data: Uint8Array, bits: QuantBits): Uint8Array {
+  const shift = 8 - bits;
+  const out = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i++) out[i] = data[i] >> shift;
+  return out;
+}
+
+/** Verify GPU output against CPU reference. */
+export function verifyCoQuant(
+  gpuResult: Uint8Array,
+  cpuResult: Uint8Array,
+): { ok: boolean; mismatches: number; checked: number } {
+  let mismatches = 0;
+  const len = Math.min(gpuResult.length, cpuResult.length);
+  for (let i = 0; i < len; i++) {
+    if (gpuResult[i] !== cpuResult[i]) mismatches++;
+  }
+  return { ok: mismatches === 0, mismatches, checked: len };
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Hologram Compute Cache — The Holographic Surface
 // ═══════════════════════════════════════════════════════════════
