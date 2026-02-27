@@ -1359,6 +1359,47 @@ export default function ConstantTimeBenchmark() {
             <ForensicPanel points={allPoints} precomputeMethod={precomputeMethod} precomputeMs={precomputeMs} />
           )}
 
+          {/* Cross-Demo Summary Card */}
+          {cpuState === "done" && gpuState === "done" && cpuPoints.length > 0 && gpuPoints.length > 0 && (() => {
+            const cpuPeakSpeedup = Math.max(...cpuPoints.map(p => p.speedupVsCpu));
+            const gpuPeakSpeedup = Math.max(...gpuPoints.map(p => p.speedupVsGpu));
+            const totalCpuMs = cpuPoints.reduce((s, p) => s + p.stdMs, 0);
+            const totalGpuMs = gpuPoints.reduce((s, p) => s + p.gpuMs, 0);
+            const totalHoloCpu = cpuPoints.reduce((s, p) => s + p.holoMs, 0);
+            const totalHoloGpu = gpuPoints.reduce((s, p) => s + p.holoMs, 0);
+            const cpuElim = ((1 - totalHoloCpu / totalCpuMs) * 100).toFixed(1);
+            const gpuElim = ((1 - totalHoloGpu / totalGpuMs) * 100).toFixed(1);
+            return (
+              <div className="rounded-xl overflow-hidden" style={{ border: "1px solid hsla(38, 40%, 65%, 0.15)", background: "linear-gradient(135deg, hsla(38, 40%, 65%, 0.04), hsla(38, 40%, 65%, 0.01))" }}>
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <IconFlame size={16} style={{ color: P.gold }} />
+                    <h3 className="text-sm font-bold uppercase tracking-widest" style={{ color: P.gold }}>Cross-Demo Summary</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg p-3 text-center" style={{ background: "hsla(0, 55%, 55%, 0.06)", border: "1px solid hsla(0, 55%, 55%, 0.12)" }}>
+                      <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: P.red }}>CPU vs vGPU</p>
+                      <p className="text-2xl font-mono font-bold" style={{ color: P.gold }}>
+                        {cpuPeakSpeedup >= 1000 ? `${(cpuPeakSpeedup / 1000).toFixed(1)}K` : cpuPeakSpeedup.toFixed(0)}×
+                      </p>
+                      <p className="text-[10px] mt-0.5" style={{ color: P.muted }}>CPU slower · {cpuElim}% eliminated</p>
+                    </div>
+                    <div className="rounded-lg p-3 text-center" style={{ background: "hsla(210, 50%, 60%, 0.06)", border: "1px solid hsla(210, 50%, 60%, 0.12)" }}>
+                      <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: P.blue }}>GPU vs vGPU</p>
+                      <p className="text-2xl font-mono font-bold" style={{ color: P.gold }}>
+                        {gpuPeakSpeedup >= 1000 ? `${(gpuPeakSpeedup / 1000).toFixed(1)}K` : gpuPeakSpeedup.toFixed(0)}×
+                      </p>
+                      <p className="text-[10px] mt-0.5" style={{ color: P.muted }}>GPU slower · {gpuElim}% eliminated</p>
+                    </div>
+                  </div>
+                  <p className="text-center text-[12px] font-semibold tracking-wide" style={{ color: P.gold }}>
+                    Hologram eliminates compute entirely — every answer is pre-computed retrieval.
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Scaling Exponent */}
           {cpuPoints.length >= 3 && (
             <ScalingExponent points={cpuPoints} />
