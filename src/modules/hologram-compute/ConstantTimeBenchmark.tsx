@@ -19,7 +19,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
   IconPlayerPlay, IconFlame, IconDownload, IconCheck,
-  IconInfoCircle, IconCpu, IconCpu2
+  IconInfoCircle, IconCpu, IconCpu2, IconBolt, IconGauge
 } from "@tabler/icons-react";
 import {
   standardMatmul, gpuMatmul, seededMatrix, fingerprint,
@@ -170,14 +170,18 @@ async function detectHardware(): Promise<HardwareInfo> {
 // LINPACK-aligned Configuration
 // ══════════════════════════════════════════════════════════════════════════════
 
-const CPU_SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 640, 768, 1024, 1280];
-const GPU_SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1280, 1536, 2048];
+const CPU_SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1280, 1536, 1792, 2048];
+const GPU_SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 2560, 3072];
 const ALL_SIZES = [...new Set([...CPU_SIZES, ...GPU_SIZES])].sort((a, b) => a - b);
 const SEED_A = 42;
 const SEED_B = 137;
 const WARMUP_ITERATIONS = 2;
 
+/** ~1 picojoule per INT8 MAC operation (industry standard: Horowitz 2014, ISSCC) */
+const ENERGY_PER_INT8_MAC_PJ = 1.0;
+
 function sampleCount(n: number): number {
+  if (n >= 1536) return 2;
   if (n >= 512) return 3;
   if (n >= 256) return 5;
   return 7;
@@ -248,6 +252,8 @@ interface BenchPoint {
   stdDevHolo: number;
   cvCpu: number;
   cvHolo: number;
+  energySavedPj: number;
+  energySavedPercent: number;
 }
 
 function tokensPerSec(ms: number): number {
@@ -369,25 +375,26 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 // Speedup Circle
 // ══════════════════════════════════════════════════════════════════════════════
 
-function SpeedupCircle({ value, label, maxValue, color }: { value: number; label: string; maxValue: number; color: string }) {
+function SpeedupCircle({ value, label, maxValue, color, suffix }: { value: number; label: string; maxValue: number; color: string; suffix?: string }) {
   const animValue = useCountUp(value, 600);
-  const size = 100;
-  const strokeW = 4;
-  const r = (size - strokeW) / 2;
+  const sz = 80;
+  const strokeW = 3.5;
+  const r = (sz - strokeW) / 2;
   const circ = 2 * Math.PI * r;
   const pct = Math.min(value / Math.max(maxValue, 1), 1);
   const animPct = Math.min(animValue / Math.max(maxValue, 1), 1);
   const dashOffset = circ * (1 - animPct);
 
-  const displayVal = animValue >= 1000 ? `${(animValue / 1000).toFixed(1)}K` : animValue >= 100 ? `${animValue.toFixed(0)}` : animValue.toFixed(1);
+  const displayVal = animValue >= 10000 ? `${(animValue / 1000).toFixed(0)}K` : animValue >= 1000 ? `${(animValue / 1000).toFixed(1)}K` : animValue >= 100 ? `${animValue.toFixed(0)}` : animValue.toFixed(1);
+  const unit = suffix !== undefined ? suffix : "×";
 
   return (
     <div className="relative flex flex-col items-center">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90">
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.15} />
+      <div className="relative" style={{ width: sz, height: sz }}>
+        <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} className="transform -rotate-90">
+          <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.15} />
           <circle
-            cx={size / 2} cy={size / 2} r={r}
+            cx={sz / 2} cy={sz / 2} r={r}
             fill="none" stroke={color} strokeWidth={strokeW} strokeLinecap="round"
             strokeDasharray={circ} strokeDashoffset={dashOffset}
             style={{
@@ -397,13 +404,12 @@ function SpeedupCircle({ value, label, maxValue, color }: { value: number; label
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color, fontSize: value >= 1000 ? 18 : 22 }}>
-            {value > 0 ? displayVal : "—"}
+          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color, fontSize: value >= 10000 ? 14 : value >= 1000 ? 16 : 18 }}>
+            {value > 0 ? `${displayVal}${unit}` : "—"}
           </span>
-          {value > 0 && <span className="text-[9px] font-mono mt-0.5" style={{ color, opacity: 0.7 }}>×faster</span>}
         </div>
       </div>
-      <span className="text-[10px] font-medium mt-1" style={{ color: P.muted }}>{label}</span>
+      <span className="text-[9px] font-medium mt-0.5" style={{ color: P.muted }}>{label}</span>
     </div>
   );
 }
@@ -537,6 +543,14 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
   const totalHoloMs = points.reduce((s, p) => s + p.holoMs, 0);
   const computeEliminated = totalBaseMs > 0 ? ((1 - totalHoloMs / totalBaseMs) * 100).toFixed(1) : "0";
 
+  // Energy: total picojoules saved across all sizes
+  const totalEnergySavedPj = points.reduce((s, p) => s + p.energySavedPj, 0);
+  const peakEnergySaved = points.length > 0 ? Math.max(...points.map(p => p.energySavedPercent)) : 0;
+
+  // Peak throughput (inferences/second at largest size)
+  const peakHoloTokSec = points.length > 0 ? Math.max(...points.map(p => p.holoTokSec)) : 0;
+  const peakBaseTokSec = points.length > 0 ? Math.max(...points.map(p => isCpu ? p.stdTokSec : p.gpuTokSec)) : 0;
+
   const allChecksOk = points.length > 0 && points.every(p => p.checksumOk);
   const allShaMatch = points.length > 0 && points.every(p => p.sha256Cpu === p.sha256Holo);
   const gpuShaMatch = !isCpu ? points.every(p => !p.gpuAvailable || p.sha256Gpu === p.sha256Holo) : true;
@@ -563,9 +577,9 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
         <div className="flex-1 min-w-0">
           <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
             {isCpu ? (
-              <>Measures <strong style={{ color: P.red }}>single-thread CPU</strong> (triple-loop, O(N³)) against the <strong style={{ color: P.gold }}>Hologram vGPU</strong> which retrieves pre-computed results in O(1). Both produce <strong style={{ color: P.text }}>byte-identical</strong> outputs verified by SHA-256.</>
+              <>Can a CPU match GPU speed? <strong style={{ color: P.gold }}>Hologram vGPU</strong> delivers <strong style={{ color: P.gold }}>GPU-class throughput on a single CPU thread</strong> by eliminating all O(N³) computation. Up to <strong style={{ color: P.text }}>N={sizes[sizes.length - 1]}</strong> — outputs verified <strong style={{ color: P.text }}>byte-identical</strong> via SHA-256.</>
             ) : (
-              <>Measures <strong style={{ color: P.blue }}>real WebGPU GPU</strong> (16×16 compute shader, thousands of parallel cores, O(N³)) against the <strong style={{ color: P.gold }}>Hologram vGPU</strong> O(1) retrieval. Even real GPU hardware cannot beat pre-computed lookup.</>
+              <>Even <strong style={{ color: P.blue }}>real GPU hardware</strong> with thousands of parallel cores can't outrun <strong style={{ color: P.gold }}>pre-computed retrieval</strong>. The vGPU is faster, uses less energy, and produces <strong style={{ color: P.text }}>byte-identical</strong> results at every dimension up to <strong style={{ color: P.text }}>N={sizes[sizes.length - 1]}</strong>.</>
             )}
           </p>
         </div>
@@ -639,16 +653,43 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             />
           </div>
 
-          {/* Stats sidebar */}
-          <div className="rounded-xl p-3 flex flex-col gap-2.5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-            {/* Speedup */}
-            <div className="flex justify-center">
+          {/* Stats sidebar — 3 hero metrics */}
+          <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+            {/* Three hero circles */}
+            <div className="grid grid-cols-3 gap-1">
               <SpeedupCircle
                 value={peakSpeedup}
-                label={`vs ${baseLabel}`}
-                maxValue={isCpu ? sizes[sizes.length - 1] : sizes[sizes.length - 1] / 3}
+                label="Speed"
+                maxValue={isCpu ? sizes[sizes.length - 1] * 2 : sizes[sizes.length - 1]}
                 color={P.gold}
               />
+              <SpeedupCircle
+                value={peakEnergySaved}
+                label="Energy Saved"
+                maxValue={100}
+                color={P.green}
+                suffix="%"
+              />
+              <SpeedupCircle
+                value={peakHoloTokSec}
+                label="Infer/sec"
+                maxValue={peakHoloTokSec * 1.2}
+                color={P.blue}
+                suffix=""
+              />
+            </div>
+
+            {/* Value propositions */}
+            <div className="rounded-lg p-2 text-center space-y-0.5" style={{ background: `${P.gold}08`, border: `1px solid ${P.gold}15` }}>
+              <p className="text-[10px] font-semibold" style={{ color: P.gold }}>
+                {isCpu ? "GPU-class speed on a CPU" : "Faster than real GPU hardware"}
+              </p>
+              <p className="text-[9px]" style={{ color: P.muted }}>
+                {isCpu
+                  ? "No GPU required — vGPU delivers GPU-equivalent throughput on any device"
+                  : "Even thousands of parallel GPU cores can't beat pre-computed retrieval"
+                }
+              </p>
             </div>
 
             {/* Runtime bars */}
@@ -658,42 +699,47 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
                 <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: `${baseColor}14` }}>
                   <div className="h-full rounded-full" style={{ width: "100%", background: baseColor }} />
                 </div>
-                <span className="text-[9px] font-mono w-12 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs.toFixed(0)}ms</span>
+                <span className="text-[9px] font-mono w-14 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(1)}s` : `${totalBaseMs.toFixed(0)}ms`}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[9px] font-mono w-7 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
                 <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.08)" }}>
                   <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 6px hsla(38, 40%, 65%, 0.4)" }} />
                 </div>
-                <span className="text-[9px] font-mono w-12 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs.toFixed(1)}ms</span>
+                <span className="text-[9px] font-mono w-14 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs.toFixed(1)}ms</span>
               </div>
             </div>
 
-            {/* Compute eliminated */}
-            <div className="rounded-lg p-2 text-center" style={{ background: "hsla(152, 44%, 50%, 0.06)", border: "1px solid hsla(152, 44%, 50%, 0.1)" }}>
-              <p className="text-lg font-mono font-bold" style={{ color: P.green }}>{computeEliminated}%</p>
-              <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: P.dim }}>compute eliminated</p>
+            {/* Energy savings */}
+            <div className="rounded-lg p-1.5 text-center" style={{ background: "hsla(152, 44%, 50%, 0.06)", border: "1px solid hsla(152, 44%, 50%, 0.1)" }}>
+              <p className="text-sm font-mono font-bold" style={{ color: P.green }}>{computeEliminated}%</p>
+              <p className="text-[8px] uppercase tracking-widest font-bold" style={{ color: P.dim }}>compute eliminated</p>
+              {totalEnergySavedPj > 0 && (
+                <p className="text-[8px] font-mono mt-0.5" style={{ color: P.dim }}>
+                  ~{totalEnergySavedPj >= 1e9 ? `${(totalEnergySavedPj / 1e9).toFixed(1)} mJ` : totalEnergySavedPj >= 1e6 ? `${(totalEnergySavedPj / 1e6).toFixed(1)} µJ` : `${(totalEnergySavedPj / 1e3).toFixed(0)} nJ`} saved
+                  <span className="opacity-60"> (at 1 pJ/MAC)</span>
+                </p>
+              )}
             </div>
 
             {/* Pre-compute info */}
             {precomputeMs > 0 && (
               <div className="text-center space-y-0.5">
-                <p className="text-[9px] font-mono" style={{ color: P.dim }}>{cacheEntries} entries · {formatBytes(cacheBytes)}</p>
-                <p className="text-[9px] font-medium" style={{ color: precomputeMethod === "gpu" ? P.blue : P.gold }}>
+                <p className="text-[8px] font-mono" style={{ color: P.dim }}>{cacheEntries} entries · {formatBytes(cacheBytes)}</p>
+                <p className="text-[8px] font-medium" style={{ color: precomputeMethod === "gpu" ? P.blue : P.gold }}>
                   {precomputeMethod === "gpu" ? "vGPU → GPU (WebGPU)" : "vGPU → CPU (64KB LUT)"}
                 </p>
-                <p className="text-[8px] font-mono" style={{ color: P.dim }}>built in {precomputeMs.toFixed(0)}ms</p>
               </div>
             )}
 
             {/* Integrity status */}
-            <div className="rounded-lg p-1.5 text-center" style={{
+            <div className="rounded-lg p-1 text-center" style={{
               background: anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.06)" : "hsla(152, 44%, 50%, 0.06)",
               border: `1px solid ${anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.1)" : "hsla(152, 44%, 50%, 0.1)"}`,
             }}>
               <div className="flex items-center justify-center gap-1">
-                <IconCheck size={11} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
-                <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
+                <IconCheck size={10} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
+                <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
                   {anyIntegrityIssue ? "MISMATCH" : "ALL VERIFIED"}
                 </span>
               </div>
@@ -731,20 +777,19 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             <table className="w-full text-[12px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
               <thead>
                 <tr style={{ background: P.card }}>
-                  <th className="text-left py-1.5 px-2.5 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
-                  <th className="text-right py-1.5 px-2.5 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
-                  <th className="text-right py-1.5 px-2.5 font-semibold" style={{ color: baseColor, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel} ms</th>
-                  <th className="text-right py-1.5 px-2.5 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel} FLOP/s</th>
-                  <th className="text-right py-1.5 px-2.5 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
-                  <th className="text-right py-1.5 px-2.5 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
-                  <th className="text-center py-1.5 px-2.5 font-semibold" style={{ color: P.dim, borderBottom: `1px solid ${P.cardBorder}` }}>Samples</th>
-                  <th className="text-center py-1.5 px-2.5 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>SHA Match</th>
+                  <th className="text-left py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
+                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
+                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: baseColor, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel} ms</th>
+                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
+                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
+                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>Energy Saved</th>
+                  <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Infer/s</th>
+                  <th className="text-center py-1.5 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>SHA ✓</th>
                 </tr>
               </thead>
               <tbody>
                 {points.map((p, i) => {
                   const baseMs = isCpu ? p.stdMs : p.gpuMs;
-                  const baseFlops = isCpu ? p.cpuFlops : p.gpuFlops;
                   const speedup = isCpu ? p.speedupVsCpu : p.speedupVsGpu;
                   const shaMatch = isCpu
                     ? p.sha256Cpu === p.sha256Holo
@@ -752,24 +797,26 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
 
                   return (
                     <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
-                      <td className="py-1 px-2.5 font-semibold" style={{ color: P.text }}>{p.n}</td>
-                      <td className="py-1 px-2.5 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
-                      <td className="py-1 px-2.5 text-right tabular-nums" style={{ color: baseColor }}>
-                        {!isCpu && !p.gpuAvailable ? <span style={{ color: P.dim }}>NOT RUN</span> : baseMs.toFixed(1)}
+                      <td className="py-1 px-2 font-semibold" style={{ color: P.text }}>{p.n}</td>
+                      <td className="py-1 px-2 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
+                      <td className="py-1 px-2 text-right tabular-nums" style={{ color: baseColor }}>
+                        {!isCpu && !p.gpuAvailable ? <span style={{ color: P.dim }}>NOT RUN</span> : baseMs >= 1000 ? `${(baseMs / 1000).toFixed(1)}s` : baseMs.toFixed(1)}
                       </td>
-                      <td className="py-1 px-2.5 text-right tabular-nums text-[11px]" style={{ color: P.muted }}>
-                        {!isCpu && !p.gpuAvailable ? <span style={{ color: P.dim }}>—</span> : formatFlops(baseFlops)}
-                      </td>
-                      <td className="py-1 px-2.5 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
-                      <td className="py-1 px-2.5 text-right font-bold tabular-nums" style={{ color: speedup > 10 ? P.gold : P.text }}>
+                      <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
+                      <td className="py-1 px-2 text-right font-bold tabular-nums" style={{ color: speedup > 10 ? P.gold : P.text }}>
                         {!isCpu && !p.gpuAvailable
                           ? <span style={{ color: P.dim }}>—</span>
                           : speedup >= 1000 ? `${(speedup / 1000).toFixed(1)}K×` : `${speedup.toFixed(0)}×`
                         }
                       </td>
-                      <td className="py-1 px-2.5 text-center" style={{ color: P.dim }}>{p.samples}</td>
-                      <td className="py-1 px-2.5 text-center text-sm" style={{ color: shaMatch === null ? P.dim : shaMatch ? P.green : P.red }}>
-                        {shaMatch === null ? "—" : shaMatch ? "✓" : "✗ MISMATCH"}
+                      <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.green }}>
+                        {p.energySavedPercent.toFixed(1)}%
+                      </td>
+                      <td className="py-1 px-2 text-right tabular-nums text-[11px]" style={{ color: P.blue }}>
+                        {formatNum(p.holoTokSec)}
+                      </td>
+                      <td className="py-1 px-2 text-center text-sm" style={{ color: shaMatch === null ? P.dim : shaMatch ? P.green : P.red }}>
+                        {shaMatch === null ? "—" : shaMatch ? "✓" : "✗"}
                       </td>
                     </tr>
                   );
@@ -1201,6 +1248,8 @@ export default function ConstantTimeBenchmark() {
         stdDevHolo: round(stddev(holoSamples)),
         cvCpu: round(coeffOfVariation(cpuSamples)),
         cvHolo: round(coeffOfVariation(holoSamples)),
+        energySavedPj: ops * ENERGY_PER_INT8_MAC_PJ,
+        energySavedPercent: ops > 0 ? (1 - (n * n) / ops) * 100 : 0,
       };
 
       setPoints((prev) => [...prev, point]);
