@@ -377,8 +377,8 @@ export default function HologramOsPage() {
 
       const mod = e.metaKey || e.ctrlKey;
 
-      // ⌘⇧R — Reset all element positions
-      if (mod && e.shiftKey && (e.key === "r" || e.key === "R")) {
+      // Ctrl+Shift+. — Reset all element positions (safe, no browser collision)
+      if (mod && e.shiftKey && e.key === ">") {
         e.preventDefault();
         lumenPillDrag.resetPosition();
         dayRingDrag.resetPosition();
@@ -390,24 +390,23 @@ export default function HologramOsPage() {
       if (!mod) return;
 
       switch (e.key) {
-        // ⌘L — LUMEN AI (L = Lumen)
-        case "l": case "L": e.preventDefault(); mastery.record("l"); setChatOpen(true); break;
-        // ⌘B — reserved for sidebar (handled internally now)
-        // ⌘F — Toggle focus mode (F = Focus)
-        case "f": case "F": e.preventDefault(); mastery.record("f"); attention.toggle(); break;
-        // ⌘Y — Cycle style (Y = stYle)
-        case "y": case "Y":
+        // Ctrl+; — LUMEN AI (semicolon = "ask;")
+        case ";": e.preventDefault(); mastery.record(";"); setChatOpen(true); break;
+        // Ctrl+] — Toggle Focus Mode (bracket = toggle)
+        case "]": e.preventDefault(); mastery.record("]"); attention.toggle(); break;
+        // Ctrl+[ — Cycle style (bracket pair)
+        case "[":
           e.preventDefault();
-          mastery.record("y");
+          mastery.record("[");
           setBgMode(BG_MODES[(BG_MODES.findIndex(b => b.mode === bgMode) + 1) % BG_MODES.length].mode);
           break;
-        // ⌘M — Messages (M = Messages)
-        case "m": case "M": e.preventDefault(); mastery.record("m"); setMessengerOpen(true); break;
-        // ⌘H — Home (H = Home) — close all screens, return to welcome
-        case "h": case "H": e.preventDefault(); mastery.record("h"); setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); break;
-        // ⌘W — Toggle all widgets
-        case "w": case "W": e.preventDefault(); mastery.record("w"); toggleAllWidgets(); break;
-        // ⌘/ — Shortcut cheat sheet
+        // Ctrl+, — Messages (comma = conversation)
+        case ",": e.preventDefault(); mastery.record(","); setMessengerOpen(true); break;
+        // Ctrl+. — Go Home (period = full stop = home)
+        case ".": e.preventDefault(); mastery.record("."); setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); break;
+        // Ctrl+\ — Toggle sidebar (backslash = divider)
+        case "\\": e.preventDefault(); mastery.record("\\"); toggleAllWidgets(); break;
+        // Ctrl+/ — Shortcut cheat sheet (safe, no browser collision)
         case "/":
           e.preventDefault();
           mastery.record("/");

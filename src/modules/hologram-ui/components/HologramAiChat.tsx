@@ -199,11 +199,11 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     }, []),
   });
 
-  // ⌘+Shift+V keyboard shortcut for voice input
+  // Ctrl+' keyboard shortcut for voice input (safe, no browser collision)
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === "v" || e.key === "V")) {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "'" || e.key === "'")) {
         e.preventDefault();
         e.stopPropagation();
         whisper.toggleRecording();

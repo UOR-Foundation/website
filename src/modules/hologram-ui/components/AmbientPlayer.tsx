@@ -142,10 +142,10 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     }
   }, [playing, loading, station, playStation]);
 
-  // ⌘+Shift+A shortcut
+  // Ctrl+Shift+; shortcut (safe, no browser collision)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === "a" || e.key === "A")) {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === ":") {
         e.preventDefault();
         togglePlayback();
       }
