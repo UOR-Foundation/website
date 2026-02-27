@@ -104,9 +104,14 @@ export default function VoiceOrb({
 
   // Separate audio capture for listen mode (ambient mic)
   const [listenAudioLevel, setListenAudioLevel] = useState(0);
+  const smoothLevelRef = useRef(0);
+  const peakLevelRef = useRef(0);
+  const [smoothLevel, setSmoothLevel] = useState(0);
+  const [peakLevel, setPeakLevel] = useState(0);
   const listenCapture = useAudioCapture({
     onLevel: (lvl) => { setListenAudioLevel(lvl); },
   });
+
 
   const voice = useVoiceConversation({
     voiceEngine: "piper",
@@ -124,7 +129,32 @@ export default function VoiceOrb({
     },
   });
 
-  // Inject chat context when starting a voice session
+  // Smooth the audio level for the volume meter arc
+  useEffect(() => {
+    if (!listenMode || !voice.isIdle) {
+      smoothLevelRef.current = 0;
+      peakLevelRef.current = 0;
+      setSmoothLevel(0);
+      setPeakLevel(0);
+      return;
+    }
+    let raf: number;
+    const tick = () => {
+      const target = listenAudioLevel;
+      smoothLevelRef.current += (target - smoothLevelRef.current) * 0.18;
+      setSmoothLevel(smoothLevelRef.current);
+      if (target > peakLevelRef.current) {
+        peakLevelRef.current = target;
+      } else {
+        peakLevelRef.current *= 0.992;
+      }
+      setPeakLevel(peakLevelRef.current);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [listenMode, voice.isIdle, listenAudioLevel]);
+
   const handleVoiceToggle = useCallback(() => {
     setVoiceError(null);
     if (voice.isIdle && chatContext?.length) {
@@ -488,7 +518,7 @@ export default function VoiceOrb({
             backdropFilter: "blur(16px)",
             WebkitBackdropFilter: "blur(16px)",
             boxShadow: listenMode && voice.isIdle
-              ? "0 0 18px hsla(145, 40%, 45%, 0.15), inset 0 0 8px hsla(145, 35%, 45%, 0.08)"
+              ? `0 0 ${14 + smoothLevel * 20}px hsla(145, 40%, 45%, ${0.12 + smoothLevel * 0.2}), inset 0 0 ${6 + smoothLevel * 10}px hsla(145, 35%, 45%, ${0.05 + smoothLevel * 0.1})`
               : voice.isListening
                 ? `0 0 ${12 + metrics.intensity * 20}px ${coherenceGlow}, inset 0 0 ${6 + metrics.intensity * 8}px ${coherenceGlow}`
                 : voice.isActive
@@ -501,29 +531,94 @@ export default function VoiceOrb({
             transition: "background 0.3s ease, border-color 0.15s ease, box-shadow 0.15s ease",
           }}
         >
-          {/* Listen mode breathing ring + level-reactive glow */}
+          {/* Listen mode — SVG arc volume meter */}
+          {listenMode && voice.isIdle && (() => {
+            const r = 26; // radius outside the 44px orb
+            const cx = 22, cy = 22;
+            const circumference = 2 * Math.PI * r;
+            // Level arc: fills clockwise from top, proportional to smoothLevel
+            const levelFraction = Math.min(smoothLevel, 1);
+            const levelDash = levelFraction * circumference;
+            // Peak marker: a thin dash at peak position
+            const peakFraction = Math.min(peakLevel, 1);
+            const peakOffset = peakFraction * circumference;
+            // Color shifts from green to yellow-green at high levels
+            const hue = 145 - smoothLevel * 30; // 145 (green) → 115 (yellow-green)
+            const saturation = 40 + smoothLevel * 20;
+            const lightness = 50 + smoothLevel * 10;
+
+            return (
+              <svg
+                className="absolute pointer-events-none"
+                width="56" height="56"
+                viewBox="0 0 44 44"
+                style={{ top: "-6px", left: "-6px" }}
+              >
+                {/* Background track */}
+                <circle
+                  cx={cx} cy={cy} r={r}
+                  fill="none"
+                  stroke={`hsla(145, 20%, 40%, 0.12)`}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                {/* Level arc */}
+                <circle
+                  cx={cx} cy={cy} r={r}
+                  fill="none"
+                  stroke={`hsla(${hue}, ${saturation}%, ${lightness}%, ${0.3 + levelFraction * 0.6})`}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeDasharray={`${levelDash} ${circumference - levelDash}`}
+                  strokeDashoffset={circumference * 0.25}
+                  style={{ transition: "stroke-dasharray 0.08s ease-out, stroke 0.15s ease" }}
+                />
+                {/* Peak marker */}
+                {peakFraction > 0.02 && (
+                  <circle
+                    cx={cx} cy={cy} r={r}
+                    fill="none"
+                    stroke={`hsla(${hue}, ${saturation + 10}%, ${lightness + 5}%, 0.7)`}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeDasharray={`2 ${circumference - 2}`}
+                    strokeDashoffset={circumference * 0.25 - peakOffset}
+                    style={{ transition: "stroke-dashoffset 0.06s ease-out" }}
+                  />
+                )}
+                {/* Outer glow filter */}
+                <defs>
+                  <filter id="listen-glow">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                </defs>
+                {/* Glow copy of level arc */}
+                <circle
+                  cx={cx} cy={cy} r={r}
+                  fill="none"
+                  stroke={`hsla(${hue}, ${saturation}%, ${lightness}%, ${levelFraction * 0.25})`}
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray={`${levelDash} ${circumference - levelDash}`}
+                  strokeDashoffset={circumference * 0.25}
+                  filter="url(#listen-glow)"
+                  style={{ transition: "stroke-dasharray 0.08s ease-out" }}
+                />
+              </svg>
+            );
+          })()}
+
+          {/* Listen mode inner ambient glow */}
           {listenMode && voice.isIdle && (
-            <>
-              <motion.div
-                className="absolute inset-0 rounded-full pointer-events-none"
-                animate={{
-                  boxShadow: [
-                    `0 0 0 0 hsla(145, 40%, 50%, ${0.15 + listenAudioLevel * 0.3})`,
-                    `0 0 0 ${4 + listenAudioLevel * 6}px hsla(145, 40%, 50%, 0.0)`,
-                  ],
-                }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-              />
-              {/* Ambient level indicator */}
-              <motion.div
-                className="absolute inset-0 rounded-full pointer-events-none"
-                style={{
-                  background: `radial-gradient(circle, hsla(145, 40%, 50%, ${0.03 + listenAudioLevel * 0.15}) 0%, transparent 70%)`,
-                  transform: `scale(${1.4 + listenAudioLevel * 0.8})`,
-                  transition: "transform 0.1s ease-out, background 0.1s ease-out",
-                }}
-              />
-            </>
+            <div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                background: `radial-gradient(circle, hsla(145, 40%, 50%, ${0.02 + smoothLevel * 0.12}) 0%, transparent 70%)`,
+                transform: `scale(${1.2 + smoothLevel * 0.5})`,
+                transition: "transform 0.1s ease-out, background 0.1s ease-out",
+              }}
+            />
           )}
 
           {/* Thinking/Processing spinner */}
