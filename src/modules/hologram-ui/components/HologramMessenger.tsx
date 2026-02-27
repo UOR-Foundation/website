@@ -11,7 +11,7 @@
  * @module hologram-ui/components/HologramMessenger
  */
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   IconX, IconStar, IconClock, IconCheck,
   IconChevronRight, IconArchive, IconSearch,
@@ -22,6 +22,8 @@ import {
   IconDotsVertical, IconPencil, IconSettings,
 } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+import zeroInboxReward from "@/assets/zero-inbox-reward.jpg";
 
 // ── Palette by mode ─────────────────────────────────────────────────────────
 
@@ -803,48 +805,155 @@ function ContactPanel({ message: m, P, replyOpen, onCloseReply }: { message: Mes
 
 // ── Zero Inbox ──────────────────────────────────────────────────────────────
 
+const QUOTES = [
+  { text: "Clarity is the ultimate sophistication.", author: "Leonardo da Vinci" },
+  { text: "Simplicity is the final achievement.", author: "Frédéric Chopin" },
+  { text: "The ability to simplify means to eliminate the unnecessary.", author: "Hans Hofmann" },
+  { text: "In the midst of movement and chaos, keep stillness inside of you.", author: "Deepak Chopra" },
+  { text: "Almost everything will work again if you unplug it for a few minutes — including you.", author: "Anne Lamott" },
+];
+
 function ZeroInboxView({ P }: { P: ReturnType<typeof palette> }) {
+  const quote = useRef(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+
   return (
-    <div className="flex flex-col items-center justify-center h-full py-20 px-8">
+    <div className="relative flex flex-col items-center justify-center h-full overflow-hidden">
+      {/* Background landscape */}
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
+        className="absolute inset-0"
+        initial={{ scale: 1.08, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col items-center gap-5 max-w-sm text-center"
+        transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="relative">
-          <div
+        <img
+          src={zeroInboxReward}
+          alt="Serene landscape — zero inbox achieved"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Golden glow overlay */}
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            background: "radial-gradient(ellipse at 50% 40%, hsla(38, 60%, 70%, 0.25) 0%, transparent 65%)",
+          }}
+          animate={{ opacity: [0.4, 0.7, 0.4] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
+        {/* Breathing light rays */}
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(180deg, hsla(38, 50%, 85%, 0.12) 0%, transparent 40%, transparent 70%, hsla(38, 40%, 60%, 0.08) 100%)",
+          }}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        {/* Vignette */}
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 50%, hsla(0, 0%, 0%, 0.35) 100%)" }} />
+      </motion.div>
+
+      {/* Content */}
+      <motion.div
+        className="relative z-10 flex flex-col items-center gap-6 max-w-md text-center px-8"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {/* Trophy with glow */}
+        <motion.div
+          className="relative"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <motion.div
             className="absolute inset-0 rounded-full"
-            style={{ background: `radial-gradient(circle, ${P.accent}15 0%, transparent 70%)`, transform: "scale(3)" }}
+            style={{ background: "radial-gradient(circle, hsla(38, 55%, 65%, 0.4) 0%, transparent 70%)", transform: "scale(4)" }}
+            animate={{ scale: [4, 4.5, 4], opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           />
           <div
-            className="relative w-16 h-16 rounded-2xl flex items-center justify-center"
+            className="relative w-16 h-16 rounded-2xl flex items-center justify-center backdrop-blur-sm"
             style={{
-              background: `${P.accent}10`,
-              border: `1px solid ${P.accent}20`,
+              background: "hsla(38, 50%, 70%, 0.2)",
+              border: "1px solid hsla(38, 50%, 75%, 0.3)",
+              boxShadow: "0 0 40px hsla(38, 55%, 65%, 0.25)",
             }}
           >
-            <IconTrophy size={28} style={{ color: P.accent }} strokeWidth={1.3} />
+            <IconTrophy size={28} style={{ color: "hsla(38, 55%, 80%, 1)" }} strokeWidth={1.3} />
           </div>
-        </div>
+        </motion.div>
 
-        <div>
-          <h2 style={{ fontFamily: SERIF, fontSize: "24px", fontWeight: 400, color: P.text, marginBottom: "6px" }}>
+        {/* Title */}
+        <motion.div
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+        >
+          <h2 style={{
+            fontFamily: SERIF,
+            fontSize: "28px",
+            fontWeight: 400,
+            color: "hsla(0, 0%, 100%, 0.95)",
+            marginBottom: "6px",
+            textShadow: "0 2px 20px hsla(0, 0%, 0%, 0.3)",
+            letterSpacing: "0.01em",
+          }}>
             Zero Inbox
           </h2>
-          <p style={{ fontSize: "14px", lineHeight: 1.6, color: P.muted, fontWeight: 300 }}>
+          <p style={{
+            fontSize: "15px",
+            lineHeight: 1.7,
+            color: "hsla(0, 0%, 100%, 0.7)",
+            fontWeight: 300,
+            textShadow: "0 1px 10px hsla(0, 0%, 0%, 0.3)",
+          }}>
             Every message handled. Every thread resolved.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: `${P.green}10`, border: `1px solid ${P.green}18` }}>
-          <IconCircleCheck size={14} style={{ color: P.green }} />
-          <span style={{ fontSize: "12px", color: P.green, fontWeight: 500 }}>All channels clear</span>
-        </div>
+        {/* All channels clear badge */}
+        <motion.div
+          className="flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md"
+          style={{
+            background: "hsla(152, 50%, 50%, 0.15)",
+            border: "1px solid hsla(152, 50%, 60%, 0.25)",
+          }}
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.9 }}
+        >
+          <IconCircleCheck size={14} style={{ color: "hsla(152, 55%, 65%, 1)" }} />
+          <span style={{ fontSize: "12px", color: "hsla(152, 55%, 70%, 1)", fontWeight: 500 }}>All channels clear</span>
+        </motion.div>
 
-        <p style={{ fontSize: "11px", color: P.dim, fontStyle: "italic" }}>
-          "Clarity is the ultimate sophistication."
-        </p>
+        {/* Inspirational quote */}
+        <motion.div
+          className="mt-2"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.2 }}
+        >
+          <p style={{
+            fontSize: "14px",
+            fontStyle: "italic",
+            color: "hsla(0, 0%, 100%, 0.6)",
+            fontWeight: 300,
+            lineHeight: 1.7,
+            textShadow: "0 1px 8px hsla(0, 0%, 0%, 0.2)",
+          }}>
+            "{quote.current.text}"
+          </p>
+          <p style={{
+            fontSize: "11px",
+            color: "hsla(38, 40%, 75%, 0.7)",
+            marginTop: "6px",
+            fontWeight: 400,
+            letterSpacing: "0.05em",
+          }}>
+            — {quote.current.author}
+          </p>
+        </motion.div>
       </motion.div>
     </div>
   );
