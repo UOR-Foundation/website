@@ -2,14 +2,12 @@
  * useVoiceConversation — Full Voice Loop Orchestrator
  * ════════════════════════════════════════════════════
  *
- * Chains: Whisper STT → Lumen AI Streaming → TTS (Web Speech / ElevenLabs)
- * 
- * This is the "Human ↔ Hologram" voice bridge.
- * - All transcripts are ephemeral (never stored unencrypted)
- * - Uses existing Lumen AI edge function for reasoning
- * - Falls back gracefully at every stage
+ * Chains: Whisper STT → Lumen AI Streaming → TTS
  *
- * States: idle → listening → thinking → speaking → idle
+ * States: idle → listening → processing → thinking → speaking → idle
+ *
+ * Key simplification: TTS.speak() returns a Promise, so greeting
+ * and response playback are just `await tts.speak(text)`.
  *
  * @module hologram-ui/hooks/useVoiceConversation
  */
@@ -19,35 +17,33 @@ import { useVoiceSynthesis, type VoiceEngine } from "./useVoiceSynthesis";
 
 export type VoiceConversationState =
   | "idle"
-  | "listening"     // Whisper is recording
-  | "processing"    // Transcribing audio
-  | "thinking"      // Waiting for Lumen AI
-  | "speaking";     // TTS is outputting
+  | "listening"
+  | "processing"
+  | "thinking"
+  | "speaking";
 
 interface UseVoiceConversationOptions {
-  /** Voice engine: "web-speech" (free) or "elevenlabs" (premium) */
   voiceEngine?: VoiceEngine;
-  /** Agent persona ID for Lumen AI */
   personaId?: string;
-  /** Skill mode for Lumen AI */
   skillId?: string;
-  /** Cloud model to use */
   cloudModel?: string;
-  /** Screen context for ambient awareness */
   screenContext?: string;
-  /** Observer briefing for ambient awareness */
   observerBriefing?: string;
-  /** Fusion context (holographic context surface) */
   fusionContext?: string;
-  /** Called when a full exchange completes (for conversation history) */
   onExchange?: (userText: string, assistantText: string) => void;
-  /** Called on state changes */
   onStateChange?: (state: VoiceConversationState) => void;
-  /** Called on errors */
   onError?: (error: string) => void;
 }
 
 const STREAM_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hologram-ai-stream`;
+
+const GREETINGS = [
+  "I'm here. Take your time.",
+  "Hello. I'm listening whenever you're ready.",
+  "Present and listening. What's on your mind?",
+  "I'm with you. Speak when it feels right.",
+  "Here. No rush — I'm all ears.",
+];
 
 export function useVoiceConversation({
   voiceEngine = "elevenlabs",
@@ -70,17 +66,14 @@ export function useVoiceConversation({
   const conversationHistory = useRef<{ role: "user" | "assistant"; content: string }[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const hasGreetedRef = useRef(false);
-  const greetingInProgressRef = useRef(false);
 
-  // Recording state
+  // Recording refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Whisper pipeline (reuse singleton)
   const pipelineRef = useRef<any>(null);
 
   const updateState = useCallback((s: VoiceConversationState) => {
@@ -89,24 +82,17 @@ export function useVoiceConversation({
     onStateChange?.(s);
   }, [onStateChange]);
 
-  // TTS output — onEnd/onStart skip during greeting to avoid state conflicts
+  // TTS — callbacks only fire for non-greeting speech
   const tts = useVoiceSynthesis({
     engine: voiceEngine,
     rate: 0.95,
-    onStart: () => {
-      if (!greetingInProgressRef.current) updateState("speaking");
-    },
-    onEnd: () => {
-      if (!greetingInProgressRef.current) updateState("idle");
-    },
     onError: (err) => {
-      greetingInProgressRef.current = false;
       updateState("idle");
       onError?.(`Voice output error: ${err}`);
     },
   });
 
-  /** Load Whisper pipeline (lazy) */
+  /** Lazy-load Whisper */
   const ensureWhisper = useCallback(async () => {
     if (pipelineRef.current) return pipelineRef.current;
     const { pipeline } = await import("@huggingface/transformers");
@@ -119,7 +105,7 @@ export function useVoiceConversation({
     return transcriber;
   }, []);
 
-  /** Convert audio blob to Float32 PCM at 16kHz */
+  /** Convert audio blob → Float32 PCM at 16kHz */
   const audioToFloat32 = useCallback(async (blob: Blob): Promise<Float32Array> => {
     const arrayBuf = await blob.arrayBuffer();
     const ctx = new OfflineAudioContext(1, 1, 16000);
@@ -133,17 +119,12 @@ export function useVoiceConversation({
     return rendered.getChannelData(0);
   }, []);
 
-  /** Send to Lumen AI and get streaming response */
+  /** Stream query to Lumen AI */
   const queryLumen = useCallback(async (userText: string): Promise<string> => {
     conversationHistory.current.push({ role: "user", content: userText });
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
-
-    const messages = conversationHistory.current.map(m => ({
-      role: m.role,
-      content: m.content,
-    }));
 
     const response = await fetch(STREAM_URL, {
       method: "POST",
@@ -153,7 +134,7 @@ export function useVoiceConversation({
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
       body: JSON.stringify({
-        messages,
+        messages: conversationHistory.current.map(m => ({ role: m.role, content: m.content })),
         model: cloudModel,
         personaId,
         skillId: skillId || "explain",
@@ -169,7 +150,6 @@ export function useVoiceConversation({
       throw new Error(`Lumen AI error: ${response.status}`);
     }
 
-    // Read full streaming response
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullText = "";
@@ -180,10 +160,10 @@ export function useVoiceConversation({
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
 
-      let newlineIndex: number;
-      while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
-        let line = buffer.slice(0, newlineIndex);
-        buffer = buffer.slice(newlineIndex + 1);
+      let idx: number;
+      while ((idx = buffer.indexOf("\n")) !== -1) {
+        let line = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 1);
         if (line.endsWith("\r")) line = line.slice(0, -1);
         if (!line.startsWith("data: ")) continue;
         const jsonStr = line.slice(6).trim();
@@ -195,9 +175,7 @@ export function useVoiceConversation({
             fullText += content;
             setLastResponse(fullText);
           }
-        } catch {
-          // Partial JSON, wait for more data
-        }
+        } catch { /* partial JSON */ }
       }
     }
 
@@ -205,74 +183,58 @@ export function useVoiceConversation({
     return fullText;
   }, [cloudModel, personaId, skillId, screenContext, observerBriefing, fusionContext]);
 
-  /** Warm greetings — gentle, balanced, human-first */
-  const GREETINGS = [
-    "I'm here. Take your time.",
-    "Hello. I'm listening whenever you're ready.",
-    "Present and listening. What's on your mind?",
-    "I'm with you. Speak when it feels right.",
-    "Here. No rush — I'm all ears.",
-  ];
+  /** Clean up recording resources */
+  const cleanupRecording = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    analyserRef.current = null;
+    setAudioLevel(0);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = null;
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+  }, []);
 
-  /** Start listening — begins the voice loop */
+  /** Start listening — the main entry point */
   const startListening = useCallback(async () => {
-    if (stateRef.current !== "idle" && !greetingInProgressRef.current) return;
-
-    // Prime audio output inside user interaction flow to avoid autoplay gating
-    tts.primeForPlayback();
+    if (stateRef.current !== "idle") return;
 
     try {
-      // On first activation, greet the user warmly before listening
+      // First activation: greet the user
       if (!hasGreetedRef.current) {
         hasGreetedRef.current = true;
-        greetingInProgressRef.current = true;
         const greeting = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
         updateState("speaking");
         setLastResponse(greeting);
         conversationHistory.current.push({ role: "assistant", content: greeting });
 
-        console.log("[VoiceConversation] 🎙️ Playing greeting:", greeting);
+        console.log("[Voice] Playing greeting:", greeting);
+        await tts.speak(greeting);  // ← Promise resolves when audio ends
 
-        // Speak the greeting and wait for TTS to finish
-        tts.speak(greeting);
-
-        // Wait for the audio to actually finish playing
-        await new Promise<void>((resolve) => {
-          const check = setInterval(() => {
-            if (tts.statusRef.current === "idle") {
-              clearInterval(check);
-              resolve();
-            }
-          }, 200);
-          // Safety timeout
-          setTimeout(() => { clearInterval(check); resolve(); }, 8000);
-        });
-
-        greetingInProgressRef.current = false;
-        console.log("[VoiceConversation] ✅ Greeting complete, transitioning to listening");
-
-        // Small breath before listening
-        await new Promise(r => setTimeout(r, 300));
+        console.log("[Voice] Greeting done, opening mic");
+        await new Promise(r => setTimeout(r, 300)); // brief pause
       }
 
       updateState("listening");
 
-      // Ensure Whisper is loaded
-      await ensureWhisper();
+      // Load Whisper in parallel with mic access
+      const [, stream] = await Promise.all([
+        ensureWhisper(),
+        navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 },
+        }),
+      ]);
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 },
-      });
       streamRef.current = stream;
       chunksRef.current = [];
 
       // Audio level metering
       const audioCtx = new AudioContext();
-      const source = audioCtx.createMediaStreamSource(stream);
+      const src = audioCtx.createMediaStreamSource(stream);
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 256;
       analyser.smoothingTimeConstant = 0.4;
-      source.connect(analyser);
+      src.connect(analyser);
       analyserRef.current = analyser;
 
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
@@ -300,22 +262,14 @@ export function useVoiceConversation({
       };
 
       recorder.onstop = async () => {
-        // Clean up recording resources
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-        analyserRef.current = null;
-        setAudioLevel(0);
-        if (timerRef.current) clearInterval(timerRef.current);
-        timerRef.current = null;
-        stream.getTracks().forEach(t => t.stop());
-        streamRef.current = null;
+        cleanupRecording();
 
         if (chunksRef.current.length === 0) {
           updateState("idle");
           return;
         }
 
-        // Phase 2: Transcribe
+        // Transcribe
         updateState("processing");
         try {
           const blob = new Blob(chunksRef.current, { type: "audio/webm" });
@@ -328,31 +282,25 @@ export function useVoiceConversation({
           });
 
           const transcript = (result?.text ?? "").trim();
-          if (!transcript) {
-            updateState("idle");
-            return;
-          }
+          if (!transcript) { updateState("idle"); return; }
 
           setLastTranscript(transcript);
 
-          // Phase 3: Think (Lumen AI)
+          // Think
           updateState("thinking");
           setLastResponse("");
           const response = await queryLumen(transcript);
 
-          if (!response.trim()) {
-            updateState("idle");
-            return;
-          }
+          if (!response.trim()) { updateState("idle"); return; }
 
-          // Phase 4: Speak (TTS)
-          tts.speak(response);
+          // Speak the response
+          updateState("speaking");
+          await tts.speak(response);
+          updateState("idle");
 
-          // Notify parent
           onExchange?.(transcript, response);
-
         } catch (err) {
-          console.error("[VoiceConversation] Error:", err);
+          console.error("[Voice] Error:", err);
           onError?.(err instanceof Error ? err.message : "Voice conversation error");
           updateState("idle");
         }
@@ -361,13 +309,13 @@ export function useVoiceConversation({
       mediaRecorderRef.current = recorder;
       recorder.start(250);
     } catch (err) {
-      console.error("[VoiceConversation] Start error:", err);
+      console.error("[Voice] Start error:", err);
       onError?.(err instanceof Error ? err.message : "Could not start listening");
       updateState("idle");
     }
-  }, [updateState, ensureWhisper, audioToFloat32, queryLumen, tts, onExchange, onError]);
+  }, [updateState, ensureWhisper, audioToFloat32, queryLumen, tts, cleanupRecording, onExchange, onError]);
 
-  /** Stop listening — triggers the processing chain */
+  /** Stop listening — triggers processing chain */
   const stopListening = useCallback(() => {
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
@@ -377,54 +325,33 @@ export function useVoiceConversation({
 
   /** Cancel everything */
   const cancel = useCallback(() => {
-    // Stop recording
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current = null;
     }
-    // Stop audio metering
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    if (timerRef.current) clearInterval(timerRef.current);
-    streamRef.current?.getTracks().forEach(t => t.stop());
-    // Stop AI request
+    cleanupRecording();
     abortControllerRef.current?.abort();
-    // Stop TTS
     tts.stop();
-    setAudioLevel(0);
     updateState("idle");
-  }, [tts, updateState]);
+  }, [tts, updateState, cleanupRecording]);
 
-  /** Toggle: start listening if idle, stop listening if listening, cancel if thinking/speaking */
+  /** Toggle */
   const toggle = useCallback(() => {
-    const s = stateRef.current;
-    switch (s) {
-      case "idle":
-        startListening();
-        break;
-      case "listening":
-        stopListening();
-        break;
-      case "processing":
-      case "thinking":
-      case "speaking":
-        cancel();
-        break;
+    switch (stateRef.current) {
+      case "idle": startListening(); break;
+      case "listening": stopListening(); break;
+      default: cancel(); break;
     }
   }, [startListening, stopListening, cancel]);
 
-  /** Clear conversation history */
+  /** Clear conversation */
   const clearHistory = useCallback(() => {
     conversationHistory.current = [];
     setLastTranscript("");
     setLastResponse("");
   }, []);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      cancel();
-    };
-  }, [cancel]);
+  useEffect(() => () => { cancel(); }, [cancel]);
 
   return {
     state,
