@@ -150,6 +150,8 @@ interface DesktopSurfaceProps {
   screenContext?: string;
   /** Holographic fusion context */
   fusionContext?: string;
+  /** Called after each voice exchange for persistence */
+  onExchange?: (userText: string, assistantText: string) => void;
 }
 
 export default function DesktopSurface({
@@ -169,6 +171,7 @@ export default function DesktopSurface({
   observerBriefing,
   screenContext,
   fusionContext,
+  onExchange,
 }: DesktopSurfaceProps) {
   const navigate = useNavigate();
   const P = useMemo(() => palette(mode), [mode]);
@@ -459,6 +462,7 @@ export default function DesktopSurface({
                 observerBriefing={observerBriefing}
                 screenContext={screenContext}
                 fusionContext={fusionContext}
+                onExchange={onExchange}
               />
             </div>
           </div>

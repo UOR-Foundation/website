@@ -13,7 +13,7 @@
  * generous whitespace, ultra-light serif, barely-there chrome.
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 import { useNavigate } from "react-router-dom";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
@@ -41,6 +41,7 @@ import { useContextBeacon, useScreenContext } from "@/modules/hologram-ui/hooks/
 import { useObserverCompanion } from "@/modules/hologram-ui/hooks/useObserverCompanion";
 import DesktopSurface from "@/modules/hologram-ui/components/DesktopSurface";
 import { useDesktopState, type DesktopId } from "@/modules/hologram-ui/hooks/useDesktopState";
+import { useAiChatHistory } from "@/modules/hologram-ui/hooks/useAiChatHistory";
 
 // ── Mobile detection ────────────────────────────────────────────────────────
 function useIsMobile(breakpoint = 640) {
@@ -140,6 +141,26 @@ export default function HologramOsPage() {
     sessionSNR: null,
   });
   const isFocus = attention.preset === "focus";
+
+  // ── Voice ↔ Chat persistence ──────────────────────────────────────────────
+  const chatHistory = useAiChatHistory();
+  const voiceConversationRef = React.useRef<string | null>(null);
+
+  const handleVoiceExchange = useCallback(async (userText: string, assistantText: string) => {
+    if (!chatHistory.isAuthenticated) return;
+    // Lazily create a dedicated voice conversation
+    let convId = voiceConversationRef.current;
+    if (!convId) {
+      convId = await chatHistory.createConversation("Voice Session", "voice");
+      if (!convId) return;
+      voiceConversationRef.current = convId;
+    }
+    // Persist both sides
+    await chatHistory.saveMessage(convId, "user", userText, { source: "voice" });
+    await chatHistory.saveMessage(convId, "assistant", assistantText, { source: "voice" });
+    // Auto-title from first user message
+    if (userText) await chatHistory.autoTitle(convId, userText);
+  }, [chatHistory.isAuthenticated, chatHistory.createConversation, chatHistory.saveMessage, chatHistory.autoTitle]);
 
   // ── Auto-hide widgets in focus mode ────────────────────────────────────
   useEffect(() => {
@@ -298,6 +319,7 @@ export default function HologramOsPage() {
                   ambientState={mode === "image" ? ambientState : undefined}
                   observerBriefing={observer.promptText}
                   screenContext={screenCtx.getPromptContext()}
+                  onExchange={handleVoiceExchange}
                 />
 
                 {/* Wavefront glow at the leading edge of the peel */}
