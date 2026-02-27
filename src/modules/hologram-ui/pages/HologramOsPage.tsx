@@ -319,9 +319,7 @@ export default function HologramOsPage() {
         resizeHandleProps={lumenPanel.resizeHandleProps}
         isResizing={lumenPanel.isResizing}
       />
-      {widgetStates[activeDesktop].isWidgetVisible("ambient-player") && (
-        <AmbientPlayer lumenOffset={chatOpen ? lumenPanel.width : 0} onStateChange={setAmbientState} />
-      )}
+      {/* Ambient player removed for now */}
       <BrowserProjection
         open={browserOpen}
         onClose={() => setBrowserOpen(false)}
