@@ -3,10 +3,14 @@
  * ═══════════════════════════════════════════════════════
  *
  * Single-entity voice interface for Lumen AI:
- *   Whisper ONNX (vGPU) → Lumen AI Stream → TTS
+ *   AudioWorklet capture → Whisper ONNX (vGPU) → Lumen AI Stream → Web Speech TTS
  *   Native STT fallback while Whisper loads
  *
- * All spoken exchanges are kept in persistent conversation context.
+ * v2 improvements:
+ *   - AudioWorklet capture (zero-jank, off main thread)
+ *   - Built-in VAD: auto-stops after 1.5s silence
+ *   - Idle-time Whisper warm-start
+ *   - Proactive mic permission check
  *
  * States: idle → listening → processing → thinking → speaking → idle
  *
@@ -15,6 +19,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useVoiceSynthesis, type VoiceEngine } from "./useVoiceSynthesis";
+import { useAudioCapture } from "./useAudioCapture";
 import { getWhisperEngine, preloadWhisper, type WhisperLoadProgress } from "@/modules/uns/core/hologram/whisper-engine";
 
 export type VoiceConversationState =
@@ -34,7 +39,6 @@ interface UseVoiceConversationOptions {
   screenContext?: string;
   observerBriefing?: string;
   fusionContext?: string;
-  /** Called after each exchange — wire to Lumen AI chat for context persistence */
   onExchange?: (userText: string, assistantText: string) => void;
   onStateChange?: (state: VoiceConversationState) => void;
   onError?: (error: string) => void;
@@ -54,49 +58,6 @@ const GREETINGS = [
 function getSpeechRecognition() {
   const w = window as any;
   return (w.SpeechRecognition || w.webkitSpeechRecognition || null) as (new () => any) | null;
-}
-
-// ── Shared mic capture ──────────────────────────────────────────────────────
-
-interface MicCapture {
-  stream: MediaStream;
-  audioCtx: AudioContext;
-  analyser: AnalyserNode;
-  stopMetering: () => void;
-}
-
-/** Acquire mic, set up audio level metering. One function, no duplication. */
-async function acquireMic(
-  onLevel: (level: number) => void,
-): Promise<MicCapture> {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: { echoCancellation: true, noiseSuppression: true },
-  });
-
-  const audioCtx = new AudioContext();
-  const source = audioCtx.createMediaStreamSource(stream);
-  const analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 256;
-  analyser.smoothingTimeConstant = 0.4;
-  source.connect(analyser);
-
-  const data = new Uint8Array(analyser.frequencyBinCount);
-  let raf: number | null = null;
-  const tick = () => {
-    analyser.getByteFrequencyData(data);
-    let sum = 0;
-    for (let i = 0; i < data.length; i++) sum += data[i];
-    onLevel(sum / data.length / 255);
-    raf = requestAnimationFrame(tick);
-  };
-  raf = requestAnimationFrame(tick);
-
-  return {
-    stream,
-    audioCtx,
-    analyser,
-    stopMetering: () => { if (raf) cancelAnimationFrame(raf); },
-  };
 }
 
 function classifyMicError(err: any): string {
@@ -129,17 +90,13 @@ export function useVoiceConversation({
   const [sttEngine, setSttEngine] = useState<SttEngine>("loading");
   const [whisperProgress, setWhisperProgress] = useState(0);
 
-  // Persistent conversation context — survives across exchanges
   const conversationHistory = useRef<{ role: "user" | "assistant"; content: string }[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const hasGreetedRef = useRef(false);
 
-  // Active capture refs
-  const captureRef = useRef<MicCapture | null>(null);
+  // Native STT refs
   const recognitionRef = useRef<any>(null);
   const transcriptAccRef = useRef("");
-  const chunksRef = useRef<Float32Array[]>([]);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const set = useCallback((s: VoiceConversationState) => {
@@ -154,27 +111,48 @@ export function useVoiceConversation({
     onError: (err) => { set("idle"); onError?.(`Voice output error: ${err}`); },
   });
 
-  // ── Preload Whisper ─────────────────────────────────────────────────────
+  // ── VAD auto-stop handler ─────────────────────────────────────────────
+  const autoStopRef = useRef<(() => void) | null>(null);
 
+  // ── AudioWorklet capture with built-in VAD ────────────────────────────
+  const capture = useAudioCapture({
+    silenceAutoStopSec: 1.5,
+    onSilence: () => {
+      if (stateRef.current === "listening") {
+        autoStopRef.current?.();
+      }
+    },
+    onLevel: setAudioLevel,
+  });
+
+  // ── Idle-time Whisper warm-start ──────────────────────────────────────
   useEffect(() => {
     const engine = getWhisperEngine();
     if (engine.isReady) { setSttEngine("whisper"); return; }
 
-    preloadWhisper((p) => {
-      setWhisperProgress(Math.round(p.progress ?? 0));
-      onWhisperProgress?.(p);
-    });
+    const startPreload = () => {
+      preloadWhisper((p) => {
+        setWhisperProgress(Math.round(p.progress ?? 0));
+        onWhisperProgress?.(p);
+      });
+    };
 
-    const iv = setInterval(() => {
-      if (engine.isReady) { setSttEngine("whisper"); clearInterval(iv); }
-      else if (engine.status === "error") { setSttEngine("native"); clearInterval(iv); }
-    }, 500);
-
-    const to = setTimeout(() => {
-      if (!engine.isReady) setSttEngine((prev) => prev === "loading" ? "native" : prev);
-    }, 3000);
-
-    return () => { clearInterval(iv); clearTimeout(to); };
+    // Use requestIdleCallback for non-blocking preload
+    if ("requestIdleCallback" in window) {
+      const id = requestIdleCallback(() => startPreload(), { timeout: 5000 });
+      const iv = setInterval(() => {
+        if (engine.isReady) { setSttEngine("whisper"); clearInterval(iv); }
+        else if (engine.status === "error") { setSttEngine("native"); clearInterval(iv); }
+      }, 500);
+      return () => { cancelIdleCallback(id); clearInterval(iv); };
+    } else {
+      const to = setTimeout(startPreload, 1000);
+      const iv = setInterval(() => {
+        if (engine.isReady) { setSttEngine("whisper"); clearInterval(iv); }
+        else if (engine.status === "error") { setSttEngine("native"); clearInterval(iv); }
+      }, 500);
+      return () => { clearTimeout(to); clearInterval(iv); };
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Cleanup ─────────────────────────────────────────────────────────────
@@ -182,17 +160,6 @@ export function useVoiceConversation({
   const cleanup = useCallback(() => {
     try { recognitionRef.current?.abort(); } catch {}
     recognitionRef.current = null;
-
-    processorRef.current?.disconnect();
-    processorRef.current = null;
-
-    captureRef.current?.stopMetering();
-    captureRef.current?.stream.getTracks().forEach(t => t.stop());
-    if (captureRef.current?.audioCtx.state !== "closed") {
-      void captureRef.current?.audioCtx.close();
-    }
-    captureRef.current = null;
-
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
     setAudioLevel(0);
@@ -280,7 +247,7 @@ export function useVoiceConversation({
     }
   }, [set, queryLumen, tts, onExchange, onError]);
 
-  // ── Start listening (unified mic setup) ─────────────────────────────────
+  // ── Start listening ─────────────────────────────────────────────────────
 
   const startListening = useCallback(async () => {
     if (stateRef.current !== "idle") return;
@@ -296,43 +263,38 @@ export function useVoiceConversation({
       await new Promise(r => setTimeout(r, 200));
     }
 
-    // Acquire mic (shared for both engines)
-    let capture: MicCapture;
-    try {
-      capture = await acquireMic(setAudioLevel);
-    } catch (err) {
-      onError?.(classifyMicError(err));
-      set("idle");
-      return;
-    }
-    captureRef.current = capture;
-
-    // Timer
-    setElapsed(0);
-    timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
-
     const engine = getWhisperEngine();
     const useWhisper = engine.isReady;
     setSttEngine(useWhisper ? "whisper" : "native");
 
     if (useWhisper) {
-      // ── Whisper path: record raw PCM ──
-      chunksRef.current = [];
-      const processor = capture.audioCtx.createScriptProcessor(4096, 1, 1);
-      processor.onaudioprocess = (e) => {
-        chunksRef.current.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-      };
-      const source = capture.audioCtx.createMediaStreamSource(capture.stream);
-      source.connect(processor);
-      processor.connect(capture.audioCtx.destination);
-      processorRef.current = processor;
+      // ── Whisper path: AudioWorklet capture with VAD ──
+      try {
+        await capture.start();
+      } catch (err) {
+        onError?.(classifyMicError(err));
+        set("idle");
+        return;
+      }
+
+      // Timer
+      setElapsed(0);
+      timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
       set("listening");
     } else {
       // ── Native STT path ──
       const SpeechRec = getSpeechRecognition();
       if (!SpeechRec) {
-        cleanup();
         onError?.("Speech recognition not supported. Use Chrome, Safari, or Edge.");
+        set("idle");
+        return;
+      }
+
+      // Acquire mic for level metering (native STT doesn't expose audio)
+      try {
+        await capture.start();
+      } catch (err) {
+        onError?.(classifyMicError(err));
         set("idle");
         return;
       }
@@ -356,6 +318,7 @@ export function useVoiceConversation({
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         if (event.error === "aborted" || event.error === "no-speech") return;
+        capture.cancel();
         cleanup();
         onError?.(`Speech recognition error: ${event.error}`);
         set("idle");
@@ -364,6 +327,7 @@ export function useVoiceConversation({
       recognition.onend = () => {
         if (stateRef.current !== "listening") return;
         const transcript = transcriptAccRef.current.trim();
+        capture.cancel();
         cleanup();
         if (transcript) { set("processing"); processTranscript(transcript); }
         else set("idle");
@@ -371,37 +335,32 @@ export function useVoiceConversation({
 
       recognitionRef.current = recognition;
       recognition.start();
+
+      // Timer
+      setElapsed(0);
+      timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
       set("listening");
     }
-  }, [set, tts, cleanup, processTranscript, onError]);
+  }, [set, tts, cleanup, processTranscript, onError, capture]);
 
   // ── Stop listening ──────────────────────────────────────────────────────
 
   const stopListening = useCallback(async () => {
     if (stateRef.current !== "listening") return;
 
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+
     if (sttEngine === "whisper") {
-      const sampleRate = captureRef.current?.audioCtx.sampleRate ?? 44100;
-      cleanup();
+      const result = await capture.stop();
 
-      const chunks = chunksRef.current;
-      chunksRef.current = [];
-      if (!chunks.length) { set("idle"); return; }
-
-      // Merge PCM chunks
-      const total = chunks.reduce((a, c) => a + c.length, 0);
-      const merged = new Float32Array(total);
-      let off = 0;
-      for (const c of chunks) { merged.set(c, off); off += c.length; }
-
-      if (merged.length / sampleRate < 0.3) { set("idle"); return; }
+      if (!result) { set("idle"); return; }
 
       set("processing");
       setLastTranscript("Transcribing…");
 
       try {
-        const result = await getWhisperEngine().transcribe(merged, sampleRate);
-        if (result.text.trim()) await processTranscript(result.text);
+        const transcription = await getWhisperEngine().transcribe(result.audio, result.sampleRate);
+        if (transcription.text.trim()) await processTranscript(transcription.text);
         else set("idle");
       } catch {
         onError?.("Transcription failed — falling back to native STT");
@@ -410,20 +369,26 @@ export function useVoiceConversation({
       }
     } else {
       // Native: stop triggers onend → processTranscript
+      capture.cancel();
       try { recognitionRef.current?.stop(); }
       catch { cleanup(); set("idle"); }
     }
-  }, [sttEngine, cleanup, set, processTranscript, onError]);
+  }, [sttEngine, capture, cleanup, set, processTranscript, onError]);
+
+  // Wire up VAD auto-stop
+  autoStopRef.current = stopListening;
 
   // ── Cancel / Toggle / Clear ─────────────────────────────────────────────
 
   const cancel = useCallback(() => {
+    capture.cancel();
     cleanup();
-    chunksRef.current = [];
     abortRef.current?.abort();
     tts.stop();
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = null;
     set("idle");
-  }, [tts, set, cleanup]);
+  }, [capture, tts, set, cleanup]);
 
   const toggle = useCallback(() => {
     switch (stateRef.current) {
@@ -439,7 +404,6 @@ export function useVoiceConversation({
     setLastResponse("");
   }, []);
 
-  /** Inject external context (e.g., from Lumen AI chat) into voice memory */
   const injectContext = useCallback((messages: { role: "user" | "assistant"; content: string }[]) => {
     conversationHistory.current = [...messages];
   }, []);

@@ -6,20 +6,18 @@
  * running in the browser via the unified WhisperEngine singleton, which
  * leverages the HologramGpu (vGPU) for constant-time WebGPU inference.
  *
- * This hook is the thin UI adapter for the Lumen AI chat's voice input.
- * All model management is delegated to WhisperEngine to avoid duplicate
- * pipelines and ensure consistent vGPU acceleration.
- *
- * - Press ⌘+Shift+V to toggle recording
- * - Audio is captured via ScriptProcessor, collected as Float32 PCM
- * - Transcribed by WhisperEngine (vGPU-accelerated)
- * - Result is returned via onTranscript callback
+ * Improvements over v1:
+ *   - AudioWorklet capture (off main thread, zero jank)
+ *   - Built-in VAD: auto-stops after 1.5s of silence
+ *   - Idle-time Whisper warm-start via requestIdleCallback
+ *   - Navigator permissions query for proactive mic status
  *
  * @module hologram-ui/hooks/useWhisperTranscription
  */
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { getWhisperEngine, preloadWhisper } from "@/modules/uns/core/hologram/whisper-engine";
+import { useAudioCapture } from "@/modules/hologram-ui/hooks/useAudioCapture";
 
 export type WhisperStatus =
   | "idle"           // Nothing happening
@@ -31,30 +29,45 @@ export type WhisperStatus =
 interface UseWhisperOptions {
   onTranscript: (text: string) => void;
   onStatusChange?: (status: WhisperStatus) => void;
+  /** Auto-stop recording after this many seconds of silence (default 1.5) */
+  silenceAutoStopSec?: number;
 }
 
-export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhisperOptions) {
+export function useWhisperTranscription({
+  onTranscript,
+  onStatusChange,
+  silenceAutoStopSec = 1.5,
+}: UseWhisperOptions) {
   const [status, setStatus] = useState<WhisperStatus>("idle");
   const [loadProgress, setLoadProgress] = useState(0);
-  const [audioLevel, setAudioLevel] = useState(0);
-  const [elapsed, setElapsed] = useState(0); // seconds
-  const streamRef = useRef<MediaStream | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const chunksRef = useRef<Float32Array[]>([]);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const rafRef = useRef<number | null>(null);
+  const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const statusRef = useRef<WhisperStatus>("idle");
 
   const updateStatus = useCallback(
     (s: WhisperStatus) => {
+      statusRef.current = s;
       setStatus(s);
       onStatusChange?.(s);
     },
     [onStatusChange],
   );
 
-  // Pre-load WhisperEngine (vGPU-accelerated) in background on first mount
+  // Auto-stop callback — triggered by VAD when silence detected
+  const autoStopRef = useRef<(() => void) | null>(null);
+
+  const capture = useAudioCapture({
+    silenceAutoStopSec,
+    onSilence: () => {
+      // Only auto-stop if we're recording
+      if (statusRef.current === "recording") {
+        autoStopRef.current?.();
+      }
+    },
+  });
+
+  // ── Idle-time Whisper warm-start ─────────────────────────────────────
+  // Pre-load model during browser idle periods so first mic click is instant
   useEffect(() => {
     const engine = getWhisperEngine();
     if (engine.isReady) {
@@ -62,44 +75,37 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
       return;
     }
 
-    preloadWhisper((p) => {
-      setLoadProgress(Math.round(p.progress ?? 0));
-    });
+    const startPreload = () => {
+      preloadWhisper((p) => {
+        setLoadProgress(Math.round(p.progress ?? 0));
+      });
+    };
 
-    // Poll for readiness
-    const iv = setInterval(() => {
-      const e = getWhisperEngine();
-      if (e.isReady) {
-        updateStatus("ready");
-        clearInterval(iv);
-      } else if (e.status === "error") {
-        console.warn("[useWhisperTranscription] WhisperEngine failed to load:", e.error);
-        clearInterval(iv);
-      }
-    }, 500);
-
-    return () => clearInterval(iv);
+    // Use requestIdleCallback for non-blocking preload
+    if ("requestIdleCallback" in window) {
+      const id = requestIdleCallback(() => startPreload(), { timeout: 5000 });
+      // Poll for readiness
+      const iv = setInterval(() => {
+        const e = getWhisperEngine();
+        if (e.isReady) { updateStatus("ready"); clearInterval(iv); }
+        else if (e.status === "error") { clearInterval(iv); }
+      }, 500);
+      return () => { cancelIdleCallback(id); clearInterval(iv); };
+    } else {
+      // Fallback: start after short delay
+      const to = setTimeout(startPreload, 1000);
+      const iv = setInterval(() => {
+        const e = getWhisperEngine();
+        if (e.isReady) { updateStatus("ready"); clearInterval(iv); }
+        else if (e.status === "error") { clearInterval(iv); }
+      }, 500);
+      return () => { clearTimeout(to); clearInterval(iv); };
+    }
   }, [updateStatus]);
-
-  const cleanup = useCallback(() => {
-    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-    if (processorRef.current) {
-      processorRef.current.disconnect();
-      processorRef.current = null;
-    }
-    streamRef.current?.getTracks().forEach(t => t.stop());
-    streamRef.current = null;
-    if (audioCtxRef.current?.state !== "closed") {
-      audioCtxRef.current?.close().catch(() => {});
-    }
-    audioCtxRef.current = null;
-    setAudioLevel(0);
-  }, []);
 
   const startRecording = useCallback(async () => {
     try {
-      // Ensure model is loaded via WhisperEngine
+      // Ensure model is loaded
       const engine = getWhisperEngine();
       if (!engine.isReady) {
         updateStatus("loading");
@@ -107,45 +113,8 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
       }
       updateStatus("recording");
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-      });
-      streamRef.current = stream;
-      chunksRef.current = [];
-
-      // Set up AudioContext + ScriptProcessor for raw PCM capture
-      const audioCtx = new AudioContext();
-      audioCtxRef.current = audioCtx;
-      const source = audioCtx.createMediaStreamSource(stream);
-
-      // Audio level analyser
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.4;
-      source.connect(analyser);
-      analyserRef.current = analyser;
-
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      const tick = () => {
-        analyser.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-        setAudioLevel(sum / dataArray.length / 255);
-        rafRef.current = requestAnimationFrame(tick);
-      };
-      rafRef.current = requestAnimationFrame(tick);
-
-      // PCM capture via ScriptProcessor (same approach as VoiceOrb)
-      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
-      processor.onaudioprocess = (e) => {
-        chunksRef.current.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-      };
-      source.connect(processor);
-      processor.connect(audioCtx.destination);
-      processorRef.current = processor;
+      // Start AudioWorklet-based capture (user gesture preserved)
+      await capture.start();
 
       // Elapsed timer
       setElapsed(0);
@@ -154,29 +123,16 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
       console.error("[useWhisperTranscription] Recording error:", err);
       updateStatus(getWhisperEngine().isReady ? "ready" : "idle");
     }
-  }, [onTranscript, updateStatus, cleanup]);
+  }, [updateStatus, capture]);
 
   const stopRecording = useCallback(async () => {
-    if (status !== "recording") return;
+    if (statusRef.current !== "recording") return;
 
-    const sampleRate = audioCtxRef.current?.sampleRate ?? 44100;
-    const chunks = chunksRef.current;
-    chunksRef.current = [];
-    cleanup();
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
 
-    if (!chunks.length) {
-      updateStatus("ready");
-      return;
-    }
+    const result = await capture.stop();
 
-    // Merge PCM chunks
-    const total = chunks.reduce((a, c) => a + c.length, 0);
-    const merged = new Float32Array(total);
-    let off = 0;
-    for (const c of chunks) { merged.set(c, off); off += c.length; }
-
-    // Skip very short recordings (< 0.3s)
-    if (merged.length / sampleRate < 0.3) {
+    if (!result) {
       updateStatus("ready");
       return;
     }
@@ -184,36 +140,39 @@ export function useWhisperTranscription({ onTranscript, onStatusChange }: UseWhi
     updateStatus("transcribing");
 
     try {
-      // Transcribe via WhisperEngine — uses vGPU if available
-      const result = await getWhisperEngine().transcribe(merged, sampleRate);
-      const text = result.text.trim();
+      const transcription = await getWhisperEngine().transcribe(result.audio, result.sampleRate);
+      const text = transcription.text.trim();
       if (text) onTranscript(text);
     } catch (err) {
       console.error("[useWhisperTranscription] Transcription error:", err);
     }
 
     updateStatus("ready");
-  }, [status, cleanup, onTranscript, updateStatus]);
+  }, [capture, onTranscript, updateStatus]);
+
+  // Wire up VAD auto-stop
+  autoStopRef.current = stopRecording;
 
   const toggleRecording = useCallback(() => {
-    if (status === "recording") {
+    if (statusRef.current === "recording") {
       stopRecording();
-    } else if (status === "idle" || status === "ready") {
+    } else if (statusRef.current === "idle" || statusRef.current === "ready") {
       startRecording();
     }
-  }, [status, startRecording, stopRecording]);
+  }, [startRecording, stopRecording]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      cleanup();
+      capture.cancel();
+      if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [cleanup]);
+  }, [capture]);
 
   return {
     status,
     loadProgress,
-    audioLevel,
+    audioLevel: capture.audioLevel,
     elapsed,
     isRecording: status === "recording",
     isTranscribing: status === "transcribing",
