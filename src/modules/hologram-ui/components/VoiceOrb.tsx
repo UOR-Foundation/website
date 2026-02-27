@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useVoiceConversation, type VoiceConversationState } from "../hooks/useVoiceConversation";
 import { useVoiceCoherence, type VoiceCoherenceMetrics } from "../hooks/useVoiceCoherence";
 import { useWakeWord } from "../hooks/useWakeWord";
+import MicDiagnostics from "./MicDiagnostics";
 import { Mic, Square, Volume2, Waves, Ear, EarOff } from "lucide-react";
 
 interface VoiceOrbProps {
@@ -87,6 +88,8 @@ export default function VoiceOrb({
   const [hovered, setHovered] = useState(false);
   const [alwaysListening, setAlwaysListening] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [micReady, setMicReady] = useState(false);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [metrics, setMetrics] = useState<VoiceCoherenceMetrics>({
     intensity: 0, steadiness: 1, pace: 0, coherence: 1, hue: 150, label: "silent",
   });
@@ -118,8 +121,24 @@ export default function VoiceOrb({
 
   const handleVoiceToggle = useCallback(() => {
     setVoiceError(null);
+    // First time: show diagnostics panel instead of starting immediately
+    if (!micReady && voice.isIdle) {
+      setShowDiagnostics(true);
+      return;
+    }
     voice.toggle();
-  }, [voice.toggle]);
+  }, [voice.toggle, micReady, voice.isIdle]);
+
+  const handleMicReady = useCallback(() => {
+    setMicReady(true);
+    setShowDiagnostics(false);
+    // Start listening immediately after diagnostics pass
+    voice.startListening();
+  }, [voice.startListening]);
+
+  const handleDiagnosticsDismiss = useCallback(() => {
+    setShowDiagnostics(false);
+  }, []);
 
   // Analyze audio level on every frame while listening
   useEffect(() => {
@@ -248,6 +267,21 @@ export default function VoiceOrb({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {/* Mic diagnostics panel — shown on first activation */}
+      <AnimatePresence>
+        {showDiagnostics && (
+          <motion.div
+            key="mic-diag"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 z-10"
+          >
+            <MicDiagnostics onReady={handleMicReady} onDismiss={handleDiagnosticsDismiss} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Transcript overlay */}
       <AnimatePresence>
         {voice.isActive && (voice.lastTranscript || voice.lastResponse) && (
