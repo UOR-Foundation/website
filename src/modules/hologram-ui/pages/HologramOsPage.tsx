@@ -257,31 +257,29 @@ export default function HologramOsPage() {
   const setBgMode = useCallback((m: BgMode) => {
     if (m === bgMode) return;
 
-    // Holographic projection: sweep from sidebar edge
+    // Holographic projection: single right→left sweep (returning to sidebar origin)
     setTransitionColor(TRANSITION_COLORS[m]);
     setTransitioning(true);
     setTransitionPhase("bloom");
-    
 
-    // Phase 1: gentle sweep left→right (0–900ms)
-    // Phase 2: hold — switch actual mode behind the curtain (900ms)
+    // Phase 1: sweep right→left covers viewport (0–1100ms)
+    // Phase 2: hold — switch style behind the curtain, then reveal by continuing sweep
     setTimeout(() => {
       setTransitionPhase("hold");
       setBgModeState(m);
       localStorage.setItem("hologram-bg-mode", m);
-    }, 900);
+    }, 1100);
 
-    // Phase 3: fade — curtain dissolves to reveal new reality
+    // Phase 3: curtain continues sweeping left to reveal new style
     setTimeout(() => {
       setTransitionPhase("fade");
-      
-    }, 1200);
+    }, 1400);
 
     // Phase 4: cleanup
     setTimeout(() => {
       setTransitioning(false);
       setTransitionPhase("idle");
-    }, 2400);
+    }, 2600);
   }, [bgMode]);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
@@ -479,7 +477,7 @@ export default function HologramOsPage() {
               className="absolute inset-0 pointer-events-none overflow-hidden"
               style={{ zIndex: 9999 }}
             >
-              {/* Projection surface — gentle sweep from sidebar edge */}
+              {/* Projection surface — right→left sweep returning to sidebar */}
               <div
                 style={{
                   position: "absolute",
@@ -488,36 +486,34 @@ export default function HologramOsPage() {
                   clipPath: transitionPhase === "bloom" || transitionPhase === "hold"
                     ? "inset(0 0 0 0)"
                     : transitionPhase === "fade"
-                      ? "inset(0 0 0 100%)"
-                      : "inset(0 100% 0 0)",
+                      ? "inset(0 100% 0 0)"
+                      : "inset(0 0 0 100%)",
                   transition: transitionPhase === "bloom"
-                    ? "clip-path 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+                    ? "clip-path 1100ms cubic-bezier(0.25, 0.46, 0.45, 0.94)"
                     : transitionPhase === "fade"
-                      ? "clip-path 1100ms cubic-bezier(0.39, 0.575, 0.565, 1)"
+                      ? "clip-path 1200ms cubic-bezier(0.39, 0.575, 0.565, 1)"
                       : "none",
                 }}
               />
 
-              {/* Soft leading edge — warm light at the wavefront */}
+              {/* Soft leading edge — warm light at the wavefront, moving right→left */}
               <div
                 style={{
                   position: "absolute",
                   top: 0,
                   bottom: 0,
                   width: "120px",
-                  background: "linear-gradient(to right, transparent, hsla(38, 30%, 65%, 0.07), transparent)",
-                  left: transitionPhase === "bloom"
+                  background: "linear-gradient(to left, transparent, hsla(38, 30%, 65%, 0.07), transparent)",
+                  right: transitionPhase === "bloom" || transitionPhase === "hold"
                     ? "100%"
-                    : transitionPhase === "hold"
-                      ? "100%"
-                      : transitionPhase === "fade"
-                        ? "calc(100% + 120px)"
-                        : "-120px",
+                    : transitionPhase === "fade"
+                      ? "calc(100% + 120px)"
+                      : "-120px",
                   opacity: transitionPhase === "idle" ? 0 : 1,
                   transition: transitionPhase === "bloom"
-                    ? "left 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 300ms ease-out"
+                    ? "right 1100ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 300ms ease-out"
                     : transitionPhase === "fade"
-                      ? "left 1100ms cubic-bezier(0.39, 0.575, 0.565, 1), opacity 800ms ease-out"
+                      ? "right 1200ms cubic-bezier(0.39, 0.575, 0.565, 1), opacity 800ms ease-out"
                       : "none",
                   filter: "blur(30px)",
                 }}
