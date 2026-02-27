@@ -136,6 +136,7 @@ const LensInspectorPage = lazy(() => import("@/modules/lens-inspector/pages/Lens
 const SchemaOrgExplorerPage = lazy(() => import("@/modules/schema-org/pages/SchemaOrgExplorerPage"));
 const CodeNexusPage = lazy(() => import("@/modules/code-nexus/pages/CodeNexusPage"));
 const AtlasVisualizationPage = lazy(() => import("@/modules/atlas/pages/AtlasVisualizationPage"));
+const QuantumDashboardPage = lazy(() => import("@/modules/quantum/pages/QuantumDashboardPage"));
 
 const queryClient = new QueryClient();
 
@@ -283,6 +284,7 @@ const App = () => {
             <Route path="/schema-org" element={<SchemaOrgExplorerPage />} />
             <Route path="/code-nexus" element={<CodeNexusPage />} />
             <Route path="/atlas" element={<AtlasVisualizationPage />} />
+            <Route path="/quantum" element={<QuantumDashboardPage />} />
             <Route path="/debug/lumen-voice" element={<LumenVoiceDebugPage />} />
             <Route path="/debug/diffusion" element={<DiffusionDebugPage />} />
             <Route path="*" element={<NotFoundPage />} />
