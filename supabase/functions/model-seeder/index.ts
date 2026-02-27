@@ -177,6 +177,7 @@ async function seedFile(
       method: "POST",
       headers: {
         "Authorization": `Bearer ${serviceKey}`,
+        "apikey": serviceKey,
         "Content-Type": ct,
         "x-upsert": "true",
         ...(contentLength ? { "Content-Length": contentLength } : {}),
