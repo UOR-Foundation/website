@@ -6,20 +6,19 @@
  * Uses the vocab.json from openai/whisper-tiny.en (GPT-2 byte-level BPE).
  *
  * Design:
- *   1. vocab.json is fetched from our storage bucket (self-hosted)
- *      with HuggingFace fallback
+ *   1. vocab.json is fetched via model-seeder caching proxy
+ *      (lazy-cached from HuggingFace on first access, self-hosted thereafter)
  *   2. Browser Cache API stores it permanently after first load
  *   3. Byte-level BPE tokens are decoded via unicode→byte table
  *
  * @module uns/core/hologram/whisper-compiler/tokenizer
  */
 
+import { fetchViaProxy } from "../model-proxy";
+
 // ── Constants ──────────────────────────────────────────────────────────────
 
 const VOCAB_CACHE_KEY = "hologram-whisper-vocab-v1";
-
-const SELF_HOSTED_VOCAB_URL = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/app-assets/whisper-models/openai/whisper-tiny.en/resolve/main/vocab.json`;
-const HF_VOCAB_URL = "https://huggingface.co/openai/whisper-tiny.en/resolve/main/vocab.json";
 
 // Special token IDs
 const SOT = 50258;
@@ -114,24 +113,19 @@ export class WhisperTokenizer {
         return;
       }
 
-      // 2. Try self-hosted
+      // 2. Fetch via model-seeder proxy (lazy-caches from HuggingFace)
       let vocab: Record<string, number> | null = null;
       try {
-        const res = await fetch(SELF_HOSTED_VOCAB_URL);
+        const res = await fetchViaProxy("vocab.json", "openai/whisper-tiny.en");
         if (res.ok) {
           vocab = await res.json();
           this._source = "self-hosted";
-          console.log("[WhisperTokenizer] 📦 Loaded from self-hosted storage");
+          console.log("[WhisperTokenizer] 📦 Loaded via model proxy");
         }
       } catch { /* fall through */ }
 
-      // 3. Fallback to HuggingFace
       if (!vocab) {
-        const res = await fetch(HF_VOCAB_URL);
-        if (!res.ok) throw new Error(`Failed to fetch vocab.json: ${res.status}`);
-        vocab = await res.json();
-        this._source = "huggingface";
-        console.log("[WhisperTokenizer] 🌐 Loaded from HuggingFace");
+        throw new Error("Failed to fetch vocab.json via model proxy");
       }
 
       this._buildMaps(vocab!);

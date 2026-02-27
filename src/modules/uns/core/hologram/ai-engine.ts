@@ -195,8 +195,9 @@ export class HologramAiEngine {
     try {
       // Dynamic import for code-splitting — only load Transformers.js when needed
       const { pipeline: createPipeline, env } = await import("@huggingface/transformers");
+      const { installModelProxy } = await import("./model-proxy");
 
-      // Disable local model check (we always fetch from HF Hub)
+      // Disable local model check (we always fetch from our proxy)
       env.allowLocalModels = false;
 
       // Detect WebGPU availability
@@ -214,12 +215,19 @@ export class HologramAiEngine {
 
       const dtype = (options.dtype ?? (device === "webgpu" ? "q4f16" : "q8")) as any;
 
+      // Install model proxy so all HF fetches route through our caching proxy
+      const restoreFetch = installModelProxy();
+
       // Create the pipeline
-      this.pipeline = await createPipeline(task, modelId, {
-        device,
-        dtype,
-        progress_callback: options.onProgress,
-      });
+      try {
+        this.pipeline = await createPipeline(task, modelId, {
+          device,
+          dtype,
+          progress_callback: options.onProgress,
+        });
+      } finally {
+        restoreFetch();
+      }
 
       // Content-address the model config
       const configProof = await singleProofHash({

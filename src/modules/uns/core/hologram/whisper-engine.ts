@@ -49,13 +49,7 @@ const WHISPER_MODEL_ID = "onnx-community/whisper-tiny.en";
 const WHISPER_TASK = "automatic-speech-recognition";
 const TARGET_SAMPLE_RATE = 16000;
 
-/**
- * Model-seeder edge function URL.
- * Acts as a transparent caching proxy: checks storage first,
- * lazy-seeds from HuggingFace on cache miss, then 302 redirects
- * to the public bucket URL. Zero config, zero manual uploads.
- */
-const MODEL_SEEDER_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/model-seeder`;
+// Model proxy is now in model-proxy.ts — imported dynamically during load
 
 // ── Audio Utilities ─────────────────────────────────────────────────────────
 
@@ -123,53 +117,14 @@ export class WhisperEngine {
 
     try {
       const { pipeline: createPipeline, env } = await import("@huggingface/transformers");
+      const { installModelProxy } = await import("./model-proxy");
 
       env.allowLocalModels = false;
       env.useBrowserCache = true;
       env.allowRemoteModels = true;
 
-      // ── Caching proxy interceptor ─────────────────────────────────────
-      // All HuggingFace model requests are routed through our model-seeder
-      // edge function, which acts as a transparent caching proxy:
-      //   • Cache hit  → instant 302 redirect to public bucket URL
-      //   • Cache miss → lazy-seed from HF, cache, then 302 redirect
-      // No manual uploads needed. Files are cached permanently after first access.
-      const HF_DOMAINS = ["huggingface.co", "hf.co", "cdn-lfs.huggingface.co", "cdn-lfs-us-1.huggingface.co"];
-      const originalFetch = globalThis.fetch;
-      const proxyFetch: typeof fetch = async (input, init) => {
-        let url = "";
-        if (typeof input === "string") url = input;
-        else if (input instanceof URL) url = input.toString();
-        else if (input instanceof Request) url = input.url;
-
-        const isHfUrl = HF_DOMAINS.some(d => url.includes(d));
-        if (isHfUrl) {
-          try {
-            // Extract the file path from HF URL
-            // e.g. https://huggingface.co/onnx-community/whisper-tiny.en/resolve/main/onnx/encoder_model_fp16.onnx
-            // → file = onnx/encoder_model_fp16.onnx
-            const parsed = new URL(url);
-            const pathParts = parsed.pathname.split("/resolve/main/");
-            const filePath = pathParts.length > 1 ? pathParts[1] : parsed.pathname.split("/").pop() || "";
-            const fileName = url.split("/").pop();
-
-            // Route through model-seeder proxy (handles caching + redirect)
-            const proxyUrl = `${MODEL_SEEDER_URL}?file=${encodeURIComponent(filePath)}`;
-            console.log(`[Whisper] 🔄 Proxy: ${fileName}`);
-            
-            // fetch follows 302 redirects automatically → ends up at public bucket URL
-            return originalFetch(proxyUrl, {
-              ...init,
-              redirect: "follow",
-            });
-          } catch (e) {
-            console.warn(`[Whisper] Proxy failed for ${url.split("/").pop()}, trying direct:`, e);
-            return originalFetch(input, init);
-          }
-        }
-        return originalFetch(input, init);
-      };
-      globalThis.fetch = proxyFetch;
+      // Install universal model proxy — routes all HF fetches through our caching proxy
+      const restoreFetch = installModelProxy();
 
       // ── vGPU Integration ──────────────────────────────────────────────
       this._device = "wasm";
@@ -212,7 +167,7 @@ export class WhisperEngine {
       });
 
       // Restore original fetch after model loading
-      globalThis.fetch = originalFetch;
+      restoreFetch();
 
       this._status = "ready";
       console.log(`[Whisper] ✅ Ready (${this._device}, ${dtype}, vGPU: ${this._vgpuInitialized})`);
