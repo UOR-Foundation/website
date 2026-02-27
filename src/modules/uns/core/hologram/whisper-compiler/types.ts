@@ -53,6 +53,12 @@ export const DTYPE_NAME: Record<number, string> = {
 
 // ── Parsed ONNX Structures ─────────────────────────────────────────────────
 
+export interface OnnxExternalData {
+  location: string;
+  offset: number;
+  length: number;
+}
+
 export interface OnnxTensor {
   name: string;
   dims: number[];
@@ -61,6 +67,8 @@ export interface OnnxTensor {
   rawData: Uint8Array;
   /** Total number of elements */
   elementCount: number;
+  /** External data reference (if tensor data is in a separate file) */
+  externalData?: OnnxExternalData;
 }
 
 export interface OnnxAttribute {

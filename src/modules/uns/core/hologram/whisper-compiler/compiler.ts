@@ -20,11 +20,13 @@ import type {
   OnnxNode,
   OnnxAttribute,
   OnnxTensor,
+  OnnxExternalData,
   HologramCompiledModel,
   HologramComputeNode,
   HologramTensorDescriptor,
   CompileProgress,
 } from "./types";
+import { DTYPE_BYTE_SIZE } from "./types";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -58,15 +60,40 @@ function extractNodeParams(attrs: OnnxAttribute[]): Record<string, unknown> {
 
 /**
  * Extract all weight tensors from the model — both initializers AND
- * Constant node attributes (some ONNX exports store weights in Constant ops).
+ * Constant node attributes. Resolves external data references from
+ * companion .data files.
  */
-function extractAllTensors(model: OnnxModel): OnnxTensor[] {
+function extractAllTensors(model: OnnxModel, externalDataBuffer?: ArrayBuffer): OnnxTensor[] {
   const tensors: OnnxTensor[] = [];
 
-  // 1. Initializers (may have data or just metadata)
+  // Helper: resolve external data reference into rawData
+  function resolveExternal(t: OnnxTensor): OnnxTensor {
+    if (t.rawData.byteLength > 0) return t; // already has inline data
+    if (!t.externalData || !externalDataBuffer) return t;
+
+    const { offset, length } = t.externalData;
+    // Calculate expected byte length from dims + dataType if length is 0
+    const bytesPerElem = DTYPE_BYTE_SIZE[t.dataType] ?? 4;
+    const expectedBytes = t.elementCount * bytesPerElem;
+    const byteLen = length > 0 ? length : expectedBytes;
+
+    if (offset + byteLen > externalDataBuffer.byteLength) {
+      console.warn(
+        `[WhisperCompiler] External data out of bounds for "${t.name}": ` +
+        `offset=${offset}, len=${byteLen}, bufSize=${externalDataBuffer.byteLength}`
+      );
+      return t;
+    }
+
+    const rawData = new Uint8Array(externalDataBuffer, offset, byteLen);
+    return { ...t, rawData };
+  }
+
+  // 1. Initializers
   for (const t of model.graph.initializers) {
-    if (t.rawData.byteLength > 0) {
-      tensors.push(t);
+    const resolved = resolveExternal(t);
+    if (resolved.rawData.byteLength > 0) {
+      tensors.push(resolved);
     }
   }
 
@@ -74,19 +101,23 @@ function extractAllTensors(model: OnnxModel): OnnxTensor[] {
   for (const node of model.graph.nodes) {
     if (node.opType === "Constant") {
       for (const attr of node.attributes) {
-        if (attr.t && attr.t.rawData.byteLength > 0) {
-          // Use the node's output name as the tensor name
-          const name = node.outputs[0] || attr.t.name || node.name;
-          tensors.push({ ...attr.t, name });
+        if (attr.t) {
+          const resolved = resolveExternal(attr.t);
+          if (resolved.rawData.byteLength > 0) {
+            const name = node.outputs[0] || resolved.name || node.name;
+            tensors.push({ ...resolved, name });
+          }
         }
       }
     }
   }
 
-  const initCount = model.graph.initializers.filter(t => t.rawData.byteLength > 0).length;
+  const initCount = model.graph.initializers.filter(t => resolveExternal(t).rawData.byteLength > 0).length;
   const constCount = tensors.length - initCount;
+  const extCount = model.graph.initializers.filter(t => t.externalData?.location).length;
   console.log(
-    `[WhisperCompiler] Tensor sources: ${initCount} from initializers, ${constCount} from Constant nodes (${tensors.length} total)`
+    `[WhisperCompiler] Tensor sources: ${initCount} initializers, ${constCount} Constant nodes ` +
+    `(${tensors.length} total, ${extCount} resolved from external data)`
   );
 
   return tensors;
@@ -231,7 +262,7 @@ export async function compileWhisperModel(
     onProgress?.({
       phase: "parse",
       message: `Parsing ${t} ONNX protobuf...`,
-      progress: (ti * 0.5 + 0.15) / targets.length,
+      progress: (ti * 0.5 + 0.1) / targets.length,
     });
 
     console.log(`[WhisperCompiler] 🔍 Parsing ${t} protobuf...`);
@@ -242,6 +273,50 @@ export async function compileWhisperModel(
     console.log(`[WhisperCompiler] ✓ Parsed in ${parseMs}ms`);
     console.log(summarizeModel(model));
 
+    // Check if model uses external data files
+    const hasExternalData = model.graph.initializers.some(
+      (init) => init.externalData?.location
+    );
+    let externalDataBuffer: ArrayBuffer | undefined;
+
+    if (hasExternalData) {
+      // Find the external data filename from the first tensor that has it
+      const extFile = model.graph.initializers.find(
+        (init) => init.externalData?.location
+      )?.externalData?.location;
+
+      if (extFile) {
+        const dataUrl = `${HF_BASE}/${ONNX_FILES[t]}_data`;
+        onProgress?.({
+          phase: "download",
+          message: `Downloading ${t} weight data...`,
+          progress: (ti * 0.5 + 0.15) / targets.length,
+          detail: dataUrl,
+        });
+
+        console.log(`[WhisperCompiler] ⬇ Downloading external data: ${dataUrl}`);
+        const dataResponse = await fetch(dataUrl);
+        if (!dataResponse.ok) {
+          // Try alternate naming: encoder_model.onnx.data
+          const altUrl = `${HF_BASE}/onnx/${extFile}`;
+          console.log(`[WhisperCompiler] ⬇ Retrying: ${altUrl}`);
+          const altResponse = await fetch(altUrl);
+          if (altResponse.ok) {
+            externalDataBuffer = await altResponse.arrayBuffer();
+          } else {
+            throw new Error(
+              `Failed to download external data for ${t}: tried ${dataUrl} and ${altUrl}`
+            );
+          }
+        } else {
+          externalDataBuffer = await dataResponse.arrayBuffer();
+        }
+
+        const dataSizeMB = ((externalDataBuffer?.byteLength ?? 0) / 1024 / 1024).toFixed(1);
+        console.log(`[WhisperCompiler] 📦 Downloaded external data: ${dataSizeMB} MB`);
+      }
+    }
+
     // Extract metadata from decoder (has embed_tokens)
     if (t === "decoder") {
       meta = inferModelMeta(model);
@@ -251,13 +326,12 @@ export async function compileWhisperModel(
     const graphNodes = buildComputeGraph(model.graph.nodes);
     allGraphNodes.push(...graphNodes.map((n) => ({
       ...n,
-      // Prefix node names with component for disambiguation
       inputs: n.inputs.map((i) => i ? `${t}/${i}` : ""),
       outputs: n.outputs.map((o) => o ? `${t}/${o}` : ""),
     })));
 
     // ── Phase 4: Store tensors ───────────────────────────────────────
-    const allModelTensors = extractAllTensors(model);
+    const allModelTensors = extractAllTensors(model, externalDataBuffer);
 
     onProgress?.({
       phase: "store",

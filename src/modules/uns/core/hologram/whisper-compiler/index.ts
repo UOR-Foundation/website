@@ -60,6 +60,7 @@ export type {
   OnnxNode,
   OnnxGraph,
   OnnxModel,
+  OnnxExternalData,
   HologramTensorDescriptor,
   HologramComputeNode,
   HologramCompiledModel,
