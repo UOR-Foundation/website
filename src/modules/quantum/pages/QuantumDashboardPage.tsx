@@ -11,7 +11,7 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
@@ -20,8 +20,9 @@ const CircuitCompilerPanel = React.lazy(() => import("@/modules/quantum/componen
 const StabilizerProofPanel = React.lazy(() => import("@/modules/quantum/components/StabilizerProofPanel"));
 const QuantumRadarPanel = React.lazy(() => import("@/modules/quantum/components/QuantumRadarPanel"));
 const AlphaRefinementPanel = React.lazy(() => import("@/modules/quantum/components/AlphaRefinementPanel"));
+const Subgraph153Panel = React.lazy(() => import("@/modules/quantum/components/Subgraph153Panel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ export default function QuantumDashboardPage() {
     { key: "proof", label: "Stabilizer Proof", icon: <BookOpen size={12} /> },
     { key: "radar", label: "Quantum Radar", icon: <Radar size={12} /> },
     { key: "alpha", label: "α Refinement", icon: <Zap size={12} /> },
+    { key: "153-link", label: "153-Link", icon: <Triangle size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -47,6 +49,7 @@ export default function QuantumDashboardPage() {
     proof: "Constructing stabilizer correspondence proof…",
     radar: "Initializing quantum radar sweep…",
     alpha: "Computing QED loop corrections from graph invariants…",
+    "153-link": "Searching 22-vertex subgraphs for T(17) = 153 edges…",
   };
 
   return (
@@ -103,7 +106,8 @@ export default function QuantumDashboardPage() {
            tab === "compiler" ? <CircuitCompilerPanel /> :
            tab === "proof" ? <StabilizerProofPanel /> :
            tab === "radar" ? <QuantumRadarPanel /> :
-           <AlphaRefinementPanel />}
+           tab === "alpha" ? <AlphaRefinementPanel /> :
+           <Subgraph153Panel />}
         </Suspense>
       </div>
     </div>
@@ -211,6 +215,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "Tests", value: "12/12 ✓" },
       ],
     },
+    {
+      key: "153-link" as Tab,
+      title: "153-Link Structure",
+      phase: "Phase 13",
+      icon: <Triangle size={24} />,
+      color: "hsl(280,60%,65%)",
+      description: "Combinatorial search for 22-vertex subgraphs of the Atlas with T(17) = 153 edges. Verifies the 4π fermionic resonance condition and derives α⁻¹ from the subgraph cycle structure.",
+      stats: [
+        { label: "Target Edges", value: "153" },
+        { label: "Subgraph Size", value: "22" },
+        { label: "Strategies", value: "5" },
+        { label: "β₁", value: "132 = 4×3×11" },
+      ],
+    },
   ];
 
   return (
@@ -281,7 +299,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "done", label: "Phase 10: Quantum ISA — Atlas → gate mapping (12 tests)" },
             { status: "done", label: "Phase 11: Topological Qubit — α derivation + qubit instantiation (14 tests)" },
             { status: "done", label: "Phase 12: QED Loop Corrections — α refinement via graph invariants (12 tests)" },
-            { status: "next", label: "Phase 13: Quantum error correction simulator" },
+            { status: "done", label: "Phase 13: 153-Link Search — T(17) subgraph + 4π fermionic resonance (12 tests)" },
             { status: "done", label: "Phase 14: Q-Linux Kernel — quantum process scheduling (14 tests)" },
             { status: "done", label: "Phase 15: Circuit Compiler — algorithm → Atlas gate sequences (12 tests)" },
             { status: "done", label: "Phase 16: Stabilizer Proof — Atlas₉₆ ≅ Stab₃/~ bijection (7 steps)" },
