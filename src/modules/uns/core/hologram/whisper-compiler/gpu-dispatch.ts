@@ -24,12 +24,14 @@ import {
   WGSL_SDPA,
   WGSL_CONV1D,
   WGSL_MEL_SPEC,
+  WGSL_FUSED_ATTN,
   cpuMatmul,
   cpuLayerNorm,
   cpuGelu,
   cpuSoftmax,
   cpuScaledDotProductAttention,
   cpuConv1d,
+  cpuFusedAttention,
 } from "./wgsl-kernels";
 import {
   computeMelSpectrogram as cpuMelSpectrogram,
@@ -359,31 +361,48 @@ export class GpuDispatch {
     }
   }
 
-  // ── Scaled Dot-Product Attention ─────────────────────────────────────
+  // ── Scaled Dot-Product Attention (legacy, delegates to fused) ──────
 
   async sdpa(
     Q: Float32Array, K: Float32Array, V: Float32Array,
     seqLen: number, dk: number,
   ): Promise<Float32Array> {
-    if (!this._available || seqLen < 16) {
+    return this.fusedAttention(Q, K, V, seqLen, seqLen, dk, false, 0);
+  }
+
+  // ── Fused Attention (single GPU dispatch) ────────────────────────────
+  // Combines: Q×K^T scaling + optional causal mask + softmax + V multiply
+  // Replaces 3 separate dispatches (matmul + softmax + matmul) + CPU scaling/masking.
+
+  async fusedAttention(
+    Q: Float32Array, K: Float32Array, V: Float32Array,
+    qLen: number, kvLen: number, dk: number,
+    causal: boolean, causalOffset = 0,
+  ): Promise<Float32Array> {
+    if (!this._available || qLen < 4) {
       this._cpuOps++;
-      return cpuScaledDotProductAttention(Q, K, V, seqLen, dk);
+      return cpuFusedAttention(Q, K, V, qLen, kvLen, dk, causal, causalOffset);
     }
 
     try {
       const scale = 1 / Math.sqrt(dk);
-      const uniforms = new ArrayBuffer(16);
+      const uniforms = new ArrayBuffer(32);
       const uView = new DataView(uniforms);
-      uView.setUint32(0, seqLen, true);
-      uView.setUint32(4, dk, true);
-      uView.setFloat32(8, scale, true);
-      uView.setUint32(12, 0, true);
+      uView.setUint32(0, qLen, true);
+      uView.setUint32(4, kvLen, true);
+      uView.setUint32(8, dk, true);
+      uView.setUint32(12, causal ? 1 : 0, true);
+      uView.setFloat32(16, scale, true);
+      uView.setUint32(20, causalOffset, true);
+      uView.setUint32(24, 0, true);
+      uView.setUint32(28, 0, true);
 
-      const outputSize = seqLen * dk * 4;
-      const wgX = Math.ceil(seqLen / 256);
+      const outputSize = qLen * dk * 4;
+      // One workgroup per query row
+      const wgX = qLen;
 
       const result = await this.gpu.compute(
-        WGSL_SDPA, [Q, K, V], outputSize,
+        WGSL_FUSED_ATTN, [Q, K, V], outputSize,
         [wgX, 1, 1], uniforms,
       );
 
@@ -392,7 +411,7 @@ export class GpuDispatch {
       return result.output;
     } catch {
       this._cpuOps++;
-      return cpuScaledDotProductAttention(Q, K, V, seqLen, dk);
+      return cpuFusedAttention(Q, K, V, qLen, kvLen, dk, causal, causalOffset);
     }
   }
 
@@ -578,11 +597,10 @@ export class GpuDispatch {
 
     const attnOut = new Float32Array(seqLen * dModel);
 
-    // Per-head attention
+    // Per-head fused attention (single dispatch per head)
     for (let h = 0; h < nHeads; h++) {
       const headOff = h * dHead;
 
-      // Extract per-head Q, K, V
       const Qh = new Float32Array(seqLen * dHead);
       const Kh = new Float32Array(seqLen * dHead);
       const Vh = new Float32Array(seqLen * dHead);
@@ -595,34 +613,9 @@ export class GpuDispatch {
         }
       }
 
-      // Attention: scores = Q @ K^T
-      const KhT = new Float32Array(dHead * seqLen);
-      for (let t = 0; t < seqLen; t++) {
-        for (let d = 0; d < dHead; d++) {
-          KhT[d * seqLen + t] = Kh[t * dHead + d];
-        }
-      }
+      // Fused: Q×K^T scaling + causal mask + softmax + V multiply (1 dispatch)
+      const headOut = await this.fusedAttention(Qh, Kh, Vh, seqLen, seqLen, dHead, causal, 0);
 
-      const scores = await this.matmul(Qh, KhT, seqLen, seqLen, dHead);
-      const scale = 1 / Math.sqrt(dHead);
-      for (let i = 0; i < scores.length; i++) scores[i] *= scale;
-
-      // Apply causal mask
-      if (causal) {
-        for (let i = 0; i < seqLen; i++) {
-          for (let j = i + 1; j < seqLen; j++) {
-            scores[i * seqLen + j] = -1e9;
-          }
-        }
-      }
-
-      // Softmax
-      const weights = await this.softmax(scores, seqLen, seqLen);
-
-      // Weighted sum: weights @ V
-      const headOut = await this.matmul(weights, Vh, seqLen, dHead, seqLen);
-
-      // Write back
       for (let t = 0; t < seqLen; t++) {
         for (let d = 0; d < dHead; d++) {
           attnOut[t * dModel + headOff + d] = headOut[t * dHead + d];
@@ -630,7 +623,6 @@ export class GpuDispatch {
       }
     }
 
-    // Output projection
     return this.linear(attnOut, outW, outB, seqLen, dModel, dModel);
   }
 
@@ -661,9 +653,7 @@ export class GpuDispatch {
       const Vh = new Float32Array(encLen * dHead);
 
       for (let t = 0; t < decLen; t++) {
-        for (let d = 0; d < dHead; d++) {
-          Qh[t * dHead + d] = Q[t * dModel + headOff + d];
-        }
+        for (let d = 0; d < dHead; d++) Qh[t * dHead + d] = Q[t * dModel + headOff + d];
       }
       for (let t = 0; t < encLen; t++) {
         for (let d = 0; d < dHead; d++) {
@@ -672,25 +662,11 @@ export class GpuDispatch {
         }
       }
 
-      // Scores: [decLen, encLen]
-      const KhT = new Float32Array(dHead * encLen);
-      for (let t = 0; t < encLen; t++) {
-        for (let d = 0; d < dHead; d++) {
-          KhT[d * encLen + t] = Kh[t * dHead + d];
-        }
-      }
-
-      const scores = await this.matmul(Qh, KhT, decLen, encLen, dHead);
-      const scale = 1 / Math.sqrt(dHead);
-      for (let i = 0; i < scores.length; i++) scores[i] *= scale;
-
-      const weights = await this.softmax(scores, decLen, encLen);
-      const headOut = await this.matmul(weights, Vh, decLen, dHead, encLen);
+      // Fused: 1 dispatch instead of matmul+softmax+matmul
+      const headOut = await this.fusedAttention(Qh, Kh, Vh, decLen, encLen, dHead, false, 0);
 
       for (let t = 0; t < decLen; t++) {
-        for (let d = 0; d < dHead; d++) {
-          attnOut[t * dModel + headOff + d] = headOut[t * dHead + d];
-        }
+        for (let d = 0; d < dHead; d++) attnOut[t * dModel + headOff + d] = headOut[t * dHead + d];
       }
     }
 
@@ -748,7 +724,7 @@ export class GpuDispatch {
     const fullLen = cache.len + newLen;
     cache.len = fullLen;
 
-    // Now attend: Q_new [newLen, dHead] × K_cached^T [dHead, fullLen]
+    // Now attend: fused Q_new × K_cached → softmax → V_cached (1 dispatch per head)
     for (let h = 0; h < nHeads; h++) {
       const headOff = h * dHead;
 
@@ -763,31 +739,8 @@ export class GpuDispatch {
       const KhFull = cache.k[h].subarray(0, fullLen * dHead);
       const VhFull = cache.v[h].subarray(0, fullLen * dHead);
 
-      // Transpose K: [fullLen, dHead] → [dHead, fullLen]
-      const KhT = new Float32Array(dHead * fullLen);
-      for (let t = 0; t < fullLen; t++) {
-        for (let d = 0; d < dHead; d++) {
-          KhT[d * fullLen + t] = KhFull[t * dHead + d];
-        }
-      }
-
-      // Scores: [newLen, fullLen]
-      const scores = await this.matmul(Qh, KhT, newLen, fullLen, dHead);
-      const scale = 1 / Math.sqrt(dHead);
-      for (let i = 0; i < scores.length; i++) scores[i] *= scale;
-
-      // Causal mask: for position (cache.len - newLen + i), mask out j > (cache.len - newLen + i)
-      if (causal) {
-        const basePos = fullLen - newLen;
-        for (let i = 0; i < newLen; i++) {
-          for (let j = basePos + i + 1; j < fullLen; j++) {
-            scores[i * fullLen + j] = -1e9;
-          }
-        }
-      }
-
-      const weights = await this.softmax(scores, newLen, fullLen);
-      const headOut = await this.matmul(weights, VhFull, newLen, dHead, fullLen);
+      const causalOffset = causal ? fullLen - newLen : 0;
+      const headOut = await this.fusedAttention(Qh, KhFull, VhFull, newLen, fullLen, dHead, causal, causalOffset);
 
       for (let t = 0; t < newLen; t++) {
         for (let d = 0; d < dHead; d++) {
@@ -842,33 +795,17 @@ export class GpuDispatch {
       const headOff = h * dHead;
       const Qh = new Float32Array(decLen * dHead);
       for (let t = 0; t < decLen; t++) {
-        for (let d = 0; d < dHead; d++) {
-          Qh[t * dHead + d] = Q[t * dModel + headOff + d];
-        }
+        for (let d = 0; d < dHead; d++) Qh[t * dHead + d] = Q[t * dModel + headOff + d];
       }
 
       const KhFull = cache.k[h].subarray(0, cache.len * dHead);
       const VhFull = cache.v[h].subarray(0, cache.len * dHead);
-      const cachedLen = cache.len;
 
-      const KhT = new Float32Array(dHead * cachedLen);
-      for (let t = 0; t < cachedLen; t++) {
-        for (let d = 0; d < dHead; d++) {
-          KhT[d * cachedLen + t] = KhFull[t * dHead + d];
-        }
-      }
-
-      const scores = await this.matmul(Qh, KhT, decLen, cachedLen, dHead);
-      const scale = 1 / Math.sqrt(dHead);
-      for (let i = 0; i < scores.length; i++) scores[i] *= scale;
-
-      const weights = await this.softmax(scores, decLen, cachedLen);
-      const headOut = await this.matmul(weights, VhFull, decLen, dHead, cachedLen);
+      // Fused: 1 dispatch instead of transpose+matmul+softmax+matmul
+      const headOut = await this.fusedAttention(Qh, KhFull, VhFull, decLen, cache.len, dHead, false, 0);
 
       for (let t = 0; t < decLen; t++) {
-        for (let d = 0; d < dHead; d++) {
-          attnOut[t * dModel + headOff + d] = headOut[t * dHead + d];
-        }
+        for (let d = 0; d < dHead; d++) attnOut[t * dModel + headOff + d] = headOut[t * dHead + d];
       }
     }
 

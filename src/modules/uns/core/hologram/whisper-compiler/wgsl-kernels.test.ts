@@ -5,6 +5,7 @@ import {
   cpuGelu,
   cpuSoftmax,
   cpuScaledDotProductAttention,
+  cpuFusedAttention,
 } from "./wgsl-kernels";
 
 // Helper: check arrays are close within tolerance
@@ -206,6 +207,48 @@ describe("cpuScaledDotProductAttention", () => {
     const result = cpuScaledDotProductAttention(Q, K, V, seqLen, dk);
     expect(result.length).toBe(seqLen * dk);
     // Each row's attention weights should sum to 1 (implicitly verified by softmax)
+    expect(result.every(v => isFinite(v))).toBe(true);
+  });
+});
+
+describe("cpuFusedAttention", () => {
+  it("matches cpuScaledDotProductAttention without causal mask", () => {
+    const seqLen = 4, dk = 3;
+    const Q = new Float32Array(seqLen * dk);
+    const K = new Float32Array(seqLen * dk);
+    const V = new Float32Array(seqLen * dk);
+    for (let i = 0; i < Q.length; i++) {
+      Q[i] = Math.sin(i * 0.7); K[i] = Math.cos(i * 0.5); V[i] = i * 0.1;
+    }
+    const ref = cpuScaledDotProductAttention(Q, K, V, seqLen, dk);
+    const fused = cpuFusedAttention(Q, K, V, seqLen, seqLen, dk, false, 0);
+    expectClose(fused, ref, 1e-5);
+  });
+
+  it("applies causal mask correctly", () => {
+    const seqLen = 3, dk = 2;
+    const Q = new Float32Array([1, 0, 0, 1, 1, 1]);
+    const K = new Float32Array([1, 0, 0, 1, 1, 1]);
+    const V = new Float32Array([10, 20, 30, 40, 50, 60]);
+
+    const result = cpuFusedAttention(Q, K, V, seqLen, seqLen, dk, true, 0);
+    expect(result.length).toBe(seqLen * dk);
+    // Row 0 can only attend to position 0
+    expectClose(
+      new Float32Array([result[0], result[1]]),
+      new Float32Array([10, 20]),
+      1e-5,
+    );
+  });
+
+  it("supports asymmetric Q/KV lengths (cross-attention)", () => {
+    const qLen = 2, kvLen = 4, dk = 2;
+    const Q = new Float32Array([1, 1, 0, 1]);
+    const K = new Float32Array([1, 0, 0, 1, 1, 1, -1, 0]);
+    const V = new Float32Array([0, 0, 3, 3, 6, 6, 9, 9]);
+
+    const result = cpuFusedAttention(Q, K, V, qLen, kvLen, dk, false, 0);
+    expect(result.length).toBe(qLen * dk);
     expect(result.every(v => isFinite(v))).toBe(true);
   });
 });
