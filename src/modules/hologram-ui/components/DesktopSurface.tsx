@@ -144,6 +144,12 @@ interface DesktopSurfaceProps {
   isWidgetVisible: (id: string) => boolean;
   removeWidget: (id: string) => void;
   ambientState?: { playing: boolean; stationHue: string };
+  /** Observer briefing prompt text for voice context */
+  observerBriefing?: string;
+  /** Screen context summary */
+  screenContext?: string;
+  /** Holographic fusion context */
+  fusionContext?: string;
 }
 
 export default function DesktopSurface({
@@ -160,6 +166,9 @@ export default function DesktopSurface({
   isWidgetVisible,
   removeWidget,
   ambientState,
+  observerBriefing,
+  screenContext,
+  fusionContext,
 }: DesktopSurfaceProps) {
   const navigate = useNavigate();
   const P = useMemo(() => palette(mode), [mode]);
@@ -456,7 +465,12 @@ export default function DesktopSurface({
                 transition: "opacity 300ms",
               }}
             >
-              <VoiceOrb personaId="hologram" />
+              <VoiceOrb
+                personaId="hologram"
+                observerBriefing={observerBriefing}
+                screenContext={screenContext}
+                fusionContext={fusionContext}
+              />
             </div>
           </div>
         </div>
