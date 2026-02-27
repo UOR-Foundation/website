@@ -337,7 +337,7 @@ export interface PrecomputeStats {
   /** Total bytes of cached result matrices. */
   totalBytes: number;
   /** Method used for precomputation. */
-  method: "lut-cpu";
+  method: "gpu" | "lut-cpu";
   /** Size of MUL_TABLE in bytes (always 64KB). */
   mulTableBytes: number;
 }
@@ -347,19 +347,16 @@ export interface PrecomputeStats {
  *
  * CRYSTALLIZATION (one-time):
  *   For each matrix size N, generate deterministic inputs,
- *   compute C = A×B using LUT-accelerated matmul (MUL_TABLE),
- *   and store result in Map<FNV-1a fingerprint, Uint8Array>.
+ *   compute C = A×B, and store in Map<fingerprint, result>.
+ *
+ *   Hardware selection (automatic):
+ *     1. Try GPU via WebGPU compute shader (fastest)
+ *     2. Fall back to CPU with 64KB MUL_TABLE (L1-cache LUT)
  *
  * RETRIEVAL (runtime):
  *   fingerprint(A, B) → Map.get() → precomputed result.
  *   O(N²) fingerprint + O(1) lookup = O(N²) total.
  *   The entire O(N³) computation is eliminated.
- *
- * CACHE HIERARCHY (mirrors CPU architecture):
- *   MUL_TABLE (64KB) → L1 cache (arithmetic surface)
- *   Fingerprint state (4 bytes) → CPU register
- *   Map hash buckets → L2/L3 cache
- *   Result arrays → DRAM / heap
  */
 export class HologramComputeCache {
   private cache = new Map<string, Uint8Array>();
@@ -379,9 +376,9 @@ export class HologramComputeCache {
   /**
    * Crystallize the holographic surface.
    *
-   * Uses LUT-accelerated matmul (MUL_TABLE in L1 cache) for all
-   * precomputation. The 64KB MUL_TABLE stays L1-hot throughout
-   * the entire crystallization phase due to temporal locality.
+   * Automatically selects the best available hardware:
+   *   - GPU path: WebGPU compute shader (if available)
+   *   - CPU path: LUT-accelerated matmul via 64KB MUL_TABLE
    *
    * @param sizes    Matrix dimensions to precompute
    * @param seedA    PRNG seed for matrix A
@@ -399,9 +396,18 @@ export class HologramComputeCache {
     let entries = 0;
     let totalBytes = 0;
 
+    // Probe GPU availability once
+    let useGpu = false;
+    try {
+      const probe = await gpuMatmul(new Uint8Array(4), new Uint8Array(4), 2);
+      useGpu = probe !== null;
+    } catch { useGpu = false; }
+
+    const method = useGpu ? "gpu" : "lut-cpu";
+
     for (let i = 0; i < sizes.length; i++) {
       const n = sizes[i];
-      onProgress?.(i, n, "lut-cpu");
+      onProgress?.(i, n, method);
 
       // Yield to UI thread for large matrices
       if (n >= 256) await new Promise((r) => setTimeout(r, 10));
@@ -410,8 +416,15 @@ export class HologramComputeCache {
       const b = seededMatrix(n, seedB + n);
       const key = fingerprint(a, b, n);
 
-      // LUT-accelerated matmul: every multiply is a MUL_TABLE read
-      const result = lutMatmul(a, b, n);
+      let result: Uint8Array;
+      if (useGpu) {
+        // GPU path: WebGPU compute shader
+        const gpuResult = await gpuMatmul(a, b, n);
+        result = gpuResult ?? lutMatmul(a, b, n); // fallback per-matrix if GPU fails
+      } else {
+        // CPU path: every multiply is a MUL_TABLE[a<<8|b] L1 cache read
+        result = lutMatmul(a, b, n);
+      }
 
       this.cache.set(key, result);
       entries++;
@@ -422,7 +435,7 @@ export class HologramComputeCache {
       totalMs: performance.now() - start,
       entries,
       totalBytes,
-      method: "lut-cpu",
+      method,
       mulTableBytes: MUL_TABLE_BYTES,
     };
   }
