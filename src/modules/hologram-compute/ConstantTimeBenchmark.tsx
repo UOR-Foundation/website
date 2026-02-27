@@ -213,13 +213,17 @@ class HologramComputeCache {
   get entries() { return this._entries; }
   get totalBytes() { return this._totalBytes; }
 
-  precompute(sizes: number[], seedA: number, seedB: number): void {
+  async precompute(sizes: number[], seedA: number, seedB: number, onProgress?: (i: number, n: number) => void): Promise<void> {
     this.cache.clear();
     this._entries = 0;
     this._totalBytes = 0;
     const start = performance.now();
 
-    for (const n of sizes) {
+    for (let i = 0; i < sizes.length; i++) {
+      const n = sizes[i];
+      onProgress?.(i, n);
+      // Yield to UI thread before large computations
+      if (n >= 256) await new Promise((r) => setTimeout(r, 10));
       const a = seededMatrix(n, seedA + n);
       const b = seededMatrix(n, seedB + n);
       const key = fingerprint(a, b, n);
@@ -251,7 +255,7 @@ function matrixChecksum(m: Uint8Array): number {
 // Sizes chosen to show dramatic O(N³) divergence while remaining
 // practical in a browser. The largest size (1024) performs >1 billion
 // multiply-accumulate operations on the standard path.
-const SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 640, 768];
+const SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 640, 768, 1024, 1280];
 
 const SEED_A = 42;
 const SEED_B = 137;
@@ -754,7 +758,9 @@ export default function ConstantTimeBenchmark() {
     // Phase 1: Crystallize holographic surface
     await new Promise((r) => setTimeout(r, 50));
     const cache = new HologramComputeCache();
-    cache.precompute(SIZES, SEED_A, SEED_B);
+    await cache.precompute(SIZES, SEED_A, SEED_B, (_i, n) => {
+      setCurrentSize(`crystallizing ${n}×${n}`);
+    });
     setPrecomputeMs(cache.precomputeTimeMs);
     setCacheEntries(cache.entries);
     setCacheBytes(cache.totalBytes);
@@ -884,7 +890,10 @@ export default function ConstantTimeBenchmark() {
           <div className="w-8 h-8 mx-auto border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
           <p className="text-sm font-medium" style={{ color: P.gold }}>Crystallizing Holographic Surface…</p>
           <p className="text-xs" style={{ color: P.muted }}>
-            Pre-computing {SIZES.length} matrix multiplications (up to {SIZES[SIZES.length - 1]}×{SIZES[SIZES.length - 1]}) and storing results in a content-addressed cache. This is the one-time cost.
+            Pre-computing {SIZES.length} matrix multiplications (up to {SIZES[SIZES.length - 1]}×{SIZES[SIZES.length - 1]} = {formatOps(SIZES[SIZES.length - 1] ** 3)} ops) and storing results in a content-addressed cache. This is the one-time cost.
+          </p>
+          <p className="text-[11px] font-medium mt-1" style={{ color: "hsl(38, 60%, 60%)" }}>
+            ⚠ Large matrices (1024+) may take 10–30 seconds. The browser tab may appear unresponsive — this is expected.
           </p>
         </div>
       )}
