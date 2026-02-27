@@ -116,6 +116,7 @@ interface ChatMessage {
   content: string;
   timestamp: Date;
   meta?: {
+    source?: string;
     inferenceTimeMs?: number;
     tokensGenerated?: number;
     gpuAccelerated?: boolean;
@@ -939,11 +940,18 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                       border: conv.id === history.activeConversationId ? `1px solid ${P.border}` : "1px solid transparent",
                     }}
                   >
-                    <MessageSquare className="w-4 h-4 flex-shrink-0" style={{ color: P.goldMuted }} />
+                    {conv.model_id === "voice" ? (
+                      <Mic className="w-4 h-4 flex-shrink-0" style={{ color: "hsl(0, 45%, 58%)" }} />
+                    ) : (
+                      <MessageSquare className="w-4 h-4 flex-shrink-0" style={{ color: P.goldMuted }} />
+                    )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate" style={{ color: P.text }}>{conv.title}</p>
+                      <p className="text-sm font-medium truncate" style={{ color: P.text }}>
+                        {conv.model_id === "voice" && <span style={{ color: "hsl(0, 45%, 58%)", fontSize: "10px", fontWeight: 600, letterSpacing: "0.08em", marginRight: "6px", textTransform: "uppercase" as const }}>VOICE</span>}
+                        {conv.title}
+                      </p>
                       <p className="text-xs" style={{ color: P.textDim }}>
-                        {new Date(conv.updated_at).toLocaleDateString()} · {conv.model_id?.split("/").pop() ?? ""}
+                        {new Date(conv.updated_at).toLocaleDateString()} · {conv.model_id === "voice" ? "Voice Session" : conv.model_id?.split("/").pop() ?? ""}
                       </p>
                     </div>
                   </button>
@@ -1803,12 +1811,20 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
             }
           >
             {isUser ? (
-              <p
-                className="text-base leading-[1.75] whitespace-pre-wrap"
-                style={{ color: P.text, fontFamily: P.font }}
-              >
-                {content}
-              </p>
+              <div>
+                {meta?.source === "voice" && (
+                  <div className="flex items-center gap-1 mb-1">
+                    <Mic className="w-3 h-3" style={{ color: "hsl(0, 40%, 62%)" }} />
+                    <span style={{ fontSize: "9px", color: "hsl(0, 35%, 60%)", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Spoken</span>
+                  </div>
+                )}
+                <p
+                  className="text-base leading-[1.75] whitespace-pre-wrap"
+                  style={{ color: P.text, fontFamily: P.font }}
+                >
+                  {content}
+                </p>
+              </div>
             ) : meta?.neuroSymbolic && !isStreaming ? (
               <div style={{ fontFamily: P.font }}>
                 <AnnotatedResponse
