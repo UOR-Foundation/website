@@ -324,6 +324,13 @@ export default function HologramOsPage() {
     if (isFocus) setAllWidgetsHidden(true);
   }, [isFocus]);
 
+  // ── Listen for global lumen:open event (from LumenFloatingPill) ────────
+  useEffect(() => {
+    const handler = () => setChatOpen(true);
+    window.addEventListener("lumen:open", handler);
+    return () => window.removeEventListener("lumen:open", handler);
+  }, []);
+
   // ── Global keyboard shortcuts ──────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
