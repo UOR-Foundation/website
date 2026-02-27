@@ -36,10 +36,21 @@ export {
   standardMatmul,
   gpuMatmul,
   gpuLastPath,
+  buildCoQuantLut,
+  coQuantMatVecCpu,
+  coQuantLinearGpu,
+  quantize,
+  verifyCoQuant,
   HologramComputeCache,
   seededMatrix,
   fingerprint,
   matrixChecksum,
 } from "./hologram-matmul";
 
-export type { PrecomputeStats, BitPrecision, BitTableDescriptor } from "./hologram-matmul";
+export type {
+  PrecomputeStats,
+  BitPrecision,
+  BitTableDescriptor,
+  QuantBits,
+  CoQuantLut,
+} from "./hologram-matmul";
