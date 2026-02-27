@@ -495,8 +495,8 @@ export default function HologramOsPage() {
            *  These remain visible regardless of what opens above
            * ══════════════════════════════════════════════════════════ */}
           <HologramFrame layer={1} label="chrome" interactive opacity={layerNav.layerOpacity(1)} style={{ transform: `scale(${layerNav.layerScale(1)})`, transition: "opacity 0.7s ease, transform 0.7s ease", zIndex: 400, pointerEvents: "none" }}>
-            {/* Background Mode Toggle — top right */}
-            {isWidgetVisible("style-toggle") && (
+            {/* Background Mode Toggle — top right (always visible, not dismissible) */}
+            {(
             <div
               className="absolute top-[3vh] right-6 animate-fade-in transition-all duration-300 ease-out"
               style={{
@@ -506,14 +506,7 @@ export default function HologramOsPage() {
                 filter: "blur(var(--focus-blur-chrome, 0px))",
               }}
             >
-              <WidgetHoverActions
-                widgetId="style-toggle"
-                onRemove={removeWidget}
-                showMove={false}
-                showSettings={false}
-                bgMode={bgMode}
-                position="top-left"
-              >
+              <>
               <div className="flex flex-col items-center gap-2">
                 <div
                   className="flex items-center gap-1 px-3 py-2 rounded-full transition-all duration-300"
@@ -563,7 +556,7 @@ export default function HologramOsPage() {
                   Style
                 </span>
               </div>
-              </WidgetHoverActions>
+              </>
             </div>
             )}
 
