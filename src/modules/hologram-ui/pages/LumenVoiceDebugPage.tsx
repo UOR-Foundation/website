@@ -11,8 +11,10 @@ import {
   isWhisperCompiled,
   loadCompiledWhisper,
   deleteCompiledWhisper,
+  MODEL_VARIANT_INFO,
   type CompileProgress,
   type HologramCompiledModel,
+  type ModelVariant,
 } from "@/modules/uns/core/hologram/whisper-compiler";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -163,6 +165,7 @@ export default function LumenVoiceDebugPage() {
   const [compiledModel, setCompiledModel] = useState<HologramCompiledModel | null>(null);
   const [compilerError, setCompilerError] = useState<string | null>(null);
   const [isCompiled, setIsCompiled] = useState<boolean | null>(null);
+  const [modelVariant, setModelVariant] = useState<ModelVariant>("fp16");
 
   const logsRef = useRef<DebugLog[]>([]);
 
@@ -177,8 +180,8 @@ export default function LumenVoiceDebugPage() {
       setUserSeed(`lumen-debug:${data.user?.id ?? "anon"}`);
     });
     // Check if Whisper is already compiled
-    isWhisperCompiled("both").then(setIsCompiled).catch(() => setIsCompiled(false));
-  }, []);
+    isWhisperCompiled("both", modelVariant).then(setIsCompiled).catch(() => setIsCompiled(false));
+  }, [modelVariant]);
 
   const runCompile = useCallback(async (target: "encoder" | "decoder" | "both" = "both", force = false) => {
     setCompilerBusy(true);
@@ -188,6 +191,7 @@ export default function LumenVoiceDebugPage() {
     try {
       const model = await compileWhisperModel({
         target,
+        variant: modelVariant,
         force,
         onProgress: (p) => {
           setCompilerProgress(p);
@@ -217,28 +221,28 @@ export default function LumenVoiceDebugPage() {
 
   const runDeleteCompiled = useCallback(async () => {
     try {
-      await deleteCompiledWhisper("both");
+      await deleteCompiledWhisper("both", modelVariant);
       setCompiledModel(null);
       setIsCompiled(false);
-      addLog("[Compiler] Compiled model deleted from storage.");
+      addLog(`[Compiler] Compiled model (${modelVariant}) deleted from storage.`);
     } catch (err) {
       addLog(`[Compiler] Delete failed: ${err instanceof Error ? err.message : "unknown"}`);
     }
-  }, [addLog]);
+  }, [addLog, modelVariant]);
 
   const loadExistingManifest = useCallback(async () => {
     try {
-      const model = await loadCompiledWhisper("both");
+      const model = await loadCompiledWhisper("both", modelVariant);
       if (model) {
         setCompiledModel(model);
-        addLog(`[Compiler] Loaded existing manifest: ${model.tensors.length} tensors, ${model.graph.length} nodes`);
+        addLog(`[Compiler] Loaded existing ${modelVariant} manifest: ${model.tensors.length} tensors, ${model.graph.length} nodes`);
       } else {
-        addLog("[Compiler] No compiled model found.");
+        addLog(`[Compiler] No compiled ${modelVariant} model found.`);
       }
     } catch (err) {
       addLog(`[Compiler] Load failed: ${err instanceof Error ? err.message : "unknown"}`);
     }
-  }, [addLog]);
+  }, [addLog, modelVariant]);
 
   const stopRef = useRef<(() => Promise<void>) | null>(null);
 
@@ -750,6 +754,26 @@ export default function LumenVoiceDebugPage() {
                 {compilerProgress.phase}: {compilerProgress.message} ({Math.round(compilerProgress.progress * 100)}%)
               </span>
             )}
+          </div>
+
+          {/* Model Variant Selector */}
+          <div className="flex flex-wrap items-start gap-3">
+            {(Object.entries(MODEL_VARIANT_INFO) as [ModelVariant, typeof MODEL_VARIANT_INFO["fp16"]][]).map(([key, info]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => { setModelVariant(key); setCompiledModel(null); }}
+                disabled={compilerBusy}
+                className={`rounded-lg border-2 p-3 text-left transition-all text-sm disabled:opacity-50 ${
+                  modelVariant === key
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-background hover:border-muted-foreground/30"
+                }`}
+              >
+                <div className="font-medium">{info.label}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{info.size} · {info.description}</div>
+              </button>
+            ))}
           </div>
 
           {/* Progress bar */}
