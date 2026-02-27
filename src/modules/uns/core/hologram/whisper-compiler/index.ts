@@ -1,20 +1,22 @@
 /**
- * Whisper Compiler — Module Barrel
- * ═════════════════════════════════
+ * Whisper Compiler + Inference Engine — Module Barrel
+ * ════════════════════════════════════════════════════
  *
- * ONNX → Hologram compilation pipeline.
+ * Complete ONNX → Hologram pipeline:
+ *   Phase 1: Compile ONNX → content-addressed weights
+ *   Phase 2: WGSL compute kernels
+ *   Phase 3: Inference engine (mel → encoder → decoder → tokens)
  *
  * Usage:
- *   import { compileWhisperModel, isWhisperCompiled } from "./whisper-compiler";
+ *   import { compileWhisperModel, getWhisperEngine } from "./whisper-compiler";
  *
- *   if (!await isWhisperCompiled()) {
- *     const model = await compileWhisperModel({
- *       onProgress: (p) => console.log(p.message),
- *     });
- *   }
+ *   // One-time compilation
+ *   await compileWhisperModel({ onProgress: console.log });
  *
- * After compilation, ONNX dependencies are no longer needed.
- * Phase 2 will add WGSL inference kernels.
+ *   // Inference
+ *   const engine = getWhisperEngine();
+ *   await engine.init();
+ *   const tokens = await engine.transcribe(audioFloat32);
  *
  * @module uns/core/hologram/whisper-compiler
  */
@@ -28,6 +30,20 @@ export {
 } from "./compiler";
 export type { CompileOptions } from "./compiler";
 
+// Inference engine (Phase 3)
+export { WhisperEngine, getWhisperEngine } from "./inference-engine";
+export type { InferenceProgress } from "./inference-engine";
+
+// Mel spectrogram
+export {
+  computeMelSpectrogram,
+  resampleTo16kHz,
+  SAMPLE_RATE,
+  N_MELS,
+  N_FRAMES,
+  HOP_LENGTH,
+} from "./mel-spectrogram";
+
 // ONNX parser (exposed for debugging / inspection)
 export { parseOnnxModel, summarizeModel } from "./onnx-parser";
 
@@ -37,7 +53,7 @@ export { HologramWeightStore, getWeightStore } from "./weight-store";
 // Proto decoder (exposed for testing)
 export { ProtoReader } from "./proto-decoder";
 
-// WGSL inference kernels (Phase 2)
+// WGSL inference kernels
 export {
   WHISPER_KERNELS,
   WGSL_MATMUL,
