@@ -4,11 +4,12 @@
  *
  * A subtle, draggable pill that appears on every non-home page,
  * giving instant access to Lumen AI from anywhere in Hologram.
+ * Clicking opens the chat as a right-side overlay on the current page.
  * Position is persisted to localStorage.
  */
 
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
 
 /** Only hide on hologram-os which has its own Lumen CTA */
@@ -16,7 +17,6 @@ const HIDDEN_ROUTES = ["/hologram-os"];
 
 export default function LumenFloatingPill() {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
 
   const drag = useDraggablePosition({
@@ -36,15 +36,12 @@ export default function LumenFloatingPill() {
       onMouseLeave={() => setHovered(false)}
       onClick={() => {
         if (!drag.wasDragged()) {
-          navigate("/hologram-os");
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent("lumen:open"));
-          }, 300);
+          window.dispatchEvent(new CustomEvent("lumen:open-global"));
         }
       }}
       style={{
         position: "fixed",
-        bottom: "64px",
+        bottom: "80px",
         left: "50%",
         transform: "translateX(-50%)",
         zIndex: 9000,
