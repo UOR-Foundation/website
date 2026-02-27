@@ -62,9 +62,10 @@ export type { GpuDispatchStats, KvCache } from "./gpu-dispatch";
 // Proto decoder (exposed for testing)
 export { ProtoReader } from "./proto-decoder";
 
-// WGSL inference kernels
+// WGSL inference kernels (Whisper + Diffusion)
 export {
   WHISPER_KERNELS,
+  DIFFUSION_KERNELS,
   WGSL_MATMUL,
   WGSL_LAYER_NORM,
   WGSL_GELU,
@@ -74,6 +75,10 @@ export {
   WGSL_MEL_SPEC,
   WGSL_FUSED_ATTN,
   WGSL_BATCHED_FUSED_ATTN,
+  WGSL_CONV2D,
+  WGSL_GROUP_NORM,
+  WGSL_SILU,
+  WGSL_UPSAMPLE2X,
   cpuMatmul,
   cpuLayerNorm,
   cpuGelu,
@@ -82,8 +87,12 @@ export {
   cpuConv1d,
   cpuFusedAttention,
   cpuBatchedFusedAttention,
+  cpuConv2d,
+  cpuGroupNorm,
+  cpuSilu,
+  cpuUpsample2x,
 } from "./wgsl-kernels";
-export type { WhisperKernelName } from "./wgsl-kernels";
+export type { WhisperKernelName, DiffusionKernelName } from "./wgsl-kernels";
 
 // Types
 export type {
