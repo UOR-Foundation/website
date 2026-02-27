@@ -50,10 +50,12 @@ const WHISPER_TASK = "automatic-speech-recognition";
 const TARGET_SAMPLE_RATE = 16000;
 
 /**
- * Self-hosted model files URL prefix.
- * Model files are stored in our storage bucket under whisper-models/.
+ * Model-seeder edge function URL.
+ * Acts as a transparent caching proxy: checks storage first,
+ * lazy-seeds from HuggingFace on cache miss, then 302 redirects
+ * to the public bucket URL. Zero config, zero manual uploads.
  */
-const SELF_HOSTED_MODEL_BASE = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/app-assets/whisper-models`;
+const MODEL_SEEDER_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/model-seeder`;
 
 // ── Audio Utilities ─────────────────────────────────────────────────────────
 
@@ -126,12 +128,15 @@ export class WhisperEngine {
       env.useBrowserCache = true;
       env.allowRemoteModels = true;
 
-      // ── Self-hosted fetch interceptor with HuggingFace fallback ────────
-      // Try our storage bucket first (self-hosted, no external deps).
-      // If file isn't cached there, fall back to HuggingFace directly.
+      // ── Caching proxy interceptor ─────────────────────────────────────
+      // All HuggingFace model requests are routed through our model-seeder
+      // edge function, which acts as a transparent caching proxy:
+      //   • Cache hit  → instant 302 redirect to public bucket URL
+      //   • Cache miss → lazy-seed from HF, cache, then 302 redirect
+      // No manual uploads needed. Files are cached permanently after first access.
       const HF_DOMAINS = ["huggingface.co", "hf.co", "cdn-lfs.huggingface.co", "cdn-lfs-us-1.huggingface.co"];
       const originalFetch = globalThis.fetch;
-      const selfHostedFetch: typeof fetch = async (input, init) => {
+      const proxyFetch: typeof fetch = async (input, init) => {
         let url = "";
         if (typeof input === "string") url = input;
         else if (input instanceof URL) url = input.toString();
@@ -140,28 +145,31 @@ export class WhisperEngine {
         const isHfUrl = HF_DOMAINS.some(d => url.includes(d));
         if (isHfUrl) {
           try {
+            // Extract the file path from HF URL
+            // e.g. https://huggingface.co/onnx-community/whisper-tiny.en/resolve/main/onnx/encoder_model_fp16.onnx
+            // → file = onnx/encoder_model_fp16.onnx
             const parsed = new URL(url);
-            const path = parsed.pathname.replace(/^\//, "");
-            const selfHostedUrl = `${SELF_HOSTED_MODEL_BASE}/${path}`;
+            const pathParts = parsed.pathname.split("/resolve/main/");
+            const filePath = pathParts.length > 1 ? pathParts[1] : parsed.pathname.split("/").pop() || "";
             const fileName = url.split("/").pop();
 
-            // Try self-hosted first
-            const selfHostedRes = await originalFetch(selfHostedUrl, { method: "HEAD" });
-            if (selfHostedRes.ok) {
-              console.log(`[Whisper] 📦 Self-hosted: ${fileName}`);
-              return originalFetch(selfHostedUrl, init);
-            }
-          } catch {
-            // Self-hosted check failed, fall through
+            // Route through model-seeder proxy (handles caching + redirect)
+            const proxyUrl = `${MODEL_SEEDER_URL}?file=${encodeURIComponent(filePath)}`;
+            console.log(`[Whisper] 🔄 Proxy: ${fileName}`);
+            
+            // fetch follows 302 redirects automatically → ends up at public bucket URL
+            return originalFetch(proxyUrl, {
+              ...init,
+              redirect: "follow",
+            });
+          } catch (e) {
+            console.warn(`[Whisper] Proxy failed for ${url.split("/").pop()}, trying direct:`, e);
+            return originalFetch(input, init);
           }
-
-          // Fall back to HuggingFace directly
-          console.log(`[Whisper] 🌐 HuggingFace fallback: ${url.split("/").pop()}`);
-          return originalFetch(input, init);
         }
         return originalFetch(input, init);
       };
-      globalThis.fetch = selfHostedFetch;
+      globalThis.fetch = proxyFetch;
 
       // ── vGPU Integration ──────────────────────────────────────────────
       this._device = "wasm";
