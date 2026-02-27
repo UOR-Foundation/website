@@ -53,4 +53,7 @@ export type {
   BitTableDescriptor,
   QuantBits,
   CoQuantLut,
+  CentroidEntry,
+  CentroidRetrievalResult,
+  CentroidCacheStats,
 } from "./hologram-matmul";
