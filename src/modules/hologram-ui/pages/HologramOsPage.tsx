@@ -240,46 +240,48 @@ export default function HologramOsPage() {
     return saved === "white" || saved === "dark" || saved === "image" ? saved : "image";
   });
 
-  // ── Delightful transition state ──────────────────────────────────────
+  // ── Holographic projection transition ──────────────────────────────
+  // The screen is a projection surface emanating from the sidebar.
+  // Style changes sweep left→right like a new hologram being cast.
   const [transitioning, setTransitioning] = useState(false);
   const [transitionColor, setTransitionColor] = useState("hsl(0, 0%, 100%)");
   const [transitionPhase, setTransitionPhase] = useState<"idle" | "bloom" | "hold" | "fade">("idle");
   const [contentBreathe, setContentBreathe] = useState(false);
 
   const TRANSITION_COLORS: Record<BgMode, string> = {
-    image: "hsla(30, 15%, 25%, 0.95)",
-    white: "hsl(0, 0%, 100%)",
-    dark: "hsl(0, 0%, 5%)",
+    image: "hsla(30, 15%, 12%, 0.97)",
+    white: "hsla(0, 0%, 98%, 0.97)",
+    dark: "hsla(0, 0%, 4%, 0.97)",
   };
 
   const setBgMode = useCallback((m: BgMode) => {
     if (m === bgMode) return;
 
-    // Layer-reveal transition: the new mode slides down like turning a page
+    // Holographic projection: sweep from sidebar edge
     setTransitionColor(TRANSITION_COLORS[m]);
     setTransitioning(true);
     setTransitionPhase("bloom");
     setContentBreathe(true);
 
-    // Phase 1: layer sweeps down covering old mode (0–600ms)
-    // Phase 2: hold — switch actual bg under the layer (600ms)
+    // Phase 1: projection wavefront sweeps left→right (0–650ms)
+    // Phase 2: hold — switch actual mode behind the projection (650ms)
     setTimeout(() => {
       setTransitionPhase("hold");
       setBgModeState(m);
       localStorage.setItem("hologram-bg-mode", m);
-    }, 550);
+    }, 600);
 
-    // Phase 3: fade — layer dissolves revealing the new mode (900ms)
+    // Phase 3: fade — projection dissolves, new reality revealed
     setTimeout(() => {
       setTransitionPhase("fade");
       setContentBreathe(false);
-    }, 800);
+    }, 850);
 
     // Phase 4: cleanup
     setTimeout(() => {
       setTransitioning(false);
       setTransitionPhase("idle");
-    }, 1600);
+    }, 1700);
   }, [bgMode]);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
@@ -474,51 +476,68 @@ export default function HologramOsPage() {
             marginRight: chatOpen ? `${lumenPanel.width}px` : "0px",
           }}
         >
-          {/* ── Style transition overlay — layer reveal ────────────── */}
+          {/* ── Holographic projection sweep — emanates from sidebar ── */}
           {transitioning && (
             <div
               className="absolute inset-0 pointer-events-none overflow-hidden"
               style={{ zIndex: 9999 }}
             >
-              {/* Main layer — slides down like revealing a page beneath */}
+              {/* Main projection surface — sweeps left→right from sidebar */}
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
                   background: transitionColor,
-                  transform: transitionPhase === "bloom"
-                    ? "translateY(0%)"
-                    : transitionPhase === "hold"
-                      ? "translateY(0%)"
-                      : transitionPhase === "fade"
-                        ? "translateY(100%)"
-                        : "translateY(-100%)",
-                  opacity: transitionPhase === "fade" ? 0.92 : transitionPhase === "idle" ? 0 : 1,
-                  transition: transitionPhase === "bloom"
-                    ? "transform 600ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease-out"
+                  clipPath: transitionPhase === "bloom" || transitionPhase === "hold"
+                    ? "inset(0 0 0 0)"
                     : transitionPhase === "fade"
-                      ? "transform 800ms cubic-bezier(0.4, 0, 0.2, 1), opacity 800ms cubic-bezier(0.4, 0, 0.2, 1)"
+                      ? "inset(0 0 0 100%)"
+                      : "inset(0 100% 0 0)",
+                  transition: transitionPhase === "bloom"
+                    ? "clip-path 650ms cubic-bezier(0.22, 1, 0.36, 1)"
+                    : transitionPhase === "fade"
+                      ? "clip-path 850ms cubic-bezier(0.4, 0, 0.2, 1)"
                       : "none",
-                  boxShadow: transitionPhase === "hold"
-                    ? "0 8px 60px hsla(0, 0%, 0%, 0.18)"
-                    : "none",
                 }}
               />
-              {/* Soft edge gradient — the "page fold" effect */}
+
+              {/* Leading edge glow — the holographic wavefront */}
               <div
                 style={{
                   position: "absolute",
-                  left: 0,
-                  right: 0,
-                  height: "120px",
-                  bottom: transitionPhase === "bloom" || transitionPhase === "hold" ? "0" : "auto",
-                  top: transitionPhase === "fade" ? "auto" : undefined,
-                  background: transitionPhase === "fade"
-                    ? "none"
-                    : `linear-gradient(to top, transparent, ${transitionColor})`,
-                  opacity: transitionPhase === "bloom" || transitionPhase === "hold" ? 0.6 : 0,
-                  transition: "opacity 500ms ease-in-out",
-                  pointerEvents: "none",
+                  top: 0,
+                  bottom: 0,
+                  width: "180px",
+                  background: bgMode === "dark"
+                    ? "linear-gradient(to right, transparent, hsla(38, 25%, 60%, 0.08), transparent)"
+                    : bgMode === "white"
+                      ? "linear-gradient(to right, transparent, hsla(38, 30%, 50%, 0.06), transparent)"
+                      : "linear-gradient(to right, transparent, hsla(38, 40%, 75%, 0.1), transparent)",
+                  left: transitionPhase === "bloom"
+                    ? "100%"
+                    : transitionPhase === "hold"
+                      ? "100%"
+                      : transitionPhase === "fade"
+                        ? "calc(100% + 180px)"
+                        : "-180px",
+                  opacity: transitionPhase === "idle" ? 0 : 1,
+                  transition: transitionPhase === "bloom"
+                    ? "left 650ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease-out"
+                    : transitionPhase === "fade"
+                      ? "left 850ms cubic-bezier(0.4, 0, 0.2, 1), opacity 600ms ease-out"
+                      : "none",
+                  filter: "blur(20px)",
+                }}
+              />
+
+              {/* Subtle scan-line shimmer — holographic texture */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "repeating-linear-gradient(90deg, transparent, transparent 3px, hsla(38, 20%, 70%, 0.015) 3px, hsla(38, 20%, 70%, 0.015) 4px)",
+                  opacity: transitionPhase === "hold" ? 1 : 0,
+                  transition: "opacity 300ms ease-in-out",
                 }}
               />
             </div>
