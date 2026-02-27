@@ -80,6 +80,7 @@ interface DesktopOsSidebarProps {
   onOpenBrowser?: () => void;
   onOpenCompute?: () => void;
   onOpenMemory?: () => void;
+  onOpenMessenger?: () => void;
   onReplayGuide?: () => void;
   hintOpacity?: (key: string) => number;
   bgMode?: "image" | "white" | "dark";
@@ -91,6 +92,7 @@ export default function DesktopOsSidebar({
   onOpenBrowser,
   onOpenCompute,
   onOpenMemory,
+  onOpenMessenger,
   onReplayGuide,
   hintOpacity,
   bgMode = "image",
@@ -294,7 +296,7 @@ export default function DesktopOsSidebar({
         )}
         <IconTooltip label={`Messages (${MOD_KEY} M)`} show={!expanded}>
           <button
-            onClick={() => {}}
+            onClick={() => collapseAndDo(() => onOpenMessenger?.())}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
             }`}
