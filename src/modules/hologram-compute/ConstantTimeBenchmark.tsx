@@ -167,7 +167,18 @@ async function detectHardware(): Promise<HardwareInfo> {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// LINPACK-aligned Configuration
+// Benchmark Configuration — CPU vs vGPU Acceleration Study
+// ══════════════════════════════════════════════════════════════════════════════
+//
+// FORMAL BASELINE DEFINITION:
+//   CPU baseline = single-threaded JavaScript reference implementation.
+//   No SIMD. No multithreading. No WASM. No Web Workers.
+//   This is the canonical INT8 matmul reference against which vGPU is measured.
+//
+// CLAIM:
+//   "vGPU delivers N×–N× speedup over single-threaded JS CPU for INT8 GEMM
+//    via pre-computed retrieval. Results are byte-identical (SHA-256 verified)."
+//
 // ══════════════════════════════════════════════════════════════════════════════
 
 const CPU_SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1280, 1536, 1792, 2048];
@@ -175,31 +186,120 @@ const GPU_SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 204
 const ALL_SIZES = [...new Set([...CPU_SIZES, ...GPU_SIZES])].sort((a, b) => a - b);
 const SEED_A = 42;
 const SEED_B = 137;
-const WARMUP_ITERATIONS = 2;
 
 /** ~1 picojoule per INT8 MAC operation (industry standard: Horowitz 2014, ISSCC) */
 const ENERGY_PER_INT8_MAC_PJ = 1.0;
 
+/** Minimum total measurement time for work amplification (ms) */
+const MIN_MEASUREMENT_TIME_MS = 10;
+
+/** Adaptive warmup: more iterations for small N to stabilize JIT */
+function warmupCount(n: number): number {
+  if (n <= 32) return 100;
+  if (n <= 64) return 50;
+  if (n <= 128) return 20;
+  if (n <= 256) return 10;
+  return 3;
+}
+
 function sampleCount(n: number): number {
-  if (n >= 1536) return 2;
-  if (n >= 512) return 3;
-  if (n >= 256) return 5;
-  return 7;
+  if (n >= 1536) return 3;
+  if (n >= 512) return 5;
+  if (n >= 256) return 7;
+  return 10;
 }
 
 const TIMER_RESOLUTION_US = typeof crossOriginIsolated !== "undefined" && crossOriginIsolated ? 5 : 100;
 
-function flops(n: number, ms: number): number {
-  return ms > 0 ? (2 * n * n * n) / (ms / 1000) : 0;
+/** Measure timer overhead baseline (median of 1000 empty performance.now() deltas) */
+function measureTimerOverhead(): number {
+  const deltas: number[] = [];
+  for (let i = 0; i < 1000; i++) {
+    const t0 = performance.now();
+    const t1 = performance.now();
+    deltas.push(t1 - t0);
+  }
+  deltas.sort((a, b) => a - b);
+  return deltas[Math.floor(deltas.length / 2)];
 }
 
-function formatFlops(f: number): string {
-  if (f >= 1e12) return `${(f / 1e12).toFixed(2)} TFLOP/s`;
-  if (f >= 1e9) return `${(f / 1e9).toFixed(2)} GFLOP/s`;
-  if (f >= 1e6) return `${(f / 1e6).toFixed(1)} MFLOP/s`;
-  if (f >= 1e3) return `${(f / 1e3).toFixed(0)} KFLOP/s`;
-  return `${f.toFixed(0)} FLOP/s`;
+/** INT8 operations: 1 multiply + 1 add per element = 2N³ ops */
+function totalOps(n: number): number {
+  return 2 * n * n * n;
 }
+
+function opsPerSec(n: number, ms: number): number {
+  return ms > 0 ? totalOps(n) / (ms / 1000) : 0;
+}
+
+function formatOpsRate(f: number): string {
+  if (f >= 1e12) return `${(f / 1e12).toFixed(2)} TOPS`;
+  if (f >= 1e9) return `${(f / 1e9).toFixed(2)} GOPS`;
+  if (f >= 1e6) return `${(f / 1e6).toFixed(1)} MOPS`;
+  if (f >= 1e3) return `${(f / 1e3).toFixed(0)} KOPS`;
+  return `${f.toFixed(0)} OPS`;
+}
+
+/**
+ * Work-amplified timing: repeats the function K times until total > MIN_MEASUREMENT_TIME_MS,
+ * then divides by K. Eliminates 0ms artifacts for small N.
+ */
+function timedAmplified(fn: () => Uint8Array, timerOverheadMs: number): { ms: number; reps: number; result: Uint8Array } {
+  const t0 = performance.now();
+  const result = fn();
+  const singleMs = Math.max(performance.now() - t0 - timerOverheadMs, 0);
+
+  if (singleMs >= MIN_MEASUREMENT_TIME_MS) return { ms: singleMs, reps: 1, result };
+
+  const reps = Math.max(Math.ceil(MIN_MEASUREMENT_TIME_MS / Math.max(singleMs, 0.001)), 2);
+  const start = performance.now();
+  let lastResult = result;
+  for (let i = 0; i < reps; i++) lastResult = fn();
+  const totalTime = Math.max(performance.now() - start - timerOverheadMs, 0);
+  return { ms: totalTime / reps, reps, result: lastResult };
+}
+
+/** Log-log linear regression: fit log(y) = a * log(x) + b. Returns { exponent, rSquared } */
+function logLogFit(xs: number[], ys: number[]): { exponent: number; rSquared: number } {
+  const pairs: [number, number][] = [];
+  for (let i = 0; i < xs.length; i++) {
+    if (xs[i] > 0 && ys[i] > 0) pairs.push([Math.log(xs[i]), Math.log(ys[i])]);
+  }
+  if (pairs.length < 3) return { exponent: 0, rSquared: 0 };
+
+  const np = pairs.length;
+  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+  for (const [lx, ly] of pairs) {
+    sumX += lx; sumY += ly; sumXY += lx * ly; sumXX += lx * lx;
+  }
+  const denom = np * sumXX - sumX * sumX;
+  if (Math.abs(denom) < 1e-15) return { exponent: 0, rSquared: 0 };
+
+  const a = (np * sumXY - sumX * sumY) / denom;
+  const b = (sumY - a * sumX) / np;
+  let ssRes = 0, ssTot = 0;
+  const yMean = sumY / np;
+  for (const [lx, ly] of pairs) {
+    ssRes += (ly - (a * lx + b)) ** 2;
+    ssTot += (ly - yMean) ** 2;
+  }
+  const rSquared = ssTot > 0 ? Math.max(0, 1 - ssRes / ssTot) : 0;
+  return { exponent: a, rSquared };
+}
+
+/** 95% confidence interval half-width */
+function ci95(values: number[]): number {
+  if (values.length < 2) return 0;
+  const n = values.length;
+  const s = stddev(values);
+  const tValues: Record<number, number> = { 2: 12.71, 3: 4.30, 4: 3.18, 5: 2.78, 6: 2.57, 7: 2.45, 8: 2.36, 9: 2.31, 10: 2.26 };
+  const t = tValues[n] ?? 1.96;
+  return (t * s) / Math.sqrt(n);
+}
+
+// Legacy aliases for report compatibility
+function flops(n: number, ms: number): number { return opsPerSec(n, ms); }
+function formatFlops(f: number): string { return formatOpsRate(f); }
 
 function median(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
@@ -254,6 +354,16 @@ interface BenchPoint {
   cvHolo: number;
   energySavedPj: number;
   energySavedPercent: number;
+  // NEW: rigorous statistics
+  meanCpu: number;
+  meanHolo: number;
+  ci95Cpu: number;
+  ci95Holo: number;
+  warmupIterations: number;
+  workAmplificationReps: number;
+  timerOverheadMs: number;
+  rawCpuSamples: number[];
+  rawHoloSamples: number[];
 }
 
 function tokensPerSec(ms: number): number {
@@ -431,12 +541,16 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
     standard: "LINPACK / HPL (High-Performance Linpack)",
     generated: new Date().toISOString(),
     methodology: {
-      metric: "FLOP/s = 2N³ / time",
+      metric: "INT8 OPS = 2N³ / time (1 multiply + 1 add per element)",
       timer: `performance.now() — DOMHighResTimeStamp, ~${TIMER_RESOLUTION_US}µs resolution`,
-      warmup: `${WARMUP_ITERATIONS} iterations per size (JIT stabilization)`,
+      timerOverhead: "Measured via 1000 empty performance.now() pairs, subtracted from all timings",
+      warmup: `Adaptive JIT stabilization: ${warmupCount(16)} iterations at N=16, ${warmupCount(256)} at N=256, ${warmupCount(1024)} at N=1024`,
+      workAmplification: `Small-N timings repeated until total > ${MIN_MEASUREMENT_TIME_MS}ms, then divided by repetition count`,
       sampling: `Median of ${sampleCount(16)}–${sampleCount(1024)} samples (robust to GC/outliers)`,
+      statistics: "Reports: median, mean, std dev, coefficient of variation, 95% CI, all raw samples",
       arithmetic: "INT8 multiply-accumulate mod 256 — identical to TensorRT / ONNX Runtime quantized inference",
       prng: `Mulberry32 deterministic PRNG, seeds ${SEED_A}+N and ${SEED_B}+N`,
+      baselineDefinition: "CPU baseline = single-threaded JavaScript, no SIMD, no WASM, no Web Workers",
     },
     environment: {
       machine: `${hw.oscpu} · ${hw.platform}`,
@@ -460,7 +574,7 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
     },
     results: points.map((p) => ({
       n: p.n,
-      operations: p.ops,
+      operations: `${totalOps(p.n)} INT8 ops (2×${p.n}³)`,
       timing: {
         cpuMs: p.stdMs,
         gpuMs: p.gpuAvailable ? p.gpuMs : "NOT_RUN",
@@ -468,17 +582,32 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
         speedupVsCpu: round(p.speedupVsCpu),
         speedupVsGpu: p.gpuAvailable ? round(p.speedupVsGpu) : "N/A",
       },
-      linpack: {
-        cpuFlops: formatFlops(p.cpuFlops),
-        gpuFlops: p.gpuAvailable ? formatFlops(p.gpuFlops) : "NOT_RUN",
-        vgpuFlops: formatFlops(p.holoFlops),
+      throughput: {
+        cpuOpsPerSec: formatOpsRate(p.cpuFlops),
+        gpuOpsPerSec: p.gpuAvailable ? formatOpsRate(p.gpuFlops) : "NOT_RUN",
+        vgpuOpsPerSec: formatOpsRate(p.holoFlops),
       },
       statistics: {
         samples: p.samples,
-        cpuStdDevMs: p.stdDevCpu,
-        vgpuStdDevMs: p.stdDevHolo,
-        cpuCoefficientOfVariation: `${p.cvCpu.toFixed(1)}%`,
-        vgpuCoefficientOfVariation: `${p.cvHolo.toFixed(1)}%`,
+        warmupIterations: p.warmupIterations,
+        workAmplificationReps: p.workAmplificationReps,
+        timerOverheadMs: p.timerOverheadMs,
+        cpu: {
+          medianMs: p.stdMs,
+          meanMs: p.meanCpu,
+          stdDevMs: p.stdDevCpu,
+          coefficientOfVariation: `${p.cvCpu.toFixed(1)}%`,
+          ci95Ms: `±${p.ci95Cpu}`,
+          rawSamples: p.rawCpuSamples,
+        },
+        vgpu: {
+          medianMs: p.holoMs,
+          meanMs: p.meanHolo,
+          stdDevMs: p.stdDevHolo,
+          coefficientOfVariation: `${p.cvHolo.toFixed(1)}%`,
+          ci95Ms: `±${p.ci95Holo}`,
+          rawSamples: p.rawHoloSamples,
+        },
       },
       integrity: {
         sha256Cpu: p.sha256Cpu,
@@ -489,18 +618,43 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
         checksumOk: p.checksumOk,
       },
     })),
-    selfAnalysis: {
+    scalingAnalysis: (() => {
+      const ns = points.map(p => p.n);
+      const cpuMs = points.map(p => p.stdMs);
+      const holoMs = points.map(p => p.holoMs);
+      // Exclude small N (<64) from fit to avoid JIT noise
+      const stableIdx = points.findIndex(p => p.n >= 64);
+      const stableNs = ns.slice(stableIdx);
+      const stableCpu = cpuMs.slice(stableIdx);
+      const stableHolo = holoMs.slice(stableIdx);
+      const cpuFit = logLogFit(stableNs, stableCpu);
+      const holoFit = logLogFit(stableNs, stableHolo);
+      return {
+        cpuScalingExponent: `${cpuFit.exponent.toFixed(3)} (expected: 3.0)`,
+        cpuRSquared: cpuFit.rSquared.toFixed(4),
+        vgpuScalingExponent: `${holoFit.exponent.toFixed(3)} (expected: ~0)`,
+        vgpuRSquared: holoFit.rSquared.toFixed(4),
+        fitRange: `N=${stableNs[0]}–${stableNs[stableNs.length - 1]} (${stableNs.length} points, small N excluded)`,
+      };
+    })(),
+    statisticalValidation: {
+      totalSizes: points.length,
+      totalMeasurementTimeSec: round(points.reduce((s, p) => s + (p.stdMs + p.holoMs) * p.samples / 1000, 0)),
+      maxCvCpu: `${Math.max(...points.map(p => p.cvCpu)).toFixed(1)}%`,
+      maxCvVgpu: `${Math.max(...points.map(p => p.cvHolo)).toFixed(1)}%`,
       allChecksumsPassed: points.every(p => p.checksumOk),
       allSha256CpuVgpuMatch: points.every(p => p.sha256Cpu === p.sha256Holo),
       anyMismatchDetected: points.some(p => !p.checksumOk || p.sha256Cpu !== p.sha256Holo),
-      cpuScalingExponent: (() => {
-        const p0 = points[0], pL = points[points.length - 1];
-        return (Math.log(pL.stdMs / Math.max(p0.stdMs, 0.001)) / Math.log(pL.n / p0.n)).toFixed(2) + " (expected: 3.0)";
-      })(),
-      vgpuScalingExponent: (() => {
-        const p0 = points[0], pL = points[points.length - 1];
-        return (Math.log(Math.max(pL.holoMs, 0.001) / Math.max(p0.holoMs, 0.001)) / Math.log(pL.n / p0.n)).toFixed(2) + " (expected: ~0)";
-      })(),
+    },
+    claim: {
+      statement: "vGPU delivers N×–N× speedup over single-threaded JS CPU for INT8 GEMM via pre-computed retrieval. Results are byte-identical (SHA-256 verified).",
+      baselineDefinition: "CPU baseline = single-threaded JavaScript reference implementation. No SIMD, no multithreading, no WASM, no Web Workers.",
+      limitations: [
+        "Does NOT claim faster than optimized CPU (WASM SIMD, multithreaded)",
+        "Does NOT claim faster than native GPU hardware",
+        "Does NOT represent general-purpose acceleration",
+        "Specific to INT8 matrix multiplication with deterministic inputs",
+      ],
     },
     independentVerification: {
       step1: "Implement Mulberry32 PRNG: seed = (seed + 0x6D2B79F5) | 0; t = imul(seed ^ (seed >>> 15), 1 | seed); t = (t + imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296",
@@ -716,7 +870,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           <div className="rounded-xl p-2 space-y-1" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             <div className="flex items-center justify-between gap-2">
               <span className="text-[11px] uppercase tracking-widest font-bold" style={{ color: baseColor }}>
-                {baseLabel} vs Hologram vGPU — LINPACK Results
+                {baseLabel} vs Hologram vGPU — INT8 OPS Results
               </span>
               <button
                 onClick={() => exportReport(points, precomputeMs, precomputeMethod, hw)}
@@ -729,7 +883,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             </div>
             <p className="text-[11px] leading-relaxed" style={{ color: P.muted }}>
               <strong style={{ color: P.text }}>LINPACK / HPL</strong> — FLOP/s via <code style={{ color: P.gold, background: "hsla(38, 40%, 65%, 0.08)", padding: "0px 3px", borderRadius: "3px", fontSize: 10 }}>2N³ / time</code>.
-              Median of {sampleCount(16)}–{sampleCount(1024)} samples, {WARMUP_ITERATIONS} warmup, ~{TIMER_RESOLUTION_US}µs timer. Zero simulation — all values measured.
+              Median of {sampleCount(16)}–{sampleCount(1024)} samples, adaptive warmup ({warmupCount(16)}–{warmupCount(1024)} iters), work-amplified timing (≥{MIN_MEASUREMENT_TIME_MS}ms), ~{TIMER_RESOLUTION_US}µs timer. Zero simulation — all values measured.
             </p>
           </div>
 
@@ -941,34 +1095,64 @@ function ForensicPanel({ points, demoType }: { points: BenchPoint[]; demoType: "
 
 function ScalingExponent({ points, demoType }: { points: BenchPoint[]; demoType: "cpu" | "gpu" }) {
   const isCpu = demoType === "cpu";
-  const p0 = points[0], pL = points[points.length - 1];
-  const baseMs0 = isCpu ? p0.stdMs : p0.gpuMs;
-  const baseMsL = isCpu ? pL.stdMs : pL.gpuMs;
-  const baseExp = Math.log(baseMsL / Math.max(baseMs0, 0.001)) / Math.log(pL.n / p0.n);
-  const holoExp = Math.log(Math.max(pL.holoMs, 0.001) / Math.max(p0.holoMs, 0.001)) / Math.log(pL.n / p0.n);
-
   const baseColor = isCpu ? P.red : P.blue;
   const baseLabel = isCpu ? "CPU" : "GPU";
 
-  // Self-analysis: flag if exponents are unexpected
-  const baseExpOk = baseExp >= 2.0 && baseExp <= 4.0;
-  const holoExpOk = holoExp < 1.5;
+  // Use proper log-log fit with R² (exclude small N <64 to avoid JIT noise)
+  const stablePoints = points.filter(p => p.n >= 64);
+  const ns = stablePoints.map(p => p.n);
+  const baseMs = stablePoints.map(p => isCpu ? p.stdMs : p.gpuMs);
+  const holoMs = stablePoints.map(p => p.holoMs);
+
+  const baseFit = logLogFit(ns, baseMs);
+  const holoFit = logLogFit(ns, holoMs);
+
+  const baseExpOk = baseFit.exponent >= 2.0 && baseFit.exponent <= 4.0;
+  const holoExpOk = holoFit.exponent < 1.5;
+
+  // Max CV across all points
+  const maxCvCpu = Math.max(...points.map(p => p.cvCpu));
+  const maxCvHolo = Math.max(...points.map(p => p.cvHolo));
 
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <div className="rounded-xl p-2 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-        <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: baseColor }}>{baseLabel} Scaling</p>
-        <p className="text-lg font-mono font-light" style={{ color: baseColor }}>{baseExp.toFixed(2)}</p>
-        <p className="text-[10px]" style={{ color: baseExpOk ? P.dim : P.red }}>
-          {baseExpOk ? "Expected ~3.0 for O(N³)" : `⚠ Unexpected — ${isCpu ? "JIT" : "GPU"} effects`}
-        </p>
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl p-2 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: baseColor }}>{baseLabel} Scaling</p>
+          <p className="text-lg font-mono font-light" style={{ color: baseColor }}>{baseFit.exponent.toFixed(3)}</p>
+          <p className="text-[10px]" style={{ color: baseExpOk ? P.dim : P.red }}>
+            {baseExpOk ? `Expected ~3.0 · R²=${baseFit.rSquared.toFixed(3)}` : `⚠ Unexpected — ${isCpu ? "JIT" : "GPU"} effects`}
+          </p>
+        </div>
+        <div className="rounded-xl p-2 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: P.gold }}>vGPU Scaling</p>
+          <p className="text-lg font-mono font-light" style={{ color: P.gold }}>{holoFit.exponent.toFixed(3)}</p>
+          <p className="text-[10px]" style={{ color: holoExpOk ? P.dim : P.red }}>
+            {holoExpOk ? `Expected ~0 · R²=${holoFit.rSquared.toFixed(3)}` : "⚠ Unexpected — check retrieval"}
+          </p>
+        </div>
       </div>
-      <div className="rounded-xl p-2 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-        <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: P.gold }}>vGPU Scaling</p>
-        <p className="text-lg font-mono font-light" style={{ color: P.gold }}>{holoExp.toFixed(2)}</p>
-        <p className="text-[10px]" style={{ color: holoExpOk ? P.dim : P.red }}>
-          {holoExpOk ? "Expected ~0 for O(1)" : "⚠ Unexpected — check retrieval"}
-        </p>
+      {/* Statistical stability summary */}
+      <div className="rounded-xl p-2" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <p className="text-[9px] uppercase tracking-widest font-bold text-center mb-1" style={{ color: P.green }}>Statistical Validation</p>
+        <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+          <div>
+            <span className="font-mono font-bold" style={{ color: P.text }}>{points.length}</span>
+            <p style={{ color: P.dim }}>sizes tested</p>
+          </div>
+          <div>
+            <span className="font-mono font-bold" style={{ color: P.text }}>{points.reduce((s, p) => s + p.samples, 0)}</span>
+            <p style={{ color: P.dim }}>total samples</p>
+          </div>
+          <div>
+            <span className="font-mono font-bold" style={{ color: maxCvCpu < 15 ? P.green : P.red }}>{maxCvCpu.toFixed(1)}%</span>
+            <p style={{ color: P.dim }}>max CV (CPU)</p>
+          </div>
+          <div>
+            <span className="font-mono font-bold" style={{ color: maxCvHolo < 15 ? P.green : P.red }}>{maxCvHolo.toFixed(1)}%</span>
+            <p style={{ color: P.dim }}>max CV (vGPU)</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1161,22 +1345,29 @@ export default function ConstantTimeBenchmark() {
       const a = seededMatrix(n, SEED_A + n);
       const b = seededMatrix(n, SEED_B + n);
 
-      // Warmup
-      for (let w = 0; w < WARMUP_ITERATIONS; w++) {
+      // Timer overhead measurement
+      const timerOverheadMs = measureTimerOverhead();
+
+      // Adaptive JIT stabilization warmup
+      const warmups = warmupCount(n);
+      for (let w = 0; w < warmups; w++) {
         standardMatmul(a, b, n);
         cache.retrieve(a, b, n);
       }
       await new Promise((r) => setTimeout(r, 5));
 
-      // CPU measurement
+      // CPU measurement with work amplification
       const cpuSamples: number[] = [];
       let stdResult: Uint8Array = new Uint8Array(0);
+      let cpuReps = 1;
       for (let s = 0; s < numSamples; s++) {
-        const t0 = performance.now();
-        stdResult = standardMatmul(a, b, n);
-        cpuSamples.push(performance.now() - t0);
+        const amp = timedAmplified(() => standardMatmul(a, b, n), timerOverheadMs);
+        cpuSamples.push(amp.ms);
+        stdResult = amp.result;
+        cpuReps = amp.reps;
       }
       const stdMs = median(cpuSamples);
+      const meanCpuMs = cpuSamples.reduce((s, v) => s + v, 0) / cpuSamples.length;
 
       // GPU measurement
       let gpuMs = 0;
@@ -1188,23 +1379,24 @@ export default function ConstantTimeBenchmark() {
           for (let s = 0; s < numSamples; s++) {
             const g0 = performance.now();
             gpuResult = await gpuMatmul(a, b, n);
-            gpuSamples.push(performance.now() - g0);
+            gpuSamples.push(Math.max(performance.now() - g0 - timerOverheadMs, 0));
           }
           gpuMs = median(gpuSamples);
           gpuAvailable = gpuResult !== null;
         } catch { gpuAvailable = false; }
       }
 
-      // vGPU measurement
+      // vGPU measurement with work amplification
       const fpKey = fingerprint(a, b, n);
       const holoSamples: number[] = [];
       let holoResult: Uint8Array | null = null;
       for (let s = 0; s < numSamples; s++) {
-        const h1 = performance.now();
-        holoResult = cache.retrieve(a, b, n);
-        holoSamples.push(performance.now() - h1);
+        const amp = timedAmplified(() => cache.retrieve(a, b, n)!, timerOverheadMs);
+        holoSamples.push(amp.ms);
+        holoResult = amp.result;
       }
       const holoMs = median(holoSamples);
+      const meanHoloMs = holoSamples.reduce((s, v) => s + v, 0) / holoSamples.length;
 
       const checksumStd = matrixChecksum(stdResult);
       const checksumGpu = gpuResult ? matrixChecksum(gpuResult) : -1;
@@ -1251,6 +1443,16 @@ export default function ConstantTimeBenchmark() {
         cvHolo: round(coeffOfVariation(holoSamples)),
         energySavedPj: ops * ENERGY_PER_INT8_MAC_PJ,
         energySavedPercent: ops > 0 ? (1 - (n * n) / ops) * 100 : 0,
+        // NEW rigorous statistics
+        meanCpu: round(meanCpuMs),
+        meanHolo: round(meanHoloMs),
+        ci95Cpu: round(ci95(cpuSamples)),
+        ci95Holo: round(ci95(holoSamples)),
+        warmupIterations: warmups,
+        workAmplificationReps: cpuReps,
+        timerOverheadMs: round(timerOverheadMs),
+        rawCpuSamples: cpuSamples.map(v => round(v)),
+        rawHoloSamples: holoSamples.map(v => round(v)),
       };
 
       setPoints((prev) => [...prev, point]);
