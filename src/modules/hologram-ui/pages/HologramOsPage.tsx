@@ -162,6 +162,24 @@ export default function HologramOsPage() {
     if (userText) await chatHistory.autoTitle(convId, userText);
   }, [chatHistory.isAuthenticated, chatHistory.createConversation, chatHistory.saveMessage, chatHistory.autoTitle]);
 
+  // ── Load active conversation messages as voice context ─────────────────
+  const [voiceChatContext, setVoiceChatContext] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+
+  useEffect(() => {
+    if (!chatHistory.activeConversationId || !chatHistory.isAuthenticated) {
+      setVoiceChatContext([]);
+      return;
+    }
+    chatHistory.loadMessages(chatHistory.activeConversationId).then((msgs) => {
+      setVoiceChatContext(
+        msgs
+          .filter((m) => m.role === "user" || m.role === "assistant")
+          .slice(-20) // last 20 messages for context window
+          .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
+      );
+    });
+  }, [chatHistory.activeConversationId, chatHistory.isAuthenticated]);
+
   // ── Auto-hide widgets in focus mode ────────────────────────────────────
   useEffect(() => {
     widgetStates[activeDesktop].setAllHidden(isFocus);
@@ -320,6 +338,7 @@ export default function HologramOsPage() {
                   observerBriefing={observer.promptText}
                   screenContext={screenCtx.getPromptContext()}
                   onExchange={handleVoiceExchange}
+                  chatContext={voiceChatContext}
                 />
 
                 {/* Wavefront glow at the leading edge of the peel */}

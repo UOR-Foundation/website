@@ -152,6 +152,8 @@ interface DesktopSurfaceProps {
   fusionContext?: string;
   /** Called after each voice exchange for persistence */
   onExchange?: (userText: string, assistantText: string) => void;
+  /** Chat messages for voice context injection */
+  chatContext?: { role: "user" | "assistant"; content: string }[];
 }
 
 export default function DesktopSurface({
@@ -172,6 +174,7 @@ export default function DesktopSurface({
   screenContext,
   fusionContext,
   onExchange,
+  chatContext,
 }: DesktopSurfaceProps) {
   const navigate = useNavigate();
   const P = useMemo(() => palette(mode), [mode]);
@@ -463,6 +466,7 @@ export default function DesktopSurface({
                 screenContext={screenContext}
                 fusionContext={fusionContext}
                 onExchange={onExchange}
+                chatContext={chatContext}
               />
             </div>
           </div>
