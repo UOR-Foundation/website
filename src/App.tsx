@@ -117,6 +117,7 @@ const TrustGraphPage = lazy(() => import("@/modules/trust-graph/pages/TrustGraph
 const HologramUiPage = lazy(() => import("@/modules/hologram-ui/pages/HologramUiPage"));
 const HologramOsPage = lazy(() => import("@/modules/hologram-ui/pages/HologramOsPage"));
 const HologramInstallPage = lazy(() => import("@/modules/hologram-ui/pages/HologramInstallPage"));
+const HologramLeadCapturePage = lazy(() => import("@/modules/hologram-ui/components/HologramLeadCapture"));
 const HologramConsolePage = lazy(() => import("@/modules/hologram-ui/pages/HologramConsolePage"));
 const HologramComputePage = lazy(() => import("@/modules/hologram-compute/HologramComputePage"));
 const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
@@ -265,6 +266,7 @@ const App = () => {
             <Route path="/hologram-os" element={<HologramOsPage />} />
             <Route path="/hologram" element={<HologramOsPage />} />
             <Route path="/hologram-install" element={<HologramInstallPage />} />
+            <Route path="/waitlist" element={<HologramLeadCapturePage />} />
             <Route path="/hologram-console" element={<HologramConsolePage />} />
             <Route path="/hologram-compute" element={<HologramComputePage />} />
             <Route path="/code-kg" element={<CodeKgPage />} />

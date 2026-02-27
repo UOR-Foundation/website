@@ -587,6 +587,27 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_submissions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          use_case: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          use_case?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          use_case?: string | null
+        }
+        Relationships: []
+      }
       lens_blueprints: {
         Row: {
           author_id: string | null
