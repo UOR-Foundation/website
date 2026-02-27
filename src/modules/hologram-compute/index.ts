@@ -26,3 +26,16 @@ export type {
   ComputeProvider,
   CpuLutBenchmarkResult,
 } from "./providers";
+
+export {
+  MUL_TABLE,
+  MUL_TABLE_BYTES,
+  lutMatmul,
+  standardMatmul,
+  HologramComputeCache,
+  seededMatrix,
+  fingerprint,
+  matrixChecksum,
+} from "./hologram-matmul";
+
+export type { PrecomputeStats } from "./hologram-matmul";
