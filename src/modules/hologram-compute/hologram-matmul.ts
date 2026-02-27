@@ -208,6 +208,123 @@ export function matrixChecksum(m: Uint8Array): number {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// WebGPU Matrix Multiplication — Real GPU Compute
+// ═══════════════════════════════════════════════════════════════
+
+const MATMUL_SHADER = /* wgsl */ `
+@group(0) @binding(0) var<storage, read> a: array<u32>;
+@group(0) @binding(1) var<storage, read> b: array<u32>;
+@group(0) @binding(2) var<storage, read_write> c: array<u32>;
+@group(0) @binding(3) var<uniform> params: vec4<u32>;
+
+@compute @workgroup_size(16, 16)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+  let i = gid.x;
+  let j = gid.y;
+  let n = params.x;
+  if (i >= n || j >= n) { return; }
+
+  var sum: u32 = 0u;
+  for (var k: u32 = 0u; k < n; k = k + 1u) {
+    sum = (sum + a[i * n + k] * b[k * n + j]) & 0xFFu;
+  }
+  c[i * n + j] = sum;
+}
+`;
+
+let _gpuDevice: GPUDevice | null = null;
+let _gpuPipeline: GPUComputePipeline | null = null;
+let _gpuInitFailed = false;
+
+async function getGpuPipeline(): Promise<{ device: GPUDevice; pipeline: GPUComputePipeline } | null> {
+  if (_gpuInitFailed) return null;
+  if (_gpuDevice && _gpuPipeline) return { device: _gpuDevice, pipeline: _gpuPipeline };
+
+  try {
+    if (!navigator.gpu) { _gpuInitFailed = true; return null; }
+    const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
+    if (!adapter) { _gpuInitFailed = true; return null; }
+    _gpuDevice = await adapter.requestDevice();
+    const module = _gpuDevice.createShaderModule({ code: MATMUL_SHADER });
+    _gpuPipeline = _gpuDevice.createComputePipeline({
+      layout: "auto",
+      compute: { module, entryPoint: "main" },
+    });
+    return { device: _gpuDevice, pipeline: _gpuPipeline };
+  } catch {
+    _gpuInitFailed = true;
+    return null;
+  }
+}
+
+/**
+ * WebGPU-accelerated matmul — real GPU compute shader.
+ *
+ * Uploads INT8 matrices as u32-per-element storage buffers,
+ * dispatches a 16×16 workgroup compute shader, reads back results.
+ *
+ * SCALING: O(N³) on GPU — massively parallel but still cubic.
+ * For large N, GPU is faster than CPU due to thousands of cores.
+ * But it still grows with N, unlike holographic O(1) retrieval.
+ *
+ * Returns null if WebGPU is unavailable.
+ */
+export async function gpuMatmul(a: Uint8Array, b: Uint8Array, n: number): Promise<Uint8Array | null> {
+  const gpu = await getGpuPipeline();
+  if (!gpu) return null;
+  const { device, pipeline } = gpu;
+
+  const elementCount = n * n;
+
+  // Upload as u32 arrays (one element per u32 for simplicity)
+  const aU32 = new Uint32Array(elementCount);
+  const bU32 = new Uint32Array(elementCount);
+  for (let i = 0; i < elementCount; i++) { aU32[i] = a[i]; bU32[i] = b[i]; }
+
+  const bufA = device.createBuffer({ size: aU32.byteLength, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+  const bufB = device.createBuffer({ size: bU32.byteLength, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+  const bufC = device.createBuffer({ size: elementCount * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
+  const bufParams = device.createBuffer({ size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+  const bufRead = device.createBuffer({ size: elementCount * 4, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
+
+  device.queue.writeBuffer(bufA, 0, aU32);
+  device.queue.writeBuffer(bufB, 0, bU32);
+  device.queue.writeBuffer(bufParams, 0, new Uint32Array([n, 0, 0, 0]));
+
+  const bindGroup = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: { buffer: bufA } },
+      { binding: 1, resource: { buffer: bufB } },
+      { binding: 2, resource: { buffer: bufC } },
+      { binding: 3, resource: { buffer: bufParams } },
+    ],
+  });
+
+  const encoder = device.createCommandEncoder();
+  const pass = encoder.beginComputePass();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup);
+  pass.dispatchWorkgroups(Math.ceil(n / 16), Math.ceil(n / 16));
+  pass.end();
+  encoder.copyBufferToBuffer(bufC, 0, bufRead, 0, elementCount * 4);
+  device.queue.submit([encoder.finish()]);
+
+  await bufRead.mapAsync(GPUMapMode.READ);
+  const resultU32 = new Uint32Array(bufRead.getMappedRange().slice(0));
+  bufRead.unmap();
+
+  // Convert back to Uint8Array
+  const result = new Uint8Array(elementCount);
+  for (let i = 0; i < elementCount; i++) result[i] = resultU32[i] & 0xff;
+
+  // Cleanup
+  bufA.destroy(); bufB.destroy(); bufC.destroy(); bufParams.destroy(); bufRead.destroy();
+
+  return result;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // Hologram Compute Cache — The Holographic Surface
 // ═══════════════════════════════════════════════════════════════
 

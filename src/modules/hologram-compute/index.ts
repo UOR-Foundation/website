@@ -32,6 +32,7 @@ export {
   MUL_TABLE_BYTES,
   lutMatmul,
   standardMatmul,
+  gpuMatmul,
   HologramComputeCache,
   seededMatrix,
   fingerprint,
