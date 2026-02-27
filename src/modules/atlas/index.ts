@@ -58,3 +58,16 @@ export type {
   G2StructuralTest,
   BoundaryReport,
 } from "./boundary";
+
+// Morphism map: 12 projection domains → 5 categorical operations
+export {
+  classifyDomains,
+  operationDistribution,
+  runMorphismMapVerification,
+} from "./morphism-map";
+export type {
+  CategoricalOperation,
+  AtlasMorphismClassification,
+  MorphismMapReport,
+  MorphismMapTest,
+} from "./morphism-map";
