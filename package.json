@@ -22,6 +22,8 @@
     "@huggingface/transformers": "^3.8.1",
     "@lovable.dev/cloud-auth-js": "^0.0.3",
     "@noble/post-quantum": "^0.5.4",
+    "@picovoice/porcupine-web": "^4.0.0",
+    "@picovoice/web-voice-processor": "^4.0.9",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-toast": "^1.2.14",
