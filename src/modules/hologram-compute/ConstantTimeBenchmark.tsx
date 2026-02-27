@@ -75,7 +75,18 @@ function detectHardware(): HardwareInfo {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// Benchmark Configuration
+// Benchmark Configuration — LINPACK-aligned methodology
+// ══════════════════════════════════════════════════════════════════════════════
+//
+// Standard: LINPACK / HPL (High-Performance Linpack)
+//   - Metric: FLOP/s = 2N³ / time  (each MAC = 1 multiply + 1 add = 2 FLOPs)
+//   - Timing: performance.now() (DOMHighResTimeStamp, monotonic, µs-precision
+//     when crossOriginIsolated; 5µs-100µs otherwise per Spectre mitigations)
+//   - Warmup: JIT stabilization passes before measurement
+//   - Sampling: Multiple iterations per size; report median (robust to GC/outliers)
+//   - Statistics: stddev, min, max, coefficient of variation (CV)
+//
+// Reference: https://www.netlib.org/utk/people/JackDongarra/faq-linpack.html
 // ══════════════════════════════════════════════════════════════════════════════
 
 /** CPU demo sizes — capped at 1280 to keep single-thread runtime reasonable */
@@ -86,6 +97,55 @@ const GPU_SIZES = [16, 32, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1280, 153
 const ALL_SIZES = [...new Set([...CPU_SIZES, ...GPU_SIZES])].sort((a, b) => a - b);
 const SEED_A = 42;
 const SEED_B = 137;
+
+/**
+ * Number of warmup iterations to stabilize JIT before measurement.
+ * Small N: more warmup needed (JIT amortization). Large N: 1 is enough.
+ */
+const WARMUP_ITERATIONS = 2;
+/**
+ * Number of measured samples per size. Median is reported.
+ * For N ≥ 512 only 3 samples (too expensive for more). For small N: 5.
+ */
+function sampleCount(n: number): number {
+  if (n >= 512) return 3;
+  if (n >= 256) return 5;
+  return 7;
+}
+
+/** Timer precision check — crossOriginIsolated gives µs precision */
+const TIMER_RESOLUTION_US = typeof crossOriginIsolated !== "undefined" && crossOriginIsolated ? 5 : 100;
+
+/** LINPACK FLOPS: each multiply-accumulate = 2 floating-point ops */
+function flops(n: number, ms: number): number {
+  return ms > 0 ? (2 * n * n * n) / (ms / 1000) : 0;
+}
+
+function formatFlops(f: number): string {
+  if (f >= 1e12) return `${(f / 1e12).toFixed(2)} TFLOP/s`;
+  if (f >= 1e9) return `${(f / 1e9).toFixed(2)} GFLOP/s`;
+  if (f >= 1e6) return `${(f / 1e6).toFixed(1)} MFLOP/s`;
+  if (f >= 1e3) return `${(f / 1e3).toFixed(0)} KFLOP/s`;
+  return `${f.toFixed(0)} FLOP/s`;
+}
+
+/** Statistical helpers */
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
+function stddev(values: number[]): number {
+  const mean = values.reduce((s, v) => s + v, 0) / values.length;
+  return Math.sqrt(values.reduce((s, v) => s + (v - mean) ** 2, 0) / values.length);
+}
+
+/** Coefficient of variation — measure of measurement stability (lower = better) */
+function coeffOfVariation(values: number[]): number {
+  const mean = values.reduce((s, v) => s + v, 0) / values.length;
+  return mean > 0 ? (stddev(values) / mean) * 100 : 0;
+}
 
 interface BenchPoint {
   n: number;
@@ -114,6 +174,15 @@ interface BenchPoint {
   fingerprintKey: string;
   sampleCpu: { topLeft: number[][]; bottomRight: number[][] };
   sampleHolo: { topLeft: number[][]; bottomRight: number[][] };
+  // LINPACK-aligned metrics
+  cpuFlops: number;
+  gpuFlops: number;
+  holoFlops: number;
+  samples: number;
+  stdDevCpu: number;
+  stdDevHolo: number;
+  cvCpu: number;
+  cvHolo: number;
 }
 
 function tokensPerSec(ms: number): number {
@@ -597,6 +666,23 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
       sha256Verification: allSha256Match ? "PASS — Every SHA-256 digest matches" : "FAIL",
     },
 
+    methodology: {
+      standard: "LINPACK / HPL (High-Performance Linpack) aligned",
+      reference: "https://www.netlib.org/utk/people/JackDongarra/faq-linpack.html",
+      flopsFormula: "2N³ / time_seconds (each MAC = multiply + add = 2 FLOPs)",
+      timing: {
+        api: "performance.now() — DOMHighResTimeStamp, monotonic",
+        resolutionMicroseconds: TIMER_RESOLUTION_US,
+        crossOriginIsolated: typeof crossOriginIsolated !== "undefined" && crossOriginIsolated,
+      },
+      sampling: {
+        warmupIterations: WARMUP_ITERATIONS,
+        samplesPerSize: "3–7 depending on N (fewer for large N to keep runtime practical)",
+        aggregation: "Median (robust to GC pauses and JIT outliers)",
+        statisticalMetrics: ["stddev", "coefficient of variation (CV%)"],
+      },
+    },
+
     reproducibility: {
       prngAlgorithm: "Mulberry32 (32-bit state, full-period)",
       prngSeedA: SEED_A,
@@ -663,12 +749,28 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
     results: points.map((p) => ({
       matrixDimension: p.n,
       totalMultiplications: p.ops,
+      totalFLOPs: 2 * p.ops,
       timing: {
         cpuMs: p.stdMs,
         gpuMs: p.gpuAvailable ? p.gpuMs : "N/A",
         vgpuMs: p.holoMs,
         speedupVsCpu: `${p.speedupVsCpu.toFixed(1)}×`,
         speedupVsGpu: p.gpuAvailable ? `${p.speedupVsGpu.toFixed(1)}×` : "N/A",
+      },
+      performance: {
+        cpuFlops: p.cpuFlops,
+        cpuFlopsFormatted: formatFlops(p.cpuFlops),
+        gpuFlops: p.gpuAvailable ? p.gpuFlops : "N/A",
+        gpuFlopsFormatted: p.gpuAvailable ? formatFlops(p.gpuFlops) : "N/A",
+      },
+      statistical: {
+        samplesPerMeasurement: p.samples,
+        warmupIterations: WARMUP_ITERATIONS,
+        aggregation: "median",
+        cpuStdDevMs: p.stdDevCpu,
+        cpuCoefficientOfVariation: `${p.cvCpu.toFixed(1)}%`,
+        vgpuStdDevMs: p.stdDevHolo,
+        vgpuCoefficientOfVariation: `${p.cvHolo.toFixed(1)}%`,
       },
       integrity: {
         sha256Cpu: p.sha256Cpu,
@@ -861,38 +963,59 @@ export default function ConstantTimeBenchmark() {
     for (let i = 0; i < demoSizes.length; i++) {
       if (cancelRef.current) break;
       const n = demoSizes[i];
-      setCurrentSize(`${n}×${n}`);
+      const numSamples = sampleCount(n);
+      setCurrentSize(`${n}×${n} (${numSamples} samples)`);
       await new Promise((r) => setTimeout(r, 30));
 
       const a = seededMatrix(n, SEED_A + n);
       const b = seededMatrix(n, SEED_B + n);
 
-      // ── CPU ──
-      const t0 = performance.now();
-      const stdResult = standardMatmul(a, b, n);
-      const stdMs = performance.now() - t0;
+      // ── Warmup: JIT stabilization (results discarded) ──
+      for (let w = 0; w < WARMUP_ITERATIONS; w++) {
+        standardMatmul(a, b, n);
+        cache.retrieve(a, b, n);
+      }
+      await new Promise((r) => setTimeout(r, 5)); // yield after warmup
 
-      // ── GPU ──
+      // ── Multi-sample measurement: CPU ──
+      const cpuSamples: number[] = [];
+      let stdResult: Uint8Array = new Uint8Array(0);
+      for (let s = 0; s < numSamples; s++) {
+        const t0 = performance.now();
+        stdResult = standardMatmul(a, b, n);
+        cpuSamples.push(performance.now() - t0);
+      }
+      const stdMs = median(cpuSamples);
+
+      // ── Multi-sample measurement: GPU ──
       let gpuMs = 0;
       let gpuResult: Uint8Array | null = null;
       let gpuAvailable = false;
+      const gpuSamples: number[] = [];
       if (demo === "gpu") {
         try {
-          const g0 = performance.now();
-          gpuResult = await gpuMatmul(a, b, n);
-          gpuMs = performance.now() - g0;
+          for (let s = 0; s < numSamples; s++) {
+            const g0 = performance.now();
+            gpuResult = await gpuMatmul(a, b, n);
+            gpuSamples.push(performance.now() - g0);
+          }
+          gpuMs = median(gpuSamples);
           gpuAvailable = gpuResult !== null;
         } catch {
           gpuAvailable = false;
         }
       }
 
-      // ── vGPU ──
+      // ── Multi-sample measurement: vGPU ──
       const fpKey = fingerprint(a, b, n);
-      const h1 = performance.now();
-      const holoResult = cache.retrieve(a, b, n);
-      const h2 = performance.now();
-      const holoMs = h2 - h1;
+      const holoSamples: number[] = [];
+      let holoResult: Uint8Array | null = null;
+      for (let s = 0; s < numSamples; s++) {
+        const h1 = performance.now();
+        holoResult = cache.retrieve(a, b, n);
+        holoSamples.push(performance.now() - h1);
+      }
+      const holoMs = median(holoSamples);
 
       const checksumStd = matrixChecksum(stdResult);
       const checksumGpu = gpuResult ? matrixChecksum(gpuResult) : -1;
@@ -934,6 +1057,15 @@ export default function ConstantTimeBenchmark() {
         fingerprintKey: fpKey,
         sampleCpu,
         sampleHolo,
+        // LINPACK-aligned metrics
+        cpuFlops: flops(n, stdMs),
+        gpuFlops: gpuAvailable ? flops(n, gpuMs) : 0,
+        holoFlops: flops(n, holoMs),
+        samples: numSamples,
+        stdDevCpu: round(stddev(cpuSamples)),
+        stdDevHolo: round(stddev(holoSamples)),
+        cvCpu: round(coeffOfVariation(cpuSamples)),
+        cvHolo: round(coeffOfVariation(holoSamples)),
       };
 
       setPoints((prev) => [...prev, point]);
@@ -1287,7 +1419,12 @@ export default function ConstantTimeBenchmark() {
           {/* Results table for CPU demo */}
           {cpuState === "done" && cpuPoints.length > 0 && (
             <div className="space-y-1">
-              <p className="text-[11px] uppercase tracking-widest font-bold px-1" style={{ color: P.red }}>Demo 1 Results — CPU vs Hologram vGPU</p>
+              <div className="flex items-center justify-between px-2 py-1.5" style={{ background: P.card, borderBottom: `1px solid ${P.cardBorder}` }}>
+                <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: P.red }}>Demo 1 Results — CPU vs Hologram vGPU</span>
+                <span className="text-[9px] px-2 py-0.5 rounded-full font-medium" style={{ background: "hsla(210, 50%, 60%, 0.1)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}>
+                  LINPACK · median of N samples · {WARMUP_ITERATIONS} warmup · {TIMER_RESOLUTION_US}µs timer
+                </span>
+              </div>
               <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: `1px solid ${P.cardBorder}` }}>
                 <table className="w-full text-[12px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
                   <thead>
@@ -1295,8 +1432,10 @@ export default function ConstantTimeBenchmark() {
                       <th className="text-left py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
                       <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
                       <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.red, borderBottom: `1px solid ${P.cardBorder}` }}>CPU ms</th>
+                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>CPU FLOP/s</th>
                       <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
                       <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
+                      <th className="text-center py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Samples</th>
                       <th className="text-center py-1.5 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>✓</th>
                     </tr>
                   </thead>
@@ -1306,10 +1445,12 @@ export default function ConstantTimeBenchmark() {
                         <td className="py-1 px-2 font-semibold" style={{ color: P.text }}>{p.n}</td>
                         <td className="py-1 px-2 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
                         <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.red }}>{p.stdMs.toFixed(1)}</td>
+                        <td className="py-1 px-2 text-right tabular-nums text-[11px]" style={{ color: P.muted }}>{formatFlops(p.cpuFlops)}</td>
                         <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
                         <td className="py-1 px-2 text-right font-bold tabular-nums" style={{ color: p.speedupVsCpu > 10 ? P.gold : P.text }}>
                           {p.speedupVsCpu >= 1000 ? `${(p.speedupVsCpu / 1000).toFixed(1)}K×` : `${p.speedupVsCpu.toFixed(0)}×`}
                         </td>
+                        <td className="py-1 px-2 text-center text-[11px]" style={{ color: P.dim }}>{p.samples}</td>
                         <td className="py-1 px-2 text-center" style={{ color: p.checksumOk ? P.green : P.red }}>{p.checksumOk ? "✓" : "✗"}</td>
                       </tr>
                     ))}
@@ -1322,7 +1463,12 @@ export default function ConstantTimeBenchmark() {
           {/* Results table for GPU demo */}
           {gpuState === "done" && gpuPoints.length > 0 && (
             <div className="space-y-1">
-              <p className="text-[11px] uppercase tracking-widest font-bold px-1" style={{ color: P.blue }}>Demo 2 Results — GPU vs Hologram vGPU</p>
+              <div className="flex items-center justify-between px-2 py-1.5" style={{ background: P.card, borderBottom: `1px solid ${P.cardBorder}` }}>
+                <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: P.blue }}>Demo 2 Results — GPU vs Hologram vGPU</span>
+                <span className="text-[9px] px-2 py-0.5 rounded-full font-medium" style={{ background: "hsla(210, 50%, 60%, 0.1)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}>
+                  LINPACK · median of N samples · {WARMUP_ITERATIONS} warmup · {TIMER_RESOLUTION_US}µs timer
+                </span>
+              </div>
               <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: `1px solid ${P.cardBorder}` }}>
                 <table className="w-full text-[12px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
                   <thead>
@@ -1330,8 +1476,10 @@ export default function ConstantTimeBenchmark() {
                       <th className="text-left py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
                       <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
                       <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.blue, borderBottom: `1px solid ${P.cardBorder}` }}>GPU ms</th>
+                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>GPU FLOP/s</th>
                       <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
                       <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
+                      <th className="text-center py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Samples</th>
                       <th className="text-center py-1.5 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>✓</th>
                     </tr>
                   </thead>
@@ -1341,10 +1489,12 @@ export default function ConstantTimeBenchmark() {
                         <td className="py-1 px-2 font-semibold" style={{ color: P.text }}>{p.n}</td>
                         <td className="py-1 px-2 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
                         <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.blue }}>{p.gpuMs.toFixed(1)}</td>
+                        <td className="py-1 px-2 text-right tabular-nums text-[11px]" style={{ color: P.muted }}>{formatFlops(p.gpuFlops)}</td>
                         <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
                         <td className="py-1 px-2 text-right font-bold tabular-nums" style={{ color: p.speedupVsGpu > 10 ? P.gold : P.text }}>
                           {p.speedupVsGpu >= 1000 ? `${(p.speedupVsGpu / 1000).toFixed(1)}K×` : `${p.speedupVsGpu.toFixed(0)}×`}
                         </td>
+                        <td className="py-1 px-2 text-center text-[11px]" style={{ color: P.dim }}>{p.samples}</td>
                         <td className="py-1 px-2 text-center" style={{ color: p.checksumOk ? P.green : P.red }}>{p.checksumOk ? "✓" : "✗"}</td>
                       </tr>
                     ))}
