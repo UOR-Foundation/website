@@ -35,6 +35,8 @@ const ALLOWED_MODELS = new Set([
   "onnx-community/whisper-base",
   "onnx-community/whisper-base.en",
   "openai/whisper-tiny.en",
+  // Stable Diffusion 1.5 — browser-optimized ONNX (WebNN/WebGPU)
+  "microsoft/stable-diffusion-v1.5-webnn",
 ]);
 
 /** Default files to seed for whisper-tiny.en */
