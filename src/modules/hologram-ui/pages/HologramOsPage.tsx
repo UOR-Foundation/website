@@ -255,31 +255,31 @@ export default function HologramOsPage() {
   const setBgMode = useCallback((m: BgMode) => {
     if (m === bgMode) return;
 
-    // Start the transition ballet
+    // Layer-reveal transition: the new mode slides down like turning a page
     setTransitionColor(TRANSITION_COLORS[m]);
     setTransitioning(true);
     setTransitionPhase("bloom");
     setContentBreathe(true);
 
-    // Phase 1: bloom expands (0–500ms)
-    // Phase 2: hold — switch the actual mode under the veil (500ms)
+    // Phase 1: layer sweeps down covering old mode (0–600ms)
+    // Phase 2: hold — switch actual bg under the layer (600ms)
     setTimeout(() => {
       setTransitionPhase("hold");
       setBgModeState(m);
       localStorage.setItem("hologram-bg-mode", m);
-    }, 480);
+    }, 550);
 
-    // Phase 3: fade — reveal the new mode (800ms)
+    // Phase 3: fade — layer dissolves revealing the new mode (900ms)
     setTimeout(() => {
       setTransitionPhase("fade");
-    }, 700);
+      setContentBreathe(false);
+    }, 800);
 
     // Phase 4: cleanup
     setTimeout(() => {
       setTransitioning(false);
       setTransitionPhase("idle");
-      setContentBreathe(false);
-    }, 1400);
+    }, 1600);
   }, [bgMode]);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
@@ -475,45 +475,51 @@ export default function HologramOsPage() {
             marginRight: chatOpen ? `${lumenPanel.width}px` : "0px",
           }}
         >
-          {/* ── Style transition overlay — radial iris bloom ────────── */}
+          {/* ── Style transition overlay — layer reveal ────────────── */}
           {transitioning && (
             <div
-              className="absolute inset-0 pointer-events-none"
+              className="absolute inset-0 pointer-events-none overflow-hidden"
               style={{ zIndex: 9999 }}
             >
-              {/* Radial bloom circle */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  width: "200vmax",
-                  height: "200vmax",
-                  borderRadius: "50%",
-                  background: transitionColor,
-                  transform: transitionPhase === "bloom" || transitionPhase === "hold"
-                    ? "translate(-50%, -50%) scale(1)"
-                    : transitionPhase === "fade"
-                      ? "translate(-50%, -50%) scale(1)"
-                      : "translate(-50%, -50%) scale(0)",
-                  opacity: transitionPhase === "fade" ? 0 : transitionPhase === "idle" ? 0 : 1,
-                  transition: transitionPhase === "bloom"
-                    ? "transform 600ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease-out"
-                    : transitionPhase === "fade"
-                      ? "opacity 700ms cubic-bezier(0.4, 0, 0.2, 1)"
-                      : "transform 0ms",
-                }}
-              />
-              {/* Luminance flash — brief brightening like eyes adjusting */}
+              {/* Main layer — slides down like revealing a page beneath */}
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
-                  background: bgMode === "dark"
-                    ? "radial-gradient(ellipse at center, hsla(38, 20%, 30%, 0.15), transparent 70%)"
-                    : "radial-gradient(ellipse at center, hsla(0, 0%, 100%, 0.2), transparent 70%)",
-                  opacity: transitionPhase === "hold" ? 1 : 0,
-                  transition: "opacity 400ms ease-in-out",
+                  background: transitionColor,
+                  transform: transitionPhase === "bloom"
+                    ? "translateY(0%)"
+                    : transitionPhase === "hold"
+                      ? "translateY(0%)"
+                      : transitionPhase === "fade"
+                        ? "translateY(100%)"
+                        : "translateY(-100%)",
+                  opacity: transitionPhase === "fade" ? 0.92 : transitionPhase === "idle" ? 0 : 1,
+                  transition: transitionPhase === "bloom"
+                    ? "transform 600ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease-out"
+                    : transitionPhase === "fade"
+                      ? "transform 800ms cubic-bezier(0.4, 0, 0.2, 1), opacity 800ms cubic-bezier(0.4, 0, 0.2, 1)"
+                      : "none",
+                  boxShadow: transitionPhase === "hold"
+                    ? "0 8px 60px hsla(0, 0%, 0%, 0.18)"
+                    : "none",
+                }}
+              />
+              {/* Soft edge gradient — the "page fold" effect */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  height: "120px",
+                  bottom: transitionPhase === "bloom" || transitionPhase === "hold" ? "0" : "auto",
+                  top: transitionPhase === "fade" ? "auto" : undefined,
+                  background: transitionPhase === "fade"
+                    ? "none"
+                    : `linear-gradient(to top, transparent, ${transitionColor})`,
+                  opacity: transitionPhase === "bloom" || transitionPhase === "hold" ? 0.6 : 0,
+                  transition: "opacity 500ms ease-in-out",
+                  pointerEvents: "none",
                 }}
               />
             </div>
