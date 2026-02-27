@@ -2,10 +2,10 @@
  * HologramMessenger — Unified Messaging Hub
  * ══════════════════════════════════════════
  *
- * Superhuman-inspired unified inbox. Clean single-line rows,
- * contact panel on selection, light + dark mode, zero-inbox goal.
+ * Focus-first unified inbox. Click an email → full immersive reading view.
+ * No split panels, no distractions. Just you and the message.
  *
- * Philosophy: Zero Inbox as the daily north star.
+ * North star: Focus · Signal · Peace → Inbox Zero every day.
  * Triadic: Learn · Work · Play as thematic filters.
  *
  * @module hologram-ui/components/HologramMessenger
@@ -302,7 +302,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
     [messages]
   );
 
-  // Keyboard — Superhuman-style
+  // Keyboard navigation
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
@@ -500,57 +500,63 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
       </header>
 
       {/* ── Main content ── */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
         {activeView === "inbox" && (
-          <>
-            {/* ── Message list ── */}
-            <div
-              className="flex-1 flex flex-col min-w-0 overflow-y-auto"
-              style={{ borderRight: selected ? `1px solid ${P.divider}` : "none" }}
-            >
-              {filtered.length === 0 ? (
-                <ZeroInboxView P={P} />
-              ) : (
-                filtered.map((m, i) => (
-                  <MessageRow
-                    key={m.id}
-                    message={m}
-                    P={P}
-                    selected={selectedId === m.id}
-                    isFirst={i === 0}
-                    onSelect={() => { setSelectedId(m.id); markRead(m.id); }}
-                    onArchive={() => archiveMessage(m.id)}
-                    onToggleStar={() => toggleStar(m.id)}
-                    onCreateEvent={() => createEventFromMessage(m)}
-                  />
-                ))
-              )}
-            </div>
-
-            {/* ── Contact / reading panel ── */}
-            <AnimatePresence>
-              {selected && (
-                <motion.div
-                  key="contact-panel"
-                  className="shrink-0 flex flex-col overflow-y-auto"
-                  style={{ width: "320px", borderLeft: `1px solid ${P.divider}` }}
-                  initial={{ opacity: 0, x: 16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 16 }}
-                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <ContactPanel
-                    message={selected}
-                    P={P}
-                    replyOpen={replyOpen}
-                    onCloseReply={() => setReplyOpen(false)}
-                    onCreateEvent={() => createEventFromMessage(selected)}
-                    onIntroduce={() => setActiveView("introductions")}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </>
+          <AnimatePresence mode="wait">
+            {selectedId && selected ? (
+              /* ── Full-focus reading view ── */
+              <motion.div
+                key="reading-view"
+                className="absolute inset-0 flex flex-col overflow-hidden"
+                style={{ background: P.bg, zIndex: 10 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <FocusReadingView
+                  message={selected}
+                  P={P}
+                  onBack={() => setSelectedId(null)}
+                  onArchive={() => { archiveMessage(selected.id); setSelectedId(null); }}
+                  onToggleStar={() => toggleStar(selected.id)}
+                  onCreateEvent={() => createEventFromMessage(selected)}
+                  onIntroduce={() => setActiveView("introductions")}
+                  replyOpen={replyOpen}
+                  onOpenReply={() => setReplyOpen(true)}
+                  onCloseReply={() => setReplyOpen(false)}
+                />
+              </motion.div>
+            ) : (
+              /* ── Inbox list ── */
+              <motion.div
+                key="inbox-list"
+                className="flex-1 flex flex-col min-w-0 overflow-y-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                {filtered.length === 0 ? (
+                  <ZeroInboxView P={P} />
+                ) : (
+                  filtered.map((m, i) => (
+                    <MessageRow
+                      key={m.id}
+                      message={m}
+                      P={P}
+                      selected={false}
+                      isFirst={i === 0}
+                      onSelect={() => { setSelectedId(m.id); markRead(m.id); }}
+                      onArchive={() => archiveMessage(m.id)}
+                      onToggleStar={() => toggleStar(m.id)}
+                      onCreateEvent={() => createEventFromMessage(m)}
+                    />
+                  ))
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         )}
 
         {activeView === "calendar" && (
@@ -655,7 +661,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
   );
 }
 
-// ── Message Row — Superhuman-style single line ──────────────────────────────
+// ── Message Row — clean single-line inbox entry ─────────────────────────────
 
 function MessageRow({
   message: m,
@@ -817,144 +823,302 @@ function MessageRow({
   );
 }
 
-// ── Contact Panel — Superhuman-style right sidebar ──────────────────────────
+// ── Focus Reading View — full-screen immersive email experience ──────────────
 
-function ContactPanel({ message: m, P, replyOpen, onCloseReply, onCreateEvent, onIntroduce }: { message: Message; P: ReturnType<typeof palette>; replyOpen: boolean; onCloseReply: () => void; onCreateEvent?: () => void; onIntroduce?: () => void }) {
+function FocusReadingView({
+  message: m, P, onBack, onArchive, onToggleStar, onCreateEvent, onIntroduce,
+  replyOpen, onOpenReply, onCloseReply,
+}: {
+  message: Message;
+  P: ReturnType<typeof palette>;
+  onBack: () => void;
+  onArchive: () => void;
+  onToggleStar: () => void;
+  onCreateEvent?: () => void;
+  onIntroduce?: () => void;
+  replyOpen: boolean;
+  onOpenReply: () => void;
+  onCloseReply: () => void;
+}) {
   const cfg = PLATFORM_CFG[m.platform];
   const [replyText, setReplyText] = useState("");
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [readProgress, setReadProgress] = useState(0);
+
+  // Reading progress indicator
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      setReadProgress(scrollHeight <= clientHeight ? 1 : scrollTop / (scrollHeight - clientHeight));
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Keyboard: Escape to go back, R to reply
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.tagName === "TEXTAREA") return;
+      if (e.key === "Escape") { onBack(); e.preventDefault(); }
+      if (e.key === "r" || e.key === "R") { onOpenReply(); e.preventDefault(); }
+      if (e.key === "e" || e.key === "E") { onArchive(); e.preventDefault(); }
+      if (e.key === "s" || e.key === "S") { onToggleStar(); e.preventDefault(); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onBack, onOpenReply, onArchive, onToggleStar]);
 
   return (
-    <div className="flex flex-col h-full" style={{ background: P.bg }}>
-      {/* Contact header */}
-      <div className="px-6 pt-6 pb-5" style={{ borderBottom: `1px solid ${P.divider}` }}>
-        <h3 style={{ fontSize: "20px", fontWeight: 600, color: P.text, marginBottom: "12px", fontFamily: SERIF }}>
-          {m.from.split(",")[0]}
-        </h3>
-        <div className="flex items-start gap-3 mb-4">
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
-            style={{
-              background: `linear-gradient(135deg, ${cfg.color}25, ${cfg.color}10)`,
-              border: `1px solid ${cfg.color}30`,
-            }}
+    <div className="flex flex-col h-full">
+      {/* Reading progress bar — thin golden line at the top */}
+      <div className="h-[2px] w-full shrink-0" style={{ background: P.divider }}>
+        <motion.div
+          className="h-full"
+          style={{ background: `linear-gradient(90deg, ${P.gold}, hsla(38, 60%, 70%, 0.6))`, transformOrigin: "left" }}
+          animate={{ scaleX: readProgress }}
+          transition={{ duration: 0.15, ease: "linear" }}
+        />
+      </div>
+
+      {/* Top bar — minimal: back, actions */}
+      <div
+        className="flex items-center justify-between px-6 h-[52px] shrink-0"
+        style={{ borderBottom: `1px solid ${P.divider}` }}
+      >
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 transition-colors duration-200"
+          style={{ color: P.muted, fontSize: "13px", fontFamily: FONT }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span className="tracking-wide uppercase" style={{ fontWeight: 500, letterSpacing: "0.1em" }}>Inbox</span>
+        </button>
+
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onToggleStar}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ color: m.starred ? P.gold : P.muted }}
+            title="Star (S)"
           >
-            <span style={{ fontSize: "18px", fontWeight: 600, color: cfg.color }}>
-              {m.from.charAt(0)}
-            </span>
-          </div>
-          <div className="min-w-0">
-            {m.email && (
-              <div style={{ fontSize: "14px", color: P.accent, marginBottom: "2px" }}>{m.email}</div>
-            )}
-            {m.location && (
-              <div style={{ fontSize: "13px", color: P.muted }}>{m.location}</div>
-            )}
-          </div>
+            <IconStar size={17} fill={m.starred ? P.gold : "none"} />
+          </button>
+          <button
+            onClick={onArchive}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ color: P.muted }}
+            title="Done (E)"
+          >
+            <IconArchive size={17} />
+          </button>
+          <button
+            onClick={onOpenReply}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ color: P.accent }}
+            title="Reply (R)"
+          >
+            <IconCornerUpLeft size={17} />
+          </button>
         </div>
-        {m.bio && (
-          <p style={{ fontSize: "14px", lineHeight: 1.7, color: P.textSecondary, fontWeight: 300 }}>
-            {m.bio}
-          </p>
-        )}
       </div>
 
-      {/* Recent threads */}
-      <div className="px-6 py-4" style={{ borderBottom: `1px solid ${P.divider}` }}>
-        <div className="flex items-center gap-2 mb-3">
-          <cfg.icon size={16} style={{ color: cfg.color }} />
-          <span style={{ fontSize: "14px", fontWeight: 500, color: P.text }}>{cfg.label}</span>
-        </div>
-        {m.recentThreads ? (
-          <div className="space-y-1.5">
-            {m.recentThreads.map((t, i) => (
-              <div key={i} className="truncate cursor-pointer" style={{ fontSize: "13.5px", color: P.muted, paddingLeft: "4px" }}>
-                {t}
+      {/* Scrollable reading area */}
+      <div ref={contentRef} className="flex-1 overflow-y-auto">
+        <div className="max-w-2xl mx-auto px-8 py-10">
+          {/* Sender & metadata */}
+          <motion.div
+            className="mb-8"
+            initial={{ y: 12, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="flex items-center gap-4 mb-5">
+              <div
+                className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+                style={{
+                  background: `linear-gradient(135deg, ${cfg.color}20, ${cfg.color}08)`,
+                  border: `1px solid ${cfg.color}25`,
+                }}
+              >
+                <span style={{ fontSize: "16px", fontWeight: 500, color: cfg.color }}>
+                  {m.from.charAt(0)}
+                </span>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ fontSize: "13px", color: P.dim, fontStyle: "italic" }}>No recent threads</div>
-        )}
-      </div>
-
-      {/* Social links */}
-      {m.socialLinks && m.socialLinks.length > 0 && (
-        <div className="px-6 py-4" style={{ borderBottom: `1px solid ${P.divider}` }}>
-          <div className="flex items-center gap-2 mb-3">
-            <span style={{ fontSize: "13px", color: P.dim, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em" }}>Social</span>
-          </div>
-          <div className="space-y-2">
-            {m.socialLinks.map((s, i) => {
-              const icon = s.type === "Twitter" ? "𝕏" : s.type === "LinkedIn" ? "in" : "•";
-              return (
-                <div key={i} className="flex items-center gap-2.5">
-                  <span style={{ fontSize: "13px", fontWeight: 600, color: P.muted, width: "16px", textAlign: "center" }}>{icon}</span>
-                  <span style={{ fontSize: "14px", color: P.textSecondary }}>{s.handle}</span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: "16px", fontWeight: 500, color: P.text, fontFamily: FONT }}>
+                    {m.from.split(",")[0]}
+                  </span>
+                  {m.platform !== "email" && (
+                    <cfg.icon size={14} style={{ color: cfg.color, opacity: 0.7 }} />
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                <div className="flex items-center gap-2 mt-0.5">
+                  {m.email && <span style={{ fontSize: "13px", color: P.muted }}>{m.email}</span>}
+                  <span style={{ fontSize: "12px", color: P.dim }}>{m.time}</span>
+                </div>
+              </div>
+            </div>
 
-      {/* Message preview */}
-      <div className="flex-1 px-6 py-4 overflow-y-auto">
-        <div className="flex items-center gap-2 mb-3">
-          <span style={{ fontSize: "13px", color: P.dim, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em" }}>Message</span>
-        </div>
-        <h4 style={{ fontSize: "15px", fontWeight: 500, color: P.text, marginBottom: "8px", lineHeight: 1.5 }}>
-          {m.subject}
-        </h4>
-        <p style={{ fontSize: "14px", lineHeight: 1.75, color: P.textSecondary, fontWeight: 300 }}>
-          {m.preview}
-        </p>
-        {m.actionLabel && (
-          <div className="flex items-center gap-2 mt-4 px-3 py-2 rounded-lg" style={{ background: P.accentSoft, border: `1px solid ${P.accent}20` }}>
-            <IconSparkles size={15} style={{ color: P.accent }} />
-            <span style={{ fontSize: "13px", fontWeight: 500, color: P.accent }}>{m.actionLabel}</span>
-          </div>
-        )}
+            {/* Tag */}
+            {m.tag && (
+              <span
+                className="inline-flex px-2 py-0.5 rounded text-[11px] font-medium mb-4"
+                style={{
+                  background: `${m.tag.color}15`,
+                  color: m.tag.color,
+                  border: `1px solid ${m.tag.color}25`,
+                }}
+              >
+                {m.tag.label}
+              </span>
+            )}
+          </motion.div>
 
-        {/* Quick actions: Calendar & Introduce */}
-        <div className="flex items-center gap-2 mt-4">
-          {onCreateEvent && (
-            <button
-              onClick={onCreateEvent}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
-              style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.textSecondary }}
+          {/* Subject */}
+          <motion.h2
+            style={{
+              fontFamily: SERIF,
+              fontSize: "26px",
+              fontWeight: 400,
+              color: P.text,
+              lineHeight: 1.35,
+              letterSpacing: "-0.01em",
+              marginBottom: "24px",
+            }}
+            initial={{ y: 12, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {m.subject}
+          </motion.h2>
+
+          {/* Email body */}
+          <motion.div
+            initial={{ y: 12, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <p style={{
+              fontSize: "16px",
+              lineHeight: 1.85,
+              color: P.textSecondary,
+              fontWeight: 300,
+              fontFamily: FONT,
+            }}>
+              {m.preview}
+            </p>
+          </motion.div>
+
+          {/* Action hint */}
+          {m.actionLabel && (
+            <motion.div
+              className="flex items-center gap-2.5 mt-8 px-4 py-3 rounded-xl"
+              style={{
+                background: P.accentSoft,
+                border: `1px solid ${P.accent}18`,
+              }}
+              initial={{ y: 8, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.25 }}
             >
-              <IconCalendarEvent size={13} /> Schedule
-            </button>
+              <IconSparkles size={15} style={{ color: P.accent }} />
+              <span style={{ fontSize: "14px", fontWeight: 500, color: P.accent }}>{m.actionLabel}</span>
+            </motion.div>
           )}
-          {onIntroduce && (
+
+          {/* Quick actions */}
+          <motion.div
+            className="flex items-center gap-3 mt-6"
+            initial={{ y: 8, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            {onCreateEvent && (
+              <button
+                onClick={onCreateEvent}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200"
+                style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.textSecondary }}
+              >
+                <IconCalendarEvent size={14} /> Schedule
+              </button>
+            )}
+            {onIntroduce && (
+              <button
+                onClick={onIntroduce}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200"
+                style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.textSecondary }}
+              >
+                <IconUserPlus size={14} /> Introduce
+              </button>
+            )}
             <button
-              onClick={onIntroduce}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
-              style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.textSecondary }}
+              onClick={onOpenReply}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200"
+              style={{ background: P.accent, color: "white" }}
             >
-              <IconUserPlus size={13} /> Introduce
+              <IconCornerUpLeft size={14} /> Reply
             </button>
+          </motion.div>
+
+          {/* Contact info — subtle, at the end */}
+          {(m.bio || m.location || m.socialLinks) && (
+            <motion.div
+              className="mt-12 pt-8"
+              style={{ borderTop: `1px solid ${P.divider}` }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <span
+                className="tracking-[0.15em] uppercase mb-4 block"
+                style={{ fontSize: "11px", color: P.dim, fontWeight: 500 }}
+              >
+                About {m.from.split(",")[0]}
+              </span>
+              {m.bio && (
+                <p style={{ fontSize: "14px", lineHeight: 1.7, color: P.muted, fontWeight: 300, marginBottom: "12px" }}>
+                  {m.bio}
+                </p>
+              )}
+              {m.location && (
+                <p style={{ fontSize: "13px", color: P.dim, marginBottom: "8px" }}>📍 {m.location}</p>
+              )}
+              {m.socialLinks && m.socialLinks.length > 0 && (
+                <div className="flex items-center gap-4 mt-3">
+                  {m.socialLinks.map((s, i) => (
+                    <span key={i} style={{ fontSize: "13px", color: P.muted }}>
+                      {s.type}: {s.handle}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </motion.div>
           )}
         </div>
       </div>
 
-      {/* Reply composer */}
+      {/* Reply composer — slides up from bottom */}
       <AnimatePresence>
         {replyOpen && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden shrink-0"
             style={{ borderTop: `1px solid ${P.divider}` }}
           >
-            <div className="px-5 py-3">
-              <div className="flex items-center gap-2 mb-2">
-                <IconCornerUpLeft size={12} style={{ color: P.accent }} />
-                <span style={{ fontSize: "11px", color: P.accent, fontWeight: 500 }}>Reply to {m.from.split(",")[0]}</span>
+            <div className="max-w-2xl mx-auto px-8 py-5">
+              <div className="flex items-center gap-2 mb-3">
+                <IconCornerUpLeft size={13} style={{ color: P.accent }} />
+                <span style={{ fontSize: "12px", color: P.accent, fontWeight: 500 }}>
+                  Reply to {m.from.split(",")[0]}
+                </span>
                 <button onClick={onCloseReply} className="ml-auto" style={{ color: P.dim }}>
-                  <IconX size={12} />
+                  <IconX size={13} />
                 </button>
               </div>
               <textarea
@@ -962,27 +1126,27 @@ function ContactPanel({ message: m, P, replyOpen, onCloseReply, onCreateEvent, o
                 value={replyText}
                 onChange={e => setReplyText(e.target.value)}
                 placeholder="Write your reply…"
-                rows={3}
-                className="w-full resize-none rounded-lg px-3 py-2 outline-none"
+                rows={4}
+                className="w-full resize-none rounded-xl px-4 py-3 outline-none"
                 style={{
                   background: P.surface,
                   border: `1px solid ${P.divider}`,
                   color: P.text,
-                  fontSize: "13px",
+                  fontSize: "15px",
                   fontFamily: FONT,
-                  lineHeight: 1.6,
+                  lineHeight: 1.7,
                 }}
                 onKeyDown={e => {
                   if (e.key === "Escape") { e.stopPropagation(); onCloseReply(); }
                 }}
               />
-              <div className="flex items-center justify-between mt-2">
-                <span style={{ fontSize: "10px", color: P.dim }}>⌘ Enter to send</span>
+              <div className="flex items-center justify-between mt-3">
+                <span style={{ fontSize: "11px", color: P.dim }}>⌘ Enter to send · Esc to close</span>
                 <button
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors"
-                  style={{ background: P.accent, color: "white", fontSize: "12px", fontWeight: 500 }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
+                  style={{ background: P.accent, color: "white", fontSize: "13px", fontWeight: 500 }}
                 >
-                  <IconSend size={12} />
+                  <IconSend size={13} />
                   Send
                 </button>
               </div>
@@ -990,13 +1154,6 @@ function ContactPanel({ message: m, P, replyOpen, onCloseReply, onCreateEvent, o
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Brand */}
-      <div className="px-6 py-3 shrink-0 flex items-center justify-center" style={{ borderTop: `1px solid ${P.divider}` }}>
-        <span style={{ fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", color: P.dim, fontWeight: 500 }}>
-          Hologram
-        </span>
-      </div>
     </div>
   );
 }
