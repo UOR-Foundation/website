@@ -92,7 +92,7 @@ serve(async (req) => {
       continue;
     }
 
-    // Download from HuggingFace
+    // Download from HuggingFace — stream directly to storage to avoid OOM
     console.log(`[seeder] ⬇ Downloading: ${sourceUrl}`);
     try {
       const res = await fetch(sourceUrl, {
@@ -105,21 +105,25 @@ serve(async (req) => {
         continue;
       }
 
-      const bytes = await res.arrayBuffer();
-      const sizeMB = (bytes.byteLength / 1024 / 1024).toFixed(2);
-      totalBytes += bytes.byteLength;
-
+      const contentLength = parseInt(res.headers.get("content-length") ?? "0", 10);
+      const sizeMB = (contentLength / 1024 / 1024).toFixed(2);
       const contentType = guessContentType(file);
-      const blob = new Blob([bytes], { type: contentType });
 
+      // Stream the response body directly to storage upload
+      // This avoids buffering the entire file in memory (prevents OOM for large ONNX files)
       const { error: uploadErr } = await supabase.storage
         .from(BUCKET)
-        .upload(storageKey, blob, { contentType, upsert: true });
+        .upload(storageKey, res.body!, {
+          contentType,
+          upsert: true,
+          duplex: "half",
+        } as any);
 
       if (uploadErr) {
         results.push({ file, status: "error", error: uploadErr.message });
         console.error(`[seeder] ✗ Upload failed ${file}:`, uploadErr.message);
       } else {
+        totalBytes += contentLength;
         results.push({ file, status: "seeded", sizeMB });
         console.log(`[seeder] ✓ Seeded: ${file} (${sizeMB}MB)`);
       }
