@@ -25,6 +25,7 @@ import {
   WGSL_CONV1D,
   WGSL_MEL_SPEC,
   WGSL_FUSED_ATTN,
+  WGSL_BATCHED_FUSED_ATTN,
   cpuMatmul,
   cpuLayerNorm,
   cpuGelu,
@@ -32,6 +33,7 @@ import {
   cpuScaledDotProductAttention,
   cpuConv1d,
   cpuFusedAttention,
+  cpuBatchedFusedAttention,
 } from "./wgsl-kernels";
 import {
   computeMelSpectrogram as cpuMelSpectrogram,
@@ -415,6 +417,49 @@ export class GpuDispatch {
     }
   }
 
+  // ── Batched Multi-Head Fused Attention (single GPU dispatch for ALL heads) ──
+  // Q/K/V layout: [nHeads, seqLen, dk] — interleaved by head.
+  // Grid: (qLen, nHeads, 1) — one workgroup per (query_row, head).
+  // Eliminates nHeads sequential dispatches → 1 dispatch.
+
+  async batchedFusedAttention(
+    Q: Float32Array, K: Float32Array, V: Float32Array,
+    qLen: number, kvLen: number, dk: number, nHeads: number,
+    causal: boolean, causalOffset = 0,
+  ): Promise<Float32Array> {
+    if (!this._available || qLen < 4) {
+      this._cpuOps++;
+      return cpuBatchedFusedAttention(Q, K, V, qLen, kvLen, dk, nHeads, causal, causalOffset);
+    }
+
+    try {
+      const scale = 1 / Math.sqrt(dk);
+      const uniforms = new ArrayBuffer(32);
+      const uView = new DataView(uniforms);
+      uView.setUint32(0, qLen, true);
+      uView.setUint32(4, kvLen, true);
+      uView.setUint32(8, dk, true);
+      uView.setUint32(12, nHeads, true);
+      uView.setUint32(16, causal ? 1 : 0, true);
+      uView.setFloat32(20, scale, true);
+      uView.setUint32(24, causalOffset, true);
+      uView.setUint32(28, 0, true);
+
+      const outputSize = nHeads * qLen * dk * 4;
+      const result = await this.gpu.compute(
+        WGSL_BATCHED_FUSED_ATTN, [Q, K, V], outputSize,
+        [qLen, nHeads, 1], uniforms,
+      );
+
+      this._gpuOps++;
+      this._totalGpuMs += result.computeTimeMs;
+      return result.output;
+    } catch {
+      this._cpuOps++;
+      return cpuBatchedFusedAttention(Q, K, V, qLen, kvLen, dk, nHeads, causal, causalOffset);
+    }
+  }
+
   // ── Compound Ops (GPU-optimised) ─────────────────────────────────────
 
   /**
@@ -578,8 +623,8 @@ export class GpuDispatch {
   }
 
   /**
-   * GPU-accelerated multi-head attention.
-   * Dispatches Q/K/V projections, per-head SDPA, and output projection through GPU.
+   * GPU-accelerated multi-head attention — single batched dispatch for all heads.
+   * Q/K/V are interleaved into [nHeads, seqLen, dHead] and dispatched once.
    */
   async multiHeadAttention(
     input: Float32Array, seqLen: number,
@@ -595,30 +640,34 @@ export class GpuDispatch {
     const K = await this.linear(input, kW, kB, seqLen, dModel, dModel);
     const V = await this.linear(input, vW, vB, seqLen, dModel, dModel);
 
-    const attnOut = new Float32Array(seqLen * dModel);
+    // Interleave into [nHeads, seqLen, dHead] layout
+    const Qb = new Float32Array(nHeads * seqLen * dHead);
+    const Kb = new Float32Array(nHeads * seqLen * dHead);
+    const Vb = new Float32Array(nHeads * seqLen * dHead);
 
-    // Per-head fused attention (single dispatch per head)
     for (let h = 0; h < nHeads; h++) {
       const headOff = h * dHead;
-
-      const Qh = new Float32Array(seqLen * dHead);
-      const Kh = new Float32Array(seqLen * dHead);
-      const Vh = new Float32Array(seqLen * dHead);
-
+      const batchOff = h * seqLen * dHead;
       for (let t = 0; t < seqLen; t++) {
         for (let d = 0; d < dHead; d++) {
-          Qh[t * dHead + d] = Q[t * dModel + headOff + d];
-          Kh[t * dHead + d] = K[t * dModel + headOff + d];
-          Vh[t * dHead + d] = V[t * dModel + headOff + d];
+          Qb[batchOff + t * dHead + d] = Q[t * dModel + headOff + d];
+          Kb[batchOff + t * dHead + d] = K[t * dModel + headOff + d];
+          Vb[batchOff + t * dHead + d] = V[t * dModel + headOff + d];
         }
       }
+    }
 
-      // Fused: Q×K^T scaling + causal mask + softmax + V multiply (1 dispatch)
-      const headOut = await this.fusedAttention(Qh, Kh, Vh, seqLen, seqLen, dHead, causal, 0);
+    // Single dispatch for ALL heads
+    const batchedOut = await this.batchedFusedAttention(Qb, Kb, Vb, seqLen, seqLen, dHead, nHeads, causal, 0);
 
+    // De-interleave back to [seqLen, dModel]
+    const attnOut = new Float32Array(seqLen * dModel);
+    for (let h = 0; h < nHeads; h++) {
+      const headOff = h * dHead;
+      const batchOff = h * seqLen * dHead;
       for (let t = 0; t < seqLen; t++) {
         for (let d = 0; d < dHead; d++) {
-          attnOut[t * dModel + headOff + d] = headOut[t * dHead + d];
+          attnOut[t * dModel + headOff + d] = batchedOut[batchOff + t * dHead + d];
         }
       }
     }
@@ -627,7 +676,7 @@ export class GpuDispatch {
   }
 
   /**
-   * GPU-accelerated cross-attention.
+   * GPU-accelerated cross-attention — single batched dispatch for all heads.
    * Queries from decoder, keys/values from encoder.
    */
   async crossAttention(
@@ -643,30 +692,33 @@ export class GpuDispatch {
     const K = await this.linear(encOutput, kW, kB, encLen, dModel, dModel);
     const V = await this.linear(encOutput, vW, vB, encLen, dModel, dModel);
 
-    const attnOut = new Float32Array(decLen * dModel);
+    // Interleave into batched layout
+    const Qb = new Float32Array(nHeads * decLen * dHead);
+    const Kb = new Float32Array(nHeads * encLen * dHead);
+    const Vb = new Float32Array(nHeads * encLen * dHead);
 
     for (let h = 0; h < nHeads; h++) {
       const headOff = h * dHead;
-
-      const Qh = new Float32Array(decLen * dHead);
-      const Kh = new Float32Array(encLen * dHead);
-      const Vh = new Float32Array(encLen * dHead);
-
       for (let t = 0; t < decLen; t++) {
-        for (let d = 0; d < dHead; d++) Qh[t * dHead + d] = Q[t * dModel + headOff + d];
+        for (let d = 0; d < dHead; d++) Qb[h * decLen * dHead + t * dHead + d] = Q[t * dModel + headOff + d];
       }
       for (let t = 0; t < encLen; t++) {
         for (let d = 0; d < dHead; d++) {
-          Kh[t * dHead + d] = K[t * dModel + headOff + d];
-          Vh[t * dHead + d] = V[t * dModel + headOff + d];
+          Kb[h * encLen * dHead + t * dHead + d] = K[t * dModel + headOff + d];
+          Vb[h * encLen * dHead + t * dHead + d] = V[t * dModel + headOff + d];
         }
       }
+    }
 
-      // Fused: 1 dispatch instead of matmul+softmax+matmul
-      const headOut = await this.fusedAttention(Qh, Kh, Vh, decLen, encLen, dHead, false, 0);
+    // Single dispatch for ALL heads
+    const batchedOut = await this.batchedFusedAttention(Qb, Kb, Vb, decLen, encLen, dHead, nHeads, false, 0);
 
+    // De-interleave
+    const attnOut = new Float32Array(decLen * dModel);
+    for (let h = 0; h < nHeads; h++) {
+      const headOff = h * dHead;
       for (let t = 0; t < decLen; t++) {
-        for (let d = 0; d < dHead; d++) attnOut[t * dModel + headOff + d] = headOut[t * dHead + d];
+        for (let d = 0; d < dHead; d++) attnOut[t * dModel + headOff + d] = batchedOut[h * decLen * dHead + t * dHead + d];
       }
     }
 
@@ -679,7 +731,7 @@ export class GpuDispatch {
   // Reduces per-step complexity from O(T² · D) to O(T · D).
 
   /**
-   * Incremental self-attention with KV-cache.
+   * Incremental self-attention with KV-cache — single batched dispatch.
    * `input` is [newLen, dModel] (typically newLen=1 for autoregressive).
    * `cache` accumulates K/V across steps.
    */
@@ -693,58 +745,54 @@ export class GpuDispatch {
     cache: KvCache,
     causal: boolean,
   ): Promise<Float32Array> {
-    // Project only new tokens
     const Q = await this.linear(input, qW, qB, newLen, dModel, dModel);
     const Knew = await this.linear(input, kW, kB, newLen, dModel, dModel);
     const Vnew = await this.linear(input, vW, vB, newLen, dModel, dModel);
 
-    const attnOut = new Float32Array(newLen * dModel);
-
+    // Append new K/V to cache for all heads
     for (let h = 0; h < nHeads; h++) {
       const headOff = h * dHead;
-
-      // Extract new Q/K/V for this head
-      const Qh = new Float32Array(newLen * dHead);
       const KhNew = new Float32Array(newLen * dHead);
       const VhNew = new Float32Array(newLen * dHead);
-
       for (let t = 0; t < newLen; t++) {
         for (let d = 0; d < dHead; d++) {
-          Qh[t * dHead + d] = Q[t * dModel + headOff + d];
           KhNew[t * dHead + d] = Knew[t * dModel + headOff + d];
           VhNew[t * dHead + d] = Vnew[t * dModel + headOff + d];
         }
       }
-
-      // Append to cache
       appendKv(cache, h, KhNew, VhNew, dHead, newLen);
     }
 
-    // Update cache length (only once, after all heads appended)
     const fullLen = cache.len + newLen;
     cache.len = fullLen;
 
-    // Now attend: fused Q_new × K_cached → softmax → V_cached (1 dispatch per head)
+    // Interleave Q and cached K/V into batched layout
+    const Qb = new Float32Array(nHeads * newLen * dHead);
+    const Kb = new Float32Array(nHeads * fullLen * dHead);
+    const Vb = new Float32Array(nHeads * fullLen * dHead);
+
     for (let h = 0; h < nHeads; h++) {
       const headOff = h * dHead;
-
-      const Qh = new Float32Array(newLen * dHead);
       for (let t = 0; t < newLen; t++) {
         for (let d = 0; d < dHead; d++) {
-          Qh[t * dHead + d] = Q[t * dModel + headOff + d];
+          Qb[h * newLen * dHead + t * dHead + d] = Q[t * dModel + headOff + d];
         }
       }
+      // Copy from pre-allocated cache buffers (zero-copy subarray)
+      Kb.set(cache.k[h].subarray(0, fullLen * dHead), h * fullLen * dHead);
+      Vb.set(cache.v[h].subarray(0, fullLen * dHead), h * fullLen * dHead);
+    }
 
-      // Use subarray view into pre-allocated buffer (no copy)
-      const KhFull = cache.k[h].subarray(0, fullLen * dHead);
-      const VhFull = cache.v[h].subarray(0, fullLen * dHead);
+    const causalOffset = causal ? fullLen - newLen : 0;
+    const batchedOut = await this.batchedFusedAttention(Qb, Kb, Vb, newLen, fullLen, dHead, nHeads, causal, causalOffset);
 
-      const causalOffset = causal ? fullLen - newLen : 0;
-      const headOut = await this.fusedAttention(Qh, KhFull, VhFull, newLen, fullLen, dHead, causal, causalOffset);
-
+    // De-interleave
+    const attnOut = new Float32Array(newLen * dModel);
+    for (let h = 0; h < nHeads; h++) {
+      const headOff = h * dHead;
       for (let t = 0; t < newLen; t++) {
         for (let d = 0; d < dHead; d++) {
-          attnOut[t * dModel + headOff + d] = headOut[t * dHead + d];
+          attnOut[t * dModel + headOff + d] = batchedOut[h * newLen * dHead + t * dHead + d];
         }
       }
     }
@@ -753,8 +801,8 @@ export class GpuDispatch {
   }
 
   /**
-   * Cached cross-attention: K/V from encoder are computed once
-   * and stored in cache. Only Q is computed per decoder step.
+   * Cached cross-attention — single batched dispatch for all heads.
+   * K/V from encoder are computed once and stored in cache.
    */
   async cachedCrossAttention(
     input: Float32Array, decLen: number,
@@ -787,25 +835,30 @@ export class GpuDispatch {
       cache.len = encLen;
     }
 
-    // Only Q changes each step
     const Q = await this.linear(input, qW, qB, decLen, dModel, dModel);
-    const attnOut = new Float32Array(decLen * dModel);
+
+    // Interleave into batched layout
+    const Qb = new Float32Array(nHeads * decLen * dHead);
+    const Kb = new Float32Array(nHeads * cache.len * dHead);
+    const Vb = new Float32Array(nHeads * cache.len * dHead);
 
     for (let h = 0; h < nHeads; h++) {
       const headOff = h * dHead;
-      const Qh = new Float32Array(decLen * dHead);
       for (let t = 0; t < decLen; t++) {
-        for (let d = 0; d < dHead; d++) Qh[t * dHead + d] = Q[t * dModel + headOff + d];
+        for (let d = 0; d < dHead; d++) Qb[h * decLen * dHead + t * dHead + d] = Q[t * dModel + headOff + d];
       }
+      Kb.set(cache.k[h].subarray(0, cache.len * dHead), h * cache.len * dHead);
+      Vb.set(cache.v[h].subarray(0, cache.len * dHead), h * cache.len * dHead);
+    }
 
-      const KhFull = cache.k[h].subarray(0, cache.len * dHead);
-      const VhFull = cache.v[h].subarray(0, cache.len * dHead);
+    const batchedOut = await this.batchedFusedAttention(Qb, Kb, Vb, decLen, cache.len, dHead, nHeads, false, 0);
 
-      // Fused: 1 dispatch instead of transpose+matmul+softmax+matmul
-      const headOut = await this.fusedAttention(Qh, KhFull, VhFull, decLen, cache.len, dHead, false, 0);
-
+    // De-interleave
+    const attnOut = new Float32Array(decLen * dModel);
+    for (let h = 0; h < nHeads; h++) {
+      const headOff = h * dHead;
       for (let t = 0; t < decLen; t++) {
-        for (let d = 0; d < dHead; d++) attnOut[t * dModel + headOff + d] = headOut[t * dHead + d];
+        for (let d = 0; d < dHead; d++) attnOut[t * dModel + headOff + d] = batchedOut[h * decLen * dHead + t * dHead + d];
       }
     }
 

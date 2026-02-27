@@ -6,6 +6,7 @@ import {
   cpuSoftmax,
   cpuScaledDotProductAttention,
   cpuFusedAttention,
+  cpuBatchedFusedAttention,
 } from "./wgsl-kernels";
 
 // Helper: check arrays are close within tolerance
@@ -250,5 +251,109 @@ describe("cpuFusedAttention", () => {
     const result = cpuFusedAttention(Q, K, V, qLen, kvLen, dk, false, 0);
     expect(result.length).toBe(qLen * dk);
     expect(result.every(v => isFinite(v))).toBe(true);
+  });
+});
+
+// ── Batched Multi-Head Fused Attention ────────────────────────────────────
+
+describe("cpuBatchedFusedAttention", () => {
+  it("matches per-head cpuFusedAttention for 2 heads", () => {
+    const qLen = 3, kvLen = 3, dk = 4, nHeads = 2;
+    // Create random-ish Q/K/V per head
+    const Q = new Float32Array(nHeads * qLen * dk);
+    const K = new Float32Array(nHeads * kvLen * dk);
+    const V = new Float32Array(nHeads * kvLen * dk);
+    for (let i = 0; i < Q.length; i++) Q[i] = Math.sin(i * 0.7);
+    for (let i = 0; i < K.length; i++) K[i] = Math.cos(i * 0.3);
+    for (let i = 0; i < V.length; i++) V[i] = Math.sin(i * 1.1 + 0.5);
+
+    const batched = cpuBatchedFusedAttention(Q, K, V, qLen, kvLen, dk, nHeads, false, 0);
+    expect(batched.length).toBe(nHeads * qLen * dk);
+
+    // Compare each head against single-head cpuFusedAttention
+    for (let h = 0; h < nHeads; h++) {
+      const Qh = Q.subarray(h * qLen * dk, (h + 1) * qLen * dk);
+      const Kh = K.subarray(h * kvLen * dk, (h + 1) * kvLen * dk);
+      const Vh = V.subarray(h * kvLen * dk, (h + 1) * kvLen * dk);
+      const single = cpuFusedAttention(Qh, Kh, Vh, qLen, kvLen, dk, false, 0);
+      const batchSlice = batched.subarray(h * qLen * dk, (h + 1) * qLen * dk);
+      expectClose(batchSlice, single, 1e-5);
+    }
+  });
+
+  it("supports causal masking across multiple heads", () => {
+    const qLen = 4, kvLen = 4, dk = 2, nHeads = 3;
+    const Q = new Float32Array(nHeads * qLen * dk);
+    const K = new Float32Array(nHeads * kvLen * dk);
+    const V = new Float32Array(nHeads * kvLen * dk);
+    for (let i = 0; i < Q.length; i++) Q[i] = (i % 5) * 0.2 - 0.4;
+    for (let i = 0; i < K.length; i++) K[i] = (i % 7) * 0.15 - 0.3;
+    for (let i = 0; i < V.length; i++) V[i] = (i % 3) * 0.5;
+
+    const batched = cpuBatchedFusedAttention(Q, K, V, qLen, kvLen, dk, nHeads, true, 0);
+
+    for (let h = 0; h < nHeads; h++) {
+      const Qh = Q.subarray(h * qLen * dk, (h + 1) * qLen * dk);
+      const Kh = K.subarray(h * kvLen * dk, (h + 1) * kvLen * dk);
+      const Vh = V.subarray(h * kvLen * dk, (h + 1) * kvLen * dk);
+      const single = cpuFusedAttention(Qh, Kh, Vh, qLen, kvLen, dk, true, 0);
+      expectClose(batched.subarray(h * qLen * dk, (h + 1) * qLen * dk), single, 1e-5);
+    }
+  });
+
+  it("handles asymmetric Q/KV (cross-attention) with 4 heads", () => {
+    const qLen = 2, kvLen = 6, dk = 8, nHeads = 4;
+    const Q = new Float32Array(nHeads * qLen * dk);
+    const K = new Float32Array(nHeads * kvLen * dk);
+    const V = new Float32Array(nHeads * kvLen * dk);
+    for (let i = 0; i < Q.length; i++) Q[i] = Math.sin(i);
+    for (let i = 0; i < K.length; i++) K[i] = Math.cos(i);
+    for (let i = 0; i < V.length; i++) V[i] = Math.sin(i + 2);
+
+    const batched = cpuBatchedFusedAttention(Q, K, V, qLen, kvLen, dk, nHeads, false, 0);
+    expect(batched.length).toBe(nHeads * qLen * dk);
+
+    for (let h = 0; h < nHeads; h++) {
+      const single = cpuFusedAttention(
+        Q.subarray(h * qLen * dk, (h + 1) * qLen * dk),
+        K.subarray(h * kvLen * dk, (h + 1) * kvLen * dk),
+        V.subarray(h * kvLen * dk, (h + 1) * kvLen * dk),
+        qLen, kvLen, dk, false, 0,
+      );
+      expectClose(batched.subarray(h * qLen * dk, (h + 1) * qLen * dk), single, 1e-5);
+    }
+  });
+
+  it("handles causalOffset for cached attention", () => {
+    const qLen = 1, kvLen = 8, dk = 4, nHeads = 2, causalOffset = 5;
+    const Q = new Float32Array(nHeads * qLen * dk);
+    const K = new Float32Array(nHeads * kvLen * dk);
+    const V = new Float32Array(nHeads * kvLen * dk);
+    for (let i = 0; i < Q.length; i++) Q[i] = i * 0.1;
+    for (let i = 0; i < K.length; i++) K[i] = Math.sin(i);
+    for (let i = 0; i < V.length; i++) V[i] = Math.cos(i);
+
+    const batched = cpuBatchedFusedAttention(Q, K, V, qLen, kvLen, dk, nHeads, true, causalOffset);
+
+    for (let h = 0; h < nHeads; h++) {
+      const single = cpuFusedAttention(
+        Q.subarray(h * qLen * dk, (h + 1) * qLen * dk),
+        K.subarray(h * kvLen * dk, (h + 1) * kvLen * dk),
+        V.subarray(h * kvLen * dk, (h + 1) * kvLen * dk),
+        qLen, kvLen, dk, true, causalOffset,
+      );
+      expectClose(batched.subarray(h * qLen * dk, (h + 1) * qLen * dk), single, 1e-5);
+    }
+  });
+
+  it("single head matches cpuFusedAttention exactly", () => {
+    const qLen = 5, kvLen = 5, dk = 3, nHeads = 1;
+    const Q = new Float32Array(qLen * dk).map((_, i) => Math.sin(i));
+    const K = new Float32Array(kvLen * dk).map((_, i) => Math.cos(i));
+    const V = new Float32Array(kvLen * dk).map((_, i) => i * 0.1);
+
+    const batched = cpuBatchedFusedAttention(Q, K, V, qLen, kvLen, dk, nHeads, false, 0);
+    const single = cpuFusedAttention(Q, K, V, qLen, kvLen, dk, false, 0);
+    expectClose(batched, single, 1e-6);
   });
 });
