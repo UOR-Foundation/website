@@ -120,6 +120,7 @@ const HologramInstallPage = lazy(() => import("@/modules/hologram-ui/pages/Holog
 const HologramLeadCapturePage = lazy(() => import("@/modules/hologram-ui/components/HologramLeadCapture"));
 const HologramConsolePage = lazy(() => import("@/modules/hologram-ui/pages/HologramConsolePage"));
 const LumenVoiceDebugPage = lazy(() => import("@/modules/hologram-ui/pages/LumenVoiceDebugPage"));
+const DiffusionDebugPage = lazy(() => import("@/modules/uns/core/hologram/diffusion/DiffusionDebugPage"));
 const HologramComputePage = lazy(() => import("@/modules/hologram-compute/HologramComputePage"));
 const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
 const MetaObserverPage = lazy(() => import("@/modules/observable/pages/MetaObserverPage"));
@@ -281,6 +282,7 @@ const App = () => {
             <Route path="/schema-org" element={<SchemaOrgExplorerPage />} />
             <Route path="/code-nexus" element={<CodeNexusPage />} />
             <Route path="/debug/lumen-voice" element={<LumenVoiceDebugPage />} />
+            <Route path="/debug/diffusion" element={<DiffusionDebugPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
