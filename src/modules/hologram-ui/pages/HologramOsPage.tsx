@@ -246,7 +246,7 @@ export default function HologramOsPage() {
   const [transitioning, setTransitioning] = useState(false);
   const [transitionColor, setTransitionColor] = useState("hsl(0, 0%, 100%)");
   const [transitionPhase, setTransitionPhase] = useState<"idle" | "bloom" | "hold" | "fade">("idle");
-  const [contentBreathe, setContentBreathe] = useState(false);
+  
 
   const TRANSITION_COLORS: Record<BgMode, string> = {
     image: "hsla(30, 15%, 12%, 0.97)",
@@ -261,7 +261,7 @@ export default function HologramOsPage() {
     setTransitionColor(TRANSITION_COLORS[m]);
     setTransitioning(true);
     setTransitionPhase("bloom");
-    setContentBreathe(true);
+    
 
     // Phase 1: gentle sweep left→right (0–900ms)
     // Phase 2: hold — switch actual mode behind the curtain (900ms)
@@ -274,7 +274,7 @@ export default function HologramOsPage() {
     // Phase 3: fade — curtain dissolves to reveal new reality
     setTimeout(() => {
       setTransitionPhase("fade");
-      setContentBreathe(false);
+      
     }, 1200);
 
     // Phase 4: cleanup
@@ -467,12 +467,9 @@ export default function HologramOsPage() {
             opacity: departing ? 0 : 1,
             transform: departing
               ? "scale(1.02)"
-              : contentBreathe
-                ? "scale(0.985)"
-                : isFocus ? "scale(1.03)" : "scale(1)",
-            filter: departing ? "blur(4px)" : contentBreathe ? "blur(1px)" : "none",
-            transitionDuration: lumenPanel.isResizing ? "0ms" : contentBreathe ? "700ms" : isFocus ? "600ms" : "400ms",
-            transitionTimingFunction: contentBreathe ? "cubic-bezier(0.4, 0, 0.2, 1)" : undefined,
+              : isFocus ? "scale(1.03)" : "scale(1)",
+            filter: departing ? "blur(4px)" : "none",
+            transitionDuration: lumenPanel.isResizing ? "0ms" : isFocus ? "600ms" : "400ms",
             marginRight: chatOpen ? `${lumenPanel.width}px` : "0px",
           }}
         >
