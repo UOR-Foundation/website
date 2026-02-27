@@ -91,7 +91,7 @@ export default function VoiceOrb({
   const metricsRafRef = useRef<number | null>(null);
 
   const voice = useVoiceConversation({
-    voiceEngine: "web-speech",
+    voiceEngine: "piper",
     personaId,
     screenContext,
     observerBriefing,
