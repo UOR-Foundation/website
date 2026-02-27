@@ -140,6 +140,8 @@ export class WhisperEngine {
       env.allowLocalModels = false;
       // Enable caching (default, but explicit)
       env.useBrowserCache = true;
+      // Allow remote models from HuggingFace
+      env.allowRemoteModels = true;
 
       // ── vGPU Integration ──────────────────────────────────────────────
       // Coordinate with the HologramGpu singleton for device lifecycle.

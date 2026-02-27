@@ -17,6 +17,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { getWhisperEngine, preloadWhisper } from "@/modules/uns/core/hologram/whisper-engine";
+import { isNativeSttAvailable, recognizeNative } from "@/modules/uns/core/hologram/native-stt";
 import { useAudioCapture } from "@/modules/hologram-ui/hooks/useAudioCapture";
 
 export type WhisperStatus =
@@ -140,9 +141,21 @@ export function useWhisperTranscription({
     updateStatus("transcribing");
 
     try {
-      const transcription = await getWhisperEngine().transcribe(result.audio, result.sampleRate);
-      const text = transcription.text.trim();
-      if (text) onTranscript(text);
+      const engine = getWhisperEngine();
+      if (engine.isReady) {
+        // Primary path: Whisper ONNX (in-browser, vGPU accelerated)
+        const transcription = await engine.transcribe(result.audio, result.sampleRate);
+        const text = transcription.text.trim();
+        if (text) onTranscript(text);
+      } else if (isNativeSttAvailable()) {
+        // Fallback path: Native SpeechRecognition API
+        console.log("[useWhisperTranscription] Whisper unavailable, using native SpeechRecognition fallback");
+        const native = await recognizeNative({ timeoutMs: 8000 });
+        const text = native.text.trim();
+        if (text) onTranscript(text);
+      } else {
+        console.warn("[useWhisperTranscription] No STT engine available");
+      }
     } catch (err) {
       console.error("[useWhisperTranscription] Transcription error:", err);
     }
