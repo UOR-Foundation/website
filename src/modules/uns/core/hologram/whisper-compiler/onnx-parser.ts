@@ -24,8 +24,13 @@ import { OnnxDataType, DTYPE_BYTE_SIZE } from "./types";
 
 let _tensorDebugCount = 0;
 
+/** Reset debug counter — call before parsing initializers to capture their fields */
+export function resetTensorDebug(): void {
+  _tensorDebugCount = 0;
+}
+
 function parseTensorProto(reader: ProtoReader): OnnxTensor {
-  const isDebug = _tensorDebugCount < 2;
+  const isDebug = _tensorDebugCount < 5;
   _tensorDebugCount++;
   const dims: number[] = [];
   let dataType: number = OnnxDataType.FLOAT;
@@ -274,13 +279,27 @@ function parseGraphProto(reader: ProtoReader): OnnxGraph {
   const initializers: OnnxTensor[] = [];
   const inputNames: string[] = [];
   const outputNames: string[] = [];
+  let initializerDebugReset = false;
 
   let tag;
   while ((tag = reader.readTag()) !== null) {
     switch (tag.field) {
       case 1:  nodes.push(parseNodeProto(reader.subReader())); break;
       case 2:  name = reader.readString(); break;
-      case 5:  initializers.push(parseTensorProto(reader.subReader())); break;
+      case 5: {
+        // Reset debug counter on first initializer to capture their fields
+        if (!initializerDebugReset) {
+          console.log(`[GraphDebug] First initializer at reader pos ${reader.position}, remaining: ${reader.remaining}`);
+          resetTensorDebug();
+          initializerDebugReset = true;
+        }
+        const sub = reader.subReader();
+        if (initializers.length < 3) {
+          console.log(`[GraphDebug] Initializer sub-reader: ${sub.remaining} bytes`);
+        }
+        initializers.push(parseTensorProto(sub));
+        break;
+      }
       case 11: inputNames.push(parseValueInfoName(reader.subReader())); break;
       case 12: outputNames.push(parseValueInfoName(reader.subReader())); break;
       default: reader.skip(tag.wire);
