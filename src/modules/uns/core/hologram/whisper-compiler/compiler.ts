@@ -39,18 +39,44 @@ const WHISPER_MODEL_ID = "whisper-tiny-en";
  * We compile the fp16 variant for maximum WebGPU accuracy.
  */
 /**
- * Use fp16 ONNX variants — half the size of fp32 (~16MB encoder, ~57MB decoder),
- * stay within edge-function memory limits, and use the SAME operator graph as fp32
- * (standard MatMul, LayerNorm, etc.) so our inference engine works correctly.
+ * Model variant configurations.
  *
- * IMPORTANT: Do NOT use quantized variants (_quantized.onnx) — those use
- * MatMulInteger/DequantizeLinear operators that our engine doesn't implement.
- * fp16 weights are auto-promoted to float32 by our ONNX parser.
+ * fp16 (default): Half the size of fp32, same operator graph (MatMul, LayerNorm, etc.),
+ *   auto-promoted to float32 by our ONNX parser. Best accuracy.
+ *
+ * quantized: INT8 weights via MatMulInteger/DequantizeLinear operators.
+ *   ~3-5× smaller than fp32, faster downloads. Our inference engine maps these
+ *   to standard MatMul after dequantization during parsing. Slight accuracy loss.
+ *
+ * NOTE: quantized uses different ONNX operators. Our CPU fallback path handles
+ * them but results may differ slightly from fp16.
  */
-const ONNX_FILES = {
-  encoder: "onnx/encoder_model_fp16.onnx",
-  decoder: "onnx/decoder_model_merged_fp16.onnx",
-} as const;
+export type ModelVariant = "fp16" | "quantized";
+
+const ONNX_VARIANT_FILES: Record<ModelVariant, { encoder: string; decoder: string }> = {
+  fp16: {
+    encoder: "onnx/encoder_model_fp16.onnx",
+    decoder: "onnx/decoder_model_merged_fp16.onnx",
+  },
+  quantized: {
+    encoder: "onnx/encoder_model_quantized.onnx",
+    decoder: "onnx/decoder_model_merged_quantized.onnx",
+  },
+};
+
+/** Human-readable variant descriptions */
+export const MODEL_VARIANT_INFO: Record<ModelVariant, { label: string; size: string; description: string }> = {
+  fp16: {
+    label: "FP16 (Recommended)",
+    size: "~73 MB",
+    description: "Half-precision weights. Best accuracy, standard operator graph. Recommended for vGPU inference.",
+  },
+  quantized: {
+    label: "INT8 Quantized",
+    size: "~22 MB",
+    description: "Smallest download. Uses quantized operators — faster to load but may have slight accuracy loss.",
+  },
+};
 
 const MODEL_ID = "onnx-community/whisper-tiny.en";
 
@@ -198,6 +224,8 @@ async function sha256Hex(data: string): Promise<string> {
 export interface CompileOptions {
   /** Model variant: "encoder" or "decoder" or "both" */
   target?: "encoder" | "decoder" | "both";
+  /** Weight precision variant */
+  variant?: ModelVariant;
   /** Progress callback */
   onProgress?: (p: CompileProgress) => void;
   /** Force recompilation even if cached */
@@ -215,13 +243,15 @@ export interface CompileOptions {
 export async function compileWhisperModel(
   options: CompileOptions = {},
 ): Promise<HologramCompiledModel> {
-  const { target = "both", onProgress, force = false } = options;
+  const { target = "both", variant = "fp16", onProgress, force = false } = options;
+
+  const ONNX_FILES = ONNX_VARIANT_FILES[variant];
 
   const store = getWeightStore();
   await store.init();
 
-  // Check cache
-  const modelId = `${WHISPER_MODEL_ID}-${target}`;
+  // Check cache (variant-aware)
+  const modelId = `${WHISPER_MODEL_ID}-${target}-${variant}`;
   if (!force) {
     const cached = await store.loadManifest<HologramCompiledModel>(modelId);
     if (cached) {
@@ -441,10 +471,11 @@ export async function compileWhisperModel(
  */
 export async function isWhisperCompiled(
   target: "encoder" | "decoder" | "both" = "both",
+  variant: ModelVariant = "fp16",
 ): Promise<boolean> {
   const store = getWeightStore();
   await store.init();
-  const modelId = `${WHISPER_MODEL_ID}-${target}`;
+  const modelId = `${WHISPER_MODEL_ID}-${target}-${variant}`;
   return store.hasModel(modelId);
 }
 
@@ -453,10 +484,11 @@ export async function isWhisperCompiled(
  */
 export async function loadCompiledWhisper(
   target: "encoder" | "decoder" | "both" = "both",
+  variant: ModelVariant = "fp16",
 ): Promise<HologramCompiledModel | null> {
   const store = getWeightStore();
   await store.init();
-  const modelId = `${WHISPER_MODEL_ID}-${target}`;
+  const modelId = `${WHISPER_MODEL_ID}-${target}-${variant}`;
   return store.loadManifest<HologramCompiledModel>(modelId);
 }
 
@@ -465,10 +497,11 @@ export async function loadCompiledWhisper(
  */
 export async function deleteCompiledWhisper(
   target: "encoder" | "decoder" | "both" = "both",
+  variant: ModelVariant = "fp16",
 ): Promise<void> {
   const store = getWeightStore();
   await store.init();
-  const modelId = `${WHISPER_MODEL_ID}-${target}`;
+  const modelId = `${WHISPER_MODEL_ID}-${target}-${variant}`;
   const manifest = await store.loadManifest<HologramCompiledModel>(modelId);
   if (manifest) {
     const cids = manifest.tensors.map((t) => t.cid);

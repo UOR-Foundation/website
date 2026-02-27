@@ -27,8 +27,9 @@ export {
   isWhisperCompiled,
   loadCompiledWhisper,
   deleteCompiledWhisper,
+  MODEL_VARIANT_INFO,
 } from "./compiler";
-export type { CompileOptions } from "./compiler";
+export type { CompileOptions, ModelVariant } from "./compiler";
 
 // Inference engine (Phase 3)
 export { WhisperEngine, getWhisperEngine } from "./inference-engine";
