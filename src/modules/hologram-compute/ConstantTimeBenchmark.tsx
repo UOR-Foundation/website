@@ -1516,7 +1516,7 @@ export default function ConstantTimeBenchmark() {
         </div>
 
         {/* Demo 2 Idle */}
-        {hw.webgpuAvailable && gpuState === "idle" && (
+        {hwSafe.webgpuAvailable && gpuState === "idle" && (
           <div className="grid grid-cols-2 gap-3 p-3" style={{ background: "hsla(210, 50%, 60%, 0.02)" }}>
             <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid hsla(210, 50%, 60%, 0.12)` }}>
               <div className="flex items-center gap-2">
@@ -1542,7 +1542,7 @@ export default function ConstantTimeBenchmark() {
         )}
 
         {/* Demo 2 Precomputing */}
-        {hw.webgpuAvailable && gpuState === "precomputing" && (
+        {hwSafe.webgpuAvailable && gpuState === "precomputing" && (
           <div className="p-5 text-center space-y-2" style={{ background: "hsla(210, 50%, 60%, 0.02)" }}>
             <div className="w-7 h-7 mx-auto border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
             <p className="text-sm font-medium" style={{ color: P.gold }}>Pre-computing all results…</p>
@@ -1550,7 +1550,7 @@ export default function ConstantTimeBenchmark() {
         )}
 
         {/* Demo 2 Chart + Stats */}
-        {hw.webgpuAvailable && gpuPoints.length > 0 && view === "complexity" && (
+        {hwSafe.webgpuAvailable && gpuPoints.length > 0 && view === "complexity" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 p-3" style={{ background: "hsla(210, 50%, 60%, 0.02)" }}>
             <div className="lg:col-span-2 rounded-xl p-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
               <ComparisonChart
@@ -1576,7 +1576,7 @@ export default function ConstantTimeBenchmark() {
           </div>
         )}
         {/* Demo 2 Bandwidth — 3-column side-by-side */}
-        {hw.webgpuAvailable && gpuPoints.length > 0 && view === "throughput" && (
+        {hwSafe.webgpuAvailable && gpuPoints.length > 0 && view === "throughput" && (
           <div className="p-3" style={{ background: "hsla(210, 50%, 60%, 0.02)" }}>
             <div className="flex items-center gap-1">
               <BandwidthColumnChart
@@ -1616,40 +1616,55 @@ export default function ConstantTimeBenchmark() {
         <>
           {/* Results table for CPU demo */}
           {cpuState === "done" && cpuPoints.length > 0 && (
-            <div className="space-y-1">
-              <div className="flex items-center justify-between px-2 py-1.5" style={{ background: P.card, borderBottom: `1px solid ${P.cardBorder}` }}>
-                <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: P.red }}>Demo 1 Results — CPU vs Hologram vGPU</span>
-                <span className="text-[9px] px-2 py-0.5 rounded-full font-medium" style={{ background: "hsla(210, 50%, 60%, 0.1)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}>
-                  LINPACK · median of N samples · {WARMUP_ITERATIONS} warmup · {TIMER_RESOLUTION_US}µs timer
-                </span>
+            <div className="space-y-2">
+              {/* LINPACK methodology header with export */}
+              <div className="rounded-xl p-3 space-y-2" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs uppercase tracking-widest font-bold" style={{ color: P.red }}>Demo 1 Results — CPU vs Hologram vGPU</span>
+                  </div>
+                  <button
+                    onClick={() => exportReport(cpuPoints, precomputeMs, precomputeMethod, hwSafe)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 hover:opacity-80 shrink-0"
+                    style={{ background: "hsla(210, 50%, 60%, 0.08)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}
+                  >
+                    <IconDownload size={14} />
+                    Export LINPACK Report
+                  </button>
+                </div>
+                <div className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
+                  <strong style={{ color: P.text }}>LINPACK / HPL methodology</strong> — Performance measured in <strong style={{ color: P.text }}>FLOP/s</strong> (floating-point operations per second) using the standard formula <code style={{ color: P.gold, background: "hsla(38, 40%, 65%, 0.08)", padding: "1px 4px", borderRadius: "3px" }}>2N³ / time</code> where each multiply-accumulate counts as 2 FLOPs.
+                  Each data point is the <strong style={{ color: P.text }}>median</strong> of {sampleCount(16)}–{sampleCount(1024)} samples (robust to GC pauses & JIT outliers), preceded by {WARMUP_ITERATIONS} warmup iterations for JIT stabilization.
+                  Timer: <code style={{ color: P.blue, background: "hsla(210, 50%, 60%, 0.08)", padding: "1px 4px", borderRadius: "3px" }}>performance.now()</code> — DOMHighResTimeStamp, monotonic, ~{TIMER_RESOLUTION_US}µs resolution.
+                </div>
               </div>
               <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: `1px solid ${P.cardBorder}` }}>
-                <table className="w-full text-[12px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
+                <table className="w-full text-sm font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
                   <thead>
                     <tr style={{ background: P.card }}>
-                      <th className="text-left py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
-                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
-                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.red, borderBottom: `1px solid ${P.cardBorder}` }}>CPU ms</th>
-                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>CPU FLOP/s</th>
-                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
-                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
-                      <th className="text-center py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Samples</th>
-                      <th className="text-center py-1.5 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>✓</th>
+                      <th className="text-left py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
+                      <th className="text-right py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
+                      <th className="text-right py-2 px-3 font-semibold" style={{ color: P.red, borderBottom: `1px solid ${P.cardBorder}` }}>CPU ms</th>
+                      <th className="text-right py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>CPU FLOP/s</th>
+                      <th className="text-right py-2 px-3 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
+                      <th className="text-right py-2 px-3 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
+                      <th className="text-center py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Samples</th>
+                      <th className="text-center py-2 px-3 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>✓</th>
                     </tr>
                   </thead>
                   <tbody>
                     {cpuPoints.map((p, i) => (
                       <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
-                        <td className="py-1 px-2 font-semibold" style={{ color: P.text }}>{p.n}</td>
-                        <td className="py-1 px-2 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
-                        <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.red }}>{p.stdMs.toFixed(1)}</td>
-                        <td className="py-1 px-2 text-right tabular-nums text-[11px]" style={{ color: P.muted }}>{formatFlops(p.cpuFlops)}</td>
-                        <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
-                        <td className="py-1 px-2 text-right font-bold tabular-nums" style={{ color: p.speedupVsCpu > 10 ? P.gold : P.text }}>
+                        <td className="py-1.5 px-3 font-semibold" style={{ color: P.text }}>{p.n}</td>
+                        <td className="py-1.5 px-3 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
+                        <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: P.red }}>{p.stdMs.toFixed(1)}</td>
+                        <td className="py-1.5 px-3 text-right tabular-nums text-[13px]" style={{ color: P.muted }}>{formatFlops(p.cpuFlops)}</td>
+                        <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
+                        <td className="py-1.5 px-3 text-right font-bold tabular-nums" style={{ color: p.speedupVsCpu > 10 ? P.gold : P.text }}>
                           {p.speedupVsCpu >= 1000 ? `${(p.speedupVsCpu / 1000).toFixed(1)}K×` : `${p.speedupVsCpu.toFixed(0)}×`}
                         </td>
-                        <td className="py-1 px-2 text-center text-[11px]" style={{ color: P.dim }}>{p.samples}</td>
-                        <td className="py-1 px-2 text-center" style={{ color: p.checksumOk ? P.green : P.red }}>{p.checksumOk ? "✓" : "✗"}</td>
+                        <td className="py-1.5 px-3 text-center text-[13px]" style={{ color: P.dim }}>{p.samples}</td>
+                        <td className="py-1.5 px-3 text-center text-base" style={{ color: p.checksumOk ? P.green : P.red }}>{p.checksumOk ? "✓" : "✗"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1660,40 +1675,54 @@ export default function ConstantTimeBenchmark() {
 
           {/* Results table for GPU demo */}
           {gpuState === "done" && gpuPoints.length > 0 && (
-            <div className="space-y-1">
-              <div className="flex items-center justify-between px-2 py-1.5" style={{ background: P.card, borderBottom: `1px solid ${P.cardBorder}` }}>
-                <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: P.blue }}>Demo 2 Results — GPU vs Hologram vGPU</span>
-                <span className="text-[9px] px-2 py-0.5 rounded-full font-medium" style={{ background: "hsla(210, 50%, 60%, 0.1)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}>
-                  LINPACK · median of N samples · {WARMUP_ITERATIONS} warmup · {TIMER_RESOLUTION_US}µs timer
-                </span>
+            <div className="space-y-2">
+              {/* LINPACK methodology header with export */}
+              <div className="rounded-xl p-3 space-y-2" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs uppercase tracking-widest font-bold" style={{ color: P.blue }}>Demo 2 Results — GPU vs Hologram vGPU</span>
+                  </div>
+                  <button
+                    onClick={() => exportReport(gpuPoints, precomputeMs, precomputeMethod, hwSafe)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 hover:opacity-80 shrink-0"
+                    style={{ background: "hsla(210, 50%, 60%, 0.08)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}
+                  >
+                    <IconDownload size={14} />
+                    Export LINPACK Report
+                  </button>
+                </div>
+                <div className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
+                  <strong style={{ color: P.text }}>LINPACK / HPL methodology</strong> — Performance in <strong style={{ color: P.text }}>FLOP/s</strong> via <code style={{ color: P.gold, background: "hsla(38, 40%, 65%, 0.08)", padding: "1px 4px", borderRadius: "3px" }}>2N³ / time</code>.
+                  Median of {sampleCount(16)}–{sampleCount(1024)} samples, {WARMUP_ITERATIONS} warmup iterations, ~{TIMER_RESOLUTION_US}µs timer precision.
+                </div>
               </div>
               <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: `1px solid ${P.cardBorder}` }}>
-                <table className="w-full text-[12px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
+                <table className="w-full text-sm font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
                   <thead>
                     <tr style={{ background: P.card }}>
-                      <th className="text-left py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
-                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
-                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.blue, borderBottom: `1px solid ${P.cardBorder}` }}>GPU ms</th>
-                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>GPU FLOP/s</th>
-                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
-                      <th className="text-right py-1.5 px-2 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
-                      <th className="text-center py-1.5 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Samples</th>
-                      <th className="text-center py-1.5 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>✓</th>
+                      <th className="text-left py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
+                      <th className="text-right py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
+                      <th className="text-right py-2 px-3 font-semibold" style={{ color: P.blue, borderBottom: `1px solid ${P.cardBorder}` }}>GPU ms</th>
+                      <th className="text-right py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>GPU FLOP/s</th>
+                      <th className="text-right py-2 px-3 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
+                      <th className="text-right py-2 px-3 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
+                      <th className="text-center py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Samples</th>
+                      <th className="text-center py-2 px-3 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>✓</th>
                     </tr>
                   </thead>
                   <tbody>
                     {gpuPoints.map((p, i) => (
                       <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
-                        <td className="py-1 px-2 font-semibold" style={{ color: P.text }}>{p.n}</td>
-                        <td className="py-1 px-2 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
-                        <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.blue }}>{p.gpuMs.toFixed(1)}</td>
-                        <td className="py-1 px-2 text-right tabular-nums text-[11px]" style={{ color: P.muted }}>{formatFlops(p.gpuFlops)}</td>
-                        <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
-                        <td className="py-1 px-2 text-right font-bold tabular-nums" style={{ color: p.speedupVsGpu > 10 ? P.gold : P.text }}>
+                        <td className="py-1.5 px-3 font-semibold" style={{ color: P.text }}>{p.n}</td>
+                        <td className="py-1.5 px-3 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
+                        <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: P.blue }}>{p.gpuMs.toFixed(1)}</td>
+                        <td className="py-1.5 px-3 text-right tabular-nums text-[13px]" style={{ color: P.muted }}>{formatFlops(p.gpuFlops)}</td>
+                        <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
+                        <td className="py-1.5 px-3 text-right font-bold tabular-nums" style={{ color: p.speedupVsGpu > 10 ? P.gold : P.text }}>
                           {p.speedupVsGpu >= 1000 ? `${(p.speedupVsGpu / 1000).toFixed(1)}K×` : `${p.speedupVsGpu.toFixed(0)}×`}
                         </td>
-                        <td className="py-1 px-2 text-center text-[11px]" style={{ color: P.dim }}>{p.samples}</td>
-                        <td className="py-1 px-2 text-center" style={{ color: p.checksumOk ? P.green : P.red }}>{p.checksumOk ? "✓" : "✗"}</td>
+                        <td className="py-1.5 px-3 text-center text-[13px]" style={{ color: P.dim }}>{p.samples}</td>
+                        <td className="py-1.5 px-3 text-center text-base" style={{ color: p.checksumOk ? P.green : P.red }}>{p.checksumOk ? "✓" : "✗"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1755,29 +1784,29 @@ export default function ConstantTimeBenchmark() {
 
           {/* Footer */}
           <div className="flex items-center justify-between flex-wrap gap-2 pt-2" style={{ borderTop: `1px solid ${P.cardBorder}` }}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <div
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium"
                 style={{
                   background: allChecksOk ? "hsla(152, 44%, 50%, 0.1)" : "hsla(0, 55%, 55%, 0.1)",
                   color: allChecksOk ? P.green : P.red,
                   border: `1px solid ${allChecksOk ? "hsla(152, 44%, 50%, 0.2)" : "hsla(0, 55%, 55%, 0.2)"}`,
                 }}
               >
-                <IconCheck size={13} />
-                {allChecksOk ? "All outputs identical" : "Mismatch"}
+                <IconCheck size={14} />
+                {allChecksOk ? "All outputs byte-identical" : "Mismatch detected"}
               </div>
-              <span className="text-[12px]" style={{ color: P.muted }}>
-                {hwSafe.jsEngine} · {hwSafe.cpuCores} cores · {hwSafe.webgpuAvailable ? "WebGPU ✓" : "No GPU"} · {ALL_SIZES.length} sizes
+              <span className="text-sm" style={{ color: P.muted }}>
+                {hwSafe.glRenderer ? hwSafe.glRenderer.split(/[,(]/)[0].trim() : hwSafe.jsEngine} · {hwSafe.cpuCores} cores · {hwSafe.webgpuAvailable ? "WebGPU ✓" : "No GPU"} · {ALL_SIZES.length} sizes
               </span>
             </div>
             <button
               onClick={() => exportReport(allPoints, precomputeMs, precomputeMethod, hwSafe)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-200 hover:opacity-80"
-              style={{ background: P.card, color: P.text, border: `1px solid ${P.cardBorder}` }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:opacity-80"
+              style={{ background: "hsla(38, 40%, 65%, 0.1)", color: P.gold, border: `1px solid hsla(38, 40%, 65%, 0.2)` }}
             >
-              <IconDownload size={13} />
-              Export JSON
+              <IconDownload size={14} />
+              Export Full LINPACK Report
             </button>
           </div>
         </>
