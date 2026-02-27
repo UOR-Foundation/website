@@ -32,11 +32,12 @@ export interface PorcupineEngineConfig {
   accessKey: string;
   /**
    * Keywords to listen for.
-   * Can be built-in names or custom keyword configs with base64-encoded .ppn data.
+   * Can be built-in names, or custom keyword configs with base64 or publicPath.
    */
   keywords: Array<
     | { builtin: PorcupineBuiltinKeyword; sensitivity?: number }
     | { base64: string; label: string; sensitivity?: number }
+    | { publicPath: string; label: string; sensitivity?: number }
   >;
   /** Porcupine model file — defaults to built-in English */
   model?: { publicPath?: string; base64?: string };
@@ -79,6 +80,13 @@ export class PorcupineWakeWordEngine implements IWakeWordEngine {
           if ("builtin" in kw) {
             const enumKey = kw.builtin.replace(/\s/g, "") as keyof typeof BuiltInKeyword;
             return BuiltInKeyword[enumKey];
+          }
+          if ("publicPath" in kw) {
+            return {
+              publicPath: kw.publicPath,
+              label: kw.label,
+              sensitivity: kw.sensitivity ?? 0.65,
+            } as PorcupineKeywordType;
           }
           return {
             base64: kw.base64,
