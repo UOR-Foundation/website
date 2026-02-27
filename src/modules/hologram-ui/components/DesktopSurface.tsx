@@ -505,6 +505,43 @@ export default function DesktopSurface({
         </div>
       </div>
 
+      {/* ── Desktop indicator dots (Mission Control) ─ */}
+      <div
+        className="absolute bottom-14 left-0 right-0 flex items-center justify-center gap-2 z-10"
+        style={{
+          opacity: isFocus ? 0 : 1,
+          transition: "opacity 0.7s ease",
+        }}
+      >
+        {(["image", "white", "dark"] as DesktopId[]).map((m) => {
+          const active = mode === m;
+          const dotColor = mode === "white"
+            ? "hsla(0, 0%, 10%, 0.8)"
+            : "hsla(0, 0%, 95%, 0.8)";
+          const inactiveColor = mode === "white"
+            ? "hsla(0, 0%, 10%, 0.2)"
+            : "hsla(0, 0%, 95%, 0.2)";
+          return (
+            <button
+              key={m}
+              onClick={() => onSwitchDesktop(m)}
+              className="p-1"
+              aria-label={`Switch to ${m} frame`}
+            >
+              <div
+                className="rounded-full transition-all duration-500 ease-out"
+                style={{
+                  width: active ? 8 : 5,
+                  height: active ? 8 : 5,
+                  background: active ? dotColor : inactiveColor,
+                  boxShadow: active ? `0 0 6px 1px ${dotColor}` : "none",
+                }}
+              />
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── Legal links ──────────────────────────── */}
       <div
         className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-6 z-10"
