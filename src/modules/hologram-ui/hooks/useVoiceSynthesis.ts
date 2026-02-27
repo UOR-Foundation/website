@@ -45,10 +45,16 @@ export function useVoiceSynthesis({
   onError,
 }: UseVoiceSynthesisOptions = {}) {
   const [status, setStatus] = useState<VoiceSynthStatus>("idle");
+  const statusRef = useRef<VoiceSynthStatus>("idle");
   const [currentEngine, setCurrentEngine] = useState<VoiceEngine>(engine);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const abortRef = useRef(false);
+
+  const updateStatus = useCallback((s: VoiceSynthStatus) => {
+    statusRef.current = s;
+    setStatus(s);
+  }, []);
 
   // Clean up on unmount
   useEffect(() => {
@@ -106,18 +112,18 @@ export function useVoiceSynthesis({
     utterance.volume = 0.85;
 
     utterance.onstart = () => {
-      setStatus("speaking");
+      updateStatus("speaking");
       onStart?.();
     };
 
     utterance.onend = () => {
-      setStatus("idle");
+      updateStatus("idle");
       onEnd?.();
     };
 
     utterance.onerror = (e) => {
       if (e.error !== "canceled") {
-        setStatus("idle");
+        updateStatus("idle");
         onError?.(e.error);
       }
     };
@@ -130,7 +136,7 @@ export function useVoiceSynthesis({
   const speakElevenLabs = useCallback(async (text: string) => {
     if (abortRef.current) return;
 
-    setStatus("loading");
+    updateStatus("loading");
     try {
       const response = await fetch(ELEVENLABS_TTS_URL, {
         method: "POST",
@@ -155,18 +161,18 @@ export function useVoiceSynthesis({
       const audio = new Audio(audioUrl);
 
       audio.onplay = () => {
-        setStatus("speaking");
+        updateStatus("speaking");
         onStart?.();
       };
 
       audio.onended = () => {
-        setStatus("idle");
+        updateStatus("idle");
         URL.revokeObjectURL(audioUrl);
         onEnd?.();
       };
 
       audio.onerror = () => {
-        setStatus("idle");
+        updateStatus("idle");
         URL.revokeObjectURL(audioUrl);
         onError?.("Audio playback failed");
       };
@@ -218,7 +224,7 @@ export function useVoiceSynthesis({
       audioRef.current = null;
     }
 
-    setStatus("idle");
+    updateStatus("idle");
   }, []);
 
   /** Toggle engine */
@@ -231,6 +237,7 @@ export function useVoiceSynthesis({
     speak,
     stop,
     status,
+    statusRef,
     isSpeaking: status === "speaking",
     isLoading: status === "loading",
     currentEngine,
