@@ -319,9 +319,9 @@ export default function HologramOsPage() {
   const P = useMemo(() => palette(bgMode), [bgMode]);
   const isFocus = attention.preset === "focus";
 
-  // ── Auto-hide widgets in focus mode ────────────────────────────────────
+  // ── Auto-hide widgets in focus mode, restore when leaving ───────────────
   useEffect(() => {
-    if (isFocus) setAllWidgetsHidden(true);
+    setAllWidgetsHidden(isFocus);
   }, [isFocus]);
 
   // ── Listen for global lumen:open event (from LumenFloatingPill) ────────
