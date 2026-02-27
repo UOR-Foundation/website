@@ -11,14 +11,15 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
 const QLinuxKernelPanel = React.lazy(() => import("@/modules/quantum/components/QLinuxKernelPanel"));
 const CircuitCompilerPanel = React.lazy(() => import("@/modules/quantum/components/CircuitCompilerPanel"));
+const StabilizerProofPanel = React.lazy(() => import("@/modules/quantum/components/StabilizerProofPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function QuantumDashboardPage() {
     { key: "topo-qubit", label: "Topological Qubit", icon: <Hexagon size={12} /> },
     { key: "q-linux", label: "Q-Linux Kernel", icon: <Terminal size={12} /> },
     { key: "compiler", label: "Circuit Compiler", icon: <Workflow size={12} /> },
+    { key: "proof", label: "Stabilizer Proof", icon: <BookOpen size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -38,6 +40,7 @@ export default function QuantumDashboardPage() {
     "topo-qubit": "Instantiating topological qubits…",
     "q-linux": "Booting Q-Linux kernel…",
     compiler: "Initializing circuit compiler…",
+    proof: "Constructing stabilizer correspondence proof…",
   };
 
   return (
@@ -91,7 +94,8 @@ export default function QuantumDashboardPage() {
            tab === "isa" ? <QuantumISAPanel /> :
            tab === "topo-qubit" ? <TopologicalQubitPanel /> :
            tab === "q-linux" ? <QLinuxKernelPanel /> :
-           <CircuitCompilerPanel />}
+           tab === "compiler" ? <CircuitCompilerPanel /> :
+           <StabilizerProofPanel />}
         </Suspense>
       </div>
     </div>
@@ -155,6 +159,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "Pipeline", value: "6-stage" },
         { label: "Decompose", value: "MCZ/CR/SWAP" },
         { label: "Tests", value: "12/12 ✓" },
+      ],
+    },
+    {
+      key: "proof" as Tab,
+      title: "Stabilizer Proof",
+      phase: "Phase 16",
+      icon: <BookOpen size={24} />,
+      color: "hsl(50,80%,60%)",
+      description: "Constructive proof: Atlas₉₆ ≅ Stab₃/~ — bijection between 96 Atlas vertices and 96 canonical stabilizer state representatives under phase equivalence.",
+      stats: [
+        { label: "Theorems", value: "4+2" },
+        { label: "Bijection", value: "96↔96" },
+        { label: "Mirror Pairs", value: "48" },
+        { label: "Status", value: "QED ✓" },
       ],
     },
   ];
@@ -230,6 +248,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "next", label: "Phase 13: Quantum error correction simulator" },
             { status: "done", label: "Phase 14: Q-Linux Kernel — quantum process scheduling (14 tests)" },
             { status: "done", label: "Phase 15: Circuit Compiler — algorithm → Atlas gate sequences (12 tests)" },
+            { status: "done", label: "Phase 16: Stabilizer Proof — Atlas₉₆ ≅ Stab₃/~ bijection (7 steps)" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>
