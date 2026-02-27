@@ -41,7 +41,7 @@ export class AudioEngine {
 
     this.audio = new Audio();
     this.audio.preload = "none";
-    this.audio.crossOrigin = "anonymous"; // Enable Web Audio AnalyserNode reads
+    // crossOrigin is set per-play: "anonymous" for proxy, removed for direct streams
 
     // Wire up state events
     this.audio.addEventListener("playing", () => this.setState("playing"));
@@ -184,25 +184,27 @@ export class AudioEngine {
   }
 
   private async playNative(url: string): Promise<void> {
-    // Try CORS proxy first for AnalyserNode access, fall back to direct URL
     const proxiedUrl = this.proxyUrl(url);
     const useProxy = proxiedUrl !== url;
 
     if (useProxy) {
       try {
-        // Quick HEAD check to see if proxy is available
-        const probe = await fetch(proxiedUrl, { method: "HEAD" }).catch(() => null);
-        if (probe && probe.ok) {
-          this.audio.src = proxiedUrl;
-          this.audio.load();
-          try { await this.audio.play(); return; } catch {}
+        // Use the proxy directly — set crossOrigin for AnalyserNode access
+        this.audio.crossOrigin = "anonymous";
+        this.audio.src = proxiedUrl;
+        this.audio.load();
+        try {
+          await this.audio.play();
+          return; // Success via proxy
+        } catch (proxyPlayErr) {
+          console.warn("[AudioEngine] Proxy playback failed, trying direct:", proxyPlayErr);
         }
       } catch {}
-      console.warn("[AudioEngine] Proxy unavailable, using direct stream (AnalyserNode will be silent)");
     }
 
-    // Direct stream — works for playback but AnalyserNode gets silence (CORS)
-    this.audio.crossOrigin = ""; // Remove crossOrigin for direct streams
+    // Direct stream — remove crossOrigin entirely so browser doesn't enforce CORS
+    this.audio.removeAttribute("crossorigin");
+    this.audio.crossOrigin = null as unknown as string;
     this.audio.src = url;
     this.audio.load();
     try {

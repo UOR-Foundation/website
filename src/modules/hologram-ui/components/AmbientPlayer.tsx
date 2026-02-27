@@ -54,7 +54,7 @@ export default function AmbientPlayer({ lumenOffset = 0, onStateChange }: Ambien
     return () => document.removeEventListener("mousedown", handler);
   }, [expanded]);
 
-  const openUpward = drag.pos.y > (typeof window !== "undefined" ? window.innerHeight * 0.45 : 400);
+  const openUpward = true; // Always open upward since the pill sits near the bottom
   const { playing, loading, station, volume, muted, currentFrame, cacheStats } = ctrl;
 
   return (
@@ -119,7 +119,9 @@ function ExpandedPanel({
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
       className="w-[280px] rounded-2xl overflow-hidden"
       style={{
-        ...(openUpward ? { position: "absolute", bottom: 0 } : {}),
+        position: "absolute",
+        bottom: 0,
+        left: 0,
         background: P.surface,
         backdropFilter: "blur(40px) saturate(1.3)",
         WebkitBackdropFilter: "blur(40px) saturate(1.3)",
@@ -161,7 +163,7 @@ function ExpandedPanel({
       )}
 
       {/* Station List */}
-      <div className="px-3 pb-2 max-h-[240px] overflow-y-auto lumen-scroll">
+      <div className="px-3 pb-2 max-h-[200px] overflow-y-auto lumen-scroll">
         {(["focus", "nature"] as const).map((cat) => (
           <div key={cat} className="mb-2">
             <p className="text-[11px] tracking-[0.16em] uppercase px-1 py-1.5" style={{ color: P.textDim }}>
