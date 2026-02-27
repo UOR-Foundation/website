@@ -186,9 +186,9 @@ function runScaleBenchmark(dataSize: number): ScalePoint {
 // SVG Chart
 // ═══════════════════════════════════════════════════════════════════════════
 
-const CHART_W = 560;
-const CHART_H = 220;
-const PAD = { top: 24, right: 20, bottom: 40, left: 50 };
+const CHART_W = 480;
+const CHART_H = 200;
+const PAD = { top: 24, right: 16, bottom: 36, left: 46 };
 const INNER_W = CHART_W - PAD.left - PAD.right;
 const INNER_H = CHART_H - PAD.top - PAD.bottom;
 
@@ -328,9 +328,9 @@ function EfficiencyAmplifier({ speedup, stdTotalMs, holoTotalMs, pointCount, isR
   const wasteRatio = Math.max(Math.round(stdTotalMs / Math.max(holoTotalMs, 0.01)), 1);
 
   return (
-    <div className="rounded-xl p-4 flex flex-col items-center justify-between h-full" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+    <div className="rounded-xl p-3 flex flex-col items-center justify-between h-full" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
       {/* Radial gauge — compact */}
-      <svg viewBox="0 0 160 120" className="w-full" style={{ maxWidth: 180 }}>
+      <svg viewBox="0 0 160 120" className="w-full" style={{ maxWidth: 160 }}>
         <defs>
           <linearGradient id="gauge-glow" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor={P.gold} stopOpacity="0.6" />
@@ -508,7 +508,7 @@ export default function ConstantTimeBenchmark() {
   const holoTotalMs = currentPoints.reduce((s, p) => s + p.hologramMs, 0);
 
   return (
-    <div className="space-y-4" style={{ fontFamily: P.font }}>
+    <div className="space-y-3" style={{ fontFamily: P.font }}>
       {/* ── Header row ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
@@ -565,22 +565,22 @@ export default function ConstantTimeBenchmark() {
       {/* ── Side-by-side comparison (idle state) ──────────────── */}
       {currentState === "idle" && (
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <div className="rounded-xl p-3 space-y-1.5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full" style={{ background: P.red }} />
               <h3 className="text-xs font-medium" style={{ color: P.text }}>Standard Compute</h3>
             </div>
-            <p className="text-3xl font-light font-mono tabular-nums leading-none" style={{ color: P.red }}>O(N)</p>
+            <p className="text-2xl font-light font-mono tabular-nums leading-none" style={{ color: P.red }}>O(N)</p>
             <p className="text-[11px] leading-relaxed" style={{ color: P.muted }}>
               {tab === "chain" ? "Each op = full pass. 512 ops = 512× work." : "128 passes × N elements. Linear growth."}
             </p>
           </div>
-          <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
+          <div className="rounded-xl p-3 space-y-1.5" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full" style={{ background: P.gold }} />
               <h3 className="text-xs font-medium" style={{ color: P.text }}>Hologram Virtual GPU</h3>
             </div>
-            <p className="text-3xl font-light font-mono tabular-nums leading-none" style={{ color: P.gold }}>O(1)</p>
+            <p className="text-2xl font-light font-mono tabular-nums leading-none" style={{ color: P.gold }}>O(1)</p>
             <p className="text-[11px] leading-relaxed" style={{ color: P.muted }}>
               {tab === "chain" ? "All ops → one 256-byte table. Constant." : "One composed table, one pass. Flat."}
             </p>
@@ -588,9 +588,9 @@ export default function ConstantTimeBenchmark() {
         </div>
       )}
 
-      {/* ── Chart + Efficiency Amplifier (side-by-side) ────────── */}
+      {/* ── Chart + Efficiency Amplifier (balanced 50/50) ─────── */}
       {currentPoints.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <div className="rounded-xl p-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             {tab === "chain" ? (
               <DualLineChart
@@ -633,32 +633,32 @@ export default function ConstantTimeBenchmark() {
           <table className="w-full text-[11px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
             <thead>
               <tr style={{ background: P.card }}>
-                <th className="text-left py-2 px-3 font-medium" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>
+                <th className="text-left py-1.5 px-3 font-medium" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>
                   {tab === "chain" ? "Ops" : "Data"}
                 </th>
-                <th className="text-right py-2 px-3 font-medium" style={{ color: P.red, borderBottom: `1px solid ${P.cardBorder}` }}>Standard</th>
-                <th className="text-right py-2 px-3 font-medium" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU</th>
-                <th className="text-right py-2 px-3 font-medium" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Compose</th>
-                <th className="text-right py-2 px-3 font-medium" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
+                <th className="text-right py-1.5 px-3 font-medium" style={{ color: P.red, borderBottom: `1px solid ${P.cardBorder}` }}>Standard</th>
+                <th className="text-right py-1.5 px-3 font-medium" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU</th>
+                <th className="text-right py-1.5 px-3 font-medium" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Compose</th>
+                <th className="text-right py-1.5 px-3 font-medium" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
               </tr>
             </thead>
             <tbody>
               {tab === "chain" && chainPoints.map((p, i) => (
                 <tr key={p.chainDepth} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
-                  <td className="py-1.5 px-3 font-semibold" style={{ color: P.text }}>{p.chainDepth}</td>
-                  <td className="py-1.5 px-3 text-right" style={{ color: P.red }}>{p.standardMs.toFixed(2)}</td>
-                  <td className="py-1.5 px-3 text-right" style={{ color: P.gold }}>{p.hologramMs.toFixed(2)}</td>
-                  <td className="py-1.5 px-3 text-right" style={{ color: P.muted }}>{p.composeMs.toFixed(3)}</td>
-                  <td className="py-1.5 px-3 text-right font-bold" style={{ color: P.text }}>{p.speedup.toFixed(1)}×</td>
+                  <td className="py-1 px-3 font-semibold" style={{ color: P.text }}>{p.chainDepth}</td>
+                  <td className="py-1 px-3 text-right" style={{ color: P.red }}>{p.standardMs.toFixed(2)}</td>
+                  <td className="py-1 px-3 text-right" style={{ color: P.gold }}>{p.hologramMs.toFixed(2)}</td>
+                  <td className="py-1 px-3 text-right" style={{ color: P.muted }}>{p.composeMs.toFixed(3)}</td>
+                  <td className="py-1 px-3 text-right font-bold" style={{ color: P.text }}>{p.speedup.toFixed(1)}×</td>
                 </tr>
               ))}
               {tab === "scale" && scalePoints.map((p, i) => (
                 <tr key={p.dataSize} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
-                  <td className="py-1.5 px-3 font-semibold" style={{ color: P.text }}>{p.label}</td>
-                  <td className="py-1.5 px-3 text-right" style={{ color: P.red }}>{p.standardMs.toFixed(2)}</td>
-                  <td className="py-1.5 px-3 text-right" style={{ color: P.gold }}>{p.hologramMs.toFixed(2)}</td>
-                  <td className="py-1.5 px-3 text-right" style={{ color: P.muted }}>{p.composeMs.toFixed(3)}</td>
-                  <td className="py-1.5 px-3 text-right font-bold" style={{ color: P.text }}>{p.speedup.toFixed(1)}×</td>
+                  <td className="py-1 px-3 font-semibold" style={{ color: P.text }}>{p.label}</td>
+                  <td className="py-1 px-3 text-right" style={{ color: P.red }}>{p.standardMs.toFixed(2)}</td>
+                  <td className="py-1 px-3 text-right" style={{ color: P.gold }}>{p.hologramMs.toFixed(2)}</td>
+                  <td className="py-1 px-3 text-right" style={{ color: P.muted }}>{p.composeMs.toFixed(3)}</td>
+                  <td className="py-1 px-3 text-right font-bold" style={{ color: P.text }}>{p.speedup.toFixed(1)}×</td>
                 </tr>
               ))}
             </tbody>
