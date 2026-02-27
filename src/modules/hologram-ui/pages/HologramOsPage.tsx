@@ -263,25 +263,25 @@ export default function HologramOsPage() {
     setTransitionPhase("bloom");
     setContentBreathe(true);
 
-    // Phase 1: projection wavefront sweeps left→right (0–650ms)
-    // Phase 2: hold — switch actual mode behind the projection (650ms)
+    // Phase 1: gentle sweep left→right (0–900ms)
+    // Phase 2: hold — switch actual mode behind the curtain (900ms)
     setTimeout(() => {
       setTransitionPhase("hold");
       setBgModeState(m);
       localStorage.setItem("hologram-bg-mode", m);
-    }, 600);
+    }, 900);
 
-    // Phase 3: fade — projection dissolves, new reality revealed
+    // Phase 3: fade — curtain dissolves to reveal new reality
     setTimeout(() => {
       setTransitionPhase("fade");
       setContentBreathe(false);
-    }, 850);
+    }, 1200);
 
     // Phase 4: cleanup
     setTimeout(() => {
       setTransitioning(false);
       setTransitionPhase("idle");
-    }, 1700);
+    }, 2400);
   }, [bgMode]);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
@@ -482,7 +482,7 @@ export default function HologramOsPage() {
               className="absolute inset-0 pointer-events-none overflow-hidden"
               style={{ zIndex: 9999 }}
             >
-              {/* Main projection surface — sweeps left→right from sidebar */}
+              {/* Projection surface — gentle sweep from sidebar edge */}
               <div
                 style={{
                   position: "absolute",
@@ -494,50 +494,35 @@ export default function HologramOsPage() {
                       ? "inset(0 0 0 100%)"
                       : "inset(0 100% 0 0)",
                   transition: transitionPhase === "bloom"
-                    ? "clip-path 650ms cubic-bezier(0.22, 1, 0.36, 1)"
+                    ? "clip-path 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94)"
                     : transitionPhase === "fade"
-                      ? "clip-path 850ms cubic-bezier(0.4, 0, 0.2, 1)"
+                      ? "clip-path 1100ms cubic-bezier(0.39, 0.575, 0.565, 1)"
                       : "none",
                 }}
               />
 
-              {/* Leading edge glow — the holographic wavefront */}
+              {/* Soft leading edge — warm light at the wavefront */}
               <div
                 style={{
                   position: "absolute",
                   top: 0,
                   bottom: 0,
-                  width: "180px",
-                  background: bgMode === "dark"
-                    ? "linear-gradient(to right, transparent, hsla(38, 25%, 60%, 0.08), transparent)"
-                    : bgMode === "white"
-                      ? "linear-gradient(to right, transparent, hsla(38, 30%, 50%, 0.06), transparent)"
-                      : "linear-gradient(to right, transparent, hsla(38, 40%, 75%, 0.1), transparent)",
+                  width: "120px",
+                  background: "linear-gradient(to right, transparent, hsla(38, 30%, 65%, 0.07), transparent)",
                   left: transitionPhase === "bloom"
                     ? "100%"
                     : transitionPhase === "hold"
                       ? "100%"
                       : transitionPhase === "fade"
-                        ? "calc(100% + 180px)"
-                        : "-180px",
+                        ? "calc(100% + 120px)"
+                        : "-120px",
                   opacity: transitionPhase === "idle" ? 0 : 1,
                   transition: transitionPhase === "bloom"
-                    ? "left 650ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease-out"
+                    ? "left 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 300ms ease-out"
                     : transitionPhase === "fade"
-                      ? "left 850ms cubic-bezier(0.4, 0, 0.2, 1), opacity 600ms ease-out"
+                      ? "left 1100ms cubic-bezier(0.39, 0.575, 0.565, 1), opacity 800ms ease-out"
                       : "none",
-                  filter: "blur(20px)",
-                }}
-              />
-
-              {/* Subtle scan-line shimmer — holographic texture */}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "repeating-linear-gradient(90deg, transparent, transparent 3px, hsla(38, 20%, 70%, 0.015) 3px, hsla(38, 20%, 70%, 0.015) 4px)",
-                  opacity: transitionPhase === "hold" ? 1 : 0,
-                  transition: "opacity 300ms ease-in-out",
+                  filter: "blur(30px)",
                 }}
               />
             </div>
