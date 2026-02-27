@@ -30,6 +30,8 @@ export type {
 export {
   MUL_TABLE,
   MUL_TABLE_BYTES,
+  BIT_TABLE,
+  BIT_TABLE_Q4_BYTES,
   lutMatmul,
   standardMatmul,
   gpuMatmul,
@@ -39,4 +41,4 @@ export {
   matrixChecksum,
 } from "./hologram-matmul";
 
-export type { PrecomputeStats } from "./hologram-matmul";
+export type { PrecomputeStats, BitPrecision, BitTableDescriptor } from "./hologram-matmul";
