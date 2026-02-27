@@ -443,6 +443,69 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_events: {
+        Row: {
+          all_day: boolean
+          attendees: Json | null
+          color: string | null
+          created_at: string
+          description: string | null
+          end_time: string
+          external_calendar_id: string | null
+          external_event_id: string | null
+          id: string
+          location: string | null
+          recurrence: string | null
+          source_message_id: string | null
+          source_platform: string | null
+          start_time: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          all_day?: boolean
+          attendees?: Json | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          end_time: string
+          external_calendar_id?: string | null
+          external_event_id?: string | null
+          id?: string
+          location?: string | null
+          recurrence?: string | null
+          source_message_id?: string | null
+          source_platform?: string | null
+          start_time: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          all_day?: boolean
+          attendees?: Json | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          external_calendar_id?: string | null
+          external_event_id?: string | null
+          id?: string
+          location?: string | null
+          recurrence?: string | null
+          source_message_id?: string | null
+          source_platform?: string | null
+          start_time?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       discord_events: {
         Row: {
           calendar_date: string | null
@@ -572,6 +635,84 @@ export type Database = {
           uor_cid?: string
           updated_at?: string
           version?: string
+        }
+        Relationships: []
+      }
+      messenger_context_graph: {
+        Row: {
+          confidence: number
+          created_at: string
+          id: string
+          source_id: string | null
+          source_type: string
+          triple_object: string
+          triple_predicate: string
+          triple_subject: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          source_id?: string | null
+          source_type?: string
+          triple_object: string
+          triple_predicate: string
+          triple_subject: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          source_id?: string | null
+          source_type?: string
+          triple_object?: string
+          triple_predicate?: string
+          triple_subject?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      messenger_introductions: {
+        Row: {
+          created_at: string
+          id: string
+          introducer_name: string
+          person_a: string
+          person_a_email: string | null
+          person_b: string
+          person_b_email: string | null
+          reason: string | null
+          status: string
+          stay_in_group: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          introducer_name: string
+          person_a: string
+          person_a_email?: string | null
+          person_b: string
+          person_b_email?: string | null
+          reason?: string | null
+          status?: string
+          stay_in_group?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          introducer_name?: string
+          person_a?: string
+          person_a_email?: string | null
+          person_b?: string
+          person_b_email?: string | null
+          reason?: string | null
+          status?: string
+          stay_in_group?: boolean
+          user_id?: string
         }
         Relationships: []
       }
