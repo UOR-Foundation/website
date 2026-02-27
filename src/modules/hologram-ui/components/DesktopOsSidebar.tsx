@@ -135,7 +135,7 @@ export default function DesktopOsSidebar({
         fontFamily: "'DM Sans', system-ui, sans-serif",
       } as React.CSSProperties}
     >
-      {/* Ambient projection glow along the right edge */}
+      {/* Ambient projection glow along the right edge — breathes with the heartbeat */}
       <div
         className="absolute top-0 bottom-0 pointer-events-none"
         style={{
@@ -144,6 +144,7 @@ export default function DesktopOsSidebar({
           background: "linear-gradient(to right, hsla(38, 30%, 60%, 0.08), transparent)",
           filter: "blur(4px)",
           zIndex: 1,
+          animation: "sidebar-glow-breathe 2.4s ease-in-out infinite",
         }}
       />
       {/* ── Top: Logo / toggle ─────────────────────────────────── */}

@@ -439,6 +439,16 @@
   44% { opacity: 0.6; }
 }
 
+/* Sidebar projection glow — synchronized to heartbeat-love (2.4s) */
+@keyframes sidebar-glow-breathe {
+  0%, 100% { opacity: 0.5; }
+  10%  { opacity: 1; }
+  22%  { opacity: 0.5; }
+  32%  { opacity: 0.85; }
+  44%  { opacity: 0.5; }
+}
+}
+
 /* ── Lumen glyph entrance ─────────────────────────────────────────── */
 @keyframes lumen-ring-enter {
   0%   { transform: scale(0); opacity: 0; }
