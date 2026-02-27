@@ -18,6 +18,7 @@ import {
 import { PageShell } from "@/modules/hologram-ui";
 import { getOrchestrator, type ProviderSnapshot } from "@/modules/hologram-compute";
 import ConstantTimeBenchmark from "./ConstantTimeBenchmark";
+import BitTableBenchmark from "./BitTableBenchmark";
 
 // ── Shared ──────────────────────────────────────────────────────────────────
 
@@ -175,6 +176,19 @@ function ConsumerView({ snap }: {
           <ResourceRow icon={<IconBrain size={18} />} label="AI Inference" value={isOnline ? "Ready" : "Awaiting init"} accent={isOnline} />
           <ResourceRow icon={<IconBoltFilled size={18} />} label="Cost" value="$0 / forever" accent />
         </div>
+      </section>
+
+      {/* BIT_TABLE benchmark */}
+      <section className="space-y-2">
+        <div className="text-center space-y-0.5">
+          <h2 className="font-serif text-lg text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Memory-efficient inference
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            64× less memory with bit-plane decomposition — same results, proven byte-identical.
+          </p>
+        </div>
+        <BitTableBenchmark />
       </section>
 
       {/* Constant-time proof */}
