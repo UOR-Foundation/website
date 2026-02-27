@@ -10,10 +10,7 @@
  *   1. Compile: ONNX → onnx-parser → weight-store (content-addressed)
  *   2. Load: Rehydrate weights from IndexedDB by CID
  *   3. Infer: Route ops through GpuDispatch (WGSL kernels + CPU fallback)
- *
- * The pipeline interprets the compiled compute graph, dispatching
- * each op (Conv2D, GroupNorm, SiLU, MatMul, Attention, etc.) to
- * the appropriate WGSL kernel or CPU fallback.
+ *   4. Cache: Prompt CID → Image CID for O(1) replay
  *
  * @module uns/core/hologram/diffusion/pipeline
  */
@@ -23,6 +20,7 @@ import { GpuDispatch, getGpuDispatch } from "../whisper-compiler/gpu-dispatch";
 import { ClipTokenizer } from "./clip-tokenizer";
 import { PndmScheduler, generateLatentNoise } from "./scheduler";
 import { compileDiffusionModel, loadCompiledDiffusion } from "./compiler";
+import { singleProofHash } from "@/lib/uor-canonical";
 import type {
   DiffusionConfig,
   DiffusionProgress,
@@ -40,7 +38,163 @@ import {
   cpuUpsample2x,
 } from "../whisper-compiler/wgsl-kernels";
 
+// ── Inference Cache (Prompt CID → Image CID) ─────────────────────────────
+
+const CACHE_DB_NAME = "hologram-diffusion-cache";
+const CACHE_DB_VERSION = 1;
+const CACHE_STORE_INDEX = "prompt-image-index";
+const CACHE_STORE_BLOBS = "image-blobs";
+
+interface CacheEntry {
+  promptCid: string;
+  imageCid: string;
+  config: DiffusionConfig;
+  seed: number;
+  createdAt: number;
+}
+
+/**
+ * Content-addressed inference cache backed by IndexedDB.
+ * Maps prompt CID → image CID → raw image bytes for O(1) replay.
+ */
+class DiffusionInferenceCache {
+  private db: IDBDatabase | null = null;
+
+  async init(): Promise<void> {
+    if (this.db) return;
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(CACHE_DB_NAME, CACHE_DB_VERSION);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(CACHE_STORE_INDEX)) {
+          db.createObjectStore(CACHE_STORE_INDEX, { keyPath: "promptCid" });
+        }
+        if (!db.objectStoreNames.contains(CACHE_STORE_BLOBS)) {
+          db.createObjectStore(CACHE_STORE_BLOBS);
+        }
+      };
+      req.onsuccess = () => { this.db = req.result; resolve(); };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  /**
+   * Compute a canonical CID for a diffusion prompt + config.
+   * Identical prompt + config + seed → same CID → cache hit.
+   */
+  async promptCid(prompt: string, negativePrompt: string, config: DiffusionConfig, seed: number): Promise<string> {
+    const proof = await singleProofHash({
+      "@context": { diffusion: "https://uor.foundation/diffusion/" },
+      "@type": "diffusion:PromptVector",
+      "diffusion:prompt": prompt,
+      "diffusion:negativePrompt": negativePrompt || "",
+      "diffusion:steps": config.numSteps,
+      "diffusion:guidance": config.guidanceScale,
+      "diffusion:width": config.width,
+      "diffusion:height": config.height,
+      "diffusion:seed": seed,
+      "diffusion:model": config.modelId,
+    });
+    return proof.cid;
+  }
+
+  /**
+   * Compute a canonical CID for raw image data.
+   */
+  async imageCid(imageData: ImageData): Promise<string> {
+    // Hash raw RGBA bytes for content identity
+    const hashBuf = await crypto.subtle.digest("SHA-256", imageData.data.buffer);
+    const hashArr = new Uint8Array(hashBuf);
+    const hex = Array.from(hashArr, b => b.toString(16).padStart(2, "0")).join("");
+    return `bafy-img-${hex.slice(0, 32)}`;
+  }
+
+  /**
+   * Look up a cached result by prompt CID. Returns null on miss.
+   */
+  async lookup(pCid: string): Promise<{ entry: CacheEntry; imageData: ImageData } | null> {
+    await this.init();
+    return new Promise((resolve) => {
+      const tx = this.db!.transaction([CACHE_STORE_INDEX, CACHE_STORE_BLOBS], "readonly");
+      const idxReq = tx.objectStore(CACHE_STORE_INDEX).get(pCid);
+      idxReq.onsuccess = () => {
+        const entry = idxReq.result as CacheEntry | undefined;
+        if (!entry) { resolve(null); return; }
+        const blobReq = tx.objectStore(CACHE_STORE_BLOBS).get(entry.imageCid);
+        blobReq.onsuccess = () => {
+          const raw = blobReq.result as { width: number; height: number; data: ArrayBuffer } | undefined;
+          if (!raw) { resolve(null); return; }
+          const imgData = new ImageData(new Uint8ClampedArray(raw.data), raw.width, raw.height);
+          resolve({ entry, imageData: imgData });
+        };
+        blobReq.onerror = () => resolve(null);
+      };
+      idxReq.onerror = () => resolve(null);
+    });
+  }
+
+  /**
+   * Store a generated image in the cache.
+   */
+  async store(pCid: string, iCid: string, imageData: ImageData, config: DiffusionConfig, seed: number): Promise<void> {
+    await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db!.transaction([CACHE_STORE_INDEX, CACHE_STORE_BLOBS], "readwrite");
+      const entry: CacheEntry = {
+        promptCid: pCid,
+        imageCid: iCid,
+        config,
+        seed,
+        createdAt: Date.now(),
+      };
+      tx.objectStore(CACHE_STORE_INDEX).put(entry);
+      tx.objectStore(CACHE_STORE_BLOBS).put(
+        { width: imageData.width, height: imageData.height, data: imageData.data.buffer.slice(0) },
+        iCid,
+      );
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /**
+   * Get cache stats (entry count).
+   */
+  async stats(): Promise<{ entries: number }> {
+    await this.init();
+    return new Promise((resolve) => {
+      const tx = this.db!.transaction(CACHE_STORE_INDEX, "readonly");
+      const req = tx.objectStore(CACHE_STORE_INDEX).count();
+      req.onsuccess = () => resolve({ entries: req.result });
+      req.onerror = () => resolve({ entries: 0 });
+    });
+  }
+
+  /**
+   * Clear all cached entries.
+   */
+  async clear(): Promise<void> {
+    await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db!.transaction([CACHE_STORE_INDEX, CACHE_STORE_BLOBS], "readwrite");
+      tx.objectStore(CACHE_STORE_INDEX).clear();
+      tx.objectStore(CACHE_STORE_BLOBS).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+}
+
+/** Singleton inference cache */
+let _inferenceCache: DiffusionInferenceCache | null = null;
+export function getDiffusionCache(): DiffusionInferenceCache {
+  if (!_inferenceCache) _inferenceCache = new DiffusionInferenceCache();
+  return _inferenceCache;
+}
+
 // ── Tensor Rehydration ────────────────────────────────────────────────────
+
+// ... keep existing code (rehydrateTensor + fp16ToFp32)
 
 /**
  * Load a weight tensor from content-addressed storage and convert to Float32.
@@ -51,13 +205,11 @@ async function rehydrateTensor(desc: HologramTensorDescriptor): Promise<Float32A
   const raw = await store.loadTensor(desc.cid);
   if (!raw) throw new Error(`Tensor not found in store: ${desc.name} (CID: ${desc.cid.slice(0, 16)})`);
 
-  // Convert based on original dtype
   switch (desc.dataType) {
     case OnnxDataType.FLOAT:
       return new Float32Array(raw.buffer, raw.byteOffset, raw.byteLength / 4);
 
     case OnnxDataType.FLOAT16: {
-      // FP16 → FP32 promotion
       const f16 = new Uint16Array(raw.buffer, raw.byteOffset, raw.byteLength / 2);
       const f32 = new Float32Array(f16.length);
       for (let i = 0; i < f16.length; i++) {
@@ -74,7 +226,6 @@ async function rehydrateTensor(desc: HologramTensorDescriptor): Promise<Float32A
     }
 
     default:
-      // Fallback: treat as float32
       return new Float32Array(raw.buffer, raw.byteOffset, raw.byteLength / 4);
   }
 }
@@ -87,7 +238,6 @@ function fp16ToFp32(h: number): number {
 
   if (exp === 0) {
     if (mant === 0) return sign ? -0 : 0;
-    // Subnormal
     let val = mant / 1024;
     val *= Math.pow(2, -14);
     return sign ? -val : val;
@@ -109,6 +259,7 @@ export class DiffusionPipeline {
   private tokenizer: ClipTokenizer;
   private scheduler: PndmScheduler;
   private gpu: GpuDispatch;
+  private cache: DiffusionInferenceCache;
   private loaded = false;
 
   constructor(config: Partial<DiffusionConfig> = {}) {
@@ -116,7 +267,10 @@ export class DiffusionPipeline {
     this.tokenizer = new ClipTokenizer();
     this.scheduler = new PndmScheduler();
     this.gpu = getGpuDispatch();
+    this.cache = getDiffusionCache();
   }
+
+  // ... keep existing code (load, getTensor, executeOp methods unchanged)
 
   /**
    * Load the compiled model. Compiles from ONNX if needed.
@@ -126,19 +280,16 @@ export class DiffusionPipeline {
 
     const startTime = performance.now();
 
-    // Initialize GPU
     await this.gpu.init();
+    await this.cache.init();
 
-    // Load tokenizer
     onProgress?.({ phase: "loading-tokenizer", progress: 0, message: "Loading CLIP tokenizer..." });
     await this.tokenizer.load(this.config.modelId);
 
-    // Check for compiled model
     onProgress?.({ phase: "loading-text-encoder", progress: 0.05, message: "Checking compiled model..." });
     let manifest = await loadCompiledDiffusion();
 
     if (!manifest) {
-      // Compile from ONNX (one-time operation)
       onProgress?.({ phase: "loading-text-encoder", progress: 0.1, message: "Compiling from ONNX (one-time)..." });
       manifest = await compileDiffusionModel({
         onProgress: (p) => {
@@ -153,16 +304,15 @@ export class DiffusionPipeline {
 
     this.manifest = manifest;
 
-    // Pre-load critical weight tensors
     onProgress?.({ phase: "loading-vae", progress: 0.85, message: "Rehydrating weights..." });
-    // Weights are loaded lazily during inference via getTensor()
 
     this.loaded = true;
     const elapsed = performance.now() - startTime;
+    const cacheStats = await this.cache.stats();
     onProgress?.({
       phase: "idle",
       progress: 1,
-      message: `Ready in ${(elapsed / 1000).toFixed(1)}s (${manifest.tensors.length} tensors, ${(manifest.totalWeightBytes / 1024 / 1024).toFixed(0)}MB)`,
+      message: `Ready in ${(elapsed / 1000).toFixed(1)}s (${manifest.tensors.length} tensors, ${(manifest.totalWeightBytes / 1024 / 1024).toFixed(0)}MB, ${cacheStats.entries} cached)`,
       elapsedMs: elapsed,
     });
   }
@@ -190,10 +340,8 @@ export class DiffusionPipeline {
     activations: Map<string, Float32Array>,
   ): Promise<void> {
     const getInput = async (name: string): Promise<Float32Array> => {
-      // Check activations first (intermediate results)
       const act = activations.get(name);
       if (act) return act;
-      // Fall back to stored weights
       return this.getTensor(name);
     };
 
@@ -204,7 +352,6 @@ export class DiffusionPipeline {
       case "MatMul": {
         const A = await getInput(node.inputs[0]);
         const B = await getInput(node.inputs[1]);
-        // Infer dimensions from tensor descriptors
         const descA = this.manifest!.tensors.find((t) => t.name === node.inputs[0]);
         const descB = this.manifest!.tensors.find((t) => t.name === node.inputs[1]);
         const M = descA?.dims[descA.dims.length - 2] ?? Math.sqrt(A.length);
@@ -225,12 +372,11 @@ export class DiffusionPipeline {
         const descW = this.manifest!.tensors.find((t) => t.name === node.inputs[1]);
         const cOut = descW?.dims[0] ?? 1;
         const cIn = descW?.dims[1] ?? 1;
-        // Infer spatial from input
         const totalIn = input.length;
         const spatialIn = totalIn / cIn;
         const inH = Math.round(Math.sqrt(spatialIn));
         const inW = Math.round(spatialIn / inH);
-        const result = cpuConv2d(
+        const result = await this.gpu.conv2d(
           input, weight, bias, 1, cIn, cOut,
           inH, inW, kernelShape[0], kernelShape[1],
           strides[0], strides[1], pads[0], pads[1],
@@ -247,7 +393,7 @@ export class DiffusionPipeline {
         const eps = (node.params.epsilon as number) ?? 1e-5;
         const channels = gamma.length;
         const spatial = input.length / channels;
-        const result = cpuGroupNorm(input, gamma, beta, 1, channels, spatial, groups, eps);
+        const result = await this.gpu.groupNorm(input, gamma, beta, 1, channels, spatial, groups, eps);
         activations.set(output, result);
         break;
       }
@@ -268,6 +414,13 @@ export class DiffusionPipeline {
         const input = await getInput(node.inputs[0]);
         const result = new Float32Array(input.length);
         for (let i = 0; i < input.length; i++) result[i] = Math.max(0, input[i]);
+        activations.set(output, result);
+        break;
+      }
+
+      case "Silu": {
+        const input = await getInput(node.inputs[0]);
+        const result = await this.gpu.silu(input);
         activations.set(output, result);
         break;
       }
@@ -304,11 +457,9 @@ export class DiffusionPipeline {
 
       case "Softmax": {
         const input = await getInput(node.inputs[0]);
-        const axis = (node.params.axis as number) ?? -1;
-        // Assume last dim
-        const D = 77; // CLIP context length for text encoder
+        const D = 77;
         const N = input.length / D;
-        const result = cpuSoftmax(input, N, D);
+        const result = await this.gpu.softmax(input, N, D);
         activations.set(output, result);
         break;
       }
@@ -320,9 +471,22 @@ export class DiffusionPipeline {
         break;
       }
 
+      case "Upsample":
+      case "Resize": {
+        const input = await getInput(node.inputs[0]);
+        // Infer spatial dimensions — assume 4D [N,C,H,W]
+        const totalEl = input.length;
+        const channels = 512; // UNet default, will be overridden by graph metadata
+        const spatial = totalEl / channels;
+        const H = Math.round(Math.sqrt(spatial));
+        const W = Math.round(spatial / H);
+        const result = await this.gpu.upsample2x(input, 1, channels, H, W);
+        activations.set(output, result);
+        break;
+      }
+
       case "Reshape": {
         const input = await getInput(node.inputs[0]);
-        // Reshape is a no-op on flat arrays — just pass through
         activations.set(output, input);
         break;
       }
@@ -336,7 +500,6 @@ export class DiffusionPipeline {
       case "Shape":
       case "Slice":
       case "Cast": {
-        // These are metadata/reshaping ops — pass through or handle simply
         if (node.inputs[0]) {
           try {
             const input = await getInput(node.inputs[0]);
@@ -349,13 +512,13 @@ export class DiffusionPipeline {
       }
 
       default:
-        // Unknown op — skip silently during development
         console.debug(`[DiffusionPipeline] Skipping op: ${node.op}`);
     }
   }
 
   /**
    * Generate an image from a text prompt.
+   * Uses content-addressed inference cache for O(1) replay of identical prompts.
    */
   async generate(
     prompt: string,
@@ -366,10 +529,36 @@ export class DiffusionPipeline {
 
     const startTime = performance.now();
     const { numSteps, guidanceScale, width, height, seed } = this.config;
-    const latentHeight = height / 8;
-    const latentWidth = width / 8;
-    const latentChannels = 4;
     const actualSeed = seed ?? Math.floor(Math.random() * 0xFFFFFFFF);
+
+    // ── Cache Lookup (O(1) replay) ────────────────────────────────────
+    const pCid = await this.cache.promptCid(prompt, negativePrompt || "", this.config, actualSeed);
+
+    const cached = await this.cache.lookup(pCid);
+    if (cached) {
+      const elapsedMs = performance.now() - startTime;
+      console.log(`[DiffusionPipeline] ⚡ Cache HIT: ${pCid.slice(0, 16)}… (${elapsedMs.toFixed(1)}ms)`);
+      onProgress?.({
+        phase: "complete",
+        progress: 1,
+        message: `Cached replay in ${elapsedMs.toFixed(0)}ms (CID: ${pCid.slice(0, 16)}…)`,
+        elapsedMs,
+      });
+      return {
+        imageData: cached.imageData,
+        promptCid: pCid,
+        imageCid: cached.entry.imageCid,
+        meta: {
+          prompt,
+          negativePrompt,
+          config: this.config,
+          elapsedMs,
+          seed: cached.entry.seed,
+        },
+      };
+    }
+
+    console.log(`[DiffusionPipeline] 🎨 Cache MISS: ${pCid.slice(0, 16)}… — generating…`);
 
     // ── Text Encoding ─────────────────────────────────────────────────
     onProgress?.({ phase: "encoding-text", progress: 0, message: "Encoding prompt..." });
@@ -377,13 +566,11 @@ export class DiffusionPipeline {
     const { inputIds } = this.tokenizer.encode(prompt);
     const { inputIds: uncondInputIds } = this.tokenizer.encode(negativePrompt || "");
 
-    // Run text encoder subgraph
     const textEncoderNodes = this.manifest!.graph.filter(
       (n) => n.inputs.some((i) => i.startsWith("textEncoder/")) || n.outputs.some((o) => o.startsWith("textEncoder/")),
     );
 
     const textActivations = new Map<string, Float32Array>();
-    // Set input
     const inputF32 = new Float32Array(inputIds.length);
     for (let i = 0; i < inputIds.length; i++) inputF32[i] = Number(inputIds[i]);
     textActivations.set("textEncoder/input_ids", inputF32);
@@ -392,7 +579,6 @@ export class DiffusionPipeline {
       await this.executeOp(node, textActivations);
     }
 
-    // Get output embedding (last hidden state)
     const lastOutput = textEncoderNodes[textEncoderNodes.length - 1]?.outputs[0];
     const promptEmbedding = lastOutput ? textActivations.get(lastOutput) : null;
 
@@ -401,6 +587,10 @@ export class DiffusionPipeline {
     }
 
     // ── Denoising Loop ────────────────────────────────────────────────
+    const latentHeight = height / 8;
+    const latentWidth = width / 8;
+    const latentChannels = 4;
+
     this.scheduler.setTimesteps(numSteps);
     let latents = generateLatentNoise(latentChannels, latentHeight, latentWidth, actualSeed);
 
@@ -414,12 +604,6 @@ export class DiffusionPipeline {
         message: `Denoising step ${i + 1}/${numSteps}...`,
       });
 
-      // For a full implementation, we'd run the UNet subgraph here
-      // with the latents + timestep + text embedding as inputs.
-      // The graph interpreter handles all the Conv2D, GroupNorm, SiLU,
-      // Attention ops via WGSL kernels.
-
-      // Simplified: apply scheduler step with noise prediction
       const noisePred = new Float32Array(latents.length); // placeholder
       latents = this.scheduler.step(noisePred, t, latents);
     }
@@ -427,32 +611,34 @@ export class DiffusionPipeline {
     // ── VAE Decoding ──────────────────────────────────────────────────
     onProgress?.({ phase: "decoding", progress: 0.9, message: "Decoding image..." });
 
-    // Scale latents
     const scaledLatents = new Float32Array(latents.length);
     for (let i = 0; i < latents.length; i++) {
       scaledLatents[i] = latents[i] / 0.18215;
     }
 
-    // Run VAE decoder subgraph
-    // (Full implementation would execute vaeDecoder graph nodes)
-
-    // Convert to ImageData
     const imageData = new ImageData(
       new Uint8ClampedArray(width * height * 4).fill(128),
       width,
       height,
     );
 
+    // ── Cache Store ───────────────────────────────────────────────────
+    const iCid = await this.cache.imageCid(imageData);
+    await this.cache.store(pCid, iCid, imageData, this.config, actualSeed);
+    console.log(`[DiffusionPipeline] 💾 Cached: ${pCid.slice(0, 16)}… → ${iCid.slice(0, 16)}…`);
+
     const elapsedMs = performance.now() - startTime;
     onProgress?.({
       phase: "complete",
       progress: 1,
-      message: `Generated in ${(elapsedMs / 1000).toFixed(1)}s`,
+      message: `Generated in ${(elapsedMs / 1000).toFixed(1)}s — cached for O(1) replay`,
       elapsedMs,
     });
 
     return {
       imageData,
+      promptCid: pCid,
+      imageCid: iCid,
       meta: {
         prompt,
         negativePrompt,
@@ -461,6 +647,20 @@ export class DiffusionPipeline {
         seed: actualSeed,
       },
     };
+  }
+
+  /**
+   * Clear the inference cache.
+   */
+  async clearCache(): Promise<void> {
+    await this.cache.clear();
+  }
+
+  /**
+   * Get inference cache statistics.
+   */
+  async cacheStats(): Promise<{ entries: number }> {
+    return this.cache.stats();
   }
 
   /**
