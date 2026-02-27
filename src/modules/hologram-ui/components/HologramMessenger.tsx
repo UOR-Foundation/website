@@ -20,10 +20,14 @@ import {
   IconBrandLinkedin, IconBrandDiscord, IconShieldCheck,
   IconSend, IconFlame, IconCornerUpLeft,
   IconDotsVertical, IconPencil, IconSettings,
+  IconCalendarEvent, IconBrain, IconUsers, IconUserPlus,
 } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import zeroInboxReward from "@/assets/zero-inbox-reward.jpg";
+import MessengerCalendar, { type CalendarEvent } from "./messenger/MessengerCalendar";
+import MessengerAIPanel from "./messenger/MessengerAIPanel";
+import MessengerIntroductions from "./messenger/MessengerIntroductions";
 
 // ── Palette by mode ─────────────────────────────────────────────────────────
 
@@ -77,6 +81,7 @@ const SERIF = "'Playfair Display', serif";
 
 type TriadicPhase = "all" | "learn" | "work" | "play";
 type Platform = "email" | "telegram" | "whatsapp" | "linkedin" | "discord" | "signal";
+type MessengerView = "inbox" | "calendar" | "ai" | "introductions";
 
 interface Message {
   id: string;
@@ -186,6 +191,18 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [activeView, setActiveView] = useState<MessengerView>("inbox");
+
+  // Calendar state
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([
+    { id: "ev1", title: "Team standup", startTime: new Date(2026, 1, 27, 9, 0), endTime: new Date(2026, 1, 27, 9, 30), color: "hsl(220, 80%, 56%)", status: "confirmed" },
+    { id: "ev2", title: "Hologram launch review", startTime: new Date(2026, 1, 27, 14, 0), endTime: new Date(2026, 1, 27, 15, 30), color: "hsl(265, 55%, 60%)", status: "confirmed", location: "Zoom" },
+    { id: "ev3", title: "Deep work block", startTime: new Date(2026, 1, 28, 10, 0), endTime: new Date(2026, 1, 28, 12, 0), color: "hsl(152, 55%, 42%)", status: "confirmed" },
+  ]);
+  const [suggestedEvent, setSuggestedEvent] = useState<Partial<CalendarEvent> | null>(null);
+
+  // Introduction state
+  const [introductions, setIntroductions] = useState<any[]>([]);
 
   const filtered = useMemo(() => {
     let list = messages;
@@ -223,6 +240,47 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
 
   const isZeroInbox = stats.unread === 0;
   const [replyOpen, setReplyOpen] = useState(false);
+
+  // Create event from message
+  const createEventFromMessage = useCallback((msg: Message) => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
+    const end = new Date(tomorrow);
+    end.setHours(11, 0, 0, 0);
+    setSuggestedEvent({
+      title: `Re: ${msg.subject}`,
+      startTime: tomorrow,
+      endTime: end,
+      sourceMessageId: msg.id,
+      sourcePlatform: msg.platform,
+    });
+    setActiveView("calendar");
+  }, []);
+
+  // Calendar handlers
+  const handleCreateEvent = useCallback((event: Omit<CalendarEvent, "id">) => {
+    setCalendarEvents(prev => [...prev, { ...event, id: `ev-${Date.now()}` } as CalendarEvent]);
+  }, []);
+
+  const handleDeleteEvent = useCallback((id: string) => {
+    setCalendarEvents(prev => prev.filter(e => e.id !== id));
+  }, []);
+
+  // Introduction handlers
+  const handleCreateIntro = useCallback((intro: any) => {
+    setIntroductions(prev => [...prev, { ...intro, id: `intro-${Date.now()}`, status: "sent", createdAt: new Date() }]);
+  }, []);
+
+  // Contacts derived from messages
+  const contacts = useMemo(() =>
+    [...new Set(messages.map(m => m.from))].map(name => ({
+      name,
+      email: messages.find(m => m.from === name)?.email,
+      platform: messages.find(m => m.from === name)?.platform,
+    })),
+    [messages]
+  );
 
   // Keyboard — Superhuman-style
   useEffect(() => {
@@ -286,6 +344,14 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
     { key: "play", label: "Play", count: messages.filter(m => m.phase === "play").length },
   ];
 
+  // View switcher config
+  const viewTabs: { key: MessengerView; icon: typeof IconMail; label: string }[] = [
+    { key: "inbox", icon: IconMail, label: "Inbox" },
+    { key: "calendar", icon: IconCalendarEvent, label: "Calendar" },
+    { key: "ai", icon: IconBrain, label: "Lumen" },
+    { key: "introductions", icon: IconUsers, label: "Intros" },
+  ];
+
   return (
     <div
       className="flex flex-col h-full w-full select-none"
@@ -297,49 +363,71 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
         style={{ borderBottom: `1px solid ${P.divider}` }}
       >
         <div className="flex items-center gap-6">
-          {/* Hamburger placeholder */}
-          <button className="w-5 h-5 flex flex-col justify-center gap-[3px]" style={{ color: P.muted }}>
-            <span className="block w-full h-[1.5px] rounded-full" style={{ background: P.muted }} />
-            <span className="block w-full h-[1.5px] rounded-full" style={{ background: P.muted }} />
-            <span className="block w-full h-[1.5px] rounded-full" style={{ background: P.muted }} />
-          </button>
-
-          {/* Tabs */}
-          <nav className="flex items-center gap-1">
-            {tabs.map(({ key, label, count }) => {
-              const active = phase === key;
+          {/* View switcher icons */}
+          <nav className="flex items-center gap-0.5">
+            {viewTabs.map(({ key, icon: Icon, label }) => {
+              const active = activeView === key;
               return (
                 <button
                   key={key}
-                  onClick={() => setPhase(key)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all duration-150"
+                  onClick={() => setActiveView(key)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all duration-150"
                   style={{
-                    color: active ? P.text : P.muted,
+                    color: active ? P.accent : P.muted,
                     fontWeight: active ? 600 : 400,
-                    fontSize: "15px",
-                    background: active ? "transparent" : "transparent",
+                    fontSize: "13px",
+                    background: active ? P.accentSoft : "transparent",
                   }}
+                  title={label}
                 >
-                  {label}
-                  <span
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: 400,
-                      color: active ? P.textSecondary : P.dim,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    {count}
-                  </span>
+                  <Icon size={15} />
+                  <span className="hidden sm:inline">{label}</span>
                 </button>
               );
             })}
           </nav>
+
+          {/* Phase tabs — only in inbox view */}
+          {activeView === "inbox" && (
+            <>
+              <div className="w-px h-5" style={{ background: P.divider }} />
+              <nav className="flex items-center gap-1">
+                {tabs.map(({ key, label, count }) => {
+                  const active = phase === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setPhase(key)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all duration-150"
+                      style={{
+                        color: active ? P.text : P.muted,
+                        fontWeight: active ? 600 : 400,
+                        fontSize: "14px",
+                        background: active ? "transparent" : "transparent",
+                      }}
+                    >
+                      {label}
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 400,
+                          color: active ? P.textSecondary : P.dim,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
           {/* Zero inbox indicator */}
-          {isZeroInbox && (
+          {isZeroInbox && activeView === "inbox" && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md mr-2" style={{ background: `${P.green}15` }}>
               <IconTrophy size={15} style={{ color: P.green }} />
               <span style={{ fontSize: "12px", fontWeight: 600, color: P.green }}>Zero Inbox</span>
@@ -393,50 +481,109 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
         </div>
       </header>
 
-      {/* ── Main content: list + contact panel ── */}
+      {/* ── Main content ── */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* ── Message list ── */}
-        <div
-          className="flex-1 flex flex-col min-w-0 overflow-y-auto"
-          style={{ borderRight: selected ? `1px solid ${P.divider}` : "none" }}
-        >
-          {filtered.length === 0 ? (
-            <ZeroInboxView P={P} />
-          ) : (
-            filtered.map((m, i) => (
-              <MessageRow
-                key={m.id}
-                message={m}
-                P={P}
-                selected={selectedId === m.id}
-                isFirst={i === 0}
-                onSelect={() => { setSelectedId(m.id); markRead(m.id); }}
-                onArchive={() => archiveMessage(m.id)}
-                onToggleStar={() => toggleStar(m.id)}
-              />
-            ))
-          )}
-        </div>
-
-        {/* ── Contact / reading panel ── */}
-        <AnimatePresence>
-          {selected && (
-            <motion.div
-              key="contact-panel"
-              className="shrink-0 flex flex-col overflow-y-auto"
-              style={{ width: "320px", borderLeft: `1px solid ${P.divider}` }}
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 16 }}
-              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        {activeView === "inbox" && (
+          <>
+            {/* ── Message list ── */}
+            <div
+              className="flex-1 flex flex-col min-w-0 overflow-y-auto"
+              style={{ borderRight: selected ? `1px solid ${P.divider}` : "none" }}
             >
-              <ContactPanel message={selected} P={P} replyOpen={replyOpen} onCloseReply={() => setReplyOpen(false)} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {filtered.length === 0 ? (
+                <ZeroInboxView P={P} />
+              ) : (
+                filtered.map((m, i) => (
+                  <MessageRow
+                    key={m.id}
+                    message={m}
+                    P={P}
+                    selected={selectedId === m.id}
+                    isFirst={i === 0}
+                    onSelect={() => { setSelectedId(m.id); markRead(m.id); }}
+                    onArchive={() => archiveMessage(m.id)}
+                    onToggleStar={() => toggleStar(m.id)}
+                    onCreateEvent={() => createEventFromMessage(m)}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* ── Contact / reading panel ── */}
+            <AnimatePresence>
+              {selected && (
+                <motion.div
+                  key="contact-panel"
+                  className="shrink-0 flex flex-col overflow-y-auto"
+                  style={{ width: "320px", borderLeft: `1px solid ${P.divider}` }}
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 16 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <ContactPanel
+                    message={selected}
+                    P={P}
+                    replyOpen={replyOpen}
+                    onCloseReply={() => setReplyOpen(false)}
+                    onCreateEvent={() => createEventFromMessage(selected)}
+                    onIntroduce={() => setActiveView("introductions")}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        )}
+
+        {activeView === "calendar" && (
+          <div className="flex-1">
+            <MessengerCalendar
+              P={P}
+              font={FONT}
+              serif={SERIF}
+              events={calendarEvents}
+              onCreateEvent={handleCreateEvent}
+              onDeleteEvent={handleDeleteEvent}
+              suggestedEvent={suggestedEvent}
+              onClearSuggestion={() => setSuggestedEvent(null)}
+            />
+          </div>
+        )}
+
+        {activeView === "ai" && (
+          <div className="flex-1">
+            <MessengerAIPanel
+              P={P}
+              font={FONT}
+              serif={SERIF}
+              messages={messages}
+              events={calendarEvents}
+              onCreateEvent={(e) => {
+                setSuggestedEvent(e);
+                setActiveView("calendar");
+              }}
+              onInitiateIntroduction={(a, b, reason) => {
+                setActiveView("introductions");
+              }}
+            />
+          </div>
+        )}
+
+        {activeView === "introductions" && (
+          <div className="flex-1">
+            <MessengerIntroductions
+              P={P}
+              font={FONT}
+              serif={SERIF}
+              contacts={contacts}
+              introductions={introductions}
+              onCreateIntro={handleCreateIntro}
+            />
+          </div>
+        )}
       </div>
 
-      {/* ── Footer with keyboard hints ── */}
+      {/* ── Footer ── */}
       <div
         className="flex items-center justify-between px-5 h-[44px] shrink-0"
         style={{ borderTop: `1px solid ${P.divider}` }}
@@ -450,31 +597,40 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
           })}
         </div>
         <div className="flex items-center gap-1.5">
-          {[
-            { key: "↑↓", label: "navigate" },
-            { key: "E", label: "done" },
-            { key: "S", label: "star" },
-            { key: "R", label: "reply" },
-            { key: "esc", label: "back" },
-          ].map(h => (
-            <div key={h.key} className="flex items-center gap-1 mr-2">
-              <kbd
-                className="inline-flex items-center justify-center rounded px-1.5 h-[22px]"
-                style={{
-                  fontSize: "11px",
-                  fontFamily: "monospace",
-                  fontWeight: 600,
-                  color: P.dim,
-                  background: P.surfaceHover,
-                  border: `1px solid ${P.divider}`,
-                  minWidth: "22px",
-                }}
-              >
-                {h.key}
-              </kbd>
-              <span style={{ fontSize: "11px", color: P.dim }}>{h.label}</span>
-            </div>
-          ))}
+          {activeView === "inbox" ? (
+            [
+              { key: "↑↓", label: "navigate" },
+              { key: "E", label: "done" },
+              { key: "S", label: "star" },
+              { key: "R", label: "reply" },
+              { key: "C", label: "calendar" },
+              { key: "esc", label: "back" },
+            ].map(h => (
+              <div key={h.key} className="flex items-center gap-1 mr-2">
+                <kbd
+                  className="inline-flex items-center justify-center rounded px-1.5 h-[22px]"
+                  style={{
+                    fontSize: "11px",
+                    fontFamily: "monospace",
+                    fontWeight: 600,
+                    color: P.dim,
+                    background: P.surfaceHover,
+                    border: `1px solid ${P.divider}`,
+                    minWidth: "22px",
+                  }}
+                >
+                  {h.key}
+                </kbd>
+                <span style={{ fontSize: "11px", color: P.dim }}>{h.label}</span>
+              </div>
+            ))
+          ) : (
+            <span style={{ fontSize: "11px", color: P.dim }}>
+              {activeView === "calendar" && `${calendarEvents.length} events`}
+              {activeView === "ai" && "Private context · Encrypted graph"}
+              {activeView === "introductions" && `${introductions.length} introductions`}
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -491,6 +647,7 @@ function MessageRow({
   onSelect,
   onArchive,
   onToggleStar,
+  onCreateEvent,
 }: {
   message: Message;
   P: ReturnType<typeof palette>;
@@ -499,6 +656,7 @@ function MessageRow({
   onSelect: () => void;
   onArchive: () => void;
   onToggleStar: () => void;
+  onCreateEvent?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const cfg = PLATFORM_CFG[m.platform];
@@ -643,7 +801,7 @@ function MessageRow({
 
 // ── Contact Panel — Superhuman-style right sidebar ──────────────────────────
 
-function ContactPanel({ message: m, P, replyOpen, onCloseReply }: { message: Message; P: ReturnType<typeof palette>; replyOpen: boolean; onCloseReply: () => void }) {
+function ContactPanel({ message: m, P, replyOpen, onCloseReply, onCreateEvent, onIntroduce }: { message: Message; P: ReturnType<typeof palette>; replyOpen: boolean; onCloseReply: () => void; onCreateEvent?: () => void; onIntroduce?: () => void }) {
   const cfg = PLATFORM_CFG[m.platform];
   const [replyText, setReplyText] = useState("");
 
@@ -738,6 +896,28 @@ function ContactPanel({ message: m, P, replyOpen, onCloseReply }: { message: Mes
             <span style={{ fontSize: "13px", fontWeight: 500, color: P.accent }}>{m.actionLabel}</span>
           </div>
         )}
+
+        {/* Quick actions: Calendar & Introduce */}
+        <div className="flex items-center gap-2 mt-4">
+          {onCreateEvent && (
+            <button
+              onClick={onCreateEvent}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
+              style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.textSecondary }}
+            >
+              <IconCalendarEvent size={13} /> Schedule
+            </button>
+          )}
+          {onIntroduce && (
+            <button
+              onClick={onIntroduce}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
+              style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.textSecondary }}
+            >
+              <IconUserPlus size={13} /> Introduce
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Reply composer */}
