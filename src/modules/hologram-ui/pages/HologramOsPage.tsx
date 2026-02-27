@@ -595,7 +595,7 @@ export default function HologramOsPage() {
           <HologramFrame layer={2} label="content" interactive={false} transform={contentTilt} opacity={layerNav.layerOpacity(2)} style={{ transform: `scale(${layerNav.layerScale(2)})`, transition: "opacity 0.5s, transform 0.5s" }}>
             {/* Logo — top center */}
             <div
-              className="absolute top-[3vh] left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-300 ease-out"
+              className="absolute top-[5vh] left-0 right-0 flex items-center justify-center animate-fade-in transition-all duration-300 ease-out"
               style={{
                 pointerEvents: isFocus ? "none" : "auto",
                 opacity: isFocus ? 0 : 1,
