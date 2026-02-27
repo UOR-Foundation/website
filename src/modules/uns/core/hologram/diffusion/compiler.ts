@@ -39,13 +39,13 @@ import { DTYPE_BYTE_SIZE } from "../whisper-compiler/types";
 
 const COMPILER_VERSION = "1.0.0-diffusion";
 const SD_MODEL_ID = "sd15-hologram";
-const HF_MODEL_ID = "microsoft/stable-diffusion-v1.5-webnn";
+const HF_MODEL_ID = "onnx-community/stable-diffusion-v1-5-ONNX";
 
 /** SD 1.5 ONNX components */
 const SD_COMPONENTS = {
-  textEncoder: "text-encoder.onnx",
-  unet: "unet.onnx",
-  vaeDecoder: "vae-decoder.onnx",
+  textEncoder: "text_encoder/model.onnx",
+  unet: "unet/model.onnx",
+  vaeDecoder: "vae_decoder/model.onnx",
 } as const;
 
 type SdComponent = keyof typeof SD_COMPONENTS;
