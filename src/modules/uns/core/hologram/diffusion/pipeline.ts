@@ -29,14 +29,8 @@ import type {
 import { DEFAULT_DIFFUSION_CONFIG } from "./types";
 import type { HologramCompiledModel, HologramComputeNode, HologramTensorDescriptor } from "../whisper-compiler/types";
 import { OnnxDataType, DTYPE_BYTE_SIZE } from "../whisper-compiler/types";
-import {
-  cpuConv2d,
-  cpuGroupNorm,
-  cpuSilu,
-  cpuGelu,
-  cpuSoftmax,
-  cpuUpsample2x,
-} from "../whisper-compiler/wgsl-kernels";
+// CPU kernel imports removed — all ops route through GpuDispatch
+// which handles GPU→CPU fallback internally
 
 // ── Inference Cache (Prompt CID → Image CID) ─────────────────────────────
 
