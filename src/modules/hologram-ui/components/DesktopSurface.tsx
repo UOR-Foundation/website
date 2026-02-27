@@ -20,6 +20,9 @@ import AttentionToggle from "./AttentionToggle";
 import WidgetHoverActions from "./WidgetHoverActions";
 import { useDraggablePosition } from "../hooks/useDraggablePosition";
 import type { DesktopId } from "../hooks/useDesktopState";
+import WeatherWidget from "./widgets/WeatherWidget";
+import ProductivityTimerWidget from "./widgets/ProductivityTimerWidget";
+import AmbientMoodWidget from "./widgets/AmbientMoodWidget";
 
 /* ── Palette ───────────────────────────────────────── */
 function palette(m: DesktopId) {
@@ -313,6 +316,22 @@ export default function DesktopSurface({
           </WidgetHoverActions>
         </div>
       )}
+
+      {/* ── Chrome: Frame-exclusive widget (bottom-left) ── */}
+      <div
+        className="absolute bottom-[3.5vh] left-8 z-[400]"
+        style={{
+          opacity: isFocus ? 0 : 1,
+          pointerEvents: isFocus ? "none" : "auto",
+          transition: "opacity 300ms, transform 300ms",
+          transform: isFocus ? "translateY(10px)" : "translateY(0)",
+          animation: "stagger-fade-in 1s ease-out 0.6s both",
+        }}
+      >
+        {mode === "image" && <WeatherWidget />}
+        {mode === "white" && <ProductivityTimerWidget />}
+        {mode === "dark" && <AmbientMoodWidget />}
+      </div>
 
       {/* ── Content: Logo ────────────────────────── */}
       <div
