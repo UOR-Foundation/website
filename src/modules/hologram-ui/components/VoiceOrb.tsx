@@ -25,6 +25,8 @@ interface VoiceOrbProps {
   fusionContext?: string;
   personaId?: string;
   onExchange?: (userText: string, assistantText: string) => void;
+  /** Chat messages to inject as voice context when conversation starts */
+  chatContext?: { role: "user" | "assistant"; content: string }[];
 }
 
 const STATE_LABELS: Record<VoiceConversationState, string> = {
@@ -76,6 +78,7 @@ export default function VoiceOrb({
   fusionContext,
   personaId = "hologram",
   onExchange,
+  chatContext,
 }: VoiceOrbProps) {
   const [hovered, setHovered] = useState(false);
   const [alwaysListening, setAlwaysListening] = useState(false);
@@ -103,11 +106,14 @@ export default function VoiceOrb({
     },
   });
 
-  // No diagnostics gate — go straight to listening
+  // Inject chat context when starting a voice session
   const handleVoiceToggle = useCallback(() => {
     setVoiceError(null);
+    if (voice.isIdle && chatContext?.length) {
+      voice.injectContext(chatContext);
+    }
     voice.toggle();
-  }, [voice.toggle]);
+  }, [voice.toggle, voice.isIdle, voice.injectContext, chatContext]);
 
   // Analyze audio level while listening
   useEffect(() => {
