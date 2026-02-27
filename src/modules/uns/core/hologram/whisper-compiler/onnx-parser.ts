@@ -22,7 +22,11 @@ import { OnnxDataType, DTYPE_BYTE_SIZE } from "./types";
 
 // ── TensorProto (field numbers from onnx.proto3) ───────────────────────────
 
+let _tensorDebugCount = 0;
+
 function parseTensorProto(reader: ProtoReader): OnnxTensor {
+  const isDebug = _tensorDebugCount < 2;
+  _tensorDebugCount++;
   const dims: number[] = [];
   let dataType: number = OnnxDataType.FLOAT;
   let name = "";
@@ -33,8 +37,10 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
   let doubleData: Float64Array | null = null;
   let externalData: { location: string; offset: number; length: number } | undefined;
 
+  const fieldsHit: number[] = [];
   let tag;
   while ((tag = reader.readTag()) !== null) {
+    if (isDebug) fieldsHit.push(tag.field);
     switch (tag.field) {
       case 1: // repeated int64 dims (packed or unpacked)
         if (tag.wire === WireType.LENGTH_DELIMITED) {
@@ -46,6 +52,10 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
 
       case 2: // int32 data_type
         dataType = reader.readVarint();
+        break;
+
+      case 3: // Segment segment (deprecated, skip)
+        reader.skip(tag.wire);
         break;
 
       case 4: // repeated float float_data (packed)
@@ -64,6 +74,10 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
         }
         break;
 
+      case 6: // repeated bytes string_data
+        reader.skip(tag.wire);
+        break;
+
       case 7: // repeated int64 int64_data (packed)
         if (tag.wire === WireType.LENGTH_DELIMITED) {
           const vals = reader.readPackedVarint64();
@@ -78,8 +92,28 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
         name = reader.readString();
         break;
 
-      case 9: { // repeated StringStringEntryProto external_data
-        // Parse the key-value pair submessage
+      case 10: // repeated double double_data (packed)
+        if (tag.wire === WireType.LENGTH_DELIMITED) {
+          doubleData = reader.readPackedFloat64();
+        } else {
+          reader.skip(tag.wire);
+        }
+        break;
+
+      case 11: // repeated uint64 uint64_data
+        reader.skip(tag.wire);
+        break;
+
+      case 12: // string doc_string
+        reader.skip(tag.wire);
+        break;
+
+      case 13: // bytes raw_data (zero-copy view)
+        rawData = reader.readBytes();
+        if (isDebug) console.log(`[TensorDebug] field 13 raw_data: ${rawData.byteLength} bytes, remaining: ${reader.remaining}`);
+        break;
+
+      case 14: { // repeated StringStringEntryProto external_data
         const sub = reader.subReader();
         let key = "", value = "";
         let stag;
@@ -95,16 +129,8 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
         break;
       }
 
-      case 10: // repeated double double_data (packed)
-        if (tag.wire === WireType.LENGTH_DELIMITED) {
-          doubleData = reader.readPackedFloat64();
-        } else {
-          reader.skip(tag.wire);
-        }
-        break;
-
-      case 13: // bytes raw_data (zero-copy view)
-        rawData = reader.readBytes();
+      case 15: // DataLocation data_location
+        reader.readVarint();
         break;
 
       default:
@@ -128,6 +154,10 @@ function parseTensorProto(reader: ProtoReader): OnnxTensor {
   }
 
   const elementCount = dims.length > 0 ? dims.reduce((a, b) => a * b, 1) : 0;
+
+  if (isDebug) {
+    console.log(`[TensorDebug] "${name}" fields: [${fieldsHit}], dims: [${dims}], dtype: ${dataType}, rawBytes: ${finalRawData.byteLength}, elements: ${elementCount}`);
+  }
 
   return { name, dims, dataType, rawData: finalRawData, elementCount, externalData };
 }
