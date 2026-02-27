@@ -86,6 +86,7 @@ export default function VoiceOrb({
 }: VoiceOrbProps) {
   const [hovered, setHovered] = useState(false);
   const [alwaysListening, setAlwaysListening] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<VoiceCoherenceMetrics>({
     intensity: 0, steadiness: 1, pace: 0, coherence: 1, hue: 150, label: "silent",
   });
@@ -94,14 +95,31 @@ export default function VoiceOrb({
   const metricsRafRef = useRef<number | null>(null);
 
   const voice = useVoiceConversation({
-    voiceEngine: "elevenlabs",
+    // Simpler + more reliable on desktop while we validate full voice loop.
+    voiceEngine: "web-speech",
     personaId,
     screenContext,
     observerBriefing,
     fusionContext,
     onExchange,
-    onError: (err) => console.warn("[VoiceOrb]", err),
+    onError: (err) => {
+      console.warn("[VoiceOrb]", err);
+      if (/requested device not found/i.test(err)) {
+        setVoiceError("No microphone detected");
+      } else if (/permission|denied|notallowed/i.test(err)) {
+        setVoiceError("Microphone permission blocked");
+      } else if (/voice output|audio playback/i.test(err)) {
+        setVoiceError("Audio playback failed");
+      } else {
+        setVoiceError(err);
+      }
+    },
   });
+
+  const handleVoiceToggle = useCallback(() => {
+    setVoiceError(null);
+    voice.toggle();
+  }, [voice.toggle]);
 
   // Analyze audio level on every frame while listening
   useEffect(() => {
@@ -297,7 +315,7 @@ export default function VoiceOrb({
 
       {/* The Orb */}
       <button
-        onClick={voice.toggle}
+        onClick={handleVoiceToggle}
         className="relative group cursor-pointer select-none"
         style={{ touchAction: "none" }}
         aria-label={STATE_LABELS[voice.state]}
@@ -612,6 +630,25 @@ export default function VoiceOrb({
             }}
           >
             {Math.floor(voice.elapsed / 60)}:{String(voice.elapsed % 60).padStart(2, "0")}
+          </motion.span>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {voiceError && !voice.isActive && (
+          <motion.span
+            initial={{ opacity: 0, y: 2 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -2 }}
+            style={{
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontSize: "10px",
+              fontWeight: 500,
+              color: "hsla(0, 45%, 70%, 0.82)",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {voiceError}
           </motion.span>
         )}
       </AnimatePresence>

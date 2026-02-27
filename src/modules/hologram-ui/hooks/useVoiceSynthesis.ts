@@ -47,6 +47,7 @@ export function useVoiceSynthesis({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
   const abortRef = useRef(false);
+  const audioPrimedRef = useRef(false);
 
   const setIdle = useCallback(() => setStatus("idle"), []);
 
@@ -95,7 +96,33 @@ export function useVoiceSynthesis({
     });
   }, []);
 
-  /** Speak via Web Speech — returns Promise that resolves when done */
+  /** Prime output in direct user gesture path (helps strict autoplay policies) */
+  const primeAudioOutput = useCallback(async (): Promise<void> => {
+    if (audioPrimedRef.current) return;
+
+    try {
+      const AudioCtx = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        if (ctx.state !== "running") await ctx.resume();
+
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+        source.stop(0);
+
+        setTimeout(() => {
+          void ctx.close();
+        }, 50);
+      }
+    } catch {
+      // Non-fatal: synthesis still attempts normal playback path
+    } finally {
+      audioPrimedRef.current = true;
+    }
+  }, []);
   const speakWebSpeech = useCallback((text: string): Promise<void> => {
     return new Promise(async (resolve) => {
       if (!window.speechSynthesis) {
@@ -171,6 +198,9 @@ export function useVoiceSynthesis({
 
         // Create a fresh Audio element each time — simplest cross-browser approach
         const audio = new Audio(url);
+        audio.preload = "auto";
+        audio.volume = 1;
+        audio.muted = false;
         audio.setAttribute("playsinline", "true");
         audioRef.current = audio;
 
@@ -205,9 +235,12 @@ export function useVoiceSynthesis({
   }, [voiceId, speakWebSpeech, onStart, onEnd, onError, setIdle, revokeUrl]);
 
   /** Primary speak — cleans text, routes to active engine, returns Promise */
-  const speak = useCallback((text: string): Promise<void> => {
-    if (!text.trim()) return Promise.resolve();
+  const speak = useCallback(async (text: string): Promise<void> => {
+    if (!text.trim()) return;
     abortRef.current = false;
+
+    // First call is usually user-initiated; prime audio once for stricter autoplay policies.
+    await primeAudioOutput();
 
     const clean = text
       .replace(/[*_`#>]/g, "")
@@ -217,11 +250,11 @@ export function useVoiceSynthesis({
       .trim();
 
     if (currentEngine === "elevenlabs") {
-      return speakElevenLabs(clean);
+      await speakElevenLabs(clean);
     } else {
-      return speakWebSpeech(clean);
+      await speakWebSpeech(clean);
     }
-  }, [currentEngine, speakElevenLabs, speakWebSpeech]);
+  }, [currentEngine, primeAudioOutput, speakElevenLabs, speakWebSpeech]);
 
   /** Stop all speech immediately */
   const stop = useCallback(() => {
