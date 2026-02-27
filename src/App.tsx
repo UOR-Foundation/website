@@ -14,6 +14,7 @@ import FocusJournalOverlay from "@/modules/hologram-ui/components/FocusJournalOv
 import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
 import { initializeContentRegistry } from "@/lib/uor-content-registry";
 import LumenFloatingPill from "@/modules/hologram-ui/components/LumenFloatingPill";
+import GlobalFloatingWidgets from "@/modules/hologram-ui/components/GlobalFloatingWidgets";
 import { initTriwordGenesis } from "@/lib/uor-triword";
 
 // Eager — homepage renders instantly
@@ -159,6 +160,7 @@ const App = () => {
       <BrowserRouter>
         <ScreenContextProvider>
         <LumenFloatingPill />
+        <GlobalFloatingWidgets />
         <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<IndexPage />} />
