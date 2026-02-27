@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 /**
  * DesktopSurface — A complete, self-contained desktop layer
  * ═══════════════════════════════════════════════════════════
@@ -155,6 +157,7 @@ export default function DesktopSurface({
   removeWidget,
   ambientState,
 }: DesktopSurfaceProps) {
+  const navigate = useNavigate();
   const P = useMemo(() => palette(mode), [mode]);
   const dayRingDrag = useDraggablePosition({
     storageKey: `hologram-pos:day-ring:${mode}`,
@@ -523,6 +526,23 @@ export default function DesktopSurface({
           }}
         >
           Terms of Use
+        </button>
+        <span style={{ width: "2px", height: "2px", borderRadius: "50%", background: P.legalDot }} />
+        <button
+          onClick={() => navigate("/waitlist")}
+          className="transition-opacity duration-500 hover:opacity-90"
+          style={{
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontSize: "10px",
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            color: mode === "white" ? "hsla(0, 0%, 10%, 0.75)" : "hsla(38, 30%, 75%, 0.75)",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          Request Early Access
         </button>
       </div>
     </div>
