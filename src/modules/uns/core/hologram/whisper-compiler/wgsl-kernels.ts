@@ -370,6 +370,148 @@ fn main(
 }
 `;
 
+// ── Batched Multi-Head Fused Attention ─────────────────────────────────────
+// Dispatches ALL heads simultaneously in a single GPU call.
+// Layout: Q/K/V are interleaved [nHeads × seqLen × dHead].
+// Grid: (q_len, n_heads, 1) — one workgroup per (query_row, head) pair.
+// Eliminates sequential per-head dispatch overhead entirely.
+
+export const WGSL_BATCHED_FUSED_ATTN = /* wgsl */ `
+struct Params {
+  q_len: u32,
+  kv_len: u32,
+  d_k: u32,
+  n_heads: u32,
+  causal: u32,
+  scale: f32,
+  causal_offset: u32,
+  _p0: u32,
+}
+@group(0) @binding(0) var<uniform> params: Params;
+@group(0) @binding(1) var<storage, read> Q: array<f32>;      // [n_heads, q_len, d_k]
+@group(0) @binding(2) var<storage, read> K: array<f32>;      // [n_heads, kv_len, d_k]
+@group(0) @binding(3) var<storage, read> V: array<f32>;      // [n_heads, kv_len, d_k]
+@group(0) @binding(4) var<storage, read_write> output: array<f32>; // [n_heads, q_len, d_k]
+
+var<workgroup> scores: array<f32, 4096>;
+
+@compute @workgroup_size(256)
+fn main(
+  @builtin(workgroup_id) wid: vec3<u32>,
+  @builtin(local_invocation_id) lid: vec3<u32>,
+) {
+  let q_row = wid.x;
+  let head = wid.y;
+  if (q_row >= params.q_len || head >= params.n_heads) { return; }
+  let tid = lid.x;
+
+  let S = params.kv_len;
+  let D = params.d_k;
+
+  // Head offsets into the interleaved buffers
+  let q_head_off = head * params.q_len * D;
+  let kv_head_off = head * S * D;
+  let out_head_off = head * params.q_len * D;
+
+  // ── Phase 1: Q[head, q_row] · K[head, j]^T × scale ──────────────
+  let keys_per_thread = (S + 255u) / 256u;
+  for (var ki: u32 = 0u; ki < keys_per_thread; ki = ki + 1u) {
+    let j = tid * keys_per_thread + ki;
+    if (j >= S) { break; }
+
+    var dot: f32 = 0.0;
+    for (var d: u32 = 0u; d < D; d = d + 1u) {
+      dot = dot + Q[q_head_off + q_row * D + d] * K[kv_head_off + j * D + d];
+    }
+    var score = dot * params.scale;
+
+    if (params.causal != 0u) {
+      let q_pos = params.causal_offset + q_row;
+      if (j > q_pos) {
+        score = -1e9;
+      }
+    }
+    scores[j] = score;
+  }
+
+  workgroupBarrier();
+
+  // ── Phase 2: Softmax (thread 0 sequential — safe for S ≤ 4096) ───
+  if (tid == 0u) {
+    var maxVal: f32 = -3.402823e+38;
+    for (var j: u32 = 0u; j < S; j = j + 1u) {
+      maxVal = max(maxVal, scores[j]);
+    }
+    var sumExp: f32 = 0.0;
+    for (var j: u32 = 0u; j < S; j = j + 1u) {
+      let e = exp(scores[j] - maxVal);
+      scores[j] = e;
+      sumExp = sumExp + e;
+    }
+    let invSum = 1.0 / sumExp;
+    for (var j: u32 = 0u; j < S; j = j + 1u) {
+      scores[j] = scores[j] * invSum;
+    }
+  }
+
+  workgroupBarrier();
+
+  // ── Phase 3: Output[head, q_row] = weights × V[head] ─────────────
+  let dims_per_thread = (D + 255u) / 256u;
+  for (var di: u32 = 0u; di < dims_per_thread; di = di + 1u) {
+    let d = tid * dims_per_thread + di;
+    if (d >= D) { break; }
+
+    var acc: f32 = 0.0;
+    for (var j: u32 = 0u; j < S; j = j + 1u) {
+      acc = acc + scores[j] * V[kv_head_off + j * D + d];
+    }
+    output[out_head_off + q_row * D + d] = acc;
+  }
+}
+`;
+
+/** CPU fallback for batched multi-head fused attention */
+export function cpuBatchedFusedAttention(
+  Q: Float32Array, K: Float32Array, V: Float32Array,
+  qLen: number, kvLen: number, dk: number, nHeads: number,
+  causal: boolean, causalOffset = 0,
+): Float32Array {
+  const scale = 1 / Math.sqrt(dk);
+  const output = new Float32Array(nHeads * qLen * dk);
+
+  for (let h = 0; h < nHeads; h++) {
+    const qOff = h * qLen * dk;
+    const kvOff = h * kvLen * dk;
+    const outOff = h * qLen * dk;
+
+    for (let i = 0; i < qLen; i++) {
+      const scores = new Float32Array(kvLen);
+      let maxScore = -Infinity;
+      for (let j = 0; j < kvLen; j++) {
+        let dot = 0;
+        for (let d = 0; d < dk; d++) dot += Q[qOff + i * dk + d] * K[kvOff + j * dk + d];
+        let s = dot * scale;
+        if (causal && j > causalOffset + i) s = -1e9;
+        scores[j] = s;
+        maxScore = Math.max(maxScore, s);
+      }
+      let sumExp = 0;
+      for (let j = 0; j < kvLen; j++) {
+        scores[j] = Math.exp(scores[j] - maxScore);
+        sumExp += scores[j];
+      }
+      for (let j = 0; j < kvLen; j++) scores[j] /= sumExp;
+      for (let d = 0; d < dk; d++) {
+        let acc = 0;
+        for (let j = 0; j < kvLen; j++) acc += scores[j] * V[kvOff + j * dk + d];
+        output[outOff + i * dk + d] = acc;
+      }
+    }
+  }
+  return output;
+}
+
 
 // ── Conv1D ─────────────────────────────────────────────────────────────────
 // output[oc, ol] = bias[oc] + Σ_ic Σ_k weight[oc, ic, k] × input[ic, ol*stride - padding + k]
@@ -794,6 +936,7 @@ export const WHISPER_KERNELS = {
   conv1d: WGSL_CONV1D,
   mel_spec: WGSL_MEL_SPEC,
   fused_attn: WGSL_FUSED_ATTN,
+  batched_fused_attn: WGSL_BATCHED_FUSED_ATTN,
 } as const;
 
 export type WhisperKernelName = keyof typeof WHISPER_KERNELS;
