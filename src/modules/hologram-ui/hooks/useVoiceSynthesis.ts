@@ -219,11 +219,22 @@ export function useVoiceSynthesis({
         audio.onerror = () => {
           setIdle();
           revokeUrl();
-          onError?.("Audio playback failed");
-          resolve();
+          // Fallback to Web Speech instead of showing error
+          console.warn("[TTS] Audio element playback failed, falling back to Web Speech");
+          setCurrentEngine("web-speech");
+          resolve(speakWebSpeech(text));
         };
 
-        await audio.play();
+        try {
+          await audio.play();
+        } catch (playErr) {
+          // play() rejected (autoplay policy) — fallback to Web Speech
+          console.warn("[TTS] audio.play() rejected, falling back to Web Speech:", playErr);
+          setIdle();
+          revokeUrl();
+          setCurrentEngine("web-speech");
+          resolve(speakWebSpeech(text));
+        }
       } catch (err) {
         console.warn("[TTS] ElevenLabs error, falling back:", err);
         setIdle();
