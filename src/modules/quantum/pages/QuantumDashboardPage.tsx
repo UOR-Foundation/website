@@ -11,13 +11,14 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu, Terminal } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
 const QLinuxKernelPanel = React.lazy(() => import("@/modules/quantum/components/QLinuxKernelPanel"));
+const CircuitCompilerPanel = React.lazy(() => import("@/modules/quantum/components/CircuitCompilerPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export default function QuantumDashboardPage() {
     { key: "isa", label: "Quantum ISA", icon: <Atom size={12} /> },
     { key: "topo-qubit", label: "Topological Qubit", icon: <Hexagon size={12} /> },
     { key: "q-linux", label: "Q-Linux Kernel", icon: <Terminal size={12} /> },
+    { key: "compiler", label: "Circuit Compiler", icon: <Workflow size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -35,6 +37,7 @@ export default function QuantumDashboardPage() {
     isa: "Mapping quantum gate architecture…",
     "topo-qubit": "Instantiating topological qubits…",
     "q-linux": "Booting Q-Linux kernel…",
+    compiler: "Initializing circuit compiler…",
   };
 
   return (
@@ -87,7 +90,8 @@ export default function QuantumDashboardPage() {
           {tab === "overview" ? <QuantumOverview onNavigate={setTab} /> :
            tab === "isa" ? <QuantumISAPanel /> :
            tab === "topo-qubit" ? <TopologicalQubitPanel /> :
-           <QLinuxKernelPanel />}
+           tab === "q-linux" ? <QLinuxKernelPanel /> :
+           <CircuitCompilerPanel />}
         </Suspense>
       </div>
     </div>
@@ -137,6 +141,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "Mesh Nodes", value: "4" },
         { label: "Policies", value: "4" },
         { label: "Tests", value: "14/14 ✓" },
+      ],
+    },
+    {
+      key: "compiler" as Tab,
+      title: "Circuit Compiler",
+      phase: "Phase 15",
+      icon: <Workflow size={24} />,
+      color: "hsl(160,60%,55%)",
+      description: "Compiles high-level quantum algorithms into Atlas gate sequences. 6-stage pipeline: parse → decompose → map → route → optimize → schedule. Mesh-topology-aware.",
+      stats: [
+        { label: "Algorithms", value: "6" },
+        { label: "Pipeline", value: "6-stage" },
+        { label: "Decompose", value: "MCZ/CR/SWAP" },
+        { label: "Tests", value: "12/12 ✓" },
       ],
     },
   ];
@@ -211,6 +229,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "next", label: "Phase 12: QED loop corrections — close the 2.7% α gap" },
             { status: "next", label: "Phase 13: Quantum error correction simulator" },
             { status: "done", label: "Phase 14: Q-Linux Kernel — quantum process scheduling (14 tests)" },
+            { status: "done", label: "Phase 15: Circuit Compiler — algorithm → Atlas gate sequences (12 tests)" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>
