@@ -37,8 +37,8 @@ export {
 } from "./compiler";
 export type { DiffusionCompileOptions } from "./compiler";
 
-// Pipeline (native inference)
-export { DiffusionPipeline } from "./pipeline";
+// Pipeline (native inference + inference cache)
+export { DiffusionPipeline, getDiffusionCache } from "./pipeline";
 
 // Scheduler
 export { PndmScheduler, generateLatentNoise } from "./scheduler";
