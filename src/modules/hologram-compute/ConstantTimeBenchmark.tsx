@@ -150,6 +150,71 @@ function formatBytes(b: number): string {
   return `${b}B`;
 }
 
+/** Single-series column chart for bandwidth 3-column layout */
+function BandwidthColumnChart({ points, vals, color, label, gradientId, glow }: {
+  points: BenchPoint[];
+  vals: number[];
+  color: string;
+  label: string;
+  gradientId: string;
+  glow?: boolean;
+}) {
+  const xVals = points.map((p) => p.n);
+  const maxY = Math.max(...vals, 1);
+  const minX = Math.min(...xVals);
+  const maxX = Math.max(...xVals);
+  const colH = 160;
+  const colIH = colH - PAD.top - PAD.bottom;
+  const xS = (v: number) => PAD.left + ((v - minX) / (maxX - minX || 1)) * IW;
+  const yS = (v: number) => PAD.top + colIH - (v / maxY) * colIH;
+  const path = xVals.map((x, i) => `${xS(x)},${yS(vals[i])}`).join(" ");
+  const yTicks = 3;
+  const gridLines = Array.from({ length: yTicks + 1 }, (_, i) => {
+    const v = (maxY / yTicks) * i;
+    return { y: yS(v), label: formatNum(v) };
+  });
+  const peakVal = Math.max(...vals);
+
+  return (
+    <div className="rounded-lg p-2 flex-1 min-w-0" style={{ background: "hsla(25, 8%, 10%, 0.5)", border: `1px solid ${P.cardBorder}` }}>
+      <div className="flex items-center justify-between mb-1 px-1">
+        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color }}>{label}</span>
+        <span className="text-[10px] font-mono" style={{ color }}>{formatNum(peakVal)} tok/s</span>
+      </div>
+      <svg viewBox={`0 0 ${CW} ${colH}`} className="w-full" style={{ height: 120 }}>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.01" />
+          </linearGradient>
+          {glow && (
+            <filter id={`glow-${gradientId}`}>
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          )}
+        </defs>
+        {gridLines.map((g, i) => (
+          <g key={i}>
+            <line x1={PAD.left} y1={g.y} x2={CW - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.2} />
+            <text x={PAD.left - 8} y={g.y + 3} textAnchor="end" fill={P.muted} fontSize={8} fontFamily="'DM Sans', monospace">{g.label}</text>
+          </g>
+        ))}
+        {xVals.map((x, i) => (
+          i % 3 === 0 || i === xVals.length - 1 ? (
+            <text key={i} x={xS(x)} y={colH - PAD.bottom + 12} textAnchor="middle" fill={P.muted} fontSize={7} fontFamily="'DM Sans', monospace">{x}</text>
+          ) : null
+        ))}
+        <polygon points={`${xS(xVals[0])},${yS(0)} ${path} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill={`url(#${gradientId})`} />
+        <polyline points={path} fill="none" stroke={color} strokeWidth={glow ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" filter={glow ? `url(#glow-${gradientId})` : undefined} />
+        {xVals.map((x, i) => (
+          <circle key={i} cx={xS(x)} cy={yS(vals[i])} r={glow ? 3 : 2.5} fill={color} stroke={P.bg} strokeWidth={1} />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
 /** Two-line comparison chart: baseline (red or blue) vs Hologram (gold) */
 function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLabel, yLabel, mode }: {
   points: BenchPoint[];
@@ -991,17 +1056,17 @@ export default function ConstantTimeBenchmark() {
         )}
 
         {/* Demo 1 Chart + Stats */}
-        {cpuPoints.length > 0 && (
+        {cpuPoints.length > 0 && view === "complexity" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 p-3" style={{ background: "hsla(0, 55%, 55%, 0.02)" }}>
             <div className="lg:col-span-2 rounded-xl p-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
               <ComparisonChart
                 points={cpuPoints}
-                baselineMs={view === "complexity" ? cpuPoints.map(p => p.stdMs) : cpuPoints.map(p => p.stdTokSec)}
-                holoMs={view === "complexity" ? cpuPoints.map(p => p.holoMs) : cpuPoints.map(p => p.holoTokSec)}
+                baselineMs={cpuPoints.map(p => p.stdMs)}
+                holoMs={cpuPoints.map(p => p.holoMs)}
                 baselineColor={P.red}
                 baselineLabel="CPU — O(N³) single-thread"
-                yLabel={view === "complexity" ? "Runtime (ms)" : "Tokens / sec"}
-                mode={view}
+                yLabel="Runtime (ms)"
+                mode="complexity"
               />
             </div>
             <DemoStats
@@ -1014,6 +1079,37 @@ export default function ConstantTimeBenchmark() {
               cacheBytes={cacheBytes}
               demoType="cpu"
             />
+          </div>
+        )}
+        {/* Demo 1 Bandwidth — 3-column side-by-side */}
+        {cpuPoints.length > 0 && view === "throughput" && (
+          <div className="p-3" style={{ background: "hsla(0, 55%, 55%, 0.02)" }}>
+            <div className="flex gap-2">
+              <BandwidthColumnChart
+                points={cpuPoints}
+                vals={cpuPoints.map(p => p.stdTokSec)}
+                color={P.red}
+                label="CPU"
+                gradientId="bw-cpu-d1"
+              />
+              {cpuPoints.some(p => p.gpuAvailable) && (
+                <BandwidthColumnChart
+                  points={cpuPoints}
+                  vals={cpuPoints.map(p => p.gpuTokSec)}
+                  color={P.blue}
+                  label="GPU"
+                  gradientId="bw-gpu-d1"
+                />
+              )}
+              <BandwidthColumnChart
+                points={cpuPoints}
+                vals={cpuPoints.map(p => p.holoTokSec)}
+                color={P.gold}
+                label="Hologram vGPU"
+                gradientId="bw-holo-d1"
+                glow
+              />
+            </div>
           </div>
         )}
       </div>
@@ -1113,17 +1209,17 @@ export default function ConstantTimeBenchmark() {
         )}
 
         {/* Demo 2 Chart + Stats */}
-        {hw.webgpuAvailable && gpuPoints.length > 0 && (
+        {hw.webgpuAvailable && gpuPoints.length > 0 && view === "complexity" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 p-3" style={{ background: "hsla(210, 50%, 60%, 0.02)" }}>
             <div className="lg:col-span-2 rounded-xl p-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
               <ComparisonChart
                 points={gpuPoints}
-                baselineMs={view === "complexity" ? gpuPoints.map(p => p.gpuMs) : gpuPoints.map(p => p.gpuTokSec)}
-                holoMs={view === "complexity" ? gpuPoints.map(p => p.holoMs) : gpuPoints.map(p => p.holoTokSec)}
+                baselineMs={gpuPoints.map(p => p.gpuMs)}
+                holoMs={gpuPoints.map(p => p.holoMs)}
                 baselineColor={P.blue}
                 baselineLabel="GPU — O(N³) parallel compute"
-                yLabel={view === "complexity" ? "Runtime (ms)" : "Tokens / sec"}
-                mode={view}
+                yLabel="Runtime (ms)"
+                mode="complexity"
               />
             </div>
             <DemoStats
@@ -1136,6 +1232,35 @@ export default function ConstantTimeBenchmark() {
               cacheBytes={cacheBytes}
               demoType="gpu"
             />
+          </div>
+        )}
+        {/* Demo 2 Bandwidth — 3-column side-by-side */}
+        {hw.webgpuAvailable && gpuPoints.length > 0 && view === "throughput" && (
+          <div className="p-3" style={{ background: "hsla(210, 50%, 60%, 0.02)" }}>
+            <div className="flex gap-2">
+              <BandwidthColumnChart
+                points={gpuPoints}
+                vals={gpuPoints.map(p => p.stdTokSec)}
+                color={P.red}
+                label="CPU"
+                gradientId="bw-cpu-d2"
+              />
+              <BandwidthColumnChart
+                points={gpuPoints}
+                vals={gpuPoints.map(p => p.gpuTokSec)}
+                color={P.blue}
+                label="GPU"
+                gradientId="bw-gpu-d2"
+              />
+              <BandwidthColumnChart
+                points={gpuPoints}
+                vals={gpuPoints.map(p => p.holoTokSec)}
+                color={P.gold}
+                label="Hologram vGPU"
+                gradientId="bw-holo-d2"
+                glow
+              />
+            </div>
           </div>
         )}
       </div>
