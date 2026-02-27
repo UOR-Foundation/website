@@ -101,6 +101,8 @@ export default function HologramOsPage() {
   // ── Transition state ──────────────────────────────────────────────────────
   // departingDesktop = the one being peeled away (clip-path animating out)
   const [departingDesktop, setDepartingDesktop] = useState<DesktopId | null>(null);
+  // Sidebar theme only updates after the transition animation completes
+  const [sidebarBgMode, setSidebarBgMode] = useState<DesktopId>(activeDesktop);
 
   const switchDesktop = useCallback((target: DesktopId) => {
     if (target === activeDesktop || departingDesktop) return;
@@ -111,8 +113,11 @@ export default function HologramOsPage() {
     setActiveDesktop(target);
     localStorage.setItem("hologram-bg-mode", target);
 
-    // After animation completes, clear departing state
-    setTimeout(() => setDepartingDesktop(null), 2000);
+    // After animation completes, update sidebar theme and clear departing state
+    setTimeout(() => {
+      setSidebarBgMode(target);
+      setDepartingDesktop(null);
+    }, 2000);
   }, [activeDesktop, departingDesktop]);
 
   // Per-desktop widget states
@@ -242,7 +247,7 @@ export default function HologramOsPage() {
             onGoHome={() => { setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); }}
             onReplayGuide={() => setShortcutsOpen(true)}
             hintOpacity={mastery.hintOpacity}
-            bgMode={activeDesktop}
+            bgMode={sidebarBgMode}
           />
         </div>
 
