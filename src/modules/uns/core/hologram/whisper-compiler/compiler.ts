@@ -19,6 +19,7 @@ import type {
   OnnxModel,
   OnnxNode,
   OnnxAttribute,
+  OnnxTensor,
   HologramCompiledModel,
   HologramComputeNode,
   HologramTensorDescriptor,
@@ -53,6 +54,42 @@ function extractNodeParams(attrs: OnnxAttribute[]): Record<string, unknown> {
     else if (attr.floats && attr.floats.length > 0) params[attr.name] = attr.floats;
   }
   return params;
+}
+
+/**
+ * Extract all weight tensors from the model — both initializers AND
+ * Constant node attributes (some ONNX exports store weights in Constant ops).
+ */
+function extractAllTensors(model: OnnxModel): OnnxTensor[] {
+  const tensors: OnnxTensor[] = [];
+
+  // 1. Initializers (may have data or just metadata)
+  for (const t of model.graph.initializers) {
+    if (t.rawData.byteLength > 0) {
+      tensors.push(t);
+    }
+  }
+
+  // 2. Constant nodes — weights stored as attribute tensors
+  for (const node of model.graph.nodes) {
+    if (node.opType === "Constant") {
+      for (const attr of node.attributes) {
+        if (attr.t && attr.t.rawData.byteLength > 0) {
+          // Use the node's output name as the tensor name
+          const name = node.outputs[0] || attr.t.name || node.name;
+          tensors.push({ ...attr.t, name });
+        }
+      }
+    }
+  }
+
+  const initCount = model.graph.initializers.filter(t => t.rawData.byteLength > 0).length;
+  const constCount = tensors.length - initCount;
+  console.log(
+    `[WhisperCompiler] Tensor sources: ${initCount} from initializers, ${constCount} from Constant nodes (${tensors.length} total)`
+  );
+
+  return tensors;
 }
 
 function buildComputeGraph(nodes: OnnxNode[]): HologramComputeNode[] {
