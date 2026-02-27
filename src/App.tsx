@@ -13,6 +13,7 @@ import { FocusJournalProvider } from "@/modules/hologram-ui/hooks/useFocusJourna
 import FocusJournalOverlay from "@/modules/hologram-ui/components/FocusJournalOverlay";
 import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
 import { initializeContentRegistry } from "@/lib/uor-content-registry";
+import LumenFloatingPill from "@/modules/hologram-ui/components/LumenFloatingPill";
 import { initTriwordGenesis } from "@/lib/uor-triword";
 
 // Eager — homepage renders instantly
@@ -157,6 +158,7 @@ const App = () => {
       <Sonner />
       <BrowserRouter>
         <ScreenContextProvider>
+        <LumenFloatingPill />
         <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<IndexPage />} />
