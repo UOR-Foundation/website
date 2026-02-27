@@ -17,9 +17,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useVoiceConversation, type VoiceConversationState } from "../hooks/useVoiceConversation";
 import { useVoiceCoherence, type VoiceCoherenceMetrics } from "../hooks/useVoiceCoherence";
 import { useWakeWord } from "../hooks/useWakeWord";
+import { useAudioCapture } from "../hooks/useAudioCapture";
 import { Mic, Square, Volume2, Waves, Ear, EarOff, Radio } from "lucide-react";
 
 const LONG_PRESS_MS = 600;
+
+function classifyMicError(err: any): string {
+  if (err?.name === "NotAllowedError") return "Microphone permission denied";
+  if (err?.name === "NotFoundError") return "No microphone found";
+  return "Could not access microphone";
+}
 
 interface VoiceOrbProps {
   screenContext?: string;
@@ -95,6 +102,12 @@ export default function VoiceOrb({
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPressRef = useRef(false);
 
+  // Separate audio capture for listen mode (ambient mic)
+  const [listenAudioLevel, setListenAudioLevel] = useState(0);
+  const listenCapture = useAudioCapture({
+    onLevel: (lvl) => { setListenAudioLevel(lvl); },
+  });
+
   const voice = useVoiceConversation({
     voiceEngine: "piper",
     personaId,
@@ -123,15 +136,26 @@ export default function VoiceOrb({
   // Long-press handlers for listen mode
   const handlePointerDown = useCallback(() => {
     didLongPressRef.current = false;
-    longPressTimerRef.current = setTimeout(() => {
+    longPressTimerRef.current = setTimeout(async () => {
       didLongPressRef.current = true;
       setListenMode(prev => {
         const next = !prev;
         console.log(`[VoiceOrb] Listen mode ${next ? "ON" : "OFF"}`);
+        if (next) {
+          // Request mic permission and start capturing for ambient listening
+          listenCapture.start().catch(err => {
+            console.warn("[VoiceOrb] Listen mode mic error:", err);
+            setVoiceError(classifyMicError(err));
+            setListenMode(false);
+          });
+        } else {
+          // Release mic when turning off listen mode
+          listenCapture.cancel();
+        }
         return next;
       });
     }, LONG_PRESS_MS);
-  }, []);
+  }, [listenCapture]);
 
   const handlePointerUp = useCallback(() => {
     if (longPressTimerRef.current) {
@@ -477,18 +501,29 @@ export default function VoiceOrb({
             transition: "background 0.3s ease, border-color 0.15s ease, box-shadow 0.15s ease",
           }}
         >
-          {/* Listen mode breathing ring */}
+          {/* Listen mode breathing ring + level-reactive glow */}
           {listenMode && voice.isIdle && (
-            <motion.div
-              className="absolute inset-0 rounded-full pointer-events-none"
-              animate={{
-                boxShadow: [
-                  "0 0 0 0 hsla(145, 40%, 50%, 0.2)",
-                  "0 0 0 6px hsla(145, 40%, 50%, 0.0)",
-                ],
-              }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-            />
+            <>
+              <motion.div
+                className="absolute inset-0 rounded-full pointer-events-none"
+                animate={{
+                  boxShadow: [
+                    `0 0 0 0 hsla(145, 40%, 50%, ${0.15 + listenAudioLevel * 0.3})`,
+                    `0 0 0 ${4 + listenAudioLevel * 6}px hsla(145, 40%, 50%, 0.0)`,
+                  ],
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+              />
+              {/* Ambient level indicator */}
+              <motion.div
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  background: `radial-gradient(circle, hsla(145, 40%, 50%, ${0.03 + listenAudioLevel * 0.15}) 0%, transparent 70%)`,
+                  transform: `scale(${1.4 + listenAudioLevel * 0.8})`,
+                  transition: "transform 0.1s ease-out, background 0.1s ease-out",
+                }}
+              />
+            </>
           )}
 
           {/* Thinking/Processing spinner */}
