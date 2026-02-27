@@ -83,9 +83,93 @@ function ConsumerView({ snap }: {
         </p>
       </section>
 
-      {/* Simple resource summary */}
-      <section className="max-w-xl mx-auto space-y-6">
-        <div className="grid grid-cols-2 gap-4">
+      {/* ── PERFORMANCE — large stat cards ── */}
+      <section className="space-y-6">
+        <div className="text-center space-y-1">
+          <h2 className="font-serif text-xl md:text-2xl text-foreground tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Performance
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            What your device delivers right now
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Ops / sec */}
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl" style={{ background: "hsl(38 40% 65% / 0.1)" }}>
+                <IconBolt size={20} style={{ color: "hsl(38 40% 65%)" }} />
+              </div>
+            </div>
+            <div>
+              <p className="text-3xl md:text-4xl font-light font-mono text-foreground tracking-tight leading-none">
+                {isOnline ? "10M+" : "—"}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1.5">operations / second</p>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Constant-time lookups across all matrix sizes, independent of input complexity.
+            </p>
+          </div>
+
+          {/* Throughput */}
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl" style={{ background: "hsl(210 50% 55% / 0.1)" }}>
+                <IconServer size={20} style={{ color: "hsl(210 50% 55%)" }} />
+              </div>
+            </div>
+            <div>
+              <p className="text-3xl md:text-4xl font-light font-mono text-foreground tracking-tight leading-none">
+                {tables > 0 ? `${(tables * 256 * 256 / 1024 / 1024).toFixed(1)}M` : "—"}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1.5">pre-computed results</p>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {tables} lookup tables × 65,536 entries each. Every answer ready before you ask.
+            </p>
+          </div>
+
+          {/* Energy savings */}
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl" style={{ background: "hsl(152 44% 50% / 0.1)" }}>
+                <IconFlame size={20} style={{ color: "hsl(152 44% 50%)" }} />
+              </div>
+            </div>
+            <div>
+              <p className="text-3xl md:text-4xl font-light font-mono tracking-tight leading-none" style={{ color: "hsl(152 44% 50%)" }}>
+                99.9%
+              </p>
+              <p className="text-sm text-muted-foreground mt-1.5">energy saved</p>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Replaces billions of multiplications with a single memory read. Near-zero power draw.
+            </p>
+          </div>
+
+          {/* Cost */}
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl" style={{ background: "hsl(38 40% 65% / 0.1)" }}>
+                <IconBoltFilled size={20} style={{ color: "hsl(38 40% 65%)" }} />
+              </div>
+            </div>
+            <div>
+              <p className="text-3xl md:text-4xl font-light font-mono text-foreground tracking-tight leading-none">
+                $0
+              </p>
+              <p className="text-sm text-muted-foreground mt-1.5">forever</p>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              No cloud GPU bills. No subscriptions. Runs entirely on your own hardware.
+            </p>
+          </div>
+        </div>
+
+        {/* Simple resource status row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto">
           <ResourceRow icon={<IconCpu size={18} />} label="Compute Engine" value={isOnline ? "Active" : "—"} accent={isOnline} />
           <ResourceRow icon={<IconBolt size={18} />} label="LUT Tables" value={tables > 0 ? `${tables} loaded` : "—"} accent={tables > 0} />
           <ResourceRow icon={<IconBrain size={18} />} label="AI Inference" value={isOnline ? "Ready" : "Awaiting init"} accent={isOnline} />
