@@ -12,13 +12,17 @@
  *  - thinking:   Golden orbital animation (Lumen reasoning)
  *  - speaking:   Rhythmic pulse synced to speech output
  *
+ * Observer layer:
+ *  - When observer context is present, a subtle outer halo indicates
+ *    ambient intelligence is active — Lumen is contextually aware.
+ *
  * @module hologram-ui/components/VoiceOrb
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useVoiceConversation, type VoiceConversationState } from "../hooks/useVoiceConversation";
-import { Mic, Square, Volume2 } from "lucide-react";
+import { Mic, Square, Volume2, Waves } from "lucide-react";
 
 interface VoiceOrbProps {
   /** Screen context for ambient awareness */
@@ -35,10 +39,10 @@ interface VoiceOrbProps {
 
 const STATE_LABELS: Record<VoiceConversationState, string> = {
   idle: "Speak",
-  listening: "Listening",
-  processing: "Understanding",
-  thinking: "Thinking",
-  speaking: "Speaking",
+  listening: "Listening…",
+  processing: "Understanding…",
+  thinking: "Reflecting…",
+  speaking: "Speaking…",
 };
 
 const STATE_COLORS: Record<VoiceConversationState, { ring: string; glow: string; bg: string }> = {
@@ -48,23 +52,23 @@ const STATE_COLORS: Record<VoiceConversationState, { ring: string; glow: string;
     bg: "hsla(0, 0%, 8%, 0.6)",
   },
   listening: {
-    ring: "hsla(0, 55%, 55%, 0.7)",
-    glow: "hsla(0, 55%, 50%, 0.15)",
-    bg: "hsla(0, 15%, 12%, 0.8)",
+    ring: "hsla(0, 50%, 55%, 0.65)",
+    glow: "hsla(0, 50%, 50%, 0.12)",
+    bg: "hsla(0, 12%, 12%, 0.8)",
   },
   processing: {
-    ring: "hsla(38, 50%, 55%, 0.5)",
-    glow: "hsla(38, 50%, 50%, 0.1)",
+    ring: "hsla(38, 45%, 55%, 0.5)",
+    glow: "hsla(38, 45%, 50%, 0.08)",
     bg: "hsla(30, 10%, 10%, 0.8)",
   },
   thinking: {
-    ring: "hsla(38, 60%, 60%, 0.7)",
-    glow: "hsla(38, 60%, 55%, 0.2)",
+    ring: "hsla(38, 55%, 60%, 0.65)",
+    glow: "hsla(38, 55%, 55%, 0.15)",
     bg: "hsla(30, 12%, 11%, 0.85)",
   },
   speaking: {
-    ring: "hsla(200, 40%, 55%, 0.6)",
-    glow: "hsla(200, 40%, 50%, 0.12)",
+    ring: "hsla(200, 35%, 55%, 0.55)",
+    glow: "hsla(200, 35%, 50%, 0.1)",
     bg: "hsla(200, 8%, 10%, 0.8)",
   },
 };
@@ -77,7 +81,6 @@ export default function VoiceOrb({
   onExchange,
 }: VoiceOrbProps) {
   const [hovered, setHovered] = useState(false);
-  const [expanded, setExpanded] = useState(false);
 
   const voice = useVoiceConversation({
     voiceEngine: "web-speech",
@@ -90,32 +93,34 @@ export default function VoiceOrb({
   });
 
   const colors = STATE_COLORS[voice.state];
+  const hasObserver = !!(observerBriefing && observerBriefing.length > 10);
 
   const Icon = useMemo(() => {
     switch (voice.state) {
       case "idle": return Mic;
       case "listening": return Square;
       case "speaking": return Volume2;
-      default: return Mic;
+      default: return Waves;
     }
   }, [voice.state]);
 
-  // Waveform bars for listening state
+  // Natural waveform bars for listening state
   const waveBars = useMemo(() => {
     if (!voice.isListening) return null;
+    const barHeights = [0.2, 0.5, 1.0, 0.7, 0.35];
     return (
       <div className="flex items-center gap-[2px] h-4">
-        {[0.3, 0.6, 1, 0.7, 0.4].map((offset, i) => {
-          const height = Math.max(3, Math.round(voice.audioLevel * offset * 16));
+        {barHeights.map((offset, i) => {
+          const height = Math.max(3, Math.round(voice.audioLevel * offset * 18));
           return (
-            <div
+            <motion.div
               key={i}
               className="rounded-full"
+              animate={{ height }}
+              transition={{ duration: 0.08, ease: "easeOut" }}
               style={{
                 width: "2px",
-                height: `${height}px`,
-                background: `hsla(0, 55%, 60%, ${0.5 + voice.audioLevel * 0.5})`,
-                transition: "height 80ms ease-out",
+                background: `hsla(0, 50%, 62%, ${0.4 + voice.audioLevel * 0.6})`,
               }}
             />
           );
@@ -123,6 +128,29 @@ export default function VoiceOrb({
       </div>
     );
   }, [voice.isListening, voice.audioLevel]);
+
+  // Speaking rhythm bars
+  const speakBars = useMemo(() => {
+    if (!voice.isSpeaking) return null;
+    return (
+      <div className="flex items-center gap-[2px] h-4">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <motion.div
+            key={i}
+            className="rounded-full"
+            style={{ width: "2px", background: "hsla(200, 40%, 62%, 0.7)" }}
+            animate={{ height: [4, 12, 6, 14, 4] }}
+            transition={{
+              duration: 1.2,
+              repeat: Infinity,
+              delay: i * 0.12,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div>
+    );
+  }, [voice.isSpeaking]);
 
   return (
     <div
@@ -137,44 +165,80 @@ export default function VoiceOrb({
             initial={{ opacity: 0, y: 8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 pointer-events-none"
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 pointer-events-none"
             style={{
-              maxWidth: "280px",
-              padding: "10px 14px",
-              borderRadius: "14px",
-              background: "hsla(0, 0%, 6%, 0.9)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid hsla(38, 20%, 30%, 0.2)",
+              maxWidth: "300px",
+              padding: "12px 16px",
+              borderRadius: "16px",
+              background: "hsla(0, 0%, 5%, 0.92)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              border: "1px solid hsla(38, 20%, 30%, 0.15)",
+              boxShadow: "0 8px 32px hsla(0, 0%, 0%, 0.4)",
             }}
           >
+            {/* User's words */}
             {voice.lastTranscript && (
               <p
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
                   fontSize: "11px",
-                  color: "hsla(38, 15%, 75%, 0.6)",
-                  marginBottom: voice.lastResponse ? "6px" : 0,
-                  lineHeight: 1.5,
+                  color: "hsla(38, 12%, 70%, 0.5)",
+                  marginBottom: voice.lastResponse ? "8px" : 0,
+                  lineHeight: 1.55,
+                  fontStyle: "italic",
                 }}
               >
-                {voice.lastTranscript}
+                "{voice.lastTranscript}"
               </p>
             )}
+
+            {/* Lumen's response */}
             {voice.lastResponse && (voice.isThinking || voice.isSpeaking) && (
               <p
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "'Playfair Display', serif",
                   fontSize: "12px",
-                  color: "hsla(38, 15%, 88%, 0.85)",
-                  lineHeight: 1.5,
-                  maxHeight: "100px",
+                  fontWeight: 300,
+                  color: "hsla(38, 15%, 90%, 0.85)",
+                  lineHeight: 1.6,
+                  maxHeight: "120px",
                   overflow: "hidden",
                 }}
               >
-                {voice.lastResponse.slice(0, 200)}
-                {voice.lastResponse.length > 200 ? "…" : ""}
+                {voice.lastResponse.slice(0, 250)}
+                {voice.lastResponse.length > 250 ? "…" : ""}
               </p>
+            )}
+
+            {/* Observer context indicator */}
+            {hasObserver && voice.isActive && (
+              <div
+                className="flex items-center gap-1.5 mt-2 pt-2"
+                style={{ borderTop: "1px solid hsla(38, 20%, 30%, 0.1)" }}
+              >
+                <div
+                  className="rounded-full"
+                  style={{
+                    width: "4px",
+                    height: "4px",
+                    background: "hsla(150, 40%, 55%, 0.6)",
+                    animation: "heartbeat-love 3s ease-in-out infinite",
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: "9px",
+                    letterSpacing: "0.12em",
+                    color: "hsla(150, 30%, 65%, 0.45)",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Observer active
+                </span>
+              </div>
             )}
           </motion.div>
         )}
@@ -187,6 +251,19 @@ export default function VoiceOrb({
         style={{ touchAction: "none" }}
         aria-label={STATE_LABELS[voice.state]}
       >
+        {/* Observer awareness halo — outermost ring, only when observer context is present */}
+        {hasObserver && (
+          <div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{
+              transform: "scale(2.4)",
+              background: `radial-gradient(circle, hsla(150, 35%, 50%, ${voice.isActive ? 0.06 : 0.03}) 0%, transparent 70%)`,
+              animation: "ring-breathe 5s ease-in-out infinite",
+              transition: "background 1s ease",
+            }}
+          />
+        )}
+
         {/* Outer glow */}
         <div
           className="absolute inset-0 rounded-full pointer-events-none"
@@ -209,36 +286,42 @@ export default function VoiceOrb({
             backdropFilter: "blur(16px)",
             WebkitBackdropFilter: "blur(16px)",
             boxShadow: voice.isActive
-              ? `0 0 20px ${colors.glow}, inset 0 0 8px ${colors.glow}`
-              : "0 2px 8px hsla(0, 0%, 0%, 0.2)",
+              ? `0 0 24px ${colors.glow}, inset 0 0 10px ${colors.glow}`
+              : hovered
+                ? `0 0 12px hsla(38, 30%, 50%, 0.08)`
+                : "0 2px 8px hsla(0, 0%, 0%, 0.2)",
           }}
         >
-          {/* Thinking spinner */}
+          {/* Thinking/Processing spinner */}
           {(voice.isThinking || voice.isProcessing) && (
             <div
               className="absolute inset-0 rounded-full pointer-events-none"
               style={{
                 border: "1.5px solid transparent",
-                borderTopColor: "hsla(38, 50%, 60%, 0.6)",
-                animation: "spin 1.2s linear infinite",
+                borderTopColor: voice.isThinking
+                  ? "hsla(38, 50%, 60%, 0.55)"
+                  : "hsla(38, 40%, 55%, 0.4)",
+                animation: `spin ${voice.isThinking ? "1s" : "1.4s"} linear infinite`,
               }}
             />
           )}
 
-          {/* Icon or waveform */}
+          {/* Icon, waveform, or speak bars */}
           {voice.isListening ? (
             waveBars
+          ) : voice.isSpeaking ? (
+            speakBars
           ) : (
             <Icon
               size={16}
               strokeWidth={1.5}
               style={{
                 color: voice.isActive
-                  ? "hsla(38, 20%, 90%, 0.9)"
+                  ? "hsla(38, 20%, 92%, 0.9)"
                   : hovered
-                    ? "hsla(38, 20%, 85%, 0.8)"
-                    : "hsla(38, 15%, 75%, 0.5)",
-                transition: "color 0.3s ease",
+                    ? "hsla(38, 20%, 85%, 0.75)"
+                    : "hsla(38, 15%, 75%, 0.45)",
+                transition: "color 0.4s ease",
               }}
             />
           )}
@@ -246,21 +329,28 @@ export default function VoiceOrb({
       </button>
 
       {/* State label */}
-      <span
-        className="tracking-[0.15em] uppercase transition-all duration-500"
-        style={{
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: "9px",
-          fontWeight: 500,
-          color: voice.isActive
-            ? "hsla(38, 15%, 85%, 0.7)"
-            : hovered
-              ? "hsla(38, 15%, 80%, 0.5)"
-              : "hsla(38, 15%, 75%, 0.3)",
-        }}
-      >
-        {STATE_LABELS[voice.state]}
-      </span>
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={voice.state}
+          initial={{ opacity: 0, y: 2 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -2 }}
+          transition={{ duration: 0.25 }}
+          className="tracking-[0.15em] uppercase"
+          style={{
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontSize: "9px",
+            fontWeight: 500,
+            color: voice.isActive
+              ? "hsla(38, 15%, 85%, 0.65)"
+              : hovered
+                ? "hsla(38, 15%, 80%, 0.45)"
+                : "hsla(38, 15%, 75%, 0.25)",
+          }}
+        >
+          {STATE_LABELS[voice.state]}
+        </motion.span>
+      </AnimatePresence>
 
       {/* Elapsed timer — only while listening */}
       <AnimatePresence>
@@ -273,7 +363,7 @@ export default function VoiceOrb({
               fontFamily: "'DM Sans', monospace",
               fontSize: "10px",
               fontWeight: 400,
-              color: "hsla(0, 55%, 60%, 0.7)",
+              color: "hsla(0, 50%, 60%, 0.6)",
               letterSpacing: "0.05em",
             }}
           >

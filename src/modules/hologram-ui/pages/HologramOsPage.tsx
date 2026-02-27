@@ -37,7 +37,8 @@ import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 import { useFocusJournal } from "@/modules/hologram-ui/hooks/useFocusJournal";
 import { useContextProjection } from "@/modules/hologram-ui/hooks/useContextProjection";
 import { useShortcutMastery } from "@/modules/hologram-ui/hooks/useShortcutMastery";
-import { useContextBeacon } from "@/modules/hologram-ui/hooks/useScreenContext";
+import { useContextBeacon, useScreenContext } from "@/modules/hologram-ui/hooks/useScreenContext";
+import { useObserverCompanion } from "@/modules/hologram-ui/hooks/useObserverCompanion";
 import DesktopSurface from "@/modules/hologram-ui/components/DesktopSurface";
 import { useDesktopState, type DesktopId } from "@/modules/hologram-ui/hooks/useDesktopState";
 
@@ -88,7 +89,8 @@ export default function HologramOsPage() {
   const [chatPrompt, setChatPrompt] = useState("");
   const [legalOpen, setLegalOpen] = useState(false);
   const [legalTab, setLegalTab] = useState<"privacy" | "terms">("privacy");
-  const { entryCount: journalEntryCount } = useFocusJournal();
+  const journal = useFocusJournal();
+  const journalEntryCount = journal.entryCount;
 
   // ── Active desktop ────────────────────────────────────────────────────────
   const [activeDesktop, setActiveDesktop] = useState<DesktopId>(() => {
@@ -126,6 +128,12 @@ export default function HologramOsPage() {
   const mastery = useShortcutMastery();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const ctx = useContextProjection();
+  const screenCtx = useScreenContext();
+  const observer = useObserverCompanion({
+    profile: ctx.profile,
+    pendingTLDR: journal.pendingTLDR,
+    sessionSNR: null,
+  });
   const isFocus = attention.preset === "focus";
 
   // ── Auto-hide widgets in focus mode ────────────────────────────────────
@@ -283,6 +291,8 @@ export default function HologramOsPage() {
                   isWidgetVisible={ws.isWidgetVisible}
                   removeWidget={ws.removeWidget}
                   ambientState={mode === "image" ? ambientState : undefined}
+                  observerBriefing={observer.promptText}
+                  screenContext={screenCtx.getPromptContext()}
                 />
 
                 {/* Wavefront glow at the leading edge of the peel */}
