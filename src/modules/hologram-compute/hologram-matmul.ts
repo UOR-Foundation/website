@@ -207,6 +207,38 @@ export function matrixChecksum(m: Uint8Array): number {
   return sum;
 }
 
+/**
+ * SHA-256 hex digest of a Uint8Array.
+ * Uses the Web Crypto API — the gold standard for tamper-evident hashing.
+ * Returns the full 64-character hex string.
+ */
+export async function sha256Hex(data: Uint8Array): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data.buffer as ArrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Extract a reproducible sample from a matrix for forensic display.
+ * Returns the top-left corner and bottom-right corner values.
+ */
+export function matrixSample(m: Uint8Array, n: number, sampleSize = 4): { topLeft: number[][]; bottomRight: number[][] } {
+  const s = Math.min(sampleSize, n);
+  const topLeft: number[][] = [];
+  const bottomRight: number[][] = [];
+  for (let i = 0; i < s; i++) {
+    const tlRow: number[] = [];
+    const brRow: number[] = [];
+    for (let j = 0; j < s; j++) {
+      tlRow.push(m[i * n + j]);
+      brRow.push(m[(n - s + i) * n + (n - s + j)]);
+    }
+    topLeft.push(tlRow);
+    bottomRight.push(brRow);
+  }
+  return { topLeft, bottomRight };
+}
+
 // ═══════════════════════════════════════════════════════════════
 // WebGPU Matrix Multiplication — Real GPU Compute
 // ═══════════════════════════════════════════════════════════════
