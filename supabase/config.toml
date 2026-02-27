@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.whisper-model-proxy]
 verify_jwt = false
+
+[functions.whisper-model-seeder]
+verify_jwt = false

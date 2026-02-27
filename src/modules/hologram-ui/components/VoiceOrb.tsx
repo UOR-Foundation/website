@@ -522,28 +522,53 @@ export default function VoiceOrb({
                 : STATE_LABELS[voice.state]
             }
             {voice.isActive && (
-              <span
-                style={{
-                  fontSize: "7px",
-                  fontWeight: 600,
-                  letterSpacing: "0.08em",
-                  padding: "1px 4px",
-                  borderRadius: "4px",
-                  background: voice.sttEngine === "whisper"
-                    ? "hsla(160, 35%, 25%, 0.5)"
-                    : "hsla(38, 25%, 25%, 0.4)",
-                  color: voice.sttEngine === "whisper"
-                    ? "hsla(160, 40%, 70%, 0.8)"
-                    : "hsla(38, 20%, 65%, 0.6)",
-                  border: `1px solid ${
-                    voice.sttEngine === "whisper"
-                      ? "hsla(160, 30%, 45%, 0.25)"
-                      : "hsla(38, 20%, 40%, 0.15)"
-                  }`,
-                }}
-              >
-                {voice.sttEngine === "whisper" ? "WHISPER·vGPU" : "NATIVE"}
-              </span>
+              <>
+                <span
+                  style={{
+                    fontSize: "7px",
+                    fontWeight: 600,
+                    letterSpacing: "0.08em",
+                    padding: "1px 4px",
+                    borderRadius: "4px",
+                    background: voice.sttEngine === "whisper"
+                      ? "hsla(160, 35%, 25%, 0.5)"
+                      : "hsla(38, 25%, 25%, 0.4)",
+                    color: voice.sttEngine === "whisper"
+                      ? "hsla(160, 40%, 70%, 0.8)"
+                      : "hsla(38, 20%, 65%, 0.6)",
+                    border: `1px solid ${
+                      voice.sttEngine === "whisper"
+                        ? "hsla(160, 30%, 45%, 0.25)"
+                        : "hsla(38, 20%, 40%, 0.15)"
+                    }`,
+                  }}
+                >
+                  {voice.sttEngine === "whisper" ? "WHISPER·vGPU" : "NATIVE"}
+                </span>
+                <span
+                  style={{
+                    fontSize: "6px",
+                    fontWeight: 500,
+                    letterSpacing: "0.06em",
+                    padding: "1px 3px",
+                    borderRadius: "3px",
+                    background: voice.privacy === "local"
+                      ? "hsla(140, 40%, 20%, 0.5)"
+                      : "hsla(30, 30%, 20%, 0.4)",
+                    color: voice.privacy === "local"
+                      ? "hsla(140, 50%, 65%, 0.8)"
+                      : "hsla(30, 40%, 60%, 0.6)",
+                    border: `1px solid ${
+                      voice.privacy === "local"
+                        ? "hsla(140, 35%, 40%, 0.2)"
+                        : "hsla(30, 25%, 35%, 0.15)"
+                    }`,
+                  }}
+                  title={voice.privacyWarning || "Audio processed locally — full privacy"}
+                >
+                  {voice.privacy === "local" ? "🔒 LOCAL" : "☁️ CLOUD"}
+                </span>
+              </>
             )}
           </motion.span>
         </AnimatePresence>

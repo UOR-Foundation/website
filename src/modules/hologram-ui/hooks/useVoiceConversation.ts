@@ -2,12 +2,7 @@
  * useVoiceConversation — Unified Voice Loop Orchestrator
  * ═══════════════════════════════════════════════════════
  *
- * Native-first voice interface for Lumen AI:
- *   Native SpeechRecognition (primary) → Lumen AI Stream → Web Speech TTS
- *   Whisper ONNX (only if cached) as optional upgrade
- *
- * AudioWorklet runs in parallel for VAD, level metering, voiceprint.
- *
+ * Delegates STT to HologramSttEngine (privacy-aware).
  * States: idle → listening → processing → thinking → speaking → idle
  *
  * @module hologram-ui/hooks/useVoiceConversation
@@ -16,8 +11,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useVoiceSynthesis, type VoiceEngine } from "./useVoiceSynthesis";
 import { useAudioCapture } from "./useAudioCapture";
-import { getWhisperEngine } from "@/modules/uns/core/hologram/whisper-engine";
-import { isNativeSttAvailable, recognizeNative } from "@/modules/uns/core/hologram/native-stt";
+import { getHologramStt, type SttStrategy, type SttPrivacyLevel } from "@/modules/uns/core/hologram/stt-engine";
 
 export type VoiceConversationState =
   | "idle"
@@ -26,7 +20,7 @@ export type VoiceConversationState =
   | "thinking"
   | "speaking";
 
-export type SttEngine = "whisper" | "native" | "loading";
+export type SttEngine = SttStrategy | "loading";
 
 interface UseVoiceConversationOptions {
   voiceEngine?: VoiceEngine;
@@ -52,11 +46,6 @@ const GREETINGS = [
   "Here. No rush — I'm all ears.",
 ];
 
-function getSpeechRecognition() {
-  const w = window as any;
-  return (w.SpeechRecognition || w.webkitSpeechRecognition || null) as (new () => any) | null;
-}
-
 function classifyMicError(err: any): string {
   if (err?.name === "NotAllowedError") return "Microphone permission denied";
   if (err?.name === "NotFoundError") return "No microphone found";
@@ -76,7 +65,6 @@ export function useVoiceConversation({
   onExchange,
   onStateChange,
   onError,
-  onWhisperProgress,
 }: UseVoiceConversationOptions = {}) {
   const [state, setState] = useState<VoiceConversationState>("idle");
   const stateRef = useRef<VoiceConversationState>("idle");
@@ -90,11 +78,10 @@ export function useVoiceConversation({
   const conversationHistory = useRef<{ role: "user" | "assistant"; content: string }[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const hasGreetedRef = useRef(false);
-
-  // Native STT refs
-  const recognitionRef = useRef<any>(null);
-  const transcriptAccRef = useRef("");
+  const nativeHandleRef = useRef<{ stop: () => void; abort: () => void; getTranscript: () => string } | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stt = getHologramStt();
 
   const set = useCallback((s: VoiceConversationState) => {
     stateRef.current = s;
@@ -108,10 +95,8 @@ export function useVoiceConversation({
     onError: (err) => { set("idle"); onError?.(`Voice output error: ${err}`); },
   });
 
-  // ── VAD auto-stop handler ─────────────────────────────────────────────
   const autoStopRef = useRef<(() => void) | null>(null);
 
-  // ── AudioWorklet capture with built-in VAD ────────────────────────────
   const capture = useAudioCapture({
     silenceAutoStopSec: 1.5,
     onSilence: () => {
@@ -122,36 +107,22 @@ export function useVoiceConversation({
     onLevel: setAudioLevel,
   });
 
-  // ── Engine availability (native-first, no CDN preload) ─────────────────
+  // ── Engine availability ─────────────────────────────────────────────
   useEffect(() => {
-    const engine = getWhisperEngine();
-    if (engine.isReady) {
-      setSttEngine("whisper");
-      console.log("[Voice] Whisper ONNX cached — using as primary");
-      return;
-    }
-
-    // Default to native SpeechRecognition (instant, browser-native)
-    if (isNativeSttAvailable()) {
-      setSttEngine("native");
-      console.log("[Voice] Using native SpeechRecognition (zero download)");
-    } else {
-      setSttEngine("native");
-      console.warn("[Voice] No STT engine available");
-    }
+    const strategy = stt.autoSelect();
+    setSttEngine(strategy);
+    console.log(`[Voice] ${strategy} (privacy: ${stt.privacy})`);
   }, []);
 
-  // ── Cleanup ─────────────────────────────────────────────────────────────
-
   const cleanup = useCallback(() => {
-    try { recognitionRef.current?.abort(); } catch {}
-    recognitionRef.current = null;
+    stt.abort();
+    nativeHandleRef.current = null;
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
     setAudioLevel(0);
-  }, []);
+  }, [stt]);
 
-  // ── Lumen AI Stream ─────────────────────────────────────────────────────
+  // ── Lumen AI Stream ─────────────────────────────────────────────────
 
   const queryLumen = useCallback(async (userText: string): Promise<string> => {
     conversationHistory.current.push({ role: "user", content: userText });
@@ -210,7 +181,7 @@ export function useVoiceConversation({
     return full;
   }, [cloudModel, personaId, skillId, screenContext, observerBriefing, fusionContext]);
 
-  // ── Process transcript → think → speak ──────────────────────────────────
+  // ── Process transcript → think → speak ──────────────────────────────
 
   const processTranscript = useCallback(async (transcript: string) => {
     if (!transcript.trim()) { set("idle"); return; }
@@ -233,7 +204,7 @@ export function useVoiceConversation({
     }
   }, [set, queryLumen, tts, onExchange, onError]);
 
-  // ── Start listening ─────────────────────────────────────────────────────
+  // ── Start listening ─────────────────────────────────────────────────
 
   const startListening = useCallback(async () => {
     if (stateRef.current !== "idle") return;
@@ -249,122 +220,81 @@ export function useVoiceConversation({
       await new Promise(r => setTimeout(r, 200));
     }
 
-    const engine = getWhisperEngine();
-    const useWhisper = engine.isReady;
-    setSttEngine(useWhisper ? "whisper" : "native");
+    // Re-check strategy (Whisper may have loaded since init)
+    const strategy = stt.autoSelect();
+    setSttEngine(strategy);
 
-    if (useWhisper) {
-      // ── Whisper path: AudioWorklet capture with VAD ──
-      try {
-        await capture.start();
-      } catch (err) {
-        onError?.(classifyMicError(err));
-        set("idle");
-        return;
-      }
-
-      // Timer
-      setElapsed(0);
-      timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
-      set("listening");
-    } else {
-      // ── Native STT path ──
-      const SpeechRec = getSpeechRecognition();
-      if (!SpeechRec) {
-        onError?.("Speech recognition not supported. Use Chrome, Safari, or Edge.");
-        set("idle");
-        return;
-      }
-
-      // Acquire mic for level metering (native STT doesn't expose audio)
-      try {
-        await capture.start();
-      } catch (err) {
-        onError?.(classifyMicError(err));
-        set("idle");
-        return;
-      }
-
-      transcriptAccRef.current = "";
-      const recognition = new SpeechRec();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = "en-US";
-
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        let interim = "", final = "";
-        for (let i = 0; i < event.results.length; i++) {
-          const r = event.results[i];
-          if (r.isFinal) final += r[0].transcript;
-          else interim += r[0].transcript;
-        }
-        transcriptAccRef.current = final;
-        setLastTranscript((final + " " + interim).trim());
-      };
-
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        if (event.error === "aborted" || event.error === "no-speech") return;
-        capture.cancel();
-        cleanup();
-        onError?.(`Speech recognition error: ${event.error}`);
-        set("idle");
-      };
-
-      recognition.onend = () => {
-        if (stateRef.current !== "listening") return;
-        const transcript = transcriptAccRef.current.trim();
-        capture.cancel();
-        cleanup();
-        if (transcript) { set("processing"); processTranscript(transcript); }
-        else set("idle");
-      };
-
-      recognitionRef.current = recognition;
-      recognition.start();
-
-      // Timer
-      setElapsed(0);
-      timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
-      set("listening");
+    // Acquire mic + start AudioWorklet for level metering + VAD
+    try {
+      await capture.start();
+    } catch (err) {
+      onError?.(classifyMicError(err));
+      set("idle");
+      return;
     }
-  }, [set, tts, cleanup, processTranscript, onError, capture]);
 
-  // ── Stop listening ──────────────────────────────────────────────────────
+    // If native strategy, start continuous recognition in parallel
+    if (strategy === "native" && stt.nativeAvailable) {
+      nativeHandleRef.current = stt.startContinuousNative({
+        onInterim: (text) => setLastTranscript(text),
+        onError: (err) => {
+          if (err !== "aborted" && err !== "no-speech") {
+            capture.cancel();
+            cleanup();
+            onError?.(`Speech recognition error: ${err}`);
+            set("idle");
+          }
+        },
+        onEnd: (transcript) => {
+          if (stateRef.current !== "listening") return;
+          capture.cancel();
+          cleanup();
+          if (transcript) { set("processing"); processTranscript(transcript); }
+          else set("idle");
+        },
+      });
+    }
+
+    // Timer
+    setElapsed(0);
+    timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
+    set("listening");
+  }, [set, tts, cleanup, processTranscript, onError, capture, stt]);
+
+  // ── Stop listening ──────────────────────────────────────────────────
 
   const stopListening = useCallback(async () => {
     if (stateRef.current !== "listening") return;
-
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
 
-    if (sttEngine === "whisper") {
+    if (stt.activeStrategy === "whisper" && stt.whisperAvailable) {
+      nativeHandleRef.current?.abort();
       const result = await capture.stop();
-
       if (!result) { set("idle"); return; }
 
       set("processing");
       setLastTranscript("Transcribing…");
 
       try {
-        const transcription = await getWhisperEngine().transcribe(result.audio, result.sampleRate);
+        const transcription = await stt.transcribeWhisper(result.audio, result.sampleRate);
         if (transcription.text.trim()) await processTranscript(transcription.text);
         else set("idle");
       } catch {
-        onError?.("Transcription failed — falling back to native STT");
+        onError?.("Transcription failed — using native STT");
+        stt.forceStrategy("native");
         setSttEngine("native");
         set("idle");
       }
     } else {
       // Native: stop triggers onend → processTranscript
       capture.cancel();
-      try { recognitionRef.current?.stop(); }
-      catch { cleanup(); set("idle"); }
+      nativeHandleRef.current?.stop();
     }
-  }, [sttEngine, capture, cleanup, set, processTranscript, onError]);
+  }, [stt, capture, set, processTranscript, onError]);
 
-  // Wire up VAD auto-stop
   autoStopRef.current = stopListening;
 
-  // ── Cancel / Toggle / Clear ─────────────────────────────────────────────
+  // ── Cancel / Toggle / Clear ─────────────────────────────────────────
 
   const cancel = useCallback(() => {
     capture.cancel();
@@ -409,6 +339,8 @@ export function useVoiceConversation({
     audioLevel,
     elapsed,
     sttEngine,
+    privacy: stt.privacy as SttPrivacyLevel,
+    privacyWarning: stt.privacyWarning,
     whisperProgress,
     conversationHistory: conversationHistory.current,
     isIdle: state === "idle",
