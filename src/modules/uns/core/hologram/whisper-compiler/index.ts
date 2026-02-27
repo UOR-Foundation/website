@@ -72,12 +72,14 @@ export {
   WGSL_SDPA,
   WGSL_CONV1D,
   WGSL_MEL_SPEC,
+  WGSL_FUSED_ATTN,
   cpuMatmul,
   cpuLayerNorm,
   cpuGelu,
   cpuSoftmax,
   cpuScaledDotProductAttention,
   cpuConv1d,
+  cpuFusedAttention,
 } from "./wgsl-kernels";
 export type { WhisperKernelName } from "./wgsl-kernels";
 
