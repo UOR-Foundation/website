@@ -26,6 +26,10 @@ import {
   WGSL_MEL_SPEC,
   WGSL_FUSED_ATTN,
   WGSL_BATCHED_FUSED_ATTN,
+  WGSL_CONV2D,
+  WGSL_GROUP_NORM,
+  WGSL_SILU,
+  WGSL_UPSAMPLE2X,
   cpuMatmul,
   cpuLayerNorm,
   cpuGelu,
@@ -34,6 +38,10 @@ import {
   cpuConv1d,
   cpuFusedAttention,
   cpuBatchedFusedAttention,
+  cpuConv2d,
+  cpuGroupNorm,
+  cpuSilu,
+  cpuUpsample2x,
 } from "./wgsl-kernels";
 import {
   computeMelSpectrogram as cpuMelSpectrogram,
@@ -619,6 +627,166 @@ export class GpuDispatch {
       console.warn("[GpuDispatch] Mel spectrogram GPU failed, CPU fallback:", e);
       this._cpuOps++;
       return cpuMelSpectrogram(audio);
+    }
+  }
+
+  // ── Conv2D (GPU-accelerated) ──────────────────────────────────────────
+  // input [N, C_in, H, W], weight [C_out, C_in, kH, kW], bias [C_out]
+
+  async conv2d(
+    input: Float32Array, weight: Float32Array, bias: Float32Array | null,
+    batch: number, cIn: number, cOut: number,
+    H: number, W: number, kH: number, kW: number,
+    strideH = 1, strideW = 1, padH = 0, padW = 0,
+  ): Promise<Float32Array> {
+    const outH = Math.floor((H + 2 * padH - kH) / strideH) + 1;
+    const outW = Math.floor((W + 2 * padW - kW) / strideW) + 1;
+    const totalElements = batch * cOut * outH * outW;
+
+    if (!this._available || totalElements < 4096) {
+      this._cpuOps++;
+      return cpuConv2d(input, weight, bias, batch, cIn, cOut, H, W, kH, kW, strideH, strideW, padH, padW);
+    }
+
+    try {
+      // Uniforms: 12 u32s = 48 bytes (padded to 16-byte alignment)
+      const uniforms = new ArrayBuffer(48);
+      const view = new Uint32Array(uniforms);
+      view[0] = batch; view[1] = cIn; view[2] = cOut;
+      view[3] = H; view[4] = W; view[5] = kH; view[6] = kW;
+      view[7] = outH; view[8] = outW;
+      view[9] = strideH; view[10] = strideW;
+      view[11] = padH; // padW assumed == padH for simplicity in WGSL
+
+      const biasBuffer = bias ?? new Float32Array(1);
+      const outputSize = totalElements * 4;
+      // Dispatch: one thread per output element, grouped in 256-thread workgroups
+      const wgX = Math.ceil(totalElements / 256);
+
+      const result = await this.gpu.compute(
+        WGSL_CONV2D, [input, weight, biasBuffer], outputSize,
+        [wgX, 1, 1], uniforms,
+      );
+
+      this._gpuOps++;
+      this._totalGpuMs += result.computeTimeMs;
+      return result.output;
+    } catch {
+      this._cpuOps++;
+      return cpuConv2d(input, weight, bias, batch, cIn, cOut, H, W, kH, kW, strideH, strideW, padH, padW);
+    }
+  }
+
+  // ── GroupNorm (GPU-accelerated) ─────────────────────────────────────────
+  // input [N, C, H, W], gamma [C], beta [C], groups G
+
+  async groupNorm(
+    input: Float32Array, gamma: Float32Array, beta: Float32Array,
+    batch: number, channels: number, spatial: number,
+    numGroups: number, eps = 1e-5,
+  ): Promise<Float32Array> {
+    const totalElements = batch * channels * spatial;
+
+    if (!this._available || totalElements < 4096) {
+      this._cpuOps++;
+      return cpuGroupNorm(input, gamma, beta, batch, channels, spatial, numGroups, eps);
+    }
+
+    try {
+      const channelsPerGroup = channels / numGroups;
+      const uniforms = new ArrayBuffer(32);
+      const uView = new DataView(uniforms);
+      uView.setUint32(0, batch, true);
+      uView.setUint32(4, channels, true);
+      uView.setUint32(8, spatial, true);
+      uView.setUint32(12, numGroups, true);
+      uView.setUint32(16, channelsPerGroup, true);
+      uView.setFloat32(20, eps, true);
+      uView.setUint32(24, 0, true);
+      uView.setUint32(28, 0, true);
+
+      const outputSize = totalElements * 4;
+      // One workgroup per (batch, group) pair
+      const wgX = batch * numGroups;
+
+      const result = await this.gpu.compute(
+        WGSL_GROUP_NORM, [input, gamma, beta], outputSize,
+        [wgX, 1, 1], uniforms,
+      );
+
+      this._gpuOps++;
+      this._totalGpuMs += result.computeTimeMs;
+      return result.output;
+    } catch {
+      this._cpuOps++;
+      return cpuGroupNorm(input, gamma, beta, batch, channels, spatial, numGroups, eps);
+    }
+  }
+
+  // ── SiLU (GPU-accelerated) ──────────────────────────────────────────────
+  // SiLU(x) = x * sigmoid(x)
+
+  async silu(input: Float32Array): Promise<Float32Array> {
+    if (!this._available || input.length < 1024) {
+      this._cpuOps++;
+      return cpuSilu(input);
+    }
+
+    try {
+      const outputSize = input.byteLength;
+      const wgX = Math.ceil(input.length / 256);
+
+      const result = await this.gpu.compute(
+        WGSL_SILU, [input], outputSize,
+        [wgX, 1, 1],
+      );
+
+      this._gpuOps++;
+      this._totalGpuMs += result.computeTimeMs;
+      return result.output;
+    } catch {
+      this._cpuOps++;
+      return cpuSilu(input);
+    }
+  }
+
+  // ── Upsample 2× (GPU-accelerated) ──────────────────────────────────────
+  // input [N, C, H, W] → output [N, C, H*2, W*2] (nearest-neighbor)
+
+  async upsample2x(
+    input: Float32Array,
+    batch: number, channels: number, H: number, W: number,
+  ): Promise<Float32Array> {
+    const outH = H * 2, outW = W * 2;
+    const totalElements = batch * channels * outH * outW;
+
+    if (!this._available || totalElements < 4096) {
+      this._cpuOps++;
+      return cpuUpsample2x(input, batch, channels, H, W);
+    }
+
+    try {
+      const uniforms = new ArrayBuffer(32);
+      const view = new Uint32Array(uniforms);
+      view[0] = batch; view[1] = channels;
+      view[2] = H; view[3] = W;
+      view[4] = outH; view[5] = outW;
+      view[6] = 0; view[7] = 0;
+
+      const outputSize = totalElements * 4;
+      const wgX = Math.ceil(totalElements / 256);
+
+      const result = await this.gpu.compute(
+        WGSL_UPSAMPLE2X, [input], outputSize,
+        [wgX, 1, 1], uniforms,
+      );
+
+      this._gpuOps++;
+      this._totalGpuMs += result.computeTimeMs;
+      return result.output;
+    } catch {
+      this._cpuOps++;
+      return cpuUpsample2x(input, batch, channels, H, W);
     }
   }
 
