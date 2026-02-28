@@ -691,12 +691,14 @@
   transform: scale(1.06);
 }
 .sidebar-tooltip {
-  background: hsla(25, 10%, 14%, 0.92);
-  color: hsl(30, 10%, 88%);
-  border: 1px solid hsla(30, 10%, 70%, calc(0.08 * var(--still-border-opacity, 1)));
-  box-shadow: 0 6px 20px -6px hsla(25, 12%, 5%, calc(0.35 * var(--still-shadow-opacity, 1)));
+  background: hsla(25, 12%, 12%, 0.85);
+  color: hsl(30, 10%, 90%);
+  border: 1px solid hsla(38, 20%, 70%, calc(0.12 * var(--still-border-opacity, 1)));
+  box-shadow: 0 8px 32px -8px hsla(25, 12%, 5%, calc(0.4 * var(--still-shadow-opacity, 1))),
+              inset 0 1px 0 hsla(38, 25%, 90%, 0.08);
   font-family: 'DM Sans', system-ui, sans-serif;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(32px) saturate(1.4);
+  -webkit-backdrop-filter: blur(32px) saturate(1.4);
 }
 
 /* ── Mobile drawer: CSS-only touch feedback ──────────────────────── */
