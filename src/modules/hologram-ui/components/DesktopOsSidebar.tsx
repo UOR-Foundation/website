@@ -346,18 +346,7 @@ export default function DesktopOsSidebar({
             </button>
           </IconTooltip>
         )}
-      </div>
-
-      {/* Share the Love heart is now in the bottom section */}
-
-      {/* ── Bottom: Text Size + Settings + Help ─────────────── */}
-      <div className="px-2.5 py-5 space-y-0.5" style={{ borderTop: "1px solid var(--sb-border)" }}>
-        {/* Text Size Control — visible when expanded */}
-        {expanded && (
-          <TextSizeControl textSize={textSize} setTextSize={handleTextSize} bgMode={bgMode} />
-        )}
-
-        {/* Share the Love — warm gradient heart, above Help */}
+        {/* Share the Love — warm gradient heart, above divider */}
         <IconTooltip label="Share the Love" show={!expanded}>
           <button
             onClick={() => collapseAndDo(() => setShareOpen(true))}
@@ -390,6 +379,14 @@ export default function DesktopOsSidebar({
             {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Share the Love</span>}
           </button>
         </IconTooltip>
+      </div>
+
+      {/* ── Bottom: Text Size + Settings + Help ─────────────── */}
+      <div className="px-2.5 py-5 space-y-0.5" style={{ borderTop: "1px solid var(--sb-border)" }}>
+        {/* Text Size Control — visible when expanded */}
+        {expanded && (
+          <TextSizeControl textSize={textSize} setTextSize={handleTextSize} bgMode={bgMode} />
+        )}
 
         {onReplayGuide && (
           <IconTooltip label={`Help (${MOD_KEY} /)`} show={!expanded}>
