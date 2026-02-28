@@ -1,17 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { registerRect, unregisterRect, snapToOthers } from "./dragSnapRegistry";
-import { SNAP_GUIDE_EVENT, type SnapGuidePayload } from "../components/SnapGuideOverlay";
-
 /**
- * Generic hook that makes any absolutely/fixed-positioned element draggable.
- * Position is persisted to localStorage under the given key.
- * If no saved position exists, `defaultPos` is used.
+ * useDraggablePosition — Kernel-projected widget placement
+ * ═══════════════════════════════════════════════════════════
+ *
+ * Position state flows through KernelConfig.dragPositions.
+ * No direct localStorage access — the kernel persists all positions
+ * under the unified kernel:config key.
  *
  * Features:
  *  - Snap-to-alignment with other draggable elements
  *  - Visual guide lines emitted via custom event
- *  - Haptic-style feedback through snapping behavior
  */
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { registerRect, unregisterRect, snapToOthers } from "./dragSnapRegistry";
+import { SNAP_GUIDE_EVENT, type SnapGuidePayload } from "../components/SnapGuideOverlay";
+import { getKernelProjector } from "@/modules/hologram-os/projection-engine";
 
 export interface DragPosition {
   x: number;
@@ -19,7 +22,7 @@ export interface DragPosition {
 }
 
 interface UseDraggablePositionOptions {
-  /** localStorage key, e.g. "hologram-pos:ambient" */
+  /** Kernel drag-position key, e.g. "hologram-pos:ambient" */
   storageKey: string;
   /** Default position when nothing is saved */
   defaultPos: DragPosition;
@@ -32,22 +35,6 @@ interface UseDraggablePositionOptions {
   mode?: "absolute" | "offset";
   /** Approximate element size for snap calculations (default 48x48) */
   snapSize?: { width: number; height: number };
-}
-
-function load(key: string): DragPosition | null {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const p = JSON.parse(raw);
-    if (typeof p.x === "number" && typeof p.y === "number") return p;
-  } catch {}
-  return null;
-}
-
-function save(key: string, pos: DragPosition) {
-  try {
-    localStorage.setItem(key, JSON.stringify(pos));
-  } catch {}
 }
 
 function emitGuides(guides: SnapGuidePayload["guides"], active: boolean) {
@@ -65,11 +52,14 @@ export function useDraggablePosition({
   mode = "absolute",
   snapSize = { width: 48, height: 48 },
 }: UseDraggablePositionOptions) {
-  const [pos, setPos] = useState<DragPosition>(() => load(storageKey) ?? defaultPos);
+  const projector = getKernelProjector();
+
+  const [pos, setPos] = useState<DragPosition>(
+    () => projector.getDragPosition(storageKey) ?? defaultPos,
+  );
   const dragging = useRef(false);
   const offset = useRef({ dx: 0, dy: 0 });
   const moved = useRef(false);
-  const elementRef = useRef<HTMLElement | null>(null);
 
   // Clamp helper
   const clamp = useCallback(
@@ -92,10 +82,10 @@ export function useDraggablePosition({
     return () => unregisterRect(storageKey);
   }, [storageKey, pos.x, pos.y, snapSize.width, snapSize.height]);
 
-  // Persist whenever pos changes
+  // Persist to kernel whenever pos changes
   useEffect(() => {
-    save(storageKey, pos);
-  }, [storageKey, pos]);
+    projector.setDragPosition(storageKey, pos);
+  }, [storageKey, pos, projector]);
 
   // Global pointer move / up
   useEffect(() => {
@@ -108,7 +98,6 @@ export function useDraggablePosition({
         y: e.clientY - offset.current.dy,
       });
 
-      // Snap to other elements
       const snap = snapToOthers(
         storageKey,
         raw.x,
@@ -149,8 +138,8 @@ export function useDraggablePosition({
 
   const resetPosition = useCallback(() => {
     setPos(defaultPos);
-    save(storageKey, defaultPos);
-  }, [defaultPos, storageKey]);
+    projector.setDragPosition(storageKey, defaultPos);
+  }, [defaultPos, storageKey, projector]);
 
   const wasDragged = useCallback(() => moved.current, []);
 

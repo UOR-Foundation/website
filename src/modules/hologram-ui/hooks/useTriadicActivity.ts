@@ -1,95 +1,54 @@
 /**
- * useTriadicActivity — Real Triadic Balance from Persona/Skill Usage
+ * useTriadicActivity — Kernel-projected sovereign creator balance
  * ═══════════════════════════════════════════════════════════════════
  *
- * Tracks time spent in each triadic phase (Learn/Work/Play) based on
- * which persona and skill the user has active in Hologram Intelligence.
- * Persists to localStorage for same-day continuity.
- *
- * The "hidden insight": the ring becomes a MIRROR of actual sovereign
- * creator behavior, not a simulated placeholder. Activity data flows
- * from persona selection → phase classification → balance computation.
+ * Reads/writes triadic activity from KernelConfig registers.
+ * No direct localStorage access — the kernel is the single source
+ * of truth for Learn/Work/Play time tracking.
  *
  * @module hologram-ui/hooks/useTriadicActivity
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { TriadicBalance, TriadicPhase, CreatorStage } from "@/modules/hologram-ui/sovereign-creator";
+import { getKernelProjector } from "@/modules/hologram-os/projection-engine";
 
-const STORAGE_KEY = "hologram:triadic-activity";
-const HISTORY_KEY = "hologram:triadic-history";
-const TICK_INTERVAL_MS = 15_000; // accumulate every 15s
-
-/** Minimum seconds in each phase to count as a "completed cycle" */
+const TICK_INTERVAL_MS = 15_000;
 const CYCLE_THRESHOLD_S = 60;
 
-interface ActivityState {
-  date: string; // YYYY-MM-DD
-  learn: number; // seconds
-  work: number;
-  play: number;
-}
-
-function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function loadState(): ActivityState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as ActivityState;
-      if (parsed.date === todayKey()) return parsed;
-    }
-  } catch { /* ignore */ }
-  // New users default to learning — the natural starting point
-  return { date: todayKey(), learn: 1, work: 0, play: 0 };
-}
-
-function saveState(state: ActivityState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
 export function useTriadicActivity() {
-  const [state, setState] = useState<ActivityState>(loadState);
+  const projector = getKernelProjector();
+  const [state, setState] = useState(() => projector.getTriadicActivity());
   const activePhaseRef = useRef<TriadicPhase | null>(null);
 
-  // Reset on day change — archive previous day as a completed cycle if balanced
+  // Subscribe to kernel frames for state updates
+  useEffect(() => {
+    const unsub = projector.onFrame(() => {
+      setState(projector.getTriadicActivity());
+    });
+    return unsub;
+  }, [projector]);
+
+  // Day rollover check
   useEffect(() => {
     const check = setInterval(() => {
-      if (state.date !== todayKey()) {
-        // Archive yesterday if all 3 phases had meaningful time
-        if (state.learn >= CYCLE_THRESHOLD_S && state.work >= CYCLE_THRESHOLD_S && state.play >= CYCLE_THRESHOLD_S) {
-          try {
-            const raw = localStorage.getItem(HISTORY_KEY);
-            const history: string[] = raw ? JSON.parse(raw) : [];
-            if (!history.includes(state.date)) {
-              history.push(state.date);
-              localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-            }
-          } catch { /* ignore */ }
-        }
-        const fresh = { date: todayKey(), learn: 0, work: 0, play: 0 };
-        setState(fresh);
-        saveState(fresh);
+      const today = new Date().toISOString().slice(0, 10);
+      if (state.date && state.date !== today) {
+        projector.resetTriadicDay();
       }
     }, 60_000);
     return () => clearInterval(check);
-  }, [state.date, state.learn, state.work, state.play]);
+  }, [state.date, projector]);
 
-  // Accumulate time for active phase
+  // Accumulate time for active phase via kernel syscall
   useEffect(() => {
     const id = setInterval(() => {
       const phase = activePhaseRef.current;
       if (!phase) return;
-      setState((prev) => {
-        const next = { ...prev, [phase]: prev[phase] + TICK_INTERVAL_MS / 1000 };
-        saveState(next);
-        return next;
-      });
+      projector.accumulateTriadicPhase(phase, TICK_INTERVAL_MS / 1000);
     }, TICK_INTERVAL_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [projector]);
 
   const setActivePhase = useCallback((phase: TriadicPhase | null) => {
     activePhaseRef.current = phase;
@@ -106,25 +65,10 @@ export function useTriadicActivity() {
     };
   })();
 
-  /**
-   * Derive CreatorStage from completed cycle history + today's activity.
-   *
-   * Stage 1: 0 completed cycles (default — The Sleeping Creator)
-   * Stage 2: 1+ completed cycles (The Awakening Creator)
-   * Stage 3: 7+ completed cycles (The Practiced Creator)
-   * Stage 4: 21+ completed cycles (The Sovereign Creator)
-   *
-   * A cycle completes when all 3 phases have ≥60s of activity in a single day.
-   * Today's in-progress activity can also count toward the current stage.
-   */
   const creatorStage: CreatorStage = useMemo(() => {
-    let completedCycles = 0;
-    try {
-      const raw = localStorage.getItem(HISTORY_KEY);
-      if (raw) completedCycles = (JSON.parse(raw) as string[]).length;
-    } catch { /* ignore */ }
+    const history = projector.getTriadicHistory();
+    let completedCycles = history.length;
 
-    // Count today as a cycle if all 3 phases are above threshold
     const todayComplete =
       state.learn >= CYCLE_THRESHOLD_S &&
       state.work >= CYCLE_THRESHOLD_S &&
@@ -135,7 +79,7 @@ export function useTriadicActivity() {
     if (completedCycles >= 7) return 3;
     if (completedCycles >= 1) return 2;
     return 1;
-  }, [state.learn, state.work, state.play]);
+  }, [state.learn, state.work, state.play, projector]);
 
   return { balance, setActivePhase, rawSeconds: state, creatorStage };
 }
