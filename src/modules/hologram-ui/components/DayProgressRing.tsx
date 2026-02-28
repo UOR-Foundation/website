@@ -203,7 +203,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 style={{
                   fontFamily: "'Playfair Display', serif",
                   fontSize: "26px",
-                  color: isWhite ? "hsla(0, 0%, 5%, 0.9)" : "hsla(38, 15%, 94%, 0.95)",
+                  color: isWhite ? "hsla(0, 0%, 5%, 0.9)" : "hsla(38, 15%, 96%, 1)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
                 }}
