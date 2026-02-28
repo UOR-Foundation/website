@@ -1026,6 +1026,74 @@ function ConvergenceChart({ history, targetEnergy }: { history: VqeIteration[]; 
   );
 }
 
+/* ── Parameter Trajectory Chart ───────────────────────────────────────────── */
+
+const PARAM_COLORS = [
+  "hsl(220, 60%, 55%)",   // θ₀ — blue
+  "hsl(340, 55%, 52%)",   // θ₁ — rose
+  "hsl(160, 50%, 42%)",   // θ₂ — teal
+  "hsl(30, 65%, 50%)",    // θ₃ — amber
+];
+const PARAM_LABELS = ["θ₀ (RY q0 L1)", "θ₁ (RY q1 L1)", "θ₂ (RY q0 L2)", "θ₃ (RY q1 L2)"];
+
+function ParameterTrajectoryChart({ history }: { history: VqeIteration[] }) {
+  if (history.length < 2) return null;
+  const numParams = history[0].params.length;
+  const allVals = history.flatMap(h => h.params);
+  const minV = Math.min(...allVals) - 0.2;
+  const maxV = Math.max(...allVals) + 0.2;
+  const range = maxV - minV || 1;
+
+  const chartW = 280, chartH = 160;
+  const padL = 44, padR = 8, padT = 8, padB = 24;
+  const plotW = chartW - padL - padR;
+  const plotH = chartH - padT - padB;
+  const toX = (i: number) => padL + (i / (history.length - 1)) * plotW;
+  const toY = (v: number) => padT + (1 - (v - minV) / range) * plotH;
+
+  const numTicks = 5;
+  const ticks = Array.from({ length: numTicks }, (_, i) => minV + (range * i) / (numTicks - 1));
+
+  return (
+    <div className="space-y-2">
+      <span className="text-xs font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>Parameter Trajectory</span>
+      <svg width={chartW} height={chartH} className="w-full" viewBox={`0 0 ${chartW} ${chartH}`} style={{ background: "hsla(220, 10%, 50%, 0.02)", borderRadius: 6 }}>
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={padL} x2={chartW - padR} y1={toY(t)} y2={toY(t)} stroke="hsla(0,0%,50%,0.08)" strokeWidth={1} />
+            <text x={padL - 4} y={toY(t) + 3} textAnchor="end" fontSize={8} fill="hsl(0,0%,55%)" fontFamily="monospace">{t.toFixed(1)}</text>
+          </g>
+        ))}
+        {Array.from({ length: numParams }, (_, p) => {
+          const pts = history.map((h, i) => `${toX(i)},${toY(h.params[p])}`).join(" ");
+          return (
+            <g key={p}>
+              <polyline points={pts} fill="none" stroke={PARAM_COLORS[p]} strokeWidth={1.5} strokeLinejoin="round" opacity={0.85} />
+              {history.map((h, i) => (
+                <circle key={i} cx={toX(i)} cy={toY(h.params[p])} r={i === history.length - 1 ? 2.5 : 1}
+                  fill={PARAM_COLORS[p]} opacity={i === history.length - 1 ? 1 : 0.5} />
+              ))}
+            </g>
+          );
+        })}
+        <text x={padL + plotW / 2} y={chartH - 2} textAnchor="middle" fontSize={8} fill="hsl(0,0%,55%)">SPSA Iteration</text>
+        <text x={6} y={padT + plotH / 2} textAnchor="middle" fontSize={8} fill="hsl(0,0%,55%)" transform={`rotate(-90,6,${padT + plotH / 2})`}>θ (rad)</text>
+      </svg>
+      <div className="flex flex-wrap gap-x-3 gap-y-1">
+        {Array.from({ length: numParams }, (_, p) => (
+          <div key={p} className="flex items-center gap-1">
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: PARAM_COLORS[p], display: "inline-block" }} />
+            <span className="text-[10px] font-mono" style={{ color: "hsl(0,0%,45%)" }}>{PARAM_LABELS[p]}</span>
+            <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(0,0%,30%)" }}>
+              {history[history.length - 1].params[p].toFixed(3)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
   demo: ReturnType<typeof getDemoDefinitions>[0];
   kernel: KernelState;
@@ -1311,7 +1379,10 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
           )}
 
           {isVqeDemo && vqeHistory.length > 1 && (
-            <ConvergenceChart history={vqeHistory} targetEnergy={-1.137} />
+            <div className="space-y-4">
+              <ConvergenceChart history={vqeHistory} targetEnergy={-1.137} />
+              <ParameterTrajectoryChart history={vqeHistory} />
+            </div>
           )}
 
           {(!anyMitigationEnabled || !mitigatedCounts) && outputs.filter(o => o.type === "histogram").map((o, i) => (
