@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import {
   compileCircuit,
   verifyCircuitCompiler,
+  exportToOpenQASM,
   ALGORITHM_LIBRARY,
   type CompiledCircuit,
   type CompilerVerification,
@@ -27,6 +28,7 @@ export default function CircuitCompilerPanel() {
   const [result, setResult] = useState<CompiledCircuit | null>(null);
   const [verifications, setVerifications] = useState<CompilerVerification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showQasm, setShowQasm] = useState(false);
 
   useEffect(() => {
     const v = verifyCircuitCompiler();
@@ -69,8 +71,18 @@ export default function CircuitCompilerPanel() {
             Algorithm → Atlas gate decomposition → mesh-optimized schedule
           </p>
         </div>
-        <div className="text-[10px] font-mono text-[hsl(210,10%,40%)]">
-          Phase 15 • {Object.keys(ALGORITHM_LIBRARY).length} algorithms
+        <div className="flex items-center gap-3">
+          {result && (
+            <button
+              onClick={() => setShowQasm(v => !v)}
+              className="text-[10px] font-mono px-3 py-1.5 rounded-md border bg-[hsla(200,40%,20%,0.3)] border-[hsla(200,40%,40%,0.4)] text-[hsl(200,60%,60%)] hover:bg-[hsla(200,40%,25%,0.4)] transition-colors"
+            >
+              {showQasm ? "Hide QASM" : "Export OpenQASM 2.0"}
+            </button>
+          )}
+          <div className="text-[10px] font-mono text-[hsl(210,10%,40%)]">
+            Phase 15 • {Object.keys(ALGORITHM_LIBRARY).length} algorithms
+          </div>
         </div>
       </div>
 
@@ -188,6 +200,28 @@ export default function CircuitCompilerPanel() {
               ))}
             </div>
           </div>
+
+          {/* OpenQASM 2.0 Export Panel */}
+          {showQasm && (
+            <div className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(200,40%,35%,0.4)] rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-[11px] font-mono text-[hsl(200,60%,60%)] uppercase">
+                  OpenQASM 2.0 Output
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(exportToOpenQASM(result));
+                  }}
+                  className="text-[9px] font-mono px-2 py-1 rounded border bg-[hsla(140,30%,20%,0.3)] border-[hsla(140,30%,40%,0.4)] text-[hsl(140,60%,55%)] hover:bg-[hsla(140,30%,25%,0.4)] transition-colors"
+                >
+                  Copy to Clipboard
+                </button>
+              </div>
+              <pre className="text-[9px] font-mono text-[hsl(210,10%,65%)] bg-[hsla(210,10%,6%,0.8)] rounded p-3 overflow-auto max-h-[400px] whitespace-pre leading-relaxed">
+                {exportToOpenQASM(result)}
+              </pre>
+            </div>
+          )}
         </>
       )}
 

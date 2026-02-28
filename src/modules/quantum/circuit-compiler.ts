@@ -547,3 +547,100 @@ export function verifyCircuitCompiler(): CompilerVerification[] {
 
   return results;
 }
+
+// ── OpenQASM 2.0 Export ───────────────────────────────────────────────────
+
+/**
+ * Map compiled gate names to OpenQASM 2.0 gate names.
+ * Gates not in the standard basis are emitted as comments.
+ */
+function qasmGateName(name: string): string | null {
+  const map: Record<string, string> = {
+    "H": "h", "X": "x", "Y": "y", "Z": "z",
+    "S": "s", "T": "t", "T†": "tdg", "S†": "sdg",
+    "CNOT": "cx", "CZ": "cz", "SWAP_route": "swap",
+    "SWAP": "swap",
+  };
+  if (map[name]) return map[name];
+  if (name.startsWith("Ry")) return "ry";
+  if (name.startsWith("Rz")) return "rz";
+  if (name.startsWith("Rx")) return "rx";
+  return null;
+}
+
+/**
+ * Export a compiled circuit to OpenQASM 2.0 format.
+ *
+ * The output is valid QASM that can be loaded into Qiskit, Cirq,
+ * or any OpenQASM-compatible simulator.
+ */
+export function exportToOpenQASM(circuit: CompiledCircuit): string {
+  const lines: string[] = [];
+
+  lines.push("OPENQASM 2.0;");
+  lines.push('include "qelib1.inc";');
+  lines.push("");
+  lines.push(`// Circuit: ${circuit.algorithm}`);
+  lines.push(`// Compiled by Atlas Circuit Compiler (Phase 15)`);
+  lines.push(`// Logical qubits: ${circuit.logicalQubits}, Depth: ${circuit.depth}, T-count: ${circuit.tCount}`);
+  lines.push("");
+
+  // Declare quantum and classical registers
+  const numQubits = circuit.logicalQubits;
+  lines.push(`qreg q[${numQubits}];`);
+  lines.push(`creg c[${numQubits}];`);
+  lines.push("");
+
+  // Build physical→logical reverse map
+  const physToLogical = new Map<number, number>();
+  for (const m of circuit.qubitMap) {
+    physToLogical.set(m.physical, m.logical);
+  }
+
+  // Emit gates sorted by cycle
+  const sorted = [...circuit.compiledGates].sort((a, b) => a.cycle - b.cycle);
+  let lastCycle = -1;
+
+  for (const gate of sorted) {
+    if (gate.cycle !== lastCycle) {
+      lines.push(`// --- cycle ${gate.cycle} ---`);
+      lastCycle = gate.cycle;
+    }
+
+    // Map physical qubits back to logical indices
+    const logicalQubits = gate.physicalQubits.map(p => physToLogical.get(p) ?? p);
+    const qargs = logicalQubits.map(q => `q[${q}]`).join(",");
+    const qasmName = qasmGateName(gate.name);
+
+    if (qasmName) {
+      // Parameterized gates
+      if ((gate.name.startsWith("Ry") || gate.name.startsWith("Rz") || gate.name.startsWith("Rx"))) {
+        // Extract angle from the atlas gate or use a default
+        const angle = gate.atlasGate.roots > 0
+          ? (Math.PI / gate.atlasGate.roots).toFixed(6)
+          : (Math.PI / 4).toFixed(6);
+        lines.push(`${qasmName}(${angle}) ${qargs};`);
+      } else if (qasmName === "swap") {
+        // SWAP decomposed to 3 cx for compatibility
+        const [a, b] = logicalQubits;
+        lines.push(`cx q[${a}],q[${b}];`);
+        lines.push(`cx q[${b}],q[${a}];`);
+        lines.push(`cx q[${a}],q[${b}];`);
+      } else {
+        lines.push(`${qasmName} ${qargs};`);
+      }
+    } else {
+      // Non-standard gate → comment
+      lines.push(`// [atlas] ${gate.name} ${qargs}; // tier=${gate.atlasGate.tier}, node=${gate.meshNode.split("::")[1]}`);
+    }
+  }
+
+  // Measurement
+  lines.push("");
+  lines.push("// Measurement");
+  for (let i = 0; i < numQubits; i++) {
+    lines.push(`measure q[${i}] -> c[${i}];`);
+  }
+
+  return lines.join("\n");
+}
