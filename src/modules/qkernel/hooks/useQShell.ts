@@ -128,7 +128,11 @@ const MAN_PAGES: Record<string, string[]> = {
   notebook: ["NOTEBOOK(1) — alias for jupyter(1). See 'man jupyter'."],
 };
 
-export function useQShell() {
+interface UseQShellOptions {
+  onOpenJupyter?: () => void;
+}
+
+export function useQShell(options: UseQShellOptions = {}) {
   const [state, setState] = useState<KernelState>(INITIAL);
   const subsRef = useRef<{
     mmu: QMmu; sched: QSched; syscall: QSyscall; fs: QFs;
@@ -2620,12 +2624,23 @@ export function useQShell() {
           log("");
           log("  Launching Quantum Jupyter Workspace...");
           log("");
-          log("  ┌─────────────────────────────────────────────┐");
-          log("  │  Jupyter Quantum Workspace is ready.        │");
-          log("  │                                             │");
-          log("  │  Open the Notebooks tab above to access     │");
-          log("  │  the full JupyterLab-style environment.     │");
-          log("  └─────────────────────────────────────────────┘");
+          if (options.onOpenJupyter) {
+            setTimeout(() => {
+              options.onOpenJupyter?.();
+            }, 600);
+            log("  ┌─────────────────────────────────────────────┐");
+            log("  │  ✓ Jupyter Quantum Workspace launching...   │");
+            log("  │                                             │");
+            log("  │  The workspace will open momentarily.       │");
+            log("  └─────────────────────────────────────────────┘");
+          } else {
+            log("  ┌─────────────────────────────────────────────┐");
+            log("  │  Jupyter Quantum Workspace is ready.        │");
+            log("  │                                             │");
+            log("  │  Open the Notebooks tab above to access     │");
+            log("  │  the full JupyterLab-style environment.     │");
+            log("  └─────────────────────────────────────────────┘");
+          }
           log("");
           log("  Tip: Use 'jupyter list' to see available templates.");
         } else if (sub2 === "list" || sub2 === "ls") {
@@ -2685,7 +2700,7 @@ export function useQShell() {
     }
 
     refresh();
-  }, [log, refresh, demoRunning, state.kernel, bootKernel]);
+  }, [log, refresh, demoRunning, state.kernel, bootKernel, options]);
 
   return { state, bootKernel, executeCommand, refresh, demoLog, demoRunning };
 }

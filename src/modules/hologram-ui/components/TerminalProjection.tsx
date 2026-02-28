@@ -12,11 +12,12 @@ import QShellEmbed from "@/modules/qkernel/pages/QShellEmbed";
 interface TerminalProjectionProps {
   open: boolean;
   onClose: () => void;
+  onOpenJupyter?: () => void;
 }
 
 const SIDEBAR_WIDTH = 68;
 
-export default function TerminalProjection({ open, onClose }: TerminalProjectionProps) {
+export default function TerminalProjection({ open, onClose, onOpenJupyter }: TerminalProjectionProps) {
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export default function TerminalProjection({ open, onClose }: TerminalProjection
                 background: "linear-gradient(to bottom, hsla(120, 40%, 55%, 0.0), hsla(120, 40%, 55%, 0.2), hsla(120, 40%, 55%, 0.0))",
               }}
             />
-            <QShellEmbed onClose={onClose} />
+            <QShellEmbed onClose={onClose} onOpenJupyter={onOpenJupyter} />
           </motion.div>
         </>
       )}
