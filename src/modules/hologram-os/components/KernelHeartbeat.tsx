@@ -29,6 +29,45 @@ export default function KernelHeartbeat() {
   const [tick, setTick] = useState(0);
   const [glyphIdx, setGlyphIdx] = useState(0);
 
+  // ── Drag state ──────────────────────────────────────────
+  const [pos, setPos] = useState({ x: 16, y: 16 }); // bottom-left default
+  const dragging = React.useRef(false);
+  const dragOffset = React.useRef({ x: 0, y: 0 });
+  const didDrag = React.useRef(false);
+  const rootRef = React.useRef<HTMLDivElement>(null);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    dragging.current = true;
+    didDrag.current = false;
+    const rect = rootRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    // offset from pointer to the element's bottom-left corner
+    dragOffset.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    didDrag.current = true;
+    const rect = rootRef.current;
+    if (!rect) return;
+    const elW = rect.offsetWidth;
+    const elH = rect.offsetHeight;
+    const newLeft = e.clientX - dragOffset.current.x;
+    const newBottom = window.innerHeight - e.clientY - (elH - dragOffset.current.y);
+    // Clamp to viewport
+    const clampedLeft = Math.max(0, Math.min(newLeft, window.innerWidth - elW));
+    const clampedBottom = Math.max(0, Math.min(newBottom, window.innerHeight - elH));
+    setPos({ x: clampedLeft, y: clampedBottom });
+  }, []);
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false;
+  }, []);
+
   // Boot genesis once — this is the kernel's heartbeat source
   const genesis: GenesisState = useMemo(() => bootGenesis(), []);
 
@@ -44,7 +83,11 @@ export default function KernelHeartbeat() {
     return () => clearInterval(id);
   }, []);
 
-  const toggle = useCallback(() => setExpanded((p) => !p), []);
+  const toggle = useCallback(() => {
+    // Only toggle if we didn't drag
+    if (didDrag.current) return;
+    setExpanded((p) => !p);
+  }, []);
 
   const dotColor = genesis.alive ? KP.green : KP.red;
   const passed = genesis.post.checks.filter((c) => c.passed).length;
@@ -54,8 +97,12 @@ export default function KernelHeartbeat() {
 
   return (
     <div
+      ref={rootRef}
       className="fixed z-[9999] select-none"
-      style={{ bottom: 16, left: 16 }}
+      style={{ bottom: pos.y, left: pos.x, cursor: dragging.current ? "grabbing" : "grab", touchAction: "none" }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
     >
       {/* ── Pill ────────────────────────────────── */}
       <button
