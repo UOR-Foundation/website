@@ -315,16 +315,27 @@ function FileBrowser({ templates, activeId, onSelect, onNew }: {
 
 /* ── Demo Card ────────────────────────────────────────────────────────────── */
 
+const DIFFICULTY_STYLES: Record<string, { bg: string; color: string; label: string }> = {
+  beginner: { bg: "hsla(152, 40%, 50%, 0.08)", color: "hsl(152, 40%, 38%)", label: "Beginner" },
+  intermediate: { bg: "hsla(38, 50%, 50%, 0.08)", color: "hsl(38, 45%, 40%)", label: "Intermediate" },
+  advanced: { bg: "hsla(280, 40%, 50%, 0.08)", color: "hsl(280, 35%, 45%)", label: "Advanced" },
+};
+
 function DemoCard({ demo, onOpen, onOpenInWorkspace }: { demo: ReturnType<typeof getDemoDefinitions>[0]; onOpen: () => void; onOpenInWorkspace: () => void }) {
+  const diff = DIFFICULTY_STYLES[demo.difficulty] || DIFFICULTY_STYLES.beginner;
   return (
-    <div className="group rounded-xl p-5 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg" style={{
+    <div className="group rounded-xl p-5 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex flex-col" style={{
       background: "hsl(0, 0%, 100%)",
       border: "1px solid hsla(0, 0%, 50%, 0.1)",
       boxShadow: "0 1px 3px hsla(0, 0%, 0%, 0.04)",
     }} onClick={onOpen}>
-      <span className="text-3xl block mb-3">{demo.icon}</span>
+      <div className="flex items-start justify-between mb-3">
+        <span className="text-3xl">{demo.icon}</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: diff.bg, color: diff.color }}>{diff.label}</span>
+      </div>
       <h3 className="text-base font-semibold mb-1" style={{ color: "hsl(0, 0%, 15%)" }}>{demo.name}</h3>
-      <p className="text-sm leading-relaxed mb-4" style={{ color: "hsl(0, 0%, 45%)" }}>{demo.description}</p>
+      <p className="text-sm leading-relaxed mb-2" style={{ color: "hsl(0, 0%, 45%)" }}>{demo.description}</p>
+      <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: "hsl(0, 0%, 58%)" }}>{demo.whyItMatters}</p>
       <div className="flex gap-2">
         <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" style={{
           background: "hsl(38, 45%, 48%)",
@@ -697,6 +708,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeDemoId, setActiveDemoId] = useState<string | null>(null);
+  const [demoCategory, setDemoCategory] = useState<string>("all");
   const templates = useMemo(() => getTemplateNotebooks(), []);
   const demos = useMemo(() => getDemoDefinitions(), []);
 
@@ -896,14 +908,60 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
         </div>
 
         <div className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-serif font-semibold mb-2" style={{ color: "hsl(0, 0%, 10%)" }}>Interactive Demos</h2>
-            <p className="text-base mb-8" style={{ color: "hsl(0, 0%, 48%)" }}>
-              Explore quantum computing hands-on. No coding required.
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-2xl font-serif font-semibold mb-2" style={{ color: "hsl(0, 0%, 10%)" }}>Quantum Simulation Lab</h2>
+            <p className="text-base mb-6" style={{ color: "hsl(0, 0%, 48%)" }}>
+              Experience quantum computing through interactive simulations. Every demo runs on our built-in quantum simulator — no external hardware, no setup, fully reproducible.
             </p>
 
+            {/* Category tabs */}
+            <div className="flex items-center gap-1 mb-6 pb-3" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.08)" }}>
+              {[
+                { id: "all", label: "All", count: demos.length },
+                { id: "fundamentals", label: "Fundamentals", count: demos.filter(d => d.category === "fundamentals").length },
+                { id: "algorithms", label: "Algorithms", count: demos.filter(d => d.category === "algorithms").length },
+                { id: "security", label: "Security", count: demos.filter(d => d.category === "security").length },
+                { id: "hybrid", label: "Applications", count: demos.filter(d => d.category === "hybrid").length },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setDemoCategory(tab.id)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  style={{
+                    background: demoCategory === tab.id ? "hsla(38, 50%, 50%, 0.08)" : "transparent",
+                    color: demoCategory === tab.id ? "hsl(38, 45%, 35%)" : "hsl(0, 0%, 50%)",
+                    border: demoCategory === tab.id ? "1px solid hsla(38, 50%, 50%, 0.15)" : "1px solid transparent",
+                  }}
+                >
+                  {tab.label}
+                  <span className="text-xs font-mono px-1.5 py-0.5 rounded-full" style={{
+                    background: demoCategory === tab.id ? "hsla(38, 50%, 50%, 0.1)" : "hsla(0, 0%, 50%, 0.06)",
+                    color: demoCategory === tab.id ? "hsl(38, 45%, 40%)" : "hsl(0, 0%, 55%)",
+                  }}>{tab.count}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Stats bar */}
+            <div className="flex items-center gap-8 mb-8">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold" style={{ color: "hsl(38, 45%, 45%)" }}>{demos.length}</span>
+                <span className="text-sm" style={{ color: "hsl(0, 0%, 50%)" }}>Simulators</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold" style={{ color: "hsl(152, 40%, 42%)" }}>100%</span>
+                <span className="text-sm" style={{ color: "hsl(0, 0%, 50%)" }}>Interactive</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold" style={{ color: "hsl(220, 35%, 50%)" }}>0</span>
+                <span className="text-sm" style={{ color: "hsl(0, 0%, 50%)" }}>Setup Required</span>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {demos.map(demo => (
+              {demos
+                .filter(demo => demoCategory === "all" || demo.category === demoCategory)
+                .map(demo => (
                 <DemoCard
                   key={demo.id}
                   demo={demo}
@@ -912,6 +970,10 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
                 />
               ))}
             </div>
+
+            <p className="text-sm text-center mt-10" style={{ color: "hsl(0, 0%, 58%)" }}>
+              Every simulation runs deterministically on the Q-Linux statevector engine. Results are reproducible and verifiable.
+            </p>
           </div>
         </div>
       </div>
