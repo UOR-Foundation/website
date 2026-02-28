@@ -97,10 +97,11 @@ function FanoTopology({ nodes }: { nodes: readonly { index: number; neighbors: n
 
 interface QShellEmbedProps {
   onClose?: () => void;
+  onOpenJupyter?: () => void;
 }
 
-export default function QShellEmbed({ onClose }: QShellEmbedProps) {
-  const { state, bootKernel, executeCommand, demoLog, demoRunning } = useQShell();
+export default function QShellEmbed({ onClose, onOpenJupyter }: QShellEmbedProps) {
+  const { state, bootKernel, executeCommand, demoLog, demoRunning } = useQShell({ onOpenJupyter });
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [histIdx, setHistIdx] = useState(-1);

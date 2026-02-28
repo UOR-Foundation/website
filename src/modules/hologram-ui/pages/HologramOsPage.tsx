@@ -395,7 +395,7 @@ export default function HologramOsPage() {
       <ComputeProjection open={computeOpen} onClose={() => setComputeOpen(false)} />
       <MemoryProjection open={memoryOpen} onClose={() => setMemoryOpen(false)} />
       <MessengerProjection open={messengerOpen} onClose={() => setMessengerOpen(false)} />
-      <TerminalProjection open={terminalOpen} onClose={() => setTerminalOpen(false)} />
+      <TerminalProjection open={terminalOpen} onClose={() => setTerminalOpen(false)} onOpenJupyter={() => { setTerminalOpen(false); setTimeout(() => setJupyterOpen(true), 350); }} />
       <JupyterProjection open={jupyterOpen} onClose={() => setJupyterOpen(false)} />
       <SnapGuideOverlay />
     </HologramViewport>
