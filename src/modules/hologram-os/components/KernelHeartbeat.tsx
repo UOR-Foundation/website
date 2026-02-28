@@ -20,9 +20,13 @@ import { bootGenesis, type GenesisState } from "@/hologram/genesis/genesis";
 import { KP } from "@/modules/hologram-os/kernel-palette";
 import { canonicalToTriword } from "@/lib/uor-triword";
 
+// Braille block chars for the living glyph animation
+const GLYPH_CHARS = "⠁⠂⠄⡀⠈⠐⠠⢀⠃⠅⠆⡁⡂⡄⠉⠊⠑⠒⠔⠘⠡⠢⠤⠨⠰⢁⢂⢄⢈⢐⢠⣀⠇⡃⡅⡆⡈⡉⡊⡐⡑⡒⡔⡘⡠⡡⡢⡤⡨⡰⠋⠍⠎⠓⠕⠖⠙⠚⠜⠣⠥⠦⠩⠪⠬⠱⠲⠴⠸⢃⢅⢆⢉⢊⢌⢑⢒⢔⢘⢡⢢⢤⢨⢰⣁⣂⣄⣈⣐⣠".split("");
+
 export default function KernelHeartbeat() {
   const [expanded, setExpanded] = useState(false);
   const [tick, setTick] = useState(0);
+  const [glyphIdx, setGlyphIdx] = useState(0);
 
   // Boot genesis once — this is the kernel's heartbeat source
   const genesis: GenesisState = useMemo(() => bootGenesis(), []);
@@ -33,12 +37,19 @@ export default function KernelHeartbeat() {
     return () => clearInterval(id);
   }, []);
 
+  // Living glyph — cycles braille characters to prove continuous self-verification
+  useEffect(() => {
+    const id = setInterval(() => setGlyphIdx((i) => (i + 1) % GLYPH_CHARS.length), 800);
+    return () => clearInterval(id);
+  }, []);
+
   const toggle = useCallback(() => setExpanded((p) => !p), []);
 
   const dotColor = genesis.alive ? KP.green : KP.red;
   const passed = genesis.post.checks.filter((c) => c.passed).length;
   const total = genesis.post.checks.length;
   const triword = genesis.alive ? canonicalToTriword(genesis.genesisCid.string) : null;
+  const livingGlyph = GLYPH_CHARS[glyphIdx];
 
   return (
     <div
@@ -70,6 +81,18 @@ export default function KernelHeartbeat() {
             style={{ background: dotColor }}
           />
         </span>
+
+        {/* Living glyph */}
+        <motion.span
+          key={glyphIdx}
+          initial={{ opacity: 0.3, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="text-[12px]"
+          style={{ color: KP.muted, fontFamily: "monospace" }}
+        >
+          {livingGlyph}
+        </motion.span>
 
         {/* Triword address */}
         <span
@@ -147,11 +170,18 @@ export default function KernelHeartbeat() {
               </div>
             )}
 
-            {/* Glyph + IRI */}
+            {/* Living Glyph + IRI */}
             <div className="mb-2 flex items-center gap-2">
-              <span className="text-[14px] tracking-widest" style={{ color: KP.muted }}>
-                {genesis.genesisGlyph || "—"}
-              </span>
+              <motion.span
+                key={glyphIdx}
+                initial={{ opacity: 0.3 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                className="text-[14px] tracking-widest"
+                style={{ color: KP.muted }}
+              >
+                {livingGlyph}
+              </motion.span>
               <span
                 className="text-[8px] break-all flex-1"
                 style={{ color: KP.dim, fontFamily: "monospace" }}
