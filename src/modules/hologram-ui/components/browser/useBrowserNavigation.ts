@@ -51,6 +51,8 @@ export interface BrowserNavState {
   loading: boolean;
   error: string | null;
   page: HistoryEntry | null;
+  /** URL to load immediately in the iframe (live mode) — no scrape needed */
+  liveUrl: string | null;
   searchResults: SearchResult[] | null;
   searchQuery: string | null;
   history: HistoryEntry[];
@@ -86,6 +88,7 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<HistoryEntry | null>(null);
+  const [liveUrl, setLiveUrl] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -151,36 +154,48 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
     if (!targetUrl.trim()) return;
     const formatted = formatUrl(targetUrl);
 
-    // Save current page scroll position before navigating
-    const curPage = pageRef.current;
-    // (scroll saving is done by the content area via saveScrollPosition)
+    // In live mode, set the iframe URL immediately — no waiting for scrape
+    setLiveUrl(formatted);
+    setUrl(formatted);
+    setError(null);
+    setSearchResults(null);
+    setSearchQuery(null);
 
-    // Cache hit → instant
+    // Cache hit → instant page data (for reader mode / Lumen)
     const cached = !forceRefresh && pageCache.get(formatted);
     if (cached) {
       const entry = { ...cached, visitedAt: Date.now() };
       setPage(entry);
-      setUrl(formatted);
-      setError(null);
-      setSearchResults(null);
-      setSearchQuery(null);
+      setLoading(false);
       pushToHistory(entry);
       return;
     }
 
+    // Create a minimal history entry immediately for live mode
+    const liveEntry: HistoryEntry = {
+      url: formatted,
+      title: formatted,
+      markdown: "",
+      rawHtml: "",
+      links: [],
+      visitedAt: Date.now(),
+    };
+    setPage(liveEntry);
+    pushToHistory(liveEntry);
+
+    // Scrape in background for machine-readable layer (Lumen, reader mode)
     setLoading(true);
-    setError(null);
-    setUrl(formatted);
-    try {
-      const entry = await fetchPage(formatted);
-      cacheSet(formatted, entry);
-      setPage(entry);
-      pushToHistory(entry);
-    } catch (err: any) {
-      setError(err.message || "Network error");
-    } finally {
-      setLoading(false);
-    }
+    fetchPage(formatted)
+      .then((entry) => {
+        cacheSet(formatted, entry);
+        setPage(entry);
+        // Update the history entry with rich data
+        setHistory((h) => h.map((he) => he.url === formatted ? entry : he));
+      })
+      .catch(() => {
+        // Scrape failure is non-fatal in live mode — iframe still works
+      })
+      .finally(() => setLoading(false));
   }, [pushToHistory]);
 
   const goBackFn = useCallback(() => {
@@ -293,7 +308,7 @@ export function useBrowserNavigation(onClose: () => void): [BrowserNavState, Bro
   }, []);
 
   const state: BrowserNavState = {
-    url, loading, error, page, searchResults, searchQuery,
+    url, loading, error, page, liveUrl, searchResults, searchQuery,
     history, historyIdx, showHistory, viewMode, popupsBlocked, privateRelay,
   };
 

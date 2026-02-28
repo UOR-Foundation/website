@@ -27,7 +27,7 @@ interface BrowserContentProps {
 }
 
 export default function BrowserContent({ state, actions }: BrowserContentProps) {
-  const { page, loading, error, searchResults, searchQuery, url, viewMode, popupsBlocked, privateRelay } = state;
+  const { page, loading, error, searchResults, searchQuery, url, viewMode, popupsBlocked, privateRelay, liveUrl } = state;
   const { navigate, handleLinkClick, prefetch, saveScrollPosition, getScrollPosition, setUrl } = actions;
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevUrlRef = useRef<string | null>(null);
@@ -158,10 +158,35 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
     ),
   }), [handleLinkClick, prefetch]);
 
+  const proxyBase = import.meta.env.VITE_SUPABASE_URL
+    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-proxy?url=`
+    : null;
+
+  /** Build the iframe src for live mode */
+  const liveIframeSrc = liveUrl
+    ? (privateRelay && proxyBase
+      ? `${proxyBase}${encodeURIComponent(liveUrl)}`
+      : liveUrl)
+    : null;
+
   return (
     <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto lumen-scroll">
-      {/* Empty state */}
-      {!page && !loading && !error && !searchResults && (
+      {/* Live Mode — renders immediately, no scrape needed */}
+      {viewMode === "live" && liveIframeSrc && (
+        <iframe
+          key={`live-${liveUrl}-${popupsBlocked}-${privateRelay}`}
+          src={liveIframeSrc}
+          sandbox={`allow-same-origin allow-scripts allow-forms allow-modals${popupsBlocked ? "" : " allow-popups allow-popups-to-escape-sandbox"}`}
+          allow="clipboard-write; encrypted-media; autoplay"
+          className="w-full h-full border-none"
+          style={{ background: "#fff" }}
+          title={page?.title || liveUrl || ""}
+          referrerPolicy={privateRelay ? "no-referrer" : "strict-origin-when-cross-origin"}
+        />
+      )}
+
+      {/* Empty state — only when NOT in live mode with a URL */}
+      {!(viewMode === "live" && liveIframeSrc) && !page && !loading && !error && !searchResults && (
         <div className="flex flex-col items-center justify-center h-full gap-5 px-6">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "hsla(38, 20%, 25%, 0.2)", border: `1px solid ${P.border}` }}>
             <Globe className="w-6 h-6" style={{ color: P.gold, opacity: 0.7 }} strokeWidth={1} />
@@ -189,8 +214,8 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
         </div>
       )}
 
-      {/* Skeleton loading */}
-      {loading && <BrowserSkeleton />}
+      {/* Skeleton loading — only for non-live modes */}
+      {loading && viewMode !== "live" && <BrowserSkeleton />}
 
       {/* Error */}
       {error && (
@@ -249,25 +274,10 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
         </div>
       )}
 
-      {/* Page Content — Live Mode (fully interactive) */}
-      {page && !loading && viewMode === "live" && (
-        <iframe
-          key={`live-${page.url}-${popupsBlocked}-${privateRelay}`}
-          src={privateRelay
-            ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-proxy?url=${encodeURIComponent(page.url)}`
-            : page.url
-          }
-          sandbox={`allow-same-origin allow-scripts allow-forms allow-modals${popupsBlocked ? "" : " allow-popups allow-popups-to-escape-sandbox"}`}
-          allow="clipboard-write; encrypted-media"
-          className="w-full h-full border-none"
-          style={{ background: "#fff" }}
-          title={page.title}
-          referrerPolicy={privateRelay ? "no-referrer" : "strict-origin-when-cross-origin"}
-        />
-      )}
+      {/* Old live mode block removed — live iframe is now rendered at top */}
 
       {/* Page Content — Fidelity Mode (pixel-perfect static snapshot) */}
-      {page && !loading && viewMode === "fidelity" && page.rawHtml && (
+      {viewMode === "fidelity" && page && !loading && page.rawHtml && (
         <iframe
           key={`fidelity-${page.url}`}
           srcDoc={page.rawHtml}
@@ -279,7 +289,7 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
       )}
 
       {/* Page Content — Reader Mode (markdown) */}
-      {page && !loading && (viewMode === "reader" || (viewMode === "fidelity" && !page.rawHtml)) && (
+      {viewMode !== "live" && page && !loading && (viewMode === "reader" || (viewMode === "fidelity" && !page.rawHtml)) && (
         <>
           {/* Reading progress bar */}
           <div className="sticky top-0 z-10 h-[2px] w-full" style={{ background: "transparent" }}>
