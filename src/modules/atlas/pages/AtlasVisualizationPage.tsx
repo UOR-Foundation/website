@@ -14,7 +14,7 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BarChart3, Network, ArrowLeftRight, Minimize2, Atom, Hexagon } from "lucide-react";
+import { ArrowLeft, BarChart3, Network, ArrowLeftRight, Minimize2, Atom, Hexagon, GitBranch } from "lucide-react";
 
 const AtlasGraph = React.lazy(() => import("@/modules/atlas/components/AtlasGraph"));
 const ModelFingerprintPanel = React.lazy(() => import("@/modules/atlas/components/ModelFingerprintCard"));
@@ -22,8 +22,9 @@ const TranslationPanel = React.lazy(() => import("@/modules/atlas/components/Tra
 const CompressionPanel = React.lazy(() => import("@/modules/atlas/components/CompressionPanel"));
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
+const CircuitDiagramPanel = React.lazy(() => import("@/modules/atlas/components/CircuitDiagramPanel"));
 
-type Tab = "graph" | "fingerprint" | "translation" | "compression" | "quantum" | "topo-qubit";
+type Tab = "graph" | "fingerprint" | "translation" | "compression" | "quantum" | "topo-qubit" | "circuit";
 
 export default function AtlasVisualizationPage() {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ export default function AtlasVisualizationPage() {
     { key: "compression", label: "Compression", icon: <Minimize2 size={12} /> },
     { key: "quantum", label: "Quantum", icon: <Atom size={12} /> },
     { key: "topo-qubit", label: "Topo-Qubit", icon: <Hexagon size={12} /> },
+    { key: "circuit", label: "Circuit", icon: <GitBranch size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -45,6 +47,7 @@ export default function AtlasVisualizationPage() {
     compression: "Analyzing τ-mirror symmetry…",
     quantum: "Mapping quantum gate architecture…",
     "topo-qubit": "Instantiating topological qubits…",
+    circuit: "Compiling categorical circuit…",
   };
 
   return (
@@ -103,7 +106,8 @@ export default function AtlasVisualizationPage() {
                tab === "translation" ? <TranslationPanel /> :
                tab === "compression" ? <CompressionPanel /> :
                tab === "quantum" ? <QuantumISAPanel /> :
-               <TopologicalQubitPanel />}
+               tab === "topo-qubit" ? <TopologicalQubitPanel /> :
+               <CircuitDiagramPanel />}
             </div>
           )}
         </Suspense>
