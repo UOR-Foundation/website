@@ -144,3 +144,11 @@ export type {
   SecurityEvent,
   SecurityStats,
 } from "./q-security";
+
+// Q-Secure Mesh: Phase 8 — Security ↔ Agent Mesh Integration
+export { QSecureMesh } from "./q-secure-mesh";
+export type {
+  SecureResult,
+  SecureAgentInfo,
+  SecureMeshStats,
+} from "./q-secure-mesh";
