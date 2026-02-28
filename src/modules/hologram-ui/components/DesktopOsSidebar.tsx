@@ -63,19 +63,19 @@ function getPaletteVars(bgMode: "image" | "white" | "dark") {
     "--sb-shadow": "4px 0 40px -8px hsla(25, 10%, 0%, 0.4)",
     "--sb-highlight": "inset -1px 0 0 hsla(38, 20%, 90%, 0.04), inset 0 1px 0 hsla(38, 20%, 90%, 0.03)",
   } as Record<string, string>;
-  // image mode — luminous frosted glass over landscape
+  // image mode — solid warm dark, no glass artifacts
   return {
-    "--sb-bg": "linear-gradient(180deg, hsla(25, 8%, 12%, 0.62) 0%, hsla(25, 6%, 6%, 0.68) 100%)",
-    "--sb-bg-flat": "hsla(25, 8%, 10%, 0.58)",
-    "--sb-hover": "hsla(30, 15%, 95%, 0.1)",
-    "--sb-active": "hsla(30, 18%, 90%, 0.14)",
-    "--sb-border": "hsla(38, 20%, 85%, 0.15)",
-    "--sb-border-inner": "hsla(38, 25%, 95%, 0.1)",
-    "--sb-text": "hsl(30, 12%, 96%)",
-    "--sb-muted": "hsl(30, 10%, 82%)",
+    "--sb-bg": "linear-gradient(180deg, hsl(25, 8%, 11%) 0%, hsl(25, 6%, 7%) 100%)",
+    "--sb-bg-flat": "hsl(25, 7%, 9%)",
+    "--sb-hover": "hsla(30, 15%, 95%, 0.08)",
+    "--sb-active": "hsla(30, 18%, 90%, 0.12)",
+    "--sb-border": "hsla(38, 15%, 50%, 0.1)",
+    "--sb-border-inner": "hsla(38, 25%, 95%, 0.06)",
+    "--sb-text": "hsl(30, 12%, 92%)",
+    "--sb-muted": "hsl(30, 10%, 65%)",
     "--sb-gold": "hsl(34, 38%, 72%)",
-    "--sb-shadow": "4px 0 48px -8px hsla(25, 10%, 0%, 0.25), 8px 0 80px -16px hsla(25, 10%, 0%, 0.12)",
-    "--sb-highlight": "inset -1px 0 0 hsla(38, 30%, 95%, 0.1), inset 0 1px 0 hsla(38, 30%, 95%, 0.08), inset 1px 0 0 hsla(38, 25%, 90%, 0.05)",
+    "--sb-shadow": "2px 0 16px -4px hsla(25, 10%, 0%, 0.3)",
+    "--sb-highlight": "inset -1px 0 0 hsla(38, 20%, 70%, 0.06)",
   } as Record<string, string>;
 }
 
@@ -169,13 +169,12 @@ export default function DesktopOsSidebar({
         width: `${w}px`,
         background: "var(--sb-bg-flat)",
         backgroundImage: "var(--sb-bg)",
-        backdropFilter: "blur(64px) saturate(1.5) brightness(1.05)",
-        WebkitBackdropFilter: "blur(64px) saturate(1.5) brightness(1.05)",
         borderRight: "1px solid var(--sb-border)",
         boxShadow: "var(--sb-highlight), var(--sb-shadow)",
         willChange: "width",
-        transition: "width 350ms cubic-bezier(0.4, 0, 0.2, 1), background 600ms ease, border-color 600ms ease, color 600ms ease",
+        transition: "width 200ms cubic-bezier(0.25, 0.1, 0.25, 1), background 400ms ease, border-color 400ms ease, color 400ms ease",
         fontFamily: "'DM Sans', system-ui, sans-serif",
+        contain: "layout style",
       } as React.CSSProperties}
     >
       {/* ── Top: Logo / toggle ─────────────────────────────────── */}
