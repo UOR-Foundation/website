@@ -219,3 +219,38 @@ export {
   verifyThreeWordBijection,
 } from "./q-three-word";
 export type { ThreeWordName } from "./q-three-word";
+
+// Q-Vault: Ring 0 encrypted sovereign storage
+export { QVault } from "./q-vault";
+export type {
+  VaultSlot,
+  VaultManifest,
+  VaultReadResult,
+  VaultWriteResult,
+  VaultExportBundle,
+  VaultExportSlot,
+  VaultStats,
+} from "./q-vault";
+
+// Q-Trust-Mesh: Fano-topology trust attestation graph
+export { QTrustMesh } from "./q-trust-mesh";
+export type {
+  TrustLevel,
+  TrustAttestation,
+  TrustEdge,
+  TrustScore,
+  MutualCeremony,
+  TrustMeshStats,
+} from "./q-trust-mesh";
+
+// Q-Disclosure: Selective disclosure via lens morphisms
+export { QDisclosure } from "./q-disclosure";
+export type {
+  AttributeVisibility,
+  DisclosurePolicy,
+  DisclosureRule,
+  DisclosureProjection,
+  DisclosedAttribute,
+  DisclosureLayer,
+  DisclosureStats,
+} from "./q-disclosure";
