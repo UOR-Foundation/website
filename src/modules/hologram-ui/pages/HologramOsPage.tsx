@@ -13,9 +13,11 @@
  * generous whitespace, ultra-light serif, barely-there chrome.
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 import { useNavigate } from "react-router-dom";
+import { useKernel } from "@/modules/hologram-os/hooks/useKernel";
+import KernelBoot from "@/modules/hologram-os/components/KernelBoot";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 import BrowserProjection from "@/modules/hologram-ui/components/BrowserProjection";
@@ -75,6 +77,28 @@ const ALL_DESKTOPS: DesktopId[] = ["image", "white", "dark"];
 export default function HologramOsPage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
+  // ── Kernel Projection ─────────────────────────────────────────────────────
+  const kernel = useKernel();
+  const [kernelEntered, setKernelEntered] = useState(false);
+  const hasBootedBefore = useRef(false);
+
+  // Boot the kernel on mount (once)
+  useEffect(() => {
+    if (!kernel.isBooted && !kernel.isBooting) {
+      // Check if we've booted before this session (skip animation)
+      const skipAnim = sessionStorage.getItem("kernel:booted") === "1";
+      hasBootedBefore.current = skipAnim;
+      kernel.boot().then(() => {
+        sessionStorage.setItem("kernel:booted", "1");
+      });
+    } else if (kernel.isBooted) {
+      // Already booted (e.g., HMR) — skip portal
+      setKernelEntered(true);
+      hasBootedBefore.current = true;
+    }
+  }, [kernel.isBooted, kernel.isBooting]);
+
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [browserOpen, setBrowserOpen] = useState(false);
@@ -267,6 +291,18 @@ export default function HologramOsPage() {
 
   return (
     <HologramViewport className="h-screen bg-background">
+      {/* ══ Kernel Boot Portal ═════════════════════════════════════ */}
+      {!kernelEntered && (
+        <KernelBoot
+          events={kernel.bootEvents}
+          stage={kernel.stage}
+          isBooted={kernel.isBooted}
+          bootTimeMs={kernel.bootTimeMs}
+          onEntered={() => setKernelEntered(true)}
+          skipAnimation={hasBootedBefore.current}
+        />
+      )}
+
       <DepthShiftSync active={claimOpen} />
 
       <div className="flex h-full overflow-hidden">
