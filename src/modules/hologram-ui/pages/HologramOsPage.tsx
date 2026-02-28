@@ -22,6 +22,7 @@ import BrowserProjection from "@/modules/hologram-ui/components/BrowserProjectio
 import ComputeProjection from "@/modules/hologram-ui/components/ComputeProjection";
 import MemoryProjection from "@/modules/hologram-ui/components/MemoryProjection";
 import MessengerProjection from "@/modules/hologram-ui/components/MessengerProjection";
+import TerminalProjection from "@/modules/hologram-ui/components/TerminalProjection";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
@@ -79,6 +80,7 @@ export default function HologramOsPage() {
   const [computeOpen, setComputeOpen] = useState(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [messengerOpen, setMessengerOpen] = useState(false);
+  const [terminalOpen, setTerminalOpen] = useState(false);
   const [ambientState, setAmbientState] = useState<AmbientState>({ playing: false, loading: false, stationHue: "220", stationName: "" });
   const lumenPanel = useModularPanel({
     storageKey: "lumen-ai",
@@ -281,10 +283,10 @@ export default function HologramOsPage() {
             onOpenChat={() => setChatOpen(true)}
             onOpenBrowser={() => { setBrowserOpen(true); setChatOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); }}
             onOpenCompute={() => { setComputeOpen(true); setChatOpen(false); setBrowserOpen(false); setMemoryOpen(false); setMessengerOpen(false); }}
-            onOpenTerminal={() => { navigate("/q-shell"); }}
+            onOpenTerminal={() => { setTerminalOpen(true); setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); }}
             onOpenMemory={() => { setMemoryOpen(true); setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMessengerOpen(false); }}
             onOpenMessenger={() => { setMessengerOpen(true); setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); }}
-            onGoHome={() => { setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); }}
+            onGoHome={() => { setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); setTerminalOpen(false); }}
             onReplayGuide={() => setShortcutsOpen(true)}
             hintOpacity={mastery.hintOpacity}
             bgMode={sidebarBgMode}
@@ -390,6 +392,7 @@ export default function HologramOsPage() {
       <ComputeProjection open={computeOpen} onClose={() => setComputeOpen(false)} />
       <MemoryProjection open={memoryOpen} onClose={() => setMemoryOpen(false)} />
       <MessengerProjection open={messengerOpen} onClose={() => setMessengerOpen(false)} />
+      <TerminalProjection open={terminalOpen} onClose={() => setTerminalOpen(false)} />
       <SnapGuideOverlay />
     </HologramViewport>
   );
