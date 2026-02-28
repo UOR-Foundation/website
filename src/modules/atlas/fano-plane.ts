@@ -632,6 +632,224 @@ export function verifyGeneratorComposition(): {
   return { antiCommutative, selfAnnihilating, closed, compositions };
 }
 
+// ── Non-Associativity Detection & Associator Bracket ─────────────────────
+
+/**
+ * An octonion element: scalar + 7 imaginary components.
+ * Represented as [s, e₁, e₂, ..., e₇].
+ */
+export type Octonion = [number, number, number, number, number, number, number, number];
+
+const ZERO_OCT: Octonion = [0, 0, 0, 0, 0, 0, 0, 0];
+
+function octFromBasis(index: number, sign: number): Octonion {
+  const o: Octonion = [0, 0, 0, 0, 0, 0, 0, 0];
+  if (index === -1) o[0] = sign; // scalar
+  else o[index + 1] = sign;
+  return o;
+}
+
+function octSub(a: Octonion, b: Octonion): Octonion {
+  return a.map((v, i) => v - b[i]) as Octonion;
+}
+
+function octEqual(a: Octonion, b: Octonion): boolean {
+  return a.every((v, i) => v === b[i]);
+}
+
+function octNorm(o: Octonion): number {
+  return Math.sqrt(o.reduce((s, v) => s + v * v, 0));
+}
+
+/**
+ * Multiply two basis octonion units using the Fano multiplication table.
+ * Input: basis index (-1 for e₀=1, 0-6 for e₁-e₇) and sign.
+ * Returns the product as an Octonion vector.
+ */
+function mulBasis(
+  idxA: number, signA: number,
+  idxB: number, signB: number,
+  mulTable: { index: number; sign: number }[][],
+): Octonion {
+  // e₀ · anything = anything
+  if (idxA === -1) return octFromBasis(idxB, signA * signB);
+  // anything · e₀ = anything
+  if (idxB === -1) return octFromBasis(idxA, signA * signB);
+  // eᵢ · eⱼ from table
+  const entry = mulTable[idxA][idxB];
+  return octFromBasis(entry.index, signA * signB * entry.sign);
+}
+
+/** Result of computing the associator bracket for a triple. */
+export interface AssociatorResult {
+  /** Fano point indices of the triple (a, b, c). */
+  readonly triple: [number, number, number];
+  /** Generator labels. */
+  readonly labels: [string, string, string];
+  /** Left-associated product: (gₐ ⊗ gᵦ) ⊗ gᵧ. */
+  readonly leftProduct: Octonion;
+  /** Right-associated product: gₐ ⊗ (gᵦ ⊗ gᵧ). */
+  readonly rightProduct: Octonion;
+  /** Associator bracket: [gₐ, gᵦ, gᵧ] = left - right. */
+  readonly associator: Octonion;
+  /** Whether the triple is associative (bracket = 0). */
+  readonly isAssociative: boolean;
+  /** Whether all three points are collinear (on same Fano line). */
+  readonly collinear: boolean;
+  /** Norm of the associator (0 for associative triples). */
+  readonly associatorNorm: number;
+  /** Human-readable description. */
+  readonly description: string;
+}
+
+/** Full non-associativity analysis. */
+export interface NonAssociativityAnalysis {
+  /** All 7³ = 343 triple results (including repeats). */
+  readonly allTriples: AssociatorResult[];
+  /** Only the distinct ordered triples with indices a < b < c. */
+  readonly distinctTriples: AssociatorResult[];
+  /** Non-associative triples (associator ≠ 0). */
+  readonly nonAssociativeTriples: AssociatorResult[];
+  /** Associative triples (associator = 0). */
+  readonly associativeTriples: AssociatorResult[];
+  /** Count of non-associative among C(7,3) = 35 unordered triples. */
+  readonly nonAssociativeCount: number;
+  /** Count of associative among 35. */
+  readonly associativeCount: number;
+  /** Whether any non-collinear triple is associative (should be false). */
+  readonly nonCollinearAssociativeExists: boolean;
+  /** Whether all collinear triples are associative (should be true). */
+  readonly collinearAlwaysAssociative: boolean;
+  /** Summary. */
+  readonly summary: string;
+}
+
+/**
+ * Compute the associator bracket [gₐ, gᵦ, gᵧ] = (gₐ⊗gᵦ)⊗gᵧ − gₐ⊗(gᵦ⊗gᵧ).
+ */
+export function computeAssociator(a: number, b: number, c: number): AssociatorResult {
+  const topology = constructFanoTopology();
+  const mul = topology.multiplicationTable;
+  const collinearityMatrix = topology.collinearityMatrix;
+
+  // Check collinearity: all three must be on the same line
+  const collinear = topology.lines.some(
+    l => l.points.includes(a) && l.points.includes(b) && l.points.includes(c)
+  );
+
+  // Left: (eₐ · eᵦ) · eᵧ
+  const ab = mul[a]?.[b] ?? { index: a, sign: 1 };
+  const leftProduct = mulBasis(ab.index, ab.sign, c, 1, mul);
+
+  // Right: eₐ · (eᵦ · eᵧ)
+  const bc = mul[b]?.[c] ?? { index: b, sign: 1 };
+  const rightProduct = mulBasis(a, 1, bc.index, bc.sign, mul);
+
+  const associator = octSub(leftProduct, rightProduct);
+  const isAssociative = octEqual(associator, ZERO_OCT);
+  const norm = octNorm(associator);
+
+  const labels: [string, string, string] = [
+    fanoPointToGenerator(a),
+    fanoPointToGenerator(b),
+    fanoPointToGenerator(c),
+  ];
+
+  const leftStr = formatOctonion(leftProduct);
+  const rightStr = formatOctonion(rightProduct);
+  const assocStr = formatOctonion(associator);
+
+  return {
+    triple: [a, b, c],
+    labels,
+    leftProduct,
+    rightProduct,
+    associator,
+    isAssociative,
+    collinear,
+    associatorNorm: norm,
+    description: isAssociative
+      ? `[${labels.join(",")}] = 0 (associative${collinear ? ", collinear" : ""})`
+      : `[${labels.join(",")}] = ${assocStr} ≠ 0 (left=${leftStr}, right=${rightStr})`,
+  };
+}
+
+function formatOctonion(o: Octonion): string {
+  const parts: string[] = [];
+  if (o[0] !== 0) parts.push(String(o[0]));
+  for (let i = 1; i < 8; i++) {
+    if (o[i] !== 0) {
+      const sign = o[i] > 0 ? (parts.length ? "+" : "") : "";
+      parts.push(`${sign}${o[i]}e${i}`);
+    }
+  }
+  return parts.length ? parts.join("") : "0";
+}
+
+/**
+ * Run full non-associativity analysis over all generator triples.
+ */
+export function analyzeNonAssociativity(): NonAssociativityAnalysis {
+  // Compute all ordered triples for completeness
+  const allTriples: AssociatorResult[] = [];
+  for (let a = 0; a < 7; a++) {
+    for (let b = 0; b < 7; b++) {
+      for (let c = 0; c < 7; c++) {
+        if (a === b || b === c || a === c) continue; // skip degenerate
+        allTriples.push(computeAssociator(a, b, c));
+      }
+    }
+  }
+
+  // Distinct unordered triples (a < b < c)
+  const distinctTriples: AssociatorResult[] = [];
+  for (let a = 0; a < 7; a++) {
+    for (let b = a + 1; b < 7; b++) {
+      for (let c = b + 1; c < 7; c++) {
+        distinctTriples.push(computeAssociator(a, b, c));
+      }
+    }
+  }
+
+  const nonAssociativeTriples = distinctTriples.filter(t => !t.isAssociative);
+  const associativeTriples = distinctTriples.filter(t => t.isAssociative);
+
+  const nonCollinearAssociativeExists = distinctTriples.some(
+    t => !t.collinear && t.isAssociative
+  );
+  const collinearAlwaysAssociative = distinctTriples
+    .filter(t => t.collinear)
+    .every(t => t.isAssociative);
+
+  const summary = [
+    `Non-Associativity Analysis of 𝕆 Generators`,
+    `═══════════════════════════════════════════`,
+    `C(7,3) = ${distinctTriples.length} distinct unordered triples`,
+    `  Associative:     ${associativeTriples.length} (all collinear: ${collinearAlwaysAssociative})`,
+    `  Non-associative: ${nonAssociativeTriples.length} (all non-collinear: ${!nonCollinearAssociativeExists})`,
+    ``,
+    `Key theorem verified:`,
+    `  (gₐ⊗gᵦ)⊗gᵧ = gₐ⊗(gᵦ⊗gᵧ) ⟺ {a,b,c} collinear in PG(2,2)`,
+    ``,
+    `Non-associative triples (associator ≠ 0):`,
+    ...nonAssociativeTriples.map(t =>
+      `  [${t.labels.join(",")}]: ‖[·]‖ = ${t.associatorNorm.toFixed(1)}`
+    ),
+  ].join("\n");
+
+  return {
+    allTriples,
+    distinctTriples,
+    nonAssociativeTriples,
+    associativeTriples,
+    nonAssociativeCount: nonAssociativeTriples.length,
+    associativeCount: associativeTriples.length,
+    nonCollinearAssociativeExists,
+    collinearAlwaysAssociative,
+    summary,
+  };
+}
+
 // ── Atlas Connection ──────────────────────────────────────────────────────
 
 /**
