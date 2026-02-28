@@ -105,6 +105,9 @@ export default function QShellEmbed({ onClose }: QShellEmbedProps) {
   const [history, setHistory] = useState<string[]>([]);
   const [histIdx, setHistIdx] = useState(-1);
   const [tabHint, setTabHint] = useState("");
+  const [tabMatches, setTabMatches] = useState<string[]>([]);
+  const [tabCycleIdx, setTabCycleIdx] = useState(-1);
+  const [lastTabInput, setLastTabInput] = useState("");
   const [activeTab, setActiveTab] = useState<"terminal" | "procs" | "mesh" | "net" | "collab">("terminal");
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -119,6 +122,9 @@ export default function QShellEmbed({ onClose }: QShellEmbedProps) {
     "curl", "ssh", "dmesg", "export", "alias", "exit", "demo", "reason",
     "security", "mesh", "channel", "send", "broadcast", "agent",
   ];
+
+  // Commands that take file/path arguments
+  const PATH_COMMANDS = new Set(["ls", "cat", "rm", "cd", "mkdir", "touch", "head", "tail", "wc", "du", "find", "cp", "mv", "chmod"]);
 
   // Auto-scroll terminal
   useEffect(() => {
@@ -137,54 +143,88 @@ export default function QShellEmbed({ onClose }: QShellEmbedProps) {
     }
   }, [activeTab, state.stage]);
 
+  /** Resolve filesystem children for a partial path */
+  const resolvePathMatches = (partial: string): string[] => {
+    const dir = partial.includes("/") ? partial.slice(0, partial.lastIndexOf("/") + 1) || "/" : "/";
+    const namePrefix = partial.includes("/") ? partial.slice(partial.lastIndexOf("/") + 1) : partial;
+    try {
+      const fs = state.kernel && (state as any).sub?.fs;
+      if (!fs) return [];
+      const node = fs.stat(dir);
+      if (node && node.kind === "dir") {
+        return Object.keys(node.children || {})
+          .filter(n => n.startsWith(namePrefix))
+          .map(n => (dir === "/" ? `/${n}` : `${dir}${n}`));
+      }
+    } catch { /* no FS available */ }
+    return [];
+  };
+
+  const commonPrefix = (arr: string[]) =>
+    arr.reduce((a, b) => { let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++; return a.slice(0, i); });
+
   const handleTab = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const parts = input.split(" ");
+    const cmd = parts[0];
     const isFirstWord = parts.length <= 1;
     const partial = parts[parts.length - 1] || "";
 
+    // ── Double-Tab cycling: if we already have matches from a previous Tab, cycle ──
+    if (tabMatches.length > 1 && input === lastTabInput) {
+      const nextIdx = (tabCycleIdx + 1) % tabMatches.length;
+      setTabCycleIdx(nextIdx);
+      const prefix = isFirstWord ? "" : parts.slice(0, -1).join(" ") + " ";
+      const completion = tabMatches[nextIdx];
+      const newInput = prefix + completion + (isFirstWord ? " " : "");
+      setInput(newInput);
+      setLastTabInput(newInput);
+      setTabHint(tabMatches.map((m, i) => i === nextIdx ? `[${m}]` : m).join("  "));
+      return;
+    }
+
+    // ── First Tab press: gather matches ──
+    let matches: string[] = [];
+    let prefix = "";
+
     if (isFirstWord) {
-      const matches = COMMANDS.filter(c => c.startsWith(partial) && c !== partial);
-      if (matches.length === 1) {
-        setInput(matches[0] + " ");
-        setTabHint("");
-      } else if (matches.length > 1) {
-        setTabHint(matches.join("  "));
-        const common = matches.reduce((a, b) => {
-          let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++;
-          return a.slice(0, i);
-        });
-        if (common.length > partial.length) setInput(common);
-      }
+      // Complete command names
+      matches = COMMANDS.filter(c => c.startsWith(partial) && c !== partial);
+    } else if (PATH_COMMANDS.has(cmd)) {
+      // Complete file paths for path-aware commands
+      prefix = parts.slice(0, -1).join(" ") + " ";
+      matches = resolvePathMatches(partial);
     } else {
-      const prefix = parts.slice(0, -1).join(" ") + " ";
-      const dir = partial.includes("/") ? partial.slice(0, partial.lastIndexOf("/") + 1) : "/";
-      const namePrefix = partial.includes("/") ? partial.slice(partial.lastIndexOf("/") + 1) : partial;
-      try {
-        const node = state.kernel && (state as any).sub?.fs?.stat(dir);
-        if (node && node.kind === "dir") {
-          const children = Object.keys(node.children || {}).filter(n => n.startsWith(namePrefix));
-          if (children.length === 1) {
-            setInput(prefix + (dir === "/" ? `/${children[0]}` : `${dir}${children[0]}`));
-            setTabHint("");
-          } else if (children.length > 1) {
-            setTabHint(children.join("  "));
-            const common = children.reduce((a, b) => {
-              let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++;
-              return a.slice(0, i);
-            });
-            if (common.length > namePrefix.length) {
-              setInput(prefix + (dir === "/" ? `/${common}` : `${dir}${common}`));
-            }
-          }
-        }
-      } catch { /* no FS */ }
+      // Generic: try path completion for any argument
+      prefix = parts.slice(0, -1).join(" ") + " ";
+      matches = resolvePathMatches(partial);
+    }
+
+    if (matches.length === 0) return;
+
+    if (matches.length === 1) {
+      const suffix = isFirstWord ? " " : "";
+      setInput((isFirstWord ? "" : prefix) + matches[0] + suffix);
+      setTabHint("");
+      setTabMatches([]);
+      setTabCycleIdx(-1);
+      setLastTabInput("");
+    } else {
+      // Fill common prefix, show all matches, prepare for cycling
+      const cp = commonPrefix(matches);
+      const basePartial = isFirstWord ? partial : partial;
+      const newInput = (isFirstWord ? "" : prefix) + (cp.length > basePartial.length ? cp : partial);
+      setInput(newInput);
+      setTabHint(matches.map(m => typeof m === "string" ? m.split("/").pop() || m : m).join("  "));
+      setTabMatches(matches);
+      setTabCycleIdx(-1);
+      setLastTabInput(newInput);
     }
   };
 
   const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Tab") { handleTab(e); return; }
-    if (tabHint) setTabHint("");
+    if (tabHint) { setTabHint(""); setTabMatches([]); setTabCycleIdx(-1); setLastTabInput(""); }
     if (e.key === "Enter" && input.trim()) {
       executeCommand(input.trim());
       setHistory(h => [input.trim(), ...h]);
