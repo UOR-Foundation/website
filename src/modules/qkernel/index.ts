@@ -164,9 +164,12 @@ export {
   toOpenQASM,
   entanglementMap,
   quickRun,
+  noNoise,
+  realisticNoise,
 } from "./q-simulator";
 export type {
   SimulatorState,
   SimOp,
   GateMatrix,
+  NoiseModel,
 } from "./q-simulator";
