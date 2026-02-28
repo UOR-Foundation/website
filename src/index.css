@@ -69,6 +69,15 @@
     --coherence-border-alpha: calc(0.04 + var(--kernel-coherence) * 0.12);
     --coherence-pulse-duration: calc(3s - var(--kernel-coherence) * 1.5s);
 
+    /* ── Protective Stillness defaults (driven by FocusVignette) ──── */
+    --still-shadow-opacity: 1;
+    --still-margin-scale: 1;
+    --still-radius-scale: 1;
+    --still-decor-opacity: 1;
+    --still-transition-scale: 1;
+    --still-border-opacity: 1;
+    --still-chrome-scale: 1;
+    --still-noise-opacity: 0.04;
     /* ── Existing shadcn/ui tokens ───────────────────────────────── */
     --background: 210 30% 96%;
     --foreground: 220 20% 12%;
@@ -585,24 +594,31 @@
   background: hsla(25, 10%, 15%, 0.6);
   backdrop-filter: blur(32px) saturate(1.3);
   -webkit-backdrop-filter: blur(32px) saturate(1.3);
-  border: 1px solid hsla(38, 15%, 60%, 0.1);
-  border-radius: 16px;
-  box-shadow: 0 16px 48px -12px hsla(25, 10%, 0%, 0.4),
-              inset 0 1px 0 hsla(38, 20%, 80%, 0.06);
+  border: 1px solid hsla(38, 15%, 60%, calc(0.1 * var(--still-border-opacity, 1)));
+  border-radius: calc(16px * var(--still-radius-scale, 1));
+  box-shadow: 0 16px 48px -12px hsla(25, 10%, 0%, calc(0.4 * var(--still-shadow-opacity, 1))),
+              inset 0 1px 0 hsla(38, 20%, 80%, calc(0.06 * var(--still-decor-opacity, 1)));
+  transition: border-radius calc(700ms * var(--still-transition-scale, 1)) ease,
+              box-shadow calc(700ms * var(--still-transition-scale, 1)) ease,
+              border-color calc(700ms * var(--still-transition-scale, 1)) ease;
 }
 .hologram-glass-card {
   background: hsla(25, 8%, 12%, 0.55);
   backdrop-filter: blur(12px) saturate(1.1);
   -webkit-backdrop-filter: blur(12px) saturate(1.1);
-  border: 1px solid hsla(38, 12%, 70%, 0.06);
-  border-radius: 12px;
+  border: 1px solid hsla(38, 12%, 70%, calc(0.06 * var(--still-border-opacity, 1)));
+  border-radius: calc(12px * var(--still-radius-scale, 1));
+  box-shadow: 0 4px 16px -4px hsla(25, 10%, 0%, calc(0.3 * var(--still-shadow-opacity, 1)));
+  transition: border-radius calc(700ms * var(--still-transition-scale, 1)) ease,
+              box-shadow calc(700ms * var(--still-transition-scale, 1)) ease,
+              border-color calc(700ms * var(--still-transition-scale, 1)) ease;
 }
 .hologram-glass-card-borderless {
   background: hsla(25, 8%, 12%, 0.4);
   backdrop-filter: blur(12px) saturate(1.1);
   -webkit-backdrop-filter: blur(12px) saturate(1.1);
   border: none;
-  border-radius: 12px;
+  border-radius: calc(12px * var(--still-radius-scale, 1));
 }
 
 /* Proportional text size transition for smooth user-scale switching */
@@ -655,36 +671,8 @@
    Driven by --kernel-coherence (0–1) at 60fps from the surface adapter.
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* Heartbeat dot glow — pulses with coherence-derived intensity */
-.kernel-heartbeat-glow {
-  box-shadow: 0 0 calc(4px + var(--kernel-coherence) * 12px)
-              calc(1px + var(--kernel-coherence) * 4px)
-              var(--coherence-glow-color);
-  transition: box-shadow 0.1s linear;
-}
-
-/* Widget card border shimmer — coherence drives border luminance */
-.coherence-border {
-  border-color: hsla(
-    var(--coherence-glow-hue),
-    calc(12% + var(--kernel-coherence) * 20%),
-    calc(50% + var(--kernel-coherence) * 20%),
-    var(--coherence-border-alpha)
-  );
-  transition: border-color 0.15s linear;
-}
-
-/* Sidebar coherence pulse — subtle left-edge glow */
-.coherence-sidebar-pulse {
-  box-shadow: inset 2px 0 calc(8px + var(--kernel-coherence) * 16px)
-              hsla(
-                var(--coherence-glow-hue),
-                var(--coherence-glow-sat),
-                var(--coherence-glow-light),
-                calc(var(--coherence-glow-opacity) * 0.5)
-              );
-  transition: box-shadow 0.1s linear;
-}
+/* Coherence classes are defined in the Protective Stillness section below,
+   which merges coherence glow with stillness-aware shadow/opacity scaling. */
 
 /* Ambient background warmth — full-viewport coherence wash */
 .coherence-ambient {
@@ -700,7 +688,96 @@
     var(--coherence-glow-color) 0%,
     transparent 70%
   );
+  /* Base opacity — overridden by stillness rules below */
   opacity: calc(var(--kernel-coherence) * 0.15);
   transition: opacity 0.2s linear;
   z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Protective Stillness — Progressive Visual Simplification
+   As --focus-t rises, the kernel makes itself invisible.
+   Driven by --still-* CSS vars from FocusVignette.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Shadows dissolve — all box-shadows respect stillness */
+.still-shadow {
+  box-shadow: 0 4px 16px -4px hsla(25, 10%, 0%, calc(0.3 * var(--still-shadow-opacity)));
+}
+
+/* Margins widen — content breathes */
+.still-margin {
+  margin: calc(var(--holo-space-4) * var(--still-margin-scale));
+  transition: margin calc(700ms * var(--still-transition-scale)) ease;
+}
+
+/* Padding expands — inner breathing room */
+.still-padding {
+  padding: calc(var(--holo-space-4) * var(--still-margin-scale));
+  transition: padding calc(700ms * var(--still-transition-scale)) ease;
+}
+
+/* Decorative elements fade — ornamental chrome vanishes */
+.still-decor {
+  opacity: var(--still-decor-opacity);
+  transition: opacity calc(700ms * var(--still-transition-scale)) ease;
+}
+
+/* Borders soften — edges become gentle */
+.still-border {
+  border-color: hsla(38, 12%, 70%, calc(0.08 * var(--still-border-opacity)));
+  transition: border-color calc(700ms * var(--still-transition-scale)) ease;
+}
+
+/* Chrome recedes — non-content elements scale down subtly */
+.still-chrome {
+  transform: scale(var(--still-chrome-scale));
+  transition: transform calc(700ms * var(--still-transition-scale)) ease,
+              opacity calc(700ms * var(--still-transition-scale)) ease;
+}
+
+/* Rounded corners soften at focus — harsh geometry dissolves */
+.still-radius {
+  border-radius: calc(8px * var(--still-radius-scale));
+  transition: border-radius calc(700ms * var(--still-transition-scale)) ease;
+}
+
+/* Coherence elements calm down during focus */
+.kernel-heartbeat-glow {
+  box-shadow: 0 0 calc((4px + var(--kernel-coherence) * 12px) * var(--still-shadow-opacity))
+              calc((1px + var(--kernel-coherence) * 4px) * var(--still-shadow-opacity))
+              var(--coherence-glow-color);
+  transition: box-shadow calc(100ms * var(--still-transition-scale)) linear;
+}
+
+.coherence-border {
+  border-color: hsla(
+    var(--coherence-glow-hue),
+    calc(12% + var(--kernel-coherence) * 20%),
+    calc(50% + var(--kernel-coherence) * 20%),
+    calc(var(--coherence-border-alpha) * var(--still-border-opacity))
+  );
+  transition: border-color calc(150ms * var(--still-transition-scale)) linear;
+}
+
+.coherence-sidebar-pulse {
+  box-shadow: inset 2px 0 calc((8px + var(--kernel-coherence) * 16px) * var(--still-shadow-opacity))
+              hsla(
+                var(--coherence-glow-hue),
+                var(--coherence-glow-sat),
+                var(--coherence-glow-light),
+                calc(var(--coherence-glow-opacity) * 0.5 * var(--still-decor-opacity))
+              );
+  transition: box-shadow calc(100ms * var(--still-transition-scale)) linear;
+}
+
+/* Ambient background warmth calms during stillness */
+.coherence-ambient::after {
+  opacity: calc(var(--kernel-coherence) * 0.15 * var(--still-decor-opacity));
+  transition: opacity calc(200ms * var(--still-transition-scale)) linear;
+}
+
+/* Sidebar tooltip shadows dissolve */
+.sidebar-tooltip {
+  box-shadow: 0 8px 24px -6px hsla(25, 15%, 5%, calc(0.5 * var(--still-shadow-opacity)));
 }
