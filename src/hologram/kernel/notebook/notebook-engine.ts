@@ -66,7 +66,11 @@ const QISKIT_GATE_MAP: Record<string, { gate: string; qubits: number }> = {
   z: { gate: "z", qubits: 1 }, s: { gate: "s", qubits: 1 }, t: { gate: "t", qubits: 1 },
   sdg: { gate: "sdg", qubits: 1 }, tdg: { gate: "tdg", qubits: 1 },
   rx: { gate: "rx", qubits: 1 }, ry: { gate: "ry", qubits: 1 }, rz: { gate: "rz", qubits: 1 },
-  cx: { gate: "cx", qubits: 2 }, cnot: { gate: "cx", qubits: 2 }, cz: { gate: "cz", qubits: 2 }, cs: { gate: "cs", qubits: 2 }, swap: { gate: "swap", qubits: 2 },
+  p: { gate: "p", qubits: 1 }, u: { gate: "u", qubits: 1 },
+  cx: { gate: "cx", qubits: 2 }, cnot: { gate: "cx", qubits: 2 }, cz: { gate: "cz", qubits: 2 },
+  cy: { gate: "cy", qubits: 2 }, ch: { gate: "ch", qubits: 2 }, cs: { gate: "cs", qubits: 2 },
+  crx: { gate: "crx", qubits: 2 }, cry: { gate: "cry", qubits: 2 }, crz: { gate: "crz", qubits: 2 },
+  swap: { gate: "swap", qubits: 2 },
   ccx: { gate: "ccx", qubits: 3 }, cswap: { gate: "cswap", qubits: 3 },
 };
 
@@ -107,27 +111,34 @@ function parsePythonLine(line: string): ParsedLine {
     return { type: "create_circuit", args: { name: circMatch[1], qubits: parseInt(circMatch[2]), clbits: circMatch[3] ? parseInt(circMatch[3]) : undefined }, raw: line };
   }
 
-  // qc.h(0), qc.cx(0, 1), qc.rx(pi/4, 0), etc.
-  const gateMatch = trimmed.match(/(\w+)\.(h|x|y|z|s|t|sdg|tdg|rx|ry|rz|cx|cz|swap|ccx|cswap)\((.+)\)/);
+  // qc.h(0), qc.cx(0, 1), qc.rx(pi/4, 0), qc.ry(0, 0), etc.
+  const gateMatch = trimmed.match(/(\w+)\.(h|x|y|z|s|t|sdg|tdg|rx|ry|rz|p|u|cx|cz|cy|ch|crx|cry|crz|swap|ccx|cswap)\((.+)\)/);
   if (gateMatch) {
     const gateName = gateMatch[2];
     const argsStr = gateMatch[3];
     const args = argsStr.split(",").map(a => a.trim());
-    const qubits: number[] = [];
-    const params: number[] = [];
-    for (const a of args) {
-      const n = parseFloat(a);
-      if (!isNaN(n) && Number.isInteger(n) && n >= 0 && n < 100) {
-        qubits.push(n);
-      } else {
-        // Try to evaluate as math expression
-        params.push(evalMathExpr(a));
-      }
-    }
-    // For parameterized gates, params come first in Qiskit
     const gateInfo = QISKIT_GATE_MAP[gateName];
-    if (gateInfo && qubits.length > 0) {
-      return { type: "gate", args: { gate: gateInfo.gate, qubits, params: params.length > 0 ? params : undefined }, raw: line };
+
+    if (gateInfo) {
+      // Qiskit convention: (params..., qubits...) — last N args are qubits
+      const numQubits = gateInfo.qubits;
+      const qubitArgs = args.slice(-numQubits);
+      const paramArgs = args.slice(0, args.length - numQubits);
+
+      const qubits = qubitArgs.map(a => parseInt(a.trim()));
+      const params = paramArgs.map(a => evalMathExpr(a));
+
+      if (qubits.every(q => !isNaN(q) && q >= 0)) {
+        return {
+          type: "gate",
+          args: {
+            gate: gateInfo.gate,
+            qubits,
+            params: params.length > 0 ? params : undefined,
+          },
+          raw: line,
+        };
+      }
     }
   }
 
@@ -180,7 +191,14 @@ function parsePythonLine(line: string): ParsedLine {
 }
 
 function evalMathExpr(expr: string): number {
-  const cleaned = expr.replace(/pi/g, String(Math.PI)).replace(/np\.pi/g, String(Math.PI));
+  const PI = String(Math.PI);
+  const cleaned = expr
+    .replace(/np\.pi/g, PI)
+    .replace(/math\.pi/g, PI)
+    .replace(/np\.e/g, String(Math.E))
+    .replace(/\bpi\b/g, PI)
+    .replace(/np\.sqrt\(([^)]+)\)/g, "Math.sqrt($1)")
+    .replace(/np\.log\(([^)]+)\)/g, "Math.log($1)");
   try { return Function(`"use strict"; return (${cleaned})`)() as number; } catch { return 0; }
 }
 
