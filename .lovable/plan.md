@@ -641,3 +641,133 @@ The Inversion Test — for every component, ask:
 - [ ] Widget maps to a kernel PID
 - [ ] State changes emit kernel frame transitions
 - [ ] H-score assigned: how well does this serve human reasoning?
+
+---
+
+## 9. Hologram Consolidation & Export Plan
+
+### Goal
+Make the entire Hologram system (OS, kernel, compute, UI, AI) a **single self-contained subtree** that can be extracted from this repo and deployed independently — while keeping UOR website completely decoupled.
+
+### Current State — Dependency Audit
+
+The hologram system currently spans **6 module directories** plus shared infrastructure:
+
+| Directory | Purpose | Files |
+|-----------|---------|-------|
+| `hologram-ui/` | Desktop shell, widgets, projections, hooks, theming | ~65 components, ~28 hooks |
+| `hologram-os/` | Projection engine, surface adapter, kernel boot | 6 files |
+| `hologram-compute/` | vGPU, matmul, centroid cache, benchmarks | 11 files |
+| `qkernel/` | Q-Boot, Q-Sched, Q-MMU, Q-FS, Q-ISA, Q-ECC, Q-Net, Q-IPC, Q-Security | ~25 files |
+| `quantum/` | Circuit compiler, stabilizer proof, attention, dashboard | ~12 files |
+| `uns/core/hologram/` | AI engine, lens system, GPU, whisper, TTS, wake-word, diffusion | ~30 files |
+
+**Cross-cutting dependencies (outside → hologram):**
+- `observable/` pages → import `PageShell`, `StatCard`, etc. from `hologram-ui`
+- `lens-inspector/` → imports `PageShell` from `hologram-ui`
+- `ring-core/reason-command.ts` → imports `Panel` type from `hologram-os/runtime`
+- `uns/core/hologram/engine.ts` → imports from `hologram-ui/projection-registry`
+- `App.tsx` → AttentionProvider, FocusJournal, FocusVignette, LumenPill, GlobalWidgets, GlobalLumenOverlay
+
+### Target Structure
+
+All hologram code consolidates under: `src/hologram/`
+
+```
+src/hologram/                          ← SINGLE EXPORTABLE ROOT
+├── kernel/                            ← Q-Linux kernel (the origin of everything)
+│   ├── boot.ts                        ← Q-Boot (POST, topology, genesis)
+│   ├── sched.ts                       ← Q-Sched (coherence-priority scheduler)
+│   ├── mmu.ts                         ← Q-MMU (CID-addressed virtual memory)
+│   ├── fs.ts                          ← Q-FS (Merkle DAG filesystem)
+│   ├── isa.ts                         ← Q-ISA (96-gate instruction set)
+│   ├── ecc.ts                         ← Q-ECC (stabilizer error correction)
+│   ├── net.ts                         ← Q-Net (Fano mesh networking)
+│   ├── ipc.ts                         ← Q-IPC (agent message channels)
+│   ├── security.ts                    ← Q-Security (capability rings)
+│   ├── syscall.ts                     ← Q-Syscall (lens-based traps)
+│   ├── drivers/                       ← Q-Drivers (gpu, audio, vault)
+│   └── index.ts
+│
+├── projection/                        ← Projection engine (kernel → surface)
+│   ├── engine.ts                      ← KernelProjector, ProjectionFrame
+│   ├── surface-adapter.ts             ← BrowserSurfaceAdapter
+│   └── runtime.ts                     ← Panel registry, widget-as-process
+│
+├── compute/                           ← vGPU / hologram compute
+│   ├── matmul.ts
+│   ├── centroid-cache.ts
+│   ├── providers.ts
+│   └── benchmarks/
+│
+├── ai/                                ← AI engine, inference, models
+│   ├── engine.ts
+│   ├── model-proxy.ts
+│   ├── inference-cache.ts
+│   ├── coherence-gate.ts
+│   ├── stt/                           ← Speech-to-text
+│   ├── tts/                           ← Text-to-speech
+│   ├── wake-word/
+│   ├── diffusion/
+│   └── gpu/                           ← WebGPU device manager
+│
+├── lens/                              ← Holographic lens system
+│   ├── lens.ts
+│   ├── blueprint.ts
+│   ├── specs.ts
+│   ├── lenses/
+│   └── polytree.ts
+│
+├── quantum/                           ← Quantum circuits & attention
+│   ├── circuit-compiler.ts
+│   ├── stabilizer-proof.ts
+│   ├── quantum-native-attention.ts
+│   └── pages/
+│
+├── shell/                             ← Desktop shell & full UI
+│   ├── components/                    ← All widget/projection components
+│   ├── hooks/                         ← All hologram hooks
+│   ├── theme/                         ← Palette, tokens
+│   ├── pages/                         ← HologramOsPage, ConsolePage, etc.
+│   └── engine/                        ← Context projection, topic extraction
+│
+├── observable/                        ← MetaObserver, stream projection
+├── data-bank/                         ← Encrypted user data vault
+├── audio/                             ← Ambient stations & engine
+├── notebook/                          ← Jupyter-style quantum workspace
+│
+├── index.ts                           ← Master barrel export
+└── manifest.json                      ← Self-describing CID-addressed manifest
+```
+
+### Migration Strategy (3 Phases)
+
+#### Phase A — Extract Shared UI Bridge
+`PageShell`, `StatCard`, `DashboardGrid`, `MetricBar`, `InfoCard`, `DataTable` are generic UI shells used by both hologram AND website pages. Move to `src/modules/core/ui/` so both sides import from neutral ground. This breaks the bidirectional dependency.
+
+#### Phase B — Consolidate into `src/hologram/`
+- `modules/hologram-ui/*` → `hologram/shell/*`
+- `modules/hologram-os/*` → `hologram/projection/*`
+- `modules/hologram-compute/*` → `hologram/compute/*`
+- `modules/qkernel/*` → `hologram/kernel/*`
+- `modules/quantum/*` → `hologram/quantum/*`
+- `modules/uns/core/hologram/*` → `hologram/ai/*` + `hologram/lens/*`
+- `modules/observable/*` → `hologram/observable/*`
+- `modules/data-bank/*` → `hologram/data-bank/*`
+- `modules/audio/*` → `hologram/audio/*`
+
+Fix cross-deps: `ring-core/reason-command.ts` Panel import → inject via interface.
+
+#### Phase C — Export Gate
+Create `manifest.json` listing all entrypoints, routes, and external deps. At export time, copy `src/hologram/` to new repo. Only 3 external touchpoints:
+1. `ring-core/ring` (Z/256Z algebra)
+2. `uns/core/identity` (singleProofHash)
+3. `integrations/supabase/client` (reconfigure)
+
+### Dependency Direction Rule
+```
+UOR-Website ──imports──▶ shared-core (ring, identity, PageShell)
+Hologram    ──imports──▶ shared-core (ring, identity, PageShell)
+UOR-Website ──NEVER──▶ Hologram
+Hologram    ──NEVER──▶ UOR-Website
+```
