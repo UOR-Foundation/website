@@ -22,7 +22,10 @@
  * @module qkernel/q-syscall
  */
 
-import { sha256, computeCid, bytesToHex } from "@/modules/uns/core/address";
+import { toHex, encodeUtf8 } from "@/hologram/genesis/axiom-ring";
+import { sha256 } from "@/hologram/genesis/axiom-hash";
+import { createCid } from "@/hologram/genesis/axiom-cid";
+import { canonicalEncode } from "@/hologram/genesis/axiom-codec";
 import type { QMmu } from "./q-mmu";
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -31,25 +34,23 @@ import type { QMmu } from "./q-mmu";
 
 /** The morphism classification for each syscall */
 export type MorphismType =
-  | "morphism:Isometry"     // preserves metric (focus, resolve)
-  | "morphism:Transform"    // property-preserving map (refract)
-  | "morphism:Action"       // side-effecting operation (compileLens)
-  | "morphism:Embedding"    // structure-preserving injection (pin)
-  | "categorical:Product"   // fork = categorical product
-  | "projection:Functor";   // project = holographic projection
+  | "morphism:Isometry"
+  | "morphism:Transform"
+  | "morphism:Action"
+  | "morphism:Embedding"
+  | "categorical:Product"
+  | "projection:Functor";
 
-/** Result of a syscall execution */
 export interface SyscallResult<T = unknown> {
   readonly syscall: string;
   readonly morphism: MorphismType;
   readonly success: boolean;
   readonly result: T;
-  readonly cid: string;           // content address of the result
+  readonly cid: string;
   readonly latencyMs: number;
   readonly callerPid: number;
 }
 
-/** A compiled lens — the instantiated syscall pipeline */
 export interface CompiledLens {
   readonly lensId: string;
   readonly blueprintCid: string;
@@ -58,7 +59,6 @@ export interface CompiledLens {
   readonly compiledAt: number;
 }
 
-/** Lens blueprint — the specification for a syscall pipeline */
 export interface LensBlueprint {
   readonly name: string;
   readonly version: string;
@@ -66,14 +66,12 @@ export interface LensBlueprint {
   readonly pipeline: readonly PipelineStage[];
 }
 
-/** A single stage in a lens pipeline */
 export interface PipelineStage {
   readonly name: string;
   readonly morphism: MorphismType;
   readonly config?: Record<string, unknown>;
 }
 
-/** Syscall dispatch table entry */
 export interface TrapTableEntry {
   readonly syscallNumber: number;
   readonly name: string;
@@ -82,7 +80,6 @@ export interface TrapTableEntry {
   readonly callCount: number;
 }
 
-/** Syscall statistics */
 export interface SyscallStats {
   readonly totalCalls: number;
   readonly callsByType: Record<string, number>;
@@ -95,17 +92,9 @@ export interface SyscallStats {
 // Supported Modalities
 // ═══════════════════════════════════════════════════════════════════════
 
-/** The 9 standard refraction modalities */
 export const STANDARD_MODALITIES = [
-  "nquads",         // URDNA2015 canonical N-Quads
-  "jsonld",         // Expanded JSON-LD
-  "jsonld-framed",  // Framed JSON-LD
-  "compact-json",   // Compact JSON
-  "turtle",         // RDF Turtle
-  "rdf-xml",        // RDF/XML
-  "graphql-sdl",    // GraphQL Schema
-  "hologram",       // Holographic projection
-  "identity",       // Pass-through (no transform)
+  "nquads", "jsonld", "jsonld-framed", "compact-json",
+  "turtle", "rdf-xml", "graphql-sdl", "hologram", "identity",
 ] as const;
 
 export type Modality = (typeof STANDARD_MODALITIES)[number];
@@ -125,7 +114,6 @@ export class QSyscall {
     this.initTrapTable();
   }
 
-  /** Initialize the trap table — Linux's IDT equivalent */
   private initTrapTable(): void {
     const entries: Omit<TrapTableEntry, "callCount">[] = [
       { syscallNumber: 0, name: "focus",         morphism: "morphism:Isometry",   handler: "focus" },
@@ -141,18 +129,10 @@ export class QSyscall {
 
   // ── Syscall 0: focus (read) ─────────────────────────────────────
 
-  /**
-   * focus — Dehydrate an object to its canonical content-addressed form.
-   * Like read() in Linux, but the result IS the address.
-   *
-   * morphism:Isometry — preserves the metric (content = address)
-   */
-  async focus(obj: unknown, callerPid: number): Promise<SyscallResult<{ cid: string; bytes: Uint8Array }>> {
+  focus(obj: unknown, callerPid: number): SyscallResult<{ cid: string; bytes: Uint8Array }> {
     const t0 = performance.now();
-    const bytes = new TextEncoder().encode(
-      typeof obj === "string" ? obj : JSON.stringify(obj, Object.keys(obj as object).sort())
-    );
-    const cid = await this.mmu.store(bytes, callerPid);
+    const bytes = canonicalEncode(obj);
+    const cid = this.mmu.store(bytes, callerPid);
 
     const result: SyscallResult<{ cid: string; bytes: Uint8Array }> = {
       syscall: "focus",
@@ -169,17 +149,11 @@ export class QSyscall {
 
   // ── Syscall 1: refract (write) ──────────────────────────────────
 
-  /**
-   * refract — Rehydrate canonical bytes into a target modality.
-   * Like write() in Linux, but type-checked by morphism classification.
-   *
-   * morphism:Transform — property-preserving map
-   */
-  async refract(
+  refract(
     cid: string,
     modality: Modality,
     callerPid: number
-  ): Promise<SyscallResult<{ content: string; modality: Modality }>> {
+  ): SyscallResult<{ content: string; modality: Modality }> {
     const t0 = performance.now();
     const bytes = this.mmu.load(cid);
 
@@ -199,7 +173,6 @@ export class QSyscall {
 
     const raw = new TextDecoder().decode(bytes);
 
-    // Apply modality transform
     let content: string;
     switch (modality) {
       case "identity":
@@ -215,7 +188,6 @@ export class QSyscall {
         } catch { content = raw; }
         break;
       case "nquads":
-        // Simplified N-Quads: subject predicate object .
         try {
           const obj = JSON.parse(raw);
           content = Object.entries(obj)
@@ -224,10 +196,10 @@ export class QSyscall {
         } catch { content = `<urn:uor:${cid}> <urn:uor:content> "${raw}" .`; }
         break;
       default:
-        content = raw; // Other modalities pass through for now
+        content = raw;
     }
 
-    const resultCid = await this.mmu.store(new TextEncoder().encode(content), callerPid);
+    const resultCid = this.mmu.store(encodeUtf8(content), callerPid);
 
     const result: SyscallResult<{ content: string; modality: Modality }> = {
       syscall: "refract",
@@ -244,12 +216,6 @@ export class QSyscall {
 
   // ── Syscall 2: resolve (open) ───────────────────────────────────
 
-  /**
-   * resolve — Locate a CID in the address space.
-   * Like open() in Linux — returns metadata without loading content.
-   *
-   * morphism:Isometry — the resolution preserves identity
-   */
   resolve(cid: string, callerPid: number): SyscallResult<{ found: boolean; tier?: string; byteLength?: number }> {
     const t0 = performance.now();
     const entry = this.mmu.lookup(cid);
@@ -272,23 +238,17 @@ export class QSyscall {
 
   // ── Syscall 3: compileLens (exec) ───────────────────────────────
 
-  /**
-   * compileLens — Instantiate a lens pipeline from a blueprint.
-   * Like exec() in Linux — loads and prepares a program for execution.
-   *
-   * morphism:Action — side-effecting (creates new compiled lens)
-   */
-  async compileLens(
+  compileLens(
     blueprint: LensBlueprint,
     callerPid: number
-  ): Promise<SyscallResult<CompiledLens>> {
+  ): SyscallResult<CompiledLens> {
     const t0 = performance.now();
 
-    const bpBytes = new TextEncoder().encode(JSON.stringify(blueprint));
-    const bpCid = await this.mmu.store(bpBytes, callerPid);
+    const bpBytes = canonicalEncode(blueprint);
+    const bpCid = this.mmu.store(bpBytes, callerPid);
 
-    const hashBytes = await sha256(bpBytes);
-    const lensId = bytesToHex(hashBytes).slice(0, 16);
+    const hashBytes = sha256(bpBytes);
+    const lensId = toHex(hashBytes).slice(0, 16);
 
     const compiled: CompiledLens = {
       lensId,
@@ -315,12 +275,6 @@ export class QSyscall {
 
   // ── Syscall 4: pin (mmap) ───────────────────────────────────────
 
-  /**
-   * pin — Promote a CID to register tier (prevent eviction).
-   * Like mmap() + mlock() in Linux.
-   *
-   * morphism:Embedding — structure-preserving injection into hot tier
-   */
   pin(cid: string, callerPid: number): SyscallResult<{ pinned: boolean }> {
     const t0 = performance.now();
     const pinned = this.mmu.pin(cid);
@@ -340,18 +294,11 @@ export class QSyscall {
 
   // ── Syscall 5: project (ioctl) ──────────────────────────────────
 
-  /**
-   * project — Create a holographic projection of an identity.
-   * Like ioctl() — device-specific control, but here it's
-   * projecting a UOR identity into a target protocol space.
-   *
-   * projection:Functor — maps between categories
-   */
-  async project(
+  project(
     cid: string,
     targetProtocol: string,
     callerPid: number
-  ): Promise<SyscallResult<{ projection: string; protocol: string }>> {
+  ): SyscallResult<{ projection: string; protocol: string }> {
     const t0 = performance.now();
     const bytes = this.mmu.load(cid);
 
@@ -369,9 +316,8 @@ export class QSyscall {
       return result;
     }
 
-    // Generate protocol-specific projection
-    const hashBytes = await sha256(bytes);
-    const hex = bytesToHex(hashBytes);
+    const hashBytes = sha256(bytes);
+    const hex = toHex(hashBytes);
     let projection: string;
     switch (targetProtocol) {
       case "ipv6":
@@ -384,7 +330,7 @@ export class QSyscall {
         projection = `urn:uor:derivation:sha256:${hex}`;
         break;
       case "ipfs":
-        projection = await computeCid(hashBytes);
+        projection = createCid(hashBytes).string;
         break;
       default:
         projection = `${targetProtocol}:${hex.slice(0, 32)}`;
@@ -405,21 +351,15 @@ export class QSyscall {
 
   // ── Syscall 6: forkBlueprint (clone) ────────────────────────────
 
-  /**
-   * forkBlueprint — Create a new lens from an existing blueprint.
-   * Like clone() in Linux — new PID, shared structure.
-   *
-   * categorical:Product — the fork is a categorical product
-   */
-  async forkBlueprint(
+  forkBlueprint(
     blueprint: LensBlueprint,
     newName: string,
     callerPid: number
-  ): Promise<SyscallResult<{ original: string; forked: string; forkedBlueprint: LensBlueprint }>> {
+  ): SyscallResult<{ original: string; forked: string; forkedBlueprint: LensBlueprint }> {
     const t0 = performance.now();
 
-    const originalBytes = new TextEncoder().encode(JSON.stringify(blueprint));
-    const originalCid = await this.mmu.store(originalBytes, callerPid);
+    const originalBytes = canonicalEncode(blueprint);
+    const originalCid = this.mmu.store(originalBytes, callerPid);
 
     const forkedBp: LensBlueprint = {
       ...blueprint,
@@ -427,8 +367,8 @@ export class QSyscall {
       version: `${blueprint.version}-fork`,
     };
 
-    const forkedBytes = new TextEncoder().encode(JSON.stringify(forkedBp));
-    const forkedCid = await this.mmu.store(forkedBytes, callerPid);
+    const forkedBytes = canonicalEncode(forkedBp);
+    const forkedCid = this.mmu.store(forkedBytes, callerPid);
 
     const result: SyscallResult<{ original: string; forked: string; forkedBlueprint: LensBlueprint }> = {
       syscall: "forkBlueprint",
@@ -445,22 +385,10 @@ export class QSyscall {
 
   // ── Introspection ───────────────────────────────────────────────
 
-  /** Get the trap table */
-  getTrapTable(): readonly TrapTableEntry[] {
-    return this.trapTable;
-  }
+  getTrapTable(): readonly TrapTableEntry[] { return this.trapTable; }
+  getLens(lensId: string): CompiledLens | undefined { return this.lenses.get(lensId); }
+  allLenses(): CompiledLens[] { return Array.from(this.lenses.values()); }
 
-  /** Get a compiled lens by ID */
-  getLens(lensId: string): CompiledLens | undefined {
-    return this.lenses.get(lensId);
-  }
-
-  /** Get all compiled lenses */
-  allLenses(): CompiledLens[] {
-    return Array.from(this.lenses.values());
-  }
-
-  /** Get syscall statistics */
   stats(): SyscallStats {
     const callsByType: Record<string, number> = {};
     const callsByMorphism: Record<string, number> = {};
@@ -483,12 +411,7 @@ export class QSyscall {
     };
   }
 
-  /** Get call log */
-  getCallLog(): readonly SyscallResult[] {
-    return this.callLog;
-  }
-
-  // ── Internal ────────────────────────────────────────────────────
+  getCallLog(): readonly SyscallResult[] { return this.callLog; }
 
   private recordCall(result: SyscallResult): void {
     this.callLog.push(result);
