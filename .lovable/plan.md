@@ -3,6 +3,167 @@
 
 > **North Star**: Classical AI makes humans attend to machine output. Hologram inverts this — the system attends to human coherence. Every design decision, every interaction, every pixel optimizes for how well it serves the human's reasoning, not how much attention it captures. The kernel itself optimizes for human understanding.
 
+> **Architectural North Star**: The entire hologram experience — UX, visuals, AI models, widgets, every component — is a *projection* emanating from the Q-Linux kernel. The kernel is the single origin. It self-unpacks, self-verifies, and self-enfolds. It is portable, device-agnostic, and edge-deployable. Cloud or local, the kernel projects the same coherent experience.
+
+---
+
+## 0. Kernel-Projected Architecture
+
+### The Core Insight
+
+The Q-Linux kernel is not a backend that serves a frontend. It IS the experience. Every visual element, every interaction, every AI model output is a **projection** from the kernel's algebraic substrate into the user's perception field. The browser is merely the projection surface — like a holographic plate receiving light.
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  Q-LINUX KERNEL                     │
+│                                                     │
+│  ┌───────────┐  ┌───────────┐  ┌───────────────┐   │
+│  │ Ring Z/256 │  │ Fano Topo │  │ 96 Vertices   │   │
+│  │ (algebra)  │  │ (routing) │  │ (instruction) │   │
+│  └─────┬─────┘  └─────┬─────┘  └───────┬───────┘   │
+│        │              │                │            │
+│        └──────────┬───┴────────────────┘            │
+│                   │                                 │
+│          ┌────────▼────────┐                        │
+│          │  PROJECTION     │                        │
+│          │  ENGINE         │                        │
+│          │                 │                        │
+│          │  UX ← kernel    │                        │
+│          │  AI ← kernel    │                        │
+│          │  FS ← kernel    │                        │
+│          │  Net ← kernel   │                        │
+│          └────────┬────────┘                        │
+│                   │                                 │
+└───────────────────┼─────────────────────────────────┘
+                    │
+          ┌─────────▼─────────┐
+          │  PROJECTION       │
+          │  SURFACE          │
+          │  (Browser / Edge  │
+          │   Device / Cloud) │
+          └───────────────────┘
+```
+
+### Self-Unpacking Kernel (The Portal)
+
+The kernel is a single self-contained artifact that:
+
+1. **Arrives** — A minimal payload (the "seed") lands on any JavaScript runtime
+2. **Verifies** — POST sequence: validates Z/256Z ring integrity, verifies its own hash
+3. **Hydrates** — Loads Fano topology (7 lines, 96 vertices) from its own bytes
+4. **Projects** — Spawns the Genesis process (PID 0) which projects the full experience
+
+```typescript
+// The kernel entry point — the portal
+interface KernelSeed {
+  /** SHA-256 of the kernel payload — self-verification */
+  readonly selfHash: string;
+  /** Compressed kernel state (ring table + topology + ISA) */
+  readonly payload: Uint8Array;
+  /** Boot sequence version */
+  readonly bootVersion: string;
+}
+
+interface ProjectionSurface {
+  /** Where to render — DOM node, canvas, or headless */
+  readonly target: 'dom' | 'canvas' | 'headless';
+  /** Viewport dimensions for proportional scaling */
+  readonly viewport: { width: number; height: number };
+  /** Available compute: webgpu | webgl | cpu */
+  readonly compute: string;
+}
+
+// boot(seed, surface) → full hologram experience
+```
+
+### The Boot Sequence (Entering the Portal)
+
+The user doesn't "open an app" — they enter a portal. The kernel boot is a visible, elegant transition:
+
+```
+Phase 0: SEED ARRIVAL
+  └─ Minimal JS payload arrives (< 50KB compressed)
+  └─ Self-hash verification (is this kernel intact?)
+
+Phase 1: POST (Power-On Self-Test)
+  └─ Z/256Z ring integrity check (256 additions, 256 multiplications)
+  └─ Fano plane line verification (7 lines, 3 points each)
+  └─ Visual: warm glow expanding from center, ring forming
+
+Phase 2: TOPOLOGY HYDRATION
+  └─ 96 vertices materialize from ring algebra
+  └─ Fano routing mesh establishes connectivity
+  └─ Visual: constellation of points connecting, mesh forming
+
+Phase 3: GENESIS
+  └─ PID 0 spawns — the root process
+  └─ Coherence observer initializes (H-score baseline)
+  └─ Visual: mesh dissolves into the hologram desktop
+
+Phase 4: PROJECTION
+  └─ Desktop layout materializes from kernel state
+  └─ Widgets are projections of kernel processes
+  └─ AI models are kernel syscalls
+  └─ The experience IS the kernel, made visible
+```
+
+### Everything Is a Projection
+
+| What the user sees | What the kernel provides |
+|---|---|
+| Desktop layout | Kernel process tree, projected spatially |
+| Widget (e.g., Coherence) | Observable subscription, projected as glass panel |
+| AI conversation | Syscall to lens morphism, projected as chat |
+| File browser | Q-FS inode tree, projected as explorer |
+| Terminal | Direct kernel shell (Q-Shell) |
+| Text size control | Kernel config register, projected as UI |
+| Panel positions | Kernel frame state, projected as coordinates |
+| Boot animation | POST sequence, projected as visual narrative |
+
+### Portability Contract
+
+The kernel projects the same experience regardless of surface:
+
+```typescript
+interface KernelProjectionContract {
+  /** The kernel produces a stream of ProjectionFrames */
+  frames(): AsyncIterable<ProjectionFrame>;
+  
+  /** Each frame is a pure data description of what to show */
+  interface ProjectionFrame {
+    readonly tick: number;
+    readonly panels: PanelProjection[];
+    readonly processes: ProcessProjection[];
+    readonly observables: ObservableProjection[];
+    readonly typography: TypographyProjection;
+    readonly palette: PaletteProjection;
+  }
+}
+```
+
+The projection surface (browser, edge device, cloud renderer) receives frames and renders them. The kernel doesn't know or care about CSS, DOM, or React — it emits pure algebraic descriptions. The surface adapter translates.
+
+### Edge Deployment Model
+
+```
+┌─────────────────────────────────────────┐
+│  CLOUD (full resources)                 │
+│  └─ Full kernel + all projections       │
+│  └─ AI models via syscall               │
+│  └─ Persistent state via Q-FS           │
+└──────────────────┬──────────────────────┘
+                   │ same kernel, same experience
+┌──────────────────▼──────────────────────┐
+│  EDGE DEVICE (limited resources)        │
+│  └─ Same kernel seed                    │
+│  └─ Projection quality scales with      │
+│     available compute (graceful)        │
+│  └─ AI models: local inference or       │
+│     cloud relay via Q-Net               │
+│  └─ State: local Q-FS + cloud sync      │
+└─────────────────────────────────────────┘
+```
+
 ---
 
 ## 1. Design Philosophy
@@ -35,6 +196,7 @@ In classical interfaces, the human must:
 - **No unnecessary borders**: Use spacing + subtle transparency shifts instead of hard lines.
 - **Floaty equilibrium**: Panels feel weightless — soft shadows, rounded corners, gentle glass blur.
 - **Proportional consistency**: Same layout proportions across all desktop/tablet viewports.
+- **Everything from kernel**: Every visual element traces back to a kernel projection. No orphan UI.
 
 ---
 
@@ -173,25 +335,67 @@ CREATE TABLE desktop_layouts (
 
 ---
 
+### Phase 0: Kernel Projection Foundation
+**Inversion embodied**: The kernel doesn't serve a UI — the kernel IS the experience. This phase establishes the architectural spine: every component traces to a kernel process, every visual is a projection frame.
+
+#### 0.1 Projection Engine Core
+- [ ] Create `src/modules/hologram-os/projection-engine.ts`
+- [ ] Define `ProjectionFrame` interface: the pure-data description of a single tick's visual state
+- [ ] Define `PanelProjection`, `ProcessProjection`, `ObservableProjection`, `TypographyProjection`, `PaletteProjection`
+- [ ] Implement `KernelProjector` class: subscribes to Q-Linux kernel state, emits `ProjectionFrame` stream
+- [ ] Each widget maps to a kernel process — `widgetId → PID` registry
+
+#### 0.2 Surface Adapter (Browser)
+- [ ] Create `src/modules/hologram-os/surface-adapter.ts`
+- [ ] `BrowserSurfaceAdapter`: receives `ProjectionFrame[]`, maps to React component tree
+- [ ] Typography projections → CSS custom property updates (`--holo-scale`, `--holo-user-scale`)
+- [ ] Palette projections → CSS custom property updates (`--hologram-*`)
+- [ ] Panel projections → widget positions/sizes/visibility
+- [ ] This adapter is the ONLY place where DOM/React concerns exist
+
+#### 0.3 Boot Sequence Visualization
+- [ ] Create `src/modules/hologram-os/components/KernelBoot.tsx`
+- [ ] Phase 0 → Phase 4 animated sequence (warm glow → ring → mesh → desktop)
+- [ ] Each POST check result appears as a subtle line item, then fades
+- [ ] Total boot visual: 2–3 seconds, skippable after first visit
+- [ ] On completion: seamless dissolve into the projected desktop
+- [ ] Boot uses the actual Q-Boot sequence (`post()`, `loadHardware()`, `hydrateFirmware()`, `createGenesisProcess()`, `boot()`)
+
+#### 0.4 Kernel Config Registers → UI Controls
+- [ ] Text size preference = kernel config register at address `config:typography:user-scale`
+- [ ] Panel positions = kernel frame state at address `state:desktop:layout`
+- [ ] Theme preference = kernel config register at address `config:palette:mode`
+- [ ] All UI controls read/write kernel registers — the control IS a projection of the register
+
+#### 0.5 Widget-as-Process Model
+- [ ] Each widget on the desktop is a kernel process (`QProcess`) managed by `Q-Sched`
+- [ ] Widget visibility = process state (running/sleeping/stopped)
+- [ ] Widget priority = coherence zone (high-H-score widgets get more render priority)
+- [ ] Minimizing a widget = `SIGSTOP` to its process
+- [ ] Closing a widget = process termination with state snapshot to Q-FS
+
+---
+
 ### Phase 1: Adaptive Typography & Proportional Scale
-**Inversion embodied**: The system attends to the human's visual needs — automatically sizing itself to serve readability on any screen, and yielding control to the human's preference.
+**Inversion embodied**: The system attends to the human's visual needs — automatically sizing itself to serve readability on any screen, and yielding control to the human's preference. Typography settings are kernel config registers projected as UI controls.
 
 #### 1.1 CSS Foundation
-- [ ] Add `--holo-scale` with `clamp()` formula to `:root` in `index.css`
-- [ ] Add `--holo-user-scale` with `data-text-size` attribute variants
-- [ ] Define all `--holo-text-*` tokens (xs through display)
-- [ ] Define all `--holo-space-*` tokens (1 through 8)
+- [x] Add `--holo-scale` with `clamp()` formula to `:root` in `index.css`
+- [x] Add `--holo-user-scale` with `data-text-size` attribute variants
+- [x] Define all `--holo-text-*` tokens (xs through display)
+- [x] Define all `--holo-space-*` tokens (1 through 8)
 - [ ] Add floor constraints: no text < 11px, no display > 42px
 - [ ] Add small-viewport contrast boost rule
 
 #### 1.2 User Control
-- [ ] Create `useTextSize` hook: read/write `data-text-size` on `<html>`, persist to localStorage
-- [ ] Build Text Size control component: 3 radio buttons (Compact / Default / Large)
-- [ ] Integrate control into OS sidebar settings area
+- [x] Create `useTextSize` hook: read/write `data-text-size` on `<html>`, persist to localStorage
+- [x] Build Text Size control component: 3 radio buttons (Compact / Default / Large)
+- [x] Integrate control into OS sidebar settings area
 - [ ] 200ms CSS transition on `font-size` and `padding` properties
+- [ ] Wire text size control to kernel config register (Phase 0 dependency)
 
 #### 1.3 Component Migration
-- [ ] Audit all Hologram OS components: replace `text-sm`, `text-xs`, `text-base`, etc. with `var(--holo-text-*)` 
+- [x] Audit all Hologram OS components: replace `text-sm`, `text-xs`, `text-base`, etc. with `var(--holo-text-*)`
 - [ ] Replace all fixed padding (`p-2`, `p-3`, `p-4`) in Hologram components with `var(--holo-space-*)`
 - [ ] Migrate sidebar, panels, widgets, modals, and tooltips
 - [ ] Verify no container overflow at Large (1.15×)
@@ -212,13 +416,14 @@ CREATE TABLE desktop_layouts (
 ---
 
 ### Phase 2: Design Token Overhaul & Text Reduction
-**Inversion embodied**: The system presents only what serves the human's understanding. Every word, every border, every color must earn its place by increasing coherence, not by filling space.
+**Inversion embodied**: The system presents only what serves the human's understanding. Every word, every border, every color must earn its place by increasing coherence, not by filling space. The palette is a kernel register — changing the theme changes a register, and the projection updates everywhere.
 
 #### 2.1 Color Tokens
 - [ ] Add all `--hologram-*` HSL variables to `index.css`
 - [ ] Update `tailwind.config.ts` to expose tokens as utilities
 - [ ] Update `theme/palette.ts` and `browser-palette.ts` to reference CSS variables
 - [ ] Ensure dark/light frame palettes derive from same token set
+- [ ] Wire palette to kernel config register (`config:palette:*`)
 
 #### 2.2 Glass Utility
 - [ ] Add `.hologram-glass` class to `index.css`
@@ -242,20 +447,22 @@ CREATE TABLE desktop_layouts (
 ---
 
 ### Phase 3: Glass Panel Component
-**Inversion embodied**: The panels feel like they're serving you — floating toward you with information, not imposing themselves. They're light, translucent, and aware of their neighbors.
+**Inversion embodied**: The panels feel like they're serving you — floating toward you with information, not imposing themselves. They're light, translucent, and aware of their neighbors. Each panel is a kernel process projection.
 
 #### 3.1 GlassPanel Component
 - [ ] Create `<GlassPanel>` with glass styling, proportional internal sizing
-- [ ] Props: `title`, `children`, `collapsible`, `className`
+- [ ] Props: `title`, `children`, `collapsible`, `className`, `pid` (kernel process ID)
 - [ ] All internal padding uses `--holo-space-*`
 - [ ] All internal text uses `--holo-text-*`
 - [ ] Title uses Playfair Display at `--holo-text-lg`
+- [ ] Panel header shows kernel process coherence zone indicator (subtle dot)
 
 #### 3.2 Integration
 - [ ] Wire into `useModularPanel` for resize
 - [ ] Wire into `useDraggablePosition` for drag
 - [ ] Resize handle: invisible until hover (cursor change only, no visible element)
 - [ ] Minimum panel size respects content at current `--holo-scale`
+- [ ] Panel state changes (resize, move, collapse) emit kernel frame transitions
 
 #### 3.3 Magnetic Snapping
 - [ ] Edge detection: panels within 12px snap together
@@ -271,24 +478,25 @@ CREATE TABLE desktop_layouts (
 
 ---
 
-### Phase 4: Profile-Synced Layouts
-**Inversion embodied**: The system remembers your preferences so you never have to reconfigure. Your spatial arrangement, your text size, your widget choices — the system attends to preserving your cognitive context across sessions and devices.
+### Phase 4: Profile-Synced Layouts (Kernel State Persistence)
+**Inversion embodied**: The system remembers your preferences so you never have to reconfigure. Your spatial arrangement, your text size, your widget choices — the system attends to preserving your cognitive context. All state is kernel state, persisted via Q-FS to cloud.
 
 #### 4.1 Database
 - [ ] Create `desktop_layouts` table with RLS (user_id = auth.uid())
-- [ ] Schema: `{ user_id, desktop_id, widget_states, text_size, updated_at }`
-- [ ] `widget_states` JSONB: `{ [widgetId]: { x, y, w, h, visible, docked_to } }`
+- [ ] Schema: `{ user_id, desktop_id, widget_states, text_size, kernel_config, updated_at }`
+- [ ] `widget_states` JSONB: `{ [widgetId]: { x, y, w, h, visible, docked_to, pid } }`
+- [ ] `kernel_config` JSONB: `{ typography: {...}, palette: {...}, boot: {...} }`
 
 #### 4.2 Sync Hook
 - [ ] Create `useCloudDesktopState` hook
-- [ ] On mount: load from cloud → merge with localStorage → apply
+- [ ] On mount: load from cloud → merge with localStorage → apply to kernel registers
 - [ ] On change: save to localStorage immediately + debounce 2s cloud write
 - [ ] Conflict resolution: last-write-wins with ISO timestamp
 
 #### 4.3 Text Size Sync
-- [ ] Store `text_size` preference in profile or layout row
+- [ ] Store `text_size` preference in kernel config register
 - [ ] On login: apply saved text size immediately (before first paint if possible)
-- [ ] Flash prevention: server-render `data-text-size` attribute if SSR, else brief loader
+- [ ] Flash prevention: kernel projects typography frame before DOM paint
 
 #### 4.4 Cross-Device Guarantee
 - [ ] Positions stored as viewport-percentages, not absolute pixels
@@ -298,14 +506,15 @@ CREATE TABLE desktop_layouts (
 
 ---
 
-### Phase 5: Desktop Frame Polish
-**Inversion embodied**: Every widget is audited through the lens of "does this serve the human's understanding, or does it serve the system's need to display information?" Anything that serves only the system gets removed or simplified.
+### Phase 5: Desktop Frame Polish (Coherence Audit)
+**Inversion embodied**: Every widget is audited through the lens of "does this serve the human's understanding, or does it serve the system's need to display information?" Widgets with low human-coherence H-scores get simplified or hidden by the kernel scheduler.
 
 #### 5.1 Widget Audit
 - [ ] For each widget, ask: "What is the one thing this tells the human?"
 - [ ] Remove any widget content that doesn't answer that question
 - [ ] Ensure every widget has a clear, self-explanatory title
 - [ ] No technical jargon without a human-readable explanation
+- [ ] Assign each widget an H-score based on how well it serves human reasoning
 
 #### 5.2 Visual Polish
 - [ ] Apply `<GlassPanel>` treatment to all widgets
@@ -313,10 +522,11 @@ CREATE TABLE desktop_layouts (
 - [ ] Verify proportional scaling at 1024px, 1280px, 1440px, 1920px
 - [ ] Ensure warm earth tones throughout (no cold grays)
 
-#### 5.3 Information Hierarchy
-- [ ] Primary information: large, prominent, warm text
-- [ ] Secondary: smaller, muted, recedes
-- [ ] Tertiary: hidden behind hover or expand — the system only shows it when the human asks
+#### 5.3 Information Hierarchy (Kernel-Driven)
+- [ ] Primary information: large, prominent, warm text — kernel priority HIGH
+- [ ] Secondary: smaller, muted, recedes — kernel priority NORMAL
+- [ ] Tertiary: hidden behind hover or expand — kernel priority LOW, loaded on-demand
+- [ ] The kernel scheduler determines what to show based on human-coherence H-score
 - [ ] This is the inversion: the system *withholds* instead of *dumping*
 
 #### 5.4 Attention-Free Notifications
@@ -324,11 +534,12 @@ CREATE TABLE desktop_layouts (
 - [ ] Status changes reflected through subtle color shifts (not alerts)
 - [ ] The Focus Journal captures events silently — the human reviews on their terms
 - [ ] Nothing blinks, bounces, or demands attention
+- [ ] Notifications are kernel IPC messages — they arrive in the journal, not the face
 
 ---
 
-### Phase 6: Panel Composition
-**Inversion embodied**: The human doesn't adapt to a fixed layout — the layout adapts to the human. Panels compose and decompose fluidly, remembering the human's preferred arrangement.
+### Phase 6: Panel Composition (Kernel Frame Groups)
+**Inversion embodied**: The human doesn't adapt to a fixed layout — the layout adapts to the human. Panels compose and decompose fluidly, remembering the human's preferred arrangement. Dock groups are kernel process groups.
 
 #### 6.1 Magnetic Edge Detection
 - [ ] Algorithm: for each edge pair within 12px, compute alignment score
@@ -345,11 +556,42 @@ CREATE TABLE desktop_layouts (
 - [ ] Docked group moves as unit on drag
 - [ ] Resize one panel in group: adjacent panel adjusts (flex behavior)
 - [ ] Collapse one panel: group closes gap smoothly
+- [ ] Process group: all PIDs in a dock group share a coherence zone
 
 #### 6.4 Persistence
 - [ ] Dock relationships stored in `widget_states` JSONB
-- [ ] `docked_to: "widget-id"` + `dock_edge: "right"` 
+- [ ] `docked_to: "widget-id"` + `dock_edge: "right"`
 - [ ] Restored on load with same magnetic snap
+- [ ] Dock state is kernel frame state — persisted to Q-FS
+
+---
+
+### Phase 7: Full Kernel Integration
+**Inversion embodied**: The final phase collapses the distinction between "kernel" and "UI" entirely. There is only the kernel and its projections. The browser is a projection surface. The experience is the kernel made visible.
+
+#### 7.1 AI Models as Kernel Syscalls
+- [ ] AI chat = `QSyscall.dispatch('focus', { input: userMessage })` → lens morphism → response
+- [ ] AI responses carry H-score: how well does this serve the human's reasoning?
+- [ ] Low-H-score responses get flagged by the kernel for refinement
+- [ ] Model selection = kernel modality configuration (`STANDARD_MODALITIES`)
+
+#### 7.2 Every Component Traces to Kernel
+- [ ] Sidebar items = Q-FS directory listing, projected as navigation
+- [ ] Search = Q-FS content-addressed lookup, projected as search UI
+- [ ] Settings = kernel config registers, projected as forms
+- [ ] Audit: no orphan components (every React component must trace to a kernel projection)
+
+#### 7.3 Kernel Self-Monitoring (Hologram of the Hologram)
+- [ ] The kernel projects its own health as a subtle background indicator
+- [ ] H-score of the overall experience: are we serving the human well?
+- [ ] If coherence drops: kernel automatically simplifies (fewer widgets, larger text, more space)
+- [ ] If coherence rises: kernel offers more detail (on-demand, never pushed)
+
+#### 7.4 Portable Kernel Artifact
+- [ ] Bundle the kernel as a self-contained module (< 200KB compressed)
+- [ ] Entry point: `boot(seed, surface)` — works in browser, Node, Deno, edge runtime
+- [ ] Projection surface adapters: `BrowserAdapter`, `HeadlessAdapter`, `CanvasAdapter`
+- [ ] Same kernel, same experience, any environment
 
 ---
 
@@ -372,6 +614,8 @@ These are the patterns of classical "human-attends-to-machine" design. Hologram 
 - ❌ Engagement dark patterns — streaks, gamification, urgency signals
 - ❌ Auto-playing anything — the human initiates, the system responds
 - ❌ Information dumping — showing everything at once instead of what's relevant
+- ❌ Orphan UI — any component not traced to a kernel projection
+- ❌ Separate "backend" and "frontend" — the kernel IS the experience
 
 ---
 
@@ -380,6 +624,7 @@ These are the patterns of classical "human-attends-to-machine" design. Hologram 
 The Inversion Test — for every component, ask:
 
 - [ ] **Does this serve the human's understanding, or the system's need to display?**
+- [ ] **Does this component trace to a kernel process/projection?**
 - [ ] Uses `--holo-text-*` tokens (not raw px or tailwind text-*)
 - [ ] Uses `--holo-space-*` tokens for padding/gaps
 - [ ] Container stable at all 3 user scales (Compact / Default / Large)
@@ -393,3 +638,6 @@ The Inversion Test — for every component, ask:
 - [ ] Accessible contrast ratios at all scales
 - [ ] No attention-demanding elements (badges, counters, alerts)
 - [ ] Information hierarchy: primary visible, secondary recedes, tertiary on-demand
+- [ ] Widget maps to a kernel PID
+- [ ] State changes emit kernel frame transitions
+- [ ] H-score assigned: how well does this serve human reasoning?
