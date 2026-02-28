@@ -1,10 +1,7 @@
 /**
- * JupyterProjection — Sidebar-originating Jupyter workspace panel
- *
- * Identical projection animation to Terminal/Browser/Compute panels.
+ * JupyterProjection — Instant sidebar-originating Jupyter panel
  */
 
-import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import QuantumJupyterWorkspace from "@/modules/qkernel/notebook/QuantumJupyterWorkspace";
 
@@ -14,22 +11,12 @@ interface JupyterProjectionProps {
 }
 
 const SIDEBAR_WIDTH = 68;
+const SLIDE = { duration: 0.22, ease: [0.22, 1, 0.36, 1] } as const;
+const FADE = { duration: 0.15, ease: "easeOut" } as const;
 
 export default function JupyterProjection({ open, onClose }: JupyterProjectionProps) {
-  const [shouldRender, setShouldRender] = useState(false);
-
-  useEffect(() => {
-    if (open) setShouldRender(true);
-  }, [open]);
-
-  const handleExitComplete = useCallback(() => {
-    if (!open) setShouldRender(false);
-  }, [open]);
-
-  if (!shouldRender) return null;
-
   return (
-    <AnimatePresence onExitComplete={handleExitComplete}>
+    <AnimatePresence>
       {open && (
         <>
           <motion.div
@@ -39,17 +26,17 @@ export default function JupyterProjection({ open, onClose }: JupyterProjectionPr
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={FADE}
             onClick={onClose}
           />
           <motion.div
             key="jupyter-panel"
             className="fixed top-0 bottom-0 z-[500] flex"
-            style={{ left: SIDEBAR_WIDTH, right: 0, transformOrigin: "left center" }}
-            initial={{ clipPath: `inset(0 100% 0 0)`, opacity: 0.3 }}
-            animate={{ clipPath: `inset(0 0% 0 0)`, opacity: 1 }}
-            exit={{ clipPath: `inset(0 100% 0 0)`, opacity: 0.3 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            style={{ left: SIDEBAR_WIDTH, right: 0, transformOrigin: "left center", willChange: "clip-path, opacity" }}
+            initial={{ clipPath: "inset(0 100% 0 0)", opacity: 0.3 }}
+            animate={{ clipPath: "inset(0 0% 0 0)", opacity: 1 }}
+            exit={{ clipPath: "inset(0 100% 0 0)", opacity: 0.3 }}
+            transition={SLIDE}
           >
             <div
               className="absolute top-0 bottom-0 left-0 w-[2px] pointer-events-none z-10"
