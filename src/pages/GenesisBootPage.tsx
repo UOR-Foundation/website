@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { bootGenesis, type GenesisState } from "@/hologram/genesis/genesis";
+import { buildArtifact, toBlob } from "@/hologram/genesis/artifact";
 import type { PostCheck } from "@/hologram/genesis/axiom-post";
 
 // ── Check icon glyphs (no lucide import needed) ──────────
@@ -250,7 +251,7 @@ export default function GenesisBootPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-holo-6 pb-16 flex justify-center"
+            className="mt-holo-6 pb-16 flex justify-center gap-holo-3"
           >
             <button
               onClick={runBoot}
@@ -261,6 +262,26 @@ export default function GenesisBootPage() {
               }}
             >
               Re-verify seed crystal ({bootCount})
+            </button>
+            <button
+              onClick={() => {
+                const artifact = buildArtifact();
+                const blob = toBlob(artifact);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `genesis-${artifact.envelopeCid.slice(0, 12)}.uor`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="px-holo-6 py-holo-3 rounded-md text-holo-sm font-mono transition-colors border"
+              style={{
+                borderColor: "hsla(38, 40%, 62%, 0.3)",
+                background: "hsla(38, 40%, 62%, 0.1)",
+                color: "hsl(38, 40%, 62%)",
+              }}
+            >
+              Export .uor
             </button>
           </motion.div>
         )}
