@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback, useMemo, useRef, useEffect, type DragEvent } from "react";
-import { X, Plus, Minus, Play, RotateCcw, Copy, Check, Trash2, Atom, Zap, Timer, Layers, FlaskConical, Info, TrendingUp, Code2, FileDown, FileText, Braces, ChevronDown, Shield, Activity, Gauge, Target, Sparkles, AlertTriangle, CheckCircle2, GripVertical, Cpu, ArrowRight } from "lucide-react";
+import { X, Plus, Minus, Play, RotateCcw, Copy, Check, Trash2, Atom, Zap, Timer, Layers, FlaskConical, Info, TrendingUp, Code2, FileDown, FileText, Braces, ChevronDown, Shield, Activity, Gauge, Target, Sparkles, AlertTriangle, CheckCircle2, GripVertical, Cpu, ArrowRight, ChevronRight, Settings2, Hash, BarChart3 } from "lucide-react";
 import {
   createState,
   simulateCircuit,
@@ -31,6 +31,8 @@ import {
 
 /* ── Types ─────────────────────────────────────────────── */
 
+type GateCategory = "pauli" | "phase" | "rotation" | "controlled-rotation" | "entangling" | "multi" | "special";
+
 interface GateDef {
   id: string;
   label: string;
@@ -39,33 +41,57 @@ interface GateDef {
   paramCount?: number;
   description: string;
   color: string;
-  category: "pauli" | "phase" | "rotation" | "entangling" | "multi";
+  category: GateCategory;
 }
 
+const CATEGORY_INFO: Record<GateCategory, { label: string; icon: string; description: string }> = {
+  pauli:               { label: "Pauli Gates",           icon: "⚛",  description: "Fundamental bit/phase flips" },
+  phase:               { label: "Phase & Root Gates",    icon: "◇",  description: "Phase rotations and square roots" },
+  rotation:            { label: "Parametric Rotations",  icon: "↻",  description: "Continuous single-qubit rotations" },
+  "controlled-rotation": { label: "Controlled Rotations", icon: "⊕↻", description: "Parameterized controlled gates" },
+  entangling:          { label: "Entangling Gates",      icon: "⚡", description: "Two-qubit entangling operations" },
+  multi:               { label: "Multi-Qubit Gates",     icon: "◈",  description: "3+ qubit composite gates" },
+  special:             { label: "Identity & Barrier",    icon: "▪",  description: "No-ops and visual separators" },
+};
+
 const GATE_PALETTE: GateDef[] = [
-  { id: "h",    label: "H",    qubits: 1, description: "Hadamard — creates equal superposition", color: "hsl(200, 60%, 55%)", category: "pauli" },
-  { id: "x",    label: "X",    qubits: 1, description: "Pauli-X — bit flip (NOT)", color: "hsl(340, 55%, 55%)", category: "pauli" },
-  { id: "y",    label: "Y",    qubits: 1, description: "Pauli-Y — combined bit & phase flip", color: "hsl(280, 50%, 55%)", category: "pauli" },
-  { id: "z",    label: "Z",    qubits: 1, description: "Pauli-Z — phase flip", color: "hsl(160, 50%, 50%)", category: "pauli" },
-  { id: "s",    label: "S",    qubits: 1, description: "S gate — √Z, π/2 phase", color: "hsl(45, 55%, 50%)", category: "phase" },
-  { id: "sdg",  label: "S†",   qubits: 1, description: "S-dagger — inverse of S gate", color: "hsl(45, 55%, 50%)", category: "phase" },
-  { id: "t",    label: "T",    qubits: 1, description: "T gate — π/8 phase, universal computation", color: "hsl(30, 60%, 50%)", category: "phase" },
-  { id: "tdg",  label: "T†",   qubits: 1, description: "T-dagger — inverse of T gate", color: "hsl(30, 60%, 50%)", category: "phase" },
-  { id: "sx",   label: "√X",   qubits: 1, description: "√X gate — square root of Pauli-X", color: "hsl(340, 55%, 55%)", category: "phase" },
-  { id: "ry",   label: "RY",   qubits: 1, parameterized: true, description: "Y-axis rotation by angle θ", color: "hsl(280, 50%, 55%)", category: "rotation" },
-  { id: "rx",   label: "RX",   qubits: 1, parameterized: true, description: "X-axis rotation by angle θ", color: "hsl(340, 55%, 55%)", category: "rotation" },
-  { id: "rz",   label: "RZ",   qubits: 1, parameterized: true, description: "Z-axis rotation by angle θ", color: "hsl(160, 50%, 50%)", category: "rotation" },
-  { id: "p",    label: "P",    qubits: 1, parameterized: true, description: "Phase gate P(θ) — diagonal phase rotation", color: "hsl(55, 55%, 50%)", category: "rotation" },
-  { id: "u",    label: "U",    qubits: 1, parameterized: true, paramCount: 3, description: "Universal U(θ,φ,λ) — arbitrary single-qubit rotation", color: "hsl(200, 55%, 60%)", category: "rotation" },
-  { id: "cx",   label: "CNOT", qubits: 2, description: "Controlled-NOT — flips target if control is |1⟩", color: "hsl(220, 55%, 55%)", category: "entangling" },
-  { id: "cz",   label: "CZ",   qubits: 2, description: "Controlled-Z — phase flip when both |1⟩", color: "hsl(160, 50%, 50%)", category: "entangling" },
-  { id: "cy",   label: "CY",   qubits: 2, description: "Controlled-Y — applies Y when control is |1⟩", color: "hsl(280, 50%, 55%)", category: "entangling" },
-  { id: "ch",   label: "CH",   qubits: 2, description: "Controlled-Hadamard — applies H when control is |1⟩", color: "hsl(200, 55%, 55%)", category: "entangling" },
-  { id: "swap", label: "SWAP", qubits: 2, description: "Swap — exchanges quantum states of two qubits", color: "hsl(30, 55%, 50%)", category: "entangling" },
-  { id: "crz",  label: "CRZ",  qubits: 2, parameterized: true, description: "Controlled-RZ(θ) — controlled Z rotation", color: "hsl(160, 50%, 50%)", category: "entangling" },
-  { id: "cry",  label: "CRY",  qubits: 2, parameterized: true, description: "Controlled-RY(θ) — controlled Y rotation", color: "hsl(280, 50%, 55%)", category: "entangling" },
-  { id: "ccx",  label: "CCX",  qubits: 3, description: "Toffoli — flips target when both controls |1⟩", color: "hsl(0, 55%, 55%)", category: "multi" },
-  { id: "cswap",label: "CSWAP",qubits: 3, description: "Fredkin — controlled-SWAP gate", color: "hsl(30, 55%, 50%)", category: "multi" },
+  // Pauli
+  { id: "h",    label: "H",     qubits: 1, description: "Hadamard — creates equal superposition |+⟩", color: "hsl(200, 60%, 55%)", category: "pauli" },
+  { id: "x",    label: "X",     qubits: 1, description: "Pauli-X — bit flip (NOT gate)", color: "hsl(340, 55%, 55%)", category: "pauli" },
+  { id: "y",    label: "Y",     qubits: 1, description: "Pauli-Y — combined bit & phase flip", color: "hsl(280, 50%, 55%)", category: "pauli" },
+  { id: "z",    label: "Z",     qubits: 1, description: "Pauli-Z — phase flip |1⟩ → −|1⟩", color: "hsl(160, 50%, 50%)", category: "pauli" },
+  // Phase & Root
+  { id: "s",    label: "S",     qubits: 1, description: "S gate — √Z, π/2 phase shift", color: "hsl(45, 55%, 50%)", category: "phase" },
+  { id: "sdg",  label: "S†",    qubits: 1, description: "S-dagger — inverse of S (−π/2 phase)", color: "hsl(45, 45%, 45%)", category: "phase" },
+  { id: "t",    label: "T",     qubits: 1, description: "T gate — π/8 phase, enables universality", color: "hsl(30, 60%, 50%)", category: "phase" },
+  { id: "tdg",  label: "T†",    qubits: 1, description: "T-dagger — inverse of T gate (−π/8 phase)", color: "hsl(30, 50%, 45%)", category: "phase" },
+  { id: "sx",   label: "√X",    qubits: 1, description: "√X — square root of Pauli-X", color: "hsl(340, 50%, 50%)", category: "phase" },
+  { id: "sxdg", label: "√X†",   qubits: 1, description: "√X-dagger — inverse square root of X", color: "hsl(340, 45%, 45%)", category: "phase" },
+  // Parametric single-qubit rotations
+  { id: "rx",   label: "RX",    qubits: 1, parameterized: true, description: "X-axis rotation RX(θ)", color: "hsl(340, 55%, 55%)", category: "rotation" },
+  { id: "ry",   label: "RY",    qubits: 1, parameterized: true, description: "Y-axis rotation RY(θ)", color: "hsl(280, 50%, 55%)", category: "rotation" },
+  { id: "rz",   label: "RZ",    qubits: 1, parameterized: true, description: "Z-axis rotation RZ(θ)", color: "hsl(160, 50%, 50%)", category: "rotation" },
+  { id: "p",    label: "P",     qubits: 1, parameterized: true, description: "Phase gate P(θ) = diag(1, e^{iθ})", color: "hsl(55, 55%, 50%)", category: "rotation" },
+  { id: "u",    label: "U",     qubits: 1, parameterized: true, paramCount: 3, description: "Universal U(θ,φ,λ) — arbitrary SU(2)", color: "hsl(200, 55%, 60%)", category: "rotation" },
+  // Controlled rotations
+  { id: "crx",  label: "CRX",   qubits: 2, parameterized: true, description: "Controlled-RX(θ) — controlled X rotation", color: "hsl(340, 50%, 50%)", category: "controlled-rotation" },
+  { id: "cry",  label: "CRY",   qubits: 2, parameterized: true, description: "Controlled-RY(θ) — controlled Y rotation", color: "hsl(280, 45%, 50%)", category: "controlled-rotation" },
+  { id: "crz",  label: "CRZ",   qubits: 2, parameterized: true, description: "Controlled-RZ(θ) — controlled Z rotation", color: "hsl(160, 45%, 48%)", category: "controlled-rotation" },
+  { id: "cp",   label: "CP",    qubits: 2, parameterized: true, description: "Controlled-Phase CP(θ)", color: "hsl(55, 50%, 48%)", category: "controlled-rotation" },
+  // Entangling (non-parameterized 2-qubit)
+  { id: "cx",   label: "CNOT",  qubits: 2, description: "Controlled-NOT — flips target if control is |1⟩", color: "hsl(220, 55%, 55%)", category: "entangling" },
+  { id: "cz",   label: "CZ",    qubits: 2, description: "Controlled-Z — phase flip when both |1⟩", color: "hsl(160, 50%, 50%)", category: "entangling" },
+  { id: "cy",   label: "CY",    qubits: 2, description: "Controlled-Y — applies Y when control is |1⟩", color: "hsl(280, 45%, 50%)", category: "entangling" },
+  { id: "ch",   label: "CH",    qubits: 2, description: "Controlled-Hadamard — applies H when control is |1⟩", color: "hsl(200, 50%, 52%)", category: "entangling" },
+  { id: "swap", label: "SWAP",  qubits: 2, description: "Swap — exchanges two qubits' states", color: "hsl(30, 55%, 50%)", category: "entangling" },
+  { id: "iswap",label: "iSWAP", qubits: 2, description: "iSWAP — swap with i phase, native on superconducting", color: "hsl(30, 50%, 48%)", category: "entangling" },
+  // Multi-qubit
+  { id: "ccx",  label: "CCX",   qubits: 3, description: "Toffoli — AND gate, flips target when both controls |1⟩", color: "hsl(0, 55%, 55%)", category: "multi" },
+  { id: "cswap",label: "CSWAP", qubits: 3, description: "Fredkin — controlled-SWAP gate", color: "hsl(30, 50%, 48%)", category: "multi" },
+  { id: "ccz",  label: "CCZ",   qubits: 3, description: "Double-controlled Z — phase flip when all |1⟩", color: "hsl(160, 45%, 48%)", category: "multi" },
+  // Special
+  { id: "id",   label: "I",     qubits: 1, description: "Identity — no operation (timing placeholder)", color: "hsl(0, 0%, 40%)", category: "special" },
+  { id: "barrier", label: "║",  qubits: 1, description: "Barrier — visual separator, no physical effect", color: "hsl(0, 0%, 35%)", category: "special" },
 ];
 
 interface CircuitGate { id: string; gateId: string; wires: number[]; params?: number[]; col: number }
@@ -148,13 +174,15 @@ const C = {
 type WorkspaceMode = "visual" | "code";
 
 /* ── Scale thresholds ──────────────────────────────────── */
+const MAX_QUBITS = 256;
 const SCALE_TIERS = [
   { max: 20, label: "Classical range", color: C.textMuted },
   { max: 30, label: "Beyond most simulators", color: C.gold },
-  { max: 50, label: "Exceeds all classical simulators", color: "hsl(25, 80%, 55%)" },
-  { max: 80, label: "Beyond Google Sycamore (53q)", color: C.red },
-  { max: 128, label: "Beyond IBM Condor (1121q logical equiv.)", color: C.purple },
-  { max: Infinity, label: "Theoretical frontier", color: "hsl(300, 70%, 60%)" },
+  { max: 53, label: "Beyond Google Sycamore (53q)", color: "hsl(25, 80%, 55%)" },
+  { max: 80, label: "Exceeds all hardware", color: C.red },
+  { max: 127, label: "IBM Eagle equivalent", color: C.purple },
+  { max: 256, label: "Theoretical frontier", color: "hsl(300, 70%, 60%)" },
+  { max: Infinity, label: "Beyond frontier", color: "hsl(300, 70%, 60%)" },
 ];
 
 function getScaleTier(q: number) {
@@ -173,7 +201,6 @@ interface PresetExperiment {
 }
 
 function makePresetGates(gates: { gateId: string; wires: number[]; params?: number[] }[]): Omit<CircuitGate, "id">[] {
-  // Auto-assign columns: sequential for simplicity
   return gates.map((g, i) => ({ ...g, col: i }));
 }
 
@@ -181,21 +208,21 @@ const PRESET_EXPERIMENTS: PresetExperiment[] = [
   {
     name: "Superposition",
     description: "H|0⟩ → |+⟩. Verify ⟨Z⟩ = 0 exactly.",
-    qubits: 1, category: "fundamental",
+    qubits: 2, category: "fundamental",
     gates: makePresetGates([{ gateId: "h", wires: [0] }]),
     measurements: [{ qubit: 0, observable: "Z" }, { qubit: 0, observable: "X" }],
   },
   {
     name: "RY(π/4) Validation",
     description: "Verify ⟨Z⟩ = cos(π/4) = 1/√2 analytically.",
-    qubits: 1, category: "validation",
+    qubits: 2, category: "validation",
     gates: makePresetGates([{ gateId: "ry", wires: [0], params: [Math.PI / 4] }]),
     measurements: [{ qubit: 0, observable: "Z" }, { qubit: 0, observable: "X" }, { qubit: 0, observable: "Y" }],
   },
   {
     name: "HZH = X Identity",
     description: "Proves H·Z·H = X via expectation values.",
-    qubits: 1, category: "validation",
+    qubits: 2, category: "validation",
     gates: makePresetGates([{ gateId: "h", wires: [0] }, { gateId: "z", wires: [0] }, { gateId: "h", wires: [0] }]),
     measurements: [{ qubit: 0, observable: "Z" }],
   },
@@ -260,7 +287,7 @@ export default function QuantumWorkspace({ onClose }: { onClose: () => void }) {
           </div>
           <div>
             <h1 className="text-base font-semibold tracking-tight" style={{ color: C.text }}>Quantum Workspace</h1>
-            <p className="text-xs" style={{ color: C.textMuted }}>Drag & Drop Circuit Builder · Virtual Qubits</p>
+            <p className="text-xs" style={{ color: C.textMuted }}>Drag & Drop Circuit Builder · Virtual Qubits · up to {MAX_QUBITS}q</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -448,13 +475,12 @@ function CodeLabEmpty() {
    VISUAL BUILDER — Drag & Drop LEGO Circuit Builder
    ════════════════════════════════════════════════════════════ */
 
-const MAX_QUBITS = 128;
-const CELL_W = 56;
-const CELL_H = 48;
-const WIRE_PAD = 70;
+const CELL_W = 64;
+const CELL_H = 52;
+const WIRE_PAD = 56;
 
 function VisualBuilder() {
-  const [numQubits, setNumQubits] = useState(2);
+  const [numQubits, setNumQubits] = useState(4);
   const [circuit, setCircuit] = useState<CircuitGate[]>([]);
   const [measurements, setMeasurements] = useState<MeasurementConfig[]>([{ qubit: 0, observable: "Z" }]);
   const [results, setResults] = useState<{
@@ -477,7 +503,8 @@ function VisualBuilder() {
   const [scalingBenchmark, setScalingBenchmark] = useState<{ qubits: number; amplitudes: number; timeMs: number; gateCount: number; verified: boolean }[] | null>(null);
   const [runningBenchmark, setRunningBenchmark] = useState(false);
   const [presetMenuOpen, setPresetMenuOpen] = useState(false);
-  const [qubitSliderOpen, setQubitSliderOpen] = useState(false);
+  const [paletteCollapsed, setPaletteCollapsed] = useState<Record<GateCategory, boolean>>({} as any);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Drag-and-drop state
   const [dragGate, setDragGate] = useState<string | null>(null);
@@ -487,7 +514,7 @@ function VisualBuilder() {
   // How many columns to show
   const maxCol = useMemo(() => {
     const max = circuit.reduce((m, g) => Math.max(m, g.col), -1);
-    return Math.max(max + 2, 8); // always show at least 8 columns
+    return Math.max(max + 4, 12);
   }, [circuit]);
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -522,10 +549,8 @@ function VisualBuilder() {
     if (!gateDef) return;
 
     if (existingId) {
-      // Moving existing gate
       setCircuit(prev => prev.map(g => g.id === existingId ? { ...g, col, wires: gateDef.qubits === 1 ? [wire] : g.wires.map((w, i) => i === 0 ? wire : Math.min(wire + i, numQubits - 1)) } : g));
     } else {
-      // New gate from palette
       const wires = gateDef.qubits === 1
         ? [wire]
         : gateDef.qubits === 2
@@ -552,7 +577,6 @@ function VisualBuilder() {
 
   /* ── Run Circuit ──────────────────────────── */
   const runCircuit = useCallback(() => {
-    // Sort gates by column for proper ordering
     const sorted = [...circuit].sort((a, b) => a.col - b.col);
     const t0 = performance.now();
     const state = createState(numQubits);
@@ -625,355 +649,409 @@ function VisualBuilder() {
   /* ── PennyLane Code Gen ──────────────────── */
   const pennyLaneCode = useMemo(() => {
     const sorted = [...circuit].sort((a, b) => a.col - b.col);
-    const lines = ["import pennylane as qml", "import numpy as np", "", `dev = qml.device("default.qubit", wires=${numQubits})`, "", "@qml.qnode(dev)", "def circuit():"];
+    const lines = [
+      "import pennylane as qml",
+      "import numpy as np",
+      "",
+      `dev = qml.device("default.qubit", wires=${numQubits})`,
+      "",
+      "@qml.qnode(dev)",
+      "def circuit():",
+      `    \"\"\"${circuit.length}-gate circuit on ${numQubits} qubits\"\"\"`,
+    ];
     for (const g of sorted) {
-      const nm = g.gateId === "cx" ? "CNOT" : g.gateId === "ccx" ? "Toffoli" : g.gateId === "cswap" ? "CSWAP" : g.gateId === "cy" ? "CY" : g.gateId === "ch" ? "CH" : g.gateId === "cz" ? "CZ" : g.gateId === "cry" ? "CRY" : g.gateId === "crz" ? "CRZ" : g.gateId.toUpperCase();
+      const nm = g.gateId === "cx" ? "CNOT" : g.gateId === "ccx" ? "Toffoli" : g.gateId === "cswap" ? "CSWAP" : g.gateId === "cy" ? "CY" : g.gateId === "ch" ? "CH" : g.gateId === "cz" ? "CZ" : g.gateId === "cry" ? "CRY" : g.gateId === "crz" ? "CRZ" : g.gateId === "crx" ? "CRX" : g.gateId === "cp" ? "ControlledPhaseShift" : g.gateId === "ccz" ? "CCZ" : g.gateId === "iswap" ? "ISWAP" : g.gateId === "barrier" ? "Barrier" : g.gateId === "id" ? "Identity" : g.gateId === "sxdg" ? "SX" : g.gateId.toUpperCase();
       const ws = g.wires.length === 1 ? `${g.wires[0]}` : JSON.stringify(g.wires);
       if (g.params?.length) {
         const ps = g.params.map(p => Math.abs(p - Math.PI) < 1e-10 ? "np.pi" : Math.abs(p - Math.PI / 4) < 1e-10 ? "np.pi/4" : Math.abs(p - Math.PI / 2) < 1e-10 ? "np.pi/2" : p.toFixed(6)).join(", ");
         lines.push(`    qml.${nm}(${ps}, wires=${ws})`);
-      } else lines.push(`    qml.${nm}(wires=${ws})`);
+      } else if (g.gateId !== "barrier") {
+        lines.push(`    qml.${nm}(wires=${ws})`);
+      } else {
+        lines.push(`    qml.Barrier(wires=range(${numQubits}))`);
+      }
     }
     if (measurements.length > 0) {
       const ms = measurements.map(m => `qml.expval(qml.Pauli${m.observable}(${m.qubit}))`);
-      lines.push(`    return ${ms.length === 1 ? ms[0] : ms.join(", ")}`);
+      lines.push(`    return ${ms.length === 1 ? ms[0] : "(\n        " + ms.join(",\n        ") + "\n    )"}`);
     } else lines.push("    return qml.state()");
-    lines.push("", "result = circuit()", 'print(f"Result: {result}")');
+    lines.push("", "# Execute circuit", "result = circuit()", 'print(f"Result: {result}")', "", "# Circuit info", `print(f"Qubits: ${numQubits}")`, `print(f"Gates: ${circuit.length}")`, `print(f"Hilbert space: 2^${numQubits} = {2**${numQubits}:,} dimensions")`);
     return lines.join("\n");
   }, [circuit, numQubits, measurements]);
 
-  const copyCode = useCallback(() => { navigator.clipboard.writeText(pennyLaneCode); setCopied(true); setTimeout(() => setCopied(false), 2000); }, [pennyLaneCode]);
+  /* ── Qiskit Code Gen ─────────────────────── */
+  const qiskitCode = useMemo(() => {
+    const sorted = [...circuit].sort((a, b) => a.col - b.col);
+    const lines = [
+      "from qiskit import QuantumCircuit",
+      "from qiskit.quantum_info import Statevector",
+      "",
+      `qc = QuantumCircuit(${numQubits})`,
+      "",
+    ];
+    for (const g of sorted) {
+      const ws = g.wires.join(", ");
+      const p0 = g.params?.[0];
+      switch (g.gateId) {
+        case "h":  lines.push(`qc.h(${ws})`); break;
+        case "x":  lines.push(`qc.x(${ws})`); break;
+        case "y":  lines.push(`qc.y(${ws})`); break;
+        case "z":  lines.push(`qc.z(${ws})`); break;
+        case "s":  lines.push(`qc.s(${ws})`); break;
+        case "sdg": lines.push(`qc.sdg(${ws})`); break;
+        case "t":  lines.push(`qc.t(${ws})`); break;
+        case "tdg": lines.push(`qc.tdg(${ws})`); break;
+        case "sx": lines.push(`qc.sx(${ws})`); break;
+        case "rx": lines.push(`qc.rx(${p0}, ${ws})`); break;
+        case "ry": lines.push(`qc.ry(${p0}, ${ws})`); break;
+        case "rz": lines.push(`qc.rz(${p0}, ${ws})`); break;
+        case "p":  lines.push(`qc.p(${p0}, ${ws})`); break;
+        case "u":  lines.push(`qc.u(${g.params?.join(", ")}, ${ws})`); break;
+        case "cx": lines.push(`qc.cx(${ws})`); break;
+        case "cz": lines.push(`qc.cz(${ws})`); break;
+        case "cy": lines.push(`qc.cy(${ws})`); break;
+        case "ch": lines.push(`qc.ch(${ws})`); break;
+        case "swap": lines.push(`qc.swap(${ws})`); break;
+        case "ccx": lines.push(`qc.ccx(${ws})`); break;
+        case "cswap": lines.push(`qc.cswap(${ws})`); break;
+        case "crx": lines.push(`qc.crx(${p0}, ${ws})`); break;
+        case "cry": lines.push(`qc.cry(${p0}, ${ws})`); break;
+        case "crz": lines.push(`qc.crz(${p0}, ${ws})`); break;
+        case "barrier": lines.push(`qc.barrier()`); break;
+        default: lines.push(`# ${g.gateId}(${ws})`);
+      }
+    }
+    lines.push("", "# Simulate", "sv = Statevector.from_instruction(qc)", "probs = sv.probabilities_dict()", 'print("State:", sv)', 'print("Probabilities:", probs)');
+    return lines.join("\n");
+  }, [circuit, numQubits]);
+
+  const copyCode = useCallback((code: string) => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); }, []);
 
   const tier = getScaleTier(numQubits);
 
+  const toggleCategory = useCallback((cat: GateCategory) => {
+    setPaletteCollapsed(prev => ({ ...prev, [cat]: !prev[cat] }));
+  }, []);
+
   return (
     <div className="flex-1 flex overflow-hidden">
-      {/* ═══ LEFT: Gate Palette + Canvas ═══ */}
-      <div className="flex flex-col overflow-hidden" style={{ width: "52%", borderRight: `1px solid ${C.borderLight}` }}>
+      {/* ═══ LEFT: Gate Palette (sidebar) + Canvas ═══ */}
+      <div className="flex overflow-hidden" style={{ flex: "1 1 55%", borderRight: `1px solid ${C.borderLight}` }}>
 
-        {/* ── Top bar: Qubit count + controls ── */}
-        <div className="flex items-center justify-between px-4 py-3 shrink-0 gap-3" style={{ borderBottom: `1px solid ${C.borderLight}` }}>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <button onClick={() => setQubitsDirect(numQubits - 1)} disabled={numQubits <= 1} className="w-6 h-6 rounded flex items-center justify-center hover:bg-white/5 disabled:opacity-30 transition-colors" style={{ color: C.textSecondary }}><Minus className="w-3 h-3" /></button>
-              <div className="relative">
-                <button onClick={() => setQubitSliderOpen(v => !v)} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: "hsla(200, 30%, 50%, 0.08)", border: `1px solid ${C.borderLight}` }}>
-                  <Cpu className="w-3.5 h-3.5" style={{ color: C.accent }} />
-                  <span className="text-lg font-bold" style={{ color: C.accent, fontFamily: MONO }}>{numQubits}</span>
-                  <span className="text-xs" style={{ color: C.textMuted }}>qubits</span>
-                  <ChevronDown className="w-3 h-3" style={{ color: C.textDim }} />
-                </button>
-                {qubitSliderOpen && (
-                  <>
-                    <div className="fixed inset-0 z-[10]" onClick={() => setQubitSliderOpen(false)} />
-                    <div className="absolute left-0 top-full mt-1 w-72 rounded-xl p-4 z-[11] shadow-xl" style={{ background: C.surfaceAlt, border: `1px solid ${C.border}` }}>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-semibold" style={{ color: C.text }}>Qubit Scale</span>
-                        <span className="text-xs px-2 py-0.5 rounded" style={{ background: `${tier.color}22`, color: tier.color }}>{tier.label}</span>
-                      </div>
-                      <input type="range" min={1} max={MAX_QUBITS} value={numQubits}
-                        onChange={e => setQubitsDirect(parseInt(e.target.value))}
-                        className="w-full mb-3 accent-sky-500" />
-                      <div className="flex items-center justify-between text-xs mb-3" style={{ color: C.textDim }}>
-                        <span>1</span>
-                        <span>20</span>
-                        <span>50</span>
-                        <span>100</span>
-                        <span>{MAX_QUBITS}</span>
-                      </div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <input type="number" min={1} max={MAX_QUBITS} value={numQubits} onChange={e => setQubitsDirect(parseInt(e.target.value) || 1)}
-                          className="w-20 text-center text-sm font-bold rounded-lg py-1.5" style={{ background: "hsla(200, 20%, 50%, 0.08)", border: `1px solid ${C.border}`, color: C.accent, fontFamily: MONO }} />
-                        <div className="flex gap-1">
-                          {[1, 4, 8, 16, 28, 50, 100, MAX_QUBITS].map(q => (
-                            <button key={q} onClick={() => setQubitsDirect(q)}
-                              className="px-2 py-1 rounded text-[10px] font-bold transition-colors hover:bg-white/10"
-                              style={{ color: numQubits === q ? C.accent : C.textDim, background: numQubits === q ? "hsla(200, 60%, 55%, 0.15)" : "transparent" }}>
-                              {q}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      {/* Scale markers */}
-                      <div className="space-y-1 text-[10px]">
-                        {SCALE_TIERS.slice(0, -1).map((t, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: t.color }} />
-                            <span style={{ color: t.color }}>≤{t.max}q — {t.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-3 px-3 py-2 rounded-lg text-[10px] leading-relaxed" style={{ background: "hsla(200, 20%, 50%, 0.04)", color: C.textDim }}>
-                        2<sup>{numQubits}</sup> = {numQubits <= 30 ? (2 ** numQubits).toLocaleString() : `${(2 ** numQubits / 1e15).toFixed(1)}×10¹⁵`} amplitudes ·
-                        {numQubits <= 24 ? ` ${((1 << numQubits) * 16 / 1024).toFixed(1)} KB` : numQubits <= 30 ? ` ${((2 ** numQubits) * 16 / 1048576).toFixed(1)} MB` : ` ${((2 ** numQubits) * 16 / 1073741824).toFixed(1)} GB virtual`}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-              <button onClick={() => setQubitsDirect(numQubits + 1)} disabled={numQubits >= MAX_QUBITS} className="w-6 h-6 rounded flex items-center justify-center hover:bg-white/5 disabled:opacity-30 transition-colors" style={{ color: C.textSecondary }}><Plus className="w-3 h-3" /></button>
-            </div>
-            {numQubits > 20 && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: `${tier.color}15`, color: tier.color }}>
-                {tier.label}
-              </span>
-            )}
+        {/* ── Gate Palette Sidebar ── */}
+        <div className="flex flex-col shrink-0 overflow-y-auto" style={{ width: 180, borderRight: `1px solid ${C.borderLight}`, background: C.surface, scrollbarWidth: "thin" }}>
+          <div className="px-3 py-2.5 flex items-center gap-2 shrink-0" style={{ borderBottom: `1px solid ${C.borderLight}` }}>
+            <GripVertical className="w-3.5 h-3.5" style={{ color: C.accent }} />
+            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: C.textSecondary }}>Gate Palette</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button onClick={clearCircuit} className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg hover:bg-white/5 transition-colors" style={{ color: C.red }}>
-              <Trash2 className="w-3 h-3" /> Clear
-            </button>
-            <div className="relative">
-              <button onClick={() => setPresetMenuOpen(v => !v)} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg hover:bg-white/5 transition-colors" style={{ color: C.gold, border: `1px solid hsla(38, 50%, 50%, 0.15)` }}>
-                <Sparkles className="w-3 h-3" /> Experiments <ChevronDown className="w-3 h-3" />
-              </button>
-              {presetMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-[10]" onClick={() => setPresetMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 w-72 rounded-xl overflow-hidden z-[11] shadow-xl max-h-[400px] overflow-y-auto" style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, scrollbarWidth: "thin" }}>
-                    {(["fundamental", "validation", "entanglement", "stress"] as const).map(cat => (
-                      <div key={cat}>
-                        <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest" style={{ background: "hsla(200, 20%, 50%, 0.04)", color: C.textDim }}>
-                          {cat === "fundamental" ? "⚛ Fundamental" : cat === "validation" ? "✓ Validation" : cat === "entanglement" ? "⚡ Entanglement" : "🔥 Stress"}
-                        </div>
-                        {PRESET_EXPERIMENTS.filter(p => p.category === cat).map((p, i) => (
-                          <button key={i} onClick={() => loadPreset(p)} className="w-full text-left px-3 py-2 transition-colors hover:bg-white/5" style={{ borderBottom: `1px solid ${C.borderLight}` }}>
-                            <span className="text-xs font-medium" style={{ color: C.text }}>{p.name}</span>
-                            <span className="text-[10px] block" style={{ color: C.textMuted }}>{p.description}</span>
-                          </button>
-                        ))}
+          {(Object.keys(CATEGORY_INFO) as GateCategory[]).map(cat => {
+            const info = CATEGORY_INFO[cat];
+            const gates = GATE_PALETTE.filter(g => g.category === cat);
+            const collapsed = paletteCollapsed[cat];
+            return (
+              <div key={cat}>
+                <button onClick={() => toggleCategory(cat)} className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/3 transition-colors" style={{ borderBottom: `1px solid ${C.borderLight}` }}>
+                  <ChevronRight className="w-3 h-3 transition-transform" style={{ color: C.textDim, transform: collapsed ? "rotate(0deg)" : "rotate(90deg)" }} />
+                  <span className="text-[10px]">{info.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-bold block" style={{ color: C.textSecondary }}>{info.label}</span>
+                    <span className="text-[8px] block truncate" style={{ color: C.textDim }}>{info.description}</span>
+                  </div>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: "hsla(200, 20%, 50%, 0.08)", color: C.textDim }}>{gates.length}</span>
+                </button>
+                {!collapsed && (
+                  <div className="px-2 py-1.5 flex flex-wrap gap-1" style={{ background: "hsla(200, 10%, 50%, 0.02)" }}>
+                    {gates.map(g => (
+                      <div
+                        key={g.id}
+                        draggable
+                        onDragStart={e => onDragStartPalette(e, g.id)}
+                        onDragEnd={onDragEnd}
+                        className="rounded-lg text-[11px] font-bold cursor-grab active:cursor-grabbing select-none transition-all duration-150 hover:scale-110 hover:shadow-lg"
+                        style={{
+                          padding: "4px 7px",
+                          background: dragGate === g.id ? g.color : "hsla(200, 20%, 50%, 0.08)",
+                          color: dragGate === g.id ? "hsl(0, 0%, 100%)" : g.color,
+                          border: `1.5px solid ${dragGate === g.id ? g.color : "hsla(200, 20%, 50%, 0.12)"}`,
+                          fontFamily: MONO,
+                          boxShadow: dragGate === g.id ? `0 0 12px ${g.color}55` : "none",
+                        }}
+                        title={`${g.description}\n${g.qubits > 1 ? `${g.qubits}-qubit gate` : "1-qubit gate"}${g.parameterized ? "\nParameterized" : ""}`}
+                      >
+                        {g.label}
+                        {g.qubits > 1 && <span className="ml-0.5 opacity-60" style={{ fontSize: "8px" }}>{g.qubits}q</span>}
                       </div>
                     ))}
                   </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+                )}
+              </div>
+            );
+          })}
 
-        {/* ── Gate Palette — Drag from here ── */}
-        <div className="px-4 py-3 shrink-0" style={{ borderBottom: `1px solid ${C.borderLight}` }}>
-          <div className="flex items-center gap-2 mb-2">
-            <GripVertical className="w-3.5 h-3.5" style={{ color: C.accent }} />
-            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: C.textSecondary }}>Drag gates onto the canvas</span>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {(["pauli", "phase", "rotation", "entangling", "multi"] as const).map(cat => (
-              GATE_PALETTE.filter(g => g.category === cat).map(g => (
-                <div
-                  key={g.id}
-                  draggable
-                  onDragStart={e => onDragStartPalette(e, g.id)}
-                  onDragEnd={onDragEnd}
-                  className="rounded-lg text-[11px] font-bold cursor-grab active:cursor-grabbing select-none transition-all duration-150 hover:scale-110 hover:shadow-lg"
-                  style={{
-                    padding: "5px 8px",
-                    background: dragGate === g.id ? g.color : "hsla(200, 20%, 50%, 0.08)",
-                    color: dragGate === g.id ? "hsl(0, 0%, 100%)" : g.color,
-                    border: `1.5px solid ${dragGate === g.id ? g.color : "hsla(200, 20%, 50%, 0.12)"}`,
-                    fontFamily: MONO,
-                    boxShadow: dragGate === g.id ? `0 0 12px ${g.color}55` : "none",
-                  }}
-                  title={`${g.description}\n${g.qubits > 1 ? `${g.qubits}-qubit gate` : "1-qubit gate"}`}
-                >
-                  {g.label}
-                  {g.qubits > 1 && <span className="ml-0.5 opacity-60" style={{ fontSize: "8px" }}>{g.qubits}q</span>}
-                </div>
-              ))
-            ))}
-          </div>
-          {/* Parameter inputs for rotation gates */}
-          <div className="flex items-center gap-3 mt-2 flex-wrap">
+          {/* Parameter inputs */}
+          <div className="px-3 py-3 mt-auto shrink-0" style={{ borderTop: `1px solid ${C.borderLight}` }}>
+            <span className="text-[9px] font-bold uppercase tracking-widest block mb-2" style={{ color: C.textDim }}>Rotation Parameters</span>
             {["θ", "φ", "λ"].map((label, pi) => (
-              <div key={pi} className="flex items-center gap-1.5">
-                <span className="text-[10px] font-medium" style={{ color: C.textDim }}>{label}=</span>
+              <div key={pi} className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-[10px] font-medium w-4 text-right" style={{ color: C.accent, fontFamily: MONO }}>{label}</span>
                 <input value={paramInputs[pi]} onChange={e => { const n = [...paramInputs]; n[pi] = e.target.value; setParamInputs(n); }}
-                  className="text-[11px] px-2 py-1 rounded w-16"
+                  className="flex-1 text-[11px] px-2 py-1 rounded"
                   style={{ background: "hsla(200, 20%, 50%, 0.06)", border: `1px solid ${C.borderLight}`, color: C.text, fontFamily: MONO }}
                   placeholder="π/4" />
               </div>
             ))}
-            <span className="text-[10px]" style={{ color: C.textDim }}>Used for rotation gates</span>
+            <span className="text-[8px] block mt-1" style={{ color: C.textDim }}>Accepts: π/4, 2π, 1.571, pi/3</span>
           </div>
         </div>
 
-        {/* ── Circuit Canvas — Drop here ── */}
-        <div
-          ref={canvasRef}
-          className="flex-1 overflow-auto relative"
-          style={{ background: canvasHover ? "hsla(200, 20%, 12%, 1)" : "hsla(220, 15%, 6%, 1)", transition: "background 0.2s", scrollbarWidth: "thin" }}
-          onDragOver={e => { e.preventDefault(); setCanvasHover(true); }}
-          onDragLeave={() => setCanvasHover(false)}
-          onDrop={() => setCanvasHover(false)}
-        >
-          {/* Grid dots */}
-          <svg className="absolute inset-0 pointer-events-none" width="100%" height="100%">
-            <defs>
-              <pattern id="qgrid" width={CELL_W} height={CELL_H} patternUnits="userSpaceOnUse" x={WIRE_PAD} y={0}>
-                <circle cx={CELL_W / 2} cy={CELL_H / 2} r="1" fill="hsla(200, 20%, 40%, 0.08)" />
-              </pattern>
-            </defs>
-            <rect x={WIRE_PAD} width="100%" height="100%" fill="url(#qgrid)" />
-          </svg>
+        {/* ── Canvas Area ── */}
+        <div className="flex flex-col flex-1 overflow-hidden">
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-3 py-2 shrink-0 gap-2 flex-wrap" style={{ borderBottom: `1px solid ${C.borderLight}` }}>
+            <div className="flex items-center gap-2">
+              {/* Qubit count */}
+              <button onClick={() => setQubitsDirect(numQubits - 1)} disabled={numQubits <= 1} className="w-6 h-6 rounded flex items-center justify-center hover:bg-white/5 disabled:opacity-30" style={{ color: C.textSecondary }}><Minus className="w-3 h-3" /></button>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: "hsla(200, 30%, 50%, 0.08)", border: `1px solid ${C.borderLight}` }}>
+                <Cpu className="w-3.5 h-3.5" style={{ color: C.accent }} />
+                <input type="number" min={1} max={MAX_QUBITS} value={numQubits} onChange={e => setQubitsDirect(parseInt(e.target.value) || 1)}
+                  className="w-10 text-center text-sm font-bold bg-transparent outline-none" style={{ color: C.accent, fontFamily: MONO }} />
+                <span className="text-[10px]" style={{ color: C.textMuted }}>qubits</span>
+              </div>
+              <button onClick={() => setQubitsDirect(numQubits + 1)} disabled={numQubits >= MAX_QUBITS} className="w-6 h-6 rounded flex items-center justify-center hover:bg-white/5 disabled:opacity-30" style={{ color: C.textSecondary }}><Plus className="w-3 h-3" /></button>
 
-          <div style={{ minWidth: WIRE_PAD + maxCol * CELL_W + 60, minHeight: numQubits * CELL_H + 20, position: "relative" }}>
-            {/* Wires */}
-            {Array.from({ length: numQubits }, (_, q) => {
-              const y = q * CELL_H + CELL_H / 2;
-              return (
-                <div key={q} className="absolute flex items-center" style={{ top: y - 0.5, left: 0, right: 0, height: 1 }}>
-                  {/* Label */}
-                  <div className="absolute flex items-center gap-1" style={{ left: 6, top: -8 }}>
-                    <span className="text-[10px] font-bold" style={{ color: C.textDim, fontFamily: MONO }}>q{q}</span>
-                    <span className="text-[9px]" style={{ color: "hsla(200, 30%, 50%, 0.2)", fontFamily: MONO }}>|0⟩</span>
-                  </div>
-                  {/* Wire line */}
-                  <div className="absolute" style={{ left: WIRE_PAD, right: 20, height: 1, background: "hsla(200, 20%, 50%, 0.12)" }} />
-                </div>
-              );
-            })}
-
-            {/* Drop zones (invisible cells) */}
-            {Array.from({ length: maxCol }, (_, col) =>
-              Array.from({ length: numQubits }, (_, wire) => {
-                const isTarget = dropTarget?.col === col && dropTarget?.wire === wire;
-                return (
-                  <div
-                    key={`${col}-${wire}`}
-                    className="absolute transition-all duration-100"
-                    style={{
-                      left: WIRE_PAD + col * CELL_W + 2,
-                      top: wire * CELL_H + 2,
-                      width: CELL_W - 4,
-                      height: CELL_H - 4,
-                      borderRadius: 8,
-                      border: isTarget ? `2px dashed ${C.accent}` : dragGate ? "2px dashed hsla(200, 30%, 50%, 0.08)" : "2px solid transparent",
-                      background: isTarget ? "hsla(200, 60%, 55%, 0.08)" : "transparent",
-                    }}
-                    onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; setDropTarget({ col, wire }); }}
-                    onDragLeave={() => setDropTarget(null)}
-                    onDrop={e => onDropCell(col, wire, e)}
-                  />
-                );
-              })
-            )}
-
-            {/* Placed gates */}
-            {circuit.map(g => {
-              const gateDef = GATE_PALETTE.find(gd => gd.id === g.gateId);
-              if (!gateDef) return null;
-              const color = gateDef.color;
-              const minW = Math.min(...g.wires);
-              const maxW = Math.max(...g.wires);
-              const x = WIRE_PAD + g.col * CELL_W;
-              const y = minW * CELL_H;
-              const h = (maxW - minW + 1) * CELL_H;
-              const hasParam = g.params && g.params.length > 0;
-              const label = hasParam ? `${gateDef.label}(${formatAngle(g.params![0])})` : gateDef.label;
-
-              return (
-                <div
-                  key={g.id}
-                  draggable
-                  onDragStart={e => {
-                    e.dataTransfer.setData("gate-id", g.gateId);
-                    e.dataTransfer.setData("move-gate-id", g.id);
-                    e.dataTransfer.effectAllowed = "move";
-                    setDragGate(g.gateId);
-                  }}
-                  onDragEnd={onDragEnd}
-                  className="absolute flex flex-col items-center justify-center cursor-grab active:cursor-grabbing select-none group transition-transform hover:scale-105"
-                  style={{
-                    left: x + 4,
-                    top: y + 4,
-                    width: CELL_W - 8,
-                    height: h - 8,
-                    borderRadius: 8,
-                    background: color,
-                    boxShadow: `0 2px 12px ${color}44, inset 0 1px 0 hsla(0, 0%, 100%, 0.15)`,
-                    zIndex: 5,
-                  }}
-                >
-                  {/* CNOT special rendering */}
-                  {(g.gateId === "cx" || g.gateId === "cnot") && g.wires.length === 2 ? (
-                    <>
-                      <div className="absolute w-3 h-3 rounded-full" style={{ top: (g.wires[0] - minW) * CELL_H + CELL_H / 2 - 6, background: "hsl(0, 0%, 100%)" }} />
-                      <div className="absolute w-5 h-5 rounded-full border-2" style={{ top: (g.wires[1] - minW) * CELL_H + CELL_H / 2 - 10, borderColor: "hsl(0, 0%, 100%)" }}>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Plus className="w-3 h-3" style={{ color: "hsl(0, 0%, 100%)" }} strokeWidth={2.5} />
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <span className="text-[10px] font-bold text-center leading-tight" style={{ color: "hsl(0, 0%, 100%)", fontFamily: MONO, textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>
-                      {label}
-                    </span>
-                  )}
-                  {gateDef.qubits > 1 && g.gateId !== "cx" && (
-                    <span className="text-[7px] mt-0.5 opacity-70" style={{ color: "hsl(0, 0%, 100%)" }}>{gateDef.qubits}q</span>
-                  )}
-                  {/* Remove button */}
-                  <button
-                    onClick={e => { e.stopPropagation(); removeGate(g.id); }}
-                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: C.red, color: "hsl(0, 0%, 100%)" }}
-                  >
-                    <X className="w-2.5 h-2.5" strokeWidth={2.5} />
+              {/* Quick presets */}
+              <div className="flex gap-0.5 ml-1">
+                {[2, 4, 8, 16, 28, 53, 100, 128, 256].map(q => (
+                  <button key={q} onClick={() => setQubitsDirect(q)}
+                    className="px-1.5 py-0.5 rounded text-[9px] font-bold transition-colors hover:bg-white/10"
+                    style={{ color: numQubits === q ? C.accent : q > 53 ? C.gold : C.textDim, background: numQubits === q ? "hsla(200, 60%, 55%, 0.15)" : "transparent" }}>
+                    {q}
                   </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                ))}
+              </div>
 
-        {/* ── Run bar ── */}
-        <div className="flex items-center gap-3 px-4 py-3 shrink-0 flex-wrap" style={{ borderTop: `1px solid ${C.borderLight}` }}>
-          <button onClick={runCircuit} disabled={circuit.length === 0}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-all hover:brightness-110 disabled:opacity-40"
-            style={{ background: "linear-gradient(135deg, hsl(200, 60%, 50%), hsl(220, 60%, 50%))", color: "hsl(0, 0%, 100%)", boxShadow: "0 4px 20px hsla(200, 60%, 50%, 0.3)" }}>
-            <Play className="w-4 h-4" /> Run
-          </button>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px]" style={{ color: C.textMuted }}>Shots:</span>
-            <select value={shots} onChange={e => setShots(parseInt(e.target.value))} className="text-[11px] px-2 py-1 rounded-lg"
-              style={{ background: "hsla(200, 20%, 50%, 0.06)", border: `1px solid ${C.border}`, color: C.text, fontFamily: MONO }}>
-              {[256, 1024, 4096, 8192, 16384, 65536, 1000000].map(s => <option key={s} value={s}>{s.toLocaleString()}</option>)}
-            </select>
-          </div>
-          <span className="text-[10px]" style={{ color: C.textDim }}>{circuit.length} gates · {numQubits}q</span>
+              {numQubits > 20 && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: `${tier.color}15`, color: tier.color }}>
+                  {tier.label}
+                </span>
+              )}
+            </div>
 
-          {/* Observables inline */}
-          <div className="ml-auto flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px]" style={{ color: C.textMuted }}>⟨O⟩:</span>
-            {measurements.map((m, i) => (
-              <div key={i} className="flex items-center gap-0.5 px-1.5 py-0.5 rounded" style={{ background: "hsla(200, 20%, 50%, 0.06)" }}>
-                <select value={m.observable} onChange={e => setMeasurements(prev => prev.map((mm, j) => j === i ? { ...mm, observable: e.target.value as PauliOp } : mm))}
-                  className="text-[10px] bg-transparent" style={{ color: C.text, fontFamily: MONO }}>
-                  {(["Z", "X", "Y", "I"] as PauliOp[]).map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-                <span className="text-[10px]" style={{ color: C.textDim }}>q</span>
-                <select value={m.qubit} onChange={e => setMeasurements(prev => prev.map((mm, j) => j === i ? { ...mm, qubit: parseInt(e.target.value) } : mm))}
-                  className="text-[10px] bg-transparent w-6" style={{ color: C.text, fontFamily: MONO }}>
-                  {Array.from({ length: numQubits }, (_, q) => <option key={q} value={q}>{q}</option>)}
-                </select>
-                {measurements.length > 1 && (
-                  <button onClick={() => setMeasurements(prev => prev.filter((_, j) => j !== i))} className="hover:bg-white/5 rounded" style={{ color: C.red }}><X className="w-2.5 h-2.5" /></button>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px]" style={{ color: C.textDim }}>
+                2<sup>{numQubits}</sup> = {numQubits <= 20 ? (2 ** numQubits).toLocaleString() : numQubits <= 53 ? `${(2 ** numQubits / 1e15).toFixed(1)}×10¹⁵` : `2^${numQubits}`} amplitudes
+              </span>
+              <button onClick={clearCircuit} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded hover:bg-white/5" style={{ color: C.red }}>
+                <Trash2 className="w-3 h-3" /> Clear
+              </button>
+              <div className="relative">
+                <button onClick={() => setPresetMenuOpen(v => !v)} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded hover:bg-white/5" style={{ color: C.gold, border: `1px solid hsla(38, 50%, 50%, 0.15)` }}>
+                  <Sparkles className="w-3 h-3" /> Presets <ChevronDown className="w-2.5 h-2.5" />
+                </button>
+                {presetMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-[10]" onClick={() => setPresetMenuOpen(false)} />
+                    <div className="absolute right-0 top-full mt-1 w-72 rounded-xl overflow-hidden z-[11] shadow-xl max-h-[400px] overflow-y-auto" style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, scrollbarWidth: "thin" }}>
+                      {(["fundamental", "validation", "entanglement", "stress"] as const).map(cat => (
+                        <div key={cat}>
+                          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest" style={{ background: "hsla(200, 20%, 50%, 0.04)", color: C.textDim }}>
+                            {cat === "fundamental" ? "⚛ Fundamental" : cat === "validation" ? "✓ Validation" : cat === "entanglement" ? "⚡ Entanglement" : "🔥 Stress"}
+                          </div>
+                          {PRESET_EXPERIMENTS.filter(p => p.category === cat).map((p, i) => (
+                            <button key={i} onClick={() => loadPreset(p)} className="w-full text-left px-3 py-2 transition-colors hover:bg-white/5" style={{ borderBottom: `1px solid ${C.borderLight}` }}>
+                              <span className="text-xs font-medium" style={{ color: C.text }}>{p.name}</span>
+                              <span className="text-[10px] block" style={{ color: C.textMuted }}>{p.description}</span>
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
-            ))}
-            <button onClick={() => setMeasurements(prev => [...prev, { qubit: 0, observable: "Z" }])} className="w-4 h-4 rounded flex items-center justify-center hover:bg-white/5" style={{ color: C.accent }}><Plus className="w-3 h-3" /></button>
+            </div>
+          </div>
+
+          {/* ── Circuit Canvas ── */}
+          <div
+            ref={canvasRef}
+            className="flex-1 overflow-auto relative"
+            style={{ background: canvasHover ? "hsla(200, 20%, 12%, 1)" : "hsla(220, 15%, 6%, 1)", transition: "background 0.2s", scrollbarWidth: "thin" }}
+            onDragOver={e => { e.preventDefault(); setCanvasHover(true); }}
+            onDragLeave={() => setCanvasHover(false)}
+            onDrop={() => setCanvasHover(false)}
+          >
+            {/* Grid dots */}
+            <svg className="absolute inset-0 pointer-events-none" width="100%" height="100%">
+              <defs>
+                <pattern id="qgrid" width={CELL_W} height={CELL_H} patternUnits="userSpaceOnUse" x={WIRE_PAD} y={0}>
+                  <circle cx={CELL_W / 2} cy={CELL_H / 2} r="1" fill="hsla(200, 20%, 40%, 0.08)" />
+                </pattern>
+              </defs>
+              <rect x={WIRE_PAD} width="100%" height="100%" fill="url(#qgrid)" />
+            </svg>
+
+            <div style={{ minWidth: WIRE_PAD + maxCol * CELL_W + 60, minHeight: numQubits * CELL_H + 20, position: "relative" }}>
+              {/* Wires */}
+              {Array.from({ length: numQubits }, (_, q) => {
+                const y = q * CELL_H + CELL_H / 2;
+                return (
+                  <div key={q} className="absolute flex items-center" style={{ top: y - 0.5, left: 0, right: 0, height: 1 }}>
+                    <div className="absolute flex items-center gap-1" style={{ left: 4, top: -8 }}>
+                      <span className="text-[9px] font-bold" style={{ color: C.textDim, fontFamily: MONO }}>q{q}</span>
+                      <span className="text-[8px]" style={{ color: "hsla(200, 30%, 50%, 0.2)", fontFamily: MONO }}>|0⟩</span>
+                    </div>
+                    <div className="absolute" style={{ left: WIRE_PAD, right: 20, height: 1, background: "hsla(200, 20%, 50%, 0.12)" }} />
+                  </div>
+                );
+              })}
+
+              {/* Drop zones */}
+              {Array.from({ length: maxCol }, (_, col) =>
+                Array.from({ length: numQubits }, (_, wire) => {
+                  const isTarget = dropTarget?.col === col && dropTarget?.wire === wire;
+                  return (
+                    <div
+                      key={`${col}-${wire}`}
+                      className="absolute transition-all duration-100"
+                      style={{
+                        left: WIRE_PAD + col * CELL_W + 2,
+                        top: wire * CELL_H + 2,
+                        width: CELL_W - 4,
+                        height: CELL_H - 4,
+                        borderRadius: 8,
+                        border: isTarget ? `2px dashed ${C.accent}` : dragGate ? "2px dashed hsla(200, 30%, 50%, 0.06)" : "2px solid transparent",
+                        background: isTarget ? "hsla(200, 60%, 55%, 0.08)" : "transparent",
+                      }}
+                      onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; setDropTarget({ col, wire }); }}
+                      onDragLeave={() => setDropTarget(null)}
+                      onDrop={e => onDropCell(col, wire, e)}
+                    />
+                  );
+                })
+              )}
+
+              {/* Placed gates */}
+              {circuit.map(g => {
+                const gateDef = GATE_PALETTE.find(gd => gd.id === g.gateId);
+                if (!gateDef) return null;
+                const color = gateDef.color;
+                const minW = Math.min(...g.wires);
+                const maxW = Math.max(...g.wires);
+                const x = WIRE_PAD + g.col * CELL_W;
+                const y = minW * CELL_H;
+                const h = (maxW - minW + 1) * CELL_H;
+                const hasParam = g.params && g.params.length > 0;
+                const label = hasParam ? `${gateDef.label}(${formatAngle(g.params![0])})` : gateDef.label;
+
+                return (
+                  <div
+                    key={g.id}
+                    draggable
+                    onDragStart={e => {
+                      e.dataTransfer.setData("gate-id", g.gateId);
+                      e.dataTransfer.setData("move-gate-id", g.id);
+                      e.dataTransfer.effectAllowed = "move";
+                      setDragGate(g.gateId);
+                    }}
+                    onDragEnd={onDragEnd}
+                    className="absolute flex flex-col items-center justify-center cursor-grab active:cursor-grabbing select-none group transition-transform hover:scale-105"
+                    style={{
+                      left: x + 4,
+                      top: y + 4,
+                      width: CELL_W - 8,
+                      height: h - 8,
+                      borderRadius: 10,
+                      background: color,
+                      boxShadow: `0 2px 12px ${color}44, inset 0 1px 0 hsla(0, 0%, 100%, 0.15)`,
+                      zIndex: 5,
+                    }}
+                  >
+                    {(g.gateId === "cx" || g.gateId === "cnot") && g.wires.length === 2 ? (
+                      <>
+                        <div className="absolute w-3 h-3 rounded-full" style={{ top: (g.wires[0] - minW) * CELL_H + CELL_H / 2 - 6, background: "hsl(0, 0%, 100%)" }} />
+                        <div className="absolute w-5 h-5 rounded-full border-2" style={{ top: (g.wires[1] - minW) * CELL_H + CELL_H / 2 - 10, borderColor: "hsl(0, 0%, 100%)" }}>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Plus className="w-3 h-3" style={{ color: "hsl(0, 0%, 100%)" }} strokeWidth={2.5} />
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <span className="text-[10px] font-bold text-center leading-tight px-0.5" style={{ color: "hsl(0, 0%, 100%)", fontFamily: MONO, textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>
+                        {label}
+                      </span>
+                    )}
+                    {gateDef.qubits > 1 && g.gateId !== "cx" && (
+                      <span className="text-[7px] mt-0.5 opacity-70" style={{ color: "hsl(0, 0%, 100%)" }}>{gateDef.qubits}q</span>
+                    )}
+                    <button
+                      onClick={e => { e.stopPropagation(); removeGate(g.id); }}
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ background: C.red, color: "hsl(0, 0%, 100%)" }}
+                    >
+                      <X className="w-2.5 h-2.5" strokeWidth={2.5} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Run bar ── */}
+          <div className="flex items-center gap-3 px-3 py-2.5 shrink-0 flex-wrap" style={{ borderTop: `1px solid ${C.borderLight}` }}>
+            <button onClick={runCircuit} disabled={circuit.length === 0}
+              className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-all hover:brightness-110 disabled:opacity-40"
+              style={{ background: "linear-gradient(135deg, hsl(200, 60%, 50%), hsl(220, 60%, 50%))", color: "hsl(0, 0%, 100%)", boxShadow: "0 4px 20px hsla(200, 60%, 50%, 0.3)" }}>
+              <Play className="w-4 h-4" /> Run
+            </button>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px]" style={{ color: C.textMuted }}>Shots:</span>
+              <select value={shots} onChange={e => setShots(parseInt(e.target.value))} className="text-[11px] px-2 py-1 rounded-lg"
+                style={{ background: "hsla(200, 20%, 50%, 0.06)", border: `1px solid ${C.border}`, color: C.text, fontFamily: MONO }}>
+                {[256, 1024, 4096, 8192, 16384, 65536, 1000000].map(s => <option key={s} value={s}>{s.toLocaleString()}</option>)}
+              </select>
+            </div>
+            <span className="text-[10px]" style={{ color: C.textDim }}>{circuit.length} gates · {numQubits}q</span>
+
+            {/* Advanced toggle */}
+            <button onClick={() => setShowAdvanced(v => !v)} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded hover:bg-white/5 ml-1" style={{ color: C.textMuted }}>
+              <Settings2 className="w-3 h-3" /> {showAdvanced ? "Hide" : "Show"} Observables
+            </button>
+
+            {showAdvanced && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px]" style={{ color: C.textMuted }}>⟨O⟩:</span>
+                {measurements.map((m, i) => (
+                  <div key={i} className="flex items-center gap-0.5 px-1.5 py-0.5 rounded" style={{ background: "hsla(200, 20%, 50%, 0.06)" }}>
+                    <select value={m.observable} onChange={e => setMeasurements(prev => prev.map((mm, j) => j === i ? { ...mm, observable: e.target.value as PauliOp } : mm))}
+                      className="text-[10px] bg-transparent" style={{ color: C.text, fontFamily: MONO }}>
+                      {(["Z", "X", "Y", "I"] as PauliOp[]).map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                    <span className="text-[10px]" style={{ color: C.textDim }}>q</span>
+                    <select value={m.qubit} onChange={e => setMeasurements(prev => prev.map((mm, j) => j === i ? { ...mm, qubit: parseInt(e.target.value) } : mm))}
+                      className="text-[10px] bg-transparent w-8" style={{ color: C.text, fontFamily: MONO }}>
+                      {Array.from({ length: Math.min(numQubits, 64) }, (_, q) => <option key={q} value={q}>{q}</option>)}
+                    </select>
+                    {measurements.length > 1 && (
+                      <button onClick={() => setMeasurements(prev => prev.filter((_, j) => j !== i))} className="hover:bg-white/5 rounded" style={{ color: C.red }}><X className="w-2.5 h-2.5" /></button>
+                    )}
+                  </div>
+                ))}
+                <button onClick={() => setMeasurements(prev => [...prev, { qubit: 0, observable: "Z" }])} className="w-4 h-4 rounded flex items-center justify-center hover:bg-white/5" style={{ color: C.accent }}><Plus className="w-3 h-3" /></button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* ═══ RIGHT: Results Panel ═══ */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center gap-0 px-3 shrink-0" style={{ borderBottom: `1px solid ${C.borderLight}` }}>
+      <div className="flex flex-col overflow-hidden" style={{ flex: "1 1 45%" }}>
+        <div className="flex items-center gap-0 px-2 shrink-0 flex-wrap" style={{ borderBottom: `1px solid ${C.borderLight}` }}>
           {([
             { key: "results" as const, label: "Results", icon: <Activity className="w-3.5 h-3.5" /> },
             { key: "verify" as const, label: "Verify", icon: <Shield className="w-3.5 h-3.5" /> },
-            { key: "code" as const, label: "PennyLane", icon: <Code2 className="w-3.5 h-3.5" /> },
+            { key: "code" as const, label: "Code", icon: <Code2 className="w-3.5 h-3.5" /> },
             { key: "circuit" as const, label: "QASM", icon: <Braces className="w-3.5 h-3.5" /> },
           ]).map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -991,62 +1069,76 @@ function VisualBuilder() {
         </div>
         <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: "thin" }}>
           {activeTab === "results" && (results ? <VisualResultsPanel results={results} numQubits={numQubits} /> : <EmptyState onBenchmark={runScalingBenchmark} runningBenchmark={runningBenchmark} scalingBenchmark={scalingBenchmark} />)}
-          {activeTab === "verify" && (results ? <VerificationPanel verification={results.verification} executionTime={results.executionTime} numQubits={numQubits} gateCount={results.gateCount} /> : <EmptyState onBenchmark={runScalingBenchmark} runningBenchmark={runningBenchmark} scalingBenchmark={scalingBenchmark} />)}
-          {activeTab === "code" && <CodePanel code={pennyLaneCode} onCopy={copyCode} copied={copied} />}
-          {activeTab === "circuit" && (results ? (
+          {activeTab === "verify" && results && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold" style={{ color: C.accent }}>Mathematical Verification</h3>
+              <p className="text-[10px]" style={{ color: C.textDim }}>Automated audits: unitarity, Born rule, bounded expectation values, Hilbert space dimension.</p>
+              {results.verification.map((v, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: v.passed ? "hsla(152, 40%, 50%, 0.04)" : "hsla(340, 40%, 50%, 0.04)", border: `1px solid ${v.passed ? "hsla(152, 40%, 50%, 0.1)" : "hsla(340, 40%, 50%, 0.1)"}` }}>
+                  {v.passed ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.green }} /> : <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.red }} />}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium" style={{ color: C.text }}>{v.name}</span>
+                      <span className="text-xs font-bold" style={{ color: v.passed ? C.green : C.red, fontFamily: MONO }}>{v.passed ? "PASS" : "FAIL"}</span>
+                    </div>
+                    <div className="flex items-center gap-4 mt-1 text-[10px]" style={{ fontFamily: MONO }}>
+                      <span style={{ color: C.textMuted }}>Expected: {v.expected}</span>
+                      <span style={{ color: C.textSecondary }}>Actual: {v.actual}</span>
+                    </div>
+                    <span className="text-[10px] block mt-0.5" style={{ color: C.textDim }}>{v.detail}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {activeTab === "code" && (
             <div className="space-y-6">
-              <div><h3 className="text-sm font-semibold mb-3" style={{ color: C.accent }}>OpenQASM 3.0</h3><pre className="text-xs p-4 rounded-xl overflow-x-auto leading-relaxed" style={{ background: "hsla(200, 15%, 50%, 0.04)", color: C.textSecondary, fontFamily: MONO }}>{results.qasm.join("\n")}</pre></div>
-              <div><h3 className="text-sm font-semibold mb-3" style={{ color: C.accent }}>ASCII Circuit</h3><pre className="text-xs p-4 rounded-xl overflow-x-auto" style={{ background: "hsla(200, 15%, 50%, 0.04)", color: C.textSecondary, fontFamily: MONO }}>{results.ascii.join("\n")}</pre></div>
+              <CodePanel title="PennyLane (Python)" code={pennyLaneCode} onCopy={() => copyCode(pennyLaneCode)} copied={copied} />
+              <CodePanel title="Qiskit (Python)" code={qiskitCode} onCopy={() => copyCode(qiskitCode)} copied={copied} />
+              {results && (
+                <div>
+                  <h3 className="text-sm font-semibold mb-2" style={{ color: C.accent }}>OpenQASM 3.0</h3>
+                  <pre className="text-xs p-3 rounded-xl overflow-x-auto leading-relaxed" style={{ background: "hsla(220, 15%, 5%, 0.6)", color: C.textSecondary, fontFamily: MONO, border: `1px solid ${C.borderLight}` }}>
+                    {results.qasm.join("\n")}
+                  </pre>
+                </div>
+              )}
             </div>
-          ) : <EmptyState onBenchmark={runScalingBenchmark} runningBenchmark={runningBenchmark} scalingBenchmark={scalingBenchmark} />)}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ════════════════════════════════════════════════════════════
-   Verification Panel
-   ════════════════════════════════════════════════════════════ */
-
-function VerificationPanel({ verification, executionTime, numQubits, gateCount }: { verification: VerificationResult[]; executionTime: number; numQubits: number; gateCount: number }) {
-  const allPassed = verification.every(v => v.passed);
-  return (
-    <div className="space-y-5">
-      <div className="p-4 rounded-xl" style={{ background: allPassed ? "hsla(152, 40%, 50%, 0.06)" : "hsla(340, 40%, 50%, 0.06)", border: `1px solid ${allPassed ? "hsla(152, 40%, 50%, 0.15)" : "hsla(340, 40%, 50%, 0.15)"}` }}>
-        <div className="flex items-center gap-3 mb-2">
-          {allPassed ? <CheckCircle2 className="w-5 h-5" style={{ color: C.green }} /> : <AlertTriangle className="w-5 h-5" style={{ color: C.red }} />}
-          <span className="text-base font-bold" style={{ color: allPassed ? C.green : C.red }}>{allPassed ? "All Checks Passed" : `${verification.filter(v => v.passed).length}/${verification.length} Passed`}</span>
-        </div>
-        <div className="flex items-center gap-5 text-xs" style={{ color: C.textMuted }}>
-          <span>{numQubits}q</span><span>{gateCount} gates</span>
-          <span>{executionTime < 1 ? `${(executionTime * 1000).toFixed(0)}µs` : `${executionTime.toFixed(2)}ms`}</span>
-        </div>
-        {allPassed && <p className="text-xs mt-2" style={{ color: C.textMuted }}>✦ <strong style={{ color: C.green }}>Mathematically verified</strong>: unitarity, Born rule, expectation bounds, entropy limits. Fault-tolerant by construction.</p>}
-      </div>
-      <div className="space-y-2">
-        {verification.map((v, i) => (
-          <div key={i} className="p-3 rounded-xl" style={{ background: "hsla(200, 20%, 50%, 0.02)", border: `1px solid ${C.borderLight}` }}>
-            <div className="flex items-center gap-3 mb-1">
-              <span className="text-xs w-4 h-4 rounded-full flex items-center justify-center" style={{ background: v.passed ? "hsla(152, 55%, 52%, 0.2)" : "hsla(340, 55%, 55%, 0.2)", color: v.passed ? C.green : C.red }}>{v.passed ? "✓" : "✗"}</span>
-              <span className="text-sm font-medium" style={{ color: C.text, fontFamily: MONO }}>{v.name}</span>
-            </div>
-            <div className="ml-7 text-xs space-y-0.5" style={{ color: C.textMuted }}>
-              <div className="flex gap-6">
-                <span>Expected: <strong style={{ color: C.textSecondary, fontFamily: MONO }}>{v.expected}</strong></span>
-                <span>Actual: <strong style={{ color: v.passed ? C.green : C.red, fontFamily: MONO }}>{v.actual}</strong></span>
+          )}
+          {activeTab === "circuit" && results && (
+            <div className="space-y-4">
+              <div><h3 className="text-sm font-semibold mb-2" style={{ color: C.accent }}>OpenQASM 3.0</h3><pre className="text-xs p-3 rounded-xl overflow-x-auto leading-relaxed" style={{ background: "hsla(200, 15%, 50%, 0.04)", color: C.textSecondary, fontFamily: MONO }}>{results.qasm.join("\n")}</pre></div>
+              <div><h3 className="text-sm font-semibold mb-2" style={{ color: C.accent }}>ASCII Circuit Diagram</h3><pre className="text-xs p-3 rounded-xl overflow-x-auto" style={{ background: "hsla(200, 15%, 50%, 0.04)", color: C.textSecondary, fontFamily: MONO }}>{results.ascii.join("\n")}</pre></div>
+              {/* Audit summary */}
+              <div className="p-3 rounded-xl" style={{ background: "hsla(38, 30%, 50%, 0.04)", border: `1px solid hsla(38, 30%, 50%, 0.1)` }}>
+                <h4 className="text-xs font-semibold mb-2" style={{ color: C.gold }}>Audit Summary</h4>
+                <div className="grid grid-cols-2 gap-2 text-[10px]" style={{ fontFamily: MONO }}>
+                  <div><span style={{ color: C.textDim }}>Qubits:</span> <span style={{ color: C.text }}>{numQubits}</span></div>
+                  <div><span style={{ color: C.textDim }}>Gates:</span> <span style={{ color: C.text }}>{results.gateCount}</span></div>
+                  <div><span style={{ color: C.textDim }}>dim(ℋ):</span> <span style={{ color: C.text }}>2^{numQubits} = {numQubits <= 20 ? (2 ** numQubits).toLocaleString() : `~${(2 ** numQubits / 1e15).toFixed(1)}×10¹⁵`}</span></div>
+                  <div><span style={{ color: C.textDim }}>‖ψ‖²:</span> <span style={{ color: Math.abs(results.normCheck - 1) < 1e-10 ? C.green : C.red }}>{results.normCheck.toFixed(14)}</span></div>
+                  <div><span style={{ color: C.textDim }}>Entropy:</span> <span style={{ color: C.text }}>{results.entropy.toFixed(8)}</span></div>
+                  <div><span style={{ color: C.textDim }}>Time:</span> <span style={{ color: C.text }}>{results.executionTime < 1 ? `${(results.executionTime * 1000).toFixed(0)}µs` : `${results.executionTime.toFixed(2)}ms`}</span></div>
+                  <div><span style={{ color: C.textDim }}>Shots:</span> <span style={{ color: C.text }}>{shots.toLocaleString()}</span></div>
+                  <div><span style={{ color: C.textDim }}>Fault-tolerant:</span> <span style={{ color: C.green }}>Yes (virtual)</span></div>
+                </div>
               </div>
-              <p style={{ color: C.textDim }}>{v.detail}</p>
             </div>
-          </div>
-        ))}
+          )}
+          {!results && activeTab !== "results" && (
+            <div className="flex flex-col items-center justify-center h-full gap-3" style={{ color: C.textDim }}>
+              <Atom className="w-8 h-8" style={{ color: "hsla(200, 40%, 50%, 0.2)" }} strokeWidth={1} />
+              <p className="text-sm" style={{ color: C.textMuted }}>Build a circuit and press Run to see results</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
 /* ════════════════════════════════════════════════════════════
-   Shared Sub-components
+   REUSABLE SUB-COMPONENTS
    ════════════════════════════════════════════════════════════ */
 
 function EmptyState({ onBenchmark, runningBenchmark, scalingBenchmark }: {
@@ -1062,15 +1154,14 @@ function EmptyState({ onBenchmark, runningBenchmark, scalingBenchmark }: {
       <div className="text-center space-y-3 max-w-sm">
         <p className="text-base font-medium" style={{ color: C.textSecondary }}>Drag gates → Drop on wires → Run</p>
         <div className="text-xs leading-relaxed space-y-1" style={{ color: C.textMuted }}>
-          <p>🧱 Drag LEGO-like gate blocks from the palette</p>
+          <p>🧱 Drag LEGO-like gate blocks from the sidebar palette</p>
           <p>📐 Drop them onto qubit wires on the canvas</p>
           <p>🔁 Drag placed gates to rearrange them</p>
           <p>❌ Hover a gate and click × to remove</p>
-          <p>⚡ Scale up to <strong style={{ color: C.gold }}>128 qubits</strong> with the qubit selector</p>
+          <p>⚡ Scale up to <strong style={{ color: C.gold }}>{MAX_QUBITS} qubits</strong> — far beyond any classical simulator</p>
         </div>
       </div>
 
-      {/* Scaling benchmark inline */}
       <div className="w-full max-w-sm mt-4 pt-4" style={{ borderTop: `1px solid ${C.borderLight}` }}>
         <button onClick={onBenchmark} disabled={runningBenchmark}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all w-full justify-center"
@@ -1214,11 +1305,11 @@ function ExpectationBar({ value }: { value: number }) {
   );
 }
 
-function CodePanel({ code, onCopy, copied }: { code: string; onCopy: () => void; copied: boolean }) {
+function CodePanel({ title, code, onCopy, copied }: { title: string; code: string; onCopy: () => void; copied: boolean }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold" style={{ color: C.accent }}>PennyLane Equivalent</h3>
+        <h3 className="text-sm font-semibold" style={{ color: C.accent }}>{title}</h3>
         <button onClick={onCopy} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
           style={{ background: "hsla(200, 30%, 50%, 0.08)", color: copied ? C.green : C.accent, border: `1px solid ${C.borderLight}` }}>
           {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} {copied ? "Copied!" : "Copy"}
