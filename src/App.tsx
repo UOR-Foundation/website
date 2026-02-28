@@ -17,6 +17,13 @@ import LumenFloatingPill from "@/modules/hologram-ui/components/LumenFloatingPil
 import GlobalFloatingWidgets from "@/modules/hologram-ui/components/GlobalFloatingWidgets";
 import GlobalLumenOverlay from "@/modules/hologram-ui/components/GlobalLumenOverlay";
 import { initTriwordGenesis } from "@/lib/uor-triword";
+import { useReferralTracking } from "@/hooks/useReferralTracking";
+
+/** Runs inside BrowserRouter so useSearchParams works */
+function ReferralTracker() {
+  useReferralTracking();
+  return null;
+}
 
 // Eager — homepage renders instantly
 import { IndexPage } from "@/modules/landing";
@@ -166,6 +173,7 @@ const App = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ReferralTracker />
         <ScreenContextProvider>
         <LumenFloatingPill />
         <GlobalFloatingWidgets />
