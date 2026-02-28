@@ -449,43 +449,90 @@ export default function QShellPage() {
                     ))}
                   </div>
 
-                  {/* Peer Review Matrix */}
-                  {demoLog.some(e => e.action === "peer-review") && (
-                    <div className="bg-[hsl(220,20%,8%)] border border-[hsl(150,30%,15%)] rounded-lg p-4 mb-4">
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3">Peer Review Scores (Latest Round)</div>
-                      {(() => {
-                        const agents = ["researcher", "synthesizer", "critic"];
-                        const colors = ["text-emerald-400", "text-sky-400", "text-amber-400"];
-                        const lastRound = Math.max(...demoLog.filter(e => e.action === "peer-review").map(e => e.tick));
-                        const reviews = demoLog.filter(e => e.action === "peer-review" && e.tick === lastRound);
-                        return (
-                          <div className="space-y-2">
-                            {agents.map((reviewer, ri) => (
-                              <div key={reviewer} className="flex items-center gap-2 text-[11px]">
-                                <span className={`w-20 truncate font-medium ${colors[ri]}`}>{reviewer}</span>
-                                <span className="text-muted-foreground">→</span>
-                                <div className="flex gap-3 flex-1">
-                                  {reviews
-                                    .filter(r => r.agent === reviewer)
-                                    .map((r, j) => {
-                                      const targetName = r.detail.split(" ")[0].replace("→", "");
-                                      const score = parseFloat(r.detail.split(" ")[1]);
-                                      const scoreColor = score >= 0.7 ? "text-emerald-400" : score >= 0.4 ? "text-amber-400" : "text-red-400";
-                                      return (
-                                        <span key={j} className="flex items-center gap-1">
-                                          <span className="text-muted-foreground">{targetName}</span>
-                                          <span className={`font-mono font-bold ${scoreColor}`}>{score.toFixed(2)}</span>
-                                        </span>
-                                      );
-                                    })}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
+                   {/* Reputation Tracker */}
+                   {demoLog.some(e => e.action === "reputation") && (
+                     <div className="bg-[hsl(220,20%,8%)] border border-[hsl(150,30%,15%)] rounded-lg p-4 mb-4">
+                       <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3">Reviewer Reputation (Prediction Accuracy)</div>
+                       {(() => {
+                         const agents = ["researcher", "synthesizer", "critic"];
+                         const colors = ["text-emerald-400", "text-sky-400", "text-amber-400"];
+                         const bgColors = ["bg-emerald-500", "bg-sky-500", "bg-amber-500"];
+                         const rounds = [...new Set(demoLog.filter(e => e.action === "reputation").map(e => e.tick))].sort((a, b) => a - b);
+                         return (
+                           <div className="space-y-3">
+                             {agents.map((agent, ai) => {
+                               const entries = demoLog.filter(e => e.agent === agent && e.action === "reputation");
+                               const latest = entries.length > 0 ? entries[entries.length - 1].h : 1;
+                               return (
+                                 <div key={agent}>
+                                   <div className="flex items-center justify-between mb-1">
+                                     <span className={`text-[11px] font-medium ${colors[ai]}`}>{agent}</span>
+                                     <span className="text-[11px] font-mono text-[hsl(0,0%,70%)]">ρ = {latest.toFixed(3)}</span>
+                                   </div>
+                                   <div className="h-2 bg-[hsl(0,0%,15%)] rounded-full overflow-hidden">
+                                     <motion.div
+                                       className={`h-full rounded-full ${bgColors[ai]}`}
+                                       initial={{ width: "100%" }}
+                                       animate={{ width: `${latest * 100}%` }}
+                                       transition={{ duration: 0.5 }}
+                                     />
+                                   </div>
+                                   <div className="flex gap-1 mt-1">
+                                     {entries.map((e, i) => (
+                                       <span key={i} className="text-[9px] text-muted-foreground font-mono">
+                                         R{e.tick + 1}:{e.h.toFixed(2)}
+                                       </span>
+                                     ))}
+                                   </div>
+                                 </div>
+                               );
+                             })}
+                           </div>
+                         );
+                       })()}
+                     </div>
+                   )}
+
+                   {/* Peer Review Matrix */}
+                   {demoLog.some(e => e.action === "peer-review") && (
+                     <div className="bg-[hsl(220,20%,8%)] border border-[hsl(150,30%,15%)] rounded-lg p-4 mb-4">
+                       <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3">Peer Review Scores (Latest Round)</div>
+                       {(() => {
+                         const agents = ["researcher", "synthesizer", "critic"];
+                         const colors = ["text-emerald-400", "text-sky-400", "text-amber-400"];
+                         const lastRound = Math.max(...demoLog.filter(e => e.action === "peer-review").map(e => e.tick));
+                         const reviews = demoLog.filter(e => e.action === "peer-review" && e.tick === lastRound);
+                         return (
+                           <div className="space-y-2">
+                             {agents.map((reviewer, ri) => (
+                               <div key={reviewer} className="flex items-center gap-2 text-[11px]">
+                                 <span className={`w-20 truncate font-medium ${colors[ri]}`}>{reviewer}</span>
+                                 <span className="text-muted-foreground">→</span>
+                                 <div className="flex gap-3 flex-1">
+                                   {reviews
+                                     .filter(r => r.agent === reviewer)
+                                     .map((r, j) => {
+                                       const parts = r.detail.split(" ");
+                                       const targetName = parts[0].replace("→", "");
+                                       const score = parseFloat(parts[1]);
+                                       const rep = parts[2] ? parts[2].replace("ρ=", "") : "";
+                                       const scoreColor = score >= 0.7 ? "text-emerald-400" : score >= 0.4 ? "text-amber-400" : "text-red-400";
+                                       return (
+                                         <span key={j} className="flex items-center gap-1">
+                                           <span className="text-muted-foreground">{targetName}</span>
+                                           <span className={`font-mono font-bold ${scoreColor}`}>{score.toFixed(2)}</span>
+                                           {rep && <span className="text-[9px] text-muted-foreground font-mono">ρ{rep}</span>}
+                                         </span>
+                                       );
+                                     })}
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         );
+                       })()}
+                     </div>
+                   )}
 
                   {/* Post-Peer H-Score Convergence */}
                   {demoLog.some(e => e.action === "peer-result") && (
@@ -537,11 +584,12 @@ export default function QShellPage() {
                         const agentColor = e.agent === "researcher" ? "text-emerald-400" :
                           e.agent === "synthesizer" ? "text-sky-400" :
                           e.agent === "critic" ? "text-amber-400" : "text-primary";
-                        const actionIcon = e.action === "think" ? "◆" :
-                          e.action === "ipc-send" ? "→" :
-                          e.action === "feedback" ? "★" :
-                          e.action === "peer-review" ? "⇄" :
-                          e.action === "peer-result" ? "◎" : "⚡";
+                         const actionIcon = e.action === "think" ? "◆" :
+                           e.action === "ipc-send" ? "→" :
+                           e.action === "feedback" ? "★" :
+                           e.action === "peer-review" ? "⇄" :
+                           e.action === "peer-result" ? "◎" :
+                           e.action === "reputation" ? "ρ" : "⚡";
                         return (
                           <motion.div
                             key={i}
