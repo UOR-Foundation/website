@@ -69,6 +69,35 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        /* Hologram palette as Tailwind utilities */
+        hologram: {
+          bg: "hsl(var(--hologram-bg))",
+          surface: "hsl(var(--hologram-surface))",
+          text: "hsl(var(--hologram-text))",
+          "text-muted": "hsl(var(--hologram-text-muted))",
+          gold: "hsl(var(--hologram-gold))",
+          purple: "hsl(var(--hologram-purple-warm))",
+        },
+      },
+      /* Hologram proportional font sizes */
+      fontSize: {
+        "holo-xs": "var(--holo-text-xs)",
+        "holo-sm": "var(--holo-text-sm)",
+        "holo-base": "var(--holo-text-base)",
+        "holo-lg": "var(--holo-text-lg)",
+        "holo-xl": "var(--holo-text-xl)",
+        "holo-2xl": "var(--holo-text-2xl)",
+        "holo-display": "var(--holo-text-display)",
+      },
+      /* Hologram proportional spacing */
+      spacing: {
+        "holo-1": "var(--holo-space-1)",
+        "holo-2": "var(--holo-space-2)",
+        "holo-3": "var(--holo-space-3)",
+        "holo-4": "var(--holo-space-4)",
+        "holo-5": "var(--holo-space-5)",
+        "holo-6": "var(--holo-space-6)",
+        "holo-8": "var(--holo-space-8)",
       },
       borderRadius: {
         lg: "var(--radius)",

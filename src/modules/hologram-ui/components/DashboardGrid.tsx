@@ -19,7 +19,7 @@ const colClass = {
 
 export function DashboardGrid({ children, cols = 3, className = "" }: DashboardGridProps) {
   return (
-    <div className={`grid grid-cols-1 ${colClass[cols]} gap-3 ${className}`}>
+    <div className={`grid grid-cols-1 ${colClass[cols]} ${className}`} style={{ gap: "var(--holo-space-3)" }}>
       {children}
     </div>
   );
