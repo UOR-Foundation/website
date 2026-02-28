@@ -10,7 +10,6 @@
 
 import { useCallback, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Home, LayoutGrid, User, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
@@ -231,28 +230,11 @@ export default function DesktopOsSidebar({
           return (
             <IconTooltip key={item.path} label={item.label} show={!expanded}>
               <button
-                onClick={() => collapseAndDo(async () => {
+                onClick={() => collapseAndDo(() => {
                   if (item.label === "Home" && onGoHome) {
                     onGoHome();
                   } else if (item.label === "My Space") {
-                    // Gate: check auth + sovereign identity before entering My Space
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (!session?.user) {
-                      // Not signed in — send to ceremony which will trigger auth
-                      navigate("/ceremony");
-                      return;
-                    }
-                    const { data: profile } = await supabase
-                      .from("profiles")
-                      .select("uor_canonical_id")
-                      .eq("user_id", session.user.id)
-                      .maybeSingle();
-                    if (!profile?.uor_canonical_id) {
-                      // Signed in but no sovereign identity yet
-                      navigate("/ceremony");
-                    } else {
-                      navigate(item.path);
-                    }
+                    navigate("/ceremony");
                   } else {
                     navigate(item.path);
                   }
