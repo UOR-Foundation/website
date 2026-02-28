@@ -41,3 +41,28 @@ export type {
   SchedStats,
   ContextSwitch,
 } from "./q-sched";
+
+// Q-Syscall: lens-based trap table
+export { QSyscall, STANDARD_MODALITIES } from "./q-syscall";
+export type {
+  MorphismType,
+  SyscallResult,
+  CompiledLens,
+  LensBlueprint,
+  PipelineStage,
+  TrapTableEntry,
+  SyscallStats,
+  Modality,
+} from "./q-syscall";
+
+// Q-FS: Merkle DAG filesystem
+export { QFs } from "./q-fs";
+export type {
+  InodeType,
+  QInode,
+  QPermissions,
+  JournalEntry,
+  JournalOp,
+  MountPoint,
+  FsStats,
+} from "./q-fs";
