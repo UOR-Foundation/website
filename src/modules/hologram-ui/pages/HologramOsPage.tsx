@@ -29,6 +29,7 @@ import MemoryProjection from "@/modules/hologram-ui/components/MemoryProjection"
 import MessengerProjection from "@/modules/hologram-ui/components/MessengerProjection";
 import TerminalProjection from "@/modules/hologram-ui/components/TerminalProjection";
 import JupyterProjection from "@/modules/hologram-ui/components/JupyterProjection";
+import QuantumWorkspaceProjection from "@/modules/hologram-ui/components/QuantumWorkspaceProjection";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
@@ -336,6 +337,7 @@ export default function HologramOsPage() {
             onOpenMemory={() => k.openPanel("memory")}
             onOpenMessenger={() => k.openPanel("messenger")}
             onOpenJupyter={() => k.openPanel("jupyter")}
+            onOpenQuantumWorkspace={() => k.openPanel("quantum-workspace")}
             onGoHome={() => { k.setChatOpen(false); k.closePanel(); }}
             onReplayGuide={() => setShortcutsOpen(true)}
             onHoverPanel={handleHoverPanel}
@@ -462,6 +464,7 @@ export default function HologramOsPage() {
       <MessengerProjection open={activePanel === "messenger"} preload={preloadedPanels.has("messenger")} onClose={() => k.closePanel()} />
       <TerminalProjection open={activePanel === "terminal"} preload={preloadedPanels.has("terminal")} onClose={() => k.closePanel()} onOpenJupyter={() => k.openPanel("jupyter")} />
       <JupyterProjection open={activePanel === "jupyter"} preload={preloadedPanels.has("jupyter")} onClose={() => k.closePanel()} />
+      <QuantumWorkspaceProjection open={activePanel === "quantum-workspace"} preload={preloadedPanels.has("quantum-workspace")} onClose={() => k.closePanel()} />
       <SnapGuideOverlay />
       
       <KernelDevTools />

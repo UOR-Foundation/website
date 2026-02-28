@@ -806,6 +806,171 @@ export function entanglementMap(state: SimulatorState): { qubit: number; purity:
   return result;
 }
 
+// ── Expectation Values ────────────────────────────────────────────────────
+
+/** Pauli operator type for expectation value measurements. */
+export type PauliOp = "I" | "X" | "Y" | "Z";
+
+/**
+ * Compute ⟨ψ|O|ψ⟩ for a single-qubit Pauli operator on a specific qubit.
+ *
+ * This is the KEY function that bridges classical simulation and quantum measurement.
+ * For n qubits, O acts on qubit `target` and I on all others.
+ *
+ * Mathematical derivation:
+ *   For Pauli-Z: ⟨Z⟩ = Σᵢ (-1)^{bit(i,target)} |αᵢ|²
+ *   For Pauli-X: ⟨X⟩ = Σᵢ 2·Re(αᵢ* · α_{i⊕bit})
+ *   For Pauli-Y: ⟨Y⟩ = Σᵢ 2·Im(α_{i⊕bit}* · αᵢ)
+ *   For Identity: ⟨I⟩ = 1 (always, by normalization)
+ *
+ * This computes the EXACT expectation value from the statevector — no sampling noise.
+ * On real quantum hardware, you would need O(1/ε²) shots to estimate this to precision ε.
+ * Our statevector simulator computes it in O(2^n) — exponential in qubits but EXACT.
+ *
+ * @param state - Simulated quantum state (circuit must be already simulated)
+ * @param target - Which qubit to measure the observable on (0-indexed)
+ * @param pauli - Which Pauli operator: "I", "X", "Y", "Z"
+ * @returns The exact expectation value ∈ [-1, 1]
+ */
+export function expectationValue(state: SimulatorState, target: number, pauli: PauliOp): number {
+  const n = state.numQubits;
+  const sv = state.stateVector;
+  const dim = 1 << n;
+  const bit = 1 << (n - 1 - target);
+
+  if (pauli === "I") return 1.0;
+
+  if (pauli === "Z") {
+    // ⟨Z⟩ = Σ |α_{...0...}|² - Σ |α_{...1...}|²
+    // bit=0 on target → eigenvalue +1, bit=1 → eigenvalue -1
+    let val = 0;
+    for (let i = 0; i < dim; i++) {
+      const prob = cnorm2(sv[i]);
+      val += (i & bit) ? -prob : prob;
+    }
+    return val;
+  }
+
+  if (pauli === "X") {
+    // ⟨X⟩ = Σ_{pairs} 2·Re(α_i* · α_j) where j = i ⊕ bit
+    let val = 0;
+    for (let i = 0; i < dim; i++) {
+      if (i & bit) continue; // process each pair once
+      const j = i | bit;
+      // ⟨i|X|j⟩ contributes: α_i* · α_j + α_j* · α_i = 2·Re(α_i* · α_j)
+      val += 2 * (sv[i][0] * sv[j][0] + sv[i][1] * sv[j][1]);
+    }
+    return val;
+  }
+
+  if (pauli === "Y") {
+    // ⟨Y⟩ = Σ_{pairs} 2·Re(α_i* · (-i)·α_j + α_j* · i·α_i)
+    // Y = [[0, -i], [i, 0]], so Y|0⟩ = i|1⟩, Y|1⟩ = -i|0⟩
+    let val = 0;
+    for (let i = 0; i < dim; i++) {
+      if (i & bit) continue;
+      const j = i | bit;
+      // contribution = α_i* · (-i·α_j) + α_j* · (i·α_i)
+      // = -i(α_i* · α_j) + i(α_j* · α_i) = 2·Im(α_j* · α_i)
+      val += 2 * (sv[j][0] * sv[i][1] - sv[j][1] * sv[i][0]);
+    }
+    return val;
+  }
+
+  return 0;
+}
+
+/**
+ * Compute expectation value of a multi-qubit Pauli string.
+ * E.g., pauliString = ["Z", "I", "X"] means Z⊗I⊗X on 3 qubits.
+ *
+ * For a tensor product observable O = O₀⊗O₁⊗...⊗Oₙ₋₁:
+ *   ⟨O⟩ = ⟨ψ| (O₀⊗O₁⊗...⊗Oₙ₋₁) |ψ⟩
+ *
+ * We compute this by applying each single-qubit Pauli to a copy of |ψ⟩
+ * and then taking the inner product with the original.
+ */
+export function expectationValuePauliString(state: SimulatorState, pauliString: PauliOp[]): number {
+  const n = state.numQubits;
+  const sv = state.stateVector;
+  const dim = 1 << n;
+
+  // Create O|ψ⟩
+  const transformed: Complex[] = sv.slice();
+
+  // Apply each single-qubit Pauli
+  for (let q = 0; q < n; q++) {
+    const p = pauliString[q] || "I";
+    if (p === "I") continue;
+    const gate = resolveGate(p.toLowerCase());
+    if (gate) applySingleQubitGateOnCopy(transformed, n, q, gate);
+  }
+
+  // ⟨ψ|O|ψ⟩ = Σᵢ αᵢ* · (O|ψ⟩)ᵢ
+  let real = 0, imag = 0;
+  for (let i = 0; i < dim; i++) {
+    const c = cmul(cconj(sv[i]), transformed[i]);
+    real += c[0];
+    imag += c[1];
+  }
+
+  // Should be real for Hermitian operators
+  return real;
+}
+
+/** Apply single-qubit gate in-place on a separate copy. */
+function applySingleQubitGateOnCopy(sv: Complex[], n: number, target: number, U: GateMatrix): void {
+  const dim = 1 << n;
+  const bit = 1 << (n - 1 - target);
+  for (let i = 0; i < dim; i++) {
+    if (i & bit) continue;
+    const j = i | bit;
+    const a0: Complex = [sv[i][0], sv[i][1]];
+    const a1: Complex = [sv[j][0], sv[j][1]];
+    sv[i] = cadd(cmul(U[0][0], a0), cmul(U[0][1], a1));
+    sv[j] = cadd(cmul(U[1][0], a0), cmul(U[1][1], a1));
+  }
+}
+
+/**
+ * Get probabilities for all computational basis states.
+ * Returns array of { state: "010", probability: 0.25 } sorted by probability desc.
+ */
+export function getStateProbabilities(state: SimulatorState): { state: string; probability: number; amplitude: Complex }[] {
+  const n = state.numQubits;
+  const dim = 1 << n;
+  const results: { state: string; probability: number; amplitude: Complex }[] = [];
+
+  for (let i = 0; i < dim; i++) {
+    const amp = state.stateVector[i];
+    const prob = cnorm2(amp);
+    if (prob > 1e-14) {
+      results.push({
+        state: i.toString(2).padStart(n, "0"),
+        probability: prob,
+        amplitude: amp,
+      });
+    }
+  }
+
+  return results.sort((a, b) => b.probability - a.probability);
+}
+
+/**
+ * Compute the Von Neumann entropy of the full state.
+ * S = -Σ pᵢ log₂(pᵢ) where pᵢ = |αᵢ|²
+ * For a pure state this is 0; for maximally mixed it's n.
+ */
+export function vonNeumannEntropy(state: SimulatorState): number {
+  const dim = 1 << state.numQubits;
+  let S = 0;
+  for (let i = 0; i < dim; i++) {
+    const p = cnorm2(state.stateVector[i]);
+    if (p > 1e-14) S -= p * Math.log2(p);
+  }
+  return S;
+}
+
 // ── Convenience: Full Pipeline ────────────────────────────────────────────
 
 /**
