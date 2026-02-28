@@ -306,6 +306,73 @@ export type {
   TrialityTest,
 } from "./triality";
 
+// Transform Group — Aut(Atlas) = R(4) × D(3) × T(8) × M(2) (Phase 2)
+export {
+  applyTransform,
+  applyTransformFull,
+  compose,
+  inverse,
+  enumerateGroup,
+  isIdentity,
+  elementOrder,
+  isTransitive,
+  orbit as transformOrbit,
+  stabilizer,
+  runTransformGroupVerification,
+  IDENTITY,
+  GROUP_ORDER,
+} from "./transform-group";
+export type {
+  TransformElement,
+  TransformResult,
+  TransformGroupReport,
+  TransformGroupTest,
+} from "./transform-group";
+
+// Extended Morphism Generators — 7 categorical operations (Phase 3)
+export {
+  getGenerators,
+  getGenerator,
+  getGeneratorTriples,
+  fanoPointToGenerator,
+  generatorToFanoPoint,
+  runGeneratorAnalysis,
+} from "./morphism-generators";
+export type {
+  GeneratorKind,
+  CategoricalGenerator,
+  GeneratorTriple,
+  GeneratorAnalysis,
+  GeneratorTest,
+} from "./morphism-generators";
+
+// Belt ↔ Fiber Bijection — 12,288-slot correspondence (Phase 4)
+export {
+  beltToFiber,
+  fiberToBelt,
+  classifyByte,
+  slotToBelt,
+  beltToSlot,
+  slotToFiber,
+  fiberToSlot,
+  buildBeltFiberBijection,
+  runBeltFiberVerification,
+  BELT_PAGES,
+  BYTES_PER_PAGE,
+  BELT_TOTAL,
+  EXTERIOR_PER_VERTEX,
+  FIBER_TOTAL,
+} from "./belt-fiber";
+export type {
+  BeltAddress,
+  FiberCoordinate,
+  DualSemantic,
+  PageMirrorPair,
+  BeltFiberBijection,
+  BeltFiberReport,
+  BeltFiberTest,
+} from "./belt-fiber";
+
 // Fano Plane — PG(2,2) quantum gate routing topology
 export {
   constructFanoTopology,
