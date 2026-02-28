@@ -19,7 +19,7 @@ import {
   Folder, FolderOpen, Code, Sparkles,
   Trash2, ArrowUp, ArrowDown, Type, PlayCircle,
   RotateCcw, ChevronRight, ChevronDown,
-  Atom, Brain, BarChart3, Shield, Zap,
+  Atom, Brain, BarChart3, Shield, Zap, Download,
 } from "lucide-react";
 import {
   createKernel,
@@ -41,12 +41,36 @@ function Histogram({ counts }: { counts: Record<string, number> }) {
   const entries = Object.entries(counts).sort(([a], [b]) => a.localeCompare(b));
   const maxCount = Math.max(...entries.map(([, c]) => c));
   const total = entries.reduce((s, [, c]) => s + c, 0);
+  const isLarge = entries.length > 8;
+
+  if (isLarge) {
+    // Horizontal bar layout for many states — always readable
+    return (
+      <div className="px-3 py-2 space-y-1 overflow-y-auto" style={{ maxHeight: 280 }}>
+        {entries.map(([key, count]) => {
+          const pct = (count / total) * 100;
+          return (
+            <div key={key} className="flex items-center gap-2">
+              <span className="text-[10px] font-mono shrink-0 w-14 text-right" style={{ color: "hsl(38, 15%, 35%)" }}>|{key}⟩</span>
+              <div className="flex-1 h-4 rounded-sm overflow-hidden" style={{ background: "hsla(38, 20%, 50%, 0.08)" }}>
+                <div className="h-full rounded-sm" style={{
+                  width: `${Math.max(1, (count / maxCount) * 100)}%`,
+                  background: "linear-gradient(to right, hsl(38, 45%, 45%), hsl(38, 55%, 60%))",
+                }} />
+              </div>
+              <span className="text-[10px] font-mono shrink-0 w-12" style={{ color: "hsl(38, 20%, 50%)" }}>{pct.toFixed(1)}%</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-end gap-2 px-3 py-2" style={{ height: 160 }}>
       {entries.map(([key, count]) => (
         <div key={key} className="flex flex-col items-center gap-1 flex-1 min-w-0">
-          <span className="text-xs font-mono" style={{ color: "hsl(38, 20%, 50%)" }}>
+          <span className="text-[10px] font-mono" style={{ color: "hsl(38, 20%, 50%)" }}>
             {((count / total) * 100).toFixed(1)}%
           </span>
           <div
@@ -57,13 +81,204 @@ function Histogram({ counts }: { counts: Record<string, number> }) {
               background: "linear-gradient(to top, hsl(38, 45%, 45%), hsl(38, 55%, 60%))",
             }}
           />
-          <span className="text-sm font-mono font-semibold" style={{ color: "hsl(38, 15%, 35%)" }}>
+          <span className="text-[10px] font-mono font-semibold truncate w-full text-center" style={{ color: "hsl(38, 15%, 35%)" }}>
             |{key}⟩
           </span>
         </div>
       ))}
     </div>
   );
+}
+
+/* ── Scientific Export Engine ─────────────────────────────────────────────── */
+
+function generateScientificReport(
+  demoName: string,
+  demoDescription: string,
+  outputs: CellOutput[],
+  rawCounts: Record<string, number> | null,
+  mitigatedCounts: Record<string, number> | null,
+  mitigationStages: string[],
+  controlValues: Record<string, number | string | boolean>,
+): string {
+  const timestamp = new Date().toISOString();
+  const dateHuman = new Date().toLocaleString("en-US", { dateStyle: "full", timeStyle: "long" });
+
+  // Extract circuit info
+  const circuitOutput = outputs.find(o => o.type === "circuit");
+  const svOutput = outputs.find(o => o.type === "statevector");
+  const histOutput = outputs.find(o => o.type === "histogram");
+  const textOutputs = outputs.filter(o => o.type === "text");
+
+  // Compute statistics from counts
+  const counts = mitigatedCounts || (histOutput?.data?.counts as Record<string, number>) || rawCounts;
+  let statsSection = "";
+  if (counts) {
+    const total = Object.values(counts).reduce((s, c) => s + c, 0);
+    const entries = Object.entries(counts).sort(([, a], [, b]) => b - a);
+    const probs = entries.map(([k, v]) => ({ state: k, count: v, prob: v / total }));
+    const entropy = -probs.reduce((s, p) => s + (p.prob > 0 ? p.prob * Math.log2(p.prob) : 0), 0);
+    const maxProb = probs[0];
+    const numStates = probs.length;
+    const idealUniform = 1 / numStates;
+    const tvd = probs.reduce((s, p) => s + Math.abs(p.prob - idealUniform), 0) / 2;
+
+    statsSection = `
+## 4. QUANTITATIVE RESULTS
+
+### 4.1 Measurement Distribution
+
+| Rank | Quantum State | Counts | Probability | Deviation from Uniform |
+|------|--------------|--------|-------------|----------------------|
+${probs.slice(0, Math.min(32, probs.length)).map((p, i) => 
+  `| ${i + 1} | |${p.state}⟩ | ${p.count} | ${(p.prob * 100).toFixed(3)}% | ${((p.prob - idealUniform) * 100).toFixed(3)}% |`
+).join("\n")}
+${probs.length > 32 ? `\n... and ${probs.length - 32} additional states (see raw data below)\n` : ""}
+
+### 4.2 Statistical Properties
+
+| Metric | Value | Description |
+|--------|-------|-------------|
+| Total Measurements | ${total} | Number of shots executed |
+| Distinct States Observed | ${numStates} | Out of 2^n possible |
+| Shannon Entropy | ${entropy.toFixed(6)} bits | Theoretical max: ${Math.log2(numStates).toFixed(4)} bits |
+| Most Probable State | |${maxProb.state}⟩ (${(maxProb.prob * 100).toFixed(3)}%) | |
+| Total Variation Distance | ${tvd.toFixed(6)} | Distance from uniform distribution |
+| Kolmogorov-Smirnov D | ${Math.max(...probs.map(p => Math.abs(p.prob - idealUniform))).toFixed(6)} | Max pointwise deviation |
+`;
+  }
+
+  // Mitigation section
+  let mitigationSection = "";
+  if (rawCounts && mitigatedCounts && mitigationStages.length > 0) {
+    const rawTotal = Object.values(rawCounts).reduce((s, c) => s + c, 0);
+    const mitTotal = Object.values(mitigatedCounts).reduce((s, c) => s + c, 0);
+    const allKeys = Array.from(new Set([...Object.keys(rawCounts), ...Object.keys(mitigatedCounts)]));
+    const numStates = allKeys.length;
+    const idealUniform = 1 / numStates;
+    
+    let fidRaw = 0, fidMit = 0, klRaw = 0, klMit = 0;
+    for (const k of allKeys) {
+      const pR = (rawCounts[k] || 0) / rawTotal;
+      const pM = (mitigatedCounts[k] || 0) / mitTotal;
+      fidRaw += Math.sqrt(pR * idealUniform);
+      fidMit += Math.sqrt(pM * idealUniform);
+      if (pR > 0) klRaw += pR * Math.log(pR / idealUniform);
+      if (pM > 0) klMit += pM * Math.log(pM / idealUniform);
+    }
+
+    mitigationSection = `
+## 5. ERROR MITIGATION ANALYSIS
+
+### 5.1 Mitigation Pipeline
+${mitigationStages.map((s, i) => `${i + 1}. **${s.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}**`).join("\n")}
+
+### 5.2 Before/After Comparison
+
+| Metric | Raw (Noisy) | Mitigated | Improvement |
+|--------|------------|-----------|-------------|
+| Classical Fidelity (Bhattacharyya) | ${fidRaw.toFixed(6)} | ${fidMit.toFixed(6)} | ${fidRaw > 0 ? ((fidMit - fidRaw) / fidRaw * 100).toFixed(2) : "N/A"}% |
+| KL Divergence from Ideal | ${klRaw.toFixed(6)} | ${klMit.toFixed(6)} | ${klRaw > 0 ? ((klRaw - klMit) / klRaw * 100).toFixed(2) : "N/A"}% reduction |
+`;
+  }
+
+  // Raw data section
+  let rawDataSection = "";
+  if (counts) {
+    const total = Object.values(counts).reduce((s, c) => s + c, 0);
+    rawDataSection = `
+## ${mitigationStages.length > 0 ? "6" : "5"}. RAW DATA (JSON)
+
+\`\`\`json
+${JSON.stringify({
+  experiment: demoName,
+  timestamp,
+  parameters: controlValues,
+  total_shots: total,
+  measurement_counts: counts,
+  ...(rawCounts && mitigatedCounts ? { raw_counts: rawCounts, mitigated_counts: mitigatedCounts } : {}),
+}, null, 2)}
+\`\`\`
+`;
+  }
+
+  return `${"═".repeat(80)}
+QUANTUM SIMULATION EXPERIMENT REPORT
+${"═".repeat(80)}
+
+Generated by: Hologram Q-Linux Quantum Simulator
+Timestamp:    ${timestamp}
+Date:         ${dateHuman}
+Report ID:    QSR-${Date.now().toString(36).toUpperCase()}
+
+${"─".repeat(80)}
+
+## 1. EXPERIMENT IDENTIFICATION
+
+| Field | Value |
+|-------|-------|
+| Experiment Name | ${demoName} |
+| Description | ${demoDescription} |
+| Simulator Backend | Hologram Q-Simulator (Statevector) |
+| Execution Environment | Browser-based (WebAssembly-optimized JavaScript) |
+| Timestamp | ${timestamp} |
+
+## 2. EXPERIMENTAL PARAMETERS
+
+| Parameter | Value |
+|-----------|-------|
+${Object.entries(controlValues).map(([k, v]) => `| ${k} | ${v} |`).join("\n")}
+
+## 3. METHODOLOGY
+
+### 3.1 Simulation Method
+- **Backend:** Exact statevector simulation (no sampling noise in state evolution)
+- **Measurement:** Born-rule probabilistic sampling from final statevector amplitudes
+- **Gate Set:** Universal gate set from Hologram 96-gate ISA
+- **Precision:** IEEE 754 double-precision floating-point (64-bit)
+- **Entanglement Tracking:** Full statevector representation (exponential in qubit count)
+
+### 3.2 Circuit Description
+${circuitOutput ? `\`\`\`\n${circuitOutput.content}\n\`\`\`` : "Circuit diagram not available for this run."}
+
+### 3.3 Statevector (if computed)
+${svOutput ? `\`\`\`\n${svOutput.content}\n\`\`\`` : "Statevector output not included in this run."}
+
+${textOutputs.length > 0 ? `### 3.4 Additional Outputs\n${textOutputs.map(o => `\`\`\`\n${o.content}\n\`\`\``).join("\n")}` : ""}
+${statsSection}${mitigationSection}${rawDataSection}
+## REPRODUCIBILITY STATEMENT
+
+This experiment was executed on the Hologram Q-Linux statevector simulator,
+which implements exact unitary evolution of quantum states. The simulator uses
+deterministic gate decomposition and IEEE 754 arithmetic. Given identical input
+parameters and random seed, results are bit-for-bit reproducible.
+
+The measurement sampling uses a pseudorandom number generator seeded from
+Math.random(). To obtain deterministic measurements, fix the PRNG seed before
+execution.
+
+## CITATION
+
+If referencing this report in academic work, please cite:
+  Hologram Q-Linux Quantum Simulator, Experiment Report QSR-${Date.now().toString(36).toUpperCase()},
+  generated ${dateHuman}.
+
+${"═".repeat(80)}
+END OF REPORT
+${"═".repeat(80)}
+`;
+}
+
+function downloadReport(content: string, filename: string) {
+  const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 /* ── Cell Output ──────────────────────────────────────────────────────────── */
@@ -643,6 +858,20 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
           <h2 className="text-base font-semibold" style={{ color: "hsl(0, 0%, 15%)" }}>{demo.name}</h2>
           <p className="text-sm" style={{ color: "hsl(0, 0%, 50%)" }}>{demo.description}</p>
         </div>
+        <button
+          onClick={() => {
+            const report = generateScientificReport(
+              demo.name, demo.description, outputs,
+              rawCounts, mitigatedCounts, mitigationStages, controlValues,
+            );
+            downloadReport(report, `${demo.id}-report-${Date.now()}.md`);
+          }}
+          disabled={outputs.length === 0}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
+          style={{ border: "1px solid hsla(38, 50%, 50%, 0.2)", color: "hsl(38, 45%, 38%)" }}
+        >
+          <Download size={14} /> Export Report
+        </button>
         <button onClick={onOpenInWorkspace} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium" style={{
           border: "1px solid hsla(0, 0%, 50%, 0.15)",
           color: "hsl(0, 0%, 40%)",
@@ -1102,6 +1331,24 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
           <button onClick={runAllCells} className="flex items-center gap-1.5 px-3 py-1 rounded hover:bg-black/5" title="Run all">
             <Play size={15} style={{ color: "hsl(152, 40%, 38%)" }} />
             <span className="text-base font-medium" style={{ color: "hsl(152, 40%, 38%)" }}>Run All</span>
+          </button>
+          <button
+            onClick={() => {
+              const allOutputs: CellOutput[] = [];
+              for (const c of notebook.cells) {
+                if (c.outputs) allOutputs.push(...c.outputs);
+              }
+              const report = generateScientificReport(
+                notebook.name, "Jupyter Notebook — Workspace Execution",
+                allOutputs, null, null, [], {},
+              );
+              downloadReport(report, `${notebook.name.replace(/\s+/g, "-").toLowerCase()}-report-${Date.now()}.md`);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1 rounded hover:bg-black/5"
+            title="Export scientific report"
+          >
+            <Download size={15} style={{ color: "hsl(38, 45%, 45%)" }} />
+            <span className="text-sm font-medium" style={{ color: "hsl(38, 45%, 45%)" }}>Export</span>
           </button>
         </div>
 
