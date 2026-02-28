@@ -432,83 +432,27 @@ export default function DesktopSurface({
             />
           </div>
 
-          {/* Lumen CTA */}
+          {/* Lumen ambient marker — subtle, non-interactive */}
           <div
             className="flex flex-col items-center"
             style={{ animation: "stagger-fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both" }}
           >
-            <button
-              onClick={() => onOpenChat()}
-              className="group flex flex-col items-center transition-all duration-700"
-              style={{ cursor: "pointer", background: "none", border: "none", gap: isFocus ? "clamp(14px, 2vh, 28px)" : "clamp(10px, 1.5vh, 20px)" }}
-            >
-              <div className="relative flex items-center justify-center" style={{ width: isFocus ? "clamp(48px, 5vw, 80px)" : "clamp(40px, 4vw, 64px)", height: isFocus ? "clamp(48px, 5vw, 80px)" : "clamp(40px, 4vw, 64px)" }}>
-                <div
-                  className="absolute rounded-full transition-all duration-[1400ms] ease-out group-hover:opacity-100"
-                  style={{
-                    width: "100%", height: "100%",
-                    opacity: 0.85,
-                    border: `1px solid ${
-                      mode === "white" ? "hsla(0, 0%, 10%, 0.55)"
-                        : mode === "dark" ? "hsla(38, 25%, 75%, 0.25)"
-                        : "hsla(0, 0%, 5%, 0.4)"
-                    }`,
-                    animation: "lumen-ring-enter 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, ambient-glow-breathe 5.82s ease-in-out 3s infinite",
-                  }}
-                />
-                <div
-                  className="lumen-dot-hover rounded-full transition-all duration-[1400ms] ease-out"
-                  style={{
-                    width: isFocus ? "clamp(8px, 0.8vw, 12px)" : "clamp(6px, 0.6vw, 10px)",
-                    height: isFocus ? "clamp(8px, 0.8vw, 12px)" : "clamp(6px, 0.6vw, 10px)",
-                    background: mode === "white" ? "hsla(38, 45%, 50%, 0.75)" : "hsla(38, 50%, 60%, 0.7)",
-                    boxShadow: mode === "white" ? "0 0 20px hsla(38, 40%, 50%, 0.4)" : "0 0 24px hsla(38, 50%, 55%, 0.35)",
-                    animation: "lumen-dot-enter 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, heartbeat-love 1.94s ease-in-out 3.2s infinite",
-                  }}
-                />
-              </div>
-
-              <span
-                className="tracking-[0.2em] transition-all duration-700"
-                style={{
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  fontWeight: 400,
-                  fontSize: isFocus ? "calc(clamp(13px, 1.1vw, 16px) * var(--holo-user-scale))" : "calc(clamp(12px, 0.9vw, 14px) * var(--holo-user-scale))",
-                  color: mode === "white" ? "hsla(0, 0%, 10%, 0.9)" : "hsla(38, 15%, 88%, 0.7)",
-                }}
-              >
-                LUMEN AI
-              </span>
-
-              <p
-                className="tracking-[0.08em] transition-all duration-500"
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontWeight: 300,
-                  fontStyle: "italic",
-                  fontSize: isFocus ? "calc(clamp(15px, 1.2vw, 22px) * var(--holo-user-scale))" : "calc(clamp(14px, 1vw, 18px) * var(--holo-user-scale))",
-                  color: mode === "white" ? "hsla(0, 0%, 20%, 0.8)" : "hsla(38, 12%, 85%, 0.6)",
-                  maxWidth: "30ch",
-                  lineHeight: 1.6,
-                  animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
-                }}
-              >
-                <TypewriterText text={getLumenSubtitle()} />
-              </p>
-            </button>
-
-            {/* Voice Orb — Human ↔ Hologram voice interface */}
-            <div
+            <p
+              className="tracking-[0.08em] transition-all duration-500"
               style={{
-                marginTop: "clamp(28px, 4vh, 56px)",
-                animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.6s both",
-                opacity: isFocus ? 0 : 1,
-                pointerEvents: isFocus ? "none" : "auto",
-                transition: "opacity 300ms",
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 300,
+                fontStyle: "italic",
+                fontSize: isFocus ? "calc(clamp(15px, 1.2vw, 22px) * var(--holo-user-scale))" : "calc(clamp(14px, 1vw, 18px) * var(--holo-user-scale))",
+                color: mode === "white" ? "hsla(0, 0%, 20%, 0.8)" : "hsla(38, 12%, 85%, 0.6)",
+                maxWidth: "30ch",
+                lineHeight: 1.6,
+                textAlign: "center",
+                animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
               }}
             >
-            {/* VoiceOrb lifted to page level — single instance */}
-            </div>
+              <TypewriterText text={getLumenSubtitle()} />
+            </p>
           </div>
         </div>
       </div>
