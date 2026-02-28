@@ -127,11 +127,27 @@ export default function HologramOsPage() {
   const [legalTab, setLegalTab] = useState<"privacy" | "terms">("privacy");
   const journal = useFocusJournal();
 
-  // ── Panel preloading — hover-triggered from sidebar ───────────────────
+  // ── Panel preloading — prescience-driven + hover-triggered ─────────────
   const [preloadedPanels, setPreloadedPanels] = useState<Set<string>>(new Set());
   const handleHoverPanel = useCallback((panel: string) => {
     setPreloadedPanels(prev => prev.has(panel) ? prev : new Set(prev).add(panel));
   }, []);
+
+  // Prescience: auto-preload panels predicted by the coherence engine
+  useEffect(() => {
+    if (k.prescienceHints.length === 0) return;
+    setPreloadedPanels(prev => {
+      const next = new Set(prev);
+      let changed = false;
+      for (const hint of k.prescienceHints) {
+        if (!next.has(hint.panel)) {
+          next.add(hint.panel);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [k.prescienceHints]);
 
   // ── Transition state (visual-only, not kernel state) ──────────────────
   const [departingDesktop, setDepartingDesktop] = useState<DesktopMode | null>(null);

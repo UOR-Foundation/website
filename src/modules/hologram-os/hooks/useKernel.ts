@@ -29,6 +29,7 @@ import {
 } from "../projection-engine";
 import { getBrowserAdapter } from "../surface-adapter";
 import type { QKernelBoot, BootStage } from "@/modules/qkernel/q-boot";
+import type { PreloadHint } from "../prescience-engine";
 
 export interface UseKernelResult {
   /** Current projection frame (null before boot) */
@@ -105,6 +106,8 @@ export interface UseKernelResult {
   config: Readonly<KernelConfig>;
   /** Boot time in ms */
   bootTimeMs: number;
+  /** Prescience preload hints — panels predicted to be opened next */
+  prescienceHints: PreloadHint[];
 }
 
 export function useKernel(): UseKernelResult {
@@ -117,6 +120,7 @@ export function useKernel(): UseKernelResult {
   const [isBooting, setIsBooting] = useState(false);
   const [kernel, setKernel] = useState<QKernelBoot | null>(null);
   const bootedRef = useRef(false);
+  const [prescienceHints, setPrescienceHints] = useState<PreloadHint[]>([]);
 
   // Subscribe to projection frames + start interpolation
   useEffect(() => {
@@ -132,6 +136,12 @@ export function useKernel(): UseKernelResult {
       adapter.stopInterpolation();
     };
   }, [projector, adapter]);
+
+  // Subscribe to prescience hints
+  useEffect(() => {
+    const unsub = projector.onPrescienceHints(setPrescienceHints);
+    return unsub;
+  }, [projector]);
 
   // Subscribe to boot events
   useEffect(() => {
@@ -276,5 +286,6 @@ export function useKernel(): UseKernelResult {
     breathingRhythm: projector.getBreathingRhythm(),
     config: projector.getConfig(),
     bootTimeMs: kernel?.bootTimeMs ?? 0,
+    prescienceHints,
   };
 }

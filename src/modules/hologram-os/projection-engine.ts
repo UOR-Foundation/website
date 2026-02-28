@@ -24,6 +24,7 @@
 import type { QKernelBoot, BootStage, GenesisProcess } from "@/modules/qkernel/q-boot";
 import { boot, post, loadHardware, hydrateFirmware, createGenesisProcess } from "@/modules/qkernel/q-boot";
 import { QSched, classifyZone, type QProcess, type CoherenceZone } from "@/modules/qkernel/q-sched";
+import { getPrescienceEngine, type PreloadHint } from "./prescience-engine";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Projection Frame Types — Pure data descriptions of what to render
@@ -286,6 +287,7 @@ export class KernelProjector {
   private scheduler = new QSched();
   private config: KernelConfig = { ...DEFAULT_CONFIG };
   private tickCount = 0;
+  private prescience = getPrescienceEngine();
   private widgetRegistry = new Map<WidgetType, number>(); // widget → PID
   private bootEvents: BootEvent[] = [];
   private listeners = new Set<(frame: ProjectionFrame) => void>();
@@ -703,6 +705,10 @@ export class KernelProjector {
     // Spawn widget processes
     await this.spawnWidgetProcesses();
 
+    // Initialize Prescience engine with boot time and current state
+    this.prescience.setBootTime(performance.now());
+    this.prescience.setCurrentState(`${this.config.activePanel}:${this.config.palette.mode}`);
+
     // Emit initial frame and start the projection stream
     this.emitFrame(this.projectFrame());
     this.startStream();
@@ -795,6 +801,10 @@ export class KernelProjector {
       this.config.activePanel = panel;
       this.config.chatOpen = false;
     }
+    // Prescience: record transition with current system coherence
+    const hScore = this.cachedCoherence?.meanH ?? 0.5;
+    const flowState = `${this.config.activePanel}:${this.config.palette.mode}`;
+    this.prescience.recordTransition(flowState, hScore);
     this.saveConfig();
     this.markDirty();
   }
@@ -802,6 +812,9 @@ export class KernelProjector {
   /** Close the active projection panel */
   closePanel(): void {
     this.config.activePanel = "none";
+    // Prescience: record return to home
+    const hScore = this.cachedCoherence?.meanH ?? 0.5;
+    this.prescience.recordTransition(`none:${this.config.palette.mode}`, hScore);
     this.saveConfig();
     this.markDirty();
   }
@@ -816,6 +829,9 @@ export class KernelProjector {
   /** Switch desktop frame (kernel syscall: palette mode) */
   switchDesktop(mode: DesktopMode): void {
     this.config.palette.mode = mode;
+    // Prescience: record desktop switch
+    const hScore = this.cachedCoherence?.meanH ?? 0.5;
+    this.prescience.recordTransition(`${this.config.activePanel}:${mode}`, hScore);
     this.saveConfig();
     this.markDirty();
   }
@@ -833,6 +849,21 @@ export class KernelProjector {
   /** Get active desktop mode */
   getDesktopMode(): DesktopMode {
     return this.config.palette.mode as DesktopMode;
+  }
+
+  /** Get prescience preload hints — panels predicted to be opened next */
+  getPrescienceHints(): PreloadHint[] {
+    return this.prescience.getHints();
+  }
+
+  /** Subscribe to prescience hint updates */
+  onPrescienceHints(cb: (hints: PreloadHint[]) => void): () => void {
+    return this.prescience.onHints(cb);
+  }
+
+  /** Get prescience engine stats (for dev tools) */
+  getPrescienceStats() {
+    return this.prescience.getStats();
   }
 
   // ── Attention Aperture (kernel register) ────────────────────────────
