@@ -63,19 +63,19 @@ function getPaletteVars(bgMode: "image" | "white" | "dark") {
     "--sb-shadow": "4px 0 40px -8px hsla(25, 10%, 0%, 0.25)",
     "--sb-highlight": "inset -1px 0 0 hsla(38, 25%, 90%, 0.06), inset 0 1px 0 hsla(38, 25%, 90%, 0.04)",
   } as Record<string, string>;
-  // image mode — the hero glass panel
+  // image mode — luminous frosted glass over landscape
   return {
-    "--sb-bg": "linear-gradient(180deg, hsla(25, 12%, 14%, 0.32) 0%, hsla(25, 10%, 8%, 0.38) 100%)",
-    "--sb-bg-flat": "hsla(25, 10%, 12%, 0.32)",
-    "--sb-hover": "hsla(30, 12%, 90%, 0.07)",
-    "--sb-active": "hsla(30, 15%, 85%, 0.1)",
-    "--sb-border": "hsla(38, 22%, 75%, 0.12)",
-    "--sb-border-inner": "hsla(38, 25%, 90%, 0.08)",
-    "--sb-text": "hsl(30, 10%, 92%)",
-    "--sb-muted": "hsl(30, 8%, 75%)",
-    "--sb-gold": "hsl(34, 35%, 68%)",
-    "--sb-shadow": "4px 0 48px -8px hsla(25, 10%, 0%, 0.2), 8px 0 80px -16px hsla(25, 10%, 0%, 0.1)",
-    "--sb-highlight": "inset -1px 0 0 hsla(38, 25%, 90%, 0.08), inset 0 1px 0 hsla(38, 25%, 90%, 0.06)",
+    "--sb-bg": "linear-gradient(180deg, hsla(25, 8%, 12%, 0.62) 0%, hsla(25, 6%, 6%, 0.68) 100%)",
+    "--sb-bg-flat": "hsla(25, 8%, 10%, 0.58)",
+    "--sb-hover": "hsla(30, 15%, 95%, 0.1)",
+    "--sb-active": "hsla(30, 18%, 90%, 0.14)",
+    "--sb-border": "hsla(38, 20%, 85%, 0.15)",
+    "--sb-border-inner": "hsla(38, 25%, 95%, 0.1)",
+    "--sb-text": "hsl(30, 12%, 96%)",
+    "--sb-muted": "hsl(30, 10%, 82%)",
+    "--sb-gold": "hsl(34, 38%, 72%)",
+    "--sb-shadow": "4px 0 48px -8px hsla(25, 10%, 0%, 0.25), 8px 0 80px -16px hsla(25, 10%, 0%, 0.12)",
+    "--sb-highlight": "inset -1px 0 0 hsla(38, 30%, 95%, 0.1), inset 0 1px 0 hsla(38, 30%, 95%, 0.08), inset 1px 0 0 hsla(38, 25%, 90%, 0.05)",
   } as Record<string, string>;
 }
 
