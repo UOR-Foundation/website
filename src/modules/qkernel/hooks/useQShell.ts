@@ -14,6 +14,13 @@ import {
   type SimOp,
   type NoiseModel,
 } from "@/modules/qkernel/q-simulator";
+import {
+  zeroNoiseExtrapolation,
+  buildCalibrationMatrix,
+  applyMeasurementMitigation,
+  randomizedCompiling,
+  mitigateFull,
+} from "@/modules/qkernel/q-error-mitigation";
 import { QMmu } from "@/modules/qkernel/q-mmu";
 import { QSched, type QProcess, type SchedStats } from "@/modules/qkernel/q-sched";
 import { QSyscall } from "@/modules/qkernel/q-syscall";
@@ -1558,18 +1565,25 @@ export function useQShell() {
           log("    qiskit library list        List built-in circuit templates");
           log("    qiskit library load <name> <n>  Load template on n qubits");
           log("");
-          log("  Noise simulation:");
-          log("    qiskit noise status       Show current noise model");
-          log("    qiskit noise off          Ideal (noiseless) simulation");
-          log("    qiskit noise realistic    Preset: low / medium / high");
-          log("    qiskit noise depol <p>    Set depolarizing error rate");
-          log("    qiskit noise amp_damp <γ> Set amplitude damping (T1)");
-          log("    qiskit noise phase_damp <λ> Set phase damping (T2)");
-          log("    qiskit noise meas <p>     Set measurement error rate");
-          log("    qiskit noise 2q <p>       Set two-qubit gate error");
-          log("");
-          log("  Type 'man qiskit' for the full manual with gate map.");
-          break;
+           log("  Noise simulation:");
+           log("    qiskit noise status       Show current noise model");
+           log("    qiskit noise off          Ideal (noiseless) simulation");
+           log("    qiskit noise realistic    Preset: low / medium / high");
+           log("    qiskit noise depol <p>    Set depolarizing error rate");
+           log("    qiskit noise amp_damp <γ> Set amplitude damping (T1)");
+           log("    qiskit noise phase_damp <λ> Set phase damping (T2)");
+           log("    qiskit noise meas <p>     Set measurement error rate");
+           log("    qiskit noise 2q <p>       Set two-qubit gate error");
+           log("");
+           log("  Error mitigation:");
+           log("    qiskit mitigate zne [shots]       Zero-noise extrapolation");
+           log("    qiskit mitigate mem [shots]       Measurement error mitigation");
+           log("    qiskit mitigate rc [compilations] Randomized compiling");
+           log("    qiskit mitigate full [shots]      Full pipeline (RC → ZNE → MEM)");
+           log("    qiskit mitigate status            Show what mitigation does");
+           log("");
+           log("  Type 'man qiskit' for the full manual with gate map.");
+           break;
         }
 
         // ── circuit: Create a QuantumCircuit ──────────────────
@@ -2122,6 +2136,186 @@ export function useQShell() {
             break;
           }
           log("  Usage: noise [status|off|realistic [low|medium|high]|depolarizing <p>|amplitude_damping <γ>|phase_damping <λ>|measurement <p>|two_qubit <p>]");
+          break;
+        }
+
+        // ── mitigate: Error mitigation techniques ─────────────
+        if (subcmd === "mitigate" || subcmd === "mitigation") {
+          if (!circ) { log("qiskit: no circuit active. Create one first: qiskit circuit <n>"); break; }
+          if (circ.ops.length === 0) { log("qiskit: circuit has no gates. Add some gates first."); break; }
+          const mitCmd = parts[2]?.toLowerCase();
+
+          if (!mitCmd || mitCmd === "help") {
+            log("  Error mitigation — reduce noise in quantum results");
+            log("");
+            log("  qiskit mitigate zne [shots]        Zero-noise extrapolation");
+            log("  qiskit mitigate mem [shots]        Measurement error mitigation");
+            log("  qiskit mitigate rc [compilations]  Randomized compiling");
+            log("  qiskit mitigate full [shots]       Full pipeline (RC → ZNE → MEM)");
+            log("  qiskit mitigate status             Explain each technique");
+            break;
+          }
+
+          if (mitCmd === "status" || mitCmd === "explain") {
+            log("");
+            log("  Error Mitigation Techniques");
+            log("  ═══════════════════════════════════════════════════════");
+            log("");
+            log("  ZNE  (Zero-Noise Extrapolation)");
+            log("       Run the circuit at increasing noise levels, then");
+            log("       extrapolate back to the zero-noise limit.");
+            log("       Best for: reducing gate errors in expectation values.");
+            log("");
+            log("  MEM  (Measurement Error Mitigation)");
+            log("       Calibrate the readout by measuring known states,");
+            log("       then invert the error matrix on your real results.");
+            log("       Best for: correcting readout/measurement errors.");
+            log("");
+            log("  RC   (Randomized Compiling)");
+            log("       Insert random Pauli pairs around gates to convert");
+            log("       coherent errors into simpler stochastic noise.");
+            log("       Best for: making errors well-behaved and predictable.");
+            log("");
+            log("  FULL Pipeline: RC → ZNE → MEM (industry standard)");
+            log("       Apply all three in sequence for maximum accuracy.");
+            break;
+          }
+
+          const shots = parseInt(parts[3] || "1024");
+
+          if (mitCmd === "zne") {
+            log("");
+            log("  Running Zero-Noise Extrapolation...");
+            log(`  Circuit: ${circ.ops.length} gates, ${circ.numQubits} qubits, ${shots} shots`);
+            log("");
+            try {
+              const result = zeroNoiseExtrapolation(circ.ops, circ.numQubits, circ.noise, undefined, [1, 2, 3], shots);
+              log(`  Scale factors: ${result.rawValues.map(d => d.scale.toFixed(1)).join(", ")}`);
+              log(`  Noisy values:  ${result.rawValues.map(d => d.value.toFixed(4)).join(", ")}`);
+              log(`  Extrapolation: ${result.method}`);
+              log("");
+              log(`  ┌───────────────────────────────────────┐`);
+              log(`  │  Mitigated result: ${result.mitigated.toFixed(6)}            │`);
+              log(`  │  Raw noisy value:  ${result.rawValues[0].value.toFixed(6)}            │`);
+              const raw0 = result.rawValues[0].value;
+              const improvement = Math.abs(raw0 - 1) > 0
+                ? ((1 - Math.abs(result.mitigated - 1) / Math.abs(raw0 - 1)) * 100).toFixed(1)
+                : "N/A";
+              log(`  │  Improvement:      ${improvement}%                  │`);
+              log(`  └───────────────────────────────────────┘`);
+            } catch (e: any) {
+              log(`  Error: ${e.message}`);
+            }
+            break;
+          }
+
+          if (mitCmd === "mem") {
+            log("");
+            log("  Running Measurement Error Mitigation...");
+            log(`  Circuit: ${circ.numQubits} qubits, ${shots} calibration shots`);
+            log("");
+            try {
+              const calMatrix = buildCalibrationMatrix(circ.numQubits, circ.noise, shots);
+              const dim = 1 << circ.numQubits;
+              log(`  Calibration matrix: ${dim}×${dim} (fidelity: ${calMatrix.fidelity.toFixed(4)})`);
+              // Run the circuit to get raw counts
+              const st = createState(circ.numQubits);
+              st.ops = circ.ops;
+              st.noise = circ.noise;
+              const { measure: simMeas } = await import("@/modules/qkernel/q-simulator");
+              const rawCounts = simMeas(st, shots);
+              const mitigated = applyMeasurementMitigation(rawCounts, calMatrix);
+              log("");
+              log("  ┌─ Raw counts ─────────────────────────────────────┐");
+              const rawEntries = Object.entries(rawCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+              for (const [bs, count] of rawEntries) {
+                const pct = ((count / shots) * 100).toFixed(1);
+                const bar = "█".repeat(Math.round(count / shots * 30));
+                log(`  │  |${bs}⟩  ${String(count).padStart(5)}  ${pct.padStart(5)}%  ${bar}`);
+              }
+              log("  └────────────────────────────────────────────────────┘");
+              log("");
+              log("  ┌─ Mitigated counts ───────────────────────────────┐");
+              const mitEntries = Object.entries(mitigated.mitigatedCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+              for (const [bs, count] of mitEntries) {
+                const pct = ((count / shots) * 100).toFixed(1);
+                const bar = "█".repeat(Math.max(0, Math.round(count / shots * 30)));
+                log(`  │  |${bs}⟩  ${String(Math.round(count)).padStart(5)}  ${pct.padStart(5)}%  ${bar}`);
+              }
+              log("  └────────────────────────────────────────────────────┘");
+            } catch (e: any) {
+              log(`  Error: ${e.message}`);
+            }
+            break;
+          }
+
+          if (mitCmd === "rc") {
+            const compilations = parseInt(parts[3] || "16");
+            log("");
+            log("  Running Randomized Compiling...");
+            log(`  Circuit: ${circ.ops.length} gates, ${compilations} random compilations`);
+            log("");
+            try {
+              const result = randomizedCompiling(circ.ops, circ.numQubits, circ.noise, compilations);
+              log(`  Compilations: ${result.numCompilations}`);
+              log("");
+              log("  ┌─ Averaged counts ────────────────────────────────┐");
+              const rcEntries = Object.entries(result.mitigatedCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+              const totalRC = Object.values(result.mitigatedCounts).reduce((s, v) => s + v, 0);
+              for (const [bs, count] of rcEntries) {
+                const pct = ((count / totalRC) * 100).toFixed(1);
+                const bar = "█".repeat(Math.max(0, Math.round(count / totalRC * 30)));
+                log(`  │  |${bs}⟩  ${String(Math.round(count)).padStart(5)}  ${pct.padStart(5)}%  ${bar}`);
+              }
+              log("  └────────────────────────────────────────────────────┘");
+              log("");
+              log("  Coherent errors converted to stochastic noise.");
+            } catch (e: any) {
+              log(`  Error: ${e.message}`);
+            }
+            break;
+          }
+
+          if (mitCmd === "full") {
+            log("");
+            log("  Running Full Mitigation Pipeline: RC → ZNE → MEM");
+            log(`  Circuit: ${circ.ops.length} gates, ${circ.numQubits} qubits, ${shots} shots`);
+            log("");
+            try {
+              const result = mitigateFull(circ.ops, circ.numQubits, circ.noise, { shots });
+              if (result.rc) {
+                log("  Step 1: Randomized Compiling ✓");
+                log(`          ${result.rc.numCompilations} compilations`);
+              }
+              if (result.zne) {
+                log("  Step 2: Zero-Noise Extrapolation ✓");
+                log(`          Mitigated value: ${result.zne.mitigated.toFixed(6)}`);
+              }
+              if (result.mem) {
+                log("  Step 3: Measurement Error Mitigation ✓");
+              }
+              log("");
+              log("  ┌─ Final mitigated results ────────────────────────┐");
+              const finalCounts = result.counts;
+              const fullEntries = Object.entries(finalCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+              const totalFull = Object.values(finalCounts).reduce((s, v) => s + v, 0);
+              for (const [bs, count] of fullEntries) {
+                const pct = totalFull > 0 ? ((count / totalFull) * 100).toFixed(1) : "0.0";
+                const bar = "█".repeat(Math.max(0, Math.round((totalFull > 0 ? count / totalFull : 0) * 30)));
+                log(`  │  |${bs}⟩  ${String(Math.round(count)).padStart(5)}  ${pct.padStart(5)}%  ${bar}`);
+              }
+              log("  └────────────────────────────────────────────────────┘");
+              if (result.zne) {
+                log("");
+                log(`  ZNE estimate: ${result.zne.mitigated.toFixed(6)} (${result.zne.method})`);
+              }
+            } catch (e: any) {
+              log(`  Error: ${e.message}`);
+            }
+            break;
+          }
+
+          log("  Unknown mitigation command. Options: zne, mem, rc, full, status");
           break;
         }
 
