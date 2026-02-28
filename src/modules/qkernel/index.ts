@@ -66,3 +66,23 @@ export type {
   MountPoint,
   FsStats,
 } from "./q-fs";
+
+// Q-ECC: [[96,48,2]] stabilizer error correction
+export { QEcc, CODE_N, CODE_K, CODE_D } from "./q-ecc";
+export type {
+  StabilizerGenerator,
+  Syndrome,
+  CorrectionResult,
+  EccStats,
+} from "./q-ecc";
+
+// Q-ISA: 96-gate quantum instruction set
+export { QIsa } from "./q-isa";
+export type {
+  GateTier,
+  GateDef,
+  GateOp,
+  QCircuit,
+  IsaStats,
+  TransformElement,
+} from "./q-isa";
