@@ -11,7 +11,7 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit, CircleDot, BrainCircuit, Layers } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit, CircleDot, BrainCircuit, Layers, Shield } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
@@ -28,8 +28,9 @@ const CoadjointOrbitPanel = React.lazy(() => import("@/modules/quantum/component
 const TINNPanel = React.lazy(() => import("@/modules/quantum/components/TINNPanel"));
 const FoliationPanel = React.lazy(() => import("@/modules/quantum/components/FoliationPanel"));
 const QuantumAttentionPanel = React.lazy(() => import("@/modules/quantum/components/QuantumAttentionPanel"));
+const GeometricECCPanel = React.lazy(() => import("@/modules/quantum/components/GeometricECCPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits" | "tinn" | "foliation" | "q-attention";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits" | "tinn" | "foliation" | "q-attention" | "geo-ecc";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ export default function QuantumDashboardPage() {
     { key: "tinn", label: "TINN Layer", icon: <BrainCircuit size={12} /> },
     { key: "foliation", label: "Foliation", icon: <Layers size={12} /> },
     { key: "q-attention", label: "Q-Attention", icon: <BrainCircuit size={12} /> },
+    { key: "geo-ecc", label: "Geo ECC", icon: <Shield size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -71,6 +73,7 @@ export default function QuantumDashboardPage() {
     tinn: "Initializing metriplectic bracket dynamics…",
     foliation: "Constructing transverse symplectic foliation…",
     "q-attention": "Compiling attention head into quantum circuit…",
+    "geo-ecc": "Building τ-mirror stabilizer code…",
   };
 
   return (
@@ -136,6 +139,7 @@ export default function QuantumDashboardPage() {
            tab === "tinn" ? <TINNPanel /> :
            tab === "foliation" ? <FoliationPanel /> :
            tab === "q-attention" ? <QuantumAttentionPanel /> :
+           tab === "geo-ecc" ? <GeometricECCPanel /> :
            <SouriauThermodynamicsPanel />}
         </Suspense>
       </div>
@@ -314,6 +318,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "Tests", value: "10/10 ✓" },
       ],
     },
+    {
+      key: "geo-ecc" as Tab,
+      title: "Geometric Error Correction",
+      phase: "Phase 23",
+      icon: <Shield size={24} />,
+      color: "hsl(140,50%,55%)",
+      description: "Atlas τ-mirror involution as a stabilizer code [[96, 48, 2]]. 48 Z⊗Z generators from mirror pairs, 100% single-qubit error detection, sign class parity as secondary syndrome layer.",
+      stats: [
+        { label: "Code", value: "[[96,48,2]]" },
+        { label: "Generators", value: "48" },
+        { label: "Detection", value: "100%" },
+        { label: "Tests", value: "12/12 ✓" },
+      ],
+    },
   ];
 
   return (
@@ -393,6 +411,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "done", label: "Phase 19: Circuit Composer — drag-and-drop builder + kernel execution" },
             { status: "done", label: "Phase 20: Souriau Thermodynamics — zero-point info geometry & Cartan NN integration" },
             { status: "done", label: "Phase 22: Quantum-Native Attention — attention head → quantum circuit compilation (10 tests)" },
+            { status: "done", label: "Phase 23: Geometric Error Correction — τ-mirror stabilizer code [[96,48,2]] (12 tests)" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>
