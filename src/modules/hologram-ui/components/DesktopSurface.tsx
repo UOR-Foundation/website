@@ -19,14 +19,14 @@ import DayProgressRing from "./DayProgressRing";
 import AttentionToggle from "./AttentionToggle";
 import WidgetHoverActions from "./WidgetHoverActions";
 import { useDraggablePosition } from "../hooks/useDraggablePosition";
-import type { DesktopId } from "../hooks/useDesktopState";
+import type { DesktopMode } from "@/modules/hologram-os/projection-engine";
 import WeatherWidget from "./widgets/WeatherWidget";
 import ProductivityTimerWidget from "./widgets/ProductivityTimerWidget";
 import AmbientMoodWidget from "./widgets/AmbientMoodWidget";
 // VoiceOrb lifted to page level for single-instance efficiency
 
 /* ── Palette ───────────────────────────────────────── */
-function palette(m: DesktopId) {
+function palette(m: DesktopMode) {
   if (m === "white") return {
     wordmark: "hsla(0, 0%, 10%, 0.9)",
     greeting: "hsla(0, 0%, 8%, 0.8)",
@@ -121,7 +121,7 @@ function TypewriterText({ text, delay = 3200, speed = 80 }: { text: string; dela
 }
 
 /* ── BG Mode toggle dots ─────────────────────────────── */
-const BG_MODES: { mode: DesktopId; label: string }[] = [
+const BG_MODES: { mode: DesktopMode; label: string }[] = [
   { mode: "image", label: "Landscape" },
   { mode: "white", label: "Light" },
   { mode: "dark",  label: "Dark" },
@@ -129,7 +129,7 @@ const BG_MODES: { mode: DesktopId; label: string }[] = [
 
 /* ── Props ────────────────────────────────────────────── */
 interface DesktopSurfaceProps {
-  mode: DesktopId;
+  mode: DesktopMode;
   /** Whether this is the currently active (top) desktop */
   isActive: boolean;
   /** Whether this desktop is currently being peeled away */
@@ -139,7 +139,7 @@ interface DesktopSurfaceProps {
   isFocus: boolean;
   contextHints: string[];
   onOpenChat: () => void;
-  onSwitchDesktop: (m: DesktopId) => void;
+  onSwitchDesktop: (m: DesktopMode) => void;
   onOpenLegal: (tab: "privacy" | "terms") => void;
   isWidgetVisible: (id: string) => boolean;
   removeWidget: (id: string) => void;
@@ -487,7 +487,7 @@ export default function DesktopSurface({
           Frame
         </span>
         <div className="flex items-center gap-2.5">
-          {(["image", "white", "dark"] as DesktopId[]).map((m) => {
+          {(["image", "white", "dark"] as DesktopMode[]).map((m) => {
             const active = mode === m;
             const dotColor = mode === "white"
               ? "hsla(0, 0%, 10%, 0.8)"

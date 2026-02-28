@@ -143,7 +143,7 @@ export interface BootEvent {
 export type PanelId = "none" | "chat" | "browser" | "compute" | "memory" | "messenger" | "terminal" | "jupyter";
 
 /** Desktop frame IDs — the kernel's view of the active visual environment */
-export type DesktopMode = "image" | "white" | "dark" | "light";
+export type DesktopMode = "image" | "white" | "dark";
 
 export interface KernelConfig {
   typography: {
@@ -539,7 +539,7 @@ export class KernelProjector {
   }
 
   /** Update palette mode */
-  setPaletteMode(mode: "dark" | "light" | "image"): void {
+  setPaletteMode(mode: DesktopMode): void {
     this.config.palette.mode = mode;
     this.saveConfig();
     this.markDirty();
