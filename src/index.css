@@ -575,7 +575,7 @@
 
 /* ── Hologram Glass utility ───────────────────────────────────────── */
 .hologram-glass {
-  background: hsla(25, 10%, 15%, 0.35);
+  background: hsla(25, 10%, 12%, 0.55);
   backdrop-filter: blur(40px) saturate(1.4);
   -webkit-backdrop-filter: blur(40px) saturate(1.4);
   border: 1px solid hsla(38, 20%, 80%, calc(0.1 * var(--still-border-opacity, 1)));
@@ -588,7 +588,7 @@
               border-color calc(700ms * var(--still-transition-scale, 1)) ease;
 }
 .hologram-glass-subtle {
-  background: hsla(25, 10%, 18%, 0.2);
+  background: hsla(25, 10%, 14%, 0.35);
   backdrop-filter: blur(30px) saturate(1.3);
   -webkit-backdrop-filter: blur(30px) saturate(1.3);
   border: 1px solid hsla(38, 20%, 80%, calc(0.07 * var(--still-border-opacity, 1)));
@@ -598,7 +598,7 @@
               border-color calc(700ms * var(--still-transition-scale, 1)) ease;
 }
 .hologram-glass-elevated {
-  background: hsla(25, 10%, 14%, 0.5);
+  background: hsla(25, 10%, 12%, 0.65);
   backdrop-filter: blur(48px) saturate(1.5);
   -webkit-backdrop-filter: blur(48px) saturate(1.5);
   border: 1px solid hsla(38, 20%, 80%, calc(0.12 * var(--still-border-opacity, 1)));
@@ -612,9 +612,9 @@
 }
 /* Widget-sized glass pill */
 .hologram-glass-widget {
-  background: hsla(25, 10%, 14%, 0.3);
-  backdrop-filter: blur(36px) saturate(1.35);
-  -webkit-backdrop-filter: blur(36px) saturate(1.35);
+  background: hsla(25, 10%, 12%, 0.5);
+  backdrop-filter: blur(40px) saturate(1.4);
+  -webkit-backdrop-filter: blur(40px) saturate(1.4);
   border: 1px solid hsla(38, 20%, 80%, calc(0.08 * var(--still-border-opacity, 1)));
   border-radius: calc(24px * var(--still-radius-scale, 1));
   box-shadow: 0 6px 24px -6px hsla(25, 10%, 0%, calc(0.2 * var(--still-shadow-opacity, 1))),

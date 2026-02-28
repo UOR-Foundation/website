@@ -28,12 +28,12 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
     <div
       className="flex flex-col h-full w-full"
       style={{
-        background: P.bg,
-        backdropFilter: "blur(60px) saturate(1.6)",
-        WebkitBackdropFilter: "blur(60px) saturate(1.6)",
+        background: "hsla(25, 10%, 10%, 0.6)",
+        backdropFilter: "blur(48px) saturate(1.5)",
+        WebkitBackdropFilter: "blur(48px) saturate(1.5)",
         fontFamily: P.font,
-        borderLeft: `1px solid ${P.border}`,
-        boxShadow: "inset 0 0 80px hsla(25, 8%, 4%, 0.3)",
+        borderLeft: `1px solid hsla(38, 20%, 80%, 0.1)`,
+        boxShadow: "inset 0 0 80px hsla(25, 8%, 4%, 0.2), inset 0 1px 0 hsla(38, 25%, 90%, 0.06)",
       }}
     >
       <BrowserChrome state={state} actions={actions} onClose={onClose} onSendToLumen={onSendToLumen} />
