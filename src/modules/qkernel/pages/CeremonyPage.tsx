@@ -351,7 +351,7 @@ export default function CeremonyPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.0 }}
-                onClick={() => navigate("/your-space")}
+                onClick={() => navigate("/your-space?welcome=1")}
                 className="px-8 py-3.5 bg-primary text-primary-foreground rounded-xl font-medium text-lg
                            hover:bg-primary/90 transition-colors flex items-center gap-2"
               >
