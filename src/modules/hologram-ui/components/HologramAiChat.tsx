@@ -1017,55 +1017,23 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         <div
           className="flex-1 flex flex-col h-full relative"
           style={{
-            background: "hsla(25, 10%, 6%, 0.92)",
-            backdropFilter: "blur(28px) saturate(0.9)",
-            WebkitBackdropFilter: "blur(28px) saturate(0.9)",
-            borderLeft: "1px solid hsla(38, 15%, 35%, 0.1)",
-            boxShadow: "-8px 0 32px hsla(25, 10%, 3%, 0.35)",
+            background: "hsl(25, 10%, 7%)",
+            borderLeft: "1px solid hsla(38, 15%, 30%, 0.08)",
+            boxShadow: "-4px 0 24px hsla(25, 10%, 3%, 0.3)",
           }}
         >
-          {/* ── Close arrow — inside panel, left edge ────────────── */}
-          <button
-            onClick={onClose}
-            className="absolute top-1/2 -translate-y-1/2 left-0 z-[61] flex items-center justify-center cursor-pointer group"
-            style={{
-              width: 20,
-              height: 56,
-              background: "transparent",
-            }}
-            aria-label="Close LUMEN AI"
-          >
-            <svg
-              width="8"
-              height="16"
-              viewBox="0 0 8 16"
-              fill="none"
-              className="transition-transform duration-200 group-hover:translate-x-[1px]"
-            >
-              <path
-                d="M1.5 1.5L6.5 8L1.5 14.5"
-                stroke="hsla(38, 20%, 65%, 0.35)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="transition-all duration-200 group-hover:stroke-[hsla(38,25%,75%,0.7)]"
-              />
-            </svg>
-          </button>
         {/* ── Header — whisper-quiet ────────────────────────────────── */}
-        <div className="flex items-center justify-between px-5 py-3.5 flex-shrink-0" style={{ borderBottom: "1px solid hsla(38, 15%, 30%, 0.08)" }}>
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" style={{ borderBottom: "1px solid hsla(38, 15%, 25%, 0.06)" }}>
+          <div className="flex items-center gap-2">
             <div
-              className="w-7 h-7 rounded-full flex items-center justify-center"
-              style={{ background: "hsla(38, 30%, 40%, 0.12)", border: "1px solid hsla(38, 20%, 50%, 0.08)" }}
-            >
-              <Sparkles className="w-3.5 h-3.5" style={{ color: P.goldLight }} />
-            </div>
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: "hsla(38, 50%, 60%, 0.7)", boxShadow: "0 0 8px hsla(38, 50%, 55%, 0.3)" }}
+            />
             <span
-              className="text-[13px] font-medium tracking-[0.18em] uppercase"
-              style={{ fontFamily: P.font, color: "hsla(38, 15%, 75%, 0.4)" }}
+              className="text-[12px] font-medium tracking-[0.2em] uppercase"
+              style={{ fontFamily: P.font, color: "hsla(38, 15%, 70%, 0.35)" }}
             >
-              LUMEN AI
+              LUMEN
             </span>
           </div>
           <div className="flex items-center gap-0.5">
@@ -1121,7 +1089,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         <TrustTrendBar messages={messages} />
 
         {/* ── Messages / Welcome ─────────────────────────────────────── */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5 lumen-scroll">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 lumen-scroll">
           {!hasMessages && !isLoadingModel && (
             <TriadicWelcome
               key={replayGuideKey}
@@ -1194,19 +1162,18 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               exit={{ opacity: 0, y: 8, scale: 0.9 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               onClick={scrollToBottom}
-              className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] tracking-wider z-20 cursor-pointer"
+              className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-wider z-20 cursor-pointer"
               style={{
-                bottom: "180px",
-                background: "hsla(25, 12%, 12%, 0.92)",
-                backdropFilter: "blur(12px)",
-                border: "1px solid hsla(38, 30%, 40%, 0.2)",
-                color: P.goldLight,
+                bottom: "160px",
+                background: "hsl(25, 10%, 10%)",
+                border: "1px solid hsla(38, 30%, 40%, 0.15)",
+                color: P.goldMuted,
                 fontFamily: P.font,
-                boxShadow: "0 4px 16px hsla(25, 10%, 3%, 0.5), 0 0 0 1px hsla(38, 30%, 40%, 0.06)",
+                boxShadow: "0 2px 12px hsla(25, 10%, 3%, 0.4)",
               }}
             >
-              <ChevronDown className="w-3 h-3" style={{ color: P.goldMuted }} />
-              <span>New below</span>
+              <ChevronDown className="w-3 h-3" />
+              <span>New</span>
             </motion.button>
           )}
         </AnimatePresence>
@@ -1240,7 +1207,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         </div>
 
         {/* ── Input Bar — bottom-anchored, centered ────────────────── */}
-        <div className="flex justify-center px-4 pb-6 pt-2 flex-shrink-0 pointer-events-auto">
+        <div className="flex justify-center px-3 pb-4 pt-1.5 flex-shrink-0 pointer-events-auto">
           <div className="w-full max-w-2xl">
 
           {/* ── Context Awareness Chip ─────────────────────────── */}
@@ -1435,13 +1402,11 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           })()}
 
           <div
-            className="rounded-2xl overflow-visible transition-all"
+            className="rounded-xl overflow-visible transition-all"
             style={{
-              background: "hsla(25, 10%, 8%, 0.85)",
-              backdropFilter: "blur(30px) saturate(1.2)",
-              WebkitBackdropFilter: "blur(30px) saturate(1.2)",
-              border: "1px solid hsla(38, 15%, 30%, 0.2)",
-              boxShadow: "0 4px 20px hsla(25, 10%, 5%, 0.4)",
+              background: "hsla(25, 10%, 10%, 0.95)",
+              border: "1px solid hsla(38, 15%, 25%, 0.15)",
+              boxShadow: "0 2px 12px hsla(25, 10%, 5%, 0.3)",
             }}
           >
             {/* Attachment preview strip */}
@@ -1857,19 +1822,12 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
             style={
               isUser
                  ? {
-                    background: "hsla(38, 40%, 40%, 0.35)",
-                    backdropFilter: "blur(24px) saturate(1.2)",
-                    WebkitBackdropFilter: "blur(24px) saturate(1.2)",
-                    border: `1px solid hsla(38, 40%, 35%, 0.3)`,
+                    background: "hsla(38, 30%, 25%, 0.4)",
+                    border: "1px solid hsla(38, 35%, 30%, 0.2)",
                     borderBottomRightRadius: "6px",
-                    boxShadow: "0 2px 12px hsla(25, 10%, 5%, 0.3)",
                   }
                 : {
-                    background: "hsla(25, 10%, 8%, 0.82)",
-                    backdropFilter: "blur(24px) saturate(1.2)",
-                    WebkitBackdropFilter: "blur(24px) saturate(1.2)",
-                    border: "1px solid hsla(38, 15%, 25%, 0.15)",
-                    boxShadow: "0 2px 12px hsla(25, 10%, 5%, 0.3)",
+                    background: "transparent",
                   }
             }
           >
