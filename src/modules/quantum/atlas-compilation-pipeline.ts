@@ -31,6 +31,12 @@ import {
   type CompiledGate,
 } from "./circuit-compiler";
 import { buildStabilizers } from "./geometric-ecc";
+import {
+  compileFTAttention,
+  emitFTQASM,
+  verifyFTAttention,
+  type FTAttentionCircuit,
+} from "./fault-tolerant-attention";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -82,6 +88,8 @@ export interface ECCOverhead {
   syndromeCircuits: number;
   /** Total overhead factor */
   overheadFactor: number;
+  /** Fault-tolerant circuits per head (when FT module used) */
+  ftCircuits?: FTAttentionCircuit[];
 }
 
 export interface PipelineResult {
@@ -184,17 +192,32 @@ export function runPipeline(config: Partial<PipelineConfig> = {}): PipelineResul
     });
   }
 
-  // Stage 5: ECC wrapping
+  // Stage 5: ECC wrapping via fault-tolerant attention module
   let ecc: ECCOverhead | null = null;
   if (cfg.withECC) {
     const stabilizers = buildStabilizers();
-    const logicalPerHead = layers[0]?.heads[0]?.circuit.totalQubits ?? 0;
-    // Each logical qubit needs 2 physical qubits in the [[96,48,2]] code
-    const additionalQubits = logicalPerHead; // 2:1 overhead
+    const ftCircuits: FTAttentionCircuit[] = [];
+
+    // Compile each head through the FT pipeline
+    for (const layer of layers) {
+      for (const head of layer.heads) {
+        const ft = compileFTAttention(head.circuit.head);
+        ftCircuits.push(ft);
+      }
+    }
+
+    // Aggregate overhead from real FT circuits
+    const totalAdditional = ftCircuits.reduce(
+      (s, ft) => s + (ft.totalQubits - ft.overhead.bareQubits), 0,
+    );
+
     ecc = {
-      additionalQubits: additionalQubits * headsPerLayer * numLayers,
-      syndromeCircuits: stabilizers.length * numLayers,
-      overheadFactor: 2.0,
+      additionalQubits: totalAdditional,
+      syndromeCircuits: ftCircuits.reduce(
+        (s, ft) => s + ft.syndromeCircuits.length * ft.encoding.logicalAssignments.length, 0,
+      ),
+      overheadFactor: ftCircuits[0]?.overhead.qubitOverhead ?? 2.0,
+      ftCircuits,
     };
   }
 
@@ -259,7 +282,9 @@ function emitQASM(
   // Compute total qubits
   const totalQubits = layers.reduce((s, l) => s + l.totalQubits, 0)
     + (ecc?.additionalQubits ?? 0);
-  const totalClbits = layers.reduce((s, l) => s + l.heads.length, 0); // 1 measurement per head
+  const syndromeClbits = ecc?.ftCircuits
+    ? ecc.ftCircuits.reduce((s, ft) => s + ft.totalClassicalBits, 0) : 0;
+  const totalClbits = layers.reduce((s, l) => s + l.heads.length, 0) + syndromeClbits;
 
   lines.push(`// ── Registers ──`);
   lines.push(`qubit[${totalQubits}] q;`);
@@ -268,9 +293,10 @@ function emitQASM(
 
   // ECC stabilizer declarations
   if (ecc) {
-    lines.push(`// ── ECC: τ-mirror stabilizer syndrome qubits ──`);
-    lines.push(`// Additional ${ecc.additionalQubits} qubits for [[96,48,2]] code`);
-    lines.push(`// ${ecc.syndromeCircuits} syndrome extraction circuits`);
+    lines.push(`// ── ECC: [[96,48,2]] τ-mirror stabilizer code ──`);
+    lines.push(`// Additional ${ecc.additionalQubits} physical qubits for encoding + syndrome`);
+    lines.push(`// ${ecc.syndromeCircuits} syndrome extraction rounds`);
+    lines.push(`// Overhead: ${ecc.overheadFactor.toFixed(1)}× qubit expansion`);
     lines.push(``);
   }
 
@@ -337,13 +363,51 @@ function emitQASM(
       clbitOffset++;
     }
 
-    // ECC syndrome extraction per layer
-    if (ecc) {
+    // ECC: real syndrome extraction per layer
+    if (ecc?.ftCircuits) {
       lines.push(`// ── ECC syndrome extraction (layer ${layer.index}) ──`);
-      lines.push(`// Apply Z⊗Z stabilizer measurements from τ-mirror pairs`);
+      lines.push(`// Z⊗Z stabilizer measurements via CNOT-to-ancilla pattern`);
       lines.push(`barrier q;`);
       lines.push(``);
-      totalGateInstructions += 2; // barrier + syndrome
+
+      // Emit real syndrome circuits from FT module
+      const layerFTs = ecc.ftCircuits.filter(
+        (_, idx) => Math.floor(idx / layer.heads.length) === layer.index,
+      );
+      for (const ft of layerFTs) {
+        for (const sc of ft.syndromeCircuits) {
+          for (const gate of sc.cnotGates) {
+            if (gate.name === "reset") {
+              lines.push(`reset q[${gate.qubits[0]}];`);
+            } else {
+              const ctrl = gate.qubits[0] + qubitOffset - layer.totalQubits;
+              const tgt = gate.qubits[1] + qubitOffset - layer.totalQubits;
+              lines.push(`cx q[${ctrl}], q[${tgt}];`);
+              totalGateInstructions++;
+            }
+          }
+          for (let m = 0; m < sc.measurements.length; m++) {
+            lines.push(`c[${clbitOffset + m}] = measure q[${sc.measurements[m].qubits[0] + qubitOffset - layer.totalQubits}];`);
+            totalGateInstructions++;
+          }
+          clbitOffset += sc.classicalBits;
+        }
+      }
+
+      // Conditional corrections
+      lines.push(``);
+      lines.push(`// Conditional X corrections from syndrome decode`);
+      for (const ft of layerFTs) {
+        for (const rg of ft.recoveryGates) {
+          lines.push(`// if syndrome[${rg.qubits[0]}] → x q[${rg.qubits[1]}]`);
+          totalGateInstructions++;
+        }
+      }
+      lines.push(``);
+    } else if (ecc) {
+      lines.push(`// ── ECC syndrome extraction (layer ${layer.index}) ──`);
+      lines.push(`barrier q;`);
+      totalGateInstructions += 2;
     }
   }
 
