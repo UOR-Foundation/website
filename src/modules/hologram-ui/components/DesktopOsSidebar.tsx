@@ -456,6 +456,46 @@ export default function DesktopOsSidebar({
           </button>
         </IconTooltip>
       </div>
+
+      {/* ── Genesis Dot — Lumen AI trigger at the very bottom ── */}
+      <div className="flex justify-center pb-5 pt-1">
+        <IconTooltip label="Lumen AI" show={!expanded}>
+          <button
+            onClick={() => collapseAndDo(onNewChat)}
+            className="group relative flex items-center justify-center transition-all duration-300"
+            style={{
+              width: expanded ? "100%" : "44px",
+              height: "44px",
+              borderRadius: expanded ? "12px" : "50%",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: expanded ? "0 14px" : 0,
+            }}
+          >
+            {/* Breathing dot */}
+            <div
+              className="rounded-full transition-all duration-500 group-hover:scale-125"
+              style={{
+                width: "8px",
+                height: "8px",
+                background: "hsla(38, 50%, 60%, 0.85)",
+                boxShadow: "0 0 16px hsla(38, 50%, 55%, 0.5), 0 0 6px hsla(38, 50%, 55%, 0.3)",
+                animation: "heartbeat-love 2.4s ease-in-out infinite",
+                flexShrink: 0,
+              }}
+            />
+            {expanded && (
+              <span
+                className="text-[13px] font-light tracking-wide ml-3 whitespace-nowrap"
+                style={{ color: "var(--sb-gold)" }}
+              >
+                Lumen AI
+              </span>
+            )}
+          </button>
+        </IconTooltip>
+      </div>
     </aside>
 
     <ShareTheLoveModal open={shareOpen} onClose={() => setShareOpen(false)} />
