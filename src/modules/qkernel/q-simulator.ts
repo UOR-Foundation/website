@@ -439,6 +439,11 @@ export function applyOp(state: SimulatorState, op: SimOp): string | null {
     applyControlledGate(sv, n, q[0], q[1], Z);
     return null;
   }
+  if (g === "cs") {
+    const S = GATES.s as GateMatrix;
+    applyControlledGate(sv, n, q[0], q[1], S);
+    return null;
+  }
   if (g === "cy") {
     const Y = GATES.y as GateMatrix;
     applyControlledGate(sv, n, q[0], q[1], Y);
