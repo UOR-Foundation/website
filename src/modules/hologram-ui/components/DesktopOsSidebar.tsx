@@ -13,7 +13,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, User, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
-  Terminal,
+  Terminal, Beaker,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 import DataBankIndicator from "./DataBankIndicator";
@@ -83,6 +83,7 @@ interface DesktopOsSidebarProps {
   onOpenTerminal?: () => void;
   onOpenMemory?: () => void;
   onOpenMessenger?: () => void;
+  onOpenJupyter?: () => void;
   onGoHome?: () => void;
   onReplayGuide?: () => void;
   hintOpacity?: (key: string) => number;
@@ -97,6 +98,7 @@ export default function DesktopOsSidebar({
   onOpenTerminal,
   onOpenMemory,
   onOpenMessenger,
+  onOpenJupyter,
   onGoHome,
   onReplayGuide,
   hintOpacity,
@@ -300,6 +302,22 @@ export default function DesktopOsSidebar({
             >
               <Terminal className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
               {expanded && <span className="text-[14px] font-light whitespace-nowrap">Terminal</span>}
+            </button>
+          </IconTooltip>
+        )}
+
+        {/* Jupyter */}
+        {onOpenJupyter && (
+          <IconTooltip label="Jupyter" show={!expanded}>
+            <button
+              onClick={() => collapseAndDo(onOpenJupyter)}
+              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+                !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+              }`}
+              style={{ color: "var(--sb-text)" }}
+            >
+              <Beaker className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-gold)" }} />
+              {expanded && <span className="text-[14px] font-light whitespace-nowrap">Jupyter</span>}
             </button>
           </IconTooltip>
         )}
