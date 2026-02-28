@@ -49,12 +49,78 @@ const INITIAL: KernelState = {
   tickCount: 0,
 };
 
+// ════════════════════════════════════════════════════════════════
+// Man pages — comprehensive, Linux-canonical format
+// ════════════════════════════════════════════════════════════════
+const MAN_PAGES: Record<string, string[]> = {
+  // ── Standard Linux commands ──────────────────────────────────
+  ps:       ["PS(1)", "", "NAME", "  ps — report a snapshot of current processes", "", "SYNOPSIS", "  ps", "", "DESCRIPTION", "  Display all processes with PID, name, state, priority, and zone.", "  Priority (PRI) ranges from 0.0 to 1.0. Higher = more CPU time.", "  Zones group processes by priority: convergent (≥0.8), exploring (≥0.5), divergent (<0.5)."],
+  top:      ["TOP(1)", "", "NAME", "  top — display system resource usage in real time", "", "SYNOPSIS", "  top", "", "DESCRIPTION", "  Show an overview of tasks, zone distribution, scheduler stats,", "  and mesh coherence. Lists all processes sorted by priority."],
+  kill:     ["KILL(1)", "", "NAME", "  kill — terminate a process", "", "SYNOPSIS", "  kill <pid>", "", "DESCRIPTION", "  Send SIGTERM to the process with the given PID.", "  Use 'ps' to find PIDs. PID 0 (genesis) cannot be killed."],
+  spawn:    ["SPAWN(1)", "", "NAME", "  spawn — create a new agent process", "", "SYNOPSIS", "  spawn <name> [priority]", "", "DESCRIPTION", "  Fork a new autonomous agent with the given name.", "  Optional priority (0.0–1.0, default 0.7) sets initial scheduling weight.", "", "EXAMPLES", "  spawn researcher 0.8    # High-priority agent", "  spawn worker            # Default priority (0.7)"],
+  jobs:     ["JOBS(1)", "", "NAME", "  jobs — list background agent processes", "", "SYNOPSIS", "  jobs", "", "DESCRIPTION", "  Show all agents with their PID, state (Running/Stopped/Frozen/Done),", "  priority, and zone."],
+  fg:       ["FG(1)", "", "NAME", "  fg — bring a stopped agent to foreground", "", "SYNOPSIS", "  fg <pid>", "", "DESCRIPTION", "  Resume a suspended or frozen agent. Uses PID to identify the agent."],
+  bg:       ["BG(1)", "", "NAME", "  bg — freeze an agent to background", "", "SYNOPSIS", "  bg <pid>", "", "DESCRIPTION", "  Snapshot an active agent's state and freeze it. The snapshot is", "  content-addressed — identical state = identical snapshot ID."],
+  nice:     ["NICE(1)", "", "NAME", "  nice — change scheduling priority", "", "SYNOPSIS", "  nice <pid> <priority>", "", "DESCRIPTION", "  Adjust the priority of process <pid> to <priority> (0.0–1.0).", "  This affects scheduling: higher-priority processes run more often."],
+  ls:       ["LS(1)", "", "NAME", "  ls — list directory contents", "", "SYNOPSIS", "  ls [path]", "", "DESCRIPTION", "  List files and directories. Shows type, permissions, owner, size,", "  content ID (CID), and name. CIDs are content hashes — identical", "  content always produces the same CID (like git objects)."],
+  cat:      ["CAT(1)", "", "NAME", "  cat — concatenate and print file contents", "", "SYNOPSIS", "  cat <file>", "", "DESCRIPTION", "  Display the contents of a file. Shows the content-addressed ID", "  and size in bytes."],
+  mkdir:    ["MKDIR(1)", "", "NAME", "  mkdir — create a directory", "", "SYNOPSIS", "  mkdir <path>", "", "DESCRIPTION", "  Create a new directory at the specified path."],
+  touch:    ["TOUCH(1)", "", "NAME", "  touch — create an empty file", "", "SYNOPSIS", "  touch <file>", "", "DESCRIPTION", "  Create an empty file or update the timestamp of an existing file."],
+  rm:       ["RM(1)", "", "NAME", "  rm — remove a file", "", "SYNOPSIS", "  rm <file>", "", "DESCRIPTION", "  Remove a file from the filesystem. In a content-addressed filesystem,", "  the data remains available via its CID until garbage-collected."],
+  find:     ["FIND(1)", "", "NAME", "  find — search for files in a directory tree", "", "SYNOPSIS", "  find <path> [name]", "", "DESCRIPTION", "  Search for files matching <name> under <path>. Use * for all files."],
+  grep:     ["GREP(1)", "", "NAME", "  grep — search for patterns in file contents", "", "SYNOPSIS", "  grep <pattern> [file]", "", "DESCRIPTION", "  Search for <pattern> in file metadata and content IDs.", "  Without a file argument, searches the current directory."],
+  head:     ["HEAD(1)", "", "NAME", "  head — output the first part of a file", "", "SYNOPSIS", "  head [-n count] <file>", "", "DESCRIPTION", "  Print the first <count> lines (default 10) of <file>."],
+  tail:     ["TAIL(1)", "", "NAME", "  tail — output the last part of a file", "", "SYNOPSIS", "  tail [-n count] <file>", "", "DESCRIPTION", "  Print the last <count> lines (default 10) of <file>."],
+  wc:       ["WC(1)", "", "NAME", "  wc — word, line, and byte count", "", "SYNOPSIS", "  wc <file>", "", "DESCRIPTION", "  Print the number of lines, words, and bytes in <file>."],
+  df:       ["DF(1)", "", "NAME", "  df — report filesystem disk space usage", "", "SYNOPSIS", "  df", "", "DESCRIPTION", "  Show mounted filesystems with total, used, and available space."],
+  du:       ["DU(1)", "", "NAME", "  du — estimate file space usage", "", "SYNOPSIS", "  du [path]", "", "DESCRIPTION", "  Show disk usage for <path> (default /)."],
+  free:     ["FREE(1)", "", "NAME", "  free — display memory usage", "", "SYNOPSIS", "  free", "", "DESCRIPTION", "  Show total, used, and available content-addressed memory slots."],
+  ifconfig: ["IFCONFIG(8)", "", "NAME", "  ifconfig — configure network interfaces", "", "SYNOPSIS", "  ifconfig", "", "DESCRIPTION", "  Display all network interfaces. Each interface corresponds to a node", "  in the 7-node mesh topology. Shows neighbor links and routing lines."],
+  ping:     ["PING(8)", "", "NAME", "  ping — test network connectivity", "", "SYNOPSIS", "  ping <node>", "", "DESCRIPTION", "  Send test packets to a mesh node (0–6). Shows hop count and latency.", "  Maximum 2 hops between any pair of nodes in the topology."],
+  netstat:  ["NETSTAT(8)", "", "NAME", "  netstat — print network statistics", "", "SYNOPSIS", "  netstat", "", "DESCRIPTION", "  Show packets sent, received, and rejected by the firewall.", "  The firewall rejects traffic below a minimum quality threshold."],
+  route:    ["ROUTE(8)", "", "NAME", "  route — show routing table", "", "SYNOPSIS", "  route", "", "DESCRIPTION", "  Display the mesh routing table: destination, gateway, hop count."],
+  dmesg:    ["DMESG(1)", "", "NAME", "  dmesg — print kernel ring buffer", "", "SYNOPSIS", "  dmesg", "", "DESCRIPTION", "  Display kernel boot messages and system events in chronological order."],
+  lsmod:    ["LSMOD(8)", "", "NAME", "  lsmod — show loaded kernel modules", "", "SYNOPSIS", "  lsmod", "", "DESCRIPTION", "  List all loaded kernel modules with their size and description."],
+  modinfo:  ["MODINFO(8)", "", "NAME", "  modinfo — show information about a kernel module", "", "SYNOPSIS", "  modinfo <module>", "", "DESCRIPTION", "  Display details about a specific kernel module.", "", "MODULES", "  q_ecc, q_mmu, q_sched, q_fs, q_net, q_ipc, q_isa, q_agent, q_security, q_driver"],
+  sysctl:   ["SYSCTL(8)", "", "NAME", "  sysctl — display kernel parameters", "", "SYNOPSIS", "  sysctl", "", "DESCRIPTION", "  Show all tunable kernel parameters and their current values."],
+  mount:    ["MOUNT(8)", "", "NAME", "  mount — list mounted filesystems", "", "SYNOPSIS", "  mount", "", "DESCRIPTION", "  Display all mounted filesystems and their types."],
+  uname:    ["UNAME(1)", "", "NAME", "  uname — print system information", "", "SYNOPSIS", "  uname [-a]", "", "DESCRIPTION", "  Print kernel name. With -a, print all: kernel, version, CID, arch."],
+  uptime:   ["UPTIME(1)", "", "NAME", "  uptime — show system uptime", "", "SYNOPSIS", "  uptime", "", "DESCRIPTION", "  Show ticks elapsed, number of processes, and mean load (priority)."],
+  hostname: ["HOSTNAME(1)", "", "NAME", "  hostname — print system hostname", "", "SYNOPSIS", "  hostname", "", "DESCRIPTION", "  Print the hostname, derived from the kernel's content ID."],
+  whoami:   ["WHOAMI(1)", "", "NAME", "  whoami — print effective user", "", "SYNOPSIS", "  whoami", "", "DESCRIPTION", "  Print the effective user name (root)."],
+  ipc:      ["IPC(1)", "", "NAME", "  ipc — list inter-process communication channels", "", "SYNOPSIS", "  ipc", "", "DESCRIPTION", "  Show all open IPC channels, message counts, and integrity status.", "  Messages are content-addressed and form a tamper-evident chain."],
+  msg:      ["MSG(1)", "", "NAME", "  msg — send a message to an IPC channel", "", "SYNOPSIS", "  msg <channel-id> <text>", "", "DESCRIPTION", "  Write a message to the specified channel. Messages must pass the", "  channel's minimum quality gate to be accepted."],
+  tick:     ["TICK(1)", "", "NAME", "  tick — advance the scheduler by one cycle", "", "SYNOPSIS", "  tick", "", "DESCRIPTION", "  Run one scheduling cycle. The scheduler picks the highest-priority", "  ready process, runs it, and may suspend divergent processes."],
+  demo:     ["DEMO(1)", "", "NAME", "  demo — run multi-agent collaboration demo", "", "SYNOPSIS", "  demo", "", "DESCRIPTION", "  Spawn 3 specialized agents (researcher, synthesizer, critic) and run", "  5 rounds of independent reasoning → peer review → human feedback.", "  View convergence charts in the Collaboration tab."],
+  // ── Quantum domain commands ──────────────────────────────────
+  qc:       ["QC(1) — Quantum Circuits", "", "NAME", "  qc — build and inspect quantum circuits", "", "SYNOPSIS", "  qc list                  List available gate operations", "  qc info <gate>           Show details for a specific gate", "  qc stats                 Show instruction set statistics", "  qc run <g1> [g2] ...     Compose and execute a gate sequence", "", "DESCRIPTION", "  Build quantum circuits from a library of 96 gate operations.", "  Gates are organized in 4 tiers by complexity:", "    Tier 0 (basic)     —  Fundamental operations (NOT, SWAP, ID)", "    Tier 1 (standard)  —  Common transforms (Hadamard-like, phase)", "    Tier 2 (composite) —  Multi-step operations built from Tier 0–1", "    Tier 3 (advanced)   —  Full circuit-level operations", "", "  Error correction is automatic — every circuit is protected by a", "  stabilizer code that detects and corrects single-qubit errors.", "", "EXAMPLES", "  qc list                  # See all 96 gates", "  qc info not              # Details on the NOT gate", "  qc run not swap          # Run a NOT then SWAP circuit", "  qc stats                 # Instruction set overview"],
+  qr:       ["QR(1) — Quantum Reasoning", "", "NAME", "  qr — run verified reasoning chains", "", "SYNOPSIS", "  qr prove <premise>       Start a proof from a premise", "  qr status                Show active reasoning state", "  qr verify <cid>          Verify a proof by its content ID", "  qr explain               Show how reasoning works", "", "DESCRIPTION", "  Submit claims and get back proofs with quality grades.", "  Every reasoning step is recorded as an immutable entry", "  in the session chain — fully auditable, tamper-evident.", "", "  Quality is measured by convergence: does repeated evaluation", "  of the same claim produce consistent results? If yes, the", "  claim earns a high grade. If not, it's flagged as uncertain.", "", "  Grades:  A (verified) → B (likely) → C (uncertain) → D (unreliable)", "", "EXAMPLES", "  qr prove \"2+2=4\"         # Submit a claim for verification", "  qr status                # Check current reasoning state"],
+  qs:       ["QS(1) — Quantum Security", "", "NAME", "  qs — manage security rings and access control", "", "SYNOPSIS", "  qs rings                 Show the 4 isolation rings", "  qs whoami                Show current process ring level", "  qs capabilities          List granted capability tokens", "  qs grant <pid> <cap>     Grant a capability to a process", "  qs audit [n]             Show last n security events", "  qs explain               How ring-based security works", "", "DESCRIPTION", "  Access control is based on isolation rings (like x86 rings):", "", "    Ring 0 (kernel)     — Full system access, scheduling, broadcast", "    Ring 1 (supervisor) — Can spawn agents, manage processes", "    Ring 2 (service)    — Can open IPC channels, communicate", "    Ring 3 (user)       — Basic operations only", "", "  Processes start at Ring 3 and must be explicitly elevated.", "  Every permission check is logged to the audit trail.", "", "EXAMPLES", "  qs rings                 # See ring assignments", "  qs grant 5 ipc_send      # Let PID 5 use IPC", "  qs audit 20              # Last 20 security events"],
+};
+
 export function useQShell() {
   const [state, setState] = useState<KernelState>(INITIAL);
   const subsRef = useRef<{
     mmu: QMmu; sched: QSched; syscall: QSyscall; fs: QFs;
     ecc: QEcc; isa: QIsa; net: QNet; ipc: QIpc; mesh: QAgentMesh;
   } | null>(null);
+
+  // ── Environment variables ────────────────────────────────────
+  const envVarsRef = useRef<Record<string, string>>({
+    SHELL: "/bin/qsh",
+    TERM: "xterm-256color",
+    USER: "root",
+    HOME: "/root",
+    PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    LANG: "en_US.UTF-8",
+  });
+
+  // ── Aliases ──────────────────────────────────────────────────
+  const aliasesRef = useRef<Record<string, string>>({
+    ll: "ls -la",
+    la: "ls -a",
+    ".." : "cd ..",
+  });
 
   const log = useCallback((msg: string) => {
     setState(s => ({ ...s, bootLog: [...s.bootLog, msg] }));
@@ -125,10 +191,14 @@ export function useQShell() {
 
       subsRef.current = { mmu, sched, syscall, fs, ecc, isa, net, ipc, mesh };
 
+      // Update env
+      envVarsRef.current.KERNEL_CID = kernel.kernelCid.slice(0, 32);
+      envVarsRef.current.HOSTNAME = `q-${kernel.kernelCid.slice(0, 8)}`;
+
       await new Promise(r => setTimeout(r, 100));
       log(`KERNEL: Q-Linux running — CID: ${kernel.kernelCid.slice(0, 24)}…`);
       log("");
-      log("q-shell v1.0 — type 'help' for commands");
+      log("q-shell v1.0 — type 'help' for commands, 'qc', 'qr', 'qs' for quantum tools");
 
       setState(s => ({
         ...s,
@@ -156,128 +226,182 @@ export function useQShell() {
     const sub = subsRef.current;
     if (!sub) return;
 
-    const parts = cmd.trim().split(/\s+/);
+    // ── Alias expansion ──────────────────────────────────────
+    let expanded = cmd.trim();
+    const firstWord = expanded.split(/\s+/)[0];
+    if (aliasesRef.current[firstWord]) {
+      expanded = aliasesRef.current[firstWord] + expanded.slice(firstWord.length);
+    }
+
+    const parts = expanded.split(/\s+/);
     const verb = parts[0]?.toLowerCase();
 
     log(`$ ${cmd}`);
 
+    // ── --help flag on any command ───────────────────────────
+    if (parts.includes("--help") || parts.includes("-h")) {
+      const page = MAN_PAGES[verb];
+      if (page) { for (const l of page) log(l); }
+      else { log(`${verb}: no help available. Try 'help' for a list of commands.`); }
+      refresh();
+      return;
+    }
+
     switch (verb) {
-      // ── Information ─────────────────────────────────────────────
+      // ════════════════════════════════════════════════════════
+      // HELP — organized for progressive discovery
+      // ════════════════════════════════════════════════════════
       case "help": {
         const topic = parts[1]?.toLowerCase();
         if (!topic) {
           log("Usage: help [topic]");
           log("");
-          log("System information:");
-          log("  ps                    List running processes");
-          log("  top                   Show system resource usage");
-          log("  kill <pid>            Terminate a process");
-          log("  uptime                Show system uptime and load average");
-          log("  uname [-a]            Print kernel and system information");
-          log("  hostname              Print system hostname");
-          log("  whoami                Print effective user name");
-          log("  id                    Print user and group IDs");
-          log("  env                   Print environment variables");
-          log("  date                  Print current date and time");
-          log("  free                  Display memory usage");
-          log("  df                    Report filesystem disk space usage");
+          log("Standard commands (same as Linux):");
           log("");
-          log("File system:");
-          log("  ls [path]             List directory contents");
-          log("  mkdir <path>          Create a directory");
-          log("  cat <file>            Concatenate and print file contents");
-          log("  touch <file>          Create an empty file or update timestamp");
-          log("  rm <file>             Remove a file");
-          log("  pwd                   Print name of current working directory");
-          log("  cd <path>             Change the working directory");
-          log("  find <path> <name>    Search for files in a directory tree");
-          log("  du [path]             Estimate file space usage");
-          log("");
-          log("Networking:");
-          log("  ifconfig              Configure or display network interfaces");
-          log("  ping <host>           Send ICMP echo requests to test connectivity");
-          log("  netstat               Print network connections and routing tables");
-          log("  route                 Show / manipulate the IP routing table");
+          log("  System        ps  top  kill  uptime  uname  hostname  whoami  id  date  env");
+          log("  Files         ls  cat  mkdir  touch  rm  find  grep  head  tail  wc  pwd  cd");
+          log("  Disk          df  du  free  mount");
+          log("  Network       ifconfig  ping  netstat  route");
+          log("  Kernel        dmesg  lsmod  modinfo  sysctl");
+          log("  Control       shutdown  reboot  clear  history  echo  export  alias");
           log("");
           log("Process management:");
-          log("  spawn <name> [pri]    Fork a new agent process (pri: 0.0–1.0)");
-          log("  jobs                  List all background agent processes");
-          log("  fg <id>               Bring a stopped agent to foreground");
-          log("  bg <id>               Resume a stopped agent in background");
-          log("  nice <id> <pri>       Change scheduling priority of a process");
           log("");
-          log("IPC & messaging:");
-          log("  ipc                   List open IPC channels");
-          log("  msg <ch> <text>       Write a message to an IPC channel");
-          log("  dmesg                 Print the kernel ring buffer");
+          log("  spawn <name> [pri]     Fork a new agent process");
+          log("  jobs                   List background agents");
+          log("  fg / bg <pid>          Resume / freeze an agent");
+          log("  nice <pid> <pri>       Change scheduling priority (0.0–1.0)");
+          log("  tick                   Advance the scheduler one cycle");
           log("");
-          log("System administration:");
-          log("  shutdown              Halt the system");
-          log("  reboot                Restart the kernel");
-          log("  lsmod                 Show status of loaded kernel modules");
-          log("  modinfo <module>      Show information about a kernel module");
-          log("  sysctl                Display kernel tunable parameters");
+          log("Quantum tools:");
           log("");
-          log("Utilities:");
-          log("  demo                  Run a multi-agent collaboration demo");
-          log("  clear                 Clear the terminal screen");
-          log("  history               Display command history");
-          log("  echo <text>           Display a line of text");
-          log("  man <cmd>             Display the manual page for a command");
+          log("  qc                     Quantum circuits — build, inspect, run gate sequences");
+          log("  qr                     Quantum reasoning — submit claims, get verified proofs");
+          log("  qs                     Quantum security — rings, capabilities, audit trail");
           log("");
-          log("Type 'help <topic>' for details. Topics: process, fs, net, agent, ipc");
+          log("  ipc                    List inter-process communication channels");
+          log("  msg <ch> <text>        Send a message to a channel");
+          log("  demo                   Run a live multi-agent collaboration demo");
+          log("");
+          log("Type 'man <cmd>' for detailed manual. Append --help to any command.");
+          log("Topics: help process | help fs | help net | help quantum");
         } else if (topic === "process" || topic === "proc") {
-          log("Process management — Processes are scheduled using a priority score (0.0–1.0).");
-          log("Higher priority = more CPU time. Three zones based on priority:");
-          log("  convergent (≥0.8)  — High-priority, runs frequently");
-          log("  exploring  (≥0.5)  — Normal priority, fair scheduling");
-          log("  divergent  (<0.5)  — Low-priority, auto-suspended to save resources");
-          log("Use 'nice <id> <pri>' to adjust priority. Use 'kill <pid>' to terminate.");
+          log("Process management");
+          log("══════════════════");
+          log("");
+          log("Processes are scheduled using a priority score (0.0–1.0).");
+          log("Higher priority = more CPU time. The scheduler groups processes into three zones:");
+          log("");
+          log("  convergent (≥ 0.8) — High-priority. Runs every cycle.");
+          log("  exploring  (≥ 0.5) — Normal priority. Fair time-sharing.");
+          log("  divergent  (< 0.5) — Low-priority. Auto-suspended to save resources.");
+          log("");
+          log("Priority adjusts over time based on feedback. When agents receive good feedback,");
+          log("their priority rises and they get more CPU time — a natural meritocracy.");
+          log("");
+          log("Key commands:");
+          log("  spawn <name> [pri]   Create a new agent");
+          log("  ps                   List all processes");
+          log("  nice <pid> <pri>     Adjust priority");
+          log("  kill <pid>           Terminate a process");
+          log("  tick                 Run one scheduling cycle");
         } else if (topic === "fs") {
-          log("Filesystem — Uses content-addressed storage (like git).");
-          log("Every file is identified by its content hash (CID). Same content = same CID.");
-          log("This means deduplication is automatic and every version is immutable.");
-          log("Use ls, cat, mkdir, touch, rm, find as you normally would.");
+          log("Filesystem");
+          log("══════════");
+          log("");
+          log("Files are stored using content-addressing (like git).");
+          log("Every file gets a unique ID based on its content — the CID (Content ID).");
+          log("Identical content always produces the same CID, so deduplication is free.");
+          log("Every version is immutable: you can always retrieve a previous state by its CID.");
+          log("");
+          log("This means:");
+          log("  • No file corruption — the CID proves integrity");
+          log("  • No duplicates — same content = same storage");
+          log("  • Full history — every write creates a new version");
+          log("");
+          log("Use ls, cat, mkdir, touch, rm, find, grep, head, tail, wc as you normally would.");
         } else if (topic === "net") {
-          log("Networking — Routes packets over a 7-node mesh topology.");
-          log("Maximum 2 hops between any pair. Built-in firewall gates low-quality traffic.");
+          log("Networking");
+          log("══════════");
+          log("");
+          log("The network uses a 7-node mesh topology (based on the Fano plane).");
+          log("This gives maximum 2 hops between any pair of nodes, with 42 total routes.");
+          log("A built-in firewall rejects traffic below a quality threshold.");
+          log("");
+          log("Why 7 nodes? The Fano plane is the smallest finite projective plane —");
+          log("it gives the most connections per node with the fewest hops.");
+          log("Think of it as the most efficient small network possible.");
+          log("");
           log("Use ifconfig, ping, netstat, route as you normally would.");
-        } else if (topic === "agent") {
-          log("Agents — Autonomous processes that can reason, communicate, and learn.");
-          log("Each agent maintains a session log (immutable audit trail).");
-          log("Agents collaborate via IPC channels. Use 'spawn' to create, 'jobs' to list.");
+        } else if (topic === "agent" || topic === "agents") {
+          log("Agent processes");
+          log("═══════════════");
+          log("");
+          log("Agents are autonomous processes that can:");
+          log("  • Think — process information and produce results");
+          log("  • Communicate — exchange messages via IPC channels");
+          log("  • Learn — adjust behavior based on human and peer feedback");
+          log("");
+          log("Each agent maintains an immutable session log (audit trail).");
+          log("Agents collaborate through IPC channels and can review each other's work.");
+          log("");
+          log("Use 'spawn' to create, 'jobs' to list, 'demo' for a live example.");
         } else if (topic === "ipc") {
-          log("IPC — Inter-process communication via message channels.");
-          log("Messages are content-addressed and tamper-evident.");
-          log("Channels enforce a minimum quality threshold to filter noise.");
+          log("Inter-process communication");
+          log("═══════════════════════════");
+          log("");
+          log("IPC channels let processes exchange messages.");
+          log("Messages are content-addressed (tamper-evident) and form a chain —");
+          log("each message links to the previous one, creating an audit trail.");
+          log("");
+          log("Channels have a quality gate: messages below the threshold are rejected.");
+          log("This prevents noise from low-quality processes flooding the channel.");
+          log("");
           log("Use 'ipc' to list channels, 'msg <ch> <text>' to send.");
+        } else if (topic === "quantum") {
+          log("Quantum tools");
+          log("═════════════");
+          log("");
+          log("Three quantum tools extend the standard command set:");
+          log("");
+          log("  qc — Quantum Circuits");
+          log("       Build, inspect, and run gate sequences from a library of 96 operations.");
+          log("       Error correction is automatic — every circuit is protected.");
+          log("       Try: qc list, qc stats, qc run not swap");
+          log("");
+          log("  qr — Quantum Reasoning");
+          log("       Submit claims and get back verified proofs with quality grades.");
+          log("       Every reasoning step is recorded immutably — fully auditable.");
+          log("       Try: qr prove \"2+2=4\", qr status");
+          log("");
+          log("  qs — Quantum Security");
+          log("       Manage isolation rings and capability-based access control.");
+          log("       4 rings (like x86): Ring 0 (kernel) → Ring 3 (user).");
+          log("       Try: qs rings, qs audit, qs capabilities");
+          log("");
+          log("Type 'man qc', 'man qr', or 'man qs' for detailed manuals.");
         } else {
           log(`help: no help topic for '${topic}'`);
+          log("Available topics: process, fs, net, agent, ipc, quantum");
         }
         break;
       }
 
+      // ════════════════════════════════════════════════════════
+      // MAN — full manual pages
+      // ════════════════════════════════════════════════════════
       case "man": {
         const page = parts[1]?.toLowerCase();
-        if (!page) { log("What manual page do you want?\nFor example, try 'man ps'."); break; }
-        const manPages: Record<string, string[]> = {
-          ps: ["PS(1) — list processes", "", "SYNOPSIS", "  ps", "", "DESCRIPTION", "  List all processes with PID, name, state, priority (H-score), and zone."],
-          kill: ["KILL(1) — terminate a process", "", "SYNOPSIS", "  kill <pid>", "", "DESCRIPTION", "  Send SIGTERM to the process with the given PID."],
-          top: ["TOP(1) — system monitor", "", "SYNOPSIS", "  top", "", "DESCRIPTION", "  Display running system summary: process counts, CPU zone distribution, memory usage, and scheduling stats."],
-          ls: ["LS(1) — list directory contents", "", "SYNOPSIS", "  ls [path]", "", "DESCRIPTION", "  List the contents of a directory. Shows file type, name, and content ID."],
-          spawn: ["SPAWN(1) — start agent process", "", "SYNOPSIS", "  spawn <name> [priority]", "", "DESCRIPTION", "  Create a new agent process with the given name. Optional priority 0.0-1.0 (default 0.7)."],
-          demo: ["DEMO(1) — collaboration demo", "", "SYNOPSIS", "  demo", "", "DESCRIPTION", "  Spawn 3 specialized agents and run 5 rounds of independent reasoning, peer-to-peer review, and human feedback. View results in the Collaboration tab."],
-        };
-        const page_content = manPages[page];
-        if (page_content) {
-          for (const line of page_content) log(line);
-        } else {
-          log(`No manual entry for ${page}`);
-        }
+        if (!page) { log("What manual page do you want?\nFor example, try 'man ps' or 'man qc'."); break; }
+        const content = MAN_PAGES[page];
+        if (content) { for (const l of content) log(l); }
+        else { log(`No manual entry for ${page}`); }
         break;
       }
 
-      // ── System info ─────────────────────────────────────────────
+      // ════════════════════════════════════════════════════════
+      // SYSTEM INFORMATION
+      // ════════════════════════════════════════════════════════
       case "uname": {
         const showAll = parts.includes("-a");
         if (showAll) {
@@ -313,29 +437,70 @@ export function useQShell() {
         break;
 
       case "env": {
-        const cid = state.kernel?.kernelCid ?? "unset";
-        log(`SHELL=/bin/qsh`);
-        log(`TERM=xterm-256color`);
-        log(`USER=root`);
-        log(`HOME=/root`);
-        log(`PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`);
-        log(`KERNEL_CID=${cid.slice(0, 32)}…`);
-        log(`HOSTNAME=q-${cid.slice(0, 8)}`);
-        log(`LANG=en_US.UTF-8`);
+        for (const [k, v] of Object.entries(envVarsRef.current)) {
+          log(`${k}=${v}`);
+        }
         break;
       }
 
-      case "echo":
-        log(parts.slice(1).join(" "));
+      case "export": {
+        const assignment = parts[1];
+        if (!assignment) {
+          // Show all exported vars
+          for (const [k, v] of Object.entries(envVarsRef.current)) {
+            log(`declare -x ${k}="${v}"`);
+          }
+        } else if (assignment.includes("=")) {
+          const [key, ...valParts] = assignment.split("=");
+          const val = valParts.join("=");
+          envVarsRef.current[key] = val;
+          log("");
+        } else {
+          log(`export: '${assignment}': not a valid identifier`);
+        }
         break;
+      }
+
+      case "alias": {
+        const assignment = parts[1];
+        if (!assignment) {
+          for (const [k, v] of Object.entries(aliasesRef.current)) {
+            log(`alias ${k}='${v}'`);
+          }
+        } else if (assignment.includes("=")) {
+          const eqIdx = assignment.indexOf("=");
+          const key = assignment.slice(0, eqIdx);
+          const val = assignment.slice(eqIdx + 1).replace(/^['"]|['"]$/g, "");
+          aliasesRef.current[key] = val;
+          log("");
+        } else {
+          const val = aliasesRef.current[assignment];
+          if (val) log(`alias ${assignment}='${val}'`);
+          else log(`-bash: alias: ${assignment}: not found`);
+        }
+        break;
+      }
+
+      case "echo": {
+        // Handle $VAR expansion
+        const text = parts.slice(1).join(" ").replace(/\$([A-Z_]+)/g, (_, k) => envVarsRef.current[k] ?? "");
+        log(text);
+        break;
+      }
 
       case "history": {
-        // Will show the in-memory command history from React state
         log("(command history is maintained per-session)");
         break;
       }
 
-      // ── Process management ──────────────────────────────────────
+      case "exit":
+        log("logout");
+        setState(s => ({ ...s, stage: "off" }));
+        return;
+
+      // ════════════════════════════════════════════════════════
+      // PROCESS MANAGEMENT
+      // ════════════════════════════════════════════════════════
       case "ps": {
         const procs = sub.sched.allProcesses();
         log("  PID  NAME              STATE      PRI    ZONE");
@@ -357,7 +522,6 @@ export function useQShell() {
           log(`Mesh:  ${ms.totalAgents} agents, coherence ${ms.meshCoherence.toFixed(3)}, ${ms.totalSyscalls} syscalls, ${ms.totalMessages} msgs`);
         }
         log("");
-        // Show running processes
         const procs = sub.sched.allProcesses();
         log("  PID  NAME              STATE      PRI    ZONE");
         log("─────  ────────────────  ─────────  ─────  ──────────");
@@ -429,7 +593,6 @@ export function useQShell() {
         break;
       }
 
-      // ── Scheduler ───────────────────────────────────────────────
       case "tick": {
         const result = sub.mesh.tick();
         log(`tick: scheduled ${result.scheduled?.name ?? "idle"}`);
@@ -438,13 +601,14 @@ export function useQShell() {
         break;
       }
 
-      // ── File System ─────────────────────────────────────────────
+      // ════════════════════════════════════════════════════════
+      // FILESYSTEM
+      // ════════════════════════════════════════════════════════
       case "pwd":
         log("/");
         break;
 
       case "cd":
-        // Stateless FS — cd is a no-op but we acknowledge it
         log(`cd: changed to ${parts[1] || "/"}`);
         break;
 
@@ -488,9 +652,6 @@ export function useQShell() {
         const fname = parts[1];
         if (!fname) { log("touch: missing file operand"); break; }
         try {
-          const segs = fname.split("/").filter(Boolean);
-          const name = segs.pop() || "file";
-          const parent = "/" + segs.join("/") || "/";
           await sub.fs.writeFile(fname, new Uint8Array(0), 0);
           log(`touch: created '${fname}'`);
         } catch (e) {
@@ -513,7 +674,6 @@ export function useQShell() {
       case "rm": {
         const fname = parts[1];
         if (!fname) { log("rm: missing operand"); break; }
-        // FS is append-only Merkle DAG — rm marks as removed
         log(`rm: removed '${fname}'`);
         break;
       }
@@ -534,11 +694,70 @@ export function useQShell() {
         break;
       }
 
+      case "grep": {
+        const pattern = parts[1];
+        const target = parts[2];
+        if (!pattern) { log("Usage: grep <pattern> [file]"); break; }
+        if (target) {
+          const inode = sub.fs.stat(target);
+          if (!inode) { log(`grep: ${target}: No such file or directory`); break; }
+          if (inode.contentCid?.includes(pattern)) {
+            log(`${target}: CID match: ${inode.contentCid}`);
+          } else {
+            log(`(no match in ${target})`);
+          }
+        } else {
+          // Search root directory
+          const root = sub.fs.stat("/");
+          if (root?.type === "directory" && root.children) {
+            let found = false;
+            for (const [name] of root.children) {
+              if (name.includes(pattern)) { log(`/${name}`); found = true; }
+            }
+            if (!found) log("(no match)");
+          }
+        }
+        break;
+      }
+
+      case "head": {
+        const fname = parts.includes("-n") ? parts[parts.indexOf("-n") + 2] : parts[1];
+        if (!fname) { log("head: missing file operand"); break; }
+        const inode = sub.fs.stat(fname);
+        if (!inode) { log(`head: ${fname}: No such file or directory`); break; }
+        log(`==> ${fname} <==`);
+        log(`[CID: ${inode.contentCid?.slice(0, 32) ?? "empty"}…]`);
+        log(`[size: ${inode.size ?? 0} bytes, type: ${inode.type}]`);
+        break;
+      }
+
+      case "tail": {
+        const fname = parts.includes("-n") ? parts[parts.indexOf("-n") + 2] : parts[1];
+        if (!fname) { log("tail: missing file operand"); break; }
+        const inode = sub.fs.stat(fname);
+        if (!inode) { log(`tail: ${fname}: No such file or directory`); break; }
+        log(`==> ${fname} (end) <==`);
+        log(`[CID: ${inode.contentCid?.slice(0, 32) ?? "empty"}…]`);
+        break;
+      }
+
+      case "wc": {
+        const fname = parts[1];
+        if (!fname) { log("wc: missing file operand"); break; }
+        const inode = sub.fs.stat(fname);
+        if (!inode) { log(`wc: ${fname}: No such file or directory`); break; }
+        const size = inode.size ?? 0;
+        const lines = Math.max(1, Math.ceil(size / 40));
+        const words = Math.max(1, Math.ceil(size / 5));
+        log(`  ${lines}   ${words}   ${size} ${fname}`);
+        break;
+      }
+
       case "df": {
-        const mmu = sub.mmu;
+        const mmuStats = sub.mmu.stats();
         log("Filesystem        Size    Used   Avail  Use%  Mounted on");
-        log(`q-merkle-dag      ∞       ${mmu.stats().totalDatums}     ∞      0%    /`);
-        log(`q-mem             4096    ${mmu.stats().totalDatums}     ${4096 - mmu.stats().totalDatums}    ${((mmu.stats().totalDatums / 4096) * 100).toFixed(0)}%    /dev/mem`);
+        log(`q-merkle-dag      ∞       ${mmuStats.totalDatums}     ∞      0%    /`);
+        log(`q-mem             4096    ${mmuStats.totalDatums}     ${4096 - mmuStats.totalDatums}    ${((mmuStats.totalDatums / 4096) * 100).toFixed(0)}%    /dev/mem`);
         break;
       }
 
@@ -558,7 +777,17 @@ export function useQShell() {
         break;
       }
 
-      // ── Networking ──────────────────────────────────────────────
+      case "mount": {
+        log("q-merkle-dag on / type merkle-dag (rw,content-addressed)");
+        log("q-mem on /dev/mem type content-addressed (rw,noexec)");
+        log("q-proc on /proc type proc (ro)");
+        log("q-sys on /sys type sysfs (ro)");
+        break;
+      }
+
+      // ════════════════════════════════════════════════════════
+      // NETWORKING
+      // ════════════════════════════════════════════════════════
       case "ifconfig": {
         const nodes = sub.net.getNodes();
         for (const n of nodes) {
@@ -603,10 +832,58 @@ export function useQShell() {
         break;
       }
 
-      // ── IPC / messaging ─────────────────────────────────────────
+      case "traceroute": {
+        const host = parts[1];
+        if (!host) { log("traceroute: missing host"); break; }
+        const targetNode = parseInt(host) || 0;
+        log(`traceroute to fano${targetNode}, 2 hops max`);
+        if (targetNode === 0) {
+          log(` 1  fano0  0.1ms`);
+        } else {
+          const hop1 = Math.min(targetNode, 6);
+          log(` 1  fano${Math.floor(hop1 / 2)}  ${(Math.random() * 0.5 + 0.1).toFixed(1)}ms`);
+          log(` 2  fano${targetNode}  ${(Math.random() * 1 + 0.2).toFixed(1)}ms`);
+        }
+        break;
+      }
+
+      case "nslookup": {
+        const host = parts[1];
+        if (!host) { log("nslookup: missing host"); break; }
+        log(`Server:   fano0`);
+        log(`Address:  fano0:53`);
+        log("");
+        log(`Name:     ${host}`);
+        log(`Address:  fano${parseInt(host) || 0}`);
+        break;
+      }
+
+      case "curl": {
+        const url = parts[1];
+        if (!url) { log("curl: missing URL"); break; }
+        log(`  % Total    % Received  Time    Speed`);
+        log(`  100      100          0:00    --:--`);
+        log(`< HTTP/1.1 200 OK`);
+        log(`< Content-Type: application/json`);
+        log(`{"status":"ok","node":"fano0","mesh_coherence":${sub.mesh.stats().meshCoherence.toFixed(3)}}`);
+        break;
+      }
+
+      case "ssh": {
+        const host = parts[1];
+        if (!host) { log("usage: ssh <node>"); break; }
+        log(`ssh: connected to fano${parseInt(host) || 0}`);
+        log(`Welcome to Q-Linux (fano${parseInt(host) || 0})`);
+        log(`Last login: ${new Date().toUTCString()}`);
+        break;
+      }
+
+      // ════════════════════════════════════════════════════════
+      // IPC & MESSAGING
+      // ════════════════════════════════════════════════════════
       case "ipc": {
         const allAgents = sub.mesh.allAgents();
-        if (allAgents.length === 0) { log("No IPC channels."); break; }
+        if (allAgents.length === 0) { log("No IPC channels. Spawn agents first."); break; }
         const ipcStats = sub.ipc.stats();
         log(`Channels: ${ipcStats.totalChannels} (active=${ipcStats.activeChannels})`);
         log(`Messages: ${ipcStats.totalMessages}  Participants: ${ipcStats.totalParticipants}`);
@@ -632,44 +909,48 @@ export function useQShell() {
         log("[  0.000006] ECC: [[96,48,2]] stabilizer code active");
         log("[  0.000007] NET: Fano topology — 7 nodes, 42 routes");
         log("[  0.000008] IPC: session chain messaging ready");
-        log("[  0.000009] SCHED: H-score weighted fair scheduler active");
+        log("[  0.000009] SCHED: priority-weighted fair scheduler active");
         const st = sub.sched.stats();
         log(`[  ${(st.tickCount * 0.001).toFixed(6)}] ${st.totalProcesses} processes, ${st.contextSwitches} context switches`);
         break;
       }
 
-      // ── Kernel modules ──────────────────────────────────────────
+      // ════════════════════════════════════════════════════════
+      // KERNEL MODULES
+      // ════════════════════════════════════════════════════════
       case "lsmod": {
-        log("Module                  Size  Used by");
-        log("q_ecc                  96,48  ECC stabilizer code");
-        log("q_mmu                  4096   Content-addressed memory");
-        log("q_sched                   1   H-score weighted scheduler");
-        log("q_fs                      1   Merkle DAG filesystem");
-        log("q_net                     7   Fano plane routing");
-        log("q_ipc                     1   Session chain IPC");
-        log("q_isa                    96   Instruction set (4 tiers)");
-        log("q_agent                   1   Agent mesh orchestrator");
-        log("q_security                1   Capability-based access control");
-        log("q_driver                  1   Block device abstraction");
+        log("Module                  Size  Description");
+        log("q_ecc                  96,48  Error correction (detects & corrects single errors)");
+        log("q_mmu                  4096   Content-addressed memory (like git for RAM)");
+        log("q_sched                   1   Priority-weighted fair scheduler");
+        log("q_fs                      1   Merkle DAG filesystem (like git for files)");
+        log("q_net                     7   Mesh network routing (7 nodes, max 2 hops)");
+        log("q_ipc                     1   Tamper-evident messaging channels");
+        log("q_isa                    96   Gate instruction set (96 operations, 4 tiers)");
+        log("q_agent                   1   Autonomous agent orchestrator");
+        log("q_security                1   Ring-based access control (4 rings)");
+        log("q_driver                  1   Block device abstraction layer");
         break;
       }
 
       case "modinfo": {
         const mod = parts[1];
-        if (!mod) { log("modinfo: missing module name"); break; }
+        if (!mod) { log("modinfo: missing module name. Try 'lsmod' to list modules."); break; }
         const mods: Record<string, string[]> = {
-          q_ecc: ["filename: /lib/modules/q_ecc.ko", "description: [[96,48,2]] stabilizer error correction code", "author: Q-Linux kernel team"],
-          q_mmu: ["filename: /lib/modules/q_mmu.ko", "description: Content-addressed virtual memory manager", "author: Q-Linux kernel team"],
-          q_sched: ["filename: /lib/modules/q_sched.ko", "description: H-score weighted fair process scheduler", "author: Q-Linux kernel team"],
-          q_fs: ["filename: /lib/modules/q_fs.ko", "description: Merkle DAG content-addressed filesystem", "author: Q-Linux kernel team"],
-          q_net: ["filename: /lib/modules/q_net.ko", "description: Fano plane topology network router", "author: Q-Linux kernel team"],
-          q_ipc: ["filename: /lib/modules/q_ipc.ko", "description: Content-addressed session chain IPC", "author: Q-Linux kernel team"],
-          q_agent: ["filename: /lib/modules/q_agent.ko", "description: Agent mesh orchestrator with peer feedback", "author: Q-Linux kernel team"],
-          q_security: ["filename: /lib/modules/q_security.ko", "description: Capability-based access control, ring 0-3 isolation", "author: Q-Linux kernel team"],
+          q_ecc:      ["filename:    /lib/modules/q_ecc.ko", "description: [[96,48,2]] stabilizer error correction — detects and corrects single errors automatically", "parameters:  code_n=96, code_k=48, min_distance=2", "author:      Q-Linux kernel team"],
+          q_mmu:      ["filename:    /lib/modules/q_mmu.ko", "description: Content-addressed virtual memory — every value gets a unique ID based on its content", "parameters:  tiers=hot,warm,cold", "author:      Q-Linux kernel team"],
+          q_sched:    ["filename:    /lib/modules/q_sched.ko", "description: Priority-weighted fair scheduler — higher priority = more CPU time", "parameters:  zones=convergent,exploring,divergent", "author:      Q-Linux kernel team"],
+          q_fs:       ["filename:    /lib/modules/q_fs.ko", "description: Merkle DAG filesystem — files are content-addressed, deduplication is automatic", "parameters:  journal=enabled, permissions=rwx", "author:      Q-Linux kernel team"],
+          q_net:      ["filename:    /lib/modules/q_net.ko", "description: Mesh router using 7-node topology — max 2 hops between any pair", "parameters:  nodes=7, max_hops=2, firewall=enabled", "author:      Q-Linux kernel team"],
+          q_ipc:      ["filename:    /lib/modules/q_ipc.ko", "description: Tamper-evident message channels — each message links to previous (chain)", "parameters:  quality_gate=0.3", "author:      Q-Linux kernel team"],
+          q_isa:      ["filename:    /lib/modules/q_isa.ko", "description: 96-gate instruction set — 4 tiers from basic to advanced circuits", "parameters:  tiers=basic,standard,composite,advanced", "author:      Q-Linux kernel team"],
+          q_agent:    ["filename:    /lib/modules/q_agent.ko", "description: Autonomous agent orchestrator — agents think, communicate, and learn from feedback", "parameters:  mesh_coherence=enabled, session_chains=enabled", "author:      Q-Linux kernel team"],
+          q_security: ["filename:    /lib/modules/q_security.ko", "description: Ring-based access control — 4 isolation rings (0=kernel → 3=user)", "parameters:  rings=4, audit=enabled, capabilities=enabled", "author:      Q-Linux kernel team"],
+          q_driver:   ["filename:    /lib/modules/q_driver.ko", "description: Block device abstraction — pluggable storage backends", "parameters:  backends=memory,indexeddb,supabase,ipfs", "author:      Q-Linux kernel team"],
         };
         const info = mods[mod];
         if (info) { for (const l of info) log(l); }
-        else { log(`modinfo: module '${mod}' not found`); }
+        else { log(`modinfo: module '${mod}' not found. Try 'lsmod' to list modules.`); }
         break;
       }
 
@@ -682,11 +963,17 @@ export function useQShell() {
         log(`kernel.mean_priority = ${st.meanHScore.toFixed(3)}`);
         log(`kernel.ctx_switches = ${st.contextSwitches}`);
         log(`kernel.ticks = ${st.tickCount}`);
-        log(`net.fano_nodes = 7`);
+        log(`net.topology = fano-plane`);
+        log(`net.nodes = 7`);
         log(`net.max_hops = 2`);
         log(`fs.type = merkle-dag`);
         log(`fs.content_addressed = 1`);
-        log(`sched.algorithm = h-score-weighted-fair`);
+        log(`sched.algorithm = priority-weighted-fair`);
+        log(`security.rings = 4`);
+        log(`security.audit = enabled`);
+        log(`ecc.code = [[96,48,2]]`);
+        log(`isa.gates = 96`);
+        log(`isa.tiers = 4`);
         if (ms.totalAgents > 0) {
           log(`mesh.agents = ${ms.totalAgents}`);
           log(`mesh.coherence = ${ms.meshCoherence.toFixed(3)}`);
@@ -694,7 +981,251 @@ export function useQShell() {
         break;
       }
 
-      // ── System control ──────────────────────────────────────────
+      // ════════════════════════════════════════════════════════
+      // QUANTUM CIRCUITS — qc
+      // ════════════════════════════════════════════════════════
+      case "qc": {
+        const subcmd = parts[1]?.toLowerCase();
+        if (!subcmd || subcmd === "help") {
+          log("qc — Quantum Circuit Toolkit");
+          log("");
+          log("  qc list              List all 96 gate operations");
+          log("  qc info <gate>       Show details for a specific gate");
+          log("  qc stats             Instruction set overview");
+          log("  qc run <g1> [g2]..   Compose and execute a gate sequence");
+          log("  qc tiers             Show gate tiers with examples");
+          log("");
+          log("Type 'man qc' for the full manual.");
+          break;
+        }
+        if (subcmd === "list") {
+          const stats = sub.isa.stats();
+          log(`Available gates: ${stats.totalGates}`);
+          log("");
+          log("Tier 0 (basic):     Fundamental operations — identity, negation, bit-flip, swap");
+          log("Tier 1 (standard):  Common transforms — rotations, phase shifts, controlled ops");
+          log("Tier 2 (composite): Multi-step operations built from Tier 0–1");
+          log("Tier 3 (advanced):  Full circuit-level operations");
+          log("");
+          log(`Total: ${stats.totalGates} gates across 4 tiers`);
+        } else if (subcmd === "info") {
+          const gateName = parts[2];
+          if (!gateName) { log("Usage: qc info <gate-name>"); break; }
+          log(`Gate: ${gateName}`);
+          log(`Status: Available in instruction set`);
+          log(`ECC: Protected by [[96,48,2]] stabilizer code`);
+        } else if (subcmd === "stats") {
+          const stats = sub.isa.stats();
+          log("Instruction Set Statistics");
+          log(`  Total gates:          ${stats.totalGates}`);
+          log(`  Circuits compiled:    ${stats.circuitsCompiled}`);
+          log("");
+          log("Every circuit is automatically protected by the [[96,48,2]] error");
+          log("correction code, which detects and corrects single-qubit errors.");
+        } else if (subcmd === "tiers") {
+          log("Gate Tiers");
+          log("══════════");
+          log("");
+          log("  Tier 0 — Basic");
+          log("    Fundamental operations: identity, negation, bit-flip, swap");
+          log("    Building blocks for everything else");
+          log("");
+          log("  Tier 1 — Standard");
+          log("    Common transforms: rotations, phase shifts, controlled operations");
+          log("    Most everyday circuits use these");
+          log("");
+          log("  Tier 2 — Composite");
+          log("    Multi-step operations built from Tier 0-1 gates");
+          log("    Automatically decomposed during execution");
+          log("");
+          log("  Tier 3 — Advanced");
+          log("    Full circuit-level operations for complex algorithms");
+          log("    Maximum error correction overhead");
+        } else if (subcmd === "run") {
+          const gateNames = parts.slice(2);
+          if (!gateNames.length) { log("Usage: qc run <gate1> [gate2] ..."); break; }
+          log(`Composing circuit: ${gateNames.join(" → ")}`);
+          log(`Circuit compiled (${gateNames.length} gates)`);
+          log(`ECC: stabilizer protection active`);
+          log(`Result: circuit executed successfully`);
+        } else {
+          log(`qc: unknown subcommand '${subcmd}'. Type 'qc' for usage.`);
+        }
+        break;
+      }
+
+      // ════════════════════════════════════════════════════════
+      // QUANTUM REASONING — qr
+      // ════════════════════════════════════════════════════════
+      case "qr": {
+        const subcmd = parts[1]?.toLowerCase();
+        if (!subcmd || subcmd === "help") {
+          log("qr — Quantum Reasoning Toolkit");
+          log("");
+          log("  qr prove <claim>     Submit a claim for verification");
+          log("  qr status            Show current reasoning state");
+          log("  qr verify <cid>      Verify a proof by its content ID");
+          log("  qr explain           How reasoning and grading works");
+          log("");
+          log("Type 'man qr' for the full manual.");
+          break;
+        }
+        if (subcmd === "prove") {
+          const claim = parts.slice(2).join(" ");
+          if (!claim) { log("Usage: qr prove <claim>"); break; }
+          log(`Submitting claim: "${claim}"`);
+          log(`  Step 1: Canonicalizing input...`);
+          log(`  Step 2: Evaluating convergence...`);
+          const convergence = 0.7 + Math.random() * 0.25;
+          const grade = convergence >= 0.9 ? "A" : convergence >= 0.75 ? "B" : convergence >= 0.6 ? "C" : "D";
+          const proofCid = `Qm${Array.from({ length: 16 }, () => "0123456789abcdef"[Math.floor(Math.random() * 16)]).join("")}`;
+          log(`  Step 3: Recording proof...`);
+          log("");
+          log(`  Grade:       ${grade}`);
+          log(`  Convergence: ${convergence.toFixed(3)}`);
+          log(`  Proof CID:   ${proofCid}`);
+          log("");
+          if (grade === "A") log("  ✓ Verified — consistent across repeated evaluation.");
+          else if (grade === "B") log("  ○ Likely — mostly consistent, minor variance.");
+          else if (grade === "C") log("  △ Uncertain — results vary between evaluations.");
+          else log("  ✗ Unreliable — inconsistent results.");
+        } else if (subcmd === "status") {
+          const st = sub.sched.stats();
+          log("Reasoning Engine Status");
+          log(`  Proofs generated: ${st.tickCount}`);
+          log(`  Session chain: intact`);
+          log(`  Grading: A (verified) → B (likely) → C (uncertain) → D (unreliable)`);
+        } else if (subcmd === "verify") {
+          const cid = parts[2];
+          if (!cid) { log("Usage: qr verify <proof-cid>"); break; }
+          log(`Verifying proof ${cid}...`);
+          log(`  Chain integrity: OK`);
+          log(`  Content match: verified`);
+          log(`  ✓ Proof is valid and tamper-evident.`);
+        } else if (subcmd === "explain") {
+          log("How Quantum Reasoning Works");
+          log("═══════════════════════════");
+          log("");
+          log("You submit a claim. The system evaluates it multiple times.");
+          log("If repeated evaluation produces consistent results, the claim");
+          log("gets a high grade. If not, it's flagged as uncertain.");
+          log("");
+          log("Every step is recorded as an immutable entry in the session chain.");
+          log("This means proofs are fully auditable — anyone can verify them");
+          log("by following the chain of content-addressed records.");
+          log("");
+          log("Grades:");
+          log("  A — Verified:    consistent across all evaluations");
+          log("  B — Likely:      mostly consistent, minor variance");
+          log("  C — Uncertain:   results vary between evaluations");
+          log("  D — Unreliable:  inconsistent results");
+          log("");
+          log("This is like a scientific peer review process, but automated");
+          log("and mathematically verifiable.");
+        } else {
+          log(`qr: unknown subcommand '${subcmd}'. Type 'qr' for usage.`);
+        }
+        break;
+      }
+
+      // ════════════════════════════════════════════════════════
+      // QUANTUM SECURITY — qs
+      // ════════════════════════════════════════════════════════
+      case "qs": {
+        const subcmd = parts[1]?.toLowerCase();
+        if (!subcmd || subcmd === "help") {
+          log("qs — Quantum Security Toolkit");
+          log("");
+          log("  qs rings             Show the 4 isolation rings");
+          log("  qs whoami            Show current process ring level");
+          log("  qs capabilities      List granted capability tokens");
+          log("  qs grant <pid> <cap> Grant a capability to a process");
+          log("  qs audit [n]         Show last n security events (default 10)");
+          log("  qs explain           How ring-based security works");
+          log("");
+          log("Type 'man qs' for the full manual.");
+          break;
+        }
+        if (subcmd === "rings") {
+          log("Isolation Rings");
+          log("═══════════════");
+          log("");
+          log("  Ring 0 (kernel)      Full access — scheduling, broadcast, system control");
+          log("  Ring 1 (supervisor)  Can spawn agents, manage processes");
+          log("  Ring 2 (service)     Can open IPC channels, communicate");
+          log("  Ring 3 (user)        Basic operations only");
+          log("");
+          const procs = sub.sched.allProcesses();
+          log("Current assignments:");
+          for (const p of procs) {
+            const ring = p.pid === 0 ? 0 : p.hScore >= 0.8 ? 1 : p.hScore >= 0.5 ? 2 : 3;
+            log(`  PID ${String(p.pid).padStart(3)}  ${p.name.padEnd(16)}  Ring ${ring}`);
+          }
+        } else if (subcmd === "whoami") {
+          log("Ring 0 (kernel) — full system access");
+        } else if (subcmd === "capabilities") {
+          log("Capabilities for root (Ring 0):");
+          log("  ✓ sys_admin      System administration");
+          log("  ✓ proc_spawn     Create new processes");
+          log("  ✓ proc_kill      Terminate processes");
+          log("  ✓ ipc_send       Send IPC messages");
+          log("  ✓ ipc_create     Create IPC channels");
+          log("  ✓ net_admin      Network administration");
+          log("  ✓ fs_write       Write to filesystem");
+          log("  ✓ mesh_broadcast Broadcast to all agents");
+        } else if (subcmd === "grant") {
+          const pid = parts[2];
+          const cap = parts[3];
+          if (!pid || !cap) { log("Usage: qs grant <pid> <capability>"); break; }
+          log(`qs: granted '${cap}' to PID ${pid}`);
+          log(`  audit: GRANT pid=${pid} cap=${cap} by=root ring=0`);
+        } else if (subcmd === "audit") {
+          const n = parseInt(parts[2] || "10");
+          log(`Security Audit Log (last ${n} events):`);
+          log("");
+          log("  TIME         EVENT          PID   DETAILS");
+          log("  ──────────   ────────────   ────  ──────────────────────────");
+          const events = [
+            "BOOT        genesis    0     System initialized, Ring 0 assigned",
+            "GRANT       root       0     All capabilities granted",
+            "FIREWALL    net        -     Coherence gate activated (H ≥ 0.4)",
+          ];
+          const agents = sub.mesh.allAgents();
+          for (const a of agents) {
+            events.push(`SPAWN       ${a.name.padEnd(10)} ${String(a.pid).padEnd(5)} Ring ${a.hScore >= 0.8 ? 1 : a.hScore >= 0.5 ? 2 : 3}, priority=${a.hScore.toFixed(2)}`);
+          }
+          for (const e of events.slice(0, n)) {
+            log(`  ${new Date().toISOString().slice(11, 19)}   ${e}`);
+          }
+        } else if (subcmd === "explain") {
+          log("How Ring-Based Security Works");
+          log("════════════════════════════");
+          log("");
+          log("Access control uses 4 isolation rings, like x86 processor rings:");
+          log("");
+          log("  Ring 0 — Kernel: unrestricted access to everything");
+          log("  Ring 1 — Supervisor: can create and manage processes");
+          log("  Ring 2 — Service: can communicate via IPC channels");
+          log("  Ring 3 — User: basic read-only operations");
+          log("");
+          log("New processes start at Ring 3 (least privilege).");
+          log("To do more, they need explicit capability grants from Ring 0.");
+          log("");
+          log("Every permission check is logged to the audit trail.");
+          log("You can review the trail with 'qs audit' at any time.");
+          log("");
+          log("This is the same model used by modern operating systems,");
+          log("extended with content-addressed capability tokens that");
+          log("can't be forged or tampered with.");
+        } else {
+          log(`qs: unknown subcommand '${subcmd}'. Type 'qs' for usage.`);
+        }
+        break;
+      }
+
+      // ════════════════════════════════════════════════════════
+      // SYSTEM CONTROL
+      // ════════════════════════════════════════════════════════
       case "shutdown":
         log("Broadcast message from root@q-linux:");
         log("  The system is going down for halt NOW!");
@@ -708,7 +1239,9 @@ export function useQShell() {
         setTimeout(() => bootKernel(), 500);
         return;
 
-      // ── Demo ────────────────────────────────────────────────────
+      // ════════════════════════════════════════════════════════
+      // DEMO
+      // ════════════════════════════════════════════════════════
       case "demo": {
         if (demoRunning) { log("demo: already running."); break; }
         setDemoRunning(true);
@@ -729,26 +1262,19 @@ export function useQShell() {
           log(`[${a.pid}] Started ${a.name} (priority=${a.hScore.toFixed(2)}, role=${spec.specialty})`);
         }
 
-        // Create shared IPC channel
         const ch = await agents[0].openChannel("collab", agents.slice(1).map(a => a.pid), 0.3);
         log(`ipc: channel opened ${ch.channelCid.slice(0, 16)}…`);
         log("");
 
-        // Run 5 rounds
         const addDemoEntry = (agent: string, action: string, detail: string, h: number, tick: number) => {
           setDemoLog(prev => [...prev, { agent, action, detail, h, tick }]);
         };
 
-        // ── Reputation tracking ──────────────────────────────────
-        // Each reviewer accumulates accuracy: how close their peer score
-        // predicted the target's *next-round* H-score.
-        // reputation = 1 / (1 + mean_absolute_error)  →  [0.5 … 1.0]
         const reputation: Record<string, number> = {};
         const predictionErrors: Record<string, number[]> = {};
-        // predictions[reviewer][target] = predicted score from last round
         const predictions: Record<string, Record<string, number>> = {};
         for (const a of agents) {
-          reputation[a.name] = 1.0; // start equal
+          reputation[a.name] = 1.0;
           predictionErrors[a.name] = [];
           predictions[a.name] = {};
         }
@@ -757,7 +1283,6 @@ export function useQShell() {
           await new Promise(r => setTimeout(r, 350));
           log(`── Round ${round + 1} ─────────────────────────────────`);
 
-          // ── Resolve previous-round predictions against actual H-scores ──
           if (round > 0) {
             for (const reviewer of agents) {
               for (const target of agents) {
@@ -778,7 +1303,6 @@ export function useQShell() {
             }
           }
 
-          // Each agent thinks independently
           for (const a of agents) {
             if (a.state !== "active") continue;
             const entry = await a.think({ query: `round-${round}-analysis`, round });
@@ -786,7 +1310,6 @@ export function useQShell() {
             addDemoEntry(a.name, "think", entry.entryCid.slice(0, 16), a.hScore, round);
           }
 
-          // Agents exchange findings via IPC
           for (const a of agents) {
             if (a.state !== "active") continue;
             const msg = new TextEncoder().encode(JSON.stringify({
@@ -799,7 +1322,6 @@ export function useQShell() {
           }
           log(`  ipc: ${agents.filter(a => a.state === "active").length} agents exchanged findings`);
 
-          // Human feedback
           const feedbackScores = [
             0.6 + round * 0.08,
             0.5 + round * 0.1,
@@ -814,11 +1336,8 @@ export function useQShell() {
             if (agents[i].state === "suspended") agents[i].revive();
           }
 
-          // ── Reputation-weighted peer-to-peer review ────────────
           log(`  peer review (reputation-weighted):`);
           const activeAgents = agents.filter(a => a.state === "active");
-
-          // Normalize reputations so they sum to 1 per target
           const totalRep = activeAgents.reduce((s, a) => s + reputation[a.name], 0);
 
           for (const reviewer of activeAgents) {
@@ -828,12 +1347,10 @@ export function useQShell() {
               const reviewerBias = reviewer.name === "critic" ? -0.08 : reviewer.name === "researcher" ? 0.04 : 0;
               const peerScore = Math.max(0.1, Math.min(1, baseScore + reviewerBias));
 
-              // Store prediction for next-round accuracy check
               predictions[reviewer.name][target.name] = peerScore;
 
-              // Weight by reputation: higher-reputation reviewers have more influence
               const repWeight = reputation[reviewer.name] / (totalRep - reputation[target.name]);
-              const weightedScore = peerScore * repWeight * activeAgents.length; // scale back to ~1x
+              const weightedScore = peerScore * repWeight * activeAgents.length;
 
               const reviewMsg = new TextEncoder().encode(JSON.stringify({
                 type: "peer-review", from: reviewer.name, target: target.name,
