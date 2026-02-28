@@ -98,8 +98,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Apps",     icon: LayoutGrid, path: "/console/apps" },
 ];
 
-const COLLAPSED_W = 68;
-const EXPANDED_W = 220;
+const COLLAPSED_W = 56;
+const EXPANDED_W = 210;
 
 /* ── Props ─────────────────────────────────────────────────── */
 interface DesktopOsSidebarProps {
@@ -172,6 +172,11 @@ export default function DesktopOsSidebar({
       .sidebar-logo-btn:active {
         animation: sidebar-haptic-bounce 160ms cubic-bezier(0.25, 0.1, 0.25, 1);
       }
+      /* Responsive vertical padding: shrinks on shorter viewports */
+      .sidebar-nav-btn {
+        padding-top: clamp(6px, 1.4vh, 14px) !important;
+        padding-bottom: clamp(6px, 1.4vh, 14px) !important;
+      }
     `}</style>
     <aside
       className="sidebar-root flex flex-col h-full shrink-0 relative coherence-sidebar-pulse"
@@ -189,7 +194,7 @@ export default function DesktopOsSidebar({
       } as React.CSSProperties}
     >
       {/* ── Top: Logo / toggle ─────────────────────────────────── */}
-      <div className="flex items-center justify-between px-3 pt-6 pb-7">
+      <div className="flex items-center justify-between px-2 pt-4 pb-4">
         {expanded ? (
           <>
             <div className="flex items-center gap-2.5 px-2 py-1 overflow-hidden">
@@ -242,11 +247,11 @@ export default function DesktopOsSidebar({
         ) : (
           <button
             onClick={() => setExpanded(true)}
-            className="group/logo sidebar-logo-btn w-11 h-11 mx-auto rounded-xl flex items-center justify-center transition-transform duration-200 hover:scale-105 relative"
+            className="group/logo sidebar-logo-btn w-9 h-9 mx-auto rounded-xl flex items-center justify-center transition-transform duration-200 hover:scale-105 relative"
             title={`Expand sidebar (${MOD_KEY} B)`}
           >
             <HologramLogo
-              size={24}
+              size={20}
               color={bgMode === "white" ? "hsl(30, 15%, 30%)" : "hsl(38, 25%, 80%)"}
               className="absolute transition-opacity duration-200 group-hover/logo:opacity-0"
             />
@@ -260,7 +265,7 @@ export default function DesktopOsSidebar({
       </div>
 
       {/* ── Core Navigation ───────────────────────────────────── */}
-      <div className="flex-1 px-2.5 space-y-0.5 overflow-hidden">
+      <div className="flex-1 px-2 space-y-0 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "none" }}>
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.path);
           return (
@@ -284,7 +289,7 @@ export default function DesktopOsSidebar({
                 }}
               >
                 <item.icon
-                  className="w-[18px] h-[18px] shrink-0"
+                  className="w-4 h-4 shrink-0"
                   strokeWidth={1.3}
                   style={{ color: active ? "var(--sb-gold)" : "var(--sb-muted)" }}
                 />
@@ -307,7 +312,7 @@ export default function DesktopOsSidebar({
               }`}
               style={{ color: "var(--sb-text)" }}
             >
-              <Globe className="w-[18px] h-[18px] shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+              <Globe className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
               {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Web</span>}
             </button>
           </IconTooltip>
@@ -323,7 +328,7 @@ export default function DesktopOsSidebar({
             }`}
             style={{ color: "var(--sb-text)", background: "transparent" }}
           >
-            <Database className="w-[18px] h-[18px] shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+            <Database className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
             {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Memory</span>}
           </button>
         </IconTooltip>
@@ -338,7 +343,7 @@ export default function DesktopOsSidebar({
             }`}
             style={{ color: "var(--sb-text)", background: "transparent" }}
           >
-            <Cpu className="w-[18px] h-[18px] shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+            <Cpu className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
             {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Compute</span>}
           </button>
         </IconTooltip>
@@ -354,7 +359,7 @@ export default function DesktopOsSidebar({
               }`}
               style={{ color: "var(--sb-text)" }}
             >
-              <Terminal className="w-[18px] h-[18px] shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+              <Terminal className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
               {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Terminal</span>}
             </button>
           </IconTooltip>
@@ -371,7 +376,7 @@ export default function DesktopOsSidebar({
               }`}
               style={{ color: "var(--sb-text)" }}
             >
-              <Beaker className="w-[18px] h-[18px] shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-gold)" }} />
+              <Beaker className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-gold)" }} />
               {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Jupyter</span>}
             </button>
           </IconTooltip>
@@ -386,8 +391,8 @@ export default function DesktopOsSidebar({
             style={{ color: "var(--sb-text)", background: "transparent" }}
           >
             <svg
-              width="18"
-              height="18"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -412,7 +417,7 @@ export default function DesktopOsSidebar({
       </div>
 
       {/* ── Bottom: Text Size + Settings + Help ─────────────── */}
-      <div className="px-2.5 py-5 space-y-0.5" style={{ borderTop: "1px solid var(--sb-border)" }}>
+      <div className="px-2 py-3 space-y-0 shrink-0" style={{ borderTop: "1px solid var(--sb-border)" }}>
         {/* Text Size Control — visible when expanded */}
         {expanded && (
           <TextSizeControl textSize={textSize} setTextSize={handleTextSize} bgMode={bgMode} />
@@ -427,7 +432,7 @@ export default function DesktopOsSidebar({
               }`}
               style={{ color: "var(--sb-text)" }}
             >
-              <HelpCircle className="w-[18px] h-[18px]" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+              <HelpCircle className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
               {expanded && <span className="text-[13px] font-light tracking-wide">Help</span>}
             </button>
           </IconTooltip>
@@ -441,7 +446,7 @@ export default function DesktopOsSidebar({
             }`}
             style={{ color: "var(--sb-text)" }}
           >
-            <Inbox className="w-[18px] h-[18px]" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+            <Inbox className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
             {expanded && <span className="text-[13px] font-light tracking-wide">Inbox</span>}
           </button>
         </IconTooltip>
@@ -453,14 +458,14 @@ export default function DesktopOsSidebar({
             }`}
             style={{ color: "var(--sb-text)" }}
           >
-            <Settings className="w-[18px] h-[18px]" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+            <Settings className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
             {expanded && <span className="text-[13px] font-light tracking-wide">Settings</span>}
           </button>
         </IconTooltip>
       </div>
 
       {/* ── Genesis Dot — kernel heartbeat summary ────────── */}
-      <div className="flex justify-center pb-5 pt-1">
+      <div className="flex justify-center pb-3 pt-1 shrink-0">
         <IconTooltip label="Genesis" show={!expanded}>
           <button
             onClick={() => collapseAndDo(() => setGenesisOpen(true))}
