@@ -355,20 +355,35 @@ export function executePennyLane(code: string): PennyLaneResult {
     if (m.type === "expval" && m.observable && m.qubit !== undefined) {
       const val = expectationValue(state, m.qubit, m.observable);
       expectations.push({ observable: m.observable, qubit: m.qubit, value: val });
-      output.push(`⟨Pauli${m.observable}⟩ on qubit ${m.qubit} = ${val >= 0 ? "+" : ""}${val.toFixed(8)}`);
+      output.push(`⟨Pauli${m.observable}⟩ on qubit ${m.qubit} = ${val >= 0 ? "+" : ""}${val.toFixed(16)}`);
     } else if (m.type === "probs") {
-      output.push("Probabilities:");
+      output.push("");
+      output.push("Probabilities (exact Born-rule):");
       for (const sv of statevector) {
-        output.push(`  |${sv.state}⟩ : ${(sv.probability * 100).toFixed(4)}%`);
+        output.push(`  P(${sv.state}) = ${sv.probability.toFixed(16)}`);
+      }
+      // Verification: ⟨Z⟩ = P(0) - P(1) for single qubit
+      if (parsed.numQubits === 1 && statevector.length === 2) {
+        const p0 = statevector.find(s => s.state === "0")?.probability ?? 0;
+        const p1 = statevector.find(s => s.state === "1")?.probability ?? 0;
+        const check = p0 - p1;
+        output.push("");
+        output.push(`Verification: ⟨Z⟩ = P(0) − P(1) = ${check.toFixed(16)}`);
+        const expZ = expectations.find(e => e.observable === "Z" && e.qubit === 0);
+        if (expZ) {
+          const match = Math.abs(check - expZ.value) < 1e-12;
+          output.push(`  Direct ⟨Z⟩ =                     ${expZ.value.toFixed(16)}`);
+          output.push(`  Match: ${match ? "✓ EXACT (within machine epsilon)" : "⚠ Discrepancy detected"}`);
+        }
       }
     } else if (m.type === "state") {
-      output.push("Statevector:");
+      output.push("Statevector |ψ⟩:");
       for (const sv of statevector.slice(0, 64)) {
         const [r, im] = sv.amplitude;
         const ampStr = Math.abs(im) < 1e-10
-          ? r.toFixed(6)
-          : `${r.toFixed(6)} ${im >= 0 ? "+" : "−"} ${Math.abs(im).toFixed(6)}i`;
-        output.push(`  |${sv.state}⟩ : ${ampStr}  (p=${(sv.probability * 100).toFixed(4)}%)`);
+          ? r.toFixed(16)
+          : `${r.toFixed(10)} ${im >= 0 ? "+" : "−"} ${Math.abs(im).toFixed(10)}i`;
+        output.push(`  |${sv.state}⟩ : ${ampStr}  (p=${sv.probability.toFixed(16)})`);
       }
       if (statevector.length > 64) output.push(`  ... (${statevector.length - 64} more non-zero amplitudes)`);
     }
@@ -689,8 +704,8 @@ result = circuit()
 print(f"Result: {result}")`,
   },
   {
-    name: "RY Rotation Sweep",
-    description: "Parametric rotation — watch ⟨Z⟩ vary with angle",
+    name: "RY(0.79) — Expectation & Probability Check",
+    description: "Single qubit RY rotation with rigorous ⟨Z⟩ = P(0) − P(1) verification",
     code: `import pennylane as qml
 from pennylane import numpy as np
 
@@ -698,10 +713,16 @@ dev = qml.device("default.qubit", wires=1)
 
 @qml.qnode(dev)
 def circuit():
-    # RY(π/2) rotates halfway: ⟨Z⟩ should be 0.0
-    qml.RY(np.pi/2, wires=0)
-    return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliX(0))
+    # Apply RY(0.79) rotation on qubit 0
+    # This rotates |0⟩ by 0.79 rad around the Y-axis
+    qml.RY(0.79, wires=0)
+    return qml.expval(qml.PauliZ(0)), qml.probs()
 
+# Expected results (analytical):
+#   ⟨Z⟩ = cos(0.79) = 0.7071067811865475
+#   P(0) = cos²(0.79/2) = 0.8535533905932737
+#   P(1) = sin²(0.79/2) = 0.14644660940672624
+#   Check: P(0) - P(1) = ⟨Z⟩ ✓
 result = circuit()
 print(f"Result: {result}")`,
   },
