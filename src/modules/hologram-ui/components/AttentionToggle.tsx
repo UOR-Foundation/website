@@ -81,19 +81,6 @@ export default function AttentionToggle({ bgMode = "dark" }: AttentionToggleProp
         />
       </div>
 
-      {/* OFF / ON label — vertical */}
-      <span
-        className="text-[12px] font-bold tracking-[0.15em] uppercase transition-colors duration-500"
-        style={{
-          writingMode: "vertical-rl",
-          color: isFocus
-            ? (isWhite ? "hsla(200, 60%, 35%, 1)" : "hsla(200, 70%, 82%, 1)")
-            : (isWhite ? "hsla(0, 0%, 15%, 0.75)" : "hsla(0, 0%, 90%, 0.8)"),
-          textShadow: isWhite ? "none" : "0 1px 4px hsla(0, 0%, 0%, 0.5)",
-        }}
-      >
-        {isFocus ? "On" : "Off"}
-      </span>
 
     </button>
   );
