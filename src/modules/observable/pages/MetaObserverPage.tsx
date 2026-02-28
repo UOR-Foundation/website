@@ -18,7 +18,7 @@ import {
 import {
   PageShell, StatCard, DashboardGrid, MetricBar, InfoCard, DataTable,
   type DataTableColumn,
-} from "@/modules/hologram-ui";
+} from "@/modules/core/ui/shared-dashboard";
 import {
   MetaObserver, createMetaObserver, UOR_MODULES,
   type ModuleObserverProfile, type TelosVector,

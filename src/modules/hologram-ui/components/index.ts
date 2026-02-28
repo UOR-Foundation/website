@@ -18,11 +18,11 @@
  * @module hologram-ui/components
  */
 
-export { StatCard, type StatCardProps } from "./StatCard";
-export { DataTable, type DataTableProps, type DataTableColumn } from "./DataTable";
-export { MetricBar, type MetricBarProps } from "./MetricBar";
-export { InfoCard, type InfoCardProps } from "./InfoCard";
-export { DashboardGrid } from "./DashboardGrid";
+export { StatCard, type StatCardProps } from "@/modules/core/ui/StatCard";
+export { DataTable, type DataTableProps, type DataTableColumn } from "@/modules/core/ui/DataTable";
+export { MetricBar, type MetricBarProps } from "@/modules/core/ui/MetricBar";
+export { InfoCard, type InfoCardProps } from "@/modules/core/ui/InfoCard";
+export { DashboardGrid } from "@/modules/core/ui/DashboardGrid";
 export { PageShell, type PageShellProps } from "./PageShell";
 
 // ── Dynamic Projection (Phase 2 — Visual Hologram Renderer) ────────────────

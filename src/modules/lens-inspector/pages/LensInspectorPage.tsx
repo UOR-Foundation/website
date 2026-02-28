@@ -17,7 +17,7 @@ import {
   IconPlayerPlay, IconBraces, IconWorld, IconArrowsExchange, IconFileCode, IconSchema,
   IconBrain, IconArrowRight,
 } from "@tabler/icons-react";
-import { PageShell } from "@/modules/hologram-ui";
+import { PageShell } from "@/modules/core/ui/shared-dashboard";
 import {
   dehydrate,
   rehydrate,

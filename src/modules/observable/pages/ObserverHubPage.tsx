@@ -8,7 +8,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { PageShell } from "@/modules/hologram-ui";
+import { PageShell } from "@/modules/core/ui/shared-dashboard";
 import { MetaObserver, type CoherenceZone } from "../meta-observer";
 import { StreamProjection, type StreamSnapshot } from "../stream-projection";
 import { SystemEventBus } from "../system-event-bus";
