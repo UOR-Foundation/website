@@ -329,7 +329,7 @@ function CollapsedPill({
             initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="absolute rounded-full pointer-events-none"
-            style={{ inset: -4, border: `1.5px solid hsla(${station.color}, 40%, 55%, 0.25)`, animation: "ambient-glow-breathe 3s ease-in-out infinite" }}
+            style={{ inset: -4, border: `1.5px solid hsla(${station.color}, 40%, 55%, 0.25)`, animation: "ambient-glow-breathe 1.94s ease-in-out infinite" }}
           />
         )}
       </AnimatePresence>
@@ -378,7 +378,7 @@ if (typeof document !== "undefined" && !document.querySelector("[data-ambient-eq
   s.setAttribute("data-ambient-eq", "");
   s.textContent = `
     @keyframes ambient-eq { 0% { transform: scaleY(0.4); } 100% { transform: scaleY(1); } }
-    @keyframes ambient-glow-breathe { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+    @keyframes ambient-glow-breathe { 0%, 100% { opacity: 0.7; } 13% { opacity: 1; } 26% { opacity: 0.75; } 39% { opacity: 0.95; } 52% { opacity: 0.7; } }
   `;
   document.head.appendChild(s);
 }

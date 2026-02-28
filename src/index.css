@@ -468,19 +468,25 @@
 }
 
 /* ── Hologram OS keyframes (GPU-composited, declared once) ───────── */
+/* All pulsating animations synchronized to Genesis kernel frequency:
+   62 BPM = 1.94s fundamental, with double-beat at 13% and 39%.
+   Harmonics: 2× = 3.88s, 3× = 5.82s */
+
 @keyframes heartbeat-love {
   0%   { transform: scale(1);    opacity: 0.8; }
-  10%  { transform: scale(1.45); opacity: 1; }
-  22%  { transform: scale(1);    opacity: 0.8; }
-  32%  { transform: scale(1.25); opacity: 0.95; }
-  44%  { transform: scale(1);    opacity: 0.8; }
+  13%  { transform: scale(1.45); opacity: 1; }
+  26%  { transform: scale(1);    opacity: 0.8; }
+  39%  { transform: scale(1.25); opacity: 0.95; }
+  52%  { transform: scale(1);    opacity: 0.8; }
   100% { transform: scale(1);    opacity: 0.8; }
 }
 
 @keyframes pill-glow-pulse {
   0%   { box-shadow: 0 0 0 hsla(38, 50%, 50%, 0), 0 0 0 hsla(38, 50%, 50%, 0); }
-  15%  { box-shadow: 0 0 24px hsla(38, 50%, 50%, 0.4), 0 0 48px hsla(38, 50%, 50%, 0.15); }
-  40%  { box-shadow: 0 0 16px hsla(38, 50%, 50%, 0.25), 0 0 32px hsla(38, 50%, 50%, 0.08); }
+  13%  { box-shadow: 0 0 24px hsla(38, 50%, 50%, 0.4), 0 0 48px hsla(38, 50%, 50%, 0.15); }
+  26%  { box-shadow: 0 0 8px hsla(38, 50%, 50%, 0.1), 0 0 16px hsla(38, 50%, 50%, 0.04); }
+  39%  { box-shadow: 0 0 16px hsla(38, 50%, 50%, 0.25), 0 0 32px hsla(38, 50%, 50%, 0.08); }
+  52%  { box-shadow: 0 0 0 hsla(38, 50%, 50%, 0), 0 0 0 hsla(38, 50%, 50%, 0); }
   100% { box-shadow: 0 0 0 hsla(38, 50%, 50%, 0), 0 0 0 hsla(38, 50%, 50%, 0); }
 }
 
@@ -489,32 +495,31 @@
   100% { transform: scaleY(1); }
 }
 
-/* Lumen dot hover — gentle warmth, no scale change */
-.group:hover .lumen-dot-hover {
-  box-shadow: 0 0 28px hsla(38, 50%, 55%, 0.5), 0 0 56px hsla(38, 50%, 55%, 0.15) !important;
-  background: hsla(38, 55%, 55%, 0.85) !important;
-}
-
-@keyframes ring-breathe {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.06); }
-}
-
+/* Day ring leading dot — Genesis-synchronized (1.94s fundamental) */
 @keyframes dot-heartbeat {
   0%, 100% { opacity: 0.6; }
-  10% { opacity: 1; }
-  22% { opacity: 0.6; }
-  32% { opacity: 0.9; }
-  44% { opacity: 0.6; }
+  13% { opacity: 1; }
+  26% { opacity: 0.6; }
+  39% { opacity: 0.9; }
+  52% { opacity: 0.6; }
 }
 
-/* Sidebar projection glow — synchronized to heartbeat-love (2.4s) */
+/* Day ring breathing glow — Genesis 3rd harmonic (5.82s) */
+@keyframes ring-breathe {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  13% { opacity: 0.85; transform: scale(1.04); }
+  26% { opacity: 0.55; transform: scale(1.01); }
+  39% { opacity: 0.75; transform: scale(1.03); }
+  52% { opacity: 0.5; transform: scale(1); }
+}
+
+/* Sidebar projection glow — Genesis-synchronized (1.94s) */
 @keyframes sidebar-glow-breathe {
   0%, 100% { opacity: 0.5; }
-  10%  { opacity: 1; }
-  22%  { opacity: 0.5; }
-  32%  { opacity: 0.85; }
-  44%  { opacity: 0.5; }
+  13%  { opacity: 1; }
+  26%  { opacity: 0.5; }
+  39%  { opacity: 0.85; }
+  52%  { opacity: 0.5; }
 }
 
 /* ── Lumen glyph entrance ─────────────────────────────────────────── */

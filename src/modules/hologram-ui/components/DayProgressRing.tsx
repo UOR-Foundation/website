@@ -150,7 +150,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
             fill={isWhite ? "hsla(38, 40%, 45%, 0.8)" : "hsla(38, 40%, 65%, 0.7)"}
             style={{
               transition: "cx 0.6s ease-out, cy 0.6s ease-out",
-              animation: "dot-heartbeat 1.6s ease-in-out infinite",
+              animation: "dot-heartbeat 1.94s ease-in-out infinite",
             }}
           />
         </svg>
@@ -162,7 +162,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
             background: isWhite
               ? "radial-gradient(circle, hsla(38, 30%, 40%, 0.04) 0%, transparent 70%)"
               : "radial-gradient(circle, hsla(38, 35%, 55%, 0.06) 0%, transparent 70%)",
-            animation: "ring-breathe 6s ease-in-out infinite",
+            animation: "ring-breathe 5.82s ease-in-out infinite",
           }}
         />
 
