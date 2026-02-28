@@ -145,3 +145,61 @@ describe("QASM Structural Validity", () => {
     expect(Number(match![1])).toBe(r.summary.totalPhysicalQubits);
   });
 });
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Part VI: Qiskit Python Output
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe("Qiskit Python Output", () => {
+  it("contains valid Qiskit imports", () => {
+    const r = runPipeline({ modelName: "GPT-2", maxHeads: 1, maxLayers: 1 });
+    expect(r.qiskit.source).toContain("from qiskit import QuantumCircuit");
+    expect(r.qiskit.source).toContain("qiskit_ibm_runtime");
+  });
+
+  it("declares QuantumCircuit with correct qubit count", () => {
+    const r = runPipeline({ modelName: "LLaMA-7B", maxHeads: 1, maxLayers: 1 });
+    expect(r.qiskit.source).toContain(`QuantumCircuit(${r.qiskit.qubits}`);
+  });
+
+  it("qubit count matches QASM output", () => {
+    const r = runPipeline({ modelName: "LLaMA-7B", maxHeads: 2, maxLayers: 1 });
+    expect(r.qiskit.qubits).toBe(r.qasm.qubits);
+    expect(r.qiskit.clbits).toBe(r.qasm.clbits);
+  });
+
+  it("targets ibm_brisbane for small circuits", () => {
+    const r = runPipeline({ modelName: "GPT-2", maxHeads: 1, maxLayers: 1 });
+    expect(r.qiskit.backendTarget).toBe("ibm_brisbane");
+    expect(r.qiskit.source).toContain("ibm_brisbane");
+  });
+
+  it("contains gate instructions (qc.ry, qc.cx, etc.)", () => {
+    const r = runPipeline({ modelName: "GPT-2", maxHeads: 1, maxLayers: 1 });
+    expect(r.qiskit.source).toMatch(/qc\.(ry|rz|cx|h|measure)/);
+  });
+
+  it("contains measurement and execution template", () => {
+    const r = runPipeline({ modelName: "GPT-2", maxHeads: 1, maxLayers: 1 });
+    expect(r.qiskit.source).toContain("qc.measure");
+    expect(r.qiskit.source).toContain("transpile");
+    expect(r.qiskit.source).toContain("SamplerV2");
+  });
+
+  it("ECC Qiskit output includes syndrome extraction", () => {
+    const r = runPipeline({ modelName: "LLaMA-7B", maxHeads: 1, maxLayers: 1, withECC: true });
+    expect(r.qiskit.source).toContain("syndrome");
+    expect(r.qiskit.source).toContain("qc.barrier");
+    expect(r.qiskit.qubits).toBeGreaterThan(
+      runPipeline({ modelName: "LLaMA-7B", maxHeads: 1, maxLayers: 1 }).qiskit.qubits,
+    );
+  });
+
+  it("all pipeline verification tests pass (including Qiskit)", () => {
+    const r = runPipeline({ modelName: "LLaMA-7B", maxHeads: 2, maxLayers: 2 });
+    expect(r.tests.length).toBe(14);
+    for (const t of r.tests) {
+      expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
+    }
+  });
+});
