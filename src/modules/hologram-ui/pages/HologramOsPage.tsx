@@ -346,13 +346,15 @@ export default function HologramOsPage() {
 
         {/* ══ Desktop Stack — lazy-mounted projections from kernel ═══ */}
         <div
-          className={`flex-1 relative overflow-hidden z-0 ${lumenPanel.isResizing ? "" : "transition-all ease-in-out"}`}
+          className="flex-1 relative overflow-hidden z-0"
           style={{
             opacity: departing ? 0 : 1,
-            transform: departing ? "scale(1.02)" : isFocus ? "scale(1.03)" : "scale(1)",
+            transform: `translate3d(${chatOpen ? "-10px" : "0px"}, 0, 0) scale(${departing ? 1.02 : isFocus ? 1.03 : 1})`,
             filter: departing ? "blur(4px)" : "none",
-            transitionDuration: lumenPanel.isResizing ? "0ms" : isFocus ? "600ms" : "400ms",
-            marginRight: chatOpen ? `${lumenPanel.width}px` : "0px",
+            transition: lumenPanel.isResizing
+              ? "none"
+              : `transform ${isFocus ? 600 : 240}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${isFocus ? 600 : 240}ms ease, filter ${isFocus ? 600 : 240}ms ease`,
+            willChange: "transform",
           }}
         >
           {mountedDesktops.map((mode) => {

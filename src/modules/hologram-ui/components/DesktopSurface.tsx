@@ -438,7 +438,12 @@ export default function DesktopSurface({
             style={{ animation: "stagger-fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both" }}
           >
             <button
-              onClick={onOpenChat}
+              onPointerDown={(e) => {
+                if (e.button === 0) onOpenChat();
+              }}
+              onClick={(e) => {
+                if (e.detail === 0) onOpenChat();
+              }}
               className="group flex flex-col items-center transition-all duration-700"
               style={{ cursor: "pointer", background: "none", border: "none", gap: isFocus ? "clamp(14px, 2vh, 28px)" : "clamp(10px, 1.5vh, 20px)" }}
             >

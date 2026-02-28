@@ -154,10 +154,6 @@ interface HologramAiChatProps {
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function HologramAiChat({ open, onClose, onPhaseChange, creatorStage = 1, replayGuideKey = 0, initialPrompt, panelWidth, resizeHandleProps, isResizing }: HologramAiChatProps) {
-  // ── Keep-alive: once mounted, never unmount ──────────────────────────
-  const hasBeenOpenedRef = useRef(false);
-  if (open) hasBeenOpenedRef.current = true;
-
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -877,8 +873,6 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     }
   }, [open, sendMessage, isGenerating]);
 
-  // Keep-alive: don't unmount, just hide. Skip initial render before first open.
-  if (!hasBeenOpenedRef.current) return null;
 
   // ── Saved Responses Panel ─────────────────────────────────────────────
   if (open && showSaved) {
@@ -991,11 +985,11 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         className="fixed top-0 right-0 bottom-0 z-[60] flex"
         style={{
           width: computedWidth,
-          transform: open ? "translateX(0)" : `translateX(100%)`,
-          opacity: open ? 1 : 0,
+          transform: open ? "translate3d(0, 0, 0)" : "translate3d(calc(100% + 10px), 0, 0)",
           pointerEvents: open ? "auto" : "none",
-          transition: isResizing ? "none" : "transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease",
+          transition: isResizing ? "none" : "transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)",
           willChange: "transform",
+          backfaceVisibility: "hidden",
         }}
       >
         {/* ── Resize handle — left edge drag strip ─────────────────── */}
@@ -1024,10 +1018,10 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           className="flex-1 flex flex-col h-full relative"
           style={{
             background: "hsla(25, 10%, 6%, 0.92)",
-            backdropFilter: "blur(40px) saturate(0.85)",
-            WebkitBackdropFilter: "blur(40px) saturate(0.85)",
+            backdropFilter: "blur(28px) saturate(0.9)",
+            WebkitBackdropFilter: "blur(28px) saturate(0.9)",
             borderLeft: "1px solid hsla(38, 15%, 35%, 0.1)",
-            boxShadow: "-8px 0 40px hsla(25, 10%, 3%, 0.4)",
+            boxShadow: "-8px 0 32px hsla(25, 10%, 3%, 0.35)",
           }}
         >
           {/* ── Close arrow — inside panel, left edge ────────────── */}
