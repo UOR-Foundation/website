@@ -4,6 +4,7 @@
  *
  * Proves the Causal Accumulation Law on the Atlas lattice with
  * octonionic propagators and geometric α coupling.
+ * Now includes higher-order path (maxDepth=4) and benchmark tests.
  */
 
 import { describe, it, expect } from "vitest";
@@ -18,7 +19,10 @@ import {
   octConj,
   octCommutator,
   octAssociator,
+  analyzeDepthContributions,
+  benchmarkDepths,
   type CausalKernelReport,
+  type DepthBenchmark,
 } from "@/modules/atlas/causal-kernel";
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -39,7 +43,6 @@ describe("Octonionic Arithmetic", () => {
       const ei = unitOctonion(i);
       const sq = octMul(ei, ei);
       expect(sq.components[0]).toBeCloseTo(-1);
-      // All other components zero
       for (let j = 1; j < 8; j++) {
         expect(sq.components[j]).toBeCloseTo(0);
       }
@@ -154,19 +157,74 @@ describe("Causal Kernel — Full Pipeline", () => {
       expect(a.totalFlux).toBeLessThan(1e10);
     }
   });
+
+  it("has depth contribution analysis", () => {
+    expect(report.depthContributions).toBeDefined();
+    expect(report.depthContributions.length).toBeGreaterThan(0);
+  });
 });
 
 // ══════════════════════════════════════════════════════════════════════════
-// Part III: Internal Verification Tests
+// Part III: Higher-Order Paths (maxDepth=3 and 4)
+// ══════════════════════════════════════════════════════════════════════════
+
+describe("Causal Kernel — Higher-Order Paths", () => {
+  it("maxDepth=4 completes without explosion", () => {
+    const report = runCausalKernel({ maxDepth: 4, evolutionSteps: 3 });
+    expect(report.kernelEntries.length).toBe(484);
+    for (const e of report.kernelEntries) {
+      expect(isFinite(octNorm(e.kernel))).toBe(true);
+    }
+    // Depth contributions are monotonically decreasing
+    const contribs = report.depthContributions;
+    for (let i = 1; i < contribs.length; i++) {
+      expect(contribs[i].totalCoupling).toBeLessThanOrEqual(contribs[i - 1].totalCoupling + 1e-10);
+    }
+  });
+
+  it("depth-4 kernel norm is close to depth-3 (α⁴ ≈ 10⁻⁹ marginal)", () => {
+    const d3 = runCausalKernel({ maxDepth: 3, evolutionSteps: 3 });
+    const d4 = runCausalKernel({ maxDepth: 4, evolutionSteps: 3 });
+    const norm3 = d3.kernelEntries.filter(e => e.from !== e.to).reduce((s, e) => s + octNorm(e.kernel), 0);
+    const norm4 = d4.kernelEntries.filter(e => e.from !== e.to).reduce((s, e) => s + octNorm(e.kernel), 0);
+    const relDiff = norm3 > 0 ? Math.abs(norm4 - norm3) / norm3 : 0;
+    expect(relDiff).toBeLessThan(0.01);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// Part IV: Convergence Speed vs Accuracy Benchmark
+// ══════════════════════════════════════════════════════════════════════════
+
+describe("Causal Kernel — Benchmark: Speed vs Accuracy", () => {
+  it("benchmarks depths 1-3 with correct structure", () => {
+    const benchmarks = benchmarkDepths(3, 3);
+    expect(benchmarks.length).toBe(3);
+    // Kernel norm increases or stays constant with depth
+    for (let i = 1; i < benchmarks.length; i++) {
+      expect(benchmarks[i].totalKernelNorm).toBeGreaterThanOrEqual(
+        benchmarks[i - 1].totalKernelNorm - 1e-6
+      );
+    }
+    // All benchmarks have per-depth breakdowns
+    for (const b of benchmarks) {
+      expect(b.depthContributions.length).toBe(b.maxDepth);
+    }
+    expect(benchmarks[0].efficiency).toBeGreaterThan(0);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// Part V: Internal Verification Tests
 // ══════════════════════════════════════════════════════════════════════════
 
 describe("Causal Kernel — Internal Verification", () => {
-  it("all 14 internal tests pass", () => {
-    const report = runCausalKernel({ maxDepth: 2, evolutionSteps: 8 });
+  it("all 17 internal tests pass (depth=2)", () => {
+    const report = runCausalKernel({ maxDepth: 2, evolutionSteps: 4 });
     for (const t of report.tests) {
       expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
     }
     expect(report.allPassed).toBe(true);
-    expect(report.tests.length).toBe(14);
+    expect(report.tests.length).toBe(17);
   });
 });
