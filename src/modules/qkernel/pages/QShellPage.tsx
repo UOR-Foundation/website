@@ -95,11 +95,11 @@ function HBar({ value, label }: { value: number; label?: string }) {
 
 // ─── Main Component ──────────────────────────────────────────────
 export default function QShellPage() {
-  const { state, bootKernel, executeCommand } = useQShell();
+  const { state, bootKernel, executeCommand, demoLog, demoRunning } = useQShell();
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [histIdx, setHistIdx] = useState(-1);
-  const [activeTab, setActiveTab] = useState<"terminal" | "procs" | "mesh" | "net">("terminal");
+  const [activeTab, setActiveTab] = useState<"terminal" | "procs" | "mesh" | "net" | "collab">("terminal");
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -139,6 +139,7 @@ export default function QShellPage() {
     { id: "procs" as const, label: "Processes" },
     { id: "mesh" as const, label: "Agent Mesh" },
     { id: "net" as const, label: "Network" },
+    { id: "collab" as const, label: `Collab${demoLog.length > 0 ? ` (${demoLog.length})` : ""}` },
   ];
 
   return (
@@ -371,6 +372,112 @@ export default function QShellPage() {
                     ));
                   })()}
                 </div>
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === "collab" && (
+            <motion.div
+              key="collab"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 overflow-auto p-4"
+            >
+              <h3 className="text-xs text-muted-foreground mb-3 tracking-widest uppercase">
+                Multi-Agent Collaboration
+                {demoRunning && <span className="ml-2 text-amber-400 animate-pulse">● RUNNING</span>}
+              </h3>
+
+              {demoLog.length === 0 ? (
+                <div className="text-sm text-muted-foreground mt-8 text-center">
+                  No demo data. Type <code className="text-primary">demo</code> in terminal to start.
+                </div>
+              ) : (
+                <>
+                  {/* Convergence chart — H-score over rounds */}
+                  <div className="bg-[hsl(220,20%,8%)] border border-[hsl(150,30%,15%)] rounded-lg p-4 mb-4">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3">H-Score Convergence</div>
+                    <div className="h-32 flex items-end gap-0.5">
+                      {(() => {
+                        const agents = ["researcher", "synthesizer", "critic"];
+                        const colors = ["bg-emerald-500", "bg-sky-500", "bg-amber-500"];
+                        const rounds = Math.max(...demoLog.filter(e => e.action === "feedback").map(e => e.tick)) + 1;
+                        const bars: JSX.Element[] = [];
+                        for (let r = 0; r < rounds; r++) {
+                          for (let ai = 0; ai < agents.length; ai++) {
+                            const entries = demoLog.filter(e => e.agent === agents[ai] && e.action === "feedback" && e.tick === r);
+                            const h = entries.length > 0 ? entries[entries.length - 1].h : 0;
+                            bars.push(
+                              <motion.div
+                                key={`${r}-${ai}`}
+                                className={`flex-1 rounded-t ${colors[ai]} opacity-80`}
+                                initial={{ height: 0 }}
+                                animate={{ height: `${h * 100}%` }}
+                                transition={{ duration: 0.5, delay: r * 0.15 + ai * 0.05 }}
+                              />
+                            );
+                          }
+                          if (r < rounds - 1) {
+                            bars.push(<div key={`gap-${r}`} className="w-1" />);
+                          }
+                        }
+                        return bars;
+                      })()}
+                    </div>
+                    <div className="flex justify-between mt-1 text-[9px] text-muted-foreground">
+                      {Array.from({ length: Math.max(...demoLog.filter(e => e.action === "feedback").map(e => e.tick), 0) + 1 }, (_, i) => (
+                        <span key={i}>R{i + 1}</span>
+                      ))}
+                    </div>
+                    <div className="flex gap-4 mt-2 text-[10px]">
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-emerald-500" /> researcher</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-sky-500" /> synthesizer</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-amber-500" /> critic</span>
+                    </div>
+                  </div>
+
+                  {/* Mesh coherence over rounds */}
+                  <div className="bg-[hsl(220,20%,8%)] border border-[hsl(150,30%,15%)] rounded-lg p-4 mb-4">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Mesh Coherence Trend</div>
+                    {demoLog.filter(e => e.agent === "mesh" && e.action === "tick").map((e, i) => (
+                      <div key={i} className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] text-muted-foreground w-6">R{e.tick + 1}</span>
+                        <div className="flex-1">
+                          <HBar value={e.h} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Event timeline */}
+                  <div className="bg-[hsl(220,20%,8%)] border border-[hsl(150,30%,15%)] rounded-lg p-4">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Activity Timeline</div>
+                    <div className="space-y-0.5 max-h-48 overflow-auto">
+                      {demoLog.map((e, i) => {
+                        const agentColor = e.agent === "researcher" ? "text-emerald-400" :
+                          e.agent === "synthesizer" ? "text-sky-400" :
+                          e.agent === "critic" ? "text-amber-400" : "text-primary";
+                        const actionIcon = e.action === "think" ? "◆" : e.action === "ipc-send" ? "→" : e.action === "feedback" ? "★" : "⚡";
+                        return (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.02 }}
+                            className="flex items-center gap-2 text-[11px] py-0.5"
+                          >
+                            <span className="text-muted-foreground w-6">R{e.tick + 1}</span>
+                            <span className="w-3">{actionIcon}</span>
+                            <span className={`w-20 truncate font-medium ${agentColor}`}>{e.agent}</span>
+                            <span className="text-muted-foreground w-16">{e.action}</span>
+                            <span className="text-muted-foreground truncate flex-1">{e.detail}</span>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
               )}
             </motion.div>
           )}
