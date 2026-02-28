@@ -67,20 +67,57 @@ export default function Subgraph153Panel() {
       </div>
 
       {/* Search Stats */}
-      <div className="grid grid-cols-6 gap-2">
+      <div className="grid grid-cols-7 gap-2">
         {[
           { label: "Candidates", value: String(result.stats.totalCandidatesExplored), color: "hsl(200,60%,55%)" },
           { label: "Exact 153", value: String(result.stats.exact153Found), color: result.stats.exact153Found > 0 ? "hsl(140,60%,55%)" : "hsl(40,80%,55%)" },
           { label: "Near 153 (±5)", value: String(result.stats.near153Found), color: "hsl(280,50%,60%)" },
           { label: "Best Edges", value: String(result.stats.bestEdgeCount), color: "hsl(30,70%,55%)" },
           { label: "Gap to 153", value: String(result.stats.closestToTarget), color: result.stats.closestToTarget === 0 ? "hsl(140,60%,55%)" : "hsl(50,80%,55%)" },
-          { label: "Strategies", value: "5", color: "hsl(190,60%,55%)" },
+          { label: "Strategies", value: String(result.stats.strategiesUsed.length), color: "hsl(190,60%,55%)" },
+          { label: "Time", value: `${(result.stats.searchTimeMs / 1000).toFixed(1)}s`, color: "hsl(210,10%,55%)" },
         ].map(s => (
           <div key={s.label} className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-3">
             <div className="text-[7px] font-mono text-[hsl(210,10%,40%)] uppercase">{s.label}</div>
             <div className="text-[16px] font-mono mt-0.5" style={{ color: s.color }}>{s.value}</div>
           </div>
         ))}
+      </div>
+
+      {/* Intensified Strategy Stats */}
+      <div className="bg-[hsla(160,20%,12%,0.3)] border border-[hsla(160,20%,25%,0.3)] rounded-lg p-4">
+        <div className="text-[10px] font-mono text-[hsl(160,60%,55%)] uppercase mb-2">
+          Intensified Search Strategies (Phase 12c)
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-[hsla(210,10%,8%,0.5)] rounded p-3 space-y-1">
+            <div className="text-[9px] font-mono text-[hsl(40,80%,55%)] uppercase">Simulated Annealing</div>
+            <div className="text-[10px] font-mono text-[hsl(210,10%,60%)]">
+              12 restarts × 3000 steps · exponential cooling + reheat
+            </div>
+            <div className="text-[10px] font-mono text-[hsl(40,60%,55%)]">
+              Uphill accepts: {result.stats.saAcceptedUphill} · T_final: {result.stats.saFinalTemperature.toExponential(2)}
+            </div>
+          </div>
+          <div className="bg-[hsla(210,10%,8%,0.5)] rounded p-3 space-y-1">
+            <div className="text-[9px] font-mono text-[hsl(200,60%,55%)] uppercase">Genetic Algorithm</div>
+            <div className="text-[10px] font-mono text-[hsl(210,10%,60%)]">
+              pop=250 · {result.stats.gaGenerations} generations · tournament k=4
+            </div>
+            <div className="text-[10px] font-mono text-[hsl(200,50%,55%)]">
+              Best fitness: {result.stats.gaBestFitness} (0 = exact 153)
+            </div>
+          </div>
+          <div className="bg-[hsla(210,10%,8%,0.5)] rounded p-3 space-y-1">
+            <div className="text-[9px] font-mono text-[hsl(280,50%,60%)] uppercase">Parallel Hill-Climb</div>
+            <div className="text-[10px] font-mono text-[hsl(210,10%,60%)]">
+              {result.stats.parallelWalkers} walkers × 3000 steps · plateau escape
+            </div>
+            <div className="text-[10px] font-mono text-[hsl(280,40%,55%)]">
+              Best/walker: [{result.stats.parallelBestPerWalker.slice(0, 8).join(", ")}{result.stats.parallelBestPerWalker.length > 8 ? "…" : ""}]
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Number theory */}
