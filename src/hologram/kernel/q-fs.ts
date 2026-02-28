@@ -18,10 +18,15 @@
  *
  * No fsck needed — content-addressing means corruption is self-detecting.
  *
+ * ── CRYSTALLIZED ──
+ * This module derives entirely from genesis/. Zero external dependencies.
+ *
  * @module qkernel/q-fs
  */
 
-import { sha256, computeCid, bytesToHex } from "@/modules/uns/core/address";
+import { sha256 } from "@/hologram/genesis/axiom-hash";
+import { createCid } from "@/hologram/genesis/axiom-cid";
+import { encodeUtf8 } from "@/hologram/genesis/axiom-ring";
 import type { QMmu } from "./q-mmu";
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -108,12 +113,13 @@ export class QFs {
   /**
    * mkfs — Create the root filesystem.
    * Like mkfs.ext4 — initializes the root directory and journal.
+   * Now SYNCHRONOUS — genesis hash is pure math.
    */
-  async mkfs(ownerPid: number): Promise<string> {
-    const rootInode = await this.createInode("directory", "/", ownerPid);
+  mkfs(ownerPid: number): string {
+    const rootInode = this.createInode("directory", "/", ownerPid);
     this.rootCid = rootInode.cid;
 
-    await this.appendJournal("mount", "/", rootInode.cid, ownerPid);
+    this.appendJournal("mount", "/", rootInode.cid, ownerPid);
     this.mounts.set("/", {
       path: "/",
       rootCid: rootInode.cid,
@@ -129,51 +135,51 @@ export class QFs {
   /**
    * create — Create a new file with content.
    */
-  async createFile(
+  createFile(
     parentPath: string,
     name: string,
     content: Uint8Array,
     ownerPid: number
-  ): Promise<QInode> {
-    const contentCid = await this.mmu.store(content, ownerPid);
-    const inode = await this.createInode("file", name, ownerPid, contentCid, content.byteLength);
+  ): QInode {
+    const contentCid = this.mmu.store(content, ownerPid);
+    const inode = this.createInode("file", name, ownerPid, contentCid, content.byteLength);
 
     // Add to parent directory
     const parent = this.resolveInode(parentPath);
     if (parent && parent.type === "directory") {
       parent.children.set(name, inode.cid);
-      await this.updateInodeCid(parent);
+      this.updateInodeCid(parent);
     }
 
     const fullPath = parentPath === "/" ? `/${name}` : `${parentPath}/${name}`;
-    await this.appendJournal("create", fullPath, inode.cid, ownerPid);
+    this.appendJournal("create", fullPath, inode.cid, ownerPid);
     return inode;
   }
 
   /**
    * write — Update a file's content (creates new CID — immutability).
    */
-  async writeFile(
+  writeFile(
     path: string,
     content: Uint8Array,
     ownerPid: number
-  ): Promise<QInode | null> {
+  ): QInode | null {
     const inode = this.resolveInode(path);
     if (!inode || inode.type !== "file") return null;
     if (!this.checkPermission(inode, ownerPid, "write")) return null;
 
-    const contentCid = await this.mmu.store(content, ownerPid);
-    const newInode = await this.createInode("file", inode.name, ownerPid, contentCid, content.byteLength);
+    const contentCid = this.mmu.store(content, ownerPid);
+    const newInode = this.createInode("file", inode.name, ownerPid, contentCid, content.byteLength);
 
     // Replace in parent
     const parentPath = path.substring(0, path.lastIndexOf("/")) || "/";
     const parent = this.resolveInode(parentPath);
     if (parent && parent.type === "directory") {
       parent.children.set(inode.name, newInode.cid);
-      await this.updateInodeCid(parent);
+      this.updateInodeCid(parent);
     }
 
-    await this.appendJournal("write", path, newInode.cid, ownerPid);
+    this.appendJournal("write", path, newInode.cid, ownerPid);
     return newInode;
   }
 
@@ -200,17 +206,17 @@ export class QFs {
   /**
    * mkdir — Create a directory.
    */
-  async mkdir(parentPath: string, name: string, ownerPid: number): Promise<QInode> {
-    const dirInode = await this.createInode("directory", name, ownerPid);
+  mkdir(parentPath: string, name: string, ownerPid: number): QInode {
+    const dirInode = this.createInode("directory", name, ownerPid);
 
     const parent = this.resolveInode(parentPath);
     if (parent && parent.type === "directory") {
       parent.children.set(name, dirInode.cid);
-      await this.updateInodeCid(parent);
+      this.updateInodeCid(parent);
     }
 
     const fullPath = parentPath === "/" ? `/${name}` : `${parentPath}/${name}`;
-    await this.appendJournal("mkdir", fullPath, dirInode.cid, ownerPid);
+    this.appendJournal("mkdir", fullPath, dirInode.cid, ownerPid);
     return dirInode;
   }
 
@@ -232,7 +238,7 @@ export class QFs {
   /**
    * rm — Remove a file or empty directory.
    */
-  async rm(path: string, ownerPid: number): Promise<boolean> {
+  rm(path: string, ownerPid: number): boolean {
     const inode = this.resolveInode(path);
     if (!inode) return false;
     if (inode.type === "directory" && inode.children.size > 0) return false;
@@ -243,13 +249,13 @@ export class QFs {
     const parent = this.resolveInode(parentPath);
     if (parent && parent.type === "directory") {
       parent.children.delete(inode.name);
-      await this.updateInodeCid(parent);
+      this.updateInodeCid(parent);
     }
 
     this.inodes.delete(inode.cid);
     if (inode.contentCid) this.mmu.free(inode.contentCid);
 
-    await this.appendJournal("delete", path, inode.cid, ownerPid);
+    this.appendJournal("delete", path, inode.cid, ownerPid);
     return true;
   }
 
@@ -258,25 +264,25 @@ export class QFs {
   /**
    * mount — Attach a CID-addressed subtree at a path.
    */
-  async mount(path: string, rootCid: string, ownerPid: number): Promise<boolean> {
+  mount(path: string, rootCid: string, ownerPid: number): boolean {
     this.mounts.set(path, {
       path,
       rootCid,
       mountedAt: Date.now(),
       readOnly: false,
     });
-    await this.appendJournal("mount", path, rootCid, ownerPid);
+    this.appendJournal("mount", path, rootCid, ownerPid);
     return true;
   }
 
   /**
    * unmount — Detach a mount point.
    */
-  async unmount(path: string, ownerPid: number): Promise<boolean> {
+  unmount(path: string, ownerPid: number): boolean {
     if (!this.mounts.has(path)) return false;
     const mp = this.mounts.get(path)!;
     this.mounts.delete(path);
-    await this.appendJournal("unmount", path, mp.rootCid, ownerPid);
+    this.appendJournal("unmount", path, mp.rootCid, ownerPid);
     return true;
   }
 
@@ -285,23 +291,23 @@ export class QFs {
   /**
    * fsck — Verify filesystem integrity.
    * In Q-FS this is trivial: every CID is self-verifying.
+   * Now SYNCHRONOUS — genesis hash is pure math.
    */
-  async fsck(): Promise<{ valid: boolean; errors: string[] }> {
+  fsck(): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     for (const [cid, inode] of this.inodes) {
       // Verify the inode's CID matches its content
-      const inodeBytes = new TextEncoder().encode(JSON.stringify({
+      const inodeBytes = encodeUtf8(JSON.stringify({
         type: inode.type,
         name: inode.name,
         ownerPid: inode.ownerPid,
         contentCid: inode.contentCid,
       }));
-      const hashBytes = await sha256(inodeBytes);
-      const expectedCid = await computeCid(hashBytes);
+      const expectedCid = createCid(inodeBytes);
 
-      if (cid !== expectedCid) {
-        errors.push(`Inode ${inode.name}: CID mismatch (stored: ${cid.slice(0, 16)}…, expected: ${expectedCid.slice(0, 16)}…)`);
+      if (cid !== expectedCid.string) {
+        errors.push(`Inode ${inode.name}: CID mismatch (stored: ${cid.slice(0, 16)}…, expected: ${expectedCid.string.slice(0, 16)}…)`);
       }
 
       // Verify content exists for files
@@ -361,21 +367,20 @@ export class QFs {
 
   // ── Internal ────────────────────────────────────────────────────
 
-  private async createInode(
+  private createInode(
     type: InodeType,
     name: string,
     ownerPid: number,
     contentCid?: string,
     size?: number
-  ): Promise<QInode> {
-    const inodeBytes = new TextEncoder().encode(JSON.stringify({
+  ): QInode {
+    const inodeBytes = encodeUtf8(JSON.stringify({
       type, name, ownerPid, contentCid: contentCid ?? null,
     }));
-    const hashBytes = await sha256(inodeBytes);
-    const cid = await computeCid(hashBytes);
+    const cid = createCid(inodeBytes);
 
     const inode: QInode = {
-      cid,
+      cid: cid.string,
       type,
       name,
       size: size ?? 0,
@@ -388,11 +393,11 @@ export class QFs {
       permissions: { ownerPid, readable: true, writable: true, executable: type === "directory" },
     };
 
-    this.inodes.set(cid, inode);
+    this.inodes.set(cid.string, inode);
     return inode;
   }
 
-  private async updateInodeCid(inode: QInode): Promise<void> {
+  private updateInodeCid(inode: QInode): void {
     // Directories need their CID updated when children change
     // We keep the same reference since the Map key is the original CID
     (inode as { modifiedAt: number }).modifiedAt = Date.now();
@@ -429,16 +434,15 @@ export class QFs {
     }
   }
 
-  private async appendJournal(op: JournalOp, path: string, cid: string, pid: number): Promise<void> {
+  private appendJournal(op: JournalOp, path: string, cid: string, pid: number): void {
     const prevEntry = this.journal.length > 0 ? this.journal[this.journal.length - 1] : null;
 
     let prevEntryCid: string | null = null;
     if (prevEntry) {
-      const prevBytes = new TextEncoder().encode(JSON.stringify({
+      const prevBytes = encodeUtf8(JSON.stringify({
         seq: prevEntry.sequence, op: prevEntry.operation, path: prevEntry.path, cid: prevEntry.cid,
       }));
-      const hashBytes = await sha256(prevBytes);
-      prevEntryCid = await computeCid(hashBytes);
+      prevEntryCid = createCid(prevBytes).string;
     }
 
     this.journal.push({

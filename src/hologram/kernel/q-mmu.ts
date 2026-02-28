@@ -19,10 +19,15 @@
  * The key insight: deduplication is FREE. If two processes produce
  * identical results, they share the same CID. No duplicate memory. Ever.
  *
+ * ── CRYSTALLIZED ──
+ * This module derives entirely from genesis/. Zero external dependencies.
+ *
  * @module qkernel/q-mmu
  */
 
-import { sha256, computeCid, bytesToHex } from "@/modules/uns/core/address";
+import { sha256 } from "@/hologram/genesis/axiom-hash";
+import { createCid } from "@/hologram/genesis/axiom-cid";
+import { toHex, encodeUtf8 } from "@/hologram/genesis/axiom-ring";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Storage Tiers
@@ -117,22 +122,24 @@ export class QMmu {
    * mmap — Store content into virtual memory.
    * Returns the CID (content-addressed virtual address).
    * If the content already exists, returns existing CID (free dedup).
+   *
+   * Now SYNCHRONOUS — genesis hash is pure math, no Web Crypto needed.
    */
-  async store(content: Uint8Array, ownerPid: number, derivationCid?: string): Promise<string> {
+  store(content: Uint8Array, ownerPid: number, derivationCid?: string): string {
     this.totalStoreOps++;
 
-    const hashBytes = await sha256(content);
-    const cid = await computeCid(hashBytes);
+    const hashBytes = sha256(content);
+    const cid = createCid(content);
 
     // Deduplication: if CID exists, just bump access
-    const existing = this.datums.get(cid);
+    const existing = this.datums.get(cid.string);
     if (existing) {
-      this.touch(cid);
-      return cid;
+      this.touch(cid.string);
+      return cid.string;
     }
 
     const datum: Datum = {
-      cid,
+      cid: cid.string,
       content: new Uint8Array(content),
       byteLength: content.byteLength,
       tier: "hot",
@@ -141,14 +148,14 @@ export class QMmu {
       accessCount: 1,
       ownerPid,
       derivationCid: derivationCid ?? null,
-      checksum: bytesToHex(hashBytes).slice(0, 16),
+      checksum: toHex(hashBytes).slice(0, 16),
     };
 
-    this.datums.set(cid, datum);
-    this.accessOrder.push(cid);
+    this.datums.set(cid.string, datum);
+    this.accessOrder.push(cid.string);
     this.maybeEvict();
 
-    return cid;
+    return cid.string;
   }
 
   /**
