@@ -100,14 +100,19 @@ export function useKernel(): UseKernelResult {
   const [kernel, setKernel] = useState<QKernelBoot | null>(null);
   const bootedRef = useRef(false);
 
-  // Subscribe to projection frames
+  // Subscribe to projection frames + start interpolation
   useEffect(() => {
     const unsub = projector.onFrame((f) => {
       setFrame(f);
       setStage(f.stage);
       adapter.applyFrame(f);
     });
-    return unsub;
+    // Start interpolation loop (60fps smoothing between kernel ticks)
+    adapter.startInterpolation();
+    return () => {
+      unsub();
+      adapter.stopInterpolation();
+    };
   }, [projector, adapter]);
 
   // Subscribe to boot events
