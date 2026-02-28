@@ -17,12 +17,12 @@ import { useMemo, type CSSProperties } from "react";
 import heroLandscape from "@/assets/hologram-hero-landscape.jpg";
 import DayProgressRing from "./DayProgressRing";
 import AttentionToggle from "./AttentionToggle";
-import WidgetHoverActions from "./WidgetHoverActions";
 import { useDraggablePosition } from "../hooks/useDraggablePosition";
 import type { DesktopMode } from "@/modules/hologram-os/projection-engine";
 import WeatherWidget from "./widgets/WeatherWidget";
 import ProductivityTimerWidget from "./widgets/ProductivityTimerWidget";
 import AmbientMoodWidget from "./widgets/AmbientMoodWidget";
+import { SNAP_ANCHOR_EVENT } from "../hooks/useDraggablePosition";
 // VoiceOrb lifted to page level for single-instance efficiency
 
 /* ── Palette ───────────────────────────────────────── */
@@ -63,7 +63,7 @@ function palette(m: DesktopMode) {
 }
 
 /* ── Typewriter ──────────────────────────────────────── */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 function getLumenSubtitle(): string {
   const h = new Date().getHours();
@@ -191,6 +191,36 @@ export default function DesktopSurface({
     snapSize: { width: 64, height: 64 },
   });
 
+  // ── Snap anchor feedback ──────────────────────────
+  const [anchoredKey, setAnchoredKey] = useState<string | null>(null);
+  const anchorTimeout = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const key = (e as CustomEvent).detail?.key as string;
+      if (!key) return;
+      setAnchoredKey(key);
+      clearTimeout(anchorTimeout.current);
+      anchorTimeout.current = setTimeout(() => setAnchoredKey(null), 400);
+    };
+    window.addEventListener(SNAP_ANCHOR_EVENT, handler);
+    return () => window.removeEventListener(SNAP_ANCHOR_EVENT, handler);
+  }, []);
+
+  const isAnchored = useCallback(
+    (dragKey: string) => anchoredKey === dragKey,
+    [anchoredKey],
+  );
+
+  // ── Double-click to hide widget ───────────────────
+  const handleDoubleClick = useCallback(
+    (widgetId: string, drag: ReturnType<typeof useDraggablePosition>) =>
+      () => {
+        if (!drag.wasDragged()) removeWidget(widgetId);
+      },
+    [removeWidget],
+  );
+
   return (
     <div
       className="absolute inset-0"
@@ -243,26 +273,23 @@ export default function DesktopSurface({
       {/* ── Chrome: Day Ring ──────────────────────── */}
       {isWidgetVisible("day-ring") && (
         <div
-          className="absolute bottom-[3vh] right-24 z-[400] flex items-center gap-2"
+          className="absolute bottom-[3vh] right-24 z-[400] flex items-center gap-2 cursor-grab active:cursor-grabbing"
           style={{
             opacity: isFocus ? 0 : 1,
             pointerEvents: isFocus ? "none" : "auto",
-            transition: "opacity 300ms, transform 300ms",
-            transform: `translate(${dayRingDrag.pos.x}px, ${dayRingDrag.pos.y}px)`,
+            transition: isAnchored(`hologram-pos:day-ring:${mode}`)
+              ? "opacity 300ms, transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1)"
+              : "opacity 300ms, transform 300ms",
+            transform: `translate(${dayRingDrag.pos.x}px, ${dayRingDrag.pos.y}px)${
+              isAnchored(`hologram-pos:day-ring:${mode}`) ? " scale(1.04)" : ""
+            }`,
             touchAction: "none",
             userSelect: "none",
           }}
+          onDoubleClick={handleDoubleClick("day-ring", dayRingDrag)}
+          {...dayRingDrag.handlers}
         >
-          <WidgetHoverActions
-            widgetId="day-ring"
-            onRemove={removeWidget}
-            dragHandlers={dayRingDrag.handlers}
-            showSettings={false}
-            bgMode={mode}
-            position="top-center"
-          >
-            <DayProgressRing bgMode={mode} />
-          </WidgetHoverActions>
+          <DayProgressRing bgMode={mode} />
         </div>
       )}
 
@@ -273,32 +300,28 @@ export default function DesktopSurface({
 
       {/* ── Chrome: Frame-exclusive widget (bottom-left, aligned with Day Ring) ── */}
       <div
-        className="absolute bottom-[3vh] left-24 z-[400]"
+        className="absolute bottom-[3vh] left-24 z-[400] cursor-grab active:cursor-grabbing"
         style={{
           opacity: isFocus ? 0 : 1,
           pointerEvents: isFocus ? "none" : "auto",
-          transition: "opacity 300ms, transform 300ms",
+          transition: isAnchored(`hologram-pos:frame-widget:${mode}`)
+            ? "opacity 300ms, transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1)"
+            : "opacity 300ms, transform 300ms",
           transform: isFocus
             ? "translateY(10px)"
-            : `translate(${frameWidgetDrag.pos.x}px, ${frameWidgetDrag.pos.y}px)`,
+            : `translate(${frameWidgetDrag.pos.x}px, ${frameWidgetDrag.pos.y}px)${
+                isAnchored(`hologram-pos:frame-widget:${mode}`) ? " scale(1.04)" : ""
+              }`,
           animation: "stagger-fade-in 1s ease-out 0.6s both",
           touchAction: "none",
           userSelect: "none",
         }}
+        onDoubleClick={handleDoubleClick("frame-widget", frameWidgetDrag)}
+        {...frameWidgetDrag.handlers}
       >
-        <WidgetHoverActions
-          widgetId="frame-widget"
-          onRemove={removeWidget}
-          dragHandlers={frameWidgetDrag.handlers}
-          showSettings={false}
-          showResize={false}
-          bgMode={mode}
-          position="top-center"
-        >
-          {mode === "image" && <WeatherWidget />}
-          {mode === "white" && <ProductivityTimerWidget />}
-          {mode === "dark" && <AmbientMoodWidget />}
-        </WidgetHoverActions>
+        {mode === "image" && <WeatherWidget />}
+        {mode === "white" && <ProductivityTimerWidget />}
+        {mode === "dark" && <AmbientMoodWidget />}
       </div>
 
       {/* ── Content: Logo ────────────────────────── */}

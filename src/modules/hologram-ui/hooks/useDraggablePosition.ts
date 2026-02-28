@@ -16,6 +16,10 @@ import { registerRect, unregisterRect, snapToOthers } from "./dragSnapRegistry";
 import { SNAP_GUIDE_EVENT, type SnapGuidePayload } from "../components/SnapGuideOverlay";
 import { getKernelProjector } from "@/modules/hologram-os/projection-engine";
 
+/** Fired when a widget snaps into place (on pointerup after drag) */
+export const SNAP_ANCHOR_EVENT = "hologram:snap-anchor";
+export interface SnapAnchorPayload { key: string }
+
 export interface DragPosition {
   x: number;
   y: number;
@@ -114,6 +118,14 @@ export function useDraggablePosition({
       if (dragging.current) {
         dragging.current = false;
         emitGuides([], false);
+        // Emit snap-anchor feedback if widget was actually moved
+        if (moved.current) {
+          window.dispatchEvent(
+            new CustomEvent<SnapAnchorPayload>(SNAP_ANCHOR_EVENT, {
+              detail: { key: storageKey },
+            }),
+          );
+        }
       }
     };
 
