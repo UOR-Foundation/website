@@ -11,7 +11,7 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit, CircleDot } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
@@ -24,8 +24,9 @@ const Subgraph153Panel = React.lazy(() => import("@/modules/quantum/components/S
 const GeometricQubitPanel = React.lazy(() => import("@/modules/quantum/components/GeometricQubitPanel"));
 const CircuitComposerPanel = React.lazy(() => import("@/modules/quantum/components/CircuitComposerPanel"));
 const SouriauThermodynamicsPanel = React.lazy(() => import("@/modules/quantum/components/SouriauThermodynamicsPanel"));
+const CoadjointOrbitPanel = React.lazy(() => import("@/modules/quantum/components/CoadjointOrbitPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ export default function QuantumDashboardPage() {
     { key: "geo-qubit", label: "Geo Qubit", icon: <Orbit size={12} /> },
     { key: "composer", label: "Composer", icon: <Cpu size={12} /> },
     { key: "thermo", label: "Souriau Thermo", icon: <Zap size={12} /> },
+    { key: "orbits", label: "Orbit Classifier", icon: <CircleDot size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -59,6 +61,7 @@ export default function QuantumDashboardPage() {
     "geo-qubit": "Projecting qubits from Atlas symplectic manifold…",
     composer: "Initializing quantum circuit composer engine…",
     thermo: "Calibrating Cartan Neural Network temperature cone…",
+    orbits: "Classifying coadjoint orbits for Neeb integrability…",
   };
 
   return (
@@ -119,6 +122,8 @@ export default function QuantumDashboardPage() {
            tab === "153-link" ? <Subgraph153Panel /> :
            tab === "geo-qubit" ? <GeometricQubitPanel /> :
            tab === "composer" ? <CircuitComposerPanel /> :
+           tab === "thermo" ? <SouriauThermodynamicsPanel /> :
+           tab === "orbits" ? <CoadjointOrbitPanel /> :
            <SouriauThermodynamicsPanel />}
         </Suspense>
       </div>
