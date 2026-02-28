@@ -21,7 +21,7 @@ import DataBankIndicator from "./DataBankIndicator";
 import { ShareTheLoveModal } from "./ShareTheLoveModal";
 import TextSizeControl from "./TextSizeControl";
 import { useTextSize, type TextSize } from "@/modules/hologram-ui/hooks/useTextSize";
-import { useKernel } from "@/modules/hologram-os/hooks/useKernel";
+
 
 /* ── Tooltip wrapper ───────────────────────────────────────── */
 function IconTooltip({ label, children, show }: { label: string; children: React.ReactNode; show: boolean }) {
@@ -115,14 +115,11 @@ export default function DesktopOsSidebar({
   const [expanded, setExpanded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const { textSize, setTextSize } = useTextSize();
-  const kernel = useKernel();
 
-  // Wire text size changes to both the CSS hook AND the kernel config register
+  // Text size changes flow through kernel automatically via useTextSize
   const handleTextSize = useCallback((size: TextSize) => {
     setTextSize(size);
-    const scaleMap: Record<TextSize, number> = { compact: 0.9, default: 1.0, large: 1.15 };
-    kernel.setUserScale(scaleMap[size]);
-  }, [setTextSize, kernel]);
+  }, [setTextSize]);
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,

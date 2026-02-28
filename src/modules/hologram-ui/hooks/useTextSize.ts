@@ -2,23 +2,22 @@
  * useTextSize — User text size preference
  * ════════════════════════════════════════
  *
- * The system attends to the human's visual needs.
- * Three levels: compact (0.9×), default (1.0×), large (1.15×).
- * Applied via data-text-size attribute on <html> for zero-JS CSS scaling.
- * Persisted to localStorage, synced to profile in Phase 4.
+ * KERNEL-PROJECTED: Text scale lives in KernelConfig.typography.userScale.
+ * This hook reads from the kernel and applies the CSS attribute.
+ * The kernel is the single source of truth.
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useKernel } from "@/modules/hologram-os/hooks/useKernel";
 
 export type TextSize = "compact" | "default" | "large";
 
-const STORAGE_KEY = "hologram-text-size";
+const SCALE_MAP: Record<TextSize, number> = { compact: 0.9, default: 1.0, large: 1.15 };
+const REVERSE_MAP: Record<number, TextSize> = { 0.9: "compact", 1.0: "default", 1.15: "large" };
 
-function loadTextSize(): TextSize {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === "compact" || saved === "default" || saved === "large") return saved;
-  } catch {}
+function scaleToSize(scale: number): TextSize {
+  if (scale <= 0.9) return "compact";
+  if (scale >= 1.15) return "large";
   return "default";
 }
 
@@ -32,20 +31,17 @@ function applyToDocument(size: TextSize) {
 }
 
 export function useTextSize() {
-  const [textSize, setTextSizeState] = useState<TextSize>(loadTextSize);
+  const k = useKernel();
+  const textSize = scaleToSize(k.config.typography.userScale);
 
-  // Apply on mount (before first paint if possible)
+  // Apply CSS attribute whenever kernel config changes
   useEffect(() => {
     applyToDocument(textSize);
   }, [textSize]);
 
   const setTextSize = useCallback((size: TextSize) => {
-    setTextSizeState(size);
-    applyToDocument(size);
-    try {
-      localStorage.setItem(STORAGE_KEY, size);
-    } catch {}
-  }, []);
+    k.setUserScale(SCALE_MAP[size]);
+  }, [k.setUserScale]);
 
   return { textSize, setTextSize };
 }
@@ -53,8 +49,13 @@ export function useTextSize() {
 /** Apply saved text size immediately on module load (flash prevention) */
 (() => {
   if (typeof document === "undefined") return;
-  const saved = loadTextSize();
-  if (saved !== "default") {
-    document.documentElement.setAttribute("data-text-size", saved);
-  }
+  try {
+    const raw = localStorage.getItem("kernel:config");
+    if (raw) {
+      const config = JSON.parse(raw);
+      const scale = config?.typography?.userScale;
+      if (scale <= 0.9) document.documentElement.setAttribute("data-text-size", "compact");
+      else if (scale >= 1.15) document.documentElement.setAttribute("data-text-size", "large");
+    }
+  } catch {}
 })();

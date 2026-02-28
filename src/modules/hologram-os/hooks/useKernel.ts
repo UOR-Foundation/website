@@ -53,6 +53,8 @@ export interface UseKernelResult {
   chatOpen: boolean;
   /** Active desktop mode — derived from kernel palette */
   desktopMode: DesktopMode;
+  /** Attention aperture (0–1) — derived from kernel config */
+  aperture: number;
 
   // ── Kernel syscalls (write to kernel → triggers re-projection) ────
   /** Open a projection panel */
@@ -71,6 +73,16 @@ export interface UseKernelResult {
   setWidgetVisible: (type: WidgetType, visible: boolean) => void;
   /** Get PID for a widget */
   getWidgetPid: (type: WidgetType) => number | undefined;
+  /** Set attention aperture (0–1) */
+  setAperture: (value: number) => void;
+  /** Hide a widget on a desktop */
+  hideDesktopWidget: (desktopId: string, widgetId: string) => void;
+  /** Toggle all widgets on a desktop */
+  toggleAllDesktopWidgets: (desktopId: string) => void;
+  /** Set all-hidden for a desktop */
+  setDesktopAllHidden: (desktopId: string, hidden: boolean) => void;
+  /** Check if a widget is visible on a desktop */
+  isDesktopWidgetVisible: (desktopId: string, widgetId: string) => boolean;
   /** Current kernel config */
   config: Readonly<KernelConfig>;
   /** Boot time in ms */
@@ -168,6 +180,26 @@ export function useKernel(): UseKernelResult {
     return projector.getWidgetPid(type);
   }, [projector]);
 
+  const setAperture = useCallback((value: number) => {
+    projector.setAperture(value);
+  }, [projector]);
+
+  const hideDesktopWidget = useCallback((desktopId: string, widgetId: string) => {
+    projector.hideDesktopWidget(desktopId, widgetId);
+  }, [projector]);
+
+  const toggleAllDesktopWidgets = useCallback((desktopId: string) => {
+    projector.toggleAllDesktopWidgets(desktopId);
+  }, [projector]);
+
+  const setDesktopAllHidden = useCallback((desktopId: string, hidden: boolean) => {
+    projector.setDesktopAllHidden(desktopId, hidden);
+  }, [projector]);
+
+  const isDesktopWidgetVisible = useCallback((desktopId: string, widgetId: string) => {
+    return projector.isDesktopWidgetVisible(desktopId, widgetId);
+  }, [projector]);
+
   return {
     frame,
     bootEvents,
@@ -181,6 +213,7 @@ export function useKernel(): UseKernelResult {
     activePanel: projector.getActivePanel(),
     chatOpen: projector.isChatOpen(),
     desktopMode: projector.getDesktopMode(),
+    aperture: projector.getAperture(),
 
     // Kernel syscalls
     openPanel,
@@ -191,6 +224,11 @@ export function useKernel(): UseKernelResult {
     setPaletteMode,
     setWidgetVisible,
     getWidgetPid,
+    setAperture,
+    hideDesktopWidget,
+    toggleAllDesktopWidgets,
+    setDesktopAllHidden,
+    isDesktopWidgetVisible,
     config: projector.getConfig(),
     bootTimeMs: kernel?.bootTimeMs ?? 0,
   };
