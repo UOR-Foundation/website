@@ -174,7 +174,7 @@ export function useKernel(): UseKernelResult {
   }, [projector]);
 
   const setPaletteMode = useCallback((mode: DesktopMode) => {
-    projector.setPaletteMode(mode as "dark" | "light" | "image");
+    projector.setPaletteMode(mode);
   }, [projector]);
 
   const setWidgetVisible = useCallback((type: WidgetType, visible: boolean) => {

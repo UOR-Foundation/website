@@ -48,7 +48,6 @@ import { useShortcutMastery } from "@/modules/hologram-ui/hooks/useShortcutMaste
 import { useContextBeacon, useScreenContext } from "@/modules/hologram-ui/hooks/useScreenContext";
 import { useObserverCompanion } from "@/modules/hologram-ui/hooks/useObserverCompanion";
 import DesktopSurface from "@/modules/hologram-ui/components/DesktopSurface";
-import type { DesktopId } from "@/modules/hologram-ui/hooks/useDesktopState";
 import { useAiChatHistory } from "@/modules/hologram-ui/hooks/useAiChatHistory";
 import VoiceOrb from "@/modules/hologram-ui/components/VoiceOrb";
 
@@ -76,7 +75,7 @@ function DepthShiftSync({ active }: { active: boolean }) {
   return null;
 }
 
-const ALL_DESKTOPS: DesktopId[] = ["image", "white", "dark"];
+const ALL_DESKTOPS: DesktopMode[] = ["image", "white", "dark"];
 
 export default function HologramOsPage() {
   const navigate = useNavigate();
@@ -109,7 +108,7 @@ export default function HologramOsPage() {
   // ═══════════════════════════════════════════════════════════════════════
   const activePanel = k.activePanel;
   const chatOpen = k.chatOpen;
-  const activeDesktop = k.desktopMode as DesktopId;
+  const activeDesktop = k.desktopMode;
 
   // ── Remaining local state (truly view-local, not kernel state) ────────
   const [claimOpen, setClaimOpen] = useState(false);
@@ -127,10 +126,10 @@ export default function HologramOsPage() {
   const journal = useFocusJournal();
 
   // ── Transition state (visual-only, not kernel state) ──────────────────
-  const [departingDesktop, setDepartingDesktop] = useState<DesktopId | null>(null);
-  const [sidebarBgMode, setSidebarBgMode] = useState<DesktopId>(activeDesktop);
+  const [departingDesktop, setDepartingDesktop] = useState<DesktopMode | null>(null);
+  const [sidebarBgMode, setSidebarBgMode] = useState<DesktopMode>(activeDesktop);
 
-  const switchDesktop = useCallback((target: DesktopId) => {
+  const switchDesktop = useCallback((target: DesktopMode) => {
     if (target === activeDesktop || departingDesktop) return;
 
     // Visual: start peel animation from current desktop
@@ -271,7 +270,7 @@ export default function HologramOsPage() {
     ? [activeDesktop, departingDesktop]
     : [activeDesktop];
 
-  function desktopZ(mode: DesktopId): number {
+  function desktopZ(mode: DesktopMode): number {
     if (mode === departingDesktop) return 300;
     if (mode === activeDesktop) return 200;
     return 100;
