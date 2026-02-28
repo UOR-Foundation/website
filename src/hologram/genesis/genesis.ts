@@ -54,6 +54,12 @@ export {
   type PostCheck, type PostResult,
 } from "./axiom-post";
 
+export {
+  buildArtifact, serializeArtifact, stringifyArtifact,
+  deserializeArtifact, verifyArtifact, toBlob,
+  type UorArtifact, type DerivationNode, type ArtifactVerification,
+} from "./artifact";
+
 // ── Genesis Boot Sequence ─────────────────────────────────
 
 import { post as runPost, type PostResult } from "./axiom-post";
