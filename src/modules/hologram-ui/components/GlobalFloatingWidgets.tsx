@@ -10,13 +10,13 @@ import { useLocation } from "react-router-dom";
 import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
 
-/** Only hide on hologram-os which renders its own richer widget instances */
-const HIDDEN_ROUTES = ["/hologram-os"];
+/** Only show on hologram-os routes — hidden from the public website */
+const ALLOWED_ROUTES = ["/hologram-os", "/hologram"];
 
 export default function GlobalFloatingWidgets() {
   const { pathname } = useLocation();
 
-  if (HIDDEN_ROUTES.includes(pathname)) return null;
+  if (!ALLOWED_ROUTES.includes(pathname)) return null;
 
   return (
     <>

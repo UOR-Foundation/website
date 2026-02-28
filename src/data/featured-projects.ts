@@ -5,13 +5,6 @@ export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
 export const featuredProjects = [
   {
-    name: "Hologram",
-    category: "Frontier Technology",
-    description: "A new kind of computing infrastructure built from the ground up. Software-defined, high-performance, and designed for the next generation of applications.",
-    maturity: "Sandbox" as MaturityLevel,
-    url: "https://gethologram.ai/",
-  },
-  {
     name: "Atlas Embeddings",
     category: "Open Science",
     description: "Research showing that five of the most complex structures in mathematics all come from a single, simple starting point, revealing a deeper shared order.",

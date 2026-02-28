@@ -12,8 +12,8 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
 
-/** Only hide on hologram-os which has its own Lumen CTA */
-const HIDDEN_ROUTES = ["/hologram-os"];
+/** Only show on hologram-os routes — hidden from the public website */
+const ALLOWED_ROUTES = ["/hologram-os", "/hologram"];
 
 export default function LumenFloatingPill() {
   const { pathname } = useLocation();
@@ -26,8 +26,8 @@ export default function LumenFloatingPill() {
     snapSize: { width: 140, height: 40 },
   });
 
-  // Hide on home / hologram-os (which has its own Lumen CTA)
-  if (HIDDEN_ROUTES.includes(pathname)) return null;
+  // Only show on hologram routes
+  if (!ALLOWED_ROUTES.includes(pathname)) return null;
 
   return (
     <div

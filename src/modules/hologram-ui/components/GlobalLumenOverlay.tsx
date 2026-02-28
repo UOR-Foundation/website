@@ -11,15 +11,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 
-const HIDDEN_ROUTES = ["/hologram-os"];
+/** Only show on hologram-os routes — hidden from the public website */
+const ALLOWED_ROUTES = ["/hologram-os", "/hologram"];
 const PANEL_WIDTH = 440;
 
 export default function GlobalLumenOverlay() {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
 
-  // Hide on home page
-  const isHidden = HIDDEN_ROUTES.includes(pathname);
+  // Only show on hologram routes
+  const isHidden = !ALLOWED_ROUTES.includes(pathname);
 
   // Listen for lumen:open-global event from pill
   useEffect(() => {
