@@ -51,6 +51,24 @@
     --hologram-gold: 38 40% 62%;
     --hologram-purple-warm: 280 25% 42%;
 
+    /* ── Kernel Coherence Ambient Layer (driven at 60fps by surface adapter) ── */
+    --kernel-coherence: 0.5;
+    --kernel-process-count: 0;
+    --kernel-base-px: 16px;
+    /* Derived warmth: low coherence → cool, high coherence → warm amber */
+    --coherence-glow-opacity: calc(0.08 + var(--kernel-coherence) * 0.22);
+    --coherence-glow-hue: calc(200 + var(--kernel-coherence) * 160);
+    --coherence-glow-sat: calc(20% + var(--kernel-coherence) * 40%);
+    --coherence-glow-light: calc(30% + var(--kernel-coherence) * 25%);
+    --coherence-glow-color: hsla(
+      var(--coherence-glow-hue),
+      var(--coherence-glow-sat),
+      var(--coherence-glow-light),
+      var(--coherence-glow-opacity)
+    );
+    --coherence-border-alpha: calc(0.04 + var(--kernel-coherence) * 0.12);
+    --coherence-pulse-duration: calc(3s - var(--kernel-coherence) * 1.5s);
+
     /* ── Existing shadcn/ui tokens ───────────────────────────────── */
     --background: 210 30% 96%;
     --foreground: 220 20% 12%;
@@ -630,4 +648,59 @@
 .mobile-drawer-btn {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Kernel Coherence — Ambient Breathing Layer
+   Driven by --kernel-coherence (0–1) at 60fps from the surface adapter.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Heartbeat dot glow — pulses with coherence-derived intensity */
+.kernel-heartbeat-glow {
+  box-shadow: 0 0 calc(4px + var(--kernel-coherence) * 12px)
+              calc(1px + var(--kernel-coherence) * 4px)
+              var(--coherence-glow-color);
+  transition: box-shadow 0.1s linear;
+}
+
+/* Widget card border shimmer — coherence drives border luminance */
+.coherence-border {
+  border-color: hsla(
+    var(--coherence-glow-hue),
+    calc(12% + var(--kernel-coherence) * 20%),
+    calc(50% + var(--kernel-coherence) * 20%),
+    var(--coherence-border-alpha)
+  );
+  transition: border-color 0.15s linear;
+}
+
+/* Sidebar coherence pulse — subtle left-edge glow */
+.coherence-sidebar-pulse {
+  box-shadow: inset 2px 0 calc(8px + var(--kernel-coherence) * 16px)
+              hsla(
+                var(--coherence-glow-hue),
+                var(--coherence-glow-sat),
+                var(--coherence-glow-light),
+                calc(var(--coherence-glow-opacity) * 0.5)
+              );
+  transition: box-shadow 0.1s linear;
+}
+
+/* Ambient background warmth — full-viewport coherence wash */
+.coherence-ambient {
+  position: relative;
+}
+.coherence-ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    var(--coherence-glow-color) 0%,
+    transparent 70%
+  );
+  opacity: calc(var(--kernel-coherence) * 0.15);
+  transition: opacity 0.2s linear;
+  z-index: 0;
 }
