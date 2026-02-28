@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import lobsterIcon from "@/assets/lobster-icon.png";
 import { canonicalToTriword } from "@/lib/uor-triword";
+import TriwordAddress from "@/components/TriwordAddress";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -731,15 +732,15 @@ export default function HologramClaimOverlay({ open, onClose }: HologramClaimOve
 
               <div className="p-6 space-y-5" style={panel}>
                 {/* Triword address — agent's human-readable form */}
-                <div>
-                  <span className="block text-xs mb-1" style={{ color: warmMuted }}>Agent Address</span>
-                  <span className="block text-lg font-serif tracking-wide" style={{ color: warmAccent }}>
-                    {canonicalToTriword(agentIdentity.canonicalId).split(".").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ")}
-                  </span>
-                  <span className="block text-[10px] font-mono mt-1" style={{ color: warmMuted }}>
-                    {canonicalToTriword(agentIdentity.canonicalId)}
-                  </span>
-                </div>
+                <TriwordAddress
+                  canonicalId={agentIdentity.canonicalId}
+                  glyph={agentIdentity.glyph}
+                  label="Agent Address"
+                  size="md"
+                  color={warmAccent}
+                  mutedColor={warmMuted}
+                  variant="hologram"
+                />
                 <MonoField label="Canonical ID" value={agentIdentity.canonicalId} />
                 <GlyphField label="Visual Symbol" value={agentIdentity.glyph} />
                 <MonoField label="Content Address (CID)" value={agentIdentity.cid} />
@@ -930,15 +931,15 @@ export default function HologramClaimOverlay({ open, onClose }: HologramClaimOve
 
               <div className="p-6 space-y-5" style={panel}>
                 {/* Triword address — primary human-readable form */}
-                <div>
-                  <span className="block text-xs mb-1" style={{ color: warmMuted }}>Your Address</span>
-                  <span className="block text-lg font-serif tracking-wide" style={{ color: warmAccent }}>
-                    {canonicalToTriword(identity.canonicalId).split(".").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ")}
-                  </span>
-                  <span className="block text-[10px] font-mono mt-1" style={{ color: warmMuted }}>
-                    {canonicalToTriword(identity.canonicalId)}
-                  </span>
-                </div>
+                <TriwordAddress
+                  canonicalId={identity.canonicalId}
+                  glyph={identity.glyph}
+                  label="Your Address"
+                  size="md"
+                  color={warmAccent}
+                  mutedColor={warmMuted}
+                  variant="hologram"
+                />
                 <MonoField label="Canonical ID" value={identity.canonicalId} />
                 <GlyphField label="Visual Symbol" value={identity.glyph} />
                 <MonoField label="Content Address" value={identity.cid} />

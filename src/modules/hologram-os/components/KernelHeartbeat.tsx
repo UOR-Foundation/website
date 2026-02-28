@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { bootGenesis, type GenesisState } from "@/hologram/genesis/genesis";
 import { KP } from "@/modules/hologram-os/kernel-palette";
 import { canonicalToTriword } from "@/lib/uor-triword";
+import TriwordAddress from "@/components/TriwordAddress";
 
 // Braille block chars for the living glyph animation
 const GLYPH_CHARS = "⠁⠂⠄⡀⠈⠐⠠⢀⠃⠅⠆⡁⡂⡄⠉⠊⠑⠒⠔⠘⠡⠢⠤⠨⠰⢁⢂⢄⢈⢐⢠⣀⠇⡃⡅⡆⡈⡉⡊⡐⡑⡒⡔⡘⡠⡡⡢⡤⡨⡰⠋⠍⠎⠓⠕⠖⠙⠚⠜⠣⠥⠦⠩⠪⠬⠱⠲⠴⠸⢃⢅⢆⢉⢊⢌⢑⢒⢔⢘⢡⢢⢤⢨⢰⣁⣂⣄⣈⣐⣠".split("");
@@ -155,18 +156,18 @@ export default function KernelHeartbeat() {
               </span>
             </div>
 
-            {/* Triword address */}
+            {/* Triword address with copy + reveal */}
             {triword && (
               <div className="mb-2">
-                <span className="text-[9px] block" style={{ color: KP.dim }}>
-                  Address
-                </span>
-                <span
-                  className="text-[13px] font-medium block"
-                  style={{ color: KP.gold, fontFamily: KP.serif }}
-                >
-                  {triword.split(".").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ")}
-                </span>
+                <TriwordAddress
+                  canonicalId={genesis.genesisCid.string}
+                  glyph={genesis.genesisGlyph}
+                  label="Address"
+                  size="sm"
+                  color={KP.gold}
+                  mutedColor={KP.dim}
+                  variant="hologram"
+                />
               </div>
             )}
 
