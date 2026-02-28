@@ -33,4 +33,5 @@ export const routeTable = [
   { path: "/console/fpp", label: "Console: FPP Trust Flow" },
   { path: "/schema-org", label: "Schema.org Explorer" },
   { path: "/leaderboard", label: "Referral Leaderboard" },
+  { path: "/kernel-graph", label: "Kernel Dependency Graph" },
 ];
