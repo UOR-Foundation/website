@@ -76,7 +76,7 @@ export default function ProductivityTimerWidget() {
         {/* Time */}
         <span
           style={{
-            fontSize: remaining === 0 ? "14px" : "20px",
+            fontSize: remaining === 0 ? "14px" : "22px",
             fontWeight: 300,
             color: "hsla(0, 0%, 10%, 0.85)",
             fontFamily: "'Playfair Display', serif",
@@ -90,8 +90,8 @@ export default function ProductivityTimerWidget() {
       {/* Label */}
       <span
         style={{
-          fontSize: "11px",
-          letterSpacing: "0.15em",
+          fontSize: "12px",
+          letterSpacing: "0.35em",
           textTransform: "uppercase",
           color: "hsla(0, 0%, 15%, 0.7)",
           fontWeight: 500,

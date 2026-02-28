@@ -174,7 +174,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 className="leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  fontSize: "var(--holo-text-lg)",
+                  fontSize: "22px",
                   color: isWhite ? "hsla(0, 0%, 10%, 0.8)" : "hsla(220, 20%, 80%, 0.8)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
@@ -186,8 +186,8 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 <span
                   className="tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
                   style={{
-                    fontFamily: "var(--font-body, 'DM Sans', system-ui, sans-serif)",
-                    fontSize: "calc(var(--holo-text-xs) * 0.85)",
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    fontSize: "10px",
                     color: isWhite ? "hsla(0, 0%, 10%, 0.65)" : "hsla(220, 15%, 75%, 0.5)",
                     fontWeight: 500,
                   }}
@@ -202,7 +202,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 className="font-light leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  fontSize: "var(--holo-text-xl)",
+                  fontSize: "22px",
                   color: isWhite ? "hsla(0, 0%, 5%, 0.9)" : "hsla(38, 15%, 94%, 0.95)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
@@ -214,8 +214,8 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 <span
                   className="tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
                   style={{
-                    fontFamily: "var(--font-body, 'DM Sans', system-ui, sans-serif)",
-                    fontSize: "var(--holo-text-xs)",
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    fontSize: "12px",
                     color: isWhite ? "hsla(0, 0%, 10%, 0.65)" : "hsla(38, 15%, 82%, 0.55)",
                     fontWeight: 500,
                   }}
@@ -292,8 +292,8 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
           <span
             className="tracking-[0.35em] uppercase transition-all duration-300"
             style={{
-              fontFamily: "var(--font-body, 'DM Sans', system-ui, sans-serif)",
-              fontSize: "var(--holo-text-xs)",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontSize: "12px",
               color,
               fontWeight: 500,
             }}
@@ -319,7 +319,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 className="font-light leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  fontSize: "var(--holo-text-sm)",
+                  fontSize: "13px",
                   color: isWhite
                     ? `hsla(${PHASES[phase].hue}, 40%, 35%, 0.9)`
                     : `hsla(${PHASES[phase].hue}, 35%, 72%, 0.95)`,
@@ -333,8 +333,8 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
               <span
                 className="tracking-[0.2em] uppercase leading-none"
                 style={{
-                  fontFamily: "var(--font-body, 'DM Sans', system-ui, sans-serif)",
-                  fontSize: "var(--holo-text-xs)",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontSize: "10px",
                   color: isWhite
                     ? `hsla(${PHASES[phase].hue}, 35%, 30%, 0.8)`
                     : `hsla(${PHASES[phase].hue}, 30%, 75%, 0.9)`,
