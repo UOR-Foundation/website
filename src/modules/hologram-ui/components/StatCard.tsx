@@ -35,10 +35,12 @@ export function StatCard({
     : IconMinus;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 transition-shadow hover:shadow-md">
+    <div className="bg-card rounded-xl transition-shadow hover:shadow-md"
+      style={{ padding: "var(--holo-space-4)", display: "flex", flexDirection: "column", gap: "var(--holo-space-2)" }}
+    >
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+        <span className="font-medium text-muted-foreground uppercase" style={{ fontSize: "var(--holo-text-xs)", letterSpacing: "0.08em" }}>
           {label}
         </span>
         {icon && <span className="text-muted-foreground opacity-60">{icon}</span>}
@@ -46,15 +48,15 @@ export function StatCard({
 
       {/* Value */}
       <div
-        className="text-2xl font-bold tracking-tight font-mono"
-        style={accentVar ? { color: `hsl(var(--${accentVar}))` } : undefined}
+        className="font-bold tracking-tight font-mono"
+        style={{ fontSize: "var(--holo-text-2xl)", ...(accentVar ? { color: `hsl(var(--${accentVar}))` } : {}) }}
       >
         {value}
       </div>
 
       {/* Trend + sublabel */}
       {(trend !== undefined || sublabel) && (
-        <div className="flex items-center gap-2 text-[10px]">
+        <div className="flex items-center" style={{ gap: "var(--holo-space-2)", fontSize: "var(--holo-text-xs)" }}>
           {trend !== undefined && TrendIcon && (
             <span className="flex items-center gap-0.5 font-mono font-medium" style={{ color: trendColor }}>
               <TrendIcon size={12} />

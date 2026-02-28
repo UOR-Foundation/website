@@ -106,8 +106,9 @@ export function CoherenceWidget() {
   return (
     <Link
       to="/console/observer"
-      className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors group"
-      title={`Zone: ${state.zone} · Φ=${phiPercent}% · ${state.totalEvents} events — Click for Observer Hub`}
+      className="flex items-center rounded-md bg-muted/40 hover:bg-muted/70 transition-colors group"
+      style={{ gap: "var(--holo-space-2)", padding: "var(--holo-space-1) var(--holo-space-3)" }}
+      title={`Zone: ${state.zone} · Φ=${phiPercent}% · ${state.totalEvents} events`}
     >
       {/* Zone dot */}
       <span
@@ -117,7 +118,9 @@ export function CoherenceWidget() {
       />
 
       {/* Zone label */}
-      <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
+      <span className="font-mono uppercase text-muted-foreground group-hover:text-foreground transition-colors"
+        style={{ fontSize: "var(--holo-text-xs)", letterSpacing: "0.08em" }}
+      >
         {state.zone === "COHERENCE" ? "COH" : state.zone === "DRIFT" ? "DFT" : "COL"}
       </span>
 
@@ -125,7 +128,7 @@ export function CoherenceWidget() {
       <ZoneSparkline data={history} />
 
       {/* Phi value */}
-      <span className="text-[9px] font-mono text-muted-foreground">
+      <span className="font-mono text-muted-foreground" style={{ fontSize: "var(--holo-text-xs)" }}>
         {phiPercent}%
       </span>
     </Link>

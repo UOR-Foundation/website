@@ -19,6 +19,8 @@ import {
 import HologramLogo from "./HologramLogo";
 import DataBankIndicator from "./DataBankIndicator";
 import { ShareTheLoveModal } from "./ShareTheLoveModal";
+import TextSizeControl from "./TextSizeControl";
+import { useTextSize } from "@/modules/hologram-ui/hooks/useTextSize";
 
 /* ── Tooltip wrapper ───────────────────────────────────────── */
 function IconTooltip({ label, children, show }: { label: string; children: React.ReactNode; show: boolean }) {
@@ -111,6 +113,7 @@ export default function DesktopOsSidebar({
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const { textSize, setTextSize } = useTextSize();
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
@@ -392,8 +395,13 @@ export default function DesktopOsSidebar({
         </button>
       </div>
 
-      {/* ── Bottom: Settings + Help ───────────────────────────── */}
+      {/* ── Bottom: Text Size + Settings + Help ─────────────── */}
       <div className="px-2.5 py-4 space-y-1" style={{ borderTop: "1px solid var(--sb-border)" }}>
+        {/* Text Size Control — visible when expanded */}
+        {expanded && (
+          <TextSizeControl textSize={textSize} setTextSize={setTextSize} bgMode={bgMode} />
+        )}
+
         {onReplayGuide && (
           <IconTooltip label={`Help (${MOD_KEY} /)`} show={!expanded}>
             <button
