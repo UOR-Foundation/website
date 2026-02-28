@@ -490,74 +490,101 @@ function buildAdjacency(edges: CausalEdge[], n: number): Map<number, CausalEdge[
 }
 
 /**
- * Coupling threshold for pruning higher-order paths.
- * At depth d, a path contributes α^d × Π weights. For α ≈ 1/137,
- * depth 4 gives α⁴ ≈ 2.8×10⁻⁹. We prune paths below this threshold
- * to keep depth-4 computation tractable on the 22-node manifold.
+ * Maximum paths to collect per (from, to) pair.
+ * Prevents combinatorial explosion at higher depths.
  */
-const PRUNING_THRESHOLD = 1e-12;
+const MAX_PATHS_PER_PAIR = 64;
 
 function enumeratePaths(
   from: number,
   to: number,
   adj: Map<number, CausalEdge[]>,
-  allEdges: CausalEdge[],
+  _allEdges: CausalEdge[],
   alpha: number,
   maxDepth: number,
 ): CausalPath[] {
   const results: CausalPath[] = [];
 
-  // BFS with path tracking and coupling-based pruning
+  // Dynamic pruning threshold: α^(depth+1) at each level.
+  // At depth d, the coupling should scale as α^d × normalized_weight^d.
+  // We normalize weights so maximum edge weight = 1, ensuring
+  // coupling decays as α^d per step.
+
+  // Find maximum edge weight for normalization
+  let maxWeight = 1;
+  for (const edges of adj.values()) {
+    for (const e of edges) {
+      if (e.weight > maxWeight) maxWeight = e.weight;
+    }
+  }
+
+  // Pruning threshold scales as α^maxDepth — anything below the
+  // deepest meaningful contribution is discarded early.
+  const pruningThreshold = Math.pow(alpha, maxDepth + 1);
+
+  // DFS with iterative stack (faster than BFS for deep pruning)
   interface State {
     node: number;
-    path: number[];
+    visited: number; // bitmask for 22 nodes
+    pathNodes: number[];
     pathEdges: CausalEdge[];
     amplitude: Octonion;
     coupling: number;
     depth: number;
   }
 
-  const queue: State[] = [{
+  const stack: State[] = [{
     node: from,
-    path: [from],
+    visited: 1 << from,
+    pathNodes: [from],
     pathEdges: [],
-    amplitude: octonion(1), // identity propagator
+    amplitude: octonion(1),
     coupling: 1,
     depth: 0,
   }];
 
-  while (queue.length > 0) {
-    const state = queue.shift()!;
+  while (stack.length > 0 && results.length < MAX_PATHS_PER_PAIR) {
+    const state = stack.pop()!;
     if (state.depth >= maxDepth) continue;
 
-    for (const edge of adj.get(state.node) ?? []) {
-      if (state.path.includes(edge.to)) continue; // no cycles
+    const neighbors = adj.get(state.node);
+    if (!neighbors) continue;
 
-      const newCoupling = state.coupling * alpha * edge.weight;
+    for (const edge of neighbors) {
+      // No revisiting (bitmask check — fast)
+      if (state.visited & (1 << edge.to)) continue;
 
-      // Prune negligible higher-order contributions
-      if (newCoupling < PRUNING_THRESHOLD) continue;
+      // Normalized coupling: α per hop × normalized weight
+      const normalizedWeight = edge.weight / maxWeight;
+      const newCoupling = state.coupling * alpha * normalizedWeight;
 
-      const newAmplitude = octMul(state.amplitude, edge.propagator);
-      const newPath = [...state.path, edge.to];
-      const newEdges = [...state.pathEdges, edge];
+      // α^depth pruning: discard paths whose coupling has fallen
+      // below the expected contribution at maximum depth
+      if (newCoupling < pruningThreshold) continue;
+
+      const newAmplitude = octMul(state.amplitude, octScale(edge.propagator, normalizedWeight));
+      const newVisited = state.visited | (1 << edge.to);
+      const newPathNodes = [...state.pathNodes, edge.to];
+      const newPathEdges = [...state.pathEdges, edge];
 
       if (edge.to === to) {
         results.push({
-          nodes: newPath,
-          edges: newEdges,
+          nodes: newPathNodes,
+          edges: newPathEdges,
           amplitude: newAmplitude,
-          length: newEdges.length,
+          length: newPathEdges.length,
           totalCoupling: newCoupling,
         });
+        if (results.length >= MAX_PATHS_PER_PAIR) break;
       }
 
-      // Continue exploring if under depth limit
+      // Continue exploring deeper
       if (state.depth + 1 < maxDepth) {
-        queue.push({
+        stack.push({
           node: edge.to,
-          path: newPath,
-          pathEdges: newEdges,
+          visited: newVisited,
+          pathNodes: newPathNodes,
+          pathEdges: newPathEdges,
           amplitude: newAmplitude,
           coupling: newCoupling,
           depth: state.depth + 1,
