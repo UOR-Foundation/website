@@ -17,10 +17,15 @@
  *   │ runqueue     │ Priority queue sorted by H-score           │
  *   └──────────────┴──────────────────────────────────────────┘
  *
+ * ── CRYSTALLIZED ──
+ * This module derives entirely from genesis/. Zero external dependencies.
+ *
  * @module qkernel/q-sched
  */
 
-import { sha256, computeCid, bytesToHex } from "@/modules/uns/core/address";
+import { sha256 } from "@/hologram/genesis/axiom-hash";
+import { createCid } from "@/hologram/genesis/axiom-cid";
+import { encodeUtf8 } from "@/hologram/genesis/axiom-ring";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types
@@ -131,18 +136,19 @@ export class QSched {
 
   /**
    * fork — Create a child process. Inherits parent's H-score.
-   * Returns the new PID.
+   * Returns the new process.
+   *
+   * Now SYNCHRONOUS — genesis hash is pure math.
    */
-  async fork(parentPid: number, name: string, hScore?: number): Promise<QProcess> {
+  fork(parentPid: number, name: string, hScore?: number): QProcess {
     const parent = this.processes.get(parentPid);
     const pid = this.nextPid++;
     const score = hScore ?? (parent?.hScore ?? 0.5);
 
-    const payload = new TextEncoder().encode(
+    const payload = encodeUtf8(
       JSON.stringify({ pid, parent: parentPid, name, t: Date.now() })
     );
-    const hash = await sha256(payload);
-    const sessionCid = await computeCid(hash);
+    const sessionCid = createCid(payload);
 
     const proc: QProcess = {
       pid,
@@ -154,7 +160,7 @@ export class QSched {
       createdAt: Date.now(),
       lastScheduledAt: 0,
       totalCpuMs: 0,
-      sessionCid,
+      sessionCid: sessionCid.string,
       frozenCid: null,
       children: [],
     };
@@ -212,12 +218,13 @@ export class QSched {
 
   /**
    * freeze — Dehydrate a process to a CID (context save).
+   * Now SYNCHRONOUS — genesis hash is pure math.
    */
-  async freeze(pid: number): Promise<string | null> {
+  freeze(pid: number): string | null {
     const proc = this.processes.get(pid);
     if (!proc || proc.state === "halted") return null;
 
-    const stateBytes = new TextEncoder().encode(
+    const stateBytes = encodeUtf8(
       JSON.stringify({
         pid: proc.pid,
         name: proc.name,
@@ -227,13 +234,12 @@ export class QSched {
         children: proc.children,
       })
     );
-    const hash = await sha256(stateBytes);
-    const cid = await computeCid(hash);
+    const cid = createCid(stateBytes);
 
     proc.state = "frozen";
-    proc.frozenCid = cid;
+    proc.frozenCid = cid.string;
     if (this.currentPid === pid) this.currentPid = null;
-    return cid;
+    return cid.string;
   }
 
   /**
