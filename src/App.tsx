@@ -144,6 +144,7 @@ const ReferralLeaderboardPage = lazy(() => import("@/pages/ReferralLeaderboardPa
 const GenesisBootPage = lazy(() => import("@/pages/GenesisBootPage"));
 const ArtifactInspectorPage = lazy(() => import("@/pages/ArtifactInspectorPage"));
 const KernelGraphPage = lazy(() => import("@/pages/KernelGraphPage"));
+const TriwordLookupPage = lazy(() => import("@/pages/TriwordLookupPage"));
 
 const queryClient = new QueryClient();
 
@@ -290,6 +291,7 @@ const App = () => {
             <Route path="/genesis" element={<GenesisBootPage />} />
             <Route path="/artifact" element={<ArtifactInspectorPage />} />
             <Route path="/kernel-graph" element={<KernelGraphPage />} />
+            <Route path="/triword" element={<TriwordLookupPage />} />
             <Route path="/code-nexus" element={<CodeNexusPage />} />
             <Route path="/atlas" element={<AtlasVisualizationPage />} />
             <Route path="/quantum" element={<QuantumDashboardPage />} />
