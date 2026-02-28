@@ -73,6 +73,9 @@ export function useFrameTilt(options: TiltOptions = {}): Transform3D {
     active.current = true;
     window.addEventListener("mousemove", onMove, { passive: true });
 
+    const THRESHOLD = 0.001;
+    let idleFrames = 0;
+
     const tick = () => {
       if (!active.current) return;
       const c = current.current;
@@ -82,22 +85,45 @@ export function useFrameTilt(options: TiltOptions = {}): Transform3D {
       c.nx += (t.nx - c.nx) * smoothing;
       c.ny += (t.ny - c.ny) * smoothing;
 
-      if (Math.abs(t.rx - c.rx) > 0.01 || Math.abs(t.ry - c.ry) > 0.01) {
+      const delta = Math.abs(t.rx - c.rx) + Math.abs(t.ry - c.ry);
+
+      if (delta > THRESHOLD) {
+        idleFrames = 0;
         const shiftSign = invert ? -1 : 1;
         setTransform({
           position: [shiftSign * c.nx * maxShift, shiftSign * c.ny * maxShift, zShift],
           rotation: [c.rx, c.ry, 0],
           scale: [1, 1, 1],
         });
+        rafId.current = requestAnimationFrame(tick);
+      } else {
+        // Stop RAF when settled; mousemove restarts it
+        idleFrames++;
+        if (idleFrames < 3) {
+          rafId.current = requestAnimationFrame(tick);
+        }
+        // else: loop stops, saves CPU
       }
+    };
+
+    const restartLoop = () => {
+      idleFrames = 0;
+      cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(tick);
     };
+
+    const wrappedOnMove = (e: MouseEvent) => {
+      onMove(e);
+      restartLoop();
+    };
+
+    window.addEventListener("mousemove", wrappedOnMove, { passive: true });
     rafId.current = requestAnimationFrame(tick);
 
     return () => {
       active.current = false;
       cancelAnimationFrame(rafId.current);
-      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mousemove", wrappedOnMove);
     };
   }, [onMove, smoothing, zShift, disableOnTouch, invert, maxShift, isDisabled]);
 

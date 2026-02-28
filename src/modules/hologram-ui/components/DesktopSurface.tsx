@@ -23,7 +23,7 @@ import type { DesktopId } from "../hooks/useDesktopState";
 import WeatherWidget from "./widgets/WeatherWidget";
 import ProductivityTimerWidget from "./widgets/ProductivityTimerWidget";
 import AmbientMoodWidget from "./widgets/AmbientMoodWidget";
-import VoiceOrb from "./VoiceOrb";
+// VoiceOrb lifted to page level for single-instance efficiency
 
 /* ── Palette ───────────────────────────────────────── */
 function palette(m: DesktopId) {
@@ -460,14 +460,7 @@ export default function DesktopSurface({
                 transition: "opacity 300ms",
               }}
             >
-              <VoiceOrb
-                personaId="hologram"
-                observerBriefing={observerBriefing}
-                screenContext={screenContext}
-                fusionContext={fusionContext}
-                onExchange={onExchange}
-                chatContext={chatContext}
-              />
+            {/* VoiceOrb lifted to page level — single instance */}
             </div>
           </div>
         </div>
