@@ -2,7 +2,8 @@
  * Q-ECC — Inline [[96,48,2]] Stabilizer Error Correction
  * ═══════════════════════════════════════════════════════
  *
- * Every classical ECC concept maps to a geometric equivalent:
+ * Now derived from genesis/axiom-mirror — zero external deps.
+ * The 48 mirror pairs from axiom-mirror serve as stabilizer generators.
  *
  *   ┌──────────────┬──────────────────────────────────────────────┐
  *   │ Classical ECC │ Q-ECC                                        │
@@ -14,24 +15,18 @@
  *   │ Scope        │ Every gate op, every morphism — inline       │
  *   └──────────────┴──────────────────────────────────────────────┘
  *
- * The 96 Atlas vertices split into 48 mirror pairs under τ.
- * Each pair (v, τ(v)) acts as a stabilizer generator. An X-error
- * on physical qubit v is detected by measuring the parity of the
- * pair — if v ≠ τ(v), the syndrome is non-trivial.
- *
  * @module qkernel/q-ecc
  */
 
-import { getAtlas, ATLAS_VERTEX_COUNT } from "@/modules/atlas/atlas";
-import type { AtlasVertex } from "@/modules/atlas/atlas";
+import { MIRROR_PAIRS, ATLAS_VERTICES, type MirrorPair } from "@/hologram/genesis/axiom-mirror";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════════════════
 
 /** Code parameters */
-export const CODE_N = 96;   // physical qubits
-export const CODE_K = 48;   // logical qubits
+export const CODE_N = ATLAS_VERTICES;   // 96 physical qubits
+export const CODE_K = ATLAS_VERTICES / 2;  // 48 logical qubits
 export const CODE_D = 2;    // distance
 
 /** A stabilizer generator (one mirror pair) */
@@ -69,7 +64,7 @@ export interface EccStats {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Q-ECC Implementation
+// Q-ECC Implementation — derived from genesis axiom-mirror
 // ═══════════════════════════════════════════════════════════════════════
 
 export class QEcc {
@@ -82,29 +77,16 @@ export class QEcc {
     this.buildGenerators();
   }
 
-  /** Build the 48 stabilizer generators from Atlas mirror pairs */
+  /** Build the 48 stabilizer generators from genesis mirror pairs */
   private buildGenerators(): void {
-    const atlas = getAtlas();
-    const vertices = atlas.vertices;
-    const seen = new Set<number>();
-    let genIndex = 0;
-
-    for (const v of vertices) {
-      if (seen.has(v.index)) continue;
-      const partner = v.mirrorPair;
-      if (seen.has(partner)) continue;
-
-      seen.add(v.index);
-      seen.add(partner);
-
-      const partnerVertex = vertices.find(u => u.index === partner)!;
-
+    for (const pair of MIRROR_PAIRS) {
+      // Sign class derived from vertex position mod 8 (atlas convention)
       this.generators.push({
-        index: genIndex++,
-        qubitA: v.index,
-        qubitB: partner,
-        signClassA: v.signClass,
-        signClassB: partnerVertex.signClass,
+        index: pair.index,
+        qubitA: pair.v,
+        qubitB: pair.w,
+        signClassA: pair.v % 8,
+        signClassB: pair.w % 8,
       });
     }
   }
@@ -135,8 +117,7 @@ export class QEcc {
       syndromes.push(nonTrivial);
 
       if (nonTrivial && errorLocation === null) {
-        // For single-qubit errors, the syndrome points to the pair
-        errorLocation = gen.qubitA; // convention: report first of pair
+        errorLocation = gen.qubitA;
       }
     }
 
@@ -157,59 +138,30 @@ export class QEcc {
 
   /**
    * Correct single-qubit X-errors using syndrome measurement.
-   * For the [[96,48,2]] code, we can DETECT any single error
-   * and correct it by flipping the affected qubit's mirror partner.
-   *
-   * @param state - 96-element array (will be corrected in-place copy)
    */
   correct(state: number[]): CorrectionResult {
     const corrected = [...state];
     const syndrome = this.measureSyndrome(state);
 
     if (!syndrome.errorDetected) {
-      return {
-        syndrome,
-        corrected: false,
-        correctionApplied: null,
-        codeword: corrected,
-      };
+      return { syndrome, corrected: false, correctionApplied: null, codeword: corrected };
     }
 
-    // For weight-1 syndrome: apply mirror reflection (τ-flip)
     if (syndrome.weight === 1) {
       const genIndex = syndrome.generators.findIndex(Boolean);
       const gen = this.generators[genIndex];
-
-      // Determine which qubit is wrong by checking expected parity
-      // Convention: flip the one that differs from the encoded logical value
-      // For simplicity: flip qubitA to match qubitB (τ correction)
       corrected[gen.qubitA] = corrected[gen.qubitB];
-
       this.errorsCorrected++;
-
-      return {
-        syndrome,
-        corrected: true,
-        correctionApplied: gen.qubitA,
-        codeword: corrected,
-      };
+      return { syndrome, corrected: true, correctionApplied: gen.qubitA, codeword: corrected };
     }
 
-    // Weight > 1: multi-qubit error detected but not correctable by distance-2
-    return {
-      syndrome,
-      corrected: false,
-      correctionApplied: null,
-      codeword: corrected,
-    };
+    return { syndrome, corrected: false, correctionApplied: null, codeword: corrected };
   }
 
   // ── Encoding ────────────────────────────────────────────────────
 
   /**
    * Encode 48 logical qubits into 96 physical qubits.
-   * Each logical qubit maps to a mirror pair: (v, τ(v)).
-   * Encoding: both physical qubits in a pair get the logical value.
    */
   encode(logical: number[]): number[] {
     if (logical.length !== CODE_K) {
@@ -217,44 +169,29 @@ export class QEcc {
     }
 
     const physical = new Array(CODE_N).fill(0);
-
     for (let i = 0; i < this.generators.length; i++) {
       const gen = this.generators[i];
       physical[gen.qubitA] = logical[i];
-      physical[gen.qubitB] = logical[i]; // mirror redundancy
+      physical[gen.qubitB] = logical[i];
     }
-
     return physical;
   }
 
   /**
    * Decode 96 physical qubits back to 48 logical qubits.
-   * Uses majority vote within each mirror pair.
    */
   decode(physical: number[]): number[] {
     if (physical.length !== CODE_N) {
       throw new Error(`Physical state must be ${CODE_N} qubits, got ${physical.length}`);
     }
-
-    return this.generators.map(gen => {
-      // Majority vote (for pair: just take qubitA, after correction)
-      return physical[gen.qubitA];
-    });
+    return this.generators.map(gen => physical[gen.qubitA]);
   }
 
   // ── Introspection ───────────────────────────────────────────────
 
-  /** Get all stabilizer generators */
-  getGenerators(): readonly StabilizerGenerator[] {
-    return this.generators;
-  }
+  getGenerators(): readonly StabilizerGenerator[] { return this.generators; }
+  generatorCount(): number { return this.generators.length; }
 
-  /** Get number of generators */
-  generatorCount(): number {
-    return this.generators.length;
-  }
-
-  /** Get ECC statistics */
   stats(): EccStats {
     return {
       totalChecks: this.totalChecks,
@@ -265,15 +202,11 @@ export class QEcc {
     };
   }
 
-  /** Verify code parameters */
   verifyCodeParameters(): { valid: boolean; n: number; k: number; d: number; generators: number } {
     return {
       valid: this.generators.length === CODE_K &&
              CODE_N === 96 && CODE_K === 48 && CODE_D === 2,
-      n: CODE_N,
-      k: CODE_K,
-      d: CODE_D,
-      generators: this.generators.length,
+      n: CODE_N, k: CODE_K, d: CODE_D, generators: this.generators.length,
     };
   }
 }
