@@ -15,6 +15,7 @@ import {
   IconSparkles,
 } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { sf } from "@/modules/hologram-ui/utils/scaledFontSize";
 
 interface Contact {
   name: string;
@@ -75,8 +76,8 @@ export default function MessengerIntroductions({
             <IconUsers size={15} style={{ color: P.green }} />
           </div>
           <div>
-            <h3 style={{ fontSize: "15px", fontWeight: 600, color: P.text }}>Introductions</h3>
-            <span style={{ fontSize: "10px", color: P.dim }}>Connect people in one action</span>
+            <h3 style={{ fontSize: sf(15), fontWeight: 600, color: P.text }}>Introductions</h3>
+            <span style={{ fontSize: sf(10), color: P.dim }}>Connect people in one action</span>
           </div>
         </div>
         <button
@@ -93,8 +94,8 @@ export default function MessengerIntroductions({
         <div className="flex items-start gap-2.5">
           <IconSparkles size={14} className="mt-0.5" style={{ color: P.accent }} />
           <div>
-            <span style={{ fontSize: "12px", fontWeight: 600, color: P.text }}>AI-Suggested Introductions</span>
-            <p style={{ fontSize: "11px", color: P.muted, marginTop: "3px", lineHeight: 1.5 }}>
+            <span style={{ fontSize: sf(12), fontWeight: 600, color: P.text }}>AI-Suggested Introductions</span>
+            <p style={{ fontSize: sf(11), color: P.muted, marginTop: "3px", lineHeight: 1.5 }}>
               Based on your messaging patterns, Lumen can identify people who might benefit from knowing each other. Open the AI panel to discover opportunities.
             </p>
           </div>
@@ -108,8 +109,8 @@ export default function MessengerIntroductions({
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: `${P.green}10` }}>
               <IconUsers size={24} style={{ color: P.dim }} />
             </div>
-            <span style={{ fontSize: "14px", fontWeight: 500, color: P.textSecondary }}>No introductions yet</span>
-            <span style={{ fontSize: "12px", color: P.dim, textAlign: "center", maxWidth: "240px" }}>
+            <span style={{ fontSize: sf(14), fontWeight: 500, color: P.textSecondary }}>No introductions yet</span>
+            <span style={{ fontSize: sf(12), color: P.dim, textAlign: "center", maxWidth: "240px" }}>
               Connect two people with a single action. They'll be introduced in a group thread.
             </span>
             <button
@@ -132,17 +133,17 @@ export default function MessengerIntroductions({
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: `${P.accent}20`, color: P.accent }}>
                     {intro.personA.name.charAt(0)}
                   </div>
-                  <span style={{ fontSize: "13px", fontWeight: 500, color: P.text }}>{intro.personA.name}</span>
+                  <span style={{ fontSize: sf(13), fontWeight: 500, color: P.text }}>{intro.personA.name}</span>
                 </div>
                 <IconArrowRight size={12} style={{ color: P.dim }} />
                 <div className="flex items-center gap-1.5">
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: `${P.green}20`, color: P.green }}>
                     {intro.personB.name.charAt(0)}
                   </div>
-                  <span style={{ fontSize: "13px", fontWeight: 500, color: P.text }}>{intro.personB.name}</span>
+                  <span style={{ fontSize: sf(13), fontWeight: 500, color: P.text }}>{intro.personB.name}</span>
                 </div>
               </div>
-              <p style={{ fontSize: "12px", color: P.muted, lineHeight: 1.5 }}>{intro.reason}</p>
+              <p style={{ fontSize: sf(12), color: P.muted, lineHeight: 1.5 }}>{intro.reason}</p>
               <div className="flex items-center gap-3 mt-2">
                 <span
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold"
@@ -154,7 +155,7 @@ export default function MessengerIntroductions({
                   {intro.status === "sent" ? <IconCheck size={10} /> : null}
                   {intro.status}
                 </span>
-                <span style={{ fontSize: "10px", color: P.dim }}>
+                <span style={{ fontSize: sf(10), color: P.dim }}>
                   {intro.stayInGroup ? "Staying in group" : "Will exit group"}
                 </span>
               </div>
@@ -177,7 +178,7 @@ export default function MessengerIntroductions({
             <div className="px-5 py-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span style={{ fontSize: "13px", fontWeight: 600, color: P.text }}>New Introduction</span>
+                  <span style={{ fontSize: sf(13), fontWeight: 600, color: P.text }}>New Introduction</span>
                   <span className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: P.accentSoft, color: P.accent }}>
                     Step {step}/3
                   </span>
@@ -195,7 +196,7 @@ export default function MessengerIntroductions({
                     onChange={e => setPersonA(e.target.value)}
                     placeholder="Person A — who are you introducing?"
                     className="w-full rounded-lg px-3 py-2 outline-none"
-                    style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: "13px" }}
+                    style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: sf(13) }}
                     list="contacts-a"
                   />
                   <datalist id="contacts-a">
@@ -206,7 +207,7 @@ export default function MessengerIntroductions({
                     onChange={e => setPersonB(e.target.value)}
                     placeholder="Person B — to whom?"
                     className="w-full rounded-lg px-3 py-2 outline-none"
-                    style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: "13px" }}
+                    style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: sf(13) }}
                     list="contacts-b"
                   />
                   <datalist id="contacts-b">
@@ -232,7 +233,7 @@ export default function MessengerIntroductions({
                     placeholder={`Why should ${personA.split(" ")[0]} meet ${personB.split(" ")[0]}? (optional)`}
                     rows={3}
                     className="w-full rounded-lg px-3 py-2 outline-none resize-none"
-                    style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: "13px", lineHeight: 1.6 }}
+                    style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: sf(13), lineHeight: 1.6 }}
                   />
                   <button
                     onClick={() => setStep(3)}
@@ -247,8 +248,8 @@ export default function MessengerIntroductions({
               {step === 3 && (
                 <div className="space-y-3">
                   <div className="rounded-xl px-4 py-3" style={{ background: P.surface, border: `1px solid ${P.divider}` }}>
-                    <span style={{ fontSize: "11px", color: P.dim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Preview</span>
-                    <p style={{ fontSize: "13px", color: P.text, marginTop: "6px", lineHeight: 1.6 }}>
+                    <span style={{ fontSize: sf(11), color: P.dim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Preview</span>
+                    <p style={{ fontSize: sf(13), color: P.text, marginTop: "6px", lineHeight: 1.6 }}>
                       "Hey {personA.split(" ")[0]} and {personB.split(" ")[0]}! {reason || `I thought you two should connect — you have a lot in common.`} Introducing you both here."
                     </p>
                   </div>
@@ -263,7 +264,7 @@ export default function MessengerIntroductions({
                       }}
                     >
                       {stayInGroup ? <IconUsers size={14} style={{ color: P.accent }} /> : <IconDoorExit size={14} style={{ color: P.muted }} />}
-                      <span style={{ fontSize: "12px", color: stayInGroup ? P.accent : P.muted, fontWeight: 500 }}>
+                      <span style={{ fontSize: sf(12), color: stayInGroup ? P.accent : P.muted, fontWeight: 500 }}>
                         {stayInGroup ? "Stay in group" : "Exit after intro"}
                       </span>
                     </button>
