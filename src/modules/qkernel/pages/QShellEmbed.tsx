@@ -119,8 +119,9 @@ export default function QShellEmbed({ onClose }: QShellEmbedProps) {
     "fg", "bg", "nice", "tick", "pwd", "cd", "ls", "mkdir", "touch", "cat",
     "rm", "find", "grep", "head", "tail", "wc", "du", "df", "free", "mount",
     "lsmod", "modinfo", "ifconfig", "netstat", "ping", "traceroute", "nslookup",
-    "curl", "ssh", "dmesg", "export", "alias", "exit", "demo", "reason",
-    "security", "mesh", "channel", "send", "broadcast", "agent",
+    "curl", "ssh", "dmesg", "export", "alias", "exit", "demo",
+    "ipc", "msg", "sysctl", "route", "shutdown", "reboot",
+    "qc", "qr", "qs",
   ];
 
   // Commands that take file/path arguments
