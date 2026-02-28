@@ -10,8 +10,8 @@ import { useLocation } from "react-router-dom";
 import DayProgressRing from "@/modules/hologram-ui/components/DayProgressRing";
 import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
 
-/** Only show on hologram-os routes — hidden from the public website */
-const ALLOWED_ROUTES = ["/hologram-os", "/hologram"];
+/** Show on /hologram console only — /hologram-os has its own widgets in DesktopSurface */
+const ALLOWED_ROUTES = ["/hologram"];
 
 export default function GlobalFloatingWidgets() {
   const { pathname } = useLocation();

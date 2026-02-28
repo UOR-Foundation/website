@@ -11,8 +11,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
 
-/** Only show on hologram-os routes — hidden from the public website */
-const ALLOWED_ROUTES = ["/hologram-os", "/hologram"];
+/** Show on /hologram console only — /hologram-os has its own chat overlay */
+const ALLOWED_ROUTES = ["/hologram"];
 const PANEL_WIDTH = 440;
 
 export default function GlobalLumenOverlay() {

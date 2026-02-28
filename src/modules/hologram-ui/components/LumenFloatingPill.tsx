@@ -12,8 +12,8 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useDraggablePosition } from "@/modules/hologram-ui/hooks/useDraggablePosition";
 
-/** Only show on hologram-os routes — hidden from the public website */
-const ALLOWED_ROUTES = ["/hologram-os", "/hologram"];
+/** Show on /hologram console only — /hologram-os has its own Lumen button in the bottom bar */
+const ALLOWED_ROUTES = ["/hologram"];
 
 export default function LumenFloatingPill() {
   const { pathname } = useLocation();
