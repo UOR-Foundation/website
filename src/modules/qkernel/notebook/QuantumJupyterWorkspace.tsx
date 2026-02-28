@@ -569,54 +569,78 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
 
   /* ── Landing ──────────────────────────────────────────────────────────────── */
   if (mode === "landing") {
+    const featured = templates.slice(0, 4);
     return (
       <div className="h-full flex flex-col" style={{ background: "hsl(0, 0%, 98%)" }}>
         {/* Top bar */}
-        <div className="flex items-center gap-3 px-6 py-3" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
-          <Atom size={20} style={{ color: "hsl(38, 50%, 50%)" }} />
-          <span className="text-base font-semibold" style={{ color: "hsl(0, 0%, 15%)" }}>Quantum Workspace</span>
+        <div className="flex items-center gap-3 px-6 py-3.5" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
+          <Atom size={22} style={{ color: "hsl(38, 50%, 50%)" }} />
+          <span className="text-lg font-semibold" style={{ color: "hsl(0, 0%, 12%)" }}>Quantum Workspace</span>
           <div className="flex-1" />
-          {onClose && <button onClick={onClose} className="p-2 rounded-lg hover:bg-black/5"><X size={18} style={{ color: "hsl(0, 0%, 45%)" }} /></button>}
+          {onClose && <button onClick={onClose} className="p-2 rounded-lg hover:bg-black/5"><X size={20} style={{ color: "hsl(0, 0%, 45%)" }} /></button>}
         </div>
 
-        <div className="flex-1 flex items-center justify-center">
-          <div className="max-w-xl text-center space-y-10">
-            <div>
-              <h1 className="text-3xl font-serif font-semibold mb-3" style={{ color: "hsl(0, 0%, 12%)" }}>
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-8 py-12">
+            {/* Hero */}
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-serif font-semibold mb-4" style={{ color: "hsl(0, 0%, 10%)" }}>
                 Quantum Workspace
               </h1>
-              <p className="text-base leading-relaxed" style={{ color: "hsl(0, 0%, 45%)" }}>
+              <p className="text-lg leading-relaxed max-w-lg mx-auto" style={{ color: "hsl(0, 0%, 42%)" }}>
                 Run quantum computing demos, then open the same code as editable notebooks to build your own experiments.
               </p>
             </div>
 
-            <div className="flex gap-5 justify-center">
+            {/* Two main buttons */}
+            <div className="flex gap-6 justify-center mb-14">
               <button
                 onClick={() => setMode("workspace")}
-                className="group flex flex-col items-center gap-4 p-8 rounded-2xl transition-all duration-300 hover:scale-[1.03] hover:shadow-lg"
-                style={{ background: "hsl(0, 0%, 100%)", border: "1px solid hsla(0, 0%, 50%, 0.1)", minWidth: "200px" }}
+                className="group flex flex-col items-center gap-4 p-10 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex-1 max-w-xs"
+                style={{ background: "hsl(0, 0%, 100%)", border: "1px solid hsla(0, 0%, 50%, 0.1)" }}
               >
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "hsla(220, 40%, 50%, 0.07)" }}>
-                  <Code size={26} style={{ color: "hsl(220, 40%, 50%)" }} />
+                <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: "hsla(220, 40%, 50%, 0.07)" }}>
+                  <Code size={30} style={{ color: "hsl(220, 40%, 50%)" }} />
                 </div>
-                <span className="text-base font-semibold" style={{ color: "hsl(0, 0%, 15%)" }}>Open Workspace</span>
-                <span className="text-sm" style={{ color: "hsl(0, 0%, 50%)" }}>Write and run code</span>
+                <span className="text-lg font-semibold" style={{ color: "hsl(0, 0%, 12%)" }}>Open Workspace</span>
+                <span className="text-base" style={{ color: "hsl(0, 0%, 50%)" }}>Write and run code</span>
               </button>
 
               <button
                 onClick={() => setMode("demos")}
-                className="group flex flex-col items-center gap-4 p-8 rounded-2xl transition-all duration-300 hover:scale-[1.03] hover:shadow-lg"
-                style={{ background: "hsl(0, 0%, 100%)", border: "1px solid hsla(0, 0%, 50%, 0.1)", minWidth: "200px" }}
+                className="group flex flex-col items-center gap-4 p-10 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex-1 max-w-xs"
+                style={{ background: "hsl(0, 0%, 100%)", border: "1px solid hsla(0, 0%, 50%, 0.1)" }}
               >
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "hsla(38, 50%, 50%, 0.07)" }}>
-                  <Sparkles size={26} style={{ color: "hsl(38, 50%, 50%)" }} />
+                <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: "hsla(38, 50%, 50%, 0.07)" }}>
+                  <Sparkles size={30} style={{ color: "hsl(38, 50%, 50%)" }} />
                 </div>
-                <span className="text-base font-semibold" style={{ color: "hsl(0, 0%, 15%)" }}>Open Demos</span>
-                <span className="text-sm" style={{ color: "hsl(0, 0%, 50%)" }}>Interactive examples</span>
+                <span className="text-lg font-semibold" style={{ color: "hsl(0, 0%, 12%)" }}>Open Demos</span>
+                <span className="text-base" style={{ color: "hsl(0, 0%, 50%)" }}>Interactive examples</span>
               </button>
             </div>
 
-            <p className="text-xs" style={{ color: "hsl(0, 0%, 60%)" }}>
+            {/* Featured notebooks */}
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "hsl(0, 0%, 48%)" }}>Featured Notebooks</h2>
+              <div className="grid grid-cols-2 gap-4">
+                {featured.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => loadTemplate(t.id)}
+                    className="flex items-start gap-4 p-5 rounded-xl text-left transition-all duration-200 hover:shadow-md hover:scale-[1.01]"
+                    style={{ background: "hsl(0, 0%, 100%)", border: "1px solid hsla(0, 0%, 50%, 0.08)" }}
+                  >
+                    <span className="text-2xl mt-0.5">{t.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-semibold mb-1" style={{ color: "hsl(0, 0%, 12%)" }}>{t.name}</h3>
+                      <p className="text-sm leading-relaxed" style={{ color: "hsl(0, 0%, 50%)" }}>{t.description}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-sm text-center mt-10" style={{ color: "hsl(0, 0%, 58%)" }}>
               Every result is verified and reproducible.
             </p>
           </div>
@@ -643,14 +667,14 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
 
     return (
       <div className="h-full flex flex-col" style={{ background: "hsl(0, 0%, 98%)" }}>
-        <div className="flex items-center gap-3 px-6 py-3" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
-          <Sparkles size={20} style={{ color: "hsl(38, 50%, 50%)" }} />
-          <span className="text-base font-semibold" style={{ color: "hsl(0, 0%, 15%)" }}>Demos</span>
+        <div className="flex items-center gap-3 px-6 py-3.5" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
+          <Sparkles size={22} style={{ color: "hsl(38, 50%, 50%)" }} />
+          <span className="text-lg font-semibold" style={{ color: "hsl(0, 0%, 12%)" }}>Demos</span>
           <div className="flex-1" />
-          <button onClick={() => setMode("workspace")} className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-black/5" style={{ color: "hsl(220, 30%, 45%)" }}>
-            <Code size={14} /> Workspace
+          <button onClick={() => setMode("workspace")} className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-base font-medium hover:bg-black/5" style={{ color: "hsl(220, 30%, 45%)" }}>
+            <Code size={16} /> Workspace
           </button>
-          <button onClick={() => setMode("landing")} className="px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-black/5" style={{ color: "hsl(0, 0%, 45%)" }}>
+          <button onClick={() => setMode("landing")} className="px-4 py-1.5 rounded-lg text-base font-medium hover:bg-black/5" style={{ color: "hsl(0, 0%, 45%)" }}>
             Home
           </button>
           {onClose && <button onClick={onClose} className="p-2 rounded-lg hover:bg-black/5"><X size={18} style={{ color: "hsl(0, 0%, 45%)" }} /></button>}
@@ -658,8 +682,8 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
 
         <div className="flex-1 overflow-y-auto p-8">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-xl font-serif font-semibold mb-2" style={{ color: "hsl(0, 0%, 12%)" }}>Interactive Demos</h2>
-            <p className="text-sm mb-8" style={{ color: "hsl(0, 0%, 50%)" }}>
+            <h2 className="text-2xl font-serif font-semibold mb-2" style={{ color: "hsl(0, 0%, 10%)" }}>Interactive Demos</h2>
+            <p className="text-base mb-8" style={{ color: "hsl(0, 0%, 48%)" }}>
               Explore quantum computing hands-on. No coding required.
             </p>
 
@@ -683,38 +707,38 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   return (
     <div className="h-full flex flex-col" style={{ background: "hsl(0, 0%, 100%)" }}>
       {/* Menu bar — mirrors JupyterLab */}
-      <div className="flex items-center gap-2 px-3 py-2" style={{
+      <div className="flex items-center gap-2 px-4 py-2.5" style={{
         borderBottom: "1px solid hsla(220, 10%, 50%, 0.12)",
         background: "hsl(220, 10%, 97%)",
       }}>
-        <Atom size={16} style={{ color: "hsl(38, 50%, 50%)" }} />
-        <span className="text-sm font-semibold mr-3" style={{ color: "hsl(0, 0%, 20%)" }}>Notebook</span>
+        <Atom size={18} style={{ color: "hsl(38, 50%, 50%)" }} />
+        <span className="text-base font-semibold mr-3" style={{ color: "hsl(0, 0%, 15%)" }}>Notebook</span>
 
         <div className="flex items-center gap-1 px-2" style={{ borderLeft: "1px solid hsla(220, 10%, 50%, 0.12)" }}>
           <button onClick={() => addCell(activeCell, "code")} className="p-1.5 rounded hover:bg-black/5" title="Add cell">
-            <Plus size={15} style={{ color: "hsl(0, 0%, 40%)" }} />
+            <Plus size={17} style={{ color: "hsl(0, 0%, 40%)" }} />
           </button>
-          <button onClick={runAllCells} className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-black/5" title="Run all">
-            <Play size={13} style={{ color: "hsl(152, 40%, 38%)" }} />
-            <span className="text-sm font-medium" style={{ color: "hsl(152, 40%, 38%)" }}>Run All</span>
+          <button onClick={runAllCells} className="flex items-center gap-1.5 px-3 py-1 rounded hover:bg-black/5" title="Run all">
+            <Play size={15} style={{ color: "hsl(152, 40%, 38%)" }} />
+            <span className="text-base font-medium" style={{ color: "hsl(152, 40%, 38%)" }}>Run All</span>
           </button>
         </div>
 
         <div className="flex items-center gap-1 px-2" style={{ borderLeft: "1px solid hsla(220, 10%, 50%, 0.12)" }}>
-          <span className="text-xs font-mono px-2 py-1 rounded" style={{ background: "hsla(152, 30%, 50%, 0.06)", color: "hsl(152, 35%, 38%)" }}>
+          <span className="text-sm font-mono px-2.5 py-1 rounded" style={{ background: "hsla(152, 30%, 50%, 0.06)", color: "hsl(152, 35%, 38%)" }}>
             Python 3.11 ●
           </span>
         </div>
 
         <div className="flex-1" />
 
-        <button onClick={() => setMode("demos")} className="flex items-center gap-1.5 px-3 py-1 rounded text-sm hover:bg-black/5" style={{ color: "hsl(0, 0%, 45%)" }}>
-          <Sparkles size={13} /> Demos
+        <button onClick={() => setMode("demos")} className="flex items-center gap-1.5 px-3 py-1 rounded text-base hover:bg-black/5" style={{ color: "hsl(0, 0%, 45%)" }}>
+          <Sparkles size={15} /> Demos
         </button>
-        <button onClick={() => setMode("landing")} className="px-3 py-1 rounded text-sm hover:bg-black/5" style={{ color: "hsl(0, 0%, 45%)" }}>
+        <button onClick={() => setMode("landing")} className="px-3 py-1 rounded text-base hover:bg-black/5" style={{ color: "hsl(0, 0%, 45%)" }}>
           Home
         </button>
-        {onClose && <button onClick={onClose} className="p-1.5 rounded hover:bg-black/5"><X size={16} style={{ color: "hsl(0, 0%, 45%)" }} /></button>}
+        {onClose && <button onClick={onClose} className="p-1.5 rounded hover:bg-black/5"><X size={18} style={{ color: "hsl(0, 0%, 45%)" }} /></button>}
       </div>
 
       {/* Main area */}
@@ -746,16 +770,16 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
         {/* Notebook editor */}
         <div className="flex-1 overflow-y-auto">
           {/* Tab bar */}
-          <div className="flex items-center gap-1 px-4 py-1.5" style={{ borderBottom: "1px solid hsla(220, 10%, 50%, 0.06)", background: "hsl(220, 10%, 97%)" }}>
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1 rounded hover:bg-black/5 mr-2">
-              <FileText size={14} style={{ color: "hsl(0, 0%, 45%)" }} />
+          <div className="flex items-center gap-1 px-4 py-2" style={{ borderBottom: "1px solid hsla(220, 10%, 50%, 0.06)", background: "hsl(220, 10%, 97%)" }}>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded hover:bg-black/5 mr-2">
+              <FileText size={16} style={{ color: "hsl(0, 0%, 45%)" }} />
             </button>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-t text-sm font-medium" style={{
+            <div className="flex items-center gap-2 px-4 py-2 rounded-t text-base font-medium" style={{
               background: "hsl(0, 0%, 100%)",
-              color: "hsl(0, 0%, 20%)",
+              color: "hsl(0, 0%, 18%)",
               borderBottom: "2px solid hsl(38, 50%, 55%)",
             }}>
-              <FileText size={13} />
+              <FileText size={15} />
               {notebook.name}.ipynb
             </div>
           </div>
@@ -777,11 +801,11 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
                 />
                 {activeCell === cell.id && (
                   <div className="flex items-center justify-center py-1 opacity-0 hover:opacity-100 transition-opacity">
-                    <button onClick={() => addCell(cell.id, "code")} className="flex items-center gap-1 px-3 py-1 rounded text-xs hover:bg-black/5" style={{ color: "hsl(0, 0%, 50%)" }}>
-                      <Plus size={12} /> Code
+                    <button onClick={() => addCell(cell.id, "code")} className="flex items-center gap-1.5 px-3 py-1 rounded text-sm hover:bg-black/5" style={{ color: "hsl(0, 0%, 50%)" }}>
+                      <Plus size={13} /> Code
                     </button>
-                    <button onClick={() => addCell(cell.id, "markdown")} className="flex items-center gap-1 px-3 py-1 rounded text-xs hover:bg-black/5" style={{ color: "hsl(0, 0%, 50%)" }}>
-                      <Plus size={12} /> Text
+                    <button onClick={() => addCell(cell.id, "markdown")} className="flex items-center gap-1.5 px-3 py-1 rounded text-sm hover:bg-black/5" style={{ color: "hsl(0, 0%, 50%)" }}>
+                      <Plus size={13} /> Text
                     </button>
                   </div>
                 )}
@@ -792,19 +816,19 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
       </div>
 
       {/* Status bar */}
-      <div className="flex items-center gap-4 px-4 py-1.5" style={{
+      <div className="flex items-center gap-4 px-5 py-2" style={{
         borderTop: "1px solid hsla(220, 10%, 50%, 0.08)",
         background: "hsl(220, 10%, 97%)",
       }}>
-        <span className="flex items-center gap-1.5 text-xs" style={{ color: "hsl(152, 35%, 40%)" }}>
-          <span className="w-2 h-2 rounded-full" style={{ background: "hsl(152, 45%, 50%)" }} />
+        <span className="flex items-center gap-1.5 text-sm" style={{ color: "hsl(152, 35%, 40%)" }}>
+          <span className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(152, 45%, 50%)" }} />
           Python 3.11
         </span>
-        <span className="text-xs" style={{ color: "hsl(0, 0%, 55%)" }}>
+        <span className="text-sm" style={{ color: "hsl(0, 0%, 52%)" }}>
           {notebook.cells.length} cells · {notebook.cells.filter(c => c.executionCount).length} run
         </span>
         <div className="flex-1" />
-        <span className="text-xs" style={{ color: "hsl(0, 0%, 55%)" }}>
+        <span className="text-sm" style={{ color: "hsl(0, 0%, 52%)" }}>
           Qiskit · Cirq · PennyLane
         </span>
       </div>
