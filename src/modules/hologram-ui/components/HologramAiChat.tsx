@@ -85,6 +85,7 @@ import { useObserverCompanion } from "@/modules/hologram-ui/hooks/useObserverCom
 import { useWhisperTranscription } from "@/modules/hologram-ui/hooks/useWhisperTranscription";
 import { Mic, MicOff, Brain } from "lucide-react";
 import SavedResponsesPanel from "@/modules/hologram-ui/components/SavedResponsesPanel";
+import { sf } from "@/modules/hologram-ui/utils/scaledFontSize";
 
 // ── Palette constants ──────────────────────────────────────────────────────
 
@@ -951,7 +952,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate" style={{ color: P.text }}>
-                        {conv.model_id === "voice" && <span style={{ color: "hsl(0, 45%, 58%)", fontSize: "10px", fontWeight: 600, letterSpacing: "0.08em", marginRight: "6px", textTransform: "uppercase" as const }}>VOICE</span>}
+                        {conv.model_id === "voice" && <span style={{ color: "hsl(0, 45%, 58%)", fontSize: sf(10), fontWeight: 600, letterSpacing: "0.08em", marginRight: "6px", textTransform: "uppercase" as const }}>VOICE</span>}
                         {conv.title}
                       </p>
                       <p className="text-xs" style={{ color: P.textDim }}>
@@ -1883,7 +1884,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                 {meta?.source === "voice" && (
                   <div className="flex items-center gap-1 mb-1">
                     <Mic className="w-3 h-3" style={{ color: "hsl(0, 40%, 62%)" }} />
-                    <span style={{ fontSize: "9px", color: "hsl(0, 35%, 60%)", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Spoken</span>
+                    <span style={{ fontSize: sf(9), color: "hsl(0, 35%, 60%)", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Spoken</span>
                   </div>
                 )}
                 <p
@@ -1964,7 +1965,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                       <li className="flex gap-3 items-start text-base" style={{ color: "hsl(30, 14%, 76%)" }}>
                         <span
                           className="flex-shrink-0 mt-[10px]"
-                          style={{ color: "hsl(38, 35%, 52%)", fontSize: "5px" }}
+                          style={{ color: "hsl(38, 35%, 52%)", fontSize: sf(5) }}
                         >
                           ●
                         </span>

@@ -15,6 +15,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { sf } from "@/modules/hologram-ui/utils/scaledFontSize";
 
 // ── Types ──
 
@@ -186,7 +187,7 @@ export default function MessengerCalendar({
           <button onClick={() => navigate(-1)} className="w-7 h-7 rounded-md flex items-center justify-center" style={{ color: P.muted }}>
             <IconChevronLeft size={16} />
           </button>
-          <h3 style={{ fontSize: "17px", fontWeight: 600, color: P.text, fontFamily: serif }}>
+          <h3 style={{ fontSize: sf(17), fontWeight: 600, color: P.text, fontFamily: serif }}>
             {MONTHS[viewMonth]} {viewYear}
           </h3>
           <button onClick={() => navigate(1)} className="w-7 h-7 rounded-md flex items-center justify-center" style={{ color: P.muted }}>
@@ -218,7 +219,7 @@ export default function MessengerCalendar({
         {/* Day headers */}
         <div className="grid grid-cols-7 px-3 pt-3 pb-1">
           {DAYS.map(d => (
-            <div key={d} className="text-center" style={{ fontSize: "11px", fontWeight: 600, color: P.dim, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            <div key={d} className="text-center" style={{ fontSize: sf(11), fontWeight: 600, color: P.dim, textTransform: "uppercase", letterSpacing: "0.08em" }}>
               {d}
             </div>
           ))}
@@ -273,17 +274,17 @@ export default function MessengerCalendar({
         {selectedDay !== null && (
           <div className="shrink-0 px-4 pb-3 overflow-y-auto" style={{ borderTop: `1px solid ${P.divider}`, maxHeight: "220px" }}>
             <div className="flex items-center justify-between py-3">
-              <span style={{ fontSize: "13px", fontWeight: 600, color: P.text }}>
+              <span style={{ fontSize: sf(13), fontWeight: 600, color: P.text }}>
                 {MONTHS[viewMonth]} {selectedDay}
               </span>
-              <span style={{ fontSize: "11px", color: P.dim }}>
+              <span style={{ fontSize: sf(11), color: P.dim }}>
                 {selectedDayEvents.length === 0 ? "No events" : `${selectedDayEvents.length} event${selectedDayEvents.length > 1 ? "s" : ""}`}
               </span>
             </div>
             {selectedDayEvents.length === 0 ? (
               <div className="flex flex-col items-center py-4 gap-2">
                 <IconCalendarEvent size={20} style={{ color: P.dim }} />
-                <span style={{ fontSize: "12px", color: P.dim }}>Open day — you're available</span>
+                <span style={{ fontSize: sf(12), color: P.dim }}>Open day — you're available</span>
                 <button
                   onClick={() => setCreating(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium mt-1"
@@ -302,17 +303,17 @@ export default function MessengerCalendar({
                   >
                     <div className="w-[3px] h-8 rounded-full shrink-0 mt-0.5" style={{ background: e.color }} />
                     <div className="min-w-0 flex-1">
-                      <div style={{ fontSize: "13px", fontWeight: 500, color: P.text }}>{e.title}</div>
+                      <div style={{ fontSize: sf(13), fontWeight: 500, color: P.text }}>{e.title}</div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <IconClock size={11} style={{ color: P.dim }} />
-                        <span style={{ fontSize: "11px", color: P.muted }}>
+                        <span style={{ fontSize: sf(11), color: P.muted }}>
                           {e.allDay ? "All day" : `${formatTime(e.startTime)} – ${formatTime(e.endTime)}`}
                         </span>
                       </div>
                       {e.location && (
                         <div className="flex items-center gap-2 mt-0.5">
                           <IconMapPin size={11} style={{ color: P.dim }} />
-                          <span style={{ fontSize: "11px", color: P.muted }}>{e.location}</span>
+                          <span style={{ fontSize: sf(11), color: P.muted }}>{e.location}</span>
                         </div>
                       )}
                     </div>
@@ -328,7 +329,7 @@ export default function MessengerCalendar({
 
             {/* Availability heatmap for selected day */}
             <div className="mt-3">
-              <span style={{ fontSize: "10px", fontWeight: 600, color: P.dim, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              <span style={{ fontSize: sf(10), fontWeight: 600, color: P.dim, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                 Availability
               </span>
               <div className="flex gap-0.5 mt-1.5">
@@ -368,7 +369,7 @@ export default function MessengerCalendar({
           >
             <div className="px-5 py-4">
               <div className="flex items-center justify-between mb-3">
-                <span style={{ fontSize: "13px", fontWeight: 600, color: P.text }}>New Event</span>
+                <span style={{ fontSize: sf(13), fontWeight: 600, color: P.text }}>New Event</span>
                 <button onClick={() => { setCreating(false); onClearSuggestion?.(); }} style={{ color: P.dim }}>
                   <IconX size={14} />
                 </button>
@@ -380,26 +381,26 @@ export default function MessengerCalendar({
                 onChange={e => setNewTitle(e.target.value)}
                 placeholder="Event title"
                 className="w-full rounded-lg px-3 py-2 outline-none mb-2"
-                style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: "14px", fontFamily: font }}
+                style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: sf(14), fontFamily: font }}
               />
 
               {!newAllDay && (
                 <div className="flex items-center gap-2 mb-2">
                   <IconClock size={13} style={{ color: P.dim }} />
-                  <input value={newStartHour} onChange={e => setNewStartHour(e.target.value)} className="w-10 rounded px-1.5 py-1 text-center outline-none" style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: "13px" }} />
+                  <input value={newStartHour} onChange={e => setNewStartHour(e.target.value)} className="w-10 rounded px-1.5 py-1 text-center outline-none" style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: sf(13) }} />
                   <span style={{ color: P.dim }}>:</span>
-                  <input value={newStartMin} onChange={e => setNewStartMin(e.target.value)} className="w-10 rounded px-1.5 py-1 text-center outline-none" style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: "13px" }} />
-                  <span style={{ fontSize: "12px", color: P.dim }}>→</span>
-                  <input value={newEndHour} onChange={e => setNewEndHour(e.target.value)} className="w-10 rounded px-1.5 py-1 text-center outline-none" style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: "13px" }} />
+                  <input value={newStartMin} onChange={e => setNewStartMin(e.target.value)} className="w-10 rounded px-1.5 py-1 text-center outline-none" style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: sf(13) }} />
+                  <span style={{ fontSize: sf(12), color: P.dim }}>→</span>
+                  <input value={newEndHour} onChange={e => setNewEndHour(e.target.value)} className="w-10 rounded px-1.5 py-1 text-center outline-none" style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: sf(13) }} />
                   <span style={{ color: P.dim }}>:</span>
-                  <input value={newEndMin} onChange={e => setNewEndMin(e.target.value)} className="w-10 rounded px-1.5 py-1 text-center outline-none" style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: "13px" }} />
+                  <input value={newEndMin} onChange={e => setNewEndMin(e.target.value)} className="w-10 rounded px-1.5 py-1 text-center outline-none" style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: sf(13) }} />
                 </div>
               )}
 
               <div className="flex items-center gap-3 mb-2">
                 <label className="flex items-center gap-1.5 cursor-pointer">
                   <input type="checkbox" checked={newAllDay} onChange={e => setNewAllDay(e.target.checked)} className="rounded" />
-                  <span style={{ fontSize: "12px", color: P.muted }}>All day</span>
+                  <span style={{ fontSize: sf(12), color: P.muted }}>All day</span>
                 </label>
               </div>
 
@@ -408,7 +409,7 @@ export default function MessengerCalendar({
                 onChange={e => setNewLocation(e.target.value)}
                 placeholder="Location (optional)"
                 className="w-full rounded-lg px-3 py-2 outline-none mb-3"
-                style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: "13px", fontFamily: font }}
+                style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: sf(13), fontFamily: font }}
               />
 
               {/* Color picker */}
