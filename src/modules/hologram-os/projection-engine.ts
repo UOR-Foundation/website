@@ -350,6 +350,32 @@ export class KernelProjector {
     this.streamRafId = requestAnimationFrame(this.streamTick);
   };
 
+  /** Get real-time stream diagnostics for DevTools */
+  getStreamStats(): {
+    tickCount: number;
+    dirty: boolean;
+    streamRunning: boolean;
+    isActive: boolean;
+    tickRateHz: number;
+    listenerCount: number;
+    activeUntil: number;
+    lastFrameAge: number;
+  } {
+    const now = performance.now();
+    const isActive = now < this.activeUntil;
+    const interval = isActive ? this.activeTickMs : this.idleTickMs;
+    return {
+      tickCount: this.tickCount,
+      dirty: this.dirty,
+      streamRunning: this.streamRunning,
+      isActive,
+      tickRateHz: Math.round(1000 / interval),
+      listenerCount: this.listeners.size,
+      activeUntil: Math.max(0, this.activeUntil - now),
+      lastFrameAge: now - this.lastFrameTime,
+    };
+  }
+
   /** Configure stream tick rates (in ms) */
   setStreamRates(idleMs: number, activeMs: number): void {
     this.idleTickMs = Math.max(16, idleMs);
