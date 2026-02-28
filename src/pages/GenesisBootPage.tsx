@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { bootGenesis, type GenesisState } from "@/hologram/genesis/genesis";
 import { buildArtifact, toBlob } from "@/hologram/genesis/artifact";
@@ -285,6 +286,17 @@ export default function GenesisBootPage() {
             </button>
           </motion.div>
         )}
+      </div>
+
+      {/* Cross-link */}
+      <div className="mt-12 text-center">
+        <Link
+          to="/artifact"
+          className="inline-flex items-center gap-2 font-mono text-sm transition-colors"
+          style={{ color: "hsl(38, 40%, 62%)" }}
+        >
+          <span>→</span> Artifact Inspector
+        </Link>
       </div>
     </div>
   );
