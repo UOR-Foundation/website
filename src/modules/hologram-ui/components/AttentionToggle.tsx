@@ -35,10 +35,10 @@ export default function AttentionToggle({ bgMode = "dark" }: AttentionToggleProp
     >
       {/* "Focus" label — vertical */}
       <span
-        className="font-semibold tracking-[0.2em] uppercase transition-colors duration-500"
+        className="font-medium tracking-[0.35em] uppercase transition-colors duration-500"
         style={{
           writingMode: "vertical-rl",
-          fontSize: "var(--holo-text-xs)",
+          fontSize: "12px",
           color: isFocus
             ? (isWhite ? "hsla(200, 55%, 30%, 1)" : "hsla(200, 70%, 82%, 1)")
             : (isWhite ? "hsla(0, 0%, 10%, 0.85)" : "hsla(0, 0%, 90%, 0.8)"),
