@@ -11,7 +11,7 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit, CircleDot } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit, CircleDot, BrainCircuit } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
@@ -25,8 +25,9 @@ const GeometricQubitPanel = React.lazy(() => import("@/modules/quantum/component
 const CircuitComposerPanel = React.lazy(() => import("@/modules/quantum/components/CircuitComposerPanel"));
 const SouriauThermodynamicsPanel = React.lazy(() => import("@/modules/quantum/components/SouriauThermodynamicsPanel"));
 const CoadjointOrbitPanel = React.lazy(() => import("@/modules/quantum/components/CoadjointOrbitPanel"));
+const TINNPanel = React.lazy(() => import("@/modules/quantum/components/TINNPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits" | "tinn";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ export default function QuantumDashboardPage() {
     { key: "composer", label: "Composer", icon: <Cpu size={12} /> },
     { key: "thermo", label: "Souriau Thermo", icon: <Zap size={12} /> },
     { key: "orbits", label: "Orbit Classifier", icon: <CircleDot size={12} /> },
+    { key: "tinn", label: "TINN Layer", icon: <BrainCircuit size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -62,6 +64,7 @@ export default function QuantumDashboardPage() {
     composer: "Initializing quantum circuit composer engine…",
     thermo: "Calibrating Cartan Neural Network temperature cone…",
     orbits: "Classifying coadjoint orbits for Neeb integrability…",
+    tinn: "Initializing metriplectic bracket dynamics…",
   };
 
   return (
@@ -124,6 +127,7 @@ export default function QuantumDashboardPage() {
            tab === "composer" ? <CircuitComposerPanel /> :
            tab === "thermo" ? <SouriauThermodynamicsPanel /> :
            tab === "orbits" ? <CoadjointOrbitPanel /> :
+           tab === "tinn" ? <TINNPanel /> :
            <SouriauThermodynamicsPanel />}
         </Suspense>
       </div>
