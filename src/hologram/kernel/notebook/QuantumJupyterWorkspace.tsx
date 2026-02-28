@@ -33,7 +33,7 @@ import {
   type NotebookCell,
   type CellOutput,
 } from "@/hologram/kernel/notebook/notebook-engine";
-import { createState, realisticNoise, measure } from "@/hologram/kernel/q-simulator";
+import { createState, simulateCircuit, realisticNoise, measure } from "@/hologram/kernel/q-simulator";
 
 /* ── Histogram ────────────────────────────────────────────────────────────── */
 
@@ -770,6 +770,119 @@ function ComparisonHistogram({ rawCounts, mitigatedCounts, rawLabel, mitigatedLa
   );
 }
 
+/* ── VQE Energy Convergence Chart ─────────────────────────────────────────── */
+
+interface VqeIteration {
+  iteration: number;
+  energy: number;
+  params: number[];
+}
+
+function runVqeOptimization(numIterations: number, shots: number): VqeIteration[] {
+  const numParams = 4;
+  const history: VqeIteration[] = [];
+  let params = Array.from({ length: numParams }, () => Math.random() * 2 * Math.PI);
+  const a0 = 0.6, c0 = 0.2, A = numIterations * 0.1;
+  const alpha = 0.602, gamma = 0.101;
+
+  for (let k = 0; k < numIterations; k++) {
+    const ak = a0 / Math.pow(k + 1 + A, alpha);
+    const ck = c0 / Math.pow(k + 1, gamma);
+    const energy = evaluateH2Energy(params, shots);
+    history.push({ iteration: k, energy, params: [...params] });
+
+    const delta = Array.from({ length: numParams }, () => Math.random() > 0.5 ? 1 : -1);
+    const ePlus = evaluateH2Energy(params.map((p, i) => p + ck * delta[i]), shots);
+    const eMinus = evaluateH2Energy(params.map((p, i) => p - ck * delta[i]), shots);
+    const grad = delta.map((d) => (ePlus - eMinus) / (2 * ck * d));
+    params = params.map((p, i) => p - ak * grad[i]);
+  }
+  history.push({ iteration: numIterations, energy: evaluateH2Energy(params, shots), params: [...params] });
+  return history;
+}
+
+function evaluateH2Energy(params: number[], shots: number): number {
+  const state = createState(2);
+  state.ops.push({ gate: "ry", qubits: [0], params: [params[0]] });
+  state.ops.push({ gate: "ry", qubits: [1], params: [params[1]] });
+  state.ops.push({ gate: "cx", qubits: [0, 1] });
+  state.ops.push({ gate: "ry", qubits: [0], params: [params[2]] });
+  state.ops.push({ gate: "ry", qubits: [1], params: [params[3]] });
+  simulateCircuit(state);
+  const sv = state.stateVector;
+  const p = sv.map(([r, i]) => r * r + i * i);
+  const zi = p[0] + p[1] - p[2] - p[3];
+  const iz = p[0] - p[1] + p[2] - p[3];
+  const zz = p[0] - p[1] - p[2] + p[3];
+  const xx = 2 * (sv[0][0] * sv[3][0] + sv[0][1] * sv[3][1] + sv[1][0] * sv[2][0] + sv[1][1] * sv[2][1]);
+  const energy = -0.4804 + 0.3435 * zi - 0.4347 * iz + 0.5716 * zz + 0.0910 * xx;
+  return energy + (Math.random() - 0.5) * 2 / Math.sqrt(shots);
+}
+
+function ConvergenceChart({ history, targetEnergy }: { history: VqeIteration[]; targetEnergy: number }) {
+  if (history.length < 2) return null;
+  const energies = history.map(h => h.energy);
+  const minE = Math.min(...energies, targetEnergy) - 0.1;
+  const maxE = Math.max(...energies, targetEnergy) + 0.1;
+  const range = maxE - minE;
+  const chartW = 280, chartH = 140;
+  const padL = 44, padR = 8, padT = 8, padB = 24;
+  const plotW = chartW - padL - padR;
+  const plotH = chartH - padT - padB;
+  const toX = (i: number) => padL + (i / (history.length - 1)) * plotW;
+  const toY = (e: number) => padT + (1 - (e - minE) / range) * plotH;
+  const points = history.map((h, i) => `${toX(i)},${toY(h.energy)}`).join(" ");
+  const targetY = toY(targetEnergy);
+  const finalEnergy = energies[energies.length - 1];
+  const errorPct = Math.abs((finalEnergy - targetEnergy) / targetEnergy * 100);
+  const numTicks = 5;
+  const ticks = Array.from({ length: numTicks }, (_, i) => minE + (range * i) / (numTicks - 1));
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>Energy Convergence</span>
+        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{
+          background: errorPct < 5 ? "hsla(152, 45%, 50%, 0.08)" : "hsla(38, 50%, 50%, 0.08)",
+          color: errorPct < 5 ? "hsl(152, 45%, 38%)" : "hsl(38, 45%, 38%)",
+        }}>
+          {errorPct < 1 ? "converged" : `${errorPct.toFixed(1)}% from target`}
+        </span>
+      </div>
+      <svg width={chartW} height={chartH} className="w-full" viewBox={`0 0 ${chartW} ${chartH}`} style={{ background: "hsla(220, 10%, 50%, 0.02)", borderRadius: 6 }}>
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={padL} x2={chartW - padR} y1={toY(t)} y2={toY(t)} stroke="hsla(0,0%,50%,0.08)" strokeWidth={1} />
+            <text x={padL - 4} y={toY(t) + 3} textAnchor="end" fontSize={8} fill="hsl(0,0%,55%)" fontFamily="monospace">{t.toFixed(2)}</text>
+          </g>
+        ))}
+        <line x1={padL} x2={chartW - padR} y1={targetY} y2={targetY} stroke="hsl(152, 50%, 45%)" strokeWidth={1} strokeDasharray="4,3" />
+        <text x={chartW - padR} y={targetY - 4} textAnchor="end" fontSize={7} fill="hsl(152, 50%, 45%)" fontFamily="monospace">E₀ = {targetEnergy}</text>
+        <polyline points={points} fill="none" stroke="hsl(38, 55%, 50%)" strokeWidth={1.5} strokeLinejoin="round" />
+        {history.map((h, i) => (
+          <circle key={i} cx={toX(i)} cy={toY(h.energy)} r={i === history.length - 1 ? 3 : 1.5}
+            fill={i === history.length - 1 ? "hsl(38, 60%, 48%)" : "hsl(38, 45%, 55%)"} />
+        ))}
+        <text x={padL + plotW / 2} y={chartH - 2} textAnchor="middle" fontSize={8} fill="hsl(0,0%,55%)">SPSA Iteration</text>
+        <text x={6} y={padT + plotH / 2} textAnchor="middle" fontSize={8} fill="hsl(0,0%,55%)" transform={`rotate(-90,6,${padT + plotH / 2})`}>E (Ha)</text>
+      </svg>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+        {[
+          { label: "Initial E", value: `${energies[0].toFixed(4)} Ha` },
+          { label: "Final E", value: `${finalEnergy.toFixed(4)} Ha` },
+          { label: "Target E₀", value: `${targetEnergy.toFixed(4)} Ha` },
+          { label: "Error", value: `${errorPct.toFixed(2)}%` },
+        ].map(m => (
+          <div key={m.label} className="flex items-center justify-between">
+            <span className="text-[10px]" style={{ color: "hsl(0, 0%, 55%)" }}>{m.label}</span>
+            <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>{m.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
   demo: ReturnType<typeof getDemoDefinitions>[0];
   kernel: KernelState;
@@ -793,8 +906,10 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
   const [zneValue, setZneValue] = useState<number | null>(null);
   const [benchmarkMs, setBenchmarkMs] = useState<number | null>(null);
   const [benchmarkDetail, setBenchmarkDetail] = useState<{ gates: number; qubits: number; stateSize: number; shots: number } | null>(null);
+  const [vqeHistory, setVqeHistory] = useState<VqeIteration[]>([]);
 
   const anyMitigationEnabled = enableZne || enableMem || enableRc;
+  const isVqeDemo = demo.id === "vqe-demo";
 
   const runDemo = useCallback(async () => {
     if (!template) return;
@@ -823,6 +938,16 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
       shots: (controlValues["shots"] as number) || 1024,
     });
     setOutputs(allOutputs);
+
+    // Run VQE convergence optimization if this is the VQE demo
+    if (isVqeDemo) {
+      const iters = (controlValues["iterations"] as number) || 20;
+      const shots = (controlValues["shots"] as number) || 4096;
+      const history = runVqeOptimization(iters, shots);
+      setVqeHistory(history);
+    } else {
+      setVqeHistory([]);
+    }
 
     // Run error mitigation if any toggle is on and we have a circuit
     if (anyMitigationEnabled && k.circuit && k.circuit.ops.length > 0) {
@@ -1079,6 +1204,11 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
               {/* Quantitative metrics */}
               <MitigationMetricsCard raw={rawCounts} mitigated={mitigatedCounts} />
             </div>
+          )}
+
+          {/* VQE Convergence Chart */}
+          {isVqeDemo && vqeHistory.length > 1 && (
+            <ConvergenceChart history={vqeHistory} targetEnergy={-1.137} />
           )}
 
           {/* Standard histogram when no mitigation */}

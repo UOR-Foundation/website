@@ -1036,6 +1036,7 @@ export function getDemoDefinitions(): DemoDefinition[] {
       difficulty: "advanced",
       notebookId: "vqe-ansatz",
       controls: [
+        { id: "iterations", label: "SPSA iterations", type: "slider", min: 5, max: 50, step: 5, defaultValue: 20 },
         { id: "shots", label: "Measurements", type: "slider", min: 256, max: 8192, step: 256, defaultValue: 4096 },
       ],
     },
