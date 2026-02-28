@@ -38,31 +38,44 @@ function IconTooltip({ label, children, show }: { label: string; children: React
 /* ── Palette — CSS variables set on the sidebar root ────────── */
 function getPaletteVars(bgMode: "image" | "white" | "dark") {
   if (bgMode === "white") return {
-    "--sb-bg": "hsla(30, 10%, 97%, 0.85)",
-    "--sb-hover": "hsla(30, 8%, 0%, 0.03)",
-    "--sb-active": "hsla(30, 12%, 0%, 0.05)",
-    "--sb-border": "hsla(30, 8%, 0%, 0.06)",
+    "--sb-bg": "linear-gradient(180deg, hsla(30, 12%, 97%, 0.88) 0%, hsla(30, 10%, 95%, 0.82) 100%)",
+    "--sb-bg-flat": "hsla(30, 10%, 96%, 0.85)",
+    "--sb-hover": "hsla(30, 8%, 0%, 0.035)",
+    "--sb-active": "hsla(30, 12%, 0%, 0.06)",
+    "--sb-border": "hsla(30, 15%, 80%, 0.25)",
+    "--sb-border-inner": "hsla(0, 0%, 100%, 0.6)",
     "--sb-text": "hsl(25, 8%, 28%)",
-    "--sb-muted": "hsl(25, 8%, 40%)",
+    "--sb-muted": "hsl(25, 8%, 45%)",
     "--sb-gold": "hsl(32, 30%, 45%)",
+    "--sb-shadow": "4px 0 32px -8px hsla(25, 15%, 20%, 0.08)",
+    "--sb-highlight": "inset -1px 0 0 hsla(0, 0%, 100%, 0.5), inset 0 1px 0 hsla(0, 0%, 100%, 0.4)",
   } as Record<string, string>;
   if (bgMode === "dark") return {
-    "--sb-bg": "hsla(25, 8%, 8%, 0.3)",
-    "--sb-hover": "hsla(30, 12%, 90%, 0.08)",
-    "--sb-active": "hsla(30, 15%, 85%, 0.12)",
-    "--sb-border": "hsla(38, 20%, 80%, 0.08)",
-    "--sb-text": "hsl(30, 10%, 90%)",
+    "--sb-bg": "linear-gradient(180deg, hsla(25, 10%, 10%, 0.35) 0%, hsla(25, 8%, 6%, 0.4) 100%)",
+    "--sb-bg-flat": "hsla(25, 8%, 8%, 0.35)",
+    "--sb-hover": "hsla(30, 12%, 90%, 0.07)",
+    "--sb-active": "hsla(30, 15%, 85%, 0.1)",
+    "--sb-border": "hsla(38, 20%, 70%, 0.1)",
+    "--sb-border-inner": "hsla(38, 20%, 90%, 0.06)",
+    "--sb-text": "hsl(30, 10%, 88%)",
+    "--sb-muted": "hsl(30, 8%, 68%)",
+    "--sb-gold": "hsl(34, 35%, 65%)",
+    "--sb-shadow": "4px 0 40px -8px hsla(25, 10%, 0%, 0.25)",
+    "--sb-highlight": "inset -1px 0 0 hsla(38, 25%, 90%, 0.06), inset 0 1px 0 hsla(38, 25%, 90%, 0.04)",
+  } as Record<string, string>;
+  // image mode — the hero glass panel
+  return {
+    "--sb-bg": "linear-gradient(180deg, hsla(25, 12%, 14%, 0.32) 0%, hsla(25, 10%, 8%, 0.38) 100%)",
+    "--sb-bg-flat": "hsla(25, 10%, 12%, 0.32)",
+    "--sb-hover": "hsla(30, 12%, 90%, 0.07)",
+    "--sb-active": "hsla(30, 15%, 85%, 0.1)",
+    "--sb-border": "hsla(38, 22%, 75%, 0.12)",
+    "--sb-border-inner": "hsla(38, 25%, 90%, 0.08)",
+    "--sb-text": "hsl(30, 10%, 92%)",
     "--sb-muted": "hsl(30, 8%, 75%)",
     "--sb-gold": "hsl(34, 35%, 68%)",
-  } as Record<string, string>;
-  return {
-    "--sb-bg": "hsla(25, 10%, 12%, 0.28)",
-    "--sb-hover": "hsla(30, 12%, 90%, 0.08)",
-    "--sb-active": "hsla(30, 15%, 85%, 0.12)",
-    "--sb-border": "hsla(38, 20%, 80%, 0.1)",
-    "--sb-text": "hsl(30, 10%, 92%)",
-    "--sb-muted": "hsl(30, 8%, 78%)",
-    "--sb-gold": "hsl(34, 35%, 68%)",
+    "--sb-shadow": "4px 0 48px -8px hsla(25, 10%, 0%, 0.2), 8px 0 80px -16px hsla(25, 10%, 0%, 0.1)",
+    "--sb-highlight": "inset -1px 0 0 hsla(38, 25%, 90%, 0.08), inset 0 1px 0 hsla(38, 25%, 90%, 0.06)",
   } as Record<string, string>;
 }
 
@@ -154,11 +167,12 @@ export default function DesktopOsSidebar({
       style={{
         ...paletteVars,
         width: `${w}px`,
-        background: "var(--sb-bg)",
-        backdropFilter: "blur(56px) saturate(1.6)",
-        WebkitBackdropFilter: "blur(56px) saturate(1.6)",
+        background: "var(--sb-bg-flat)",
+        backgroundImage: "var(--sb-bg)",
+        backdropFilter: "blur(64px) saturate(1.5) brightness(1.05)",
+        WebkitBackdropFilter: "blur(64px) saturate(1.5) brightness(1.05)",
         borderRight: "1px solid var(--sb-border)",
-        boxShadow: "inset -1px 0 0 hsla(38, 25%, 90%, 0.06), 4px 0 24px -4px hsla(25, 10%, 0%, 0.15)",
+        boxShadow: "var(--sb-highlight), var(--sb-shadow)",
         willChange: "width",
         transition: "width 350ms cubic-bezier(0.4, 0, 0.2, 1), background 600ms ease, border-color 600ms ease, color 600ms ease",
         fontFamily: "'DM Sans', system-ui, sans-serif",
