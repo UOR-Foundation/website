@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 import DataBankIndicator from "./DataBankIndicator";
+import { ShareTheLoveModal } from "./ShareTheLoveModal";
 
 /* ── Tooltip wrapper ───────────────────────────────────────── */
 function IconTooltip({ label, children, show }: { label: string; children: React.ReactNode; show: boolean }) {
@@ -109,6 +110,7 @@ export default function DesktopOsSidebar({
   const navigate = useNavigate();
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
@@ -129,6 +131,7 @@ export default function DesktopOsSidebar({
   const w = expanded ? EXPANDED_W : COLLAPSED_W;
 
   return (
+    <>
     <aside
       className="sidebar-root flex flex-col h-full shrink-0 relative"
       style={{
@@ -347,10 +350,7 @@ export default function DesktopOsSidebar({
       <div className="px-2.5 pb-1">
         <IconTooltip label="Share the Love" show={!expanded}>
           <button
-            onClick={() => collapseAndDo(() => {
-              // Future: viral invite/share flow
-              console.log("Share the love clicked");
-            })}
+            onClick={() => collapseAndDo(() => setShareOpen(true))}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
             }`}
@@ -423,5 +423,8 @@ export default function DesktopOsSidebar({
         </IconTooltip>
       </div>
     </aside>
+
+    <ShareTheLoveModal open={shareOpen} onClose={() => setShareOpen(false)} />
+    </>
   );
 }

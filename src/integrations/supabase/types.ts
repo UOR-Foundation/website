@@ -632,6 +632,33 @@ export type Database = {
         }
         Relationships: []
       }
+      invite_links: {
+        Row: {
+          click_count: number
+          code: string
+          created_at: string
+          id: string
+          signup_count: number
+          user_id: string
+        }
+        Insert: {
+          click_count?: number
+          code: string
+          created_at?: string
+          id?: string
+          signup_count?: number
+          user_id: string
+        }
+        Update: {
+          click_count?: number
+          code?: string
+          created_at?: string
+          id?: string
+          signup_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       lead_submissions: {
         Row: {
           created_at: string
