@@ -821,6 +821,7 @@ export class KernelProjector {
 
   /** Toggle Lumen AI chat independently */
   setChatOpen(open: boolean): void {
+    if (this.config.chatOpen === open) return;
     this.config.chatOpen = open;
     this.saveConfig();
     this.markDirty();
