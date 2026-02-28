@@ -153,6 +153,10 @@ interface HologramAiChatProps {
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function HologramAiChat({ open, onClose, onPhaseChange, creatorStage = 1, replayGuideKey = 0, initialPrompt, panelWidth, resizeHandleProps, isResizing }: HologramAiChatProps) {
+  // ── Keep-alive: once mounted, never unmount ──────────────────────────
+  const hasBeenOpenedRef = useRef(false);
+  if (open) hasBeenOpenedRef.current = true;
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -872,16 +876,16 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     }
   }, [open, sendMessage, isGenerating]);
 
-  if (!open) return null;
+  // Keep-alive: don't unmount, just hide. Skip initial render before first open.
+  if (!hasBeenOpenedRef.current) return null;
 
   // ── Saved Responses Panel ─────────────────────────────────────────────
-  if (showSaved) {
+  if (open && showSaved) {
     return (
       <SavedResponsesPanel
         onBack={() => setShowSaved(false)}
         onLoadResponse={(content, query) => {
           setShowSaved(false);
-          // Could optionally scroll to or highlight the response
         }}
       />
     );
@@ -889,7 +893,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
   // ── History Sidebar ──────────────────────────────────────────────────
 
-  if (showHistory) {
+  if (open && showHistory) {
     return (
       <div className="fixed inset-0 z-[60] flex items-center justify-center animate-fade-in">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -977,15 +981,20 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
   const isFocus = attention.preset === "focus";
 
+  const computedWidth = panelWidth ? `${panelWidth}px` : "min(340px, 82vw)";
+
   return (
     <>
       {/* ── Slide-out panel — docked right, part of the OS ─────────── */}
       <div
-        className="fixed top-0 right-0 bottom-0 z-[60] flex pointer-events-auto"
+        className="fixed top-0 right-0 bottom-0 z-[60] flex"
         style={{
-          width: panelWidth ? `${panelWidth}px` : "min(340px, 82vw)",
-          animation: isResizing ? "none" : "lumen-slide-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both",
-          transition: isResizing ? "none" : undefined,
+          width: computedWidth,
+          transform: open ? "translateX(0)" : `translateX(100%)`,
+          opacity: open ? 1 : 0,
+          pointerEvents: open ? "auto" : "none",
+          transition: isResizing ? "none" : "transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease",
+          willChange: "transform",
         }}
       >
         {/* ── Resize handle — left edge drag strip ─────────────────── */}
