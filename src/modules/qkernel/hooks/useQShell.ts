@@ -385,13 +385,46 @@ export function useQShell() {
             if (agents[i].state !== "active") continue;
             const h = Math.min(1, feedbackScores[i]);
             await agents[i].feedback(`output-r${round}`, h, "human");
-            log(`  ${agents[i].name}: feedback H=${agents[i].hScore.toFixed(3)} zone=${agents[i].zone}`);
+            log(`  ${agents[i].name}: human feedback H=${agents[i].hScore.toFixed(3)} zone=${agents[i].zone}`);
             addDemoEntry(agents[i].name, "feedback", `H=${agents[i].hScore.toFixed(3)}`, agents[i].hScore, round);
 
             // Try to revive suspended agents
             if (agents[i].state === "suspended") {
               agents[i].revive();
             }
+          }
+
+          // ── Peer-to-peer review: each agent rates every other agent's output ──
+          log(`  Peer review:`);
+          const activeAgents = agents.filter(a => a.state === "active");
+          for (const reviewer of activeAgents) {
+            for (const target of activeAgents) {
+              if (reviewer === target) continue;
+              // Peer score: based on reviewer's own H and round progression
+              // Higher-H reviewers give more calibrated scores; critic is harsher
+              const baseScore = target.hScore * 0.6 + reviewer.hScore * 0.3 + (round * 0.02);
+              const reviewerBias = reviewer.name === "critic" ? -0.08 : reviewer.name === "researcher" ? 0.04 : 0;
+              const peerScore = Math.max(0.1, Math.min(1, baseScore + reviewerBias));
+
+              // Send peer review via IPC
+              const reviewMsg = new TextEncoder().encode(JSON.stringify({
+                type: "peer-review",
+                from: reviewer.name,
+                target: target.name,
+                round,
+                score: peerScore,
+              }));
+              await reviewer.communicate(ch.channelCid, reviewMsg);
+
+              // Apply peer feedback (weighted at 50% of human feedback)
+              await target.feedback(`peer-${reviewer.name}-r${round}`, peerScore, "peer");
+
+              addDemoEntry(reviewer.name, "peer-review", `→${target.name} ${peerScore.toFixed(2)}`, peerScore, round);
+            }
+          }
+          for (const a of activeAgents) {
+            log(`    ${a.name}: post-peer H=${a.hScore.toFixed(3)} zone=${a.zone}`);
+            addDemoEntry(a.name, "peer-result", `H=${a.hScore.toFixed(3)}`, a.hScore, round);
           }
 
           // Mesh tick
