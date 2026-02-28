@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Play, Pause, RotateCcw } from "lucide-react";
+import { sf } from "@/modules/hologram-ui/utils/scaledFontSize";
 
 const FOCUS_DURATION = 25 * 60; // 25 minutes
 
@@ -76,7 +77,7 @@ export default function ProductivityTimerWidget() {
         {/* Time */}
         <span
           style={{
-            fontSize: remaining === 0 ? "14px" : "22px",
+            fontSize: remaining === 0 ? sf(14) : sf(22),
             fontWeight: 300,
             color: "hsla(0, 0%, 10%, 0.85)",
             fontFamily: "'Playfair Display', serif",
@@ -90,7 +91,7 @@ export default function ProductivityTimerWidget() {
       {/* Label */}
       <span
         style={{
-          fontSize: "12px",
+          fontSize: sf(12),
           letterSpacing: "0.35em",
           textTransform: "uppercase",
           color: "hsla(0, 0%, 15%, 0.7)",

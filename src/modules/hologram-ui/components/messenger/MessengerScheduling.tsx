@@ -19,6 +19,7 @@ import {
 } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { CalendarEvent } from "./MessengerCalendar";
+import { sf } from "@/modules/hologram-ui/utils/scaledFontSize";
 
 // ── Types ──
 
@@ -357,10 +358,10 @@ function MeetingTypesView({
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: `1px solid ${P.divider}` }}>
         <div>
-          <h3 style={{ fontSize: "17px", fontWeight: 600, color: P.text, fontFamily: serif }}>
+          <h3 style={{ fontSize: sf(17), fontWeight: 600, color: P.text, fontFamily: serif }}>
             Scheduling
           </h3>
-          <span style={{ fontSize: "11px", color: P.dim }}>
+          <span style={{ fontSize: sf(11), color: P.dim }}>
             {meetingTypes.length} meeting type{meetingTypes.length !== 1 ? "s" : ""} · {upcomingBookings.length} upcoming
           </span>
         </div>
@@ -396,7 +397,7 @@ function MeetingTypesView({
           <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${P.accent}15` }}>
             <IconBrain size={13} style={{ color: P.accent }} />
           </div>
-          <span style={{ fontSize: "12px", color: P.textSecondary, flex: 1, textAlign: "left" }}>
+          <span style={{ fontSize: sf(12), color: P.textSecondary, flex: 1, textAlign: "left" }}>
             Let Lumen optimize your availability based on messaging patterns
           </span>
           <IconChevronRight size={13} style={{ color: P.dim }} className="group-hover:translate-x-0.5 transition-transform" />
@@ -426,7 +427,7 @@ function MeetingTypesView({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span style={{ fontSize: "15px", fontWeight: 600, color: P.text }}>{mt.title}</span>
+                        <span style={{ fontSize: sf(15), fontWeight: 600, color: P.text }}>{mt.title}</span>
                         {!mt.isActive && (
                           <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase" style={{ background: `${P.dim}20`, color: P.dim }}>
                             Off
@@ -434,7 +435,7 @@ function MeetingTypesView({
                         )}
                       </div>
                       {mt.description && (
-                        <p className="truncate" style={{ fontSize: "12px", color: P.muted, marginBottom: "6px" }}>
+                        <p className="truncate" style={{ fontSize: sf(12), color: P.muted, marginBottom: "6px" }}>
                           {mt.description}
                         </p>
                       )}
@@ -498,14 +499,14 @@ function MeetingTypesView({
                               <button
                                 onClick={() => { onEdit(mt); setMenuOpenId(null); }}
                                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors"
-                                style={{ fontSize: "13px", color: P.text }}
+                                style={{ fontSize: sf(13), color: P.text }}
                               >
                                 <IconEdit size={13} /> Edit
                               </button>
                               <button
                                 onClick={() => { onToggleActive(mt); setMenuOpenId(null); }}
                                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors"
-                                style={{ fontSize: "13px", color: P.text }}
+                                style={{ fontSize: sf(13), color: P.text }}
                               >
                                 {mt.isActive ? <IconToggleRight size={13} /> : <IconToggleLeft size={13} />}
                                 {mt.isActive ? "Disable" : "Enable"}
@@ -513,7 +514,7 @@ function MeetingTypesView({
                               <button
                                 onClick={() => { onCopyLink(mt); setMenuOpenId(null); }}
                                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors"
-                                style={{ fontSize: "13px", color: P.text }}
+                                style={{ fontSize: sf(13), color: P.text }}
                               >
                                 <IconShare size={13} /> Share link
                               </button>
@@ -521,7 +522,7 @@ function MeetingTypesView({
                               <button
                                 onClick={() => { onDelete(mt.id); setMenuOpenId(null); }}
                                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors"
-                                style={{ fontSize: "13px", color: P.red }}
+                                style={{ fontSize: sf(13), color: P.red }}
                               >
                                 <IconTrash size={13} /> Delete
                               </button>
@@ -559,7 +560,7 @@ function MeetingTypesView({
       <div className="shrink-0 px-5 py-2.5 flex items-center justify-between" style={{ borderTop: `1px solid ${P.divider}` }}>
         <div className="flex items-center gap-1.5">
           <IconShieldCheck size={12} style={{ color: P.green }} />
-          <span style={{ fontSize: "10px", color: P.dim }}>Links are private · Only your availability is shared</span>
+          <span style={{ fontSize: sf(10), color: P.dim }}>Links are private · Only your availability is shared</span>
         </div>
       </div>
     </>
@@ -586,10 +587,10 @@ function EmptyState({ P, font, serif, onCreateNew }: {
         <IconCalendarEvent size={28} style={{ color: P.accent }} strokeWidth={1.3} />
       </motion.div>
       <div className="text-center">
-        <h4 style={{ fontSize: "18px", fontWeight: 600, color: P.text, fontFamily: serif, marginBottom: "6px" }}>
+        <h4 style={{ fontSize: sf(18), fontWeight: 600, color: P.text, fontFamily: serif, marginBottom: "6px" }}>
           Share your availability
         </h4>
-        <p style={{ fontSize: "13px", color: P.muted, lineHeight: 1.6, maxWidth: "280px" }}>
+        <p style={{ fontSize: sf(13), color: P.muted, lineHeight: 1.6, maxWidth: "280px" }}>
           Create meeting types and share booking links — like Calendly, but built into your messenger.
         </p>
       </div>
@@ -639,7 +640,7 @@ function MeetingTypeForm({
     background: P.surface,
     border: `1px solid ${P.divider}`,
     color: P.text,
-    fontSize: "14px",
+    fontSize: sf(14),
     fontFamily: font,
   };
 
@@ -651,7 +652,7 @@ function MeetingTypeForm({
           <button onClick={onBack} style={{ color: P.muted }}>
             <IconChevronLeft size={18} />
           </button>
-          <h3 style={{ fontSize: "15px", fontWeight: 600, color: P.text }}>
+          <h3 style={{ fontSize: sf(15), fontWeight: 600, color: P.text }}>
             {isEdit ? "Edit Meeting Type" : "New Meeting Type"}
           </h3>
         </div>
@@ -674,7 +675,7 @@ function MeetingTypeForm({
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
         {/* Title */}
         <div>
-          <label className="block mb-1.5" style={{ fontSize: "12px", fontWeight: 600, color: P.textSecondary }}>Event name</label>
+          <label className="block mb-1.5" style={{ fontSize: sf(12), fontWeight: 600, color: P.textSecondary }}>Event name</label>
           <input
             autoFocus
             value={title}
@@ -687,7 +688,7 @@ function MeetingTypeForm({
 
         {/* Description */}
         <div>
-          <label className="block mb-1.5" style={{ fontSize: "12px", fontWeight: 600, color: P.textSecondary }}>Description (optional)</label>
+          <label className="block mb-1.5" style={{ fontSize: sf(12), fontWeight: 600, color: P.textSecondary }}>Description (optional)</label>
           <textarea
             value={desc}
             onChange={e => setDesc(e.target.value)}
@@ -700,7 +701,7 @@ function MeetingTypeForm({
 
         {/* Duration */}
         <div>
-          <label className="block mb-2" style={{ fontSize: "12px", fontWeight: 600, color: P.textSecondary }}>Duration</label>
+          <label className="block mb-2" style={{ fontSize: sf(12), fontWeight: 600, color: P.textSecondary }}>Duration</label>
           <div className="flex gap-2 flex-wrap">
             {DURATION_OPTIONS.map(d => (
               <button
@@ -721,7 +722,7 @@ function MeetingTypeForm({
 
         {/* Color */}
         <div>
-          <label className="block mb-2" style={{ fontSize: "12px", fontWeight: 600, color: P.textSecondary }}>Color</label>
+          <label className="block mb-2" style={{ fontSize: sf(12), fontWeight: 600, color: P.textSecondary }}>Color</label>
           <div className="flex gap-2">
             {COLORS.map(c => (
               <button
@@ -742,7 +743,7 @@ function MeetingTypeForm({
 
         {/* Location type */}
         <div>
-          <label className="block mb-2" style={{ fontSize: "12px", fontWeight: 600, color: P.textSecondary }}>Location</label>
+          <label className="block mb-2" style={{ fontSize: sf(12), fontWeight: 600, color: P.textSecondary }}>Location</label>
           <div className="grid grid-cols-2 gap-2">
             {LOCATION_TYPES.map(({ key, icon: Icon, label }) => (
               <button
@@ -773,9 +774,9 @@ function MeetingTypeForm({
 
         {/* Custom slug */}
         <div>
-          <label className="block mb-1.5" style={{ fontSize: "12px", fontWeight: 600, color: P.textSecondary }}>Custom URL slug</label>
+          <label className="block mb-1.5" style={{ fontSize: sf(12), fontWeight: 600, color: P.textSecondary }}>Custom URL slug</label>
           <div className="flex items-center rounded-xl overflow-hidden" style={{ border: `1px solid ${P.divider}` }}>
-            <span className="px-3 py-2.5 shrink-0" style={{ background: `${P.dim}10`, fontSize: "13px", color: P.dim }}>
+            <span className="px-3 py-2.5 shrink-0" style={{ background: `${P.dim}10`, fontSize: sf(13), color: P.dim }}>
               /book/
             </span>
             <input
@@ -783,7 +784,7 @@ function MeetingTypeForm({
               onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
               placeholder={title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "") || "meeting-slug"}
               className="flex-1 px-3 py-2.5 outline-none bg-transparent"
-              style={{ color: P.text, fontSize: "13px", fontFamily: "monospace" }}
+              style={{ color: P.text, fontSize: sf(13), fontFamily: "monospace" }}
             />
           </div>
         </div>
@@ -791,7 +792,7 @@ function MeetingTypeForm({
         {/* Buffer & max per day */}
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block mb-1.5" style={{ fontSize: "12px", fontWeight: 600, color: P.textSecondary }}>Buffer (min)</label>
+            <label className="block mb-1.5" style={{ fontSize: sf(12), fontWeight: 600, color: P.textSecondary }}>Buffer (min)</label>
             <input
               type="number"
               value={buffer}
@@ -801,7 +802,7 @@ function MeetingTypeForm({
             />
           </div>
           <div className="flex-1">
-            <label className="block mb-1.5" style={{ fontSize: "12px", fontWeight: 600, color: P.textSecondary }}>Max/day</label>
+            <label className="block mb-1.5" style={{ fontSize: sf(12), fontWeight: 600, color: P.textSecondary }}>Max/day</label>
             <input
               type="number"
               value={maxPerDay}
@@ -814,7 +815,7 @@ function MeetingTypeForm({
 
         {/* Availability */}
         <div>
-          <label className="block mb-2" style={{ fontSize: "12px", fontWeight: 600, color: P.textSecondary }}>Weekly availability</label>
+          <label className="block mb-2" style={{ fontSize: sf(12), fontWeight: 600, color: P.textSecondary }}>Weekly availability</label>
           <div className="space-y-1.5">
             {[0, 1, 2, 3, 4, 5, 6].map(day => {
               const window = availability.find(w => w.day === day);
@@ -835,7 +836,7 @@ function MeetingTypeForm({
                   >
                     {active && <IconCheck size={12} color="white" />}
                   </button>
-                  <span style={{ fontSize: "13px", fontWeight: 500, color: active ? P.text : P.dim, width: "80px" }}>
+                  <span style={{ fontSize: sf(13), fontWeight: 500, color: active ? P.text : P.dim, width: "80px" }}>
                     {DAYS_FULL[day]}
                   </span>
                   {active && window && (
@@ -847,7 +848,7 @@ function MeetingTypeForm({
                         className="rounded px-2 py-1 outline-none text-xs"
                         style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text }}
                       />
-                      <span style={{ fontSize: "11px", color: P.dim }}>→</span>
+                      <span style={{ fontSize: sf(11), color: P.dim }}>→</span>
                       <input
                         type="time"
                         value={window.end}
@@ -892,7 +893,7 @@ function BookingsView({
           <button onClick={onBack} style={{ color: P.muted }}>
             <IconChevronLeft size={18} />
           </button>
-          <h3 style={{ fontSize: "15px", fontWeight: 600, color: P.text }}>Bookings</h3>
+          <h3 style={{ fontSize: sf(15), fontWeight: 600, color: P.text }}>Bookings</h3>
         </div>
         <div className="flex items-center gap-1 p-0.5 rounded-lg" style={{ background: P.surface }}>
           {(["upcoming", "past"] as const).map(t => (
@@ -916,7 +917,7 @@ function BookingsView({
         {list.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <IconCalendarEvent size={24} style={{ color: P.dim }} />
-            <span style={{ fontSize: "13px", color: P.dim }}>No {tab} bookings</span>
+            <span style={{ fontSize: sf(13), color: P.dim }}>No {tab} bookings</span>
           </div>
         ) : (
           list.map(b => {
@@ -930,7 +931,7 @@ function BookingsView({
                 <div className="w-[4px] h-10 rounded-full shrink-0 mt-0.5" style={{ background: mt?.color || P.accent }} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span style={{ fontSize: "14px", fontWeight: 600, color: P.text }}>{b.inviteeName}</span>
+                    <span style={{ fontSize: sf(14), fontWeight: 600, color: P.text }}>{b.inviteeName}</span>
                     <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{
                       background: b.status === "confirmed" ? `${P.green}15` : `${P.red}15`,
                       color: b.status === "confirmed" ? P.green : P.red,
@@ -938,7 +939,7 @@ function BookingsView({
                       {b.status}
                     </span>
                   </div>
-                  <span style={{ fontSize: "12px", color: P.muted }}>{b.inviteeEmail}</span>
+                  <span style={{ fontSize: sf(12), color: P.muted }}>{b.inviteeEmail}</span>
                   <div className="flex items-center gap-3 mt-1.5">
                     <span className="flex items-center gap-1 text-[11px]" style={{ color: P.textSecondary }}>
                       <IconCalendarEvent size={11} />
@@ -1057,7 +1058,7 @@ function BookingPreview({
         <button onClick={onBack} style={{ color: P.muted }}>
           <IconChevronLeft size={18} />
         </button>
-        <span style={{ fontSize: "13px", fontWeight: 500, color: P.muted }}>Booking page preview</span>
+        <span style={{ fontSize: sf(13), fontWeight: 500, color: P.muted }}>Booking page preview</span>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -1066,25 +1067,25 @@ function BookingPreview({
             {/* Left: Meeting info */}
             <div className="lg:w-[220px] shrink-0 px-6 py-6 flex flex-col gap-4" style={{ borderRight: `1px solid ${P.divider}` }}>
               <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${mt.color}15` }}>
-                <span style={{ fontSize: "16px", fontWeight: 600, color: mt.color }}>H</span>
+                <span style={{ fontSize: sf(16), fontWeight: 600, color: mt.color }}>H</span>
               </div>
               <div>
-                <span style={{ fontSize: "12px", color: P.dim }}>Hologram</span>
-                <h2 style={{ fontSize: "20px", fontWeight: 700, color: P.text, fontFamily: serif, marginTop: "2px" }}>
+                <span style={{ fontSize: sf(12), color: P.dim }}>Hologram</span>
+                <h2 style={{ fontSize: sf(20), fontWeight: 700, color: P.text, fontFamily: serif, marginTop: "2px" }}>
                   {mt.title}
                 </h2>
               </div>
               {mt.description && (
-                <p style={{ fontSize: "13px", color: P.muted, lineHeight: 1.5 }}>{mt.description}</p>
+                <p style={{ fontSize: sf(13), color: P.muted, lineHeight: 1.5 }}>{mt.description}</p>
               )}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <IconClock size={14} style={{ color: P.dim }} />
-                  <span style={{ fontSize: "13px", color: P.textSecondary }}>{mt.durationMinutes} min</span>
+                  <span style={{ fontSize: sf(13), color: P.textSecondary }}>{mt.durationMinutes} min</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <LocIcon size={14} style={{ color: P.dim }} />
-                  <span style={{ fontSize: "13px", color: P.textSecondary }}>
+                  <span style={{ fontSize: sf(13), color: P.textSecondary }}>
                     {LOCATION_TYPES.find(l => l.key === mt.locationType)?.label}
                   </span>
                 </div>
@@ -1093,7 +1094,7 @@ function BookingPreview({
 
             {/* Right: Calendar + time slots */}
             <div className="flex-1 px-5 py-5">
-              <h3 style={{ fontSize: "15px", fontWeight: 600, color: P.text, marginBottom: "12px" }}>
+              <h3 style={{ fontSize: sf(15), fontWeight: 600, color: P.text, marginBottom: "12px" }}>
                 Select a Date & Time
               </h3>
 
@@ -1102,13 +1103,13 @@ function BookingPreview({
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-3">
                     <button onClick={() => navMonth(-1)} style={{ color: P.muted }}><IconChevronLeft size={16} /></button>
-                    <span style={{ fontSize: "14px", fontWeight: 600, color: P.text }}>{MONTHS[viewMonth]} {viewYear}</span>
+                    <span style={{ fontSize: sf(14), fontWeight: 600, color: P.text }}>{MONTHS[viewMonth]} {viewYear}</span>
                     <button onClick={() => navMonth(1)} style={{ color: P.muted }}><IconChevronRight size={16} /></button>
                   </div>
 
                   <div className="grid grid-cols-7 gap-px mb-1">
                     {DAYS_H.map(d => (
-                      <div key={d} className="text-center py-1" style={{ fontSize: "11px", fontWeight: 600, color: P.dim }}>
+                      <div key={d} className="text-center py-1" style={{ fontSize: sf(11), fontWeight: 600, color: P.dim }}>
                         {d}
                       </div>
                     ))}
@@ -1144,7 +1145,7 @@ function BookingPreview({
                   {/* Timezone note */}
                   <div className="flex items-center gap-1.5 mt-3">
                     <IconWorld size={12} style={{ color: P.dim }} />
-                    <span style={{ fontSize: "11px", color: P.dim }}>
+                    <span style={{ fontSize: sf(11), color: P.dim }}>
                       {Intl.DateTimeFormat().resolvedOptions().timeZone}
                     </span>
                   </div>
@@ -1158,12 +1159,12 @@ function BookingPreview({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: P.text, marginBottom: "8px" }}>
+                    <div style={{ fontSize: sf(13), fontWeight: 600, color: P.text, marginBottom: "8px" }}>
                       {DAYS_FULL[new Date(viewYear, viewMonth, selectedDay).getDay()]}, {MONTHS[viewMonth]} {selectedDay}
                     </div>
                     <div className="space-y-1.5 max-h-[280px] overflow-y-auto pr-1">
                       {availableSlots.length === 0 ? (
-                        <span style={{ fontSize: "12px", color: P.dim }}>No slots available</span>
+                        <span style={{ fontSize: sf(12), color: P.dim }}>No slots available</span>
                       ) : (
                         availableSlots.map(slot => (
                           <button
@@ -1203,15 +1204,15 @@ function BookingPreview({
             <button
               onClick={() => setStep("date")}
               className="flex items-center gap-1 mb-5"
-              style={{ fontSize: "13px", color: P.muted }}
+              style={{ fontSize: sf(13), color: P.muted }}
             >
               <IconChevronLeft size={14} /> Back
             </button>
 
-            <h3 style={{ fontSize: "18px", fontWeight: 700, color: P.text, fontFamily: serif, marginBottom: "4px" }}>
+            <h3 style={{ fontSize: sf(18), fontWeight: 700, color: P.text, fontFamily: serif, marginBottom: "4px" }}>
               Confirm your booking
             </h3>
-            <p style={{ fontSize: "13px", color: P.muted, marginBottom: "20px" }}>
+            <p style={{ fontSize: sf(13), color: P.muted, marginBottom: "20px" }}>
               {mt.title} · {mt.durationMinutes} min
             </p>
 
@@ -1222,10 +1223,10 @@ function BookingPreview({
             >
               <IconCalendarEvent size={16} style={{ color: mt.color }} />
               <div>
-                <div style={{ fontSize: "14px", fontWeight: 600, color: P.text }}>
+                <div style={{ fontSize: sf(14), fontWeight: 600, color: P.text }}>
                   {selectedDay && `${DAYS_FULL[new Date(viewYear, viewMonth, selectedDay).getDay()]}, ${MONTHS[viewMonth]} ${selectedDay}, ${viewYear}`}
                 </div>
-                <div style={{ fontSize: "13px", color: P.muted }}>
+                <div style={{ fontSize: sf(13), color: P.muted }}>
                   {selectedSlot} · {mt.durationMinutes} minutes
                 </div>
               </div>
@@ -1233,24 +1234,24 @@ function BookingPreview({
 
             <div className="space-y-3">
               <div>
-                <label className="block mb-1" style={{ fontSize: "12px", fontWeight: 600, color: P.textSecondary }}>Your name</label>
+                <label className="block mb-1" style={{ fontSize: sf(12), fontWeight: 600, color: P.textSecondary }}>Your name</label>
                 <input
                   value={invName}
                   onChange={e => setInvName(e.target.value)}
                   placeholder="Full name"
                   className="w-full rounded-xl px-4 py-2.5 outline-none"
-                  style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: "14px" }}
+                  style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: sf(14) }}
                 />
               </div>
               <div>
-                <label className="block mb-1" style={{ fontSize: "12px", fontWeight: 600, color: P.textSecondary }}>Email address</label>
+                <label className="block mb-1" style={{ fontSize: sf(12), fontWeight: 600, color: P.textSecondary }}>Email address</label>
                 <input
                   type="email"
                   value={invEmail}
                   onChange={e => setInvEmail(e.target.value)}
                   placeholder="you@example.com"
                   className="w-full rounded-xl px-4 py-2.5 outline-none"
-                  style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: "14px" }}
+                  style={{ background: P.surface, border: `1px solid ${P.divider}`, color: P.text, fontSize: sf(14) }}
                 />
               </div>
             </div>

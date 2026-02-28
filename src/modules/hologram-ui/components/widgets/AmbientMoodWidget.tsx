@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { sf } from "@/modules/hologram-ui/utils/scaledFontSize";
 
 interface Mood {
   label: string;
@@ -62,7 +63,7 @@ export default function AmbientMoodWidget() {
       {/* Message */}
       <span
         style={{
-          fontSize: "12px",
+          fontSize: sf(12),
           color: "hsla(0, 0%, 85%, 0.6)",
           fontStyle: "italic",
           letterSpacing: "0.04em",
@@ -85,7 +86,7 @@ export default function AmbientMoodWidget() {
               className="rounded-full transition-all duration-300"
               style={{
                 padding: "4px 12px",
-                fontSize: "10px",
+                fontSize: sf(10),
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
                 fontWeight: active ? 500 : 400,
