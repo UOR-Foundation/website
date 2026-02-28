@@ -11,7 +11,7 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit, CircleDot, BrainCircuit, Layers, Shield, GitMerge } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit, CircleDot, BrainCircuit, Layers, Shield, GitMerge, Gem } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
@@ -30,8 +30,9 @@ const FoliationPanel = React.lazy(() => import("@/modules/quantum/components/Fol
 const QuantumAttentionPanel = React.lazy(() => import("@/modules/quantum/components/QuantumAttentionPanel"));
 const GeometricECCPanel = React.lazy(() => import("@/modules/quantum/components/GeometricECCPanel"));
 const CompilationPipelinePanel = React.lazy(() => import("@/modules/quantum/components/CompilationPipelinePanel"));
+const OctonionAtlasPanel = React.lazy(() => import("@/modules/quantum/components/OctonionAtlasPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits" | "tinn" | "foliation" | "q-attention" | "geo-ecc" | "pipeline";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits" | "tinn" | "foliation" | "q-attention" | "geo-ecc" | "pipeline" | "octonion";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -56,6 +57,7 @@ export default function QuantumDashboardPage() {
     { key: "q-attention", label: "Q-Attention", icon: <BrainCircuit size={12} /> },
     { key: "geo-ecc", label: "Geo ECC", icon: <Shield size={12} /> },
     { key: "pipeline", label: "Pipeline", icon: <GitMerge size={12} /> },
+    { key: "octonion", label: "Octonions", icon: <Gem size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -77,6 +79,7 @@ export default function QuantumDashboardPage() {
     "q-attention": "Compiling attention head into quantum circuit…",
     "geo-ecc": "Building τ-mirror stabilizer code…",
     "pipeline": "Running Atlas compilation pipeline…",
+    "octonion": "Constructing Cayley-Dickson doubling tower…",
   };
 
   return (
@@ -144,6 +147,7 @@ export default function QuantumDashboardPage() {
            tab === "q-attention" ? <QuantumAttentionPanel /> :
            tab === "geo-ecc" ? <GeometricECCPanel /> :
            tab === "pipeline" ? <CompilationPipelinePanel /> :
+           tab === "octonion" ? <OctonionAtlasPanel /> :
            <SouriauThermodynamicsPanel />}
         </Suspense>
       </div>
@@ -350,6 +354,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "Tests", value: "12/12 ✓" },
       ],
     },
+    {
+      key: "octonion" as Tab,
+      title: "Cayley-Dickson ↔ Atlas",
+      phase: "Phase 25",
+      icon: <Gem size={24} />,
+      color: "hsl(30,70%,55%)",
+      description: "Constructs the Cayley-Dickson doubling tower R→C→H→O→S and maps each level to an Atlas structural layer. Verifies Hurwitz's theorem, Fano plane, and the 256=2⁸ Clifford connection.",
+      stats: [
+        { label: "Algebras", value: "5" },
+        { label: "Doublings", value: "4" },
+        { label: "Fano Lines", value: "7" },
+        { label: "Tests", value: "14/14 ✓" },
+      ],
+    },
   ];
 
   return (
@@ -431,6 +449,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "done", label: "Phase 22: Quantum-Native Attention — attention head → quantum circuit compilation (10 tests)" },
             { status: "done", label: "Phase 23: Geometric Error Correction — τ-mirror stabilizer code [[96,48,2]] (12 tests)" },
             { status: "done", label: "Phase 24: Atlas Compilation Pipeline — model → Atlas → quantum circuit → OpenQASM 3.0 (12 tests)" },
+            { status: "done", label: "Phase 25: Cayley-Dickson ↔ Atlas — octonion doubling tower mapped to Atlas layers (14 tests)" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>
