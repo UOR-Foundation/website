@@ -13,7 +13,7 @@ import { FocusJournalProvider } from "@/modules/hologram-ui/hooks/useFocusJourna
 import FocusJournalOverlay from "@/modules/hologram-ui/components/FocusJournalOverlay";
 import AttentionToggle from "@/modules/hologram-ui/components/AttentionToggle";
 import { initializeContentRegistry } from "@/lib/uor-content-registry";
-import LumenFloatingPill from "@/modules/hologram-ui/components/LumenFloatingPill";
+
 import GlobalFloatingWidgets from "@/modules/hologram-ui/components/GlobalFloatingWidgets";
 import GlobalLumenOverlay from "@/modules/hologram-ui/components/GlobalLumenOverlay";
 import HologramSearch from "@/modules/hologram-ui/components/HologramSearch";
@@ -175,7 +175,7 @@ const App = () => {
       <BrowserRouter>
         <ReferralTracker />
         <ScreenContextProvider>
-        <LumenFloatingPill />
+        
         <GlobalFloatingWidgets />
         <GlobalLumenOverlay />
         <HologramSearch />

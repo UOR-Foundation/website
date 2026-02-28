@@ -8,7 +8,7 @@
  *   - will-change: width for compositor-promoted expansion
  */
 
-import { useCallback, useState, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, User, Globe, Cpu, Database,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 import DataBankIndicator from "./DataBankIndicator";
+import GenesisPopover from "./GenesisPopover";
 import { ShareTheLoveModal } from "./ShareTheLoveModal";
 import TextSizeControl from "./TextSizeControl";
 import { useTextSize, type TextSize } from "@/modules/hologram-ui/hooks/useTextSize";
@@ -137,6 +138,7 @@ export default function DesktopOsSidebar({
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [genesisOpen, setGenesisOpen] = useState(false);
   const { textSize, setTextSize } = useTextSize();
 
   // Text size changes flow through kernel automatically via useTextSize
@@ -457,11 +459,11 @@ export default function DesktopOsSidebar({
         </IconTooltip>
       </div>
 
-      {/* ── Genesis Dot — Lumen AI trigger at the very bottom ── */}
+      {/* ── Genesis Dot — kernel heartbeat summary ────────── */}
       <div className="flex justify-center pb-5 pt-1">
-        <IconTooltip label="Lumen AI" show={!expanded}>
+        <IconTooltip label="Genesis" show={!expanded}>
           <button
-            onClick={() => collapseAndDo(onNewChat)}
+            onClick={() => collapseAndDo(() => setGenesisOpen(true))}
             className="group relative flex items-center justify-center transition-all duration-300"
             style={{
               width: expanded ? "100%" : "44px",
@@ -473,7 +475,6 @@ export default function DesktopOsSidebar({
               padding: expanded ? "0 14px" : 0,
             }}
           >
-            {/* Breathing dot */}
             <div
               className="rounded-full transition-all duration-500 group-hover:scale-125"
               style={{
@@ -490,7 +491,7 @@ export default function DesktopOsSidebar({
                 className="text-[13px] font-light tracking-wide ml-3 whitespace-nowrap"
                 style={{ color: "var(--sb-gold)" }}
               >
-                Lumen AI
+                Genesis
               </span>
             )}
           </button>
@@ -499,6 +500,7 @@ export default function DesktopOsSidebar({
     </aside>
 
     <ShareTheLoveModal open={shareOpen} onClose={() => setShareOpen(false)} />
+    <GenesisPopover open={genesisOpen} onClose={() => setGenesisOpen(false)} bgMode={bgMode} />
     </>
   );
 }
