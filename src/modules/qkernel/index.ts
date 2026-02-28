@@ -191,3 +191,31 @@ export type {
   FullMitigationResult,
   MitigationConfig,
 } from "./q-error-mitigation";
+
+// Q-Sovereignty: Single entry point for sovereign identity
+export { QSovereignty } from "./q-sovereignty";
+export type {
+  AuthUser,
+  SovereignIdentity,
+  GenesisResult,
+  SovereigntyStats,
+} from "./q-sovereignty";
+
+// Q-Ceremony: Founding ceremony engine
+export { executeFoundingCeremony, verifyCollapseIntegrity } from "./q-ceremony";
+export type {
+  FoundingCeremony,
+  SignedCeremony,
+  CeremonyResult,
+  CeremonyAttribute,
+  CollapseVerification,
+} from "./q-ceremony";
+
+// Q-Three-Word: Canonical three-word identity names
+export {
+  deriveThreeWordName,
+  reverseThreeWordName,
+  parseThreeWordDisplay,
+  verifyThreeWordBijection,
+} from "./q-three-word";
+export type { ThreeWordName } from "./q-three-word";
