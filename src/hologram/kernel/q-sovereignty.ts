@@ -13,7 +13,6 @@ import { toHex, encodeUtf8 } from "@/hologram/genesis/axiom-ring";
 import { sha256 } from "@/hologram/genesis/axiom-hash";
 import { createCid } from "@/hologram/genesis/axiom-cid";
 import { canonicalEncode } from "@/hologram/genesis/axiom-codec";
-import { singleProofHash } from "@/modules/uns/core/identity";
 import type { UorCanonicalIdentity } from "@/modules/uns/core/identity";
 import {
   executeFoundingCeremony,
@@ -114,8 +113,8 @@ export class QSovereignty {
         : []),
     ]);
 
-    // ── Step 3: Verify Observer-Collapse (async — WebCrypto) ──
-    const collapseCheck = await verifyCollapseIntegrity(
+    // ── Step 3: Verify Observer-Collapse (now sync) ──
+    const collapseCheck = verifyCollapseIntegrity(
       ceremony.signedCeremony as unknown as FoundingCeremony
     );
     if (!collapseCheck.intact) {
@@ -178,7 +177,7 @@ export class QSovereignty {
   getSovereign(): SovereignIdentity | null { return this.sovereign; }
   getThreeWordName(): ThreeWordName | null { return this.sovereign?.threeWordName ?? null; }
 
-  async verifyIntegrity(): Promise<CollapseVerification | null> {
+  verifyIntegrity(): CollapseVerification | null {
     if (!this.sovereign) return null;
     return verifyCollapseIntegrity(this.sovereign.signedCeremony as unknown as FoundingCeremony);
   }

@@ -20,14 +20,20 @@
  * produces a different nonce → different hash → collapsed state.
  * The original ceremony becomes unrecoverable.
  *
+ * Genesis axiom migration:
+ *   sha256, bytesToHex → axiom-hash, axiom-ring (sync)
+ *   singleProofHash, generateKeypair, signRecord → @/modules/uns/core
+ *     (irreducible: URDNA2015 canonicalization + @noble/post-quantum)
+ *
  * @module qkernel/q-ceremony
  */
 
+import { toHex } from "@/hologram/genesis/axiom-ring";
+import { sha256 } from "@/hologram/genesis/axiom-hash";
 import { singleProofHash } from "@/modules/uns/core/identity";
 import type { UorCanonicalIdentity } from "@/modules/uns/core/identity";
 import { generateKeypair, signRecord } from "@/modules/uns/core/keypair";
 import type { UnsKeypair, SignedRecord } from "@/modules/uns/core/keypair";
-import { sha256, bytesToHex } from "@/modules/uns/core/address";
 import { deriveThreeWordName, type ThreeWordName } from "./q-three-word";
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -100,14 +106,6 @@ export interface CollapseVerification {
 
 /**
  * Generate a cryptographically secure observer-collapse nonce.
- *
- * This nonce is the quantum-security primitive: it is generated ONCE
- * at ceremony time and bound into the ceremony hash. Any interception
- * that reads or copies the nonce changes the ceremony context —
- * producing a different hash — collapsing the original state.
- *
- * The nonce is 32 bytes of crypto.getRandomValues() — 256 bits of
- * entropy that cannot be predicted, replayed, or reconstructed.
  */
 function generateCollapseNonce(): Uint8Array {
   const nonce = new Uint8Array(32);
@@ -116,28 +114,32 @@ function generateCollapseNonce(): Uint8Array {
 }
 
 /**
- * Compute the collapse witness hash.
+ * Compute the collapse witness hash (now sync via genesis axioms).
  *
  * H(nonce || canonicalId || timestamp) — if ANY component changes,
  * the witness changes, proving the state was observed/tampered.
  */
-async function computeCollapseHash(
+function computeCollapseHash(
   nonce: Uint8Array,
   canonicalId: string,
   timestamp: string
-): Promise<{ collapseHash: string; entanglementBit: string }> {
-  const payload = new Uint8Array([
-    ...nonce,
-    ...new TextEncoder().encode(canonicalId),
-    ...new TextEncoder().encode(timestamp),
-  ]);
-  const hashBytes = await sha256(payload);
-  const hex = bytesToHex(hashBytes);
+): { collapseHash: string; entanglementBit: string } {
+  const encoder = new TextEncoder();
+  const idBytes = encoder.encode(canonicalId);
+  const tsBytes = encoder.encode(timestamp);
+
+  // Concatenate nonce + canonicalId + timestamp
+  const payload = new Uint8Array(nonce.length + idBytes.length + tsBytes.length);
+  payload.set(nonce, 0);
+  payload.set(idBytes, nonce.length);
+  payload.set(tsBytes, nonce.length + idBytes.length);
+
+  // Sync SHA-256 via genesis axiom
+  const hashBytes = sha256(payload);
+  const hex = toHex(hashBytes);
 
   return {
     collapseHash: hex,
-    // The entanglement bit: first bit of the collapse hash
-    // If the creator's stored bit differs from recomputed, state collapsed
     entanglementBit: (hashBytes[0] & 0x80) !== 0 ? "1" : "0",
   };
 }
@@ -149,22 +151,9 @@ async function computeCollapseHash(
 /**
  * Execute the Founding Ceremony — create a new sovereign identity.
  *
- * This is the ONE function that creates identity. It:
- *   1. Generates a Dilithium-3 keypair (post-quantum)
- *   2. Derives all four identity forms via singleProofHash
- *   3. Derives the three-word canonical name
- *   4. Generates observer-collapse nonce (anti-interception)
- *   5. Constructs the ceremony JSON-LD record
- *   6. Signs the ceremony with Dilithium-3 (quantum-resistant witness)
- *   7. Content-addresses the signed ceremony (founding derivation CID)
- *
- * Security guarantees:
- *   - Post-quantum: Dilithium-3 lattice-based signatures
- *   - Observer-collapse: nonce-bound state that detects interception
- *   - Single entry: this function is the ONLY way to create identity
- *   - Non-replayable: timestamp + nonce = unique per execution
- *
- * @param initialAttributes Optional attributes for the identity object
+ * Async boundary: generateKeypair (WebCrypto), singleProofHash (URDNA2015),
+ * signRecord (@noble/post-quantum). These are irreducible I/O boundaries.
+ * All hashing is now sync via genesis axioms.
  */
 export async function executeFoundingCeremony(
   initialAttributes: CeremonyAttribute[] = []
@@ -172,11 +161,10 @@ export async function executeFoundingCeremony(
   // ── Step 1: Generate post-quantum keypair ──────────────────────
   const keypair = await generateKeypair();
 
-  // ── Step 2: Derive identity (already done by generateKeypair) ──
+  // ── Step 2: Derive identity (URDNA2015 → SHA-256 → identity) ──
   const identity = await singleProofHash(keypair.publicKeyObject);
 
   // ── Step 3: Extract hash bytes for three-word derivation ───────
-  // Parse the hex from the canonical ID: urn:uor:derivation:sha256:{hex64}
   const hexStr = identity["u:canonicalId"].split(":").pop() ?? "";
   const hashBytes = new Uint8Array(
     (hexStr.match(/.{2}/g) ?? []).map(h => parseInt(h, 16))
@@ -185,10 +173,10 @@ export async function executeFoundingCeremony(
   // ── Step 4: Derive three-word name ─────────────────────────────
   const threeWordName = deriveThreeWordName(hashBytes);
 
-  // ── Step 5: Observer-collapse nonce ────────────────────────────
+  // ── Step 5: Observer-collapse nonce (now sync) ─────────────────
   const timestamp = new Date().toISOString();
   const collapseNonce = generateCollapseNonce();
-  const { collapseHash, entanglementBit } = await computeCollapseHash(
+  const { collapseHash, entanglementBit } = computeCollapseHash(
     collapseNonce,
     identity["u:canonicalId"],
     timestamp
@@ -215,7 +203,7 @@ export async function executeFoundingCeremony(
       ...initialAttributes,
     ],
     "uor:observerCollapse": {
-      nonce: bytesToHex(collapseNonce),
+      nonce: toHex(collapseNonce),
       collapseHash,
       entanglementBit,
     },
@@ -240,27 +228,23 @@ export async function executeFoundingCeremony(
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Observer-Collapse Verification
+// Observer-Collapse Verification (now sync)
 // ═══════════════════════════════════════════════════════════════════════
 
 /**
  * Verify that a ceremony's observer-collapse state is intact.
  *
- * Recomputes the collapse hash from the stored nonce and identity.
- * If the recomputed hash differs from the stored one, the state
- * was observed/tampered — the quantum analogy of wavefunction collapse.
- *
- * This is the mathematical guarantee: interception = detection.
+ * Now fully sync — sha256 from genesis axioms.
  */
-export async function verifyCollapseIntegrity(
+export function verifyCollapseIntegrity(
   ceremony: FoundingCeremony
-): Promise<CollapseVerification> {
+): CollapseVerification {
   const nonceHex = ceremony["uor:observerCollapse"].nonce;
   const nonceBytes = new Uint8Array(
     (nonceHex.match(/.{2}/g) ?? []).map(h => parseInt(h, 16))
   );
 
-  const { collapseHash: recomputed } = await computeCollapseHash(
+  const { collapseHash: recomputed } = computeCollapseHash(
     nonceBytes,
     ceremony["uor:subject"].canonicalId,
     ceremony["uor:timestamp"]
