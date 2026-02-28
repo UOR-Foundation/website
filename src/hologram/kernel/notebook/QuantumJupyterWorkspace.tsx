@@ -100,6 +100,8 @@ function generateScientificReport(
   mitigatedCounts: Record<string, number> | null,
   mitigationStages: string[],
   controlValues: Record<string, number | string | boolean>,
+  benchmarkMs?: number | null,
+  benchmarkDetail?: { gates: number; qubits: number; stateSize: number; shots: number } | null,
 ): string {
   const timestamp = new Date().toISOString();
   const dateHuman = new Date().toLocaleString("en-US", { dateStyle: "full", timeStyle: "long" });
@@ -245,7 +247,19 @@ ${circuitOutput ? `\`\`\`\n${circuitOutput.content}\n\`\`\`` : "Circuit diagram 
 ${svOutput ? `\`\`\`\n${svOutput.content}\n\`\`\`` : "Statevector output not included in this run."}
 
 ${textOutputs.length > 0 ? `### 3.4 Additional Outputs\n${textOutputs.map(o => `\`\`\`\n${o.content}\n\`\`\``).join("\n")}` : ""}
-${statsSection}${mitigationSection}${rawDataSection}
+${statsSection}${benchmarkMs != null && benchmarkDetail ? `
+## PERFORMANCE BENCHMARK
+
+| Metric | Value |
+|--------|-------|
+| Total Execution Time | ${benchmarkMs < 1 ? `${(benchmarkMs * 1000).toFixed(0)} µs` : benchmarkMs < 1000 ? `${benchmarkMs.toFixed(2)} ms` : `${(benchmarkMs / 1000).toFixed(3)} s`} |
+| Qubits | ${benchmarkDetail.qubits} |
+| Gate Operations | ${benchmarkDetail.gates} |
+| Hilbert Space Dimension | 2^${benchmarkDetail.qubits} = ${benchmarkDetail.stateSize} |
+| Measurement Shots | ${benchmarkDetail.shots.toLocaleString()} |
+${benchmarkDetail.gates > 0 ? `| Per-Gate Latency | ${((benchmarkMs / benchmarkDetail.gates) * 1000).toFixed(0)} µs/gate |
+| Gate Throughput | ${(benchmarkDetail.gates / (benchmarkMs / 1000)).toFixed(0)} gates/s |` : ""}
+` : ""}${mitigationSection}${rawDataSection}
 ## REPRODUCIBILITY STATEMENT
 
 This experiment was executed on the Hologram Q-Linux statevector simulator,
@@ -777,6 +791,8 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
   const [mitigatedCounts, setMitigatedCounts] = useState<Record<string, number> | null>(null);
   const [mitigationStages, setMitigationStages] = useState<string[]>([]);
   const [zneValue, setZneValue] = useState<number | null>(null);
+  const [benchmarkMs, setBenchmarkMs] = useState<number | null>(null);
+  const [benchmarkDetail, setBenchmarkDetail] = useState<{ gates: number; qubits: number; stateSize: number; shots: number } | null>(null);
 
   const anyMitigationEnabled = enableZne || enableMem || enableRc;
 
@@ -790,12 +806,22 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
       k.noiseModel = realisticNoise(noiseLevel as "low" | "medium" | "high");
     }
 
+    const t0 = performance.now();
     const allOutputs: CellOutput[] = [];
     for (const cell of template.cells) {
       if (cell.type === "code") {
         allOutputs.push(...executeCell(k, cell));
       }
     }
+    const t1 = performance.now();
+    const elapsedMs = t1 - t0;
+    setBenchmarkMs(elapsedMs);
+    setBenchmarkDetail({
+      gates: k.circuit?.ops.length ?? 0,
+      qubits: k.circuit?.numQubits ?? 0,
+      stateSize: k.circuit ? Math.pow(2, k.circuit.numQubits) : 0,
+      shots: (controlValues["shots"] as number) || 1024,
+    });
     setOutputs(allOutputs);
 
     // Run error mitigation if any toggle is on and we have a circuit
@@ -863,6 +889,7 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
             const report = generateScientificReport(
               demo.name, demo.description, outputs,
               rawCounts, mitigatedCounts, mitigationStages, controlValues,
+              benchmarkMs, benchmarkDetail,
             );
             downloadReport(report, `${demo.id}-report-${Date.now()}.md`);
           }}
@@ -967,6 +994,53 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
         {/* Results */}
         <div className="w-80 shrink-0 p-5 space-y-4 overflow-y-auto" style={{ borderLeft: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
           <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Results</h3>
+
+          {/* Timing benchmark */}
+          {benchmarkMs !== null && benchmarkDetail && (
+            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid hsla(220, 40%, 50%, 0.12)" }}>
+              <div className="px-3 py-2 flex items-center gap-2" style={{ background: "hsla(220, 40%, 50%, 0.04)", borderBottom: "1px solid hsla(220, 40%, 50%, 0.08)" }}>
+                <Zap size={12} style={{ color: "hsl(220, 45%, 50%)" }} />
+                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "hsl(220, 30%, 45%)" }}>Performance Benchmark</span>
+              </div>
+              <div className="px-3 py-2.5 space-y-2">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-xs font-medium" style={{ color: "hsl(0, 0%, 35%)" }}>Total Execution</span>
+                  <span className="text-lg font-mono font-bold" style={{ color: benchmarkMs < 10 ? "hsl(152, 45%, 40%)" : benchmarkMs < 100 ? "hsl(38, 50%, 42%)" : "hsl(0, 50%, 50%)" }}>
+                    {benchmarkMs < 1 ? `${(benchmarkMs * 1000).toFixed(0)} µs` : benchmarkMs < 1000 ? `${benchmarkMs.toFixed(2)} ms` : `${(benchmarkMs / 1000).toFixed(3)} s`}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                  {[
+                    { label: "Qubits", value: String(benchmarkDetail.qubits) },
+                    { label: "Gate Ops", value: String(benchmarkDetail.gates) },
+                    { label: "State Dim", value: `2^${benchmarkDetail.qubits} = ${benchmarkDetail.stateSize}` },
+                    { label: "Shots", value: benchmarkDetail.shots.toLocaleString() },
+                  ].map(m => (
+                    <div key={m.label} className="flex items-center justify-between">
+                      <span className="text-[10px]" style={{ color: "hsl(0, 0%, 55%)" }}>{m.label}</span>
+                      <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>{m.value}</span>
+                    </div>
+                  ))}
+                </div>
+                {benchmarkDetail.gates > 0 && (
+                  <div className="pt-1.5" style={{ borderTop: "1px solid hsla(0, 0%, 50%, 0.06)" }}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px]" style={{ color: "hsl(0, 0%, 55%)" }}>Per Gate</span>
+                      <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>
+                        {((benchmarkMs / benchmarkDetail.gates) * 1000).toFixed(0)} µs/gate
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px]" style={{ color: "hsl(0, 0%, 55%)" }}>Throughput</span>
+                      <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>
+                        {(benchmarkDetail.gates / (benchmarkMs / 1000)).toFixed(0)} gates/s
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Before/After comparison when mitigation is active */}
           {rawCounts && mitigatedCounts && anyMitigationEnabled && (
