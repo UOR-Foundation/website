@@ -1,5 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { boot, type QKernelBoot } from "@/modules/qkernel/q-boot";
+import {
+  createState,
+  applyOp,
+  measure as simMeasure,
+  formatStatevector,
+  drawCircuitASCII,
+  toOpenQASM,
+  entanglementMap,
+  type SimulatorState,
+  type SimOp,
+} from "@/modules/qkernel/q-simulator";
 import { QMmu } from "@/modules/qkernel/q-mmu";
 import { QSched, type QProcess, type SchedStats } from "@/modules/qkernel/q-sched";
 import { QSyscall } from "@/modules/qkernel/q-syscall";
@@ -126,15 +137,8 @@ export function useQShell() {
     ".." : "cd ..",
   });
 
-  // ── Qiskit session-based circuit builder ───────────────────
-  interface QiskitCircuitState {
-    name: string;
-    numQubits: number;
-    numClbits: number;
-    ops: { gate: string; qubits: number[]; clbits?: number[]; param?: number }[];
-    measured: boolean;
-  }
-  const qiskitCircuitRef = useRef<QiskitCircuitState | null>(null);
+  // ── Qiskit session-based circuit builder (real statevector simulator) ──
+  const qiskitCircuitRef = useRef<SimulatorState | null>(null);
 
   /** Map Qiskit gate names → Q-ISA gate names */
   const QISKIT_GATE_MAP: Record<string, { qisa: string; qubits: number; desc: string }> = {
@@ -168,45 +172,9 @@ export function useQShell() {
     fredkin: { qisa: "SWAP_V1", qubits: 3, desc: "Fredkin (CSWAP)" },
   };
 
-  /** Draw ASCII circuit diagram */
-  const drawCircuit = useCallback((circ: QiskitCircuitState): string[] => {
-    const lines: string[] = [];
-    const wires: string[][] = [];
-    for (let q = 0; q < circ.numQubits; q++) {
-      wires.push([`q_${q}: ┤`]);
-    }
-    for (const op of circ.ops) {
-      if (op.gate === "measure") {
-        for (const q of op.qubits) {
-          wires[q].push("M");
-        }
-      } else if (op.gate === "barrier") {
-        for (let q = 0; q < circ.numQubits; q++) {
-          wires[q].push("░");
-        }
-      } else {
-        const label = op.gate.toUpperCase();
-        const padded = ` ${label.length <= 3 ? label : label.slice(0, 3)} `;
-        for (let q = 0; q < circ.numQubits; q++) {
-          if (op.qubits.includes(q)) {
-            if (op.qubits.length >= 2 && q === op.qubits[0]) {
-              wires[q].push("──●──");
-            } else {
-              wires[q].push(`─${padded}─`);
-            }
-          } else {
-            wires[q].push("─────");
-          }
-        }
-      }
-    }
-    for (let q = 0; q < circ.numQubits; q++) {
-      lines.push(wires[q].join("") + "─┤");
-    }
-    if (circ.numClbits > 0) {
-      lines.push(`c: ${circ.numClbits}/${"═".repeat(Math.max(1, lines[0]?.length - 5 || 10))}`);
-    }
-    return lines;
+  /** Draw ASCII circuit diagram — delegates to real simulator */
+  const drawCircuit = useCallback((circ: SimulatorState): string[] => {
+    return drawCircuitASCII(circ);
   }, []);
 
   const log = useCallback((msg: string) => {
@@ -1503,10 +1471,12 @@ export function useQShell() {
           log("    qiskit run [shots]        Execute (default: 1024 shots)");
           log("    qiskit counts             Show measurement results");
           log("");
-          log("  More:");
+          log("  Inspect & export:");
+          log("    qiskit statevector        Show full state vector (complex amplitudes)");
+          log("    qiskit entanglement       Show qubit entanglement map");
+          log("    qiskit qasm               Export circuit as OpenQASM 3.0");
           log("    qiskit transpile          Optimize for Q-Linux backend");
-          log("    qiskit statevector        Show state vector");
-          log("    qiskit decompose          Decompose to Clifford+T");
+          log("    qiskit decompose          Decompose to Clifford+T basis");
           log("    qiskit backends           List available backends");
           log("    qiskit gates              List all available gates");
           log("    qiskit reset              Clear current circuit");
@@ -1520,17 +1490,11 @@ export function useQShell() {
         if (subcmd === "circuit") {
           const n = parseInt(parts[2] || "0");
           const m = parseInt(parts[3] || String(n));
-          if (n < 1 || n > 96) {
-            log("qiskit: circuit needs 1–96 qubits");
+          if (n < 1 || n > 16) {
+            log("qiskit: circuit needs 1–16 qubits (statevector simulator)");
             break;
           }
-          qiskitCircuitRef.current = {
-            name: `circuit_${Date.now() % 10000}`,
-            numQubits: n,
-            numClbits: m,
-            ops: [],
-            measured: false,
-          };
+          qiskitCircuitRef.current = createState(n, m, `circuit_${Date.now() % 10000}`);
           log(`QuantumCircuit(${n}, ${m})`);
           log(`  ${n} qubits, ${m} classical bits`);
           log(`  Backend: q-linux-simulator (96-gate ISA, ECC-protected)`);
@@ -1602,8 +1566,21 @@ export function useQShell() {
             log(`qiskit: no circuit. Create one first: qiskit circuit <n>`);
             break;
           }
-          const qubits = parts.slice(2).map(Number);
-          if (qubits.length < gateMapping.qubits || qubits.some(isNaN)) {
+          // Parse qubit indices and optional angle params
+          const rawArgs = parts.slice(2);
+          const qubits: number[] = [];
+          const params: number[] = [];
+          for (const a of rawArgs) {
+            const num = Number(a);
+            if (!isNaN(num) && Number.isInteger(num) && num >= 0 && num < circ.numQubits) {
+              qubits.push(num);
+            } else if (!isNaN(parseFloat(a))) {
+              // Could be an angle param like 3.14 or pi/2
+              const val = a.includes("pi") ? eval(a.replace(/pi/g, String(Math.PI))) : parseFloat(a);
+              params.push(val);
+            }
+          }
+          if (qubits.length < gateMapping.qubits) {
             log(`qiskit: ${subcmd} needs ${gateMapping.qubits} qubit(s). Usage: qiskit ${subcmd} ${Array.from({ length: gateMapping.qubits }, (_, i) => `<q${i}>`).join(" ")}`);
             break;
           }
@@ -1612,9 +1589,11 @@ export function useQShell() {
             log(`qiskit: qubit ${outOfRange} out of range (circuit has ${circ.numQubits} qubits: 0–${circ.numQubits - 1})`);
             break;
           }
-          circ.ops.push({ gate: subcmd, qubits });
+          const simOp: SimOp = { gate: subcmd, qubits, params: params.length > 0 ? params : undefined };
+          circ.ops.push(simOp);
           const qStr = qubits.join(", ");
-          log(`  circuit.${subcmd}(${qStr})    →  ${gateMapping.qisa} [${gateMapping.desc}]`);
+          const pStr = params.length > 0 ? `, ${params.map(p => p.toFixed(4)).join(", ")}` : "";
+          log(`  circuit.${subcmd}(${qStr}${pStr})    →  ${gateMapping.qisa} [${gateMapping.desc}]`);
           break;
         }
 
@@ -1685,62 +1664,19 @@ export function useQShell() {
           break;
         }
 
-        // ── run: Execute the circuit ──────────────────────────
+        // ── run: Execute the circuit (REAL statevector simulation) ──
         if (subcmd === "run") {
           if (!circ) { log("qiskit: no circuit active"); break; }
           const shots = parseInt(parts[2] || "1024");
-          log(`  Executing on q-linux-simulator...`);
-          log(`  Shots: ${shots}`);
+          const n = circ.numQubits;
+          const t0 = performance.now();
+          log(`  Executing on q-linux-simulator (statevector)...`);
+          log(`  Qubits: ${n}    Amplitudes: ${1 << n}    Shots: ${shots}`);
           log("");
 
-          const n = circ.numQubits;
-          const gateOps = circ.ops.filter(o => o.gate !== "measure" && o.gate !== "barrier");
-          const stateArr = new Array(n).fill(0);
-          for (const op of gateOps) {
-            const mapped = QISKIT_GATE_MAP[op.gate];
-            if (!mapped) continue;
-            if (mapped.qisa === "X" || mapped.qisa.startsWith("X_")) {
-              stateArr[op.qubits[0]] ^= 1;
-            } else if (mapped.qisa === "H" || mapped.qisa.startsWith("H_")) {
-              stateArr[op.qubits[0]] = stateArr[op.qubits[0]] === 0 ? 2 : 0;
-            } else if (mapped.qisa === "CNOT") {
-              if (stateArr[op.qubits[0]] === 1) stateArr[op.qubits[1]] ^= 1;
-              // Entanglement from superposition
-              if (stateArr[op.qubits[0]] === 2) stateArr[op.qubits[1]] = 2;
-            }
-          }
-
-          const hasSuperposition = stateArr.some(s => s === 2);
-          const counts: Record<string, number> = {};
-
-          if (hasSuperposition) {
-            const superQubits = stateArr.filter(s => s === 2).length;
-            const numOutcomes = Math.pow(2, superQubits);
-            let remaining = shots;
-            const superIndices = stateArr.map((s, i) => s === 2 ? i : -1).filter(i => i >= 0);
-
-            for (let combo = 0; combo < numOutcomes && combo < 16; combo++) {
-              const bits = stateArr.map((s, idx) => {
-                if (s === 2) {
-                  const superIdx = superIndices.indexOf(idx);
-                  return (combo >> superIdx) & 1 ? "1" : "0";
-                }
-                return s > 0 ? "1" : "0";
-              }).join("");
-              const expected = shots / numOutcomes;
-              const noise = Math.round((Math.random() - 0.5) * expected * 0.15);
-              const count = combo === numOutcomes - 1 ? remaining : Math.max(1, Math.round(expected + noise));
-              counts[bits] = Math.min(count, remaining);
-              remaining -= counts[bits];
-            }
-            if (remaining > 0) {
-              const k = Object.keys(counts);
-              counts[k[0]] = (counts[k[0]] || 0) + remaining;
-            }
-          } else {
-            const bits = stateArr.map(s => s > 0 ? "1" : "0").join("");
-            counts[bits] = shots;
-          }
+          // Real Born-rule measurement
+          const counts = simMeasure(circ, shots);
+          const elapsed = ((performance.now() - t0) / 1000).toFixed(3);
 
           log(`  Results:`);
           log(`  ┌${"─".repeat(n + 2)}┬────────┬────────┐`);
@@ -1752,10 +1688,12 @@ export function useQShell() {
           }
           log(`  └${"─".repeat(n + 2)}┴────────┴────────┘`);
           log("");
-          log(`  Backend: q-linux-simulator`);
-          log(`  ECC: ${gateOps.length > 0 ? "stabilizer protection active" : "idle"}`);
-          log(`  Time: ${(Math.random() * 0.5 + 0.1).toFixed(3)}s`);
+          log(`  Backend: q-linux-simulator (dense statevector)`);
+          log(`  Simulation: ${elapsed}s (${(1 << n)} complex amplitudes)`);
+          log(`  ECC: [[96,48,2]] stabilizer protection active`);
 
+          circ.lastCounts = counts;
+          circ.lastShots = shots;
           envVarsRef.current._QISKIT_LAST_COUNTS = JSON.stringify(counts);
           envVarsRef.current._QISKIT_LAST_SHOTS = String(shots);
           break;
@@ -1779,19 +1717,32 @@ export function useQShell() {
           break;
         }
 
-        // ── statevector ───────────────────────────────────────
+        // ── statevector (REAL) ─────────────────────────────────
         if (subcmd === "statevector") {
           if (!circ) { log("qiskit: no circuit active"); break; }
-          const gateOps = circ.ops.filter(o => o.gate !== "measure" && o.gate !== "barrier");
-          const hCount = gateOps.filter(o => o.gate === "h").length;
-          log(`  Statevector (${circ.numQubits} qubits, ${Math.pow(2, circ.numQubits)} amplitudes):`);
+          const lines = formatStatevector(circ);
+          for (const line of lines) log("  " + line);
+          break;
+        }
+
+        // ── qasm: Export OpenQASM 3.0 ─────────────────────────
+        if (subcmd === "qasm") {
+          if (!circ) { log("qiskit: no circuit active"); break; }
+          const lines = toOpenQASM(circ);
+          for (const line of lines) log("  " + line);
+          break;
+        }
+
+        // ── entanglement: Show entanglement map ───────────────
+        if (subcmd === "entanglement") {
+          if (!circ) { log("qiskit: no circuit active"); break; }
+          const emap = entanglementMap(circ);
+          log("  Entanglement map (via reduced density matrix purity):");
           log("");
-          if (hCount > 0) {
-            const amp = (1 / Math.sqrt(Math.pow(2, hCount))).toFixed(4);
-            log(`  [${amp}+0j, ${amp}+0j, ...]`);
-            log(`  (${Math.pow(2, hCount)} non-zero amplitudes, each with magnitude ${amp})`);
-          } else {
-            log(`  |${"0".repeat(circ.numQubits)}⟩ with amplitude 1.0`);
+          for (const e of emap) {
+            const bar = "█".repeat(Math.round((1 - e.purity) * 20));
+            const label = e.entangled ? "ENTANGLED" : "separable";
+            log(`  q${e.qubit}: purity=${e.purity.toFixed(4)}  ${bar}  ${label}`);
           }
           break;
         }
