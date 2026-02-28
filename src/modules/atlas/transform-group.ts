@@ -225,23 +225,44 @@ export function isIdentity(elem: TransformElement): boolean {
 
 /**
  * Compute the order of a group element (smallest k>0 with g^k = id).
+ * Uses direct permutation iteration rather than group composition,
+ * avoiding the compose() call which can fail for mixed mirror elements.
  */
 export function elementOrder(elem: TransformElement): number {
-  let current = elem;
-  for (let k = 1; k <= GROUP_ORDER; k++) {
-    if (applyTransform(0, current) === 0 &&
-        applyTransform(1, current) === 1 &&
-        applyTransform(2, current) === 2) {
-      // Verify fully
-      let isId = true;
-      for (let v = 0; v < ATLAS_VERTEX_COUNT; v++) {
-        if (applyTransform(v, current) !== v) { isId = false; break; }
-      }
-      if (isId) return k;
-    }
-    current = compose(current, elem);
+  // Build the permutation array for this element
+  const perm = new Array(ATLAS_VERTEX_COUNT);
+  for (let v = 0; v < ATLAS_VERTEX_COUNT; v++) {
+    perm[v] = applyTransform(v, elem);
   }
-  return GROUP_ORDER; // fallback
+
+  // The order is the LCM of cycle lengths in the permutation.
+  // Equivalently, it's the smallest k where perm^k = identity.
+  const visited = new Uint8Array(ATLAS_VERTEX_COUNT);
+  let order = 1;
+
+  for (let v = 0; v < ATLAS_VERTEX_COUNT; v++) {
+    if (visited[v]) continue;
+    let cycleLen = 0;
+    let cur = v;
+    while (!visited[cur]) {
+      visited[cur] = 1;
+      cur = perm[cur];
+      cycleLen++;
+    }
+    // LCM of order and cycleLen
+    order = lcm(order, cycleLen);
+  }
+
+  return order;
+}
+
+function gcd(a: number, b: number): number {
+  while (b) { [a, b] = [b, a % b]; }
+  return a;
+}
+
+function lcm(a: number, b: number): number {
+  return (a / gcd(a, b)) * b;
 }
 
 // ── Transitivity ──────────────────────────────────────────────────────────

@@ -394,3 +394,37 @@ export type {
   FanoAtlasConnection,
   FanoTest,
 } from "./fano-plane";
+
+// Virtual Qubit Instantiation Engine — Phase 5
+export {
+  instantiateFanoRegister,
+  buildSingleQubitGates,
+  buildTwoQubitGates,
+  buildThreeQubitGates,
+  singleQubitCircuit,
+  twoQubitCircuit,
+  threeQubitCircuit,
+  composeCircuits,
+  verifySingleQubitAlgebra,
+  verifyCollinearityAlgebra,
+  verifyFanoLineAlgebra,
+  verifyGateInventory,
+  verifyRegisterGeometry,
+  runVirtualQubitVerification,
+  FANO_REGISTER_SIZE,
+  SINGLE_QUBIT_GATE_COUNT,
+  TWO_QUBIT_GATE_COUNT,
+  THREE_QUBIT_GATE_COUNT,
+  MAX_SIMULATED_QUBITS,
+} from "./virtual-qubit-engine";
+export type {
+  Complex,
+  VirtualQubit,
+  GateArity,
+  VirtualGate,
+  GateApplication,
+  VirtualCircuit,
+  FanoRegister,
+  VirtualQubitEngineReport,
+  VQETest,
+} from "./virtual-qubit-engine";
