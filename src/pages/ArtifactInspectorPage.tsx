@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { UorArtifact, ArtifactVerification, DerivationNode } from "@/hologram/genesis/artifact";
 import { verifyArtifact } from "@/hologram/genesis/artifact";
@@ -293,6 +294,17 @@ export default function ArtifactInspectorPage() {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* Cross-link */}
+      <div className="mt-12 text-center">
+        <Link
+          to="/genesis"
+          className="inline-flex items-center gap-2 font-mono text-sm transition-colors"
+          style={{ color: "hsl(38, 40%, 62%)" }}
+        >
+          <span>→</span> Genesis Boot
+        </Link>
       </div>
     </div>
   );
