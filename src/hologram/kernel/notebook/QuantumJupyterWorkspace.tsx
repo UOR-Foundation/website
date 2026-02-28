@@ -20,6 +20,9 @@ import {
   Trash2, ArrowUp, ArrowDown, Type, PlayCircle,
   RotateCcw, ChevronRight, ChevronDown,
   Atom, Brain, BarChart3, Shield, Zap, Download,
+  Save, Scissors, Copy, ClipboardPaste, Square, FastForward,
+  StopCircle, SkipForward, ChevronUp, Search, Keyboard,
+  Eye, EyeOff, Hash, MoreHorizontal, Settings,
 } from "lucide-react";
 import {
   createKernel,
@@ -35,6 +38,98 @@ import {
 } from "@/hologram/kernel/notebook/notebook-engine";
 import { createState, simulateCircuit, realisticNoise, measure } from "@/hologram/kernel/q-simulator";
 
+/* ── Python Syntax Highlighter ────────────────────────────────────────────── */
+
+const PY_KEYWORDS = new Set([
+  "from", "import", "as", "def", "class", "return", "if", "elif", "else",
+  "for", "while", "in", "not", "and", "or", "is", "None", "True", "False",
+  "try", "except", "finally", "raise", "with", "yield", "lambda", "pass",
+  "break", "continue", "del", "global", "nonlocal", "assert",
+]);
+
+const PY_BUILTINS = new Set([
+  "print", "range", "len", "int", "float", "str", "list", "dict", "set",
+  "tuple", "type", "isinstance", "enumerate", "zip", "map", "filter",
+  "sorted", "reversed", "abs", "max", "min", "sum", "round", "open",
+  "super", "property", "staticmethod", "classmethod",
+]);
+
+function highlightPython(code: string): { tokens: React.ReactNode[]; lineNum: number }[] {
+  const lines = code.split("\n");
+  return lines.map((line, li) => {
+    const tokens: React.ReactNode[] = [];
+    let i = 0;
+    while (i < line.length) {
+      // Comment
+      if (line[i] === "#") {
+        tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(120, 15%, 55%)", fontStyle: "italic" }}>{line.slice(i)}</span>);
+        break;
+      }
+      // String (single or double quotes)
+      if (line[i] === '"' || line[i] === "'") {
+        const q = line[i];
+        // Triple quote
+        if (line.slice(i, i + 3) === q + q + q) {
+          const end = line.indexOf(q + q + q, i + 3);
+          const s = end >= 0 ? line.slice(i, end + 3) : line.slice(i);
+          tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(25, 65%, 50%)" }}>{s}</span>);
+          i += s.length;
+          continue;
+        }
+        let j = i + 1;
+        while (j < line.length && line[j] !== q) { if (line[j] === "\\") j++; j++; }
+        const s = line.slice(i, j + 1);
+        tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(25, 65%, 50%)" }}>{s}</span>);
+        i = j + 1;
+        continue;
+      }
+      // Number
+      if (/\d/.test(line[i]) && (i === 0 || /[\s,(\[=+\-*/:]/.test(line[i - 1]))) {
+        let j = i;
+        while (j < line.length && /[\d.eExXa-fA-F_]/.test(line[j])) j++;
+        tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(200, 60%, 50%)" }}>{line.slice(i, j)}</span>);
+        i = j;
+        continue;
+      }
+      // Word (keyword, builtin, or identifier)
+      if (/[a-zA-Z_]/.test(line[i])) {
+        let j = i;
+        while (j < line.length && /[a-zA-Z0-9_]/.test(line[j])) j++;
+        const word = line.slice(i, j);
+        if (PY_KEYWORDS.has(word)) {
+          tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(300, 50%, 45%)", fontWeight: 600 }}>{word}</span>);
+        } else if (PY_BUILTINS.has(word)) {
+          tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(200, 55%, 45%)" }}>{word}</span>);
+        } else if (word === "self") {
+          tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(300, 50%, 45%)" }}>{word}</span>);
+        } else {
+          tokens.push(<span key={`${li}-${i}`}>{word}</span>);
+        }
+        i = j;
+        continue;
+      }
+      // Decorator
+      if (line[i] === "@") {
+        let j = i + 1;
+        while (j < line.length && /[a-zA-Z0-9_.]/.test(line[j])) j++;
+        tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(40, 65%, 50%)" }}>{line.slice(i, j)}</span>);
+        i = j;
+        continue;
+      }
+      // Operator
+      if ("=<>!+-*/%&|^~".includes(line[i])) {
+        tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(0, 0%, 45%)" }}>{line[i]}</span>);
+        i++;
+        continue;
+      }
+      // Default
+      tokens.push(<span key={`${li}-${i}`}>{line[i]}</span>);
+      i++;
+    }
+    return { tokens, lineNum: li + 1 };
+  });
+}
+
 /* ── Histogram ────────────────────────────────────────────────────────────── */
 
 function Histogram({ counts }: { counts: Record<string, number> }) {
@@ -44,7 +139,6 @@ function Histogram({ counts }: { counts: Record<string, number> }) {
   const isLarge = entries.length > 8;
 
   if (isLarge) {
-    // Horizontal bar layout for many states — always readable
     return (
       <div className="px-3 py-2 space-y-1 overflow-y-auto" style={{ maxHeight: 280 }}>
         {entries.map(([key, count]) => {
@@ -106,13 +200,11 @@ function generateScientificReport(
   const timestamp = new Date().toISOString();
   const dateHuman = new Date().toLocaleString("en-US", { dateStyle: "full", timeStyle: "long" });
 
-  // Extract circuit info
   const circuitOutput = outputs.find(o => o.type === "circuit");
   const svOutput = outputs.find(o => o.type === "statevector");
   const histOutput = outputs.find(o => o.type === "histogram");
   const textOutputs = outputs.filter(o => o.type === "text");
 
-  // Compute statistics from counts
   const counts = mitigatedCounts || (histOutput?.data?.counts as Record<string, number>) || rawCounts;
   let statsSection = "";
   if (counts) {
@@ -150,7 +242,6 @@ ${probs.length > 32 ? `\n... and ${probs.length - 32} additional states (see raw
 `;
   }
 
-  // Mitigation section
   let mitigationSection = "";
   if (rawCounts && mitigatedCounts && mitigationStages.length > 0) {
     const rawTotal = Object.values(rawCounts).reduce((s, c) => s + c, 0);
@@ -184,7 +275,6 @@ ${mitigationStages.map((s, i) => `${i + 1}. **${s.replace(/_/g, " ").replace(/\b
 `;
   }
 
-  // Raw data section
   let rawDataSection = "";
   if (counts) {
     const total = Object.values(counts).reduce((s, c) => s + c, 0);
@@ -345,21 +435,29 @@ function CellOutputView({ output }: { output: CellOutput }) {
   );
 }
 
-/* ── Notebook Cell ────────────────────────────────────────────────────────── */
+/* ── Notebook Cell (Jupyter-authentic) ────────────────────────────────────── */
 
 interface CellViewProps {
   cell: NotebookCell;
   isActive: boolean;
+  isSelected: boolean;
+  editMode: boolean;
+  showLineNumbers: boolean;
   onFocus: () => void;
+  onEdit: () => void;
   onChange: (source: string) => void;
   onRun: () => void;
   onDelete: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onToggleType: () => void;
+  onToggleCollapse: () => void;
 }
 
-function CellView({ cell, isActive, onFocus, onChange, onRun, onDelete, onMoveUp, onMoveDown, onToggleType }: CellViewProps) {
+function CellView({
+  cell, isActive, isSelected, editMode, showLineNumbers,
+  onFocus, onEdit, onChange, onRun, onDelete, onMoveUp, onMoveDown, onToggleType, onToggleCollapse,
+}: CellViewProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -369,104 +467,157 @@ function CellView({ cell, isActive, onFocus, onChange, onRun, onDelete, onMoveUp
     }
   }, [cell.source]);
 
+  // Auto-focus textarea when entering edit mode
+  useEffect(() => {
+    if (isActive && editMode && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isActive, editMode]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && (e.shiftKey || e.ctrlKey)) {
       e.preventDefault();
       onRun();
     }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      textareaRef.current?.blur();
+    }
   };
 
   const isMarkdown = cell.type === "markdown";
+  const isCollapsed = cell.metadata?.collapsed;
+  const highlighted = !isMarkdown ? highlightPython(cell.source) : [];
+
+  // Jupyter-style cell border colors
+  const borderColor = isActive
+    ? editMode
+      ? "hsl(152, 50%, 50%)" // Green = edit mode (like Jupyter)
+      : "hsl(220, 65%, 55%)" // Blue = command mode (like Jupyter)
+    : isSelected
+      ? "hsl(220, 40%, 70%)"
+      : "transparent";
 
   return (
     <div
       className="group relative flex"
       style={{
-        borderLeft: isActive ? "3px solid hsl(38, 50%, 55%)" : "3px solid transparent",
-        transition: "border-color 150ms",
+        borderLeft: `3px solid ${borderColor}`,
+        transition: "border-color 100ms",
+        background: isSelected && !isActive ? "hsla(220, 50%, 50%, 0.03)" : "transparent",
       }}
-      onClick={onFocus}
+      onClick={(e) => {
+        onFocus();
+        // Double-click to enter edit mode
+        if (e.detail === 2) onEdit();
+      }}
     >
-      {/* Execution count — just like JupyterLab */}
-      <div className="w-16 shrink-0 flex flex-col items-center pt-3 select-none">
-        {!isMarkdown && (
-          <span className="text-sm font-mono" style={{ color: "hsl(220, 15%, 55%)" }}>
-            {cell.executionCount !== null ? `[${cell.executionCount}]` : "[ ]"}
+      {/* Execution count / cell type indicator — Jupyter style */}
+      <div className="w-[85px] shrink-0 flex items-start justify-end pt-[10px] pr-2 select-none" style={{ minHeight: 36 }}>
+        {!isMarkdown ? (
+          <span className="text-[13px] font-mono" style={{ color: isActive ? "hsl(220, 65%, 55%)" : "hsl(220, 15%, 55%)" }}>
+            In [{cell.executionCount !== null ? cell.executionCount : " "}]:
+          </span>
+        ) : (
+          <span className="text-[13px] font-mono" style={{ color: "hsl(38, 15%, 55%)" }}>
+            &nbsp;
           </span>
         )}
-        {isMarkdown && <Type size={14} style={{ color: "hsl(38, 15%, 55%)" }} />}
       </div>
 
       {/* Cell body */}
-      <div className="flex-1 min-w-0 py-2 pr-4">
-        <div className="relative rounded-lg overflow-hidden" style={{
-          background: isMarkdown
-            ? "transparent"
-            : isActive
-              ? "hsla(220, 20%, 50%, 0.04)"
-              : "hsla(220, 10%, 50%, 0.02)",
-          border: isActive ? "1px solid hsla(220, 30%, 50%, 0.2)" : "1px solid hsla(220, 10%, 50%, 0.08)",
-        }}>
-          {isMarkdown && !isActive && cell.source ? (
-            <div className="px-4 py-3" style={{ color: "hsl(0, 0%, 20%)" }}>
-              {cell.source.split("\n").map((line, i) => {
-                if (line.startsWith("# ")) return <h1 key={i} className="text-xl font-serif font-semibold mt-0 mb-2" style={{ color: "hsl(0, 0%, 15%)" }}>{line.slice(2)}</h1>;
-                if (line.startsWith("## ")) return <h2 key={i} className="text-lg font-serif font-medium mt-3 mb-1.5" style={{ color: "hsl(0, 0%, 18%)" }}>{line.slice(3)}</h2>;
-                if (line.startsWith("### ")) return <h3 key={i} className="text-base font-serif font-medium mt-2 mb-1" style={{ color: "hsl(0, 0%, 22%)" }}>{line.slice(4)}</h3>;
-                if (line.startsWith("- ")) return <li key={i} className="text-sm ml-5 mb-0.5 leading-relaxed">{line.slice(2)}</li>;
-                if (line.startsWith("|")) return <pre key={i} className="text-xs font-mono leading-relaxed" style={{ color: "hsl(0, 0%, 40%)" }}>{line}</pre>;
-                if (line.startsWith("```")) return null;
-                if (line.startsWith("**")) return <p key={i} className="text-sm font-semibold my-1">{line.replace(/\*\*/g, "")}</p>;
-                return line ? <p key={i} className="text-sm my-1 leading-relaxed">{line}</p> : <br key={i} />;
-              })}
-            </div>
-          ) : (
-            <textarea
-              ref={textareaRef}
-              value={cell.source}
-              onChange={e => onChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="w-full px-4 py-3 text-sm font-mono resize-none focus:outline-none bg-transparent"
-              style={{
-                color: isMarkdown ? "hsl(0, 0%, 25%)" : "hsl(220, 15%, 15%)",
-                lineHeight: "1.8",
-                minHeight: "44px",
-                fontSize: "14px",
-              }}
-              spellCheck={false}
-              placeholder={isMarkdown ? "Write notes here…" : "# Write Python code here…"}
-            />
-          )}
+      <div className="flex-1 min-w-0 py-1 pr-4">
+        {/* Collapsed indicator */}
+        {isCollapsed && (
+          <button onClick={onToggleCollapse} className="flex items-center gap-1 text-xs px-2 py-1 hover:bg-black/5 rounded" style={{ color: "hsl(0, 0%, 50%)" }}>
+            <ChevronRight size={12} /> Collapsed ({cell.source.split("\n").length} lines)
+          </button>
+        )}
 
-          {/* Cell toolbar */}
-          {isActive && (
-            <div className="flex items-center gap-1 px-3 py-1.5 border-t" style={{
-              borderColor: "hsla(220, 15%, 50%, 0.1)",
-              background: "hsla(220, 10%, 50%, 0.02)",
+        {!isCollapsed && (
+          <>
+            <div className="relative rounded overflow-hidden" style={{
+              background: isMarkdown
+                ? "transparent"
+                : "hsl(0, 0%, 100%)",
+              border: isMarkdown ? "none" : `1px solid ${isActive ? "hsla(220, 30%, 50%, 0.25)" : "hsla(220, 10%, 50%, 0.12)"}`,
             }}>
-              {!isMarkdown && (
-                <button onClick={onRun} className="flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium hover:bg-black/5 transition-colors" style={{ color: "hsl(152, 40%, 38%)" }}>
-                  <Play size={12} /> Run (Shift+Enter)
-                </button>
-              )}
-              <button onClick={onToggleType} className="px-3 py-1 rounded text-xs hover:bg-black/5 transition-colors" style={{ color: "hsl(220, 15%, 45%)" }}>
-                {isMarkdown ? "Switch to Code" : "Switch to Text"}
-              </button>
-              <div className="flex-1" />
-              <button onClick={onMoveUp} className="p-1 rounded hover:bg-black/5"><ArrowUp size={14} style={{ color: "hsl(0, 0%, 55%)" }} /></button>
-              <button onClick={onMoveDown} className="p-1 rounded hover:bg-black/5"><ArrowDown size={14} style={{ color: "hsl(0, 0%, 55%)" }} /></button>
-              <button onClick={onDelete} className="p-1 rounded hover:bg-black/5"><Trash2 size={14} style={{ color: "hsl(0, 40%, 55%)" }} /></button>
-            </div>
-          )}
-        </div>
+              {/* Rendered markdown (view mode) */}
+              {isMarkdown && !(isActive && editMode) && cell.source ? (
+                <div className="px-4 py-3" style={{ color: "hsl(0, 0%, 20%)" }}>
+                  {cell.source.split("\n").map((line, i) => {
+                    if (line.startsWith("# ")) return <h1 key={i} className="text-xl font-serif font-semibold mt-0 mb-2" style={{ color: "hsl(0, 0%, 15%)" }}>{line.slice(2)}</h1>;
+                    if (line.startsWith("## ")) return <h2 key={i} className="text-lg font-serif font-medium mt-3 mb-1.5" style={{ color: "hsl(0, 0%, 18%)" }}>{line.slice(3)}</h2>;
+                    if (line.startsWith("### ")) return <h3 key={i} className="text-base font-serif font-medium mt-2 mb-1" style={{ color: "hsl(0, 0%, 22%)" }}>{line.slice(4)}</h3>;
+                    if (line.startsWith("- ")) return <li key={i} className="text-sm ml-5 mb-0.5 leading-relaxed">{line.slice(2)}</li>;
+                    if (line.startsWith("|")) return <pre key={i} className="text-xs font-mono leading-relaxed" style={{ color: "hsl(0, 0%, 40%)" }}>{line}</pre>;
+                    if (line.startsWith("```")) return null;
+                    if (line.startsWith("**")) return <p key={i} className="text-sm font-semibold my-1">{line.replace(/\*\*/g, "")}</p>;
+                    return line ? <p key={i} className="text-sm my-1 leading-relaxed">{line}</p> : <br key={i} />;
+                  })}
+                </div>
+              ) : (
+                /* Code cell or markdown in edit mode */
+                <div className="relative flex">
+                  {/* Line numbers */}
+                  {showLineNumbers && !isMarkdown && (
+                    <div className="select-none py-[5px] pr-2 text-right border-r" style={{
+                      minWidth: 40,
+                      background: "hsla(220, 10%, 50%, 0.03)",
+                      borderColor: "hsla(220, 10%, 50%, 0.08)",
+                    }}>
+                      {cell.source.split("\n").map((_, i) => (
+                        <div key={i} className="text-[12px] font-mono leading-[1.8] px-1" style={{ color: "hsl(220, 10%, 65%)" }}>
+                          {i + 1}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-        {/* Output area */}
-        {cell.outputs.length > 0 && (
-          <div className="mt-2 space-y-2 pl-1">
-            {cell.outputs.map((output, i) => (
-              <CellOutputView key={i} output={output} />
-            ))}
-          </div>
+                  {/* Code input with syntax highlighting */}
+                  <div className="flex-1 relative">
+                    {/* Syntax highlight overlay (code cells only, when not editing) */}
+                    {!isMarkdown && !(isActive && editMode) && cell.source && (
+                      <pre className="absolute inset-0 px-4 py-[5px] text-[13px] font-mono leading-[1.8] whitespace-pre-wrap pointer-events-none overflow-hidden" style={{ color: "hsl(220, 15%, 15%)" }}>
+                        {highlighted.map((h, i) => (
+                          <div key={i}>{h.tokens}</div>
+                        ))}
+                      </pre>
+                    )}
+
+                    <textarea
+                      ref={textareaRef}
+                      value={cell.source}
+                      onChange={e => onChange(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      onFocus={onEdit}
+                      className="w-full px-4 py-[5px] text-[13px] font-mono resize-none focus:outline-none bg-transparent relative z-10"
+                      style={{
+                        color: (!isMarkdown && !(isActive && editMode)) ? "transparent" : (isMarkdown ? "hsl(0, 0%, 25%)" : "hsl(220, 15%, 15%)"),
+                        caretColor: "hsl(220, 15%, 15%)",
+                        lineHeight: "1.8",
+                        minHeight: "28px",
+                      }}
+                      spellCheck={false}
+                      placeholder={isMarkdown ? "Write Markdown here…" : "# Write Python code here…"}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Output area — Jupyter style with Out[n]: label */}
+            {cell.outputs.length > 0 && (
+              <div className="flex mt-1">
+                <div className="w-0 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  {cell.outputs.map((output, i) => (
+                    <CellOutputView key={i} output={output} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -491,7 +642,6 @@ function FileBrowser({ templates, activeId, onSelect, onNew }: {
       </div>
 
       <div className="flex-1 overflow-y-auto py-2">
-        {/* Examples folder */}
         <button onClick={() => setDemosOpen(!demosOpen)} className="w-full flex items-center gap-2 px-4 py-2 hover:bg-black/3 transition-colors">
           <ChevronRight size={12} className={`transition-transform ${demosOpen ? "rotate-90" : ""}`} style={{ color: "hsl(220, 10%, 50%)" }} />
           {demosOpen ? <FolderOpen size={14} style={{ color: "hsl(38, 45%, 50%)" }} /> : <Folder size={14} style={{ color: "hsl(38, 45%, 50%)" }} />}
@@ -516,7 +666,6 @@ function FileBrowser({ templates, activeId, onSelect, onNew }: {
           </div>
         )}
 
-        {/* My Notebooks folder */}
         <button onClick={() => setProjectsOpen(!projectsOpen)} className="w-full flex items-center gap-2 px-4 py-2 hover:bg-black/3 transition-colors mt-1">
           <ChevronRight size={12} className={`transition-transform ${projectsOpen ? "rotate-90" : ""}`} style={{ color: "hsl(220, 10%, 50%)" }} />
           {projectsOpen ? <FolderOpen size={14} style={{ color: "hsl(152, 35%, 50%)" }} /> : <Folder size={14} style={{ color: "hsl(152, 35%, 50%)" }} />}
@@ -529,7 +678,6 @@ function FileBrowser({ templates, activeId, onSelect, onNew }: {
         )}
       </div>
 
-      {/* New notebook */}
       <div className="p-3 space-y-1.5" style={{ borderTop: "1px solid hsla(220, 10%, 50%, 0.1)" }}>
         <button onClick={() => onNew("quantum")} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-black/5" style={{ color: "hsl(220, 30%, 40%)" }}>
           <Atom size={14} /> New Notebook
@@ -585,7 +733,6 @@ function DemoCard({ demo, onOpen, onOpenInWorkspace }: { demo: ReturnType<typeof
 
 /* ── Demo Viewer (Voilà) ──────────────────────────────────────────────────── */
 
-/* Mitigation toggle switch */
 function MitigationToggle({ label, description, enabled, onChange }: {
   label: string; description: string; enabled: boolean; onChange: (v: boolean) => void;
 }) {
@@ -633,7 +780,6 @@ function computeDistributionMetrics(raw: Record<string, number>, mit: Record<str
     pMit[k] = (mit[k] || 0) / mitTotal;
   }
 
-  // Total Variation Distance from uniform
   let tvdRaw = 0, tvdMit = 0;
   for (const k of allKeys) {
     tvdRaw += Math.abs(pRaw[k] - idealUniform);
@@ -641,14 +787,12 @@ function computeDistributionMetrics(raw: Record<string, number>, mit: Record<str
   }
   tvdRaw /= 2; tvdMit /= 2;
 
-  // KL Divergence from uniform
   let klRaw = 0, klMit = 0;
   for (const k of allKeys) {
     if (pRaw[k] > 0) klRaw += pRaw[k] * Math.log(pRaw[k] / idealUniform);
     if (pMit[k] > 0) klMit += pMit[k] * Math.log(pMit[k] / idealUniform);
   }
 
-  // Classical fidelity (Bhattacharyya coefficient) against uniform
   let fidRaw = 0, fidMit = 0;
   for (const k of allKeys) {
     fidRaw += Math.sqrt(pRaw[k] * idealUniform);
@@ -718,7 +862,6 @@ function MitigationMetricsCard({ raw, mitigated }: { raw: Record<string, number>
   );
 }
 
-/* Before/After histogram comparison */
 function ComparisonHistogram({ rawCounts, mitigatedCounts, rawLabel, mitigatedLabel }: {
   rawCounts: Record<string, number>;
   mitigatedCounts: Record<string, number>;
@@ -896,7 +1039,6 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
   const [outputs, setOutputs] = useState<CellOutput[]>([]);
   const [running, setRunning] = useState(false);
 
-  // Error mitigation state
   const [enableZne, setEnableZne] = useState(false);
   const [enableMem, setEnableMem] = useState(false);
   const [enableRc, setEnableRc] = useState(false);
@@ -915,7 +1057,6 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
     if (!template) return;
     setRunning(true);
     const k = createKernel();
-    // If noise control exists, apply it
     const noiseLevel = controlValues["noise"] as string | undefined;
     if (noiseLevel && noiseLevel !== "none") {
       k.noiseModel = realisticNoise(noiseLevel as "low" | "medium" | "high");
@@ -939,7 +1080,6 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
     });
     setOutputs(allOutputs);
 
-    // Run VQE convergence optimization if this is the VQE demo
     if (isVqeDemo) {
       const iters = (controlValues["iterations"] as number) || 20;
       const shots = (controlValues["shots"] as number) || 4096;
@@ -949,7 +1089,6 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
       setVqeHistory([]);
     }
 
-    // Run error mitigation if any toggle is on and we have a circuit
     if (anyMitigationEnabled && k.circuit && k.circuit.ops.length > 0) {
       try {
         const {
@@ -966,14 +1105,12 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
         const numQubits = k.circuit.numQubits;
         const shots = (controlValues["shots"] as number) || 1024;
 
-        // Get raw (noisy) counts
         const rawState = createState(numQubits);
         rawState.ops = [...ops];
         rawState.noise = noise;
         const raw = measure(rawState, shots);
         setRawCounts(raw);
 
-        // Run full mitigation pipeline
         const result = mitigateFull(ops, numQubits, noise, {
           enableZne,
           enableMem,
@@ -1001,7 +1138,6 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
 
   return (
     <div className="h-full flex flex-col" style={{ background: "hsl(0, 0%, 98%)" }}>
-      {/* Header */}
       <div className="flex items-center gap-3 px-5 py-3" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.1)", background: "hsl(0, 0%, 100%)" }}>
         <button onClick={onClose} className="p-1 rounded hover:bg-black/5"><ChevronDown size={18} style={{ color: "hsl(0, 0%, 45%)" }} /></button>
         <span className="text-2xl">{demo.icon}</span>
@@ -1032,9 +1168,7 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
         </button>
       </div>
 
-      {/* Body: 3 columns */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Controls */}
         <div className="w-64 shrink-0 p-5 space-y-5 overflow-y-auto" style={{ borderRight: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
           <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Settings</h3>
           {demo.controls.map(ctrl => (
@@ -1066,31 +1200,15 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
             </div>
           ))}
 
-          {/* Error Mitigation Section */}
           <div className="pt-3" style={{ borderTop: "1px solid hsla(0, 0%, 50%, 0.08)" }}>
             <div className="flex items-center gap-2 mb-3">
               <Shield size={14} style={{ color: "hsl(38, 50%, 48%)" }} />
               <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Error Mitigation</h3>
             </div>
             <div className="space-y-2">
-              <MitigationToggle
-                label="ZNE"
-                description="Run at multiple noise levels, extrapolate to zero"
-                enabled={enableZne}
-                onChange={setEnableZne}
-              />
-              <MitigationToggle
-                label="MEM"
-                description="Calibrate readout errors and correct measurements"
-                enabled={enableMem}
-                onChange={setEnableMem}
-              />
-              <MitigationToggle
-                label="RC"
-                description="Randomize gate sequences to average out systematic errors"
-                enabled={enableRc}
-                onChange={setEnableRc}
-              />
+              <MitigationToggle label="ZNE" description="Run at multiple noise levels, extrapolate to zero" enabled={enableZne} onChange={setEnableZne} />
+              <MitigationToggle label="MEM" description="Calibrate readout errors and correct measurements" enabled={enableMem} onChange={setEnableMem} />
+              <MitigationToggle label="RC" description="Randomize gate sequences to average out systematic errors" enabled={enableRc} onChange={setEnableRc} />
             </div>
           </div>
 
@@ -1103,7 +1221,6 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
           </button>
         </div>
 
-        {/* Circuit & State */}
         <div className="flex-1 p-5 space-y-4 overflow-y-auto">
           <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Circuit & State</h3>
           {outputs.filter(o => o.type === "circuit" || o.type === "statevector").map((o, i) => (
@@ -1116,11 +1233,9 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
           )}
         </div>
 
-        {/* Results */}
         <div className="w-80 shrink-0 p-5 space-y-4 overflow-y-auto" style={{ borderLeft: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
           <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Results</h3>
 
-          {/* Timing benchmark */}
           {benchmarkMs !== null && benchmarkDetail && (
             <div className="rounded-lg overflow-hidden" style={{ border: "1px solid hsla(220, 40%, 50%, 0.12)" }}>
               <div className="px-3 py-2 flex items-center gap-2" style={{ background: "hsla(220, 40%, 50%, 0.04)", borderBottom: "1px solid hsla(220, 40%, 50%, 0.08)" }}>
@@ -1167,10 +1282,8 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
             </div>
           )}
 
-          {/* Before/After comparison when mitigation is active */}
           {rawCounts && mitigatedCounts && anyMitigationEnabled && (
             <div className="space-y-4">
-              {/* Summary badge */}
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "hsla(38, 50%, 50%, 0.06)", border: "1px solid hsla(38, 50%, 50%, 0.12)" }}>
                 <Zap size={14} style={{ color: "hsl(38, 50%, 48%)" }} />
                 <span className="text-xs font-medium" style={{ color: "hsl(38, 40%, 35%)" }}>
@@ -1179,9 +1292,8 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
                 </span>
               </div>
 
-              {/* Stages list */}
               <div className="space-y-1">
-                {mitigationStages.map((stage, i) => (
+                {mitigationStages.map((stage) => (
                   <div key={stage} className="flex items-center gap-2 text-xs" style={{ color: "hsl(152, 35%, 40%)" }}>
                     <span className="font-mono">✓</span>
                     <span className="font-medium">
@@ -1193,25 +1305,15 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
                 ))}
               </div>
 
-              {/* Comparison chart */}
-              <ComparisonHistogram
-                rawCounts={rawCounts}
-                mitigatedCounts={mitigatedCounts}
-                rawLabel="Before"
-                mitigatedLabel="After"
-              />
-
-              {/* Quantitative metrics */}
+              <ComparisonHistogram rawCounts={rawCounts} mitigatedCounts={mitigatedCounts} rawLabel="Before" mitigatedLabel="After" />
               <MitigationMetricsCard raw={rawCounts} mitigated={mitigatedCounts} />
             </div>
           )}
 
-          {/* VQE Convergence Chart */}
           {isVqeDemo && vqeHistory.length > 1 && (
             <ConvergenceChart history={vqeHistory} targetEnergy={-1.137} />
           )}
 
-          {/* Standard histogram when no mitigation */}
           {(!anyMitigationEnabled || !mitigatedCounts) && outputs.filter(o => o.type === "histogram").map((o, i) => (
             <CellOutputView key={i} output={o} />
           ))}
@@ -1230,6 +1332,222 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
   );
 }
 
+/* ── Jupyter Menu Dropdown ────────────────────────────────────────────────── */
+
+interface MenuItem {
+  label: string;
+  shortcut?: string;
+  action?: () => void;
+  divider?: boolean;
+  disabled?: boolean;
+}
+
+function MenuDropdown({ label, items, isOpen, onToggle, onClose }: {
+  label: string;
+  items: MenuItem[];
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [isOpen, onClose]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={onToggle}
+        className="px-3 py-1 text-[13px] rounded hover:bg-black/5 transition-colors"
+        style={{
+          color: "hsl(0, 0%, 25%)",
+          background: isOpen ? "hsla(220, 30%, 50%, 0.08)" : "transparent",
+        }}
+      >
+        {label}
+      </button>
+      {isOpen && (
+        <div
+          className="absolute top-full left-0 mt-0.5 z-50 min-w-[220px] rounded-lg shadow-lg py-1"
+          style={{
+            background: "hsl(0, 0%, 100%)",
+            border: "1px solid hsla(0, 0%, 50%, 0.15)",
+            boxShadow: "0 4px 16px hsla(0, 0%, 0%, 0.12)",
+          }}
+        >
+          {items.map((item, i) =>
+            item.divider ? (
+              <div key={i} className="my-1 mx-2" style={{ borderTop: "1px solid hsla(0, 0%, 50%, 0.1)" }} />
+            ) : (
+              <button
+                key={i}
+                onClick={() => { item.action?.(); onClose(); }}
+                disabled={item.disabled}
+                className="w-full flex items-center justify-between px-4 py-1.5 text-[13px] text-left hover:bg-black/5 disabled:opacity-40 disabled:cursor-default transition-colors"
+                style={{ color: "hsl(0, 0%, 20%)" }}
+              >
+                <span>{item.label}</span>
+                {item.shortcut && (
+                  <span className="text-[11px] font-mono ml-6" style={{ color: "hsl(0, 0%, 55%)" }}>{item.shortcut}</span>
+                )}
+              </button>
+            )
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Keyboard Shortcuts Modal ─────────────────────────────────────────────── */
+
+function ShortcutsModal({ onClose }: { onClose: () => void }) {
+  const isMac = navigator.platform.toUpperCase().includes("MAC");
+  const mod = isMac ? "⌘" : "Ctrl";
+
+  const sections = [
+    {
+      title: "Command Mode (press Esc to enter)",
+      shortcuts: [
+        { keys: "Enter", desc: "Enter edit mode" },
+        { keys: "A", desc: "Insert cell above" },
+        { keys: "B", desc: "Insert cell below" },
+        { keys: "D, D", desc: "Delete selected cell" },
+        { keys: "M", desc: "Change cell to Markdown" },
+        { keys: "Y", desc: "Change cell to Code" },
+        { keys: "C", desc: "Copy cell" },
+        { keys: "V", desc: "Paste cell below" },
+        { keys: "X", desc: "Cut cell" },
+        { keys: "Z", desc: "Undo cell delete" },
+        { keys: "↑ / K", desc: "Select cell above" },
+        { keys: "↓ / J", desc: "Select cell below" },
+        { keys: `Shift+Enter`, desc: "Run cell, select below" },
+        { keys: "L", desc: "Toggle line numbers" },
+        { keys: "O", desc: "Toggle cell output" },
+        { keys: "H", desc: "Show keyboard shortcuts" },
+      ],
+    },
+    {
+      title: "Edit Mode (press Enter to enter)",
+      shortcuts: [
+        { keys: "Esc", desc: "Enter command mode" },
+        { keys: `Shift+Enter`, desc: "Run cell" },
+        { keys: `${mod}+S`, desc: "Save notebook" },
+        { keys: "Tab", desc: "Indent / autocomplete" },
+        { keys: `Shift+Tab`, desc: "Tooltip / unindent" },
+      ],
+    },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0" style={{ background: "hsla(0, 0%, 0%, 0.4)" }} />
+      <div
+        className="relative rounded-xl shadow-2xl overflow-hidden max-w-lg w-full max-h-[70vh] flex flex-col"
+        style={{ background: "hsl(0, 0%, 100%)" }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.1)" }}>
+          <h2 className="text-lg font-semibold" style={{ color: "hsl(0, 0%, 12%)" }}>Keyboard Shortcuts</h2>
+          <button onClick={onClose} className="p-1 rounded hover:bg-black/5"><X size={18} style={{ color: "hsl(0, 0%, 45%)" }} /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5 space-y-6">
+          {sections.map(sec => (
+            <div key={sec.title}>
+              <h3 className="text-sm font-semibold mb-3" style={{ color: "hsl(0, 0%, 30%)" }}>{sec.title}</h3>
+              <div className="space-y-1">
+                {sec.shortcuts.map(s => (
+                  <div key={s.keys} className="flex items-center justify-between py-1">
+                    <span className="text-sm" style={{ color: "hsl(0, 0%, 40%)" }}>{s.desc}</span>
+                    <kbd className="text-xs font-mono px-2 py-0.5 rounded" style={{
+                      background: "hsla(0, 0%, 50%, 0.06)",
+                      border: "1px solid hsla(0, 0%, 50%, 0.12)",
+                      color: "hsl(0, 0%, 30%)",
+                    }}>{s.keys}</kbd>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Find & Replace Bar ───────────────────────────────────────────────────── */
+
+function FindReplaceBar({ notebook, onReplace, onClose }: {
+  notebook: NotebookDocument;
+  onReplace: (cellId: string, oldText: string, newText: string) => void;
+  onClose: () => void;
+}) {
+  const [findText, setFindText] = useState("");
+  const [replaceText, setReplaceText] = useState("");
+  const [showReplace, setShowReplace] = useState(false);
+
+  const matches = useMemo(() => {
+    if (!findText) return [];
+    const results: { cellId: string; cellIndex: number; count: number }[] = [];
+    notebook.cells.forEach((cell, idx) => {
+      const count = (cell.source.match(new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi")) || []).length;
+      if (count > 0) results.push({ cellId: cell.id, cellIndex: idx, count });
+    });
+    return results;
+  }, [findText, notebook.cells]);
+
+  const totalMatches = matches.reduce((s, m) => s + m.count, 0);
+
+  return (
+    <div className="flex items-center gap-2 px-4 py-2" style={{ background: "hsla(220, 10%, 50%, 0.04)", borderBottom: "1px solid hsla(220, 10%, 50%, 0.1)" }}>
+      <Search size={14} style={{ color: "hsl(0, 0%, 50%)" }} />
+      <input
+        type="text"
+        value={findText}
+        onChange={e => setFindText(e.target.value)}
+        placeholder="Find…"
+        className="px-2 py-1 text-sm rounded bg-white focus:outline-none"
+        style={{ border: "1px solid hsla(0, 0%, 50%, 0.15)", width: 180 }}
+        autoFocus
+      />
+      {findText && (
+        <span className="text-xs" style={{ color: "hsl(0, 0%, 50%)" }}>{totalMatches} match{totalMatches !== 1 ? "es" : ""}</span>
+      )}
+      <button onClick={() => setShowReplace(!showReplace)} className="text-xs px-2 py-1 rounded hover:bg-black/5" style={{ color: "hsl(0, 0%, 45%)" }}>
+        {showReplace ? "Hide Replace" : "Replace"}
+      </button>
+      {showReplace && (
+        <>
+          <input
+            type="text"
+            value={replaceText}
+            onChange={e => setReplaceText(e.target.value)}
+            placeholder="Replace with…"
+            className="px-2 py-1 text-sm rounded bg-white focus:outline-none"
+            style={{ border: "1px solid hsla(0, 0%, 50%, 0.15)", width: 180 }}
+          />
+          <button
+            onClick={() => matches.forEach(m => onReplace(m.cellId, findText, replaceText))}
+            className="text-xs px-2 py-1 rounded hover:bg-black/5"
+            style={{ color: "hsl(220, 45%, 45%)" }}
+            disabled={!findText}
+          >
+            Replace All
+          </button>
+        </>
+      )}
+      <div className="flex-1" />
+      <button onClick={onClose} className="p-1 rounded hover:bg-black/5"><X size={14} style={{ color: "hsl(0, 0%, 50%)" }} /></button>
+    </div>
+  );
+}
+
 /* ── Main Workspace ───────────────────────────────────────────────────────── */
 
 type WorkspaceMode = "landing" | "workspace" | "demos";
@@ -1241,13 +1559,30 @@ interface QuantumJupyterWorkspaceProps {
 export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorkspaceProps) {
   const [mode, setMode] = useState<WorkspaceMode>("landing");
   const [notebook, setNotebook] = useState<NotebookDocument>(() => createNotebook("Untitled"));
-  const [kernel] = useState<KernelState>(() => createKernel());
+  const [kernel, setKernel] = useState<KernelState>(() => createKernel());
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeDemoId, setActiveDemoId] = useState<string | null>(null);
   const [demoCategory, setDemoCategory] = useState<string>("all");
   const templates = useMemo(() => getTemplateNotebooks(), []);
   const demos = useMemo(() => getDemoDefinitions(), []);
+
+  // ── Jupyter-specific state ──
+  const [editMode, setEditMode] = useState(false); // false = command mode, true = edit mode
+  const [showLineNumbers, setShowLineNumbers] = useState(true);
+  const [clipboard, setClipboard] = useState<NotebookCell | null>(null);
+  const [undoStack, setUndoStack] = useState<NotebookCell[]>([]);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showFindReplace, setShowFindReplace] = useState(false);
+  const [isRenamingNotebook, setIsRenamingNotebook] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [kernelBusy, setKernelBusy] = useState(false);
+  const notebookNameRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Track last D press for DD delete
+  const lastDPressRef = useRef<number>(0);
 
   const updateCell = useCallback((id: string, source: string) => {
     setNotebook(prev => ({
@@ -1258,6 +1593,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   }, []);
 
   const runCell = useCallback((id: string) => {
+    setKernelBusy(true);
     setNotebook(prev => {
       const cell = prev.cells.find(c => c.id === id);
       if (!cell) return prev;
@@ -1271,9 +1607,20 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
         } : c),
       };
     });
+    // Move to next cell
+    setNotebook(prev => {
+      const idx = prev.cells.findIndex(c => c.id === id);
+      if (idx >= 0 && idx < prev.cells.length - 1) {
+        setActiveCell(prev.cells[idx + 1].id);
+        setEditMode(false);
+      }
+      return prev;
+    });
+    setKernelBusy(false);
   }, [kernel]);
 
   const runAllCells = useCallback(() => {
+    setKernelBusy(true);
     setNotebook(prev => {
       const newCells = prev.cells.map(c => {
         if (c.type !== "code") return c;
@@ -1282,7 +1629,14 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
       });
       return { ...prev, cells: newCells };
     });
+    setKernelBusy(false);
   }, [kernel]);
+
+  const runCellAndInsertBelow = useCallback(() => {
+    if (!activeCell) return;
+    runCell(activeCell);
+    addCell(activeCell, "code");
+  }, [activeCell]);
 
   const addCell = useCallback((afterId: string | null, type: "code" | "markdown" = "code") => {
     const newCell = createCell(type);
@@ -1293,14 +1647,48 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
       return { ...prev, cells };
     });
     setActiveCell(newCell.id);
+    setEditMode(true);
   }, []);
 
+  const insertCellAbove = useCallback(() => {
+    if (!activeCell) return;
+    const newCell = createCell("code");
+    setNotebook(prev => {
+      const idx = prev.cells.findIndex(c => c.id === activeCell);
+      const cells = [...prev.cells];
+      cells.splice(idx, 0, newCell);
+      return { ...prev, cells };
+    });
+    setActiveCell(newCell.id);
+    setEditMode(true);
+  }, [activeCell]);
+
   const deleteCell = useCallback((id: string) => {
-    setNotebook(prev => ({
-      ...prev,
-      cells: prev.cells.length > 1 ? prev.cells.filter(c => c.id !== id) : prev.cells,
-    }));
+    setNotebook(prev => {
+      if (prev.cells.length <= 1) return prev;
+      const cell = prev.cells.find(c => c.id === id);
+      if (cell) setUndoStack(s => [...s, { ...cell }]);
+      const idx = prev.cells.findIndex(c => c.id === id);
+      const newCells = prev.cells.filter(c => c.id !== id);
+      // Select neighbor
+      if (idx < newCells.length) setActiveCell(newCells[idx].id);
+      else if (newCells.length > 0) setActiveCell(newCells[newCells.length - 1].id);
+      return { ...prev, cells: newCells };
+    });
   }, []);
+
+  const undoCellDelete = useCallback(() => {
+    if (undoStack.length === 0) return;
+    const cell = undoStack[undoStack.length - 1];
+    setUndoStack(s => s.slice(0, -1));
+    setNotebook(prev => {
+      const idx = activeCell ? prev.cells.findIndex(c => c.id === activeCell) : prev.cells.length;
+      const cells = [...prev.cells];
+      cells.splice(idx, 0, cell);
+      return { ...prev, cells };
+    });
+    setActiveCell(cell.id);
+  }, [undoStack, activeCell]);
 
   const moveCell = useCallback((id: string, direction: -1 | 1) => {
     setNotebook(prev => {
@@ -1321,22 +1709,245 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
     }));
   }, []);
 
+  const setCellType = useCallback((id: string, type: "code" | "markdown") => {
+    setNotebook(prev => ({
+      ...prev,
+      cells: prev.cells.map(c => c.id === id ? { ...c, type } : c),
+    }));
+  }, []);
+
+  const copyCellAction = useCallback(() => {
+    if (!activeCell) return;
+    const cell = notebook.cells.find(c => c.id === activeCell);
+    if (cell) setClipboard({ ...cell, id: `cell-${Math.random().toString(36).slice(2)}` });
+  }, [activeCell, notebook.cells]);
+
+  const cutCellAction = useCallback(() => {
+    copyCellAction();
+    if (activeCell) deleteCell(activeCell);
+  }, [activeCell, copyCellAction, deleteCell]);
+
+  const pasteCellAction = useCallback(() => {
+    if (!clipboard) return;
+    const newCell = { ...clipboard, id: `cell-${Math.random().toString(36).slice(2)}`, executionCount: null, outputs: [], status: "idle" as const };
+    setNotebook(prev => {
+      const idx = activeCell ? prev.cells.findIndex(c => c.id === activeCell) : prev.cells.length - 1;
+      const cells = [...prev.cells];
+      cells.splice(idx + 1, 0, newCell);
+      return { ...prev, cells };
+    });
+    setActiveCell(newCell.id);
+  }, [clipboard, activeCell]);
+
+  const clearOutputs = useCallback((id?: string) => {
+    setNotebook(prev => ({
+      ...prev,
+      cells: prev.cells.map(c => (id ? c.id === id : true) ? { ...c, outputs: [], status: "idle" as const, executionCount: null } : c),
+    }));
+  }, []);
+
+  const restartKernel = useCallback((runAfter = false) => {
+    setKernel(createKernel());
+    clearOutputs();
+    if (runAfter) setTimeout(() => runAllCells(), 50);
+  }, [clearOutputs, runAllCells]);
+
+  const toggleCollapse = useCallback((id: string) => {
+    setNotebook(prev => ({
+      ...prev,
+      cells: prev.cells.map(c => c.id === id ? { ...c, metadata: { ...c.metadata, collapsed: !c.metadata.collapsed } } : c),
+    }));
+  }, []);
+
+  const selectAdjacentCell = useCallback((direction: -1 | 1) => {
+    if (!activeCell) return;
+    const idx = notebook.cells.findIndex(c => c.id === activeCell);
+    const newIdx = idx + direction;
+    if (newIdx >= 0 && newIdx < notebook.cells.length) {
+      setActiveCell(notebook.cells[newIdx].id);
+      setEditMode(false);
+    }
+  }, [activeCell, notebook.cells]);
+
+  const saveNotebook = useCallback(() => {
+    setLastSaved(new Date());
+    // In a real impl this would persist to backend
+  }, []);
+
+  const downloadAsIpynb = useCallback(() => {
+    const ipynb = {
+      nbformat: 4, nbformat_minor: 5,
+      metadata: notebook.metadata,
+      cells: notebook.cells.map(c => ({
+        cell_type: c.type,
+        source: c.source.split("\n").map((l, i, arr) => i < arr.length - 1 ? l + "\n" : l),
+        metadata: {},
+        ...(c.type === "code" ? { execution_count: c.executionCount, outputs: [] } : {}),
+      })),
+    };
+    const blob = new Blob([JSON.stringify(ipynb, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${notebook.name}.ipynb`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [notebook]);
+
+  const downloadAsPy = useCallback(() => {
+    const py = notebook.cells.map(c => {
+      if (c.type === "markdown") return `# ${c.source.replace(/\n/g, "\n# ")}`;
+      return c.source;
+    }).join("\n\n");
+    const blob = new Blob([py], { type: "text/x-python" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${notebook.name}.py`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [notebook]);
+
+  const replaceInCell = useCallback((cellId: string, oldText: string, newText: string) => {
+    setNotebook(prev => ({
+      ...prev,
+      cells: prev.cells.map(c => c.id === cellId ? { ...c, source: c.source.split(oldText).join(newText) } : c),
+    }));
+  }, []);
+
   const loadTemplate = useCallback((templateId: string) => {
     const tmpl = templates.find(t => t.id === templateId);
     if (!tmpl) return;
     const nb = createNotebook(tmpl.name, tmpl.cells.map(c => ({ ...c, id: `cell-${Math.random().toString(36).slice(2)}` })));
     setNotebook(nb);
+    setKernel(createKernel());
     setMode("workspace");
   }, [templates]);
 
+  // ── Command Mode Keyboard Shortcuts ──
+  useEffect(() => {
+    if (mode !== "workspace") return;
+
+    const handler = (e: KeyboardEvent) => {
+      // Don't intercept when typing in inputs
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "SELECT") return;
+      if (editMode && target.tagName === "TEXTAREA") {
+        // Only handle Escape in edit mode
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setEditMode(false);
+          (target as HTMLTextAreaElement).blur();
+        }
+        // Ctrl+S save
+        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+          e.preventDefault();
+          saveNotebook();
+        }
+        return;
+      }
+
+      // Command mode shortcuts
+      if (!editMode || target.tagName !== "TEXTAREA") {
+        switch (e.key) {
+          case "Enter":
+            e.preventDefault();
+            setEditMode(true);
+            break;
+          case "a":
+            e.preventDefault();
+            insertCellAbove();
+            break;
+          case "b":
+            e.preventDefault();
+            if (activeCell) addCell(activeCell, "code");
+            break;
+          case "d": {
+            const now = Date.now();
+            if (now - lastDPressRef.current < 500) {
+              e.preventDefault();
+              if (activeCell) deleteCell(activeCell);
+              lastDPressRef.current = 0;
+            } else {
+              lastDPressRef.current = now;
+            }
+            break;
+          }
+          case "m":
+            e.preventDefault();
+            if (activeCell) setCellType(activeCell, "markdown");
+            break;
+          case "y":
+            e.preventDefault();
+            if (activeCell) setCellType(activeCell, "code");
+            break;
+          case "c":
+            if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); copyCellAction(); }
+            break;
+          case "x":
+            if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); cutCellAction(); }
+            break;
+          case "v":
+            if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); pasteCellAction(); }
+            break;
+          case "z":
+            if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); undoCellDelete(); }
+            break;
+          case "l":
+            e.preventDefault();
+            setShowLineNumbers(v => !v);
+            break;
+          case "o":
+            e.preventDefault();
+            if (activeCell) toggleCollapse(activeCell);
+            break;
+          case "h":
+            e.preventDefault();
+            setShowShortcuts(true);
+            break;
+          case "ArrowUp":
+          case "k":
+            e.preventDefault();
+            selectAdjacentCell(-1);
+            break;
+          case "ArrowDown":
+          case "j":
+            e.preventDefault();
+            selectAdjacentCell(1);
+            break;
+          case "s":
+            if (e.ctrlKey || e.metaKey) { e.preventDefault(); saveNotebook(); }
+            break;
+          case "f":
+            if (e.ctrlKey || e.metaKey) { e.preventDefault(); setShowFindReplace(v => !v); }
+            break;
+        }
+        // Shift+Enter: run cell
+        if (e.key === "Enter" && e.shiftKey) {
+          e.preventDefault();
+          if (activeCell) runCell(activeCell);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [mode, editMode, activeCell, insertCellAbove, addCell, deleteCell, setCellType,
+      copyCellAction, cutCellAction, pasteCellAction, undoCellDelete, selectAdjacentCell,
+      saveNotebook, runCell, toggleCollapse]);
+
   const activeDemo = activeDemoId ? demos.find(d => d.id === activeDemoId) : null;
+  const activeCellObj = activeCell ? notebook.cells.find(c => c.id === activeCell) : null;
 
   /* ── Landing ──────────────────────────────────────────────────────────────── */
   if (mode === "landing") {
     const featured = templates.slice(0, 4);
     return (
       <div className="h-full flex flex-col" style={{ background: "hsl(0, 0%, 98%)" }}>
-        {/* Top bar */}
         <div className="flex items-center gap-3 px-6 py-3.5" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
           <Atom size={22} style={{ color: "hsl(38, 50%, 50%)" }} />
           <span className="text-lg font-semibold" style={{ color: "hsl(0, 0%, 12%)" }}>Quantum Workspace</span>
@@ -1346,7 +1957,6 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
 
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-3xl mx-auto px-8 py-12">
-            {/* Hero */}
             <div className="text-center mb-12">
               <h1 className="text-4xl font-serif font-semibold mb-4" style={{ color: "hsl(0, 0%, 10%)" }}>
                 Quantum Workspace
@@ -1356,7 +1966,6 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
               </p>
             </div>
 
-            {/* Two main buttons */}
             <div className="flex gap-6 justify-center mb-14">
               <button
                 onClick={() => setMode("workspace")}
@@ -1383,7 +1992,6 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
               </button>
             </div>
 
-            {/* Featured notebooks */}
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "hsl(0, 0%, 48%)" }}>Featured Notebooks</h2>
               <div className="grid grid-cols-2 gap-4">
@@ -1451,7 +2059,6 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
               Experience quantum computing through interactive simulations. Every demo runs on our built-in quantum simulator — no external hardware, no setup, fully reproducible.
             </p>
 
-            {/* Category tabs */}
             <div className="flex items-center gap-1 mb-6 pb-3" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.08)" }}>
               {[
                 { id: "all", label: "All", count: demos.length },
@@ -1479,7 +2086,6 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
               ))}
             </div>
 
-            {/* Stats bar */}
             <div className="flex items-center gap-8 mb-8">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold" style={{ color: "hsl(38, 45%, 45%)" }}>{demos.length}</span>
@@ -1518,60 +2124,206 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   }
 
   /* ── Workspace (JupyterLab) ───────────────────────────────────────────────── */
+
+  // Menu definitions
+  const fileMenuItems: MenuItem[] = [
+    { label: "New Notebook", shortcut: "", action: () => { setNotebook(createNotebook("Untitled")); setKernel(createKernel()); } },
+    { label: "New Quantum+ML Notebook", action: () => {
+      const nb = createNotebook("Quantum+ML Notebook", [
+        createCell("markdown", "# Quantum + ML Notebook\nCombine quantum circuits with machine learning."),
+        createCell("code", "from qiskit import QuantumCircuit\nfrom sklearn.svm import SVC"),
+        createCell("code", ""),
+      ]);
+      setNotebook(nb);
+      setKernel(createKernel());
+    }},
+    { divider: true, label: "" },
+    { label: "Save", shortcut: "⌘S", action: saveNotebook },
+    { divider: true, label: "" },
+    { label: "Download as .ipynb", action: downloadAsIpynb },
+    { label: "Download as .py", action: downloadAsPy },
+    { label: "Export Report (.md)", action: () => {
+      const allOutputs: CellOutput[] = [];
+      for (const c of notebook.cells) if (c.outputs) allOutputs.push(...c.outputs);
+      const report = generateScientificReport(notebook.name, "Workspace Execution", allOutputs, null, null, [], {});
+      downloadReport(report, `${notebook.name.replace(/\s+/g, "-").toLowerCase()}-report-${Date.now()}.md`);
+    }},
+    { divider: true, label: "" },
+    ...(onClose ? [{ label: "Close Notebook", action: onClose }] : []),
+  ];
+
+  const editMenuItems: MenuItem[] = [
+    { label: "Cut Cell", shortcut: "X", action: cutCellAction },
+    { label: "Copy Cell", shortcut: "C", action: copyCellAction },
+    { label: "Paste Cell Below", shortcut: "V", action: pasteCellAction },
+    { divider: true, label: "" },
+    { label: "Delete Cell", shortcut: "D,D", action: () => activeCell && deleteCell(activeCell) },
+    { label: "Undo Cell Delete", shortcut: "Z", action: undoCellDelete, disabled: undoStack.length === 0 },
+    { divider: true, label: "" },
+    { label: "Move Cell Up", action: () => activeCell && moveCell(activeCell, -1) },
+    { label: "Move Cell Down", action: () => activeCell && moveCell(activeCell, 1) },
+    { divider: true, label: "" },
+    { label: "Find and Replace", shortcut: "⌘F", action: () => setShowFindReplace(v => !v) },
+  ];
+
+  const viewMenuItems: MenuItem[] = [
+    { label: showLineNumbers ? "Hide Line Numbers" : "Show Line Numbers", shortcut: "L", action: () => setShowLineNumbers(v => !v) },
+    { label: sidebarOpen ? "Hide Sidebar" : "Show Sidebar", action: () => setSidebarOpen(v => !v) },
+    { divider: true, label: "" },
+    { label: "Collapse Selected Cell", shortcut: "O", action: () => activeCell && toggleCollapse(activeCell) },
+  ];
+
+  const insertMenuItems: MenuItem[] = [
+    { label: "Insert Cell Above", shortcut: "A", action: insertCellAbove },
+    { label: "Insert Cell Below", shortcut: "B", action: () => activeCell && addCell(activeCell, "code") },
+  ];
+
+  const cellMenuItems: MenuItem[] = [
+    { label: "Run Cell", shortcut: "Shift+↵", action: () => activeCell && runCell(activeCell) },
+    { label: "Run All Cells", action: runAllCells },
+    { label: "Run Cell & Insert Below", action: runCellAndInsertBelow },
+    { divider: true, label: "" },
+    { label: "Cell Type → Code", shortcut: "Y", action: () => activeCell && setCellType(activeCell, "code") },
+    { label: "Cell Type → Markdown", shortcut: "M", action: () => activeCell && setCellType(activeCell, "markdown") },
+    { divider: true, label: "" },
+    { label: "Clear Selected Output", action: () => activeCell && clearOutputs(activeCell) },
+    { label: "Clear All Outputs", action: () => clearOutputs() },
+  ];
+
+  const kernelMenuItems: MenuItem[] = [
+    { label: "Restart Kernel", action: () => restartKernel(false) },
+    { label: "Restart & Run All", action: () => restartKernel(true) },
+    { divider: true, label: "" },
+    { label: "Interrupt Kernel", action: () => setKernelBusy(false), disabled: !kernelBusy },
+  ];
+
+  const helpMenuItems: MenuItem[] = [
+    { label: "Keyboard Shortcuts", shortcut: "H", action: () => setShowShortcuts(true) },
+    { divider: true, label: "" },
+    { label: "About", action: () => {} },
+  ];
+
   return (
-    <div className="h-full flex flex-col" style={{ background: "hsl(0, 0%, 100%)" }}>
-      {/* Menu bar — mirrors JupyterLab */}
-      <div className="flex items-center gap-2 px-4 py-2.5" style={{
+    <div ref={containerRef} className="h-full flex flex-col" style={{ background: "hsl(0, 0%, 100%)" }} tabIndex={-1}>
+      {/* ── Menu Bar — JupyterLab style ── */}
+      <div className="flex items-center px-2 py-0.5" style={{
         borderBottom: "1px solid hsla(220, 10%, 50%, 0.12)",
-        background: "hsl(220, 10%, 97%)",
+        background: "hsl(0, 0%, 100%)",
       }}>
-        <Atom size={18} style={{ color: "hsl(38, 50%, 50%)" }} />
-        <span className="text-base font-semibold mr-3" style={{ color: "hsl(0, 0%, 15%)" }}>Notebook</span>
-
-        <div className="flex items-center gap-1 px-2" style={{ borderLeft: "1px solid hsla(220, 10%, 50%, 0.12)" }}>
-          <button onClick={() => addCell(activeCell, "code")} className="p-1.5 rounded hover:bg-black/5" title="Add cell">
-            <Plus size={17} style={{ color: "hsl(0, 0%, 40%)" }} />
-          </button>
-          <button onClick={runAllCells} className="flex items-center gap-1.5 px-3 py-1 rounded hover:bg-black/5" title="Run all">
-            <Play size={15} style={{ color: "hsl(152, 40%, 38%)" }} />
-            <span className="text-base font-medium" style={{ color: "hsl(152, 40%, 38%)" }}>Run All</span>
-          </button>
-          <button
-            onClick={() => {
-              const allOutputs: CellOutput[] = [];
-              for (const c of notebook.cells) {
-                if (c.outputs) allOutputs.push(...c.outputs);
-              }
-              const report = generateScientificReport(
-                notebook.name, "Jupyter Notebook — Workspace Execution",
-                allOutputs, null, null, [], {},
-              );
-              downloadReport(report, `${notebook.name.replace(/\s+/g, "-").toLowerCase()}-report-${Date.now()}.md`);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1 rounded hover:bg-black/5"
-            title="Export scientific report"
-          >
-            <Download size={15} style={{ color: "hsl(38, 45%, 45%)" }} />
-            <span className="text-sm font-medium" style={{ color: "hsl(38, 45%, 45%)" }}>Export</span>
-          </button>
+        <div className="flex items-center gap-0">
+          {[
+            { label: "File", items: fileMenuItems },
+            { label: "Edit", items: editMenuItems },
+            { label: "View", items: viewMenuItems },
+            { label: "Insert", items: insertMenuItems },
+            { label: "Cell", items: cellMenuItems },
+            { label: "Kernel", items: kernelMenuItems },
+            { label: "Help", items: helpMenuItems },
+          ].map(menu => (
+            <MenuDropdown
+              key={menu.label}
+              label={menu.label}
+              items={menu.items}
+              isOpen={openMenu === menu.label}
+              onToggle={() => setOpenMenu(openMenu === menu.label ? null : menu.label)}
+              onClose={() => setOpenMenu(null)}
+            />
+          ))}
         </div>
+      </div>
 
-        <div className="flex items-center gap-1 px-2" style={{ borderLeft: "1px solid hsla(220, 10%, 50%, 0.12)" }}>
-          <span className="text-sm font-mono px-2.5 py-1 rounded" style={{ background: "hsla(152, 30%, 50%, 0.06)", color: "hsl(152, 35%, 38%)" }}>
-            Python 3.11 ●
-          </span>
-        </div>
+      {/* ── Toolbar — JupyterLab style ── */}
+      <div className="flex items-center gap-0.5 px-2 py-1" style={{
+        borderBottom: "1px solid hsla(220, 10%, 50%, 0.12)",
+        background: "hsl(220, 10%, 98%)",
+      }}>
+        {/* Save */}
+        <button onClick={saveNotebook} className="p-1.5 rounded hover:bg-black/5" title="Save (Ctrl+S)">
+          <Save size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
+        </button>
+
+        <div className="w-px h-5 mx-1" style={{ background: "hsla(0, 0%, 50%, 0.15)" }} />
+
+        {/* Add cell */}
+        <button onClick={() => addCell(activeCell, "code")} className="p-1.5 rounded hover:bg-black/5" title="Insert cell below (B)">
+          <Plus size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
+        </button>
+
+        {/* Cut, Copy, Paste */}
+        <button onClick={cutCellAction} className="p-1.5 rounded hover:bg-black/5" title="Cut cell (X)">
+          <Scissors size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
+        </button>
+        <button onClick={copyCellAction} className="p-1.5 rounded hover:bg-black/5" title="Copy cell (C)">
+          <Copy size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
+        </button>
+        <button onClick={pasteCellAction} className="p-1.5 rounded hover:bg-black/5" title="Paste cell (V)" style={{ opacity: clipboard ? 1 : 0.4 }}>
+          <ClipboardPaste size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
+        </button>
+
+        <div className="w-px h-5 mx-1" style={{ background: "hsla(0, 0%, 50%, 0.15)" }} />
+
+        {/* Move up/down */}
+        <button onClick={() => activeCell && moveCell(activeCell, -1)} className="p-1.5 rounded hover:bg-black/5" title="Move cell up">
+          <ArrowUp size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
+        </button>
+        <button onClick={() => activeCell && moveCell(activeCell, 1)} className="p-1.5 rounded hover:bg-black/5" title="Move cell down">
+          <ArrowDown size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
+        </button>
+
+        <div className="w-px h-5 mx-1" style={{ background: "hsla(0, 0%, 50%, 0.15)" }} />
+
+        {/* Run, Stop, Restart, Run All */}
+        <button onClick={() => activeCell && runCell(activeCell)} className="p-1.5 rounded hover:bg-black/5" title="Run cell (Shift+Enter)">
+          <Play size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
+        </button>
+        <button onClick={() => setKernelBusy(false)} className="p-1.5 rounded hover:bg-black/5" title="Interrupt kernel" style={{ opacity: kernelBusy ? 1 : 0.4 }}>
+          <Square size={14} style={{ color: "hsl(0, 0%, 40%)" }} />
+        </button>
+        <button onClick={() => restartKernel(false)} className="p-1.5 rounded hover:bg-black/5" title="Restart kernel">
+          <RotateCcw size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
+        </button>
+        <button onClick={runAllCells} className="p-1.5 rounded hover:bg-black/5" title="Restart & Run All">
+          <FastForward size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
+        </button>
+
+        <div className="w-px h-5 mx-1" style={{ background: "hsla(0, 0%, 50%, 0.15)" }} />
+
+        {/* Cell type dropdown */}
+        <select
+          value={activeCellObj?.type || "code"}
+          onChange={e => activeCell && setCellType(activeCell, e.target.value as "code" | "markdown")}
+          className="text-[13px] px-2 py-1 rounded bg-transparent cursor-pointer"
+          style={{ border: "1px solid hsla(0, 0%, 50%, 0.15)", color: "hsl(0, 0%, 30%)", minWidth: 100 }}
+        >
+          <option value="code">Code</option>
+          <option value="markdown">Markdown</option>
+        </select>
 
         <div className="flex-1" />
 
-        <button onClick={() => setMode("demos")} className="flex items-center gap-1.5 px-3 py-1 rounded text-base hover:bg-black/5" style={{ color: "hsl(0, 0%, 45%)" }}>
-          <Sparkles size={15} /> Demos
+        {/* Mode indicator */}
+        <span className="text-[11px] font-mono px-2 py-0.5 rounded" style={{
+          background: editMode ? "hsla(152, 40%, 50%, 0.08)" : "hsla(220, 40%, 50%, 0.08)",
+          color: editMode ? "hsl(152, 40%, 38%)" : "hsl(220, 40%, 45%)",
+        }}>
+          {editMode ? "Edit" : "Command"}
+        </span>
+
+        {/* Demos & Home buttons */}
+        <button onClick={() => setMode("demos")} className="flex items-center gap-1 px-2 py-1 rounded text-[13px] hover:bg-black/5 ml-1" style={{ color: "hsl(0, 0%, 45%)" }}>
+          <Sparkles size={14} /> Demos
         </button>
-        <button onClick={() => setMode("landing")} className="px-3 py-1 rounded text-base hover:bg-black/5" style={{ color: "hsl(0, 0%, 45%)" }}>
-          Home
-        </button>
-        {onClose && <button onClick={onClose} className="p-1.5 rounded hover:bg-black/5"><X size={18} style={{ color: "hsl(0, 0%, 45%)" }} /></button>}
+        {onClose && <button onClick={onClose} className="p-1.5 rounded hover:bg-black/5 ml-1"><X size={16} style={{ color: "hsl(0, 0%, 45%)" }} /></button>}
       </div>
+
+      {/* Find & Replace */}
+      {showFindReplace && (
+        <FindReplaceBar
+          notebook={notebook}
+          onReplace={replaceInCell}
+          onClose={() => setShowFindReplace(false)}
+        />
+      )}
 
       {/* Main area */}
       <div className="flex-1 flex overflow-hidden">
@@ -1594,6 +2346,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
                   ]
                 );
                 setNotebook(nb);
+                setKernel(createKernel());
               }}
             />
           </div>
@@ -1601,69 +2354,116 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
 
         {/* Notebook editor */}
         <div className="flex-1 overflow-y-auto">
-          {/* Tab bar */}
-          <div className="flex items-center gap-1 px-4 py-2" style={{ borderBottom: "1px solid hsla(220, 10%, 50%, 0.06)", background: "hsl(220, 10%, 97%)" }}>
+          {/* Tab bar with editable notebook name */}
+          <div className="flex items-center gap-1 px-4 py-1.5" style={{ borderBottom: "1px solid hsla(220, 10%, 50%, 0.06)", background: "hsl(220, 10%, 97%)" }}>
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded hover:bg-black/5 mr-2">
               <FileText size={16} style={{ color: "hsl(0, 0%, 45%)" }} />
             </button>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-t text-base font-medium" style={{
-              background: "hsl(0, 0%, 100%)",
-              color: "hsl(0, 0%, 18%)",
-              borderBottom: "2px solid hsl(38, 50%, 55%)",
-            }}>
-              <FileText size={15} />
-              {notebook.name}.ipynb
-            </div>
+
+            {isRenamingNotebook ? (
+              <input
+                ref={notebookNameRef}
+                type="text"
+                defaultValue={notebook.name}
+                autoFocus
+                className="text-[14px] font-medium px-2 py-1 rounded bg-white focus:outline-none"
+                style={{ border: "1px solid hsla(220, 40%, 50%, 0.3)", color: "hsl(0, 0%, 18%)" }}
+                onBlur={e => {
+                  setNotebook(prev => ({ ...prev, name: e.target.value || "Untitled" }));
+                  setIsRenamingNotebook(false);
+                }}
+                onKeyDown={e => {
+                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                  if (e.key === "Escape") setIsRenamingNotebook(false);
+                }}
+              />
+            ) : (
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-t text-[14px] font-medium cursor-pointer hover:bg-white/50"
+                style={{
+                  background: "hsl(0, 0%, 100%)",
+                  color: "hsl(0, 0%, 18%)",
+                  borderBottom: "2px solid hsl(38, 50%, 55%)",
+                }}
+                onClick={() => setIsRenamingNotebook(true)}
+                title="Click to rename"
+              >
+                <FileText size={14} />
+                {notebook.name}.ipynb
+              </div>
+            )}
+
+            <div className="flex-1" />
+
+            {lastSaved && (
+              <span className="text-[11px]" style={{ color: "hsl(0, 0%, 55%)" }}>
+                Last saved: {lastSaved.toLocaleTimeString()}
+              </span>
+            )}
           </div>
 
           {/* Cells */}
-          <div className="max-w-4xl mx-auto py-6 space-y-2">
+          <div className="max-w-4xl mx-auto py-4 space-y-0">
             {notebook.cells.map((cell) => (
               <React.Fragment key={cell.id}>
                 <CellView
                   cell={cell}
                   isActive={activeCell === cell.id}
-                  onFocus={() => setActiveCell(cell.id)}
+                  isSelected={activeCell === cell.id}
+                  editMode={editMode && activeCell === cell.id}
+                  showLineNumbers={showLineNumbers}
+                  onFocus={() => { setActiveCell(cell.id); setEditMode(false); }}
+                  onEdit={() => setEditMode(true)}
                   onChange={source => updateCell(cell.id, source)}
                   onRun={() => runCell(cell.id)}
                   onDelete={() => deleteCell(cell.id)}
                   onMoveUp={() => moveCell(cell.id, -1)}
                   onMoveDown={() => moveCell(cell.id, 1)}
                   onToggleType={() => toggleCellType(cell.id)}
+                  onToggleCollapse={() => toggleCollapse(cell.id)}
                 />
-                {activeCell === cell.id && (
-                  <div className="flex items-center justify-center py-1 opacity-0 hover:opacity-100 transition-opacity">
-                    <button onClick={() => addCell(cell.id, "code")} className="flex items-center gap-1.5 px-3 py-1 rounded text-sm hover:bg-black/5" style={{ color: "hsl(0, 0%, 50%)" }}>
-                      <Plus size={13} /> Code
-                    </button>
-                    <button onClick={() => addCell(cell.id, "markdown")} className="flex items-center gap-1.5 px-3 py-1 rounded text-sm hover:bg-black/5" style={{ color: "hsl(0, 0%, 50%)" }}>
-                      <Plus size={13} /> Text
-                    </button>
-                  </div>
-                )}
+                {/* Insert cell button between cells */}
+                <div className="flex items-center justify-center py-0 opacity-0 hover:opacity-100 transition-opacity" style={{ height: 16 }}>
+                  <button onClick={() => addCell(cell.id, "code")} className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] hover:bg-black/5" style={{ color: "hsl(0, 0%, 55%)" }}>
+                    <Plus size={11} /> Insert
+                  </button>
+                </div>
               </React.Fragment>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Status bar */}
-      <div className="flex items-center gap-4 px-5 py-2" style={{
+      {/* Status bar — JupyterLab style */}
+      <div className="flex items-center gap-4 px-4 py-1.5" style={{
         borderTop: "1px solid hsla(220, 10%, 50%, 0.08)",
         background: "hsl(220, 10%, 97%)",
+        fontSize: "12px",
       }}>
-        <span className="flex items-center gap-1.5 text-sm" style={{ color: "hsl(152, 35%, 40%)" }}>
-          <span className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(152, 45%, 50%)" }} />
-          Python 3.11
+        <span className="flex items-center gap-1.5" style={{ color: kernelBusy ? "hsl(38, 50%, 45%)" : "hsl(152, 35%, 40%)" }}>
+          <span className="w-2 h-2 rounded-full" style={{ background: kernelBusy ? "hsl(38, 50%, 50%)" : "hsl(152, 45%, 50%)" }} />
+          {kernelBusy ? "Kernel busy" : "Idle"}
         </span>
-        <span className="text-sm" style={{ color: "hsl(0, 0%, 52%)" }}>
-          {notebook.cells.length} cells · {notebook.cells.filter(c => c.executionCount).length} run
+        <span className="text-xs font-mono" style={{ color: "hsl(0, 0%, 52%)" }}>
+          Q-Linux Python 3.11
+        </span>
+        <span style={{ color: "hsl(0, 0%, 52%)" }}>
+          {notebook.cells.length} cells · {notebook.cells.filter(c => c.executionCount).length} executed
         </span>
         <div className="flex-1" />
-        <span className="text-sm" style={{ color: "hsl(0, 0%, 52%)" }}>
+        <span style={{ color: editMode ? "hsl(152, 35%, 40%)" : "hsl(220, 35%, 50%)" }}>
+          {editMode ? "Edit Mode" : "Command Mode"}
+        </span>
+        <span style={{ color: "hsl(0, 0%, 52%)" }}>
+          Ln {activeCellObj ? activeCellObj.source.split("\n").length : 0}
+        </span>
+        <span style={{ color: "hsl(0, 0%, 52%)" }}>
           Qiskit · Cirq · PennyLane
         </span>
       </div>
+
+      {/* Keyboard Shortcuts Modal */}
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
     </div>
   );
 }
