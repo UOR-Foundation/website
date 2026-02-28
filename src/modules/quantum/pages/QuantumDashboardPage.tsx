@@ -22,8 +22,9 @@ const QuantumRadarPanel = React.lazy(() => import("@/modules/quantum/components/
 const AlphaRefinementPanel = React.lazy(() => import("@/modules/quantum/components/AlphaRefinementPanel"));
 const Subgraph153Panel = React.lazy(() => import("@/modules/quantum/components/Subgraph153Panel"));
 const GeometricQubitPanel = React.lazy(() => import("@/modules/quantum/components/GeometricQubitPanel"));
+const CircuitComposerPanel = React.lazy(() => import("@/modules/quantum/components/CircuitComposerPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -40,6 +41,7 @@ export default function QuantumDashboardPage() {
     { key: "alpha", label: "α Refinement", icon: <Zap size={12} /> },
     { key: "153-link", label: "153-Link", icon: <Triangle size={12} /> },
     { key: "geo-qubit", label: "Geo Qubit", icon: <Orbit size={12} /> },
+    { key: "composer", label: "Composer", icon: <Cpu size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -53,6 +55,7 @@ export default function QuantumDashboardPage() {
     alpha: "Computing QED loop corrections from graph invariants…",
     "153-link": "Searching 22-vertex subgraphs for T(17) = 153 edges…",
     "geo-qubit": "Projecting qubits from Atlas symplectic manifold…",
+    composer: "Initializing quantum circuit composer engine…",
   };
 
   return (
@@ -111,7 +114,8 @@ export default function QuantumDashboardPage() {
            tab === "radar" ? <QuantumRadarPanel /> :
            tab === "alpha" ? <AlphaRefinementPanel /> :
            tab === "153-link" ? <Subgraph153Panel /> :
-           <GeometricQubitPanel />}
+           tab === "geo-qubit" ? <GeometricQubitPanel /> :
+           <CircuitComposerPanel />}
         </Suspense>
       </div>
     </div>
@@ -247,6 +251,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "Tests", value: "14" },
       ],
     },
+    {
+      key: "composer" as Tab,
+      title: "Quantum Circuit Composer",
+      phase: "Phase 19",
+      icon: <Cpu size={24} />,
+      color: "hsl(220,60%,65%)",
+      description: "Interactive drag-and-drop circuit builder. Compose gates on qubit wires, execute on the Q-Linux kernel via the geometric substrate, and visualize real-time state vector evolution.",
+      stats: [
+        { label: "Gates", value: "H, X, Y, Z, S, T, CX" },
+        { label: "Execution", value: "Geometric Engine" },
+        { label: "State", value: "Real-time Vector" },
+        { label: "Kernel", value: "Q-Linux Process" },
+      ],
+    },
   ];
 
   return (
@@ -323,6 +341,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "done", label: "Phase 16: Stabilizer Proof — Atlas₉₆ ≅ Stab₃/~ bijection (7 steps)" },
             { status: "done", label: "Phase 17: Quantum Radar — real-time network coherence monitor (12 tests)" },
             { status: "done", label: "Phase 18: Geometric Qubit Emulator — Souriau quantization + braiding gates (14 tests)" },
+            { status: "done", label: "Phase 19: Circuit Composer — drag-and-drop builder + kernel execution" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>
