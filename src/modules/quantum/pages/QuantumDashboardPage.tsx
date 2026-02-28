@@ -11,7 +11,7 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit, CircleDot, BrainCircuit } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit, CircleDot, BrainCircuit, Layers } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
@@ -26,8 +26,9 @@ const CircuitComposerPanel = React.lazy(() => import("@/modules/quantum/componen
 const SouriauThermodynamicsPanel = React.lazy(() => import("@/modules/quantum/components/SouriauThermodynamicsPanel"));
 const CoadjointOrbitPanel = React.lazy(() => import("@/modules/quantum/components/CoadjointOrbitPanel"));
 const TINNPanel = React.lazy(() => import("@/modules/quantum/components/TINNPanel"));
+const FoliationPanel = React.lazy(() => import("@/modules/quantum/components/FoliationPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits" | "tinn";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits" | "tinn" | "foliation";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -48,6 +49,7 @@ export default function QuantumDashboardPage() {
     { key: "thermo", label: "Souriau Thermo", icon: <Zap size={12} /> },
     { key: "orbits", label: "Orbit Classifier", icon: <CircleDot size={12} /> },
     { key: "tinn", label: "TINN Layer", icon: <BrainCircuit size={12} /> },
+    { key: "foliation", label: "Foliation", icon: <Layers size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -65,6 +67,7 @@ export default function QuantumDashboardPage() {
     thermo: "Calibrating Cartan Neural Network temperature cone…",
     orbits: "Classifying coadjoint orbits for Neeb integrability…",
     tinn: "Initializing metriplectic bracket dynamics…",
+    foliation: "Constructing transverse symplectic foliation…",
   };
 
   return (
@@ -128,6 +131,7 @@ export default function QuantumDashboardPage() {
            tab === "thermo" ? <SouriauThermodynamicsPanel /> :
            tab === "orbits" ? <CoadjointOrbitPanel /> :
            tab === "tinn" ? <TINNPanel /> :
+           tab === "foliation" ? <FoliationPanel /> :
            <SouriauThermodynamicsPanel />}
         </Suspense>
       </div>
