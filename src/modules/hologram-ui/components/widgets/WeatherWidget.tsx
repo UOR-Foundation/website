@@ -137,8 +137,8 @@ function tempHue(temp: number): number {
 }
 
 /* ── Ring geometry (matches DayProgressRing) ────────── */
-const SIZE = 96;
-const STROKE = 2.5;
+const SIZE = 77;
+const STROKE = 2;
 const RADIUS = (SIZE - STROKE * 2) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -314,7 +314,7 @@ export default function WeatherWidget() {
           style={{ textRendering: "geometricPrecision" }}
         >
           <Icon
-            size={15}
+            size={12}
             strokeWidth={1.3}
             style={{
               color: `hsla(${hue}, 30%, 88%, 0.9)`,
@@ -324,7 +324,7 @@ export default function WeatherWidget() {
           <span
             className="leading-none"
             style={{
-              fontSize: "22px",
+              fontSize: "18px",
               fontFamily: "'Playfair Display', serif",
               fontWeight: 300,
               color: "hsla(38, 15%, 96%, 1)",

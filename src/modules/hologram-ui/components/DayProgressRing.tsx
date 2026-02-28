@@ -26,8 +26,8 @@ function getDayProgress(): number {
 
 // ── Ring geometry ──────────────────────────────────────────────────────────
 
-const SIZE = 96;
-const STROKE = 2.5;
+const SIZE = 77;
+const STROKE = 2;
 const RADIUS = (SIZE - STROKE * 2) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
