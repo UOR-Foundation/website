@@ -144,10 +144,10 @@ export default function GlassPanel({
 
   // ── Glass effect calibration ──────────────────────────────────────
   const glassBackground = heavy
-    ? "hsla(25, 10%, 12%, 0.65)"
-    : "hsla(25, 10%, 12%, 0.5)";
-  const glassBlur = heavy ? "blur(48px) saturate(1.5)" : "blur(40px) saturate(1.4)";
-  const borderColor = `hsla(38, 20%, 80%, ${tokens.borderWidth > 0.5 ? 0.1 : 0.07})`;
+    ? "hsla(25, 10%, 10%, 0.8)"
+    : "hsla(25, 10%, 10%, 0.7)";
+  const glassBlur = heavy ? "blur(56px) saturate(1.6)" : "blur(48px) saturate(1.5)";
+  const borderColor = `hsla(38, 20%, 80%, ${tokens.borderWidth > 0.5 ? 0.12 : 0.09})`;
 
   // ── Compose styles ────────────────────────────────────────────────
   const composedStyle: React.CSSProperties = {
@@ -156,7 +156,7 @@ export default function GlassPanel({
     WebkitBackdropFilter: glassBlur,
     borderRadius: tokens.borderRadius,
     border: `${tokens.borderWidth}px solid ${borderColor}`,
-    boxShadow: `0 8px 32px -8px hsla(25, 10%, 0%, 0.2), inset 0 1px 0 hsla(38, 25%, 90%, 0.07)`,
+    boxShadow: `0 8px 32px -8px hsla(25, 10%, 0%, 0.35), inset 0 1px 0 hsla(38, 25%, 90%, 0.08)`,
     padding: tokens.padding,
     fontFamily: KP.font,
     position: draggable ? "fixed" : undefined,

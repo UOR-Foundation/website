@@ -56,7 +56,7 @@ function getPaletteVars(bgMode: "image" | "white" | "dark") {
     "--sb-gold": "hsl(34, 35%, 62%)",
   } as Record<string, string>;
   return {
-    "--sb-bg": "hsla(25, 10%, 12%, 0.35)",
+    "--sb-bg": "hsla(25, 10%, 10%, 0.6)",
     "--sb-hover": "hsla(30, 12%, 90%, 0.06)",
     "--sb-active": "hsla(30, 15%, 85%, 0.09)",
     "--sb-border": "hsla(38, 20%, 80%, 0.08)",

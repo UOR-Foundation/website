@@ -317,7 +317,7 @@ export default function WeatherWidget() {
             size={15}
             strokeWidth={1.3}
             style={{
-              color: `hsla(${hue}, 25%, 85%, 0.75)`,
+              color: `hsla(${hue}, 30%, 88%, 0.9)`,
               transition: "color 0.8s ease",
             }}
           />
@@ -327,7 +327,7 @@ export default function WeatherWidget() {
               fontSize: "22px",
               fontFamily: "'Playfair Display', serif",
               fontWeight: 300,
-              color: "hsla(38, 15%, 94%, 0.95)",
+              color: "hsla(38, 15%, 96%, 1)",
               letterSpacing: "0.02em",
             }}
           >
@@ -341,7 +341,7 @@ export default function WeatherWidget() {
         className="text-[12px] tracking-[0.35em] uppercase text-center transition-all duration-300"
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
-          color: "hsla(38, 15%, 85%, 0.75)",
+          color: "hsla(38, 15%, 90%, 0.9)",
           fontWeight: 500,
         }}
       >
@@ -362,7 +362,7 @@ export default function WeatherWidget() {
               fontSize: "13px",
               fontFamily: "'Playfair Display', serif",
               fontWeight: 300,
-              color: "hsla(38, 15%, 92%, 0.85)",
+              color: "hsla(38, 15%, 95%, 0.95)",
               letterSpacing: "0.02em",
             }}
           >
@@ -376,7 +376,7 @@ export default function WeatherWidget() {
                 fontSize: "10px",
                 fontFamily: "'DM Sans', system-ui, sans-serif",
                 fontWeight: 500,
-                color: "hsla(38, 15%, 82%, 0.55)",
+                color: "hsla(38, 15%, 88%, 0.7)",
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
               }}
@@ -390,7 +390,7 @@ export default function WeatherWidget() {
                 fontSize: "10px",
                 fontFamily: "'DM Sans', system-ui, sans-serif",
                 fontWeight: 500,
-                color: "hsla(38, 15%, 82%, 0.55)",
+                color: "hsla(38, 15%, 88%, 0.7)",
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
               }}
@@ -404,7 +404,7 @@ export default function WeatherWidget() {
                 fontSize: "10px",
                 fontFamily: "'DM Sans', system-ui, sans-serif",
                 fontWeight: 500,
-                color: "hsla(38, 15%, 82%, 0.55)",
+                color: "hsla(38, 15%, 88%, 0.7)",
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
               }}
@@ -424,7 +424,7 @@ export default function WeatherWidget() {
             fontSize: "11px",
             fontWeight: 300,
             fontStyle: "italic",
-            color: "hsla(38, 12%, 85%, 0.5)",
+            color: "hsla(38, 12%, 88%, 0.7)",
             letterSpacing: "0.03em",
             maxWidth: 180,
             lineHeight: 1.5,
