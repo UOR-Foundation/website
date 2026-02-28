@@ -25,6 +25,7 @@ import {
   IconLink,
 } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { sf } from "@/modules/hologram-ui/utils/scaledFontSize";
 
 import zeroInboxReward from "@/assets/zero-inbox-reward.jpg";
 import MessengerCalendar, { type CalendarEvent } from "./messenger/MessengerCalendar";
@@ -525,7 +526,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
                   style={{
                     color: active ? P.accent : P.muted,
                     fontWeight: active ? 600 : 400,
-                    fontSize: "13px",
+                    fontSize: sf(13),
                     background: active ? P.accentSoft : "transparent",
                   }}
                   title={label}
@@ -552,14 +553,14 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
                       style={{
                         color: active ? P.text : P.muted,
                         fontWeight: active ? 600 : 400,
-                        fontSize: "14px",
+                        fontSize: sf(14),
                         background: active ? "transparent" : "transparent",
                       }}
                     >
                       {label}
                       <span
                         style={{
-                          fontSize: "12px",
+                          fontSize: sf(12),
                           fontWeight: 400,
                           color: active ? P.textSecondary : P.dim,
                           fontVariantNumeric: "tabular-nums",
@@ -580,7 +581,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
           {isZeroInbox && activeView === "inbox" && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md mr-2" style={{ background: `${P.green}15` }}>
               <IconTrophy size={15} style={{ color: P.green }} />
-              <span style={{ fontSize: "12px", fontWeight: 600, color: P.green }}>Zero Inbox</span>
+              <span style={{ fontSize: sf(12), fontWeight: 600, color: P.green }}>Zero Inbox</span>
             </div>
           )}
 
@@ -782,7 +783,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
                 <kbd
                   className="inline-flex items-center justify-center rounded px-1.5 h-[22px]"
                   style={{
-                    fontSize: "11px",
+                    fontSize: sf(11),
                     fontFamily: "monospace",
                     fontWeight: 600,
                     color: P.dim,
@@ -793,11 +794,11 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
                 >
                   {h.key}
                 </kbd>
-                <span style={{ fontSize: "11px", color: P.dim }}>{h.label}</span>
+                <span style={{ fontSize: sf(11), color: P.dim }}>{h.label}</span>
               </div>
             ))
           ) : (
-            <span style={{ fontSize: "11px", color: P.dim }}>
+            <span style={{ fontSize: sf(11), color: P.dim }}>
               {activeView === "calendar" && `${calendarEvents.length} events`}
               {activeView === "ai" && "Private context · Encrypted graph"}
               {activeView === "introductions" && `${introductions.length} introductions`}
@@ -867,7 +868,7 @@ function MessageRow({
         className="shrink-0 truncate"
         style={{
           width: "175px",
-          fontSize: "15px",
+          fontSize: sf(15),
           fontWeight: m.unread ? 600 : 400,
           color: m.unread ? P.text : P.textSecondary,
           paddingRight: "12px",
@@ -905,7 +906,7 @@ function MessageRow({
         <span
           className="truncate flex-1"
           style={{
-            fontSize: "14px",
+            fontSize: sf(14),
             fontWeight: 300,
             color: P.muted,
           }}
@@ -948,14 +949,14 @@ function MessageRow({
             {m.threadCount && m.threadCount > 1 && (
               <span
                 className="w-6 h-6 rounded flex items-center justify-center mr-1"
-                style={{ background: P.accentSoft, fontSize: "11px", fontWeight: 600, color: P.accent }}
+                style={{ background: P.accentSoft, fontSize: sf(11), fontWeight: 600, color: P.accent }}
               >
                 {m.threadCount}
               </span>
             )}
             <span
               style={{
-                fontSize: "13px",
+                fontSize: sf(13),
                 color: P.dim,
                 fontVariantNumeric: "tabular-nums",
                 whiteSpace: "nowrap",
@@ -1039,7 +1040,7 @@ function FocusReadingView({
         <button
           onClick={onBack}
           className="flex items-center gap-2 transition-colors duration-200"
-          style={{ color: P.muted, fontSize: "13px", fontFamily: FONT }}
+          style={{ color: P.muted, fontSize: sf(13), fontFamily: FONT }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           <span className="tracking-wide uppercase" style={{ fontWeight: 500, letterSpacing: "0.1em" }}>Inbox</span>
@@ -1091,13 +1092,13 @@ function FocusReadingView({
                   border: `1px solid ${cfg.color}25`,
                 }}
               >
-                <span style={{ fontSize: "16px", fontWeight: 500, color: cfg.color }}>
+                <span style={{ fontSize: sf(16), fontWeight: 500, color: cfg.color }}>
                   {m.from.charAt(0)}
                 </span>
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span style={{ fontSize: "16px", fontWeight: 500, color: P.text, fontFamily: FONT }}>
+                  <span style={{ fontSize: sf(16), fontWeight: 500, color: P.text, fontFamily: FONT }}>
                     {m.from.split(",")[0]}
                   </span>
                   {m.platform !== "email" && (
@@ -1105,8 +1106,8 @@ function FocusReadingView({
                   )}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
-                  {m.email && <span style={{ fontSize: "13px", color: P.muted }}>{m.email}</span>}
-                  <span style={{ fontSize: "12px", color: P.dim }}>{m.time}</span>
+                  {m.email && <span style={{ fontSize: sf(13), color: P.muted }}>{m.email}</span>}
+                  <span style={{ fontSize: sf(12), color: P.dim }}>{m.time}</span>
                 </div>
               </div>
             </div>
@@ -1174,7 +1175,7 @@ function FocusReadingView({
               transition={{ duration: 0.4, delay: 0.25 }}
             >
               <IconSparkles size={15} style={{ color: P.accent }} />
-              <span style={{ fontSize: "14px", fontWeight: 500, color: P.accent }}>{m.actionLabel}</span>
+              <span style={{ fontSize: sf(14), fontWeight: 500, color: P.accent }}>{m.actionLabel}</span>
             </motion.div>
           )}
 
@@ -1223,12 +1224,12 @@ function FocusReadingView({
             >
               <span
                 className="tracking-[0.15em] uppercase mb-4 block"
-                style={{ fontSize: "11px", color: P.dim, fontWeight: 500 }}
+                style={{ fontSize: sf(11), color: P.dim, fontWeight: 500 }}
               >
                 About {m.from.split(",")[0]}
               </span>
               {m.bio && (
-                <p style={{ fontSize: "14px", lineHeight: 1.7, color: P.muted, fontWeight: 300, marginBottom: "12px" }}>
+                <p style={{ fontSize: sf(14), lineHeight: 1.7, color: P.muted, fontWeight: 300, marginBottom: "12px" }}>
                   {m.bio}
                 </p>
               )}
