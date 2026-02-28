@@ -392,7 +392,7 @@ export default function DesktopSurface({
               fontFamily: "'DM Sans', system-ui, sans-serif",
               color: P.greeting,
               fontWeight: 400,
-              fontSize: isFocus ? "clamp(13px, 1.2vw, 20px)" : "clamp(11px, 1vw, 16px)",
+              fontSize: isFocus ? "calc(clamp(13px, 1.2vw, 20px) * var(--holo-user-scale))" : "calc(clamp(11px, 1vw, 16px) * var(--holo-user-scale))",
             }}
           >
             {greeting}
@@ -405,7 +405,7 @@ export default function DesktopSurface({
               fontWeight: 300,
               color: P.heading,
               letterSpacing: "-0.01em",
-              fontSize: isFocus ? "clamp(42px, 5.5vw, 96px)" : "clamp(34px, 4.4vw, 76px)",
+              fontSize: isFocus ? "calc(clamp(42px, 5.5vw, 96px) * var(--holo-user-scale))" : "calc(clamp(34px, 4.4vw, 76px) * var(--holo-user-scale))",
             }}
           >
             Welcome{contextHints.length > 0 ? " back" : " home"},
@@ -473,7 +473,7 @@ export default function DesktopSurface({
                 style={{
                   fontFamily: "'DM Sans', system-ui, sans-serif",
                   fontWeight: 400,
-                  fontSize: isFocus ? "clamp(13px, 1.1vw, 16px)" : "clamp(12px, 0.9vw, 14px)",
+                  fontSize: isFocus ? "calc(clamp(13px, 1.1vw, 16px) * var(--holo-user-scale))" : "calc(clamp(12px, 0.9vw, 14px) * var(--holo-user-scale))",
                   color: mode === "white" ? "hsla(0, 0%, 10%, 0.9)" : "hsla(38, 15%, 88%, 0.7)",
                 }}
               >
@@ -486,7 +486,7 @@ export default function DesktopSurface({
                   fontFamily: "'Playfair Display', serif",
                   fontWeight: 300,
                   fontStyle: "italic",
-                  fontSize: isFocus ? "clamp(15px, 1.2vw, 22px)" : "clamp(14px, 1vw, 18px)",
+                  fontSize: isFocus ? "calc(clamp(15px, 1.2vw, 22px) * var(--holo-user-scale))" : "calc(clamp(14px, 1vw, 18px) * var(--holo-user-scale))",
                   color: mode === "white" ? "hsla(0, 0%, 20%, 0.8)" : "hsla(38, 12%, 85%, 0.6)",
                   maxWidth: "30ch",
                   lineHeight: 1.6,
@@ -524,7 +524,7 @@ export default function DesktopSurface({
         <span
           style={{
             fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontSize: "12px",
+            fontSize: "calc(12px * var(--holo-user-scale))",
             letterSpacing: "0.35em",
             textTransform: "uppercase",
             fontWeight: 500,
@@ -577,7 +577,7 @@ export default function DesktopSurface({
           className="transition-opacity duration-500 hover:opacity-70"
           style={{
             fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontSize: "10px",
+            fontSize: "calc(10px * var(--holo-user-scale))",
             letterSpacing: "0.15em",
             textTransform: "uppercase",
             color: P.legalText,
@@ -594,7 +594,7 @@ export default function DesktopSurface({
           className="transition-opacity duration-500 hover:opacity-70"
           style={{
             fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontSize: "10px",
+            fontSize: "calc(10px * var(--holo-user-scale))",
             letterSpacing: "0.15em",
             textTransform: "uppercase",
             color: P.legalText,
@@ -611,7 +611,7 @@ export default function DesktopSurface({
           className="transition-opacity duration-500 hover:opacity-90"
           style={{
             fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontSize: "10px",
+            fontSize: "calc(10px * var(--holo-user-scale))",
             letterSpacing: "0.15em",
             textTransform: "uppercase",
             color: mode === "white" ? "hsla(0, 0%, 10%, 0.85)" : "hsla(38, 30%, 75%, 0.75)",

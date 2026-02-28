@@ -1130,7 +1130,7 @@ function FocusReadingView({
           <motion.h2
             style={{
               fontFamily: SERIF,
-              fontSize: "26px",
+              fontSize: "var(--holo-text-2xl)",
               fontWeight: 400,
               color: P.text,
               lineHeight: 1.35,
@@ -1151,7 +1151,7 @@ function FocusReadingView({
             transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
           >
             <p style={{
-              fontSize: "16px",
+              fontSize: "var(--holo-text-base)",
               lineHeight: 1.85,
               color: P.textSecondary,
               fontWeight: 300,
