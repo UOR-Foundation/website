@@ -120,3 +120,16 @@ export type {
   AgentStats,
   MeshStats,
 } from "./q-agent";
+
+// Q-Driver: Block device abstraction layer
+export { QDriver, BlockDevice, MemoryBackend, IndexedDBBackend, SupabaseBackend, IpfsBackend } from "./q-driver";
+export type {
+  BackendType,
+  DeviceState,
+  Sector,
+  BlockDeviceDescriptor,
+  IoResult,
+  DriverStats,
+  DeviceEvent,
+  StorageBackend,
+} from "./q-driver";
