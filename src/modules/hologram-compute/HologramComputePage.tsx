@@ -15,7 +15,7 @@ import {
   IconCloudComputing, IconUsers, IconArrowRight,
   IconCircleCheck, IconFlame, IconBoltFilled,
 } from "@tabler/icons-react";
-import { PageShell } from "@/modules/hologram-ui";
+import { PageShell } from "@/modules/core/ui/shared-dashboard";
 import { getOrchestrator, type ProviderSnapshot } from "@/modules/hologram-compute";
 import ConstantTimeBenchmark from "./ConstantTimeBenchmark";
 import BitTableBenchmark from "./BitTableBenchmark";

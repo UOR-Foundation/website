@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { StreamProjection, type StreamSnapshot, type LevelSnapshot } from "../stream-projection";
 import { SourceBreakdownPanel } from "../components/SourceBreakdownPanel";
 import { SystemEventBus } from "../system-event-bus";
-import { PageShell } from "@/modules/hologram-ui";
+import { PageShell } from "@/modules/core/ui/shared-dashboard";
 import { Q0 } from "@/modules/ring-core/ring";
 import { singleProofHash } from "@/modules/uns/core/identity";
 import { project } from "@/modules/uns/core/hologram";

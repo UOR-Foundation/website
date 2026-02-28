@@ -17,7 +17,7 @@ import {
 import {
   PageShell, StatCard, DashboardGrid, MetricBar, InfoCard, DataTable,
   type DataTableColumn,
-} from "@/modules/hologram-ui";
+} from "@/modules/core/ui/shared-dashboard";
 import {
   buildCodeGraph, computeStats, graphToTriples,
   UOR_MODULE_SOURCES,

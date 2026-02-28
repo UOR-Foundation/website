@@ -17,7 +17,7 @@ import {
 import {
   PageShell, StatCard, DashboardGrid, MetricBar, DataTable,
   type DataTableColumn,
-} from "@/modules/hologram-ui";
+} from "@/modules/core/ui/shared-dashboard";
 import {
   MultiScaleObserver,
   createFullStackObservation,
