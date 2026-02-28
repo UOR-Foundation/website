@@ -38,22 +38,31 @@ function IconTooltip({ label, children, show }: { label: string; children: React
 /* ── Palette — CSS variables set on the sidebar root ────────── */
 function getPaletteVars(bgMode: "image" | "white" | "dark") {
   if (bgMode === "white") return {
-    "--sb-bg": "hsl(0, 0%, 97%)",
-    "--sb-hover": "hsla(0, 0%, 0%, 0.04)",
-    "--sb-active": "hsla(0, 0%, 0%, 0.08)",
-    "--sb-border": "hsla(0, 0%, 0%, 0.08)",
-    "--sb-text": "hsl(0, 0%, 15%)",
-    "--sb-muted": "hsl(0, 0%, 45%)",
-    "--sb-gold": "hsl(38, 35%, 42%)",
+    "--sb-bg": "hsla(30, 10%, 97%, 0.85)",
+    "--sb-hover": "hsla(30, 8%, 0%, 0.03)",
+    "--sb-active": "hsla(30, 12%, 0%, 0.05)",
+    "--sb-border": "hsla(30, 8%, 0%, 0.06)",
+    "--sb-text": "hsl(25, 8%, 28%)",
+    "--sb-muted": "hsl(25, 6%, 55%)",
+    "--sb-gold": "hsl(32, 30%, 45%)",
+  } as Record<string, string>;
+  if (bgMode === "dark") return {
+    "--sb-bg": "hsla(25, 8%, 7%, 0.92)",
+    "--sb-hover": "hsla(30, 12%, 90%, 0.05)",
+    "--sb-active": "hsla(30, 15%, 85%, 0.08)",
+    "--sb-border": "hsla(30, 10%, 70%, 0.06)",
+    "--sb-text": "hsl(30, 8%, 82%)",
+    "--sb-muted": "hsl(30, 6%, 52%)",
+    "--sb-gold": "hsl(34, 35%, 62%)",
   } as Record<string, string>;
   return {
-    "--sb-bg": "hsl(25, 8%, 10%)",
-    "--sb-hover": "hsla(38, 12%, 90%, 0.08)",
-    "--sb-active": "hsla(38, 20%, 85%, 0.12)",
-    "--sb-border": "hsla(38, 12%, 70%, 0.1)",
-    "--sb-text": "hsl(38, 10%, 88%)",
-    "--sb-muted": "hsl(38, 8%, 60%)",
-    "--sb-gold": "hsl(38, 40%, 65%)",
+    "--sb-bg": "hsla(25, 10%, 8%, 0.75)",
+    "--sb-hover": "hsla(30, 12%, 90%, 0.05)",
+    "--sb-active": "hsla(30, 15%, 85%, 0.08)",
+    "--sb-border": "hsla(30, 10%, 70%, 0.06)",
+    "--sb-text": "hsl(30, 8%, 82%)",
+    "--sb-muted": "hsl(30, 6%, 52%)",
+    "--sb-gold": "hsl(34, 35%, 62%)",
   } as Record<string, string>;
 }
 
@@ -146,14 +155,16 @@ export default function DesktopOsSidebar({
         ...paletteVars,
         width: `${w}px`,
         background: "var(--sb-bg)",
+        backdropFilter: "blur(24px) saturate(1.2)",
+        WebkitBackdropFilter: "blur(24px) saturate(1.2)",
         borderRight: "1px solid var(--sb-border)",
         willChange: "width",
-        transition: "width 350ms cubic-bezier(0.4, 0, 0.2, 1), background 500ms ease, border-color 500ms ease, color 500ms ease",
+        transition: "width 350ms cubic-bezier(0.4, 0, 0.2, 1), background 600ms ease, border-color 600ms ease, color 600ms ease",
         fontFamily: "'DM Sans', system-ui, sans-serif",
       } as React.CSSProperties}
     >
       {/* ── Top: Logo / toggle ─────────────────────────────────── */}
-      <div className="flex items-center justify-between px-3 pt-5 pb-6">
+      <div className="flex items-center justify-between px-3 pt-6 pb-7">
         {expanded ? (
           <>
             <div className="flex items-center gap-2.5 px-2 py-1 overflow-hidden">
@@ -224,7 +235,7 @@ export default function DesktopOsSidebar({
       </div>
 
       {/* ── Core Navigation ───────────────────────────────────── */}
-      <div className="flex-1 px-2.5 space-y-1 overflow-hidden">
+      <div className="flex-1 px-2.5 space-y-0.5 overflow-hidden">
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.path);
           return (
@@ -240,7 +251,7 @@ export default function DesktopOsSidebar({
                   }
                 })}
                 className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                  !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+                  !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
                 } ${active ? "sidebar-nav-active" : ""}`}
                 style={{
                   color: active ? "var(--sb-gold)" : "var(--sb-text)",
@@ -248,12 +259,12 @@ export default function DesktopOsSidebar({
                 }}
               >
                 <item.icon
-                  className="w-5 h-5 shrink-0"
-                  strokeWidth={1.5}
+                  className="w-[18px] h-[18px] shrink-0"
+                  strokeWidth={1.3}
                   style={{ color: active ? "var(--sb-gold)" : "var(--sb-muted)" }}
                 />
                 {expanded && (
-                  <span className="text-[14px] font-light whitespace-nowrap">{item.label}</span>
+                  <span className="text-[13px] font-light whitespace-nowrap tracking-wide">{item.label}</span>
                 )}
               </button>
             </IconTooltip>
@@ -266,12 +277,12 @@ export default function DesktopOsSidebar({
             <button
               onClick={() => collapseAndDo(onOpenBrowser)}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
               }`}
               style={{ color: "var(--sb-text)" }}
             >
-              <Globe className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
-              {expanded && <span className="text-[14px] font-light whitespace-nowrap">Web</span>}
+              <Globe className="w-[18px] h-[18px] shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+              {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Web</span>}
             </button>
           </IconTooltip>
         )}
@@ -281,12 +292,12 @@ export default function DesktopOsSidebar({
           <button
             onClick={() => collapseAndDo(() => onOpenMemory?.())}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
             }`}
             style={{ color: "var(--sb-text)", background: "transparent" }}
           >
-            <Database className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
-            {expanded && <span className="text-[14px] font-light whitespace-nowrap">Memory</span>}
+            <Database className="w-[18px] h-[18px] shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+            {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Memory</span>}
           </button>
         </IconTooltip>
 
@@ -295,12 +306,12 @@ export default function DesktopOsSidebar({
           <button
             onClick={() => collapseAndDo(() => onOpenCompute?.())}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
             }`}
             style={{ color: "var(--sb-text)", background: "transparent" }}
           >
-            <Cpu className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
-            {expanded && <span className="text-[14px] font-light whitespace-nowrap">Compute</span>}
+            <Cpu className="w-[18px] h-[18px] shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+            {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Compute</span>}
           </button>
         </IconTooltip>
 
@@ -310,12 +321,12 @@ export default function DesktopOsSidebar({
             <button
               onClick={() => collapseAndDo(onOpenTerminal)}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
               }`}
               style={{ color: "var(--sb-text)" }}
             >
-              <Terminal className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
-              {expanded && <span className="text-[14px] font-light whitespace-nowrap">Terminal</span>}
+              <Terminal className="w-[18px] h-[18px] shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+              {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Terminal</span>}
             </button>
           </IconTooltip>
         )}
@@ -326,12 +337,12 @@ export default function DesktopOsSidebar({
             <button
               onClick={() => collapseAndDo(onOpenJupyter)}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
               }`}
               style={{ color: "var(--sb-text)" }}
             >
-              <Beaker className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-gold)" }} />
-              {expanded && <span className="text-[14px] font-light whitespace-nowrap">Jupyter</span>}
+              <Beaker className="w-[18px] h-[18px] shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-gold)" }} />
+              {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Jupyter</span>}
             </button>
           </IconTooltip>
         )}
@@ -340,7 +351,7 @@ export default function DesktopOsSidebar({
       {/* Share the Love heart is now in the bottom section */}
 
       {/* ── Bottom: Text Size + Settings + Help ─────────────── */}
-      <div className="px-2.5 py-4 space-y-1" style={{ borderTop: "1px solid var(--sb-border)" }}>
+      <div className="px-2.5 py-5 space-y-0.5" style={{ borderTop: "1px solid var(--sb-border)" }}>
         {/* Text Size Control — visible when expanded */}
         {expanded && (
           <TextSizeControl textSize={textSize} setTextSize={handleTextSize} bgMode={bgMode} />
@@ -351,18 +362,18 @@ export default function DesktopOsSidebar({
           <button
             onClick={() => collapseAndDo(() => setShareOpen(true))}
             className={`sidebar-nav-btn group w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
             }`}
             style={{ color: "var(--sb-text)", background: "transparent" }}
           >
             <svg
-              width="20"
-              height="20"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               className="shrink-0 transition-transform duration-300 group-hover:scale-110"
-              style={{ opacity: 0.75 }}
+              style={{ opacity: 0.65 }}
             >
               <path
                 d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
@@ -376,7 +387,7 @@ export default function DesktopOsSidebar({
                 </linearGradient>
               </defs>
             </svg>
-            {expanded && <span className="text-[14px] font-light whitespace-nowrap">Share the Love</span>}
+            {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Share the Love</span>}
           </button>
         </IconTooltip>
 
@@ -385,12 +396,12 @@ export default function DesktopOsSidebar({
             <button
               onClick={() => collapseAndDo(() => onReplayGuide?.())}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
               }`}
               style={{ color: "var(--sb-text)" }}
             >
-              <HelpCircle className="w-5 h-5" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
-              {expanded && <span className="text-[14px] font-light">Help</span>}
+              <HelpCircle className="w-[18px] h-[18px]" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+              {expanded && <span className="text-[13px] font-light tracking-wide">Help</span>}
             </button>
           </IconTooltip>
         )}
@@ -398,24 +409,24 @@ export default function DesktopOsSidebar({
           <button
             onClick={() => collapseAndDo(() => onOpenMessenger?.())}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
             }`}
             style={{ color: "var(--sb-text)" }}
           >
-            <Inbox className="w-5 h-5" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
-            {expanded && <span className="text-[14px] font-light">Inbox</span>}
+            <Inbox className="w-[18px] h-[18px]" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+            {expanded && <span className="text-[13px] font-light tracking-wide">Inbox</span>}
           </button>
         </IconTooltip>
         <IconTooltip label="Settings" show={!expanded}>
           <button
             onClick={() => collapseAndDo(() => navigate("/settings"))}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
             }`}
             style={{ color: "var(--sb-text)" }}
           >
-            <Settings className="w-5 h-5" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
-            {expanded && <span className="text-[14px] font-light">Settings</span>}
+            <Settings className="w-[18px] h-[18px]" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+            {expanded && <span className="text-[13px] font-light tracking-wide">Settings</span>}
           </button>
         </IconTooltip>
       </div>
