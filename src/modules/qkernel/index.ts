@@ -86,3 +86,25 @@ export type {
   IsaStats,
   TransformElement,
 } from "./q-isa";
+
+// Q-Net: Fano-topology networking
+export { QNet } from "./q-net";
+export type {
+  QSocket,
+  SocketState,
+  QProtocol,
+  QEnvelope,
+  FanoNode,
+  QRoute,
+  FirewallRule,
+  NetStats,
+} from "./q-net";
+
+// Q-IPC: Inter-process communication
+export { QIpc } from "./q-ipc";
+export type {
+  QMessage,
+  QChannel,
+  QSubscription,
+  IpcStats,
+} from "./q-ipc";
