@@ -3,14 +3,17 @@
  * ═════════════════════════════════════════
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   compileCircuit,
   verifyCircuitCompiler,
   exportToOpenQASM,
   ALGORITHM_LIBRARY,
+  rotationSequenceAlgorithm,
+  composeRotations,
   type CompiledCircuit,
   type CompilerVerification,
+  type RotationStep,
 } from "../circuit-compiler";
 
 const ALGORITHMS = [
@@ -21,6 +24,7 @@ const ALGORITHMS = [
   { key: "deutsch-jozsa", label: "Deutsch-Jozsa", qubits: 3 },
   { key: "vqe", label: "VQE Ansatz", qubits: 4 },
   { key: "custom-rotation", label: "Custom Rotation", qubits: 2 },
+  { key: "euler-compose", label: "Euler Compose", qubits: 1 },
 ];
 
 export default function CircuitCompilerPanel() {
@@ -33,6 +37,12 @@ export default function CircuitCompilerPanel() {
   const [theta, setTheta] = useState(Math.PI / 4);
   const [rotAxis, setRotAxis] = useState<"Rx" | "Ry" | "Rz">("Ry");
   const [rotQubit, setRotQubit] = useState(0);
+
+  // Euler composition state
+  const [eulerSteps, setEulerSteps] = useState<RotationStep[]>([
+    { axis: "x", angle: Math.PI / 3 },
+    { axis: "z", angle: Math.PI / 4 },
+  ]);
 
   useEffect(() => {
     const v = verifyCircuitCompiler();
@@ -47,6 +57,10 @@ export default function CircuitCompilerPanel() {
     setQubits(n);
     if (key === "custom-rotation") {
       compileCustomRotation();
+      return;
+    }
+    if (key === "euler-compose") {
+      compileEuler();
       return;
     }
     const factory = ALGORITHM_LIBRARY[key];
@@ -71,10 +85,29 @@ export default function CircuitCompilerPanel() {
     setResult(compileCircuit(spec));
   };
 
+  const compileEuler = useCallback(() => {
+    const spec = rotationSequenceAlgorithm(eulerSteps, 0);
+    setResult(compileCircuit(spec));
+  }, [eulerSteps]);
+
+  const addEulerStep = () => {
+    setEulerSteps(s => [...s, { axis: "z", angle: Math.PI / 4 }]);
+  };
+  const removeEulerStep = (i: number) => {
+    setEulerSteps(s => s.filter((_, j) => j !== i));
+  };
+  const updateEulerStep = (i: number, patch: Partial<RotationStep>) => {
+    setEulerSteps(s => s.map((step, j) => j === i ? { ...step, ...patch } : step));
+  };
+
   // Re-compile when rotation params change while custom-rotation is selected
   useEffect(() => {
     if (selected === "custom-rotation") compileCustomRotation();
   }, [theta, rotAxis, rotQubit]);
+
+  useEffect(() => {
+    if (selected === "euler-compose") compileEuler();
+  }, [eulerSteps, selected, compileEuler]);
 
   const passed = verifications.filter(v => v.passed).length;
 
@@ -219,6 +252,113 @@ export default function CircuitCompilerPanel() {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Euler composition controls */}
+      {selected === "euler-compose" && (
+        <div className="bg-[hsla(160,20%,12%,0.4)] border border-[hsla(160,30%,35%,0.4)] rounded-lg p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-[11px] font-mono text-[hsl(160,60%,60%)] uppercase">
+              Euler ZYZ Decomposition — Compose Rotation Sequence
+            </div>
+            <button
+              onClick={addEulerStep}
+              className="text-[9px] font-mono px-2 py-1 rounded border bg-[hsla(140,30%,20%,0.3)] border-[hsla(140,30%,40%,0.4)] text-[hsl(140,60%,55%)] hover:bg-[hsla(140,30%,25%,0.4)] transition-colors"
+            >
+              + Add Step
+            </button>
+          </div>
+          <p className="text-[9px] font-mono text-[hsl(210,10%,45%)]">
+            Define a sequence of Rx, Ry, Rz gates. They are multiplied right-to-left and decomposed into U = Rz(α)·Ry(β)·Rz(γ).
+          </p>
+          <div className="space-y-2">
+            {eulerSteps.map((step, i) => (
+              <div key={i} className="flex items-center gap-3 bg-[hsla(210,10%,8%,0.5)] rounded p-2">
+                <span className="text-[9px] font-mono text-[hsl(210,10%,40%)] w-6">#{i + 1}</span>
+                <div className="flex gap-1">
+                  {(["x", "y", "z"] as const).map(ax => (
+                    <button
+                      key={ax}
+                      onClick={() => updateEulerStep(i, { axis: ax })}
+                      className={`text-[10px] font-mono px-2 py-1 rounded border transition-colors ${
+                        step.axis === ax
+                          ? "bg-[hsla(160,40%,25%,0.4)] border-[hsla(160,40%,45%,0.5)] text-[hsl(160,60%,65%)]"
+                          : "bg-[hsla(210,10%,15%,0.5)] border-[hsla(210,10%,25%,0.3)] text-[hsl(210,10%,50%)]"
+                      }`}
+                    >
+                      R{ax}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="range"
+                  min={-Math.PI * 2}
+                  max={Math.PI * 2}
+                  step={0.01}
+                  value={step.angle}
+                  onChange={e => updateEulerStep(i, { angle: parseFloat(e.target.value) })}
+                  className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, hsl(160,50%,35%) ${((step.angle + 2 * Math.PI) / (4 * Math.PI)) * 100}%, hsl(210,10%,20%) ${((step.angle + 2 * Math.PI) / (4 * Math.PI)) * 100}%)`,
+                  }}
+                />
+                <span className="text-[9px] font-mono text-[hsl(160,60%,60%)] w-20 text-right">
+                  {(step.angle * 180 / Math.PI).toFixed(1)}°
+                </span>
+                {eulerSteps.length > 1 && (
+                  <button
+                    onClick={() => removeEulerStep(i)}
+                    className="text-[9px] font-mono px-1.5 py-0.5 rounded text-[hsl(0,50%,55%)] hover:bg-[hsla(0,30%,20%,0.3)] transition-colors"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          {/* Show the composed result */}
+          {eulerSteps.length > 0 && (() => {
+            const decomposed = composeRotations(eulerSteps, 0);
+            const inputStr = eulerSteps.map(s => `R${s.axis}(${(s.angle * 180 / Math.PI).toFixed(0)}°)`).join(" · ");
+            const outputStr = decomposed.map(g => {
+              if (g.name === "I") return "I";
+              const angle = g.params?.[0] ?? 0;
+              return `${g.name.replace("(θ)", "")}(${(angle * 180 / Math.PI).toFixed(1)}°)`;
+            }).join(" · ");
+            return (
+              <div className="bg-[hsla(160,20%,8%,0.5)] rounded p-3 space-y-1.5 mt-2">
+                <div className="text-[9px] font-mono text-[hsl(210,10%,45%)]">
+                  <span className="text-[hsl(210,10%,35%)]">Input:</span> {inputStr}
+                </div>
+                <div className="text-[9px] font-mono text-[hsl(160,60%,60%)]">
+                  <span className="text-[hsl(210,10%,35%)]">ZYZ:</span> {outputStr}
+                </div>
+                <div className="text-[8px] font-mono text-[hsl(210,10%,35%)]">
+                  {decomposed.length} gate{decomposed.length !== 1 ? "s" : ""} after Euler decomposition (near-zero rotations eliminated)
+                </div>
+              </div>
+            );
+          })()}
+          {/* Presets */}
+          <div className="flex gap-1.5 flex-wrap mt-1">
+            <span className="text-[8px] font-mono text-[hsl(210,10%,35%)] self-center mr-1">Presets:</span>
+            {[
+              { label: "Hadamard", steps: [{ axis: "z" as const, angle: Math.PI }, { axis: "y" as const, angle: Math.PI / 2 }] },
+              { label: "T gate", steps: [{ axis: "z" as const, angle: Math.PI / 4 }] },
+              { label: "Rx·Rz", steps: [{ axis: "x" as const, angle: Math.PI / 3 }, { axis: "z" as const, angle: Math.PI / 4 }] },
+              { label: "Ry·Rx·Rz", steps: [{ axis: "y" as const, angle: Math.PI / 6 }, { axis: "x" as const, angle: Math.PI / 3 }, { axis: "z" as const, angle: Math.PI / 2 }] },
+              { label: "X gate", steps: [{ axis: "x" as const, angle: Math.PI }] },
+            ].map(p => (
+              <button
+                key={p.label}
+                onClick={() => setEulerSteps(p.steps)}
+                className="text-[8px] font-mono px-2 py-0.5 rounded bg-[hsla(210,10%,15%,0.5)] border border-[hsla(210,10%,25%,0.3)] text-[hsl(210,10%,50%)] hover:text-[hsl(210,10%,70%)] transition-colors"
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
       )}

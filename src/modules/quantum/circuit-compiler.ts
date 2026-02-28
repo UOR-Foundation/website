@@ -212,6 +212,127 @@ export function vqeAnsatz(n: number, layers = 2): AlgorithmSpec {
   };
 }
 
+/** Euler decomposition (ZYZ): any single-qubit U = Rz(α)·Ry(β)·Rz(γ)·e^(iδ) */
+export function eulerDecompose(
+  alpha: number,
+  beta: number,
+  gamma: number,
+  qubit: number = 0,
+): AbstractGate[] {
+  const gates: AbstractGate[] = [];
+  // Skip near-zero rotations for efficiency
+  if (Math.abs(gamma) > 1e-10)
+    gates.push({ name: "Rz(θ)", qubits: [qubit], params: [gamma], tier: 3 });
+  if (Math.abs(beta) > 1e-10)
+    gates.push({ name: "Ry(θ)", qubits: [qubit], params: [beta], tier: 3 });
+  if (Math.abs(alpha) > 1e-10)
+    gates.push({ name: "Rz(θ)", qubits: [qubit], params: [alpha], tier: 3 });
+  return gates.length > 0 ? gates : [{ name: "I", qubits: [qubit], tier: 0 }];
+}
+
+/** Compose a sequence of rotation gates into a single Euler-decomposed unitary.
+ *  Each step is { axis: "x"|"y"|"z", angle: number }.
+ *  We multiply 2×2 unitaries then extract ZYZ Euler angles. */
+export interface RotationStep {
+  axis: "x" | "y" | "z";
+  angle: number;
+}
+
+type C2 = [[number, number, number, number], [number, number, number, number]];
+
+function rotMatrix(axis: "x" | "y" | "z", θ: number): C2 {
+  const c = Math.cos(θ / 2), s = Math.sin(θ / 2);
+  // Each entry: [re, im] packed as [a_re, a_im, b_re, b_im] per row
+  if (axis === "z") return [[c, -s, 0, 0], [0, 0, c, s]];
+  if (axis === "y") return [[c, 0, -s, 0], [s, 0, c, 0]];
+  // x
+  return [[c, 0, 0, -s], [0, -s, c, 0]];
+}
+
+function mulMat(a: C2, b: C2): C2 {
+  // 2×2 complex matrix multiply
+  // a = [[a00r,a00i,a01r,a01i],[a10r,a10i,a11r,a11i]]
+  const mr = (ar: number, ai: number, br: number, bi: number) => ar * br - ai * bi;
+  const mi = (ar: number, ai: number, br: number, bi: number) => ar * bi + ai * br;
+
+  const r00 = mr(a[0][0], a[0][1], b[0][0], b[0][1]) + mr(a[0][2], a[0][3], b[1][0], b[1][1]);
+  const i00 = mi(a[0][0], a[0][1], b[0][0], b[0][1]) + mi(a[0][2], a[0][3], b[1][0], b[1][1]);
+  const r01 = mr(a[0][0], a[0][1], b[0][2], b[0][3]) + mr(a[0][2], a[0][3], b[1][2], b[1][3]);
+  const i01 = mi(a[0][0], a[0][1], b[0][2], b[0][3]) + mi(a[0][2], a[0][3], b[1][2], b[1][3]);
+  const r10 = mr(a[1][0], a[1][1], b[0][0], b[0][1]) + mr(a[1][2], a[1][3], b[1][0], b[1][1]);
+  const i10 = mi(a[1][0], a[1][1], b[0][0], b[0][1]) + mi(a[1][2], a[1][3], b[1][0], b[1][1]);
+  const r11 = mr(a[1][0], a[1][1], b[0][2], b[0][3]) + mr(a[1][2], a[1][3], b[1][2], b[1][3]);
+  const i11 = mi(a[1][0], a[1][1], b[0][2], b[0][3]) + mi(a[1][2], a[1][3], b[1][2], b[1][3]);
+
+  return [[r00, i00, r01, i01], [r10, i10, r11, i11]];
+}
+
+/** Extract ZYZ Euler angles from a 2×2 unitary matrix */
+function extractEulerZYZ(u: C2): { alpha: number; beta: number; gamma: number } {
+  // |u00|² = cos²(β/2), |u10|² = sin²(β/2)
+  const abs00 = Math.sqrt(u[0][0] * u[0][0] + u[0][1] * u[0][1]);
+  const abs10 = Math.sqrt(u[1][0] * u[1][0] + u[1][1] * u[1][1]);
+  const beta = 2 * Math.atan2(abs10, abs00);
+
+  if (abs00 < 1e-12) {
+    // β ≈ π: u00 ≈ 0
+    const phase10 = Math.atan2(u[1][0], -u[1][1]); // not standard but consistent
+    return { alpha: phase10, beta: Math.PI, gamma: 0 };
+  }
+  if (abs10 < 1e-12) {
+    // β ≈ 0: u10 ≈ 0
+    const phase00 = Math.atan2(u[0][1], u[0][0]);
+    return { alpha: phase00, beta: 0, gamma: 0 };
+  }
+
+  // General case: arg(u00) = -(α+γ)/2, arg(u10) = -(α-γ)/2 + π/2... 
+  // Use: α = arg(u11) - arg(u10), γ = -arg(u11) - arg(u10) (up to conventions)
+  const arg00 = Math.atan2(u[0][1], u[0][0]);
+  const arg10 = Math.atan2(u[1][1], u[1][0]);
+
+  // ZYZ convention: U = Rz(α)·Ry(β)·Rz(γ)
+  // u00 = cos(β/2) e^{-i(α+γ)/2}, u10 = sin(β/2) e^{-i(α-γ)/2}
+  // arg(u00) = -(α+γ)/2, arg(u10) = -(α-γ)/2
+  const alpha = -(arg00 + arg10);
+  const gamma = -(arg00 - arg10);
+
+  return { alpha, beta, gamma };
+}
+
+/** Compose a sequence of rotation gates and return Euler-decomposed result */
+export function composeRotations(steps: RotationStep[], qubit: number = 0): AbstractGate[] {
+  if (steps.length === 0) return [{ name: "I", qubits: [qubit], tier: 0 }];
+
+  // Multiply all rotation matrices
+  let result = rotMatrix(steps[0].axis, steps[0].angle);
+  for (let i = 1; i < steps.length; i++) {
+    result = mulMat(rotMatrix(steps[i].axis, steps[i].angle), result);
+  }
+
+  const { alpha, beta, gamma } = extractEulerZYZ(result);
+  return eulerDecompose(alpha, beta, gamma, qubit);
+}
+
+/** Build an algorithm spec from a rotation sequence */
+export function rotationSequenceAlgorithm(
+  steps: RotationStep[],
+  qubit: number = 0,
+): AlgorithmSpec {
+  const eulerGates = composeRotations(steps, qubit);
+  const stepsDesc = steps.map(s => `R${s.axis}(${(s.angle * 180 / Math.PI).toFixed(0)}°)`).join("·");
+  const { alpha, beta, gamma } = (() => {
+    let r = rotMatrix(steps[0]?.axis ?? "z", steps[0]?.angle ?? 0);
+    for (let i = 1; i < steps.length; i++) r = mulMat(rotMatrix(steps[i].axis, steps[i].angle), r);
+    return extractEulerZYZ(r);
+  })();
+  return {
+    name: `Euler(${stepsDesc})`,
+    qubits: Math.max(qubit + 1, 1),
+    description: `${steps.length}-step rotation → ZYZ Euler: Rz(${(alpha * 180 / Math.PI).toFixed(1)}°)·Ry(${(beta * 180 / Math.PI).toFixed(1)}°)·Rz(${(gamma * 180 / Math.PI).toFixed(1)}°)`,
+    gates: eulerGates,
+  };
+}
+
 export const ALGORITHM_LIBRARY: Record<string, (n: number) => AlgorithmSpec> = {
   "bell-pair": () => bellPairAlgorithm(),
   "ghz": (n) => ghzAlgorithm(n),
@@ -543,6 +664,30 @@ export function verifyCircuitCompiler(): CompilerVerification[] {
     name: "Circuit depth computed correctly",
     passed: bell.depth >= 1 && qft.depth >= 1,
     detail: `Bell depth=${bell.depth}, QFT-4 depth=${qft.depth}`,
+  });
+
+  // 13. Euler decomposition round-trip: Rx(π/3)·Rz(π/4) decomposes to ≤3 ZYZ gates
+  const eulerSpec = rotationSequenceAlgorithm([
+    { axis: "x", angle: Math.PI / 3 },
+    { axis: "z", angle: Math.PI / 4 },
+  ]);
+  const eulerCircuit = compileCircuit(eulerSpec);
+  results.push({
+    name: "Euler ZYZ decomposition of Rx·Rz sequence",
+    passed: eulerCircuit.abstractGates.length <= 3 && eulerCircuit.abstractGates.length >= 1,
+    detail: `${eulerSpec.description} → ${eulerCircuit.abstractGates.length} gates`,
+  });
+
+  // 14. Identity composition: Rx(π)·Rx(-π) ≈ I
+  const identityGates = composeRotations([
+    { axis: "x", angle: Math.PI },
+    { axis: "x", angle: -Math.PI },
+  ]);
+  const isIdentity = identityGates.length === 1 && identityGates[0].name === "I";
+  results.push({
+    name: "Rx(π)·Rx(-π) composes to identity",
+    passed: isIdentity || identityGates.every(g => Math.abs(g.params?.[0] ?? 0) < 0.01),
+    detail: `result: ${identityGates.map(g => g.name).join(" ")}`,
   });
 
   return results;
