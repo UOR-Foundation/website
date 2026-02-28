@@ -184,6 +184,12 @@ export default function DesktopSurface({
     mode: "offset",
     snapSize: { width: 64, height: 64 },
   });
+  const frameWidgetDrag = useDraggablePosition({
+    storageKey: `hologram-pos:frame-widget:${mode}`,
+    defaultPos: { x: 0, y: 0 },
+    mode: "offset",
+    snapSize: { width: 64, height: 64 },
+  });
 
   return (
     <div
@@ -272,13 +278,27 @@ export default function DesktopSurface({
           opacity: isFocus ? 0 : 1,
           pointerEvents: isFocus ? "none" : "auto",
           transition: "opacity 300ms, transform 300ms",
-          transform: isFocus ? "translateY(10px)" : "translateY(0)",
+          transform: isFocus
+            ? "translateY(10px)"
+            : `translate(${frameWidgetDrag.pos.x}px, ${frameWidgetDrag.pos.y}px)`,
           animation: "stagger-fade-in 1s ease-out 0.6s both",
+          touchAction: "none",
+          userSelect: "none",
         }}
       >
-        {mode === "image" && <WeatherWidget />}
-        {mode === "white" && <ProductivityTimerWidget />}
-        {mode === "dark" && <AmbientMoodWidget />}
+        <WidgetHoverActions
+          widgetId="frame-widget"
+          onRemove={removeWidget}
+          dragHandlers={frameWidgetDrag.handlers}
+          showSettings={false}
+          showResize={false}
+          bgMode={mode}
+          position="top-center"
+        >
+          {mode === "image" && <WeatherWidget />}
+          {mode === "white" && <ProductivityTimerWidget />}
+          {mode === "dark" && <AmbientMoodWidget />}
+        </WidgetHoverActions>
       </div>
 
       {/* ── Content: Logo ────────────────────────── */}

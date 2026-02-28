@@ -144,9 +144,9 @@ export default function GlassPanel({
 
   // ── Glass effect calibration ──────────────────────────────────────
   const glassBackground = heavy
-    ? "hsla(25, 10%, 14%, 0.5)"
-    : "hsla(25, 10%, 14%, 0.3)";
-  const glassBlur = heavy ? "blur(48px) saturate(1.5)" : "blur(36px) saturate(1.35)";
+    ? "hsla(25, 10%, 12%, 0.65)"
+    : "hsla(25, 10%, 12%, 0.5)";
+  const glassBlur = heavy ? "blur(48px) saturate(1.5)" : "blur(40px) saturate(1.4)";
   const borderColor = `hsla(38, 20%, 80%, ${tokens.borderWidth > 0.5 ? 0.1 : 0.07})`;
 
   // ── Compose styles ────────────────────────────────────────────────

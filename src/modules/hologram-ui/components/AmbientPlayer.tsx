@@ -222,11 +222,11 @@ function ExpandedPanel({
         position: "absolute",
         bottom: 0,
         left: 0,
-        background: P.surface,
-        backdropFilter: "blur(40px) saturate(1.3)",
-        WebkitBackdropFilter: "blur(40px) saturate(1.3)",
-        border: `1px solid ${P.border}`,
-        boxShadow: "0 8px 40px hsla(0, 0%, 0%, 0.5)",
+        background: "hsla(25, 10%, 12%, 0.55)",
+        backdropFilter: "blur(40px) saturate(1.4)",
+        WebkitBackdropFilter: "blur(40px) saturate(1.4)",
+        border: `1px solid hsla(38, 20%, 80%, 0.1)`,
+        boxShadow: "0 8px 40px hsla(0, 0%, 0%, 0.3), inset 0 1px 0 hsla(38, 25%, 90%, 0.07)",
       }}
     >
       {/* Header */}
@@ -315,11 +315,11 @@ function CollapsedPill({
       transition={{ duration: 0.2 }}
       className="relative flex items-center rounded-full"
       style={{
-        background: P.surface,
-        backdropFilter: "blur(30px) saturate(1.3)",
-        WebkitBackdropFilter: "blur(30px) saturate(1.3)",
-        border: `1px solid ${P.border}`,
-        boxShadow: "0 4px 20px hsla(0, 0%, 0%, 0.3)",
+        background: "hsla(25, 10%, 12%, 0.5)",
+        backdropFilter: "blur(36px) saturate(1.4)",
+        WebkitBackdropFilter: "blur(36px) saturate(1.4)",
+        border: `1px solid hsla(38, 20%, 80%, 0.08)`,
+        boxShadow: "0 4px 20px hsla(0, 0%, 0%, 0.2), inset 0 1px 0 hsla(38, 25%, 90%, 0.06)",
       }}
     >
       <AnimatePresence>
