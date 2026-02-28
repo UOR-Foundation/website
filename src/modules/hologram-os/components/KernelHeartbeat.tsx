@@ -60,7 +60,7 @@ export default function KernelHeartbeat() {
       {/* ── Pill ────────────────────────────────── */}
       <button
         onClick={toggle}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] coherence-border"
         style={{
           background: "hsla(25, 8%, 10%, 0.75)",
           border: `1px solid ${KP.cardBorder}`,
@@ -69,7 +69,7 @@ export default function KernelHeartbeat() {
         }}
         aria-label="Kernel heartbeat"
       >
-        {/* Pulsing dot */}
+        {/* Pulsing dot — glow driven by --kernel-coherence at 60fps */}
         <span className="relative flex h-2 w-2">
           <motion.span
             className="absolute inset-0 rounded-full"
@@ -78,7 +78,7 @@ export default function KernelHeartbeat() {
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
           <span
-            className="relative inline-flex rounded-full h-2 w-2"
+            className="relative inline-flex rounded-full h-2 w-2 kernel-heartbeat-glow"
             style={{ background: dotColor }}
           />
         </span>

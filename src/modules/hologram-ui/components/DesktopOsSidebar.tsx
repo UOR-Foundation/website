@@ -142,7 +142,7 @@ export default function DesktopOsSidebar({
   return (
     <>
     <aside
-      className="sidebar-root flex flex-col h-full shrink-0 relative"
+      className="sidebar-root flex flex-col h-full shrink-0 relative coherence-sidebar-pulse"
       style={{
         ...paletteVars,
         width: `${w}px`,
