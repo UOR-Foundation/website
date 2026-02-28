@@ -112,6 +112,7 @@ interface DesktopOsSidebarProps {
   onOpenJupyter?: () => void;
   onGoHome?: () => void;
   onReplayGuide?: () => void;
+  onHoverPanel?: (panel: string) => void;
   hintOpacity?: (key: string) => number;
   bgMode?: "image" | "white" | "dark";
 }
@@ -127,6 +128,7 @@ export default function DesktopOsSidebar({
   onOpenJupyter,
   onGoHome,
   onReplayGuide,
+  onHoverPanel,
   hintOpacity,
   bgMode = "image",
 }: DesktopOsSidebarProps) {
@@ -297,6 +299,7 @@ export default function DesktopOsSidebar({
           <IconTooltip label="Web" show={!expanded}>
             <button
               onClick={() => collapseAndDo(onOpenBrowser)}
+              onMouseEnter={() => onHoverPanel?.("browser")}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                 !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
               }`}
@@ -312,6 +315,7 @@ export default function DesktopOsSidebar({
         <IconTooltip label="Memory" show={!expanded}>
           <button
             onClick={() => collapseAndDo(() => onOpenMemory?.())}
+            onMouseEnter={() => onHoverPanel?.("memory")}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
             }`}
@@ -326,6 +330,7 @@ export default function DesktopOsSidebar({
         <IconTooltip label="Compute" show={!expanded}>
           <button
             onClick={() => collapseAndDo(() => onOpenCompute?.())}
+            onMouseEnter={() => onHoverPanel?.("compute")}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
             }`}
@@ -341,6 +346,7 @@ export default function DesktopOsSidebar({
           <IconTooltip label="Terminal" show={!expanded}>
             <button
               onClick={() => collapseAndDo(onOpenTerminal)}
+              onMouseEnter={() => onHoverPanel?.("terminal")}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                 !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
               }`}
@@ -357,6 +363,7 @@ export default function DesktopOsSidebar({
           <IconTooltip label="Jupyter" show={!expanded}>
             <button
               onClick={() => collapseAndDo(onOpenJupyter)}
+              onMouseEnter={() => onHoverPanel?.("jupyter")}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                 !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
               }`}
@@ -426,6 +433,7 @@ export default function DesktopOsSidebar({
         <IconTooltip label={`Messages (${MOD_KEY} M)`} show={!expanded}>
           <button
             onClick={() => collapseAndDo(() => onOpenMessenger?.())}
+            onMouseEnter={() => onHoverPanel?.("messenger")}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
             }`}

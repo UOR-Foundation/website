@@ -127,6 +127,12 @@ export default function HologramOsPage() {
   const [legalTab, setLegalTab] = useState<"privacy" | "terms">("privacy");
   const journal = useFocusJournal();
 
+  // ── Panel preloading — hover-triggered from sidebar ───────────────────
+  const [preloadedPanels, setPreloadedPanels] = useState<Set<string>>(new Set());
+  const handleHoverPanel = useCallback((panel: string) => {
+    setPreloadedPanels(prev => prev.has(panel) ? prev : new Set(prev).add(panel));
+  }, []);
+
   // ── Transition state (visual-only, not kernel state) ──────────────────
   const [departingDesktop, setDepartingDesktop] = useState<DesktopMode | null>(null);
   const [sidebarBgMode, setSidebarBgMode] = useState<DesktopMode>(activeDesktop);
@@ -316,6 +322,7 @@ export default function HologramOsPage() {
             onOpenJupyter={() => k.openPanel("jupyter")}
             onGoHome={() => { k.setChatOpen(false); k.closePanel(); }}
             onReplayGuide={() => setShortcutsOpen(true)}
+            onHoverPanel={handleHoverPanel}
             hintOpacity={mastery.hintOpacity}
             bgMode={sidebarBgMode}
           />
@@ -423,6 +430,7 @@ export default function HologramOsPage() {
       />
       <BrowserProjection
         open={activePanel === "browser"}
+        preload={preloadedPanels.has("browser")}
         onClose={() => k.closePanel()}
         onSendToLumen={({ title, url, markdown }) => {
           const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) + "\n\n…[truncated]" : markdown;
@@ -431,11 +439,11 @@ export default function HologramOsPage() {
           k.setChatOpen(true);
         }}
       />
-      <ComputeProjection open={activePanel === "compute"} onClose={() => k.closePanel()} />
-      <MemoryProjection open={activePanel === "memory"} onClose={() => k.closePanel()} />
-      <MessengerProjection open={activePanel === "messenger"} onClose={() => k.closePanel()} />
-      <TerminalProjection open={activePanel === "terminal"} onClose={() => k.closePanel()} onOpenJupyter={() => k.openPanel("jupyter")} />
-      <JupyterProjection open={activePanel === "jupyter"} onClose={() => k.closePanel()} />
+      <ComputeProjection open={activePanel === "compute"} preload={preloadedPanels.has("compute")} onClose={() => k.closePanel()} />
+      <MemoryProjection open={activePanel === "memory"} preload={preloadedPanels.has("memory")} onClose={() => k.closePanel()} />
+      <MessengerProjection open={activePanel === "messenger"} preload={preloadedPanels.has("messenger")} onClose={() => k.closePanel()} />
+      <TerminalProjection open={activePanel === "terminal"} preload={preloadedPanels.has("terminal")} onClose={() => k.closePanel()} onOpenJupyter={() => k.openPanel("jupyter")} />
+      <JupyterProjection open={activePanel === "jupyter"} preload={preloadedPanels.has("jupyter")} onClose={() => k.closePanel()} />
       <SnapGuideOverlay />
       <KernelHeartbeat />
       <KernelDevTools />
