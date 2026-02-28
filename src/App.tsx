@@ -139,6 +139,7 @@ const AtlasVisualizationPage = lazy(() => import("@/modules/atlas/pages/AtlasVis
 const QuantumDashboardPage = lazy(() => import("@/modules/quantum/pages/QuantumDashboardPage"));
 const QShellPage = lazy(() => import("@/modules/qkernel/pages/QShellPage"));
 const CeremonyPage = lazy(() => import("@/modules/qkernel/pages/CeremonyPage"));
+const ReferralLeaderboardPage = lazy(() => import("@/pages/ReferralLeaderboardPage"));
 
 const queryClient = new QueryClient();
 
@@ -280,6 +281,7 @@ const App = () => {
             <Route path="/continuity" element={<ContinuityPage />} />
             <Route path="/lens-inspector" element={<LensInspectorPage />} />
             <Route path="/schema-org" element={<SchemaOrgExplorerPage />} />
+            <Route path="/leaderboard" element={<ReferralLeaderboardPage />} />
             <Route path="/code-nexus" element={<CodeNexusPage />} />
             <Route path="/atlas" element={<AtlasVisualizationPage />} />
             <Route path="/quantum" element={<QuantumDashboardPage />} />

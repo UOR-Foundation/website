@@ -1803,7 +1803,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_referral_leaderboard: {
+        Args: { result_limit?: number }
+        Returns: {
+          click_count: number
+          conversion_rate: number
+          display_name_masked: string
+          rank: number
+          signup_count: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

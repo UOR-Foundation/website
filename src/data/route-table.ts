@@ -32,4 +32,5 @@ export const routeTable = [
   { path: "/cartridge", label: "QR Cartridge" },
   { path: "/console/fpp", label: "Console: FPP Trust Flow" },
   { path: "/schema-org", label: "Schema.org Explorer" },
+  { path: "/leaderboard", label: "Referral Leaderboard" },
 ];
