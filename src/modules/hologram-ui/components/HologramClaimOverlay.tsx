@@ -161,7 +161,7 @@ export default function HologramClaimOverlay({ open, onClose }: HologramClaimOve
     })();
   }, [open]);
 
-  // Auth state change listener
+  // Auth state change listener — routes new users to /ceremony for QSovereignty.genesis()
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -170,12 +170,28 @@ export default function HologramClaimOverlay({ open, onClose }: HologramClaimOve
           session?.user &&
           (step === "signing-in" || step === "email-sent")
         ) {
-          await deriveIdentity(session.user);
+          // Check if user already has a sovereign identity
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("uor_canonical_id")
+            .eq("user_id", session.user.id)
+            .maybeSingle();
+
+          if (profile?.uor_canonical_id) {
+            // Returning user — identity already exists, show it
+            await deriveIdentity(session.user);
+          } else {
+            // New user — redirect to the Founding Ceremony
+            // This runs the full QSovereignty.genesis() pipeline with
+            // observer-collapse protection instead of inline derivation
+            onClose();
+            window.location.href = "/ceremony";
+          }
         }
       },
     );
     return () => subscription.unsubscribe();
-  }, [step]);
+  }, [step, onClose]);
 
   // ── Identity derivation ───────────────────────────────────────────────
 
