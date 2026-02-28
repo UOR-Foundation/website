@@ -36,6 +36,7 @@
 
 import { fanoPlane as cdFanoPlane } from "./cayley-dickson";
 import { getAtlas, ATLAS_VERTEX_COUNT } from "./atlas";
+import { fanoPointToGenerator, type GeneratorKind } from "./morphism-generators";
 
 // ── Constants ─────────────────────────────────────────────────────────────
 
@@ -56,6 +57,8 @@ export interface FanoPoint {
   index: number;
   /** Octonion unit label */
   label: string;
+  /** Morphism generator kind mapped to this Fano point */
+  generatorKind: GeneratorKind;
   /** Lines through this point (indices into lines array) */
   incidentLines: number[];
   /** Qubit role in the 3-qubit Clifford register */
@@ -259,6 +262,7 @@ export function constructFanoTopology(): FanoTopology {
     return {
       index: i,
       label,
+      generatorKind: fanoPointToGenerator(i),
       incidentLines,
       qubitRole: qubitRoles[i],
       degree: incidentLines.length,
@@ -484,6 +488,148 @@ export function computeGateRoutes(topology: FanoTopology): GateRoute[] {
   }
 
   return routes;
+}
+
+// ── Generator Composition via Fano Line Multiplication ────────────────────
+
+/** Result of composing two generators via Fano line multiplication. */
+export interface GeneratorComposition {
+  /** First input generator */
+  readonly inputA: GeneratorKind;
+  /** Second input generator */
+  readonly inputB: GeneratorKind;
+  /** Fano point index of A */
+  readonly pointA: number;
+  /** Fano point index of B */
+  readonly pointB: number;
+  /** Whether A and B are collinear (on same Fano line) */
+  readonly collinear: boolean;
+  /** Result generator (null if inputs are identical → scalar) */
+  readonly result: GeneratorKind | null;
+  /** Fano point index of result (-1 for scalar) */
+  readonly resultPoint: number;
+  /** Sign: +1 for cyclic order, -1 for anti-cyclic */
+  readonly sign: 1 | -1;
+  /** The Fano line mediating this composition (null if non-collinear or self-product) */
+  readonly mediatingLine: number | null;
+  /** Composition rule as string: "g₁ ⊗ g₂ = ±g₃" */
+  readonly rule: string;
+}
+
+/**
+ * Compose two generators via Fano line multiplication rules.
+ * 
+ * Given generators gₐ (at Fano point a) and g_b (at point b):
+ *   - If a = b: gₐ ⊗ gₐ = -1 (scalar, "self-annihilation")
+ *   - If {a,b,c} is a Fano line in cyclic order: gₐ ⊗ g_b = +g_c
+ *   - If {a,b,c} in anti-cyclic order: gₐ ⊗ g_b = -g_c
+ *   - If a,b non-collinear: no direct composition (returns non-collinear result)
+ */
+export function composeGenerators(a: number, b: number): GeneratorComposition {
+  const topology = constructFanoTopology();
+  const genA = fanoPointToGenerator(a);
+  const genB = fanoPointToGenerator(b);
+
+  // Self-product: eᵢ² = -1
+  if (a === b) {
+    return {
+      inputA: genA, inputB: genB,
+      pointA: a, pointB: b,
+      collinear: false,
+      result: null, resultPoint: -1,
+      sign: -1,
+      mediatingLine: null,
+      rule: `${genA} ⊗ ${genA} = -1 (scalar)`,
+    };
+  }
+
+  const mul = topology.multiplicationTable[a][b];
+  const collinear = topology.collinearityMatrix[a][b] === 1;
+
+  if (mul.index >= 0 && collinear) {
+    const resultGen = fanoPointToGenerator(mul.index);
+    const lineIdx = topology.lines.findIndex(
+      l => l.points.includes(a) && l.points.includes(b)
+    );
+    return {
+      inputA: genA, inputB: genB,
+      pointA: a, pointB: b,
+      collinear: true,
+      result: resultGen, resultPoint: mul.index,
+      sign: mul.sign as 1 | -1,
+      mediatingLine: lineIdx >= 0 ? lineIdx : null,
+      rule: `${genA} ⊗ ${genB} = ${mul.sign > 0 ? "+" : "-"}${resultGen}`,
+    };
+  }
+
+  // Non-collinear: multiplication still defined but not via a single line
+  const resultGen = mul.index >= 0 ? fanoPointToGenerator(mul.index) : null;
+  return {
+    inputA: genA, inputB: genB,
+    pointA: a, pointB: b,
+    collinear: false,
+    result: resultGen, resultPoint: mul.index,
+    sign: mul.sign as 1 | -1,
+    mediatingLine: null,
+    rule: mul.index >= 0
+      ? `${genA} ⊗ ${genB} = ${mul.sign > 0 ? "+" : "-"}${resultGen} (non-collinear)`
+      : `${genA} ⊗ ${genB} = scalar`,
+  };
+}
+
+/**
+ * Get all 7 composition rules along Fano lines (the "multiplication table" of generators).
+ * Each Fano line {a,b,c} produces the rule: gₐ ∘ g_b = g_c.
+ */
+export function getFanoLineCompositions(): GeneratorComposition[] {
+  const topology = constructFanoTopology();
+  return topology.lines.map(line => {
+    const [a, b, c] = line.points;
+    return composeGenerators(a, b);
+  });
+}
+
+/**
+ * Verify the 7 generator composition rules satisfy octonionic identities:
+ *   1. Anti-commutativity: gₐ ⊗ g_b = -(g_b ⊗ gₐ) for a ≠ b
+ *   2. Self-annihilation: gₐ ⊗ gₐ = -1
+ *   3. Closure: collinear compositions stay within the 7 generators
+ */
+export function verifyGeneratorComposition(): {
+  antiCommutative: boolean;
+  selfAnnihilating: boolean;
+  closed: boolean;
+  compositions: GeneratorComposition[];
+} {
+  const compositions = getFanoLineCompositions();
+  
+  // Check anti-commutativity for all collinear pairs
+  let antiCommutative = true;
+  for (const comp of compositions) {
+    if (comp.collinear && comp.resultPoint >= 0) {
+      const reverse = composeGenerators(comp.pointB, comp.pointA);
+      if (reverse.resultPoint !== comp.resultPoint || reverse.sign !== -comp.sign) {
+        antiCommutative = false;
+      }
+    }
+  }
+
+  // Check self-annihilation
+  let selfAnnihilating = true;
+  for (let i = 0; i < 7; i++) {
+    const self = composeGenerators(i, i);
+    if (self.resultPoint !== -1 || self.sign !== -1) selfAnnihilating = false;
+  }
+
+  // Check closure: all collinear results are valid generator points
+  let closed = true;
+  for (const comp of compositions) {
+    if (comp.collinear && (comp.resultPoint < 0 || comp.resultPoint >= 7)) {
+      closed = false;
+    }
+  }
+
+  return { antiCommutative, selfAnnihilating, closed, compositions };
 }
 
 // ── Atlas Connection ──────────────────────────────────────────────────────

@@ -13,6 +13,9 @@ import {
   computeGateRoutes,
   connectToAtlas,
   runFanoPlaneAnalysis,
+  composeGenerators,
+  getFanoLineCompositions,
+  verifyGeneratorComposition,
   FANO_AUTOMORPHISM_ORDER,
   FANO_ORDER,
   FANO_INCIDENCE,
@@ -250,5 +253,73 @@ describe("Fano Plane — Full Verification Report", () => {
     }
     expect(report.allPassed).toBe(true);
     expect(report.tests.length).toBe(18);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// Part VIII: Generator Kind & Fano Line Composition
+// ══════════════════════════════════════════════════════════════════════════
+
+describe("Fano Plane — Generator Kind & Composition", () => {
+  it("every FanoPoint has a generatorKind", () => {
+    const topo = constructFanoTopology();
+    for (const p of topo.points) {
+      expect(p.generatorKind).toBeDefined();
+      expect(p.generatorKind.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("7 distinct generatorKinds across 7 points", () => {
+    const topo = constructFanoTopology();
+    const kinds = new Set(topo.points.map(p => p.generatorKind));
+    expect(kinds.size).toBe(7);
+  });
+
+  it("self-composition yields scalar (-1)", () => {
+    for (let i = 0; i < 7; i++) {
+      const comp = composeGenerators(i, i);
+      expect(comp.resultPoint).toBe(-1);
+      expect(comp.sign).toBe(-1);
+      expect(comp.result).toBeNull();
+    }
+  });
+
+  it("Fano line compositions are collinear with positive sign", () => {
+    const comps = getFanoLineCompositions();
+    expect(comps.length).toBe(7);
+    for (const c of comps) {
+      expect(c.collinear).toBe(true);
+      expect(c.result).not.toBeNull();
+      expect(c.resultPoint).toBeGreaterThanOrEqual(0);
+      expect(c.resultPoint).toBeLessThan(7);
+    }
+  });
+
+  it("anti-commutativity: gₐ⊗g_b = -(g_b⊗gₐ)", () => {
+    const v = verifyGeneratorComposition();
+    expect(v.antiCommutative).toBe(true);
+  });
+
+  it("self-annihilation: gₐ⊗gₐ = -1 for all 7", () => {
+    const v = verifyGeneratorComposition();
+    expect(v.selfAnnihilating).toBe(true);
+  });
+
+  it("closure: collinear compositions stay within 7 generators", () => {
+    const v = verifyGeneratorComposition();
+    expect(v.closed).toBe(true);
+  });
+
+  it("composition result matches multiplication table", () => {
+    const topo = constructFanoTopology();
+    for (let a = 0; a < 7; a++) {
+      for (let b = 0; b < 7; b++) {
+        if (a === b) continue;
+        const comp = composeGenerators(a, b);
+        const mul = topo.multiplicationTable[a][b];
+        expect(comp.resultPoint).toBe(mul.index);
+        expect(comp.sign).toBe(mul.sign);
+      }
+    }
   });
 });

@@ -46,8 +46,10 @@ import {
 } from "./transform-group";
 import {
   constructFanoTopology,
+  composeGenerators,
   type FanoTopology,
   type FanoLine,
+  type GeneratorComposition,
 } from "./fano-plane";
 import {
   getGenerators,
@@ -116,6 +118,8 @@ export interface VirtualGate {
   readonly order: number;
   /** Morphism composition rule (for arity ≥ 2). */
   readonly compositionRule?: string;
+  /** Generator composition result (for arity ≥ 2, from Fano line multiplication). */
+  readonly generatorComposition?: GeneratorComposition;
 }
 
 /** A gate application in a circuit. */
@@ -303,9 +307,7 @@ export function buildTwoQubitGates(): VirtualGate[] {
   for (let i = 0; i < 7; i++) {
     for (let j = i + 1; j < 7; j++) {
       const isCollinear = topology.collinearityMatrix[i][j] === 1;
-      const mul = topology.multiplicationTable[i][j];
-      const mediator = mul.index;
-      const sign = mul.sign;
+      const composition = composeGenerators(i, j);
 
       // Find which Fano line contains this pair (if collinear)
       let lineIdx = -1;
@@ -315,22 +317,17 @@ export function buildTwoQubitGates(): VirtualGate[] {
         );
       }
 
-      const genI = fanoPointToGenerator(i);
-      const genJ = fanoPointToGenerator(j);
-      const rule = mediator >= 0
-        ? `${genI} ⊗ ${genJ} → ${sign > 0 ? "" : "-"}${fanoPointToGenerator(mediator)}`
-        : `${genI} ⊗ ${genJ} → scalar`;
-
       gates.push({
         id: `2q_${i}_${j}`,
         arity: 2,
         name: isCollinear
-          ? `CX(${genI},${genJ})`
-          : `SWAP·CX(${genI},${genJ})`,
+          ? `CX(${composition.inputA},${composition.inputB})`
+          : `SWAP·CX(${composition.inputA},${composition.inputB})`,
         collinearPair: [i, j],
         fanoLine: lineIdx >= 0 ? lineIdx : undefined,
-        order: isCollinear ? 2 : 4, // CNOT² = I, SWAP·CNOT has order 4
-        compositionRule: rule,
+        order: isCollinear ? 2 : 4,
+        compositionRule: composition.rule,
+        generatorComposition: composition,
       });
     }
   }
@@ -352,17 +349,16 @@ export function buildThreeQubitGates(): VirtualGate[] {
 
   return topology.lines.map((line, idx) => {
     const [a, b, c] = line.points;
-    const genA = fanoPointToGenerator(a);
-    const genB = fanoPointToGenerator(b);
-    const genC = fanoPointToGenerator(c);
+    const composition = composeGenerators(a, b);
 
     return {
       id: `3q_line${idx}`,
       arity: 3 as const,
-      name: `Toffoli(${genA},${genB},${genC})`,
+      name: `Toffoli(${composition.inputA},${composition.inputB},${composition.result ?? "scalar"})`,
       fanoLine: idx,
       order: 2, // Toffoli² = I
-      compositionRule: `${genA} ∘ ${genB} = ${genC}`,
+      compositionRule: composition.rule,
+      generatorComposition: composition,
     };
   });
 }
