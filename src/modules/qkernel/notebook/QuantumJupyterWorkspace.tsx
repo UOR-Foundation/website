@@ -386,6 +386,109 @@ function MitigationToggle({ label, description, enabled, onChange }: {
   );
 }
 
+/* ── Statistical metrics ─────────────────────────────────────────────────── */
+
+function computeDistributionMetrics(raw: Record<string, number>, mit: Record<string, number>) {
+  const allKeys = Array.from(new Set([...Object.keys(raw), ...Object.keys(mit)]));
+  const rawTotal = Object.values(raw).reduce((s, c) => s + c, 0);
+  const mitTotal = Object.values(mit).reduce((s, c) => s + c, 0);
+  if (rawTotal === 0 || mitTotal === 0) return null;
+
+  const numStates = allKeys.length;
+  const idealUniform = 1 / numStates;
+
+  const pRaw: Record<string, number> = {};
+  const pMit: Record<string, number> = {};
+  for (const k of allKeys) {
+    pRaw[k] = (raw[k] || 0) / rawTotal;
+    pMit[k] = (mit[k] || 0) / mitTotal;
+  }
+
+  // Total Variation Distance from uniform
+  let tvdRaw = 0, tvdMit = 0;
+  for (const k of allKeys) {
+    tvdRaw += Math.abs(pRaw[k] - idealUniform);
+    tvdMit += Math.abs(pMit[k] - idealUniform);
+  }
+  tvdRaw /= 2; tvdMit /= 2;
+
+  // KL Divergence from uniform
+  let klRaw = 0, klMit = 0;
+  for (const k of allKeys) {
+    if (pRaw[k] > 0) klRaw += pRaw[k] * Math.log(pRaw[k] / idealUniform);
+    if (pMit[k] > 0) klMit += pMit[k] * Math.log(pMit[k] / idealUniform);
+  }
+
+  // Classical fidelity (Bhattacharyya coefficient) against uniform
+  let fidRaw = 0, fidMit = 0;
+  for (const k of allKeys) {
+    fidRaw += Math.sqrt(pRaw[k] * idealUniform);
+    fidMit += Math.sqrt(pMit[k] * idealUniform);
+  }
+
+  return {
+    fidelityRaw: fidRaw, fidelityMit: fidMit,
+    fidImprovement: fidRaw > 0 ? ((fidMit - fidRaw) / fidRaw) * 100 : 0,
+    klRaw, klMit,
+    klReduction: klRaw > 0 ? ((klRaw - klMit) / klRaw) * 100 : 0,
+    tvdRaw, tvdMit,
+  };
+}
+
+function MitigationMetricsCard({ raw, mitigated }: { raw: Record<string, number>; mitigated: Record<string, number> }) {
+  const m = computeDistributionMetrics(raw, mitigated);
+  if (!m) return null;
+
+  const metrics = [
+    { label: "Classical Fidelity", desc: "Bhattacharyya coefficient vs. ideal — 1.0 is perfect",
+      rawVal: m.fidelityRaw.toFixed(4), mitVal: m.fidelityMit.toFixed(4), change: m.fidImprovement },
+    { label: "KL Divergence", desc: "Information loss from ideal — 0 is perfect",
+      rawVal: m.klRaw.toFixed(4), mitVal: m.klMit.toFixed(4), change: m.klReduction },
+    { label: "Total Variation", desc: "Max distinguishability from ideal — 0 is perfect",
+      rawVal: m.tvdRaw.toFixed(4), mitVal: m.tvdMit.toFixed(4),
+      change: m.tvdRaw > 0 ? ((m.tvdRaw - m.tvdMit) / m.tvdRaw) * 100 : 0 },
+  ];
+
+  return (
+    <div className="rounded-lg overflow-hidden" style={{ border: "1px solid hsla(0, 0%, 50%, 0.1)" }}>
+      <div className="px-3 py-2 flex items-center gap-2" style={{ background: "hsla(220, 30%, 50%, 0.04)", borderBottom: "1px solid hsla(0, 0%, 50%, 0.06)" }}>
+        <BarChart3 size={12} style={{ color: "hsl(220, 30%, 50%)" }} />
+        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "hsl(220, 25%, 45%)" }}>Quantitative Analysis</span>
+      </div>
+      <div className="divide-y" style={{ borderColor: "hsla(0, 0%, 50%, 0.06)" }}>
+        {metrics.map(met => {
+          const pos = met.change > 0.1;
+          const neg = met.change < -0.1;
+          const clr = pos ? "hsl(152, 45%, 40%)" : neg ? "hsl(0, 50%, 50%)" : "hsl(0, 0%, 55%)";
+          return (
+            <div key={met.label} className="px-3 py-2.5 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>{met.label}</span>
+                <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded" style={{
+                  color: clr,
+                  background: pos ? "hsla(152, 45%, 50%, 0.06)" : neg ? "hsla(0, 50%, 50%, 0.06)" : "hsla(0, 0%, 50%, 0.04)",
+                }}>{pos ? "+" : ""}{met.change.toFixed(1)}%</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="text-[10px] mb-0.5" style={{ color: "hsl(0, 0%, 55%)" }}>Raw</div>
+                  <div className="text-xs font-mono font-medium" style={{ color: "hsl(0, 0%, 40%)" }}>{met.rawVal}</div>
+                </div>
+                <div className="text-xs" style={{ color: "hsl(0, 0%, 65%)" }}>→</div>
+                <div className="flex-1">
+                  <div className="text-[10px] mb-0.5" style={{ color: "hsl(38, 40%, 45%)" }}>Mitigated</div>
+                  <div className="text-xs font-mono font-semibold" style={{ color: "hsl(38, 45%, 38%)" }}>{met.mitVal}</div>
+                </div>
+              </div>
+              <div className="text-[10px] leading-snug" style={{ color: "hsl(0, 0%, 60%)" }}>{met.desc}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* Before/After histogram comparison */
 function ComparisonHistogram({ rawCounts, mitigatedCounts, rawLabel, mitigatedLabel }: {
   rawCounts: Record<string, number>;
@@ -403,7 +506,6 @@ function ComparisonHistogram({ rawCounts, mitigatedCounts, rawLabel, mitigatedLa
 
   return (
     <div className="space-y-3">
-      {/* Legend */}
       <div className="flex items-center gap-4 px-1">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm" style={{ background: "hsl(0, 0%, 72%)" }} />
@@ -414,7 +516,6 @@ function ComparisonHistogram({ rawCounts, mitigatedCounts, rawLabel, mitigatedLa
           <span className="text-xs font-medium" style={{ color: "hsl(38, 40%, 40%)" }}>{mitigatedLabel}</span>
         </div>
       </div>
-      {/* Bars */}
       <div className="space-y-2">
         {allKeys.map(key => {
           const rawPct = rawTotal > 0 ? (rawCounts[key] || 0) / rawTotal * 100 : 0;
@@ -671,6 +772,9 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
                 rawLabel="Before"
                 mitigatedLabel="After"
               />
+
+              {/* Quantitative metrics */}
+              <MitigationMetricsCard raw={rawCounts} mitigated={mitigatedCounts} />
             </div>
           )}
 
