@@ -255,3 +255,26 @@ export type {
   CryptoClockReport,
   CryptoClockTest,
 } from "./crypto-clock";
+
+// Euler's Number Bridge — e connects Atlas ↔ Quantum ↔ Thermodynamics
+export {
+  buildPhaseMap,
+  vertexPhase,
+  twelfthRootsOfUnity,
+  analyzeEulersIdentity,
+  buildPhaseGateSet,
+  composePhaseGates,
+  computePartition,
+  discreteLog as eulerDiscreteLog,
+  buildExpLogTables,
+  runEulerBridgeVerification,
+  ATLAS_CAPACITY,
+  ATLAS_BITS,
+  GROUP_EXPONENT,
+} from "./euler-bridge";
+export type {
+  PhasePoint,
+  AtlasPhaseGate,
+  AtlasPartition,
+  EulerDiscovery,
+} from "./euler-bridge";
