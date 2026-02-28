@@ -96,7 +96,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
 
   return (
     <div
-      className="group relative flex flex-col items-center gap-2 cursor-default select-none"
+      className="group relative flex flex-col items-center gap-4 cursor-default select-none"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -278,7 +278,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
 
         return (
           <span
-            className="tracking-[0.35em] uppercase transition-all duration-300"
+            className="tracking-[0.35em] uppercase text-center transition-all duration-300"
             style={{
               fontFamily: "'DM Sans', system-ui, sans-serif",
               fontSize: "12px",

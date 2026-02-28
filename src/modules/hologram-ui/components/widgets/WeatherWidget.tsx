@@ -258,7 +258,7 @@ export default function WeatherWidget() {
 
   return (
     <div
-      className="relative flex flex-col items-center gap-2 cursor-default select-none"
+      className="relative flex flex-col items-center gap-4 cursor-default select-none"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -338,7 +338,7 @@ export default function WeatherWidget() {
 
       {/* Primary label */}
       <span
-        className="text-[12px] tracking-[0.35em] uppercase transition-all duration-300"
+        className="text-[12px] tracking-[0.35em] uppercase text-center transition-all duration-300"
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
           color: "hsla(38, 15%, 85%, 0.75)",
