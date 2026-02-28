@@ -202,3 +202,37 @@ export type {
   ClassificationReport,
   ClassificationInvariant,
 } from "./coadjoint-orbit-classifier";
+
+// Clock Algebra — φ(360) = 96 universal finite circuit computing
+export {
+  CLOCK_MODULUS,
+  TOTIENT_360,
+  eulerTotient,
+  generateClockElements,
+  clockElement,
+  clockElementByIndex,
+  groupExponent,
+  modPow,
+  modInverse,
+  crtReconstruct,
+  buildAtlasBijection,
+  buildMultiplicationCircuit,
+  buildExponentiationCircuit,
+  buildInverseCircuit,
+  applyCircuit,
+  encodeToClockElements,
+  analyzePeriod,
+  enumerateOrbits,
+  discreteLog,
+  runClockAlgebraVerification,
+} from "./clock-algebra";
+export type {
+  ClockElement,
+  ClockAtlasBijection,
+  ClockCircuit,
+  ClockOperation,
+  ClockEncoding,
+  PeriodAnalysis,
+  ClockAlgebraReport,
+  ClockAlgebraTest,
+} from "./clock-algebra";
