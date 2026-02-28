@@ -26,7 +26,7 @@ function getDayProgress(): number {
 
 // ── Ring geometry ──────────────────────────────────────────────────────────
 
-const SIZE = 110;
+const SIZE = 96;
 const STROKE = 2.5;
 const RADIUS = (SIZE - STROKE * 2) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -293,10 +293,10 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
 
       {/* Phase legend — appears on hover */}
       <div
-        className="absolute -top-16 left-1/2 -translate-x-1/2 flex gap-5 transition-all duration-300 pointer-events-none"
+        className="absolute -top-12 left-1/2 -translate-x-1/2 flex gap-5 transition-all duration-300 pointer-events-none"
         style={{
           opacity: hovered && attention.showExpanded ? 1 : 0,
-          transform: `translateX(-50%) translateY(${hovered && attention.showExpanded ? "0" : "6px"})`,
+          transform: `translateX(-50%) translateY(${hovered && attention.showExpanded ? "4px" : "6px"})`,
         }}
       >
         {PHASE_ORDER.map((phase) => {

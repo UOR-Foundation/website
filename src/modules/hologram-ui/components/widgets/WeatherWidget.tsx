@@ -303,7 +303,7 @@ export default function WeatherWidget() {
           className="absolute inset-0 rounded-full pointer-events-none"
           style={{
             background: `radial-gradient(circle, hsla(${hue}, 35%, 55%, 0.06) 0%, transparent 70%)`,
-            animation: "ring-breathe 6s ease-in-out infinite",
+            animation: "ring-breathe 5.82s ease-in-out infinite",
             transition: "background 1s ease",
           }}
         />
@@ -350,9 +350,9 @@ export default function WeatherWidget() {
 
       {/* Hover reveal: mood + details */}
       <div
-        className="absolute -top-16 left-1/2 flex flex-col items-center gap-1 transition-all duration-300 pointer-events-none whitespace-nowrap"
+        className="absolute -top-12 left-1/2 flex flex-col items-center gap-1 transition-all duration-300 pointer-events-none whitespace-nowrap"
         style={{
-          transform: `translateX(-50%) translateY(${hovered ? "0" : "6px"})`,
+          transform: `translateX(-50%) translateY(${hovered ? "4px" : "6px"})`,
           opacity: hovered ? 1 : 0,
         }}
       >
