@@ -434,7 +434,7 @@ export default function HologramOsPage() {
       <ComputeProjection open={activePanel === "compute"} onClose={() => k.closePanel()} />
       <MemoryProjection open={activePanel === "memory"} onClose={() => k.closePanel()} />
       <MessengerProjection open={activePanel === "messenger"} onClose={() => k.closePanel()} />
-      <TerminalProjection open={activePanel === "terminal"} onClose={() => k.closePanel()} onOpenJupyter={() => { k.closePanel(); setTimeout(() => k.openPanel("jupyter"), 350); }} />
+      <TerminalProjection open={activePanel === "terminal"} onClose={() => k.closePanel()} onOpenJupyter={() => { k.closePanel(); setTimeout(() => k.openPanel("jupyter"), 150); }} />
       <JupyterProjection open={activePanel === "jupyter"} onClose={() => k.closePanel()} />
       <SnapGuideOverlay />
       <KernelHeartbeat />

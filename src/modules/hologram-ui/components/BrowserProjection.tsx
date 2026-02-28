@@ -42,7 +42,7 @@ export default function BrowserProjection({ open, onClose, onSendToLumen }: Brow
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             onClick={onClose}
           />
 
@@ -68,8 +68,8 @@ export default function BrowserProjection({ open, onClose, onSendToLumen }: Brow
               opacity: 0.3,
             }}
             transition={{
-              duration: 0.65,
-              ease: [0.22, 1, 0.36, 1], // smooth overshoot-free ease
+              duration: 0.3,
+              ease: [0.22, 1, 0.36, 1],
             }}
           >
             {/* Inner glow edge — the "projection beam" effect */}

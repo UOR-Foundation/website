@@ -41,7 +41,7 @@ export default function ComputeProjection({ open, onClose }: ComputeProjectionPr
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             onClick={onClose}
           />
 
@@ -57,7 +57,7 @@ export default function ComputeProjection({ open, onClose }: ComputeProjectionPr
             initial={{ clipPath: `inset(0 100% 0 0)`, opacity: 0.3 }}
             animate={{ clipPath: `inset(0 0% 0 0)`, opacity: 1 }}
             exit={{ clipPath: `inset(0 100% 0 0)`, opacity: 0.3 }}
-            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
             {/* Projection beam */}
             <div
