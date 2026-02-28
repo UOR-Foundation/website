@@ -1,20 +1,20 @@
 /**
- * AttentionMode — Diffuse ↔ Focus Attention Spectrum
- * ═══════════════════════════════════════════════════
+ * useAttentionMode — Pure kernel projection, zero React Context
+ * ══════════════════════════════════════════════════════════════
  *
- * KERNEL-PROJECTED: The aperture value lives in KernelConfig.attention.aperture.
- * This module reads from the kernel singleton (single source of truth)
- * and exposes derived UOR metrics via React Context.
+ * KERNEL-PROJECTED: All attention metrics are derived from the
+ * ProjectionFrame.attention register. No separate Context needed —
+ * the kernel IS the single source of truth.
  *
  * Maps to the Dual Force model from the Sovereign Creator Framework:
- *   Diffuse (0.0) = Compassion-dominant attention — divergent, receptive, open
- *   Focus   (1.0) = Intellect-dominant attention — convergent, selective, deep
+ *   Diffuse (0.0) = Compassion-dominant attention — divergent, receptive
+ *   Focus   (1.0) = Intellect-dominant attention — convergent, selective
  *
  * @module hologram-ui/hooks/useAttentionMode
  */
 
-import { createContext, useContext, useCallback, useMemo, useEffect, useState, type ReactNode } from "react";
-import { getKernelProjector } from "@/modules/hologram-os/projection-engine";
+import { useCallback, useMemo, useState, useEffect } from "react";
+import { getKernelProjector, type AttentionProjection } from "@/modules/hologram-os/projection-engine";
 
 export type AttentionPreset = "focus" | "diffuse";
 
@@ -28,18 +28,7 @@ const PRIORITY_WEIGHT: Record<DistractionPriority, number> = {
   ambient: 0.1,
 };
 
-export interface AttentionState {
-  aperture: number;
-  preset: AttentionPreset;
-  snr: number;
-  observerStratum: number;
-  distractionGate: number;
-  showNotifications: boolean;
-  showExpanded: boolean;
-  sidebarExpanded: boolean;
-  animateBackground: boolean;
-  aiResponseStyle: "concise" | "exploratory";
-}
+export interface AttentionState extends AttentionProjection {}
 
 interface AttentionContextValue extends AttentionState {
   toggle: () => void;
@@ -48,57 +37,30 @@ interface AttentionContextValue extends AttentionState {
   shouldShow: (priority: DistractionPriority) => boolean;
 }
 
-const EPSILON = 0.01;
-
-function deriveState(aperture: number): AttentionState {
-  const preset: AttentionPreset = aperture >= 0.5 ? "focus" : "diffuse";
-  const diffusion = 1 - aperture;
-  const snr = aperture / (diffusion + EPSILON);
-  const observerStratum = diffusion;
-  const distractionGate = Math.min(0.95, aperture * 0.9);
-
-  return {
-    aperture,
-    preset,
-    snr,
-    observerStratum,
-    distractionGate,
-    showNotifications: diffusion >= 0.4,
-    showExpanded: diffusion >= 0.5,
-    sidebarExpanded: diffusion >= 0.6,
-    animateBackground: diffusion >= 0.3,
-    aiResponseStyle: aperture >= 0.5 ? "concise" : "exploratory",
-  };
-}
-
-const AttentionContext = createContext<AttentionContextValue | null>(null);
-
 /**
- * AttentionProvider — reads aperture from kernel, derives all metrics.
- * The kernel is the single source of truth. This Context is a projection.
+ * useAttentionMode — reads attention directly from the kernel projection stream.
+ * No Provider wrapper needed. Every consumer subscribes to the same kernel frames.
  */
-export function AttentionProvider({ children }: { children: ReactNode }) {
+export function useAttentionMode(): AttentionContextValue {
   const projector = getKernelProjector();
 
-  // Subscribe to kernel frames to get aperture updates
-  const [aperture, setApertureLocal] = useState(() => projector.getAperture());
+  // Subscribe to kernel frames to get attention updates
+  const [attention, setAttention] = useState<AttentionProjection>(() => projector.getAttention());
 
   useEffect(() => {
     const unsub = projector.onFrame((frame) => {
-      const kernelAperture = projector.getAperture();
-      setApertureLocal(kernelAperture);
+      setAttention(frame.attention);
     });
     return unsub;
   }, [projector]);
 
-  // Kernel syscall: write aperture
   const setAperture = useCallback((value: number) => {
     projector.setAperture(value);
   }, [projector]);
 
   const toggle = useCallback(() => {
-    setAperture(aperture >= 0.5 ? 0.2 : 0.8);
-  }, [aperture, setAperture]);
+    setAperture(attention.aperture >= 0.5 ? 0.2 : 0.8);
+  }, [attention.aperture, setAperture]);
 
   const setPreset = useCallback((preset: AttentionPreset) => {
     setAperture(preset === "focus" ? 0.8 : 0.2);
@@ -106,35 +68,14 @@ export function AttentionProvider({ children }: { children: ReactNode }) {
 
   const shouldShow = useCallback((priority: DistractionPriority) => {
     const weight = PRIORITY_WEIGHT[priority];
-    const gate = Math.min(0.95, aperture * 0.9);
-    return weight >= gate;
-  }, [aperture]);
+    return weight >= attention.distractionGate;
+  }, [attention.distractionGate]);
 
-  const value = useMemo<AttentionContextValue>(() => ({
-    ...deriveState(aperture),
+  return useMemo<AttentionContextValue>(() => ({
+    ...attention,
     toggle,
     setAperture,
     setPreset,
     shouldShow,
-  }), [aperture, toggle, setAperture, setPreset, shouldShow]);
-
-  return (
-    <AttentionContext.Provider value={value}>
-      {children}
-    </AttentionContext.Provider>
-  );
-}
-
-export function useAttentionMode(): AttentionContextValue {
-  const ctx = useContext(AttentionContext);
-  if (!ctx) {
-    return {
-      ...deriveState(0.3),
-      toggle: () => {},
-      setAperture: () => {},
-      setPreset: () => {},
-      shouldShow: () => true,
-    };
-  }
-  return ctx;
+  }), [attention, toggle, setAperture, setPreset, shouldShow]);
 }

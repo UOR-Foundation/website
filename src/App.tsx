@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { initializeRegistry } from "@/lib/uor-registry";
-import { AttentionProvider } from "@/modules/hologram-ui/hooks/useAttentionMode";
+
 import { ScreenContextProvider } from "@/modules/hologram-ui/hooks/useScreenContext";
 import FocusVignette from "@/modules/hologram-ui/components/FocusVignette";
 import { FocusJournalProvider } from "@/modules/hologram-ui/hooks/useFocusJournal";
@@ -165,7 +165,7 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
-    <AttentionProvider>
+    
     <FocusJournalProvider>
     <FocusVignette />
     <FocusJournalOverlay />
@@ -306,7 +306,7 @@ const App = () => {
       </BrowserRouter>
     </TooltipProvider>
     </FocusJournalProvider>
-    </AttentionProvider>
+    
   </QueryClientProvider>
   );
 };

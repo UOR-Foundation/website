@@ -83,6 +83,20 @@ export interface ObservableProjection {
   readonly zone: CoherenceZone;
 }
 
+/** Attention projection — derived from kernel aperture register */
+export interface AttentionProjection {
+  readonly aperture: number;
+  readonly preset: "focus" | "diffuse";
+  readonly snr: number;
+  readonly observerStratum: number;
+  readonly distractionGate: number;
+  readonly showNotifications: boolean;
+  readonly showExpanded: boolean;
+  readonly sidebarExpanded: boolean;
+  readonly animateBackground: boolean;
+  readonly aiResponseStyle: "concise" | "exploratory";
+}
+
 /** A single projection frame — one tick's worth of visual state */
 export interface ProjectionFrame {
   readonly tick: number;
@@ -94,6 +108,8 @@ export interface ProjectionFrame {
   readonly observables: readonly ObservableProjection[];
   readonly typography: TypographyProjection;
   readonly palette: PaletteProjection;
+  /** Attention/focus state — derived from kernel aperture register */
+  readonly attention: AttentionProjection;
   /** System-wide coherence: are we serving the human well? */
   readonly systemCoherence: {
     readonly meanH: number;
@@ -608,6 +624,25 @@ export class KernelProjector {
     return this.config.attention.aperture;
   }
 
+  /** Get full attention projection (derived from aperture register) */
+  getAttention(): AttentionProjection {
+    const aperture = this.config.attention.aperture;
+    const diffusion = 1 - aperture;
+    const EPSILON = 0.01;
+    return {
+      aperture,
+      preset: aperture >= 0.5 ? "focus" : "diffuse",
+      snr: aperture / (diffusion + EPSILON),
+      observerStratum: diffusion,
+      distractionGate: Math.min(0.95, aperture * 0.9),
+      showNotifications: diffusion >= 0.4,
+      showExpanded: diffusion >= 0.5,
+      sidebarExpanded: diffusion >= 0.6,
+      animateBackground: diffusion >= 0.3,
+      aiResponseStyle: aperture >= 0.5 ? "concise" : "exploratory",
+    };
+  }
+
   /** Set attention aperture — kernel syscall for focus/diffuse mode */
   setAperture(value: number): void {
     this.config.attention.aperture = Math.max(0, Math.min(1, value));
@@ -726,6 +761,11 @@ export class KernelProjector {
       },
     ];
 
+    // Derive attention metrics from the aperture register
+    const aperture = this.config.attention.aperture;
+    const diffusion = 1 - aperture;
+    const EPSILON = 0.01;
+
     return {
       tick: this.tickCount,
       timestamp: Date.now(),
@@ -745,6 +785,18 @@ export class KernelProjector {
         surface: "hsla(25, 10%, 12%, 0.65)",
         text: "hsl(38, 15%, 88%)",
         gold: "hsl(38, 40%, 62%)",
+      },
+      attention: {
+        aperture,
+        preset: aperture >= 0.5 ? "focus" : "diffuse",
+        snr: aperture / (diffusion + EPSILON),
+        observerStratum: diffusion,
+        distractionGate: Math.min(0.95, aperture * 0.9),
+        showNotifications: diffusion >= 0.4,
+        showExpanded: diffusion >= 0.5,
+        sidebarExpanded: diffusion >= 0.6,
+        animateBackground: diffusion >= 0.3,
+        aiResponseStyle: aperture >= 0.5 ? "concise" : "exploratory",
       },
       systemCoherence: {
         meanH: stats.meanHScore,
