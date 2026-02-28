@@ -16,15 +16,6 @@ export interface ProjectData {
 
 export const projects: ProjectData[] = [
   {
-    name: "Hologram",
-    slug: "hologram",
-    category: "Frontier Technology",
-    description: "A software layer that turns your existing hardware into a high-performance computing engine. No expensive GPUs or cloud subscriptions required.",
-    maturity: "Sandbox",
-    url: "https://gethologram.ai/",
-    imageKey: "hologram",
-  },
-  {
     name: "Atlas Embeddings",
     slug: "atlas-embeddings",
     category: "Open Science",
@@ -75,14 +66,6 @@ export const projects: ProjectData[] = [
     description: "Turn any content into a scannable QR code that carries its own verified identity. Movies, apps, music, websites — one scan to load, no trust required.",
     maturity: "Sandbox",
     imageKey: "qrCartridge",
-  },
-  {
-    name: "Hologram SDK",
-    slug: "hologram-sdk",
-    category: "Developer Tools",
-    description: "Build, ship, and run applications with one identity, one gate, and one balance. The managed app platform for creative builders.",
-    maturity: "Sandbox",
-    imageKey: "hologramSdk",
   },
   {
     name: "UOR Identity",
