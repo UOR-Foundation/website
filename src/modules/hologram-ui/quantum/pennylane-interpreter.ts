@@ -704,24 +704,24 @@ result = circuit()
 print(f"Result: {result}")`,
   },
   {
-    name: "RY(0.79) — Expectation & Probability Check",
-    description: "Single qubit RY rotation with rigorous ⟨Z⟩ = P(0) − P(1) verification",
+    name: "RY(π/4) — Expectation & Probability Verification",
+    description: "Single qubit RY(π/4) with rigorous ⟨Z⟩ = P(0) − P(1) check",
     code: `import pennylane as qml
-from pennylane import numpy as np
+import numpy as np
 
+# Create 1-qubit device (analytic mode)
 dev = qml.device("default.qubit", wires=1)
 
 @qml.qnode(dev)
 def circuit():
-    # Apply RY(0.79) rotation on qubit 0
-    # This rotates |0⟩ by 0.79 rad around the Y-axis
-    qml.RY(0.79, wires=0)
+    qml.RY(np.pi/4, wires=0)
     return qml.expval(qml.PauliZ(0)), qml.probs()
 
-# Expected results (analytical):
-#   ⟨Z⟩ = cos(0.79) = 0.7071067811865475
-#   P(0) = cos²(0.79/2) = 0.8535533905932737
-#   P(1) = sin²(0.79/2) = 0.14644660940672624
+# Expected (analytical):
+#   θ = π/4 = 0.7853981633974483
+#   ⟨Z⟩ = cos(θ) = 0.7071067811865476
+#   P(0) = cos²(θ/2) = 0.8535533905932737
+#   P(1) = sin²(θ/2) = 0.1464466094067263
 #   Check: P(0) - P(1) = ⟨Z⟩ ✓
 result = circuit()
 print(f"Result: {result}")`,
