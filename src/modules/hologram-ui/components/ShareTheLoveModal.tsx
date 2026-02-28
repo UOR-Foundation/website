@@ -130,43 +130,61 @@ export function ShareTheLoveModal({ open, onClose }: ShareTheLoveModalProps) {
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
             onClick={(e) => e.stopPropagation()}
             className="relative z-10 w-full max-w-md mx-4 rounded-2xl border border-border bg-card shadow-2xl overflow-hidden"
           >
             {/* Header */}
-            <div className="px-6 pt-6 pb-4 text-center relative">
+            <div className="px-8 pt-8 pb-5 text-center relative">
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                className="absolute top-5 right-5 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              {/* Purple heart icon */}
-              <div className="mx-auto w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                style={{ background: "linear-gradient(135deg, hsl(270, 80%, 65%), hsl(290, 70%, 50%))" }}
+              {/* Heart icon — warm earth with purple tint, tilted like Lovable logo */}
+              <div
+                className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+                style={{
+                  background: "linear-gradient(145deg, hsla(280, 25%, 42%, 0.9), hsla(320, 20%, 36%, 0.8))",
+                  boxShadow: "0 8px 32px -8px hsla(280, 35%, 30%, 0.35)",
+                  transform: "rotate(-12deg)",
+                }}
               >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style={{ transform: "rotate(12deg)" }}>
+                  <path
+                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                    fill="url(#modalHeartGrad)"
+                    opacity="0.95"
+                  />
+                  <defs>
+                    <linearGradient id="modalHeartGrad" x1="2" y1="3" x2="22" y2="21" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="hsl(38, 30%, 88%)" />
+                      <stop offset="50%" stopColor="hsl(300, 18%, 84%)" />
+                      <stop offset="100%" stopColor="hsl(38, 25%, 80%)" />
+                    </linearGradient>
+                  </defs>
                 </svg>
               </div>
 
-              <h2 className="text-foreground text-xl font-body font-bold tracking-tight">Share the Love</h2>
-              <p className="text-muted-foreground text-sm font-body mt-1.5 leading-relaxed">
-                Invite someone to claim their sovereign identity. Your unique link tracks referrals.
+              <h2 className="text-foreground text-xl font-serif font-normal tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Share the Love
+              </h2>
+              <p className="text-muted-foreground text-sm font-body mt-2 leading-relaxed max-w-xs mx-auto">
+                Invite someone to claim their sovereign identity. Your unique link tracks every referral.
               </p>
             </div>
 
             {/* Invite link */}
-            <div className="px-6 pb-4">
+            <div className="px-8 pb-5">
               {loading ? (
-                <div className="flex items-center justify-center py-6">
+                <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-2 p-3 rounded-xl border border-border bg-muted/50">
+                  <div className="flex items-center gap-2 p-3.5 rounded-xl border border-border bg-muted/30">
                     <Link2 className="w-4 h-4 text-muted-foreground shrink-0" />
                     <input
                       readOnly
@@ -175,7 +193,7 @@ export function ShareTheLoveModal({ open, onClose }: ShareTheLoveModalProps) {
                     />
                     <button
                       onClick={handleCopy}
-                      className="shrink-0 p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                      className="shrink-0 p-2 rounded-lg bg-primary/90 text-primary-foreground hover:bg-primary transition-colors"
                     >
                       {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
@@ -187,47 +205,43 @@ export function ShareTheLoveModal({ open, onClose }: ShareTheLoveModalProps) {
                       animate={{ opacity: 1, y: 0 }}
                       className="text-primary text-xs font-body mt-2 text-center"
                     >
-                      Copied to clipboard!
+                      Copied to clipboard
                     </motion.p>
                   )}
                 </>
               )}
             </div>
 
-            {/* Share buttons */}
-            <div className="px-6 pb-4">
-              <p className="text-muted-foreground text-xs font-body mb-3 uppercase tracking-widest">Share via</p>
-              <div className="grid grid-cols-4 gap-2">
+            {/* Share buttons — earth-warm styling */}
+            <div className="px-8 pb-5">
+              <p className="text-muted-foreground text-[10px] font-body mb-3 uppercase tracking-[0.2em]">Share via</p>
+              <div className="grid grid-cols-4 gap-2.5">
                 {[
                   {
                     label: "𝕏",
                     onClick: handleShareTwitter,
-                    bg: "bg-foreground/10 hover:bg-foreground/20",
-                    icon: <span className="text-foreground text-base font-bold">𝕏</span>,
+                    icon: <span className="text-foreground text-base font-semibold">𝕏</span>,
                   },
                   {
                     label: "LinkedIn",
                     onClick: handleShareLinkedIn,
-                    bg: "bg-blue-500/10 hover:bg-blue-500/20",
-                    icon: <span className="text-blue-600 dark:text-blue-400 text-sm font-bold">in</span>,
+                    icon: <span className="text-foreground text-sm font-semibold">in</span>,
                   },
                   {
                     label: "Email",
                     onClick: handleShareEmail,
-                    bg: "bg-orange-500/10 hover:bg-orange-500/20",
-                    icon: <span className="text-orange-600 dark:text-orange-400 text-sm">✉</span>,
+                    icon: <ExternalLink className="w-4 h-4 text-foreground" />,
                   },
                   {
                     label: "More",
                     onClick: handleNativeShare,
-                    bg: "bg-muted hover:bg-muted/80",
-                    icon: <Share2 className="w-4 h-4 text-muted-foreground" />,
+                    icon: <Share2 className="w-4 h-4 text-foreground" />,
                   },
                 ].map((btn) => (
                   <button
                     key={btn.label}
                     onClick={btn.onClick}
-                    className={`flex flex-col items-center gap-1.5 py-3 rounded-xl transition-colors ${btn.bg}`}
+                    className="flex flex-col items-center gap-1.5 py-3.5 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 transition-all duration-300"
                   >
                     {btn.icon}
                     <span className="text-muted-foreground text-[10px] font-body">{btn.label}</span>
@@ -237,23 +251,23 @@ export function ShareTheLoveModal({ open, onClose }: ShareTheLoveModalProps) {
             </div>
 
             {/* Stats */}
-            <div className="px-6 pb-6">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col items-center p-3 rounded-xl bg-muted/50 border border-border">
-                  <span className="text-foreground text-lg font-body font-bold">{stats.clicks}</span>
-                  <span className="text-muted-foreground text-[10px] font-body">Link Clicks</span>
+            <div className="px-8 pb-6">
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="flex flex-col items-center p-3.5 rounded-xl bg-muted/30 border border-border">
+                  <span className="text-foreground text-lg font-body font-semibold">{stats.clicks}</span>
+                  <span className="text-muted-foreground text-[10px] font-body tracking-wide">Clicks</span>
                 </div>
-                <div className="flex flex-col items-center p-3 rounded-xl bg-muted/50 border border-border">
-                  <span className="text-foreground text-lg font-body font-bold">{stats.signups}</span>
-                  <span className="text-muted-foreground text-[10px] font-body">Signups</span>
+                <div className="flex flex-col items-center p-3.5 rounded-xl bg-muted/30 border border-border">
+                  <span className="text-foreground text-lg font-body font-semibold">{stats.signups}</span>
+                  <span className="text-muted-foreground text-[10px] font-body tracking-wide">Signups</span>
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="px-6 pb-6">
+            <div className="px-8 pb-8">
               <p className="text-[10px] text-muted-foreground font-body text-center leading-relaxed">
-                Your invite code: <span className="font-mono font-semibold text-foreground">{inviteCode}</span> · 
+                Invite code <span className="font-mono font-medium text-foreground/70">{inviteCode}</span> · 
                 Every identity claimed strengthens the network.
               </p>
             </div>
