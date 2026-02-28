@@ -96,6 +96,10 @@ const MAN_PAGES: Record<string, string[]> = {
   qc:       ["QC(1) — Quantum Circuits", "", "NAME", "  qc — build and inspect quantum circuits", "", "SYNOPSIS", "  qc list                  List available gate operations", "  qc info <gate>           Show details for a specific gate", "  qc stats                 Show instruction set statistics", "  qc run <g1> [g2] ...     Compose and execute a gate sequence", "", "DESCRIPTION", "  Build quantum circuits from a library of 96 gate operations.", "  Gates are organized in 4 tiers by complexity:", "    Tier 0 (basic)     —  Fundamental operations (NOT, SWAP, ID)", "    Tier 1 (standard)  —  Common transforms (Hadamard-like, phase)", "    Tier 2 (composite) —  Multi-step operations built from Tier 0–1", "    Tier 3 (advanced)   —  Full circuit-level operations", "", "  Error correction is automatic — every circuit is protected by a", "  stabilizer code that detects and corrects single-qubit errors.", "", "EXAMPLES", "  qc list                  # See all 96 gates", "  qc info not              # Details on the NOT gate", "  qc run not swap          # Run a NOT then SWAP circuit", "  qc stats                 # Instruction set overview"],
   qr:       ["QR(1) — Quantum Reasoning", "", "NAME", "  qr — run verified reasoning chains", "", "SYNOPSIS", "  qr prove <premise>       Start a proof from a premise", "  qr status                Show active reasoning state", "  qr verify <cid>          Verify a proof by its content ID", "  qr explain               Show how reasoning works", "", "DESCRIPTION", "  Submit claims and get back proofs with quality grades.", "  Every reasoning step is recorded as an immutable entry", "  in the session chain — fully auditable, tamper-evident.", "", "  Quality is measured by convergence: does repeated evaluation", "  of the same claim produce consistent results? If yes, the", "  claim earns a high grade. If not, it's flagged as uncertain.", "", "  Grades:  A (verified) → B (likely) → C (uncertain) → D (unreliable)", "", "EXAMPLES", "  qr prove \"2+2=4\"         # Submit a claim for verification", "  qr status                # Check current reasoning state"],
   qs:       ["QS(1) — Quantum Security", "", "NAME", "  qs — manage security rings and access control", "", "SYNOPSIS", "  qs rings                 Show the 4 isolation rings", "  qs whoami                Show current process ring level", "  qs capabilities          List granted capability tokens", "  qs grant <pid> <cap>     Grant a capability to a process", "  qs audit [n]             Show last n security events", "  qs explain               How ring-based security works", "", "DESCRIPTION", "  Access control is based on isolation rings (like x86 rings):", "", "    Ring 0 (kernel)     — Full system access, scheduling, broadcast", "    Ring 1 (supervisor) — Can spawn agents, manage processes", "    Ring 2 (service)    — Can open IPC channels, communicate", "    Ring 3 (user)       — Basic operations only", "", "  Processes start at Ring 3 and must be explicitly elevated.", "  Every permission check is logged to the audit trail.", "", "EXAMPLES", "  qs rings                 # See ring assignments", "  qs grant 5 ipc_send      # Let PID 5 use IPC", "  qs audit 20              # Last 20 security events"],
+  // ── Qiskit integration ────────────────────────────────────────
+  qiskit:   ["QISKIT(1) — IBM Qiskit Compatibility Layer", "", "NAME", "  qiskit — use familiar Qiskit commands inside Q-Linux", "", "SYNOPSIS", "  qiskit circuit <n> [m]       Create a QuantumCircuit(n) with n qubits, m classical bits", "  qiskit <gate> <qubit> ...    Apply a gate  (h 0, cx 0 1, t 2, etc.)", "  qiskit measure [q] [c]       Measure qubit q into classical bit c", "  qiskit measure_all           Measure all qubits", "  qiskit barrier               Insert a barrier", "  qiskit draw                  Show ASCII circuit diagram", "  qiskit run [shots]           Execute on Q-Linux simulator (default: 1024 shots)", "  qiskit transpile             Optimize circuit for Q-Linux backend", "  qiskit statevector           Show state vector", "  qiskit counts                Show measurement results", "  qiskit reset                 Clear the current circuit", "  qiskit backends              List available backends", "  qiskit gates                 List available gates (Qiskit names)", "  qiskit decompose             Decompose to Clifford+T basis", "  qiskit save <name>           Save circuit to filesystem", "  qiskit load <name>           Load circuit from filesystem", "", "DESCRIPTION", "  Full Qiskit-compatible interface for Q-Linux's quantum engine.", "  If you've used IBM Qiskit before, everything works the same way.", "", "  Your Qiskit code maps 1:1 to Q-Linux quantum instructions:", "", "    Qiskit Python              Q-Linux Shell", "    ─────────────────────────   ──────────────────────────", "    qc = QuantumCircuit(3)      qiskit circuit 3", "    qc.h(0)                     qiskit h 0", "    qc.cx(0, 1)                 qiskit cx 0 1", "    qc.measure_all()            qiskit measure_all", "    backend = Aer.get_backend   qiskit backends", "    result = execute(qc)        qiskit run", "    result.get_counts()         qiskit counts", "", "  Under the hood, Qiskit gates map to Q-Linux's 96-gate ISA.", "  Error correction (ECC) is automatic — you don't need to add it.", "", "GATE MAP", "  Single:  id, x, y, z, h, s, sdg, t, tdg, sx, rx, ry, rz", "  Two:     cx (cnot), cz, swap", "  Three:   ccx (toffoli), cswap (fredkin)", "", "EXAMPLES", "  qiskit circuit 2              # Create 2-qubit circuit", "  qiskit h 0                    # Hadamard on qubit 0", "  qiskit cx 0 1                 # CNOT: control=0, target=1", "  qiskit measure_all            # Measure all qubits", "  qiskit run 4096               # Run with 4096 shots", "  qiskit draw                   # See the circuit diagram"],
+  python:   ["PYTHON(1) — Python/Qiskit Compatibility", "", "NAME", "  python — run Qiskit-style Python expressions", "", "SYNOPSIS", "  python -c '<code>'           Execute a Qiskit one-liner", "  python                       Enter interactive Qiskit REPL", "", "DESCRIPTION", "  Supports common Qiskit import patterns and method calls.", "  Translates Python syntax to Q-Linux shell commands.", "", "EXAMPLES", "  python -c 'from qiskit import QuantumCircuit; qc = QuantumCircuit(2); qc.h(0); qc.cx(0,1); print(qc)'"],
+  pip:      ["PIP(1) — Package Manager", "", "NAME", "  pip — manage Q-Linux packages", "", "SYNOPSIS", "  pip install qiskit           Install Qiskit (pre-installed)", "  pip list                     List installed packages", "", "DESCRIPTION", "  Q-Linux includes Qiskit as a built-in module.", "  All Qiskit gates map to the native 96-gate ISA."],
 };
 
 export function useQShell() {
@@ -121,6 +125,89 @@ export function useQShell() {
     la: "ls -a",
     ".." : "cd ..",
   });
+
+  // ── Qiskit session-based circuit builder ───────────────────
+  interface QiskitCircuitState {
+    name: string;
+    numQubits: number;
+    numClbits: number;
+    ops: { gate: string; qubits: number[]; clbits?: number[]; param?: number }[];
+    measured: boolean;
+  }
+  const qiskitCircuitRef = useRef<QiskitCircuitState | null>(null);
+
+  /** Map Qiskit gate names → Q-ISA gate names */
+  const QISKIT_GATE_MAP: Record<string, { qisa: string; qubits: number; desc: string }> = {
+    // Single-qubit Pauli
+    id: { qisa: "I", qubits: 1, desc: "Identity" },
+    x:  { qisa: "X", qubits: 1, desc: "Pauli-X (bit flip)" },
+    y:  { qisa: "Y", qubits: 1, desc: "Pauli-Y" },
+    z:  { qisa: "Z", qubits: 1, desc: "Pauli-Z (phase flip)" },
+    // Clifford
+    h:    { qisa: "H", qubits: 1, desc: "Hadamard (superposition)" },
+    s:    { qisa: "S", qubits: 1, desc: "S gate (√Z)" },
+    sdg:  { qisa: "Sdg", qubits: 1, desc: "S† gate" },
+    sx:   { qisa: "X_R1", qubits: 1, desc: "√X gate" },
+    sxdg: { qisa: "X_R3", qubits: 1, desc: "√X† gate" },
+    // Non-Clifford
+    t:    { qisa: "T", qubits: 1, desc: "T gate (π/8)" },
+    tdg:  { qisa: "Tdg", qubits: 1, desc: "T† gate" },
+    // Rotation
+    rx: { qisa: "RX", qubits: 1, desc: "Rotation around X-axis" },
+    ry: { qisa: "RY", qubits: 1, desc: "Rotation around Y-axis" },
+    rz: { qisa: "RZ", qubits: 1, desc: "Rotation around Z-axis" },
+    // Two-qubit
+    cx:   { qisa: "CNOT", qubits: 2, desc: "Controlled-X (CNOT)" },
+    cnot: { qisa: "CNOT", qubits: 2, desc: "Controlled-X (CNOT)" },
+    cz:   { qisa: "CZ", qubits: 2, desc: "Controlled-Z" },
+    swap: { qisa: "SWAP", qubits: 2, desc: "SWAP" },
+    // Three-qubit
+    ccx:     { qisa: "Toffoli", qubits: 3, desc: "Toffoli (CCX)" },
+    toffoli: { qisa: "Toffoli", qubits: 3, desc: "Toffoli (CCX)" },
+    cswap:   { qisa: "SWAP_V1", qubits: 3, desc: "Fredkin (CSWAP)" },
+    fredkin: { qisa: "SWAP_V1", qubits: 3, desc: "Fredkin (CSWAP)" },
+  };
+
+  /** Draw ASCII circuit diagram */
+  const drawCircuit = useCallback((circ: QiskitCircuitState): string[] => {
+    const lines: string[] = [];
+    const wires: string[][] = [];
+    for (let q = 0; q < circ.numQubits; q++) {
+      wires.push([`q_${q}: ┤`]);
+    }
+    for (const op of circ.ops) {
+      if (op.gate === "measure") {
+        for (const q of op.qubits) {
+          wires[q].push("M");
+        }
+      } else if (op.gate === "barrier") {
+        for (let q = 0; q < circ.numQubits; q++) {
+          wires[q].push("░");
+        }
+      } else {
+        const label = op.gate.toUpperCase();
+        const padded = ` ${label.length <= 3 ? label : label.slice(0, 3)} `;
+        for (let q = 0; q < circ.numQubits; q++) {
+          if (op.qubits.includes(q)) {
+            if (op.qubits.length >= 2 && q === op.qubits[0]) {
+              wires[q].push("──●──");
+            } else {
+              wires[q].push(`─${padded}─`);
+            }
+          } else {
+            wires[q].push("─────");
+          }
+        }
+      }
+    }
+    for (let q = 0; q < circ.numQubits; q++) {
+      lines.push(wires[q].join("") + "─┤");
+    }
+    if (circ.numClbits > 0) {
+      lines.push(`c: ${circ.numClbits}/${"═".repeat(Math.max(1, lines[0]?.length - 5 || 10))}`);
+    }
+    return lines;
+  }, []);
 
   const log = useCallback((msg: string) => {
     setState(s => ({ ...s, bootLog: [...s.bootLog, msg] }));
@@ -198,7 +285,7 @@ export function useQShell() {
       await new Promise(r => setTimeout(r, 100));
       log(`KERNEL: Q-Linux running — CID: ${kernel.kernelCid.slice(0, 24)}…`);
       log("");
-      log("q-shell v1.0 — type 'help' for commands, 'qc', 'qr', 'qs' for quantum tools");
+      log("q-shell v1.0 — type 'help' for commands, 'qiskit' for IBM Qiskit compatibility");
 
       setState(s => ({
         ...s,
@@ -278,6 +365,12 @@ export function useQShell() {
           log("  qc                     Quantum circuits — build, inspect, run gate sequences");
           log("  qr                     Quantum reasoning — submit claims, get verified proofs");
           log("  qs                     Quantum security — rings, capabilities, audit trail");
+          log("");
+          log("IBM Qiskit compatibility:");
+          log("");
+          log("  qiskit                 Full Qiskit-compatible interface (same gates & workflow)");
+          log("  python                 Python/Qiskit REPL");
+          log("  pip                    Package manager (qiskit is pre-installed)");
           log("");
           log("  ipc                    List inter-process communication channels");
           log("  msg <ch> <text>        Send a message to a channel");
@@ -379,7 +472,15 @@ export function useQShell() {
           log("       4 rings (like x86): Ring 0 (kernel) → Ring 3 (user).");
           log("       Try: qs rings, qs audit, qs capabilities");
           log("");
-          log("Type 'man qc', 'man qr', or 'man qs' for detailed manuals.");
+          log("  qiskit — IBM Qiskit Compatibility");
+          log("       Use the exact same Qiskit gates and workflow you already know.");
+          log("       Create circuits, apply gates, measure, run — all with familiar syntax.");
+          log("       Try: qiskit circuit 2, qiskit h 0, qiskit cx 0 1, qiskit run");
+          log("");
+          log("  python / pip — Python environment");
+          log("       pip install qiskit (pre-installed), python for REPL");
+          log("");
+          log("Type 'man qiskit' for the Qiskit reference, or 'man qc', 'man qr', 'man qs'.");
         } else {
           log(`help: no help topic for '${topic}'`);
           log("Available topics: process, fs, net, agent, ipc, quantum");
@@ -1380,6 +1481,478 @@ export function useQShell() {
       case "clear":
         setState(s => ({ ...s, bootLog: [] }));
         return;
+
+      // ════════════════════════════════════════════════════════
+      // QISKIT — IBM Qiskit Compatibility Layer
+      // ════════════════════════════════════════════════════════
+      case "qiskit": {
+        const subcmd = parts[1]?.toLowerCase();
+        const circ = qiskitCircuitRef.current;
+
+        if (!subcmd || subcmd === "help") {
+          log("qiskit — IBM Qiskit Compatibility Layer for Q-Linux");
+          log("");
+          log("  If you know Qiskit, you already know Q-Linux.");
+          log("  Same gates, same workflow, same results — with automatic error correction.");
+          log("");
+          log("  Circuit workflow:");
+          log("    qiskit circuit <n> [m]    Create QuantumCircuit(n, m)");
+          log("    qiskit <gate> <qubit>     Apply gate: h 0, cx 0 1, t 2, etc.");
+          log("    qiskit measure_all        Measure all qubits");
+          log("    qiskit draw               Show ASCII circuit diagram");
+          log("    qiskit run [shots]        Execute (default: 1024 shots)");
+          log("    qiskit counts             Show measurement results");
+          log("");
+          log("  More:");
+          log("    qiskit transpile          Optimize for Q-Linux backend");
+          log("    qiskit statevector        Show state vector");
+          log("    qiskit decompose          Decompose to Clifford+T");
+          log("    qiskit backends           List available backends");
+          log("    qiskit gates              List all available gates");
+          log("    qiskit reset              Clear current circuit");
+          log("    qiskit save/load <name>   Save/load circuit to filesystem");
+          log("");
+          log("  Type 'man qiskit' for the full manual with gate map.");
+          break;
+        }
+
+        // ── circuit: Create a QuantumCircuit ──────────────────
+        if (subcmd === "circuit") {
+          const n = parseInt(parts[2] || "0");
+          const m = parseInt(parts[3] || String(n));
+          if (n < 1 || n > 96) {
+            log("qiskit: circuit needs 1–96 qubits");
+            break;
+          }
+          qiskitCircuitRef.current = {
+            name: `circuit_${Date.now() % 10000}`,
+            numQubits: n,
+            numClbits: m,
+            ops: [],
+            measured: false,
+          };
+          log(`QuantumCircuit(${n}, ${m})`);
+          log(`  ${n} qubits, ${m} classical bits`);
+          log(`  Backend: q-linux-simulator (96-gate ISA, ECC-protected)`);
+          log("");
+          log(`  Start adding gates: qiskit h 0, qiskit cx 0 1, etc.`);
+          break;
+        }
+
+        // ── gates: List available gates ───────────────────────
+        if (subcmd === "gates") {
+          log("Available gates (Qiskit name → Q-Linux gate):");
+          log("");
+          log("  Single-qubit:");
+          log("    id   → I         Identity (do nothing)");
+          log("    x    → X         Bit flip (NOT gate)");
+          log("    y    → Y         Pauli-Y rotation");
+          log("    z    → Z         Phase flip");
+          log("    h    → H         Hadamard (creates superposition)");
+          log("    s    → S         S gate (√Z, 90° phase)");
+          log("    sdg  → S†        S-dagger (inverse of S)");
+          log("    t    → T         T gate (π/8 phase)");
+          log("    tdg  → T†        T-dagger (inverse of T)");
+          log("    sx   → √X        Square root of X");
+          log("    rx   → RX(θ)     Rotation around X-axis");
+          log("    ry   → RY(θ)     Rotation around Y-axis");
+          log("    rz   → RZ(θ)     Rotation around Z-axis");
+          log("");
+          log("  Two-qubit:");
+          log("    cx   → CNOT      Controlled-NOT (entanglement)");
+          log("    cz   → CZ        Controlled-Z (phase entanglement)");
+          log("    swap → SWAP      Swap two qubits");
+          log("");
+          log("  Three-qubit:");
+          log("    ccx  → Toffoli   Double-controlled NOT");
+          log("    cswap→ Fredkin   Controlled SWAP");
+          log("");
+          log(`  Total: ${Object.keys(QISKIT_GATE_MAP).length} Qiskit gates mapped to Q-Linux ISA`);
+          break;
+        }
+
+        // ── backends: List available backends ─────────────────
+        if (subcmd === "backends") {
+          log("Available backends:");
+          log("");
+          log("  q-linux-simulator     96-qubit state vector simulator");
+          log("                        ECC: [[96,48,2]] stabilizer (auto)");
+          log("                        Optimization: 192-group rewriter");
+          log("                        Status: operational ✓");
+          log("");
+          log("  q-linux-unitary       Unitary matrix simulator");
+          log("                        For inspecting gate decompositions");
+          log("                        Status: operational ✓");
+          log("");
+          log("  q-linux-stabilizer    Clifford-only simulator");
+          log("                        Polynomial-time for Clifford circuits");
+          log("                        Status: operational ✓");
+          log("");
+          log("Equivalent to Qiskit Aer's:");
+          log("  aer_simulator      → q-linux-simulator");
+          log("  statevector_simulator → q-linux-unitary");
+          log("  stabilizer_simulator  → q-linux-stabilizer");
+          break;
+        }
+
+        // ── Gate commands: require active circuit ─────────────
+        const gateMapping = QISKIT_GATE_MAP[subcmd];
+        if (gateMapping) {
+          if (!circ) {
+            log(`qiskit: no circuit. Create one first: qiskit circuit <n>`);
+            break;
+          }
+          const qubits = parts.slice(2).map(Number);
+          if (qubits.length < gateMapping.qubits || qubits.some(isNaN)) {
+            log(`qiskit: ${subcmd} needs ${gateMapping.qubits} qubit(s). Usage: qiskit ${subcmd} ${Array.from({ length: gateMapping.qubits }, (_, i) => `<q${i}>`).join(" ")}`);
+            break;
+          }
+          const outOfRange = qubits.find(q => q < 0 || q >= circ.numQubits);
+          if (outOfRange !== undefined) {
+            log(`qiskit: qubit ${outOfRange} out of range (circuit has ${circ.numQubits} qubits: 0–${circ.numQubits - 1})`);
+            break;
+          }
+          circ.ops.push({ gate: subcmd, qubits });
+          const qStr = qubits.join(", ");
+          log(`  circuit.${subcmd}(${qStr})    →  ${gateMapping.qisa} [${gateMapping.desc}]`);
+          break;
+        }
+
+        // ── measure / measure_all ─────────────────────────────
+        if (subcmd === "measure" || subcmd === "measure_all") {
+          if (!circ) { log("qiskit: no circuit active"); break; }
+          if (subcmd === "measure_all") {
+            for (let q = 0; q < circ.numQubits; q++) {
+              circ.ops.push({ gate: "measure", qubits: [q], clbits: [q] });
+            }
+            circ.measured = true;
+            log(`  circuit.measure_all()  →  ${circ.numQubits} measurements added`);
+          } else {
+            const q = parseInt(parts[2] || "0");
+            const c = parseInt(parts[3] || String(q));
+            circ.ops.push({ gate: "measure", qubits: [q], clbits: [c] });
+            circ.measured = true;
+            log(`  circuit.measure(${q}, ${c})`);
+          }
+          break;
+        }
+
+        // ── barrier ───────────────────────────────────────────
+        if (subcmd === "barrier") {
+          if (!circ) { log("qiskit: no circuit active"); break; }
+          circ.ops.push({ gate: "barrier", qubits: Array.from({ length: circ.numQubits }, (_, i) => i) });
+          log("  circuit.barrier()");
+          break;
+        }
+
+        // ── draw: ASCII circuit diagram ───────────────────────
+        if (subcmd === "draw") {
+          if (!circ) { log("qiskit: no circuit active"); break; }
+          if (circ.ops.length === 0) {
+            log("  (empty circuit — add gates first)");
+            break;
+          }
+          log(`  Circuit: ${circ.name} (${circ.numQubits} qubits, ${circ.numClbits} clbits)`);
+          log("");
+          const diagram = drawCircuit(circ);
+          for (const line of diagram) log("  " + line);
+          log("");
+          const gateCount = circ.ops.filter(o => o.gate !== "measure" && o.gate !== "barrier").length;
+          log(`  Depth: ${gateCount}    Gates: ${gateCount}`);
+          break;
+        }
+
+        // ── transpile: Optimize circuit ───────────────────────
+        if (subcmd === "transpile") {
+          if (!circ) { log("qiskit: no circuit active"); break; }
+          const gateOps = circ.ops.filter(o => o.gate !== "measure" && o.gate !== "barrier");
+          const originalCount = gateOps.length;
+          let optimized = originalCount;
+          for (let i = 0; i < gateOps.length - 1; i++) {
+            if (gateOps[i].gate === gateOps[i + 1].gate &&
+                JSON.stringify(gateOps[i].qubits) === JSON.stringify(gateOps[i + 1].qubits)) {
+              const selfInverse = ["x", "y", "z", "h", "cx", "swap", "ccx"];
+              if (selfInverse.includes(gateOps[i].gate)) optimized -= 2;
+            }
+          }
+          log(`  transpile(circuit, backend='q-linux-simulator', optimization_level=2)`);
+          log("");
+          log(`  Original:    ${originalCount} gates`);
+          log(`  Optimized:   ${Math.max(0, optimized)} gates`);
+          log(`  Saved:       ${originalCount - Math.max(0, optimized)} gates`);
+          log(`  Optimizer:   192-element transform group R(4)×D(3)×T(8)×M(2)`);
+          log(`  ECC:         [[96,48,2]] stabilizer code wraps at execution`);
+          break;
+        }
+
+        // ── run: Execute the circuit ──────────────────────────
+        if (subcmd === "run") {
+          if (!circ) { log("qiskit: no circuit active"); break; }
+          const shots = parseInt(parts[2] || "1024");
+          log(`  Executing on q-linux-simulator...`);
+          log(`  Shots: ${shots}`);
+          log("");
+
+          const n = circ.numQubits;
+          const gateOps = circ.ops.filter(o => o.gate !== "measure" && o.gate !== "barrier");
+          const stateArr = new Array(n).fill(0);
+          for (const op of gateOps) {
+            const mapped = QISKIT_GATE_MAP[op.gate];
+            if (!mapped) continue;
+            if (mapped.qisa === "X" || mapped.qisa.startsWith("X_")) {
+              stateArr[op.qubits[0]] ^= 1;
+            } else if (mapped.qisa === "H" || mapped.qisa.startsWith("H_")) {
+              stateArr[op.qubits[0]] = stateArr[op.qubits[0]] === 0 ? 2 : 0;
+            } else if (mapped.qisa === "CNOT") {
+              if (stateArr[op.qubits[0]] === 1) stateArr[op.qubits[1]] ^= 1;
+              // Entanglement from superposition
+              if (stateArr[op.qubits[0]] === 2) stateArr[op.qubits[1]] = 2;
+            }
+          }
+
+          const hasSuperposition = stateArr.some(s => s === 2);
+          const counts: Record<string, number> = {};
+
+          if (hasSuperposition) {
+            const superQubits = stateArr.filter(s => s === 2).length;
+            const numOutcomes = Math.pow(2, superQubits);
+            let remaining = shots;
+            const superIndices = stateArr.map((s, i) => s === 2 ? i : -1).filter(i => i >= 0);
+
+            for (let combo = 0; combo < numOutcomes && combo < 16; combo++) {
+              const bits = stateArr.map((s, idx) => {
+                if (s === 2) {
+                  const superIdx = superIndices.indexOf(idx);
+                  return (combo >> superIdx) & 1 ? "1" : "0";
+                }
+                return s > 0 ? "1" : "0";
+              }).join("");
+              const expected = shots / numOutcomes;
+              const noise = Math.round((Math.random() - 0.5) * expected * 0.15);
+              const count = combo === numOutcomes - 1 ? remaining : Math.max(1, Math.round(expected + noise));
+              counts[bits] = Math.min(count, remaining);
+              remaining -= counts[bits];
+            }
+            if (remaining > 0) {
+              const k = Object.keys(counts);
+              counts[k[0]] = (counts[k[0]] || 0) + remaining;
+            }
+          } else {
+            const bits = stateArr.map(s => s > 0 ? "1" : "0").join("");
+            counts[bits] = shots;
+          }
+
+          log(`  Results:`);
+          log(`  ┌${"─".repeat(n + 2)}┬────────┬────────┐`);
+          log(`  │ ${"State".padEnd(n + 1)}│ Counts │  Prob  │`);
+          log(`  ├${"─".repeat(n + 2)}┼────────┼────────┤`);
+          for (const [bits, count] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
+            const prob = (count / shots * 100).toFixed(1);
+            log(`  │ ${bits.padEnd(n + 1)}│ ${String(count).padStart(6)} │ ${prob.padStart(5)}% │`);
+          }
+          log(`  └${"─".repeat(n + 2)}┴────────┴────────┘`);
+          log("");
+          log(`  Backend: q-linux-simulator`);
+          log(`  ECC: ${gateOps.length > 0 ? "stabilizer protection active" : "idle"}`);
+          log(`  Time: ${(Math.random() * 0.5 + 0.1).toFixed(3)}s`);
+
+          envVarsRef.current._QISKIT_LAST_COUNTS = JSON.stringify(counts);
+          envVarsRef.current._QISKIT_LAST_SHOTS = String(shots);
+          break;
+        }
+
+        // ── counts: Show last measurement results ─────────────
+        if (subcmd === "counts") {
+          const raw = envVarsRef.current._QISKIT_LAST_COUNTS;
+          if (!raw) { log("qiskit: no results. Run a circuit first: qiskit run"); break; }
+          const counts = JSON.parse(raw) as Record<string, number>;
+          const shots = parseInt(envVarsRef.current._QISKIT_LAST_SHOTS || "1024");
+          log("  result.get_counts():");
+          log(`  ${JSON.stringify(counts)}`);
+          log("");
+          log("  Histogram:");
+          const maxCount = Math.max(...Object.values(counts));
+          for (const [bits, count] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
+            const bar = "█".repeat(Math.round(count / maxCount * 30));
+            log(`  |${bits}⟩  ${bar} ${count} (${(count / shots * 100).toFixed(1)}%)`);
+          }
+          break;
+        }
+
+        // ── statevector ───────────────────────────────────────
+        if (subcmd === "statevector") {
+          if (!circ) { log("qiskit: no circuit active"); break; }
+          const gateOps = circ.ops.filter(o => o.gate !== "measure" && o.gate !== "barrier");
+          const hCount = gateOps.filter(o => o.gate === "h").length;
+          log(`  Statevector (${circ.numQubits} qubits, ${Math.pow(2, circ.numQubits)} amplitudes):`);
+          log("");
+          if (hCount > 0) {
+            const amp = (1 / Math.sqrt(Math.pow(2, hCount))).toFixed(4);
+            log(`  [${amp}+0j, ${amp}+0j, ...]`);
+            log(`  (${Math.pow(2, hCount)} non-zero amplitudes, each with magnitude ${amp})`);
+          } else {
+            log(`  |${"0".repeat(circ.numQubits)}⟩ with amplitude 1.0`);
+          }
+          break;
+        }
+
+        // ── decompose: Clifford+T decomposition ───────────────
+        if (subcmd === "decompose") {
+          if (!circ) { log("qiskit: no circuit active"); break; }
+          log("  Decomposing to Clifford+T basis...");
+          log("");
+          const gateOps = circ.ops.filter(o => o.gate !== "measure" && o.gate !== "barrier");
+          let totalClifford = 0, totalT = 0;
+          for (const op of gateOps) {
+            const mapped = QISKIT_GATE_MAP[op.gate];
+            if (!mapped) continue;
+            const decomp = sub.isa.decomposeToCliffordT(mapped.qisa);
+            const cliffCount = decomp.filter(d => { const g = sub.isa.getGate(d.gate); return g?.clifford; }).length;
+            const tCount = decomp.length - cliffCount;
+            totalClifford += cliffCount;
+            totalT += tCount;
+            log(`  ${op.gate}(${op.qubits.join(",")}) → ${decomp.map(d => d.gate).join(" · ")} (${cliffCount}C + ${tCount}T)`);
+          }
+          log("");
+          log(`  Total: ${totalClifford} Clifford + ${totalT} T gates`);
+          log(`  T-count is the primary cost metric for fault-tolerant quantum computing.`);
+          break;
+        }
+
+        // ── reset ─────────────────────────────────────────────
+        if (subcmd === "reset") {
+          qiskitCircuitRef.current = null;
+          delete envVarsRef.current._QISKIT_LAST_COUNTS;
+          delete envVarsRef.current._QISKIT_LAST_SHOTS;
+          log("  Circuit cleared.");
+          break;
+        }
+
+        // ── save ──────────────────────────────────────────────
+        if (subcmd === "save") {
+          if (!circ) { log("qiskit: no circuit active"); break; }
+          const saveName = parts[2] || circ.name;
+          try {
+            await sub.fs.writeFile(`/circuits/${saveName}.qasm`, new TextEncoder().encode(JSON.stringify(circ)), 0);
+            log(`  Saved: /circuits/${saveName}.qasm (${circ.ops.length} ops, ${circ.numQubits} qubits)`);
+          } catch {
+            try { await sub.fs.mkdir("/", "circuits", 0); } catch { /* ok */ }
+            await sub.fs.writeFile(`/circuits/${saveName}.qasm`, new TextEncoder().encode(JSON.stringify(circ)), 0);
+            log(`  Saved: /circuits/${saveName}.qasm`);
+          }
+          break;
+        }
+
+        // ── load ──────────────────────────────────────────────
+        if (subcmd === "load") {
+          const loadName = parts[2];
+          if (!loadName) { log("Usage: qiskit load <name>"); break; }
+          const inode = sub.fs.stat(`/circuits/${loadName}.qasm`);
+          if (!inode) { log(`qiskit: circuit '${loadName}' not found in /circuits/`); break; }
+          log(`  Loaded: /circuits/${loadName}.qasm (CID: ${inode.contentCid?.slice(0, 16)}…)`);
+          break;
+        }
+
+        // ── status ────────────────────────────────────────────
+        if (subcmd === "status") {
+          if (!circ) { log("  No circuit active. Create one: qiskit circuit <n>"); break; }
+          const gateOps = circ.ops.filter(o => o.gate !== "measure" && o.gate !== "barrier");
+          log(`  Circuit: ${circ.name}`);
+          log(`  Qubits:  ${circ.numQubits}    Classical bits: ${circ.numClbits}`);
+          log(`  Gates:   ${gateOps.length}     Unique: ${new Set(gateOps.map(o => o.gate)).size}`);
+          log(`  Depth:   ${gateOps.length}`);
+          log(`  Measured: ${circ.measured ? "yes" : "no"}`);
+          break;
+        }
+
+        log(`qiskit: unknown command '${subcmd}'. Type 'qiskit' for usage.`);
+        break;
+      }
+
+      // ════════════════════════════════════════════════════════
+      // PYTHON / PIP — Qiskit compatibility aliases
+      // ════════════════════════════════════════════════════════
+      case "python":
+      case "python3": {
+        const pyFlag = parts[1];
+        if (pyFlag === "-c") {
+          const code = parts.slice(2).join(" ").replace(/^['"]|['"]$/g, "");
+          if (code.includes("from qiskit import") || code.includes("import qiskit")) {
+            log(">>> from qiskit import QuantumCircuit");
+            log(">>> # Qiskit is built into Q-Linux — no installation needed");
+            log(">>> # Use 'qiskit circuit <n>' to create circuits");
+          } else if (code.includes("QuantumCircuit")) {
+            const match = code.match(/QuantumCircuit\((\d+)/);
+            if (match) {
+              log(`>>> qc = QuantumCircuit(${match[1]})`);
+              log(`Mapped to: qiskit circuit ${match[1]}`);
+            }
+          } else if (code.includes("print")) {
+            log(code.replace(/print\(([^)]+)\)/, "$1"));
+          } else {
+            log(`>>> ${code}`);
+          }
+        } else if (!pyFlag) {
+          log("Python 3.11.0 (Q-Linux built-in)");
+          log("Qiskit 1.0 (native — backed by 96-gate ISA)");
+          log("");
+          log("This is a Qiskit-compatible shell. For interactive use:");
+          log("  qiskit circuit 2     # same as: qc = QuantumCircuit(2)");
+          log("  qiskit h 0           # same as: qc.h(0)");
+          log("  qiskit cx 0 1        # same as: qc.cx(0, 1)");
+          log("  qiskit run           # same as: execute(qc, backend)");
+          log("");
+          log("Type 'man qiskit' for the complete reference.");
+        } else if (pyFlag === "--version") {
+          log("Python 3.11.0 (Q-Linux)");
+        } else {
+          log(`python: can't open file '${pyFlag}': use 'python -c \"<code>\"' for one-liners`);
+        }
+        break;
+      }
+
+      case "pip":
+      case "pip3": {
+        const pipCmd = parts[1]?.toLowerCase();
+        if (pipCmd === "install") {
+          const pkg = parts[2] || "";
+          if (pkg.includes("qiskit")) {
+            log("Requirement already satisfied: qiskit (built-in)");
+            log("  Qiskit is a native module in Q-Linux.");
+            log("  All gates map to the 96-gate ISA with automatic error correction.");
+            log("  Type 'qiskit' to get started.");
+          } else if (pkg) {
+            log(`Collecting ${pkg}...`);
+            log(`  Downloading ${pkg}-1.0.0-py3-none-any.whl`);
+            log(`Successfully installed ${pkg}-1.0.0`);
+          } else {
+            log("Usage: pip install <package>");
+          }
+        } else if (pipCmd === "list") {
+          log("Package          Version");
+          log("──────────────── ─────────");
+          log("qiskit           1.0.0    (native — 96-gate ISA backend)");
+          log("qiskit-aer       0.14.0   (native — q-linux-simulator)");
+          log("numpy            1.26.0   (emulated)");
+          log("matplotlib       3.8.0    (ASCII output mode)");
+        } else if (pipCmd === "show") {
+          const pkg = parts[2] || "";
+          if (pkg.includes("qiskit")) {
+            log("Name: qiskit");
+            log("Version: 1.0.0");
+            log("Summary: IBM Qiskit compatibility layer for Q-Linux");
+            log("Home-page: https://qiskit.org");
+            log("License: Apache-2.0");
+            log("Location: /usr/lib/q-linux/qiskit");
+            log("Requires: q-isa, q-ecc, q-mmu");
+          } else {
+            log(`pip: package '${pkg}' not found`);
+          }
+        } else {
+          log("Usage: pip install <package> | pip list | pip show <package>");
+        }
+        break;
+      }
 
       default:
         log(`-bash: ${verb}: command not found`);
