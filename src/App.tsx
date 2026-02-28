@@ -16,6 +16,7 @@ import { initializeContentRegistry } from "@/lib/uor-content-registry";
 import LumenFloatingPill from "@/modules/hologram-ui/components/LumenFloatingPill";
 import GlobalFloatingWidgets from "@/modules/hologram-ui/components/GlobalFloatingWidgets";
 import GlobalLumenOverlay from "@/modules/hologram-ui/components/GlobalLumenOverlay";
+import HologramSearch from "@/modules/hologram-ui/components/HologramSearch";
 import { initTriwordGenesis } from "@/lib/uor-triword";
 import { useReferralTracking } from "@/hooks/useReferralTracking";
 
@@ -177,6 +178,7 @@ const App = () => {
         <LumenFloatingPill />
         <GlobalFloatingWidgets />
         <GlobalLumenOverlay />
+        <HologramSearch />
         <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<IndexPage />} />
