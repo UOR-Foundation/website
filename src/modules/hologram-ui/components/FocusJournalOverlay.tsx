@@ -51,9 +51,10 @@ function EntryRow({ entry }: { entry: JournalEntry }) {
       <RelevanceBar value={entry.relevance} />
       <div className="flex-1 min-w-0">
         <p
-          className="text-[11px] leading-relaxed truncate"
+          className="leading-relaxed truncate"
           style={{
-            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontFamily: "var(--font-body, 'DM Sans', system-ui, sans-serif)",
+            fontSize: "var(--holo-text-xs)",
             color: entry.isSignal
               ? "hsla(38, 15%, 85%, 0.85)"
               : "hsla(38, 10%, 65%, 0.4)",
@@ -153,7 +154,7 @@ function TLDRContent({ tldr, onDismiss }: { tldr: TLDR; onDismiss: () => void })
                 style={{
                   fontFamily: "'Playfair Display', serif",
                   fontWeight: 300,
-                  fontSize: "clamp(20px, 2.5vw, 28px)",
+                  fontSize: "var(--holo-text-2xl)",
                   color: "hsla(38, 15%, 88%, 0.9)",
                 }}
               >
@@ -183,10 +184,11 @@ function TLDRContent({ tldr, onDismiss }: { tldr: TLDR; onDismiss: () => void })
               }}
             >
               <div className="text-center">
-                <p
-                  className="text-[18px] tabular-nums"
+               <p
+                  className="tabular-nums"
                   style={{
                     fontFamily: "'Playfair Display', serif",
+                    fontSize: "var(--holo-text-lg)",
                     color: "hsla(38, 35%, 70%, 0.9)",
                     fontWeight: 300,
                   }}
@@ -194,9 +196,10 @@ function TLDRContent({ tldr, onDismiss }: { tldr: TLDR; onDismiss: () => void })
                   {formatDuration(tldr.duration)}
                 </p>
                 <p
-                  className="text-[8px] tracking-[0.3em] uppercase mt-0.5"
+                  className="tracking-[0.3em] uppercase mt-0.5"
                   style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    fontFamily: "var(--font-body, 'DM Sans', system-ui, sans-serif)",
+                    fontSize: "calc(var(--holo-text-xs) * 0.8)",
                     color: "hsla(38, 10%, 65%, 0.35)",
                   }}
                 >

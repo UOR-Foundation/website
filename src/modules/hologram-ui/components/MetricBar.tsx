@@ -18,14 +18,14 @@ export function MetricBar({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[11px] font-medium text-foreground">{label}</span>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between" style={{ marginBottom: "var(--holo-space-1)" }}>
+        <span className="font-medium text-foreground" style={{ fontSize: "var(--holo-text-xs)" }}>{label}</span>
+        <div className="flex items-center" style={{ gap: "var(--holo-space-2)" }}>
           {sublabel && (
-            <span className="text-[10px] text-muted-foreground">{sublabel}</span>
+            <span className="text-muted-foreground" style={{ fontSize: "var(--holo-text-xs)" }}>{sublabel}</span>
           )}
           {showPercent && (
-            <span className="text-[10px] font-mono font-medium text-muted-foreground">
+            <span className="font-mono font-medium text-muted-foreground" style={{ fontSize: "var(--holo-text-xs)" }}>
               {pct}%
             </span>
           )}

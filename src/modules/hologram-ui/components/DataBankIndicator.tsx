@@ -100,14 +100,15 @@ export default function DataBankIndicator({ expanded, bgMode = "image" }: DataBa
           }}
         >
           {/* Header */}
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center mb-3" style={{ gap: "var(--holo-space-2)" }}>
             <DatabaseZap className="w-4 h-4" style={{ color: HEALTH_DOT[health] }} />
-            <span className="text-[13px] font-medium" style={{ color: textColor }}>
+            <span className="font-medium" style={{ color: textColor, fontSize: "var(--holo-text-sm)" }}>
               Data Bank
             </span>
             <span
-              className="ml-auto text-[11px] px-1.5 py-0.5 rounded-md"
+              className="ml-auto px-1.5 py-0.5 rounded-md"
               style={{
+                fontSize: "var(--holo-text-xs)",
                 color: HEALTH_DOT[health],
                 background: `${HEALTH_DOT[health]}15`,
               }}
@@ -172,8 +173,8 @@ export default function DataBankIndicator({ expanded, bgMode = "image" }: DataBa
 function StatRow({ label, value, muted, text }: { label: string; value: string; muted: string; text: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[11px]" style={{ color: muted }}>{label}</span>
-      <span className="text-[11px] font-mono" style={{ color: text }}>{value}</span>
+      <span style={{ color: muted, fontSize: "var(--holo-text-xs)" }}>{label}</span>
+      <span className="font-mono" style={{ color: text, fontSize: "var(--holo-text-xs)" }}>{value}</span>
     </div>
   );
 }

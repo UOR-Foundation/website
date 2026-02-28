@@ -171,9 +171,10 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
           {night ? (
             <>
               <span
-                className="text-[18px] leading-none"
+                className="leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
+                  fontSize: "var(--holo-text-lg)",
                   color: isWhite ? "hsla(0, 0%, 10%, 0.8)" : "hsla(220, 20%, 80%, 0.8)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
@@ -183,9 +184,10 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
               </span>
               {attention.showExpanded && (
                 <span
-                  className="text-[8px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
+                  className="tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
                   style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    fontFamily: "var(--font-body, 'DM Sans', system-ui, sans-serif)",
+                    fontSize: "calc(var(--holo-text-xs) * 0.85)",
                     color: isWhite ? "hsla(0, 0%, 10%, 0.65)" : "hsla(220, 15%, 75%, 0.5)",
                     fontWeight: 500,
                   }}
@@ -197,9 +199,10 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
           ) : (
             <>
               <span
-                className="text-[22px] font-light leading-none"
+                className="font-light leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
+                  fontSize: "var(--holo-text-xl)",
                   color: isWhite ? "hsla(0, 0%, 5%, 0.9)" : "hsla(38, 15%, 94%, 0.95)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
@@ -209,9 +212,10 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
               </span>
               {attention.showExpanded && (
                 <span
-                  className="text-[10px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
+                  className="tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
                   style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    fontFamily: "var(--font-body, 'DM Sans', system-ui, sans-serif)",
+                    fontSize: "var(--holo-text-xs)",
                     color: isWhite ? "hsla(0, 0%, 10%, 0.65)" : "hsla(38, 15%, 82%, 0.55)",
                     fontWeight: 500,
                   }}
@@ -286,9 +290,10 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
 
         return (
           <span
-            className="text-[12px] tracking-[0.35em] uppercase transition-all duration-300"
+            className="tracking-[0.35em] uppercase transition-all duration-300"
             style={{
-              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontFamily: "var(--font-body, 'DM Sans', system-ui, sans-serif)",
+              fontSize: "var(--holo-text-xs)",
               color,
               fontWeight: 500,
             }}
@@ -311,9 +316,10 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
           return (
             <div key={phase} className="flex flex-col items-center gap-1">
               <span
-                className="text-[13px] font-light leading-none"
+                className="font-light leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
+                  fontSize: "var(--holo-text-sm)",
                   color: isWhite
                     ? `hsla(${PHASES[phase].hue}, 40%, 35%, 0.9)`
                     : `hsla(${PHASES[phase].hue}, 35%, 72%, 0.95)`,
@@ -325,9 +331,10 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 {phasePct}%
               </span>
               <span
-                className="text-[10px] tracking-[0.2em] uppercase leading-none"
+                className="tracking-[0.2em] uppercase leading-none"
                 style={{
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontFamily: "var(--font-body, 'DM Sans', system-ui, sans-serif)",
+                  fontSize: "var(--holo-text-xs)",
                   color: isWhite
                     ? `hsla(${PHASES[phase].hue}, 35%, 30%, 0.8)`
                     : `hsla(${PHASES[phase].hue}, 30%, 75%, 0.9)`,
