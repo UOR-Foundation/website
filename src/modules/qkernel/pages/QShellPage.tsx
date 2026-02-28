@@ -450,6 +450,86 @@ export default function QShellPage() {
                     ))}
                   </div>
 
+                  {/* Peer Review Matrix */}
+                  {demoLog.some(e => e.action === "peer-review") && (
+                    <div className="bg-[hsl(220,20%,8%)] border border-[hsl(150,30%,15%)] rounded-lg p-4 mb-4">
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3">Peer Review Scores (Latest Round)</div>
+                      {(() => {
+                        const agents = ["researcher", "synthesizer", "critic"];
+                        const colors = ["text-emerald-400", "text-sky-400", "text-amber-400"];
+                        const lastRound = Math.max(...demoLog.filter(e => e.action === "peer-review").map(e => e.tick));
+                        const reviews = demoLog.filter(e => e.action === "peer-review" && e.tick === lastRound);
+                        return (
+                          <div className="space-y-2">
+                            {agents.map((reviewer, ri) => (
+                              <div key={reviewer} className="flex items-center gap-2 text-[11px]">
+                                <span className={`w-20 truncate font-medium ${colors[ri]}`}>{reviewer}</span>
+                                <span className="text-muted-foreground">→</span>
+                                <div className="flex gap-3 flex-1">
+                                  {reviews
+                                    .filter(r => r.agent === reviewer)
+                                    .map((r, j) => {
+                                      const targetName = r.detail.split(" ")[0].replace("→", "");
+                                      const score = parseFloat(r.detail.split(" ")[1]);
+                                      const scoreColor = score >= 0.7 ? "text-emerald-400" : score >= 0.4 ? "text-amber-400" : "text-red-400";
+                                      return (
+                                        <span key={j} className="flex items-center gap-1">
+                                          <span className="text-muted-foreground">{targetName}</span>
+                                          <span className={`font-mono font-bold ${scoreColor}`}>{score.toFixed(2)}</span>
+                                        </span>
+                                      );
+                                    })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {/* Post-Peer H-Score Convergence */}
+                  {demoLog.some(e => e.action === "peer-result") && (
+                    <div className="bg-[hsl(220,20%,8%)] border border-[hsl(150,30%,15%)] rounded-lg p-4 mb-4">
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3">Post-Peer H-Score (Human + Peer Combined)</div>
+                      <div className="h-32 flex items-end gap-0.5">
+                        {(() => {
+                          const agents = ["researcher", "synthesizer", "critic"];
+                          const colors = ["bg-emerald-500", "bg-sky-500", "bg-amber-500"];
+                          const rounds = Math.max(...demoLog.filter(e => e.action === "peer-result").map(e => e.tick)) + 1;
+                          const bars: JSX.Element[] = [];
+                          for (let r = 0; r < rounds; r++) {
+                            for (let ai = 0; ai < agents.length; ai++) {
+                              const entries = demoLog.filter(e => e.agent === agents[ai] && e.action === "peer-result" && e.tick === r);
+                              const h = entries.length > 0 ? entries[entries.length - 1].h : 0;
+                              bars.push(
+                                <motion.div
+                                  key={`${r}-${ai}`}
+                                  className={`flex-1 rounded-t ${colors[ai]}`}
+                                  initial={{ height: 0 }}
+                                  animate={{ height: `${h * 100}%` }}
+                                  transition={{ duration: 0.5, delay: r * 0.15 + ai * 0.05 }}
+                                />
+                              );
+                            }
+                            if (r < rounds - 1) bars.push(<div key={`gap-${r}`} className="w-1" />);
+                          }
+                          return bars;
+                        })()}
+                      </div>
+                      <div className="flex justify-between mt-1 text-[9px] text-muted-foreground">
+                        {Array.from({ length: Math.max(...demoLog.filter(e => e.action === "peer-result").map(e => e.tick), 0) + 1 }, (_, i) => (
+                          <span key={i}>R{i + 1}</span>
+                        ))}
+                      </div>
+                      <div className="flex gap-4 mt-2 text-[10px]">
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-emerald-500" /> researcher</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-sky-500" /> synthesizer</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-amber-500" /> critic</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Event timeline */}
                   <div className="bg-[hsl(220,20%,8%)] border border-[hsl(150,30%,15%)] rounded-lg p-4">
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Activity Timeline</div>
@@ -458,7 +538,11 @@ export default function QShellPage() {
                         const agentColor = e.agent === "researcher" ? "text-emerald-400" :
                           e.agent === "synthesizer" ? "text-sky-400" :
                           e.agent === "critic" ? "text-amber-400" : "text-primary";
-                        const actionIcon = e.action === "think" ? "◆" : e.action === "ipc-send" ? "→" : e.action === "feedback" ? "★" : "⚡";
+                        const actionIcon = e.action === "think" ? "◆" :
+                          e.action === "ipc-send" ? "→" :
+                          e.action === "feedback" ? "★" :
+                          e.action === "peer-review" ? "⇄" :
+                          e.action === "peer-result" ? "◎" : "⚡";
                         return (
                           <motion.div
                             key={i}
