@@ -26,7 +26,7 @@ function getDayProgress(): number {
 
 // ── Ring geometry ──────────────────────────────────────────────────────────
 
-const SIZE = 96;
+const SIZE = 110;
 const STROKE = 2.5;
 const RADIUS = (SIZE - STROKE * 2) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -174,7 +174,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 className="leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  fontSize: "22px",
+                  fontSize: "26px",
                   color: isWhite ? "hsla(0, 0%, 10%, 0.8)" : "hsla(220, 20%, 80%, 0.8)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
@@ -202,7 +202,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 className="font-light leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  fontSize: "22px",
+                  fontSize: "26px",
                   color: isWhite ? "hsla(0, 0%, 5%, 0.9)" : "hsla(38, 15%, 94%, 0.95)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
