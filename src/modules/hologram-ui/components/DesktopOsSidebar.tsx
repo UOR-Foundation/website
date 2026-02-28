@@ -147,15 +147,10 @@ export default function DesktopOsSidebar({
     [location.pathname],
   );
 
-  /** Collapse and fire action simultaneously — no sequential delay */
+  /** Collapse and fire action simultaneously — zero delay */
   const collapseAndDo = useCallback((action: () => void) => {
-    if (expanded) {
-      setExpanded(false);
-      // Fire immediately so the content panel expands in sync with sidebar collapse
-      requestAnimationFrame(() => action());
-    } else {
-      action();
-    }
+    if (expanded) setExpanded(false);
+    action();
   }, [expanded]);
 
   const w = expanded ? EXPANDED_W : COLLAPSED_W;
