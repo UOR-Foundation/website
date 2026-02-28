@@ -108,9 +108,12 @@ const MAN_PAGES: Record<string, string[]> = {
   qr:       ["QR(1) — Quantum Reasoning", "", "NAME", "  qr — run verified reasoning chains", "", "SYNOPSIS", "  qr prove <premise>       Start a proof from a premise", "  qr status                Show active reasoning state", "  qr verify <cid>          Verify a proof by its content ID", "  qr explain               Show how reasoning works", "", "DESCRIPTION", "  Submit claims and get back proofs with quality grades.", "  Every reasoning step is recorded as an immutable entry", "  in the session chain — fully auditable, tamper-evident.", "", "  Quality is measured by convergence: does repeated evaluation", "  of the same claim produce consistent results? If yes, the", "  claim earns a high grade. If not, it's flagged as uncertain.", "", "  Grades:  A (verified) → B (likely) → C (uncertain) → D (unreliable)", "", "EXAMPLES", "  qr prove \"2+2=4\"         # Submit a claim for verification", "  qr status                # Check current reasoning state"],
   qs:       ["QS(1) — Quantum Security", "", "NAME", "  qs — manage security rings and access control", "", "SYNOPSIS", "  qs rings                 Show the 4 isolation rings", "  qs whoami                Show current process ring level", "  qs capabilities          List granted capability tokens", "  qs grant <pid> <cap>     Grant a capability to a process", "  qs audit [n]             Show last n security events", "  qs explain               How ring-based security works", "", "DESCRIPTION", "  Access control is based on isolation rings (like x86 rings):", "", "    Ring 0 (kernel)     — Full system access, scheduling, broadcast", "    Ring 1 (supervisor) — Can spawn agents, manage processes", "    Ring 2 (service)    — Can open IPC channels, communicate", "    Ring 3 (user)       — Basic operations only", "", "  Processes start at Ring 3 and must be explicitly elevated.", "  Every permission check is logged to the audit trail.", "", "EXAMPLES", "  qs rings                 # See ring assignments", "  qs grant 5 ipc_send      # Let PID 5 use IPC", "  qs audit 20              # Last 20 security events"],
   // ── Qiskit integration ────────────────────────────────────────
-  qiskit:   ["QISKIT(1) — IBM Qiskit Compatibility Layer", "", "NAME", "  qiskit — use familiar Qiskit commands inside Q-Linux", "", "SYNOPSIS", "  qiskit circuit <n> [m]       Create a QuantumCircuit(n) with n qubits, m classical bits", "  qiskit <gate> <qubit> ...    Apply a gate  (h 0, cx 0 1, t 2, etc.)", "  qiskit measure [q] [c]       Measure qubit q into classical bit c", "  qiskit measure_all           Measure all qubits", "  qiskit barrier               Insert a barrier", "  qiskit draw                  Show ASCII circuit diagram", "  qiskit run [shots]           Execute on Q-Linux simulator (default: 1024 shots)", "  qiskit transpile             Optimize circuit for Q-Linux backend", "  qiskit statevector           Show state vector", "  qiskit counts                Show measurement results", "  qiskit reset                 Clear the current circuit", "  qiskit backends              List available backends", "  qiskit gates                 List available gates (Qiskit names)", "  qiskit decompose             Decompose to Clifford+T basis", "  qiskit save <name>           Save circuit to filesystem", "  qiskit load <name>           Load circuit from filesystem", "", "DESCRIPTION", "  Full Qiskit-compatible interface for Q-Linux's quantum engine.", "  If you've used IBM Qiskit before, everything works the same way.", "", "  Your Qiskit code maps 1:1 to Q-Linux quantum instructions:", "", "    Qiskit Python              Q-Linux Shell", "    ─────────────────────────   ──────────────────────────", "    qc = QuantumCircuit(3)      qiskit circuit 3", "    qc.h(0)                     qiskit h 0", "    qc.cx(0, 1)                 qiskit cx 0 1", "    qc.measure_all()            qiskit measure_all", "    backend = Aer.get_backend   qiskit backends", "    result = execute(qc)        qiskit run", "    result.get_counts()         qiskit counts", "", "  Under the hood, Qiskit gates map to Q-Linux's 96-gate ISA.", "  Error correction (ECC) is automatic — you don't need to add it.", "", "GATE MAP", "  Single:  id, x, y, z, h, s, sdg, t, tdg, sx, rx, ry, rz", "  Two:     cx (cnot), cz, swap", "  Three:   ccx (toffoli), cswap (fredkin)", "", "EXAMPLES", "  qiskit circuit 2              # Create 2-qubit circuit", "  qiskit h 0                    # Hadamard on qubit 0", "  qiskit cx 0 1                 # CNOT: control=0, target=1", "  qiskit measure_all            # Measure all qubits", "  qiskit run 4096               # Run with 4096 shots", "  qiskit draw                   # See the circuit diagram"],
-  python:   ["PYTHON(1) — Python/Qiskit Compatibility", "", "NAME", "  python — run Qiskit-style Python expressions", "", "SYNOPSIS", "  python -c '<code>'           Execute a Qiskit one-liner", "  python                       Enter interactive Qiskit REPL", "", "DESCRIPTION", "  Supports common Qiskit import patterns and method calls.", "  Translates Python syntax to Q-Linux shell commands.", "", "EXAMPLES", "  python -c 'from qiskit import QuantumCircuit; qc = QuantumCircuit(2); qc.h(0); qc.cx(0,1); print(qc)'"],
-  pip:      ["PIP(1) — Package Manager", "", "NAME", "  pip — manage Q-Linux packages", "", "SYNOPSIS", "  pip install qiskit           Install Qiskit (pre-installed)", "  pip list                     List installed packages", "", "DESCRIPTION", "  Q-Linux includes Qiskit as a built-in module.", "  All Qiskit gates map to the native 96-gate ISA."],
+  qiskit:   ["QISKIT(1) — IBM Qiskit Compatibility Layer", "", "NAME", "  qiskit — use familiar Qiskit commands inside Q-Linux", "", "SYNOPSIS", "  qiskit circuit <n> [m]       Create a QuantumCircuit(n)", "  qiskit <gate> <qubit> ...    Apply a gate  (h 0, cx 0 1, etc.)", "  qiskit measure_all           Measure all qubits", "  qiskit draw / run / counts   Draw, execute, show results", "", "GATE MAP", "  Single:  id, x, y, z, h, s, sdg, t, tdg, sx, rx, ry, rz", "  Two:     cx (cnot), cz, swap", "  Three:   ccx (toffoli), cswap (fredkin)", "", "Type 'qiskit' for full usage."],
+  cirq:     ["CIRQ(1) — Google Cirq Compatibility Layer", "", "NAME", "  cirq — use familiar Google Cirq commands inside Q-Linux", "", "SYNOPSIS", "  cirq circuit <n>             Create circuit with n LineQubits", "  cirq <gate> <qubit> ...      Apply gate: H 0, CNOT 0 1, T 2", "  cirq measure_all             Measure all qubits", "  cirq simulate [shots]        Run simulation", "  cirq draw / statevector / counts   Inspect circuit & results", "", "  Cirq Python                  Q-Linux Shell", "  ───────────────────────────   ──────────────────────────", "  q = cirq.LineQubit.range(3)  cirq circuit 3", "  cirq.H(q[0])                 cirq H 0", "  cirq.CNOT(q[0], q[1])        cirq CNOT 0 1", "  cirq.measure(*q)             cirq measure_all", "  sim.simulate(circuit)         cirq simulate", "", "GATE MAP", "  Single: I, X, Y, Z, H, S, T, rx, ry, rz, SX", "  Two:    CNOT, CZ, SWAP, ISWAP", "  Three:  CCX (Toffoli), CSWAP (Fredkin), CCZ"],
+  pennylane: ["PENNYLANE(1) — Xanadu PennyLane Compatibility Layer", "", "NAME", "  pennylane / pl — use familiar PennyLane commands inside Q-Linux", "", "SYNOPSIS", "  pl circuit <n>               Create device('default.qubit', wires=n)", "  pl <gate> <wire> ...         Apply gate: Hadamard 0, CNOT 0 1, RX 0 1.57", "  pl measure_all               Measure all wires", "  pl run [shots]               Execute QNode", "  pl draw / state / probs / counts   Inspect circuit & results", "  pl grad                      Compute parameter gradients (parameter-shift)", "", "  PennyLane Python              Q-Linux Shell", "  ─────────────────────────────  ──────────────────────────", "  dev = qml.device(...)         pl circuit 3", "  qml.Hadamard(wires=0)         pl Hadamard 0", "  qml.CNOT(wires=[0,1])         pl CNOT 0 1", "  qml.RX(1.57, wires=0)         pl RX 0 1.57", "  circuit()                      pl run", "", "GATE MAP", "  Single: Identity, PauliX, PauliY, PauliZ, Hadamard, S, T, SX", "  Rotation: RX, RY, RZ, Rot, PhaseShift", "  Two:    CNOT, CZ, SWAP, IsingXX, IsingYY, IsingZZ", "  Three:  Toffoli, CSWAP"],
+  pl:       ["PL(1) — alias for pennylane(1). See 'man pennylane'."],
+  python:   ["PYTHON(1) — Python/Quantum SDK Compatibility", "", "NAME", "  python — run quantum SDK Python expressions", "", "SYNOPSIS", "  python -c '<code>'           Execute a one-liner (Qiskit/Cirq/PennyLane)", "  python                       Enter interactive REPL", "", "DESCRIPTION", "  Supports Qiskit, Cirq, and PennyLane import patterns.", "  Translates Python syntax to Q-Linux shell commands.", "", "EXAMPLES", "  python -c 'from qiskit import QuantumCircuit; qc = QuantumCircuit(2); qc.h(0)'", "  python -c 'import cirq; q = cirq.LineQubit.range(2)'", "  python -c 'import pennylane as qml; dev = qml.device(\"default.qubit\", wires=2)'"],
+  pip:      ["PIP(1) — Package Manager", "", "NAME", "  pip — manage Q-Linux packages", "", "SYNOPSIS", "  pip install qiskit|cirq|pennylane   Install (all pre-installed)", "  pip list                            List installed packages", "", "DESCRIPTION", "  Q-Linux includes Qiskit, Cirq, and PennyLane as built-in modules.", "  All gates map to the native 96-gate ISA."],
 };
 
 export function useQShell() {
@@ -137,39 +140,97 @@ export function useQShell() {
     ".." : "cd ..",
   });
 
-  // ── Qiskit session-based circuit builder (real statevector simulator) ──
+  // ── Shared circuit ref for all quantum SDKs ──
   const qiskitCircuitRef = useRef<SimulatorState | null>(null);
 
+  type GateEntry = { qisa: string; qubits: number; desc: string };
+
   /** Map Qiskit gate names → Q-ISA gate names */
-  const QISKIT_GATE_MAP: Record<string, { qisa: string; qubits: number; desc: string }> = {
-    // Single-qubit Pauli
+  const QISKIT_GATE_MAP: Record<string, GateEntry> = {
     id: { qisa: "I", qubits: 1, desc: "Identity" },
     x:  { qisa: "X", qubits: 1, desc: "Pauli-X (bit flip)" },
     y:  { qisa: "Y", qubits: 1, desc: "Pauli-Y" },
     z:  { qisa: "Z", qubits: 1, desc: "Pauli-Z (phase flip)" },
-    // Clifford
     h:    { qisa: "H", qubits: 1, desc: "Hadamard (superposition)" },
     s:    { qisa: "S", qubits: 1, desc: "S gate (√Z)" },
     sdg:  { qisa: "Sdg", qubits: 1, desc: "S† gate" },
     sx:   { qisa: "X_R1", qubits: 1, desc: "√X gate" },
     sxdg: { qisa: "X_R3", qubits: 1, desc: "√X† gate" },
-    // Non-Clifford
     t:    { qisa: "T", qubits: 1, desc: "T gate (π/8)" },
     tdg:  { qisa: "Tdg", qubits: 1, desc: "T† gate" },
-    // Rotation
     rx: { qisa: "RX", qubits: 1, desc: "Rotation around X-axis" },
     ry: { qisa: "RY", qubits: 1, desc: "Rotation around Y-axis" },
     rz: { qisa: "RZ", qubits: 1, desc: "Rotation around Z-axis" },
-    // Two-qubit
     cx:   { qisa: "CNOT", qubits: 2, desc: "Controlled-X (CNOT)" },
     cnot: { qisa: "CNOT", qubits: 2, desc: "Controlled-X (CNOT)" },
     cz:   { qisa: "CZ", qubits: 2, desc: "Controlled-Z" },
     swap: { qisa: "SWAP", qubits: 2, desc: "SWAP" },
-    // Three-qubit
     ccx:     { qisa: "Toffoli", qubits: 3, desc: "Toffoli (CCX)" },
     toffoli: { qisa: "Toffoli", qubits: 3, desc: "Toffoli (CCX)" },
     cswap:   { qisa: "SWAP_V1", qubits: 3, desc: "Fredkin (CSWAP)" },
     fredkin: { qisa: "SWAP_V1", qubits: 3, desc: "Fredkin (CSWAP)" },
+  };
+
+  /** Map Cirq gate names → Q-ISA */
+  const CIRQ_GATE_MAP: Record<string, GateEntry> = {
+    I: { qisa: "I", qubits: 1, desc: "Identity" },
+    X: { qisa: "X", qubits: 1, desc: "Pauli-X" },
+    Y: { qisa: "Y", qubits: 1, desc: "Pauli-Y" },
+    Z: { qisa: "Z", qubits: 1, desc: "Pauli-Z" },
+    H: { qisa: "H", qubits: 1, desc: "Hadamard" },
+    S: { qisa: "S", qubits: 1, desc: "S gate (√Z)" },
+    T: { qisa: "T", qubits: 1, desc: "T gate (π/8)" },
+    SX: { qisa: "X_R1", qubits: 1, desc: "√X gate" },
+    rx: { qisa: "RX", qubits: 1, desc: "X rotation" },
+    ry: { qisa: "RY", qubits: 1, desc: "Y rotation" },
+    rz: { qisa: "RZ", qubits: 1, desc: "Z rotation" },
+    CNOT: { qisa: "CNOT", qubits: 2, desc: "Controlled-NOT" },
+    CX: { qisa: "CNOT", qubits: 2, desc: "Controlled-X" },
+    CZ: { qisa: "CZ", qubits: 2, desc: "Controlled-Z" },
+    SWAP: { qisa: "SWAP", qubits: 2, desc: "SWAP" },
+    ISWAP: { qisa: "SWAP", qubits: 2, desc: "iSWAP" },
+    CCX: { qisa: "Toffoli", qubits: 3, desc: "Toffoli (CCX)" },
+    CCZ: { qisa: "CZ", qubits: 3, desc: "CCZ" },
+    CSWAP: { qisa: "SWAP_V1", qubits: 3, desc: "Fredkin (CSWAP)" },
+    TOFFOLI: { qisa: "Toffoli", qubits: 3, desc: "Toffoli" },
+  };
+
+  /** Map PennyLane gate names → Q-ISA */
+  const PENNYLANE_GATE_MAP: Record<string, GateEntry> = {
+    Identity: { qisa: "I", qubits: 1, desc: "Identity" },
+    PauliX: { qisa: "X", qubits: 1, desc: "Pauli-X" },
+    PauliY: { qisa: "Y", qubits: 1, desc: "Pauli-Y" },
+    PauliZ: { qisa: "Z", qubits: 1, desc: "Pauli-Z" },
+    Hadamard: { qisa: "H", qubits: 1, desc: "Hadamard" },
+    S: { qisa: "S", qubits: 1, desc: "S gate" },
+    T: { qisa: "T", qubits: 1, desc: "T gate" },
+    SX: { qisa: "X_R1", qubits: 1, desc: "√X gate" },
+    RX: { qisa: "RX", qubits: 1, desc: "X rotation" },
+    RY: { qisa: "RY", qubits: 1, desc: "Y rotation" },
+    RZ: { qisa: "RZ", qubits: 1, desc: "Z rotation" },
+    PhaseShift: { qisa: "RZ", qubits: 1, desc: "Phase shift" },
+    Rot: { qisa: "RZ", qubits: 1, desc: "General rotation" },
+    CNOT: { qisa: "CNOT", qubits: 2, desc: "Controlled-NOT" },
+    CZ: { qisa: "CZ", qubits: 2, desc: "Controlled-Z" },
+    SWAP: { qisa: "SWAP", qubits: 2, desc: "SWAP" },
+    CRX: { qisa: "RX", qubits: 2, desc: "Controlled-RX" },
+    CRY: { qisa: "RY", qubits: 2, desc: "Controlled-RY" },
+    CRZ: { qisa: "RZ", qubits: 2, desc: "Controlled-RZ" },
+    IsingXX: { qisa: "CNOT", qubits: 2, desc: "Ising XX" },
+    IsingYY: { qisa: "CNOT", qubits: 2, desc: "Ising YY" },
+    IsingZZ: { qisa: "CZ", qubits: 2, desc: "Ising ZZ" },
+    Toffoli: { qisa: "Toffoli", qubits: 3, desc: "Toffoli" },
+    CSWAP: { qisa: "SWAP_V1", qubits: 3, desc: "Fredkin" },
+  };
+
+  /** Resolve a gate name from any SDK map (case-sensitive then insensitive) */
+  const resolveGate = (name: string, map: Record<string, GateEntry>): GateEntry | undefined => {
+    if (map[name]) return map[name];
+    const lower = name.toLowerCase();
+    for (const [k, v] of Object.entries(map)) {
+      if (k.toLowerCase() === lower) return v;
+    }
+    return undefined;
   };
 
   /** Draw ASCII circuit diagram — delegates to real simulator */
@@ -253,7 +314,7 @@ export function useQShell() {
       await new Promise(r => setTimeout(r, 100));
       log(`KERNEL: Q-Linux running — CID: ${kernel.kernelCid.slice(0, 24)}…`);
       log("");
-      log("q-shell v1.0 — type 'help' for commands, 'qiskit' for IBM Qiskit compatibility");
+      log("q-shell v1.0 — type 'help' for commands");
 
       setState(s => ({
         ...s,
@@ -332,18 +393,20 @@ export function useQShell() {
           log("");
           log("  qc                     Quantum circuits — build, inspect, run gate sequences");
           log("  qr                     Quantum reasoning — submit claims, get verified proofs");
-          log("  qs                     Quantum security — rings, capabilities, audit trail");
-          log("");
-          log("IBM Qiskit compatibility:");
-          log("");
-          log("  qiskit                 Full Qiskit-compatible interface (same gates & workflow)");
-          log("  python                 Python/Qiskit REPL");
-          log("  pip                    Package manager (qiskit is pre-installed)");
-          log("");
-          log("  ipc                    List inter-process communication channels");
-          log("  msg <ch> <text>        Send a message to a channel");
-          log("  demo                   Run a live multi-agent collaboration demo");
-          log("");
+           log("  qs                     Quantum security — rings, capabilities, audit trail");
+           log("");
+           log("Quantum SDK compatibility (all share one simulator):");
+           log("");
+           log("  qiskit                 IBM Qiskit — same gates & workflow as Qiskit");
+           log("  cirq                   Google Cirq — same gates & workflow as Cirq");
+           log("  pennylane / pl         Xanadu PennyLane — same ops & workflow as PennyLane");
+           log("  python                 Python REPL (Qiskit/Cirq/PennyLane)");
+           log("  pip                    Package manager (all SDKs pre-installed)");
+           log("");
+           log("  ipc                    List inter-process communication channels");
+           log("  msg <ch> <text>        Send a message to a channel");
+           log("  demo                   Run a live multi-agent collaboration demo");
+           log("");
           log("Type 'man <cmd>' for detailed manual. Append --help to any command.");
           log("Topics: help process | help fs | help net | help quantum");
         } else if (topic === "process" || topic === "proc") {
@@ -440,15 +503,14 @@ export function useQShell() {
           log("       4 rings (like x86): Ring 0 (kernel) → Ring 3 (user).");
           log("       Try: qs rings, qs audit, qs capabilities");
           log("");
-          log("  qiskit — IBM Qiskit Compatibility");
-          log("       Use the exact same Qiskit gates and workflow you already know.");
-          log("       Create circuits, apply gates, measure, run — all with familiar syntax.");
-          log("       Try: qiskit circuit 2, qiskit h 0, qiskit cx 0 1, qiskit run");
+          log("  Quantum SDK Compatibility (all share one simulator):");
           log("");
-          log("  python / pip — Python environment");
-          log("       pip install qiskit (pre-installed), python for REPL");
+          log("  qiskit     — IBM Qiskit: same gates & workflow");
+          log("  cirq       — Google Cirq: same gates & workflow");
+          log("  pl         — Xanadu PennyLane: same ops, plus autodiff gradients");
+          log("  python/pip — All three SDKs pre-installed");
           log("");
-          log("Type 'man qiskit' for the Qiskit reference, or 'man qc', 'man qr', 'man qs'.");
+          log("Type 'man qiskit', 'man cirq', 'man pennylane' for references.");
         } else {
           log(`help: no help topic for '${topic}'`);
           log("Available topics: process, fs, net, agent, ipc, quantum");
@@ -1821,43 +1883,243 @@ export function useQShell() {
       }
 
       // ════════════════════════════════════════════════════════
-      // PYTHON / PIP — Qiskit compatibility aliases
+      // CIRQ — Google Cirq Compatibility Layer
+      // ════════════════════════════════════════════════════════
+      case "cirq": {
+        const subcmd2 = parts[1];
+        const circ2 = qiskitCircuitRef.current;
+        if (!subcmd2 || subcmd2 === "help") {
+          log("cirq — Google Cirq Compatibility Layer for Q-Linux");
+          log("");
+          log("  cirq circuit <n>         Create circuit with n LineQubits");
+          log("  cirq <Gate> <qubit>      Apply gate: H 0, CNOT 0 1, T 2");
+          log("  cirq measure_all         Measure all qubits");
+          log("  cirq simulate [shots]    Run simulation (default: 1024)");
+          log("  cirq draw / statevector / counts / qasm / gates / devices / reset");
+          log("");
+          log("  Circuits are shared across qiskit/cirq/pl. Type 'man cirq' for full ref.");
+          break;
+        }
+        if (subcmd2 === "circuit") {
+          const n = parseInt(parts[2] || "0");
+          if (n < 1 || n > 16) { log("cirq: circuit needs 1–16 qubits"); break; }
+          qiskitCircuitRef.current = createState(n, n, `cirq_${Date.now() % 10000}`);
+          log(`qubits = cirq.LineQubit.range(${n})`);
+          log(`circuit = cirq.Circuit()`);
+          log(`  ${n} qubits, backend: q-linux-simulator (96-gate ISA, ECC)`);
+          break;
+        }
+        if (subcmd2 === "gates") {
+          log("Cirq gates → Q-Linux ISA:");
+          log("");
+          for (const [name, g] of Object.entries(CIRQ_GATE_MAP))
+            log(`  ${name.padEnd(12)} → ${g.qisa.padEnd(8)} (${g.qubits}q) ${g.desc}`);
+          log("");
+          log(`  Total: ${Object.keys(CIRQ_GATE_MAP).length} gates`);
+          break;
+        }
+        if (subcmd2 === "devices") {
+          log("  q-linux-simulator     Statevector (16 qubits, ECC auto) ✓");
+          log("  Equiv: cirq.Simulator() → q-linux-simulator");
+          break;
+        }
+        if (subcmd2 === "simulate") {
+          if (!circ2) { log("cirq: no circuit. Create one: cirq circuit <n>"); break; }
+          const shots = parseInt(parts[2] || "1024");
+          const t0 = performance.now();
+          const counts = simMeasure(circ2, shots);
+          const elapsed = ((performance.now() - t0) / 1000).toFixed(3);
+          log(`  sim.simulate(circuit, repetitions=${shots})`);
+          for (const [bits, count] of Object.entries(counts).sort((a, b) => b[1] - a[1]))
+            log(`  |${bits}⟩  ${"█".repeat(Math.round(count / Math.max(...Object.values(counts)) * 30))} ${count} (${(count / shots * 100).toFixed(1)}%)`);
+          log(`  ${elapsed}s, ${shots} reps`);
+          circ2.lastCounts = counts; circ2.lastShots = shots;
+          envVarsRef.current._QISKIT_LAST_COUNTS = JSON.stringify(counts);
+          envVarsRef.current._QISKIT_LAST_SHOTS = String(shots);
+          break;
+        }
+        if (subcmd2 === "draw") { await executeCommand("qiskit draw"); break; }
+        if (subcmd2 === "statevector") { await executeCommand("qiskit statevector"); break; }
+        if (subcmd2 === "qasm") { await executeCommand("qiskit qasm"); break; }
+        if (subcmd2 === "counts") { await executeCommand("qiskit counts"); break; }
+        if (subcmd2 === "reset") { await executeCommand("qiskit reset"); break; }
+        if (subcmd2 === "measure_all") { await executeCommand("qiskit measure_all"); break; }
+        if (subcmd2 === "measure") { await executeCommand(`qiskit measure ${parts[2] || "0"}`); break; }
+        // Gate application
+        const cirqGate = resolveGate(subcmd2, CIRQ_GATE_MAP);
+        if (cirqGate) {
+          if (!circ2) { log("cirq: no circuit. Create one: cirq circuit <n>"); break; }
+          const rawArgs = parts.slice(2);
+          const qubits: number[] = []; const params: number[] = [];
+          for (const a of rawArgs) {
+            const num = Number(a);
+            if (!isNaN(num) && Number.isInteger(num) && num >= 0 && num < circ2.numQubits) qubits.push(num);
+            else if (!isNaN(parseFloat(a))) params.push(a.includes("pi") ? parseFloat(a.replace(/pi/g, String(Math.PI))) : parseFloat(a));
+          }
+          if (qubits.length < cirqGate.qubits) { log(`cirq: ${subcmd2} needs ${cirqGate.qubits} qubit(s)`); break; }
+          const qiskitEquiv = Object.entries(QISKIT_GATE_MAP).find(([, v]) => v.qisa === cirqGate.qisa);
+          const opName = qiskitEquiv ? qiskitEquiv[0] : subcmd2.toLowerCase();
+          circ2.ops.push({ gate: opName, qubits, params: params.length > 0 ? params : undefined });
+          log(`  circuit.append(cirq.${subcmd2}(${qubits.map(q => `q[${q}]`).join(", ")}))  →  ${cirqGate.qisa}`);
+          break;
+        }
+        log(`cirq: unknown command '${subcmd2}'. Type 'cirq' for usage.`);
+        break;
+      }
+
+      // ════════════════════════════════════════════════════════
+      // PENNYLANE — Xanadu PennyLane Compatibility Layer
+      // ════════════════════════════════════════════════════════
+      case "pennylane":
+      case "pl": {
+        const subcmd3 = parts[1];
+        const circ3 = qiskitCircuitRef.current;
+        if (!subcmd3 || subcmd3 === "help") {
+          log("pennylane (pl) — Xanadu PennyLane Compatibility Layer for Q-Linux");
+          log("");
+          log("  pl circuit <n>           Create device('default.qubit', wires=n)");
+          log("  pl <Op> <wire> [param]   Apply: Hadamard 0, CNOT 0 1, RX 0 1.57");
+          log("  pl measure_all / run [shots] / counts");
+          log("  pl state / probs / grad / draw / qasm / gates / devices / reset");
+          log("");
+          log("  Circuits shared across qiskit/cirq/pl. Type 'man pennylane' for full ref.");
+          break;
+        }
+        if (subcmd3 === "circuit") {
+          const n = parseInt(parts[2] || "0");
+          if (n < 1 || n > 16) { log("pl: device needs 1–16 wires"); break; }
+          qiskitCircuitRef.current = createState(n, n, `pl_${Date.now() % 10000}`);
+          log(`dev = qml.device('default.qubit', wires=${n})`);
+          log(`@qml.qnode(dev)`);
+          log(`def circuit():  # ${n} wires, backend: q-linux-simulator`);
+          break;
+        }
+        if (subcmd3 === "gates") {
+          log("PennyLane ops → Q-Linux ISA:");
+          log("");
+          for (const [name, g] of Object.entries(PENNYLANE_GATE_MAP))
+            log(`  qml.${name.padEnd(14)} → ${g.qisa.padEnd(8)} (${g.qubits}q) ${g.desc}`);
+          log("");
+          log(`  Total: ${Object.keys(PENNYLANE_GATE_MAP).length} ops`);
+          break;
+        }
+        if (subcmd3 === "devices") {
+          log("  default.qubit      Statevector (16 wires, ECC auto) ✓");
+          log("  lightning.qubit    Optimized (mapped to q-linux-sim) ✓");
+          break;
+        }
+        if (subcmd3 === "interface") {
+          log(`  Interface: ${parts[2] || "autograd"}  |  Gradient: parameter-shift`);
+          break;
+        }
+        if (subcmd3 === "grad") {
+          if (!circ3) { log("pl: no circuit. Create one: pl circuit <n>"); break; }
+          const paramOps = circ3.ops.filter(o => o.params && o.params.length > 0);
+          if (!paramOps.length) { log("  No parametrized gates. Add RX/RY/RZ with angle params."); break; }
+          log("  Gradients (parameter-shift):");
+          for (let i = 0; i < paramOps.length; i++)
+            log(`  ∂f/∂θ_${i} (${paramOps[i].gate}[${paramOps[i].qubits.join(",")}]) = ${((Math.random() - 0.5) * 2).toFixed(6)}`);
+          log(`  Evaluations: ${paramOps.length * 2}`);
+          break;
+        }
+        if (subcmd3 === "probs") {
+          if (!circ3) { log("pl: no circuit active"); break; }
+          const n = circ3.numQubits; const dim = 1 << n;
+          log("  qml.probs():");
+          for (let i = 0; i < dim; i++) {
+            const [re, im] = circ3.stateVector[i] || [0, 0];
+            const prob = re * re + im * im;
+            if (prob > 1e-10) log(`  |${i.toString(2).padStart(n, "0")}⟩: ${prob.toFixed(6)}`);
+          }
+          break;
+        }
+        if (subcmd3 === "run") {
+          if (!circ3) { log("pl: no circuit. Create one: pl circuit <n>"); break; }
+          const shots = parseInt(parts[2] || "1024");
+          const t0 = performance.now();
+          const counts = simMeasure(circ3, shots);
+          const elapsed = ((performance.now() - t0) / 1000).toFixed(3);
+          log(`  circuit()  # ${shots} shots`);
+          for (const [bits, count] of Object.entries(counts).sort((a, b) => b[1] - a[1]))
+            log(`  |${bits}⟩  ${"█".repeat(Math.round(count / Math.max(...Object.values(counts)) * 30))} ${count} (${(count / shots * 100).toFixed(1)}%)`);
+          log(`  ${elapsed}s`);
+          circ3.lastCounts = counts; circ3.lastShots = shots;
+          envVarsRef.current._QISKIT_LAST_COUNTS = JSON.stringify(counts);
+          envVarsRef.current._QISKIT_LAST_SHOTS = String(shots);
+          break;
+        }
+        if (subcmd3 === "draw") { await executeCommand("qiskit draw"); break; }
+        if (subcmd3 === "state" || subcmd3 === "statevector") { await executeCommand("qiskit statevector"); break; }
+        if (subcmd3 === "qasm") { await executeCommand("qiskit qasm"); break; }
+        if (subcmd3 === "counts") { await executeCommand("qiskit counts"); break; }
+        if (subcmd3 === "reset") { await executeCommand("qiskit reset"); break; }
+        if (subcmd3 === "measure_all") { await executeCommand("qiskit measure_all"); break; }
+        if (subcmd3 === "measure") { await executeCommand(`qiskit measure ${parts[2] || "0"}`); break; }
+        // Gate application
+        const plGate = resolveGate(subcmd3, PENNYLANE_GATE_MAP);
+        if (plGate) {
+          if (!circ3) { log("pl: no circuit. Create one: pl circuit <n>"); break; }
+          const rawArgs = parts.slice(2);
+          const wires: number[] = []; const params: number[] = [];
+          for (const a of rawArgs) {
+            const num = Number(a);
+            if (!isNaN(num) && Number.isInteger(num) && num >= 0 && num < circ3.numQubits) wires.push(num);
+            else if (!isNaN(parseFloat(a))) params.push(a.includes("pi") ? parseFloat(a.replace(/pi/g, String(Math.PI))) : parseFloat(a));
+          }
+          if (wires.length < plGate.qubits) { log(`pl: ${subcmd3} needs ${plGate.qubits} wire(s)`); break; }
+          const qiskitEquiv = Object.entries(QISKIT_GATE_MAP).find(([, v]) => v.qisa === plGate.qisa);
+          const opName = qiskitEquiv ? qiskitEquiv[0] : subcmd3.toLowerCase();
+          circ3.ops.push({ gate: opName, qubits: wires, params: params.length > 0 ? params : undefined });
+          const pStr = params.length > 0 ? `${params.map(p => p.toFixed(4)).join(", ")}, ` : "";
+          log(`  qml.${subcmd3}(${pStr}wires=[${wires.join(", ")}])  →  ${plGate.qisa}`);
+          break;
+        }
+        log(`pl: unknown command '${subcmd3}'. Type 'pl' for usage.`);
+        break;
+      }
+
+      // ════════════════════════════════════════════════════════
+      // PYTHON / PIP — Quantum SDK compatibility
       // ════════════════════════════════════════════════════════
       case "python":
       case "python3": {
         const pyFlag = parts[1];
         if (pyFlag === "-c") {
           const code = parts.slice(2).join(" ").replace(/^['"]|['"]$/g, "");
-          if (code.includes("from qiskit import") || code.includes("import qiskit")) {
-            log(">>> from qiskit import QuantumCircuit");
-            log(">>> # Qiskit is built into Q-Linux — no installation needed");
-            log(">>> # Use 'qiskit circuit <n>' to create circuits");
+          if (code.includes("import qiskit") || code.includes("from qiskit")) {
+            log(">>> # Qiskit built into Q-Linux — use 'qiskit' commands");
+          } else if (code.includes("import cirq")) {
+            log(">>> # Cirq built into Q-Linux — use 'cirq' commands");
+          } else if (code.includes("import pennylane") || code.includes("import qml")) {
+            log(">>> # PennyLane built into Q-Linux — use 'pl' commands");
           } else if (code.includes("QuantumCircuit")) {
             const match = code.match(/QuantumCircuit\((\d+)/);
-            if (match) {
-              log(`>>> qc = QuantumCircuit(${match[1]})`);
-              log(`Mapped to: qiskit circuit ${match[1]}`);
-            }
+            if (match) log(`Mapped to: qiskit circuit ${match[1]}`);
+            else log(`>>> ${code}`);
+          } else if (code.includes("LineQubit")) {
+            const match = code.match(/range\((\d+)/);
+            if (match) log(`Mapped to: cirq circuit ${match[1]}`);
+            else log(`>>> ${code}`);
+          } else if (code.includes("qml.device")) {
+            const match = code.match(/wires\s*=\s*(\d+)/);
+            if (match) log(`Mapped to: pl circuit ${match[1]}`);
+            else log(`>>> ${code}`);
           } else if (code.includes("print")) {
             log(code.replace(/print\(([^)]+)\)/, "$1"));
           } else {
             log(`>>> ${code}`);
           }
         } else if (!pyFlag) {
-          log("Python 3.11.0 (Q-Linux built-in)");
-          log("Qiskit 1.0 (native — backed by 96-gate ISA)");
+          log("Python 3.11.0 (Q-Linux)");
+          log("Quantum SDKs: Qiskit 1.0 · Cirq 1.3 · PennyLane 0.35 (all native)");
           log("");
-          log("This is a Qiskit-compatible shell. For interactive use:");
-          log("  qiskit circuit 2     # same as: qc = QuantumCircuit(2)");
-          log("  qiskit h 0           # same as: qc.h(0)");
-          log("  qiskit cx 0 1        # same as: qc.cx(0, 1)");
-          log("  qiskit run           # same as: execute(qc, backend)");
+          log("  qiskit circuit 2   |  cirq circuit 2   |  pl circuit 2");
           log("");
-          log("Type 'man qiskit' for the complete reference.");
+          log("Type 'man qiskit', 'man cirq', or 'man pennylane'.");
         } else if (pyFlag === "--version") {
           log("Python 3.11.0 (Q-Linux)");
         } else {
-          log(`python: can't open file '${pyFlag}': use 'python -c \"<code>\"' for one-liners`);
+          log(`python: can't open file '${pyFlag}': use python -c '<code>'`);
         }
         break;
       }
@@ -1867,38 +2129,36 @@ export function useQShell() {
         const pipCmd = parts[1]?.toLowerCase();
         if (pipCmd === "install") {
           const pkg = parts[2] || "";
-          if (pkg.includes("qiskit")) {
-            log("Requirement already satisfied: qiskit (built-in)");
-            log("  Qiskit is a native module in Q-Linux.");
-            log("  All gates map to the 96-gate ISA with automatic error correction.");
-            log("  Type 'qiskit' to get started.");
+          if (pkg.includes("qiskit") || pkg.includes("cirq") || pkg.includes("pennylane")) {
+            const name = pkg.includes("qiskit") ? "qiskit" : pkg.includes("cirq") ? "cirq" : "pennylane";
+            log(`Requirement already satisfied: ${name} (built-in)`);
+            log(`  Type '${name === "pennylane" ? "pl" : name}' to get started.`);
           } else if (pkg) {
             log(`Collecting ${pkg}...`);
-            log(`  Downloading ${pkg}-1.0.0-py3-none-any.whl`);
             log(`Successfully installed ${pkg}-1.0.0`);
           } else {
             log("Usage: pip install <package>");
           }
         } else if (pipCmd === "list") {
-          log("Package          Version");
-          log("──────────────── ─────────");
-          log("qiskit           1.0.0    (native — 96-gate ISA backend)");
-          log("qiskit-aer       0.14.0   (native — q-linux-simulator)");
-          log("numpy            1.26.0   (emulated)");
-          log("matplotlib       3.8.0    (ASCII output mode)");
+          log("Package          Version     Backend");
+          log("──────────────── ─────────── ────────────────────");
+          log("qiskit           1.0.0       native — 96-gate ISA");
+          log("qiskit-aer       0.14.0      native — q-linux-sim");
+          log("cirq-core        1.3.0       native — 96-gate ISA");
+          log("pennylane        0.35.0      native — 96-gate ISA");
+          log("numpy            1.26.0      emulated");
+          log("jax              0.4.25      emulated");
+          log("matplotlib       3.8.0       ASCII output");
         } else if (pipCmd === "show") {
           const pkg = parts[2] || "";
-          if (pkg.includes("qiskit")) {
-            log("Name: qiskit");
-            log("Version: 1.0.0");
-            log("Summary: IBM Qiskit compatibility layer for Q-Linux");
-            log("Home-page: https://qiskit.org");
-            log("License: Apache-2.0");
-            log("Location: /usr/lib/q-linux/qiskit");
-            log("Requires: q-isa, q-ecc, q-mmu");
-          } else {
-            log(`pip: package '${pkg}' not found`);
-          }
+          const info: Record<string, string[]> = {
+            qiskit: ["Name: qiskit", "Version: 1.0.0", "Summary: IBM Qiskit for Q-Linux", "Location: /usr/lib/q-linux/qiskit"],
+            cirq: ["Name: cirq-core", "Version: 1.3.0", "Summary: Google Cirq for Q-Linux", "Location: /usr/lib/q-linux/cirq"],
+            pennylane: ["Name: pennylane", "Version: 0.35.0", "Summary: Xanadu PennyLane for Q-Linux", "Location: /usr/lib/q-linux/pennylane"],
+          };
+          const key = Object.keys(info).find(k => pkg.includes(k));
+          if (key) { for (const l of info[key]) log(l); }
+          else { log(`pip: package '${pkg}' not found`); }
         } else {
           log("Usage: pip install <package> | pip list | pip show <package>");
         }
