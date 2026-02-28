@@ -281,6 +281,7 @@ export default function HologramOsPage() {
             onOpenChat={() => setChatOpen(true)}
             onOpenBrowser={() => { setBrowserOpen(true); setChatOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); }}
             onOpenCompute={() => { setComputeOpen(true); setChatOpen(false); setBrowserOpen(false); setMemoryOpen(false); setMessengerOpen(false); }}
+            onOpenTerminal={() => { navigate("/q-shell"); }}
             onOpenMemory={() => { setMemoryOpen(true); setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMessengerOpen(false); }}
             onOpenMessenger={() => { setMessengerOpen(true); setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); }}
             onGoHome={() => { setChatOpen(false); setBrowserOpen(false); setComputeOpen(false); setMemoryOpen(false); setMessengerOpen(false); }}

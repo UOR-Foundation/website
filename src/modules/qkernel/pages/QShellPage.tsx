@@ -143,44 +143,42 @@ export default function QShellPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[hsl(220,20%,5%)] text-[hsl(150,60%,70%)] font-mono flex flex-col">
-      {/* Header */}
-      <header className="border-b border-[hsl(150,30%,20%)] px-4 py-2 flex items-center justify-between">
+    <div className="min-h-screen bg-[hsl(0,0%,7%)] text-[hsl(0,0%,80%)] font-mono flex flex-col">
+      {/* Header — mimics a classic terminal title bar */}
+      <header className="border-b border-[hsl(0,0%,18%)] bg-[hsl(0,0%,12%)] px-4 py-1.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={`w-2.5 h-2.5 rounded-full ${
-            state.stage === "running" ? "bg-emerald-500 animate-pulse" :
-            state.stage === "booting" ? "bg-amber-500 animate-pulse" :
-            state.stage === "panic" ? "bg-red-500" : "bg-muted-foreground"
-          }`} />
-          <span className="text-sm font-bold tracking-wider">Q-SHELL</span>
-          <span className="text-xs text-muted-foreground">v1.0 — Q-Linux Kernel</span>
+          <div className="flex gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-[hsl(0,60%,50%)]" />
+            <div className="w-3 h-3 rounded-full bg-[hsl(45,80%,55%)]" />
+            <div className={`w-3 h-3 rounded-full ${
+              state.stage === "running" ? "bg-[hsl(120,50%,45%)]" :
+              state.stage === "booting" ? "bg-[hsl(45,80%,55%)] animate-pulse" :
+              "bg-[hsl(0,0%,30%)]"
+            }`} />
+          </div>
+          <span className="text-xs text-[hsl(0,0%,55%)]">root@q-linux: ~</span>
         </div>
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-4 text-[11px] text-[hsl(0,0%,45%)]">
           {state.schedStats && (
             <>
-              <span>PID: {state.schedStats.totalProcesses}</span>
-              <span>H̄: {state.schedStats.meanHScore.toFixed(2)}</span>
-              <span>Tick: {state.schedStats.tickCount}</span>
+              <span>{state.schedStats.totalProcesses} procs</span>
+              <span>load {state.schedStats.meanHScore.toFixed(2)}</span>
+              <span>tick {state.schedStats.tickCount}</span>
             </>
-          )}
-          {state.kernel && (
-            <span className="text-primary/60 truncate max-w-[120px]">
-              CID: {state.kernel.kernelCid.slice(0, 12)}…
-            </span>
           )}
         </div>
       </header>
 
       {/* Tab bar */}
-      <div className="border-b border-[hsl(150,30%,15%)] px-4 flex gap-0">
+      <div className="border-b border-[hsl(0,0%,18%)] bg-[hsl(0,0%,10%)] px-4 flex gap-0">
         {tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`px-4 py-2 text-xs tracking-wide transition-colors border-b-2 ${
+            className={`px-4 py-1.5 text-xs tracking-wide transition-colors border-b-2 ${
               activeTab === t.id
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "border-[hsl(0,0%,70%)] text-[hsl(0,0%,90%)]"
+                : "border-transparent text-[hsl(0,0%,45%)] hover:text-[hsl(0,0%,70%)]"
             }`}
           >
             {t.label}
@@ -207,14 +205,15 @@ export default function QShellPage() {
               >
                 {state.bootLog.map((line, i) => (
                   <div key={i} className={`whitespace-pre-wrap ${
-                    line.startsWith("POST:") ? "text-amber-400" :
-                    line.startsWith("BOOT:") ? "text-sky-400" :
-                    line.startsWith("INIT:") ? "text-violet-400" :
-                    line.startsWith("PANIC:") ? "text-red-500 font-bold" :
-                    line.startsWith("KERNEL:") ? "text-emerald-400 font-bold" :
-                    line.startsWith("$") ? "text-primary" :
-                    line.match(/^[A-Z]+:/) ? "text-cyan-400" :
-                    ""
+                    line.startsWith("POST:") ? "text-[hsl(45,70%,60%)]" :
+                    line.startsWith("BOOT:") ? "text-[hsl(200,50%,60%)]" :
+                    line.startsWith("INIT:") ? "text-[hsl(270,40%,65%)]" :
+                    line.startsWith("PANIC:") ? "text-[hsl(0,70%,55%)] font-bold" :
+                    line.startsWith("KERNEL:") ? "text-[hsl(120,40%,55%)] font-bold" :
+                    line.startsWith("$") ? "text-[hsl(120,40%,55%)]" :
+                    line.startsWith("-bash:") ? "text-[hsl(0,60%,55%)]" :
+                    line.match(/^[A-Z]+:/) ? "text-[hsl(180,35%,55%)]" :
+                    "text-[hsl(0,0%,75%)]"
                   }`}>
                     {line}
                   </div>
@@ -224,18 +223,18 @@ export default function QShellPage() {
                 )}
               </div>
 
-              {/* Input */}
+              {/* Input — classic bash prompt */}
               {state.stage === "running" && (
-                <div className="border-t border-[hsl(150,30%,15%)] px-4 py-2 flex items-center gap-2">
-                  <span className="text-primary text-sm">$</span>
+                <div className="border-t border-[hsl(0,0%,18%)] px-4 py-2 flex items-center gap-2">
+                  <span className="text-[hsl(120,40%,55%)] text-[13px]">root@q-linux:~$</span>
                   <input
                     ref={inputRef}
                     type="text"
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={handleKey}
-                    className="flex-1 bg-transparent text-[13px] outline-none text-[hsl(150,60%,70%)] placeholder:text-muted-foreground"
-                    placeholder="type 'help' for commands"
+                    className="flex-1 bg-transparent text-[13px] outline-none text-[hsl(0,0%,80%)] placeholder:text-[hsl(0,0%,35%)] caret-[hsl(0,0%,70%)]"
+                    placeholder=""
                     autoFocus
                   />
                 </div>
