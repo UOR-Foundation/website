@@ -8,6 +8,11 @@
  * them into CSS custom property updates, widget visibility state,
  * and React-consumable data.
  *
+ * Frame Interpolation:
+ *   When the kernel ticks at 10Hz (idle), the surface adapter can
+ *   interpolate between the last two frames at 60fps for smooth
+ *   transitions of continuous values (coherence, progress, etc.).
+ *
  * The kernel emits algebra. This adapter emits pixels.
  *
  * @module hologram-os/surface-adapter
@@ -22,12 +27,55 @@ import type {
 } from "./projection-engine";
 
 // ═══════════════════════════════════════════════════════════════════════
+// Frame Interpolation — smooth 60fps from low-rate kernel ticks
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Interpolatable scalar values extracted from a frame */
+interface InterpolatableState {
+  readonly meanH: number;
+  readonly processCount: number;
+  readonly typographyBasePx: number;
+  readonly typographyScale: number;
+}
+
+function extractInterpolatable(frame: ProjectionFrame): InterpolatableState {
+  return {
+    meanH: frame.systemCoherence.meanH,
+    processCount: frame.systemCoherence.processCount,
+    typographyBasePx: frame.typography.basePx,
+    typographyScale: frame.typography.scale,
+  };
+}
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+function lerpState(from: InterpolatableState, to: InterpolatableState, t: number): InterpolatableState {
+  return {
+    meanH: lerp(from.meanH, to.meanH, t),
+    processCount: Math.round(lerp(from.processCount, to.processCount, t)),
+    typographyBasePx: lerp(from.typographyBasePx, to.typographyBasePx, t),
+    typographyScale: lerp(from.typographyScale, to.typographyScale, t),
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // Surface Adapter — maps kernel frames to DOM mutations
 // ═══════════════════════════════════════════════════════════════════════
 
 export class BrowserSurfaceAdapter {
   private lastTypography: TypographyProjection | null = null;
   private lastPalette: PaletteProjection | null = null;
+
+  // Interpolation state
+  private prevInterp: InterpolatableState | null = null;
+  private currInterp: InterpolatableState | null = null;
+  private frameArrivalTime = 0;
+  private interpRafId = 0;
+  private interpRunning = false;
+  private interpTickMs = 100; // expected kernel tick interval (updated dynamically)
+  private lastKernelTick = 0;
 
   /**
    * Apply a projection frame to the browser DOM.
@@ -38,6 +86,67 @@ export class BrowserSurfaceAdapter {
   applyFrame(frame: ProjectionFrame): void {
     this.applyTypography(frame.typography);
     this.applyPalette(frame.palette);
+
+    // Update interpolation targets
+    const now = performance.now();
+    if (this.lastKernelTick > 0) {
+      // Dynamically track kernel tick rate for interpolation timing
+      this.interpTickMs = Math.max(16, now - this.lastKernelTick);
+    }
+    this.lastKernelTick = now;
+
+    this.prevInterp = this.currInterp;
+    this.currInterp = extractInterpolatable(frame);
+    this.frameArrivalTime = now;
+
+    // Apply coherence CSS vars from the frame directly
+    this.applyCoherenceVars(this.currInterp);
+  }
+
+  /**
+   * Start the interpolation loop.
+   * Runs at 60fps, smoothing between kernel frames.
+   */
+  startInterpolation(): void {
+    if (this.interpRunning) return;
+    this.interpRunning = true;
+    this.interpTick();
+  }
+
+  /** Stop interpolation */
+  stopInterpolation(): void {
+    this.interpRunning = false;
+    if (this.interpRafId) {
+      cancelAnimationFrame(this.interpRafId);
+      this.interpRafId = 0;
+    }
+  }
+
+  private interpTick = (): void => {
+    if (!this.interpRunning) return;
+
+    if (this.prevInterp && this.currInterp && this.interpTickMs > 20) {
+      // Only interpolate when kernel is ticking slower than 50Hz
+      const elapsed = performance.now() - this.frameArrivalTime;
+      const t = Math.min(1, elapsed / this.interpTickMs);
+      // Ease: smooth step for natural feel
+      const eased = t * t * (3 - 2 * t);
+      const interpolated = lerpState(this.prevInterp, this.currInterp, eased);
+      this.applyCoherenceVars(interpolated);
+    }
+
+    this.interpRafId = requestAnimationFrame(this.interpTick);
+  };
+
+  /**
+   * Apply interpolated coherence values as CSS custom properties.
+   * These power ambient UI elements (glow intensity, pulse rate, etc.)
+   */
+  private applyCoherenceVars(state: InterpolatableState): void {
+    const root = document.documentElement;
+    root.style.setProperty("--kernel-coherence", state.meanH.toFixed(3));
+    root.style.setProperty("--kernel-process-count", state.processCount.toString());
+    root.style.setProperty("--kernel-base-px", `${state.typographyBasePx.toFixed(1)}px`);
   }
 
   /**
@@ -55,7 +164,6 @@ export class BrowserSurfaceAdapter {
 
     const root = document.documentElement;
 
-    // Map user scale to data attribute for CSS selector matching
     if (typo.userScale <= 0.9) {
       root.setAttribute("data-text-size", "compact");
     } else if (typo.userScale >= 1.15) {
@@ -75,31 +183,21 @@ export class BrowserSurfaceAdapter {
     if (this.lastPalette && this.lastPalette.mode === palette.mode) {
       return;
     }
-
-    // Palette mode is handled by the desktop frame system
-    // (image/white/dark) — this just ensures consistency
     this.lastPalette = palette;
   }
 
   /**
    * Determine which panels should be visible based on
    * coherence-priority rendering.
-   *
-   * High-H-score panels get rendered first. If the viewport
-   * is constrained, low-coherence panels are hidden to protect
-   * the human's attention.
    */
   resolveVisiblePanels(
     panels: readonly PanelProjection[],
     maxVisible?: number,
   ): PanelProjection[] {
-    // Panels already sorted by renderPriority (high first)
     const visible = panels.filter(p => p.state === "visible");
-
     if (maxVisible && visible.length > maxVisible) {
       return visible.slice(0, maxVisible);
     }
-
     return [...visible];
   }
 

@@ -220,6 +220,17 @@ export class KernelProjector {
   private listeners = new Set<(frame: ProjectionFrame) => void>();
   private bootListeners = new Set<(event: BootEvent) => void>();
 
+  // ── Projection Stream Ticker ──────────────────────────────────────────
+  private streamRafId = 0;
+  private streamRunning = false;
+  private lastFrameTime = 0;
+  private lastEmittedFrame: ProjectionFrame | null = null;
+  private dirty = false; // true when a syscall mutated config since last tick
+  private idleTickMs = 100;  // 10 Hz idle
+  private activeTickMs = 16; // ~60 Hz active
+  private activeUntil = 0;   // timestamp: stay active until this time
+  private readonly ACTIVE_WINDOW_MS = 2000; // stay at 60Hz for 2s after last syscall
+
   /** Subscribe to projection frames */
   onFrame(cb: (frame: ProjectionFrame) => void): () => void {
     this.listeners.add(cb);
@@ -240,7 +251,70 @@ export class KernelProjector {
 
   /** Emit a projection frame to all listeners */
   private emitFrame(frame: ProjectionFrame): void {
+    this.lastEmittedFrame = frame;
     for (const cb of this.listeners) cb(frame);
+  }
+
+  /**
+   * Mark config as dirty and boost to active tick rate.
+   * Called by every syscall that mutates KernelConfig.
+   */
+  private markDirty(): void {
+    this.dirty = true;
+    this.activeUntil = performance.now() + this.ACTIVE_WINDOW_MS;
+  }
+
+  /**
+   * Start the projection stream ticker.
+   * Runs a rAF loop that emits frames at the configured rate:
+   *   - 60 Hz when a syscall recently fired (active window)
+   *   - 10 Hz when idle (observables like process stats still update)
+   *
+   * The ticker only projects a new frame when dirty OR when the
+   * idle interval has elapsed (for live observable updates).
+   */
+  startStream(): void {
+    if (this.streamRunning) return;
+    this.streamRunning = true;
+    this.lastFrameTime = performance.now();
+    this.streamTick();
+  }
+
+  /** Stop the projection stream */
+  stopStream(): void {
+    this.streamRunning = false;
+    if (this.streamRafId) {
+      cancelAnimationFrame(this.streamRafId);
+      this.streamRafId = 0;
+    }
+  }
+
+  private streamTick = (): void => {
+    if (!this.streamRunning) return;
+
+    const now = performance.now();
+    const isActive = now < this.activeUntil;
+    const interval = isActive ? this.activeTickMs : this.idleTickMs;
+    const elapsed = now - this.lastFrameTime;
+
+    if (this.dirty || elapsed >= interval) {
+      this.dirty = false;
+      this.lastFrameTime = now;
+      this.emitFrame(this.projectFrame());
+    }
+
+    this.streamRafId = requestAnimationFrame(this.streamTick);
+  };
+
+  /** Configure stream tick rates (in ms) */
+  setStreamRates(idleMs: number, activeMs: number): void {
+    this.idleTickMs = Math.max(16, idleMs);
+    this.activeTickMs = Math.max(16, activeMs);
+  }
+
+  /** Get the last emitted frame (for interpolation) */
+  getLastFrame(): ProjectionFrame | null {
+    return this.lastEmittedFrame;
   }
 
   /**
@@ -395,8 +469,9 @@ export class KernelProjector {
     // Spawn widget processes
     await this.spawnWidgetProcesses();
 
-    // Emit initial frame
+    // Emit initial frame and start the projection stream
     this.emitFrame(this.projectFrame());
+    this.startStream();
 
     return this.kernel;
   }
@@ -433,25 +508,25 @@ export class KernelProjector {
     return this.config;
   }
 
-  /** Write a config register and re-project */
+  /** Write a config register → marks dirty for next stream tick */
   setConfig(patch: Partial<KernelConfig>): void {
     this.config = { ...this.config, ...patch };
     this.saveConfig();
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   /** Update typography scale */
   setUserScale(scale: number): void {
     this.config.typography.userScale = scale;
     this.saveConfig();
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   /** Update palette mode */
   setPaletteMode(mode: "dark" | "light" | "image"): void {
     this.config.palette.mode = mode;
     this.saveConfig();
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   /** Update widget visibility (via process state) */
@@ -468,7 +543,7 @@ export class KernelProjector {
       this.scheduler.freeze(pid);
     }
 
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   /** Get PID for a widget type */
@@ -484,31 +559,31 @@ export class KernelProjector {
       this.config.chatOpen = true;
     } else {
       this.config.activePanel = panel;
-      this.config.chatOpen = false; // exclusive with overlays
+      this.config.chatOpen = false;
     }
     this.saveConfig();
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   /** Close the active projection panel */
   closePanel(): void {
     this.config.activePanel = "none";
     this.saveConfig();
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   /** Toggle Lumen AI chat independently */
   setChatOpen(open: boolean): void {
     this.config.chatOpen = open;
     this.saveConfig();
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   /** Switch desktop frame (kernel syscall: palette mode) */
   switchDesktop(mode: DesktopMode): void {
     this.config.palette.mode = mode;
     this.saveConfig();
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   /** Get active panel */
@@ -537,7 +612,7 @@ export class KernelProjector {
   setAperture(value: number): void {
     this.config.attention.aperture = Math.max(0, Math.min(1, value));
     this.saveConfig();
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   // ── Desktop Widget Visibility (kernel register) ─────────────────────
@@ -555,7 +630,7 @@ export class KernelProjector {
     }
     this.config.desktopWidgets[desktopId] = state;
     this.saveConfig();
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   /** Toggle all widgets on a specific desktop */
@@ -564,7 +639,7 @@ export class KernelProjector {
     state.allHidden = !state.allHidden;
     this.config.desktopWidgets[desktopId] = state;
     this.saveConfig();
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   /** Set allHidden for a specific desktop */
@@ -573,7 +648,7 @@ export class KernelProjector {
     state.allHidden = hidden;
     this.config.desktopWidgets[desktopId] = state;
     this.saveConfig();
-    this.emitFrame(this.projectFrame());
+    this.markDirty();
   }
 
   /** Check if a widget is visible on a specific desktop */
