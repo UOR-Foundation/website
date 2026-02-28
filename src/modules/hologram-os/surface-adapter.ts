@@ -149,6 +149,23 @@ export class BrowserSurfaceAdapter {
     root.style.setProperty("--kernel-base-px", `${state.typographyBasePx.toFixed(1)}px`);
   }
 
+  /** Get interpolation diagnostics for DevTools */
+  getInterpStats(): {
+    running: boolean;
+    tickMs: number;
+    phase: number; // 0–1 interpolation progress
+    hasPrev: boolean;
+  } {
+    const elapsed = performance.now() - this.frameArrivalTime;
+    const t = this.interpTickMs > 0 ? Math.min(1, elapsed / this.interpTickMs) : 1;
+    return {
+      running: this.interpRunning,
+      tickMs: this.interpTickMs,
+      phase: t,
+      hasPrev: this.prevInterp !== null,
+    };
+  }
+
   /**
    * Apply typography projection → CSS custom properties.
    * Only updates if values changed (avoids layout thrash).
