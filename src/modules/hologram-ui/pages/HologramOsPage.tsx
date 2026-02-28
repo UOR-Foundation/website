@@ -1,21 +1,25 @@
 /**
- * Hologram OS — Welcome Screen
- * ═════════════════════════════
+ * Hologram OS — Kernel-Projected Welcome Screen
+ * ═══════════════════════════════════════════════
  *
- * Desktop: Sidebar + multi-desktop stack (Windows-style virtual desktops).
- * Mobile: iOS-style homescreen shell.
+ * ARCHITECTURAL PRINCIPLE: Zero local UI state.
+ * ─────────────────────────────────────────────
+ * Every visual decision flows from the Q-Linux kernel:
+ *   Q-Boot → KernelProjector → ProjectionFrame → useKernel() → pixels
  *
- * Architecture: Only the ACTIVE desktop is fully mounted. During transitions,
- * the departing desktop is also mounted briefly for the peel animation.
- * This eliminates the triple-render overhead of the previous approach.
+ * Panel open/close, desktop switching, chat visibility — all are
+ * kernel syscalls that mutate the KernelConfig, trigger a re-projection,
+ * and stream the new frame to this component.
  *
- * Panel state uses a discriminated union (activePanel) instead of 7 booleans.
+ * This makes the entire experience a streaming projection from Q-Linux.
+ * The kernel IS the state. The browser IS the surface.
  */
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 import { useNavigate } from "react-router-dom";
 import { useKernel } from "@/modules/hologram-os/hooks/useKernel";
+import type { DesktopMode } from "@/modules/hologram-os/projection-engine";
 import KernelBoot from "@/modules/hologram-os/components/KernelBoot";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
 import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
@@ -72,50 +76,48 @@ function DepthShiftSync({ active }: { active: boolean }) {
   return null;
 }
 
-// ── Panel state: discriminated union replaces 7 booleans ────────────────────
-type PanelId = "none" | "chat" | "browser" | "compute" | "memory" | "messenger" | "terminal" | "jupyter";
-
 const ALL_DESKTOPS: DesktopId[] = ["image", "white", "dark"];
 
 export default function HologramOsPage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // ── Kernel Projection ─────────────────────────────────────────────────────
-  const kernel = useKernel();
+  // ═══════════════════════════════════════════════════════════════════════
+  // KERNEL — the single source of truth for ALL UI state
+  // ═══════════════════════════════════════════════════════════════════════
+  const k = useKernel();
+
   const [kernelEntered, setKernelEntered] = useState(false);
   const hasBootedBefore = useRef(false);
 
+  // Boot the kernel on mount (once)
   useEffect(() => {
-    if (!kernel.isBooted && !kernel.isBooting) {
+    if (!k.isBooted && !k.isBooting) {
       const skipAnim = sessionStorage.getItem("kernel:booted") === "1";
       hasBootedBefore.current = skipAnim;
-      kernel.boot().then(() => {
+      k.boot().then(() => {
         sessionStorage.setItem("kernel:booted", "1");
       });
-    } else if (kernel.isBooted) {
+    } else if (k.isBooted) {
       setKernelEntered(true);
       hasBootedBefore.current = true;
     }
-  }, [kernel.isBooted, kernel.isBooting]);
+  }, [k.isBooted, k.isBooting]);
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // DERIVED FROM KERNEL — no local state for panels, chat, or desktop
+  // ═══════════════════════════════════════════════════════════════════════
+  const activePanel = k.activePanel;
+  const chatOpen = k.chatOpen;
+  const activeDesktop = k.desktopMode as DesktopId;
+
+  // Sync localStorage for backward compatibility with desktop persisting
+  useEffect(() => {
+    localStorage.setItem("hologram-bg-mode", activeDesktop);
+  }, [activeDesktop]);
+
+  // ── Remaining local state (truly view-local, not kernel state) ────────
   const [claimOpen, setClaimOpen] = useState(false);
-
-  // ── Consolidated panel state ──────────────────────────────────────────────
-  const [activePanel, setActivePanel] = useState<PanelId>("none");
-  const [chatOpen, setChatOpen] = useState(false); // Chat is independent (can coexist with desktop)
-
-  const openPanel = useCallback((panel: PanelId) => {
-    if (panel === "chat") {
-      setChatOpen(true);
-    } else {
-      setActivePanel(panel);
-      setChatOpen(false);
-    }
-  }, []);
-
-  const closePanel = useCallback(() => setActivePanel("none"), []);
-
   const [ambientState, setAmbientState] = useState<AmbientState>({ playing: false, loading: false, stationHue: "220", stationName: "" });
   const lumenPanel = useModularPanel({
     storageKey: "lumen-ai",
@@ -129,28 +131,27 @@ export default function HologramOsPage() {
   const [legalTab, setLegalTab] = useState<"privacy" | "terms">("privacy");
   const journal = useFocusJournal();
 
-  // ── Active desktop ────────────────────────────────────────────────────────
-  const [activeDesktop, setActiveDesktop] = useState<DesktopId>(() => {
-    const saved = localStorage.getItem("hologram-bg-mode");
-    return saved === "white" || saved === "dark" || saved === "image" ? saved : "image";
-  });
-
-  // ── Transition state ──────────────────────────────────────────────────────
+  // ── Transition state (visual-only, not kernel state) ──────────────────
   const [departingDesktop, setDepartingDesktop] = useState<DesktopId | null>(null);
   const [sidebarBgMode, setSidebarBgMode] = useState<DesktopId>(activeDesktop);
 
   const switchDesktop = useCallback((target: DesktopId) => {
     if (target === activeDesktop || departingDesktop) return;
+
+    // Visual: start peel animation from current desktop
     setDepartingDesktop(activeDesktop);
-    setActiveDesktop(target);
-    localStorage.setItem("hologram-bg-mode", target);
+
+    // Kernel syscall: switch desktop mode → re-projection
+    k.switchDesktop(target as DesktopMode);
+
+    // After peel animation completes
     setTimeout(() => {
       setSidebarBgMode(target);
       setDepartingDesktop(null);
     }, 2000);
-  }, [activeDesktop, departingDesktop]);
+  }, [activeDesktop, departingDesktop, k.switchDesktop]);
 
-  // ── Single desktop widget state (only for active desktop) ─────────────────
+  // ── Per-desktop widget state ──────────────────────────────────────────
   const activeWidgets = useDesktopState(activeDesktop);
 
   const [departing, setDeparting] = useState(false);
@@ -168,7 +169,7 @@ export default function HologramOsPage() {
   });
   const isFocus = attention.preset === "focus";
 
-  // ── Voice ↔ Chat persistence ──────────────────────────────────────────────
+  // ── Voice ↔ Chat persistence ──────────────────────────────────────────
   const chatHistory = useAiChatHistory();
   const voiceConversationRef = React.useRef<string | null>(null);
 
@@ -185,7 +186,6 @@ export default function HologramOsPage() {
     if (userText) await chatHistory.autoTitle(convId, userText);
   }, [chatHistory.isAuthenticated, chatHistory.createConversation, chatHistory.saveMessage, chatHistory.autoTitle]);
 
-  // ── Load active conversation messages as voice context ─────────────────
   const [voiceChatContext, setVoiceChatContext] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
 
   useEffect(() => {
@@ -208,7 +208,6 @@ export default function HologramOsPage() {
     activeWidgets.setAllHidden(isFocus);
   }, [isFocus, activeDesktop]);
 
-  // Context hints
   const contextHints = useMemo(() => {
     const entries = Object.entries(ctx.profile.interests);
     if (entries.length === 0) return [];
@@ -223,14 +222,14 @@ export default function HologramOsPage() {
     metadata: { bgMode: activeDesktop, focusMode: isFocus },
   });
 
-  // ── Listen for global lumen:open event ─────────────────────────────────
+  // ── Listen for global lumen:open event → kernel syscall ───────────────
   useEffect(() => {
-    const handler = () => setChatOpen(true);
+    const handler = () => k.setChatOpen(true);
     window.addEventListener("lumen:open", handler);
     return () => window.removeEventListener("lumen:open", handler);
-  }, []);
+  }, [k.setChatOpen]);
 
-  // ── Global keyboard shortcuts ──────────────────────────────────────────
+  // ── Global keyboard shortcuts → kernel syscalls ────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
@@ -240,7 +239,7 @@ export default function HologramOsPage() {
 
       if (mod && e.shiftKey && e.key === ">") {
         e.preventDefault();
-        Object.keys(localStorage).filter(k => k.startsWith("hologram-pos:")).forEach(k => localStorage.removeItem(k));
+        Object.keys(localStorage).filter(key => key.startsWith("hologram-pos:")).forEach(key => localStorage.removeItem(key));
         window.location.reload();
         return;
       }
@@ -248,7 +247,7 @@ export default function HologramOsPage() {
       if (!mod) return;
 
       switch (e.key) {
-        case ";": e.preventDefault(); mastery.record(";"); setChatOpen(true); break;
+        case ";": e.preventDefault(); mastery.record(";"); k.setChatOpen(true); break;
         case "]": e.preventDefault(); mastery.record("]"); attention.toggle(); break;
         case "[":
           e.preventDefault();
@@ -256,22 +255,22 @@ export default function HologramOsPage() {
           const nextIdx = (ALL_DESKTOPS.indexOf(activeDesktop) + 1) % ALL_DESKTOPS.length;
           switchDesktop(ALL_DESKTOPS[nextIdx]);
           break;
-        case ",": e.preventDefault(); mastery.record(","); openPanel("messenger"); break;
-        case ".": e.preventDefault(); mastery.record("."); setChatOpen(false); closePanel(); break;
+        case ",": e.preventDefault(); mastery.record(","); k.openPanel("messenger"); break;
+        case ".": e.preventDefault(); mastery.record("."); k.setChatOpen(false); k.closePanel(); break;
         case "\\": e.preventDefault(); mastery.record("\\"); activeWidgets.toggleAllWidgets(); break;
         case "/": e.preventDefault(); mastery.record("/"); setShortcutsOpen(prev => !prev); break;
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [navigate, attention, activeDesktop, switchDesktop, activeWidgets]);
+  }, [navigate, attention, activeDesktop, switchDesktop, activeWidgets, k.setChatOpen, k.openPanel, k.closePanel]);
 
   // ── Mobile: iOS homescreen ──
   if (isMobile) return <MobileOsShell />;
 
   const welcomeName = name || "traveller";
 
-  // ── Desktops to mount: only active + departing ────────────────────────────
+  // Only mount active desktop + departing (during transition)
   const mountedDesktops = departingDesktop
     ? [activeDesktop, departingDesktop]
     : [activeDesktop];
@@ -287,10 +286,10 @@ export default function HologramOsPage() {
       {/* ══ Kernel Boot Portal ═════════════════════════════════════ */}
       {!kernelEntered && (
         <KernelBoot
-          events={kernel.bootEvents}
-          stage={kernel.stage}
-          isBooted={kernel.isBooted}
-          bootTimeMs={kernel.bootTimeMs}
+          events={k.bootEvents}
+          stage={k.stage}
+          isBooted={k.isBooted}
+          bootTimeMs={k.bootTimeMs}
           onEntered={() => setKernelEntered(true)}
           skipAnimation={hasBootedBefore.current}
         />
@@ -299,7 +298,7 @@ export default function HologramOsPage() {
       <DepthShiftSync active={claimOpen} />
 
       <div className="flex h-full overflow-hidden">
-        {/* ══ Sidebar (Chrome Layer) ═══════════════════════════════ */}
+        {/* ══ Sidebar — kernel syscalls for panel/desktop switching ═══ */}
         <div
           className="shrink-0 overflow-visible"
           style={{
@@ -310,22 +309,22 @@ export default function HologramOsPage() {
           }}
         >
           <DesktopOsSidebar
-            onNewChat={() => setChatOpen(true)}
-            onOpenChat={() => setChatOpen(true)}
-            onOpenBrowser={() => openPanel("browser")}
-            onOpenCompute={() => openPanel("compute")}
-            onOpenTerminal={() => openPanel("terminal")}
-            onOpenMemory={() => openPanel("memory")}
-            onOpenMessenger={() => openPanel("messenger")}
-            onOpenJupyter={() => openPanel("jupyter")}
-            onGoHome={() => { setChatOpen(false); closePanel(); }}
+            onNewChat={() => k.setChatOpen(true)}
+            onOpenChat={() => k.setChatOpen(true)}
+            onOpenBrowser={() => k.openPanel("browser")}
+            onOpenCompute={() => k.openPanel("compute")}
+            onOpenTerminal={() => k.openPanel("terminal")}
+            onOpenMemory={() => k.openPanel("memory")}
+            onOpenMessenger={() => k.openPanel("messenger")}
+            onOpenJupyter={() => k.openPanel("jupyter")}
+            onGoHome={() => { k.setChatOpen(false); k.closePanel(); }}
             onReplayGuide={() => setShortcutsOpen(true)}
             hintOpacity={mastery.hintOpacity}
             bgMode={sidebarBgMode}
           />
         </div>
 
-        {/* ══ Desktop Stack (lazy-mounted: only active + departing) ════ */}
+        {/* ══ Desktop Stack — lazy-mounted projections from kernel ═══ */}
         <div
           className={`flex-1 relative overflow-hidden z-0 ${lumenPanel.isResizing ? "" : "transition-all ease-in-out"}`}
           style={{
@@ -361,7 +360,7 @@ export default function HologramOsPage() {
                   welcomeName={welcomeName}
                   isFocus={isFocus}
                   contextHints={contextHints}
-                  onOpenChat={() => { setChatPrompt(""); setChatOpen(true); }}
+                  onOpenChat={() => { setChatPrompt(""); k.setChatOpen(true); }}
                   onSwitchDesktop={switchDesktop}
                   onOpenLegal={(tab) => { setLegalTab(tab); setLegalOpen(true); }}
                   isWidgetVisible={activeWidgets.isWidgetVisible}
@@ -409,14 +408,14 @@ export default function HologramOsPage() {
         </div>
       </div>
 
-      {/* ══ Overlay Layer (modals, chat, projections) ════════════ */}
+      {/* ══ Overlay Layer — all derived from kernel projection ═══════ */}
       <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
       <ShortcutCheatSheet open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <LegalPanel open={legalOpen} initialTab={legalTab} onClose={() => setLegalOpen(false)} bgMode={activeDesktop === "white" ? "white" : "dark"} />
       <ModularSnapGrid visible={lumenPanel.isResizing} />
       <HologramAiChat
         open={chatOpen}
-        onClose={() => { setChatOpen(false); setChatPrompt(""); }}
+        onClose={() => { k.setChatOpen(false); setChatPrompt(""); }}
         onPhaseChange={triadicActivity.setActivePhase}
         creatorStage={triadicActivity.creatorStage}
         replayGuideKey={0}
@@ -427,19 +426,19 @@ export default function HologramOsPage() {
       />
       <BrowserProjection
         open={activePanel === "browser"}
-        onClose={closePanel}
+        onClose={() => k.closePanel()}
         onSendToLumen={({ title, url, markdown }) => {
           const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) + "\n\n…[truncated]" : markdown;
           setChatPrompt(`I'm reading "${title}" (${url}). Here's the page content:\n\n${truncated}\n\nPlease summarize the key points and insights from this page.`);
-          closePanel();
-          setChatOpen(true);
+          k.closePanel();
+          k.setChatOpen(true);
         }}
       />
-      <ComputeProjection open={activePanel === "compute"} onClose={closePanel} />
-      <MemoryProjection open={activePanel === "memory"} onClose={closePanel} />
-      <MessengerProjection open={activePanel === "messenger"} onClose={closePanel} />
-      <TerminalProjection open={activePanel === "terminal"} onClose={closePanel} onOpenJupyter={() => { closePanel(); setTimeout(() => setActivePanel("jupyter"), 350); }} />
-      <JupyterProjection open={activePanel === "jupyter"} onClose={closePanel} />
+      <ComputeProjection open={activePanel === "compute"} onClose={() => k.closePanel()} />
+      <MemoryProjection open={activePanel === "memory"} onClose={() => k.closePanel()} />
+      <MessengerProjection open={activePanel === "messenger"} onClose={() => k.closePanel()} />
+      <TerminalProjection open={activePanel === "terminal"} onClose={() => k.closePanel()} onOpenJupyter={() => { k.closePanel(); setTimeout(() => k.openPanel("jupyter"), 350); }} />
+      <JupyterProjection open={activePanel === "jupyter"} onClose={() => k.closePanel()} />
       <SnapGuideOverlay />
       <KernelHeartbeat />
     </HologramViewport>

@@ -22,6 +22,8 @@ export {
   type KernelConfig,
   type WidgetType,
   type WidgetProcess,
+  type PanelId,
+  type DesktopMode,
 } from "./projection-engine";
 
 // Surface Adapter — kernel frames → browser DOM

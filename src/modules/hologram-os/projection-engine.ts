@@ -41,7 +41,7 @@ export interface TypographyProjection {
 
 /** Palette projection — the kernel's view of color */
 export interface PaletteProjection {
-  readonly mode: "dark" | "light" | "image";
+  readonly mode: string;
   /** HSL values for core tokens */
   readonly bg: string;
   readonly surface: string;
@@ -119,13 +119,27 @@ export interface BootEvent {
 // Kernel Config Registers — UI controls map to these
 // ═══════════════════════════════════════════════════════════════════════
 
+/**
+ * Panel IDs — the kernel's view of which projection surface is active.
+ * "none" = desktop home. All others = a full-screen projection overlay.
+ * Chat is independent (can coexist with any panel or desktop).
+ */
+export type PanelId = "none" | "chat" | "browser" | "compute" | "memory" | "messenger" | "terminal" | "jupyter";
+
+/** Desktop frame IDs — the kernel's view of the active visual environment */
+export type DesktopMode = "image" | "white" | "dark" | "light";
+
 export interface KernelConfig {
   typography: {
     userScale: number; // 0.9 | 1.0 | 1.15
   };
   palette: {
-    mode: "dark" | "light" | "image";
+    mode: DesktopMode;
   };
+  /** Active projection panel (exclusive — only one at a time) */
+  activePanel: PanelId;
+  /** Whether the Lumen AI chat is open (independent of activePanel) */
+  chatOpen: boolean;
   desktop: {
     widgetStates: Record<string, {
       x: number; y: number; w: number; h: number;
@@ -137,7 +151,9 @@ export interface KernelConfig {
 
 const DEFAULT_CONFIG: KernelConfig = {
   typography: { userScale: 1.0 },
-  palette: { mode: "dark" },
+  palette: { mode: "image" },
+  activePanel: "none",
+  chatOpen: false,
   desktop: { widgetStates: {} },
 };
 
@@ -440,7 +456,55 @@ export class KernelProjector {
     return this.widgetRegistry.get(widgetType);
   }
 
-  // ── Projection ───────────────────────────────────────────────────────
+  // ── Panel & Desktop Projection Controls ─────────────────────────────
+
+  /** Open a projection panel (kernel syscall: panel switch) */
+  openPanel(panel: PanelId): void {
+    if (panel === "chat") {
+      this.config.chatOpen = true;
+    } else {
+      this.config.activePanel = panel;
+      this.config.chatOpen = false; // exclusive with overlays
+    }
+    this.saveConfig();
+    this.emitFrame(this.projectFrame());
+  }
+
+  /** Close the active projection panel */
+  closePanel(): void {
+    this.config.activePanel = "none";
+    this.saveConfig();
+    this.emitFrame(this.projectFrame());
+  }
+
+  /** Toggle Lumen AI chat independently */
+  setChatOpen(open: boolean): void {
+    this.config.chatOpen = open;
+    this.saveConfig();
+    this.emitFrame(this.projectFrame());
+  }
+
+  /** Switch desktop frame (kernel syscall: palette mode) */
+  switchDesktop(mode: DesktopMode): void {
+    this.config.palette.mode = mode;
+    this.saveConfig();
+    this.emitFrame(this.projectFrame());
+  }
+
+  /** Get active panel */
+  getActivePanel(): PanelId {
+    return this.config.activePanel;
+  }
+
+  /** Get chat open state */
+  isChatOpen(): boolean {
+    return this.config.chatOpen;
+  }
+
+  /** Get active desktop mode */
+  getDesktopMode(): DesktopMode {
+    return this.config.palette.mode as DesktopMode;
+  }
 
   /** Project the current kernel state into a frame */
   projectFrame(): ProjectionFrame {
@@ -574,6 +638,14 @@ export class KernelProjector {
         const parsed = JSON.parse(stored);
         this.config = { ...DEFAULT_CONFIG, ...parsed };
       }
+      // Backward compat: migrate legacy desktop mode preference
+      const legacyBg = localStorage.getItem("hologram-bg-mode");
+      if (legacyBg && (legacyBg === "image" || legacyBg === "white" || legacyBg === "dark")) {
+        this.config.palette.mode = legacyBg;
+      }
+      // Always reset transient state on boot (panels closed)
+      this.config.activePanel = "none";
+      this.config.chatOpen = false;
     } catch { /* use defaults */ }
   }
 }
