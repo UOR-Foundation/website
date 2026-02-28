@@ -210,19 +210,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
               >
                 {pct}%
               </span>
-              {attention.showExpanded && (
-                <span
-                  className="tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
-                  style={{
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
-                    fontSize: "12px",
-                    color: isWhite ? "hsla(0, 0%, 10%, 0.65)" : "hsla(38, 15%, 82%, 0.55)",
-                    fontWeight: 500,
-                  }}
-                >
-                  of day
-                </span>
-              )}
+              {/* "of day" label removed for cleaner look */}
             </>
           )}
         </div>
