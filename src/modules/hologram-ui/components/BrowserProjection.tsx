@@ -1,11 +1,10 @@
 /**
- * BrowserProjection — Elegant sidebar-originating browser panel
- * 
- * Animates as if "projected" from the sidebar tab outward to the right,
- * with a smooth spring-like expansion on open and graceful retraction on close.
+ * BrowserProjection — Instant sidebar-originating browser panel
+ *
+ * Zero-delay: AnimatePresence handles mount/unmount directly.
+ * GPU-promoted via will-change for crisp 60fps clip-path animation.
  */
 
-import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import HologramBrowser from "./HologramBrowser";
 
@@ -16,25 +15,14 @@ interface BrowserProjectionProps {
 }
 
 const SIDEBAR_WIDTH = 68;
+const SLIDE_TRANSITION = { duration: 0.22, ease: [0.22, 1, 0.36, 1] } as const;
+const FADE_TRANSITION = { duration: 0.15, ease: "easeOut" } as const;
 
 export default function BrowserProjection({ open, onClose, onSendToLumen }: BrowserProjectionProps) {
-  const [shouldRender, setShouldRender] = useState(false);
-
-  useEffect(() => {
-    if (open) setShouldRender(true);
-  }, [open]);
-
-  const handleExitComplete = useCallback(() => {
-    if (!open) setShouldRender(false);
-  }, [open]);
-
-  if (!shouldRender) return null;
-
   return (
-    <AnimatePresence onExitComplete={handleExitComplete}>
+    <AnimatePresence>
       {open && (
         <>
-          {/* Subtle backdrop for focus */}
           <motion.div
             key="browser-backdrop"
             className="fixed inset-0 z-[499]"
@@ -42,11 +30,9 @@ export default function BrowserProjection({ open, onClose, onSendToLumen }: Brow
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={FADE_TRANSITION}
             onClick={onClose}
           />
-
-          {/* Projected panel — originates from sidebar edge */}
           <motion.div
             key="browser-panel"
             className="fixed top-0 bottom-0 z-[500] flex"
@@ -54,25 +40,13 @@ export default function BrowserProjection({ open, onClose, onSendToLumen }: Brow
               left: SIDEBAR_WIDTH,
               right: 0,
               transformOrigin: "left center",
+              willChange: "clip-path, opacity",
             }}
-            initial={{
-              clipPath: `inset(0 100% 0 0)`,
-              opacity: 0.3,
-            }}
-            animate={{
-              clipPath: `inset(0 0% 0 0)`,
-              opacity: 1,
-            }}
-            exit={{
-              clipPath: `inset(0 100% 0 0)`,
-              opacity: 0.3,
-            }}
-            transition={{
-              duration: 0.3,
-              ease: [0.22, 1, 0.36, 1],
-            }}
+            initial={{ clipPath: "inset(0 100% 0 0)", opacity: 0.3 }}
+            animate={{ clipPath: "inset(0 0% 0 0)", opacity: 1 }}
+            exit={{ clipPath: "inset(0 100% 0 0)", opacity: 0.3 }}
+            transition={SLIDE_TRANSITION}
           >
-            {/* Inner glow edge — the "projection beam" effect */}
             <div
               className="absolute top-0 bottom-0 left-0 w-[2px] pointer-events-none z-10"
               style={{

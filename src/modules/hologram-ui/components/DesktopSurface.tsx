@@ -244,8 +244,12 @@ export default function DesktopSurface({
               src={heroLandscape}
               alt="Serene landscape"
               className="w-full h-full object-cover"
+              loading="eager"
+              decoding="async"
               style={{
                 animation: "ken-burns-breathe 42s cubic-bezier(0.25, 0.1, 0.25, 1) forwards",
+                imageRendering: "auto",
+                willChange: "transform",
               }}
             />
             <div
