@@ -185,9 +185,26 @@ export interface KernelConfig {
    * Shortcut mastery — learning-analytics register.
    * Tracks per-shortcut usage counts. After MASTERY_THRESHOLD uses,
    * the kernel suppresses visual hints for that shortcut.
-   * This is the last localStorage consumer absorbed into kernel:config.
    */
   shortcutMastery: Record<string, number>;
+  /**
+   * Widget drag positions — kernel tracks where each draggable
+   * element has been placed on the viewport. Keys are storage
+   * identifiers (e.g. "hologram-pos:ambient").
+   */
+  dragPositions: Record<string, { x: number; y: number }>;
+  /**
+   * Triadic activity — daily time tracking for Learn/Work/Play phases.
+   * The kernel measures sovereign creator balance.
+   */
+  triadicActivity: {
+    date: string;
+    learn: number;
+    work: number;
+    play: number;
+  };
+  /** Completed triadic cycle dates (all 3 phases ≥ 60s in a day) */
+  triadicHistory: string[];
 }
 
 const DEFAULT_CONFIG: KernelConfig = {
@@ -199,6 +216,9 @@ const DEFAULT_CONFIG: KernelConfig = {
   desktopWidgets: {},
   desktop: { widgetStates: {} },
   shortcutMastery: {},
+  dragPositions: {},
+  triadicActivity: { date: "", learn: 0, work: 0, play: 0 },
+  triadicHistory: [],
 };
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -726,6 +746,63 @@ export class KernelProjector {
     return (this.config.shortcutMastery[key] || 0) >= KernelProjector.MASTERY_THRESHOLD;
   }
 
+  // ── Drag Position — widget placement register ─────────────────────
+
+  /** Get saved drag position for a key */
+  getDragPosition(key: string): { x: number; y: number } | null {
+    return this.config.dragPositions[key] ?? null;
+  }
+
+  /** Save drag position — kernel syscall */
+  setDragPosition(key: string, pos: { x: number; y: number }): void {
+    this.config.dragPositions = { ...this.config.dragPositions, [key]: pos };
+    this.saveConfig();
+  }
+
+  // ── Triadic Activity — sovereign creator balance register ─────────
+
+  /** Get current triadic activity state */
+  getTriadicActivity(): KernelConfig["triadicActivity"] {
+    return this.config.triadicActivity;
+  }
+
+  /** Get triadic cycle history */
+  getTriadicHistory(): string[] {
+    return this.config.triadicHistory;
+  }
+
+  /** Accumulate time for a triadic phase */
+  accumulateTriadicPhase(phase: "learn" | "work" | "play", seconds: number): void {
+    const today = new Date().toISOString().slice(0, 10);
+    if (this.config.triadicActivity.date !== today) {
+      this.archiveTriadicDay();
+      this.config.triadicActivity = { date: today, learn: 0, work: 0, play: 0 };
+    }
+    this.config.triadicActivity = {
+      ...this.config.triadicActivity,
+      [phase]: this.config.triadicActivity[phase] + seconds,
+    };
+    this.saveConfig();
+    this.markDirty();
+  }
+
+  /** Reset triadic activity for a new day */
+  resetTriadicDay(): void {
+    this.archiveTriadicDay();
+    this.config.triadicActivity = { date: new Date().toISOString().slice(0, 10), learn: 0, work: 0, play: 0 };
+    this.saveConfig();
+    this.markDirty();
+  }
+
+  private archiveTriadicDay(): void {
+    const s = this.config.triadicActivity;
+    if (s.date && s.learn >= 60 && s.work >= 60 && s.play >= 60) {
+      if (!this.config.triadicHistory.includes(s.date)) {
+        this.config.triadicHistory = [...this.config.triadicHistory, s.date];
+      }
+    }
+  }
+
 
   projectFrame(): ProjectionFrame {
     this.tickCount++;
@@ -883,6 +960,9 @@ export class KernelProjector {
           desktopWidgets: { ...DEFAULT_CONFIG.desktopWidgets, ...parsed.desktopWidgets },
           desktop: { ...DEFAULT_CONFIG.desktop, ...parsed.desktop },
           shortcutMastery: { ...DEFAULT_CONFIG.shortcutMastery, ...parsed.shortcutMastery },
+          dragPositions: { ...DEFAULT_CONFIG.dragPositions, ...parsed.dragPositions },
+          triadicActivity: { ...DEFAULT_CONFIG.triadicActivity, ...parsed.triadicActivity },
+          triadicHistory: parsed.triadicHistory ?? DEFAULT_CONFIG.triadicHistory,
         };
       }
 
@@ -924,8 +1004,35 @@ export class KernelProjector {
           this.config.shortcutMastery = { ...this.config.shortcutMastery, ...parsed };
         } catch {}
       }
+      // Triadic activity
+      const legacyTriadic = localStorage.getItem("hologram:triadic-activity");
+      if (legacyTriadic) {
+        try {
+          const parsed = JSON.parse(legacyTriadic);
+          if (parsed.date) this.config.triadicActivity = { ...this.config.triadicActivity, ...parsed };
+        } catch {}
+      }
+      // Triadic history
+      const legacyHistory = localStorage.getItem("hologram:triadic-history");
+      if (legacyHistory) {
+        try {
+          const parsed = JSON.parse(legacyHistory);
+          if (Array.isArray(parsed)) this.config.triadicHistory = [...new Set([...this.config.triadicHistory, ...parsed])];
+        } catch {}
+      }
+      // Drag positions — migrate any hologram-pos:* keys
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("hologram-pos:") && !this.config.dragPositions[key]) {
+          try {
+            const parsed = JSON.parse(localStorage.getItem(key)!);
+            if (typeof parsed.x === "number" && typeof parsed.y === "number") {
+              this.config.dragPositions[key] = { x: parsed.x, y: parsed.y };
+            }
+          } catch {}
+        }
+      }
 
-      this.config.activePanel = "none";
       this.config.chatOpen = false;
     } catch { /* use defaults */ }
   }
