@@ -117,6 +117,15 @@ export default function Subgraph153Panel() {
               Best/walker: [{result.stats.parallelBestPerWalker.slice(0, 8).join(", ")}{result.stats.parallelBestPerWalker.length > 8 ? "…" : ""}]
             </div>
           </div>
+          <div className="bg-[hsla(210,10%,8%,0.5)] rounded p-3 space-y-1 col-span-3">
+            <div className="text-[9px] font-mono text-[hsl(330,55%,60%)] uppercase">★ Hybrid GA→SA Refinement (Phase 2)</div>
+            <div className="text-[10px] font-mono text-[hsl(210,10%,60%)]">
+              {result.stats.hybridSeeds} seeds from GA/SA/PHC → {result.stats.hybridStepsPerSeed} SA steps/seed · T₀=2.0 · τ=0.0005 (ultra-slow cooling)
+            </div>
+            <div className="text-[10px] font-mono text-[hsl(330,45%,60%)]">
+              Best edges: {result.stats.hybridBestEdges} · {result.stats.hybridImprovedCount}/{result.stats.hybridSeeds} seeds improved · T_final: {result.stats.hybridFinalTemp.toExponential(2)}
+            </div>
+          </div>
         </div>
       </div>
 

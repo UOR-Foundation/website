@@ -111,6 +111,12 @@ export interface SearchStats {
   /** Parallel hill-climb stats */
   readonly parallelWalkers: number;
   readonly parallelBestPerWalker: number[];
+  /** Hybrid GA→SA refinement stats */
+  readonly hybridSeeds: number;
+  readonly hybridStepsPerSeed: number;
+  readonly hybridBestEdges: number;
+  readonly hybridImprovedCount: number;
+  readonly hybridFinalTemp: number;
 }
 
 export interface SubgraphTest {
@@ -651,6 +657,132 @@ function geneticAlgorithm(
   };
 }
 
+// ── Strategy 9: Hybrid GA→SA Iterative Refinement ─────────────────────────
+
+interface HybridStats {
+  seeds: number;
+  stepsPerSeed: number;
+  bestEdges: number;
+  improvedCount: number;
+  finalTemp: number;
+}
+
+/**
+ * Two-phase hybrid optimizer: takes the best subgraphs found by the GA
+ * (and any other strategy) and feeds them as seeds into a final SA pass
+ * with very slow cooling (quasi-static annealing).
+ *
+ * Phase 1 (upstream): GA produces diverse high-fitness individuals.
+ * Phase 2 (this function): Each seed undergoes deep SA refinement with:
+ *   - Very low initial temperature (T₀ = 2.0) — exploit, don't explore
+ *   - Ultra-slow cooling: τ = 0.0005 (vs 0.003 in normal SA)
+ *   - Long run: 8000 steps per seed (no reheats — monotonic cooldown)
+ *   - Greedy finisher: last 20% of steps are deterministic (T→0)
+ *
+ * This converges the GA's approximate solutions toward the exact 153 basin.
+ */
+function hybridRefinement(
+  seeds: number[][],
+  stepsPerSeed: number = 8000,
+  T0: number = 2.0,
+  coolingRate: number = 0.0005,
+): { results: Subgraph22[]; stats: HybridStats } {
+  const N = ATLAS_VERTEX_COUNT;
+  const adj = buildAdjacencyLookup();
+  const results: Subgraph22[] = [];
+  let globalBestEdges = 0;
+  let improvedCount = 0;
+  let finalTemp = T0;
+
+  for (const seed of seeds) {
+    const current = [...seed];
+    let currentEdges = fastEdgeCount(current, adj);
+    const seedDist = Math.abs(currentEdges - TARGET_EDGES);
+    let bestDist = seedDist;
+    let bestConfig = [...current];
+    let bestEdges = currentEdges;
+
+    const greedyStart = Math.floor(stepsPerSeed * 0.8);
+
+    for (let step = 0; step < stepsPerSeed; step++) {
+      // Ultra-slow exponential cooling, no reheats
+      const T = step < greedyStart
+        ? T0 * Math.exp(-coolingRate * step)
+        : 0; // greedy finisher
+
+      // Propose swap — try multiple candidates when close to target
+      const removeIdx = Math.floor(Math.random() * TARGET_VERTICES);
+      const currentSet = new Set(current);
+      const numCandidates = bestDist <= 2 ? 30 : bestDist <= 5 ? 15 : 5;
+
+      let bestAdd = -1;
+      let bestSwapDist = Infinity;
+
+      for (let c = 0; c < numCandidates; c++) {
+        let addV: number;
+        do { addV = Math.floor(Math.random() * N); } while (currentSet.has(addV));
+        const delta = swapDelta(current, removeIdx, addV, adj);
+        const newDist = Math.abs(currentEdges + delta - TARGET_EDGES);
+        if (newDist < bestSwapDist) {
+          bestSwapDist = newDist;
+          bestAdd = addV;
+        }
+      }
+
+      if (bestAdd < 0) continue;
+
+      const delta = swapDelta(current, removeIdx, bestAdd, adj);
+      const newEdges = currentEdges + delta;
+      const newDist = Math.abs(newEdges - TARGET_EDGES);
+      const oldDist = Math.abs(currentEdges - TARGET_EDGES);
+      const energyDelta = newDist - oldDist;
+
+      // Metropolis with very low T → mostly greedy
+      let accept = false;
+      if (energyDelta <= 0) {
+        accept = true;
+      } else if (T > 1e-12) {
+        accept = Math.random() < Math.exp(-energyDelta / T);
+      }
+
+      if (accept) {
+        current[removeIdx] = bestAdd;
+        currentEdges = newEdges;
+
+        if (newDist < bestDist) {
+          bestDist = newDist;
+          bestConfig = [...current];
+          bestEdges = currentEdges;
+        }
+      }
+
+      finalTemp = T;
+    }
+
+    // Did hybrid improve over the seed?
+    if (Math.abs(bestEdges - TARGET_EDGES) < seedDist) {
+      improvedCount++;
+    }
+
+    if (Math.abs(bestEdges - TARGET_EDGES) < Math.abs(globalBestEdges - TARGET_EDGES) || results.length === 0) {
+      globalBestEdges = bestEdges;
+    }
+
+    results.push(analyzeSubgraph(bestConfig));
+  }
+
+  return {
+    results,
+    stats: {
+      seeds: seeds.length,
+      stepsPerSeed,
+      bestEdges: globalBestEdges,
+      improvedCount,
+      finalTemp,
+    },
+  };
+}
+
 // ── Strategy 8: Parallel Hill-Climbing Ensemble ───────────────────────────
 
 /**
@@ -864,27 +996,42 @@ function verifyFermionicResonance(sub: Subgraph22): FermionicResonance {
 // ── Main Search ───────────────────────────────────────────────────────────
 
 /**
- * Run the full 153-link subgraph search with all 8 strategies.
+ * Run the full 153-link subgraph search with all 9 strategies
+ * including the two-phase hybrid GA→SA refinement.
  */
 export function search153LinkStructure(): SearchResult {
   const startTime = performance.now();
 
   const TRIALS_PER_STRATEGY = 500;
 
-  // ── Original strategies ─────────────────────────────────────────────
+  // ── Phase 1: Diverse exploration ────────────────────────────────────
   const stratified = stratifiedSearch(TRIALS_PER_STRATEGY);
   const greedy = greedyDegreeSearch(TRIALS_PER_STRATEGY);
   const mirrorPair = mirrorPairSearch(TRIALS_PER_STRATEGY);
   const signClass = signClassSearch(TRIALS_PER_STRATEGY);
-
-  // ── New intensified strategies ──────────────────────────────────────
   const sa = simulatedAnnealing(3000, 12.0, 0.004, 600, 12);
   const ga = geneticAlgorithm(250, 200, 0.2, 0.75, 4, 0.08);
   const phc = parallelHillClimb(20, 3000);
 
+  // ── Phase 2: Hybrid GA→SA refinement ────────────────────────────────
+  // Collect top seeds from GA + SA + PHC (best subgraphs by distance to 153)
+  const phase1All = [...sa.results, ...ga.results, ...phc.results];
+  const seedCandidates = phase1All
+    .sort((a, b) => Math.abs(a.edgeCount - TARGET_EDGES) - Math.abs(b.edgeCount - TARGET_EDGES))
+    .slice(0, 20); // top 20 seeds
+  // De-dup seeds
+  const seedSeen = new Set<string>();
+  const uniqueSeeds: number[][] = [];
+  for (const s of seedCandidates) {
+    const key = [...s.vertices].sort((a, b) => a - b).join(",");
+    if (!seedSeen.has(key)) { seedSeen.add(key); uniqueSeeds.push(s.vertices); }
+  }
+  const hybrid = hybridRefinement(uniqueSeeds.slice(0, 12), 8000, 2.0, 0.0005);
+
   const allResults = [
     ...stratified, ...greedy, ...mirrorPair, ...signClass,
     ...sa.results, ...ga.results, ...phc.results,
+    ...hybrid.results,
   ];
 
   // De-duplicate by vertex set
@@ -924,6 +1071,7 @@ export function search153LinkStructure(): SearchResult {
     strategiesUsed: [
       "stratified", "greedy-degree", "mirror-pair", "sign-class",
       "simulated-annealing", "genetic-algorithm", "parallel-hill-climb",
+      "hybrid-ga-sa",
     ],
     saAcceptedUphill: sa.stats.acceptedUphill,
     saFinalTemperature: sa.stats.finalTemp,
@@ -931,6 +1079,11 @@ export function search153LinkStructure(): SearchResult {
     gaBestFitness: ga.stats.bestFitness,
     parallelWalkers: 20,
     parallelBestPerWalker: phc.bestPerWalker,
+    hybridSeeds: hybrid.stats.seeds,
+    hybridStepsPerSeed: hybrid.stats.stepsPerSeed,
+    hybridBestEdges: hybrid.stats.bestEdges,
+    hybridImprovedCount: hybrid.stats.improvedCount,
+    hybridFinalTemp: hybrid.stats.finalTemp,
   };
 
   // ── Verification Tests ──────────────────────────────────────────────
@@ -967,9 +1120,9 @@ export function search153LinkStructure(): SearchResult {
   });
 
   tests.push({
-    name: "All 7 search strategies executed",
-    holds: stats.strategiesUsed.length === 7,
-    expected: "7", actual: String(stats.strategiesUsed.length),
+    name: "All 8 search strategies executed",
+    holds: stats.strategiesUsed.length === 8,
+    expected: "8", actual: String(stats.strategiesUsed.length),
   });
 
   tests.push({
@@ -1001,6 +1154,12 @@ export function search153LinkStructure(): SearchResult {
     name: "Parallel HC used ≥ 16 walkers",
     holds: phc.bestPerWalker.length >= 16,
     expected: "≥ 16", actual: String(phc.bestPerWalker.length),
+  });
+
+  tests.push({
+    name: "Hybrid GA→SA improved ≥ 1 seed",
+    holds: hybrid.stats.improvedCount >= 1,
+    expected: "≥ 1", actual: String(hybrid.stats.improvedCount),
   });
 
   if (resonances.length > 0) {
