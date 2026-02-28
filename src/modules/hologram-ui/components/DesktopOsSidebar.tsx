@@ -157,6 +157,18 @@ export default function DesktopOsSidebar({
 
   return (
     <>
+    <style>{`
+      @keyframes sidebar-haptic-bounce {
+        0%   { transform: scale(1); }
+        40%  { transform: scale(0.91); }
+        70%  { transform: scale(1.03); }
+        100% { transform: scale(1); }
+      }
+      .sidebar-nav-btn:active,
+      .sidebar-logo-btn:active {
+        animation: sidebar-haptic-bounce 160ms cubic-bezier(0.25, 0.1, 0.25, 1);
+      }
+    `}</style>
     <aside
       className="sidebar-root flex flex-col h-full shrink-0 relative coherence-sidebar-pulse"
       style={{
