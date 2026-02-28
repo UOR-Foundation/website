@@ -379,7 +379,8 @@ export function constructAlgebra(level: number): CayleyDicksonAlgebra {
   const commutative = level <= 1 ? true : checkCommutativity(signs, indices);
   const associative = level <= 2 ? true : checkAssociativity(signs, indices);
   const alternative = level <= 3 ? true : checkAlternativity(signs, indices);
-  const division = level <= 3 ? true : checkDivision(signs, indices);
+  // Hurwitz's theorem: division algebras exist only at dim 1,2,4,8
+  const division = level <= 3;
 
   return {
     name: ALGEBRA_NAMES[level],
