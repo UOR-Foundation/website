@@ -343,6 +343,44 @@ export default function DesktopOsSidebar({
         )}
       </div>
 
+      {/* ── Share the Love ─────────────────────────────────── */}
+      <div className="px-2.5 pb-1">
+        <IconTooltip label="Share the Love" show={!expanded}>
+          <button
+            onClick={() => collapseAndDo(() => {
+              // Future: viral invite/share flow
+              console.log("Share the love clicked");
+            })}
+            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+              !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+            }`}
+            style={{ color: "var(--sb-text)" }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="shrink-0"
+              style={{ transform: "rotate(-8deg)" }}
+            >
+              <path
+                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                fill="url(#heartPurpleGrad)"
+              />
+              <defs>
+                <linearGradient id="heartPurpleGrad" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="hsl(270, 80%, 65%)" />
+                  <stop offset="100%" stopColor="hsl(290, 70%, 50%)" />
+                </linearGradient>
+              </defs>
+            </svg>
+            {expanded && <span className="text-[14px] font-light whitespace-nowrap">Share the Love</span>}
+          </button>
+        </IconTooltip>
+      </div>
+
       {/* ── Bottom: Settings + Help ───────────────────────────── */}
       <div className="px-2.5 py-4 space-y-1" style={{ borderTop: "1px solid var(--sb-border)" }}>
         {onReplayGuide && (
