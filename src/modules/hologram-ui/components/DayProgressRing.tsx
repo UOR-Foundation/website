@@ -96,7 +96,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
 
   return (
     <div
-      className="group relative flex flex-col items-center gap-4 cursor-default select-none hologram-glass-widget px-6 py-5"
+      className="group relative flex flex-col items-center gap-4 cursor-default select-none px-6 py-5"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
