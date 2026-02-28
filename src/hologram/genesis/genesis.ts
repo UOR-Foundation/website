@@ -55,6 +55,11 @@ export {
 } from "./axiom-post";
 
 export {
+  signalBus,
+  type Signal, type SignalSource, type SignalListener,
+} from "./axiom-signal";
+
+export {
   buildArtifact, serializeArtifact, stringifyArtifact,
   deserializeArtifact, verifyArtifact, toBlob,
   type UorArtifact, type DerivationNode, type ArtifactVerification,

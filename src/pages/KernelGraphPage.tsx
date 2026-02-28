@@ -30,6 +30,7 @@ const NODES: GraphNode[] = [
   { id: "axiom-codec",  label: "axiom-codec",  layer: "axiom", crystallized: true },
   { id: "axiom-mirror", label: "axiom-mirror", layer: "axiom", crystallized: true },
   { id: "axiom-post",   label: "axiom-post",   layer: "axiom", crystallized: true },
+  { id: "axiom-signal", label: "axiom-signal", layer: "axiom", crystallized: true },
 
   // Kernel modules (layer 1)
   { id: "q-boot",       label: "q-boot",       layer: "kernel", crystallized: true },
@@ -58,14 +59,13 @@ const NODES: GraphNode[] = [
   { id: "ext-webcrypto",  label: "WebCrypto",       layer: "external", crystallized: false },
   { id: "ext-postquantum",label: "@noble/post-quantum", layer: "external", crystallized: false },
   { id: "ext-urdna2015",  label: "URDNA2015 (jsonld)",  layer: "external", crystallized: false },
-  { id: "ext-eventbus",   label: "SystemEventBus",  layer: "external", crystallized: false },
 ];
 
 const EDGES: GraphEdge[] = [
-  // q-boot ← all axioms
+  // q-boot ← axioms + axiom-post (delegation)
   { from: "axiom-ring", to: "q-boot" }, { from: "axiom-hash", to: "q-boot" },
   { from: "axiom-cid", to: "q-boot" }, { from: "axiom-codec", to: "q-boot" },
-  { from: "axiom-mirror", to: "q-boot" },
+  { from: "axiom-mirror", to: "q-boot" }, { from: "axiom-post", to: "q-boot" },
   // q-mmu
   { from: "axiom-ring", to: "q-mmu" }, { from: "axiom-hash", to: "q-mmu" },
   { from: "axiom-cid", to: "q-mmu" },
@@ -115,7 +115,7 @@ const EDGES: GraphEdge[] = [
   // q-sovereignty
   { from: "axiom-ring", to: "q-sovereignty" }, { from: "axiom-hash", to: "q-sovereignty" },
   { from: "axiom-cid", to: "q-sovereignty" }, { from: "axiom-codec", to: "q-sovereignty" },
-  { from: "ext-eventbus", to: "q-sovereignty" },
+  { from: "axiom-signal", to: "q-sovereignty" },
   { from: "q-ceremony", to: "q-sovereignty" },
   // q-ceremony
   { from: "axiom-ring", to: "q-ceremony" }, { from: "axiom-hash", to: "q-ceremony" },

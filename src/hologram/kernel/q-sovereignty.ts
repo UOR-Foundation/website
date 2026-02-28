@@ -26,7 +26,7 @@ import { deriveThreeWordName, type ThreeWordName } from "./q-three-word";
 import type { QFs } from "./q-fs";
 import type { QSecurity, CapabilityToken } from "./q-security";
 import type { QEcc } from "./q-ecc";
-import { SystemEventBus } from "@/modules/observable/system-event-bus";
+import { signalBus } from "@/hologram/genesis/axiom-signal";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types (unchanged)
@@ -164,8 +164,8 @@ export class QSovereignty {
 
     this.sovereign = sovereign;
 
-    // ── Step 10: Emit to SystemEventBus ──
-    SystemEventBus.emit(
+    // ── Step 10: Emit to genesis signal bus ──
+    signalBus.emit(
       "sovereignty", "genesis",
       new Uint8Array(ceremony.hashBytes.slice(0, 32)),
       new Uint8Array(bindingHashBytes),
