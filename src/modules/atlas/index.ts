@@ -279,6 +279,33 @@ export type {
   EulerDiscovery,
 } from "./euler-bridge";
 
+// Triality Coordinate System — Sigmatics (h₂, d, ℓ) decomposition (Phase 1)
+export {
+  encodeTriality,
+  decodeTriality,
+  dTransform,
+  dTransformFull,
+  computeTrialityDecomposition,
+  getOrbit,
+  orbitSignClassDistribution,
+  orbitMirrorCorrespondence,
+  d4TrialityCorrespondence,
+  runTrialityVerification,
+  QUADRANT_COUNT,
+  MODALITY_COUNT,
+  SLOT_COUNT,
+  ORBIT_COUNT,
+} from "./triality";
+export type {
+  TrialityCoordinate,
+  TrialityVertex,
+  TrialityOrbit,
+  TrialityDecomposition,
+  DTransformResult,
+  TrialityReport,
+  TrialityTest,
+} from "./triality";
+
 // Fano Plane — PG(2,2) quantum gate routing topology
 export {
   constructFanoTopology,
