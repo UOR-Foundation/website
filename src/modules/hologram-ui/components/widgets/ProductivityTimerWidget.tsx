@@ -46,7 +46,7 @@ export default function ProductivityTimerWidget() {
 
   return (
     <div
-      className="flex flex-col items-center gap-3 select-none"
+      className="flex flex-col items-center gap-3 select-none hologram-glass-widget px-6 py-5"
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
     >
       {/* Ring */}
