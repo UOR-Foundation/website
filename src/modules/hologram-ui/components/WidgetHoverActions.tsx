@@ -68,7 +68,7 @@ export default function WidgetHoverActions({
 
       {/* Action bar */}
       <div
-        className={`absolute ${positionClasses[position]} flex items-center gap-0.5 rounded-lg px-1 py-0.5 transition-all duration-200 pointer-events-auto`}
+        className={`absolute ${positionClasses[position]} flex items-center gap-0.5 rounded-lg px-1 py-0.5 transition-all duration-200 pointer-events-auto still-decor`}
         style={{
           opacity: hovered ? 1 : 0,
           transform: hovered ? "translateY(-100%) scale(1)" : "translateY(-100%) scale(0.9)",
@@ -76,7 +76,7 @@ export default function WidgetHoverActions({
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           border: `1px solid ${barBorder}`,
-          boxShadow: "0 2px 8px hsla(0, 0%, 0%, 0.2)",
+          boxShadow: `0 2px 8px hsla(0, 0%, 0%, calc(0.2 * var(--still-shadow-opacity, 1)))`,
           pointerEvents: hovered ? "auto" : "none",
         }}
       >

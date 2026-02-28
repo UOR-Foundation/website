@@ -578,17 +578,22 @@
   background: var(--hologram-glass);
   backdrop-filter: blur(24px) saturate(1.2);
   -webkit-backdrop-filter: blur(24px) saturate(1.2);
-  border: 1px solid var(--hologram-glass-border);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px -8px hsla(25, 10%, 0%, 0.3),
-              inset 0 1px 0 hsla(38, 20%, 80%, 0.04);
+  border: 1px solid hsla(38, 15%, 60%, calc(0.08 * var(--still-border-opacity, 1)));
+  border-radius: calc(16px * var(--still-radius-scale, 1));
+  box-shadow: 0 8px 32px -8px hsla(25, 10%, 0%, calc(0.3 * var(--still-shadow-opacity, 1))),
+              inset 0 1px 0 hsla(38, 20%, 80%, calc(0.04 * var(--still-decor-opacity, 1)));
+  transition: border-radius calc(700ms * var(--still-transition-scale, 1)) ease,
+              box-shadow calc(700ms * var(--still-transition-scale, 1)) ease,
+              border-color calc(700ms * var(--still-transition-scale, 1)) ease;
 }
 .hologram-glass-subtle {
   background: hsla(25, 10%, 15%, 0.25);
   backdrop-filter: blur(16px) saturate(1.1);
   -webkit-backdrop-filter: blur(16px) saturate(1.1);
-  border: 1px solid hsla(38, 15%, 60%, 0.05);
-  border-radius: 16px;
+  border: 1px solid hsla(38, 15%, 60%, calc(0.05 * var(--still-border-opacity, 1)));
+  border-radius: calc(16px * var(--still-radius-scale, 1));
+  transition: border-radius calc(700ms * var(--still-transition-scale, 1)) ease,
+              border-color calc(700ms * var(--still-transition-scale, 1)) ease;
 }
 .hologram-glass-elevated {
   background: hsla(25, 10%, 15%, 0.6);
@@ -640,23 +645,33 @@
   border-radius: 0 !important;
 }
 
-/* ── Sidebar: CSS-only hover effects (zero JS, GPU-composited) ────── */
+/* ── Sidebar: CSS-only hover effects + Protective Stillness ───────── */
 .sidebar-nav-btn {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  /* Stillness: borders soften, shadows dissolve */
+  border: 1px solid hsla(38, 12%, 70%, calc(0.04 * var(--still-border-opacity, 1)));
+  box-shadow: 0 2px 8px -2px hsla(25, 10%, 0%, calc(0.15 * var(--still-shadow-opacity, 1)));
+  transition: background 200ms ease,
+              border-color calc(700ms * var(--still-transition-scale, 1)) ease,
+              box-shadow calc(700ms * var(--still-transition-scale, 1)) ease,
+              border-radius calc(700ms * var(--still-transition-scale, 1)) ease;
 }
 .sidebar-nav-btn:not(.sidebar-nav-active):hover {
   background: var(--sb-hover) !important;
 }
 .sidebar-logo-btn {
   background: var(--sb-active);
-  border: 1px solid var(--sb-border);
+  border: 1px solid hsla(38, 12%, 70%, calc(0.08 * var(--still-border-opacity, 1)));
+  box-shadow: 0 2px 12px -3px hsla(25, 10%, 0%, calc(0.2 * var(--still-shadow-opacity, 1)));
+  transition: border-color calc(700ms * var(--still-transition-scale, 1)) ease,
+              box-shadow calc(700ms * var(--still-transition-scale, 1)) ease;
 }
 .sidebar-tooltip {
   background: hsl(25, 10%, 16%);
   color: hsl(38, 15%, 85%);
-  border: 1px solid hsla(38, 12%, 70%, 0.15);
-  box-shadow: 0 8px 24px -6px hsla(25, 15%, 5%, 0.5);
+  border: 1px solid hsla(38, 12%, 70%, calc(0.15 * var(--still-border-opacity, 1)));
+  box-shadow: 0 8px 24px -6px hsla(25, 15%, 5%, calc(0.5 * var(--still-shadow-opacity, 1)));
   font-family: 'DM Sans', system-ui, sans-serif;
 }
 
