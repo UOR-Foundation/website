@@ -121,14 +121,7 @@ const RuliadPaperPage = lazy(() => import("@/modules/ruliad/pages/RuliadPaperPag
 const ConsciousnessPage = lazy(() => import("@/modules/consciousness/pages/ConsciousnessPage"));
 const GodConjecturePage = lazy(() => import("@/modules/consciousness/pages/GodConjecturePage"));
 const TrustGraphPage = lazy(() => import("@/modules/trust-graph/pages/TrustGraphPage"));
-const HologramUiPage = lazy(() => import("@/modules/hologram-ui/pages/HologramUiPage"));
-const HologramOsPage = lazy(() => import("@/modules/hologram-ui/pages/HologramOsPage"));
-const HologramInstallPage = lazy(() => import("@/modules/hologram-ui/pages/HologramInstallPage"));
-const HologramLeadCapturePage = lazy(() => import("@/modules/hologram-ui/components/HologramLeadCapture"));
-const HologramConsolePage = lazy(() => import("@/modules/hologram-ui/pages/HologramConsolePage"));
-const LumenVoiceDebugPage = lazy(() => import("@/modules/hologram-ui/pages/LumenVoiceDebugPage"));
-const DiffusionDebugPage = lazy(() => import("@/modules/uns/core/hologram/diffusion/DiffusionDebugPage"));
-const HologramComputePage = lazy(() => import("@/modules/hologram-compute/HologramComputePage"));
+// Hologram routes hidden — private development
 const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
 const MetaObserverPage = lazy(() => import("@/modules/observable/pages/MetaObserverPage"));
 const MultiScalePage = lazy(() => import("@/modules/observable/pages/MultiScalePage"));
@@ -277,13 +270,7 @@ const App = () => {
             <Route path="/consciousness" element={<ConsciousnessPage />} />
             <Route path="/consciousness/god-conjecture" element={<GodConjecturePage />} />
             <Route path="/trust-graph" element={<TrustGraphPage />} />
-            <Route path="/hologram-ui" element={<HologramUiPage />} />
-            <Route path="/hologram-os" element={<HologramOsPage />} />
-            <Route path="/hologram" element={<HologramOsPage />} />
-            <Route path="/hologram-install" element={<HologramInstallPage />} />
-            <Route path="/waitlist" element={<HologramLeadCapturePage />} />
-            <Route path="/hologram-console" element={<HologramConsolePage />} />
-            <Route path="/hologram-compute" element={<HologramComputePage />} />
+            {/* Hologram routes removed — private */}
             <Route path="/code-kg" element={<CodeKgPage />} />
             <Route path="/meta-observer" element={<MetaObserverPage />} />
             <Route path="/multi-scale" element={<MultiScalePage />} />
@@ -297,8 +284,7 @@ const App = () => {
             <Route path="/atlas" element={<AtlasVisualizationPage />} />
             <Route path="/quantum" element={<QuantumDashboardPage />} />
             <Route path="/q-shell" element={<QShellPage />} />
-            <Route path="/debug/lumen-voice" element={<LumenVoiceDebugPage />} />
-            <Route path="/debug/diffusion" element={<DiffusionDebugPage />} />
+            {/* Debug routes removed — private */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
