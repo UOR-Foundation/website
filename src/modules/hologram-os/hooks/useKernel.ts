@@ -89,6 +89,18 @@ export interface UseKernelResult {
   shortcutHintOpacity: (key: string) => number;
   /** Whether a shortcut is fully mastered */
   isShortcutMastered: (key: string) => boolean;
+  /** Record a human interaction for breathing rhythm */
+  recordInteraction: () => void;
+  /** Current breath period in ms */
+  breathPeriodMs: number;
+  /** Full breathing rhythm state */
+  breathingRhythm: {
+    intervals: number[];
+    breathPeriodMs: number;
+    lastEventAt: number;
+    eventCount: number;
+    dwellMs: number;
+  };
   /** Current kernel config */
   config: Readonly<KernelConfig>;
   /** Boot time in ms */
@@ -223,6 +235,10 @@ export function useKernel(): UseKernelResult {
     return projector.isShortcutMastered(key);
   }, [projector]);
 
+  const recordInteraction = useCallback(() => {
+    projector.recordInteraction();
+  }, [projector]);
+
   return {
     frame,
     bootEvents,
@@ -255,6 +271,9 @@ export function useKernel(): UseKernelResult {
     recordShortcut,
     shortcutHintOpacity,
     isShortcutMastered,
+    recordInteraction,
+    breathPeriodMs: projector.getBreathPeriodMs(),
+    breathingRhythm: projector.getBreathingRhythm(),
     config: projector.getConfig(),
     bootTimeMs: kernel?.bootTimeMs ?? 0,
   };

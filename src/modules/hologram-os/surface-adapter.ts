@@ -36,6 +36,7 @@ interface InterpolatableState {
   readonly processCount: number;
   readonly typographyBasePx: number;
   readonly typographyScale: number;
+  readonly breathPeriodMs: number;
 }
 
 function extractInterpolatable(frame: ProjectionFrame): InterpolatableState {
@@ -44,6 +45,7 @@ function extractInterpolatable(frame: ProjectionFrame): InterpolatableState {
     processCount: frame.systemCoherence.processCount,
     typographyBasePx: frame.typography.basePx,
     typographyScale: frame.typography.scale,
+    breathPeriodMs: frame.breathPeriodMs,
   };
 }
 
@@ -57,6 +59,7 @@ function lerpState(from: InterpolatableState, to: InterpolatableState, t: number
     processCount: Math.round(lerp(from.processCount, to.processCount, t)),
     typographyBasePx: lerp(from.typographyBasePx, to.typographyBasePx, t),
     typographyScale: lerp(from.typographyScale, to.typographyScale, t),
+    breathPeriodMs: lerp(from.breathPeriodMs, to.breathPeriodMs, t),
   };
 }
 
@@ -147,6 +150,8 @@ export class BrowserSurfaceAdapter {
     root.style.setProperty("--kernel-coherence", state.meanH.toFixed(3));
     root.style.setProperty("--kernel-process-count", state.processCount.toString());
     root.style.setProperty("--kernel-base-px", `${state.typographyBasePx.toFixed(1)}px`);
+    root.style.setProperty("--kernel-breath-period", `${state.breathPeriodMs.toFixed(0)}ms`);
+    root.style.setProperty("--kernel-breath-seconds", (state.breathPeriodMs / 1000).toFixed(2));
   }
 
   /** Get interpolation diagnostics for DevTools */

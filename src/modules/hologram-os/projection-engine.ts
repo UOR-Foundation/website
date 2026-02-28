@@ -116,6 +116,8 @@ export interface ProjectionFrame {
     readonly zone: CoherenceZone;
     readonly processCount: number;
   };
+  /** Breathing rhythm — derived breath period in ms for ambient animations */
+  readonly breathPeriodMs: number;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -205,6 +207,24 @@ export interface KernelConfig {
   };
   /** Completed triadic cycle dates (all 3 phases ≥ 60s in a day) */
   triadicHistory: string[];
+  /**
+   * Breathing Rhythm Sync — tracks human interaction cadence.
+   * The kernel observes inter-event intervals and derives a
+   * natural "breath period" that entrains all ambient animation
+   * timing to the human's pace. Not persisted — resets each session.
+   */
+  breathingRhythm: {
+    /** Rolling window of inter-event intervals (ms) */
+    intervals: number[];
+    /** Derived breath period in ms (typically 2000–8000) */
+    breathPeriodMs: number;
+    /** Timestamp of last interaction */
+    lastEventAt: number;
+    /** Total interactions this session */
+    eventCount: number;
+    /** Current dwell time estimate (ms since last burst) */
+    dwellMs: number;
+  };
 }
 
 const DEFAULT_CONFIG: KernelConfig = {
@@ -219,6 +239,13 @@ const DEFAULT_CONFIG: KernelConfig = {
   dragPositions: {},
   triadicActivity: { date: "", learn: 0, work: 0, play: 0 },
   triadicHistory: [],
+  breathingRhythm: {
+    intervals: [],
+    breathPeriodMs: 4000,
+    lastEventAt: 0,
+    eventCount: 0,
+    dwellMs: 0,
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -829,6 +856,86 @@ export class KernelProjector {
     }
   }
 
+  // ── Breathing Rhythm Sync — interaction cadence register ────────────
+
+  private static readonly BREATH_WINDOW = 20;       // rolling window size
+  private static readonly BREATH_MIN_MS = 2000;     // minimum breath period
+  private static readonly BREATH_MAX_MS = 8000;     // maximum breath period
+  private static readonly BREATH_DEFAULT_MS = 4000;  // default when no data
+  private static readonly DWELL_THRESHOLD_MS = 3000; // gap that resets burst
+
+  /**
+   * Record a human interaction event (click, keypress, scroll, etc.)
+   * The kernel tracks inter-event intervals and derives a natural
+   * breathing rhythm from the cadence.
+   */
+  recordInteraction(): void {
+    const now = performance.now();
+    const br = this.config.breathingRhythm;
+    const dt = br.lastEventAt > 0 ? now - br.lastEventAt : 0;
+
+    // Update intervals window (only track meaningful gaps, 50ms–10s)
+    let intervals = [...br.intervals];
+    if (dt > 50 && dt < 10000) {
+      intervals.push(dt);
+      if (intervals.length > KernelProjector.BREATH_WINDOW) {
+        intervals = intervals.slice(-KernelProjector.BREATH_WINDOW);
+      }
+    }
+
+    // Compute breath period: median of intervals, clamped
+    const breathPeriodMs = this.computeBreathPeriod(intervals);
+
+    // Dwell = time since last burst (gap > threshold = new breath cycle)
+    const dwellMs = dt > KernelProjector.DWELL_THRESHOLD_MS ? dt : br.dwellMs;
+
+    this.config.breathingRhythm = {
+      intervals,
+      breathPeriodMs,
+      lastEventAt: now,
+      eventCount: br.eventCount + 1,
+      dwellMs,
+    };
+
+    // Don't persist breathing rhythm (session-only), but mark dirty for projection
+    this.markDirty();
+  }
+
+  /**
+   * Compute breath period from interaction intervals.
+   * Uses weighted median with recency bias — recent interactions
+   * matter more than old ones.
+   */
+  private computeBreathPeriod(intervals: number[]): number {
+    if (intervals.length < 3) return KernelProjector.BREATH_DEFAULT_MS;
+
+    // Sort for median
+    const sorted = [...intervals].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 0
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid];
+
+    // Breath period = ~3× median interval (a full inhale–exhale cycle
+    // encompasses roughly 3 interaction bursts)
+    const raw = median * 3;
+
+    return Math.max(
+      KernelProjector.BREATH_MIN_MS,
+      Math.min(KernelProjector.BREATH_MAX_MS, raw)
+    );
+  }
+
+  /** Get current breath period in ms */
+  getBreathPeriodMs(): number {
+    return this.config.breathingRhythm.breathPeriodMs;
+  }
+
+  /** Get full breathing rhythm state (for DevTools) */
+  getBreathingRhythm(): KernelConfig["breathingRhythm"] {
+    return this.config.breathingRhythm;
+  }
+
 
   projectFrame(): ProjectionFrame {
     this.tickCount++;
@@ -940,6 +1047,7 @@ export class KernelProjector {
         zone: classifyZone(stats.meanHScore),
         processCount: stats.totalProcesses,
       },
+      breathPeriodMs: this.config.breathingRhythm.breathPeriodMs,
     };
   }
 
@@ -989,6 +1097,8 @@ export class KernelProjector {
           dragPositions: { ...DEFAULT_CONFIG.dragPositions, ...parsed.dragPositions },
           triadicActivity: { ...DEFAULT_CONFIG.triadicActivity, ...parsed.triadicActivity },
           triadicHistory: parsed.triadicHistory ?? DEFAULT_CONFIG.triadicHistory,
+          // Breathing rhythm is session-only — always start fresh
+          breathingRhythm: { ...DEFAULT_CONFIG.breathingRhythm },
         };
       }
 
