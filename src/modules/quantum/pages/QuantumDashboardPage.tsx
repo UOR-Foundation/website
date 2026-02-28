@@ -11,7 +11,7 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit, CircleDot, BrainCircuit, Layers, Shield } from "lucide-react";
+import { ArrowLeft, Atom, Hexagon, Cpu, Terminal, Workflow, BookOpen, Radar, Zap, Triangle, Orbit, CircleDot, BrainCircuit, Layers, Shield, GitMerge } from "lucide-react";
 
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
@@ -29,8 +29,9 @@ const TINNPanel = React.lazy(() => import("@/modules/quantum/components/TINNPane
 const FoliationPanel = React.lazy(() => import("@/modules/quantum/components/FoliationPanel"));
 const QuantumAttentionPanel = React.lazy(() => import("@/modules/quantum/components/QuantumAttentionPanel"));
 const GeometricECCPanel = React.lazy(() => import("@/modules/quantum/components/GeometricECCPanel"));
+const CompilationPipelinePanel = React.lazy(() => import("@/modules/quantum/components/CompilationPipelinePanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits" | "tinn" | "foliation" | "q-attention" | "geo-ecc";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits" | "tinn" | "foliation" | "q-attention" | "geo-ecc" | "pipeline";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -54,6 +55,7 @@ export default function QuantumDashboardPage() {
     { key: "foliation", label: "Foliation", icon: <Layers size={12} /> },
     { key: "q-attention", label: "Q-Attention", icon: <BrainCircuit size={12} /> },
     { key: "geo-ecc", label: "Geo ECC", icon: <Shield size={12} /> },
+    { key: "pipeline", label: "Pipeline", icon: <GitMerge size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -74,6 +76,7 @@ export default function QuantumDashboardPage() {
     foliation: "Constructing transverse symplectic foliation…",
     "q-attention": "Compiling attention head into quantum circuit…",
     "geo-ecc": "Building τ-mirror stabilizer code…",
+    "pipeline": "Running Atlas compilation pipeline…",
   };
 
   return (
@@ -140,6 +143,7 @@ export default function QuantumDashboardPage() {
            tab === "foliation" ? <FoliationPanel /> :
            tab === "q-attention" ? <QuantumAttentionPanel /> :
            tab === "geo-ecc" ? <GeometricECCPanel /> :
+           tab === "pipeline" ? <CompilationPipelinePanel /> :
            <SouriauThermodynamicsPanel />}
         </Suspense>
       </div>
@@ -332,6 +336,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "Tests", value: "12/12 ✓" },
       ],
     },
+    {
+      key: "pipeline" as Tab,
+      title: "Atlas Compilation Pipeline",
+      phase: "Phase 24",
+      icon: <GitMerge size={24} />,
+      color: "hsl(200,60%,60%)",
+      description: "End-to-end: any AI model from catalog → Atlas R₈ decomposition → quantum circuit compilation → OpenQASM 3.0 output. Compiles all 16 models with optional [[96,48,2]] ECC wrapping.",
+      stats: [
+        { label: "Models", value: "16" },
+        { label: "Pipeline", value: "6 stages" },
+        { label: "Output", value: "QASM 3.0" },
+        { label: "Tests", value: "12/12 ✓" },
+      ],
+    },
   ];
 
   return (
@@ -412,6 +430,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "done", label: "Phase 20: Souriau Thermodynamics — zero-point info geometry & Cartan NN integration" },
             { status: "done", label: "Phase 22: Quantum-Native Attention — attention head → quantum circuit compilation (10 tests)" },
             { status: "done", label: "Phase 23: Geometric Error Correction — τ-mirror stabilizer code [[96,48,2]] (12 tests)" },
+            { status: "done", label: "Phase 24: Atlas Compilation Pipeline — model → Atlas → quantum circuit → OpenQASM 3.0 (12 tests)" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>
