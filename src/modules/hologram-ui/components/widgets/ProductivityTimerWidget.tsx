@@ -42,7 +42,7 @@ export default function ProductivityTimerWidget() {
   }, []);
 
   const progress = 1 - remaining / FOCUS_DURATION;
-  const circumference = 2 * Math.PI * 38;
+  const circumference = 2 * Math.PI * 30.5;
   const dashOffset = circumference * (1 - progress);
 
   return (
@@ -51,25 +51,25 @@ export default function ProductivityTimerWidget() {
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
     >
       {/* Ring */}
-      <div className="relative flex items-center justify-center" style={{ width: 96, height: 96 }}>
-        <svg width={96} height={96} viewBox="0 0 96 96" className="absolute inset-0">
+      <div className="relative flex items-center justify-center" style={{ width: 77, height: 77 }}>
+        <svg width={77} height={77} viewBox="0 0 77 77" className="absolute inset-0">
           {/* Track */}
           <circle
-            cx={48} cy={48} r={38}
+            cx={38.5} cy={38.5} r={30.5}
             fill="none"
             stroke="hsla(0, 0%, 0%, 0.12)"
-            strokeWidth={3}
+            strokeWidth={2}
           />
           {/* Progress */}
           <circle
-            cx={48} cy={48} r={38}
+            cx={38.5} cy={38.5} r={30.5}
             fill="none"
             stroke="hsla(0, 0%, 15%, 0.7)"
-            strokeWidth={3}
+            strokeWidth={2}
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
-            transform="rotate(-90 48 48)"
+            transform="rotate(-90 38.5 38.5)"
             style={{ transition: "stroke-dashoffset 1s linear" }}
           />
         </svg>
@@ -77,7 +77,7 @@ export default function ProductivityTimerWidget() {
         {/* Time */}
         <span
           style={{
-            fontSize: remaining === 0 ? sf(14) : sf(22),
+            fontSize: remaining === 0 ? sf(11) : sf(18),
             fontWeight: 300,
             color: "hsla(0, 0%, 10%, 0.85)",
             fontFamily: "'Playfair Display', serif",

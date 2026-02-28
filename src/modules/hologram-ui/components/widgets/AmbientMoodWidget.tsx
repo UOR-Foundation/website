@@ -33,16 +33,16 @@ export default function AmbientMoodWidget() {
       {/* Mood orb */}
       <div
         className="relative flex items-center justify-center"
-        style={{ width: 72, height: 72 }}
+        style={{ width: 58, height: 58 }}
       >
         {/* Glow */}
         <div
           className="absolute rounded-full"
           style={{
-            width: 72,
-            height: 72,
+            width: 58,
+            height: 58,
             background: `radial-gradient(circle, hsla(${mood.hue}, 50%, 55%, 0.25) 0%, transparent 70%)`,
-            filter: "blur(12px)",
+            filter: "blur(10px)",
             animation: "ambient-glow-breathe 3.88s ease-in-out infinite",
             transition: "background 800ms ease",
           }}
@@ -51,8 +51,8 @@ export default function AmbientMoodWidget() {
         <div
           className="rounded-full"
           style={{
-            width: 24,
-            height: 24,
+            width: 19,
+            height: 19,
             background: `radial-gradient(circle, hsla(${mood.hue}, 55%, 65%, 0.9) 0%, hsla(${mood.hue}, 45%, 45%, 0.6) 100%)`,
             boxShadow: `0 0 20px 4px hsla(${mood.hue}, 50%, 55%, 0.3)`,
             transition: "all 800ms ease",
