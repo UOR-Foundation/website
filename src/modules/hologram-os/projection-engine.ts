@@ -181,6 +181,13 @@ export interface KernelConfig {
       dockedTo?: string;
     }>;
   };
+  /**
+   * Shortcut mastery — learning-analytics register.
+   * Tracks per-shortcut usage counts. After MASTERY_THRESHOLD uses,
+   * the kernel suppresses visual hints for that shortcut.
+   * This is the last localStorage consumer absorbed into kernel:config.
+   */
+  shortcutMastery: Record<string, number>;
 }
 
 const DEFAULT_CONFIG: KernelConfig = {
@@ -191,6 +198,7 @@ const DEFAULT_CONFIG: KernelConfig = {
   attention: { aperture: 0.3 },
   desktopWidgets: {},
   desktop: { widgetStates: {} },
+  shortcutMastery: {},
 };
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -692,7 +700,33 @@ export class KernelProjector {
     return !state.allHidden && !state.hiddenWidgets.includes(widgetId);
   }
 
-  /** Project the current kernel state into a frame */
+  // ── Shortcut Mastery — learning-analytics register ────────────────
+
+  private static readonly MASTERY_THRESHOLD = 6;
+
+  /** Record a shortcut use — kernel syscall */
+  recordShortcut(key: string): void {
+    const count = (this.config.shortcutMastery[key] || 0) + 1;
+    this.config.shortcutMastery = { ...this.config.shortcutMastery, [key]: count };
+    this.saveConfig();
+    this.markDirty();
+  }
+
+  /** Get hint opacity for a shortcut (1 = learning, 0 = mastered) */
+  shortcutHintOpacity(key: string): number {
+    const count = this.config.shortcutMastery[key] || 0;
+    if (count >= KernelProjector.MASTERY_THRESHOLD) return 0;
+    if (count >= 4) return 0.15;
+    if (count >= 2) return 0.5;
+    return 1;
+  }
+
+  /** Whether a shortcut is fully mastered */
+  isShortcutMastered(key: string): boolean {
+    return (this.config.shortcutMastery[key] || 0) >= KernelProjector.MASTERY_THRESHOLD;
+  }
+
+
   projectFrame(): ProjectionFrame {
     this.tickCount++;
 
@@ -848,6 +882,7 @@ export class KernelProjector {
           attention: { ...DEFAULT_CONFIG.attention, ...parsed.attention },
           desktopWidgets: { ...DEFAULT_CONFIG.desktopWidgets, ...parsed.desktopWidgets },
           desktop: { ...DEFAULT_CONFIG.desktop, ...parsed.desktop },
+          shortcutMastery: { ...DEFAULT_CONFIG.shortcutMastery, ...parsed.shortcutMastery },
         };
       }
 
@@ -881,8 +916,15 @@ export class KernelProjector {
           this.config.desktopWidgets = { ...this.config.desktopWidgets, ...parsed };
         } catch {}
       }
+      // Shortcut mastery
+      const legacyMastery = localStorage.getItem("hologram:shortcut-mastery");
+      if (legacyMastery) {
+        try {
+          const parsed = JSON.parse(legacyMastery);
+          this.config.shortcutMastery = { ...this.config.shortcutMastery, ...parsed };
+        } catch {}
+      }
 
-      // Always reset transient state on boot (panels closed)
       this.config.activePanel = "none";
       this.config.chatOpen = false;
     } catch { /* use defaults */ }
