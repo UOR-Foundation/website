@@ -30,6 +30,7 @@ import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
 import LegalPanel from "@/modules/hologram-ui/components/LegalPanel";
+import KernelHeartbeat from "@/modules/hologram-os/components/KernelHeartbeat";
 import { HologramViewport, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import ModularSnapGrid from "@/modules/hologram-ui/components/ModularSnapGrid";
 import SnapGuideOverlay from "@/modules/hologram-ui/components/SnapGuideOverlay";
@@ -434,6 +435,7 @@ export default function HologramOsPage() {
       <TerminalProjection open={terminalOpen} onClose={() => setTerminalOpen(false)} onOpenJupyter={() => { setTerminalOpen(false); setTimeout(() => setJupyterOpen(true), 350); }} />
       <JupyterProjection open={jupyterOpen} onClose={() => setJupyterOpen(false)} />
       <SnapGuideOverlay />
+      <KernelHeartbeat />
     </HologramViewport>
   );
 }
