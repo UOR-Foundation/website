@@ -278,3 +278,25 @@ export type {
   AtlasPartition,
   EulerDiscovery,
 } from "./euler-bridge";
+
+// Fano Plane — PG(2,2) quantum gate routing topology
+export {
+  constructFanoTopology,
+  computeInteractions,
+  computeGateRoutes,
+  connectToAtlas as connectFanoToAtlas,
+  runFanoPlaneAnalysis,
+  FANO_AUTOMORPHISM_ORDER,
+  FANO_ORDER,
+  FANO_INCIDENCE,
+} from "./fano-plane";
+export type {
+  FanoPoint,
+  FanoLine,
+  FanoTopology,
+  QubitInteractionPattern,
+  GateRoute,
+  FanoRoutingAnalysis,
+  FanoAtlasConnection,
+  FanoTest,
+} from "./fano-plane";
