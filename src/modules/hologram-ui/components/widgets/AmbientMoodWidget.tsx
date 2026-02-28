@@ -26,7 +26,7 @@ export default function AmbientMoodWidget() {
 
   return (
     <div
-      className="flex flex-col items-center gap-4 select-none hologram-glass-widget px-6 py-5"
+      className="flex flex-col items-center gap-4 select-none px-6 py-5"
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
     >
       {/* Mood orb */}
