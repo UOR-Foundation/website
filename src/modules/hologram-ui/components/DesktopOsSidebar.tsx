@@ -13,6 +13,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, User, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
+  Terminal,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 import DataBankIndicator from "./DataBankIndicator";
@@ -79,6 +80,7 @@ interface DesktopOsSidebarProps {
   onOpenChat: () => void;
   onOpenBrowser?: () => void;
   onOpenCompute?: () => void;
+  onOpenTerminal?: () => void;
   onOpenMemory?: () => void;
   onOpenMessenger?: () => void;
   onGoHome?: () => void;
@@ -92,6 +94,7 @@ export default function DesktopOsSidebar({
   onNewChat,
   onOpenBrowser,
   onOpenCompute,
+  onOpenTerminal,
   onOpenMemory,
   onOpenMessenger,
   onGoHome,
@@ -284,6 +287,22 @@ export default function DesktopOsSidebar({
             {expanded && <span className="text-[14px] font-light whitespace-nowrap">Compute</span>}
           </button>
         </IconTooltip>
+
+        {/* Terminal */}
+        {onOpenTerminal && (
+          <IconTooltip label="Terminal" show={!expanded}>
+            <button
+              onClick={() => collapseAndDo(onOpenTerminal)}
+              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+                !expanded ? "justify-center px-0 py-3" : "px-3.5 py-3"
+              }`}
+              style={{ color: "var(--sb-text)" }}
+            >
+              <Terminal className="w-5 h-5 shrink-0" strokeWidth={1.5} style={{ color: "var(--sb-muted)" }} />
+              {expanded && <span className="text-[14px] font-light whitespace-nowrap">Terminal</span>}
+            </button>
+          </IconTooltip>
+        )}
       </div>
 
       {/* ── Bottom: Settings + Help ───────────────────────────── */}
