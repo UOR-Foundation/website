@@ -133,3 +133,14 @@ export type {
   DeviceEvent,
   StorageBackend,
 } from "./q-driver";
+
+// Q-Security: Capability-based access control
+export { QSecurity, RING_NAMES } from "./q-security";
+export type {
+  IsolationRing,
+  SecurityOp,
+  CapabilityToken,
+  ElevationRequest,
+  SecurityEvent,
+  SecurityStats,
+} from "./q-security";
