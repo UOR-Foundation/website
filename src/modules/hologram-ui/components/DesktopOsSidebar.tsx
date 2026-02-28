@@ -67,8 +67,8 @@ interface NavItem { label: string; icon: React.ElementType; path: string }
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home",     icon: Home,       path: "/hologram-console" },
-  { label: "Apps",     icon: LayoutGrid, path: "/console/apps" },
   { label: "My Space", icon: User,       path: "/your-space" },
+  { label: "Apps",     icon: LayoutGrid, path: "/console/apps" },
 ];
 
 const COLLAPSED_W = 68;
