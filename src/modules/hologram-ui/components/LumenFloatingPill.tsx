@@ -52,9 +52,10 @@ export default function LumenFloatingPill() {
       }}
     >
       <div
-        className="flex items-center gap-2 transition-all duration-500"
+        className="flex items-center transition-all duration-500"
         style={{
-          padding: "8px 16px",
+          gap: "var(--holo-space-2)",
+          padding: "var(--holo-space-2) var(--holo-space-4)",
           borderRadius: "24px",
           background: hovered
             ? "hsla(0, 0%, 8%, 0.85)"
@@ -84,9 +85,9 @@ export default function LumenFloatingPill() {
         <span
           className="tracking-[0.15em] transition-opacity duration-500"
           style={{
-            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontFamily: "var(--font-body, 'DM Sans', system-ui, sans-serif)",
             fontWeight: 400,
-            fontSize: "11px",
+            fontSize: "var(--holo-text-xs)",
             color: hovered
               ? "hsla(38, 15%, 90%, 0.9)"
               : "hsla(38, 15%, 85%, 0.6)",
