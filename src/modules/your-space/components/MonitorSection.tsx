@@ -7,6 +7,7 @@ import { Database, Users, HardDrive, Wifi, Upload, Download, GitBranch } from "l
 import { SpaceCard } from "./SpaceCard";
 import { SortableSection } from "./SortableSection";
 import { ContextGraph } from "./ContextGraph";
+import { TrustGraphVisualization } from "./TrustGraphVisualization";
 
 interface MonitorSectionProps {
   isDark: boolean;
@@ -50,26 +51,21 @@ export const MonitorSection = ({ isDark, votes, onVote }: MonitorSectionProps) =
     ),
     social: (
       <SpaceCard
-        title="Social"
+        title="Trust Graph"
         icon={<Users className="text-foreground" size={16} />}
         isDark={isDark}
-        status="coming-soon"
         moduleSlug="trust"
-        votes={votes["trust"] || 0}
-        onVote={() => onVote("trust")}
+        expandedContent={
+          <div className="space-y-3">
+            <h4 className="text-foreground font-body text-sm font-semibold">Fano-Plane Trust Topology</h4>
+            <p className="text-muted-foreground text-sm font-body leading-relaxed">
+              Your trust score is computed from three dimensions: individual coherence (Φ), social attestations (PageRank), and temporal depth (τ). 
+              The Fano plane maps these 7 trust dimensions onto 7 collinear attestation channels — a topology where every pair of dimensions shares exactly one verification path.
+            </p>
+          </div>
+        }
       >
-        <div className="space-y-4">
-          {[
-            { label: "Connections", value: "—" },
-            { label: "Trust Score", value: "—" },
-            { label: "Engagement", value: "—" },
-          ].map((s) => (
-            <div key={s.label} className="flex items-center justify-between">
-              <span className="text-muted-foreground font-body text-sm">{s.label}</span>
-              <span className="text-foreground font-body text-sm font-medium">{s.value}</span>
-            </div>
-          ))}
-        </div>
+        <TrustGraphVisualization isDark={isDark} />
       </SpaceCard>
     ),
     resources: (
