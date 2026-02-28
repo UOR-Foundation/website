@@ -1970,7 +1970,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                           color: "hsl(30, 15%, 65%)",
                           fontStyle: "italic",
                           fontFamily: P.fontDisplay,
-                          fontSize: "15px",
+                          fontSize: "var(--holo-text-sm)",
                           lineHeight: "1.8",
                         }}
                       >
@@ -1990,7 +1990,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                             borderRadius: "10px",
                             padding: "14px 18px",
                             overflowX: "auto",
-                            fontSize: "13px",
+                            fontSize: "var(--holo-text-sm)",
                             lineHeight: "1.6",
                             margin: "12px 0",
                           }}

@@ -647,10 +647,46 @@
   border-radius: calc(12px * var(--still-radius-scale, 1));
 }
 
-/* Proportional text size transition for smooth user-scale switching */
+/* ── User Text Scale — Elegant proportional text scaling ────────────────
+ * Scales ALL text (Tailwind classes, inline px values, tokens) without
+ * affecting layout dimensions (padding, margin, width, height).
+ *
+ * Strategy: Override Tailwind text utility classes with scaled values,
+ * and apply a font-size multiplier on the hologram viewport so all
+ * hardcoded px font-sizes in children inherit proportional scaling.
+ */
+
+/* Smooth text size transitions — only font-size, never layout properties */
 [data-text-size] * {
-  transition: font-size 200ms ease, padding 200ms ease, gap 200ms ease;
+  transition: font-size 200ms ease;
 }
+
+/* Scale Tailwind text classes with user preference */
+[data-text-size="compact"] .text-xs   { font-size: calc(0.75rem  * 0.9) !important; }
+[data-text-size="compact"] .text-sm   { font-size: calc(0.875rem * 0.9) !important; }
+[data-text-size="compact"] .text-base { font-size: calc(1rem     * 0.9) !important; }
+[data-text-size="compact"] .text-lg   { font-size: calc(1.125rem * 0.9) !important; }
+[data-text-size="compact"] .text-xl   { font-size: calc(1.25rem  * 0.9) !important; }
+[data-text-size="compact"] .text-2xl  { font-size: calc(1.5rem   * 0.9) !important; }
+[data-text-size="compact"] .text-3xl  { font-size: calc(1.875rem * 0.9) !important; }
+[data-text-size="compact"] .text-4xl  { font-size: calc(2.25rem  * 0.9) !important; }
+
+[data-text-size="large"] .text-xs   { font-size: calc(0.75rem  * 1.15) !important; }
+[data-text-size="large"] .text-sm   { font-size: calc(0.875rem * 1.15) !important; }
+[data-text-size="large"] .text-base { font-size: calc(1rem     * 1.15) !important; }
+[data-text-size="large"] .text-lg   { font-size: calc(1.125rem * 1.15) !important; }
+[data-text-size="large"] .text-xl   { font-size: calc(1.25rem  * 1.15) !important; }
+[data-text-size="large"] .text-2xl  { font-size: calc(1.5rem   * 1.15) !important; }
+[data-text-size="large"] .text-3xl  { font-size: calc(1.875rem * 1.15) !important; }
+[data-text-size="large"] .text-4xl  { font-size: calc(2.25rem  * 1.15) !important; }
+
+/*
+ * Scale hardcoded inline px font-sizes in hologram panels.
+ * Uses CSS `zoom` on text-containing elements within the projection panels.
+ * The sidebar is excluded (it uses its own fixed sizing).
+ */
+[data-text-size="compact"] .hologram-text-scale { font-size: 90%; }
+[data-text-size="large"]   .hologram-text-scale { font-size: 115%; }
 
 /* ── Modular panel resize handle ─────────────────────────────────────── */
 .hologram-resize-handle {
