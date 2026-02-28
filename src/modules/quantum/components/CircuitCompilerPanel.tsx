@@ -20,6 +20,7 @@ const ALGORITHMS = [
   { key: "grover", label: "Grover Search", qubits: 3 },
   { key: "deutsch-jozsa", label: "Deutsch-Jozsa", qubits: 3 },
   { key: "vqe", label: "VQE Ansatz", qubits: 4 },
+  { key: "custom-rotation", label: "Custom Rotation", qubits: 2 },
 ];
 
 export default function CircuitCompilerPanel() {
@@ -29,11 +30,13 @@ export default function CircuitCompilerPanel() {
   const [verifications, setVerifications] = useState<CompilerVerification[]>([]);
   const [loading, setLoading] = useState(true);
   const [showQasm, setShowQasm] = useState(false);
+  const [theta, setTheta] = useState(Math.PI / 4);
+  const [rotAxis, setRotAxis] = useState<"Rx" | "Ry" | "Rz">("Ry");
+  const [rotQubit, setRotQubit] = useState(0);
 
   useEffect(() => {
     const v = verifyCircuitCompiler();
     setVerifications(v);
-    // Compile default
     const spec = ALGORITHM_LIBRARY[selected](qubits);
     setResult(compileCircuit(spec));
     setLoading(false);
@@ -42,12 +45,36 @@ export default function CircuitCompilerPanel() {
   const handleCompile = (key: string, n: number) => {
     setSelected(key);
     setQubits(n);
+    if (key === "custom-rotation") {
+      compileCustomRotation();
+      return;
+    }
     const factory = ALGORITHM_LIBRARY[key];
     if (factory) {
       const spec = factory(n);
       setResult(compileCircuit(spec));
     }
   };
+
+  const compileCustomRotation = () => {
+    const spec = {
+      name: `${rotAxis}(${(theta * 180 / Math.PI).toFixed(1)}°)`,
+      qubits: 2,
+      description: `Custom ${rotAxis} rotation by θ=${theta.toFixed(4)} rad`,
+      gates: [
+        { name: "H" as const, qubits: [0], tier: 1 as const },
+        { name: `${rotAxis}(θ)`, qubits: [rotQubit], params: [theta], tier: 3 as const },
+        { name: "CNOT" as const, qubits: [0, 1], tier: 1 as const },
+        { name: `${rotAxis}(θ)`, qubits: [1 - rotQubit], params: [theta / 2], tier: 3 as const },
+      ],
+    };
+    setResult(compileCircuit(spec));
+  };
+
+  // Re-compile when rotation params change while custom-rotation is selected
+  useEffect(() => {
+    if (selected === "custom-rotation") compileCustomRotation();
+  }, [theta, rotAxis, rotQubit]);
 
   const passed = verifications.filter(v => v.passed).length;
 
@@ -102,6 +129,99 @@ export default function CircuitCompilerPanel() {
           </button>
         ))}
       </div>
+
+      {/* Rotation controls — visible when custom-rotation is selected */}
+      {selected === "custom-rotation" && (
+        <div className="bg-[hsla(280,20%,12%,0.4)] border border-[hsla(280,30%,35%,0.4)] rounded-lg p-4 space-y-3">
+          <div className="text-[11px] font-mono text-[hsl(280,50%,65%)] uppercase">
+            Arbitrary Rotation Gate Controls
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {/* Axis selector */}
+            <div className="space-y-1.5">
+              <div className="text-[9px] font-mono text-[hsl(210,10%,45%)] uppercase">Rotation Axis</div>
+              <div className="flex gap-1.5">
+                {(["Rx", "Ry", "Rz"] as const).map(axis => (
+                  <button
+                    key={axis}
+                    onClick={() => setRotAxis(axis)}
+                    className={`text-[10px] font-mono px-3 py-1.5 rounded border transition-colors ${
+                      rotAxis === axis
+                        ? "bg-[hsla(280,40%,25%,0.4)] border-[hsla(280,40%,45%,0.5)] text-[hsl(280,60%,70%)]"
+                        : "bg-[hsla(210,10%,12%,0.5)] border-[hsla(210,10%,25%,0.3)] text-[hsl(210,10%,50%)] hover:text-[hsl(210,10%,70%)]"
+                    }`}
+                  >
+                    {axis}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Angle slider */}
+            <div className="space-y-1.5">
+              <div className="text-[9px] font-mono text-[hsl(210,10%,45%)] uppercase">
+                θ = {(theta * 180 / Math.PI).toFixed(1)}° ({theta.toFixed(4)} rad)
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={Math.PI * 2}
+                step={0.01}
+                value={theta}
+                onChange={e => setTheta(parseFloat(e.target.value))}
+                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, hsl(280,50%,40%) ${(theta / (2 * Math.PI)) * 100}%, hsl(210,10%,20%) ${(theta / (2 * Math.PI)) * 100}%)`,
+                }}
+              />
+              <div className="flex justify-between text-[8px] font-mono text-[hsl(210,10%,35%)]">
+                <span>0</span>
+                <span>π/2</span>
+                <span>π</span>
+                <span>3π/2</span>
+                <span>2π</span>
+              </div>
+            </div>
+
+            {/* Target qubit */}
+            <div className="space-y-1.5">
+              <div className="text-[9px] font-mono text-[hsl(210,10%,45%)] uppercase">Target Qubit</div>
+              <div className="flex gap-1.5">
+                {[0, 1].map(q => (
+                  <button
+                    key={q}
+                    onClick={() => setRotQubit(q)}
+                    className={`text-[10px] font-mono px-3 py-1.5 rounded border transition-colors ${
+                      rotQubit === q
+                        ? "bg-[hsla(200,40%,25%,0.4)] border-[hsla(200,40%,45%,0.5)] text-[hsl(200,60%,70%)]"
+                        : "bg-[hsla(210,10%,12%,0.5)] border-[hsla(210,10%,25%,0.3)] text-[hsl(210,10%,50%)] hover:text-[hsl(210,10%,70%)]"
+                    }`}
+                  >
+                    q{q}
+                  </button>
+                ))}
+              </div>
+              {/* Quick presets */}
+              <div className="flex gap-1 mt-1">
+                {[
+                  { label: "π/8", val: Math.PI / 8 },
+                  { label: "π/4", val: Math.PI / 4 },
+                  { label: "π/2", val: Math.PI / 2 },
+                  { label: "π", val: Math.PI },
+                ].map(p => (
+                  <button
+                    key={p.label}
+                    onClick={() => setTheta(p.val)}
+                    className="text-[8px] font-mono px-2 py-0.5 rounded bg-[hsla(210,10%,15%,0.5)] border border-[hsla(210,10%,25%,0.3)] text-[hsl(210,10%,50%)] hover:text-[hsl(210,10%,70%)] transition-colors"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {result && (
         <>
