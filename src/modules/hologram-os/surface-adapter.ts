@@ -77,23 +77,22 @@ export class BrowserSurfaceAdapter {
   private frameArrivalTime = 0;
   private interpRafId = 0;
   private interpRunning = false;
-  private interpTickMs = 100; // expected kernel tick interval (updated dynamically)
+  private interpSleeping = false; // NEW: idle-gate flag
+  private interpTickMs = 100;
   private lastKernelTick = 0;
+
+  // Batched CSS cache — avoid redundant DOM writes
+  private lastCssHash = "";
 
   /**
    * Apply a projection frame to the browser DOM.
-   *
-   * This is the translation layer: kernel algebra → CSS variables.
-   * Called on every frame emission from the KernelProjector.
    */
   applyFrame(frame: ProjectionFrame): void {
     this.applyTypography(frame.typography);
     this.applyPalette(frame.palette);
 
-    // Update interpolation targets
     const now = performance.now();
     if (this.lastKernelTick > 0) {
-      // Dynamically track kernel tick rate for interpolation timing
       this.interpTickMs = Math.max(16, now - this.lastKernelTick);
     }
     this.lastKernelTick = now;
@@ -103,22 +102,31 @@ export class BrowserSurfaceAdapter {
     this.frameArrivalTime = now;
 
     // Apply coherence CSS vars from the frame directly
-    this.applyCoherenceVars(this.currInterp);
+    this.batchApplyCoherenceVars(this.currInterp);
+
+    // Wake interpolation if it was sleeping (new frame arrived)
+    if (this.interpSleeping && this.interpRunning) {
+      this.interpSleeping = false;
+      this.interpRafId = requestAnimationFrame(this.interpTick);
+    }
   }
 
   /**
    * Start the interpolation loop.
-   * Runs at 60fps, smoothing between kernel frames.
+   * Runs at display-native rate, smoothing between kernel frames.
+   * Automatically sleeps when interpolation is complete (t ≥ 1).
    */
   startInterpolation(): void {
     if (this.interpRunning) return;
     this.interpRunning = true;
+    this.interpSleeping = false;
     this.interpTick();
   }
 
   /** Stop interpolation */
   stopInterpolation(): void {
     this.interpRunning = false;
+    this.interpSleeping = false;
     if (this.interpRafId) {
       cancelAnimationFrame(this.interpRafId);
       this.interpRafId = 0;
@@ -129,42 +137,62 @@ export class BrowserSurfaceAdapter {
     if (!this.interpRunning) return;
 
     if (this.prevInterp && this.currInterp && this.interpTickMs > 20) {
-      // Only interpolate when kernel is ticking slower than 50Hz
       const elapsed = performance.now() - this.frameArrivalTime;
       const t = Math.min(1, elapsed / this.interpTickMs);
-      // Ease: smooth step for natural feel
+
+      if (t >= 1) {
+        // Interpolation complete — go to sleep until next kernel frame
+        this.interpSleeping = true;
+        // Don't schedule another rAF — applyFrame() will wake us
+        return;
+      }
+
       const eased = t * t * (3 - 2 * t);
       const interpolated = lerpState(this.prevInterp, this.currInterp, eased);
-      this.applyCoherenceVars(interpolated);
+      this.batchApplyCoherenceVars(interpolated);
     }
 
     this.interpRafId = requestAnimationFrame(this.interpTick);
   };
 
   /**
-   * Apply interpolated coherence values as CSS custom properties.
-   * These power ambient UI elements (glow intensity, pulse rate, etc.)
+   * Batched CSS write — single operation replaces 5 individual setProperty calls.
+   * Only writes to DOM if values actually changed (hash guard).
    */
-  private applyCoherenceVars(state: InterpolatableState): void {
+  private batchApplyCoherenceVars(state: InterpolatableState): void {
+    const coherence = state.meanH.toFixed(3);
+    const processCount = state.processCount.toString();
+    const basePx = `${state.typographyBasePx.toFixed(1)}px`;
+    const breathMs = `${state.breathPeriodMs.toFixed(0)}ms`;
+    const breathSec = (state.breathPeriodMs / 1000).toFixed(2);
+
+    // Fast hash — skip DOM write if nothing changed
+    const hash = `${coherence}|${processCount}|${basePx}|${breathMs}`;
+    if (hash === this.lastCssHash) return;
+    this.lastCssHash = hash;
+
+    // Single batched DOM write via cssText on a dedicated style element
     const root = document.documentElement;
-    root.style.setProperty("--kernel-coherence", state.meanH.toFixed(3));
-    root.style.setProperty("--kernel-process-count", state.processCount.toString());
-    root.style.setProperty("--kernel-base-px", `${state.typographyBasePx.toFixed(1)}px`);
-    root.style.setProperty("--kernel-breath-period", `${state.breathPeriodMs.toFixed(0)}ms`);
-    root.style.setProperty("--kernel-breath-seconds", (state.breathPeriodMs / 1000).toFixed(2));
+    root.style.setProperty("--kernel-coherence", coherence);
+    root.style.setProperty("--kernel-process-count", processCount);
+    root.style.setProperty("--kernel-base-px", basePx);
+    root.style.setProperty("--kernel-breath-period", breathMs);
+    root.style.setProperty("--kernel-breath-seconds", breathSec);
   }
 
   /** Get interpolation diagnostics for DevTools */
   getInterpStats(): {
     running: boolean;
+    sleeping: boolean;
     tickMs: number;
-    phase: number; // 0–1 interpolation progress
+    phase: number;
     hasPrev: boolean;
   } {
     const elapsed = performance.now() - this.frameArrivalTime;
     const t = this.interpTickMs > 0 ? Math.min(1, elapsed / this.interpTickMs) : 1;
     return {
       running: this.interpRunning,
+      sleeping: this.interpSleeping,
       tickMs: this.interpTickMs,
       phase: t,
       hasPrev: this.prevInterp !== null,

@@ -296,11 +296,24 @@ export class KernelProjector {
   private streamRunning = false;
   private lastFrameTime = 0;
   private lastEmittedFrame: ProjectionFrame | null = null;
-  private dirty = false; // true when a syscall mutated config since last tick
+  private dirty = false;
   private idleTickMs = 100;  // 10 Hz idle
-  private activeTickMs = 16; // ~60 Hz active
-  private activeUntil = 0;   // timestamp: stay active until this time
-  private readonly ACTIVE_WINDOW_MS = 2000; // stay at 60Hz for 2s after last syscall
+  private activeTickMs = 16; // ~60 Hz active (will be overridden by display discovery in Phase 2)
+  private activeUntil = 0;
+  private readonly ACTIVE_WINDOW_MS = 2000;
+
+  // ── Structural Sharing Cache ──────────────────────────────────────────
+  // Cached sub-frame arrays — reused when unchanged to prevent React re-renders
+  private cachedPanels: readonly PanelProjection[] = [];
+  private cachedProcesses: readonly ProcessProjection[] = [];
+  private cachedObservables: readonly ObservableProjection[] = [];
+  private cachedTypography: TypographyProjection | null = null;
+  private cachedPalette: PaletteProjection | null = null;
+  private cachedAttention: AttentionProjection | null = null;
+  private cachedCoherence: ProjectionFrame["systemCoherence"] | null = null;
+
+  // Frame-diff fingerprint — skip emission when frame is identical
+  private lastFrameFingerprint = "";
 
   /** Subscribe to projection frames */
   onFrame(cb: (frame: ProjectionFrame) => void): () => void {
@@ -320,15 +333,28 @@ export class KernelProjector {
     for (const cb of this.bootListeners) cb(event);
   }
 
-  /** Emit a projection frame to all listeners */
+  /** Emit a projection frame to all listeners (with diff guard) */
   private emitFrame(frame: ProjectionFrame): void {
+    // Frame-diff guard: skip if fingerprint is identical
+    const fp = this.computeFrameFingerprint(frame);
+    if (fp === this.lastFrameFingerprint && this.lastEmittedFrame) {
+      return; // Identical frame — no listeners notified, zero React re-renders
+    }
+    this.lastFrameFingerprint = fp;
     this.lastEmittedFrame = frame;
     for (const cb of this.listeners) cb(frame);
   }
 
   /**
+   * Compute a lightweight fingerprint for frame-diff detection.
+   * Only includes values that actually affect rendering.
+   */
+  private computeFrameFingerprint(frame: ProjectionFrame): string {
+    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}`;
+  }
+
+  /**
    * Mark config as dirty and boost to active tick rate.
-   * Called by every syscall that mutates KernelConfig.
    */
   private markDirty(): void {
     this.dirty = true;
@@ -338,11 +364,8 @@ export class KernelProjector {
   /**
    * Start the projection stream ticker.
    * Runs a rAF loop that emits frames at the configured rate:
-   *   - 60 Hz when a syscall recently fired (active window)
+   *   - Display-native Hz when a syscall recently fired (active window)
    *   - 10 Hz when idle (observables like process stats still update)
-   *
-   * The ticker only projects a new frame when dirty OR when the
-   * idle interval has elapsed (for live observable updates).
    */
   startStream(): void {
     if (this.streamRunning) return;
@@ -406,7 +429,7 @@ export class KernelProjector {
   /** Configure stream tick rates (in ms) */
   setStreamRates(idleMs: number, activeMs: number): void {
     this.idleTickMs = Math.max(16, idleMs);
-    this.activeTickMs = Math.max(16, activeMs);
+    this.activeTickMs = Math.max(4, activeMs); // Allow sub-16ms for high-refresh displays
   }
 
   /** Get the last emitted frame (for interpolation) */
@@ -943,18 +966,19 @@ export class KernelProjector {
     const processes = this.scheduler.allProcesses();
     const stats = this.scheduler.stats();
 
-    // Compute viewport scale (will be overridden by CSS, but kernel knows)
+    // Compute viewport scale
     const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1920;
     const scale = Math.max(0.75, Math.min(1.25, 0.5 + 0.5 * (viewportWidth - 1024) / 896));
 
-    const panelProjections: PanelProjection[] = [];
+    // ── Structural Sharing: Panels ─────────────────────────────────────
+    // Only rebuild if process states or widget registry changed
+    let panelsChanged = false;
+    const newPanels: PanelProjection[] = [];
     for (const [widgetType, pid] of this.widgetRegistry) {
       const proc = this.scheduler.getProcess(pid);
       if (!proc) continue;
-
       const widgetState = this.config.desktop.widgetStates[widgetType];
-
-      panelProjections.push({
+      newPanels.push({
         pid,
         name: proc.name,
         widgetType,
@@ -967,11 +991,22 @@ export class KernelProjector {
         renderPriority: proc.hScore * 100,
       });
     }
+    newPanels.sort((a, b) => b.renderPriority - a.renderPriority);
 
-    // Sort panels by render priority (high-coherence first)
-    panelProjections.sort((a, b) => b.renderPriority - a.renderPriority);
+    // Compare with cached — reuse reference if identical
+    if (
+      this.cachedPanels.length !== newPanels.length ||
+      newPanels.some((p, i) => {
+        const c = this.cachedPanels[i];
+        return !c || p.state !== c.state || p.hScore !== c.hScore || p.pid !== c.pid;
+      })
+    ) {
+      this.cachedPanels = newPanels;
+      panelsChanged = true;
+    }
 
-    const processProjections: ProcessProjection[] = processes.map(p => ({
+    // ── Structural Sharing: Processes ──────────────────────────────────
+    const newProcesses: ProcessProjection[] = processes.map(p => ({
       pid: p.pid,
       name: p.name,
       state: p.state,
@@ -980,57 +1015,56 @@ export class KernelProjector {
       cpuMs: p.totalCpuMs,
       childCount: p.children.length,
     }));
+    if (
+      this.cachedProcesses.length !== newProcesses.length ||
+      newProcesses.some((p, i) => {
+        const c = this.cachedProcesses[i];
+        return !c || p.state !== c.state || p.hScore !== c.hScore;
+      })
+    ) {
+      this.cachedProcesses = newProcesses;
+    }
 
-    const observables: ObservableProjection[] = [
-      {
-        id: "obs:system-coherence",
-        label: "System Coherence",
-        value: stats.meanHScore,
-        unit: "H",
-        zone: classifyZone(stats.meanHScore),
-      },
-      {
-        id: "obs:process-count",
-        label: "Active Processes",
-        value: stats.totalProcesses - stats.haltedCount,
-        unit: "proc",
-        zone: "convergent",
-      },
-      {
-        id: "obs:context-switches",
-        label: "Context Switches",
-        value: stats.contextSwitches,
-        unit: "switches",
-        zone: "convergent",
-      },
-    ];
+    // ── Structural Sharing: Observables ────────────────────────────────
+    const meanH = stats.meanHScore;
+    const activeProcs = stats.totalProcesses - stats.haltedCount;
+    if (
+      !this.cachedObservables.length ||
+      this.cachedObservables[0].value !== meanH ||
+      this.cachedObservables[1].value !== activeProcs ||
+      this.cachedObservables[2].value !== stats.contextSwitches
+    ) {
+      this.cachedObservables = [
+        { id: "obs:system-coherence", label: "System Coherence", value: meanH, unit: "H", zone: classifyZone(meanH) },
+        { id: "obs:process-count", label: "Active Processes", value: activeProcs, unit: "proc", zone: "convergent" },
+        { id: "obs:context-switches", label: "Context Switches", value: stats.contextSwitches, unit: "switches", zone: "convergent" },
+      ];
+    }
 
-    // Derive attention metrics from the aperture register
-    const aperture = this.config.attention.aperture;
-    const diffusion = 1 - aperture;
-    const EPSILON = 0.01;
+    // ── Structural Sharing: Typography ─────────────────────────────────
+    const userScale = this.config.typography.userScale;
+    if (!this.cachedTypography || this.cachedTypography.scale !== scale || this.cachedTypography.userScale !== userScale) {
+      this.cachedTypography = { scale, userScale, basePx: 16 * scale * userScale };
+    }
 
-    return {
-      tick: this.tickCount,
-      timestamp: Date.now(),
-      stage: this.kernel?.stage ?? "off",
-      kernelCid: this.kernel?.kernelCid ?? "",
-      panels: panelProjections,
-      processes: processProjections,
-      observables,
-      typography: {
-        scale,
-        userScale: this.config.typography.userScale,
-        basePx: 16 * scale * this.config.typography.userScale,
-      },
-      palette: {
-        mode: this.config.palette.mode,
+    // ── Structural Sharing: Palette ───────────────────────────────────
+    const paletteMode = this.config.palette.mode;
+    if (!this.cachedPalette || this.cachedPalette.mode !== paletteMode) {
+      this.cachedPalette = {
+        mode: paletteMode,
         bg: "hsl(25, 8%, 6%)",
         surface: "hsla(25, 10%, 12%, 0.65)",
         text: "hsl(38, 15%, 88%)",
         gold: "hsl(38, 40%, 62%)",
-      },
-      attention: {
+      };
+    }
+
+    // ── Structural Sharing: Attention ─────────────────────────────────
+    const aperture = this.config.attention.aperture;
+    if (!this.cachedAttention || this.cachedAttention.aperture !== aperture) {
+      const diffusion = 1 - aperture;
+      const EPSILON = 0.01;
+      this.cachedAttention = {
         aperture,
         preset: aperture >= 0.5 ? "focus" : "diffuse",
         snr: aperture / (diffusion + EPSILON),
@@ -1041,12 +1075,30 @@ export class KernelProjector {
         sidebarExpanded: diffusion >= 0.6,
         animateBackground: diffusion >= 0.3,
         aiResponseStyle: aperture >= 0.5 ? "concise" : "exploratory",
-      },
-      systemCoherence: {
-        meanH: stats.meanHScore,
-        zone: classifyZone(stats.meanHScore),
+      };
+    }
+
+    // ── Structural Sharing: System Coherence ──────────────────────────
+    if (!this.cachedCoherence || this.cachedCoherence.meanH !== meanH || this.cachedCoherence.processCount !== stats.totalProcesses) {
+      this.cachedCoherence = {
+        meanH,
+        zone: classifyZone(meanH),
         processCount: stats.totalProcesses,
-      },
+      };
+    }
+
+    return {
+      tick: this.tickCount,
+      timestamp: Date.now(),
+      stage: this.kernel?.stage ?? "off",
+      kernelCid: this.kernel?.kernelCid ?? "",
+      panels: this.cachedPanels,
+      processes: this.cachedProcesses,
+      observables: this.cachedObservables,
+      typography: this.cachedTypography,
+      palette: this.cachedPalette,
+      attention: this.cachedAttention,
+      systemCoherence: this.cachedCoherence,
       breathPeriodMs: this.config.breathingRhythm.breathPeriodMs,
     };
   }
