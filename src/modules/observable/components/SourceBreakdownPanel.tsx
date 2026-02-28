@@ -18,10 +18,11 @@ interface SourceStats {
 type SourceMap = Record<SystemEventSource, SourceStats>;
 
 const SOURCES: { id: SystemEventSource; label: string; icon: string; color: string; barColor: string }[] = [
-  { id: "ring",        label: "Ring Core",  icon: "💎", color: "text-sky-400",     barColor: "bg-sky-400" },
-  { id: "identity",    label: "Identity",   icon: "🔑", color: "text-violet-400",  barColor: "bg-violet-400" },
-  { id: "hologram",    label: "Hologram",   icon: "🌐", color: "text-emerald-400", barColor: "bg-emerald-400" },
-  { id: "certificate", label: "Certificate",icon: "📜", color: "text-amber-400",   barColor: "bg-amber-400" },
+  { id: "ring",        label: "Ring Core",    icon: "💎", color: "text-sky-400",     barColor: "bg-sky-400" },
+  { id: "identity",    label: "Identity",     icon: "🔑", color: "text-violet-400",  barColor: "bg-violet-400" },
+  { id: "hologram",    label: "Hologram",     icon: "🌐", color: "text-emerald-400", barColor: "bg-emerald-400" },
+  { id: "certificate", label: "Certificate",  icon: "📜", color: "text-amber-400",   barColor: "bg-amber-400" },
+  { id: "sovereignty", label: "Sovereignty",  icon: "🛡️", color: "text-rose-400",    barColor: "bg-rose-400" },
 ];
 
 const HISTORY_LEN = 30; // 30 buckets
@@ -31,9 +32,9 @@ const empty = (): SourceStats => ({ count: 0, bytesTotal: 0, lastOp: "—", hist
 
 export function SourceBreakdownPanel() {
   const [stats, setStats] = useState<SourceMap>({
-    ring: empty(), identity: empty(), hologram: empty(), certificate: empty(),
+    ring: empty(), identity: empty(), hologram: empty(), certificate: empty(), sovereignty: empty(),
   });
-  const accRef = useRef<Record<SystemEventSource, number>>({ ring: 0, identity: 0, hologram: 0, certificate: 0 });
+  const accRef = useRef<Record<SystemEventSource, number>>({ ring: 0, identity: 0, hologram: 0, certificate: 0, sovereignty: 0 });
   const statsRef = useRef(stats);
   statsRef.current = stats;
 

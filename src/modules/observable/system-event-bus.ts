@@ -22,7 +22,7 @@
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-export type SystemEventSource = "ring" | "identity" | "hologram" | "certificate";
+export type SystemEventSource = "ring" | "identity" | "hologram" | "certificate" | "sovereignty";
 
 export interface SystemEvent {
   /** Which subsystem produced this event. */
