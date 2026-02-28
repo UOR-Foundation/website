@@ -31,6 +31,11 @@ interface Stats {
   interpHasPrev: boolean;
   // Derived
   measuredFps: number;
+  // Breathing rhythm
+  breathPeriodMs: number;
+  breathEventCount: number;
+  breathIntervalCount: number;
+  breathDwellMs: number;
 }
 
 function StatRow({ label, value, color }: { label: string; value: string | number; color?: string }) {
@@ -100,6 +105,8 @@ export default function KernelDevTools() {
           ? fpsAccumRef.current.reduce((a, b) => a + b, 0) / fpsAccumRef.current.length
           : 0;
 
+      const br = projector.getBreathingRhythm();
+
       setStats({
         ...ps,
         interpRunning: is.running,
@@ -107,6 +114,10 @@ export default function KernelDevTools() {
         interpPhase: is.phase,
         interpHasPrev: is.hasPrev,
         measuredFps,
+        breathPeriodMs: br.breathPeriodMs,
+        breathEventCount: br.eventCount,
+        breathIntervalCount: br.intervals.length,
+        breathDwellMs: br.dwellMs,
       });
     };
 
@@ -213,6 +224,40 @@ export default function KernelDevTools() {
             value={stats.interpHasPrev ? "lerp" : "snap"}
             color={stats.interpHasPrev ? KP.green : KP.gold}
           />
+        </div>
+
+        {/* Breathing Rhythm */}
+        <div
+          className="space-y-0.5 pt-1.5"
+          style={{ borderTop: `1px solid ${KP.cardBorder}` }}
+        >
+          <span className="text-[8px] uppercase tracking-wider" style={{ color: KP.dim }}>
+            Breathing Rhythm
+          </span>
+          <StatRow
+            label="period"
+            value={`${(stats.breathPeriodMs / 1000).toFixed(1)}s`}
+            color={KP.purple}
+          />
+          <div className="flex items-center gap-2">
+            <span className="text-[10px]" style={{ color: KP.dim, fontFamily: "monospace", minWidth: 32 }}>
+              pace
+            </span>
+            <Bar
+              value={stats.breathPeriodMs}
+              max={8000}
+              color={`hsl(${280 - (stats.breathPeriodMs / 8000) * 120}, 40%, 55%)`}
+            />
+          </div>
+          <StatRow label="events" value={stats.breathEventCount.toLocaleString()} />
+          <StatRow label="samples" value={`${stats.breathIntervalCount}/20`} />
+          {stats.breathDwellMs > 0 && (
+            <StatRow
+              label="dwell"
+              value={`${(stats.breathDwellMs / 1000).toFixed(1)}s`}
+              color={stats.breathDwellMs > 5000 ? KP.gold : KP.muted}
+            />
+          )}
         </div>
 
         {/* Poll FPS */}

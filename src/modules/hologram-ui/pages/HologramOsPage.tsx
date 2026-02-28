@@ -35,6 +35,7 @@ import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSh
 import LegalPanel from "@/modules/hologram-ui/components/LegalPanel";
 import KernelHeartbeat from "@/modules/hologram-os/components/KernelHeartbeat";
 import KernelDevTools from "@/modules/hologram-os/components/KernelDevTools";
+import BreathingRhythmListener from "@/modules/hologram-os/components/BreathingRhythmListener";
 import { HologramViewport, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import ModularSnapGrid from "@/modules/hologram-ui/components/ModularSnapGrid";
 import SnapGuideOverlay from "@/modules/hologram-ui/components/SnapGuideOverlay";
@@ -438,6 +439,7 @@ export default function HologramOsPage() {
       <SnapGuideOverlay />
       <KernelHeartbeat />
       <KernelDevTools />
+      <BreathingRhythmListener />
     </HologramViewport>
   );
 }
