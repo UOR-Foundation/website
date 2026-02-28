@@ -142,6 +142,7 @@ const CeremonyPage = lazy(() => import("@/modules/qkernel/pages/CeremonyPage"));
 const ReferralLeaderboardPage = lazy(() => import("@/pages/ReferralLeaderboardPage"));
 const GenesisBootPage = lazy(() => import("@/pages/GenesisBootPage"));
 const ArtifactInspectorPage = lazy(() => import("@/pages/ArtifactInspectorPage"));
+const KernelGraphPage = lazy(() => import("@/pages/KernelGraphPage"));
 
 const queryClient = new QueryClient();
 
@@ -286,6 +287,7 @@ const App = () => {
             <Route path="/leaderboard" element={<ReferralLeaderboardPage />} />
             <Route path="/genesis" element={<GenesisBootPage />} />
             <Route path="/artifact" element={<ArtifactInspectorPage />} />
+            <Route path="/kernel-graph" element={<KernelGraphPage />} />
             <Route path="/code-nexus" element={<CodeNexusPage />} />
             <Route path="/atlas" element={<AtlasVisualizationPage />} />
             <Route path="/quantum" element={<QuantumDashboardPage />} />
