@@ -21,11 +21,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Orbit } from "lucide-react";
 import type { HarmonicLensFrame } from "@/modules/audio/lenses/harmonic-lens";
 
+import { KP } from "@/modules/hologram-os/kernel-palette";
+
 const VP = {
-  border: "hsla(38, 15%, 30%, 0.2)",
-  text: "hsl(38, 20%, 85%)",
-  textDim: "hsl(30, 10%, 50%)",
-  font: "'DM Sans', sans-serif",
+  border: KP.borderLight,
+  text: KP.text,
+  textDim: KP.dim,
+  font: KP.font,
 } as const;
 
 const SIZE = 160;

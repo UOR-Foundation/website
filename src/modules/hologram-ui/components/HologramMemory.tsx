@@ -18,22 +18,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { compressTriples, decompressTriples, type CompressionStats } from "@/modules/data-bank/lib/graph-compression";
 import { extractSemanticTriples, triplesToSemanticContext } from "@/modules/hologram-ui/lib/semantic-triple-extractor";
 
-// ── Palette (matches Compute panel) ─────────────────────────────────────────
+import { KP } from "@/modules/hologram-os/kernel-palette";
 
-const P = {
-  bg: "hsl(25, 8%, 8%)",
-  border: "hsla(38, 12%, 70%, 0.1)",
-  font: "'DM Sans', system-ui, sans-serif",
-  serif: "'Playfair Display', serif",
-  card: "hsla(25, 8%, 12%, 0.6)",
-  cardBorder: "hsla(38, 12%, 70%, 0.08)",
-  text: "hsl(38, 10%, 88%)",
-  muted: "hsl(38, 8%, 55%)",
-  gold: "hsl(38, 40%, 65%)",
-  green: "hsl(152, 44%, 50%)",
-  dim: "hsl(38, 8%, 35%)",
-  red: "hsl(0, 55%, 55%)",
-};
+// ── Palette (kernel-derived) ────────────────────────────────────────────────
+
+const P = KP;
 
 type Mode = "overview" | "pro";
 type View = "dashboard" | "demo";
@@ -197,8 +186,7 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
           Your memory, encrypted
         </h2>
         <p className="text-base lg:text-lg leading-relaxed max-w-xl" style={{ color: P.muted, lineHeight: 1.8 }}>
-          Everything you interact with is compressed, encrypted, and stored on your terms.
-          Only you hold the keys. Your AI remembers — privately.
+          Compressed, encrypted, and stored on your terms. Only you hold the keys.
         </p>
       </section>
 
@@ -250,28 +238,28 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
               label="Hot Memory"
               value={`${stats.tierBreakdown.hot} items`}
               on
-              detail="Instant access — recent conversations, active context"
+              detail="Recent conversations, active context"
             />
             <ResourceRow
               icon={<IconStack2 size={18} />}
               label="Warm Memory"
               value={`${stats.tierBreakdown.warm} items`}
               on
-              detail="Quick recall — past sessions, learned preferences"
+              detail="Past sessions, learned preferences"
             />
             <ResourceRow
               icon={<IconArchive size={18} />}
               label="Cold Archive"
               value={`${stats.tierBreakdown.cold} items`}
               on
-              detail="Deep storage — compressed history, proofs, certificates"
+              detail="Compressed history, proofs, certificates"
             />
             <ResourceRow
               icon={<IconLock size={18} />}
               label="Encryption"
               value="AES-256-GCM"
               on
-              detail="End-to-end — server never sees plaintext"
+              detail="End-to-end encrypted"
             />
           </div>
         </section>
@@ -285,8 +273,7 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
             <span className="text-sm" style={{ color: P.dim }}>Live</span>
           </div>
           <div
-            className="rounded-xl overflow-hidden flex-1"
-            style={{ border: `1px solid ${P.cardBorder}`, background: P.card }}
+            className="hologram-glass-card rounded-xl overflow-hidden flex-1"
           >
             {stats.recentItems.map((item, i) => (
               <div
@@ -314,9 +301,9 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
           How It Works
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-          <HowCard step="1" title="Capture" desc="Every interaction is converted into a standard format — one structure that works everywhere." />
-          <HowCard step="2" title="Compress" desc="Smart compression removes redundancy while keeping every bit of meaning. Nothing is ever lost." />
-          <HowCard step="3" title="Encrypt" desc="Your data is encrypted on your device before it goes anywhere. Only you hold the keys." />
+          <HowCard step="1" title="Capture" desc="Interactions → standard format." />
+          <HowCard step="2" title="Compress" desc="Lossless deduplication preserves meaning." />
+          <HowCard step="3" title="Encrypt" desc="On-device encryption. You hold the keys." />
         </div>
       </section>
 
@@ -327,9 +314,9 @@ function OverviewMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => voi
         onClick={onDemo}
       >
         <div className="space-y-1">
-          <h3 className="text-base md:text-lg font-medium" style={{ color: P.text }}>Try it yourself</h3>
+          <h3 className="text-base md:text-lg font-medium" style={{ color: P.text }}>Try it</h3>
           <p className="text-sm md:text-base" style={{ color: P.muted }}>
-            Drop a PDF and watch it get compressed and become AI-searchable — instantly
+            Drop a PDF → compressed + AI-searchable instantly
           </p>
         </div>
         <IconArrowRight size={20} style={{ color: P.gold }} />
@@ -361,21 +348,21 @@ function ProMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => void }) 
           <TierCard
             icon={<IconFlame size={20} />}
             title="Fast Access"
-            desc="In-memory + local storage. Sub-millisecond. Active conversations and context."
+            desc="Sub-ms access. Active context."
             count={stats.tierBreakdown.hot}
             active
           />
           <TierCard
             icon={<IconCloudComputing size={20} />}
             title="Synced Storage"
-            desc="Cloud-synced across devices. Encrypted at rest. Seamless continuity."
+            desc="Cross-device sync. Encrypted at rest."
             count={stats.tierBreakdown.warm}
             active
           />
           <TierCard
             icon={<IconArchive size={20} />}
             title="Deep Archive"
-            desc="Long-term compressed storage. Hash-based retrieval. Resilient and verifiable."
+            desc="Hash-addressed long-term storage."
             count={stats.tierBreakdown.cold}
             active
           />
@@ -385,7 +372,7 @@ function ProMode({ stats, onDemo }: { stats: MemoryStats; onDemo: () => void }) 
       {/* Compression details */}
       <section className="space-y-3">
         <SectionTitle>Compression Pipeline</SectionTitle>
-        <div className="rounded-xl p-5 md:p-6" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <div className="hologram-glass-card rounded-xl p-5 md:p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
               <p className="text-lg md:text-xl font-mono font-light" style={{ color: P.text }}>{stats.compressionRatio.toFixed(1)}×</p>
