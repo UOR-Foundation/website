@@ -23,8 +23,9 @@ const AlphaRefinementPanel = React.lazy(() => import("@/modules/quantum/componen
 const Subgraph153Panel = React.lazy(() => import("@/modules/quantum/components/Subgraph153Panel"));
 const GeometricQubitPanel = React.lazy(() => import("@/modules/quantum/components/GeometricQubitPanel"));
 const CircuitComposerPanel = React.lazy(() => import("@/modules/quantum/components/CircuitComposerPanel"));
+const SouriauThermodynamicsPanel = React.lazy(() => import("@/modules/quantum/components/SouriauThermodynamicsPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ export default function QuantumDashboardPage() {
     { key: "153-link", label: "153-Link", icon: <Triangle size={12} /> },
     { key: "geo-qubit", label: "Geo Qubit", icon: <Orbit size={12} /> },
     { key: "composer", label: "Composer", icon: <Cpu size={12} /> },
+    { key: "thermo", label: "Souriau Thermo", icon: <Zap size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -56,6 +58,7 @@ export default function QuantumDashboardPage() {
     "153-link": "Searching 22-vertex subgraphs for T(17) = 153 edges…",
     "geo-qubit": "Projecting qubits from Atlas symplectic manifold…",
     composer: "Initializing quantum circuit composer engine…",
+    thermo: "Calibrating Cartan Neural Network temperature cone…",
   };
 
   return (
@@ -115,7 +118,8 @@ export default function QuantumDashboardPage() {
            tab === "alpha" ? <AlphaRefinementPanel /> :
            tab === "153-link" ? <Subgraph153Panel /> :
            tab === "geo-qubit" ? <GeometricQubitPanel /> :
-           <CircuitComposerPanel />}
+           tab === "composer" ? <CircuitComposerPanel /> :
+           <SouriauThermodynamicsPanel />}
         </Suspense>
       </div>
     </div>
@@ -265,6 +269,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "Kernel", value: "Q-Linux Process" },
       ],
     },
+    {
+      key: "thermo" as Tab,
+      title: "Souriau Lie Group Thermodynamics",
+      phase: "Phase 20",
+      icon: <Zap size={24} />,
+      color: "hsl(30,80%,60%)",
+      description: "Implementing Pietro Fré's 'Cartan Neural Networks' on Kähler symmetric spaces. Demonstrates zero-point info geometry where lossless Atlas operations are isentropic (dS=0), confirming the thermodynamic efficiency of the geometric substrate.",
+      stats: [
+        { label: "Manifold", value: "U/H (Kähler)" },
+        { label: "Temp", value: "β ∈ 𝔲*" },
+        { label: "Cost", value: "0 J (Unitary)" },
+        { label: "Metric", value: "Fisher-Rao" },
+      ],
+    },
   ];
 
   return (
@@ -342,6 +360,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "done", label: "Phase 17: Quantum Radar — real-time network coherence monitor (12 tests)" },
             { status: "done", label: "Phase 18: Geometric Qubit Emulator — Souriau quantization + braiding gates (14 tests)" },
             { status: "done", label: "Phase 19: Circuit Composer — drag-and-drop builder + kernel execution" },
+            { status: "done", label: "Phase 20: Souriau Thermodynamics — zero-point info geometry & Cartan NN integration" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>
