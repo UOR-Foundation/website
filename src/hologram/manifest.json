@@ -1,0 +1,163 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:SystemManifest",
+  "@id": "urn:uor:hologram:manifest:1.0.0",
+  "name": "hologram",
+  "version": "1.0.0",
+  "description": "Hologram OS — browser-native universal emulator. Projects and executes digital systems via content-addressed algebraic identity, lens morphisms, and coherence-priority scheduling.",
+  "uor:specification": "1.0.0",
+  "uor:canonicalHash": "sha256:pending-genesis",
+  "uor:namespaces": [
+    "u:", "schema:", "op:", "proof:", "partition:", "cert:",
+    "derivation:", "morphism:", "store:", "state:", "trace:",
+    "observable:", "tsp:", "fpp:", "trqp:", "polytree:",
+    "kernel:", "hologram:", "lens:", "projection:", "compute:"
+  ],
+
+  "subsystems": {
+    "kernel": {
+      "root": "kernel/",
+      "description": "Q-Kernel — Z/(2^n)Z algebraic OS core: boot, MMU, scheduler, syscall, FS, ECC, ISA, networking, IPC, agents, drivers, security.",
+      "exports": [
+        "boot", "post", "loadHardware", "hydrateFirmware", "createGenesisProcess",
+        "QMmu", "QSched", "classifyZone",
+        "QSyscall", "STANDARD_MODALITIES",
+        "QFs", "QEcc", "CODE_N", "CODE_K", "CODE_D",
+        "QIsa", "QNet", "QIpc",
+        "QAgent", "QAgentMesh",
+        "QDriver", "BlockDevice", "MemoryBackend", "IndexedDBBackend", "SupabaseBackend", "IpfsBackend",
+        "QSecurity", "RING_NAMES", "QSecureMesh",
+        "createState", "applyOp", "simMeasure", "simulateCircuit",
+        "formatStatevector", "drawCircuitASCII", "toOpenQASM", "entanglementMap",
+        "quickRun", "noNoise", "realisticNoise",
+        "zeroNoiseExtrapolation", "buildCalibrationMatrix", "applyMeasurementMitigation",
+        "randomizedCompiling", "mitigateFull",
+        "QSovereignty", "executeFoundingCeremony", "verifyCollapseIntegrity",
+        "deriveThreeWordName", "reverseThreeWordName", "parseThreeWordDisplay", "verifyThreeWordBijection",
+        "QVault", "QTrustMesh", "QDisclosure"
+      ],
+      "entrypoint": "kernel/index.ts"
+    },
+    "shell": {
+      "root": "shell/",
+      "description": "Hologram Shell — desktop surface, widget registry, drag/snap, GlassPanel, sidebar, and HUD compositing.",
+      "exports": [],
+      "entrypoint": "shell/index.ts",
+      "status": "pending-migration"
+    },
+    "projection": {
+      "root": "projection/",
+      "description": "Projection Engine — surface adapter, kernel palette, runtime compositor, and protocol projection registry.",
+      "exports": [],
+      "entrypoint": "projection/index.ts",
+      "status": "pending-migration"
+    },
+    "compute": {
+      "root": "compute/",
+      "description": "Hologram Compute — vGPU abstraction, WebGPU matmul, benchmarks, and tensor pipeline.",
+      "exports": [],
+      "entrypoint": "compute/index.ts",
+      "status": "pending-migration"
+    },
+    "quantum": {
+      "root": "quantum/",
+      "description": "Quantum subsystem — statevector simulation, error mitigation, circuit visualization.",
+      "exports": [],
+      "entrypoint": "quantum/index.ts",
+      "status": "pending-migration"
+    },
+    "ai": {
+      "root": "ai/",
+      "description": "AI runtime — agent execution, memory consolidation, observer outputs.",
+      "exports": [],
+      "entrypoint": "ai/index.ts",
+      "status": "pending-migration"
+    },
+    "lens": {
+      "root": "lens/",
+      "description": "Holographic Lens — dehydration/rehydration morphisms, blueprint persistence, modality refraction.",
+      "exports": [],
+      "entrypoint": "lens/index.ts",
+      "status": "pending-migration"
+    }
+  },
+
+  "routes": [
+    "/hologram",
+    "/hologram-os",
+    "/hologram-ui",
+    "/hologram-console",
+    "/hologram-compute",
+    "/hologram-install"
+  ],
+  "routeVisibility": "private",
+
+  "dependencies": {
+    "ring-core": "^1.0.0",
+    "identity": "^1.0.0",
+    "derivation": "^1.0.0",
+    "resolver": "^1.0.0",
+    "self-verify": "^1.0.0",
+    "uns": "^1.0.0",
+    "uor-sdk": "^1.0.0",
+    "kg-store": "^1.0.0",
+    "jsonld": "^1.0.0",
+    "triad": "^1.0.0",
+    "trace": "^1.0.0",
+    "atlas": "^1.0.0",
+    "observable": "^1.0.0"
+  },
+
+  "externalDependencies": {
+    "@noble/post-quantum": "^0.5.4",
+    "@huggingface/transformers": "^3.8.1",
+    "@webgpu/types": "^0.1.69",
+    "fflate": "^0.8.2",
+    "hls.js": "^1.6.15",
+    "d3-force": "^3.0.0",
+    "framer-motion": "^12.34.3"
+  },
+
+  "api_endpoints": [],
+
+  "storage": {
+    "tables": [
+      "hologram_sessions",
+      "user_data_bank",
+      "agent_memories",
+      "agent_session_chains",
+      "agent_relationships",
+      "agent_compression_witnesses"
+    ],
+    "buckets": []
+  },
+
+  "exportGate": {
+    "description": "CID-addressed export gate for dehydrating and shipping complete Hologram snapshots.",
+    "format": "dag-json",
+    "includes": [
+      "manifest.json",
+      "kernel/**",
+      "shell/**",
+      "projection/**",
+      "compute/**",
+      "quantum/**",
+      "ai/**",
+      "lens/**"
+    ],
+    "excludes": [
+      "**/*.test.ts",
+      "**/*.spec.ts",
+      "node_modules/**"
+    ],
+    "checksumAlgorithm": "sha-256",
+    "envelope": {
+      "@type": "cert:SystemCertificate",
+      "certifies": "urn:uor:hologram:manifest:1.0.0",
+      "derivation": "pending-genesis",
+      "coherenceVerified": false
+    }
+  },
+
+  "assets": []
+}
