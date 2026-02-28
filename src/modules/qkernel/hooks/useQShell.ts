@@ -731,9 +731,44 @@ export function useQShell() {
           setDemoLog(prev => [...prev, { agent, action, detail, h, tick }]);
         };
 
+        // ── Reputation tracking ──────────────────────────────────
+        // Each reviewer accumulates accuracy: how close their peer score
+        // predicted the target's *next-round* H-score.
+        // reputation = 1 / (1 + mean_absolute_error)  →  [0.5 … 1.0]
+        const reputation: Record<string, number> = {};
+        const predictionErrors: Record<string, number[]> = {};
+        // predictions[reviewer][target] = predicted score from last round
+        const predictions: Record<string, Record<string, number>> = {};
+        for (const a of agents) {
+          reputation[a.name] = 1.0; // start equal
+          predictionErrors[a.name] = [];
+          predictions[a.name] = {};
+        }
+
         for (let round = 0; round < 5; round++) {
           await new Promise(r => setTimeout(r, 350));
           log(`── Round ${round + 1} ─────────────────────────────────`);
+
+          // ── Resolve previous-round predictions against actual H-scores ──
+          if (round > 0) {
+            for (const reviewer of agents) {
+              for (const target of agents) {
+                if (reviewer === target) continue;
+                const predicted = predictions[reviewer.name]?.[target.name];
+                if (predicted !== undefined) {
+                  const error = Math.abs(predicted - target.hScore);
+                  predictionErrors[reviewer.name].push(error);
+                  const errors = predictionErrors[reviewer.name];
+                  const mae = errors.reduce((s, e) => s + e, 0) / errors.length;
+                  reputation[reviewer.name] = 1 / (1 + mae);
+                }
+              }
+            }
+            log(`  reputation: ${agents.map(a => `${a.name}=${reputation[a.name].toFixed(3)}`).join("  ")}`);
+            for (const a of agents) {
+              addDemoEntry(a.name, "reputation", `ρ=${reputation[a.name].toFixed(3)}`, reputation[a.name], round);
+            }
+          }
 
           // Each agent thinks independently
           for (const a of agents) {
@@ -771,9 +806,13 @@ export function useQShell() {
             if (agents[i].state === "suspended") agents[i].revive();
           }
 
-          // Peer-to-peer review
-          log(`  peer review:`);
+          // ── Reputation-weighted peer-to-peer review ────────────
+          log(`  peer review (reputation-weighted):`);
           const activeAgents = agents.filter(a => a.state === "active");
+
+          // Normalize reputations so they sum to 1 per target
+          const totalRep = activeAgents.reduce((s, a) => s + reputation[a.name], 0);
+
           for (const reviewer of activeAgents) {
             for (const target of activeAgents) {
               if (reviewer === target) continue;
@@ -781,16 +820,24 @@ export function useQShell() {
               const reviewerBias = reviewer.name === "critic" ? -0.08 : reviewer.name === "researcher" ? 0.04 : 0;
               const peerScore = Math.max(0.1, Math.min(1, baseScore + reviewerBias));
 
+              // Store prediction for next-round accuracy check
+              predictions[reviewer.name][target.name] = peerScore;
+
+              // Weight by reputation: higher-reputation reviewers have more influence
+              const repWeight = reputation[reviewer.name] / (totalRep - reputation[target.name]);
+              const weightedScore = peerScore * repWeight * activeAgents.length; // scale back to ~1x
+
               const reviewMsg = new TextEncoder().encode(JSON.stringify({
-                type: "peer-review", from: reviewer.name, target: target.name, round, score: peerScore,
+                type: "peer-review", from: reviewer.name, target: target.name,
+                round, score: peerScore, reputation: reputation[reviewer.name],
               }));
               await reviewer.communicate(ch.channelCid, reviewMsg);
-              await target.feedback(`peer-${reviewer.name}-r${round}`, peerScore, "peer");
-              addDemoEntry(reviewer.name, "peer-review", `→${target.name} ${peerScore.toFixed(2)}`, peerScore, round);
+              await target.feedback(`peer-${reviewer.name}-r${round}`, weightedScore, "peer");
+              addDemoEntry(reviewer.name, "peer-review", `→${target.name} ${peerScore.toFixed(2)} ρ=${reputation[reviewer.name].toFixed(2)}`, peerScore, round);
             }
           }
           for (const a of activeAgents) {
-            log(`    ${a.name}: post-peer pri=${a.hScore.toFixed(3)} zone=${a.zone}`);
+            log(`    ${a.name}: post-peer pri=${a.hScore.toFixed(3)} zone=${a.zone} rep=${reputation[a.name].toFixed(3)}`);
             addDemoEntry(a.name, "peer-result", `H=${a.hScore.toFixed(3)}`, a.hScore, round);
           }
 
