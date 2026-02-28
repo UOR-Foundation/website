@@ -649,30 +649,33 @@
 .sidebar-nav-btn {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  /* Stillness: borders soften, shadows dissolve */
-  border: 1px solid hsla(38, 12%, 70%, calc(0.04 * var(--still-border-opacity, 1)));
-  box-shadow: 0 2px 8px -2px hsla(25, 10%, 0%, calc(0.15 * var(--still-shadow-opacity, 1)));
-  transition: background 200ms ease,
-              border-color calc(700ms * var(--still-transition-scale, 1)) ease,
-              box-shadow calc(700ms * var(--still-transition-scale, 1)) ease,
-              border-radius calc(700ms * var(--still-transition-scale, 1)) ease;
+  border: 1px solid transparent;
+  box-shadow: none;
+  transition: background 250ms ease,
+              border-color 400ms ease,
+              transform 300ms ease;
 }
 .sidebar-nav-btn:not(.sidebar-nav-active):hover {
   background: var(--sb-hover) !important;
+  transform: translateX(1px);
 }
 .sidebar-logo-btn {
   background: var(--sb-active);
-  border: 1px solid hsla(38, 12%, 70%, calc(0.08 * var(--still-border-opacity, 1)));
-  box-shadow: 0 2px 12px -3px hsla(25, 10%, 0%, calc(0.2 * var(--still-shadow-opacity, 1)));
-  transition: border-color calc(700ms * var(--still-transition-scale, 1)) ease,
-              box-shadow calc(700ms * var(--still-transition-scale, 1)) ease;
+  border: 1px solid hsla(30, 10%, 70%, calc(0.06 * var(--still-border-opacity, 1)));
+  box-shadow: none;
+  transition: border-color 400ms ease,
+              transform 300ms ease;
+}
+.sidebar-logo-btn:hover {
+  transform: scale(1.06);
 }
 .sidebar-tooltip {
-  background: hsl(25, 10%, 16%);
-  color: hsl(38, 15%, 85%);
-  border: 1px solid hsla(38, 12%, 70%, calc(0.15 * var(--still-border-opacity, 1)));
-  box-shadow: 0 8px 24px -6px hsla(25, 15%, 5%, calc(0.5 * var(--still-shadow-opacity, 1)));
+  background: hsla(25, 10%, 14%, 0.92);
+  color: hsl(30, 10%, 88%);
+  border: 1px solid hsla(30, 10%, 70%, calc(0.08 * var(--still-border-opacity, 1)));
+  box-shadow: 0 6px 20px -6px hsla(25, 12%, 5%, calc(0.35 * var(--still-shadow-opacity, 1)));
   font-family: 'DM Sans', system-ui, sans-serif;
+  backdrop-filter: blur(12px);
 }
 
 /* ── Mobile drawer: CSS-only touch feedback ──────────────────────── */
