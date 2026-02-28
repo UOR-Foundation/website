@@ -1,9 +1,10 @@
 /**
- * BrowserContent — Renders page content, search results, empty state,
- * skeleton loading, and error states. Manages scroll position memory.
+ * BrowserContent — Renders page content via Firecrawl rawHtml + srcdoc.
  *
- * Memoized markdown components live here as a module-level constant
- * factory so they're never recreated.
+ * Live mode: Full HTML rendered in a sandboxed iframe via srcdoc.
+ *            A <base> tag is injected so all assets resolve to the original domain.
+ * Fidelity:  Same as live (rawHtml srcdoc).
+ * Reader:    Semantic markdown rendering.
  */
 
 import { useRef, useEffect, useCallback, useMemo, useState } from "react";
@@ -27,7 +28,7 @@ interface BrowserContentProps {
 }
 
 export default function BrowserContent({ state, actions }: BrowserContentProps) {
-  const { page, loading, error, searchResults, searchQuery, url, viewMode, popupsBlocked, privateRelay, liveUrl } = state;
+  const { page, loading, error, searchResults, searchQuery, url, viewMode, popupsBlocked } = state;
   const { navigate, handleLinkClick, prefetch, saveScrollPosition, getScrollPosition, setUrl } = actions;
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevUrlRef = useRef<string | null>(null);
@@ -73,10 +74,7 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
         {...props}
         href={href}
         onClick={(e: React.MouseEvent) => {
-          if (href && href.startsWith("http")) {
-            e.preventDefault();
-            handleLinkClick(href);
-          }
+          if (href && href.startsWith("http")) { e.preventDefault(); handleLinkClick(href); }
         }}
         onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
           e.currentTarget.style.borderBottomColor = P.gold;
@@ -86,40 +84,19 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
           e.currentTarget.style.borderBottomColor = "hsla(38, 30%, 55%, 0.2)";
         }}
         className="transition-colors"
-        style={{
-          color: P.gold,
-          textDecoration: "none",
-          borderBottom: `1px solid hsla(38, 30%, 55%, 0.2)`,
-          cursor: "pointer",
-        }}
+        style={{ color: P.gold, textDecoration: "none", borderBottom: `1px solid hsla(38, 30%, 55%, 0.2)`, cursor: "pointer" }}
       >
         {children}
       </a>
     ),
-    h1: ({ children }: any) => (
-      <h1 className="text-[24px] font-light tracking-tight mt-8 mb-4" style={{ color: P.text, lineHeight: 1.25 }}>{children}</h1>
-    ),
-    h2: ({ children }: any) => (
-      <h2 className="text-[18px] font-light tracking-tight mt-7 mb-3" style={{ color: P.text, lineHeight: 1.3, borderBottom: `1px solid ${P.border}`, paddingBottom: 6 }}>{children}</h2>
-    ),
-    h3: ({ children }: any) => (
-      <h3 className="text-[16px] font-medium mt-5 mb-2" style={{ color: P.text }}>{children}</h3>
-    ),
-    h4: ({ children }: any) => (
-      <h4 className="text-[14px] font-medium mt-4 mb-2" style={{ color: P.text }}>{children}</h4>
-    ),
-    p: ({ children }: any) => (
-      <p className="text-[14px] font-light leading-[1.8] mb-4" style={{ color: "hsl(38, 10%, 82%)" }}>{children}</p>
-    ),
-    ul: ({ children }: any) => (
-      <ul className="space-y-1.5 mb-4 ml-5 list-disc" style={{ color: P.textMuted }}>{children}</ul>
-    ),
-    ol: ({ children }: any) => (
-      <ol className="space-y-1.5 mb-4 ml-5 list-decimal" style={{ color: P.textMuted }}>{children}</ol>
-    ),
-    li: ({ children }: any) => (
-      <li className="text-[13px] font-light leading-[1.7]" style={{ color: "hsl(38, 10%, 80%)" }}>{children}</li>
-    ),
+    h1: ({ children }: any) => <h1 className="text-[24px] font-light tracking-tight mt-8 mb-4" style={{ color: P.text, lineHeight: 1.25 }}>{children}</h1>,
+    h2: ({ children }: any) => <h2 className="text-[18px] font-light tracking-tight mt-7 mb-3" style={{ color: P.text, lineHeight: 1.3, borderBottom: `1px solid ${P.border}`, paddingBottom: 6 }}>{children}</h2>,
+    h3: ({ children }: any) => <h3 className="text-[16px] font-medium mt-5 mb-2" style={{ color: P.text }}>{children}</h3>,
+    h4: ({ children }: any) => <h4 className="text-[14px] font-medium mt-4 mb-2" style={{ color: P.text }}>{children}</h4>,
+    p: ({ children }: any) => <p className="text-[14px] font-light leading-[1.8] mb-4" style={{ color: "hsl(38, 10%, 82%)" }}>{children}</p>,
+    ul: ({ children }: any) => <ul className="space-y-1.5 mb-4 ml-5 list-disc" style={{ color: P.textMuted }}>{children}</ul>,
+    ol: ({ children }: any) => <ol className="space-y-1.5 mb-4 ml-5 list-decimal" style={{ color: P.textMuted }}>{children}</ol>,
+    li: ({ children }: any) => <li className="text-[13px] font-light leading-[1.7]" style={{ color: "hsl(38, 10%, 80%)" }}>{children}</li>,
     blockquote: ({ children }: any) => (
       <blockquote className="my-3 px-4 py-2.5 rounded-r-lg text-[12px] font-light italic" style={{ borderLeft: `2px solid ${P.gold}`, background: "hsla(38, 15%, 20%, 0.2)", color: "hsl(38, 12%, 75%)" }}>
         {children}
@@ -134,11 +111,7 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
           </pre>
         );
       }
-      return (
-        <code className="px-1 py-0.5 rounded text-[11px] font-mono" style={{ background: "hsla(38, 10%, 20%, 0.3)", color: P.gold }}>
-          {children}
-        </code>
-      );
+      return <code className="px-1 py-0.5 rounded text-[11px] font-mono" style={{ background: "hsla(38, 10%, 20%, 0.3)", color: P.gold }}>{children}</code>;
     },
     hr: () => <hr className="my-6 border-none h-px" style={{ background: P.border }} />,
     img: ({ src, alt }: any) => (
@@ -147,46 +120,31 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
         {alt && <figcaption className="mt-1.5 text-[10px] font-light text-center" style={{ color: P.textMuted }}>{alt}</figcaption>}
       </figure>
     ),
-    table: ({ children }: any) => (
-      <div className="overflow-x-auto my-3"><table className="w-full text-[12px]" style={{ borderCollapse: "collapse" }}>{children}</table></div>
-    ),
-    th: ({ children }: any) => (
-      <th className="text-left px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider" style={{ borderBottom: `1px solid ${P.border}`, color: P.goldMuted }}>{children}</th>
-    ),
-    td: ({ children }: any) => (
-      <td className="px-3 py-1.5 text-[12px] font-light" style={{ borderBottom: `1px solid hsla(38, 10%, 25%, 0.15)`, color: "hsl(38, 10%, 78%)" }}>{children}</td>
-    ),
+    table: ({ children }: any) => <div className="overflow-x-auto my-3"><table className="w-full text-[12px]" style={{ borderCollapse: "collapse" }}>{children}</table></div>,
+    th: ({ children }: any) => <th className="text-left px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider" style={{ borderBottom: `1px solid ${P.border}`, color: P.goldMuted }}>{children}</th>,
+    td: ({ children }: any) => <td className="px-3 py-1.5 text-[12px] font-light" style={{ borderBottom: `1px solid hsla(38, 10%, 25%, 0.15)`, color: "hsl(38, 10%, 78%)" }}>{children}</td>,
   }), [handleLinkClick, prefetch]);
 
-  const proxyBase = import.meta.env.VITE_SUPABASE_URL
-    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-proxy?url=`
-    : null;
-
-  /** Build the iframe src for live mode */
-  const liveIframeSrc = liveUrl
-    ? (privateRelay && proxyBase
-      ? `${proxyBase}${encodeURIComponent(liveUrl)}`
-      : liveUrl)
-    : null;
+  /** Whether we have HTML to render in srcdoc */
+  const hasSrcdocHtml = page?.rawHtml && page.rawHtml.length > 100;
 
   return (
     <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto lumen-scroll">
-      {/* Live Mode — renders immediately, no scrape needed */}
-      {viewMode === "live" && liveIframeSrc && (
+      {/* ── Live / Fidelity Mode — Full HTML via srcdoc ── */}
+      {(viewMode === "live" || viewMode === "fidelity") && hasSrcdocHtml && !loading && (
         <iframe
-          key={`live-${liveUrl}-${popupsBlocked}-${privateRelay}`}
-          src={liveIframeSrc}
-          sandbox={`allow-same-origin allow-scripts allow-forms allow-modals${popupsBlocked ? "" : " allow-popups allow-popups-to-escape-sandbox"}`}
+          key={`srcdoc-${page!.url}`}
+          srcDoc={page!.rawHtml}
+          sandbox={`allow-same-origin allow-scripts allow-forms${popupsBlocked ? "" : " allow-popups allow-popups-to-escape-sandbox"}`}
           allow="clipboard-write; encrypted-media; autoplay"
           className="w-full h-full border-none"
           style={{ background: "#fff" }}
-          title={page?.title || liveUrl || ""}
-          referrerPolicy={privateRelay ? "no-referrer" : "strict-origin-when-cross-origin"}
+          title={page!.title || page!.url}
         />
       )}
 
-      {/* Empty state — only when NOT in live mode with a URL */}
-      {!(viewMode === "live" && liveIframeSrc) && !page && !loading && !error && !searchResults && (
+      {/* ── Empty state ── */}
+      {!page && !loading && !error && !searchResults && (
         <div className="flex flex-col items-center justify-center h-full gap-5 px-6">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "hsla(38, 20%, 25%, 0.2)", border: `1px solid ${P.border}` }}>
             <Globe className="w-6 h-6" style={{ color: P.gold, opacity: 0.7 }} strokeWidth={1} />
@@ -214,10 +172,10 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
         </div>
       )}
 
-      {/* Skeleton loading — only for non-live modes */}
-      {loading && viewMode !== "live" && <BrowserSkeleton />}
+      {/* ── Loading ── */}
+      {loading && <BrowserSkeleton />}
 
-      {/* Error */}
+      {/* ── Error ── */}
       {error && (
         <div className="flex flex-col items-center justify-center h-full gap-3 px-8">
           <div className="text-center space-y-1.5">
@@ -236,7 +194,7 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
         </div>
       )}
 
-      {/* Search Results — with hover prefetch */}
+      {/* ── Search Results ── */}
       {searchResults && !page && !loading && (
         <div className="px-10 py-8 max-w-[900px] mx-auto" style={{ color: P.text }}>
           <div className="mb-5 pb-3" style={{ borderBottom: `1px solid ${P.border}` }}>
@@ -254,7 +212,7 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "hsla(38, 12%, 18%, 0.4)";
                   e.currentTarget.style.borderColor = P.borderFocus;
-                  prefetch(r.url); // ← hover prefetch
+                  prefetch(r.url);
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = "hsla(38, 10%, 15%, 0.3)";
@@ -274,24 +232,9 @@ export default function BrowserContent({ state, actions }: BrowserContentProps) 
         </div>
       )}
 
-      {/* Old live mode block removed — live iframe is now rendered at top */}
-
-      {/* Page Content — Fidelity Mode (pixel-perfect static snapshot) */}
-      {viewMode === "fidelity" && page && !loading && page.rawHtml && (
-        <iframe
-          key={`fidelity-${page.url}`}
-          srcDoc={page.rawHtml}
-          sandbox={`allow-same-origin allow-scripts${popupsBlocked ? "" : " allow-popups"}`}
-          className="w-full h-full border-none"
-          style={{ background: "#fff" }}
-          title={page.title}
-        />
-      )}
-
-      {/* Page Content — Reader Mode (markdown) */}
-      {viewMode !== "live" && page && !loading && (viewMode === "reader" || (viewMode === "fidelity" && !page.rawHtml)) && (
+      {/* ── Reader Mode (markdown) — fallback when no rawHtml ── */}
+      {page && !loading && (viewMode === "reader" || ((viewMode === "live" || viewMode === "fidelity") && !hasSrcdocHtml)) && (
         <>
-          {/* Reading progress bar */}
           <div className="sticky top-0 z-10 h-[2px] w-full" style={{ background: "transparent" }}>
             <div
               className="h-full transition-[width] duration-150 ease-out"
