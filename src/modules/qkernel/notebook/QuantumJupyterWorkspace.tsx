@@ -19,7 +19,7 @@ import {
   Folder, FolderOpen, Code, Sparkles,
   Trash2, ArrowUp, ArrowDown, Type, PlayCircle,
   RotateCcw, ChevronRight, ChevronDown,
-  Atom, Brain, BarChart3,
+  Atom, Brain, BarChart3, Shield, Zap,
 } from "lucide-react";
 import {
   createKernel,
@@ -33,6 +33,7 @@ import {
   type NotebookCell,
   type CellOutput,
 } from "@/modules/qkernel/notebook/notebook-engine";
+import { createState, realisticNoise, measure } from "@/modules/qkernel/q-simulator";
 
 /* ── Histogram ────────────────────────────────────────────────────────────── */
 
@@ -344,6 +345,90 @@ function DemoCard({ demo, onOpen, onOpenInWorkspace }: { demo: ReturnType<typeof
 
 /* ── Demo Viewer (Voilà) ──────────────────────────────────────────────────── */
 
+/* Mitigation toggle switch */
+function MitigationToggle({ label, description, enabled, onChange }: {
+  label: string; description: string; enabled: boolean; onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      onClick={() => onChange(!enabled)}
+      className="w-full flex items-start gap-3 p-3 rounded-lg text-left transition-all"
+      style={{
+        background: enabled ? "hsla(38, 50%, 50%, 0.06)" : "transparent",
+        border: enabled ? "1px solid hsla(38, 50%, 50%, 0.2)" : "1px solid hsla(0, 0%, 50%, 0.08)",
+      }}
+    >
+      <div
+        className="w-9 h-5 rounded-full shrink-0 mt-0.5 transition-colors relative"
+        style={{ background: enabled ? "hsl(38, 50%, 50%)" : "hsl(0, 0%, 78%)" }}
+      >
+        <div
+          className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all"
+          style={{ left: enabled ? 18 : 2 }}
+        />
+      </div>
+      <div className="min-w-0">
+        <span className="text-sm font-semibold block" style={{ color: "hsl(0, 0%, 15%)" }}>{label}</span>
+        <span className="text-xs leading-snug block mt-0.5" style={{ color: "hsl(0, 0%, 52%)" }}>{description}</span>
+      </div>
+    </button>
+  );
+}
+
+/* Before/After histogram comparison */
+function ComparisonHistogram({ rawCounts, mitigatedCounts, rawLabel, mitigatedLabel }: {
+  rawCounts: Record<string, number>;
+  mitigatedCounts: Record<string, number>;
+  rawLabel: string;
+  mitigatedLabel: string;
+}) {
+  const allKeys = Array.from(new Set([...Object.keys(rawCounts), ...Object.keys(mitigatedCounts)])).sort();
+  const rawTotal = Object.values(rawCounts).reduce((s, c) => s + c, 0);
+  const mitTotal = Object.values(mitigatedCounts).reduce((s, c) => s + c, 0);
+  const maxPct = Math.max(
+    ...allKeys.map(k => (rawCounts[k] || 0) / rawTotal * 100),
+    ...allKeys.map(k => (mitigatedCounts[k] || 0) / mitTotal * 100),
+  );
+
+  return (
+    <div className="space-y-3">
+      {/* Legend */}
+      <div className="flex items-center gap-4 px-1">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-sm" style={{ background: "hsl(0, 0%, 72%)" }} />
+          <span className="text-xs font-medium" style={{ color: "hsl(0, 0%, 50%)" }}>{rawLabel}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-sm" style={{ background: "hsl(38, 55%, 50%)" }} />
+          <span className="text-xs font-medium" style={{ color: "hsl(38, 40%, 40%)" }}>{mitigatedLabel}</span>
+        </div>
+      </div>
+      {/* Bars */}
+      <div className="space-y-2">
+        {allKeys.map(key => {
+          const rawPct = rawTotal > 0 ? (rawCounts[key] || 0) / rawTotal * 100 : 0;
+          const mitPct = mitTotal > 0 ? (mitigatedCounts[key] || 0) / mitTotal * 100 : 0;
+          return (
+            <div key={key} className="flex items-center gap-2">
+              <span className="text-xs font-mono w-10 text-right shrink-0" style={{ color: "hsl(0, 0%, 35%)" }}>|{key}⟩</span>
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 rounded-sm" style={{ width: `${Math.max(1, rawPct / maxPct * 100)}%`, background: "hsl(0, 0%, 72%)" }} />
+                  <span className="text-xs font-mono shrink-0" style={{ color: "hsl(0, 0%, 55%)" }}>{rawPct.toFixed(1)}%</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-3 rounded-sm" style={{ width: `${Math.max(1, mitPct / maxPct * 100)}%`, background: "hsl(38, 55%, 50%)" }} />
+                  <span className="text-xs font-mono shrink-0" style={{ color: "hsl(38, 40%, 40%)" }}>{mitPct.toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
   demo: ReturnType<typeof getDemoDefinitions>[0];
   kernel: KernelState;
@@ -357,10 +442,27 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
   const [outputs, setOutputs] = useState<CellOutput[]>([]);
   const [running, setRunning] = useState(false);
 
-  const runDemo = useCallback(() => {
+  // Error mitigation state
+  const [enableZne, setEnableZne] = useState(false);
+  const [enableMem, setEnableMem] = useState(false);
+  const [enableRc, setEnableRc] = useState(false);
+  const [rawCounts, setRawCounts] = useState<Record<string, number> | null>(null);
+  const [mitigatedCounts, setMitigatedCounts] = useState<Record<string, number> | null>(null);
+  const [mitigationStages, setMitigationStages] = useState<string[]>([]);
+  const [zneValue, setZneValue] = useState<number | null>(null);
+
+  const anyMitigationEnabled = enableZne || enableMem || enableRc;
+
+  const runDemo = useCallback(async () => {
     if (!template) return;
     setRunning(true);
     const k = createKernel();
+    // If noise control exists, apply it
+    const noiseLevel = controlValues["noise"] as string | undefined;
+    if (noiseLevel && noiseLevel !== "none") {
+      k.noiseModel = realisticNoise(noiseLevel as "low" | "medium" | "high");
+    }
+
     const allOutputs: CellOutput[] = [];
     for (const cell of template.cells) {
       if (cell.type === "code") {
@@ -368,8 +470,54 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
       }
     }
     setOutputs(allOutputs);
+
+    // Run error mitigation if any toggle is on and we have a circuit
+    if (anyMitigationEnabled && k.circuit && k.circuit.ops.length > 0) {
+      try {
+        const {
+          zeroNoiseExtrapolation,
+          buildCalibrationMatrix,
+          applyMeasurementMitigation,
+          randomizedCompiling,
+          mitigateFull,
+        } = await import("@/modules/qkernel/q-error-mitigation");
+        
+
+        const noise = k.circuit.noise;
+        const ops = k.circuit.ops;
+        const numQubits = k.circuit.numQubits;
+        const shots = (controlValues["shots"] as number) || 1024;
+
+        // Get raw (noisy) counts
+        const rawState = createState(numQubits);
+        rawState.ops = [...ops];
+        rawState.noise = noise;
+        const raw = measure(rawState, shots);
+        setRawCounts(raw);
+
+        // Run full mitigation pipeline
+        const result = mitigateFull(ops, numQubits, noise, {
+          enableZne,
+          enableMem,
+          enableRc,
+          shots,
+        });
+
+        setMitigatedCounts(result.counts);
+        setMitigationStages(result.stages);
+        setZneValue(result.zne?.mitigated ?? null);
+      } catch (e) {
+        console.error("Mitigation error:", e);
+      }
+    } else {
+      setRawCounts(null);
+      setMitigatedCounts(null);
+      setMitigationStages([]);
+      setZneValue(null);
+    }
+
     setTimeout(() => setRunning(false), 300);
-  }, [template]);
+  }, [template, controlValues, anyMitigationEnabled, enableZne, enableMem, enableRc]);
 
   useEffect(() => { runDemo(); }, []);
 
@@ -394,7 +542,7 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
       {/* Body: 3 columns */}
       <div className="flex-1 flex overflow-hidden">
         {/* Controls */}
-        <div className="w-60 shrink-0 p-5 space-y-5 overflow-y-auto" style={{ borderRight: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
+        <div className="w-64 shrink-0 p-5 space-y-5 overflow-y-auto" style={{ borderRight: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
           <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Settings</h3>
           {demo.controls.map(ctrl => (
             <div key={ctrl.id} className="space-y-1.5">
@@ -424,12 +572,41 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
               )}
             </div>
           ))}
+
+          {/* Error Mitigation Section */}
+          <div className="pt-3" style={{ borderTop: "1px solid hsla(0, 0%, 50%, 0.08)" }}>
+            <div className="flex items-center gap-2 mb-3">
+              <Shield size={14} style={{ color: "hsl(38, 50%, 48%)" }} />
+              <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Error Mitigation</h3>
+            </div>
+            <div className="space-y-2">
+              <MitigationToggle
+                label="ZNE"
+                description="Run at multiple noise levels, extrapolate to zero"
+                enabled={enableZne}
+                onChange={setEnableZne}
+              />
+              <MitigationToggle
+                label="MEM"
+                description="Calibrate readout errors and correct measurements"
+                enabled={enableMem}
+                onChange={setEnableMem}
+              />
+              <MitigationToggle
+                label="RC"
+                description="Randomize gate sequences to average out systematic errors"
+                enabled={enableRc}
+                onChange={setEnableRc}
+              />
+            </div>
+          </div>
+
           <button onClick={runDemo} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors" style={{
             background: "hsl(38, 45%, 48%)",
             color: "white",
           }}>
             {running ? <RotateCcw size={14} className="animate-spin" /> : <Play size={14} />}
-            Run
+            {anyMitigationEnabled ? "Run with Mitigation" : "Run"}
           </button>
         </div>
 
@@ -449,13 +626,51 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
         {/* Results */}
         <div className="w-80 shrink-0 p-5 space-y-4 overflow-y-auto" style={{ borderLeft: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
           <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Results</h3>
-          {outputs.filter(o => o.type === "histogram").map((o, i) => (
+
+          {/* Before/After comparison when mitigation is active */}
+          {rawCounts && mitigatedCounts && anyMitigationEnabled && (
+            <div className="space-y-4">
+              {/* Summary badge */}
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "hsla(38, 50%, 50%, 0.06)", border: "1px solid hsla(38, 50%, 50%, 0.12)" }}>
+                <Zap size={14} style={{ color: "hsl(38, 50%, 48%)" }} />
+                <span className="text-xs font-medium" style={{ color: "hsl(38, 40%, 35%)" }}>
+                  {mitigationStages.length} stage{mitigationStages.length !== 1 ? "s" : ""} applied
+                  {zneValue !== null && ` · ZNE: ${zneValue.toFixed(4)}`}
+                </span>
+              </div>
+
+              {/* Stages list */}
+              <div className="space-y-1">
+                {mitigationStages.map((stage, i) => (
+                  <div key={stage} className="flex items-center gap-2 text-xs" style={{ color: "hsl(152, 35%, 40%)" }}>
+                    <span className="font-mono">✓</span>
+                    <span className="font-medium">
+                      {stage === "randomized_compiling" ? "Randomized Compiling" :
+                       stage === "zero_noise_extrapolation" ? "Zero-Noise Extrapolation" :
+                       stage === "measurement_error_mitigation" ? "Measurement Error Mitigation" : stage}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Comparison chart */}
+              <ComparisonHistogram
+                rawCounts={rawCounts}
+                mitigatedCounts={mitigatedCounts}
+                rawLabel="Before"
+                mitigatedLabel="After"
+              />
+            </div>
+          )}
+
+          {/* Standard histogram when no mitigation */}
+          {(!anyMitigationEnabled || !mitigatedCounts) && outputs.filter(o => o.type === "histogram").map((o, i) => (
             <CellOutputView key={i} output={o} />
           ))}
           {outputs.filter(o => o.type === "text" || o.type === "error").map((o, i) => (
             <CellOutputView key={i} output={o} />
           ))}
-          {outputs.length === 0 && (
+          {outputs.length === 0 && !mitigatedCounts && (
             <div className="text-center py-10">
               <BarChart3 size={28} className="mx-auto mb-3" style={{ color: "hsl(0, 0%, 65%)" }} />
               <span className="text-sm" style={{ color: "hsl(0, 0%, 55%)" }}>Results appear here</span>
