@@ -28,9 +28,7 @@ export default function HologramBrowser({ onClose, onSendToLumen }: BrowserProps
     <div
       className="flex flex-col h-full w-full"
       style={{
-        background: "hsla(25, 10%, 10%, 0.6)",
-        backdropFilter: "blur(48px) saturate(1.5)",
-        WebkitBackdropFilter: "blur(48px) saturate(1.5)",
+        background: "hsl(25, 10%, 10%)",
         fontFamily: P.font,
         borderLeft: `1px solid hsla(38, 20%, 80%, 0.1)`,
         boxShadow: "inset 0 0 80px hsla(25, 8%, 4%, 0.2), inset 0 1px 0 hsla(38, 25%, 90%, 0.06)",
