@@ -42,7 +42,7 @@ export default function AmbientMoodWidget() {
             height: 72,
             background: `radial-gradient(circle, hsla(${mood.hue}, 50%, 55%, 0.25) 0%, transparent 70%)`,
             filter: "blur(12px)",
-            animation: "ambient-glow-breathe 4s ease-in-out infinite",
+            animation: "ambient-glow-breathe 3.88s ease-in-out infinite",
             transition: "background 800ms ease",
           }}
         />

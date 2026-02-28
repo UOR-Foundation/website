@@ -260,7 +260,7 @@ export default function DesktopSurface({
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   background: `radial-gradient(ellipse 120% 80% at 50% 100%, hsla(${ambientState.stationHue}, 40%, 35%, 0.12) 0%, hsla(${ambientState.stationHue}, 30%, 25%, 0.06) 40%, transparent 70%)`,
-                  animation: "ambient-glow-breathe 8s ease-in-out infinite",
+                  animation: "ambient-glow-breathe 7.76s ease-in-out infinite",
                 }}
               />
             )}
@@ -449,7 +449,7 @@ export default function DesktopSurface({
                         : mode === "dark" ? "hsla(38, 25%, 75%, 0.25)"
                         : "hsla(0, 0%, 5%, 0.4)"
                     }`,
-                    animation: "lumen-ring-enter 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, ambient-glow-breathe 6s ease-in-out 3s infinite",
+                    animation: "lumen-ring-enter 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, ambient-glow-breathe 5.82s ease-in-out 3s infinite",
                   }}
                 />
                 <div
@@ -459,7 +459,7 @@ export default function DesktopSurface({
                     height: isFocus ? "clamp(8px, 0.8vw, 12px)" : "clamp(6px, 0.6vw, 10px)",
                     background: mode === "white" ? "hsla(38, 45%, 50%, 0.75)" : "hsla(38, 50%, 60%, 0.7)",
                     boxShadow: mode === "white" ? "0 0 20px hsla(38, 40%, 50%, 0.4)" : "0 0 24px hsla(38, 50%, 55%, 0.35)",
-                    animation: "lumen-dot-enter 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, heartbeat-love 2.4s ease-in-out 3.2s infinite",
+                    animation: "lumen-dot-enter 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both, heartbeat-love 1.94s ease-in-out 3.2s infinite",
                   }}
                 />
               </div>
