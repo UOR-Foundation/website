@@ -15,7 +15,7 @@
 import { useState, useEffect, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const SIDEBAR_WIDTH = 68;
+const SIDEBAR_WIDTH = 56;
 const SLIDE = { duration: 0.22, ease: [0.22, 1, 0.36, 1] } as const;
 const FADE = { duration: 0.15, ease: "easeOut" } as const;
 
