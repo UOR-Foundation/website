@@ -73,6 +73,9 @@ import { hScore } from "../observable/h-score";
 /** Merge strategy for combining head outputs. */
 export type MergeStrategy = "union" | "intersect" | "majority" | "weighted" | "sum";
 
+/** Causal mask mode. */
+export type CausalMaskMode = "none" | "strict" | "soft";
+
 /** Configuration for the multi-head coherence layer. */
 export interface MultiHeadConfig {
   /** Number of heads (1–7). Default: 7 (all Fano lines). */
@@ -83,6 +86,8 @@ export interface MultiHeadConfig {
   readonly mergeStrategy?: MergeStrategy;
   /** Grade-A graph for H-score. Default: Atlas-derived. */
   readonly gradeAGraph?: number[];
+  /** Causal mask mode. Default: "none". */
+  readonly causalMask?: CausalMaskMode;
 }
 
 /** Output from a single coherence head with its Fano line context. */
@@ -131,6 +136,8 @@ export interface MergedEvaluation {
   readonly mergedCorrection: Octonion;
   /** Merged H-score (average across heads). */
   readonly mergedHScore: number;
+  /** Whether this triple was masked by causal ordering. */
+  readonly causallyMasked?: boolean;
 }
 
 /** Complete output of the multi-head coherence layer. */
@@ -153,6 +160,22 @@ export interface MultiHeadOutput {
   readonly stats: MultiHeadStats;
   /** Summary. */
   readonly summary: string;
+}
+
+/** Output from causal coherence evaluation. */
+export interface CausalCoherenceOutput extends MultiHeadOutput {
+  /** Causal mask mode used. */
+  readonly causalMode: CausalMaskMode;
+  /** Number of triples masked by causal ordering. */
+  readonly maskedCount: number;
+  /** Number of triples actually evaluated. */
+  readonly evaluatedCount: number;
+  /** Ratio of evaluated to total triples. */
+  readonly causalRatio: number;
+  /** Causal decay constant (α) used in soft mode. */
+  readonly causalDecayAlpha: number;
+  /** Triples that were causally masked (strict mode only). */
+  readonly maskedTriples?: MergedEvaluation[];
 }
 
 /** Statistics for the multi-head layer. */
@@ -366,6 +389,7 @@ export class MultiHeadCoherenceLayer {
       lineIndices,
       mergeStrategy: config.mergeStrategy ?? "majority",
       gradeAGraph: config.gradeAGraph ?? atlasGradeAGraph(),
+      causalMask: config.causalMask ?? "none",
     };
 
     this.lines = lineIndices.map(i => this.topology.lines[i % 7].points);
@@ -419,11 +443,157 @@ export class MultiHeadCoherenceLayer {
     return this.forward(triples);
   }
 
+  /**
+   * Causal self-coherence: the categorical analogue of causal (autoregressive) attention.
+   *
+   * In transformer causal attention, position i can only attend to positions j ≤ i.
+   * Here, the causal mask restricts triple evaluation: a triple (v_a, v_b, v_c) at
+   * sequence positions (i, i+1, i+2) is only evaluated if it satisfies the causal
+   * constraint — the query position can only "see" triples from its causal past.
+   *
+   * With a causal index map, each vertex gets a causal ordering. A triple is
+   * causally valid iff all three vertices have causal indices ≤ the query's position.
+   *
+   * CAUSAL MASK MODES:
+   *   - "strict":  triple masked unless ALL vertices have causal index < query position
+   *   - "soft":    triple evaluated but correction scaled by α^(distance) where
+   *                distance = max vertex causal index - query position
+   *   - "none":    no masking (standard bidirectional coherence)
+   *
+   * COMPARISON TO TRANSFORMER CAUSAL ATTENTION:
+   *   Transformer: mask[i,j] = (j ≤ i) ? 1 : 0  (lower triangular)
+   *   Coherence:   mask[i,(a,b,c)] = (max(idx_a, idx_b, idx_c) ≤ i) ? 1 : 0
+   *
+   * @param vertices       Sequence of vertex indices
+   * @param causalIndices  Optional causal ordering map (vertex → causal index).
+   *                       Default: sequence position is the causal index.
+   * @param alpha          Causal decay constant for "soft" mode. Default: 1/137.
+   */
+  causalCoherence(
+    vertices: number[],
+    causalIndices?: Map<number, number>,
+    alpha: number = 1 / 137,
+  ): CausalCoherenceOutput {
+    if (vertices.length < 3) {
+      return {
+        ...this.emptyOutput(),
+        causalMode: this.config.causalMask === "none" ? "strict" : this.config.causalMask,
+        maskedCount: 0,
+        evaluatedCount: 0,
+        causalRatio: 1,
+        causalDecayAlpha: alpha,
+      };
+    }
+
+    const mode = this.config.causalMask === "none" ? "strict" : this.config.causalMask;
+
+    // Build causal index: default = sequence position
+    const idxMap = causalIndices ?? new Map(vertices.map((v, i) => [v, i]));
+
+    // Generate all consecutive triples with causal filtering
+    const allTriples: [number, number, number][] = [];
+    const causalWeights: number[] = [];
+    const maskedFlags: boolean[] = [];
+
+    for (let i = 0; i <= vertices.length - 3; i++) {
+      const triple: [number, number, number] = [vertices[i], vertices[i + 1], vertices[i + 2]];
+      const queryPos = i + 2; // the "query" is the last element of the triple
+      const maxIdx = Math.max(
+        idxMap.get(triple[0]) ?? 0,
+        idxMap.get(triple[1]) ?? 0,
+        idxMap.get(triple[2]) ?? 0,
+      );
+
+      if (mode === "strict") {
+        // Strict: only evaluate if all vertices are in causal past of query
+        const isCausal = maxIdx <= queryPos;
+        allTriples.push(triple);
+        maskedFlags.push(!isCausal);
+        causalWeights.push(isCausal ? 1 : 0);
+      } else {
+        // Soft: always evaluate, but weight by α^(distance)
+        const distance = Math.max(0, maxIdx - queryPos);
+        const weight = Math.pow(alpha, distance);
+        allTriples.push(triple);
+        maskedFlags.push(false);
+        causalWeights.push(weight);
+      }
+    }
+
+    // Evaluate only unmasked triples
+    const evaluableTriples = allTriples.filter((_, i) => !maskedFlags[i]);
+    const evaluableWeights = causalWeights.filter((_, i) => !maskedFlags[i]);
+
+    if (evaluableTriples.length === 0) {
+      return {
+        ...this.emptyOutput(),
+        causalMode: mode,
+        maskedCount: maskedFlags.filter(m => m).length,
+        evaluatedCount: 0,
+        causalRatio: 0,
+        causalDecayAlpha: alpha,
+      };
+    }
+
+    // Run heads on evaluable triples
+    const heads = this.config.lineIndices.map((li, idx) =>
+      runHead(li, this.lines[idx], evaluableTriples, this.gradeAGraph)
+    );
+
+    // Merge with causal weights applied to corrections
+    const merged: MergedEvaluation[] = evaluableTriples.map((_, i) => {
+      const base = mergeTriple(i, heads, this.config.mergeStrategy);
+      const w = evaluableWeights[i];
+
+      if (w < 1) {
+        // Scale correction vector by causal weight
+        const scaledCorrection = base.mergedCorrection.map(c => c * w) as Octonion;
+        return {
+          ...base,
+          mergedCorrection: scaledCorrection,
+          mergedHScore: base.mergedHScore * w,
+          causallyMasked: false,
+        };
+      }
+      return { ...base, causallyMasked: false };
+    });
+
+    // Add masked triples as explicitly masked entries
+    const maskedEntries: MergedEvaluation[] = allTriples
+      .map((triple, i) => maskedFlags[i] ? {
+        vertices: triple,
+        headVotes: this.config.lineIndices.map(() => false),
+        isCoherent: false,
+        agreementRatio: 0,
+        mergedCorrection: [...ZERO_OCT] as Octonion,
+        mergedHScore: 0,
+        causallyMasked: true,
+      } : null)
+      .filter((e): e is NonNullable<typeof e> => e !== null);
+
+    const output = this.buildOutput(heads, merged);
+    const maskedCount = maskedFlags.filter(m => m).length;
+
+    return {
+      ...output,
+      causalMode: mode,
+      maskedCount,
+      evaluatedCount: evaluableTriples.length,
+      causalRatio: allTriples.length > 0
+        ? evaluableTriples.length / allTriples.length : 1,
+      causalDecayAlpha: alpha,
+      maskedTriples: maskedEntries,
+    };
+  }
+
   /** Number of heads. */
   get headCount(): number { return this.config.headCount; }
 
   /** Merge strategy. */
   get mergeStrategy(): MergeStrategy { return this.config.mergeStrategy; }
+
+  /** Causal mask mode. */
+  get causalMode(): CausalMaskMode { return this.config.causalMask; }
 
   private emptyOutput(): MultiHeadOutput {
     return {
@@ -571,5 +741,28 @@ export function createSingleCoherenceLayer(
     headCount: 1,
     lineIndices: [lineIndex],
     mergeStrategy: "majority",
+  });
+}
+
+/** Create a causal 7-head coherence layer (autoregressive). */
+export function createCausalCoherenceLayer(
+  mode: CausalMaskMode = "strict",
+  strategy: MergeStrategy = "majority",
+): MultiHeadCoherenceLayer {
+  return new MultiHeadCoherenceLayer({
+    headCount: 7,
+    mergeStrategy: strategy,
+    causalMask: mode,
+  });
+}
+
+/** Create a soft-causal 7-head coherence layer with α decay. */
+export function createSoftCausalCoherenceLayer(
+  strategy: MergeStrategy = "majority",
+): MultiHeadCoherenceLayer {
+  return new MultiHeadCoherenceLayer({
+    headCount: 7,
+    mergeStrategy: strategy,
+    causalMask: "soft",
   });
 }
