@@ -138,6 +138,7 @@ const CodeNexusPage = lazy(() => import("@/modules/code-nexus/pages/CodeNexusPag
 const AtlasVisualizationPage = lazy(() => import("@/modules/atlas/pages/AtlasVisualizationPage"));
 const QuantumDashboardPage = lazy(() => import("@/modules/quantum/pages/QuantumDashboardPage"));
 const QShellPage = lazy(() => import("@/modules/qkernel/pages/QShellPage"));
+const CeremonyPage = lazy(() => import("@/modules/qkernel/pages/CeremonyPage"));
 
 const queryClient = new QueryClient();
 
@@ -253,6 +254,7 @@ const App = () => {
             <Route path="/your-space" element={<YourSpacePage />} />
             <Route path="/sandbox" element={<SandboxPage />} />
             <Route path="/claim-identity" element={<ClaimIdentityPage />} />
+            <Route path="/ceremony" element={<CeremonyPage />} />
             <Route path="/bitcoin" element={<BitcoinScriptPage />} />
             <Route path="/bitcoin/timestamp" element={<TimestampPage />} />
             <Route path="/bitcoin/demo" element={<BitcoinDemoPage />} />
