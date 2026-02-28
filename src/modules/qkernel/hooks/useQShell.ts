@@ -8,8 +8,11 @@ import {
   drawCircuitASCII,
   toOpenQASM,
   entanglementMap,
+  noNoise,
+  realisticNoise,
   type SimulatorState,
   type SimOp,
+  type NoiseModel,
 } from "@/modules/qkernel/q-simulator";
 import { QMmu } from "@/modules/qkernel/q-mmu";
 import { QSched, type QProcess, type SchedStats } from "@/modules/qkernel/q-sched";
@@ -1544,6 +1547,16 @@ export function useQShell() {
           log("    qiskit reset              Clear current circuit");
           log("    qiskit save/load <name>   Save/load circuit to filesystem");
           log("");
+          log("  Noise simulation:");
+          log("    qiskit noise status       Show current noise model");
+          log("    qiskit noise off          Ideal (noiseless) simulation");
+          log("    qiskit noise realistic    Preset: low / medium / high");
+          log("    qiskit noise depol <p>    Set depolarizing error rate");
+          log("    qiskit noise amp_damp <γ> Set amplitude damping (T1)");
+          log("    qiskit noise phase_damp <λ> Set phase damping (T2)");
+          log("    qiskit noise meas <p>     Set measurement error rate");
+          log("    qiskit noise 2q <p>       Set two-qubit gate error");
+          log("");
           log("  Type 'man qiskit' for the full manual with gate map.");
           break;
         }
@@ -1878,6 +1891,82 @@ export function useQShell() {
           break;
         }
 
+        if (subcmd === "noise") {
+          const noiseCmd = parts[2]?.toLowerCase();
+          if (!noiseCmd || noiseCmd === "status") {
+            if (!circ) { log("qiskit: no circuit active"); break; }
+            const nm = circ.noise;
+            const active = nm.depolarizing > 0 || nm.amplitudeDamping > 0 || nm.phaseDamping > 0 || nm.measurementError > 0 || nm.twoQubitDepolarizing > 0;
+            log(`  Noise model: ${active ? "ACTIVE" : "OFF (ideal)"}`);
+            if (active) {
+              log("");
+              log(`  ┌─ Gate noise ──────────────────────────────────────┐`);
+              log(`  │ 1Q depolarizing:    p = ${nm.depolarizing.toFixed(6)}              │`);
+              log(`  │ 2Q depolarizing:    p = ${nm.twoQubitDepolarizing.toFixed(6)}              │`);
+              log(`  │ Amplitude damping:  γ = ${nm.amplitudeDamping.toFixed(6)} (T1 decay)     │`);
+              log(`  │ Phase damping:      λ = ${nm.phaseDamping.toFixed(6)} (T2 dephasing)  │`);
+              log(`  ├─ Readout noise ─────────────────────────────────── │`);
+              log(`  │ Measurement error:  p = ${nm.measurementError.toFixed(6)}              │`);
+              log(`  └──────────────────────────────────────────────────┘`);
+            }
+            break;
+          }
+          if (noiseCmd === "off" || noiseCmd === "none" || noiseCmd === "ideal") {
+            if (!circ) { log("qiskit: no circuit active"); break; }
+            circ.noise = noNoise();
+            log("  Noise model: OFF (ideal simulator)");
+            break;
+          }
+          if (noiseCmd === "realistic" || noiseCmd === "on") {
+            if (!circ) { log("qiskit: no circuit active"); break; }
+            const level = (parts[3]?.toLowerCase() || "medium") as "low" | "medium" | "high";
+            if (!["low", "medium", "high"].includes(level)) { log("  Usage: noise realistic [low|medium|high]"); break; }
+            circ.noise = realisticNoise(level);
+            log(`  Noise model: realistic (${level} noise)`);
+            log(`  1Q depol: ${circ.noise.depolarizing}, 2Q depol: ${circ.noise.twoQubitDepolarizing}`);
+            log(`  Amp damp: ${circ.noise.amplitudeDamping}, Phase damp: ${circ.noise.phaseDamping}`);
+            log(`  Meas err: ${circ.noise.measurementError}`);
+            break;
+          }
+          if (noiseCmd === "depolarizing" || noiseCmd === "depol") {
+            if (!circ) { log("qiskit: no circuit active"); break; }
+            const p = parseFloat(parts[3] || "0.01");
+            circ.noise.depolarizing = Math.max(0, Math.min(1, p));
+            log(`  1-qubit depolarizing error: p = ${circ.noise.depolarizing}`);
+            break;
+          }
+          if (noiseCmd === "amplitude_damping" || noiseCmd === "amp_damp" || noiseCmd === "t1") {
+            if (!circ) { log("qiskit: no circuit active"); break; }
+            const g = parseFloat(parts[3] || "0.001");
+            circ.noise.amplitudeDamping = Math.max(0, Math.min(1, g));
+            log(`  Amplitude damping: γ = ${circ.noise.amplitudeDamping}`);
+            break;
+          }
+          if (noiseCmd === "phase_damping" || noiseCmd === "phase_damp" || noiseCmd === "t2") {
+            if (!circ) { log("qiskit: no circuit active"); break; }
+            const l = parseFloat(parts[3] || "0.002");
+            circ.noise.phaseDamping = Math.max(0, Math.min(1, l));
+            log(`  Phase damping: λ = ${circ.noise.phaseDamping}`);
+            break;
+          }
+          if (noiseCmd === "measurement" || noiseCmd === "meas" || noiseCmd === "readout") {
+            if (!circ) { log("qiskit: no circuit active"); break; }
+            const m = parseFloat(parts[3] || "0.02");
+            circ.noise.measurementError = Math.max(0, Math.min(1, m));
+            log(`  Measurement error: p = ${circ.noise.measurementError}`);
+            break;
+          }
+          if (noiseCmd === "two_qubit" || noiseCmd === "2q") {
+            if (!circ) { log("qiskit: no circuit active"); break; }
+            const p2 = parseFloat(parts[3] || "0.02");
+            circ.noise.twoQubitDepolarizing = Math.max(0, Math.min(1, p2));
+            log(`  2-qubit depolarizing: p = ${circ.noise.twoQubitDepolarizing}`);
+            break;
+          }
+          log("  Usage: noise [status|off|realistic [low|medium|high]|depolarizing <p>|amplitude_damping <γ>|phase_damping <λ>|measurement <p>|two_qubit <p>]");
+          break;
+        }
+
         log(`qiskit: unknown command '${subcmd}'. Type 'qiskit' for usage.`);
         break;
       }
@@ -1963,6 +2052,7 @@ export function useQShell() {
           log(`  circuit.append(cirq.${subcmd2}(${qubits.map(q => `q[${q}]`).join(", ")}))  →  ${cirqGate.qisa}`);
           break;
         }
+        if (subcmd2 === "noise") { await executeCommand(`qiskit noise ${parts.slice(2).join(" ")}`); break; }
         log(`cirq: unknown command '${subcmd2}'. Type 'cirq' for usage.`);
         break;
       }
@@ -2074,6 +2164,7 @@ export function useQShell() {
           log(`  qml.${subcmd3}(${pStr}wires=[${wires.join(", ")}])  →  ${plGate.qisa}`);
           break;
         }
+        if (subcmd3 === "noise") { await executeCommand(`qiskit noise ${parts.slice(2).join(" ")}`); break; }
         log(`pl: unknown command '${subcmd3}'. Type 'pl' for usage.`);
         break;
       }
