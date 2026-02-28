@@ -48,7 +48,7 @@ import { useShortcutMastery } from "@/modules/hologram-ui/hooks/useShortcutMaste
 import { useContextBeacon, useScreenContext } from "@/modules/hologram-ui/hooks/useScreenContext";
 import { useObserverCompanion } from "@/modules/hologram-ui/hooks/useObserverCompanion";
 import DesktopSurface from "@/modules/hologram-ui/components/DesktopSurface";
-import { useDesktopState, type DesktopId } from "@/modules/hologram-ui/hooks/useDesktopState";
+import type { DesktopId } from "@/modules/hologram-ui/hooks/useDesktopState";
 import { useAiChatHistory } from "@/modules/hologram-ui/hooks/useAiChatHistory";
 import VoiceOrb from "@/modules/hologram-ui/components/VoiceOrb";
 
@@ -111,11 +111,6 @@ export default function HologramOsPage() {
   const chatOpen = k.chatOpen;
   const activeDesktop = k.desktopMode as DesktopId;
 
-  // Sync localStorage for backward compatibility with desktop persisting
-  useEffect(() => {
-    localStorage.setItem("hologram-bg-mode", activeDesktop);
-  }, [activeDesktop]);
-
   // ── Remaining local state (truly view-local, not kernel state) ────────
   const [claimOpen, setClaimOpen] = useState(false);
   const [ambientState, setAmbientState] = useState<AmbientState>({ playing: false, loading: false, stationHue: "220", stationName: "" });
@@ -151,9 +146,10 @@ export default function HologramOsPage() {
     }, 2000);
   }, [activeDesktop, departingDesktop, k.switchDesktop]);
 
-  // ── Per-desktop widget state ──────────────────────────────────────────
-  const activeWidgets = useDesktopState(activeDesktop);
-
+  // ── Widget visibility — projected from kernel ─────────────────────────
+  const isWidgetVisible = useCallback((id: string) => k.isDesktopWidgetVisible(activeDesktop, id), [k, activeDesktop]);
+  const removeWidget = useCallback((id: string) => k.hideDesktopWidget(activeDesktop, id), [k, activeDesktop]);
+  const toggleAllWidgets = useCallback(() => k.toggleAllDesktopWidgets(activeDesktop), [k, activeDesktop]);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
   const triadicActivity = useTriadicActivity();
@@ -203,9 +199,9 @@ export default function HologramOsPage() {
     });
   }, [chatHistory.activeConversationId, chatHistory.isAuthenticated]);
 
-  // ── Auto-hide widgets in focus mode ────────────────────────────────────
+  // ── Auto-hide widgets in focus mode — kernel syscall ────────────────
   useEffect(() => {
-    activeWidgets.setAllHidden(isFocus);
+    k.setDesktopAllHidden(activeDesktop, isFocus);
   }, [isFocus, activeDesktop]);
 
   const contextHints = useMemo(() => {
@@ -257,13 +253,13 @@ export default function HologramOsPage() {
           break;
         case ",": e.preventDefault(); mastery.record(","); k.openPanel("messenger"); break;
         case ".": e.preventDefault(); mastery.record("."); k.setChatOpen(false); k.closePanel(); break;
-        case "\\": e.preventDefault(); mastery.record("\\"); activeWidgets.toggleAllWidgets(); break;
+        case "\\": e.preventDefault(); mastery.record("\\"); toggleAllWidgets(); break;
         case "/": e.preventDefault(); mastery.record("/"); setShortcutsOpen(prev => !prev); break;
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [navigate, attention, activeDesktop, switchDesktop, activeWidgets, k.setChatOpen, k.openPanel, k.closePanel]);
+  }, [navigate, attention, activeDesktop, switchDesktop, toggleAllWidgets, k.setChatOpen, k.openPanel, k.closePanel]);
 
   // ── Mobile: iOS homescreen ──
   if (isMobile) return <MobileOsShell />;
@@ -363,8 +359,8 @@ export default function HologramOsPage() {
                   onOpenChat={() => { setChatPrompt(""); k.setChatOpen(true); }}
                   onSwitchDesktop={switchDesktop}
                   onOpenLegal={(tab) => { setLegalTab(tab); setLegalOpen(true); }}
-                  isWidgetVisible={activeWidgets.isWidgetVisible}
-                  removeWidget={activeWidgets.removeWidget}
+                  isWidgetVisible={isWidgetVisible}
+                  removeWidget={removeWidget}
                   ambientState={mode === "image" ? ambientState : undefined}
                   observerBriefing={observer.promptText}
                   screenContext={screenCtx.getPromptContext()}

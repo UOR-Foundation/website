@@ -140,6 +140,24 @@ export interface KernelConfig {
   activePanel: PanelId;
   /** Whether the Lumen AI chat is open (independent of activePanel) */
   chatOpen: boolean;
+  /**
+   * Attention aperture — the kernel's observer focus register.
+   * 0.0 = pure diffuse (wide receptive field)
+   * 1.0 = pure focus (narrow, deep signal)
+   * All distraction gating, vignette intensity, and UI chrome
+   * visibility derive from this single scalar.
+   */
+  attention: {
+    aperture: number;
+  };
+  /**
+   * Per-desktop widget visibility — kernel tracks which widgets
+   * are hidden on each desktop frame. Maps to process freeze/thaw.
+   */
+  desktopWidgets: Record<string, {
+    hiddenWidgets: string[];
+    allHidden: boolean;
+  }>;
   desktop: {
     widgetStates: Record<string, {
       x: number; y: number; w: number; h: number;
@@ -154,6 +172,8 @@ const DEFAULT_CONFIG: KernelConfig = {
   palette: { mode: "image" },
   activePanel: "none",
   chatOpen: false,
+  attention: { aperture: 0.3 },
+  desktopWidgets: {},
   desktop: { widgetStates: {} },
 };
 
@@ -506,6 +526,62 @@ export class KernelProjector {
     return this.config.palette.mode as DesktopMode;
   }
 
+  // ── Attention Aperture (kernel register) ────────────────────────────
+
+  /** Get current attention aperture (0–1) */
+  getAperture(): number {
+    return this.config.attention.aperture;
+  }
+
+  /** Set attention aperture — kernel syscall for focus/diffuse mode */
+  setAperture(value: number): void {
+    this.config.attention.aperture = Math.max(0, Math.min(1, value));
+    this.saveConfig();
+    this.emitFrame(this.projectFrame());
+  }
+
+  // ── Desktop Widget Visibility (kernel register) ─────────────────────
+
+  /** Get per-desktop widget state */
+  getDesktopWidgets(desktopId: string): { hiddenWidgets: string[]; allHidden: boolean } {
+    return this.config.desktopWidgets[desktopId] ?? { hiddenWidgets: [], allHidden: false };
+  }
+
+  /** Hide a widget on a specific desktop */
+  hideDesktopWidget(desktopId: string, widgetId: string): void {
+    const state = this.config.desktopWidgets[desktopId] ?? { hiddenWidgets: [], allHidden: false };
+    if (!state.hiddenWidgets.includes(widgetId)) {
+      state.hiddenWidgets = [...state.hiddenWidgets, widgetId];
+    }
+    this.config.desktopWidgets[desktopId] = state;
+    this.saveConfig();
+    this.emitFrame(this.projectFrame());
+  }
+
+  /** Toggle all widgets on a specific desktop */
+  toggleAllDesktopWidgets(desktopId: string): void {
+    const state = this.config.desktopWidgets[desktopId] ?? { hiddenWidgets: [], allHidden: false };
+    state.allHidden = !state.allHidden;
+    this.config.desktopWidgets[desktopId] = state;
+    this.saveConfig();
+    this.emitFrame(this.projectFrame());
+  }
+
+  /** Set allHidden for a specific desktop */
+  setDesktopAllHidden(desktopId: string, hidden: boolean): void {
+    const state = this.config.desktopWidgets[desktopId] ?? { hiddenWidgets: [], allHidden: false };
+    state.allHidden = hidden;
+    this.config.desktopWidgets[desktopId] = state;
+    this.saveConfig();
+    this.emitFrame(this.projectFrame());
+  }
+
+  /** Check if a widget is visible on a specific desktop */
+  isDesktopWidgetVisible(desktopId: string, widgetId: string): boolean {
+    const state = this.config.desktopWidgets[desktopId] ?? { hiddenWidgets: [], allHidden: false };
+    return !state.allHidden && !state.hiddenWidgets.includes(widgetId);
+  }
+
   /** Project the current kernel state into a frame */
   projectFrame(): ProjectionFrame {
     this.tickCount++;
@@ -636,13 +712,49 @@ export class KernelProjector {
       const stored = localStorage.getItem("kernel:config");
       if (stored) {
         const parsed = JSON.parse(stored);
-        this.config = { ...DEFAULT_CONFIG, ...parsed };
+        // Deep merge with defaults to handle new config registers
+        this.config = {
+          ...DEFAULT_CONFIG,
+          ...parsed,
+          typography: { ...DEFAULT_CONFIG.typography, ...parsed.typography },
+          palette: { ...DEFAULT_CONFIG.palette, ...parsed.palette },
+          attention: { ...DEFAULT_CONFIG.attention, ...parsed.attention },
+          desktopWidgets: { ...DEFAULT_CONFIG.desktopWidgets, ...parsed.desktopWidgets },
+          desktop: { ...DEFAULT_CONFIG.desktop, ...parsed.desktop },
+        };
       }
-      // Backward compat: migrate legacy desktop mode preference
+
+      // ── Migrate legacy localStorage keys into kernel config ──────────
+      // Desktop mode
       const legacyBg = localStorage.getItem("hologram-bg-mode");
       if (legacyBg && (legacyBg === "image" || legacyBg === "white" || legacyBg === "dark")) {
         this.config.palette.mode = legacyBg;
       }
+      // Attention aperture
+      const legacyAttention = localStorage.getItem("hologram:attention-mode");
+      if (legacyAttention !== null) {
+        const val = parseFloat(legacyAttention);
+        if (!isNaN(val) && val >= 0 && val <= 1) {
+          this.config.attention.aperture = val;
+        }
+      }
+      // Text size
+      const legacyText = localStorage.getItem("hologram-text-size");
+      if (legacyText) {
+        const scaleMap: Record<string, number> = { compact: 0.9, default: 1.0, large: 1.15 };
+        if (scaleMap[legacyText]) {
+          this.config.typography.userScale = scaleMap[legacyText];
+        }
+      }
+      // Desktop widget state
+      const legacyWidgets = localStorage.getItem("hologram-desktop-widgets");
+      if (legacyWidgets) {
+        try {
+          const parsed = JSON.parse(legacyWidgets);
+          this.config.desktopWidgets = { ...this.config.desktopWidgets, ...parsed };
+        } catch {}
+      }
+
       // Always reset transient state on boot (panels closed)
       this.config.activePanel = "none";
       this.config.chatOpen = false;
