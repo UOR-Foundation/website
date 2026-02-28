@@ -152,3 +152,21 @@ export type {
   SecureAgentInfo,
   SecureMeshStats,
 } from "./q-secure-mesh";
+
+// Q-Simulator: Full statevector quantum simulator
+export {
+  createState,
+  applyOp,
+  measure as simMeasure,
+  simulateCircuit,
+  formatStatevector,
+  drawCircuitASCII,
+  toOpenQASM,
+  entanglementMap,
+  quickRun,
+} from "./q-simulator";
+export type {
+  SimulatorState,
+  SimOp,
+  GateMatrix,
+} from "./q-simulator";
