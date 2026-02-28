@@ -27,8 +27,9 @@ const SouriauThermodynamicsPanel = React.lazy(() => import("@/modules/quantum/co
 const CoadjointOrbitPanel = React.lazy(() => import("@/modules/quantum/components/CoadjointOrbitPanel"));
 const TINNPanel = React.lazy(() => import("@/modules/quantum/components/TINNPanel"));
 const FoliationPanel = React.lazy(() => import("@/modules/quantum/components/FoliationPanel"));
+const QuantumAttentionPanel = React.lazy(() => import("@/modules/quantum/components/QuantumAttentionPanel"));
 
-type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits" | "tinn" | "foliation";
+type Tab = "overview" | "isa" | "topo-qubit" | "q-linux" | "compiler" | "proof" | "radar" | "alpha" | "153-link" | "geo-qubit" | "composer" | "thermo" | "orbits" | "tinn" | "foliation" | "q-attention";
 
 export default function QuantumDashboardPage() {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ export default function QuantumDashboardPage() {
     { key: "orbits", label: "Orbit Classifier", icon: <CircleDot size={12} /> },
     { key: "tinn", label: "TINN Layer", icon: <BrainCircuit size={12} /> },
     { key: "foliation", label: "Foliation", icon: <Layers size={12} /> },
+    { key: "q-attention", label: "Q-Attention", icon: <BrainCircuit size={12} /> },
   ];
 
   const loadingText: Record<Tab, string> = {
@@ -68,6 +70,7 @@ export default function QuantumDashboardPage() {
     orbits: "Classifying coadjoint orbits for Neeb integrability…",
     tinn: "Initializing metriplectic bracket dynamics…",
     foliation: "Constructing transverse symplectic foliation…",
+    "q-attention": "Compiling attention head into quantum circuit…",
   };
 
   return (
@@ -132,6 +135,7 @@ export default function QuantumDashboardPage() {
            tab === "orbits" ? <CoadjointOrbitPanel /> :
            tab === "tinn" ? <TINNPanel /> :
            tab === "foliation" ? <FoliationPanel /> :
+           tab === "q-attention" ? <QuantumAttentionPanel /> :
            <SouriauThermodynamicsPanel />}
         </Suspense>
       </div>
@@ -296,6 +300,20 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         { label: "Metric", value: "Fisher-Rao" },
       ],
     },
+    {
+      key: "q-attention" as Tab,
+      title: "Quantum-Native Attention",
+      phase: "Phase 22",
+      icon: <BrainCircuit size={24} />,
+      color: "hsl(200,60%,60%)",
+      description: "Compiles a single transformer attention head into a quantum circuit. Amplitude encoding → swap test (Q·K^T) → √d_k scaling → value projection. All gates Euler-decomposed and mapped through Atlas.",
+      stats: [
+        { label: "Stages", value: "4" },
+        { label: "Qubits", value: "O(log d_k)" },
+        { label: "Models", value: "16" },
+        { label: "Tests", value: "10/10 ✓" },
+      ],
+    },
   ];
 
   return (
@@ -374,6 +392,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             { status: "done", label: "Phase 18: Geometric Qubit Emulator — Souriau quantization + braiding gates (14 tests)" },
             { status: "done", label: "Phase 19: Circuit Composer — drag-and-drop builder + kernel execution" },
             { status: "done", label: "Phase 20: Souriau Thermodynamics — zero-point info geometry & Cartan NN integration" },
+            { status: "done", label: "Phase 22: Quantum-Native Attention — attention head → quantum circuit compilation (10 tests)" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>
