@@ -26,6 +26,7 @@ interface Stats {
   lastFrameAge: number;
   // Surface adapter interpolation
   interpRunning: boolean;
+  interpSleeping: boolean;
   interpTickMs: number;
   interpPhase: number;
   interpHasPrev: boolean;
@@ -110,6 +111,7 @@ export default function KernelDevTools() {
       setStats({
         ...ps,
         interpRunning: is.running,
+        interpSleeping: is.sleeping,
         interpTickMs: is.tickMs,
         interpPhase: is.phase,
         interpHasPrev: is.hasPrev,
