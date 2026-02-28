@@ -81,6 +81,42 @@ export interface SouriauState {
   freeEnergy: number;
   /** Landauer cost of last operation (J) */
   landauerCost: number;
+  /** Information Capacity Φ of the zero-point state */
+  informationCapacity: InformationCapacity;
+}
+
+/**
+ * Information Capacity Φ — Bekenstein-Hawking bound for the Atlas volume.
+ *
+ * The Bekenstein-Hawking entropy sets the maximum information content
+ * of a bounded region:  S_BH = A / (4 l_P²)
+ *
+ * For the Atlas, the "area" is the boundary of the information manifold
+ * defined by the Fisher-Rao metric: A = √det(g) × surface factor.
+ *
+ * The zero-point capacity Φ is the ratio of the Casimir entropy
+ * to this geometric bound — if Φ ≤ 1, the Atlas saturates or
+ * respects the holographic principle.
+ */
+export interface InformationCapacity {
+  /** Φ: ratio of Casimir entropy to Bekenstein-Hawking bound */
+  phi: number;
+  /** Bekenstein-Hawking bound S_BH for the Atlas metric volume */
+  bekensteinHawkingBound: number;
+  /** Effective boundary area A = √det(g) × manifold surface factor */
+  effectiveArea: number;
+  /** Holographic bits: S_BH / ln(2) */
+  holographicBits: number;
+  /** Whether the bound is saturated (Φ ≈ 1) within tolerance */
+  saturated: boolean;
+  /** Whether the bound is respected (Φ ≤ 1) */
+  respected: boolean;
+  /** Atlas volume V = det(g)^(1/2) × rank-volume factor */
+  atlasVolume: number;
+  /** Effective "Planck area" unit for the Atlas lattice */
+  planckAreaUnit: number;
+  /** Breakdown of capacity by Cartan direction */
+  directionalCapacity: number[];
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────
@@ -242,6 +278,9 @@ function computeFullState(beta: LieAlgebraElement): SouriauState {
   // Metric scalar (trace of Fisher-Rao)
   const metric = fisherRao.diagonal.reduce((s, g) => s + g, 0) / RANK;
 
+  // ── Information Capacity (Bekenstein-Hawking) ──────────────────────
+  const informationCapacity = computeInformationCapacity(entropy, fisherRao, beta);
+
   const gibbs: GibbsEnsemble = {
     temperature: beta,
     partitionZ: Z,
@@ -261,6 +300,76 @@ function computeFullState(beta: LieAlgebraElement): SouriauState {
     fisherRao,
     freeEnergy,
     landauerCost: 0,
+    informationCapacity,
+  };
+}
+
+/**
+ * Compute the Information Capacity Φ of the zero-point state.
+ *
+ * Bekenstein-Hawking bound:  S_BH = A / (4 l_P²)
+ *
+ * For the Atlas information manifold:
+ *   - The "volume" is V = √det(g_ij) × Ω_rank where Ω_rank is
+ *     the rank-8 solid angle factor (π⁴/24 for 8D)
+ *   - The "boundary area" A is the (rank-1)-dimensional boundary
+ *     of this volume: A = V^{(rank-1)/rank} × surface coefficient
+ *   - The "Planck area" l_P² is set by the minimum eigenvalue of
+ *     the Fisher-Rao metric (the finest resolution the manifold supports)
+ *
+ * The key identity:  Φ = S_Casimir / S_BH
+ *   Φ ≤ 1  ↔  holographic bound respected
+ *   Φ ≈ 1  ↔  bound saturated (maximal information density)
+ */
+function computeInformationCapacity(
+  casimirEntropy: number,
+  fisherRao: FisherRaoMetric,
+  beta: LieAlgebraElement,
+): InformationCapacity {
+  const rank = beta.coeffs.length;
+
+  // Atlas volume: √det(g) × solid angle factor Ω_8 = π⁴/24
+  const solidAngleFactor = Math.pow(Math.PI, 4) / 24;
+  const sqrtDet = Math.sqrt(Math.max(fisherRao.determinant, 1e-100));
+  const atlasVolume = sqrtDet * solidAngleFactor;
+
+  // Effective boundary area: A = V^{(d-1)/d} × 2d (surface of d-cube)
+  const areaPower = (rank - 1) / rank;
+  const surfaceCoeff = 2 * rank;
+  const effectiveArea = Math.pow(Math.max(atlasVolume, 1e-100), areaPower) * surfaceCoeff;
+
+  // Planck area unit: minimum Fisher-Rao eigenvalue (finest resolution)
+  // This is the information-geometric analogue of l_P²
+  const minMetric = Math.min(...fisherRao.diagonal.filter(g => g > 1e-15));
+  const planckAreaUnit = minMetric > 0 ? minMetric : 1e-10;
+
+  // Bekenstein-Hawking bound: S_BH = A / (4 l_P²)
+  const bekensteinHawkingBound = effectiveArea / (4 * planckAreaUnit);
+
+  // Holographic bits
+  const holographicBits = bekensteinHawkingBound / Math.LN2;
+
+  // Information capacity ratio
+  const phi = bekensteinHawkingBound > 1e-15
+    ? Math.abs(casimirEntropy) / bekensteinHawkingBound
+    : 0;
+
+  // Directional capacity: per-axis contribution
+  const directionalCapacity = fisherRao.diagonal.map((g, i) => {
+    const axisBound = g / (4 * planckAreaUnit);
+    return axisBound > 0 ? (Math.abs(beta.coeffs[i]) / axisBound) : 0;
+  });
+
+  return {
+    phi,
+    bekensteinHawkingBound,
+    effectiveArea,
+    holographicBits,
+    saturated: Math.abs(phi - 1.0) < 0.05,
+    respected: phi <= 1.0 + 1e-6,
+    atlasVolume,
+    planckAreaUnit,
+    directionalCapacity,
   };
 }
 
