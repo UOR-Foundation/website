@@ -33,7 +33,7 @@ import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
 import LegalPanel from "@/modules/hologram-ui/components/LegalPanel";
-import KernelHeartbeat from "@/modules/hologram-os/components/KernelHeartbeat";
+
 import KernelDevTools from "@/modules/hologram-os/components/KernelDevTools";
 import BreathingRhythmListener from "@/modules/hologram-os/components/BreathingRhythmListener";
 import { HologramViewport, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
@@ -463,7 +463,7 @@ export default function HologramOsPage() {
       <TerminalProjection open={activePanel === "terminal"} preload={preloadedPanels.has("terminal")} onClose={() => k.closePanel()} onOpenJupyter={() => k.openPanel("jupyter")} />
       <JupyterProjection open={activePanel === "jupyter"} preload={preloadedPanels.has("jupyter")} onClose={() => k.closePanel()} />
       <SnapGuideOverlay />
-      <KernelHeartbeat />
+      
       <KernelDevTools />
       <BreathingRhythmListener />
     </HologramViewport>
