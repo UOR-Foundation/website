@@ -236,3 +236,22 @@ export type {
   ClockAlgebraReport,
   ClockAlgebraTest,
 } from "./clock-algebra";
+
+// Cryptographic Clock — Atlas ↔ SHA-256 ↔ RSA unity
+export {
+  projectHashToAtlas,
+  atlasFingerprint,
+  generateClockRSA,
+  clockRSAEncrypt,
+  mapCriticalIdentityToClock,
+  buildCorrespondence,
+  runCryptoClockVerification,
+} from "./crypto-clock";
+export type {
+  HashProjection,
+  ClockRSAKeyPair,
+  ClockRSAResult,
+  CryptoClockCorrespondence,
+  CryptoClockReport,
+  CryptoClockTest,
+} from "./crypto-clock";
