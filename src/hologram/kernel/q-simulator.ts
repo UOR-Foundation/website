@@ -409,6 +409,27 @@ function applyCSWAP(sv: Complex[], n: number, control: number, q0: number, q1: n
   }
 }
 
+/**
+ * Apply a multi-controlled X gate: flip target iff ALL controls are |1⟩.
+ * Generalizes CCX to arbitrary number of controls.
+ */
+function applyMCX(sv: Complex[], n: number, controls: number[], target: number): void {
+  const dim = 1 << n;
+  const tBit = 1 << (n - 1 - target);
+  const controlBits = controls.map(c => 1 << (n - 1 - c));
+
+  for (let i = 0; i < dim; i++) {
+    // Check all control bits are set
+    if (!controlBits.every(cb => (i & cb) !== 0)) continue;
+    // Only process pairs where target is 0
+    if (i & tBit) continue;
+    const j = i | tBit;
+    const tmp = sv[i];
+    sv[i] = sv[j];
+    sv[j] = tmp;
+  }
+}
+
 // ── Gate Application Dispatch ─────────────────────────────────────────────
 
 const X_MATRIX = GATES.x as GateMatrix;
@@ -477,6 +498,15 @@ export function applyOp(state: SimulatorState, op: SimOp): string | null {
   }
   if (g === "cswap" || g === "fredkin") {
     applyCSWAP(sv, n, q[0], q[1], q[2]);
+    return null;
+  }
+
+  // Multi-controlled X (MCX): last qubit is target, rest are controls
+  if (g === "mcx") {
+    if (q.length < 2) return "MCX requires at least 2 qubits";
+    const controls = q.slice(0, -1);
+    const target = q[q.length - 1];
+    applyMCX(sv, n, controls, target);
     return null;
   }
 
