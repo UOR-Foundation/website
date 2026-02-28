@@ -43,7 +43,7 @@ function getPaletteVars(bgMode: "image" | "white" | "dark") {
     "--sb-active": "hsla(30, 12%, 0%, 0.05)",
     "--sb-border": "hsla(30, 8%, 0%, 0.06)",
     "--sb-text": "hsl(25, 8%, 28%)",
-    "--sb-muted": "hsl(25, 6%, 55%)",
+    "--sb-muted": "hsl(25, 8%, 40%)",
     "--sb-gold": "hsl(32, 30%, 45%)",
   } as Record<string, string>;
   if (bgMode === "dark") return {
@@ -52,7 +52,7 @@ function getPaletteVars(bgMode: "image" | "white" | "dark") {
     "--sb-active": "hsla(30, 15%, 85%, 0.08)",
     "--sb-border": "hsla(30, 10%, 70%, 0.06)",
     "--sb-text": "hsl(30, 8%, 82%)",
-    "--sb-muted": "hsl(30, 6%, 52%)",
+    "--sb-muted": "hsl(30, 8%, 68%)",
     "--sb-gold": "hsl(34, 35%, 62%)",
   } as Record<string, string>;
   return {
@@ -61,7 +61,7 @@ function getPaletteVars(bgMode: "image" | "white" | "dark") {
     "--sb-active": "hsla(30, 15%, 85%, 0.08)",
     "--sb-border": "hsla(30, 10%, 70%, 0.06)",
     "--sb-text": "hsl(30, 8%, 82%)",
-    "--sb-muted": "hsl(30, 6%, 52%)",
+    "--sb-muted": "hsl(30, 8%, 68%)",
     "--sb-gold": "hsl(34, 35%, 62%)",
   } as Record<string, string>;
 }
