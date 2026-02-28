@@ -460,17 +460,25 @@ function CellView({
 }: CellViewProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
+  // Auto-resize textarea to fit content
+  const autoResize = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
     }
-  }, [cell.source]);
+  }, []);
+
+  useEffect(() => { autoResize(); }, [cell.source, autoResize]);
 
   // Auto-focus textarea when entering edit mode
   useEffect(() => {
     if (isActive && editMode && textareaRef.current) {
       textareaRef.current.focus();
+      // Ensure caret is visible at end if cell was just focused
+      const el = textareaRef.current;
+      if (el.selectionStart === 0 && el.selectionEnd === 0 && el.value.length > 0) {
+        el.selectionStart = el.selectionEnd = el.value.length;
+      }
     }
   }, [isActive, editMode]);
 
@@ -483,7 +491,45 @@ function CellView({
       e.preventDefault();
       textareaRef.current?.blur();
     }
+    // Tab key: insert 4 spaces instead of losing focus
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const ta = textareaRef.current;
+      if (!ta) return;
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const val = ta.value;
+      if (e.shiftKey) {
+        // Shift+Tab: dedent current line by up to 4 spaces
+        const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+        const linePrefix = val.slice(lineStart, lineStart + 4);
+        const spacesToRemove = linePrefix.match(/^ {1,4}/)?.[0].length || 0;
+        if (spacesToRemove > 0) {
+          const newVal = val.slice(0, lineStart) + val.slice(lineStart + spacesToRemove);
+          onChange(newVal);
+          setTimeout(() => { ta.selectionStart = ta.selectionEnd = start - spacesToRemove; }, 0);
+        }
+      } else {
+        const newVal = val.slice(0, start) + "    " + val.slice(end);
+        onChange(newVal);
+        setTimeout(() => { ta.selectionStart = ta.selectionEnd = start + 4; autoResize(); }, 0);
+      }
+    }
   };
+
+  // Handle paste: auto-enter edit mode and ensure resize
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    // Let the default paste happen, then auto-resize
+    onEdit();
+    setTimeout(autoResize, 0);
+  }, [onEdit, autoResize]);
+
+  // Handle input changes with auto-resize
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(e.target.value);
+    // Schedule resize for after React renders the new value
+    setTimeout(autoResize, 0);
+  }, [onChange, autoResize]);
 
   const isMarkdown = cell.type === "markdown";
   const isCollapsed = cell.metadata?.collapsed;
@@ -587,9 +633,11 @@ function CellView({
 
                     <textarea
                       ref={textareaRef}
+                      data-cell-id={cell.id}
                       value={cell.source}
-                      onChange={e => onChange(e.target.value)}
+                      onChange={handleChange}
                       onKeyDown={handleKeyDown}
+                      onPaste={handlePaste}
                       onFocus={onEdit}
                       className="w-full px-4 py-[5px] text-[13px] font-mono resize-none focus:outline-none bg-transparent relative z-10"
                       style={{
@@ -597,6 +645,9 @@ function CellView({
                         caretColor: "hsl(220, 15%, 15%)",
                         lineHeight: "1.8",
                         minHeight: "28px",
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                        overflowWrap: "break-word",
                       }}
                       spellCheck={false}
                       placeholder={isMarkdown ? "Write Markdown here…" : "# Write Python code here…"}
@@ -1963,7 +2014,36 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
             if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); cutCellAction(); }
             break;
           case "v":
-            if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); pasteCellAction(); }
+            if (e.ctrlKey || e.metaKey) {
+              // Ctrl+V in command mode: auto-enter edit mode and let paste go to textarea
+              e.preventDefault();
+              setEditMode(true);
+              // After edit mode is set, focus textarea and paste from clipboard
+              setTimeout(async () => {
+                const activeCellEl = document.querySelector(`textarea[data-cell-id="${activeCell}"]`) as HTMLTextAreaElement | null;
+                if (activeCellEl) {
+                  activeCellEl.focus();
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    const start = activeCellEl.selectionStart;
+                    const end = activeCellEl.selectionEnd;
+                    const val = activeCellEl.value;
+                    const newVal = val.slice(0, start) + text + val.slice(end);
+                    // Trigger React onChange
+                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+                    nativeInputValueSetter?.call(activeCellEl, newVal);
+                    activeCellEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    // Also update via React state directly
+                    updateCell(activeCell!, newVal);
+                    setTimeout(() => {
+                      activeCellEl.selectionStart = activeCellEl.selectionEnd = start + text.length;
+                    }, 0);
+                  } catch { /* clipboard API may be blocked */ }
+                }
+              }, 50);
+            } else {
+              e.preventDefault(); pasteCellAction();
+            }
             break;
           case "z":
             if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); undoCellDelete(); }
@@ -2009,7 +2089,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
     return () => window.removeEventListener("keydown", handler);
   }, [mode, editMode, activeCell, insertCellAbove, addCell, deleteCell, setCellType,
       copyCellAction, cutCellAction, pasteCellAction, undoCellDelete, selectAdjacentCell,
-      saveNotebook, runCell, toggleCollapse]);
+      saveNotebook, runCell, toggleCollapse, updateCell]);
 
   const activeDemo = activeDemoId ? demos.find(d => d.id === activeDemoId) : null;
   const activeCellObj = activeCell ? notebook.cells.find(c => c.id === activeCell) : null;
