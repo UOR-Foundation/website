@@ -18,6 +18,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { bootGenesis, type GenesisState } from "@/hologram/genesis/genesis";
 import { KP } from "@/modules/hologram-os/kernel-palette";
+import { canonicalToTriword } from "@/lib/uor-triword";
 
 export default function KernelHeartbeat() {
   const [expanded, setExpanded] = useState(false);
@@ -37,6 +38,7 @@ export default function KernelHeartbeat() {
   const dotColor = genesis.alive ? KP.green : KP.red;
   const passed = genesis.post.checks.filter((c) => c.passed).length;
   const total = genesis.post.checks.length;
+  const triword = genesis.alive ? canonicalToTriword(genesis.genesisCid.string) : null;
 
   return (
     <div
@@ -69,12 +71,12 @@ export default function KernelHeartbeat() {
           />
         </span>
 
-        {/* Glyph */}
+        {/* Triword address */}
         <span
-          className="text-[10px] tracking-widest"
-          style={{ color: KP.muted, fontFamily: "monospace" }}
+          className="text-[10px] font-medium"
+          style={{ color: KP.gold, fontFamily: KP.serif, letterSpacing: "0.02em" }}
         >
-          {genesis.genesisGlyph || "--------"}
+          {triword || "----.----.----"}
         </span>
 
         {/* POST count */}
@@ -130,14 +132,29 @@ export default function KernelHeartbeat() {
               </span>
             </div>
 
-            {/* Genesis IRI */}
-            <div className="mb-2">
-              <span className="text-[9px] block" style={{ color: KP.dim }}>
-                IRI
+            {/* Triword address */}
+            {triword && (
+              <div className="mb-2">
+                <span className="text-[9px] block" style={{ color: KP.dim }}>
+                  Address
+                </span>
+                <span
+                  className="text-[13px] font-medium block"
+                  style={{ color: KP.gold, fontFamily: KP.serif }}
+                >
+                  {triword.split(".").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ")}
+                </span>
+              </div>
+            )}
+
+            {/* Glyph + IRI */}
+            <div className="mb-2 flex items-center gap-2">
+              <span className="text-[14px] tracking-widest" style={{ color: KP.muted }}>
+                {genesis.genesisGlyph || "—"}
               </span>
               <span
-                className="text-[9px] break-all block"
-                style={{ color: KP.muted, fontFamily: "monospace" }}
+                className="text-[8px] break-all flex-1"
+                style={{ color: KP.dim, fontFamily: "monospace" }}
               >
                 {genesis.genesisIri || "—"}
               </span>

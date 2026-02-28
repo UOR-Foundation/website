@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { bootGenesis, type GenesisState } from "@/hologram/genesis/genesis";
 import { buildArtifact, toBlob } from "@/hologram/genesis/artifact";
 import type { PostCheck } from "@/hologram/genesis/axiom-post";
+import { canonicalToTriword } from "@/lib/uor-triword";
 
 // ── Check icon glyphs (no lucide import needed) ──────────
 const CheckIcon = () => (
@@ -211,8 +212,15 @@ export default function GenesisBootPage() {
                 <span className="text-holo-sm text-emerald-400 font-mono">KERNEL ALIVE</span>
               </div>
 
-              {/* Genesis CID */}
+              {/* Triword Address */}
               <div className="space-y-holo-3">
+                <div>
+                  <span className="text-holo-xs text-hologram-text-muted block mb-1">Kernel Address</span>
+                  <span className="text-holo-xl font-serif text-hologram-gold tracking-wide">
+                    {canonicalToTriword(genesis.genesisCid.string).split(".").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ")}
+                  </span>
+                </div>
+
                 <div>
                   <span className="text-holo-xs text-hologram-text-muted block mb-1">Genesis CID</span>
                   <code className="text-holo-xs font-mono text-hologram-gold break-all leading-relaxed">
