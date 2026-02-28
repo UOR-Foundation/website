@@ -122,6 +122,7 @@ export default function QShellEmbed({ onClose }: QShellEmbedProps) {
     "curl", "ssh", "dmesg", "export", "alias", "exit", "demo",
     "ipc", "msg", "sysctl", "route", "shutdown", "reboot",
     "qc", "qr", "qs",
+    "jupyter", "notebook",
   ];
 
   // Commands that take file/path arguments

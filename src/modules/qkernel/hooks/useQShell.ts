@@ -117,6 +117,8 @@ const MAN_PAGES: Record<string, string[]> = {
   pl:       ["PL(1) — alias for pennylane(1). See 'man pennylane'."],
   python:   ["PYTHON(1) — Python/Quantum SDK Compatibility", "", "NAME", "  python — run quantum SDK Python expressions", "", "SYNOPSIS", "  python -c '<code>'           Execute a one-liner (Qiskit/Cirq/PennyLane)", "  python                       Enter interactive REPL", "", "DESCRIPTION", "  Supports Qiskit, Cirq, and PennyLane import patterns.", "  Translates Python syntax to Q-Linux shell commands.", "", "EXAMPLES", "  python -c 'from qiskit import QuantumCircuit; qc = QuantumCircuit(2); qc.h(0)'", "  python -c 'import cirq; q = cirq.LineQubit.range(2)'", "  python -c 'import pennylane as qml; dev = qml.device(\"default.qubit\", wires=2)'"],
   pip:      ["PIP(1) — Package Manager", "", "NAME", "  pip — manage Q-Linux packages", "", "SYNOPSIS", "  pip install qiskit|cirq|pennylane   Install (all pre-installed)", "  pip list                            List installed packages", "", "DESCRIPTION", "  Q-Linux includes Qiskit, Cirq, and PennyLane as built-in modules.", "  All gates map to the native 96-gate ISA."],
+  jupyter:  ["JUPYTER(1) — Quantum Jupyter Workspace", "", "NAME", "  jupyter — launch and manage Jupyter-style quantum notebooks", "", "SYNOPSIS", "  jupyter lab                   Open the Quantum Jupyter Workspace", "  jupyter notebook              Open a specific notebook template", "  jupyter list                  List available notebook templates", "  jupyter demos                 List interactive demos", "", "DESCRIPTION", "  Launch a familiar JupyterLab-style environment for quantum computing.", "  Supports Qiskit, Cirq, and PennyLane with built-in circuit simulation.", "", "EXAMPLES", "  jupyter lab                   # Open workspace", "  jupyter list                  # See available templates", "  jupyter notebook bell-state   # Open a specific notebook"],
+  notebook: ["NOTEBOOK(1) — alias for jupyter(1). See 'man jupyter'."],
 };
 
 export function useQShell() {
@@ -405,6 +407,13 @@ export function useQShell() {
            log("  pennylane / pl         Xanadu PennyLane — same ops & workflow as PennyLane");
            log("  python                 Python REPL (Qiskit/Cirq/PennyLane)");
            log("  pip                    Package manager (all SDKs pre-installed)");
+           log("");
+           log("Notebooks:");
+           log("");
+           log("  jupyter lab            Open the Quantum Jupyter Workspace");
+           log("  jupyter list           List available notebook templates");
+           log("  jupyter demos          List interactive demos");
+           log("  notebook               Alias for jupyter");
            log("");
            log("  ipc                    List inter-process communication channels");
            log("  msg <ch> <text>        Send a message to a channel");
@@ -2403,6 +2412,76 @@ export function useQShell() {
           else { log(`pip: package '${pkg}' not found`); }
         } else {
           log("Usage: pip install <package> | pip list | pip show <package>");
+        }
+        break;
+      }
+
+      // ════════════════════════════════════════════════════════
+      // JUPYTER / NOTEBOOK — launch quantum workspace from CLI
+      // ════════════════════════════════════════════════════════
+      case "jupyter":
+      case "notebook": {
+        const sub2 = parts[1]?.toLowerCase() || "lab";
+        if (sub2 === "lab" || sub2 === "launch" || (!parts[1] && verb === "jupyter")) {
+          log("");
+          log("  Launching Quantum Jupyter Workspace...");
+          log("");
+          log("  ┌─────────────────────────────────────────────┐");
+          log("  │  Jupyter Quantum Workspace is ready.        │");
+          log("  │                                             │");
+          log("  │  Open the Notebooks tab above to access     │");
+          log("  │  the full JupyterLab-style environment.     │");
+          log("  └─────────────────────────────────────────────┘");
+          log("");
+          log("  Tip: Use 'jupyter list' to see available templates.");
+        } else if (sub2 === "list" || sub2 === "ls") {
+          log("");
+          log("  Available notebook templates:");
+          log("  ─────────────────────────────────────────────────────");
+          log("  ID                  Name               Category");
+          log("  ─────────────────── ────────────────── ──────────");
+          log("  bell-state          Bell State          quantum");
+          log("  grover-search       Grover's Search     quantum");
+          log("  quantum-feature-map Quantum + ML        hybrid");
+          log("  bloch-sphere        Bloch Sphere        quantum");
+          log("  teleportation       Teleportation       quantum");
+          log("  vqe-ansatz          VQE Eigensolver     hybrid");
+          log("  noise-comparison    Ideal vs Noisy      quantum");
+          log("  bernstein-vazirani  Hidden Pattern      quantum");
+          log("");
+          log("  Open any template: jupyter notebook <id>");
+          log("  Or open the Notebooks tab for the full workspace.");
+        } else if (sub2 === "demos") {
+          log("");
+          log("  Interactive demos (Voilà-style):");
+          log("  ────────────────────────────────────────────────────");
+          log("  Bell State           — Create and measure entangled qubits");
+          log("  Grover's Search      — Find items in an unsorted list");
+          log("  Bloch Sphere         — Visualize qubit rotations in 3D");
+          log("  Noise Comparison     — See how errors affect quantum results");
+          log("  Quantum Teleportation — Transfer quantum state via entanglement");
+          log("  Quantum vs Classical — Compare quantum and classical approaches");
+          log("");
+          log("  Open the Notebooks tab → Demos to run these interactively.");
+        } else if (sub2 === "notebook" || sub2 === "open") {
+          const templateId = parts[2] || "";
+          const knownIds = ["bell-state", "grover-search", "quantum-feature-map", "bloch-sphere", "teleportation", "vqe-ansatz", "noise-comparison", "bernstein-vazirani"];
+          if (!templateId) {
+            log("Usage: jupyter notebook <template-id>");
+            log("Run 'jupyter list' to see available templates.");
+          } else if (knownIds.includes(templateId)) {
+            log("");
+            log(`  Loading notebook: ${templateId}`);
+            log("  Open the Notebooks tab to view and run it.");
+          } else {
+            log(`  Template '${templateId}' not found. Run 'jupyter list' for available templates.`);
+          }
+        } else if (sub2 === "--help" || sub2 === "-h") {
+          const page = MAN_PAGES["jupyter"];
+          if (page) for (const l of page) log(l);
+        } else {
+          log("Usage: jupyter [lab | list | demos | notebook <id>]");
+          log("Run 'man jupyter' for details.");
         }
         break;
       }
