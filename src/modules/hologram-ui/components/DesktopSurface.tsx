@@ -28,15 +28,15 @@ import VoiceOrb from "./VoiceOrb";
 /* ── Palette ───────────────────────────────────────── */
 function palette(m: DesktopId) {
   if (m === "white") return {
-    wordmark: "hsla(0, 0%, 15%, 0.85)",
-    greeting: "hsla(0, 0%, 10%, 0.75)",
-    heading:  "hsla(0, 0%, 5%, 0.92)",
-    sub:      "hsla(0, 0%, 20%, 0.7)",
-    cta:      "hsla(0, 0%, 15%, 0.8)",
-    pillText: "hsla(0, 0%, 25%, 0.7)",
+    wordmark: "hsla(0, 0%, 10%, 0.9)",
+    greeting: "hsla(0, 0%, 8%, 0.8)",
+    heading:  "hsla(0, 0%, 3%, 0.95)",
+    sub:      "hsla(0, 0%, 15%, 0.75)",
+    cta:      "hsla(0, 0%, 10%, 0.85)",
+    pillText: "hsla(0, 0%, 20%, 0.75)",
     bg:       "hsl(0, 0%, 100%)",
-    legalText: "hsla(0, 0%, 15%, 0.6)",
-    legalDot:  "hsla(0, 0%, 15%, 0.4)",
+    legalText: "hsla(0, 0%, 25%, 0.7)",
+    legalDot:  "hsla(0, 0%, 25%, 0.5)",
   };
   if (m === "dark") return {
     wordmark: "hsla(0, 0%, 92%, 0.9)",
@@ -374,7 +374,7 @@ export default function DesktopSurface({
                 width: 0,
                 borderLeft: `1px solid ${
                   mode === "white"
-                    ? "hsla(0, 0%, 10%, 0.45)"
+                    ? "hsla(0, 0%, 10%, 0.55)"
                     : mode === "dark"
                       ? "hsla(0, 0%, 85%, 0.3)"
                       : "hsla(0, 0%, 5%, 0.4)"
@@ -402,7 +402,7 @@ export default function DesktopSurface({
                     width: "100%", height: "100%",
                     opacity: 0.85,
                     border: `1px solid ${
-                      mode === "white" ? "hsla(0, 0%, 10%, 0.45)"
+                      mode === "white" ? "hsla(0, 0%, 10%, 0.55)"
                         : mode === "dark" ? "hsla(38, 25%, 75%, 0.25)"
                         : "hsla(0, 0%, 5%, 0.4)"
                     }`,
@@ -427,7 +427,7 @@ export default function DesktopSurface({
                   fontFamily: "'DM Sans', system-ui, sans-serif",
                   fontWeight: 400,
                   fontSize: isFocus ? "clamp(13px, 1.1vw, 16px)" : "clamp(12px, 0.9vw, 14px)",
-                  color: mode === "white" ? "hsla(0, 0%, 15%, 0.85)" : "hsla(38, 15%, 88%, 0.7)",
+                  color: mode === "white" ? "hsla(0, 0%, 10%, 0.9)" : "hsla(38, 15%, 88%, 0.7)",
                 }}
               >
                 LUMEN AI
@@ -440,7 +440,7 @@ export default function DesktopSurface({
                   fontWeight: 300,
                   fontStyle: "italic",
                   fontSize: isFocus ? "clamp(15px, 1.2vw, 22px)" : "clamp(14px, 1vw, 18px)",
-                  color: mode === "white" ? "hsla(0, 0%, 15%, 0.7)" : "hsla(38, 12%, 85%, 0.6)",
+                  color: mode === "white" ? "hsla(0, 0%, 20%, 0.8)" : "hsla(38, 12%, 85%, 0.6)",
                   maxWidth: "30ch",
                   lineHeight: 1.6,
                   animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
@@ -488,7 +488,7 @@ export default function DesktopSurface({
             letterSpacing: "0.35em",
             textTransform: "uppercase",
             fontWeight: 500,
-            color: mode === "white" ? "hsla(0, 0%, 15%, 0.45)" : "hsla(0, 0%, 90%, 0.4)",
+            color: mode === "white" ? "hsla(0, 0%, 15%, 0.65)" : "hsla(0, 0%, 90%, 0.4)",
           }}
         >
           Frame
@@ -574,7 +574,7 @@ export default function DesktopSurface({
             fontSize: "10px",
             letterSpacing: "0.15em",
             textTransform: "uppercase",
-            color: mode === "white" ? "hsla(0, 0%, 10%, 0.75)" : "hsla(38, 30%, 75%, 0.75)",
+            color: mode === "white" ? "hsla(0, 0%, 10%, 0.85)" : "hsla(38, 30%, 75%, 0.75)",
             background: "none",
             border: "none",
             cursor: "pointer",

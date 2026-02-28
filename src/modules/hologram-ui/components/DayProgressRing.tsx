@@ -114,7 +114,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
             cy={SIZE / 2}
             r={RADIUS}
             fill="none"
-            stroke={isWhite ? "hsla(0, 0%, 15%, 0.1)" : "hsla(38, 12%, 60%, 0.08)"}
+            stroke={isWhite ? "hsla(0, 0%, 0%, 0.15)" : "hsla(38, 12%, 60%, 0.08)"}
             strokeWidth={STROKE}
           />
 
@@ -123,7 +123,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
             if (length <= 0) return null;
             const phaseDef = PHASES[phase];
             const strokeColor = neutral
-              ? (isWhite ? "hsla(0, 0%, 30%, 0.4)" : "hsla(220, 12%, 72%, 0.45)")
+              ? (isWhite ? "hsla(0, 0%, 20%, 0.5)" : "hsla(220, 12%, 72%, 0.45)")
               : `hsla(${phaseDef.hue}, 40%, ${isWhite ? "40" : "60"}%, 0.8)`;
             return (
               <circle
@@ -174,7 +174,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 className="text-[18px] leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  color: isWhite ? "hsla(0, 0%, 15%, 0.7)" : "hsla(220, 20%, 80%, 0.8)",
+                  color: isWhite ? "hsla(0, 0%, 10%, 0.8)" : "hsla(220, 20%, 80%, 0.8)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
                 }}
@@ -186,7 +186,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                   className="text-[8px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
-                    color: isWhite ? "hsla(0, 0%, 15%, 0.5)" : "hsla(220, 15%, 75%, 0.5)",
+                    color: isWhite ? "hsla(0, 0%, 10%, 0.65)" : "hsla(220, 15%, 75%, 0.5)",
                     fontWeight: 500,
                   }}
                 >
@@ -200,7 +200,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 className="text-[22px] font-light leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  color: isWhite ? "hsla(0, 0%, 15%, 0.85)" : "hsla(38, 15%, 94%, 0.95)",
+                  color: isWhite ? "hsla(0, 0%, 5%, 0.9)" : "hsla(38, 15%, 94%, 0.95)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
                 }}
@@ -212,7 +212,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                   className="text-[10px] tracking-[0.25em] uppercase leading-none transition-opacity duration-700"
                   style={{
                     fontFamily: "'DM Sans', system-ui, sans-serif",
-                    color: isWhite ? "hsla(0, 0%, 15%, 0.5)" : "hsla(38, 15%, 82%, 0.55)",
+                    color: isWhite ? "hsla(0, 0%, 10%, 0.65)" : "hsla(38, 15%, 82%, 0.55)",
                     fontWeight: 500,
                   }}
                 >
@@ -231,13 +231,13 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
 
         const getRebalancePrompt = (): { label: string; color: string } => {
           if (!isLoggedIn) {
-            return { label: "Your day", color: isWhite ? "hsla(0, 0%, 15%, 0.6)" : "hsla(38, 15%, 85%, 0.75)" };
+            return { label: "Your day", color: isWhite ? "hsla(0, 0%, 10%, 0.75)" : "hsla(38, 15%, 85%, 0.75)" };
           }
           if (night) {
-            return { label: "Rest well", color: isWhite ? "hsla(0, 0%, 15%, 0.5)" : "hsla(220, 15%, 78%, 0.6)" };
+            return { label: "Rest well", color: isWhite ? "hsla(0, 0%, 10%, 0.65)" : "hsla(220, 15%, 78%, 0.6)" };
           }
           if (!hasSufficientData) {
-            return { label: "Your day", color: isWhite ? "hsla(0, 0%, 15%, 0.6)" : "hsla(38, 15%, 85%, 0.75)" };
+            return { label: "Your day", color: isWhite ? "hsla(0, 0%, 10%, 0.75)" : "hsla(38, 15%, 85%, 0.75)" };
           }
 
           if (activePhase) {

@@ -56,7 +56,7 @@ export default function ProductivityTimerWidget() {
           <circle
             cx={48} cy={48} r={38}
             fill="none"
-            stroke="hsla(0, 0%, 0%, 0.06)"
+            stroke="hsla(0, 0%, 0%, 0.12)"
             strokeWidth={3}
           />
           {/* Progress */}
@@ -93,7 +93,7 @@ export default function ProductivityTimerWidget() {
           fontSize: "11px",
           letterSpacing: "0.15em",
           textTransform: "uppercase",
-          color: "hsla(0, 0%, 15%, 0.5)",
+          color: "hsla(0, 0%, 15%, 0.7)",
           fontWeight: 500,
         }}
       >
@@ -106,8 +106,8 @@ export default function ProductivityTimerWidget() {
           onClick={toggle}
           className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-110"
           style={{
-            background: running ? "hsla(0, 0%, 0%, 0.06)" : "hsla(0, 0%, 0%, 0.08)",
-            color: "hsla(0, 0%, 10%, 0.7)",
+            background: running ? "hsla(0, 0%, 0%, 0.08)" : "hsla(0, 0%, 0%, 0.1)",
+            color: "hsla(0, 0%, 10%, 0.8)",
           }}
           aria-label={running ? "Pause" : "Start"}
         >
@@ -117,8 +117,8 @@ export default function ProductivityTimerWidget() {
           onClick={reset}
           className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-110"
           style={{
-            background: "hsla(0, 0%, 0%, 0.04)",
-            color: "hsla(0, 0%, 10%, 0.5)",
+            background: "hsla(0, 0%, 0%, 0.07)",
+            color: "hsla(0, 0%, 10%, 0.65)",
           }}
           aria-label="Reset"
         >
