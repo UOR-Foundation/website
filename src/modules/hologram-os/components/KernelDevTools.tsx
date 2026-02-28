@@ -32,6 +32,10 @@ interface Stats {
   interpHasPrev: boolean;
   // Derived
   measuredFps: number;
+  // Display surface
+  displayRefreshHz: number;
+  displayDpr: number;
+  displayGpuTier: string;
   // Breathing rhythm
   breathPeriodMs: number;
   breathEventCount: number;
@@ -108,6 +112,8 @@ export default function KernelDevTools() {
 
       const br = projector.getBreathingRhythm();
 
+      const dc = projector.getDisplayCapabilities();
+
       setStats({
         ...ps,
         interpRunning: is.running,
@@ -116,6 +122,9 @@ export default function KernelDevTools() {
         interpPhase: is.phase,
         interpHasPrev: is.hasPrev,
         measuredFps,
+        displayRefreshHz: dc.refreshHz,
+        displayDpr: dc.dpr,
+        displayGpuTier: dc.gpuTier,
         breathPeriodMs: br.breathPeriodMs,
         breathEventCount: br.eventCount,
         breathIntervalCount: br.intervals.length,
@@ -195,6 +204,27 @@ export default function KernelDevTools() {
           />
         </div>
 
+        {/* Display Surface */}
+        <div
+          className="space-y-0.5 pt-1.5"
+          style={{ borderTop: `1px solid ${KP.cardBorder}` }}
+        >
+          <span className="text-[8px] uppercase tracking-wider" style={{ color: KP.dim }}>
+            Display Surface
+          </span>
+          <StatRow
+            label="refresh"
+            value={`${stats.displayRefreshHz}Hz`}
+            color={stats.displayRefreshHz > 60 ? KP.green : KP.muted}
+          />
+          <StatRow label="DPR" value={`${stats.displayDpr}x`} />
+          <StatRow
+            label="GPU tier"
+            value={stats.displayGpuTier}
+            color={stats.displayGpuTier === "high" ? KP.green : stats.displayGpuTier === "mid" ? KP.gold : KP.red}
+          />
+        </div>
+
         {/* Interpolation */}
         <div
           className="space-y-0.5 pt-1.5"
@@ -205,8 +235,8 @@ export default function KernelDevTools() {
           </span>
           <StatRow
             label="running"
-            value={stats.interpRunning ? "YES" : "no"}
-            color={stats.interpRunning ? KP.green : KP.dim}
+            value={stats.interpSleeping ? "SLEEP" : stats.interpRunning ? "YES" : "no"}
+            color={stats.interpSleeping ? KP.gold : stats.interpRunning ? KP.green : KP.dim}
           />
           <StatRow
             label="kernel tick"

@@ -298,9 +298,15 @@ export class KernelProjector {
   private lastEmittedFrame: ProjectionFrame | null = null;
   private dirty = false;
   private idleTickMs = 100;  // 10 Hz idle
-  private activeTickMs = 16; // ~60 Hz active (will be overridden by display discovery in Phase 2)
+  private activeTickMs = 16; // default ~60Hz — overridden by display discovery
   private activeUntil = 0;
   private readonly ACTIVE_WINDOW_MS = 2000;
+
+  // ── Display Surface Capabilities (discovered at boot) ─────────────────
+  private displayRefreshHz = 60;
+  private displayFrameMs = 16.67;
+  private displayDpr = 1;
+  private displayGpuTier: "low" | "mid" | "high" = "mid";
 
   // ── Structural Sharing Cache ──────────────────────────────────────────
   // Cached sub-frame arrays — reused when unchanged to prevent React re-renders
@@ -438,6 +444,86 @@ export class KernelProjector {
   }
 
   /**
+   * Discover display surface capabilities.
+   * Measures native rAF interval over N frames to determine actual refresh rate.
+   * Also captures DPR and estimates GPU tier from frame timing consistency.
+   */
+  private async discoverDisplay(): Promise<{
+    refreshHz: number;
+    frameMs: number;
+    dpr: number;
+    gpuTier: "low" | "mid" | "high";
+  }> {
+    const SAMPLE_FRAMES = 30;
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+
+    return new Promise((resolve) => {
+      if (typeof requestAnimationFrame === "undefined") {
+        resolve({ refreshHz: 60, frameMs: 16.67, dpr, gpuTier: "mid" });
+        return;
+      }
+
+      const timestamps: number[] = [];
+      let count = 0;
+
+      const measure = (t: DOMHighResTimeStamp) => {
+        timestamps.push(t);
+        count++;
+        if (count < SAMPLE_FRAMES) {
+          requestAnimationFrame(measure);
+        } else {
+          // Compute intervals between frames
+          const intervals: number[] = [];
+          for (let i = 1; i < timestamps.length; i++) {
+            intervals.push(timestamps[i] - timestamps[i - 1]);
+          }
+
+          // Use median for robustness (outliers from GC pauses etc.)
+          const sorted = [...intervals].sort((a, b) => a - b);
+          const mid = Math.floor(sorted.length / 2);
+          const medianMs = sorted.length % 2 === 0
+            ? (sorted[mid - 1] + sorted[mid]) / 2
+            : sorted[mid];
+
+          // Derive refresh rate — snap to known display rates
+          const rawHz = 1000 / medianMs;
+          const knownRates = [60, 72, 75, 90, 100, 120, 144, 165, 240, 360];
+          const refreshHz = knownRates.reduce((best, rate) =>
+            Math.abs(rate - rawHz) < Math.abs(best - rawHz) ? rate : best
+          );
+          const frameMs = 1000 / refreshHz;
+
+          // Estimate GPU tier from frame timing consistency
+          const variance = intervals.reduce((sum, v) => sum + (v - medianMs) ** 2, 0) / intervals.length;
+          const jitterMs = Math.sqrt(variance);
+          const gpuTier: "low" | "mid" | "high" =
+            jitterMs < 1 ? "high" :
+            jitterMs < 3 ? "mid" : "low";
+
+          resolve({ refreshHz, frameMs, dpr, gpuTier });
+        }
+      };
+
+      requestAnimationFrame(measure);
+    });
+  }
+
+  /** Get discovered display capabilities */
+  getDisplayCapabilities(): {
+    refreshHz: number;
+    frameMs: number;
+    dpr: number;
+    gpuTier: "low" | "mid" | "high";
+  } {
+    return {
+      refreshHz: this.displayRefreshHz,
+      frameMs: this.displayFrameMs,
+      dpr: this.displayDpr,
+      gpuTier: this.displayGpuTier,
+    };
+  }
+
+  /**
    * Boot the kernel — the portal entry sequence.
    *
    * This runs the real Q-Boot sequence step by step, emitting
@@ -555,6 +641,34 @@ export class KernelProjector {
       timestamp: Date.now(),
     });
 
+    // ── Phase 5: Display Surface Discovery ─────────────────────────────
+    this.emitBoot({
+      stage: "init",
+      label: "Display Discovery",
+      detail: "Probing display surface refresh rate, DPR, GPU tier…",
+      progress: 0.92,
+      passed: true,
+      timestamp: Date.now(),
+    });
+
+    const display = await this.discoverDisplay();
+    this.displayRefreshHz = display.refreshHz;
+    this.displayFrameMs = display.frameMs;
+    this.displayDpr = display.dpr;
+    this.displayGpuTier = display.gpuTier;
+
+    // Set kernel tick rate to match native display refresh
+    this.activeTickMs = Math.max(4, display.frameMs);
+
+    this.emitBoot({
+      stage: "init",
+      label: "Surface Locked",
+      detail: `${display.refreshHz}Hz · ${display.dpr}x DPR · GPU: ${display.gpuTier} · ${display.frameMs.toFixed(1)}ms/frame`,
+      progress: 0.96,
+      passed: true,
+      timestamp: Date.now(),
+    });
+
     // Assemble full kernel state
     const { sha256: hashFn, computeCid: cidFn } = await import("@/modules/uns/core/address");
     const kernelPayload = new TextEncoder().encode(
@@ -577,7 +691,7 @@ export class KernelProjector {
     this.emitBoot({
       stage: "running",
       label: "Kernel Running",
-      detail: `Boot complete in ${this.kernel.bootTimeMs.toFixed(0)}ms. CID: ${kernelCid.slice(0, 24)}…`,
+      detail: `Boot complete in ${this.kernel.bootTimeMs.toFixed(0)}ms · ${display.refreshHz}fps projection · CID: ${kernelCid.slice(0, 16)}…`,
       progress: 1,
       passed: true,
       timestamp: Date.now(),
