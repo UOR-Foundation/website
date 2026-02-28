@@ -187,3 +187,18 @@ export type {
   TopologicalQubitReport,
   TopologicalQubitTest,
 } from "./topological-qubit";
+
+// Coadjoint Orbit Classifier — Neeb integrability for E₈ (Phase 21)
+export {
+  generateOrbitCatalog,
+  testIntegrability,
+  runOrbitClassification,
+} from "./coadjoint-orbit-classifier";
+export type {
+  OrbitType,
+  IntegrabilityStatus,
+  CoadjointOrbit,
+  IntegrabilityResult,
+  ClassificationReport,
+  ClassificationInvariant,
+} from "./coadjoint-orbit-classifier";
