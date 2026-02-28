@@ -173,3 +173,21 @@ export type {
   GateMatrix,
   NoiseModel,
 } from "./q-simulator";
+
+// Q-Error-Mitigation: ZNE, MEM, Randomized Compiling
+export {
+  zeroNoiseExtrapolation,
+  buildCalibrationMatrix,
+  applyMeasurementMitigation,
+  randomizedCompiling,
+  mitigateFull,
+} from "./q-error-mitigation";
+export type {
+  ExtrapolationMethod,
+  ZneResult,
+  CalibrationMatrix,
+  MemResult,
+  RcResult,
+  FullMitigationResult,
+  MitigationConfig,
+} from "./q-error-mitigation";
