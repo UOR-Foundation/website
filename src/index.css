@@ -689,17 +689,33 @@
 [data-text-size="large"]   .hologram-text-scale { font-size: 115%; }
 
 /* Scale Tailwind arbitrary font-size classes used in hologram panels */
+[data-text-size="compact"] .text-\[8px\]  { font-size: calc(8px * 0.9) !important; }
+[data-text-size="compact"] .text-\[9px\]  { font-size: calc(9px * 0.9) !important; }
 [data-text-size="compact"] .text-\[10px\] { font-size: calc(10px * 0.9) !important; }
 [data-text-size="compact"] .text-\[11px\] { font-size: calc(11px * 0.9) !important; }
+[data-text-size="compact"] .text-\[12px\] { font-size: calc(12px * 0.9) !important; }
 [data-text-size="compact"] .text-\[13px\] { font-size: calc(13px * 0.9) !important; }
+[data-text-size="compact"] .text-\[14px\] { font-size: calc(14px * 0.9) !important; }
 [data-text-size="compact"] .text-\[15px\] { font-size: calc(15px * 0.9) !important; }
+[data-text-size="compact"] .text-\[16px\] { font-size: calc(16px * 0.9) !important; }
+[data-text-size="compact"] .text-\[18px\] { font-size: calc(18px * 0.9) !important; }
+[data-text-size="compact"] .text-\[20px\] { font-size: calc(20px * 0.9) !important; }
 [data-text-size="compact"] .text-\[22px\] { font-size: calc(22px * 0.9) !important; }
+[data-text-size="compact"] .text-\[24px\] { font-size: calc(24px * 0.9) !important; }
 
+[data-text-size="large"] .text-\[8px\]  { font-size: calc(8px * 1.15) !important; }
+[data-text-size="large"] .text-\[9px\]  { font-size: calc(9px * 1.15) !important; }
 [data-text-size="large"] .text-\[10px\] { font-size: calc(10px * 1.15) !important; }
 [data-text-size="large"] .text-\[11px\] { font-size: calc(11px * 1.15) !important; }
+[data-text-size="large"] .text-\[12px\] { font-size: calc(12px * 1.15) !important; }
 [data-text-size="large"] .text-\[13px\] { font-size: calc(13px * 1.15) !important; }
+[data-text-size="large"] .text-\[14px\] { font-size: calc(14px * 1.15) !important; }
 [data-text-size="large"] .text-\[15px\] { font-size: calc(15px * 1.15) !important; }
+[data-text-size="large"] .text-\[16px\] { font-size: calc(16px * 1.15) !important; }
+[data-text-size="large"] .text-\[18px\] { font-size: calc(18px * 1.15) !important; }
+[data-text-size="large"] .text-\[20px\] { font-size: calc(20px * 1.15) !important; }
 [data-text-size="large"] .text-\[22px\] { font-size: calc(22px * 1.15) !important; }
+[data-text-size="large"] .text-\[24px\] { font-size: calc(24px * 1.15) !important; }
 
 /* ── Modular panel resize handle ─────────────────────────────────────── */
 .hologram-resize-handle {
