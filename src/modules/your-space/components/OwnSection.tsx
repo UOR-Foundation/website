@@ -4,10 +4,11 @@
  */
 
 import { useState } from "react";
-import { Shield, User, Wallet, Eye, EyeOff, CornerDownLeft } from "lucide-react";
+import { Shield, User, Wallet, Eye, EyeOff, CornerDownLeft, Lock } from "lucide-react";
 import { SpaceCard } from "./SpaceCard";
 import { SortableSection } from "./SortableSection";
 import { IdentitySecurityRoadmap } from "./IdentitySecurityRoadmap";
+import { VaultManagementPanel } from "./VaultManagementPanel";
 
 interface OwnSectionProps {
   isDark: boolean;
@@ -173,6 +174,25 @@ export const OwnSection = ({ isDark, searchQuery, setSearchQuery, votes, onVote 
         </div>
       </SpaceCard>
     ),
+    vault: (
+      <SpaceCard
+        title="Vault"
+        icon={<Lock className="text-foreground" size={16} />}
+        isDark={isDark}
+        moduleSlug="vault"
+        expandedContent={
+          <div className="space-y-3">
+            <h4 className="text-foreground font-body text-sm font-semibold">Zero-Knowledge Architecture</h4>
+            <p className="text-muted-foreground text-sm font-body leading-relaxed">
+              Your vault uses AES-256-GCM encryption with HKDF-derived keys. Data is encrypted on your device
+              before storage — the server only ever sees ciphertext. Export your vault anytime as a portable encrypted bundle.
+            </p>
+          </div>
+        }
+      >
+        <VaultManagementPanel />
+      </SpaceCard>
+    ),
   };
 
   return (
@@ -202,7 +222,7 @@ export const OwnSection = ({ isDark, searchQuery, setSearchQuery, votes, onVote 
       </div>
 
       <SortableSection
-        initialOrder={["security", "identity", "assets"]}
+        initialOrder={["security", "identity", "vault", "assets"]}
         cards={cards}
         storageKey="uor-space-own-order"
       />
