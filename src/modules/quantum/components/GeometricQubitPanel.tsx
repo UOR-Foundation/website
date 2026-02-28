@@ -6,7 +6,7 @@
  * Implements Souriau's program: "Quantique? Alors c'est Géométrique."
  */
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   projectQubit,
   projectRegister,
@@ -24,6 +24,11 @@ import {
   type BraidingResult,
   type Complex,
 } from "@/modules/atlas/geometric-quantization";
+import {
+  runDualityAnalysis,
+  type DualityReport,
+  type DualityProbe,
+} from "@/modules/atlas/info-geometry-duality";
 
 // ── Bloch Sphere Canvas ───────────────────────────────────────────────────
 
@@ -98,6 +103,249 @@ function BlochSphere({ coords, size = 140 }: { coords: BlochCoordinates; size?: 
   }, [coords, size]);
 
   return <canvas ref={canvasRef} width={size} height={size} className="block" />;
+}
+
+// ── Info Geometry Duality Section ─────────────────────────────────────────
+
+function InfoGeometryDuality() {
+  const [report, setReport] = useState<DualityReport | null>(null);
+  const [running, setRunning] = useState(false);
+  const [selectedProbe, setSelectedProbe] = useState<DualityProbe | null>(null);
+  const [showInvariants, setShowInvariants] = useState(false);
+
+  const handleRun = () => {
+    setRunning(true);
+    requestAnimationFrame(() => {
+      setReport(runDualityAnalysis());
+      setRunning(false);
+    });
+  };
+
+  const statusColor = (v: boolean) => v ? "hsl(140,60%,55%)" : "hsl(0,60%,55%)";
+
+  return (
+    <div className="bg-[hsla(200,15%,10%,0.5)] border border-[hsla(200,25%,25%,0.4)] rounded-lg p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-[11px] font-mono text-[hsl(200,60%,60%)] uppercase flex items-center gap-2">
+            ◇ Fisher-Rao ↔ Entanglement Duality
+          </div>
+          <div className="text-[8px] font-mono text-[hsl(210,10%,42%)] mt-0.5">
+            Bures-Fisher identity: ds²_Bures = (1/4) g^FR_ij dθ^i dθ^j — same information manifold, dual coordinates
+          </div>
+        </div>
+        <button
+          onClick={handleRun}
+          disabled={running}
+          className="px-3 py-1.5 rounded text-[10px] font-mono bg-[hsla(200,50%,40%,0.2)] text-[hsl(200,60%,65%)] hover:bg-[hsla(200,50%,40%,0.3)] transition-colors disabled:opacity-40"
+        >
+          {running ? "Computing…" : report ? "Re-run Duality Proof" : "▸ Prove Duality"}
+        </button>
+      </div>
+
+      {!report && !running && (
+        <div className="text-center py-8 text-[10px] font-mono text-[hsl(210,10%,40%)]">
+          Click "Prove Duality" to test Fisher-Rao ↔ entanglement correspondence across 8 probe states
+        </div>
+      )}
+
+      {running && (
+        <div className="text-center py-8 text-[10px] font-mono text-[hsl(200,60%,55%)] animate-pulse">
+          Computing duality across probe states…
+        </div>
+      )}
+
+      {report && (
+        <>
+          {/* Score summary */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-[hsla(210,10%,8%,0.5)] rounded p-2 text-center">
+              <div className="text-[7px] font-mono text-[hsl(210,10%,40%)] uppercase">Duality Score</div>
+              <div className="text-[16px] font-mono mt-1" style={{ color: report.overallScore >= 0.7 ? "hsl(140,60%,55%)" : "hsl(45,80%,55%)" }}>
+                {(report.overallScore * 100).toFixed(0)}%
+              </div>
+            </div>
+            <div className="bg-[hsla(210,10%,8%,0.5)] rounded p-2 text-center">
+              <div className="text-[7px] font-mono text-[hsl(210,10%,40%)] uppercase">Mean Convergence</div>
+              <div className="text-[16px] font-mono mt-1 text-[hsl(200,60%,60%)]">
+                {(report.meanConvergence * 100).toFixed(1)}%
+              </div>
+            </div>
+            <div className="bg-[hsla(210,10%,8%,0.5)] rounded p-2 text-center">
+              <div className="text-[7px] font-mono text-[hsl(210,10%,40%)] uppercase">Verified Probes</div>
+              <div className="text-[16px] font-mono mt-1 text-[hsl(160,60%,55%)]">
+                {report.probes.filter(p => p.duality.verified).length}/{report.probes.length}
+              </div>
+            </div>
+          </div>
+
+          {/* Probe results */}
+          <div className="space-y-1">
+            {report.probes.map((p, i) => (
+              <button
+                key={i}
+                onClick={() => setSelectedProbe(selectedProbe === p ? null : p)}
+                className={`w-full text-left bg-[hsla(210,10%,8%,0.4)] rounded p-2 hover:bg-[hsla(210,10%,12%,0.5)] transition-colors ${
+                  selectedProbe === p ? "ring-1 ring-[hsl(200,60%,50%)]" : ""
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-[9px] font-mono" style={{ color: statusColor(p.duality.verified) }}>
+                    {p.duality.verified ? "✓" : "△"}
+                  </span>
+                  <span className="text-[9px] font-mono text-[hsl(210,10%,55%)] flex-1 truncate">{p.label}</span>
+
+                  {/* Dual bars: Fisher-Rao vs Entanglement */}
+                  <div className="flex items-center gap-1 w-48">
+                    <span className="text-[7px] font-mono text-[hsl(38,50%,50%)] w-6 text-right">FR</span>
+                    <div className="flex-1 h-2 bg-[hsla(210,10%,15%,0.5)] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.min(100, Math.abs(p.fisherRao.informationEntropy) * 5)}%`,
+                          background: "hsl(38,60%,50%)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 w-48">
+                    <span className="text-[7px] font-mono text-[hsl(280,50%,55%)] w-6 text-right">S_E</span>
+                    <div className="flex-1 h-2 bg-[hsla(210,10%,15%,0.5)] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.min(100, p.quantum.entanglementBits * 100)}%`,
+                          background: "hsl(280,50%,55%)",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <span className="text-[8px] font-mono w-12 text-right" style={{ color: statusColor(p.duality.verified) }}>
+                    {(p.duality.convergenceRatio * 100).toFixed(0)}%
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected probe detail */}
+          {selectedProbe && (
+            <div className="bg-[hsla(200,10%,8%,0.6)] border border-[hsla(200,15%,25%,0.4)] rounded-lg p-3 space-y-3">
+              <div className="text-[10px] font-mono text-[hsl(200,60%,60%)]">{selectedProbe.label}</div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Fisher-Rao side */}
+                <div className="bg-[hsla(38,15%,8%,0.5)] border border-[hsla(38,20%,25%,0.3)] rounded p-2">
+                  <div className="text-[8px] font-mono text-[hsl(38,60%,55%)] uppercase mb-2">
+                    Thermodynamic (Fisher-Rao)
+                  </div>
+                  <div className="space-y-1 text-[8px] font-mono">
+                    <div className="flex justify-between">
+                      <span className="text-[hsl(210,10%,42%)]">S_FR (info entropy)</span>
+                      <span className="text-[hsl(38,60%,55%)]">{selectedProbe.fisherRao.informationEntropy.toFixed(4)} nats</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[hsl(210,10%,42%)]">S_Casimir</span>
+                      <span className="text-[hsl(38,50%,55%)]">{selectedProbe.fisherRao.casimirEntropy.toFixed(4)} nats</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[hsl(210,10%,42%)]">√det(g)</span>
+                      <span className="text-[hsl(38,50%,55%)]">{selectedProbe.fisherRao.volumeElement.toExponential(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[hsl(210,10%,42%)]">Scalar R</span>
+                      <span className="text-[hsl(38,50%,55%)]">{selectedProbe.fisherRao.scalarCurvature.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quantum side */}
+                <div className="bg-[hsla(280,15%,8%,0.5)] border border-[hsla(280,20%,25%,0.3)] rounded p-2">
+                  <div className="text-[8px] font-mono text-[hsl(280,50%,60%)] uppercase mb-2">
+                    Quantum (Entanglement)
+                  </div>
+                  <div className="space-y-1 text-[8px] font-mono">
+                    <div className="flex justify-between">
+                      <span className="text-[hsl(210,10%,42%)]">S_E</span>
+                      <span className="text-[hsl(280,50%,60%)]">{selectedProbe.quantum.entanglementBits.toFixed(4)} bits</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[hsl(210,10%,42%)]">S_E (nats)</span>
+                      <span className="text-[hsl(280,50%,60%)]">{selectedProbe.quantum.entanglementNats.toFixed(4)} nats</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[hsl(210,10%,42%)]">Purity Tr(ρ²)</span>
+                      <span className="text-[hsl(280,50%,60%)]">{selectedProbe.quantum.purity.toFixed(4)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[hsl(210,10%,42%)]">Concurrence</span>
+                      <span className="text-[hsl(280,50%,60%)]">{selectedProbe.quantum.concurrence.toFixed(4)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[hsl(210,10%,42%)]">Schmidt rank</span>
+                      <span className="text-[hsl(280,50%,60%)]">{selectedProbe.quantum.schmidtRank.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Duality verdict */}
+              <div className="bg-[hsla(210,10%,6%,0.5)] rounded p-2">
+                <div className="flex items-center justify-between text-[9px] font-mono mb-1">
+                  <span className="text-[hsl(200,60%,55%)]">Convergence Ratio</span>
+                  <span style={{ color: statusColor(selectedProbe.duality.verified) }}>
+                    {(selectedProbe.duality.convergenceRatio * 100).toFixed(1)}% — {selectedProbe.duality.verified ? "VERIFIED" : "GAP"}
+                  </span>
+                </div>
+                <div className="h-2 bg-[hsla(210,10%,12%,0.5)] rounded-full overflow-hidden mb-1.5">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${selectedProbe.duality.convergenceRatio * 100}%`,
+                      background: selectedProbe.duality.verified ? "hsl(140,60%,50%)" : "hsl(45,70%,50%)",
+                    }}
+                  />
+                </div>
+                <div className="text-[8px] font-mono text-[hsl(210,10%,45%)] italic">
+                  {selectedProbe.duality.interpretation}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Invariants toggle */}
+          <button
+            onClick={() => setShowInvariants(v => !v)}
+            className="text-[9px] font-mono text-[hsl(200,60%,55%)] hover:text-[hsl(200,60%,70%)]"
+          >
+            {showInvariants ? "▾" : "▸"} Structural Invariants ({report.invariants.filter(i => i.holds).length}/{report.invariants.length})
+          </button>
+
+          {showInvariants && (
+            <div className="space-y-1.5">
+              {report.invariants.map((inv, i) => (
+                <div key={i} className="flex items-start gap-2 text-[9px] font-mono">
+                  <span style={{ color: statusColor(inv.holds) }}>{inv.holds ? "✓" : "✗"}</span>
+                  <div className="flex-1">
+                    <span className="text-[hsl(210,10%,60%)]">{inv.name}</span>
+                    <span className="text-[hsl(210,10%,40%)] ml-2">— {inv.evidence}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Formula reference */}
+          <div className="pt-2 border-t border-[hsla(200,15%,20%,0.3)] text-[8px] font-mono text-[hsl(200,20%,50%)] leading-relaxed space-y-0.5">
+            <div><span className="text-[hsl(38,60%,55%)]">Fisher-Rao:</span> g_ij = Var_λ(Ψ_i, Ψ_j) = ∂²(log Z)/∂β_i∂β_j</div>
+            <div><span className="text-[hsl(280,50%,60%)]">von Neumann:</span> S_E = -Tr(ρ_A log ρ_A)</div>
+            <div><span className="text-[hsl(200,60%,55%)]">Bures-Fisher:</span> ds²_Bures = (1/4) Tr(dρ G⁻¹_F dρ) — dual perspectives of ONE geometry</div>
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 // ── Main Panel ────────────────────────────────────────────────────────────
@@ -405,6 +653,9 @@ export default function GeometricQubitPanel() {
           ))}
         </div>
       </div>
+
+      {/* ── Fisher-Rao ↔ Entanglement Duality ─────────────────────────── */}
+      <InfoGeometryDuality />
 
       {/* Thesis */}
       <div className="bg-[hsla(280,20%,12%,0.3)] border border-[hsla(280,20%,25%,0.3)] rounded-lg p-5">
