@@ -258,7 +258,7 @@ export default function WeatherWidget() {
 
   return (
     <div
-      className="relative flex flex-col items-center gap-4 cursor-default select-none"
+      className="relative flex flex-col items-center gap-4 cursor-default select-none hologram-glass-widget px-6 py-5"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
