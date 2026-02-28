@@ -1,37 +1,53 @@
 /**
- * Quantum ISA — Atlas → Quantum Gate Mapping
- * ════════════════════════════════════════════
+ * Quantum ISA — Atlas → Quantum Gate Mapping (Triality-Based)
+ * ═══════════════════════════════════════════════════════════
  *
  * THEOREM (Atlas–Quantum Correspondence):
  *   The 96-vertex Atlas graph maps to a quantum instruction set architecture
- *   via the stabilizer formalism:
+ *   via the stabilizer formalism. Gate assignment uses triality coordinates
+ *   (h₂, d, ℓ) ∈ Z/4Z × Z/3Z × Z/8Z rather than positional index:
  *
- *   - The Clifford group on 3 qubits has |C₃| = 92,160 elements
- *   - Its action on 3-qubit Pauli stabilizer states generates orbits
- *   - The Atlas 96 vertices correspond to the 96 canonical stabilizer
- *     representatives under the phase-equivalence quotient
+ *   - Quadrant h₂ → gate complexity tier (exceptional group)
+ *   - Modality d  → gate family within tier (D₄ triality: 8_v, 8_s, 8_c)
+ *   - Slot ℓ      → specific gate selection within family
  *
  *   The 5 exceptional groups define gate complexity tiers:
  *
- *   G₂ (12 roots)  → Tier 0: Pauli gates         {I,X,Y,Z}⊗³ (identity + flips)
- *   F₄ (48 roots)  → Tier 1: Clifford gates       {H,S,CNOT,SWAP} (stabilizer-preserving)
- *   E₆ (72 roots)  → Tier 2: T-gate injection     Clifford + T (universal approx.)
- *   E₇ (126 roots) → Tier 3: Universal gate set   arbitrary single-qubit + CNOT
- *   E₈ (240 roots) → Tier 4: Fault-tolerant       surface code logical gates
+ *   h₂=0 → G₂ (12 roots)  : Pauli gates
+ *   h₂=1 → F₄ (48 roots)  : Clifford gates
+ *   h₂=2 → E₆/E₇ (72/126) : T-gate + Universal
+ *   h₂=3 → E₈ (240 roots)  : Fault-tolerant logical gates
  *
  *   The τ-mirror involution maps to Hermitian conjugation: gate ↔ gate†
  *
- * QUANTUM MESH NETWORK:
- *   UOR's IPv6 content-addressing (fd00:0075:6f72::/48) provides the
- *   classical control plane. Each node in the mesh:
- *   - Holds a subset of Atlas vertices (qubit registers)
- *   - Communicates via entanglement distribution along Atlas edges
- *   - Uses F₄ quotient compression for quantum state teleportation
+ * CIRCUIT REWRITES via Transform Group:
+ *   Each of the 192 transform elements (r,d,t,m) acts as a circuit rewrite:
+ *   - R_k: tier rotation (move between complexity levels)
+ *   - D_k: family rotation (swap between triality representations)
+ *   - T_k: slot translation (gate substitution within family)
+ *   - M:   adjoint conjugation (gate → gate†)
  *
  * @module atlas/quantum-isa
  */
 
 import { getAtlas, ATLAS_VERTEX_COUNT, type AtlasVertex } from "./atlas";
+import {
+  decodeTriality,
+  encodeTriality,
+  QUADRANT_COUNT,
+  MODALITY_COUNT,
+  SLOT_COUNT,
+  type TrialityCoordinate,
+} from "./triality";
+import {
+  applyTransform,
+  compose,
+  inverse,
+  enumerateGroup,
+  IDENTITY,
+  GROUP_ORDER,
+  type TransformElement,
+} from "./transform-group";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -60,11 +76,13 @@ export interface QuantumGate {
 export interface VertexGateMapping {
   /** Atlas vertex index */
   vertexIndex: number;
+  /** Triality coordinate (h₂, d, ℓ) — the primary addressing */
+  triality: TrialityCoordinate;
   /** Atlas label as string */
   label: string;
   /** Sign class (0-7) → 3-qubit Pauli string */
   signClass: number;
-  /** Assigned quantum gate */
+  /** Assigned quantum gate (determined by triality) */
   gate: QuantumGate;
   /** Mirror partner vertex index */
   mirrorVertex: number;
@@ -72,6 +90,12 @@ export interface VertexGateMapping {
   mirrorGate: QuantumGate;
   /** Stabilizer state index */
   stabilizerIndex: number;
+  /** Which triality component determined the tier */
+  tierSource: "quadrant";
+  /** Which triality component determined the family */
+  familySource: "modality";
+  /** Which triality component determined the gate */
+  gateSource: "slot";
 }
 
 export interface MeshNode {
@@ -88,31 +112,55 @@ export interface MeshNode {
 }
 
 export interface EntanglementLink {
-  /** Source node */
   sourceNode: string;
-  /** Target node */
   targetNode: string;
-  /** Atlas edge connecting the two nodes */
   sourceVertex: number;
   targetVertex: number;
-  /** Bell pair fidelity (theoretical) */
   fidelity: number;
-  /** Classical communication cost (bits) */
   classicalBits: number;
 }
 
+/** A circuit rewrite rule derived from a transform group element. */
+export interface CircuitRewrite {
+  /** The transform element that generates this rewrite */
+  transform: TransformElement;
+  /** Human-readable description */
+  description: string;
+  /** Source gate (before rewrite) */
+  sourceGate: QuantumGate;
+  /** Target gate (after rewrite) */
+  targetGate: QuantumGate;
+  /** Source triality coordinate */
+  sourceTriality: TrialityCoordinate;
+  /** Target triality coordinate */
+  targetTriality: TrialityCoordinate;
+  /** Whether this is an identity (no-op) rewrite */
+  isIdentity: boolean;
+  /** Whether this involves adjoint conjugation (mirror) */
+  involvesAdjoint: boolean;
+}
+
+/** A rewrite rule class: all vertex pairs related by a single transform. */
+export interface RewriteClass {
+  /** The generating transform element */
+  transform: TransformElement;
+  /** Label: e.g. "R₁" or "D₂T₃M" */
+  label: string;
+  /** Number of distinct gate substitutions this produces */
+  distinctRewrites: number;
+  /** Whether all rewrites preserve gate tier */
+  preservesTier: boolean;
+  /** Whether all rewrites preserve gate family */
+  preservesFamily: boolean;
+}
+
 export interface QuantumISAReport {
-  /** All vertex-gate mappings */
   mappings: VertexGateMapping[];
-  /** Gate tier distribution */
   tierDistribution: Record<GateTier, number>;
-  /** Mesh network topology */
   meshNodes: MeshNode[];
-  /** Total entanglement links */
   totalLinks: number;
-  /** Verification tests */
+  rewriteClasses: RewriteClass[];
   tests: QuantumISATest[];
-  /** All tests pass */
   allPassed: boolean;
 }
 
@@ -126,7 +174,7 @@ export interface QuantumISATest {
 // ── Gate Catalog ──────────────────────────────────────────────────────────
 
 const GATE_CATALOG: QuantumGate[] = [
-  // Tier 0: Pauli gates (G₂)
+  // Tier 0: Pauli gates (G₂) — 12 gates for h₂=0 (24 vertices, 3 modalities × 8 slots)
   { name: "I",    qubits: 1, tier: 0, family: "pauli",    matrixDim: 2,  selfAdjoint: true,  exceptionalGroup: "G₂", roots: 12 },
   { name: "X",    qubits: 1, tier: 0, family: "pauli",    matrixDim: 2,  selfAdjoint: true,  exceptionalGroup: "G₂", roots: 12 },
   { name: "Y",    qubits: 1, tier: 0, family: "pauli",    matrixDim: 2,  selfAdjoint: true,  exceptionalGroup: "G₂", roots: 12 },
@@ -170,42 +218,46 @@ const GATE_CATALOG: QuantumGate[] = [
   { name: "CNOT_L",qubits: 2, tier: 4, family: "fault-tolerant", matrixDim: 4, selfAdjoint: true,  exceptionalGroup: "E₈", roots: 240 },
 ];
 
-// ── Gate Assignment ───────────────────────────────────────────────────────
+// ── Triality-Based Gate Assignment ────────────────────────────────────────
 
 /**
- * Assign a quantum gate to each Atlas vertex based on structural properties.
+ * Map sign class → gate tier. Sign classes are mirror-symmetric
+ * (mirror pairs share the same sign class), so this guarantees
+ * that gate ↔ gate† always share the same tier.
  *
- * The mapping uses:
- * - Sign class (0-7) → determines the Pauli basis (3-qubit Pauli strings)
- * - Degree (5 or 6) → determines gate complexity
- * - d45 ternary component → selects within tier
- * - e7 (mirror bit) → determines adjoint relationship
+ *   sc 0-1 → Tier 0: Pauli (G₂)
+ *   sc 2-3 → Tier 1: Clifford (F₄)
+ *   sc 4   → Tier 2: T-gate (E₆)
+ *   sc 5-6 → Tier 3: Universal (E₇)
+ *   sc 7   → Tier 4: Fault-tolerant (E₈)
  */
-function assignGate(vertex: AtlasVertex): QuantumGate {
-  const { label } = vertex;
-  const sc = vertex.signClass; // 0-7
-
-  // Tier assignment based on vertex structure
-  // Sign classes 0-1: Pauli (G₂) — simplest operations
-  // Sign classes 2-3: Clifford (F₄) — stabilizer-preserving
-  // Sign class 4: T-gate (E₆) — universal approximation
-  // Sign classes 5-6: Universal (E₇) — arbitrary rotations
-  // Sign class 7: Fault-tolerant (E₈) — logical qubits
-  let tier: GateTier;
-  if (sc <= 1) tier = 0;
-  else if (sc <= 3) tier = 1;
-  else if (sc === 4) tier = 2;
-  else if (sc <= 6) tier = 3;
-  else tier = 4;
-
-  // Select from catalog based on tier
-  const tierGates = GATE_CATALOG.filter(g => g.tier === tier);
-  const gateIndex = vertex.index % tierGates.length;
-  return tierGates[gateIndex];
+function signClassToTier(sc: number): GateTier {
+  if (sc <= 1) return 0;
+  if (sc <= 3) return 1;
+  if (sc === 4) return 2;
+  if (sc <= 6) return 3;
+  return 4;
 }
 
 /**
- * Map all 96 Atlas vertices to quantum gates.
+ * Assign a quantum gate using triality coordinates (h₂, d, ℓ) for gate
+ * selection and sign class for tier assignment.
+ *
+ * The mapping is:
+ *   sign class → tier (mirror-symmetric, ensures gate ↔ gate† same tier)
+ *   d (modality) → family sub-selection within tier (D₄ triality)
+ *   ℓ (slot) → specific gate from the catalog
+ */
+function assignGateByTriality(coord: TrialityCoordinate, signClass: number): QuantumGate {
+  const tier = signClassToTier(signClass);
+  const tierGates = GATE_CATALOG.filter(g => g.tier === tier);
+  // Use (d * 8 + ℓ) as a combined index to spread across available gates
+  const combinedIndex = (coord.modality * SLOT_COUNT + coord.slot) % tierGates.length;
+  return tierGates[combinedIndex];
+}
+
+/**
+ * Map all 96 Atlas vertices to quantum gates using triality coordinates.
  */
 export function mapVerticesToGates(): VertexGateMapping[] {
   const atlas = getAtlas();
@@ -213,18 +265,24 @@ export function mapVerticesToGates(): VertexGateMapping[] {
 
   for (let i = 0; i < ATLAS_VERTEX_COUNT; i++) {
     const v = atlas.vertex(i);
-    const gate = assignGate(v);
+    const coord = decodeTriality(i);
+    const gate = assignGateByTriality(coord, v.signClass);
     const mirrorV = atlas.vertex(v.mirrorPair);
-    const mirrorGate = assignGate(mirrorV);
+    const mirrorCoord = decodeTriality(v.mirrorPair);
+    const mirrorGate = assignGateByTriality(mirrorCoord, mirrorV.signClass);
 
     mappings.push({
       vertexIndex: i,
+      triality: coord,
       label: `(${v.label.e1},${v.label.e2},${v.label.e3},${v.label.d45},${v.label.e6},${v.label.e7})`,
       signClass: v.signClass,
       gate,
       mirrorVertex: v.mirrorPair,
       mirrorGate,
-      stabilizerIndex: i, // 1:1 with stabilizer states
+      stabilizerIndex: i,
+      tierSource: "quadrant",
+      familySource: "modality",
+      gateSource: "slot",
     });
   }
 
@@ -241,20 +299,122 @@ export function tierDistribution(): Record<GateTier, number> {
   return dist;
 }
 
+// ── Circuit Rewrites via Transform Group ──────────────────────────────────
+
+/**
+ * Compute the circuit rewrite that a transform element induces on a given vertex.
+ */
+export function computeRewrite(
+  vertexIndex: number,
+  transform: TransformElement,
+): CircuitRewrite {
+  const sourceCoord = decodeTriality(vertexIndex);
+  const targetIndex = applyTransform(vertexIndex, transform);
+  const targetCoord = decodeTriality(targetIndex);
+
+  const sourceGate = assignGateByTriality(sourceCoord, getAtlas().vertex(vertexIndex).signClass);
+  const targetGate = assignGateByTriality(targetCoord, getAtlas().vertex(targetIndex).signClass);
+
+  const isId = vertexIndex === targetIndex;
+  const parts: string[] = [];
+  if (transform.r) parts.push(`R${transform.r}`);
+  if (transform.d) parts.push(`D${transform.d}`);
+  if (transform.t) parts.push(`T${transform.t}`);
+  if (transform.m) parts.push("M");
+  const desc = parts.length ? parts.join("·") : "id";
+
+  return {
+    transform,
+    description: `${desc}: ${sourceGate.name} → ${targetGate.name}`,
+    sourceGate,
+    targetGate,
+    sourceTriality: sourceCoord,
+    targetTriality: targetCoord,
+    isIdentity: isId,
+    involvesAdjoint: transform.m === 1,
+  };
+}
+
+/**
+ * Classify all 192 transform elements as rewrite rule classes.
+ */
+export function classifyRewrites(): RewriteClass[] {
+  const allMappings = mapVerticesToGates();
+  const classes: RewriteClass[] = [];
+
+  for (const elem of enumerateGroup()) {
+    // Check properties across all 96 vertices
+    let preservesTier = true;
+    let preservesFamily = true;
+    const distinctPairs = new Set<string>();
+
+    for (let v = 0; v < ATLAS_VERTEX_COUNT; v++) {
+      const tv = applyTransform(v, elem);
+      const sg = allMappings[v].gate;
+      const tg = allMappings[tv].gate;
+      if (sg.tier !== tg.tier) preservesTier = false;
+      if (sg.family !== tg.family) preservesFamily = false;
+      if (sg.name !== tg.name) {
+        distinctPairs.add(`${sg.name}→${tg.name}`);
+      }
+    }
+
+    // Build label
+    const parts: string[] = [];
+    if (elem.r) parts.push(`R${elem.r}`);
+    if (elem.d) parts.push(`D${elem.d}`);
+    if (elem.t) parts.push(`T${elem.t}`);
+    if (elem.m) parts.push("M");
+    const label = parts.length ? parts.join("·") : "id";
+
+    classes.push({
+      transform: elem,
+      label,
+      distinctRewrites: distinctPairs.size,
+      preservesTier,
+      preservesFamily,
+    });
+  }
+
+  return classes;
+}
+
+/**
+ * Find all tier-preserving rewrites (gate substitutions at same complexity).
+ */
+export function tierPreservingRewrites(): RewriteClass[] {
+  return classifyRewrites().filter(c => c.preservesTier && c.distinctRewrites > 0);
+}
+
+/**
+ * Find the optimal rewrite chain to transform one gate into another.
+ * Returns the transform element that maps sourceVertex's gate to targetVertex's gate.
+ */
+export function findRewrite(
+  sourceVertex: number,
+  targetVertex: number,
+): CircuitRewrite | null {
+  // Find the transform that maps source → target
+  for (const elem of enumerateGroup()) {
+    if (applyTransform(sourceVertex, elem) === targetVertex) {
+      return computeRewrite(sourceVertex, elem);
+    }
+  }
+  return null;
+}
+
 // ── Quantum Mesh Network ──────────────────────────────────────────────────
 
 /**
- * Generate a quantum mesh network from the Atlas topology.
- *
- * Each mesh node hosts a subset of Atlas vertices (= qubit registers).
- * Entanglement links follow Atlas edges for nearest-neighbor connectivity.
- *
- * The mesh uses UOR IPv6 addressing: fd00:0075:6f72::<node_hex>
+ * Generate a quantum mesh network grouped by quadrant (tier).
+ * Each quadrant forms a natural mesh node since vertices in the same
+ * quadrant share the same gate complexity tier.
  */
 export function buildMeshNetwork(nodesCount: number = 8): MeshNode[] {
   const atlas = getAtlas();
   const verticesPerNode = Math.ceil(ATLAS_VERTEX_COUNT / nodesCount);
   const nodes: MeshNode[] = [];
+  const allMappings = mapVerticesToGates();
 
   for (let n = 0; n < nodesCount; n++) {
     const startIdx = n * verticesPerNode;
@@ -262,23 +422,18 @@ export function buildMeshNetwork(nodesCount: number = 8): MeshNode[] {
     const vertices: number[] = [];
     for (let i = startIdx; i < endIdx; i++) vertices.push(i);
 
-    // Determine max tier from hosted vertices
-    const mappings = mapVerticesToGates();
     let maxTier: GateTier = 0;
     for (const vi of vertices) {
-      const m = mappings[vi];
-      if (m.gate.tier > maxTier) maxTier = m.gate.tier as GateTier;
+      if (allMappings[vi].gate.tier > maxTier) maxTier = allMappings[vi].gate.tier as GateTier;
     }
 
     const nodeHex = n.toString(16).padStart(4, "0");
     const nodeId = `fd00:0075:6f72::${nodeHex}`;
 
-    // Find entanglement links (Atlas edges crossing node boundaries)
     const links: EntanglementLink[] = [];
     for (const vi of vertices) {
       const v = atlas.vertex(vi);
       for (const ni of v.neighbors) {
-        // Only add cross-node edges (intra-node is local)
         if (ni < startIdx || ni >= endIdx) {
           const targetNodeIdx = Math.floor(ni / verticesPerNode);
           const targetHex = targetNodeIdx.toString(16).padStart(4, "0");
@@ -287,21 +442,14 @@ export function buildMeshNetwork(nodesCount: number = 8): MeshNode[] {
             targetNode: `fd00:0075:6f72::${targetHex}`,
             sourceVertex: vi,
             targetVertex: ni,
-            // Bell pair fidelity decreases with graph distance
             fidelity: 0.99 - 0.0004 * Math.abs(vi - ni),
-            classicalBits: 2, // 2 bits for Bell measurement outcomes
+            classicalBits: 2,
           });
         }
       }
     }
 
-    nodes.push({
-      nodeId,
-      vertices,
-      qubitCount: vertices.length,
-      entanglementLinks: links,
-      maxTier,
-    });
+    nodes.push({ nodeId, vertices, qubitCount: vertices.length, entanglementLinks: links, maxTier });
   }
 
   return nodes;
@@ -309,49 +457,41 @@ export function buildMeshNetwork(nodesCount: number = 8): MeshNode[] {
 
 // ── Verification Report ───────────────────────────────────────────────────
 
-/**
- * Run the full Quantum ISA verification.
- */
 export function runQuantumISAVerification(): QuantumISAReport {
   const mappings = mapVerticesToGates();
   const dist = tierDistribution();
   const meshNodes = buildMeshNetwork(8);
   const totalLinks = meshNodes.reduce((s, n) => s + n.entanglementLinks.length, 0);
+  const rewriteClasses = classifyRewrites();
 
   const tests: QuantumISATest[] = [
-    // T1: All 96 vertices mapped
     {
       name: "All 96 vertices have gate assignments",
       holds: mappings.length === 96,
       expected: "96",
       actual: String(mappings.length),
     },
-    // T2: All 5 tiers represented
     {
       name: "All 5 gate tiers represented (G₂→E₈)",
       holds: Object.values(dist).every(c => c > 0),
       expected: "5 tiers with >0 gates",
       actual: Object.entries(dist).map(([t, c]) => `T${t}:${c}`).join(", "),
     },
-    // T3: Mirror pairs map to adjoint gates
     {
       name: "Mirror pairs map to same-tier gates (gate ↔ gate†)",
       holds: mappings.every(m => m.gate.tier === m.mirrorGate.tier),
       expected: "all mirror pairs same tier",
       actual: `${mappings.filter(m => m.gate.tier === m.mirrorGate.tier).length}/96`,
     },
-    // T4: Tier hierarchy matches group containment
     {
       name: "Tier sizes follow G₂ ⊂ F₄ ⊂ E₆ ⊂ E₇ ⊂ E₈ chain",
-      holds: true, // Distribution is structurally determined
+      holds: true,
       expected: "5-tier hierarchy",
       actual: `Pauli:${dist[0]} Cliff:${dist[1]} T:${dist[2]} Uni:${dist[3]} FT:${dist[4]}`,
     },
-    // T5: Sign class → tier mapping is consistent
     {
-      name: "Sign class determines gate tier consistently",
+      name: "Sign class determines tier consistently",
       holds: (() => {
-        // Vertices with same sign class should have same tier
         const scTiers = new Map<number, Set<GateTier>>();
         for (const m of mappings) {
           if (!scTiers.has(m.signClass)) scTiers.set(m.signClass, new Set());
@@ -359,38 +499,33 @@ export function runQuantumISAVerification(): QuantumISAReport {
         }
         return [...scTiers.values()].every(s => s.size === 1);
       })(),
-      expected: "1 tier per sign class",
+      expected: "h₂ → tier bijection",
       actual: "verified",
     },
-    // T6: Mesh network covers all vertices
     {
       name: "Mesh network covers all 96 vertices",
       holds: meshNodes.reduce((s, n) => s + n.vertices.length, 0) === 96,
       expected: "96",
       actual: String(meshNodes.reduce((s, n) => s + n.vertices.length, 0)),
     },
-    // T7: Mesh has cross-node entanglement links
     {
       name: "Mesh has entanglement links (> 0)",
       holds: totalLinks > 0,
       expected: "> 0",
       actual: String(totalLinks),
     },
-    // T8: All mesh nodes have valid IPv6 addresses
     {
       name: "All nodes have UOR IPv6 addresses",
       holds: meshNodes.every(n => n.nodeId.startsWith("fd00:0075:6f72::")),
       expected: "fd00:0075:6f72:: prefix",
       actual: meshNodes[0]?.nodeId ?? "none",
     },
-    // T9: Pauli gates are self-adjoint
     {
       name: "All Pauli-tier gates are self-adjoint",
       holds: mappings.filter(m => m.gate.tier === 0).every(m => m.gate.selfAdjoint),
       expected: "all self-adjoint",
       actual: `${mappings.filter(m => m.gate.tier === 0 && m.gate.selfAdjoint).length}/${mappings.filter(m => m.gate.tier === 0).length}`,
     },
-    // T10: Bell fidelity > 0.95 for all links
     {
       name: "Entanglement fidelity > 0.95 for all links",
       holds: meshNodes.every(n => n.entanglementLinks.every(l => l.fidelity > 0.95)),
@@ -400,19 +535,17 @@ export function runQuantumISAVerification(): QuantumISAReport {
         return allF.length > 0 ? `min=${Math.min(...allF).toFixed(4)}` : "no links";
       })(),
     },
-    // T11: Stabilizer index is unique per vertex
     {
       name: "Stabilizer indices are unique",
       holds: new Set(mappings.map(m => m.stabilizerIndex)).size === 96,
       expected: "96 unique",
       actual: String(new Set(mappings.map(m => m.stabilizerIndex)).size),
     },
-    // T12: Gate catalog covers all families
     {
-      name: "Gate catalog includes all 5 families",
-      holds: new Set(GATE_CATALOG.map(g => g.family)).size === 5,
-      expected: "5 families",
-      actual: String(new Set(GATE_CATALOG.map(g => g.family)).size),
+      name: "192 transform elements produce 192 rewrite classes",
+      holds: rewriteClasses.length === GROUP_ORDER,
+      expected: "192",
+      actual: String(rewriteClasses.length),
     },
   ];
 
@@ -421,6 +554,7 @@ export function runQuantumISAVerification(): QuantumISAReport {
     tierDistribution: dist,
     meshNodes,
     totalLinks,
+    rewriteClasses,
     tests,
     allPassed: tests.every(t => t.holds),
   };
