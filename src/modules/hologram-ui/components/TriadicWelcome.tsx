@@ -24,38 +24,40 @@ import type { CreatorStage } from "@/modules/hologram-ui/sovereign-creator";
 import { getSourceCount } from "@/modules/hologram-ui/skill-knowledge-registry";
 import { Lock, ChevronLeft } from "lucide-react";
 
-// ── Palette (matches HologramAiChat) ──────────────────────────────────────
+import { KP } from "@/modules/hologram-os/kernel-palette";
+
+// ── Palette (kernel-derived) ──────────────────────────────────────
 
 const P = {
   surface: "hsla(28, 10%, 17%, 0.7)",
   surfaceHover: "hsla(38, 18%, 28%, 0.18)",
-  border: "hsla(38, 20%, 28%, 0.22)",
-  borderLight: "hsla(38, 18%, 28%, 0.14)",
-  goldLight: "hsl(38, 50%, 62%)",
+  border: KP.border,
+  borderLight: KP.borderLight,
+  goldLight: KP.gold,
   goldMuted: "hsl(38, 35%, 48%)",
-  text: "hsl(38, 22%, 88%)",
-  textMuted: "hsl(32, 12%, 64%)",
-  textDim: "hsl(30, 8%, 52%)",
-  textDimmer: "hsl(30, 8%, 44%)",
-  fontDisplay: "'Playfair Display', serif",
-  font: "'DM Sans', sans-serif",
+  text: KP.text,
+  textMuted: KP.muted,
+  textDim: KP.dim,
+  textDimmer: KP.dimmer,
+  fontDisplay: KP.serif,
+  font: KP.font,
 } as const;
 
 const PHASE_DESCRIPTIONS: Record<TriadicPhase, { verb: string; essence: string; invitation: string }> = {
   learn: {
     verb: "Explore",
-    essence: "Understand before you build. Research and connect the dots.",
-    invitation: "Research, read, reason, and deepen your understanding",
+    essence: "Understand before you build.",
+    invitation: "Research, read, and reason",
   },
   work: {
     verb: "Build",
-    essence: "Turn your ideas into reality. Plan, create, and ship.",
-    invitation: "Plan, code, design, and bring your projects to life",
+    essence: "Turn ideas into reality.",
+    invitation: "Plan, code, and ship",
   },
   play: {
     verb: "Create",
-    essence: "Experiment without pressure. Play leads to breakthroughs.",
-    invitation: "Brainstorm, remix, reflect, and discover new possibilities",
+    essence: "Experiment without pressure.",
+    invitation: "Brainstorm, remix, and discover",
   },
 };
 

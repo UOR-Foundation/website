@@ -17,31 +17,16 @@ import {
 import { getOrchestrator, type ProviderSnapshot } from "@/modules/hologram-compute";
 import ConstantTimeBenchmark from "@/modules/hologram-compute/ConstantTimeBenchmark";
 
-// ── Palette ─────────────────────────────────────────────────────────────────
+import { KP, STATUS_COLORS } from "@/modules/hologram-os/kernel-palette";
 
-const P = {
-  bg: "hsl(25, 8%, 8%)",
-  border: "hsla(38, 12%, 70%, 0.1)",
-  font: "'DM Sans', system-ui, sans-serif",
-  serif: "'Playfair Display', serif",
-  card: "hsla(25, 8%, 12%, 0.6)",
-  cardBorder: "hsla(38, 12%, 70%, 0.08)",
-  text: "hsl(38, 10%, 88%)",
-  muted: "hsl(38, 8%, 55%)",
-  gold: "hsl(38, 40%, 65%)",
-  green: "hsl(152, 44%, 50%)",
-  dim: "hsl(38, 8%, 35%)",
-};
+// ── Palette (kernel-derived) ────────────────────────────────────────────────
+
+const P = KP;
+
+const STATUS_COLOR = STATUS_COLORS;
 
 type Mode = "overview" | "pro";
 type View = "dashboard" | "demo";
-
-const STATUS_COLOR: Record<string, string> = {
-  ready: P.green,
-  degraded: P.gold,
-  offline: P.dim,
-  error: "hsl(0, 55%, 55%)",
-};
 
 function sc(s: string) { return STATUS_COLOR[s] ?? STATUS_COLOR.offline; }
 
@@ -192,10 +177,9 @@ export default function HologramCompute({ onClose }: HologramComputeProps) {
               >
                 Compute Benchmarks
               </h2>
-              <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
-                Live benchmarks comparing standard compute against the Hologram Virtual GPU.
-                All data computed in real-time in your browser.
-              </p>
+               <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
+                 Live benchmarks: standard compute vs Hologram vGPU.
+               </p>
             </div>
             <ConstantTimeBenchmark />
           </div>
@@ -246,8 +230,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
           AI that runs on your device
         </h2>
         <p className="text-base lg:text-lg leading-relaxed max-w-xl" style={{ color: P.muted, lineHeight: 1.8 }}>
-          Your data never leaves your machine. No cloud bills. No waiting.
-          Everything happens right here, powered by your own hardware.
+          Your data stays on your machine. No cloud bills. No latency.
         </p>
       </section>
 
@@ -260,26 +243,22 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
           <MetricCard
             value={gflops > 0 ? `${gflops.toFixed(0)}` : mops > 0 ? `${mops.toFixed(0)}M` : "—"}
             unit={gflops > 0 ? "GFLOPS" : "ops/sec"}
-            label="Processing Power"
-            sublabel="How fast your device can compute"
+            label="Processing"
           />
           <MetricCard
             value={bw > 0 ? bw.toFixed(1) : "—"}
             unit="GB/s"
             label="Throughput"
-            sublabel="Data processed per second"
           />
           <MetricCard
             value={tokSec > 0 ? `~${tokSec}` : "—"}
             unit="tok/s"
             label="AI Speed"
-            sublabel="Words generated per second"
           />
           <MetricCard
             value="$0"
             unit="forever"
             label="Cost"
-            sublabel="No subscriptions, no cloud fees"
             accent
           />
         </div>
@@ -326,7 +305,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
               label="Lookup Tables"
               value={tables > 0 ? `${tables} loaded` : "Loading…"}
               on={tables > 0}
-              detail="Pre-computed answer tables — instant results, no recalculation"
+              detail="Pre-computed answer tables for instant results"
             />
             <ResourceRow
               icon={<IconBrain size={16} />}
@@ -340,7 +319,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
               label="Result Verification"
               value={snap?.criticalIdentity?.holds ? "Verified" : "Pending"}
               on={snap?.criticalIdentity?.holds ?? false}
-              detail="Confirms every cached result matches a full recomputation"
+              detail="Verifies cached results match full recomputation"
             />
           </div>
         </section>
@@ -354,8 +333,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
             <span className="text-xs" style={{ color: P.dim }}>Live</span>
           </div>
           <div
-            className="rounded-xl overflow-hidden"
-            style={{ border: `1px solid ${P.cardBorder}`, background: P.card }}
+            className="hologram-glass-card rounded-xl overflow-hidden"
           >
             {activityLog.map((entry, i) => (
               <div
@@ -393,17 +371,17 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
           <HowCard
             step="1"
             title="Pre-compute"
-            desc="Complex operations are collapsed into simple lookup tables — like an answer key for math."
+            desc="Operations collapsed into lookup tables."
           />
           <HowCard
             step="2"
             title="Instant lookup"
-            desc="Instead of calculating every time, your device just looks up the answer. One step, done."
+            desc="One-step answer retrieval, no recalculation."
           />
           <HowCard
             step="3"
-            title="Verified results"
-            desc="Every result is mathematically proven to be identical to the full computation. Zero shortcuts in accuracy."
+            title="Verified"
+            desc="Mathematically proven identical to full computation."
           />
         </div>
       </section>
@@ -455,7 +433,7 @@ function OverviewMode({ snap, onBenchmark, benchmarking, onDemo }: {
         <div className="space-y-1">
           <h3 className="text-base font-medium" style={{ color: P.text }}>See the proof</h3>
           <p className="text-sm" style={{ color: P.muted }}>
-            Run a live benchmark and watch pre-computed lookups outperform standard compute by 100×+
+            Live benchmark: pre-computed lookups vs standard compute
           </p>
         </div>
         <IconArrowRight size={20} style={{ color: P.gold }} />
@@ -611,7 +589,7 @@ function ProMode({ snapshots, localSnap, onBenchmark, benchmarking, onDemo }: {
 // ── Shared sub-components ───────────────────────────────────────────────────
 
 function MetricCard({ value, unit, label, sublabel, accent }: {
-  value: string; unit: string; label: string; sublabel: string; accent?: boolean;
+  value: string; unit: string; label: string; sublabel?: string; accent?: boolean;
 }) {
   return (
     <div

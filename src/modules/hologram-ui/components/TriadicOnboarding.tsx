@@ -13,15 +13,17 @@ import { PHASES, PHASE_ORDER, type TriadicPhase } from "@/modules/hologram-ui/so
 
 const STORAGE_KEY = "hologram:onboarding-seen";
 
+import { KP } from "@/modules/hologram-os/kernel-palette";
+
 const P = {
   surface: "hsla(28, 12%, 14%, 0.97)",
-  border: "hsla(38, 20%, 28%, 0.22)",
-  text: "hsl(38, 22%, 90%)",
-  textMuted: "hsl(32, 12%, 68%)",
-  textDim: "hsl(30, 8%, 48%)",
-  goldWarm: "hsl(38, 45%, 62%)",
-  fontDisplay: "'Playfair Display', serif",
-  font: "'DM Sans', sans-serif",
+  border: KP.border,
+  text: KP.text,
+  textMuted: KP.muted,
+  textDim: KP.dim,
+  goldWarm: KP.gold,
+  fontDisplay: KP.serif,
+  font: KP.font,
 } as const;
 
 interface Step {
@@ -34,22 +36,22 @@ const STEPS: Step[] = [
   {
     phase: null,
     title: "Three modes, one flow",
-    body: "Lumini helps you stay focused by organizing your work into three simple modes — each designed for a different kind of thinking.",
+    body: "Organize your work into Learn, Work, and Play — each designed for a different kind of thinking.",
   },
   {
     phase: "learn",
     title: "Learn",
-    body: "When you need to understand something deeply — research, study, or explore new ideas. This is where clarity begins.",
+    body: "Research, study, and explore new ideas.",
   },
   {
     phase: "work",
     title: "Work",
-    body: "When it's time to get things done — plan, build, and ship your projects. This is where ideas become real.",
+    body: "Plan, build, and ship your projects.",
   },
   {
     phase: "play",
     title: "Play",
-    body: "When you want to think freely — brainstorm, experiment, and discover new connections. This is where breakthroughs happen.",
+    body: "Brainstorm, experiment, and discover.",
   },
 ];
 
