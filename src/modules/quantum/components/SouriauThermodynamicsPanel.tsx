@@ -24,6 +24,7 @@ import {
   Snowflake,
   Flame,
   Gauge,
+  Shield,
 } from "lucide-react";
 
 export default function SouriauThermodynamicsPanel() {
@@ -228,6 +229,92 @@ export default function SouriauThermodynamicsPanel() {
                   );
                 })}
               </div>
+            </div>
+          </div>
+
+          {/* Information Capacity Φ — Bekenstein-Hawking */}
+          <div className="bg-[hsla(160,15%,10%,0.5)] border border-[hsla(160,25%,25%,0.4)] rounded-lg p-4">
+            <div className="text-[10px] font-mono text-[hsl(160,60%,60%)] uppercase mb-3 flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Shield size={12} /> Information Capacity Φ — Bekenstein-Hawking Bound
+              </span>
+              <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                state.informationCapacity.saturated
+                  ? "bg-[hsla(140,50%,20%,0.4)] text-[hsl(140,70%,65%)]"
+                  : state.informationCapacity.respected
+                  ? "bg-[hsla(200,50%,20%,0.4)] text-[hsl(200,70%,65%)]"
+                  : "bg-[hsla(0,50%,20%,0.4)] text-[hsl(0,70%,65%)]"
+              }`}>
+                {state.informationCapacity.saturated ? "SATURATED" : state.informationCapacity.respected ? "RESPECTED" : "VIOLATED"}
+              </span>
+            </div>
+
+            {/* Φ gauge bar */}
+            <div className="mb-3">
+              <div className="flex justify-between text-[8px] font-mono text-[hsl(210,10%,45%)] mb-1">
+                <span>Φ = S_Casimir / S_BH</span>
+                <span className="text-[hsl(160,60%,60%)]">Φ = {state.informationCapacity.phi.toFixed(6)}</span>
+              </div>
+              <div className="h-4 bg-[hsla(210,10%,12%,0.6)] rounded-full overflow-hidden relative">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    state.informationCapacity.saturated
+                      ? "bg-gradient-to-r from-[hsl(160,60%,40%)] to-[hsl(140,60%,50%)]"
+                      : state.informationCapacity.respected
+                      ? "bg-gradient-to-r from-[hsl(200,60%,40%)] to-[hsl(200,60%,55%)]"
+                      : "bg-gradient-to-r from-[hsl(0,60%,40%)] to-[hsl(0,60%,55%)]"
+                  }`}
+                  style={{ width: `${Math.min(100, state.informationCapacity.phi * 100)}%` }}
+                />
+                {/* Saturation line at Φ = 1 */}
+                <div className="absolute top-0 bottom-0 w-[2px] bg-[hsl(50,80%,55%)]" style={{ left: "100%" }} />
+              </div>
+              <div className="flex justify-between text-[7px] font-mono text-[hsl(210,10%,35%)] mt-0.5">
+                <span>0</span>
+                <span>Φ = 1 (holographic limit)</span>
+              </div>
+            </div>
+
+            {/* Metrics grid */}
+            <div className="grid grid-cols-4 gap-2 mb-3">
+              {[
+                { label: "S_BH Bound", value: state.informationCapacity.bekensteinHawkingBound.toFixed(4) + " nats", color: "hsl(160,60%,60%)" },
+                { label: "Holo Bits", value: state.informationCapacity.holographicBits.toFixed(1) + " bits", color: "hsl(200,60%,60%)" },
+                { label: "Atlas Vol", value: state.informationCapacity.atlasVolume.toExponential(2), color: "hsl(280,50%,60%)" },
+                { label: "l_P² unit", value: state.informationCapacity.planckAreaUnit.toFixed(4), color: "hsl(40,70%,55%)" },
+              ].map(m => (
+                <div key={m.label} className="bg-[hsla(210,10%,8%,0.5)] rounded p-2">
+                  <div className="text-[7px] font-mono text-[hsl(210,10%,40%)] uppercase">{m.label}</div>
+                  <div className="text-[11px] font-mono mt-0.5" style={{ color: m.color }}>{m.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Directional capacity bars */}
+            <div className="text-[8px] font-mono text-[hsl(210,10%,45%)] mb-1">Directional Capacity (per Cartan axis)</div>
+            <div className="grid grid-cols-8 gap-1">
+              {state.informationCapacity.directionalCapacity.map((c, i) => {
+                const maxC = Math.max(...state.informationCapacity.directionalCapacity, 0.01);
+                return (
+                  <div key={i} className="flex flex-col items-center gap-0.5">
+                    <div className="w-full h-10 bg-[hsla(210,10%,12%,0.5)] rounded-sm overflow-hidden flex items-end">
+                      <div
+                        className="w-full rounded-t-sm transition-all duration-300"
+                        style={{
+                          height: `${Math.min(100, (c / maxC) * 100)}%`,
+                          background: c > 0.95 ? "hsl(140,60%,50%)" : c > 0.5 ? "hsl(200,60%,50%)" : "hsl(210,10%,35%)",
+                        }}
+                      />
+                    </div>
+                    <span className="text-[7px] font-mono text-[hsl(210,10%,40%)]">β_{i + 1}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Formula */}
+            <div className="mt-3 pt-2 border-t border-[hsla(160,20%,25%,0.3)] text-[9px] font-mono text-[hsl(160,20%,60%)] leading-relaxed">
+              S_BH = A / (4 l_P²) where A = V^{"{(d-1)/d}"} × 2d, V = √det(g_ij) × Ω₈, l_P² = min(g_ii)
             </div>
           </div>
 
