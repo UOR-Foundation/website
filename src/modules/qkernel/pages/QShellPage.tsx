@@ -99,23 +99,85 @@ export default function QShellPage() {
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [histIdx, setHistIdx] = useState(-1);
+  const [tabHint, setTabHint] = useState("");
   const [activeTab, setActiveTab] = useState<"terminal" | "procs" | "mesh" | "net" | "collab">("terminal");
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll terminal
-  useEffect(() => {
-    if (termRef.current) {
-      termRef.current.scrollTop = termRef.current.scrollHeight;
+  // All known commands for tab-completion
+  const COMMANDS = [
+    "help", "man", "clear", "uname", "hostname", "whoami", "id", "uptime",
+    "date", "env", "echo", "history", "ps", "top", "kill", "spawn", "jobs",
+    "fg", "bg", "nice", "tick", "pwd", "cd", "ls", "mkdir", "touch", "cat",
+    "rm", "find", "grep", "head", "tail", "wc", "du", "df", "free", "mount",
+    "lsmod", "modinfo", "ifconfig", "netstat", "ping", "traceroute", "nslookup",
+    "curl", "ssh", "dmesg", "export", "alias", "exit", "demo", "reason",
+    "security", "mesh", "channel", "send", "broadcast", "agent",
+  ];
+
+  const handleTab = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const parts = input.split(" ");
+    const isFirstWord = parts.length <= 1;
+    const partial = parts[parts.length - 1] || "";
+
+    if (isFirstWord) {
+      // Complete command names
+      const matches = COMMANDS.filter(c => c.startsWith(partial) && c !== partial);
+      if (matches.length === 1) {
+        setInput(matches[0] + " ");
+        setTabHint("");
+      } else if (matches.length > 1) {
+        // Show all matches as hint, fill common prefix
+        setTabHint(matches.join("  "));
+        const common = matches.reduce((a, b) => {
+          let i = 0;
+          while (i < a.length && i < b.length && a[i] === b[i]) i++;
+          return a.slice(0, i);
+        });
+        if (common.length > partial.length) setInput(common);
+      }
+    } else {
+      // Complete file paths using QFS
+      const prefix = parts.slice(0, -1).join(" ") + " ";
+      const dir = partial.includes("/") ? partial.slice(0, partial.lastIndexOf("/") + 1) : "/";
+      const namePrefix = partial.includes("/") ? partial.slice(partial.lastIndexOf("/") + 1) : partial;
+
+      try {
+        const node = state.kernel && (state as any).sub?.fs?.stat(dir);
+        if (node && node.kind === "dir") {
+          const children = Object.keys(node.children || {}).filter(n => n.startsWith(namePrefix));
+          if (children.length === 1) {
+            const full = dir === "/" ? `/${children[0]}` : `${dir}${children[0]}`;
+            setInput(prefix + full);
+            setTabHint("");
+          } else if (children.length > 1) {
+            setTabHint(children.join("  "));
+            const common = children.reduce((a, b) => {
+              let i = 0;
+              while (i < a.length && i < b.length && a[i] === b[i]) i++;
+              return a.slice(0, i);
+            });
+            if (common.length > namePrefix.length) {
+              const full = dir === "/" ? `/${common}` : `${dir}${common}`;
+              setInput(prefix + full);
+            }
+          }
+        }
+      } catch {
+        // No FS available, just complete commands as subcommands
+      }
     }
-  }, [state.bootLog]);
+  };
 
-  // Auto-boot on mount
-  useEffect(() => {
-    if (state.stage === "off") bootKernel();
-  }, [state.stage, bootKernel]);
+  const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Tab") {
+      handleTab(e);
+      return;
+    }
+    // Clear tab hint on any other key
+    if (tabHint) setTabHint("");
 
-  const handleKey = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && input.trim()) {
       executeCommand(input.trim());
       setHistory(h => [input.trim(), ...h]);
@@ -222,6 +284,13 @@ export default function QShellPage() {
                   <span className="inline-block w-2 h-4 bg-primary animate-pulse" />
                 )}
               </div>
+
+              {/* Tab-completion hint */}
+              {tabHint && (
+                <div className="px-4 py-1 text-[12px] text-muted-foreground border-t border-[hsl(0,0%,18%)] bg-[hsl(0,0%,9%)]">
+                  {tabHint}
+                </div>
+              )}
 
               {/* Input — classic bash prompt */}
               {state.stage === "running" && (
