@@ -148,6 +148,10 @@ export function useQShell() {
     }
   }, [log]);
 
+  // ── Demo state for collaboration tab ──────────────────────────
+  const [demoLog, setDemoLog] = useState<{ agent: string; action: string; detail: string; h: number; tick: number }[]>([]);
+  const [demoRunning, setDemoRunning] = useState(false);
+
   const executeCommand = useCallback(async (cmd: string) => {
     const sub = subsRef.current;
     if (!sub) return;
@@ -174,6 +178,7 @@ export function useQShell() {
         log("  net            — Network topology");
         log("  ls [path]      — List directory");
         log("  mkdir <path>   — Create directory");
+        log("  demo           — Multi-agent collaboration demo");
         log("  clear          — Clear log");
         break;
 
@@ -317,6 +322,89 @@ export function useQShell() {
         break;
       }
 
+      case "demo": {
+        if (demoRunning) { log("Demo already running."); break; }
+        setDemoRunning(true);
+        setDemoLog([]);
+        log("DEMO: Spawning 3 specialized agents...");
+
+        const specializations = [
+          { name: "researcher", h: 0.75, specialty: "data analysis" },
+          { name: "synthesizer", h: 0.7, specialty: "pattern synthesis" },
+          { name: "critic", h: 0.65, specialty: "logical critique" },
+        ];
+
+        const agents = [];
+        for (const spec of specializations) {
+          const a = await sub.mesh.spawn(spec.name, spec.h);
+          agents.push(a);
+          log(`  Spawned ${a.name} (PID ${a.pid}, H=${a.hScore.toFixed(2)}, specialty=${spec.specialty})`);
+        }
+
+        // Create shared IPC channel
+        const ch = await agents[0].openChannel("collab", agents.slice(1).map(a => a.pid), 0.3);
+        log(`  Channel opened: ${ch.channelCid.slice(0, 16)}…`);
+
+        // Run 5 rounds of independent reasoning → IPC exchange → feedback
+        const addDemoEntry = (agent: string, action: string, detail: string, h: number, tick: number) => {
+          setDemoLog(prev => [...prev, { agent, action, detail, h, tick }]);
+        };
+
+        for (let round = 0; round < 5; round++) {
+          await new Promise(r => setTimeout(r, 350));
+          log(`\n── Round ${round + 1} ──────────────────────────────`);
+
+          // Each agent thinks independently
+          for (const a of agents) {
+            if (a.state !== "active") continue;
+            const entry = await a.think({ query: `round-${round}-analysis`, round });
+            log(`  ${a.name}: thought → ${entry.entryCid.slice(0, 16)}…`);
+            addDemoEntry(a.name, "think", entry.entryCid.slice(0, 16), a.hScore, round);
+          }
+
+          // Agents exchange findings via IPC
+          for (const a of agents) {
+            if (a.state !== "active") continue;
+            const msg = new TextEncoder().encode(JSON.stringify({
+              from: a.name, round, finding: `${a.name}-insight-r${round}`,
+            }));
+            const sent = await a.communicate(ch.channelCid, msg);
+            if (sent.sent) {
+              addDemoEntry(a.name, "ipc-send", `r${round} finding`, a.hScore, round);
+            }
+          }
+          log(`  IPC: ${agents.filter(a => a.state === "active").length} agents exchanged findings`);
+
+          // Simulated human feedback — researcher gets high, critic gets variable
+          const feedbackScores = [
+            0.6 + round * 0.08,  // researcher improves steadily
+            0.5 + round * 0.1,   // synthesizer improves faster
+            0.4 + round * 0.06 + (round % 2 === 0 ? 0.15 : 0),  // critic oscillates
+          ];
+          for (let i = 0; i < agents.length; i++) {
+            if (agents[i].state !== "active") continue;
+            const h = Math.min(1, feedbackScores[i]);
+            await agents[i].feedback(`output-r${round}`, h, "human");
+            log(`  ${agents[i].name}: feedback H=${agents[i].hScore.toFixed(3)} zone=${agents[i].zone}`);
+            addDemoEntry(agents[i].name, "feedback", `H=${agents[i].hScore.toFixed(3)}`, agents[i].hScore, round);
+
+            // Try to revive suspended agents
+            if (agents[i].state === "suspended") {
+              agents[i].revive();
+            }
+          }
+
+          // Mesh tick
+          const tickResult = sub.mesh.tick();
+          log(`  Tick: scheduled=${tickResult.scheduled?.name ?? "none"}`);
+          addDemoEntry("mesh", "tick", `coherence=${sub.mesh.stats().meshCoherence.toFixed(3)}`, sub.mesh.stats().meshCoherence, round);
+        }
+
+        log("\nDEMO: Complete — see Collaboration tab for convergence visualization");
+        setDemoRunning(false);
+        break;
+      }
+
       case "clear":
         setState(s => ({ ...s, bootLog: [] }));
         return;
@@ -326,7 +414,7 @@ export function useQShell() {
     }
 
     refresh();
-  }, [log, refresh]);
+  }, [log, refresh, demoRunning]);
 
-  return { state, bootKernel, executeCommand, refresh };
+  return { state, bootKernel, executeCommand, refresh, demoLog, demoRunning };
 }
