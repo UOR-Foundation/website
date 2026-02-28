@@ -1546,6 +1546,8 @@ export function useQShell() {
           log("    qiskit gates              List all available gates");
           log("    qiskit reset              Clear current circuit");
           log("    qiskit save/load <name>   Save/load circuit to filesystem");
+          log("    qiskit library list        List built-in circuit templates");
+          log("    qiskit library load <name> <n>  Load template on n qubits");
           log("");
           log("  Noise simulation:");
           log("    qiskit noise status       Show current noise model");
@@ -1854,6 +1856,153 @@ export function useQShell() {
           break;
         }
 
+        // ── library ───────────────────────────────────────────
+        if (subcmd === "library" || subcmd === "lib") {
+          const libCmd = parts[2]?.toLowerCase();
+          type SimOpType = import("@/modules/qkernel/q-simulator").SimOp;
+          const LIBRARY: Record<string, { desc: string; minQ: number; build: (n: number) => SimOpType[] }> = {
+            qft: {
+              desc: "Quantum Fourier Transform — basis for Shor's algorithm & phase estimation",
+              minQ: 2,
+              build(n) {
+                const ops: SimOpType[] = [];
+                for (let i = 0; i < n; i++) {
+                  ops.push({ gate: "h", qubits: [i] });
+                  for (let j = i + 1; j < n; j++) {
+                    const k = j - i + 1;
+                    ops.push({ gate: "cp", qubits: [j, i], params: [Math.PI / (1 << (k - 1))] });
+                  }
+                }
+                for (let i = 0; i < Math.floor(n / 2); i++) ops.push({ gate: "swap", qubits: [i, n - 1 - i] });
+                return ops;
+              },
+            },
+            iqft: {
+              desc: "Inverse QFT — uncomputes the Fourier basis",
+              minQ: 2,
+              build(n) {
+                const ops: SimOpType[] = [];
+                for (let i = 0; i < Math.floor(n / 2); i++) ops.push({ gate: "swap", qubits: [i, n - 1 - i] });
+                for (let i = n - 1; i >= 0; i--) {
+                  for (let j = n - 1; j > i; j--) {
+                    const k = j - i + 1;
+                    ops.push({ gate: "cp", qubits: [j, i], params: [-Math.PI / (1 << (k - 1))] });
+                  }
+                  ops.push({ gate: "h", qubits: [i] });
+                }
+                return ops;
+              },
+            },
+            grover: {
+              desc: "Grover's search — quadratic speedup for unstructured search (marks |11...1⟩)",
+              minQ: 2,
+              build(n) {
+                const ops: SimOpType[] = [];
+                const iters = Math.max(1, Math.round(Math.PI / 4 * Math.sqrt(1 << n)));
+                for (let i = 0; i < n; i++) ops.push({ gate: "h", qubits: [i] });
+                for (let it = 0; it < iters; it++) {
+                  if (n === 2) { ops.push({ gate: "cz", qubits: [0, 1] }); }
+                  else if (n === 3) { ops.push({ gate: "h", qubits: [2] }); ops.push({ gate: "ccx", qubits: [0, 1, 2] }); ops.push({ gate: "h", qubits: [2] }); }
+                  else { for (let i = 0; i < n - 1; i++) ops.push({ gate: "cz", qubits: [i, i + 1] }); }
+                  for (let i = 0; i < n; i++) ops.push({ gate: "h", qubits: [i] });
+                  for (let i = 0; i < n; i++) ops.push({ gate: "x", qubits: [i] });
+                  if (n === 2) { ops.push({ gate: "cz", qubits: [0, 1] }); }
+                  else if (n === 3) { ops.push({ gate: "h", qubits: [2] }); ops.push({ gate: "ccx", qubits: [0, 1, 2] }); ops.push({ gate: "h", qubits: [2] }); }
+                  else { for (let i = 0; i < n - 1; i++) ops.push({ gate: "cz", qubits: [i, i + 1] }); }
+                  for (let i = 0; i < n; i++) ops.push({ gate: "x", qubits: [i] });
+                  for (let i = 0; i < n; i++) ops.push({ gate: "h", qubits: [i] });
+                }
+                return ops;
+              },
+            },
+            "bernstein-vazirani": {
+              desc: "Bernstein-Vazirani — finds hidden bitstring in one query (s=101...)",
+              minQ: 3,
+              build(n) {
+                const ops: SimOpType[] = [];
+                const anc = n - 1;
+                ops.push({ gate: "x", qubits: [anc] });
+                for (let i = 0; i < n; i++) ops.push({ gate: "h", qubits: [i] });
+                for (let i = 0; i < n - 1; i++) { if (i % 2 === 0) ops.push({ gate: "cx", qubits: [i, anc] }); }
+                for (let i = 0; i < n - 1; i++) ops.push({ gate: "h", qubits: [i] });
+                return ops;
+              },
+            },
+            bell: {
+              desc: "Bell state — maximally entangled pair |Φ+⟩ = (|00⟩+|11⟩)/√2",
+              minQ: 2,
+              build() { return [{ gate: "h", qubits: [0] }, { gate: "cx", qubits: [0, 1] }]; },
+            },
+            ghz: {
+              desc: "GHZ state — N-qubit entangled (|00...0⟩+|11...1⟩)/√2",
+              minQ: 2,
+              build(n) {
+                const ops: SimOpType[] = [{ gate: "h", qubits: [0] }];
+                for (let i = 1; i < n; i++) ops.push({ gate: "cx", qubits: [0, i] });
+                return ops;
+              },
+            },
+            vqe: {
+              desc: "VQE ansatz — variational eigensolver Ry-CNOT ladder (θ=π/4)",
+              minQ: 2,
+              build(n) {
+                const ops: SimOpType[] = [];
+                const theta = Math.PI / 4;
+                for (let i = 0; i < n; i++) ops.push({ gate: "ry", qubits: [i], params: [theta * (i + 1)] });
+                for (let i = 0; i < n - 1; i++) ops.push({ gate: "cx", qubits: [i, i + 1] });
+                for (let i = 0; i < n; i++) ops.push({ gate: "ry", qubits: [i], params: [theta * (n - i)] });
+                return ops;
+              },
+            },
+            teleportation: {
+              desc: "Quantum teleportation — teleport qubit 0 to qubit 2 via Bell pair",
+              minQ: 3,
+              build() {
+                return [
+                  { gate: "h", qubits: [0] }, { gate: "h", qubits: [1] }, { gate: "cx", qubits: [1, 2] },
+                  { gate: "cx", qubits: [0, 1] }, { gate: "h", qubits: [0] },
+                  { gate: "cx", qubits: [1, 2] }, { gate: "cz", qubits: [0, 2] },
+                ];
+              },
+            },
+          };
+          if (!libCmd || libCmd === "list") {
+            log("  ┌─ Quantum Circuit Library ────────────────────────────────────┐");
+            for (const [name, tmpl] of Object.entries(LIBRARY)) {
+              log(`  │  ${name.padEnd(22)} min ${tmpl.minQ}q │ ${tmpl.desc.slice(0, 45)}`);
+            }
+            log(`  └──────────────────────────────── ${Object.keys(LIBRARY).length} templates ──┘`);
+            log("  Usage: qiskit library load <name> [nQubits]");
+            break;
+          }
+          if (libCmd === "load") {
+            const tmplName = parts[3]?.toLowerCase();
+            if (!tmplName || !LIBRARY[tmplName]) {
+              log(`  Unknown template '${tmplName || ""}'. Available: ${Object.keys(LIBRARY).join(", ")}`);
+              break;
+            }
+            const tmpl = LIBRARY[tmplName];
+            const nq = Math.max(tmpl.minQ, parseInt(parts[4] || String(tmpl.minQ), 10));
+            const newCirc = createState(nq, nq, `${tmplName}_${nq}q`);
+            newCirc.ops = tmpl.build(nq);
+            qiskitCircuitRef.current = newCirc;
+            log(`  ✓ Loaded '${tmplName}' on ${nq} qubits (${newCirc.ops.length} gates)`);
+            log(`    ${tmpl.desc}`);
+            log("  Next: qiskit draw | qiskit run 1024 | qiskit statevector");
+            break;
+          }
+          if (libCmd === "info") {
+            const infoName = parts[3]?.toLowerCase();
+            if (!infoName || !LIBRARY[infoName]) { log("  Unknown template. Use 'qiskit library list'"); break; }
+            const t = LIBRARY[infoName];
+            log(`  ${infoName}: ${t.desc}`);
+            log(`  Min qubits: ${t.minQ}    Gates (at min): ${t.build(t.minQ).length}`);
+            break;
+          }
+          log("  Usage: qiskit library [list|load <name> [n]|info <name>]");
+          break;
+        }
+
         // ── save ──────────────────────────────────────────────
         if (subcmd === "save") {
           if (!circ) { log("qiskit: no circuit active"); break; }
@@ -2053,6 +2202,7 @@ export function useQShell() {
           break;
         }
         if (subcmd2 === "noise") { await executeCommand(`qiskit noise ${parts.slice(2).join(" ")}`); break; }
+        if (subcmd2 === "library" || subcmd2 === "lib") { await executeCommand(`qiskit library ${parts.slice(2).join(" ")}`); break; }
         log(`cirq: unknown command '${subcmd2}'. Type 'cirq' for usage.`);
         break;
       }
@@ -2165,6 +2315,7 @@ export function useQShell() {
           break;
         }
         if (subcmd3 === "noise") { await executeCommand(`qiskit noise ${parts.slice(2).join(" ")}`); break; }
+        if (subcmd3 === "library" || subcmd3 === "lib") { await executeCommand(`qiskit library ${parts.slice(2).join(" ")}`); break; }
         log(`pl: unknown command '${subcmd3}'. Type 'pl' for usage.`);
         break;
       }
