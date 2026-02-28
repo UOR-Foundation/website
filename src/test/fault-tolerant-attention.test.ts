@@ -64,13 +64,13 @@ describe("Fault-Tolerant Attention — Single Head", () => {
     expect(sc.measurements.length).toBe(ft.encoding.dataQubits);
   });
 
-  it("total physical qubits = 3× data (pairs + ancillae)", () => {
-    expect(ft.totalQubits).toBe(ft.encoding.dataQubits * 3);
+  it("total physical qubits = 3× data + 8 SC ancillae", () => {
+    expect(ft.totalQubits).toBe(ft.encoding.dataQubits * 3 + 8);
   });
 
   it("qubit overhead > 1×", () => {
     expect(ft.overhead.qubitOverhead).toBeGreaterThan(1);
-    expect(ft.overhead.qubitOverhead).toBe(3.0);
+    expect(ft.overhead.qubitOverhead).toBeGreaterThan(3.0); // now > 3 due to SC ancillae
   });
 
   it("code params match [[96, 48, 2]]", () => {
@@ -83,7 +83,7 @@ describe("Fault-Tolerant Attention — Single Head", () => {
 // ══════════════════════════════════════════════════════════════════════════
 
 describe("FT QASM Emission", () => {
-  it("emits valid OpenQASM 3.0 with syndrome registers", () => {
+  it("emits valid OpenQASM 3.0 with syndrome and sign-class registers", () => {
     const ft = compileFTAttention({
       model: "GPT-2",
       headDim: 64,
@@ -97,13 +97,15 @@ describe("FT QASM Emission", () => {
     expect(qasm).toContain("OPENQASM 3.0");
     expect(qasm).toContain("qubit[");
     expect(qasm).toContain("syndrome");
+    expect(qasm).toContain("sc_ancilla");
     expect(qasm).toContain("barrier");
     expect(qasm).toContain("cx");
     expect(qasm).toContain("measure");
     expect(qasm).toContain("if (c[");
     expect(qasm).toContain("Stage 1: Mirror-pair encoding");
     expect(qasm).toContain("Stage 3: Syndrome extraction");
-    expect(qasm).toContain("Stage 4: Conditional recovery");
+    expect(qasm).toContain("Stage 3b: Sign-class cross-stabilizer");
+    expect(qasm).toContain("Stage 4: Cross-stabilizer conditional recovery");
   });
 
   it("QASM line count > bare circuit", () => {
@@ -124,8 +126,8 @@ describe("FT QASM Emission", () => {
 // Part III: Internal Verification
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("FT Verification — All 12 Tests", () => {
-  it("all 12 internal verification tests pass", () => {
+describe("FT Verification — All 15 Tests", () => {
+  it("all 15 internal verification tests pass", () => {
     const ft = compileFTAttention({
       model: "LLaMA-7B",
       headDim: 128,
@@ -139,7 +141,7 @@ describe("FT Verification — All 12 Tests", () => {
       expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
     }
     expect(v.allPassed).toBe(true);
-    expect(v.tests.length).toBe(12);
+    expect(v.tests.length).toBe(15);
   });
 });
 
@@ -196,5 +198,64 @@ describe("Multiple Syndrome Rounds", () => {
     expect(ft.syndromeCircuits.length).toBe(3);
     // Later rounds include reset gates
     expect(ft.syndromeCircuits[1].cnotGates.some(g => g.name === "reset")).toBe(true);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// Part VI: Sign-Class Cross-Stabilizer Layer
+// ══════════════════════════════════════════════════════════════════════════
+
+describe("Sign-Class Cross-Stabilizer Detection", () => {
+  it("produces 8 sign-class syndrome circuits", () => {
+    const ft = compileFTAttention({
+      model: "GPT-2",
+      headDim: 64,
+      seqLen: 8,
+      headIndex: 0,
+      totalHeads: 12,
+      embeddingDim: 768,
+    });
+    expect(ft.signClassCircuits.length).toBe(8);
+  });
+
+  it("each sign-class circuit has CNOT gates", () => {
+    const ft = compileFTAttention({
+      model: "GPT-2",
+      headDim: 64,
+      seqLen: 8,
+      headIndex: 0,
+      totalHeads: 12,
+      embeddingDim: 768,
+    });
+    for (const sc of ft.signClassCircuits) {
+      expect(sc.cnotGates.length).toBeGreaterThan(0);
+      expect(sc.measurement.name).toBe("measure");
+    }
+  });
+
+  it("sign-class ancillae add 8 physical qubits", () => {
+    const ft = compileFTAttention({
+      model: "GPT-2",
+      headDim: 64,
+      seqLen: 8,
+      headIndex: 0,
+      totalHeads: 12,
+      embeddingDim: 768,
+    });
+    expect(ft.totalQubits).toBe(ft.encoding.totalPhysical + 8);
+  });
+
+  it("QASM contains sc_ancilla register", () => {
+    const ft = compileFTAttention({
+      model: "GPT-2",
+      headDim: 64,
+      seqLen: 8,
+      headIndex: 0,
+      totalHeads: 12,
+      embeddingDim: 768,
+    });
+    const qasm = emitFTQASM(ft);
+    expect(qasm).toContain("sc_ancilla");
+    expect(qasm).toContain("Sign class");
   });
 });

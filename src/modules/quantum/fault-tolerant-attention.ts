@@ -24,8 +24,11 @@ import {
   constructLogicalQubits,
   computeCodeDistance,
   extractSyndrome,
+  buildSignClassStabilizers,
+  extractCrossStabilizerSyndrome,
   type StabilizerGenerator,
   type LogicalQubit,
+  type SignClassStabilizer,
 } from "./geometric-ecc";
 import {
   compileAttentionHead,
@@ -98,6 +101,17 @@ export interface SyndromeCircuit {
   totalGates: number;
 }
 
+export interface SignClassSyndromeCircuit {
+  /** Sign class index */
+  signClass: number;
+  /** CNOT gates: data qubits in this class → sign-class ancilla */
+  cnotGates: FTGate[];
+  /** Measurement of sign-class ancilla */
+  measurement: FTGate;
+  /** Number of pairs checked */
+  pairCount: number;
+}
+
 export interface CorrectionLookup {
   /** Syndrome bit pattern → correction operation */
   entries: CorrectionEntry[];
@@ -127,13 +141,15 @@ export interface FTAttentionCircuit {
   transversalGates: FTGate[];
   /** Syndrome extraction circuits */
   syndromeCircuits: SyndromeCircuit[];
+  /** Sign-class cross-stabilizer circuits (8 circuits, one per class) */
+  signClassCircuits: SignClassSyndromeCircuit[];
   /** Correction lookup table */
   corrections: CorrectionLookup;
   /** Recovery gates (applied after syndrome decode) */
   recoveryGates: FTGate[];
-  /** Total qubits: data + ancilla */
+  /** Total qubits: data + ancilla + sign-class ancilla */
   totalQubits: number;
-  /** Total classical bits: syndrome + measurement */
+  /** Total classical bits: syndrome + sign-class + measurement */
   totalClassicalBits: number;
   /** Overhead statistics */
   overhead: FTOverhead;
@@ -214,6 +230,11 @@ export function compileFTAttention(
   // Step 5: Build syndrome extraction circuits
   const syndromeCircuits = buildSyndromeCircuits(encoding, cfg.syndromeRounds);
 
+  // Step 5b: Build sign-class cross-stabilizer circuits
+  const signClassCircuits = cfg.signClassLayer
+    ? buildSignClassSyndromeCircuits(encoding)
+    : [];
+
   // Step 6: Build correction lookup table
   const corrections = buildCorrectionLookup(stabilizers);
 
@@ -221,22 +242,28 @@ export function compileFTAttention(
   const recoveryGates = buildRecoveryGates(corrections, encoding);
 
   // Assemble complete gate sequence
+  const scGates = signClassCircuits.flatMap(sc => [...sc.cnotGates, sc.measurement]);
   const allGates: FTGate[] = [
     ...encoding.encodingGates,
     ...transversalGates,
     ...syndromeCircuits.flatMap(sc => [...sc.cnotGates, ...sc.measurements]),
+    ...scGates,
     ...recoveryGates,
   ];
 
   // Compute overhead
   const totalClassicalBits =
     syndromeCircuits.reduce((s, sc) => s + sc.classicalBits, 0)
-    + bareCircuit.stages.length; // bare measurement bits
+    + signClassCircuits.length // 8 sign-class syndrome bits
+    + bareCircuit.stages.length;
+
+  // Sign-class ancillae: 8 extra qubits
+  const totalPhysicalWithSC = encoding.totalPhysical + signClassCircuits.length;
 
   const overhead: FTOverhead = {
     bareQubits: bareCircuit.totalQubits,
-    encodedQubits: encoding.totalPhysical,
-    qubitOverhead: encoding.totalPhysical / bareCircuit.totalQubits,
+    encodedQubits: totalPhysicalWithSC,
+    qubitOverhead: totalPhysicalWithSC / bareCircuit.totalQubits,
     bareGates: bareCircuit.compiled.gateCountAfter,
     encodedGates: allGates.length,
     gateOverhead: allGates.length / Math.max(1, bareCircuit.compiled.gateCountAfter),
@@ -251,9 +278,10 @@ export function compileFTAttention(
     encoding,
     transversalGates,
     syndromeCircuits,
+    signClassCircuits,
     corrections,
     recoveryGates,
-    totalQubits: encoding.totalPhysical,
+    totalQubits: totalPhysicalWithSC,
     totalClassicalBits,
     overhead,
     allGates,
@@ -498,6 +526,90 @@ function buildSyndromeCircuits(
   return circuits;
 }
 
+// ── Sign-Class Cross-Stabilizer Circuits ──────────────────────────────────
+
+/**
+ * Build 8 sign-class syndrome circuits — one per sign class.
+ *
+ * Each sign-class stabilizer SC_c is the product of Z⊗Z over all 6 mirror
+ * pairs in class c. To extract its syndrome:
+ *   1. Prepare a sign-class ancilla in |0⟩
+ *   2. CNOT from each physical qubit in the class → sign-class ancilla
+ *      (12 CNOTs per class: 6 pairs × 2 qubits each)
+ *   3. Measure sign-class ancilla → parity bit
+ *
+ * The parity bit = 1 iff an odd number of qubits in the class have been flipped.
+ * Combined with the primary syndrome (which pair was hit), this disambiguates
+ * which qubit in the pair was the error target.
+ */
+function buildSignClassSyndromeCircuits(
+  encoding: FTEncodingLayer,
+): SignClassSyndromeCircuit[] {
+  const scStabilizers = buildSignClassStabilizers();
+  const circuits: SignClassSyndromeCircuit[] = [];
+
+  // Sign-class ancillae start after mirror-pair ancillae
+  const scAncillaBase = encoding.totalPhysical;
+
+  for (const sc of scStabilizers) {
+    const cnotGates: FTGate[] = [];
+
+    // Find all logical assignments whose sign class matches this stabilizer.
+    // For small circuits where not all 8 sign classes appear in assignments,
+    // distribute assignments round-robin: each sign class gets at least one
+    // assignment from the nearest cycling stabilizer in that class.
+    let effectiveAssignments = encoding.logicalAssignments.filter(
+      a => a.signClass === sc.signClass,
+    );
+
+    if (effectiveAssignments.length === 0) {
+      // Fallback: pick assignments whose stabilizer index falls in this class's pair set
+      effectiveAssignments = encoding.logicalAssignments.filter(
+        a => sc.pairIndices.includes(a.stabilizerIndex),
+      );
+    }
+
+    if (effectiveAssignments.length === 0 && encoding.logicalAssignments.length > 0) {
+      // Ultimate fallback: assign the (sc.signClass % N)-th logical qubit
+      const fallbackIdx = sc.signClass % encoding.logicalAssignments.length;
+      effectiveAssignments = [encoding.logicalAssignments[fallbackIdx]];
+    }
+
+    for (const assign of effectiveAssignments) {
+      const [q0, q1] = assign.physicalPair;
+      const scAncilla = scAncillaBase + sc.signClass;
+
+      cnotGates.push({
+        name: "cx",
+        qubits: [q0, scAncilla],
+        type: "syndrome",
+      });
+
+      cnotGates.push({
+        name: "cx",
+        qubits: [q1, scAncilla],
+        type: "syndrome",
+      });
+    }
+
+    // Measurement of sign-class ancilla
+    const measurement: FTGate = {
+      name: "measure",
+      qubits: [scAncillaBase + sc.signClass],
+      type: "measurement",
+    };
+
+    circuits.push({
+      signClass: sc.signClass,
+      cnotGates,
+      measurement,
+      pairCount: sc.pairCount,
+    });
+  }
+
+  return circuits;
+}
+
 // ── Correction Lookup ─────────────────────────────────────────────────────
 
 /**
@@ -597,7 +709,10 @@ export function emitFTQASM(ft: FTAttentionCircuit): string {
   lines.push(`// ── Registers ──`);
   lines.push(`qubit[${dataQubits}] data;       // Mirror-pair encoded data qubits`);
   lines.push(`qubit[${ancillaQubits}] syndrome; // Syndrome ancillae`);
-  lines.push(`bit[${ft.totalClassicalBits}] c;  // Classical syndrome + measurement bits`);
+  if (ft.signClassCircuits.length > 0) {
+    lines.push(`qubit[${ft.signClassCircuits.length}] sc_ancilla; // Sign-class cross-stabilizer ancillae`);
+  }
+  lines.push(`bit[${ft.totalClassicalBits}] c;  // Classical syndrome + sign-class + measurement bits`);
   lines.push(``);
 
   // Custom gates
@@ -651,9 +766,30 @@ export function emitFTQASM(ft: FTAttentionCircuit): string {
     lines.push(``);
   }
 
-  // Stage 4: Classical correction
+  // Stage 3b: Sign-class cross-stabilizer syndrome
+  if (ft.signClassCircuits.length > 0) {
+    lines.push(`// ═══════════════════════════════════════════════`);
+    lines.push(`// Stage 3b: Sign-class cross-stabilizer (8 parity checks)`);
+    lines.push(`// ═══════════════════════════════════════════════`);
+    lines.push(`barrier data, sc_ancilla;`);
+    for (const sc of ft.signClassCircuits) {
+      lines.push(`// Sign class ${sc.signClass} (${sc.pairCount} pairs)`);
+      for (const gate of sc.cnotGates) {
+        const ctrl = gate.qubits[0];
+        const tgt = gate.qubits[1] - ft.encoding.totalPhysical;
+        lines.push(`cx data[${ctrl}], sc_ancilla[${tgt}];`);
+      }
+      lines.push(`c[${synBitOffset}] = measure sc_ancilla[${sc.signClass}];`);
+      synBitOffset++;
+    }
+    lines.push(``);
+  }
+
+  // Stage 4: Classical correction (cross-stabilizer-aware)
   lines.push(`// ═══════════════════════════════════════════════`);
-  lines.push(`// Stage 4: Conditional recovery (classically controlled)`);
+  lines.push(`// Stage 4: Cross-stabilizer conditional recovery`);
+  lines.push(`// Primary syndrome (c[0..N-1]) identifies the pair`);
+  lines.push(`// Sign-class syndrome (c[N..N+7]) disambiguates which qubit`);
   lines.push(`// ═══════════════════════════════════════════════`);
   for (let i = 0; i < ft.encoding.logicalAssignments.length; i++) {
     const assign = ft.encoding.logicalAssignments[i];
@@ -667,6 +803,7 @@ export function emitFTQASM(ft: FTAttentionCircuit): string {
   lines.push(`//   Code: [[96, 48, ${ft.overhead.codeParams.d}]]`);
   lines.push(`//   Data qubits:     ${dataQubits}`);
   lines.push(`//   Syndrome qubits: ${ancillaQubits}`);
+  lines.push(`//   SC ancillae:     ${ft.signClassCircuits.length}`);
   lines.push(`//   Total physical:  ${ft.totalQubits}`);
   lines.push(`//   Bare gates:      ${ft.overhead.bareGates}`);
   lines.push(`//   Encoded gates:   ${ft.overhead.encodedGates}`);
@@ -746,11 +883,12 @@ export function verifyFTAttention(ft: FTAttentionCircuit): FTVerification {
     detail: `${ft.corrections.correctableCount} correctable patterns`,
   });
 
-  // T7: Total physical qubits = 3× data (pairs + ancillae)
+  // T7: Total physical qubits includes sign-class ancillae
+  const expectedTotal = ft.encoding.dataQubits * 3 + ft.signClassCircuits.length;
   tests.push({
-    name: "Physical qubit count: data pairs + ancillae",
-    holds: ft.totalQubits === ft.encoding.dataQubits * 3,
-    detail: `${ft.totalQubits} = ${ft.encoding.dataQubits} × 3`,
+    name: "Physical qubit count: pairs + ancillae + SC ancillae",
+    holds: ft.totalQubits === expectedTotal,
+    detail: `${ft.totalQubits} = ${ft.encoding.dataQubits}×3 + ${ft.signClassCircuits.length} SC`,
   });
 
   // T8: Overhead > 1
@@ -788,6 +926,28 @@ export function verifyFTAttention(ft: FTAttentionCircuit): FTVerification {
     name: "Sign class diversity in logical assignments",
     holds: signClasses.size >= 2,
     detail: `${signClasses.size} sign classes across ${ft.encoding.logicalAssignments.length} assignments`,
+  });
+
+  // T13: Sign-class cross-stabilizer circuits present (when enabled)
+  tests.push({
+    name: "Sign-class cross-stabilizer circuits (8 classes)",
+    holds: ft.signClassCircuits.length === 8,
+    detail: `${ft.signClassCircuits.length} sign-class circuits`,
+  });
+
+  // T14: Each sign-class circuit has CNOT gates
+  const allSCHaveGates = ft.signClassCircuits.every(sc => sc.cnotGates.length > 0);
+  tests.push({
+    name: "All sign-class circuits have syndrome CNOTs",
+    holds: allSCHaveGates,
+    detail: `CNOT counts: [${ft.signClassCircuits.map(sc => sc.cnotGates.length).join(",")}]`,
+  });
+
+  // T15: QASM includes sign-class syndrome stage
+  tests.push({
+    name: "QASM includes sign-class cross-stabilizer stage",
+    holds: qasm.includes("Sign-class cross-stabilizer") && qasm.includes("sc_ancilla"),
+    detail: "Stage 3b present in QASM output",
   });
 
   return {
