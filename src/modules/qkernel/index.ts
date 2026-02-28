@@ -108,3 +108,15 @@ export type {
   QSubscription,
   IpcStats,
 } from "./q-ipc";
+
+// Q-Agent: Isolated agent runtime (containers/VMs)
+export { QAgent, QAgentMesh } from "./q-agent";
+export type {
+  AgentState,
+  ResourceEnvelope,
+  SessionEntry,
+  HScoreSample,
+  AgentSnapshot,
+  AgentStats,
+  MeshStats,
+} from "./q-agent";
