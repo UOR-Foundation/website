@@ -83,6 +83,12 @@ export interface UseKernelResult {
   setDesktopAllHidden: (desktopId: string, hidden: boolean) => void;
   /** Check if a widget is visible on a desktop */
   isDesktopWidgetVisible: (desktopId: string, widgetId: string) => boolean;
+  /** Record a shortcut use — learning-analytics kernel syscall */
+  recordShortcut: (key: string) => void;
+  /** Get hint opacity for a shortcut (1 = learning, 0 = mastered) */
+  shortcutHintOpacity: (key: string) => number;
+  /** Whether a shortcut is fully mastered */
+  isShortcutMastered: (key: string) => boolean;
   /** Current kernel config */
   config: Readonly<KernelConfig>;
   /** Boot time in ms */
@@ -205,6 +211,18 @@ export function useKernel(): UseKernelResult {
     return projector.isDesktopWidgetVisible(desktopId, widgetId);
   }, [projector]);
 
+  const recordShortcut = useCallback((key: string) => {
+    projector.recordShortcut(key);
+  }, [projector]);
+
+  const shortcutHintOpacity = useCallback((key: string) => {
+    return projector.shortcutHintOpacity(key);
+  }, [projector]);
+
+  const isShortcutMastered = useCallback((key: string) => {
+    return projector.isShortcutMastered(key);
+  }, [projector]);
+
   return {
     frame,
     bootEvents,
@@ -234,6 +252,9 @@ export function useKernel(): UseKernelResult {
     toggleAllDesktopWidgets,
     setDesktopAllHidden,
     isDesktopWidgetVisible,
+    recordShortcut,
+    shortcutHintOpacity,
+    isShortcutMastered,
     config: projector.getConfig(),
     bootTimeMs: kernel?.bootTimeMs ?? 0,
   };
