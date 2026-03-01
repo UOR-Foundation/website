@@ -465,18 +465,6 @@ export default function DesktopSurface({
           transition: "opacity 0.7s ease",
         }}
       >
-        <span
-          style={{
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontSize: "calc(12px * var(--holo-user-scale))",
-            letterSpacing: "0.35em",
-            textTransform: "uppercase",
-            fontWeight: 500,
-            color: mode === "white" ? "hsla(0, 0%, 15%, 0.65)" : "hsla(0, 0%, 90%, 0.4)",
-          }}
-        >
-          Frame
-        </span>
         <div className="flex items-center gap-2.5">
           {(["image", "white", "dark"] as DesktopMode[]).map((m) => {
             const active = mode === m;
