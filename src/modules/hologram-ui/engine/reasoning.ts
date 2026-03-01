@@ -48,3 +48,19 @@ export {
   computeReward,
   type RewardSignal,
 } from "@/modules/ring-core/reward-circuit";
+
+// ── Circuit Compiler ───────────────────────────────────────────────────
+export {
+  compileCircuit,
+  executeCircuitSync,
+  getCircuitEngine,
+  CircuitEngine,
+  type CircuitGraph,
+  type CircuitGate,
+  type CircuitResult,
+  type CircuitProjection,
+  type GateType,
+  type GateState,
+  type Wire,
+  type GateResult,
+} from "@/hologram/kernel/circuit-compiler";

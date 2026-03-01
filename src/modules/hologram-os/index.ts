@@ -29,6 +29,7 @@ export {
   type EpistemicGrade,
   type RewardCoherenceSnapshot,
   type StabilizerProjection,
+  type CircuitProjection,
 } from "./projection-engine";
 
 // Surface Adapter — kernel frames → browser DOM

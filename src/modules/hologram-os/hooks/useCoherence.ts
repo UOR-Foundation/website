@@ -19,7 +19,7 @@
  */
 
 import { useMemo } from "react";
-import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave, type RewardProjection, type StabilizerProjection } from "../projection-engine";
+import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave, type RewardProjection, type StabilizerProjection, type CircuitProjection } from "../projection-engine";
 import { useKernel } from "./useKernel";
 
 export interface CoherenceState {
@@ -41,6 +41,8 @@ export interface CoherenceState {
   readonly reward: RewardProjection;
   /** Stabilizer syndrome projection — the immune system signal */
   readonly stabilizer: StabilizerProjection;
+  /** Circuit compiler projection — the prefrontal cortex pipeline */
+  readonly circuit: CircuitProjection;
 }
 
 const DEFAULT_GRADIENT: CoherenceGradient = {
@@ -61,6 +63,13 @@ const DEFAULT_STABILIZER: StabilizerProjection = {
   totalExtractions: 0, fanoViolations: 0, zone: "convergent", errorRate: 0,
 };
 
+const DEFAULT_CIRCUIT: CircuitProjection = {
+  active: false, gateCount: 0, gatesCompleted: 0, gatesRunning: 0, meanH: 0,
+  converged: false, currentGate: "", progress: 0,
+  gateCounts: {} as CircuitProjection["gateCounts"],
+  totalExecutions: 0, latencyEma: 0,
+};
+
 /**
  * useCoherence — read coherence wave state from the kernel.
  * Zero additional state — purely derived from ProjectionFrame.
@@ -77,6 +86,7 @@ export function useCoherence(): CoherenceState {
         contributions: DEFAULT_GRADIENT.contributions,
         reward: DEFAULT_REWARD,
         stabilizer: DEFAULT_STABILIZER,
+        circuit: DEFAULT_CIRCUIT,
       };
     }
 
@@ -91,6 +101,7 @@ export function useCoherence(): CoherenceState {
       contributions: g.contributions,
       reward: frame.rewardProjection,
       stabilizer: frame.stabilizerProjection,
+      circuit: frame.circuitProjection,
     };
   }, [frame]);
 }
