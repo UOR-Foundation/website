@@ -601,6 +601,124 @@ function PrinciplesContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; 
         <p>
           Instead of trying to control AI behaviour with written instructions alone, Hologram confines it within a mathematical structure: a finite topological space where every operation has defined boundaries. Think of it like this: rather than putting up warning signs around a cliff edge, we built a landscape where the cliff simply does not exist. The AI cannot go somewhere the structure does not allow, regardless of what it is asked to do.
         </p>
+
+        {/* Visual: Confinement vs Rules */}
+        <div
+          className="my-10 flex flex-col sm:flex-row gap-6 sm:gap-8"
+          style={{ fontSize: "13px", lineHeight: 1.7 }}
+        >
+          {/* Rules approach */}
+          <div className="flex-1 rounded-lg p-5" style={{ border: `1px solid ${P.border}`, background: "hsla(0,0%,100%,0.02)" }}>
+            <div className="text-center mb-4">
+              <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: P.textMuted }}>
+                Traditional approach
+              </span>
+              <p className="mt-1 font-medium" style={{ color: P.heading, fontFamily: fontDisplay }}>
+                Rules &amp; Guidelines
+              </p>
+            </div>
+            <div
+              className="relative mx-auto rounded-md flex items-end justify-center overflow-hidden"
+              style={{
+                width: "100%",
+                height: "100px",
+                background: "linear-gradient(180deg, hsla(0,0%,100%,0.03) 0%, hsla(0,50%,50%,0.06) 100%)",
+                border: "1px dashed hsla(0,50%,60%,0.25)",
+              }}
+            >
+              {["18%", "45%", "72%"].map((left, i) => (
+                <div
+                  key={i}
+                  className="absolute"
+                  style={{
+                    left,
+                    top: `${20 + i * 18}%`,
+                    fontSize: "9px",
+                    letterSpacing: "0.1em",
+                    color: "hsla(0,40%,65%,0.7)",
+                    transform: `rotate(${-5 + i * 4}deg)`,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  ⚠ {["do not cross", "stop here", "caution"][i]}
+                </div>
+              ))}
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: 8, height: 8,
+                  background: "hsla(0,50%,65%,0.8)",
+                  boxShadow: "0 0 8px hsla(0,50%,60%,0.4)",
+                  top: "30%", left: "60%",
+                }}
+              />
+            </div>
+            <p className="text-center mt-3" style={{ color: P.textMuted, fontSize: "12px" }}>
+              Open space with warning signs.
+              <br />
+              The AI <em>chooses</em> to obey.
+            </p>
+          </div>
+
+          {/* Confinement approach */}
+          <div className="flex-1 rounded-lg p-5" style={{ border: "1px solid hsla(38,30%,50%,0.2)", background: "hsla(38,20%,50%,0.04)" }}>
+            <div className="text-center mb-4">
+              <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: P.tabActive }}>
+                Hologram approach
+              </span>
+              <p className="mt-1 font-medium" style={{ color: P.heading, fontFamily: fontDisplay }}>
+                Structural Confinement
+              </p>
+            </div>
+            <div
+              className="relative mx-auto flex items-center justify-center"
+              style={{ width: "100%", height: "100px" }}
+            >
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: 90, height: 90,
+                  border: "1.5px solid hsla(38,40%,55%,0.4)",
+                  background: "hsla(38,30%,50%,0.06)",
+                  left: "50%", top: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: 50, height: 50,
+                  border: "1px solid hsla(38,40%,55%,0.25)",
+                  background: "hsla(38,30%,50%,0.08)",
+                  left: "50%", top: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: 8, height: 8,
+                  background: "hsla(38,50%,60%,0.9)",
+                  boxShadow: "0 0 10px hsla(38,50%,55%,0.5)",
+                  left: "50%", top: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
+              <span
+                className="absolute text-[9px] tracking-[0.15em]"
+                style={{ color: P.textMuted, right: "8%", top: "12%" }}
+              >
+                boundary
+              </span>
+            </div>
+            <p className="text-center mt-3" style={{ color: P.textMuted, fontSize: "12px" }}>
+              Bounded space with no edges to fall from.
+              <br />
+              The AI <em>cannot</em> leave.
+            </p>
+          </div>
+        </div>
+
         <p>
           This is what makes Hologram's safety guarantees structural rather than behavioural. They do not depend on the AI choosing to follow rules. They are embedded in the space the AI operates within.
         </p>
