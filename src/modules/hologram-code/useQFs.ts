@@ -332,6 +332,140 @@ Every file in this workspace is stored in the Q-FS Merkle DAG:
 | Ctrl+Shift+K | Delete Line |
 `,
   },
+  // ── Quantum sample files ──────────────────────────────────────────
+  {
+    path: "/quantum/bell-state.qasm",
+    content: `// Bell State — OpenQASM 3.0
+OPENQASM 3.0;
+include "stdgates.inc";
+
+qubit[2] q;
+bit[2] c;
+
+// Create Bell pair |Φ+⟩ = (|00⟩ + |11⟩) / √2
+h q[0];
+cx q[0], q[1];
+
+// Measure both qubits
+c = measure q;
+`,
+  },
+  {
+    path: "/quantum/grover.qs",
+    content: `/// Grover's Search Algorithm — Q#
+namespace Quantum.Grover {
+    open Microsoft.Quantum.Canon;
+    open Microsoft.Quantum.Intrinsic;
+    open Microsoft.Quantum.Measurement;
+
+    operation GroverSearch(nQubits : Int, iterations : Int) : Result[] {
+        use qubits = Qubit[nQubits];
+
+        // Initialize superposition
+        ApplyToEach(H, qubits);
+
+        for _ in 1..iterations {
+            // Oracle (mark target state)
+            Oracle(qubits);
+            // Diffusion operator
+            DiffusionOperator(qubits);
+        }
+
+        return ForEach(MResetZ, qubits);
+    }
+
+    operation Oracle(qubits : Qubit[]) : Unit is Adj + Ctl {
+        Controlled Z(Most(qubits), Tail(qubits));
+    }
+
+    operation DiffusionOperator(qubits : Qubit[]) : Unit {
+        ApplyToEach(H, qubits);
+        ApplyToEach(X, qubits);
+        Controlled Z(Most(qubits), Tail(qubits));
+        ApplyToEach(X, qubits);
+        ApplyToEach(H, qubits);
+    }
+}
+`,
+  },
+  // ── Systems sample files ──────────────────────────────────────────
+  {
+    path: "/examples/fibonacci.zig",
+    content: `const std = @import("std");
+
+pub fn fibonacci(n: u64) u64 {
+    if (n <= 1) return n;
+
+    var prev: u64 = 0;
+    var curr: u64 = 1;
+
+    for (2..n + 1) |_| {
+        const next = prev + curr;
+        prev = curr;
+        curr = next;
+    }
+    return curr;
+}
+
+test "fibonacci" {
+    try std.testing.expectEqual(fibonacci(10), 55);
+    try std.testing.expectEqual(fibonacci(0), 0);
+    try std.testing.expectEqual(fibonacci(1), 1);
+}
+`,
+  },
+  {
+    path: "/examples/token.sol",
+    content: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract HologramToken is ERC20, Ownable {
+    uint256 public constant MAX_SUPPLY = 1_000_000 * 10 ** 18;
+
+    constructor()
+        ERC20("Hologram", "HOLO")
+        Ownable(msg.sender)
+    {
+        _mint(msg.sender, MAX_SUPPLY);
+    }
+
+    function burn(uint256 amount) external {
+        _burn(msg.sender, amount);
+    }
+}
+`,
+  },
+  {
+    path: "/examples/pipeline.ex",
+    content: `defmodule Hologram.Pipeline do
+  @moduledoc \"\"\"
+  Data transformation pipeline using Elixir pipes.
+  \"\"\"
+
+  def transform(data) when is_list(data) do
+    data
+    |> Enum.map(&process_item/1)
+    |> Enum.filter(&valid?/1)
+    |> Enum.sort_by(& &1.score, :desc)
+    |> Enum.take(10)
+  end
+
+  defp process_item(%{raw: raw} = item) do
+    score = raw
+    |> String.downcase()
+    |> String.split()
+    |> length()
+
+    %{item | score: score}
+  end
+
+  defp valid?(%{score: score}), do: score > 0
+end
+`,
+  },
 ];
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
