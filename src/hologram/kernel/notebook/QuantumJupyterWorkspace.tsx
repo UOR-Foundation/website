@@ -11,6 +11,7 @@
  *   - Plain language — no jargon
  *   - Familiar JupyterLab layout and behavior
  *   - Respects user's time — no unnecessary text
+ *   - Light/dark theme follows the Hologram desktop frame
  */
 
 import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
@@ -23,6 +24,7 @@ import {
   Save, Scissors, Copy, ClipboardPaste, Square, FastForward,
   StopCircle, SkipForward, ChevronUp, Search, Keyboard,
   Eye, EyeOff, Hash, MoreHorizontal, Settings,
+  Sun, Moon,
 } from "lucide-react";
 import {
   createKernel,
@@ -37,6 +39,8 @@ import {
   type CellOutput,
 } from "@/hologram/kernel/notebook/notebook-engine";
 import { createState, simulateCircuit, realisticNoise, measure } from "@/hologram/kernel/q-simulator";
+import { useScreenTheme } from "@/modules/hologram-ui/hooks/useScreenTheme";
+import { nbColors, NbThemeCtx, useNbTheme, type NbColors } from "./notebook-theme";
 
 /* ── Python Syntax Highlighter ────────────────────────────────────────────── */
 
@@ -54,75 +58,67 @@ const PY_BUILTINS = new Set([
   "super", "property", "staticmethod", "classmethod",
 ]);
 
-function highlightPython(code: string): { tokens: React.ReactNode[]; lineNum: number }[] {
+function highlightPython(code: string, t: NbColors): { tokens: React.ReactNode[]; lineNum: number }[] {
   const lines = code.split("\n");
   return lines.map((line, li) => {
     const tokens: React.ReactNode[] = [];
     let i = 0;
     while (i < line.length) {
-      // Comment
       if (line[i] === "#") {
-        tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(120, 15%, 55%)", fontStyle: "italic" }}>{line.slice(i)}</span>);
+        tokens.push(<span key={`${li}-${i}`} style={{ color: t.synComment, fontStyle: "italic" }}>{line.slice(i)}</span>);
         break;
       }
-      // String (single or double quotes)
       if (line[i] === '"' || line[i] === "'") {
         const q = line[i];
-        // Triple quote
         if (line.slice(i, i + 3) === q + q + q) {
           const end = line.indexOf(q + q + q, i + 3);
           const s = end >= 0 ? line.slice(i, end + 3) : line.slice(i);
-          tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(25, 65%, 50%)" }}>{s}</span>);
+          tokens.push(<span key={`${li}-${i}`} style={{ color: t.synString }}>{s}</span>);
           i += s.length;
           continue;
         }
         let j = i + 1;
         while (j < line.length && line[j] !== q) { if (line[j] === "\\") j++; j++; }
         const s = line.slice(i, j + 1);
-        tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(25, 65%, 50%)" }}>{s}</span>);
+        tokens.push(<span key={`${li}-${i}`} style={{ color: t.synString }}>{s}</span>);
         i = j + 1;
         continue;
       }
-      // Number
       if (/\d/.test(line[i]) && (i === 0 || /[\s,(\[=+\-*/:]/.test(line[i - 1]))) {
         let j = i;
         while (j < line.length && /[\d.eExXa-fA-F_]/.test(line[j])) j++;
-        tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(200, 60%, 50%)" }}>{line.slice(i, j)}</span>);
+        tokens.push(<span key={`${li}-${i}`} style={{ color: t.synNumber }}>{line.slice(i, j)}</span>);
         i = j;
         continue;
       }
-      // Word (keyword, builtin, or identifier)
       if (/[a-zA-Z_]/.test(line[i])) {
         let j = i;
         while (j < line.length && /[a-zA-Z0-9_]/.test(line[j])) j++;
         const word = line.slice(i, j);
         if (PY_KEYWORDS.has(word)) {
-          tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(300, 50%, 45%)", fontWeight: 600 }}>{word}</span>);
+          tokens.push(<span key={`${li}-${i}`} style={{ color: t.synKeyword, fontWeight: 600 }}>{word}</span>);
         } else if (PY_BUILTINS.has(word)) {
-          tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(200, 55%, 45%)" }}>{word}</span>);
+          tokens.push(<span key={`${li}-${i}`} style={{ color: t.synBuiltin }}>{word}</span>);
         } else if (word === "self") {
-          tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(300, 50%, 45%)" }}>{word}</span>);
+          tokens.push(<span key={`${li}-${i}`} style={{ color: t.synSelf }}>{word}</span>);
         } else {
           tokens.push(<span key={`${li}-${i}`}>{word}</span>);
         }
         i = j;
         continue;
       }
-      // Decorator
       if (line[i] === "@") {
         let j = i + 1;
         while (j < line.length && /[a-zA-Z0-9_.]/.test(line[j])) j++;
-        tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(40, 65%, 50%)" }}>{line.slice(i, j)}</span>);
+        tokens.push(<span key={`${li}-${i}`} style={{ color: t.synDecorator }}>{line.slice(i, j)}</span>);
         i = j;
         continue;
       }
-      // Operator
       if ("=<>!+-*/%&|^~".includes(line[i])) {
-        tokens.push(<span key={`${li}-${i}`} style={{ color: "hsl(0, 0%, 45%)" }}>{line[i]}</span>);
+        tokens.push(<span key={`${li}-${i}`} style={{ color: t.synOperator }}>{line[i]}</span>);
         i++;
         continue;
       }
-      // Default
       tokens.push(<span key={`${li}-${i}`}>{line[i]}</span>);
       i++;
     }
@@ -133,6 +129,7 @@ function highlightPython(code: string): { tokens: React.ReactNode[]; lineNum: nu
 /* ── Histogram ────────────────────────────────────────────────────────────── */
 
 function Histogram({ counts }: { counts: Record<string, number> }) {
+  const t = useNbTheme();
   const entries = Object.entries(counts).sort(([a], [b]) => a.localeCompare(b));
   const maxCount = Math.max(...entries.map(([, c]) => c));
   const total = entries.reduce((s, [, c]) => s + c, 0);
@@ -145,14 +142,14 @@ function Histogram({ counts }: { counts: Record<string, number> }) {
           const pct = (count / total) * 100;
           return (
             <div key={key} className="flex items-center gap-2">
-              <span className="text-[10px] font-mono shrink-0 w-14 text-right" style={{ color: "hsl(38, 15%, 35%)" }}>|{key}⟩</span>
-              <div className="flex-1 h-4 rounded-sm overflow-hidden" style={{ background: "hsla(38, 20%, 50%, 0.08)" }}>
+              <span className="text-[10px] font-mono shrink-0 w-14 text-right" style={{ color: t.textMuted }}>|{key}⟩</span>
+              <div className="flex-1 h-4 rounded-sm overflow-hidden" style={{ background: t.goldBg }}>
                 <div className="h-full rounded-sm" style={{
                   width: `${Math.max(1, (count / maxCount) * 100)}%`,
-                  background: "linear-gradient(to right, hsl(38, 45%, 45%), hsl(38, 55%, 60%))",
+                  background: `linear-gradient(to right, ${t.gold}, ${t.goldText})`,
                 }} />
               </div>
-              <span className="text-[10px] font-mono shrink-0 w-12" style={{ color: "hsl(38, 20%, 50%)" }}>{pct.toFixed(1)}%</span>
+              <span className="text-[10px] font-mono shrink-0 w-12" style={{ color: t.textDim }}>{pct.toFixed(1)}%</span>
             </div>
           );
         })}
@@ -164,7 +161,7 @@ function Histogram({ counts }: { counts: Record<string, number> }) {
     <div className="flex items-end gap-2 px-3 py-2" style={{ height: 160 }}>
       {entries.map(([key, count]) => (
         <div key={key} className="flex flex-col items-center gap-1 flex-1 min-w-0">
-          <span className="text-[10px] font-mono" style={{ color: "hsl(38, 20%, 50%)" }}>
+          <span className="text-[10px] font-mono" style={{ color: t.textDim }}>
             {((count / total) * 100).toFixed(1)}%
           </span>
           <div
@@ -172,10 +169,10 @@ function Histogram({ counts }: { counts: Record<string, number> }) {
             style={{
               height: `${(count / maxCount) * 100}px`,
               minHeight: 4,
-              background: "linear-gradient(to top, hsl(38, 45%, 45%), hsl(38, 55%, 60%))",
+              background: `linear-gradient(to top, ${t.gold}, ${t.goldText})`,
             }}
           />
-          <span className="text-[10px] font-mono font-semibold truncate w-full text-center" style={{ color: "hsl(38, 15%, 35%)" }}>
+          <span className="text-[10px] font-mono font-semibold truncate w-full text-center" style={{ color: t.textMuted }}>
             |{key}⟩
           </span>
         </div>
@@ -388,12 +385,13 @@ function downloadReport(content: string, filename: string) {
 /* ── Cell Output ──────────────────────────────────────────────────────────── */
 
 function CellOutputView({ output }: { output: CellOutput }) {
+  const t = useNbTheme();
   if (output.type === "error") {
     return (
       <pre className="text-sm font-mono px-4 py-3 rounded-lg" style={{
-        background: "hsla(0, 40%, 50%, 0.06)",
-        color: "hsl(0, 55%, 50%)",
-        borderLeft: "3px solid hsl(0, 55%, 55%)",
+        background: t.redBg,
+        color: t.red,
+        borderLeft: `3px solid ${t.red}`,
       }}>
         {output.content}
       </pre>
@@ -401,7 +399,7 @@ function CellOutputView({ output }: { output: CellOutput }) {
   }
   if (output.type === "histogram" && output.data?.counts) {
     return (
-      <div className="rounded-lg" style={{ background: "hsla(38, 20%, 50%, 0.04)" }}>
+      <div className="rounded-lg" style={{ background: t.goldBg }}>
         <Histogram counts={output.data.counts as Record<string, number>} />
       </div>
     );
@@ -409,9 +407,9 @@ function CellOutputView({ output }: { output: CellOutput }) {
   if (output.type === "circuit") {
     return (
       <pre className="text-sm font-mono px-4 py-3 rounded-lg overflow-x-auto leading-relaxed" style={{
-        background: "hsla(220, 15%, 50%, 0.05)",
-        color: "hsl(220, 15%, 30%)",
-        borderLeft: "3px solid hsl(220, 40%, 60%)",
+        background: t.blueBg,
+        color: t.blueText,
+        borderLeft: `3px solid ${t.blue}`,
       }}>
         {output.content}
       </pre>
@@ -420,16 +418,16 @@ function CellOutputView({ output }: { output: CellOutput }) {
   if (output.type === "statevector") {
     return (
       <pre className="text-sm font-mono px-4 py-3 rounded-lg overflow-x-auto leading-relaxed" style={{
-        background: "hsla(260, 15%, 50%, 0.05)",
-        color: "hsl(260, 20%, 35%)",
-        borderLeft: "3px solid hsl(260, 40%, 60%)",
+        background: t.purpleBg,
+        color: t.purple,
+        borderLeft: `3px solid ${t.purple}`,
       }}>
         {output.content}
       </pre>
     );
   }
   return (
-    <pre className="text-sm font-mono px-4 py-3 whitespace-pre-wrap leading-relaxed" style={{ color: "hsl(38, 15%, 30%)" }}>
+    <pre className="text-sm font-mono px-4 py-3 whitespace-pre-wrap leading-relaxed" style={{ color: t.text }}>
       {output.content}
     </pre>
   );
@@ -458,9 +456,9 @@ function CellView({
   cell, isActive, isSelected, editMode, showLineNumbers,
   onFocus, onEdit, onChange, onRun, onDelete, onMoveUp, onMoveDown, onToggleType, onToggleCollapse,
 }: CellViewProps) {
+  const t = useNbTheme();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize textarea to fit content
   const autoResize = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -470,11 +468,9 @@ function CellView({
 
   useEffect(() => { autoResize(); }, [cell.source, autoResize]);
 
-  // Auto-focus textarea when entering edit mode
   useEffect(() => {
     if (isActive && editMode && textareaRef.current) {
       textareaRef.current.focus();
-      // Ensure caret is visible at end if cell was just focused
       const el = textareaRef.current;
       if (el.selectionStart === 0 && el.selectionEnd === 0 && el.value.length > 0) {
         el.selectionStart = el.selectionEnd = el.value.length;
@@ -491,7 +487,6 @@ function CellView({
       e.preventDefault();
       textareaRef.current?.blur();
     }
-    // Tab key: insert 4 spaces instead of losing focus
     if (e.key === "Tab") {
       e.preventDefault();
       const ta = textareaRef.current;
@@ -500,7 +495,6 @@ function CellView({
       const end = ta.selectionEnd;
       const val = ta.value;
       if (e.shiftKey) {
-        // Shift+Tab: dedent current line by up to 4 spaces
         const lineStart = val.lastIndexOf("\n", start - 1) + 1;
         const linePrefix = val.slice(lineStart, lineStart + 4);
         const spacesToRemove = linePrefix.match(/^ {1,4}/)?.[0].length || 0;
@@ -517,31 +511,26 @@ function CellView({
     }
   };
 
-  // Handle paste: auto-enter edit mode and ensure resize
   const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    // Let the default paste happen, then auto-resize
     onEdit();
     setTimeout(autoResize, 0);
   }, [onEdit, autoResize]);
 
-  // Handle input changes with auto-resize
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value);
-    // Schedule resize for after React renders the new value
     setTimeout(autoResize, 0);
   }, [onChange, autoResize]);
 
   const isMarkdown = cell.type === "markdown";
   const isCollapsed = cell.metadata?.collapsed;
-  const highlighted = !isMarkdown ? highlightPython(cell.source) : [];
+  const highlighted = !isMarkdown ? highlightPython(cell.source, t) : [];
 
-  // Jupyter-style cell border colors
   const borderColor = isActive
     ? editMode
-      ? "hsl(152, 50%, 50%)" // Green = edit mode (like Jupyter)
-      : "hsl(220, 65%, 55%)" // Blue = command mode (like Jupyter)
+      ? t.cellBorderEdit
+      : t.cellBorderCommand
     : isSelected
-      ? "hsl(220, 40%, 70%)"
+      ? t.cellBorderSelected
       : "transparent";
 
   return (
@@ -550,32 +539,28 @@ function CellView({
       style={{
         borderLeft: `3px solid ${borderColor}`,
         transition: "border-color 100ms",
-        background: isSelected && !isActive ? "hsla(220, 50%, 50%, 0.03)" : "transparent",
+        background: isSelected && !isActive ? t.bgSelected : "transparent",
       }}
       onClick={(e) => {
         onFocus();
-        // Double-click to enter edit mode
         if (e.detail === 2) onEdit();
       }}
     >
-      {/* Execution count / cell type indicator — Jupyter style */}
       <div className="w-[85px] shrink-0 flex items-start justify-end pt-[10px] pr-2 select-none" style={{ minHeight: 36 }}>
         {!isMarkdown ? (
-          <span className="text-[13px] font-mono" style={{ color: isActive ? "hsl(220, 65%, 55%)" : "hsl(220, 15%, 55%)" }}>
+          <span className="text-[13px] font-mono" style={{ color: isActive ? t.cellBorderCommand : t.textDim }}>
             In [{cell.executionCount !== null ? cell.executionCount : " "}]:
           </span>
         ) : (
-          <span className="text-[13px] font-mono" style={{ color: "hsl(38, 15%, 55%)" }}>
+          <span className="text-[13px] font-mono" style={{ color: t.textDim }}>
             &nbsp;
           </span>
         )}
       </div>
 
-      {/* Cell body */}
       <div className="flex-1 min-w-0 py-1 pr-4">
-        {/* Collapsed indicator */}
         {isCollapsed && (
-          <button onClick={onToggleCollapse} className="flex items-center gap-1 text-xs px-2 py-1 hover:bg-black/5 rounded" style={{ color: "hsl(0, 0%, 50%)" }}>
+          <button onClick={onToggleCollapse} className="flex items-center gap-1 text-xs px-2 py-1 rounded" style={{ color: t.textMuted }}>
             <ChevronRight size={12} /> Collapsed ({cell.source.split("\n").length} lines)
           </button>
         )}
@@ -583,48 +568,41 @@ function CellView({
         {!isCollapsed && (
           <>
             <div className="relative rounded overflow-hidden" style={{
-              background: isMarkdown
-                ? "transparent"
-                : "hsl(0, 0%, 100%)",
-              border: isMarkdown ? "none" : `1px solid ${isActive ? "hsla(220, 30%, 50%, 0.25)" : "hsla(220, 10%, 50%, 0.12)"}`,
+              background: isMarkdown ? "transparent" : t.bgCellCode,
+              border: isMarkdown ? "none" : `1px solid ${isActive ? t.bgCellCodeBorderActive : t.bgCellCodeBorder}`,
             }}>
-              {/* Rendered markdown (view mode) */}
               {isMarkdown && !(isActive && editMode) && cell.source ? (
-                <div className="px-4 py-3" style={{ color: "hsl(0, 0%, 20%)" }}>
+                <div className="px-4 py-3" style={{ color: t.text }}>
                   {cell.source.split("\n").map((line, i) => {
-                    if (line.startsWith("# ")) return <h1 key={i} className="text-xl font-serif font-semibold mt-0 mb-2" style={{ color: "hsl(0, 0%, 15%)" }}>{line.slice(2)}</h1>;
-                    if (line.startsWith("## ")) return <h2 key={i} className="text-lg font-serif font-medium mt-3 mb-1.5" style={{ color: "hsl(0, 0%, 18%)" }}>{line.slice(3)}</h2>;
-                    if (line.startsWith("### ")) return <h3 key={i} className="text-base font-serif font-medium mt-2 mb-1" style={{ color: "hsl(0, 0%, 22%)" }}>{line.slice(4)}</h3>;
-                    if (line.startsWith("- ")) return <li key={i} className="text-sm ml-5 mb-0.5 leading-relaxed">{line.slice(2)}</li>;
-                    if (line.startsWith("|")) return <pre key={i} className="text-xs font-mono leading-relaxed" style={{ color: "hsl(0, 0%, 40%)" }}>{line}</pre>;
+                    if (line.startsWith("# ")) return <h1 key={i} className="text-xl font-serif font-semibold mt-0 mb-2" style={{ color: t.textStrong }}>{line.slice(2)}</h1>;
+                    if (line.startsWith("## ")) return <h2 key={i} className="text-lg font-serif font-medium mt-3 mb-1.5" style={{ color: t.textStrong }}>{line.slice(3)}</h2>;
+                    if (line.startsWith("### ")) return <h3 key={i} className="text-base font-serif font-medium mt-2 mb-1" style={{ color: t.text }}>{line.slice(4)}</h3>;
+                    if (line.startsWith("- ")) return <li key={i} className="text-sm ml-5 mb-0.5 leading-relaxed" style={{ color: t.text }}>{line.slice(2)}</li>;
+                    if (line.startsWith("|")) return <pre key={i} className="text-xs font-mono leading-relaxed" style={{ color: t.textMuted }}>{line}</pre>;
                     if (line.startsWith("```")) return null;
-                    if (line.startsWith("**")) return <p key={i} className="text-sm font-semibold my-1">{line.replace(/\*\*/g, "")}</p>;
-                    return line ? <p key={i} className="text-sm my-1 leading-relaxed">{line}</p> : <br key={i} />;
+                    if (line.startsWith("**")) return <p key={i} className="text-sm font-semibold my-1" style={{ color: t.text }}>{line.replace(/\*\*/g, "")}</p>;
+                    return line ? <p key={i} className="text-sm my-1 leading-relaxed" style={{ color: t.text }}>{line}</p> : <br key={i} />;
                   })}
                 </div>
               ) : (
-                /* Code cell or markdown in edit mode */
                 <div className="relative flex">
-                  {/* Line numbers */}
                   {showLineNumbers && !isMarkdown && (
                     <div className="select-none py-[5px] pr-2 text-right border-r" style={{
                       minWidth: 40,
-                      background: "hsla(220, 10%, 50%, 0.03)",
-                      borderColor: "hsla(220, 10%, 50%, 0.08)",
+                      background: t.bgHover,
+                      borderColor: t.border,
                     }}>
                       {cell.source.split("\n").map((_, i) => (
-                        <div key={i} className="text-[12px] font-mono leading-[1.8] px-1" style={{ color: "hsl(220, 10%, 65%)" }}>
+                        <div key={i} className="text-[12px] font-mono leading-[1.8] px-1" style={{ color: t.textDim }}>
                           {i + 1}
                         </div>
                       ))}
                     </div>
                   )}
 
-                  {/* Code input with syntax highlighting */}
                   <div className="flex-1 relative">
-                    {/* Syntax highlight overlay (code cells only, when not editing) */}
                     {!isMarkdown && !(isActive && editMode) && cell.source && (
-                      <pre className="absolute inset-0 px-4 py-[5px] text-[13px] font-mono leading-[1.8] whitespace-pre-wrap pointer-events-none overflow-hidden" style={{ color: "hsl(220, 15%, 15%)" }}>
+                      <pre className="absolute inset-0 px-4 py-[5px] text-[13px] font-mono leading-[1.8] whitespace-pre-wrap pointer-events-none overflow-hidden" style={{ color: t.textCode }}>
                         {highlighted.map((h, i) => (
                           <div key={i}>{h.tokens}</div>
                         ))}
@@ -641,8 +619,8 @@ function CellView({
                       onFocus={onEdit}
                       className="w-full px-4 py-[5px] text-[13px] font-mono resize-none focus:outline-none bg-transparent relative z-10"
                       style={{
-                        color: (!isMarkdown && !(isActive && editMode)) ? "transparent" : (isMarkdown ? "hsl(0, 0%, 25%)" : "hsl(220, 15%, 15%)"),
-                        caretColor: "hsl(220, 15%, 15%)",
+                        color: (!isMarkdown && !(isActive && editMode)) ? "transparent" : (isMarkdown ? t.text : t.textCode),
+                        caretColor: t.caret,
                         lineHeight: "1.8",
                         minHeight: "28px",
                         whiteSpace: "pre-wrap",
@@ -657,7 +635,6 @@ function CellView({
               )}
             </div>
 
-            {/* Output area — Jupyter style with Out[n]: label */}
             {cell.outputs.length > 0 && (
               <div className="flex mt-1">
                 <div className="w-0 shrink-0" />
@@ -683,57 +660,58 @@ function FileBrowser({ templates, activeId, onSelect, onNew }: {
   onSelect: (id: string) => void;
   onNew: (type: "quantum" | "ml") => void;
 }) {
+  const t = useNbTheme();
   const [demosOpen, setDemosOpen] = useState(true);
   const [projectsOpen, setProjectsOpen] = useState(true);
 
   return (
-    <div className="h-full flex flex-col" style={{ background: "hsl(220, 10%, 97%)", borderRight: "1px solid hsla(220, 10%, 50%, 0.12)" }}>
-      <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(220, 10%, 50%)", borderBottom: "1px solid hsla(220, 10%, 50%, 0.1)" }}>
+    <div className="h-full flex flex-col" style={{ background: t.bgToolbar, borderRight: `1px solid ${t.borderCell}` }}>
+      <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: t.textDim, borderBottom: `1px solid ${t.border}` }}>
         Files
       </div>
 
       <div className="flex-1 overflow-y-auto py-2">
-        <button onClick={() => setDemosOpen(!demosOpen)} className="w-full flex items-center gap-2 px-4 py-2 hover:bg-black/3 transition-colors">
-          <ChevronRight size={12} className={`transition-transform ${demosOpen ? "rotate-90" : ""}`} style={{ color: "hsl(220, 10%, 50%)" }} />
-          {demosOpen ? <FolderOpen size={14} style={{ color: "hsl(38, 45%, 50%)" }} /> : <Folder size={14} style={{ color: "hsl(38, 45%, 50%)" }} />}
-          <span className="text-sm font-medium" style={{ color: "hsl(0, 0%, 25%)" }}>Examples</span>
+        <button onClick={() => setDemosOpen(!demosOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors" style={{ color: t.text }}>
+          <ChevronRight size={12} className={`transition-transform ${demosOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
+          {demosOpen ? <FolderOpen size={14} style={{ color: t.gold }} /> : <Folder size={14} style={{ color: t.gold }} />}
+          <span className="text-sm font-medium">{" "}Examples</span>
         </button>
         {demosOpen && (
           <div className="pl-8 space-y-0.5">
-            {templates.map(t => (
+            {templates.map(tmpl => (
               <button
-                key={t.id}
-                onClick={() => onSelect(t.id)}
+                key={tmpl.id}
+                onClick={() => onSelect(tmpl.id)}
                 className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-left transition-colors"
                 style={{
-                  background: activeId === t.id ? "hsla(220, 40%, 50%, 0.08)" : "transparent",
-                  color: activeId === t.id ? "hsl(220, 30%, 30%)" : "hsl(0, 0%, 40%)",
+                  background: activeId === tmpl.id ? t.blueBg : "transparent",
+                  color: activeId === tmpl.id ? t.blue : t.textMuted,
                 }}
               >
                 <FileText size={13} />
-                <span className="text-sm truncate">{t.name}.ipynb</span>
+                <span className="text-sm truncate">{tmpl.name}.ipynb</span>
               </button>
             ))}
           </div>
         )}
 
-        <button onClick={() => setProjectsOpen(!projectsOpen)} className="w-full flex items-center gap-2 px-4 py-2 hover:bg-black/3 transition-colors mt-1">
-          <ChevronRight size={12} className={`transition-transform ${projectsOpen ? "rotate-90" : ""}`} style={{ color: "hsl(220, 10%, 50%)" }} />
-          {projectsOpen ? <FolderOpen size={14} style={{ color: "hsl(152, 35%, 50%)" }} /> : <Folder size={14} style={{ color: "hsl(152, 35%, 50%)" }} />}
-          <span className="text-sm font-medium" style={{ color: "hsl(0, 0%, 25%)" }}>My Notebooks</span>
+        <button onClick={() => setProjectsOpen(!projectsOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors mt-1" style={{ color: t.text }}>
+          <ChevronRight size={12} className={`transition-transform ${projectsOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
+          {projectsOpen ? <FolderOpen size={14} style={{ color: t.green }} /> : <Folder size={14} style={{ color: t.green }} />}
+          <span className="text-sm font-medium">{" "}My Notebooks</span>
         </button>
         {projectsOpen && (
-          <div className="pl-8 text-sm py-2 px-3" style={{ color: "hsl(0, 0%, 55%)" }}>
+          <div className="pl-8 text-sm py-2 px-3" style={{ color: t.textDim }}>
             Your saved work appears here
           </div>
         )}
       </div>
 
-      <div className="p-3 space-y-1.5" style={{ borderTop: "1px solid hsla(220, 10%, 50%, 0.1)" }}>
-        <button onClick={() => onNew("quantum")} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-black/5" style={{ color: "hsl(220, 30%, 40%)" }}>
+      <div className="p-3 space-y-1.5" style={{ borderTop: `1px solid ${t.border}` }}>
+        <button onClick={() => onNew("quantum")} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: t.blue }}>
           <Atom size={14} /> New Notebook
         </button>
-        <button onClick={() => onNew("ml")} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-black/5" style={{ color: "hsl(280, 30%, 45%)" }}>
+        <button onClick={() => onNew("ml")} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: t.purple }}>
           <Brain size={14} /> New Quantum+ML Notebook
         </button>
       </div>
@@ -743,37 +721,37 @@ function FileBrowser({ templates, activeId, onSelect, onNew }: {
 
 /* ── Demo Card ────────────────────────────────────────────────────────────── */
 
-const DIFFICULTY_STYLES: Record<string, { bg: string; color: string; label: string }> = {
-  beginner: { bg: "hsla(152, 40%, 50%, 0.08)", color: "hsl(152, 40%, 38%)", label: "Beginner" },
-  intermediate: { bg: "hsla(38, 50%, 50%, 0.08)", color: "hsl(38, 45%, 40%)", label: "Intermediate" },
-  advanced: { bg: "hsla(280, 40%, 50%, 0.08)", color: "hsl(280, 35%, 45%)", label: "Advanced" },
-};
-
 function DemoCard({ demo, onOpen, onOpenInWorkspace }: { demo: ReturnType<typeof getDemoDefinitions>[0]; onOpen: () => void; onOpenInWorkspace: () => void }) {
+  const t = useNbTheme();
+  const DIFFICULTY_STYLES: Record<string, { bg: string; color: string; label: string }> = {
+    beginner: { bg: t.greenBg, color: t.greenText, label: "Beginner" },
+    intermediate: { bg: t.goldBg, color: t.goldText, label: "Intermediate" },
+    advanced: { bg: t.purpleBg, color: t.purple, label: "Advanced" },
+  };
   const diff = DIFFICULTY_STYLES[demo.difficulty] || DIFFICULTY_STYLES.beginner;
   return (
     <div className="group rounded-xl p-5 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex flex-col" style={{
-      background: "hsl(0, 0%, 100%)",
-      border: "1px solid hsla(0, 0%, 50%, 0.1)",
-      boxShadow: "0 1px 3px hsla(0, 0%, 0%, 0.04)",
+      background: t.bgCell,
+      border: `1px solid ${t.border}`,
+      boxShadow: t.shadow,
     }} onClick={onOpen}>
       <div className="flex items-start justify-between mb-3">
         <span className="text-3xl">{demo.icon}</span>
         <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: diff.bg, color: diff.color }}>{diff.label}</span>
       </div>
-      <h3 className="text-base font-semibold mb-1" style={{ color: "hsl(0, 0%, 15%)" }}>{demo.name}</h3>
-      <p className="text-sm leading-relaxed mb-2" style={{ color: "hsl(0, 0%, 45%)" }}>{demo.description}</p>
-      <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: "hsl(0, 0%, 58%)" }}>{demo.whyItMatters}</p>
+      <h3 className="text-base font-semibold mb-1" style={{ color: t.textStrong }}>{demo.name}</h3>
+      <p className="text-sm leading-relaxed mb-2" style={{ color: t.textMuted }}>{demo.description}</p>
+      <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: t.textDim }}>{demo.whyItMatters}</p>
       <div className="flex gap-2">
         <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" style={{
-          background: "hsl(38, 45%, 48%)",
+          background: t.gold,
           color: "white",
         }}>
           <PlayCircle size={14} /> Run
         </button>
-        <button onClick={e => { e.stopPropagation(); onOpenInWorkspace(); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hover:bg-black/5" style={{
-          border: "1px solid hsla(0, 0%, 50%, 0.15)",
-          color: "hsl(0, 0%, 40%)",
+        <button onClick={e => { e.stopPropagation(); onOpenInWorkspace(); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" style={{
+          border: `1px solid ${t.borderStrong}`,
+          color: t.textMuted,
         }}>
           <Code size={14} /> View Code
         </button>
@@ -787,18 +765,19 @@ function DemoCard({ demo, onOpen, onOpenInWorkspace }: { demo: ReturnType<typeof
 function MitigationToggle({ label, description, enabled, onChange }: {
   label: string; description: string; enabled: boolean; onChange: (v: boolean) => void;
 }) {
+  const t = useNbTheme();
   return (
     <button
       onClick={() => onChange(!enabled)}
       className="w-full flex items-start gap-3 p-3 rounded-lg text-left transition-all"
       style={{
-        background: enabled ? "hsla(38, 50%, 50%, 0.06)" : "transparent",
-        border: enabled ? "1px solid hsla(38, 50%, 50%, 0.2)" : "1px solid hsla(0, 0%, 50%, 0.08)",
+        background: enabled ? t.goldBg : "transparent",
+        border: enabled ? `1px solid ${t.gold}33` : `1px solid ${t.border}`,
       }}
     >
       <div
         className="w-9 h-5 rounded-full shrink-0 mt-0.5 transition-colors relative"
-        style={{ background: enabled ? "hsl(38, 50%, 50%)" : "hsl(0, 0%, 78%)" }}
+        style={{ background: enabled ? t.gold : t.textDim }}
       >
         <div
           className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all"
@@ -806,8 +785,8 @@ function MitigationToggle({ label, description, enabled, onChange }: {
         />
       </div>
       <div className="min-w-0">
-        <span className="text-sm font-semibold block" style={{ color: "hsl(0, 0%, 15%)" }}>{label}</span>
-        <span className="text-xs leading-snug block mt-0.5" style={{ color: "hsl(0, 0%, 52%)" }}>{description}</span>
+        <span className="text-sm font-semibold block" style={{ color: t.textStrong }}>{label}</span>
+        <span className="text-xs leading-snug block mt-0.5" style={{ color: t.textDim }}>{description}</span>
       </div>
     </button>
   );
@@ -860,6 +839,7 @@ function computeDistributionMetrics(raw: Record<string, number>, mit: Record<str
 }
 
 function MitigationMetricsCard({ raw, mitigated }: { raw: Record<string, number>; mitigated: Record<string, number> }) {
+  const t = useNbTheme();
   const m = computeDistributionMetrics(raw, mitigated);
   if (!m) return null;
 
@@ -874,37 +854,37 @@ function MitigationMetricsCard({ raw, mitigated }: { raw: Record<string, number>
   ];
 
   return (
-    <div className="rounded-lg overflow-hidden" style={{ border: "1px solid hsla(0, 0%, 50%, 0.1)" }}>
-      <div className="px-3 py-2 flex items-center gap-2" style={{ background: "hsla(220, 30%, 50%, 0.04)", borderBottom: "1px solid hsla(0, 0%, 50%, 0.06)" }}>
-        <BarChart3 size={12} style={{ color: "hsl(220, 30%, 50%)" }} />
-        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "hsl(220, 25%, 45%)" }}>Quantitative Analysis</span>
+    <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${t.border}` }}>
+      <div className="px-3 py-2 flex items-center gap-2" style={{ background: t.blueBg, borderBottom: `1px solid ${t.border}` }}>
+        <BarChart3 size={12} style={{ color: t.blue }} />
+        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: t.blueText }}>Quantitative Analysis</span>
       </div>
-      <div className="divide-y" style={{ borderColor: "hsla(0, 0%, 50%, 0.06)" }}>
+      <div className="divide-y" style={{ borderColor: t.border }}>
         {metrics.map(met => {
           const pos = met.change > 0.1;
           const neg = met.change < -0.1;
-          const clr = pos ? "hsl(152, 45%, 40%)" : neg ? "hsl(0, 50%, 50%)" : "hsl(0, 0%, 55%)";
+          const clr = pos ? t.green : neg ? t.red : t.textDim;
           return (
             <div key={met.label} className="px-3 py-2.5 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>{met.label}</span>
+                <span className="text-xs font-medium" style={{ color: t.text }}>{met.label}</span>
                 <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded" style={{
                   color: clr,
-                  background: pos ? "hsla(152, 45%, 50%, 0.06)" : neg ? "hsla(0, 50%, 50%, 0.06)" : "hsla(0, 0%, 50%, 0.04)",
+                  background: pos ? t.greenBg : neg ? t.redBg : t.bgHover,
                 }}>{pos ? "+" : ""}{met.change.toFixed(1)}%</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
-                  <div className="text-[10px] mb-0.5" style={{ color: "hsl(0, 0%, 55%)" }}>Raw</div>
-                  <div className="text-xs font-mono font-medium" style={{ color: "hsl(0, 0%, 40%)" }}>{met.rawVal}</div>
+                  <div className="text-[10px] mb-0.5" style={{ color: t.textDim }}>Raw</div>
+                  <div className="text-xs font-mono font-medium" style={{ color: t.textMuted }}>{met.rawVal}</div>
                 </div>
-                <div className="text-xs" style={{ color: "hsl(0, 0%, 65%)" }}>→</div>
+                <div className="text-xs" style={{ color: t.textDim }}>→</div>
                 <div className="flex-1">
-                  <div className="text-[10px] mb-0.5" style={{ color: "hsl(38, 40%, 45%)" }}>Mitigated</div>
-                  <div className="text-xs font-mono font-semibold" style={{ color: "hsl(38, 45%, 38%)" }}>{met.mitVal}</div>
+                  <div className="text-[10px] mb-0.5" style={{ color: t.goldText }}>Mitigated</div>
+                  <div className="text-xs font-mono font-semibold" style={{ color: t.gold }}>{met.mitVal}</div>
                 </div>
               </div>
-              <div className="text-[10px] leading-snug" style={{ color: "hsl(0, 0%, 60%)" }}>{met.desc}</div>
+              <div className="text-[10px] leading-snug" style={{ color: t.textDim }}>{met.desc}</div>
             </div>
           );
         })}
@@ -919,6 +899,7 @@ function ComparisonHistogram({ rawCounts, mitigatedCounts, rawLabel, mitigatedLa
   rawLabel: string;
   mitigatedLabel: string;
 }) {
+  const t = useNbTheme();
   const allKeys = Array.from(new Set([...Object.keys(rawCounts), ...Object.keys(mitigatedCounts)])).sort();
   const rawTotal = Object.values(rawCounts).reduce((s, c) => s + c, 0);
   const mitTotal = Object.values(mitigatedCounts).reduce((s, c) => s + c, 0);
@@ -931,12 +912,12 @@ function ComparisonHistogram({ rawCounts, mitigatedCounts, rawLabel, mitigatedLa
     <div className="space-y-3">
       <div className="flex items-center gap-4 px-1">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm" style={{ background: "hsl(0, 0%, 72%)" }} />
-          <span className="text-xs font-medium" style={{ color: "hsl(0, 0%, 50%)" }}>{rawLabel}</span>
+          <div className="w-3 h-3 rounded-sm" style={{ background: t.textDim }} />
+          <span className="text-xs font-medium" style={{ color: t.textMuted }}>{rawLabel}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm" style={{ background: "hsl(38, 55%, 50%)" }} />
-          <span className="text-xs font-medium" style={{ color: "hsl(38, 40%, 40%)" }}>{mitigatedLabel}</span>
+          <div className="w-3 h-3 rounded-sm" style={{ background: t.gold }} />
+          <span className="text-xs font-medium" style={{ color: t.goldText }}>{mitigatedLabel}</span>
         </div>
       </div>
       <div className="space-y-2">
@@ -945,15 +926,15 @@ function ComparisonHistogram({ rawCounts, mitigatedCounts, rawLabel, mitigatedLa
           const mitPct = mitTotal > 0 ? (mitigatedCounts[key] || 0) / mitTotal * 100 : 0;
           return (
             <div key={key} className="flex items-center gap-2">
-              <span className="text-xs font-mono w-10 text-right shrink-0" style={{ color: "hsl(0, 0%, 35%)" }}>|{key}⟩</span>
+              <span className="text-xs font-mono w-10 text-right shrink-0" style={{ color: t.text }}>|{key}⟩</span>
               <div className="flex-1 space-y-1">
                 <div className="flex items-center gap-2">
-                  <div className="h-3 rounded-sm" style={{ width: `${Math.max(1, rawPct / maxPct * 100)}%`, background: "hsl(0, 0%, 72%)" }} />
-                  <span className="text-xs font-mono shrink-0" style={{ color: "hsl(0, 0%, 55%)" }}>{rawPct.toFixed(1)}%</span>
+                  <div className="h-3 rounded-sm" style={{ width: `${Math.max(1, rawPct / maxPct * 100)}%`, background: t.textDim }} />
+                  <span className="text-xs font-mono shrink-0" style={{ color: t.textMuted }}>{rawPct.toFixed(1)}%</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="h-3 rounded-sm" style={{ width: `${Math.max(1, mitPct / maxPct * 100)}%`, background: "hsl(38, 55%, 50%)" }} />
-                  <span className="text-xs font-mono shrink-0" style={{ color: "hsl(38, 40%, 40%)" }}>{mitPct.toFixed(1)}%</span>
+                  <div className="h-3 rounded-sm" style={{ width: `${Math.max(1, mitPct / maxPct * 100)}%`, background: t.gold }} />
+                  <span className="text-xs font-mono shrink-0" style={{ color: t.goldText }}>{mitPct.toFixed(1)}%</span>
                 </div>
               </div>
             </div>
@@ -1014,6 +995,7 @@ function evaluateH2Energy(params: number[], shots: number): number {
 }
 
 function ConvergenceChart({ history, targetEnergy }: { history: VqeIteration[]; targetEnergy: number }) {
+  const t = useNbTheme();
   if (history.length < 2) return null;
   const energies = history.map(h => h.energy);
   const minE = Math.min(...energies, targetEnergy) - 0.1;
@@ -1035,30 +1017,30 @@ function ConvergenceChart({ history, targetEnergy }: { history: VqeIteration[]; 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>Energy Convergence</span>
+        <span className="text-xs font-medium" style={{ color: t.text }}>Energy Convergence</span>
         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{
-          background: errorPct < 5 ? "hsla(152, 45%, 50%, 0.08)" : "hsla(38, 50%, 50%, 0.08)",
-          color: errorPct < 5 ? "hsl(152, 45%, 38%)" : "hsl(38, 45%, 38%)",
+          background: errorPct < 5 ? t.greenBg : t.goldBg,
+          color: errorPct < 5 ? t.greenText : t.goldText,
         }}>
           {errorPct < 1 ? "converged" : `${errorPct.toFixed(1)}% from target`}
         </span>
       </div>
-      <svg width={chartW} height={chartH} className="w-full" viewBox={`0 0 ${chartW} ${chartH}`} style={{ background: "hsla(220, 10%, 50%, 0.02)", borderRadius: 6 }}>
-        {ticks.map((t, i) => (
+      <svg width={chartW} height={chartH} className="w-full" viewBox={`0 0 ${chartW} ${chartH}`} style={{ background: t.chartBg, borderRadius: 6 }}>
+        {ticks.map((tk, i) => (
           <g key={i}>
-            <line x1={padL} x2={chartW - padR} y1={toY(t)} y2={toY(t)} stroke="hsla(0,0%,50%,0.08)" strokeWidth={1} />
-            <text x={padL - 4} y={toY(t) + 3} textAnchor="end" fontSize={8} fill="hsl(0,0%,55%)" fontFamily="monospace">{t.toFixed(2)}</text>
+            <line x1={padL} x2={chartW - padR} y1={toY(tk)} y2={toY(tk)} stroke={t.chartGrid} strokeWidth={1} />
+            <text x={padL - 4} y={toY(tk) + 3} textAnchor="end" fontSize={8} fill={t.chartLabel} fontFamily="monospace">{tk.toFixed(2)}</text>
           </g>
         ))}
-        <line x1={padL} x2={chartW - padR} y1={targetY} y2={targetY} stroke="hsl(152, 50%, 45%)" strokeWidth={1} strokeDasharray="4,3" />
-        <text x={chartW - padR} y={targetY - 4} textAnchor="end" fontSize={7} fill="hsl(152, 50%, 45%)" fontFamily="monospace">E₀ = {targetEnergy}</text>
-        <polyline points={points} fill="none" stroke="hsl(38, 55%, 50%)" strokeWidth={1.5} strokeLinejoin="round" />
+        <line x1={padL} x2={chartW - padR} y1={targetY} y2={targetY} stroke={t.green} strokeWidth={1} strokeDasharray="4,3" />
+        <text x={chartW - padR} y={targetY - 4} textAnchor="end" fontSize={7} fill={t.green} fontFamily="monospace">E₀ = {targetEnergy}</text>
+        <polyline points={points} fill="none" stroke={t.gold} strokeWidth={1.5} strokeLinejoin="round" />
         {history.map((h, i) => (
           <circle key={i} cx={toX(i)} cy={toY(h.energy)} r={i === history.length - 1 ? 3 : 1.5}
-            fill={i === history.length - 1 ? "hsl(38, 60%, 48%)" : "hsl(38, 45%, 55%)"} />
+            fill={i === history.length - 1 ? t.gold : t.goldText} />
         ))}
-        <text x={padL + plotW / 2} y={chartH - 2} textAnchor="middle" fontSize={8} fill="hsl(0,0%,55%)">SPSA Iteration</text>
-        <text x={6} y={padT + plotH / 2} textAnchor="middle" fontSize={8} fill="hsl(0,0%,55%)" transform={`rotate(-90,6,${padT + plotH / 2})`}>E (Ha)</text>
+        <text x={padL + plotW / 2} y={chartH - 2} textAnchor="middle" fontSize={8} fill={t.chartLabel}>SPSA Iteration</text>
+        <text x={6} y={padT + plotH / 2} textAnchor="middle" fontSize={8} fill={t.chartLabel} transform={`rotate(-90,6,${padT + plotH / 2})`}>E (Ha)</text>
       </svg>
       <div className="grid grid-cols-2 gap-x-3 gap-y-1">
         {[
@@ -1068,8 +1050,8 @@ function ConvergenceChart({ history, targetEnergy }: { history: VqeIteration[]; 
           { label: "Error", value: `${errorPct.toFixed(2)}%` },
         ].map(m => (
           <div key={m.label} className="flex items-center justify-between">
-            <span className="text-[10px]" style={{ color: "hsl(0, 0%, 55%)" }}>{m.label}</span>
-            <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>{m.value}</span>
+            <span className="text-[10px]" style={{ color: t.textDim }}>{m.label}</span>
+            <span className="text-[10px] font-mono font-medium" style={{ color: t.text }}>{m.value}</span>
           </div>
         ))}
       </div>
@@ -1080,14 +1062,15 @@ function ConvergenceChart({ history, targetEnergy }: { history: VqeIteration[]; 
 /* ── Parameter Trajectory Chart ───────────────────────────────────────────── */
 
 const PARAM_COLORS = [
-  "hsl(220, 60%, 55%)",   // θ₀ — blue
-  "hsl(340, 55%, 52%)",   // θ₁ — rose
-  "hsl(160, 50%, 42%)",   // θ₂ — teal
-  "hsl(30, 65%, 50%)",    // θ₃ — amber
+  "hsl(220, 60%, 55%)",
+  "hsl(340, 55%, 52%)",
+  "hsl(160, 50%, 42%)",
+  "hsl(30, 65%, 50%)",
 ];
 const PARAM_LABELS = ["θ₀ (RY q0 L1)", "θ₁ (RY q1 L1)", "θ₂ (RY q0 L2)", "θ₃ (RY q1 L2)"];
 
 function ParameterTrajectoryChart({ history }: { history: VqeIteration[] }) {
+  const t = useNbTheme();
   if (history.length < 2) return null;
   const numParams = history[0].params.length;
   const allVals = history.flatMap(h => h.params);
@@ -1107,12 +1090,12 @@ function ParameterTrajectoryChart({ history }: { history: VqeIteration[] }) {
 
   return (
     <div className="space-y-2">
-      <span className="text-xs font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>Parameter Trajectory</span>
-      <svg width={chartW} height={chartH} className="w-full" viewBox={`0 0 ${chartW} ${chartH}`} style={{ background: "hsla(220, 10%, 50%, 0.02)", borderRadius: 6 }}>
-        {ticks.map((t, i) => (
+      <span className="text-xs font-medium" style={{ color: t.text }}>Parameter Trajectory</span>
+      <svg width={chartW} height={chartH} className="w-full" viewBox={`0 0 ${chartW} ${chartH}`} style={{ background: t.chartBg, borderRadius: 6 }}>
+        {ticks.map((tk, i) => (
           <g key={i}>
-            <line x1={padL} x2={chartW - padR} y1={toY(t)} y2={toY(t)} stroke="hsla(0,0%,50%,0.08)" strokeWidth={1} />
-            <text x={padL - 4} y={toY(t) + 3} textAnchor="end" fontSize={8} fill="hsl(0,0%,55%)" fontFamily="monospace">{t.toFixed(1)}</text>
+            <line x1={padL} x2={chartW - padR} y1={toY(tk)} y2={toY(tk)} stroke={t.chartGrid} strokeWidth={1} />
+            <text x={padL - 4} y={toY(tk) + 3} textAnchor="end" fontSize={8} fill={t.chartLabel} fontFamily="monospace">{tk.toFixed(1)}</text>
           </g>
         ))}
         {Array.from({ length: numParams }, (_, p) => {
@@ -1127,15 +1110,15 @@ function ParameterTrajectoryChart({ history }: { history: VqeIteration[] }) {
             </g>
           );
         })}
-        <text x={padL + plotW / 2} y={chartH - 2} textAnchor="middle" fontSize={8} fill="hsl(0,0%,55%)">SPSA Iteration</text>
-        <text x={6} y={padT + plotH / 2} textAnchor="middle" fontSize={8} fill="hsl(0,0%,55%)" transform={`rotate(-90,6,${padT + plotH / 2})`}>θ (rad)</text>
+        <text x={padL + plotW / 2} y={chartH - 2} textAnchor="middle" fontSize={8} fill={t.chartLabel}>SPSA Iteration</text>
+        <text x={6} y={padT + plotH / 2} textAnchor="middle" fontSize={8} fill={t.chartLabel} transform={`rotate(-90,6,${padT + plotH / 2})`}>θ (rad)</text>
       </svg>
       <div className="flex flex-wrap gap-x-3 gap-y-1">
         {Array.from({ length: numParams }, (_, p) => (
           <div key={p} className="flex items-center gap-1">
             <span style={{ width: 8, height: 8, borderRadius: 2, background: PARAM_COLORS[p], display: "inline-block" }} />
-            <span className="text-[10px] font-mono" style={{ color: "hsl(0,0%,45%)" }}>{PARAM_LABELS[p]}</span>
-            <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(0,0%,30%)" }}>
+            <span className="text-[10px] font-mono" style={{ color: t.textMuted }}>{PARAM_LABELS[p]}</span>
+            <span className="text-[10px] font-mono font-medium" style={{ color: t.text }}>
               {history[history.length - 1].params[p].toFixed(3)}
             </span>
           </div>
@@ -1151,7 +1134,8 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
   onClose: () => void;
   onOpenInWorkspace: () => void;
 }) {
-  const template = getTemplateNotebooks().find(t => t.id === demo.notebookId);
+  const t = useNbTheme();
+  const template = getTemplateNotebooks().find(tp => tp.id === demo.notebookId);
   const [controlValues, setControlValues] = useState<Record<string, number | string | boolean>>(() =>
     Object.fromEntries(demo.controls.map(c => [c.id, c.defaultValue]))
   );
@@ -1218,7 +1202,6 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
           mitigateFull,
         } = await import("@/modules/qkernel/q-error-mitigation");
         
-
         const noise = k.circuit.noise;
         const ops = k.circuit.ops;
         const numQubits = k.circuit.numQubits;
@@ -1256,201 +1239,205 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
   useEffect(() => { runDemo(); }, []);
 
   return (
-    <div className="h-full flex flex-col" style={{ background: "hsl(0, 0%, 98%)" }}>
-      <div className="flex items-center gap-3 px-5 py-3" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.1)", background: "hsl(0, 0%, 100%)" }}>
-        <button onClick={onClose} className="p-1 rounded hover:bg-black/5"><ChevronDown size={18} style={{ color: "hsl(0, 0%, 45%)" }} /></button>
-        <span className="text-2xl">{demo.icon}</span>
-        <div className="flex-1">
-          <h2 className="text-base font-semibold" style={{ color: "hsl(0, 0%, 15%)" }}>{demo.name}</h2>
-          <p className="text-sm" style={{ color: "hsl(0, 0%, 50%)" }}>{demo.description}</p>
-        </div>
-        <button
-          onClick={() => {
-            const report = generateScientificReport(
-              demo.name, demo.description, outputs,
-              rawCounts, mitigatedCounts, mitigationStages, controlValues,
-              benchmarkMs, benchmarkDetail,
-            );
-            downloadReport(report, `${demo.id}-report-${Date.now()}.md`);
-          }}
-          disabled={outputs.length === 0}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
-          style={{ border: "1px solid hsla(38, 50%, 50%, 0.2)", color: "hsl(38, 45%, 38%)" }}
-        >
-          <Download size={14} /> Export Report
-        </button>
-        <button onClick={onOpenInWorkspace} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium" style={{
-          border: "1px solid hsla(0, 0%, 50%, 0.15)",
-          color: "hsl(0, 0%, 40%)",
-        }}>
-          <Code size={14} /> View Code
-        </button>
-      </div>
-
-      <div className="flex-1 flex overflow-hidden">
-        <div className="w-64 shrink-0 p-5 space-y-5 overflow-y-auto" style={{ borderRight: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
-          <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Settings</h3>
-          {demo.controls.map(ctrl => (
-            <div key={ctrl.id} className="space-y-1.5">
-              <label className="text-sm font-medium" style={{ color: "hsl(0, 0%, 25%)" }}>{ctrl.label}</label>
-              {ctrl.type === "slider" && (
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min={ctrl.min} max={ctrl.max} step={ctrl.step}
-                    value={controlValues[ctrl.id] as number}
-                    onChange={e => setControlValues(prev => ({ ...prev, [ctrl.id]: parseFloat(e.target.value) }))}
-                    className="flex-1 accent-[hsl(38,45%,48%)]"
-                  />
-                  <span className="text-sm font-mono w-10 text-right" style={{ color: "hsl(0, 0%, 40%)" }}>
-                    {controlValues[ctrl.id]}
-                  </span>
-                </div>
-              )}
-              {ctrl.type === "select" && (
-                <select
-                  value={controlValues[ctrl.id] as string}
-                  onChange={e => setControlValues(prev => ({ ...prev, [ctrl.id]: e.target.value }))}
-                  className="w-full px-3 py-1.5 rounded-lg text-sm bg-transparent" style={{ border: "1px solid hsla(0, 0%, 50%, 0.15)", color: "hsl(0, 0%, 25%)" }}
-                >
-                  {ctrl.options?.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-              )}
-            </div>
-          ))}
-
-          <div className="pt-3" style={{ borderTop: "1px solid hsla(0, 0%, 50%, 0.08)" }}>
-            <div className="flex items-center gap-2 mb-3">
-              <Shield size={14} style={{ color: "hsl(38, 50%, 48%)" }} />
-              <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Error Mitigation</h3>
-            </div>
-            <div className="space-y-2">
-              <MitigationToggle label="ZNE" description="Run at multiple noise levels, extrapolate to zero" enabled={enableZne} onChange={setEnableZne} />
-              <MitigationToggle label="MEM" description="Calibrate readout errors and correct measurements" enabled={enableMem} onChange={setEnableMem} />
-              <MitigationToggle label="RC" description="Randomize gate sequences to average out systematic errors" enabled={enableRc} onChange={setEnableRc} />
-            </div>
+    <NbThemeCtx.Provider value={t}>
+      <div className="h-full flex flex-col" style={{ background: t.bgSoft }}>
+        <div className="flex items-center gap-3 px-5 py-3" style={{ borderBottom: `1px solid ${t.border}`, background: t.bg }}>
+          <button onClick={onClose} className="p-1 rounded" style={{ color: t.textMuted }}><ChevronDown size={18} /></button>
+          <span className="text-2xl">{demo.icon}</span>
+          <div className="flex-1">
+            <h2 className="text-base font-semibold" style={{ color: t.textStrong }}>{demo.name}</h2>
+            <p className="text-sm" style={{ color: t.textMuted }}>{demo.description}</p>
           </div>
-
-          <button onClick={runDemo} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors" style={{
-            background: "hsl(38, 45%, 48%)",
-            color: "white",
+          <button
+            onClick={() => {
+              const report = generateScientificReport(
+                demo.name, demo.description, outputs,
+                rawCounts, mitigatedCounts, mitigationStages, controlValues,
+                benchmarkMs, benchmarkDetail,
+              );
+              downloadReport(report, `${demo.id}-report-${Date.now()}.md`);
+            }}
+            disabled={outputs.length === 0}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
+            style={{ border: `1px solid ${t.gold}33`, color: t.goldText }}
+          >
+            <Download size={14} /> Export Report
+          </button>
+          <button onClick={onOpenInWorkspace} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium" style={{
+            border: `1px solid ${t.borderStrong}`,
+            color: t.textMuted,
           }}>
-            {running ? <RotateCcw size={14} className="animate-spin" /> : <Play size={14} />}
-            {anyMitigationEnabled ? "Run with Mitigation" : "Run"}
+            <Code size={14} /> View Code
           </button>
         </div>
 
-        <div className="flex-1 p-5 space-y-4 overflow-y-auto">
-          <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Circuit & State</h3>
-          {outputs.filter(o => o.type === "circuit" || o.type === "statevector").map((o, i) => (
-            <CellOutputView key={i} output={o} />
-          ))}
-          {outputs.filter(o => o.type === "circuit" || o.type === "statevector").length === 0 && (
-            <div className="flex items-center justify-center h-40 rounded-lg" style={{ background: "hsla(0, 0%, 50%, 0.03)", border: "1px dashed hsla(0, 0%, 50%, 0.15)" }}>
-              <span className="text-sm" style={{ color: "hsl(0, 0%, 55%)" }}>Press Run to see the circuit</span>
-            </div>
-          )}
-        </div>
-
-        <div className="w-80 shrink-0 p-5 space-y-4 overflow-y-auto" style={{ borderLeft: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
-          <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0, 0%, 50%)" }}>Results</h3>
-
-          {benchmarkMs !== null && benchmarkDetail && (
-            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid hsla(220, 40%, 50%, 0.12)" }}>
-              <div className="px-3 py-2 flex items-center gap-2" style={{ background: "hsla(220, 40%, 50%, 0.04)", borderBottom: "1px solid hsla(220, 40%, 50%, 0.08)" }}>
-                <Zap size={12} style={{ color: "hsl(220, 45%, 50%)" }} />
-                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "hsl(220, 30%, 45%)" }}>Performance Benchmark</span>
+        <div className="flex-1 flex overflow-hidden">
+          <div className="w-64 shrink-0 p-5 space-y-5 overflow-y-auto" style={{ borderRight: `1px solid ${t.border}`, background: t.bg }}>
+            <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: t.textDim }}>Settings</h3>
+            {demo.controls.map(ctrl => (
+              <div key={ctrl.id} className="space-y-1.5">
+                <label className="text-sm font-medium" style={{ color: t.text }}>{ctrl.label}</label>
+                {ctrl.type === "slider" && (
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={ctrl.min} max={ctrl.max} step={ctrl.step}
+                      value={controlValues[ctrl.id] as number}
+                      onChange={e => setControlValues(prev => ({ ...prev, [ctrl.id]: parseFloat(e.target.value) }))}
+                      className="flex-1"
+                      style={{ accentColor: t.gold }}
+                    />
+                    <span className="text-sm font-mono w-10 text-right" style={{ color: t.textMuted }}>
+                      {controlValues[ctrl.id]}
+                    </span>
+                  </div>
+                )}
+                {ctrl.type === "select" && (
+                  <select
+                    value={controlValues[ctrl.id] as string}
+                    onChange={e => setControlValues(prev => ({ ...prev, [ctrl.id]: e.target.value }))}
+                    className="w-full px-3 py-1.5 rounded-lg text-sm"
+                    style={{ border: `1px solid ${t.borderStrong}`, color: t.text, background: t.bgInput }}
+                  >
+                    {ctrl.options?.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                )}
               </div>
-              <div className="px-3 py-2.5 space-y-2">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-xs font-medium" style={{ color: "hsl(0, 0%, 35%)" }}>Total Execution</span>
-                  <span className="text-lg font-mono font-bold" style={{ color: benchmarkMs < 10 ? "hsl(152, 45%, 40%)" : benchmarkMs < 100 ? "hsl(38, 50%, 42%)" : "hsl(0, 50%, 50%)" }}>
-                    {benchmarkMs < 1 ? `${(benchmarkMs * 1000).toFixed(0)} µs` : benchmarkMs < 1000 ? `${benchmarkMs.toFixed(2)} ms` : `${(benchmarkMs / 1000).toFixed(3)} s`}
+            ))}
+
+            <div className="pt-3" style={{ borderTop: `1px solid ${t.border}` }}>
+              <div className="flex items-center gap-2 mb-3">
+                <Shield size={14} style={{ color: t.gold }} />
+                <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: t.textDim }}>Error Mitigation</h3>
+              </div>
+              <div className="space-y-2">
+                <MitigationToggle label="ZNE" description="Run at multiple noise levels, extrapolate to zero" enabled={enableZne} onChange={setEnableZne} />
+                <MitigationToggle label="MEM" description="Calibrate readout errors and correct measurements" enabled={enableMem} onChange={setEnableMem} />
+                <MitigationToggle label="RC" description="Randomize gate sequences to average out systematic errors" enabled={enableRc} onChange={setEnableRc} />
+              </div>
+            </div>
+
+            <button onClick={runDemo} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors" style={{
+              background: t.gold,
+              color: "white",
+            }}>
+              {running ? <RotateCcw size={14} className="animate-spin" /> : <Play size={14} />}
+              {anyMitigationEnabled ? "Run with Mitigation" : "Run"}
+            </button>
+          </div>
+
+          <div className="flex-1 p-5 space-y-4 overflow-y-auto">
+            <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: t.textDim }}>Circuit & State</h3>
+            {outputs.filter(o => o.type === "circuit" || o.type === "statevector").map((o, i) => (
+              <CellOutputView key={i} output={o} />
+            ))}
+            {outputs.filter(o => o.type === "circuit" || o.type === "statevector").length === 0 && (
+              <div className="flex items-center justify-center h-40 rounded-lg" style={{ background: t.bgHover, border: `1px dashed ${t.borderStrong}` }}>
+                <span className="text-sm" style={{ color: t.textDim }}>Press Run to see the circuit</span>
+              </div>
+            )}
+          </div>
+
+          <div className="w-80 shrink-0 p-5 space-y-4 overflow-y-auto" style={{ borderLeft: `1px solid ${t.border}`, background: t.bg }}>
+            <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: t.textDim }}>Results</h3>
+
+            {benchmarkMs !== null && benchmarkDetail && (
+              <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${t.blue}22` }}>
+                <div className="px-3 py-2 flex items-center gap-2" style={{ background: t.blueBg, borderBottom: `1px solid ${t.border}` }}>
+                  <Zap size={12} style={{ color: t.blue }} />
+                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: t.blueText }}>Performance Benchmark</span>
+                </div>
+                <div className="px-3 py-2.5 space-y-2">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xs font-medium" style={{ color: t.text }}>Total Execution</span>
+                    <span className="text-lg font-mono font-bold" style={{ color: benchmarkMs < 10 ? t.green : benchmarkMs < 100 ? t.gold : t.red }}>
+                      {benchmarkMs < 1 ? `${(benchmarkMs * 1000).toFixed(0)} µs` : benchmarkMs < 1000 ? `${benchmarkMs.toFixed(2)} ms` : `${(benchmarkMs / 1000).toFixed(3)} s`}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                    {[
+                      { label: "Qubits", value: String(benchmarkDetail.qubits) },
+                      { label: "Gate Ops", value: String(benchmarkDetail.gates) },
+                      { label: "State Dim", value: `2^${benchmarkDetail.qubits} = ${benchmarkDetail.stateSize}` },
+                      { label: "Shots", value: benchmarkDetail.shots.toLocaleString() },
+                    ].map(m => (
+                      <div key={m.label} className="flex items-center justify-between">
+                        <span className="text-[10px]" style={{ color: t.textDim }}>{m.label}</span>
+                        <span className="text-[10px] font-mono font-medium" style={{ color: t.text }}>{m.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {benchmarkDetail.gates > 0 && (
+                    <div className="pt-1.5" style={{ borderTop: `1px solid ${t.border}` }}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px]" style={{ color: t.textDim }}>Per Gate</span>
+                        <span className="text-[10px] font-mono font-medium" style={{ color: t.text }}>
+                          {((benchmarkMs / benchmarkDetail.gates) * 1000).toFixed(0)} µs/gate
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px]" style={{ color: t.textDim }}>Throughput</span>
+                        <span className="text-[10px] font-mono font-medium" style={{ color: t.text }}>
+                          {(benchmarkDetail.gates / (benchmarkMs / 1000)).toFixed(0)} gates/s
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {rawCounts && mitigatedCounts && anyMitigationEnabled && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: t.goldBg, border: `1px solid ${t.gold}22` }}>
+                  <Zap size={14} style={{ color: t.gold }} />
+                  <span className="text-xs font-medium" style={{ color: t.goldText }}>
+                    {mitigationStages.length} stage{mitigationStages.length !== 1 ? "s" : ""} applied
+                    {zneValue !== null && ` · ZNE: ${zneValue.toFixed(4)}`}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                  {[
-                    { label: "Qubits", value: String(benchmarkDetail.qubits) },
-                    { label: "Gate Ops", value: String(benchmarkDetail.gates) },
-                    { label: "State Dim", value: `2^${benchmarkDetail.qubits} = ${benchmarkDetail.stateSize}` },
-                    { label: "Shots", value: benchmarkDetail.shots.toLocaleString() },
-                  ].map(m => (
-                    <div key={m.label} className="flex items-center justify-between">
-                      <span className="text-[10px]" style={{ color: "hsl(0, 0%, 55%)" }}>{m.label}</span>
-                      <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>{m.value}</span>
+
+                <div className="space-y-1">
+                  {mitigationStages.map((stage) => (
+                    <div key={stage} className="flex items-center gap-2 text-xs" style={{ color: t.greenText }}>
+                      <span className="font-mono">✓</span>
+                      <span className="font-medium">
+                        {stage === "randomized_compiling" ? "Randomized Compiling" :
+                         stage === "zero_noise_extrapolation" ? "Zero-Noise Extrapolation" :
+                         stage === "measurement_error_mitigation" ? "Measurement Error Mitigation" : stage}
+                      </span>
                     </div>
                   ))}
                 </div>
-                {benchmarkDetail.gates > 0 && (
-                  <div className="pt-1.5" style={{ borderTop: "1px solid hsla(0, 0%, 50%, 0.06)" }}>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px]" style={{ color: "hsl(0, 0%, 55%)" }}>Per Gate</span>
-                      <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>
-                        {((benchmarkMs / benchmarkDetail.gates) * 1000).toFixed(0)} µs/gate
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px]" style={{ color: "hsl(0, 0%, 55%)" }}>Throughput</span>
-                      <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(0, 0%, 30%)" }}>
-                        {(benchmarkDetail.gates / (benchmarkMs / 1000)).toFixed(0)} gates/s
-                      </span>
-                    </div>
-                  </div>
-                )}
+
+                <ComparisonHistogram rawCounts={rawCounts} mitigatedCounts={mitigatedCounts} rawLabel="Before" mitigatedLabel="After" />
+                <MitigationMetricsCard raw={rawCounts} mitigated={mitigatedCounts} />
               </div>
-            </div>
-          )}
+            )}
 
-          {rawCounts && mitigatedCounts && anyMitigationEnabled && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "hsla(38, 50%, 50%, 0.06)", border: "1px solid hsla(38, 50%, 50%, 0.12)" }}>
-                <Zap size={14} style={{ color: "hsl(38, 50%, 48%)" }} />
-                <span className="text-xs font-medium" style={{ color: "hsl(38, 40%, 35%)" }}>
-                  {mitigationStages.length} stage{mitigationStages.length !== 1 ? "s" : ""} applied
-                  {zneValue !== null && ` · ZNE: ${zneValue.toFixed(4)}`}
-                </span>
+            {isVqeDemo && vqeHistory.length > 1 && (
+              <div className="space-y-4">
+                <ConvergenceChart history={vqeHistory} targetEnergy={-1.137} />
+                <ParameterTrajectoryChart history={vqeHistory} />
               </div>
+            )}
 
-              <div className="space-y-1">
-                {mitigationStages.map((stage) => (
-                  <div key={stage} className="flex items-center gap-2 text-xs" style={{ color: "hsl(152, 35%, 40%)" }}>
-                    <span className="font-mono">✓</span>
-                    <span className="font-medium">
-                      {stage === "randomized_compiling" ? "Randomized Compiling" :
-                       stage === "zero_noise_extrapolation" ? "Zero-Noise Extrapolation" :
-                       stage === "measurement_error_mitigation" ? "Measurement Error Mitigation" : stage}
-                    </span>
-                  </div>
-                ))}
+            {(!anyMitigationEnabled || !mitigatedCounts) && outputs.filter(o => o.type === "histogram").map((o, i) => (
+              <CellOutputView key={i} output={o} />
+            ))}
+            {outputs.filter(o => o.type === "text" || o.type === "error").map((o, i) => (
+              <CellOutputView key={i} output={o} />
+            ))}
+            {outputs.length === 0 && !mitigatedCounts && (
+              <div className="text-center py-10">
+                <BarChart3 size={28} className="mx-auto mb-3" style={{ color: t.textDim }} />
+                <span className="text-sm" style={{ color: t.textDim }}>Results appear here</span>
               </div>
-
-              <ComparisonHistogram rawCounts={rawCounts} mitigatedCounts={mitigatedCounts} rawLabel="Before" mitigatedLabel="After" />
-              <MitigationMetricsCard raw={rawCounts} mitigated={mitigatedCounts} />
-            </div>
-          )}
-
-          {isVqeDemo && vqeHistory.length > 1 && (
-            <div className="space-y-4">
-              <ConvergenceChart history={vqeHistory} targetEnergy={-1.137} />
-              <ParameterTrajectoryChart history={vqeHistory} />
-            </div>
-          )}
-
-          {(!anyMitigationEnabled || !mitigatedCounts) && outputs.filter(o => o.type === "histogram").map((o, i) => (
-            <CellOutputView key={i} output={o} />
-          ))}
-          {outputs.filter(o => o.type === "text" || o.type === "error").map((o, i) => (
-            <CellOutputView key={i} output={o} />
-          ))}
-          {outputs.length === 0 && !mitigatedCounts && (
-            <div className="text-center py-10">
-              <BarChart3 size={28} className="mx-auto mb-3" style={{ color: "hsl(0, 0%, 65%)" }} />
-              <span className="text-sm" style={{ color: "hsl(0, 0%, 55%)" }}>Results appear here</span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </NbThemeCtx.Provider>
   );
 }
 
@@ -1471,6 +1458,7 @@ function MenuDropdown({ label, items, isOpen, onToggle, onClose }: {
   onToggle: () => void;
   onClose: () => void;
 }) {
+  const t = useNbTheme();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1486,37 +1474,39 @@ function MenuDropdown({ label, items, isOpen, onToggle, onClose }: {
     <div ref={ref} className="relative">
       <button
         onClick={onToggle}
-        className="px-3 py-1 text-[13px] rounded hover:bg-black/5 transition-colors"
+        className="px-3 py-1 text-[13px] rounded transition-colors"
         style={{
-          color: "hsl(0, 0%, 25%)",
-          background: isOpen ? "hsla(220, 30%, 50%, 0.08)" : "transparent",
+          color: t.text,
+          background: isOpen ? t.bgSelected : "transparent",
         }}
       >
         {label}
       </button>
       {isOpen && (
         <div
-          className="absolute top-full left-0 mt-0.5 z-50 min-w-[220px] rounded-lg shadow-lg py-1"
+          className="absolute top-full left-0 mt-0.5 z-50 min-w-[220px] rounded-lg py-1"
           style={{
-            background: "hsl(0, 0%, 100%)",
-            border: "1px solid hsla(0, 0%, 50%, 0.15)",
-            boxShadow: "0 4px 16px hsla(0, 0%, 0%, 0.12)",
+            background: t.bg,
+            border: `1px solid ${t.borderStrong}`,
+            boxShadow: t.shadow,
           }}
         >
           {items.map((item, i) =>
             item.divider ? (
-              <div key={i} className="my-1 mx-2" style={{ borderTop: "1px solid hsla(0, 0%, 50%, 0.1)" }} />
+              <div key={i} className="my-1 mx-2" style={{ borderTop: `1px solid ${t.border}` }} />
             ) : (
               <button
                 key={i}
                 onClick={() => { item.action?.(); onClose(); }}
                 disabled={item.disabled}
-                className="w-full flex items-center justify-between px-4 py-1.5 text-[13px] text-left hover:bg-black/5 disabled:opacity-40 disabled:cursor-default transition-colors"
-                style={{ color: "hsl(0, 0%, 20%)" }}
+                className="w-full flex items-center justify-between px-4 py-1.5 text-[13px] text-left disabled:opacity-40 disabled:cursor-default transition-colors"
+                style={{ color: t.text }}
+                onMouseEnter={e => (e.currentTarget.style.background = t.bgHover)}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               >
                 <span>{item.label}</span>
                 {item.shortcut && (
-                  <span className="text-[11px] font-mono ml-6" style={{ color: "hsl(0, 0%, 55%)" }}>{item.shortcut}</span>
+                  <span className="text-[11px] font-mono ml-6" style={{ color: t.textDim }}>{item.shortcut}</span>
                 )}
               </button>
             )
@@ -1530,6 +1520,7 @@ function MenuDropdown({ label, items, isOpen, onToggle, onClose }: {
 /* ── Keyboard Shortcuts Modal ─────────────────────────────────────────────── */
 
 function ShortcutsModal({ onClose }: { onClose: () => void }) {
+  const t = useNbTheme();
   const isMac = navigator.platform.toUpperCase().includes("MAC");
   const mod = isMac ? "⌘" : "Ctrl";
 
@@ -1569,28 +1560,28 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
-      <div className="absolute inset-0" style={{ background: "hsla(0, 0%, 0%, 0.4)" }} />
+      <div className="absolute inset-0" style={{ background: t.bgOverlay }} />
       <div
         className="relative rounded-xl shadow-2xl overflow-hidden max-w-lg w-full max-h-[70vh] flex flex-col"
-        style={{ background: "hsl(0, 0%, 100%)" }}
+        style={{ background: t.bg }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.1)" }}>
-          <h2 className="text-lg font-semibold" style={{ color: "hsl(0, 0%, 12%)" }}>Keyboard Shortcuts</h2>
-          <button onClick={onClose} className="p-1 rounded hover:bg-black/5"><X size={18} style={{ color: "hsl(0, 0%, 45%)" }} /></button>
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${t.border}` }}>
+          <h2 className="text-lg font-semibold" style={{ color: t.textStrong }}>Keyboard Shortcuts</h2>
+          <button onClick={onClose} className="p-1 rounded" style={{ color: t.textMuted }}><X size={18} /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
           {sections.map(sec => (
             <div key={sec.title}>
-              <h3 className="text-sm font-semibold mb-3" style={{ color: "hsl(0, 0%, 30%)" }}>{sec.title}</h3>
+              <h3 className="text-sm font-semibold mb-3" style={{ color: t.text }}>{sec.title}</h3>
               <div className="space-y-1">
                 {sec.shortcuts.map(s => (
                   <div key={s.keys} className="flex items-center justify-between py-1">
-                    <span className="text-sm" style={{ color: "hsl(0, 0%, 40%)" }}>{s.desc}</span>
+                    <span className="text-sm" style={{ color: t.textMuted }}>{s.desc}</span>
                     <kbd className="text-xs font-mono px-2 py-0.5 rounded" style={{
-                      background: "hsla(0, 0%, 50%, 0.06)",
-                      border: "1px solid hsla(0, 0%, 50%, 0.12)",
-                      color: "hsl(0, 0%, 30%)",
+                      background: t.bgHover,
+                      border: `1px solid ${t.border}`,
+                      color: t.text,
                     }}>{s.keys}</kbd>
                   </div>
                 ))}
@@ -1610,6 +1601,7 @@ function FindReplaceBar({ notebook, onReplace, onClose }: {
   onReplace: (cellId: string, oldText: string, newText: string) => void;
   onClose: () => void;
 }) {
+  const t = useNbTheme();
   const [findText, setFindText] = useState("");
   const [replaceText, setReplaceText] = useState("");
   const [showReplace, setShowReplace] = useState(false);
@@ -1627,21 +1619,21 @@ function FindReplaceBar({ notebook, onReplace, onClose }: {
   const totalMatches = matches.reduce((s, m) => s + m.count, 0);
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2" style={{ background: "hsla(220, 10%, 50%, 0.04)", borderBottom: "1px solid hsla(220, 10%, 50%, 0.1)" }}>
-      <Search size={14} style={{ color: "hsl(0, 0%, 50%)" }} />
+    <div className="flex items-center gap-2 px-4 py-2" style={{ background: t.bgHover, borderBottom: `1px solid ${t.border}` }}>
+      <Search size={14} style={{ color: t.textDim }} />
       <input
         type="text"
         value={findText}
         onChange={e => setFindText(e.target.value)}
         placeholder="Find…"
-        className="px-2 py-1 text-sm rounded bg-white focus:outline-none"
-        style={{ border: "1px solid hsla(0, 0%, 50%, 0.15)", width: 180 }}
+        className="px-2 py-1 text-sm rounded focus:outline-none"
+        style={{ border: `1px solid ${t.borderStrong}`, width: 180, background: t.bgInput, color: t.text }}
         autoFocus
       />
       {findText && (
-        <span className="text-xs" style={{ color: "hsl(0, 0%, 50%)" }}>{totalMatches} match{totalMatches !== 1 ? "es" : ""}</span>
+        <span className="text-xs" style={{ color: t.textDim }}>{totalMatches} match{totalMatches !== 1 ? "es" : ""}</span>
       )}
-      <button onClick={() => setShowReplace(!showReplace)} className="text-xs px-2 py-1 rounded hover:bg-black/5" style={{ color: "hsl(0, 0%, 45%)" }}>
+      <button onClick={() => setShowReplace(!showReplace)} className="text-xs px-2 py-1 rounded" style={{ color: t.textMuted }}>
         {showReplace ? "Hide Replace" : "Replace"}
       </button>
       {showReplace && (
@@ -1651,13 +1643,13 @@ function FindReplaceBar({ notebook, onReplace, onClose }: {
             value={replaceText}
             onChange={e => setReplaceText(e.target.value)}
             placeholder="Replace with…"
-            className="px-2 py-1 text-sm rounded bg-white focus:outline-none"
-            style={{ border: "1px solid hsla(0, 0%, 50%, 0.15)", width: 180 }}
+            className="px-2 py-1 text-sm rounded focus:outline-none"
+            style={{ border: `1px solid ${t.borderStrong}`, width: 180, background: t.bgInput, color: t.text }}
           />
           <button
             onClick={() => matches.forEach(m => onReplace(m.cellId, findText, replaceText))}
-            className="text-xs px-2 py-1 rounded hover:bg-black/5"
-            style={{ color: "hsl(220, 45%, 45%)" }}
+            className="text-xs px-2 py-1 rounded"
+            style={{ color: t.blue }}
             disabled={!findText}
           >
             Replace All
@@ -1665,8 +1657,27 @@ function FindReplaceBar({ notebook, onReplace, onClose }: {
         </>
       )}
       <div className="flex-1" />
-      <button onClick={onClose} className="p-1 rounded hover:bg-black/5"><X size={14} style={{ color: "hsl(0, 0%, 50%)" }} /></button>
+      <button onClick={onClose} className="p-1 rounded" style={{ color: t.textDim }}><X size={14} /></button>
     </div>
+  );
+}
+
+/* ── Theme Toggle Button ──────────────────────────────────────────────────── */
+
+function ThemeToggleButton({ mode, canToggle, onToggle }: { mode: "light" | "dark"; canToggle: boolean; onToggle: () => void }) {
+  const t = useNbTheme();
+  if (!canToggle) return null;
+  return (
+    <button
+      onClick={onToggle}
+      className="p-1.5 rounded transition-colors"
+      title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      style={{ color: t.textMuted }}
+      onMouseEnter={e => (e.currentTarget.style.background = t.bgHover)}
+      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+    >
+      {mode === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+    </button>
   );
 }
 
@@ -1679,6 +1690,11 @@ interface QuantumJupyterWorkspaceProps {
 }
 
 export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorkspaceProps) {
+  // ── Theme: follows desktop frame (white/dark/image) ──
+  const { mode: themeMode, toggle: toggleTheme, canToggle: canToggleTheme } = useScreenTheme({ screenId: "jupyter" });
+  const isDark = themeMode === "dark";
+  const t = useMemo(() => nbColors(isDark), [isDark]);
+
   const [mode, setMode] = useState<WorkspaceMode>("landing");
   const [notebook, setNotebook] = useState<NotebookDocument>(() => createNotebook("Untitled"));
   const [kernel, setKernel] = useState<KernelState>(() => createKernel());
@@ -1690,7 +1706,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   const demos = useMemo(() => getDemoDefinitions(), []);
 
   // ── Jupyter-specific state ──
-  const [editMode, setEditMode] = useState(false); // false = command mode, true = edit mode
+  const [editMode, setEditMode] = useState(false);
   const [showLineNumbers, setShowLineNumbers] = useState(true);
   const [clipboard, setClipboard] = useState<NotebookCell | null>(null);
   const [undoStack, setUndoStack] = useState<NotebookCell[]>([]);
@@ -1703,7 +1719,6 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   const notebookNameRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Track last D press for DD delete
   const lastDPressRef = useRef<number>(0);
 
   const updateCell = useCallback((id: string, source: string) => {
@@ -1729,7 +1744,6 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
         } : c),
       };
     });
-    // Move to next cell
     setNotebook(prev => {
       const idx = prev.cells.findIndex(c => c.id === id);
       if (idx >= 0 && idx < prev.cells.length - 1) {
@@ -1792,7 +1806,6 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
       if (cell) setUndoStack(s => [...s, { ...cell }]);
       const idx = prev.cells.findIndex(c => c.id === id);
       const newCells = prev.cells.filter(c => c.id !== id);
-      // Select neighbor
       if (idx < newCells.length) setActiveCell(newCells[idx].id);
       else if (newCells.length > 0) setActiveCell(newCells[newCells.length - 1].id);
       return { ...prev, cells: newCells };
@@ -1893,7 +1906,6 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
 
   const saveNotebook = useCallback(() => {
     setLastSaved(new Date());
-    // In a real impl this would persist to backend
   }, []);
 
   const downloadAsIpynb = useCallback(() => {
@@ -1942,7 +1954,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   }, []);
 
   const loadTemplate = useCallback((templateId: string) => {
-    const tmpl = templates.find(t => t.id === templateId);
+    const tmpl = templates.find(tp => tp.id === templateId);
     if (!tmpl) return;
     const nb = createNotebook(tmpl.name, tmpl.cells.map(c => ({ ...c, id: `cell-${Math.random().toString(36).slice(2)}` })));
     setNotebook(nb);
@@ -1955,17 +1967,14 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
     if (mode !== "workspace") return;
 
     const handler = (e: KeyboardEvent) => {
-      // Don't intercept when typing in inputs
       const target = e.target as HTMLElement;
       if (target.tagName === "INPUT" || target.tagName === "SELECT") return;
       if (editMode && target.tagName === "TEXTAREA") {
-        // Only handle Escape in edit mode
         if (e.key === "Escape") {
           e.preventDefault();
           setEditMode(false);
           (target as HTMLTextAreaElement).blur();
         }
-        // Ctrl+S save
         if ((e.ctrlKey || e.metaKey) && e.key === "s") {
           e.preventDefault();
           saveNotebook();
@@ -1973,7 +1982,6 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
         return;
       }
 
-      // Command mode shortcuts
       if (!editMode || target.tagName !== "TEXTAREA") {
         switch (e.key) {
           case "Enter":
@@ -2015,10 +2023,8 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
             break;
           case "v":
             if (e.ctrlKey || e.metaKey) {
-              // Ctrl+V in command mode: auto-enter edit mode and let paste go to textarea
               e.preventDefault();
               setEditMode(true);
-              // After edit mode is set, focus textarea and paste from clipboard
               setTimeout(async () => {
                 const activeCellEl = document.querySelector(`textarea[data-cell-id="${activeCell}"]`) as HTMLTextAreaElement | null;
                 if (activeCellEl) {
@@ -2029,11 +2035,9 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
                     const end = activeCellEl.selectionEnd;
                     const val = activeCellEl.value;
                     const newVal = val.slice(0, start) + text + val.slice(end);
-                    // Trigger React onChange
                     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
                     nativeInputValueSetter?.call(activeCellEl, newVal);
                     activeCellEl.dispatchEvent(new Event('input', { bubbles: true }));
-                    // Also update via React state directly
                     updateCell(activeCell!, newVal);
                     setTimeout(() => {
                       activeCellEl.selectionStart = activeCellEl.selectionEnd = start + text.length;
@@ -2077,7 +2081,6 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
             if (e.ctrlKey || e.metaKey) { e.preventDefault(); setShowFindReplace(v => !v); }
             break;
         }
-        // Shift+Enter: run cell
         if (e.key === "Enter" && e.shiftKey) {
           e.preventDefault();
           if (activeCell) runCell(activeCell);
@@ -2098,77 +2101,80 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   if (mode === "landing") {
     const featured = templates.slice(0, 4);
     return (
-      <div className="h-full flex flex-col" style={{ background: "hsl(0, 0%, 98%)" }}>
-        <div className="flex items-center gap-3 px-6 py-3.5" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
-          <Atom size={22} style={{ color: "hsl(38, 50%, 50%)" }} />
-          <span className="text-lg font-semibold" style={{ color: "hsl(0, 0%, 12%)" }}>Quantum Workspace</span>
-          <div className="flex-1" />
-          {onClose && <button onClick={onClose} className="p-2 rounded-lg hover:bg-black/5"><X size={20} style={{ color: "hsl(0, 0%, 45%)" }} /></button>}
-        </div>
+      <NbThemeCtx.Provider value={t}>
+        <div className="h-full flex flex-col" style={{ background: t.bgSoft }}>
+          <div className="flex items-center gap-3 px-6 py-3.5" style={{ borderBottom: `1px solid ${t.border}`, background: t.bg }}>
+            <Atom size={22} style={{ color: t.gold }} />
+            <span className="text-lg font-semibold" style={{ color: t.textStrong }}>Quantum Workspace</span>
+            <div className="flex-1" />
+            <ThemeToggleButton mode={themeMode} canToggle={canToggleTheme} onToggle={toggleTheme} />
+            {onClose && <button onClick={onClose} className="p-2 rounded-lg" style={{ color: t.textMuted }}><X size={20} /></button>}
+          </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto px-8 py-12">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-serif font-semibold mb-4" style={{ color: "hsl(0, 0%, 10%)" }}>
-                Quantum Workspace
-              </h1>
-              <p className="text-lg leading-relaxed max-w-lg mx-auto" style={{ color: "hsl(0, 0%, 42%)" }}>
-                Run quantum computing demos, then open the same code as editable notebooks to build your own experiments.
+          <div className="flex-1 overflow-y-auto">
+            <div className="max-w-3xl mx-auto px-8 py-12">
+              <div className="text-center mb-12">
+                <h1 className="text-4xl font-serif font-semibold mb-4" style={{ color: t.textStrong }}>
+                  Quantum Workspace
+                </h1>
+                <p className="text-lg leading-relaxed max-w-lg mx-auto" style={{ color: t.textMuted }}>
+                  Run quantum computing demos, then open the same code as editable notebooks to build your own experiments.
+                </p>
+              </div>
+
+              <div className="flex gap-6 justify-center mb-14">
+                <button
+                  onClick={() => setMode("workspace")}
+                  className="group flex flex-col items-center gap-4 p-10 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex-1 max-w-xs"
+                  style={{ background: t.bg, border: `1px solid ${t.border}` }}
+                >
+                  <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: t.blueBg }}>
+                    <Code size={30} style={{ color: t.blue }} />
+                  </div>
+                  <span className="text-lg font-semibold" style={{ color: t.textStrong }}>Open Workspace</span>
+                  <span className="text-base" style={{ color: t.textMuted }}>Write and run code</span>
+                </button>
+
+                <button
+                  onClick={() => setMode("demos")}
+                  className="group flex flex-col items-center gap-4 p-10 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex-1 max-w-xs"
+                  style={{ background: t.bg, border: `1px solid ${t.border}` }}
+                >
+                  <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: t.goldBg }}>
+                    <Sparkles size={30} style={{ color: t.gold }} />
+                  </div>
+                  <span className="text-lg font-semibold" style={{ color: t.textStrong }}>Open Demos</span>
+                  <span className="text-base" style={{ color: t.textMuted }}>Interactive examples</span>
+                </button>
+              </div>
+
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: t.textDim }}>Featured Notebooks</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  {featured.map(tmpl => (
+                    <button
+                      key={tmpl.id}
+                      onClick={() => loadTemplate(tmpl.id)}
+                      className="flex items-start gap-4 p-5 rounded-xl text-left transition-all duration-200 hover:shadow-md hover:scale-[1.01]"
+                      style={{ background: t.bg, border: `1px solid ${t.border}` }}
+                    >
+                      <span className="text-2xl mt-0.5">{tmpl.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base font-semibold mb-1" style={{ color: t.textStrong }}>{tmpl.name}</h3>
+                        <p className="text-sm leading-relaxed" style={{ color: t.textMuted }}>{tmpl.description}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-sm text-center mt-10" style={{ color: t.textDim }}>
+                Every result is verified and reproducible.
               </p>
             </div>
-
-            <div className="flex gap-6 justify-center mb-14">
-              <button
-                onClick={() => setMode("workspace")}
-                className="group flex flex-col items-center gap-4 p-10 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex-1 max-w-xs"
-                style={{ background: "hsl(0, 0%, 100%)", border: "1px solid hsla(0, 0%, 50%, 0.1)" }}
-              >
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: "hsla(220, 40%, 50%, 0.07)" }}>
-                  <Code size={30} style={{ color: "hsl(220, 40%, 50%)" }} />
-                </div>
-                <span className="text-lg font-semibold" style={{ color: "hsl(0, 0%, 12%)" }}>Open Workspace</span>
-                <span className="text-base" style={{ color: "hsl(0, 0%, 50%)" }}>Write and run code</span>
-              </button>
-
-              <button
-                onClick={() => setMode("demos")}
-                className="group flex flex-col items-center gap-4 p-10 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex-1 max-w-xs"
-                style={{ background: "hsl(0, 0%, 100%)", border: "1px solid hsla(0, 0%, 50%, 0.1)" }}
-              >
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: "hsla(38, 50%, 50%, 0.07)" }}>
-                  <Sparkles size={30} style={{ color: "hsl(38, 50%, 50%)" }} />
-                </div>
-                <span className="text-lg font-semibold" style={{ color: "hsl(0, 0%, 12%)" }}>Open Demos</span>
-                <span className="text-base" style={{ color: "hsl(0, 0%, 50%)" }}>Interactive examples</span>
-              </button>
-            </div>
-
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "hsl(0, 0%, 48%)" }}>Featured Notebooks</h2>
-              <div className="grid grid-cols-2 gap-4">
-                {featured.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => loadTemplate(t.id)}
-                    className="flex items-start gap-4 p-5 rounded-xl text-left transition-all duration-200 hover:shadow-md hover:scale-[1.01]"
-                    style={{ background: "hsl(0, 0%, 100%)", border: "1px solid hsla(0, 0%, 50%, 0.08)" }}
-                  >
-                    <span className="text-2xl mt-0.5">{t.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-semibold mb-1" style={{ color: "hsl(0, 0%, 12%)" }}>{t.name}</h3>
-                      <p className="text-sm leading-relaxed" style={{ color: "hsl(0, 0%, 50%)" }}>{t.description}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <p className="text-sm text-center mt-10" style={{ color: "hsl(0, 0%, 58%)" }}>
-              Every result is verified and reproducible.
-            </p>
           </div>
         </div>
-      </div>
+      </NbThemeCtx.Provider>
     );
   }
 
@@ -2176,107 +2182,111 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   if (mode === "demos") {
     if (activeDemo) {
       return (
-        <DemoViewer
-          demo={activeDemo}
-          kernel={kernel}
-          onClose={() => setActiveDemoId(null)}
-          onOpenInWorkspace={() => {
-            loadTemplate(activeDemo.notebookId);
-            setActiveDemoId(null);
-          }}
-        />
+        <NbThemeCtx.Provider value={t}>
+          <DemoViewer
+            demo={activeDemo}
+            kernel={kernel}
+            onClose={() => setActiveDemoId(null)}
+            onOpenInWorkspace={() => {
+              loadTemplate(activeDemo.notebookId);
+              setActiveDemoId(null);
+            }}
+          />
+        </NbThemeCtx.Provider>
       );
     }
 
     return (
-      <div className="h-full flex flex-col" style={{ background: "hsl(0, 0%, 98%)" }}>
-        <div className="flex items-center gap-3 px-6 py-3.5" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.08)", background: "hsl(0, 0%, 100%)" }}>
-          <Sparkles size={22} style={{ color: "hsl(38, 50%, 50%)" }} />
-          <span className="text-lg font-semibold" style={{ color: "hsl(0, 0%, 12%)" }}>Demos</span>
-          <div className="flex-1" />
-          <button onClick={() => setMode("workspace")} className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-base font-medium hover:bg-black/5" style={{ color: "hsl(220, 30%, 45%)" }}>
-            <Code size={16} /> Workspace
-          </button>
-          <button onClick={() => setMode("landing")} className="px-4 py-1.5 rounded-lg text-base font-medium hover:bg-black/5" style={{ color: "hsl(0, 0%, 45%)" }}>
-            Home
-          </button>
-          {onClose && <button onClick={onClose} className="p-2 rounded-lg hover:bg-black/5"><X size={18} style={{ color: "hsl(0, 0%, 45%)" }} /></button>}
-        </div>
+      <NbThemeCtx.Provider value={t}>
+        <div className="h-full flex flex-col" style={{ background: t.bgSoft }}>
+          <div className="flex items-center gap-3 px-6 py-3.5" style={{ borderBottom: `1px solid ${t.border}`, background: t.bg }}>
+            <Sparkles size={22} style={{ color: t.gold }} />
+            <span className="text-lg font-semibold" style={{ color: t.textStrong }}>Demos</span>
+            <div className="flex-1" />
+            <ThemeToggleButton mode={themeMode} canToggle={canToggleTheme} onToggle={toggleTheme} />
+            <button onClick={() => setMode("workspace")} className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-base font-medium" style={{ color: t.blue }}>
+              <Code size={16} /> Workspace
+            </button>
+            <button onClick={() => setMode("landing")} className="px-4 py-1.5 rounded-lg text-base font-medium" style={{ color: t.textMuted }}>
+              Home
+            </button>
+            {onClose && <button onClick={onClose} className="p-2 rounded-lg" style={{ color: t.textMuted }}><X size={18} /></button>}
+          </div>
 
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-2xl font-serif font-semibold mb-2" style={{ color: "hsl(0, 0%, 10%)" }}>Quantum Simulation Lab</h2>
-            <p className="text-base mb-6" style={{ color: "hsl(0, 0%, 48%)" }}>
-              Experience quantum computing through interactive simulations. Every demo runs on our built-in quantum simulator — no external hardware, no setup, fully reproducible.
-            </p>
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="max-w-5xl mx-auto">
+              <h2 className="text-2xl font-serif font-semibold mb-2" style={{ color: t.textStrong }}>Quantum Simulation Lab</h2>
+              <p className="text-base mb-6" style={{ color: t.textMuted }}>
+                Experience quantum computing through interactive simulations. Every demo runs on our built-in quantum simulator — no external hardware, no setup, fully reproducible.
+              </p>
 
-            <div className="flex items-center gap-1 mb-6 pb-3" style={{ borderBottom: "1px solid hsla(0, 0%, 50%, 0.08)" }}>
-              {[
-                { id: "all", label: "All", count: demos.length },
-                { id: "fundamentals", label: "Fundamentals", count: demos.filter(d => d.category === "fundamentals").length },
-                { id: "algorithms", label: "Algorithms", count: demos.filter(d => d.category === "algorithms").length },
-                { id: "security", label: "Security", count: demos.filter(d => d.category === "security").length },
-                { id: "hybrid", label: "Applications", count: demos.filter(d => d.category === "hybrid").length },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setDemoCategory(tab.id)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  style={{
-                    background: demoCategory === tab.id ? "hsla(38, 50%, 50%, 0.08)" : "transparent",
-                    color: demoCategory === tab.id ? "hsl(38, 45%, 35%)" : "hsl(0, 0%, 50%)",
-                    border: demoCategory === tab.id ? "1px solid hsla(38, 50%, 50%, 0.15)" : "1px solid transparent",
-                  }}
-                >
-                  {tab.label}
-                  <span className="text-xs font-mono px-1.5 py-0.5 rounded-full" style={{
-                    background: demoCategory === tab.id ? "hsla(38, 50%, 50%, 0.1)" : "hsla(0, 0%, 50%, 0.06)",
-                    color: demoCategory === tab.id ? "hsl(38, 45%, 40%)" : "hsl(0, 0%, 55%)",
-                  }}>{tab.count}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-8 mb-8">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold" style={{ color: "hsl(38, 45%, 45%)" }}>{demos.length}</span>
-                <span className="text-sm" style={{ color: "hsl(0, 0%, 50%)" }}>Simulators</span>
+              <div className="flex items-center gap-1 mb-6 pb-3" style={{ borderBottom: `1px solid ${t.border}` }}>
+                {[
+                  { id: "all", label: "All", count: demos.length },
+                  { id: "fundamentals", label: "Fundamentals", count: demos.filter(d => d.category === "fundamentals").length },
+                  { id: "algorithms", label: "Algorithms", count: demos.filter(d => d.category === "algorithms").length },
+                  { id: "security", label: "Security", count: demos.filter(d => d.category === "security").length },
+                  { id: "hybrid", label: "Applications", count: demos.filter(d => d.category === "hybrid").length },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setDemoCategory(tab.id)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    style={{
+                      background: demoCategory === tab.id ? t.goldBg : "transparent",
+                      color: demoCategory === tab.id ? t.goldText : t.textMuted,
+                      border: demoCategory === tab.id ? `1px solid ${t.gold}33` : "1px solid transparent",
+                    }}
+                  >
+                    {tab.label}
+                    <span className="text-xs font-mono px-1.5 py-0.5 rounded-full" style={{
+                      background: demoCategory === tab.id ? t.goldBg : t.bgHover,
+                      color: demoCategory === tab.id ? t.goldText : t.textDim,
+                    }}>{tab.count}</span>
+                  </button>
+                ))}
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold" style={{ color: "hsl(152, 40%, 42%)" }}>100%</span>
-                <span className="text-sm" style={{ color: "hsl(0, 0%, 50%)" }}>Interactive</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold" style={{ color: "hsl(220, 35%, 50%)" }}>0</span>
-                <span className="text-sm" style={{ color: "hsl(0, 0%, 50%)" }}>Setup Required</span>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {demos
-                .filter(demo => demoCategory === "all" || demo.category === demoCategory)
-                .map(demo => (
-                <DemoCard
-                  key={demo.id}
-                  demo={demo}
-                  onOpen={() => setActiveDemoId(demo.id)}
-                  onOpenInWorkspace={() => loadTemplate(demo.notebookId)}
-                />
-              ))}
-            </div>
+              <div className="flex items-center gap-8 mb-8">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold" style={{ color: t.gold }}>{demos.length}</span>
+                  <span className="text-sm" style={{ color: t.textMuted }}>Simulators</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold" style={{ color: t.green }}>100%</span>
+                  <span className="text-sm" style={{ color: t.textMuted }}>Interactive</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold" style={{ color: t.blue }}>0</span>
+                  <span className="text-sm" style={{ color: t.textMuted }}>Setup Required</span>
+                </div>
+              </div>
 
-            <p className="text-sm text-center mt-10" style={{ color: "hsl(0, 0%, 58%)" }}>
-              Every simulation runs deterministically on the Q-Linux statevector engine. Results are reproducible and verifiable.
-            </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {demos
+                  .filter(demo => demoCategory === "all" || demo.category === demoCategory)
+                  .map(demo => (
+                  <DemoCard
+                    key={demo.id}
+                    demo={demo}
+                    onOpen={() => setActiveDemoId(demo.id)}
+                    onOpenInWorkspace={() => loadTemplate(demo.notebookId)}
+                  />
+                ))}
+              </div>
+
+              <p className="text-sm text-center mt-10" style={{ color: t.textDim }}>
+                Every simulation runs deterministically on the Q-Linux statevector engine. Results are reproducible and verifiable.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </NbThemeCtx.Provider>
     );
   }
 
   /* ── Workspace (JupyterLab) ───────────────────────────────────────────────── */
 
-  // Menu definitions
   const fileMenuItems: MenuItem[] = [
     { label: "New Notebook", shortcut: "", action: () => { setNotebook(createNotebook("Untitled")); setKernel(createKernel()); } },
     { label: "New Quantum+ML Notebook", action: () => {
@@ -2355,266 +2365,262 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   ];
 
   return (
-    <div ref={containerRef} className="h-full flex flex-col" style={{ background: "hsl(0, 0%, 100%)" }} tabIndex={-1}>
-      {/* ── Menu Bar — JupyterLab style ── */}
-      <div className="flex items-center px-2 py-0.5" style={{
-        borderBottom: "1px solid hsla(220, 10%, 50%, 0.12)",
-        background: "hsl(0, 0%, 100%)",
-      }}>
-        <div className="flex items-center gap-0">
-          {[
-            { label: "File", items: fileMenuItems },
-            { label: "Edit", items: editMenuItems },
-            { label: "View", items: viewMenuItems },
-            { label: "Insert", items: insertMenuItems },
-            { label: "Cell", items: cellMenuItems },
-            { label: "Kernel", items: kernelMenuItems },
-            { label: "Help", items: helpMenuItems },
-          ].map(menu => (
-            <MenuDropdown
-              key={menu.label}
-              label={menu.label}
-              items={menu.items}
-              isOpen={openMenu === menu.label}
-              onToggle={() => setOpenMenu(openMenu === menu.label ? null : menu.label)}
-              onClose={() => setOpenMenu(null)}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* ── Toolbar — JupyterLab style ── */}
-      <div className="flex items-center gap-0.5 px-2 py-1" style={{
-        borderBottom: "1px solid hsla(220, 10%, 50%, 0.12)",
-        background: "hsl(220, 10%, 98%)",
-      }}>
-        {/* Save */}
-        <button onClick={saveNotebook} className="p-1.5 rounded hover:bg-black/5" title="Save (Ctrl+S)">
-          <Save size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
-        </button>
-
-        <div className="w-px h-5 mx-1" style={{ background: "hsla(0, 0%, 50%, 0.15)" }} />
-
-        {/* Add cell */}
-        <button onClick={() => addCell(activeCell, "code")} className="p-1.5 rounded hover:bg-black/5" title="Insert cell below (B)">
-          <Plus size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
-        </button>
-
-        {/* Cut, Copy, Paste */}
-        <button onClick={cutCellAction} className="p-1.5 rounded hover:bg-black/5" title="Cut cell (X)">
-          <Scissors size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
-        </button>
-        <button onClick={copyCellAction} className="p-1.5 rounded hover:bg-black/5" title="Copy cell (C)">
-          <Copy size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
-        </button>
-        <button onClick={pasteCellAction} className="p-1.5 rounded hover:bg-black/5" title="Paste cell (V)" style={{ opacity: clipboard ? 1 : 0.4 }}>
-          <ClipboardPaste size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
-        </button>
-
-        <div className="w-px h-5 mx-1" style={{ background: "hsla(0, 0%, 50%, 0.15)" }} />
-
-        {/* Move up/down */}
-        <button onClick={() => activeCell && moveCell(activeCell, -1)} className="p-1.5 rounded hover:bg-black/5" title="Move cell up">
-          <ArrowUp size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
-        </button>
-        <button onClick={() => activeCell && moveCell(activeCell, 1)} className="p-1.5 rounded hover:bg-black/5" title="Move cell down">
-          <ArrowDown size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
-        </button>
-
-        <div className="w-px h-5 mx-1" style={{ background: "hsla(0, 0%, 50%, 0.15)" }} />
-
-        {/* Run, Stop, Restart, Run All */}
-        <button onClick={() => activeCell && runCell(activeCell)} className="p-1.5 rounded hover:bg-black/5" title="Run cell (Shift+Enter)">
-          <Play size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
-        </button>
-        <button onClick={() => setKernelBusy(false)} className="p-1.5 rounded hover:bg-black/5" title="Interrupt kernel" style={{ opacity: kernelBusy ? 1 : 0.4 }}>
-          <Square size={14} style={{ color: "hsl(0, 0%, 40%)" }} />
-        </button>
-        <button onClick={() => restartKernel(false)} className="p-1.5 rounded hover:bg-black/5" title="Restart kernel">
-          <RotateCcw size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
-        </button>
-        <button onClick={runAllCells} className="p-1.5 rounded hover:bg-black/5" title="Restart & Run All">
-          <FastForward size={16} style={{ color: "hsl(0, 0%, 40%)" }} />
-        </button>
-
-        <div className="w-px h-5 mx-1" style={{ background: "hsla(0, 0%, 50%, 0.15)" }} />
-
-        {/* Cell type dropdown */}
-        <select
-          value={activeCellObj?.type || "code"}
-          onChange={e => activeCell && setCellType(activeCell, e.target.value as "code" | "markdown")}
-          className="text-[13px] px-2 py-1 rounded bg-transparent cursor-pointer"
-          style={{ border: "1px solid hsla(0, 0%, 50%, 0.15)", color: "hsl(0, 0%, 30%)", minWidth: 100 }}
-        >
-          <option value="code">Code</option>
-          <option value="markdown">Markdown</option>
-        </select>
-
-        <div className="flex-1" />
-
-        {/* Mode indicator */}
-        <span className="text-[11px] font-mono px-2 py-0.5 rounded" style={{
-          background: editMode ? "hsla(152, 40%, 50%, 0.08)" : "hsla(220, 40%, 50%, 0.08)",
-          color: editMode ? "hsl(152, 40%, 38%)" : "hsl(220, 40%, 45%)",
+    <NbThemeCtx.Provider value={t}>
+      <div ref={containerRef} className="h-full flex flex-col" style={{ background: t.bg }} tabIndex={-1}>
+        {/* ── Menu Bar ── */}
+        <div className="flex items-center px-2 py-0.5" style={{
+          borderBottom: `1px solid ${t.borderCell}`,
+          background: t.bg,
         }}>
-          {editMode ? "Edit" : "Command"}
-        </span>
-
-        {/* Demos & Home buttons */}
-        <button onClick={() => setMode("demos")} className="flex items-center gap-1 px-2 py-1 rounded text-[13px] hover:bg-black/5 ml-1" style={{ color: "hsl(0, 0%, 45%)" }}>
-          <Sparkles size={14} /> Demos
-        </button>
-        {onClose && <button onClick={onClose} className="p-1.5 rounded hover:bg-black/5 ml-1"><X size={16} style={{ color: "hsl(0, 0%, 45%)" }} /></button>}
-      </div>
-
-      {/* Find & Replace */}
-      {showFindReplace && (
-        <FindReplaceBar
-          notebook={notebook}
-          onReplace={replaceInCell}
-          onClose={() => setShowFindReplace(false)}
-        />
-      )}
-
-      {/* Main area */}
-      <div className="flex-1 flex overflow-hidden">
-        {sidebarOpen && (
-          <div className="w-60 shrink-0">
-            <FileBrowser
-              templates={templates}
-              activeId={notebook.id}
-              onSelect={loadTemplate}
-              onNew={(type) => {
-                const nb = createNotebook(
-                  type === "quantum" ? "Untitled" : "Quantum+ML Notebook",
-                  type === "ml" ? [
-                    createCell("markdown", "# Quantum + ML Notebook\nCombine quantum circuits with machine learning."),
-                    createCell("code", "from qiskit import QuantumCircuit\nfrom sklearn.svm import SVC"),
-                    createCell("code", ""),
-                  ] : [
-                    createCell("markdown", "# Untitled Notebook\nWrite your quantum code below."),
-                    createCell("code", "from qiskit import QuantumCircuit\n\nqc = QuantumCircuit(2)\nqc.h(0)\nqc.cx(0, 1)\nqc.draw()"),
-                  ]
-                );
-                setNotebook(nb);
-                setKernel(createKernel());
-              }}
-            />
-          </div>
-        )}
-
-        {/* Notebook editor */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Tab bar with editable notebook name */}
-          <div className="flex items-center gap-1 px-4 py-1.5" style={{ borderBottom: "1px solid hsla(220, 10%, 50%, 0.06)", background: "hsl(220, 10%, 97%)" }}>
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded hover:bg-black/5 mr-2">
-              <FileText size={16} style={{ color: "hsl(0, 0%, 45%)" }} />
-            </button>
-
-            {isRenamingNotebook ? (
-              <input
-                ref={notebookNameRef}
-                type="text"
-                defaultValue={notebook.name}
-                autoFocus
-                className="text-[14px] font-medium px-2 py-1 rounded bg-white focus:outline-none"
-                style={{ border: "1px solid hsla(220, 40%, 50%, 0.3)", color: "hsl(0, 0%, 18%)" }}
-                onBlur={e => {
-                  setNotebook(prev => ({ ...prev, name: e.target.value || "Untitled" }));
-                  setIsRenamingNotebook(false);
-                }}
-                onKeyDown={e => {
-                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                  if (e.key === "Escape") setIsRenamingNotebook(false);
-                }}
+          <div className="flex items-center gap-0">
+            {[
+              { label: "File", items: fileMenuItems },
+              { label: "Edit", items: editMenuItems },
+              { label: "View", items: viewMenuItems },
+              { label: "Insert", items: insertMenuItems },
+              { label: "Cell", items: cellMenuItems },
+              { label: "Kernel", items: kernelMenuItems },
+              { label: "Help", items: helpMenuItems },
+            ].map(menu => (
+              <MenuDropdown
+                key={menu.label}
+                label={menu.label}
+                items={menu.items}
+                isOpen={openMenu === menu.label}
+                onToggle={() => setOpenMenu(openMenu === menu.label ? null : menu.label)}
+                onClose={() => setOpenMenu(null)}
               />
-            ) : (
-              <div
-                className="flex items-center gap-2 px-3 py-1.5 rounded-t text-[14px] font-medium cursor-pointer hover:bg-white/50"
-                style={{
-                  background: "hsl(0, 0%, 100%)",
-                  color: "hsl(0, 0%, 18%)",
-                  borderBottom: "2px solid hsl(38, 50%, 55%)",
-                }}
-                onClick={() => setIsRenamingNotebook(true)}
-                title="Click to rename"
-              >
-                <FileText size={14} />
-                {notebook.name}.ipynb
-              </div>
-            )}
-
-            <div className="flex-1" />
-
-            {lastSaved && (
-              <span className="text-[11px]" style={{ color: "hsl(0, 0%, 55%)" }}>
-                Last saved: {lastSaved.toLocaleTimeString()}
-              </span>
-            )}
-          </div>
-
-          {/* Cells */}
-          <div className="max-w-4xl mx-auto py-4 space-y-0">
-            {notebook.cells.map((cell) => (
-              <React.Fragment key={cell.id}>
-                <CellView
-                  cell={cell}
-                  isActive={activeCell === cell.id}
-                  isSelected={activeCell === cell.id}
-                  editMode={editMode && activeCell === cell.id}
-                  showLineNumbers={showLineNumbers}
-                  onFocus={() => { setActiveCell(cell.id); setEditMode(false); }}
-                  onEdit={() => setEditMode(true)}
-                  onChange={source => updateCell(cell.id, source)}
-                  onRun={() => runCell(cell.id)}
-                  onDelete={() => deleteCell(cell.id)}
-                  onMoveUp={() => moveCell(cell.id, -1)}
-                  onMoveDown={() => moveCell(cell.id, 1)}
-                  onToggleType={() => toggleCellType(cell.id)}
-                  onToggleCollapse={() => toggleCollapse(cell.id)}
-                />
-                {/* Insert cell button between cells */}
-                <div className="flex items-center justify-center py-0 opacity-0 hover:opacity-100 transition-opacity" style={{ height: 16 }}>
-                  <button onClick={() => addCell(cell.id, "code")} className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] hover:bg-black/5" style={{ color: "hsl(0, 0%, 55%)" }}>
-                    <Plus size={11} /> Insert
-                  </button>
-                </div>
-              </React.Fragment>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Status bar — JupyterLab style */}
-      <div className="flex items-center gap-4 px-4 py-1.5" style={{
-        borderTop: "1px solid hsla(220, 10%, 50%, 0.08)",
-        background: "hsl(220, 10%, 97%)",
-        fontSize: "12px",
-      }}>
-        <span className="flex items-center gap-1.5" style={{ color: kernelBusy ? "hsl(38, 50%, 45%)" : "hsl(152, 35%, 40%)" }}>
-          <span className="w-2 h-2 rounded-full" style={{ background: kernelBusy ? "hsl(38, 50%, 50%)" : "hsl(152, 45%, 50%)" }} />
-          {kernelBusy ? "Kernel busy" : "Idle"}
-        </span>
-        <span className="text-xs font-mono" style={{ color: "hsl(0, 0%, 52%)" }}>
-          Q-Linux Python 3.11
-        </span>
-        <span style={{ color: "hsl(0, 0%, 52%)" }}>
-          {notebook.cells.length} cells · {notebook.cells.filter(c => c.executionCount).length} executed
-        </span>
-        <div className="flex-1" />
-        <span style={{ color: editMode ? "hsl(152, 35%, 40%)" : "hsl(220, 35%, 50%)" }}>
-          {editMode ? "Edit Mode" : "Command Mode"}
-        </span>
-        <span style={{ color: "hsl(0, 0%, 52%)" }}>
-          Ln {activeCellObj ? activeCellObj.source.split("\n").length : 0}
-        </span>
-        <span style={{ color: "hsl(0, 0%, 52%)" }}>
-          Qiskit · Cirq · PennyLane
-        </span>
-      </div>
+        {/* ── Toolbar ── */}
+        <div className="flex items-center gap-0.5 px-2 py-1" style={{
+          borderBottom: `1px solid ${t.borderCell}`,
+          background: t.bgToolbar,
+        }}>
+          <button onClick={saveNotebook} className="p-1.5 rounded" title="Save (Ctrl+S)" style={{ color: t.textMuted }}>
+            <Save size={16} />
+          </button>
 
-      {/* Keyboard Shortcuts Modal */}
-      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
-    </div>
+          <div className="w-px h-5 mx-1" style={{ background: t.borderStrong }} />
+
+          <button onClick={() => addCell(activeCell, "code")} className="p-1.5 rounded" title="Insert cell below (B)" style={{ color: t.textMuted }}>
+            <Plus size={16} />
+          </button>
+
+          <button onClick={cutCellAction} className="p-1.5 rounded" title="Cut cell (X)" style={{ color: t.textMuted }}>
+            <Scissors size={16} />
+          </button>
+          <button onClick={copyCellAction} className="p-1.5 rounded" title="Copy cell (C)" style={{ color: t.textMuted }}>
+            <Copy size={16} />
+          </button>
+          <button onClick={pasteCellAction} className="p-1.5 rounded" title="Paste cell (V)" style={{ color: t.textMuted, opacity: clipboard ? 1 : 0.4 }}>
+            <ClipboardPaste size={16} />
+          </button>
+
+          <div className="w-px h-5 mx-1" style={{ background: t.borderStrong }} />
+
+          <button onClick={() => activeCell && moveCell(activeCell, -1)} className="p-1.5 rounded" title="Move cell up" style={{ color: t.textMuted }}>
+            <ArrowUp size={16} />
+          </button>
+          <button onClick={() => activeCell && moveCell(activeCell, 1)} className="p-1.5 rounded" title="Move cell down" style={{ color: t.textMuted }}>
+            <ArrowDown size={16} />
+          </button>
+
+          <div className="w-px h-5 mx-1" style={{ background: t.borderStrong }} />
+
+          <button onClick={() => activeCell && runCell(activeCell)} className="p-1.5 rounded" title="Run cell (Shift+Enter)" style={{ color: t.textMuted }}>
+            <Play size={16} />
+          </button>
+          <button onClick={() => setKernelBusy(false)} className="p-1.5 rounded" title="Interrupt kernel" style={{ color: t.textMuted, opacity: kernelBusy ? 1 : 0.4 }}>
+            <Square size={14} />
+          </button>
+          <button onClick={() => restartKernel(false)} className="p-1.5 rounded" title="Restart kernel" style={{ color: t.textMuted }}>
+            <RotateCcw size={16} />
+          </button>
+          <button onClick={runAllCells} className="p-1.5 rounded" title="Restart & Run All" style={{ color: t.textMuted }}>
+            <FastForward size={16} />
+          </button>
+
+          <div className="w-px h-5 mx-1" style={{ background: t.borderStrong }} />
+
+          <select
+            value={activeCellObj?.type || "code"}
+            onChange={e => activeCell && setCellType(activeCell, e.target.value as "code" | "markdown")}
+            className="text-[13px] px-2 py-1 rounded cursor-pointer"
+            style={{ border: `1px solid ${t.borderStrong}`, color: t.text, background: t.bgInput, minWidth: 100 }}
+          >
+            <option value="code">Code</option>
+            <option value="markdown">Markdown</option>
+          </select>
+
+          <div className="flex-1" />
+
+          {/* Mode indicator */}
+          <span className="text-[11px] font-mono px-2 py-0.5 rounded" style={{
+            background: editMode ? t.editModeBg : t.commandModeBg,
+            color: editMode ? t.editModeText : t.commandModeText,
+          }}>
+            {editMode ? "Edit" : "Command"}
+          </span>
+
+          {/* Theme toggle */}
+          <ThemeToggleButton mode={themeMode} canToggle={canToggleTheme} onToggle={toggleTheme} />
+
+          <button onClick={() => setMode("demos")} className="flex items-center gap-1 px-2 py-1 rounded text-[13px] ml-1" style={{ color: t.textMuted }}>
+            <Sparkles size={14} /> Demos
+          </button>
+          {onClose && <button onClick={onClose} className="p-1.5 rounded ml-1" style={{ color: t.textMuted }}><X size={16} /></button>}
+        </div>
+
+        {/* Find & Replace */}
+        {showFindReplace && (
+          <FindReplaceBar
+            notebook={notebook}
+            onReplace={replaceInCell}
+            onClose={() => setShowFindReplace(false)}
+          />
+        )}
+
+        {/* Main area */}
+        <div className="flex-1 flex overflow-hidden">
+          {sidebarOpen && (
+            <div className="w-60 shrink-0">
+              <FileBrowser
+                templates={templates}
+                activeId={notebook.id}
+                onSelect={loadTemplate}
+                onNew={(type) => {
+                  const nb = createNotebook(
+                    type === "quantum" ? "Untitled" : "Quantum+ML Notebook",
+                    type === "ml" ? [
+                      createCell("markdown", "# Quantum + ML Notebook\nCombine quantum circuits with machine learning."),
+                      createCell("code", "from qiskit import QuantumCircuit\nfrom sklearn.svm import SVC"),
+                      createCell("code", ""),
+                    ] : [
+                      createCell("markdown", "# Untitled Notebook\nWrite your quantum code below."),
+                      createCell("code", "from qiskit import QuantumCircuit\n\nqc = QuantumCircuit(2)\nqc.h(0)\nqc.cx(0, 1)\nqc.draw()"),
+                    ]
+                  );
+                  setNotebook(nb);
+                  setKernel(createKernel());
+                }}
+              />
+            </div>
+          )}
+
+          {/* Notebook editor */}
+          <div className="flex-1 overflow-y-auto" style={{ background: t.bgCell }}>
+            {/* Tab bar */}
+            <div className="flex items-center gap-1 px-4 py-1.5" style={{ borderBottom: `1px solid ${t.border}`, background: t.bgToolbar }}>
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded mr-2" style={{ color: t.textMuted }}>
+                <FileText size={16} />
+              </button>
+
+              {isRenamingNotebook ? (
+                <input
+                  ref={notebookNameRef}
+                  type="text"
+                  defaultValue={notebook.name}
+                  autoFocus
+                  className="text-[14px] font-medium px-2 py-1 rounded focus:outline-none"
+                  style={{ border: `1px solid ${t.blue}55`, color: t.textStrong, background: t.bgInput }}
+                  onBlur={e => {
+                    setNotebook(prev => ({ ...prev, name: e.target.value || "Untitled" }));
+                    setIsRenamingNotebook(false);
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                    if (e.key === "Escape") setIsRenamingNotebook(false);
+                  }}
+                />
+              ) : (
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-t text-[14px] font-medium cursor-pointer"
+                  style={{
+                    background: t.bg,
+                    color: t.textStrong,
+                    borderBottom: `2px solid ${t.gold}`,
+                  }}
+                  onClick={() => setIsRenamingNotebook(true)}
+                  title="Click to rename"
+                >
+                  <FileText size={14} />
+                  {notebook.name}.ipynb
+                </div>
+              )}
+
+              <div className="flex-1" />
+
+              {lastSaved && (
+                <span className="text-[11px]" style={{ color: t.textDim }}>
+                  Last saved: {lastSaved.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+
+            {/* Cells */}
+            <div className="max-w-4xl mx-auto py-4 space-y-0">
+              {notebook.cells.map((cell) => (
+                <React.Fragment key={cell.id}>
+                  <CellView
+                    cell={cell}
+                    isActive={activeCell === cell.id}
+                    isSelected={activeCell === cell.id}
+                    editMode={editMode && activeCell === cell.id}
+                    showLineNumbers={showLineNumbers}
+                    onFocus={() => { setActiveCell(cell.id); setEditMode(false); }}
+                    onEdit={() => setEditMode(true)}
+                    onChange={source => updateCell(cell.id, source)}
+                    onRun={() => runCell(cell.id)}
+                    onDelete={() => deleteCell(cell.id)}
+                    onMoveUp={() => moveCell(cell.id, -1)}
+                    onMoveDown={() => moveCell(cell.id, 1)}
+                    onToggleType={() => toggleCellType(cell.id)}
+                    onToggleCollapse={() => toggleCollapse(cell.id)}
+                  />
+                  <div className="flex items-center justify-center py-0 opacity-0 hover:opacity-100 transition-opacity" style={{ height: 16 }}>
+                    <button onClick={() => addCell(cell.id, "code")} className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px]" style={{ color: t.textDim }}>
+                      <Plus size={11} /> Insert
+                    </button>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Status bar */}
+        <div className="flex items-center gap-4 px-4 py-1.5" style={{
+          borderTop: `1px solid ${t.border}`,
+          background: t.bgToolbar,
+          fontSize: "12px",
+        }}>
+          <span className="flex items-center gap-1.5" style={{ color: kernelBusy ? t.gold : t.green }}>
+            <span className="w-2 h-2 rounded-full" style={{ background: kernelBusy ? t.gold : t.green }} />
+            {kernelBusy ? "Kernel busy" : "Idle"}
+          </span>
+          <span className="text-xs font-mono" style={{ color: t.textDim }}>
+            Q-Linux Python 3.11
+          </span>
+          <span style={{ color: t.textDim }}>
+            {notebook.cells.length} cells · {notebook.cells.filter(c => c.executionCount).length} executed
+          </span>
+          <div className="flex-1" />
+          <span style={{ color: editMode ? t.editModeText : t.commandModeText }}>
+            {editMode ? "Edit Mode" : "Command Mode"}
+          </span>
+          <span style={{ color: t.textDim }}>
+            Ln {activeCellObj ? activeCellObj.source.split("\n").length : 0}
+          </span>
+          <span style={{ color: t.textDim }}>
+            Qiskit · Cirq · PennyLane
+          </span>
+        </div>
+
+        {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+      </div>
+    </NbThemeCtx.Provider>
   );
 }
