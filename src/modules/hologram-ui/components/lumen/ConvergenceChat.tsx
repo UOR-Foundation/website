@@ -96,6 +96,12 @@ interface Exchange {
     inferenceMs?: number;
     claims?: any[];
   };
+  /** Short description of the fader mix used to generate this response */
+  mixLabel?: string;
+  /** If this is a remix, the original response text */
+  remixOriginal?: string;
+  /** The mix label of the original response */
+  remixOriginalMix?: string;
 }
 
 interface ConvergenceChatProps {
@@ -128,6 +134,8 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   const resonanceProfile = loadResonanceProfile();
   const rScore = resonanceProfile.resonanceScore;
   const rConfidence = Math.min(1, resonanceProfile.observationCount / 20);
+  /** Pending remix metadata to attach to the next converge call */
+  const pendingRemixRef = useRef<{ original: string; originalMix: string } | null>(null);
 
   // Load graph context on mount (enrichment from knowledge graph)
   useEffect(() => {
@@ -234,6 +242,11 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
     const exchangeId = `ex-${Date.now()}`;
     const start = performance.now();
 
+    // Check if this is a remix (pending remix metadata)
+    const remixData = pendingRemixRef.current;
+    pendingRemixRef.current = null;
+    const currentMixLabel = describeDimensionMix(dimensionValues);
+
     // Initialize exchange with empty understanding
     const newExchange: Exchange = {
       id: exchangeId,
@@ -242,6 +255,11 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
       timestamp: new Date(),
       pipeline: { stage: "decomposing" },
       showcase: isShowcase,
+      mixLabel: currentMixLabel,
+      ...(remixData ? {
+        remixOriginal: remixData.original,
+        remixOriginalMix: remixData.originalMix,
+      } : {}),
     };
     setExchanges(prev => [...prev, newExchange]);
 
@@ -528,9 +546,10 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   // ── Remix listener — re-run same query with current fader mix ───
   useEffect(() => {
     const handler = (e: Event) => {
-      const thought = (e as CustomEvent).detail as string;
-      if (thought && !isConverging) {
-        convergeRef.current(thought);
+      const detail = (e as CustomEvent).detail as { thought: string; original: string; originalMix: string };
+      if (detail?.thought && !isConverging) {
+        pendingRemixRef.current = { original: detail.original, originalMix: detail.originalMix };
+        convergeRef.current(detail.thought);
       }
     };
     window.addEventListener("lumen:remix", handler);

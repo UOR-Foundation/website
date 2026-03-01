@@ -47,6 +47,12 @@ interface ExchangeData {
   pipeline: { stage: string; [k: string]: any };
   showcase?: boolean;
   meta?: ExchangeMeta;
+  /** Short description of the fader mix used to generate this response */
+  mixLabel?: string;
+  /** If this is a remix, the original response text */
+  remixOriginal?: string;
+  /** The mix label of the original response */
+  remixOriginalMix?: string;
 }
 
 interface ExchangeCardProps {
@@ -317,8 +323,16 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: ExchangeCardProp
   }, [ex.thought, ex.understanding]);
 
   const handleRemix = useCallback(() => {
-    window.dispatchEvent(new CustomEvent("lumen:remix", { detail: ex.thought }));
-  }, [ex.thought]);
+    window.dispatchEvent(new CustomEvent("lumen:remix", {
+      detail: {
+        thought: ex.thought,
+        original: ex.understanding,
+        originalMix: ex.mixLabel || "Default mix",
+      },
+    }));
+  }, [ex.thought, ex.understanding, ex.mixLabel]);
+
+  const [showDiff, setShowDiff] = useState(false);
 
   return (
     <motion.div
@@ -466,6 +480,113 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: ExchangeCardProp
                 </ReactMarkdown>
               </div>
             </ContextualBloom>
+
+            {/* ── Remix Diff — side-by-side comparison with original ── */}
+            {ex.remixOriginal && isConverged && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+                className="mt-4"
+              >
+                <button
+                  onClick={() => setShowDiff(v => !v)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl w-full transition-all duration-300"
+                  style={{
+                    background: "hsla(200, 15%, 15%, 0.2)",
+                    border: "1px solid hsla(200, 25%, 35%, 0.12)",
+                  }}
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" style={{ color: "hsla(200, 50%, 65%, 0.6)" }} />
+                  <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "hsla(200, 40%, 65%, 0.7)" }}>
+                    {showDiff ? "Hide" : "Show"} remix comparison
+                  </span>
+                  <span className="ml-auto text-[9px]" style={{ color: "hsla(200, 30%, 55%, 0.4)" }}>
+                    {ex.remixOriginalMix ?? "Original"} → {ex.mixLabel ?? "Current"}
+                  </span>
+                  {showDiff ? <ChevronDown className="w-3 h-3" style={{ color: "hsla(200, 40%, 60%, 0.4)" }} /> : <ChevronRight className="w-3 h-3" style={{ color: "hsla(200, 40%, 60%, 0.4)" }} />}
+                </button>
+                <AnimatePresence>
+                  {showDiff && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div
+                        className="mt-3 grid grid-cols-2 gap-3 p-3 rounded-xl"
+                        style={{
+                          background: "hsla(25, 8%, 7%, 0.4)",
+                          border: "1px solid hsla(200, 20%, 25%, 0.08)",
+                        }}
+                      >
+                        {/* Original */}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 mb-2.5 pb-2" style={{ borderBottom: "1px solid hsla(38, 15%, 25%, 0.08)" }}>
+                            <div className="w-2 h-2 rounded-full" style={{ background: "hsla(38, 40%, 55%, 0.4)" }} />
+                            <span className="text-[9px] tracking-[0.12em] uppercase" style={{ color: "hsla(38, 30%, 60%, 0.5)" }}>
+                              {ex.remixOriginalMix || "Original mix"}
+                            </span>
+                          </div>
+                          <div
+                            className="text-[12px] leading-[1.9] prose prose-invert max-w-none opacity-60"
+                            style={{
+                              color: "hsl(30, 10%, 65%)",
+                              fontFamily: C.font,
+                            }}
+                          >
+                            <ReactMarkdown
+                              components={{
+                                p: ({ children }) => <p className="mb-2 last:mb-0" style={{ lineHeight: "1.9", fontWeight: 350 }}>{children}</p>,
+                                strong: ({ children }) => <strong style={{ color: "hsl(38, 18%, 75%)", fontWeight: 450 }}>{children}</strong>,
+                              }}
+                            >
+                              {ex.remixOriginal.replace(/\s*\{source:\s*"[^"]*"\}\s*/g, "").replace(/\s*\[\[[A-D]\|[^\]]*\]\]\s*/g, "").slice(0, 800)}
+                            </ReactMarkdown>
+                            {ex.remixOriginal.length > 800 && (
+                              <p className="text-[10px] mt-1" style={{ color: "hsla(38, 15%, 55%, 0.3)" }}>…truncated</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Divider */}
+
+                        {/* Remixed */}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 mb-2.5 pb-2" style={{ borderBottom: "1px solid hsla(200, 20%, 30%, 0.1)" }}>
+                            <div className="w-2 h-2 rounded-full" style={{ background: "hsla(200, 50%, 60%, 0.6)" }} />
+                            <span className="text-[9px] tracking-[0.12em] uppercase" style={{ color: "hsla(200, 40%, 65%, 0.6)" }}>
+                              {ex.mixLabel || "Remixed"}
+                            </span>
+                          </div>
+                          <div
+                            className="text-[12px] leading-[1.9] prose prose-invert max-w-none"
+                            style={{
+                              color: "hsl(30, 12%, 74%)",
+                              fontFamily: C.font,
+                            }}
+                          >
+                            <ReactMarkdown
+                              components={{
+                                p: ({ children }) => <p className="mb-2 last:mb-0" style={{ lineHeight: "1.9", fontWeight: 350 }}>{children}</p>,
+                                strong: ({ children }) => <strong style={{ color: "hsl(38, 20%, 82%)", fontWeight: 450 }}>{children}</strong>,
+                              }}
+                            >
+                              {ex.understanding.replace(/\s*\{source:\s*"[^"]*"\}\s*/g, "").replace(/\s*\[\[[A-D]\|[^\]]*\]\]\s*/g, "").slice(0, 800)}
+                            </ReactMarkdown>
+                            {ex.understanding.length > 800 && (
+                              <p className="text-[10px] mt-1" style={{ color: "hsla(200, 30%, 55%, 0.3)" }}>…truncated</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
 
             {/* ── Trust Surface — coherence trace + interactive tools ── */}
             {ex.meta && isConverged && (
