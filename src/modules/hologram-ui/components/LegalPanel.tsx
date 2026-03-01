@@ -494,112 +494,83 @@ function PrinciplesContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; 
         className="text-2xl font-light tracking-wide mb-2"
         style={{ fontFamily: fontDisplay, color: P.heading }}
       >
-        How Hologram Works
+        Our Principles
       </h1>
       <p className="text-[13px] tracking-wider uppercase mb-5" style={{ color: P.textMuted }}>
-        The short version of everything
+        What we believe and how it shapes everything
       </p>
       <p
         className="text-[16px] leading-[2] mb-12"
         style={{ color: P.text }}
       >
-        Most technology asks for your attention and gives you back convenience. Hologram does it the other way around. It pays attention to <em style={{ color: P.tabActive }}>you</em>, learns what matters to you, and quietly works to keep your digital life coherent, honest, and under your control. Here is why it exists, how it works, and what it actually does.
+        Hologram exists for one reason: to give you technology that actually works for you. Not technology that watches you. Not technology that nudges you toward someone else's goals. Technology that respects your time, protects your information, and helps you think clearly. These are the principles that make that real.
       </p>
 
-      <Section title="Why this exists" P={P} fontDisplay={fontDisplay}>
+      {/* ── Part 1: You Come First ── */}
+      <Section title="Part 1: You Come First" P={P} fontDisplay={fontDisplay}>
         <p>
-          The tools we use every day were not built for us. They were built to capture our attention, harvest our data, and optimise for engagement. The result is that most people feel more scattered, more surveilled, and less in control than ever.
+          Everything starts here. Your data belongs to you. Your attention belongs to you. Your identity belongs to you. Hologram never collects information behind your back, never sells your behaviour, and never treats you as a product. There is no surveillance. There is no telemetry you did not ask for. There are no dark patterns designed to keep you scrolling.
         </p>
         <p>
-          Hologram was created because we believe your technology should serve you, not the other way around. It should protect your information by default. It should never lie to you. It should get out of your way when you are focused and be there when you need it. That is the simple idea behind everything here.
-        </p>
-      </Section>
-
-      <Section title="What makes it different" P={P} fontDisplay={fontDisplay}>
-        <p>
-          Most systems are designed around the machine: they optimise for speed, throughput, or profit. Hologram is designed around the human. It tracks a single signal called <strong style={{ color: P.heading }}>coherence</strong>: how well aligned are you right now? Are you focused or scattered? Calm or overwhelmed? The entire system adapts to support whatever state you are in.
-        </p>
-        <p>
-          When you are in deep focus, the interface goes quiet. Animations slow down. Notifications are held back. When you are exploring or switching between tasks, it opens up and offers context. This is what we mean by "inverting attention." The system attends to your wellbeing. You do not have to attend to the system.
+          When you use Hologram, the system adapts to you. When you are focused, it goes quiet. When you are exploring, it opens up. It reads the room, not your inbox.
         </p>
       </Section>
 
-      <Section title="The Eight Rules" P={P} fontDisplay={fontDisplay}>
+      {/* ── Part 2: The Eight Guarantees ── */}
+      <Section title="Part 2: The Eight Guarantees" P={P} fontDisplay={fontDisplay}>
         <p>
-          Every action inside Hologram is governed by eight non-negotiable rules. They are built into the mathematical foundation of the system and cannot be overridden, not by us, not by any application, not by any AI. If any rule is violated, the operation is blocked and the attempt is permanently recorded.
-        </p>
-        <p>
-          These are not guidelines. They are structural guarantees.
+          These are not aspirations. They are structural constraints built into the system's foundation. They cannot be turned off, overridden, or bypassed. Not by us. Not by any application. Not by any AI.
         </p>
 
         <div className="mt-6 space-y-5">
           <Principle n="01" title="Your data stays with you" P={P} fontDisplay={fontDisplay}>
-            All processing happens within your boundary. Your information is never sent anywhere without your explicit, informed choice. There is no background data collection, no silent telemetry, no analytics you did not ask for. In a world where surveillance has become the default business model, Hologram takes the opposite position: your data belongs to you, and no one else gets to decide what happens with it.
+            No background collection. No silent uploads. No analytics you did not consent to. Processing happens within your boundary, and nothing leaves without your explicit choice.
           </Principle>
 
-          <Principle n="02" title="No fabrication, ever" P={P} fontDisplay={fontDisplay}>
-            Every claim the system makes is grounded in real data. If the system is uncertain, it says so. It will never generate plausible sounding answers that it cannot back up. In a world full of AI hallucinations, this is the line we refuse to cross.
+          <Principle n="02" title="No fabrication" P={P} fontDisplay={fontDisplay}>
+            Every claim is grounded in real data. If the system is uncertain, it tells you. It will never generate confident sounding answers it cannot back up. In a world of hallucinating AI, this is the line we do not cross.
           </Principle>
 
-          <Principle n="03" title="Complete audit trails" P={P} fontDisplay={fontDisplay}>
-            Every operation the system performs is recorded in a tamper proof log. You can see exactly what happened, when, and why. Nothing runs in the dark. If it happened, there is a receipt.
+          <Principle n="03" title="Full transparency" P={P} fontDisplay={fontDisplay}>
+            Every operation is recorded in a tamper proof log. You can see what happened, when, and why. Nothing runs in the dark.
           </Principle>
 
           <Principle n="04" title="Honesty over comfort" P={P} fontDisplay={fontDisplay}>
-            The system will never tell you what you want to hear if it is not true. If it does not know, it tells you it does not know. If the confidence is low, it tells you the confidence is low. Truth is always prioritised over a smooth experience.
+            The system will never tell you what you want to hear if it is not true. Low confidence? It says so. Does not know? It says that too. Truth always comes before a smooth experience.
           </Principle>
 
-          <Principle n="05" title="No harmful actions" P={P} fontDisplay={fontDisplay}>
-            The system will never perform a destructive operation without your explicit confirmation. It cannot delete your data, revoke your access, or take irreversible actions on its own. You are always in the loop for anything that matters.
+          <Principle n="05" title="You stay in control" P={P} fontDisplay={fontDisplay}>
+            No destructive action happens without your explicit confirmation. The system cannot delete your data, revoke your access, or take irreversible steps on its own.
           </Principle>
 
-          <Principle n="06" title="Actions match evidence" P={P} fontDisplay={fontDisplay}>
-            The system cannot take a big action based on a weak signal. If it has a little bit of data, it can make a small suggestion. It cannot make a sweeping change. The strength of any response is always proportional to the strength of the evidence behind it.
+          <Principle n="06" title="Proportional response" P={P} fontDisplay={fontDisplay}>
+            Small signal, small suggestion. The system cannot make a sweeping change based on weak evidence. The weight of any action always matches the weight of the evidence behind it.
           </Principle>
 
-          <Principle n="07" title="Trust is earned, not assumed" P={P} fontDisplay={fontDisplay}>
-            No part of the system, and no AI within it, starts with full autonomy. Every agent, every tool, every integration begins with limited permissions and earns more trust over time through demonstrated reliability. This is how trust works between people, and it is how it works here.
+          <Principle n="07" title="Trust is earned" P={P} fontDisplay={fontDisplay}>
+            Every agent, tool, and integration starts with limited permissions and earns more over time through reliability. This is how trust works between people. It is how it works here.
           </Principle>
 
           <Principle n="08" title="Your success is the measure" P={P} fontDisplay={fontDisplay}>
-            The system only succeeds when you do. There are no extractive incentives, no engagement traps, no dark patterns. Every feature exists because it genuinely helps you learn, create, or connect. If it does not serve you, it has no place here.
+            No engagement traps. No extraction. Every feature exists because it genuinely helps you learn, create, or connect. If it does not serve you, it does not belong here.
           </Principle>
         </div>
       </Section>
 
-      <Section title="How it all fits together" P={P} fontDisplay={fontDisplay}>
+      {/* ── Part 3: AI That Serves You ── */}
+      <Section title="Part 3: AI That Serves You" P={P} fontDisplay={fontDisplay}>
         <p>
-          Under the hood, Hologram is built on a mathematical framework called the Universal Object Reference. Every piece of information you create, every file, every note, every conversation, gets a unique, permanent identity based on its actual content. This means your data is always verifiable, always portable, and never locked into one platform.
+          Hologram includes a native AI called <strong style={{ color: P.heading }}>Lumen</strong>. It is capable, fast, and governed by the same eight guarantees above. But it is your co-pilot, not your replacement.
         </p>
         <p>
-          Hologram is a portable, interoperable substrate: a virtual operating system that works equally well on edge devices, mobile, desktop, and cloud. It is fully agnostic. Whether you are using traditional web services, decentralised protocols and chains, AI systems, or anything else that emerges next, Hologram unifies them into a single coherent experience. You do not have to choose between ecosystems. They all work together, with your identity and your data remaining sovereign throughout.
-        </p>
-        <p>
-          Your identity works the same way. Instead of usernames and passwords scattered across dozens of services, you have one sovereign identity that you control. You choose what to share, with whom, and for how long. You can prove things about yourself without revealing the underlying information. And you can revoke access at any time.
+          You set the intention. You monitor the outcome. You bring what only humans can: creativity, judgment, the ability to reframe a problem entirely. Lumen supports your decisions. It does not make them for you. And when it does not have a good answer, it stays quiet rather than guessing.
         </p>
       </Section>
 
-      <Section title="AI that works for you" P={P} fontDisplay={fontDisplay}>
+      {/* ── Part 4: Safety by Structure ── */}
+      <Section title="Part 4: Safety by Structure" P={P} fontDisplay={fontDisplay}>
         <p>
-          Hologram includes AI capabilities through <strong style={{ color: P.heading }}>Lumen AI</strong>, the native co-pilot built directly into your operating environment. The word co-pilot is deliberate: you are always in the driving seat. Lumen is intelligent, capable, and fast, but it never acts on its own. It supports your decisions. It does not make them for you.
-        </p>
-        <p>
-          Your role as a human is threefold. First, you <strong style={{ color: P.heading }}>set the intention</strong>: you decide what you want to accomplish and where the boundaries are. Second, you <strong style={{ color: P.heading }}>monitor the outcome</strong>: you check that what the AI produces actually aligns with your values, especially when questions are ambiguous or stakes are high. Third, you <strong style={{ color: P.heading }}>inject what only humans can</strong>: novelty, reframing, creative leaps, the kind of insight that no machine can originate on its own.
-        </p>
-        <p>
-          This is not just a philosophy. It is built into how the system works. Lumen is governed by the same eight rules above. It cannot fabricate information. It cannot access your data without permission. It cannot take autonomous actions beyond its trust level.
-        </p>
-        <p>
-          Most importantly, Lumen optimises for your coherence, not for engagement. It is not trying to keep you scrolling or clicking. It is trying to help you think clearly, work effectively, and stay aligned with what actually matters to you. When it does not have a good answer, it stays silent rather than guessing.
-        </p>
-      </Section>
-
-      <Section title="Safe intelligence by design" P={P} fontDisplay={fontDisplay}>
-        <p>
-          Most approaches to AI safety rely on rules, guidelines, and usage policies. These help, but they can be bypassed, misinterpreted, or simply ignored. Hologram takes a fundamentally different approach.
-        </p>
-        <p>
-          Instead of trying to control AI behaviour with written instructions alone, Hologram confines it within a mathematical structure: a finite topological space where every operation has defined boundaries. Think of it like this: rather than putting up warning signs around a cliff edge, we built a landscape where the cliff simply does not exist. The AI cannot go somewhere the structure does not allow, regardless of what it is asked to do.
+          Most AI safety relies on rules that can be bypassed. Hologram takes a different approach: it confines AI within a mathematical structure where unsafe behaviour is not just discouraged, it is impossible. Think of it as a landscape with no cliff edges, rather than a landscape full of warning signs.
         </p>
 
         {/* Visual: Confinement vs Rules */}
@@ -607,7 +578,6 @@ function PrinciplesContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; 
           className="my-10 flex flex-col sm:flex-row gap-6 sm:gap-8"
           style={{ fontSize: "13px", lineHeight: 1.7 }}
         >
-          {/* Rules approach */}
           <div className="flex-1 rounded-lg p-5" style={{ border: `1px solid ${P.border}`, background: "hsla(0,0%,100%,0.02)" }}>
             <div className="text-center mb-4">
               <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: P.textMuted }}>
@@ -660,7 +630,6 @@ function PrinciplesContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; 
             </p>
           </div>
 
-          {/* Confinement approach */}
           <div className="flex-1 rounded-lg p-5" style={{ border: "1px solid hsla(38,30%,50%,0.2)", background: "hsla(38,20%,50%,0.04)" }}>
             <div className="text-center mb-4">
               <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: P.tabActive }}>
@@ -720,19 +689,17 @@ function PrinciplesContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; 
         </div>
 
         <p>
-          This is what makes Hologram's safety guarantees structural rather than behavioural. They do not depend on the AI choosing to follow rules. They are embedded in the space the AI operates within.
+          This makes safety a structural guarantee, not a behavioural hope. It does not depend on the AI choosing to be good. The boundaries are mathematical. They hold regardless.
         </p>
       </Section>
 
-      <Section title="The bottom line" P={P} fontDisplay={fontDisplay}>
+      {/* ── Part 5: The Promise ── */}
+      <Section title="Part 5: The Promise" P={P} fontDisplay={fontDisplay}>
         <p>
-          Hologram exists because we believe people deserve technology that respects them. Not technology that tolerates them while extracting value. Not technology that pretends to care while optimising for someone else's metrics.
+          You deserve technology that treats you as its purpose, not its resource. Hologram is built on that belief. The eight guarantees are not marketing copy. They are mathematical constraints fused into every layer of the system. They apply to every operation, every user, and every AI equally.
         </p>
         <p>
-          Everything here is designed to be transparent, honest, and genuinely useful. The eight rules are not marketing. They are mathematical constraints embedded in the system's foundation. They cannot be turned off. They apply equally to every operation, every user, and every AI.
-        </p>
-        <p>
-          That is what makes this different. Not a promise. A proof.
+          Not a promise. A proof.
         </p>
       </Section>
     </article>
