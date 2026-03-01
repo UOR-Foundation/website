@@ -24,6 +24,10 @@ export {
   type WidgetProcess,
   type PanelId,
   type DesktopMode,
+  type RewardProjection,
+  type RewardSignal,
+  type EpistemicGrade,
+  type RewardCoherenceSnapshot,
 } from "./projection-engine";
 
 // Surface Adapter — kernel frames → browser DOM
