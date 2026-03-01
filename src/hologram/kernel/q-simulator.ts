@@ -510,8 +510,77 @@ export function applyOp(state: SimulatorState, op: SimOp): string | null {
     return null;
   }
 
-  // Barrier and measure are no-ops for state evolution
-  if (g === "barrier" || g === "measure") return null;
+  // RCCX (simplified Toffoli) — same unitary action as CCX for computational basis
+  if (g === "rccx") {
+    if (q.length < 3) return "RCCX requires 3 qubits";
+    applyDoublyControlledGate(sv, n, q[0], q[1], q[2], X_MATRIX);
+    return null;
+  }
+
+  // RC3X (relative-phase 3-controlled X) — same as MCX for computational basis
+  if (g === "rc3x") {
+    if (q.length < 4) return "RC3X requires 4 qubits";
+    applyMCX(sv, n, [q[0], q[1], q[2]], q[3]);
+    return null;
+  }
+
+  // RXX(θ) — XX interaction gate: exp(-i θ/2 X⊗X)
+  if (g === "rxx") {
+    const θ = (op.params?.[0]) ?? Math.PI / 4;
+    const c = Math.cos(θ / 2), s = Math.sin(θ / 2);
+    // Apply as: RXX = (H⊗H) · RZZ(θ) · (H⊗H), but direct matrix is simpler
+    // RXX matrix in computational basis {00,01,10,11}:
+    // [[c, 0, 0, -is], [0, c, -is, 0], [0, -is, c, 0], [-is, 0, 0, c]]
+    const bit0 = 1 << (n - 1 - q[0]);
+    const bit1 = 1 << (n - 1 - q[1]);
+    const dim = 1 << n;
+    for (let i = 0; i < dim; i++) {
+      const b0 = (i & bit0) ? 1 : 0;
+      const b1 = (i & bit1) ? 1 : 0;
+      if (b0 === 0 && b1 === 0) {
+        const j = i ^ bit0 ^ bit1; // |11⟩
+        const a00 = sv[i], a11 = sv[j];
+        sv[i] = cadd(cscale(c, a00), cmul([0, -s], a11));
+        sv[j] = cadd(cmul([0, -s], a00), cscale(c, a11));
+      }
+      if (b0 === 0 && b1 === 1) {
+        const j = i ^ bit0 ^ bit1; // |10⟩
+        const a01 = sv[i], a10 = sv[j];
+        sv[i] = cadd(cscale(c, a01), cmul([0, -s], a10));
+        sv[j] = cadd(cmul([0, -s], a01), cscale(c, a10));
+      }
+    }
+    return null;
+  }
+
+  // RZZ(θ) — ZZ interaction gate: exp(-i θ/2 Z⊗Z)
+  if (g === "rzz") {
+    const θ = (op.params?.[0]) ?? Math.PI / 4;
+    const bit0 = 1 << (n - 1 - q[0]);
+    const bit1 = 1 << (n - 1 - q[1]);
+    const dim = 1 << n;
+    for (let i = 0; i < dim; i++) {
+      const b0 = (i & bit0) ? 1 : 0;
+      const b1 = (i & bit1) ? 1 : 0;
+      const parity = b0 ^ b1; // 0 if same, 1 if different
+      const phase = parity === 0 ? -θ / 2 : θ / 2;
+      sv[i] = cmul([Math.cos(phase), Math.sin(phase)], sv[i]);
+    }
+    return null;
+  }
+
+  // SX† (inverse √X)
+  if (g === "sxdg") {
+    const sxdgMatrix: GateMatrix = [
+      [[0.5, -0.5], [0.5, 0.5]],
+      [[0.5, 0.5], [0.5, -0.5]],
+    ];
+    applySingleQubitGate(sv, n, q[0], sxdgMatrix);
+    return null;
+  }
+
+  // Barrier, measure, delay, identity are no-ops for state evolution
+  if (g === "barrier" || g === "measure" || g === "delay" || g === "id") return null;
 
   return `Unknown gate: ${g}`;
 }

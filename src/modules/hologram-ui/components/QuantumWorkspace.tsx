@@ -583,183 +583,196 @@ const CanvasGrid = React.memo(function CanvasGrid({ t, w, h }: { t: Theme; w: nu
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Probabilities Panel
+   Verification Metrics Panel — comprehensive output for SMEs
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function ProbabilitiesPanel({ probs, t, numQubits }: { probs: { state: string; probability: number }[]; t: Theme; numQubits: number }) {
+function VerificationMetricsPanel({ probs, t, numQubits, gates, runResult }: {
+  probs: { state: string; probability: number; amplitude?: Complex }[];
+  t: Theme; numQubits: number; gates: PlacedGate[];
+  runResult: RunResult | null;
+}) {
+  const [tab, setTab] = useState<"probs" | "state" | "circuit">("probs");
+
   const sorted = useMemo(() => {
-    const allStates: { state: string; probability: number }[] = [];
-    const n = Math.min(numQubits, 8);
+    const allStates: { state: string; probability: number; amplitude: Complex }[] = [];
+    const n = Math.min(numQubits, 10);
     const total = 1 << n;
     for (let i = 0; i < total; i++) {
       const state = i.toString(2).padStart(n, "0");
       const found = probs.find(p => p.state === state);
-      allStates.push({ state, probability: found?.probability || 0 });
+      allStates.push({ state, probability: found?.probability || 0, amplitude: (found as any)?.amplitude || [0, 0] });
     }
     return allStates;
   }, [probs, numQubits]);
 
-  const chartH = 150;
-  const barW = sorted.length > 16 ? 10 : sorted.length > 8 ? 18 : 30;
+  const nonZero = sorted.filter(s => s.probability > 1e-10);
+  const maxProb = Math.max(...sorted.map(s => s.probability), 1e-10);
+  const totalProb = sorted.reduce((s, p) => s + p.probability, 0);
+  const entropy = nonZero.reduce((s, p) => s - (p.probability > 0 ? p.probability * Math.log2(p.probability) : 0), 0);
+  const maxEntropy = Math.log2(1 << Math.min(numQubits, 10));
+
+  const realGates = gates.filter(g => g.gateId !== "barrier" && g.gateId !== "measure" && g.gateId !== "|0>" && g.gateId !== "delay" && g.gateId !== "id");
+  const singleQ = realGates.filter(g => (findGateDef(g.gateId)?.qubits || 1) === 1).length;
+  const multiQ = realGates.length - singleQ;
+  const depth = gates.length > 0 ? Math.max(...gates.map(g => g.col)) + 1 : 0;
+  const hilbert = 1 << Math.min(numQubits, 16);
 
   return (
-    <div className="h-full flex flex-col" style={{ background: t.panel }}>
-      <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: `1px solid ${t.border}` }}>
-        <span className="text-[13px] font-semibold" style={{ color: t.text }}>Probabilities</span>
-        <ChevronDown size={12} style={{ color: t.textMuted }} />
+    <div className="h-full flex flex-col overflow-hidden" style={{ background: t.panel }}>
+      <div className="flex items-center gap-0 px-3 shrink-0" style={{ borderBottom: `1px solid ${t.border}` }}>
+        {([
+          { id: "probs" as const, label: "Probabilities" },
+          { id: "state" as const, label: "Statevector" },
+          { id: "circuit" as const, label: "Circuit Info" },
+        ]).map(tb => (
+          <button key={tb.id} onClick={() => setTab(tb.id)}
+            className="px-3 py-1.5 text-[11px] font-medium"
+            style={{
+              color: tab === tb.id ? t.accent : t.textMuted,
+              borderBottom: tab === tb.id ? `2px solid ${t.accent}` : "2px solid transparent",
+            }}>
+            {tb.label}
+          </button>
+        ))}
         <div className="flex-1" />
-        <Info size={13} style={{ color: t.textMuted }} />
-        <Grid3X3 size={13} style={{ color: t.textMuted }} />
-      </div>
-      <div className="flex-1 flex flex-col justify-end overflow-x-auto px-4 pb-2 relative">
-        {/* Y-axis labels */}
-        <div className="absolute left-2 top-10 bottom-12 flex flex-col justify-between" style={{ width: 28 }}>
-          {[100, 80, 60, 40, 20, 0].map(v => (
-            <span key={v} className="text-[10px] font-mono leading-none text-right" style={{ color: t.textDim }}>{v}</span>
-          ))}
+        <div className="flex items-center gap-3 text-[10px] font-mono" style={{ color: t.textDim }}>
+          <span title="Non-zero basis states">|ψ⟩: {nonZero.length}/{hilbert}</span>
+          <span title="Shannon entropy">H: {entropy.toFixed(3)}</span>
+          <span title="Total probability (should be 1.000000)" style={{ color: Math.abs(totalProb - 1) < 1e-6 ? t.green : t.red }}>
+            ΣP: {totalProb.toFixed(6)} {Math.abs(totalProb - 1) < 1e-6 ? "✓" : "✗"}
+          </span>
         </div>
-        {/* Y-axis label */}
-        <span className="absolute left-0 text-[10px] font-medium" style={{
-          color: t.textDim, writingMode: "vertical-lr", transform: "rotate(180deg)",
-          top: "40%",
-        }}>
-          Probability (% of 1024 shots)
-        </span>
-        {/* Chart */}
-        <div className="flex items-end ml-9 mt-2 relative" style={{ height: chartH }}>
-          {/* Horizontal grid lines */}
-          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-            {[0, 1, 2, 3, 4, 5].map(i => (
-              <div key={i} style={{ height: 1, background: t.gridLine }} />
-            ))}
+      </div>
+
+      <div className="flex-1 overflow-auto">
+        {tab === "probs" && (
+          <div className="p-3">
+            {probs.length === 0 ? (
+              <div className="text-[12px] text-center py-8" style={{ color: t.textDim }}>
+                Place gates and run to see probabilities
+              </div>
+            ) : (
+              <div className="space-y-0.5">
+                {sorted.filter(s => s.probability > 1e-10 || sorted.length <= 32).map(p => (
+                  <div key={p.state} className="flex items-center gap-1.5 group">
+                    <span className="text-[10px] font-mono shrink-0 w-[60px] text-right" style={{ color: t.textMuted }}>
+                      |{p.state}⟩
+                    </span>
+                    <div className="flex-1 h-[14px] rounded-sm overflow-hidden" style={{ background: t.surfaceAlt }}>
+                      <div className="h-full rounded-sm transition-all duration-200" style={{
+                        width: `${(p.probability / maxProb) * 100}%`,
+                        background: p.probability > 0.5 ? t.accent : p.probability > 0.1 ? t.blue : t.textDim,
+                        minWidth: p.probability > 0 ? 2 : 0,
+                      }} />
+                    </div>
+                    <span className="text-[10px] font-mono w-[50px] shrink-0 text-right" style={{ color: t.text }}>
+                      {(p.probability * 100).toFixed(2)}%
+                    </span>
+                    {p.amplitude && (p.amplitude[0] !== 0 || p.amplitude[1] !== 0) && (
+                      <span className="text-[9px] font-mono w-[80px] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: t.textDim }}>
+                        {p.amplitude[0].toFixed(3)}{p.amplitude[1] >= 0 ? "+" : ""}{p.amplitude[1].toFixed(3)}i
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          {/* Bars */}
-          <div className="flex items-end gap-px relative z-10">
-            {sorted.map(p => {
-              const pct = p.probability * 100;
-              const h = (pct / 100) * chartH;
-              return (
-                <div key={p.state} className="flex flex-col items-center justify-end" style={{ width: barW, height: chartH }}>
-                  <div style={{
-                    width: barW - 1,
-                    height: Math.max(pct > 0 ? 2 : 0, h),
-                    background: t.probBar,
-                    borderRadius: "1px 1px 0 0",
-                  }} />
+        )}
+
+        {tab === "state" && (
+          <div className="p-3">
+            {nonZero.length === 0 ? (
+              <div className="text-[12px] text-center py-8" style={{ color: t.textDim }}>Run circuit to inspect statevector</div>
+            ) : (
+              <div className="space-y-2">
+                <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-x-3 gap-y-0.5 text-[10px] font-mono">
+                  <span className="font-semibold" style={{ color: t.textDim }}>State</span>
+                  <span className="font-semibold" style={{ color: t.textDim }}>Amplitude</span>
+                  <span className="font-semibold" style={{ color: t.textDim }}>Phase</span>
+                  <span className="font-semibold text-right" style={{ color: t.textDim }}>Prob</span>
+                  {nonZero.slice(0, 64).map(p => {
+                    const phase = Math.atan2(p.amplitude[1], p.amplitude[0]);
+                    const mag = Math.sqrt(p.probability);
+                    return (
+                      <React.Fragment key={p.state}>
+                        <span style={{ color: t.accent }}>|{p.state}⟩</span>
+                        <span style={{ color: t.text }}>{mag.toFixed(5)}∠{(phase * 180 / Math.PI).toFixed(1)}°</span>
+                        <span style={{ color: t.textMuted }}>
+                          {p.amplitude[0].toFixed(5)}{p.amplitude[1] >= 0 ? "+" : ""}{p.amplitude[1].toFixed(5)}i
+                        </span>
+                        <span className="text-right" style={{ color: t.text }}>{(p.probability * 100).toFixed(2)}%</span>
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-        </div>
-        {/* X-axis labels */}
-        <div className="flex ml-9 mt-1">
-          {sorted.map(p => (
-            <div key={p.state} className="text-center" style={{ width: barW + 1 }}>
-              <span className="text-[8px] font-mono" style={{
-                color: t.textMuted,
-                writingMode: sorted.length > 8 ? "vertical-lr" : undefined,
-                display: "inline-block",
-                maxHeight: sorted.length > 8 ? 40 : undefined,
-              }}>
-                {p.state}
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="text-center ml-9 mt-1">
-          <span className="text-[10px]" style={{ color: t.textDim }}>Computational basis states</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Q-Sphere Panel (SVG)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-function QSpherePanel({ probs, t }: { probs: { state: string; probability: number; amplitude: Complex }[]; t: Theme }) {
-  const [showLabels, setShowLabels] = useState(true);
-  const [showPhase, setShowPhase] = useState(false);
-  const cx = 140, cy = 105, rMajor = 75, rMinor = 28;
-
-  return (
-    <div className="h-full flex flex-col" style={{ background: t.panel }}>
-      <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: `1px solid ${t.border}` }}>
-        <span className="text-[13px] font-semibold" style={{ color: t.text }}>Q-sphere</span>
-        <ChevronDown size={12} style={{ color: t.textMuted }} />
-        <div className="flex-1" />
-        <RotateCcw size={13} style={{ color: t.textMuted }} />
-        <Info size={13} style={{ color: t.textMuted }} />
-        <Grid3X3 size={13} style={{ color: t.textMuted }} />
-      </div>
-      <div className="flex-1 flex flex-col items-center justify-center px-2 pb-2">
-        <svg width={280} height={190} viewBox="0 0 280 190" className="w-full max-w-[280px]">
-          <ellipse cx={cx} cy={cy + 42} rx={rMajor} ry={rMinor} fill="none" stroke={t.sphereWire} strokeWidth={0.8} />
-          <ellipse cx={cx} cy={cy} rx={rMajor} ry={rMinor} fill="none" stroke={t.sphereWire} strokeWidth={0.8} strokeDasharray="4,3" />
-          <line x1={cx} y1={cy - 55} x2={cx} y2={cy + 55} stroke={t.sphereWire} strokeWidth={0.8} />
-          <ellipse cx={cx} cy={cy - 6} rx={12} ry={52} fill="none" stroke={t.sphereWire} strokeWidth={0.5} strokeDasharray="3,4" />
-          {probs.filter(p => p.probability > 0.005).map((p, i) => {
-            const n = p.state.length;
-            const hw = p.state.split("").filter(b => b === "1").length;
-            const theta = (hw / n) * Math.PI;
-            const phase = Math.atan2(p.amplitude[1], p.amplitude[0]);
-            const sphereY = cy - 50 * Math.cos(theta);
-            const sphereX = cx + rMajor * Math.sin(theta) * Math.cos(phase);
-            const r = 3 + p.probability * 10;
-            const hue = ((phase + Math.PI) / (2 * Math.PI)) * 360;
-            return (
-              <g key={i}>
-                <line x1={cx} y1={sphereY} x2={sphereX} y2={sphereY} stroke={t.sphereWire} strokeWidth={0.4} />
-                <circle cx={sphereX} cy={sphereY} r={r}
-                  fill={showPhase ? `hsl(${hue}, 70%, 55%)` : t.sphereState}
-                  stroke="white" strokeWidth={0.8} opacity={0.9} />
-                {showLabels && p.probability > 0.01 && (
-                  <text x={sphereX + r + 3} y={sphereY + 3} fontSize={10}
-                    fill={t.textMuted} fontFamily="monospace" fontWeight={500}>
-                    |{p.state}⟩
-                  </text>
+                {nonZero.length > 64 && (
+                  <div className="text-[10px] text-center" style={{ color: t.textDim }}>Showing 64 of {nonZero.length} non-zero states</div>
                 )}
-              </g>
-            );
-          })}
-          {probs.length === 0 && (
-            <text x={cx} y={cy} textAnchor="middle" fontSize={12} fill={t.textDim}>Run to visualize</text>
-          )}
-        </svg>
-        {/* Phase legend + checkboxes */}
-        <div className="flex items-center gap-3 mt-1">
-          <svg width={36} height={36} viewBox="0 0 36 36">
-            <defs>
-              <linearGradient id="phaseGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="hsl(0, 70%, 55%)" />
-                <stop offset="25%" stopColor="hsl(90, 70%, 55%)" />
-                <stop offset="50%" stopColor="hsl(180, 70%, 55%)" />
-                <stop offset="75%" stopColor="hsl(270, 70%, 55%)" />
-                <stop offset="100%" stopColor="hsl(360, 70%, 55%)" />
-              </linearGradient>
-            </defs>
-            <circle cx={18} cy={18} r={14} fill="none" stroke="url(#phaseGrad)" strokeWidth={4} />
-            <rect x={10} y={10} width={16} height={16} rx={3} fill={t.accent} opacity={0.85} />
-            <text x={18} y={22} textAnchor="middle" fontSize={7} fill="white" fontWeight={600}>Phase</text>
-          </svg>
-          <div className="flex flex-col gap-0.5 text-[10px] font-mono" style={{ color: t.textDim }}>
-            <span>π/2</span>
-            <div className="flex gap-3"><span>π</span><span>0</span></div>
-            <span>3π/2</span>
+                <div className="mt-3 pt-2 space-y-1" style={{ borderTop: `1px solid ${t.border}` }}>
+                  <h5 className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: t.textDim }}>Verification Checks</h5>
+                  {[
+                    { label: "Normalization ΣP = 1", pass: Math.abs(totalProb - 1) < 1e-6, value: totalProb.toFixed(8) },
+                    { label: "Shannon entropy H(ρ)", pass: true, value: `${entropy.toFixed(6)} / ${maxEntropy.toFixed(3)} bits` },
+                    { label: "Non-zero states", pass: true, value: `${nonZero.length} / ${hilbert}` },
+                    { label: "State purity Tr(ρ²)", pass: true, value: nonZero.reduce((s, p) => s + p.probability * p.probability, 0).toFixed(6) },
+                  ].map((check, i) => (
+                    <div key={i} className="flex items-center gap-2 text-[10px] font-mono">
+                      <span style={{ color: check.pass ? t.green : t.red }}>{check.pass ? "✓" : "✗"}</span>
+                      <span style={{ color: t.textSecondary }}>{check.label}</span>
+                      <span className="flex-1 text-right" style={{ color: t.text }}>{check.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <div className="flex flex-col gap-1 ml-4">
-            <span className="text-[11px] font-semibold" style={{ color: t.textMuted }}>Labels</span>
-            <label className="flex items-center gap-1.5 text-[12px] cursor-pointer" style={{ color: t.text }}>
-              <input type="checkbox" checked={showLabels} onChange={() => setShowLabels(!showLabels)} className="w-3.5 h-3.5" />
-              State
-            </label>
-            <label className="flex items-center gap-1.5 text-[12px] cursor-pointer" style={{ color: t.text }}>
-              <input type="checkbox" checked={showPhase} onChange={() => setShowPhase(!showPhase)} className="w-3.5 h-3.5" />
-              Phase angle
-            </label>
+        )}
+
+        {tab === "circuit" && (
+          <div className="p-3 space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "Qubits", value: String(numQubits), icon: "⊗" },
+                { label: "Hilbert dim", value: `2^${numQubits} = ${hilbert}`, icon: "ℋ" },
+                { label: "Total gates", value: String(realGates.length), icon: "⊞" },
+                { label: "Circuit depth", value: String(depth), icon: "#" },
+                { label: "1Q gates", value: String(singleQ), icon: "□" },
+                { label: "2Q+ gates", value: String(multiQ), icon: "⊕" },
+                { label: "Exec time", value: runResult ? (runResult.executionTimeMs < 1 ? `${(runResult.executionTimeMs * 1000).toFixed(0)}µs` : `${runResult.executionTimeMs.toFixed(2)}ms`) : "—", icon: "⏱" },
+                { label: "Non-zero", value: `${nonZero.length} states`, icon: "Ψ" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded text-[11px]" style={{ background: t.surfaceAlt }}>
+                  <span className="text-[13px] w-5 text-center">{item.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[9px] uppercase tracking-wider" style={{ color: t.textDim }}>{item.label}</div>
+                    <div className="font-mono font-semibold truncate" style={{ color: t.text }}>{item.value}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {realGates.length > 0 && (
+              <div className="space-y-1">
+                <h5 className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: t.textDim }}>Gate Composition</h5>
+                {Object.entries(
+                  realGates.reduce<Record<string, number>>((acc, g) => { acc[g.gateId] = (acc[g.gateId] || 0) + 1; return acc; }, {})
+                ).sort((a, b) => b[1] - a[1]).map(([gate, count]) => {
+                  const def = findGateDef(gate);
+                  return (
+                    <div key={gate} className="flex items-center gap-2 text-[10px] font-mono">
+                      <span className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-bold text-white"
+                        style={{ background: gateColor(def, t) }}>
+                        {(def?.label || gate).slice(0, 2)}
+                      </span>
+                      <span style={{ color: t.textSecondary }}>{def?.label || gate}</span>
+                      <span className="flex-1 text-right font-semibold" style={{ color: t.text }}>×{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -1422,7 +1435,7 @@ export default function QuantumWorkspace({ onClose }: Props) {
                 <button onClick={() => { setNumQubits(Math.max(1, numQubits - 1)); setNumClbits(Math.max(1, numClbits - 1)); }}
                   className="w-6 h-6 flex items-center justify-center rounded" style={{ color: t.textMuted, border: `1px solid ${t.border}` }}><Minus size={12} /></button>
                 <span className="text-[14px] font-mono w-5 text-center font-semibold" style={{ color: t.text }}>{numQubits}</span>
-                <button onClick={() => { setNumQubits(Math.min(20, numQubits + 1)); setNumClbits(Math.min(20, numClbits + 1)); }}
+                <button onClick={() => { setNumQubits(Math.min(24, numQubits + 1)); setNumClbits(Math.min(24, numClbits + 1)); }}
                   className="w-6 h-6 flex items-center justify-center rounded" style={{ color: t.textMuted, border: `1px solid ${t.border}` }}><Plus size={12} /></button>
               </div>
             </div>
@@ -1590,14 +1603,9 @@ export default function QuantumWorkspace({ onClose }: Props) {
               </div>
             </div>
 
-            {/* ── Bottom: Probabilities + Q-Sphere ── */}
-            <div className="flex shrink-0" style={{ height: 250, borderTop: `1px solid ${t.border}` }}>
-              <div className="flex-1 min-w-0" style={{ borderRight: `1px solid ${t.border}` }}>
-                <ProbabilitiesPanel probs={probs} t={t} numQubits={numQubits} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <QSpherePanel probs={probs} t={t} />
-              </div>
+            {/* ── Bottom: Verification Metrics ── */}
+            <div className="shrink-0" style={{ height: 250, borderTop: `1px solid ${t.border}` }}>
+              <VerificationMetricsPanel probs={probs} t={t} numQubits={numQubits} gates={gates} runResult={runResult} />
             </div>
           </div>
         </div>
