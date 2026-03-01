@@ -2,9 +2,8 @@
  * BreathingWidget — Ring-based guided breathing exercise
  * ══════════════════════════════════════════════════════
  * Visually harmonized with DayProgressRing (SIZE=77, STROKE=2).
- * Inspired by modern breathing apps: phase-segmented ring with
- * ridge tick marks at phase boundaries, pulsing center orb,
- * and intuitive countdown display.
+ * Phase-segmented ring with ridge tick marks at boundaries,
+ * pulsing center orb, and intuitive countdown.
  *
  * Three protocols:
  *   • Calm  → 4-7-8 breathing (Dr. Andrew Weil)
@@ -19,7 +18,6 @@ interface Phase {
   label: string;
   duration: number;
   color: string;
-  prompt: string;
 }
 
 interface Protocol {
@@ -38,9 +36,9 @@ const PROTOCOLS: Protocol[] = [
     name: "4-7-8",
     intent: "Calm",
     phases: [
-      { label: "Inhale",  duration: 4, color: INHALE_COLOR, prompt: "Breathe in slowly" },
-      { label: "Hold",    duration: 7, color: HOLD_COLOR,   prompt: "Hold gently" },
-      { label: "Exhale",  duration: 8, color: EXHALE_COLOR, prompt: "Release fully" },
+      { label: "Inhale",  duration: 4, color: INHALE_COLOR },
+      { label: "Hold",    duration: 7, color: HOLD_COLOR },
+      { label: "Exhale",  duration: 8, color: EXHALE_COLOR },
     ],
     cycles: 4,
   },
@@ -48,10 +46,10 @@ const PROTOCOLS: Protocol[] = [
     name: "Box",
     intent: "Focus",
     phases: [
-      { label: "Inhale",  duration: 4, color: INHALE_COLOR, prompt: "Breathe in" },
-      { label: "Hold",    duration: 4, color: HOLD_COLOR,   prompt: "Hold steady" },
-      { label: "Exhale",  duration: 4, color: EXHALE_COLOR, prompt: "Breathe out" },
-      { label: "Hold",    duration: 4, color: HOLD_COLOR,   prompt: "Hold empty" },
+      { label: "Inhale",  duration: 4, color: INHALE_COLOR },
+      { label: "Hold",    duration: 4, color: HOLD_COLOR },
+      { label: "Exhale",  duration: 4, color: EXHALE_COLOR },
+      { label: "Hold",    duration: 4, color: HOLD_COLOR },
     ],
     cycles: 4,
   },
@@ -59,20 +57,20 @@ const PROTOCOLS: Protocol[] = [
     name: "Triangle",
     intent: "Energy",
     phases: [
-      { label: "Inhale",  duration: 4, color: INHALE_COLOR, prompt: "Inhale with power" },
-      { label: "Hold",    duration: 4, color: HOLD_COLOR,   prompt: "Hold energy" },
-      { label: "Exhale",  duration: 2, color: EXHALE_COLOR, prompt: "Quick release" },
+      { label: "Inhale",  duration: 4, color: INHALE_COLOR },
+      { label: "Hold",    duration: 4, color: HOLD_COLOR },
+      { label: "Exhale",  duration: 2, color: EXHALE_COLOR },
     ],
     cycles: 6,
   },
 ];
 
-/* ── Ring geometry — matches DayProgressRing ─────────── */
+/* ── Ring geometry — matches DayProgressRing exactly ── */
 const SIZE = 77;
 const STROKE = 2;
 const R = (SIZE - STROKE * 2) / 2;
 const C = 2 * Math.PI * R;
-const RIDGE_LEN = 5; // ridge tick mark length in px
+const RIDGE_LEN = 5;
 
 function arcDash(startFrac: number, sweepFrac: number) {
   const len = sweepFrac * C;
@@ -166,7 +164,7 @@ export default function BreathingWidget() {
     cursor += sweep;
   }
 
-  // Compute ridge tick positions (at phase boundaries)
+  // Ridge tick positions
   const ridgeAngles: number[] = [];
   let ridgeCursor = 0;
   for (let i = 0; i < protocol.phases.length; i++) {
@@ -180,20 +178,24 @@ export default function BreathingWidget() {
   const activeSweep = (phase.duration / cycleDur) * progress;
 
   // Leading dot position
-  const dotAngle = (activeStart + activeSweep) * 2 * Math.PI - Math.PI / 2;
+  const dotAngle = (activeStart + activeSweep) * 2 * Math.PI;
   const dotCx = SIZE / 2 + R * Math.cos(dotAngle);
   const dotCy = SIZE / 2 + R * Math.sin(dotAngle);
 
-  // Center orb scale based on phase
+  // Center orb scale
   const orbScale = phase.label === "Inhale"
     ? 0.7 + 0.3 * progress
     : phase.label === "Exhale"
       ? 1.0 - 0.3 * progress
       : 1.0;
 
+  const cycleNext = () => {
+    setSelectedIdx(i => (i + 1) % PROTOCOLS.length);
+  };
+
   return (
     <div
-      className="flex flex-col items-center gap-1 select-none"
+      className="group relative flex flex-col items-center gap-4 cursor-default select-none px-6 py-5"
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -223,7 +225,7 @@ export default function BreathingWidget() {
             strokeWidth={STROKE}
           />
 
-          {/* Phase arcs — colored background segments */}
+          {/* Phase arcs */}
           {arcs.map((seg, i) => {
             const gap = 0.008;
             const dash = arcDash(seg.startFrac + gap / 2, seg.sweepFrac - gap);
@@ -272,10 +274,7 @@ export default function BreathingWidget() {
             return (
               <line
                 key={`ridge-${i}`}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
+                x1={x1} y1={y1} x2={x2} y2={y2}
                 stroke="hsla(38, 15%, 90%, 0.45)"
                 strokeWidth={1.2}
                 strokeLinecap="round"
@@ -311,10 +310,7 @@ export default function BreathingWidget() {
         />
 
         {/* Center orb + countdown */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center"
-          style={{ textRendering: "geometricPrecision" }}
-        >
+        <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ textRendering: "geometricPrecision" }}>
           {running ? (
             <div
               className="flex items-center justify-center rounded-full"
@@ -328,7 +324,7 @@ export default function BreathingWidget() {
               }}
             >
               <span
-                className="leading-none font-light"
+                className="font-light leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
                   fontSize: "15px",
@@ -348,9 +344,10 @@ export default function BreathingWidget() {
         </div>
       </div>
 
-      {/* Label */}
+      {/* Label — matches DayProgressRing exactly: tracking, size, weight, font */}
       <span
-        className="tracking-[0.35em] uppercase text-center transition-all duration-300"
+        className="tracking-[0.35em] uppercase text-center transition-all duration-300 cursor-pointer"
+        onClick={(e) => { e.stopPropagation(); if (!running) cycleNext(); }}
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
           fontSize: "10px",
@@ -363,58 +360,49 @@ export default function BreathingWidget() {
         {running ? phase.label : "Breathe"}
       </span>
 
-      {/* Cycle counter */}
-      <span
-        className="tracking-[0.15em] text-center transition-all duration-300"
-        style={{
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: "9px",
-          color: "hsla(0, 0%, 80%, 0.35)",
-          opacity: running || hovered ? 1 : 0,
-          height: running || hovered ? 12 : 0,
-          overflow: "hidden",
-          transition: "opacity 300ms ease, height 300ms ease",
-        }}
-      >
-        {running
-          ? `${cycle + 1} of ${protocol.cycles}`
-          : `${protocol.name} · ${protocol.cycles} cycles`}
-      </span>
+      {/* Mode switcher — always visible below label when not running */}
+      {!running && (
+        <div className="flex items-center gap-3">
+          {PROTOCOLS.map((p, i) => {
+            const active = i === selectedIdx;
+            return (
+              <button
+                key={p.intent}
+                onClick={(e) => { e.stopPropagation(); setSelectedIdx(i); }}
+                className="transition-all duration-300"
+                style={{
+                  fontSize: "10px",
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontWeight: 500,
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase" as const,
+                  color: active ? "hsla(38, 30%, 85%, 0.9)" : "hsla(38, 15%, 75%, 0.35)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                {p.intent}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Protocol pills — hover reveal */}
-      <div
-        className="absolute -top-5 left-1/2 -translate-x-1/2 flex gap-3 transition-all duration-300 pointer-events-auto"
-        style={{
-          opacity: hovered && !running ? 1 : 0,
-          transform: `translateX(-50%) translateY(${hovered && !running ? "2px" : "4px"})`,
-          pointerEvents: hovered && !running ? "auto" : "none",
-        }}
-      >
-        {PROTOCOLS.map((p, i) => {
-          const active = i === selectedIdx;
-          return (
-            <button
-              key={p.intent}
-              onClick={(e) => { e.stopPropagation(); setSelectedIdx(i); }}
-              className="transition-all duration-300"
-              style={{
-                fontSize: "9px",
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                fontWeight: 500,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase" as const,
-                color: active ? "hsla(38, 30%, 85%, 0.9)" : "hsla(38, 15%, 75%, 0.45)",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-              }}
-            >
-              {p.intent}
-            </button>
-          );
-        })}
-      </div>
+      {/* Cycle counter — visible when running */}
+      {running && (
+        <span
+          className="tracking-[0.15em] text-center"
+          style={{
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontSize: "9px",
+            color: "hsla(0, 0%, 80%, 0.35)",
+          }}
+        >
+          {cycle + 1} of {protocol.cycles}
+        </span>
+      )}
     </div>
   );
 }
