@@ -6,12 +6,60 @@
  * rendered as a vertical timeline with ceremony markers.
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Loader2, TrendingUp, Shield, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { KP } from "@/modules/hologram-os/kernel-palette";
 import { format } from "date-fns";
+
+/* ── Sparkline ─────────────────────────────────────────────── */
+
+interface SparklineProps {
+  /** Trust levels in chronological order (oldest → newest) */
+  levels: number[];
+}
+
+function TrustSparkline({ levels }: SparklineProps) {
+  if (levels.length < 2) return null;
+
+  const w = 72;
+  const h = 20;
+  const maxLevel = 5;
+  const padY = 2;
+  const usableH = h - padY * 2;
+
+  const points = levels.map((lvl, i) => {
+    const x = (i / (levels.length - 1)) * w;
+    const y = padY + usableH - (lvl / maxLevel) * usableH;
+    return { x, y };
+  });
+
+  const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  // Area fill path
+  const area = `${line} L${w},${h} L0,${h} Z`;
+
+  return (
+    <svg width={w} height={h} className="shrink-0" style={{ overflow: "visible" }}>
+      {/* Gradient area */}
+      <defs>
+        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="hsl(38, 50%, 50%)" stopOpacity={0.25} />
+          <stop offset="100%" stopColor="hsl(38, 50%, 50%)" stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <path d={area} fill="url(#sparkGrad)" />
+      <path d={line} fill="none" stroke="hsl(38, 50%, 50%)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      {/* Current level dot */}
+      <circle
+        cx={points[points.length - 1].x}
+        cy={points[points.length - 1].y}
+        r={2.5}
+        fill="hsl(38, 50%, 55%)"
+      />
+    </svg>
+  );
+}
 
 interface HistoryEntry {
   id: string;
@@ -74,6 +122,21 @@ export default function TrustTimeline({ connections }: TrustTimelineProps) {
     loadHistory();
   }, [loadHistory]);
 
+  // Build per-connection sparkline data (chronological trust levels)
+  const sparklineMap = useMemo(() => {
+    const map = new Map<string, number[]>();
+    const chrono = [...history].reverse();
+    for (const h of chrono) {
+      let arr = map.get(h.connection_id);
+      if (!arr) {
+        arr = [h.previous_level];
+        map.set(h.connection_id, arr);
+      }
+      arr.push(h.new_level);
+    }
+    return map;
+  }, [history]);
+
   if (loading) {
     return (
       <div className="flex justify-center py-16">
@@ -114,6 +177,7 @@ export default function TrustTimeline({ connections }: TrustTimelineProps) {
           const isUpgrade = entry.new_level > entry.previous_level;
           const isInitial = entry.previous_level === 0;
           const levelDiff = entry.new_level - entry.previous_level;
+          const sparkLevels = sparklineMap.get(entry.connection_id) || [];
 
           return (
             <div key={entry.id} className="relative flex items-start gap-3 pl-1 py-2">
@@ -189,14 +253,17 @@ export default function TrustTimeline({ connections }: TrustTimelineProps) {
                   </div>
                 </div>
 
-                {/* Description */}
-                <p className="text-xs mt-1" style={{ color: KP.muted }}>
-                  {isInitial
-                    ? "Trust ceremony completed — connection established"
-                    : isUpgrade
-                    ? `Trust renewed — upgraded ${levelDiff > 1 ? `${levelDiff} levels` : "1 level"}`
-                    : `Trust level decreased by ${Math.abs(levelDiff)}`}
-                </p>
+                {/* Sparkline + Description row */}
+                <div className="flex items-center gap-2.5 mt-1.5">
+                  {sparkLevels.length >= 2 && <TrustSparkline levels={sparkLevels} />}
+                  <p className="text-xs flex-1" style={{ color: KP.muted }}>
+                    {isInitial
+                      ? "Trust ceremony completed — connection established"
+                      : isUpgrade
+                      ? `Trust renewed — upgraded ${levelDiff > 1 ? `${levelDiff} levels` : "1 level"}`
+                      : `Trust level decreased by ${Math.abs(levelDiff)}`}
+                  </p>
+                </div>
 
                 {/* Timestamp & ceremony CID */}
                 <div className="flex items-center justify-between mt-1.5">
