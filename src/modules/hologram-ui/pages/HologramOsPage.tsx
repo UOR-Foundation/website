@@ -35,7 +35,7 @@ import PackageManagerProjection from "@/modules/hologram-ui/components/PackageMa
 import VaultProjection from "@/modules/hologram-ui/components/vault/VaultProjection";
 import AppsProjection from "@/modules/hologram-ui/components/AppsProjection";
 import MySpaceProjection from "@/modules/hologram-ui/components/MySpaceProjection";
-import ConvergenceProjection from "@/modules/hologram-ui/components/projections/ConvergenceProjection";
+import LumenFullscreen from "@/modules/hologram-ui/components/projections/LumenFullscreen";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
@@ -446,6 +446,16 @@ export default function HologramOsPage() {
               </div>
             );
           })}
+
+          {/* ══ Lumen Fullscreen — expands from Genesis dot ═══════════ */}
+          <LumenFullscreen
+            open={activePanel === "convergence"}
+            onClose={() => k.closePanel()}
+            onCollapse={() => {
+              k.closePanel();
+              k.setChatOpen(true);
+            }}
+          />
         </div>
 
         {/* ══ Lumen AI Chat — GPU-accelerated slide, always mounted ═══ */}
@@ -517,7 +527,7 @@ export default function HologramOsPage() {
       <VaultProjection open={activePanel === "vault"} preload={preloadedPanels.has("vault")} onClose={() => k.closePanel()} onOpenPanel={(p) => k.openPanel(p as any)} />
       <AppsProjection open={activePanel === "apps"} preload={preloadedPanels.has("apps")} onClose={() => k.closePanel()} onOpenPanel={(p) => k.openPanel(p as any)} onNavigate={(r) => { k.closePanel(); navigate(r); }} />
       <MySpaceProjection open={activePanel === "myspace"} preload={preloadedPanels.has("myspace")} onClose={() => k.closePanel()} />
-      <ConvergenceProjection open={activePanel === "convergence"} preload={preloadedPanels.has("convergence")} onClose={() => k.closePanel()} />
+      {/* ConvergenceProjection removed — now rendered inline as LumenFullscreen within the content area */}
       <SnapGuideOverlay />
       
       <KernelDevTools />
