@@ -812,7 +812,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
           {proMode && (
             <motion.div
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
+              animate={{ width: 380, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
               className="flex-shrink-0 overflow-hidden"
@@ -820,7 +820,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
                 borderLeft: "1px solid hsla(38, 15%, 25%, 0.1)",
               }}
             >
-              <div className="w-[320px] h-full">
+              <div className="w-[380px] h-full">
                 <ProModeMixer
                   coherenceH={coherence.h ?? 0.5}
                   values={dimensionValues}
