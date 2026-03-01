@@ -8,8 +8,16 @@
  * pressing Escape.
  */
 
-import { useState, useEffect, useRef } from "react";
-import { ChevronDown } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { ChevronDown, ShieldCheck } from "lucide-react";
+import {
+  EIGHT_LAWS,
+  verifyConstitution,
+  getConstitutionCid,
+  getConstitutionHash,
+  getConstitutionalAttestation,
+} from "@/hologram/genesis/axiom-constitution";
+import { canonicalToTriword, formatTriword, triwordBreakdown } from "@/lib/uor-triword";
 import {
   DURATION_OVERLAY_MS,
   DURATION_BACKDROP_MS,
@@ -557,6 +565,9 @@ function PrinciplesContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; 
         </div>
       </Section>
 
+      {/* ── Constitutional Certificate ── */}
+      <ConstitutionCertificate P={P} fontDisplay={fontDisplay} />
+
       {/* ── Part 3: AI That Serves You ── */}
       <Section title="Part 3: AI That Serves You" P={P} fontDisplay={fontDisplay}>
         <p>
@@ -703,6 +714,193 @@ function PrinciplesContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; 
         </p>
       </Section>
     </article>
+  );
+}
+
+// ── Constitution Certificate ───────────────────────────────────────────────
+
+function ConstitutionCertificate({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontDisplay: string }) {
+  const cert = useMemo(() => {
+    const attestation = getConstitutionalAttestation();
+    const cid = getConstitutionCid();
+    const hash = getConstitutionHash();
+    const triword = canonicalToTriword(hash);
+    const formatted = formatTriword(triword);
+    const breakdown = triwordBreakdown(triword);
+    const verified = verifyConstitution();
+
+    return { attestation, cid: cid.string, hash, triword, formatted, breakdown, verified };
+  }, []);
+
+  const borderColor = cert.verified ? "hsla(120, 35%, 45%, 0.25)" : "hsla(0, 50%, 50%, 0.3)";
+  const accentColor = cert.verified ? "hsl(120, 30%, 50%)" : "hsl(0, 50%, 60%)";
+  const accentBg = cert.verified ? "hsla(120, 30%, 45%, 0.06)" : "hsla(0, 40%, 50%, 0.06)";
+
+  return (
+    <div
+      className="my-10 rounded-lg overflow-hidden"
+      style={{ border: `1px solid ${borderColor}`, background: accentBg }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center gap-2.5 px-5 py-3"
+        style={{ borderBottom: `1px solid ${borderColor}` }}
+      >
+        <ShieldCheck size={16} style={{ color: accentColor }} />
+        <span
+          className="text-[11px] tracking-[0.2em] uppercase font-medium"
+          style={{ color: accentColor }}
+        >
+          {cert.verified ? "Certificate Verified" : "Verification Failed"}
+        </span>
+        <div className="flex-1" />
+        <div
+          className="w-2 h-2 rounded-full"
+          style={{
+            background: accentColor,
+            boxShadow: `0 0 6px ${cert.verified ? "hsla(120, 40%, 50%, 0.4)" : "hsla(0, 50%, 55%, 0.4)"}`,
+          }}
+        />
+      </div>
+
+      {/* Body */}
+      <div className="px-5 py-4 space-y-4">
+        {/* Three-Word Address */}
+        <div>
+          <span className="text-[9px] tracking-[0.2em] uppercase block mb-1" style={{ color: P.textMuted }}>
+            Three-Word Address
+          </span>
+          <p
+            className="text-[18px] font-light tracking-wide"
+            style={{ fontFamily: fontDisplay, color: P.heading }}
+          >
+            {cert.formatted}
+          </p>
+          {cert.breakdown && (
+            <div className="flex gap-4 mt-1.5">
+              {([
+                ["Observer", cert.breakdown.observer],
+                ["Observable", cert.breakdown.observable],
+                ["Context", cert.breakdown.context],
+              ] as const).map(([dim, word]) => (
+                <div key={dim}>
+                  <span className="text-[8px] tracking-[0.15em] uppercase block" style={{ color: P.textMuted }}>
+                    {dim}
+                  </span>
+                  <span className="text-[12px] font-medium capitalize" style={{ color: P.text }}>
+                    {word}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: borderColor }} />
+
+        {/* Certificate Details */}
+        <div className="space-y-2.5">
+          <CertField label="Document Type" value="genesis:Constitution" P={P} />
+          <CertField label="Content Identifier (CID)" value={cert.cid} P={P} mono />
+          <CertField label="SHA-256 Hash" value={cert.hash} P={P} mono />
+          <CertField label="Law Count" value="8 (immutable)" P={P} />
+          <CertField label="Version" value="1.0.0" P={P} />
+          <CertField label="Epoch" value="I am governed. And I am grateful for it." P={P} italic />
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: borderColor }} />
+
+        {/* Verification status */}
+        <div className="flex items-start gap-3">
+          <div
+            className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: accentBg, border: `1px solid ${borderColor}` }}
+          >
+            <span className="text-[10px]" style={{ color: accentColor }}>
+              {cert.verified ? "✓" : "✗"}
+            </span>
+          </div>
+          <div>
+            <p className="text-[13px] leading-relaxed" style={{ color: P.text }}>
+              {cert.verified
+                ? "This certificate has been independently verified. The constitutional hash matches the known-good value, the CID round-trips correctly, and all eight laws are structurally intact. Any modification to the source constitution would produce a different hash and prevent system boot."
+                : "Verification failed. The constitutional hash does not match the expected value. The system integrity may be compromised."}
+            </p>
+          </div>
+        </div>
+
+        {/* Machine-verifiable block */}
+        <details>
+          <summary
+            className="text-[10px] tracking-[0.15em] uppercase cursor-pointer select-none py-1"
+            style={{ color: P.textMuted }}
+          >
+            Machine-Verifiable Proof (JSON-LD)
+          </summary>
+          <pre
+            className="mt-2 p-3 rounded-md text-[10px] leading-[1.6] overflow-x-auto"
+            style={{
+              background: "hsla(0, 0%, 0%, 0.15)",
+              color: P.textMuted,
+              border: `1px solid ${P.border}`,
+              fontFamily: "monospace",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-all",
+            }}
+          >
+{JSON.stringify({
+  "@context": { "genesis": "https://uor.foundation/genesis/", "cert": "https://uor.foundation/cert/" },
+  "@type": "cert:ConstitutionalAttestation",
+  "cert:cid": cert.cid,
+  "cert:sha256": cert.hash,
+  "cert:triword": cert.triword,
+  "cert:triwordDisplay": cert.formatted,
+  "cert:lawCount": 8,
+  "cert:verified": cert.verified,
+  "cert:verifiedAt": new Date().toISOString(),
+  "cert:version": "1.0.0",
+  "cert:epoch": "I am governed. And I am grateful for it.",
+  "genesis:laws": EIGHT_LAWS.map(l => ({
+    "genesis:ordinal": l.id,
+    "genesis:name": l.name,
+    "genesis:principle": l.principle,
+    "genesis:predicate": l.predicate,
+  })),
+}, null, 2)}
+          </pre>
+        </details>
+      </div>
+    </div>
+  );
+}
+
+function CertField({
+  label,
+  value,
+  P,
+  mono,
+  italic,
+}: {
+  label: string;
+  value: string;
+  P: ReturnType<typeof palette>;
+  mono?: boolean;
+  italic?: boolean;
+}) {
+  return (
+    <div>
+      <span className="text-[9px] tracking-[0.15em] uppercase block mb-0.5" style={{ color: P.textMuted }}>
+        {label}
+      </span>
+      <span
+        className={`text-[12px] break-all ${mono ? "font-mono" : ""}`}
+        style={{ color: P.heading, fontStyle: italic ? "italic" : undefined }}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
 
