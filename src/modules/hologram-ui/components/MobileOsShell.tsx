@@ -17,7 +17,7 @@ import {
   Home, Compass, User, Globe, Shield, Settings,
   Sparkles, ChevronUp, X, Download,
 } from "lucide-react";
-import HologramClaimOverlay from "./HologramClaimOverlay";
+import MySpacePanel from "./MySpacePanel";
 import HologramAiChat from "./HologramAiChat";
 import PwaInstallBanner from "./PwaInstallBanner";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
@@ -120,7 +120,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Apps",       icon: Compass,  action: "/console/apps" },
   { label: "Your Space", icon: User,     action: "/your-space" },
   { label: "Community",  icon: Globe,    action: "/research" },
-  { label: "Identity",   icon: Shield,   action: "__claim" },
+  { label: "My Space",   icon: Shield,   action: "__myspace" },
   { label: "Settings",   icon: Settings, action: "/settings" },
 ];
 
@@ -181,7 +181,7 @@ export default function MobileOsShell() {
   const handleNav = useCallback(
     (action: string) => {
       setDrawerOpen(false);
-      if (action === "__claim") return setClaimOpen(true);
+      if (action === "__claim" || action === "__myspace") return setClaimOpen(true);
       if (action === "__chat") return setChatOpen(true);
       navigate(action);
     },
@@ -481,7 +481,11 @@ export default function MobileOsShell() {
       )}
 
       {/* ── Overlays ──────────────────────────────────────────── */}
-      <HologramClaimOverlay open={claimOpen} onClose={() => setClaimOpen(false)} />
+      {claimOpen && (
+        <div className="fixed inset-0 z-50" style={{ background: "hsl(25 10% 8%)" }}>
+          <MySpacePanel onClose={() => setClaimOpen(false)} />
+        </div>
+      )}
       <HologramAiChat open={chatOpen} onClose={() => setChatOpen(false)} />
 
       {/* ── PWA Install Banner ────────────────────────────────── */}

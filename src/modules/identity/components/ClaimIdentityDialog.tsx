@@ -196,28 +196,14 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
         ipv6: proof.ipv6Address["u:ipv6"],
       };
 
-      const sessionIssuedAt = new Date().toISOString();
-      const sessionPayload = {
-        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-        "@type": "cert:SessionCertificate",
-        "cert:identityCanonicalId": derived.canonicalId,
-        "cert:issuedAt": sessionIssuedAt,
-        "cert:bootstrapMethod": "email-verified",
-      };
-      const sessionProof = await singleProofHash(sessionPayload);
-
-      await supabase
-        .from("profiles")
-        .update({
-          uor_canonical_id: derived.canonicalId,
-          uor_glyph: derived.glyph,
-          uor_cid: derived.cid,
-          uor_ipv6: derived.ipv6,
-          session_cid: sessionProof.cid,
-          session_derivation_id: sessionProof.derivationId,
-          session_issued_at: sessionIssuedAt,
-        })
-        .eq("user_id", user.id);
+      // SECURITY SEAL: Profile writes are ONLY permitted through the
+      // vault-isolated founding ceremony in MySpacePanel.
+      // This dialog can derive and DISPLAY identity markers for preview,
+      // but NEVER persists them — that requires the 7-layer CeremonyVault.
+      console.info(
+        "[SecuritySeal] Identity derived for preview only — " +
+        "profile persistence requires vault-isolated ceremony (MySpacePanel)."
+      );
       setIdentity(derived);
       setStep("complete");
     } catch (err) {

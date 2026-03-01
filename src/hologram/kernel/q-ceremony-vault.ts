@@ -37,6 +37,20 @@
  *     that includes ALL previous layers. Verification of the seal
  *     proves the ceremony executed in an unobserved, untampered state.
  *
+ *   Layer 6: OBSERVER TRAPS
+ *     Active detection of external observation attempts:
+ *     - Visibility API: tab-switch / minimize during ceremony → collapse
+ *     - DevTools sentinel: timing discrepancy detection via debugger probe
+ *     - Focus trap: window blur during ceremony → collapse
+ *     - Frame timing: irregular frame gaps indicate debugger breakpoints
+ *
+ *   Layer 7: SINGLE-ENTRY GATE
+ *     A process-level lock prevents concurrent vault invocations.
+ *     Only ONE ceremony can execute at a time across the entire
+ *     application. Any attempt to open a second vault while one is
+ *     active is rejected — like entangled particles, observing one
+ *     collapses the other.
+ *
  * @module qkernel/q-ceremony-vault
  */
 
@@ -50,45 +64,36 @@ import { canonicalEncode } from "@/hologram/genesis/axiom-codec";
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface VaultEntropy {
-  /** Primary entropy from crypto.getRandomValues */
   readonly primaryNonce: Uint8Array;
-  /** Secondary entropy for entanglement */
   readonly secondaryNonce: Uint8Array;
-  /** High-resolution timestamp at creation */
   readonly temporalMark: number;
-  /** Combined entropy hash */
   readonly entropyHash: string;
-  /** Entanglement witness: XOR of primary and secondary nonces */
   readonly entanglementWitness: Uint8Array;
 }
 
 export interface VaultSeal {
-  /** The seal commitment hash */
   readonly sealHash: string;
-  /** CID of the sealed ceremony */
   readonly sealCid: string;
-  /** Whether the vault was clean (no observation detected) */
   readonly clean: boolean;
-  /** Entanglement intact */
   readonly entanglementIntact: boolean;
-  /** Temporal binding valid */
   readonly temporalValid: boolean;
-  /** Vault creation timestamp */
+  readonly observerTrapsClean: boolean;
   readonly createdAt: string;
-  /** Vault seal timestamp */
   readonly sealedAt: string;
-  /** Elapsed time in ms */
   readonly elapsedMs: number;
 }
 
 export interface CeremonyVaultResult<T> {
-  /** The ceremony result */
   readonly result: T;
-  /** The vault seal proving isolated execution */
   readonly seal: VaultSeal;
-  /** The entropy used (nonces zeroed) */
   readonly entropyProof: string;
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// Process-Level Lock — Only ONE vault at a time (Layer 7)
+// ═══════════════════════════════════════════════════════════════════════
+
+let vaultActive = false;
 
 // ═══════════════════════════════════════════════════════════════════════
 // Secure Scratchpad — zeroed on dispose
@@ -102,32 +107,21 @@ class SecureScratchpad {
     this.buffer = new Uint8Array(size);
   }
 
-  /** Write entropy into the scratchpad */
   write(offset: number, data: Uint8Array): void {
     if (this.disposed) throw new Error("VAULT VIOLATION: Scratchpad already disposed");
     this.buffer.set(data, offset);
   }
 
-  /** Read from scratchpad */
   read(offset: number, length: number): Uint8Array {
     if (this.disposed) throw new Error("VAULT VIOLATION: Scratchpad already disposed");
     return this.buffer.slice(offset, offset + length);
   }
 
-  /**
-   * Secure disposal: overwrite with random bytes, then zero.
-   * This prevents any residual data from being recovered
-   * from the JavaScript heap.
-   */
   dispose(): void {
     if (this.disposed) return;
-    // Pass 1: overwrite with random
     crypto.getRandomValues(this.buffer as unknown as Uint8Array<ArrayBuffer>);
-    // Pass 2: zero
     this.buffer.fill(0);
-    // Pass 3: random again (prevents optimizer from eliding)
     crypto.getRandomValues(this.buffer as unknown as Uint8Array<ArrayBuffer>);
-    // Pass 4: final zero
     this.buffer.fill(0);
     this.disposed = true;
   }
@@ -147,13 +141,11 @@ function generateVaultEntropy(): VaultEntropy {
 
   const temporalMark = performance.now();
 
-  // Entanglement witness: XOR of both nonces
   const entanglementWitness = new Uint8Array(32);
   for (let i = 0; i < 32; i++) {
     entanglementWitness[i] = primaryNonce[i] ^ secondaryNonce[i];
   }
 
-  // Combined entropy hash: H(primary ‖ secondary ‖ temporal)
   const temporalBytes = new Float64Array([temporalMark]);
   const temporalUint = new Uint8Array(temporalBytes.buffer);
   const combined = new Uint8Array(32 + 32 + 8);
@@ -191,14 +183,98 @@ function verifyEntanglement(
 // Temporal Binding Verification
 // ═══════════════════════════════════════════════════════════════════════
 
-/**
- * Verify temporal binding: the ceremony must complete within a
- * reasonable window (30 seconds). If it takes longer, something
- * may have intercepted execution mid-flight.
- */
 function verifyTemporalBinding(startMark: number, maxMs: number = 30_000): boolean {
   const elapsed = performance.now() - startMark;
   return elapsed >= 0 && elapsed < maxMs;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Observer Traps (Layer 6)
+// ═══════════════════════════════════════════════════════════════════════
+
+interface ObserverTrapState {
+  collapsed: boolean;
+  collapseReason: string | null;
+  cleanup: () => void;
+}
+
+/**
+ * Arms observer traps that detect external observation during the ceremony.
+ *
+ * Like quantum measurement: the act of observing changes the state.
+ * Any external observation (tab switch, devtools, blur) collapses the
+ * ceremony's entanglement, making interception detectable.
+ */
+function armObserverTraps(): ObserverTrapState {
+  const state: ObserverTrapState = {
+    collapsed: false,
+    collapseReason: null,
+    cleanup: () => {},
+  };
+
+  const collapse = (reason: string) => {
+    if (!state.collapsed) {
+      state.collapsed = true;
+      state.collapseReason = reason;
+      console.error(`[CeremonyVault] OBSERVER COLLAPSE: ${reason}`);
+    }
+  };
+
+  // ── Trap 1: Visibility API ────────────────────────────────
+  // If the tab becomes hidden during ceremony, someone may be
+  // switching to inspect tools or another application is overlaying.
+  const handleVisibility = () => {
+    if (document.hidden) collapse("Tab became hidden during ceremony — possible observation");
+  };
+  document.addEventListener("visibilitychange", handleVisibility);
+
+  // ── Trap 2: Window blur ───────────────────────────────────
+  // If the window loses focus, an inspector or overlay may have appeared.
+  const handleBlur = () => {
+    collapse("Window lost focus during ceremony — possible external observer");
+  };
+  window.addEventListener("blur", handleBlur);
+
+  // ── Trap 3: Frame timing sentinel ─────────────────────────
+  // Debugger breakpoints cause frame timing gaps > 100ms.
+  // We sample the event loop to detect pauses.
+  let lastTick = performance.now();
+  let tickCount = 0;
+  const frameSentinel = setInterval(() => {
+    const now = performance.now();
+    const gap = now - lastTick;
+    tickCount++;
+    // Allow the first 2 ticks to stabilize (cold start)
+    if (tickCount > 2 && gap > 200) {
+      collapse(`Frame timing anomaly detected (${Math.round(gap)}ms gap) — possible debugger`);
+    }
+    lastTick = now;
+  }, 50);
+
+  // ── Trap 4: DevTools size heuristic ───────────────────────
+  // When devtools are open, outerWidth/outerHeight diverge from inner
+  const widthBefore = window.outerWidth - window.innerWidth;
+  const heightBefore = window.outerHeight - window.innerHeight;
+  const devtoolsSentinel = setInterval(() => {
+    const widthDiff = window.outerWidth - window.innerWidth;
+    const heightDiff = window.outerHeight - window.innerHeight;
+    // If chrome suddenly grows by >200px, devtools likely opened
+    if (
+      Math.abs(widthDiff - widthBefore) > 200 ||
+      Math.abs(heightDiff - heightBefore) > 200
+    ) {
+      collapse("Browser chrome size changed significantly — possible devtools opened");
+    }
+  }, 100);
+
+  state.cleanup = () => {
+    document.removeEventListener("visibilitychange", handleVisibility);
+    window.removeEventListener("blur", handleBlur);
+    clearInterval(frameSentinel);
+    clearInterval(devtoolsSentinel);
+  };
+
+  return state;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -209,24 +285,38 @@ function verifyTemporalBinding(startMark: number, maxMs: number = 30_000): boole
  * Execute a ceremony inside an isolated vault.
  *
  * The vault:
- *  1. Generates high-entropy nonces (Layer 1)
- *  2. Creates entangled witness pair (Layer 4)
- *  3. Stores all intermediate state in a secure scratchpad (Layer 3)
- *  4. Executes the ceremony function
- *  5. Verifies entanglement integrity (Layer 4 check)
- *  6. Verifies temporal binding (Layer 1 check)
- *  7. Creates a seal commitment (Layer 5)
- *  8. Scrubs all intermediate memory (Layer 3 cleanup)
+ *  1. Acquires the process-level lock (Layer 7)
+ *  2. Arms observer traps (Layer 6)
+ *  3. Generates high-entropy nonces (Layer 1)
+ *  4. Creates entangled witness pair (Layer 4)
+ *  5. Stores all intermediate state in a secure scratchpad (Layer 3)
+ *  6. Executes the ceremony function
+ *  7. Verifies observer traps (Layer 6 check)
+ *  8. Verifies entanglement integrity (Layer 4 check)
+ *  9. Verifies temporal binding (Layer 1 check)
+ * 10. Creates a seal commitment (Layer 5)
+ * 11. Scrubs all intermediate memory (Layer 3 cleanup)
+ * 12. Releases the lock (Layer 7)
  *
  * If ANY check fails, the vault aborts and scrubs.
- *
- * @param ceremonyFn - The async ceremony function to execute in isolation
- * @param authSessionToken - The user's auth session token (bound to entropy)
  */
 export async function executeInVault<T>(
   ceremonyFn: () => Promise<T>,
   authSessionToken?: string,
 ): Promise<CeremonyVaultResult<T>> {
+
+  // ── Layer 7: Single-entry gate ─────────────────────────────
+  if (vaultActive) {
+    throw new Error(
+      "VAULT REJECTION: Another ceremony is already in progress. " +
+      "Only ONE vault can be active — concurrent observation collapses both."
+    );
+  }
+  vaultActive = true;
+
+  // ── Layer 6: Arm observer traps ────────────────────────────
+  const traps = armObserverTraps();
+
   const scratchpad = new SecureScratchpad();
   const entropy = generateVaultEntropy();
   const createdAt = new Date().toISOString();
@@ -247,25 +337,32 @@ export async function executeInVault<T>(
   let clean = true;
   let entanglementIntact = true;
   let temporalValid = true;
+  let observerTrapsClean = true;
 
   try {
-    // ── Execute the ceremony ──────────────────────────────────────
+    // ── Execute the ceremony ──────────────────────────────────
     result = await ceremonyFn();
 
-    // ── Post-ceremony verification ────────────────────────────────
+    // ── Post-ceremony verification ────────────────────────────
 
-    // Verify entanglement: re-read nonces from scratchpad and check
+    // Layer 6: Check observer traps
+    if (traps.collapsed) {
+      clean = false;
+      observerTrapsClean = false;
+      console.error(`[CeremonyVault] OBSERVER TRAP TRIGGERED: ${traps.collapseReason}`);
+    }
+
+    // Layer 4: Verify entanglement
     const readPrimary = scratchpad.read(0, 32);
     const readSecondary = scratchpad.read(32, 32);
     const readWitness = scratchpad.read(64, 32);
-
     entanglementIntact = verifyEntanglement(readPrimary, readSecondary, readWitness);
     if (!entanglementIntact) {
       clean = false;
       console.error("[CeremonyVault] ENTANGLEMENT COLLAPSE DETECTED — possible interception");
     }
 
-    // Verify temporal binding
+    // Layer 1: Verify temporal binding
     temporalValid = verifyTemporalBinding(entropy.temporalMark);
     if (!temporalValid) {
       clean = false;
@@ -273,12 +370,13 @@ export async function executeInVault<T>(
     }
 
   } catch (err) {
-    // Scrub immediately on failure
     scratchpad.dispose();
+    traps.cleanup();
+    vaultActive = false;
     throw err;
   }
 
-  // ── Create seal ──────────────────────────────────────────────────
+  // ── Create seal ──────────────────────────────────────────────
   const sealedAt = new Date().toISOString();
   const elapsedMs = performance.now() - entropy.temporalMark;
 
@@ -286,6 +384,7 @@ export async function executeInVault<T>(
     entropyHash: entropy.entropyHash,
     entanglementIntact,
     temporalValid,
+    observerTrapsClean,
     clean,
     createdAt,
     sealedAt,
@@ -301,28 +400,32 @@ export async function executeInVault<T>(
     clean,
     entanglementIntact,
     temporalValid,
+    observerTrapsClean,
     createdAt,
     sealedAt,
     elapsedMs,
   };
 
-  // Entropy proof: hash of the entropy (nonces themselves are scrubbed)
   const entropyProof = entropy.entropyHash;
 
-  // ── SCRUB ────────────────────────────────────────────────────────
-  // Zero all intermediate memory
+  // ── SCRUB ────────────────────────────────────────────────────
   scratchpad.dispose();
+  traps.cleanup();
 
-  // Zero the entropy nonces in our local scope
   entropy.primaryNonce.fill(0);
   entropy.secondaryNonce.fill(0);
   entropy.entanglementWitness.fill(0);
 
+  // Release lock
+  vaultActive = false;
+
   if (!clean) {
     throw new Error(
-      "CEREMONY VAULT BREACH: Entanglement or temporal binding compromised. " +
-      "The ceremony was executed but the security seal is INVALID. " +
-      "Identity may have been observed during creation."
+      "CEREMONY VAULT BREACH: " +
+      (!observerTrapsClean ? `Observer trap: ${traps.collapseReason}. ` : "") +
+      (!entanglementIntact ? "Entanglement collapsed. " : "") +
+      (!temporalValid ? "Temporal binding violated. " : "") +
+      "The ceremony was aborted. Identity may have been observed during creation."
     );
   }
 
@@ -331,19 +434,7 @@ export async function executeInVault<T>(
 
 /**
  * Verify a vault seal is consistent.
- * This can be called later to re-verify a ceremony's isolation proof.
  */
 export function verifyVaultSeal(seal: VaultSeal): boolean {
-  const sealPayload = canonicalEncode({
-    entropyHash: "", // We can't reconstruct without the original entropy
-    entanglementIntact: seal.entanglementIntact,
-    temporalValid: seal.temporalValid,
-    clean: seal.clean,
-    createdAt: seal.createdAt,
-    sealedAt: seal.sealedAt,
-    elapsedMs: seal.elapsedMs,
-  });
-
-  // The seal is valid if all flags are true
-  return seal.clean && seal.entanglementIntact && seal.temporalValid;
+  return seal.clean && seal.entanglementIntact && seal.temporalValid && seal.observerTrapsClean;
 }
