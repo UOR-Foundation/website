@@ -452,40 +452,75 @@ interface CellViewProps {
   onToggleCollapse: () => void;
 }
 
-function CellView({
+const CellView = React.memo(function CellView({
   cell, isActive, isSelected, editMode, showLineNumbers,
   onFocus, onEdit, onChange, onRun, onDelete, onMoveUp, onMoveDown, onToggleType, onToggleCollapse,
 }: CellViewProps) {
   const t = useNbTheme();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // ── Local state decouples typing from parent re-renders ──
+  const [localSource, setLocalSource] = useState(cell.source);
+  const flushTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Sync from parent → local (e.g. undo, cell switch, external edits)
+  useEffect(() => {
+    if (cell.source !== localSource) {
+      setLocalSource(cell.source);
+    }
+    // Only react to cell.source changes from parent, not our own local edits
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cell.source]);
+
   const autoResize = useCallback(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+    const ta = textareaRef.current;
+    if (ta) {
+      ta.style.height = "0";
+      ta.style.height = ta.scrollHeight + "px";
     }
   }, []);
 
-  useEffect(() => { autoResize(); }, [cell.source, autoResize]);
+  useEffect(() => { autoResize(); }, [localSource, autoResize]);
 
   useEffect(() => {
     if (isActive && editMode && textareaRef.current) {
       textareaRef.current.focus();
-      const el = textareaRef.current;
-      if (el.selectionStart === 0 && el.selectionEnd === 0 && el.value.length > 0) {
-        el.selectionStart = el.selectionEnd = el.value.length;
-      }
     }
   }, [isActive, editMode]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  // Flush local → parent with minimal delay (16ms debounce)
+  const flushToParent = useCallback((value: string) => {
+    if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+    flushTimerRef.current = setTimeout(() => {
+      onChange(value);
+    }, 16);
+  }, [onChange]);
+
+  // Flush on unmount
+  useEffect(() => () => {
+    if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+  }, []);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setLocalSource(val);
+    flushToParent(val);
+    setTimeout(autoResize, 0);
+  }, [flushToParent, autoResize]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && (e.shiftKey || e.ctrlKey)) {
       e.preventDefault();
+      // Flush immediately before running
+      if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+      onChange(localSource);
       onRun();
+      return;
     }
     if (e.key === "Escape") {
       e.preventDefault();
       textareaRef.current?.blur();
+      return;
     }
     if (e.key === "Tab") {
       e.preventDefault();
@@ -493,37 +528,37 @@ function CellView({
       if (!ta) return;
       const start = ta.selectionStart;
       const end = ta.selectionEnd;
-      const val = ta.value;
+      const val = localSource;
       if (e.shiftKey) {
         const lineStart = val.lastIndexOf("\n", start - 1) + 1;
-        const linePrefix = val.slice(lineStart, lineStart + 4);
-        const spacesToRemove = linePrefix.match(/^ {1,4}/)?.[0].length || 0;
+        const spacesToRemove = val.slice(lineStart, lineStart + 4).match(/^ {1,4}/)?.[0].length || 0;
         if (spacesToRemove > 0) {
           const newVal = val.slice(0, lineStart) + val.slice(lineStart + spacesToRemove);
-          onChange(newVal);
-          setTimeout(() => { ta.selectionStart = ta.selectionEnd = start - spacesToRemove; }, 0);
+          setLocalSource(newVal);
+          flushToParent(newVal);
+          requestAnimationFrame(() => { ta.selectionStart = ta.selectionEnd = start - spacesToRemove; });
         }
       } else {
         const newVal = val.slice(0, start) + "    " + val.slice(end);
-        onChange(newVal);
-        setTimeout(() => { ta.selectionStart = ta.selectionEnd = start + 4; autoResize(); }, 0);
+        setLocalSource(newVal);
+        flushToParent(newVal);
+        requestAnimationFrame(() => { ta.selectionStart = ta.selectionEnd = start + 4; autoResize(); });
       }
     }
-  };
+  }, [localSource, onChange, onRun, flushToParent, autoResize]);
 
-  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+  const handlePaste = useCallback(() => {
     onEdit();
     setTimeout(autoResize, 0);
   }, [onEdit, autoResize]);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onChange(e.target.value);
-    setTimeout(autoResize, 0);
-  }, [onChange, autoResize]);
-
   const isMarkdown = cell.type === "markdown";
   const isCollapsed = cell.metadata?.collapsed;
-  const highlighted = !isMarkdown ? highlightPython(cell.source, t) : [];
+  // Always compute highlights from localSource so overlay stays in sync
+  const highlighted = useMemo(
+    () => !isMarkdown ? highlightPython(localSource, t) : [],
+    [isMarkdown, localSource, t]
+  );
 
   const borderColor = isActive
     ? editMode
@@ -561,7 +596,7 @@ function CellView({
       <div className="flex-1 min-w-0 py-1 pr-4">
         {isCollapsed && (
           <button onClick={onToggleCollapse} className="flex items-center gap-1 text-xs px-2 py-1 rounded" style={{ color: t.textMuted }}>
-            <ChevronRight size={12} /> Collapsed ({cell.source.split("\n").length} lines)
+            <ChevronRight size={12} /> Collapsed ({localSource.split("\n").length} lines)
           </button>
         )}
 
@@ -571,9 +606,9 @@ function CellView({
               background: isMarkdown ? "transparent" : t.bgCellCode,
               border: isMarkdown ? "none" : `1px solid ${isActive ? t.bgCellCodeBorderActive : t.bgCellCodeBorder}`,
             }}>
-              {isMarkdown && !(isActive && editMode) && cell.source ? (
+              {isMarkdown && !(isActive && editMode) && localSource ? (
                 <div className="px-4 py-3" style={{ color: t.text }}>
-                  {cell.source.split("\n").map((line, i) => {
+                  {localSource.split("\n").map((line, i) => {
                     if (line.startsWith("# ")) return <h1 key={i} className="text-xl font-serif font-semibold mt-0 mb-2" style={{ color: t.textStrong }}>{line.slice(2)}</h1>;
                     if (line.startsWith("## ")) return <h2 key={i} className="text-lg font-serif font-medium mt-3 mb-1.5" style={{ color: t.textStrong }}>{line.slice(3)}</h2>;
                     if (line.startsWith("### ")) return <h3 key={i} className="text-base font-serif font-medium mt-2 mb-1" style={{ color: t.text }}>{line.slice(4)}</h3>;
@@ -592,7 +627,7 @@ function CellView({
                       background: t.bgHover,
                       borderColor: t.border,
                     }}>
-                      {cell.source.split("\n").map((_, i) => (
+                      {localSource.split("\n").map((_, i) => (
                         <div key={i} className="text-[12px] font-mono leading-[1.8] px-1" style={{ color: t.textDim }}>
                           {i + 1}
                         </div>
@@ -601,8 +636,21 @@ function CellView({
                   )}
 
                   <div className="flex-1 relative">
-                    {!isMarkdown && !(isActive && editMode) && cell.source && (
-                      <pre className="absolute inset-0 px-4 py-[5px] text-[13px] font-mono leading-[1.8] whitespace-pre-wrap pointer-events-none overflow-hidden" style={{ color: t.textCode }}>
+                    {/* Syntax highlight overlay — ALWAYS visible for code cells */}
+                    {!isMarkdown && localSource && (
+                      <pre
+                        className="absolute inset-0 px-4 py-[5px] text-[13px] font-mono leading-[1.8] pointer-events-none overflow-hidden"
+                        aria-hidden="true"
+                        style={{
+                          color: t.textCode,
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                          overflowWrap: "break-word",
+                          margin: 0,
+                          border: "none",
+                          background: "transparent",
+                        }}
+                      >
                         {highlighted.map((h, i) => (
                           <div key={i}>{h.tokens}</div>
                         ))}
@@ -612,14 +660,14 @@ function CellView({
                     <textarea
                       ref={textareaRef}
                       data-cell-id={cell.id}
-                      value={cell.source}
+                      value={localSource}
                       onChange={handleChange}
                       onKeyDown={handleKeyDown}
                       onPaste={handlePaste}
                       onFocus={onEdit}
                       className="w-full px-4 py-[5px] text-[13px] font-mono resize-none focus:outline-none bg-transparent relative z-10"
                       style={{
-                        color: (!isMarkdown && !(isActive && editMode)) ? "transparent" : (isMarkdown ? t.text : t.textCode),
+                        color: isMarkdown ? t.text : "transparent",
                         caretColor: t.caret,
                         lineHeight: "1.8",
                         minHeight: "28px",
@@ -650,7 +698,7 @@ function CellView({
       </div>
     </div>
   );
-}
+});
 
 /* ── File Browser ─────────────────────────────────────────────────────────── */
 
