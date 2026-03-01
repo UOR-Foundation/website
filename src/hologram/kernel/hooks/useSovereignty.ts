@@ -203,8 +203,19 @@ export function useSovereignty(): SovereigntyState {
   }, [authUser, isCeremonyActive]);
 
   // ── Persist to Profile ─────────────────────────────────────────
+  // SECURITY SEAL: This method is intentionally restricted.
+  // Full sovereign profile persistence (ceremony_cid, trust_node_cid,
+  // disclosure_policy_cid, collapse_intact) ONLY happens through
+  // the vault-isolated ceremony in MySpacePanel.
+  // This hook can update display fields but NOT ceremony-critical fields.
   const persistGenesis = useCallback(async (result: GenesisResult): Promise<boolean> => {
     if (!authUser) return false;
+
+    console.warn(
+      "[SecuritySeal] useSovereignty.persistGenesis called — " +
+      "only non-ceremony fields will be updated. " +
+      "Full sovereign persistence requires MySpacePanel → CeremonyVault."
+    );
 
     try {
       const { error: updateError } = await supabase
@@ -214,10 +225,10 @@ export function useSovereignty(): SovereigntyState {
           uor_cid: result.sovereign.identity["u:cid"],
           uor_glyph: result.sovereign.identity["u:glyph"],
           uor_ipv6: result.sovereign.identity["u:ipv6"],
-          session_cid: result.sovereign.sessionEntryCid,
-          session_derivation_id: result.sovereign.ceremonyCid,
-          session_issued_at: new Date().toISOString(),
           display_name: result.sovereign.threeWordName.display,
+          // NOTE: ceremony_cid, trust_node_cid, disclosure_policy_cid,
+          // collapse_intact, pqc_algorithm are SEALED — only writable
+          // through the CeremonyVault in MySpacePanel.
         })
         .eq("user_id", authUser.id);
 
