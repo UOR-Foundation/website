@@ -7,8 +7,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QNet } from "@/modules/qkernel/q-net";
-import { QIpc } from "@/modules/qkernel/q-ipc";
+import { QNet } from "@/hologram/kernel/q-net";
+import { QIpc } from "@/hologram/kernel/q-ipc";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Phase 4a: Q-Net

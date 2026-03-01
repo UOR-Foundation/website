@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { QSched } from "@/modules/qkernel/q-sched";
-import { QIpc } from "@/modules/qkernel/q-ipc";
-import { QNet } from "@/modules/qkernel/q-net";
-import { QEcc } from "@/modules/qkernel/q-ecc";
-import { QSecureMesh } from "@/modules/qkernel/q-secure-mesh";
-import type { QAgent } from "@/modules/qkernel/q-agent";
+import { QSched } from "@/hologram/kernel/q-sched";
+import { QIpc } from "@/hologram/kernel/q-ipc";
+import { QNet } from "@/hologram/kernel/q-net";
+import { QEcc } from "@/hologram/kernel/q-ecc";
+import { QSecureMesh } from "@/hologram/kernel/q-secure-mesh";
+import type { QAgent } from "@/hologram/kernel/q-agent";
 
 describe("Phase 8: Q-Security ↔ Agent Mesh Integration", () => {
   let mesh: QSecureMesh;

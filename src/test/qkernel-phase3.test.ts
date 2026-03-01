@@ -7,9 +7,9 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { QEcc, CODE_N, CODE_K, CODE_D } from "@/modules/qkernel/q-ecc";
-import { QIsa } from "@/modules/qkernel/q-isa";
-import type { GateOp } from "@/modules/qkernel/q-isa";
+import { QEcc, CODE_N, CODE_K, CODE_D } from "@/hologram/kernel/q-ecc";
+import { QIsa } from "@/hologram/kernel/q-isa";
+import type { GateOp } from "@/hologram/kernel/q-isa";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Phase 3a: Q-ECC

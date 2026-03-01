@@ -1898,7 +1898,7 @@ export function useQShell(options: UseQShellOptions = {}) {
         // ── library ───────────────────────────────────────────
         if (subcmd === "library" || subcmd === "lib") {
           const libCmd = parts[2]?.toLowerCase();
-          type SimOpType = import("@/modules/qkernel/q-simulator").SimOp;
+          type SimOpType = import("@/hologram/kernel/q-simulator").SimOp;
           const LIBRARY: Record<string, { desc: string; minQ: number; build: (n: number) => SimOpType[] }> = {
             qft: {
               desc: "Quantum Fourier Transform, basis for Shor's algorithm and phase estimation",
@@ -2238,15 +2238,15 @@ export function useQShell(options: UseQShellOptions = {}) {
               const st = createState(circ.numQubits);
               st.ops = circ.ops;
               st.noise = circ.noise;
-              const { measure: simMeas } = await import("@/modules/qkernel/q-simulator");
-              const rawCounts = simMeas(st, shots);
+              const { measure: simMeas } = await import("@/hologram/kernel/q-simulator");
+              const rawCounts: Record<string, number> = simMeas(st, shots);
               const mitigated = applyMeasurementMitigation(rawCounts, calMatrix);
               log("");
               log("  ┌─ Raw counts ─────────────────────────────────────┐");
-              const rawEntries = Object.entries(rawCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+              const rawEntries = Object.entries(rawCounts).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 8);
               for (const [bs, count] of rawEntries) {
-                const pct = ((count / shots) * 100).toFixed(1);
-                const bar = "█".repeat(Math.round(count / shots * 30));
+                const pct = ((count as number / shots) * 100).toFixed(1);
+                const bar = "█".repeat(Math.round((count as number) / shots * 30));
                 log(`  │  |${bs}⟩  ${String(count).padStart(5)}  ${pct.padStart(5)}%  ${bar}`);
               }
               log("  └────────────────────────────────────────────────────┘");

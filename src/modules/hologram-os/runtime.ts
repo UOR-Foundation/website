@@ -25,7 +25,14 @@
 
 import type { MetricAxis } from "@/types/uor-foundation/enums";
 import type { FiberBudget } from "@/types/uor-foundation/bridge/partition";
-import { resolution } from "@/modules/ring-core";
+
+// Re-export so Hologram consumers can import from a single place
+export type { MetricAxis, FiberBudget };
+
+/** Resolution ratio [0, 1]. */
+function resolution(budget: FiberBudget): number {
+  return budget.totalFibers === 0 ? 1 : budget.pinnedCount / budget.totalFibers;
+}
 
 // ── Panel: Observable → visual ────────────────────────────────────────────
 

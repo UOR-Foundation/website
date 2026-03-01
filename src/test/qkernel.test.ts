@@ -7,9 +7,9 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { post, loadHardware, hydrateFirmware, createGenesisProcess, boot } from "@/modules/qkernel/q-boot";
-import { QMmu } from "@/modules/qkernel/q-mmu";
-import { QSched, classifyZone } from "@/modules/qkernel/q-sched";
+import { post, loadHardware, hydrateFirmware, createGenesisProcess, boot } from "@/hologram/kernel/q-boot";
+import { QMmu } from "@/hologram/kernel/q-mmu";
+import { QSched, classifyZone } from "@/hologram/kernel/q-sched";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Phase 0: Q-Boot

@@ -3,7 +3,7 @@
  */
 
 import ProjectionShell from "./ProjectionShell";
-import QShellEmbed from "@/modules/qkernel/pages/QShellEmbed";
+import QShellEmbed from "@/hologram/kernel/pages/QShellEmbed";
 
 interface TerminalProjectionProps {
   open: boolean;

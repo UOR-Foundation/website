@@ -3,7 +3,7 @@
  */
 
 import ProjectionShell from "./ProjectionShell";
-import QuantumJupyterWorkspace from "@/modules/qkernel/notebook/QuantumJupyterWorkspace";
+import QuantumJupyterWorkspace from "@/hologram/kernel/notebook/QuantumJupyterWorkspace";
 
 interface JupyterProjectionProps {
   open: boolean;
