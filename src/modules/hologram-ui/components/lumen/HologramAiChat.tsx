@@ -46,24 +46,20 @@ import {
   processResponse,
   DEFAULT_CONFIG,
   type NeuroSymbolicResult,
-} from "@/modules/ring-core/neuro-symbolic";
+  saveReasoningProof,
+  planPGI,
+  composeFragments,
+  storeClaims,
+  type PGIResult,
+  getAccelerator,
+  streamOptimized,
+  StreamingCurvatureMonitor,
+} from "@/modules/hologram-ui/engine/reasoning";
 import AnnotatedResponse from "@/components/reasoning/EpistemicBadge";
 import { getFusionContextBlock } from "@/modules/data-bank/lib/fusion-graph";
 import TrustScoreBar from "@/components/reasoning/TrustScoreBar";
 import TrustTrendBar from "@/components/reasoning/TrustTrendBar";
 import { useSavedResponses } from "@/hooks/useSavedResponses";
-import { saveReasoningProof } from "@/modules/ring-core/proof-persistence";
-import {
-  planPGI,
-  composeFragments,
-  storeClaims,
-  type PGIResult,
-} from "@/modules/ring-core/proof-gated-inference";
-import {
-  getAccelerator,
-  streamOptimized,
-} from "@/modules/ring-core/inference-accelerator";
-import { StreamingCurvatureMonitor } from "@/modules/ring-core/symbolica-enhancements";
 import { projectConversationForLLM, projectForLLM, type ProfileContext } from "@/modules/hologram-ui/q-disclosure-projector";
 
 // ── Cloud AI Models (instant, no download) ─────────────────────────────────
