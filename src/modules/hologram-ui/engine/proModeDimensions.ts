@@ -314,6 +314,47 @@ export const CELEBRITY_PRESETS: readonly DimensionPreset[] = [
     values: { depth: 0.85, breadth: 0.9, intuition: 0.6, rigor: 0.75, verbosity: 0.7, warmth: 0.85, storytelling: 0.9, humor: 0.4, focus: 0.5, empathy: 0.7, challenge: 0.4, originality: 0.7 },
     tags: ["cosmos", "science", "wonder", "astronomy", "pale-blue-dot"],
   },
+  // ── Venture Capitalists & Tech Titans ────────────────────────────
+  {
+    id: "marc-andreessen", name: "Marc Andreessen", subtitle: "Software Eats the World", icon: "🦊", phase: "work",
+    values: { depth: 0.75, breadth: 0.9, intuition: 0.7, rigor: 0.6, verbosity: 0.7, warmth: 0.3, storytelling: 0.6, humor: 0.4, focus: 0.6, empathy: 0.2, challenge: 0.85, originality: 0.8 },
+    tags: ["a16z", "vc", "venture-capital", "tech", "optimist", "software"],
+  },
+  {
+    id: "peter-thiel", name: "Peter Thiel", subtitle: "Contrarian Visionary", icon: "♟️", phase: "work",
+    values: { depth: 0.9, breadth: 0.7, intuition: 0.6, rigor: 0.75, verbosity: 0.6, warmth: 0.2, storytelling: 0.5, humor: 0.2, focus: 0.8, empathy: 0.15, challenge: 0.95, originality: 0.95 },
+    tags: ["vc", "venture-capital", "founders-fund", "paypal", "contrarian", "zero-to-one"],
+  },
+  {
+    id: "paul-graham", name: "Paul Graham", subtitle: "Essay-Driven Builder", icon: "📝", phase: "work",
+    values: { depth: 0.85, breadth: 0.7, intuition: 0.65, rigor: 0.7, verbosity: 0.6, warmth: 0.5, storytelling: 0.8, humor: 0.5, focus: 0.7, empathy: 0.4, challenge: 0.7, originality: 0.75 },
+    tags: ["yc", "y-combinator", "vc", "startup", "essays", "lisp", "founder"],
+  },
+  {
+    id: "reid-hoffman", name: "Reid Hoffman", subtitle: "Network Theorist", icon: "🔗", phase: "work",
+    values: { depth: 0.7, breadth: 0.85, intuition: 0.6, rigor: 0.6, verbosity: 0.65, warmth: 0.6, storytelling: 0.6, humor: 0.3, focus: 0.6, empathy: 0.5, challenge: 0.5, originality: 0.6 },
+    tags: ["vc", "greylock", "linkedin", "network", "blitzscaling", "silicon-valley"],
+  },
+  {
+    id: "vinod-khosla", name: "Vinod Khosla", subtitle: "Moonshot Engineer", icon: "☀️", phase: "work",
+    values: { depth: 0.8, breadth: 0.8, intuition: 0.7, rigor: 0.7, verbosity: 0.5, warmth: 0.3, storytelling: 0.4, humor: 0.2, focus: 0.7, empathy: 0.2, challenge: 0.8, originality: 0.85 },
+    tags: ["vc", "khosla-ventures", "cleantech", "sun-microsystems", "moonshot"],
+  },
+  {
+    id: "chamath", name: "Chamath Palihapitiya", subtitle: "Capital Allocator", icon: "📊", phase: "work",
+    values: { depth: 0.7, breadth: 0.75, intuition: 0.6, rigor: 0.65, verbosity: 0.7, warmth: 0.3, storytelling: 0.5, humor: 0.4, focus: 0.7, empathy: 0.25, challenge: 0.85, originality: 0.6 },
+    tags: ["vc", "social-capital", "spac", "all-in", "macro", "finance"],
+  },
+  {
+    id: "masayoshi-son", name: "Masayoshi Son", subtitle: "300-Year Visionary", icon: "🏯", phase: "play",
+    values: { depth: 0.6, breadth: 0.95, intuition: 0.9, rigor: 0.3, verbosity: 0.5, warmth: 0.5, storytelling: 0.7, humor: 0.3, focus: 0.4, empathy: 0.3, challenge: 0.7, originality: 0.9 },
+    tags: ["softbank", "vision-fund", "vc", "japan", "bold", "telecom"],
+  },
+  {
+    id: "tony-stark", name: "Tony Stark", subtitle: "Genius Billionaire Inventor", icon: "⚙️", phase: "play",
+    values: { depth: 0.8, breadth: 0.85, intuition: 0.8, rigor: 0.6, verbosity: 0.5, warmth: 0.4, storytelling: 0.5, humor: 0.9, focus: 0.6, empathy: 0.3, challenge: 0.7, originality: 0.95 },
+    tags: ["ironman", "marvel", "inventor", "genius", "tech", "avengers"],
+  },
 ];
 
 // ── All presets combined for search ──────────────────────────────────
