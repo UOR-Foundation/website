@@ -532,7 +532,7 @@ export default function DesktopSurface({
             </p>
           </div>
 
-          {/* ── Convergence pill — quantum reasoning entry point ── */}
+          {/* ── Queue pill — coherence reasoning entry point ── */}
           <div
             className="flex justify-center"
             style={{
@@ -557,7 +557,7 @@ export default function DesktopSurface({
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
               }}
-              aria-label="Open Convergence reasoning interface"
+              aria-label="Open Queue reasoning interface"
             >
               <span
                 className="flex items-center gap-2 tracking-[0.18em] uppercase transition-all duration-300 group-hover/conv:tracking-[0.22em]"
@@ -582,7 +582,7 @@ export default function DesktopSurface({
                     animation: "heartbeat-love 2.4s ease-in-out infinite",
                   }}
                 />
-                Convergence
+                Queue
               </span>
             </button>
           </div>

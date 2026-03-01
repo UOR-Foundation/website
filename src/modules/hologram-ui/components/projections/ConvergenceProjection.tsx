@@ -1,9 +1,9 @@
 /**
- * ConvergenceProjection — Inline reasoning interface within Hologram OS
- * ═════════════════════════════════════════════════════════════════════
+ * QueueProjection — Inline reasoning interface within Hologram OS
+ * ═══════════════════════════════════════════════════════════════
  *
- * Wraps ConvergenceChat in a ProjectionShell so it fills the main
- * content area alongside the sidebar, rather than navigating away.
+ * Wraps Queue (ConvergenceChat) in a ProjectionShell so it fills
+ * the main content area alongside the sidebar.
  */
 
 import ProjectionShell from "../shell/ProjectionShell";

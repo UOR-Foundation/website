@@ -29,50 +29,49 @@ interface StageNarrative {
 const NARRATIVES: Record<PipelineStage, StageNarrative> = {
   idle: { label: "", glyph: "", hue: 38, narrative: "", detail: () => null },
   decomposing: {
-    label: "Decomposing",
+    label: "Listening",
     glyph: "◇",
-    hue: 280,
-    narrative: "Breaking your thought into atomic claims — each one a node in the reasoning graph.",
-    detail: (s) => s.claimCount != null ? `${s.claimCount} constraint${s.claimCount !== 1 ? "s" : ""} extracted` : null,
+    hue: 260,
+    narrative: "Holding your thought, finding the structures within it.",
+    detail: (s) => s.claimCount != null ? `${s.claimCount} thread${s.claimCount !== 1 ? "s" : ""} found` : null,
   },
   compiling: {
-    label: "Compiling Circuit",
+    label: "Connecting",
     glyph: "⊗",
-    hue: 200,
-    narrative: "Claims become quantum gates. The circuit topology determines how coherence flows.",
-    detail: (s) => s.gateCount != null ? `${s.gateCount} gates wired` : null,
+    hue: 220,
+    narrative: "Tracing how the threads relate. The shape of the question is forming.",
+    detail: (s) => s.gateCount != null ? `${s.gateCount} connections` : null,
   },
   stabilizing: {
-    label: "Stabilizer Check",
+    label: "Grounding",
     glyph: "⟡",
-    hue: 152,
-    narrative: "Running syndrome measurements — verifying the circuit won't collapse under noise.",
-    detail: (s) => s.syndromeHealth != null ? `Syndrome health: ${(s.syndromeHealth * 100).toFixed(0)}%` : null,
+    hue: 170,
+    narrative: "Checking that the structure holds. Making sure nothing was lost.",
+    detail: (s) => s.syndromeHealth != null ? `${(s.syndromeHealth * 100).toFixed(0)}% grounded` : null,
   },
   reasoning: {
-    label: "Reasoning",
+    label: "Understanding",
     glyph: "∿",
     hue: 38,
-    narrative: "The compiled circuit fires. Inference flows through the coherence field.",
-    detail: () => "Streaming from quantum reasoning kernel…",
+    narrative: "Letting meaning settle through the coherence field.",
+    detail: () => "Meaning is forming…",
   },
   rewarding: {
-    label: "Evaluating",
+    label: "Weighing",
     glyph: "◉",
-    hue: 45,
-    narrative: "Computing the reward signal — how much did coherence increase?",
+    hue: 42,
+    narrative: "Measuring what changed. Did understanding deepen?",
     detail: (s) => s.reward != null ? `Δ${s.reward > 0 ? "+" : ""}${s.reward.toFixed(3)}` : null,
   },
   converged: {
-    label: "Converged",
+    label: "Clear",
     glyph: "✦",
     hue: 38,
-    narrative: "The answer has crystallized. Coherence is preserved.",
+    narrative: "The understanding has settled. Here it is.",
     detail: (s) => {
       const parts: string[] = [];
       if (s.grade) parts.push(`Grade ${s.grade}`);
-      if (s.curvature != null) parts.push(`κ ${(s.curvature * 100).toFixed(0)}%`);
-      if (s.converged != null) parts.push(s.converged ? "Fully converged" : "Open trace");
+      if (s.converged != null) parts.push(s.converged ? "Settled" : "Open");
       return parts.length > 0 ? parts.join(" · ") : null;
     },
   },

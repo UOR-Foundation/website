@@ -1,14 +1,19 @@
 /**
- * ConvergencePipeline — Living Reasoning Visualization
- * ═════════════════════════════════════════════════════
+ * QueuePipeline — Living Breath of Thought
+ * ═══════════════════════════════════════════
  *
- * Renders the quantum reasoning pipeline as a breathing,
- * organic process: Circuit → Stabilizer → Reward → Habit → Grade.
- * Each stage pulses with coherence-driven animation.
+ * Not a loading bar. Not dots. A living organism that breathes
+ * while intelligence crystallizes. Each stage flows into the next
+ * like thought itself: seamless, organic, inevitable.
+ *
+ * The animation language is biological, not mechanical:
+ *   - Concentric rings that breathe and expand
+ *   - Color that shifts through a warm spectrum
+ *   - Motion that decelerates as clarity approaches
+ *   - Presence that feels like shared attention
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useMemo } from "react";
 
 export type PipelineStage =
   | "idle"
@@ -33,14 +38,14 @@ export interface PipelineState {
   converged?: boolean;
 }
 
-const STAGE_META: Record<PipelineStage, { label: string; glyph: string; hue: number }> = {
-  idle:         { label: "",                glyph: "",  hue: 38  },
-  decomposing:  { label: "Decomposing",     glyph: "◇", hue: 280 },
-  compiling:    { label: "Compiling",       glyph: "⊗", hue: 200 },
-  stabilizing:  { label: "Verifying",       glyph: "⟡", hue: 152 },
-  reasoning:    { label: "Reasoning",       glyph: "∿", hue: 38  },
-  rewarding:    { label: "Evaluating",      glyph: "◉", hue: 45  },
-  converged:    { label: "Converged",       glyph: "✦", hue: 38  },
+const STAGE_META: Record<PipelineStage, { label: string; hue: number; breath: string }> = {
+  idle:         { label: "",               hue: 38,  breath: "" },
+  decomposing:  { label: "Listening",      hue: 260, breath: "Holding your thought" },
+  compiling:    { label: "Connecting",     hue: 220, breath: "Finding the shape" },
+  stabilizing:  { label: "Grounding",      hue: 170, breath: "Making sure it holds" },
+  reasoning:    { label: "Understanding",  hue: 38,  breath: "Letting meaning settle" },
+  rewarding:    { label: "Weighing",       hue: 42,  breath: "Measuring what changed" },
+  converged:    { label: "Clear",          hue: 38,  breath: "Here" },
 };
 
 const STAGE_ORDER: PipelineStage[] = [
@@ -51,126 +56,160 @@ export default function ConvergencePipeline({ state }: { state: PipelineState })
   const { stage } = state;
   const meta = STAGE_META[stage];
   const stageIdx = STAGE_ORDER.indexOf(stage);
+  const progress = stageIdx >= 0 ? (stageIdx + 1) / STAGE_ORDER.length : 0;
 
   if (stage === "idle") return null;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="flex flex-col items-center gap-3 select-none"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="flex flex-col items-center gap-5 select-none py-2"
     >
-      {/* Pipeline dots */}
-      <div className="flex items-center gap-2">
+      {/* Central breathing organism */}
+      <div className="relative flex items-center justify-center" style={{ width: 64, height: 64 }}>
+        {/* Outer ring — slow breath */}
+        <motion.div
+          className="absolute rounded-full"
+          animate={{
+            scale: [1, 1.25, 1],
+            opacity: [0.08, 0.2, 0.08],
+          }}
+          transition={{
+            duration: 4 - progress * 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          style={{
+            width: 56,
+            height: 56,
+            border: `1px solid hsla(${meta.hue}, 35%, 60%, 0.2)`,
+          }}
+        />
+
+        {/* Middle ring — medium breath, offset phase */}
+        <motion.div
+          className="absolute rounded-full"
+          animate={{
+            scale: [1, 1.15, 1],
+            opacity: [0.12, 0.28, 0.12],
+          }}
+          transition={{
+            duration: 3 - progress * 0.8,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.4,
+          }}
+          style={{
+            width: 36,
+            height: 36,
+            border: `1px solid hsla(${meta.hue}, 40%, 58%, 0.25)`,
+          }}
+        />
+
+        {/* Inner core — concentrated light */}
+        <motion.div
+          className="absolute rounded-full"
+          animate={{
+            scale: [0.9, 1.1, 0.9],
+            opacity: [0.5, 0.85, 0.5],
+          }}
+          transition={{
+            duration: 2.2 - progress * 0.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.2,
+          }}
+          style={{
+            width: 8,
+            height: 8,
+            background: `hsla(${meta.hue}, 45%, 60%, 0.6)`,
+            boxShadow: `
+              0 0 16px hsla(${meta.hue}, 45%, 55%, 0.25),
+              0 0 40px hsla(${meta.hue}, 40%, 50%, 0.1)
+            `,
+          }}
+        />
+
+        {/* Expanding awareness ring — single slow pulse outward */}
+        <motion.div
+          className="absolute rounded-full"
+          animate={{
+            scale: [1, 3],
+            opacity: [0.15, 0],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeOut",
+          }}
+          style={{
+            width: 20,
+            height: 20,
+            border: `1px solid hsla(${meta.hue}, 40%, 60%, 0.15)`,
+          }}
+        />
+      </div>
+
+      {/* Stage breath — the whisper of what's happening */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={stage}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col items-center gap-1.5"
+        >
+          <span
+            className="text-[11px] tracking-[0.2em] uppercase"
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              color: `hsla(${meta.hue}, 30%, 65%, 0.5)`,
+              fontWeight: 400,
+            }}
+          >
+            {meta.label}
+          </span>
+          <span
+            className="text-[12px] tracking-[0.04em]"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontStyle: "italic",
+              color: "hsla(30, 12%, 60%, 0.35)",
+              fontWeight: 300,
+            }}
+          >
+            {meta.breath}
+          </span>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Progress thread — organic, not a bar */}
+      <div className="flex items-center gap-1">
         {STAGE_ORDER.map((s, i) => {
-          const sMeta = STAGE_META[s];
-          const isActive = i === stageIdx;
           const isPast = i < stageIdx;
-          const isFuture = i > stageIdx;
-
+          const isActive = i === stageIdx;
           return (
-            <div key={s} className="flex items-center gap-2">
-              <motion.div
-                className="relative flex items-center justify-center"
-                animate={{
-                  scale: isActive ? [1, 1.15, 1] : 1,
-                }}
-                transition={isActive ? {
-                  duration: 1.8,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                } : {}}
-              >
-                <div
-                  className="w-2 h-2 rounded-full transition-all duration-500"
-                  style={{
-                    background: isPast
-                      ? `hsla(${sMeta.hue}, 40%, 55%, 0.7)`
-                      : isActive
-                        ? `hsla(${sMeta.hue}, 50%, 60%, 0.9)`
-                        : `hsla(0, 0%, 40%, 0.15)`,
-                    boxShadow: isActive
-                      ? `0 0 12px hsla(${sMeta.hue}, 50%, 55%, 0.4)`
-                      : "none",
-                  }}
-                />
-                {isActive && (
-                  <motion.div
-                    className="absolute inset-0 rounded-full"
-                    animate={{ scale: [1, 2.5], opacity: [0.4, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
-                    style={{
-                      border: `1px solid hsla(${sMeta.hue}, 50%, 60%, 0.3)`,
-                    }}
-                  />
-                )}
-              </motion.div>
-
-              {/* Connector line */}
-              {i < STAGE_ORDER.length - 1 && (
-                <div
-                  className="w-4 h-[1px] transition-all duration-500"
-                  style={{
-                    background: isPast
-                      ? `hsla(38, 30%, 50%, 0.3)`
-                      : `hsla(0, 0%, 40%, 0.08)`,
-                  }}
-                />
-              )}
-            </div>
+            <motion.div
+              key={s}
+              animate={{
+                width: isActive ? 16 : isPast ? 8 : 4,
+                opacity: isPast ? 0.5 : isActive ? 0.8 : 0.1,
+              }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="h-[1.5px] rounded-full"
+              style={{
+                background: isPast || isActive
+                  ? `hsla(${STAGE_META[s].hue}, 35%, 58%, 0.6)`
+                  : "hsla(0, 0%, 40%, 0.15)",
+              }}
+            />
           );
         })}
       </div>
-
-      {/* Active stage label */}
-      <motion.div
-        key={stage}
-        initial={{ opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex items-center gap-2"
-      >
-        <span
-          className="text-[10px] tracking-[0.25em] uppercase"
-          style={{
-            fontFamily: "'DM Sans', sans-serif",
-            color: `hsla(${meta.hue}, 35%, 65%, 0.6)`,
-          }}
-        >
-          {meta.glyph} {meta.label}
-        </span>
-
-        {/* Contextual micro-data */}
-        {stage === "decomposing" && state.claimCount != null && (
-          <span className="text-[9px] font-mono" style={{ color: "hsla(280, 30%, 60%, 0.4)" }}>
-            {state.claimCount} claims
-          </span>
-        )}
-        {stage === "compiling" && state.gateCount != null && (
-          <span className="text-[9px] font-mono" style={{ color: "hsla(200, 30%, 60%, 0.4)" }}>
-            {state.gateCount} gates
-          </span>
-        )}
-        {stage === "stabilizing" && state.syndromeHealth != null && (
-          <span className="text-[9px] font-mono" style={{ color: "hsla(152, 35%, 55%, 0.5)" }}>
-            {(state.syndromeHealth * 100).toFixed(0)}% health
-          </span>
-        )}
-        {stage === "converged" && state.grade && (
-          <span
-            className="text-[9px] font-mono px-1.5 py-0.5 rounded-md"
-            style={{
-              color: state.grade === "A" ? "hsla(152, 50%, 60%, 0.8)" : "hsla(38, 40%, 60%, 0.7)",
-              background: state.grade === "A" ? "hsla(152, 40%, 30%, 0.15)" : "hsla(38, 30%, 30%, 0.12)",
-            }}
-          >
-            Grade {state.grade}
-          </span>
-        )}
-      </motion.div>
 
       {/* Habit acceleration notice */}
       <AnimatePresence>
@@ -181,18 +220,15 @@ export default function ConvergencePipeline({ state }: { state: PipelineState })
             exit={{ opacity: 0, scale: 0.9 }}
             className="flex items-center gap-1.5"
           >
-            <div
-              className="w-1 h-1 rounded-full"
-              style={{ background: "hsla(38, 50%, 60%, 0.7)" }}
-            />
             <span
-              className="text-[9px] tracking-[0.15em]"
+              className="text-[10px] tracking-[0.12em]"
               style={{
                 fontFamily: "'DM Sans', sans-serif",
-                color: "hsla(38, 40%, 60%, 0.5)",
+                color: "hsla(38, 40%, 60%, 0.45)",
+                fontStyle: "italic",
               }}
             >
-              Habit recognized · instant
+              This pattern is familiar
             </span>
           </motion.div>
         )}
