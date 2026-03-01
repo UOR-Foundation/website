@@ -1852,6 +1852,8 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   const [precisionMode, setPrecisionMode] = useState(false);
   const [clipboard, setClipboard] = useState<NotebookCell | null>(null);
   const [undoStack, setUndoStack] = useState<NotebookCell[]>([]);
+  const [resetSnapshot, setResetSnapshot] = useState<{ notebook: NotebookDocument; kernel: KernelState } | null>(null);
+  const [showResetUndo, setShowResetUndo] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showFindReplace, setShowFindReplace] = useState(false);
@@ -2047,10 +2049,22 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   }, []);
 
   const restartKernel = useCallback((runAfter = false) => {
+    // Save snapshot for undo
+    setResetSnapshot({ notebook: JSON.parse(JSON.stringify(notebook)), kernel: { ...kernel } });
+    setShowResetUndo(true);
+    setTimeout(() => setShowResetUndo(false), 10000); // auto-dismiss after 10s
     setKernel(createKernel());
     clearOutputs();
     if (runAfter) setTimeout(() => runAllCells(), 50);
-  }, [clearOutputs, runAllCells]);
+  }, [clearOutputs, runAllCells, notebook, kernel]);
+
+  const undoReset = useCallback(() => {
+    if (!resetSnapshot) return;
+    setNotebook(resetSnapshot.notebook);
+    setKernel(resetSnapshot.kernel);
+    setResetSnapshot(null);
+    setShowResetUndo(false);
+  }, [resetSnapshot]);
 
   const toggleCollapse = useCallback((id: string) => {
     setNotebook(prev => ({
@@ -2651,6 +2665,29 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
             onReplace={replaceInCell}
             onClose={() => setShowFindReplace(false)}
           />
+        )}
+
+        {/* Reset Undo Banner */}
+        {showResetUndo && resetSnapshot && (
+          <div className="flex items-center justify-between px-4 py-2 text-sm animate-in slide-in-from-top-2" style={{ background: t.gold + "18", borderBottom: `1px solid ${t.gold}33`, color: t.textStrong }}>
+            <span>Kernel restarted & outputs cleared.</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={undoReset}
+                className="px-3 py-1 rounded-md text-xs font-semibold transition-colors"
+                style={{ background: t.gold, color: "#000" }}
+              >
+                Undo Reset
+              </button>
+              <button
+                onClick={() => { setShowResetUndo(false); setResetSnapshot(null); }}
+                className="p-1 rounded transition-colors"
+                style={{ color: t.textMuted }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Main area */}
