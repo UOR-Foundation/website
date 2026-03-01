@@ -1,4 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  installPackage,
+  getInstalledPackages,
+  isPackageInstalled,
+  getPackage,
+  executeProjection,
+  type InstalledPackage,
+} from "@/hologram/kernel/q-package-projector";
 import { boot, type QKernelBoot } from "@/hologram/kernel/q-boot";
 import {
   createState,
@@ -123,7 +131,7 @@ const MAN_PAGES: Record<string, string[]> = {
   pennylane: ["PENNYLANE(1) Xanadu PennyLane Compatibility Layer", "", "NAME", "  pennylane / pl: use familiar PennyLane commands inside Q Linux", "", "SYNOPSIS", "  pl circuit <n>               Create device('default.qubit', wires=n)", "  pl <gate> <wire> ...         Apply gate: Hadamard 0, CNOT 0 1, RX 0 1.57", "  pl measure_all               Measure all wires", "  pl run [shots]               Execute QNode", "  pl draw / state / probs / counts   Inspect circuit & results", "  pl grad                      Compute parameter gradients (parameter shift)", "", "  PennyLane Python              Q Linux Shell", "  ─────────────────────────────  ──────────────────────────", "  dev = qml.device(...)         pl circuit 3", "  qml.Hadamard(wires=0)         pl Hadamard 0", "  qml.CNOT(wires=[0,1])         pl CNOT 0 1", "  qml.RX(1.57, wires=0)         pl RX 0 1.57", "  circuit()                      pl run", "", "GATE MAP", "  Single: Identity, PauliX, PauliY, PauliZ, Hadamard, S, T, SX", "  Rotation: RX, RY, RZ, Rot, PhaseShift", "  Two:    CNOT, CZ, SWAP, IsingXX, IsingYY, IsingZZ", "  Three:  Toffoli, CSWAP"],
   pl:       ["PL(1) alias for pennylane(1). See 'man pennylane'."],
   python:   ["PYTHON(1) Python/Quantum SDK Compatibility", "", "NAME", "  python: run quantum SDK Python expressions", "", "SYNOPSIS", "  python -c '<code>'           Execute a one liner (Qiskit/Cirq/PennyLane)", "  python                       Enter interactive REPL", "", "DESCRIPTION", "  Supports Qiskit, Cirq, and PennyLane import patterns.", "  Translates Python syntax to Q Linux shell commands.", "", "EXAMPLES", "  python -c 'from qiskit import QuantumCircuit; qc = QuantumCircuit(2); qc.h(0)'", "  python -c 'import cirq; q = cirq.LineQubit.range(2)'", "  python -c 'import pennylane as qml; dev = qml.device(\"default.qubit\", wires=2)'"],
-  pip:      ["PIP(1) Package Manager", "", "NAME", "  pip: manage Q Linux packages", "", "SYNOPSIS", "  pip install qiskit|cirq|pennylane   Install (all pre installed)", "  pip list                            List installed packages", "", "DESCRIPTION", "  Q Linux includes Qiskit, Cirq, and PennyLane as built in modules.", "  All gates map to the native 96 gate ISA."],
+  pip:      ["PIP(1) Q-Linux Package Projection Manager", "", "NAME", "  pip: install packages as native Q-Linux projections", "", "SYNOPSIS", "  pip install <package>           Install from PyPI → generate Hologram projection", "  pip install 'pkg[extras]'      Install with optional extras", "  pip list                        List all installed packages (built-in + projections)", "  pip show <package>              Show detailed package metadata", "  pip uninstall <package>         Remove a package projection", "", "DESCRIPTION", "  The Q-Linux pip fetches real metadata from PyPI, resolves dependencies,", "  and generates a Hologram Lens projection that maps the package's", "  capabilities into native Q-Linux operations.", "", "  Installed packages become callable commands in QShell.", "  Converter-type packages (e.g. markitdown) can process files and URLs.", "", "EXAMPLES", "  pip install 'markitdown[all]'   Install Microsoft's document converter", "  markitdown --url https://...    Convert a web page to markdown", "  pip install requests            Install HTTP library as projection", "  pip show markitdown             View projection metadata"],
   jupyter:  ["JUPYTER(1) Quantum Jupyter Workspace", "", "NAME", "  jupyter: launch and manage Jupyter style quantum notebooks", "", "SYNOPSIS", "  jupyter lab                   Open the Quantum Jupyter Workspace", "  jupyter notebook              Open a specific notebook template", "  jupyter list                  List available notebook templates", "  jupyter demos                 List interactive demos", "", "DESCRIPTION", "  Launch a familiar JupyterLab style environment for quantum computing.", "  Supports Qiskit, Cirq, and PennyLane with built in circuit simulation.", "", "EXAMPLES", "  jupyter lab                   # Open workspace", "  jupyter list                  # See available templates", "  jupyter notebook bell-state   # Open a specific notebook"],
   notebook: ["NOTEBOOK(1) alias for jupyter(1). See 'man jupyter'."],
 };
@@ -2577,39 +2585,119 @@ export function useQShell(options: UseQShellOptions = {}) {
       case "pip3": {
         const pipCmd = parts[1]?.toLowerCase();
         if (pipCmd === "install") {
-          const pkg = parts[2] || "";
+          const pkg = parts.slice(2).join(" ");
+          if (!pkg) {
+            log("Usage: pip install <package>");
+            break;
+          }
+          // Quantum SDK shortcuts — already built-in
           if (pkg.includes("qiskit") || pkg.includes("cirq") || pkg.includes("pennylane")) {
             const name = pkg.includes("qiskit") ? "qiskit" : pkg.includes("cirq") ? "cirq" : "pennylane";
             log(`Requirement already satisfied: ${name} (built-in)`);
             log(`  Type '${name === "pennylane" ? "pl" : name}' to get started.`);
-          } else if (pkg) {
-            log(`Collecting ${pkg}...`);
-            log(`Successfully installed ${pkg}-1.0.0`);
-          } else {
-            log("Usage: pip install <package>");
+            break;
           }
+          // Real async package installation via Package Projection Engine
+          log(`\x1b[1mCollecting ${pkg}...\x1b[0m`);
+          (async () => {
+            const result = await installPackage(pkg, (p) => {
+              if (p.phase === "error") {
+                log(`\x1b[31m${p.detail}\x1b[0m`);
+                return;
+              }
+              log(`  ${p.detail}`);
+            });
+            if (result) {
+              log("");
+              log(`  ┌─────────────────────────────────────────────────────────────┐`);
+              log(`  │  ✓ Projection installed: ${result.metadata.name.padEnd(34)}│`);
+              log(`  │    Version:    ${result.metadata.version.padEnd(42)}│`);
+              log(`  │    Type:       ${result.metadata.projectionType.padEnd(42)}│`);
+              log(`  │    Lens:       ${result.lensId.slice(0, 42).padEnd(42)}│`);
+              log(`  │    Path:       ${result.fsPath.padEnd(42)}│`);
+              log(`  │                                                             │`);
+              log(`  │  Run '${result.metadata.name}' to invoke the projection.${" ".repeat(Math.max(0, 27 - result.metadata.name.length))}│`);
+              log(`  └─────────────────────────────────────────────────────────────┘`);
+              log("");
+              // Install files into Q-FS if available
+              if (subsRef.current?.fs) {
+                const { generateProjectionFiles } = await import("@/hologram/kernel/q-package-projector");
+                const files = generateProjectionFiles(result.metadata);
+                for (const f of files) {
+                  const pathParts = f.path.split("/").filter(Boolean);
+                  let dir = "/";
+                  for (let i = 0; i < pathParts.length - 1; i++) {
+                    const seg = pathParts[i];
+                    const existing = subsRef.current.fs.ls(dir);
+                    if (!existing.some(e => e.name === seg && e.type === "directory")) {
+                      try { subsRef.current.fs.mkdir(dir, seg, 0); } catch {}
+                    }
+                    dir = dir === "/" ? `/${seg}` : `${dir}/${seg}`;
+                  }
+                  const fileName = pathParts[pathParts.length - 1];
+                  try {
+                    const enc = new TextEncoder();
+                    subsRef.current.fs.createFile(dir, fileName, enc.encode(f.content), 0);
+                  } catch {}
+                }
+              }
+            }
+            refresh();
+          })();
         } else if (pipCmd === "list") {
-          log("Package          Version     Backend");
-          log("──────────────── ─────────── ────────────────────");
-          log("qiskit           1.0.0       native — 96-gate ISA");
-          log("qiskit-aer       0.14.0      native — q-linux-sim");
-          log("cirq-core        1.3.0       native — 96-gate ISA");
-          log("pennylane        0.35.0      native — 96-gate ISA");
-          log("numpy            1.26.0      emulated");
-          log("jax              0.4.25      emulated");
-          log("matplotlib       3.8.0       ASCII output");
+          // Show built-in + user-installed packages
+          log("Package          Version     Backend                   Type");
+          log("──────────────── ─────────── ───────────────────────── ──────────────");
+          log("qiskit           1.0.0       native — 96-gate ISA      library");
+          log("qiskit-aer       0.14.0      native — q-linux-sim      library");
+          log("cirq-core        1.3.0       native — 96-gate ISA      library");
+          log("pennylane        0.35.0      native — 96-gate ISA      library");
+          log("numpy            1.26.0      emulated                  library");
+          log("jax              0.4.25      emulated                  library");
+          log("matplotlib       3.8.0       ASCII output              visualization");
+          // User-installed packages
+          const userPkgs = getInstalledPackages();
+          for (const pkg of userPkgs) {
+            const name = pkg.metadata.name.padEnd(17);
+            const ver = pkg.metadata.version.padEnd(12);
+            const backend = "projection".padEnd(26);
+            const type = pkg.metadata.projectionType;
+            log(`${name}${ver}${backend}${type}`);
+          }
         } else if (pipCmd === "show") {
-          const pkg = parts[2] || "";
-          const info: Record<string, string[]> = {
-            qiskit: ["Name: qiskit", "Version: 1.0.0", "Summary: IBM Qiskit for Q-Linux", "Location: /usr/lib/q-linux/qiskit"],
-            cirq: ["Name: cirq-core", "Version: 1.3.0", "Summary: Google Cirq for Q-Linux", "Location: /usr/lib/q-linux/cirq"],
-            pennylane: ["Name: pennylane", "Version: 0.35.0", "Summary: Xanadu PennyLane for Q-Linux", "Location: /usr/lib/q-linux/pennylane"],
+          const pkgName = parts[2] || "";
+          const builtIn: Record<string, string[]> = {
+            qiskit: ["Name: qiskit", "Version: 1.0.0", "Summary: IBM Qiskit for Q-Linux", "Location: /usr/lib/q-linux/qiskit", "Backend: native — 96-gate ISA"],
+            cirq: ["Name: cirq-core", "Version: 1.3.0", "Summary: Google Cirq for Q-Linux", "Location: /usr/lib/q-linux/cirq", "Backend: native — 96-gate ISA"],
+            pennylane: ["Name: pennylane", "Version: 0.35.0", "Summary: Xanadu PennyLane for Q-Linux", "Location: /usr/lib/q-linux/pennylane", "Backend: native — 96-gate ISA"],
           };
-          const key = Object.keys(info).find(k => pkg.includes(k));
-          if (key) { for (const l of info[key]) log(l); }
-          else { log(`pip: package '${pkg}' not found`); }
+          const key = Object.keys(builtIn).find(k => pkgName.includes(k));
+          if (key) {
+            for (const l of builtIn[key]) log(l);
+          } else {
+            // Check user-installed
+            const userPkg = getPackage(pkgName);
+            if (userPkg) {
+              log(`Name: ${userPkg.metadata.name}`);
+              log(`Version: ${userPkg.metadata.version}`);
+              log(`Summary: ${userPkg.metadata.summary}`);
+              log(`Author: ${userPkg.metadata.author}`);
+              log(`License: ${userPkg.metadata.license}`);
+              log(`Location: ${userPkg.fsPath}`);
+              log(`Projection: ${userPkg.metadata.projectionType}`);
+              log(`Lens: ${userPkg.lensId}`);
+              log(`Homepage: ${userPkg.metadata.homepage}`);
+              log(`Requires: ${userPkg.metadata.requires.slice(0, 8).join(", ")}`);
+            } else {
+              log(`pip: package '${pkgName}' not found`);
+            }
+          }
+        } else if (pipCmd === "uninstall") {
+          const pkgName = parts[2] || "";
+          if (!pkgName) { log("Usage: pip uninstall <package>"); }
+          else { log(`Would uninstall ${pkgName}. Use pip uninstall ${pkgName} -y to confirm.`); }
         } else {
-          log("Usage: pip install <package> | pip list | pip show <package>");
+          log("Usage: pip install <package> | pip list | pip show <package> | pip uninstall <package>");
         }
         break;
       }
@@ -2695,8 +2783,86 @@ export function useQShell(options: UseQShellOptions = {}) {
         break;
       }
 
-      default:
-        log(`-bash: ${verb}: command not found`);
+      default: {
+        // Check if verb is an installed package projection
+        if (isPackageInstalled(verb)) {
+          const pkg = getPackage(verb)!;
+          if (parts[1] === "--help" || parts[1] === "-h") {
+            log(`${pkg.metadata.name} v${pkg.metadata.version} — ${pkg.metadata.summary}`);
+            log(`Projection type: ${pkg.metadata.projectionType}`);
+            log(`Lens: ${pkg.lensId}`);
+            log(`Path: ${pkg.fsPath}`);
+            log("");
+            log(`Usage: ${pkg.metadata.name} <input>`);
+            if (pkg.metadata.projectionType === "converter") {
+              log(`       ${pkg.metadata.name} convert <file>     Convert file to target format`);
+              log(`       ${pkg.metadata.name} --url <url>        Convert URL content`);
+            }
+            log(`       ${pkg.metadata.name} --info              Show package metadata`);
+          } else if (parts[1] === "--info") {
+            log(`Name: ${pkg.metadata.name}`);
+            log(`Version: ${pkg.metadata.version}`);
+            log(`Summary: ${pkg.metadata.summary}`);
+            log(`Author: ${pkg.metadata.author}`);
+            log(`License: ${pkg.metadata.license}`);
+            log(`Projection: ${pkg.metadata.projectionType}`);
+            log(`Dependencies: ${pkg.metadata.requires.slice(0, 5).join(", ")}`);
+            log(`Installed: ${pkg.installedAt}`);
+          } else if (parts[1] === "convert" || parts[1] === "--url" || parts.length >= 2) {
+            // Execute the projection
+            const target = parts[1] === "--url" ? parts[2] : parts[1] === "convert" ? parts[2] : parts.slice(1).join(" ");
+            if (!target) {
+              log(`Usage: ${pkg.metadata.name} convert <file|url>`);
+            } else {
+              log(`⬡ Invoking projection lens: ${pkg.lensId}`);
+              log(`  Processing: ${target}`);
+              (async () => {
+                try {
+                  // For markitdown specifically, call the edge function
+                  if (pkg.metadata.name === "markitdown" && (parts[1] === "--url" || target.startsWith("http"))) {
+                    const url = parts[1] === "--url" ? parts[2] : target;
+                    log(`  Fetching: ${url}`);
+                    const resp = await fetch(`${(window as any).__SUPABASE_URL__ || import.meta.env.VITE_SUPABASE_URL}/functions/v1/markitdown`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+                      body: JSON.stringify({ url }),
+                    });
+                    if (resp.ok) {
+                      const data = await resp.json();
+                      log(`  ✓ Conversion complete`);
+                      log(`  Input:  ${data.stats.inputLength} chars`);
+                      log(`  Output: ${data.stats.outputLength} chars (ratio: ${data.stats.compressionRatio})`);
+                      log("");
+                      // Show first ~30 lines of output
+                      const lines = data.markdown.split("\n").slice(0, 30);
+                      for (const l of lines) log(l);
+                      if (data.markdown.split("\n").length > 30) {
+                        log(`\n  ... (${data.markdown.split("\n").length - 30} more lines)`);
+                      }
+                    } else {
+                      log(`  ✗ Conversion failed: ${resp.status}`);
+                    }
+                  } else {
+                    // Generic projection execution
+                    const result = await executeProjection(verb, parts.slice(1));
+                    log(result.output);
+                  }
+                } catch (err) {
+                  log(`  ✗ Projection error: ${err}`);
+                }
+                refresh();
+              })();
+            }
+          } else {
+            // No args — show summary
+            log(`${pkg.metadata.name} v${pkg.metadata.version}`);
+            log(`${pkg.metadata.summary}`);
+            log(`Type '${pkg.metadata.name} --help' for usage.`);
+          }
+        } else {
+          log(`-bash: ${verb}: command not found`);
+        }
+      }
     }
 
     refresh();
