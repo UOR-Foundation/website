@@ -26,7 +26,7 @@ import { QFs, type InodeType } from "@/hologram/kernel/q-fs";
 import { QMmu } from "@/hologram/kernel/q-mmu";
 import { encodeUtf8 } from "@/hologram/genesis/axiom-ring";
 import { supabase } from "@/integrations/supabase/client";
-import { writeSlot, readSlot } from "@/modules/data-bank/lib/sync";
+import { writeSlot, readSlot, readSlotFromCloud } from "@/modules/data-bank/lib/sync";
 
 // ── Persistence constants ───────────────────────────────────────────────────
 const QFS_STORAGE_KEY = "uor:qfs:workspace";
@@ -896,7 +896,7 @@ export function useQFs(): QFsHandle {
     if (!userId || !fsRef.current) return null;
 
     try {
-      const slot = await readSlot(userId, QFS_CLOUD_SLOT);
+      const slot = await readSlotFromCloud(userId, QFS_CLOUD_SLOT);
       if (!slot) return null;
 
       const cloudWs: PersistedWorkspace = JSON.parse(slot.value);

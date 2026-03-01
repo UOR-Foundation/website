@@ -167,7 +167,17 @@ export async function readSlot(
   const local = readLocal(key);
   if (local) return local;
 
-  // L2: Fetch from cloud and decrypt
+  return readSlotFromCloud(userId, key);
+}
+
+/**
+ * Read a slot directly from L2 (cloud), bypassing the L1 cache.
+ * Use this when you need the authoritative cloud version for diffing.
+ */
+export async function readSlotFromCloud(
+  userId: string,
+  key: string
+): Promise<DataBankSlot | null> {
   try {
     const { data } = await supabase
       .from("user_data_bank")
@@ -189,8 +199,6 @@ export async function readSlot(
       updatedAt: data.updated_at,
     };
 
-    // Warm L1 cache
-    writeLocal(slot);
     return slot;
   } catch {
     return null;
