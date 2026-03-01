@@ -51,6 +51,12 @@ const FP = {
   MEMORY_SUMMARY: "schema:description",
   MEMORY_GRADE: "uor:hasRole",
 
+  // Limbic modality (emotional memory)
+  MEMORY_VALENCE: "limbic:valence",
+  MEMORY_AROUSAL: "limbic:arousal",
+  MEMORY_DOMINANCE: "limbic:dominance",
+  MEMORY_EMOTION: "limbic:emotion",
+
   // Context modality (re-uses context predicates)
   CTX_INTEREST: "uor:interestedIn",
   CTX_TASK: "uor:activeTask",
@@ -166,7 +172,7 @@ export async function projectMemories(agentId: string, limit = 50): Promise<Comp
 
   const { data: memories } = await supabase
     .from("agent_memories")
-    .select("memory_cid, memory_type, importance, storage_tier, epistemic_grade, summary")
+    .select("memory_cid, memory_type, importance, storage_tier, epistemic_grade, summary, valence, arousal, dominance")
     .eq("agent_id", agentId)
     .order("importance", { ascending: false })
     .limit(limit);
@@ -183,6 +189,10 @@ export async function projectMemories(agentId: string, limit = 50): Promise<Comp
     if (m.summary) {
       triples.push({ subject: s, predicate: FP.MEMORY_SUMMARY, object: m.summary.slice(0, 200) });
     }
+    // Limbic emotional fingerprint
+    triples.push({ subject: s, predicate: FP.MEMORY_VALENCE, object: `${m.valence}` });
+    triples.push({ subject: s, predicate: FP.MEMORY_AROUSAL, object: `${m.arousal}` });
+    triples.push({ subject: s, predicate: FP.MEMORY_DOMINANCE, object: `${m.dominance}` });
   }
 
   return triples;
