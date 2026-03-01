@@ -41,6 +41,7 @@ import {
 import { createState, simulateCircuit, realisticNoise, measure } from "@/hologram/kernel/q-simulator";
 import { useScreenTheme } from "@/modules/hologram-ui/hooks/useScreenTheme";
 import { nbColors, NbThemeCtx, useNbTheme, type NbColors } from "./notebook-theme";
+import { CodeProjection } from "@/hologram/kernel/components/CodeProjection";
 
 /* ── Python Syntax Highlighter ────────────────────────────────────────────── */
 
@@ -754,82 +755,22 @@ const CellView = React.memo(function CellView({
                     return line ? <p key={i} className="text-sm my-1 leading-relaxed" style={{ color: t.text }}>{line}</p> : <br key={i} />;
                   })}
                 </div>
-              ) : precisionMode && !isMarkdown ? (
-                /* ── Precision Input Projection mode ── */
-                <PrecisionInputEditor
-                  source={localSource}
-                  onChange={(val) => { setLocalSource(val); flushToParent(val); }}
-                  cellId={cell.id}
-                  onRun={onRun}
-                  onEdit={onEdit}
-                  showLineNumbers={showLineNumbers}
-                  t={t}
-                />
               ) : (
-                <div className="relative flex">
-                  {showLineNumbers && !isMarkdown && (
-                    <div className="select-none py-[5px] pr-2 text-right border-r" style={{
-                      minWidth: 40,
-                      background: t.bgHover,
-                      borderColor: t.border,
-                    }}>
-                      {localSource.split("\n").map((_, i) => (
-                        <div key={i} className="text-[12px] font-mono leading-[1.8] px-1" style={{ color: t.textDim }}>
-                          {i + 1}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex-1 relative">
-                    {/* Syntax highlight overlay — shown only in command mode for precise editing */}
-                    {showSyntaxOverlay && localSource && (
-                      <pre
-                        className="absolute inset-0 px-4 py-[5px] text-[13px] font-mono leading-[1.8] pointer-events-none overflow-hidden"
-                        aria-hidden="true"
-                        style={{
-                          color: t.textCode,
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-word",
-                          overflowWrap: "break-word",
-                          tabSize: 4,
-                          fontVariantLigatures: "none",
-                          margin: 0,
-                          border: "none",
-                          background: "transparent",
-                        }}
-                      >
-                        {highlighted.map((h, i) => (
-                          <div key={i}>{h.tokens.length > 0 ? h.tokens : "\u00A0"}</div>
-                        ))}
-                      </pre>
-                    )}
-
-                    <textarea
-                      ref={textareaRef}
-                      data-cell-id={cell.id}
-                      value={localSource}
-                      onChange={handleChange}
-                      onKeyDown={handleKeyDown}
-                      onPaste={handlePaste}
-                      onFocus={onEdit}
-                      className="w-full px-4 py-[5px] text-[13px] font-mono resize-none focus:outline-none bg-transparent relative z-10"
-                      style={{
-                        color: isMarkdown ? t.text : showSyntaxOverlay ? "transparent" : t.textCode,
-                        caretColor: t.caret,
-                        lineHeight: "1.8",
-                        minHeight: "28px",
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                        overflowWrap: "break-word",
-                        tabSize: 4,
-                        fontVariantLigatures: "none",
-                      }}
-                      spellCheck={false}
-                      placeholder={isMarkdown ? "Write Markdown here…" : "# Write Python code here…"}
-                    />
-                  </div>
-                </div>
+                /* ── CodeProjection — global canonical code editor ── */
+                <CodeProjection
+                  value={localSource}
+                  onChange={(val) => { setLocalSource(val); flushToParent(val); }}
+                  id={cell.id}
+                  language="python"
+                  lineNumbers={showLineNumbers}
+                  precisionMode={precisionMode}
+                  placeholder={isMarkdown ? "Write Markdown here…" : "# Write Python code here…"}
+                  onRun={onRun}
+                  onFocus={onEdit}
+                  syntaxOverlay={showSyntaxOverlay}
+                  highlighter={!isMarkdown ? highlightPython : undefined}
+                  theme={t}
+                />
               )}
             </div>
 
