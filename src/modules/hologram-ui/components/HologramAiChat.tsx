@@ -976,22 +976,17 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
   const isFocus = attention.preset === "focus";
 
-  const computedWidth = panelWidth ? `${panelWidth}px` : "min(340px, 82vw)";
+  // Width now controlled by parent flex container
 
   return (
     <>
       {/* ── Slide-out panel — docked right, part of the OS ─────────── */}
       <div
-        className="fixed top-0 right-0 bottom-0 z-[60] flex"
+        className="relative h-full w-full flex"
         style={{
-          width: computedWidth,
-          transform: open ? "translate3d(0, 0, 0)" : "translate3d(calc(100% + 10px), 0, 0)",
+          opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
-          transition: isResizing ? "none" : open
-            ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
-            : "transform 220ms cubic-bezier(0.16, 0.6, 0.4, 1)",
-          willChange: open ? "transform" : "auto",
-          backfaceVisibility: "hidden",
+          transition: isResizing ? "none" : "opacity 180ms ease",
           contain: "layout style",
         }}
       >

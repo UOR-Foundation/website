@@ -383,11 +383,11 @@ export default function HologramOsPage() {
           className="flex-1 relative overflow-hidden z-0"
           style={{
             opacity: departing ? 0 : 1,
-            transform: `translate3d(${chatOpen ? "-10px" : "0px"}, 0, 0) scale(${departing ? 1.02 : isFocus ? 1.03 : 1})`,
+            transform: `scale(${departing ? 1.02 : isFocus ? 1.03 : 1})`,
             filter: departing ? "blur(4px)" : "none",
             transition: lumenPanel.isResizing
               ? "none"
-              : `transform ${isFocus ? 600 : 240}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${isFocus ? 600 : 240}ms ease, filter ${isFocus ? 600 : 240}ms ease`,
+              : `transform ${isFocus ? 600 : 220}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${isFocus ? 600 : 220}ms ease, filter ${isFocus ? 600 : 220}ms ease`,
             willChange: "transform",
           }}
         >
@@ -442,8 +442,30 @@ export default function HologramOsPage() {
               </div>
             );
           })}
+        </div>
 
-          {/* VoiceOrb removed — genesis dot is now the primary Lumen AI entry point */}
+        {/* ══ Lumen AI Chat — inline, pushes content ═══════════════ */}
+        <div
+          className="shrink-0 h-full overflow-hidden"
+          style={{
+            width: chatOpen ? (lumenPanel.width ? `${lumenPanel.width}px` : "340px") : "0px",
+            transition: lumenPanel.isResizing
+              ? "none"
+              : "width 220ms cubic-bezier(0.22, 1, 0.36, 1)",
+            willChange: "width",
+          }}
+        >
+          <HologramAiChat
+            open={chatOpen}
+            onClose={() => { k.setChatOpen(false); setChatPrompt(""); }}
+            onPhaseChange={triadicActivity.setActivePhase}
+            creatorStage={triadicActivity.creatorStage}
+            replayGuideKey={0}
+            initialPrompt={chatPrompt}
+            panelWidth={lumenPanel.width}
+            resizeHandleProps={lumenPanel.resizeHandleProps}
+            isResizing={lumenPanel.isResizing}
+          />
         </div>
       </div>
 
@@ -452,17 +474,6 @@ export default function HologramOsPage() {
       <ShortcutCheatSheet open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <LegalPanel open={legalOpen} initialTab={legalTab} onClose={() => setLegalOpen(false)} bgMode={activeDesktop === "white" ? "white" : "dark"} />
       <ModularSnapGrid visible={lumenPanel.isResizing} />
-      <HologramAiChat
-        open={chatOpen}
-        onClose={() => { k.setChatOpen(false); setChatPrompt(""); }}
-        onPhaseChange={triadicActivity.setActivePhase}
-        creatorStage={triadicActivity.creatorStage}
-        replayGuideKey={0}
-        initialPrompt={chatPrompt}
-        panelWidth={lumenPanel.width}
-        resizeHandleProps={lumenPanel.resizeHandleProps}
-        isResizing={lumenPanel.isResizing}
-      />
       <BrowserProjection
         open={activePanel === "browser"}
         preload={preloadedPanels.has("browser")}
