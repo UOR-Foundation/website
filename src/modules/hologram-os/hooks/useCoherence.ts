@@ -19,7 +19,7 @@
  */
 
 import { useMemo } from "react";
-import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave, type RewardProjection, type StabilizerProjection, type CircuitProjection } from "../projection-engine";
+import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave, type RewardProjection, type StabilizerProjection, type CircuitProjection, type CompositorProjection } from "../projection-engine";
 import { useKernel } from "./useKernel";
 
 export interface CoherenceState {
@@ -43,6 +43,8 @@ export interface CoherenceState {
   readonly stabilizer: StabilizerProjection;
   /** Circuit compiler projection — the prefrontal cortex pipeline */
   readonly circuit: CircuitProjection;
+  /** Compositor projection — the multi-kernel frame merger */
+  readonly compositor: CompositorProjection;
 }
 
 const DEFAULT_GRADIENT: CoherenceGradient = {
@@ -70,6 +72,11 @@ const DEFAULT_CIRCUIT: CircuitProjection = {
   totalExecutions: 0, latencyEma: 0,
 };
 
+const DEFAULT_COMPOSITOR: CompositorProjection = {
+  active: false, kernelCount: 0, activeCount: 0, compositeH: 0,
+  zone: "convergent", foreground: "", layers: [], health: 1, totalFrames: 0,
+};
+
 /**
  * useCoherence — read coherence wave state from the kernel.
  * Zero additional state — purely derived from ProjectionFrame.
@@ -87,6 +94,7 @@ export function useCoherence(): CoherenceState {
         reward: DEFAULT_REWARD,
         stabilizer: DEFAULT_STABILIZER,
         circuit: DEFAULT_CIRCUIT,
+        compositor: DEFAULT_COMPOSITOR,
       };
     }
 
@@ -102,6 +110,7 @@ export function useCoherence(): CoherenceState {
       reward: frame.rewardProjection,
       stabilizer: frame.stabilizerProjection,
       circuit: frame.circuitProjection,
+      compositor: frame.compositorProjection,
     };
   }, [frame]);
 }

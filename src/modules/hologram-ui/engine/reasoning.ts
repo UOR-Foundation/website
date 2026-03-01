@@ -64,3 +64,22 @@ export {
   type Wire,
   type GateResult,
 } from "@/hologram/kernel/circuit-compiler";
+
+// ── Multi-Kernel Compositor ───────────────────────────────────────────
+export {
+  getKernelSupervisor,
+  KernelSupervisor,
+  type ChildKernel,
+  type ChildKernelFrame,
+  type ChildKernelState,
+  type KernelRole,
+  type SupervisorProjection,
+} from "@/hologram/kernel/kernel-supervisor";
+
+export {
+  getProjectionCompositor,
+  ProjectionCompositor,
+  type CompositeFrame,
+  type CompositeLayer,
+  type CompositorProjection,
+} from "@/hologram/kernel/projection-compositor";
