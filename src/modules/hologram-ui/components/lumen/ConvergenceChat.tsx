@@ -494,7 +494,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
         className="flex-1 overflow-y-auto px-6"
         style={{ scrollBehavior: "smooth" }}
       >
-        <div className="max-w-2xl mx-auto py-8">
+        <div style={{ maxWidth: "min(680px, 61.8%)", margin: "0 auto", padding: "clamp(16px, 3vh, 40px) 0" }}>
 
           {/* Welcome — when empty */}
           {!hasExchanges && !isConverging && (
@@ -502,16 +502,21 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-              className="flex flex-col items-center justify-center min-h-[50vh] text-center"
+              className="flex flex-col items-center justify-center text-center"
+              style={{
+                /* Golden ratio: content sits at ~38.2% from top (1 - 1/φ) */
+                minHeight: "61.8vh",
+                paddingTop: "6.18vh",
+              }}
             >
-              {/* Breathing glyph */}
+              {/* Breathing glyph — scales with viewport */}
               <motion.div
                 animate={{ scale: [1, 1.05, 1], opacity: [0.4, 0.6, 0.4] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="mb-8"
+                className="mb-[3.2vh]"
               >
                 <span
-                  className="text-[28px]"
+                  className="text-[clamp(24px,3.6vh,42px)]"
                   style={{ color: "hsla(38, 40%, 60%, 0.3)" }}
                 >
                   ✦
@@ -519,18 +524,22 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
               </motion.div>
 
               <h2
-                className="text-[28px] font-light leading-tight mb-3"
+                className="font-light leading-tight mb-3"
                 style={{
                   fontFamily: C.fontDisplay,
                   color: "hsla(38, 20%, 80%, 0.85)",
                   letterSpacing: "-0.01em",
+                  fontSize: "clamp(24px, 3.8vh, 44px)",
                 }}
               >
                 {greeting}
               </h2>
               <p
-                className="text-[14px] max-w-md leading-relaxed"
-                style={{ color: "hsla(30, 10%, 55%, 0.5)" }}
+                className="max-w-md leading-relaxed"
+                style={{
+                  color: "hsla(30, 10%, 55%, 0.5)",
+                  fontSize: "clamp(13px, 1.6vh, 17px)",
+                }}
               >
                 This is not a prompt. It's a thought. Express it naturally,
                 and the understanding will find its shape.
@@ -577,7 +586,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
 
       {/* ── Input — the thought field ──────────────────────── */}
       <div className="flex-shrink-0 px-6 pb-8 pt-3">
-        <div className="max-w-2xl mx-auto">
+        <div style={{ maxWidth: "min(680px, 61.8%)", margin: "0 auto" }}>
           {/* Active pipeline indicator above input */}
           <AnimatePresence>
             {isConverging && (
@@ -611,10 +620,11 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
                 placeholder={isConverging ? "Thinking…" : greeting}
                 disabled={isConverging}
                 rows={1}
-                className="w-full bg-transparent border-none outline-none resize-none text-[15px] placeholder:opacity-20 leading-relaxed block"
+                className="w-full bg-transparent border-none outline-none resize-none placeholder:opacity-20 leading-relaxed block"
                 style={{
                   color: C.text,
                   fontFamily: C.font,
+                  fontSize: "clamp(14px, 1.6vh, 17px)",
                   maxHeight: "140px",
                   letterSpacing: "0.015em",
                 }}
@@ -622,40 +632,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
             </div>
 
             {/* Bottom bar */}
-            <div className="flex items-center justify-between px-3 pb-2.5">
-              <div className="flex items-center gap-2">
-                {/* Triadic mode toggle — whisper-quiet pills */}
-                <div className="flex items-center gap-0.5 rounded-lg p-0.5" style={{ background: "hsla(25, 8%, 12%, 0.5)" }}>
-                  {TRIADIC_MODES.map(({ key, label, icon: Icon, hue }) => {
-                    const isActive = triadicMode === key;
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => setTriadicMode(prev => prev === key ? "balanced" : key)}
-                        className="flex items-center gap-1 px-2 py-1 rounded-md transition-all duration-300"
-                        style={{
-                          background: isActive ? `hsla(${hue}, 40%, 50%, 0.12)` : "transparent",
-                          color: isActive ? `hsl(${hue}, 45%, 65%)` : "hsla(38, 15%, 50%, 0.25)",
-                        }}
-                        title={`${isActive ? "Disable" : "Switch to"} ${label} mode`}
-                      >
-                        <Icon className="w-3 h-3" strokeWidth={1.4} />
-                        <span className="text-[9px] tracking-wider uppercase" style={{ fontFamily: C.font }}>
-                          {label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {/* Active mode label */}
-                <span
-                  className="text-[9px] tracking-wider transition-all duration-300"
-                  style={{ color: "hsla(38, 15%, 50%, 0.15)" }}
-                >
-                  {triadicMode === "balanced" ? "balanced" : ""}
-                </span>
-              </div>
-
+            <div className="flex items-center justify-end px-3 pb-2.5">
               <div className="flex items-center gap-2">
                 {/* Voice orb / mic button */}
                 {voice.isSttAvailable && (
