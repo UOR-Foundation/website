@@ -126,6 +126,7 @@ const ConsciousnessPage = lazy(() => import("@/modules/consciousness/pages/Consc
 const GodConjecturePage = lazy(() => import("@/modules/consciousness/pages/GodConjecturePage"));
 const TrustGraphPage = lazy(() => import("@/modules/trust-graph/pages/TrustGraphPage"));
 const HologramOsPage = lazy(() => import("@/modules/hologram-ui/pages/HologramOsPage"));
+const TextDepthDemo = lazy(() => import("@/modules/hologram-ui/pages/TextDepthDemo"));
 const HologramConsolePage = lazy(() => import("@/modules/hologram-ui/pages/HologramConsolePage"));
 const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
 const ConvergencePage = lazy(() => import("@/modules/hologram-ui/pages/ConvergencePage"));
@@ -285,6 +286,7 @@ const App = () => {
             <Route path="/consciousness/god-conjecture" element={<GodConjecturePage />} />
             <Route path="/trust-graph" element={<TrustGraphPage />} />
             <Route path="/hologram-os" element={<HologramOsPage />} />
+            <Route path="/text-depth-demo" element={<TextDepthDemo />} />
             <Route path="/hologram" element={<HologramConsolePage />} />
             <Route path="/code-kg" element={<CodeKgPage />} />
             <Route path="/convergence" element={<ConvergencePage />} />
