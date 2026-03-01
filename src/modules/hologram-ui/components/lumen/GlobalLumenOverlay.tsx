@@ -56,7 +56,7 @@ export default function GlobalLumenOverlay() {
           WebkitBackdropFilter: "blur(1px)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
-          transition: "opacity 160ms ease",
+          transition: "opacity 350ms cubic-bezier(0.22, 0.61, 0.36, 1)",
           willChange: open ? "opacity" : "auto",
         }}
       />
@@ -78,8 +78,8 @@ export default function GlobalLumenOverlay() {
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
           transition: open
-            ? "transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 140ms ease"
-            : "transform 160ms cubic-bezier(0.4, 0, 0.2, 1), opacity 100ms ease",
+            ? "transform 420ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 300ms cubic-bezier(0.22, 0.61, 0.36, 1)"
+            : "transform 380ms cubic-bezier(0.32, 0, 0.15, 1), opacity 250ms ease-out",
           willChange: open ? "transform, opacity" : "auto",
           contain: "layout style paint",
         }}

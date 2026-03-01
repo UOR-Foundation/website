@@ -50,14 +50,14 @@ export default memo(function LumenFullscreen({ open, onClose, onCollapse }: Lume
       // Snapshot the Genesis dot position at moment of click
       setOrigin(getGenesisOrigin(containerRef.current));
       setMode("expanding");
-      const t = setTimeout(() => setMode("fullscreen"), 600);
+      const t = setTimeout(() => setMode("fullscreen"), 900);
       return () => clearTimeout(t);
     }
     if (!open && (mode === "fullscreen" || mode === "expanding")) {
       // Re-snapshot origin for collapse (dot may have shifted)
       setOrigin(getGenesisOrigin(containerRef.current));
       setMode("collapsing");
-      const t = setTimeout(() => setMode("closed"), 450);
+      const t = setTimeout(() => setMode("closed"), 700);
       return () => clearTimeout(t);
     }
   }, [open]);
@@ -91,9 +91,9 @@ export default memo(function LumenFullscreen({ open, onClose, onCollapse }: Lume
       style={{
         clipPath,
         transition: isExpanding
-          ? "clip-path 600ms cubic-bezier(0.16, 1, 0.3, 1)"
+          ? "clip-path 900ms cubic-bezier(0.22, 0.61, 0.36, 1)"
           : isCollapsing
-            ? "clip-path 450ms cubic-bezier(0.4, 0, 0.2, 1)"
+            ? "clip-path 700ms cubic-bezier(0.32, 0, 0.15, 1)"
             : "none",
         willChange: isVisible ? "clip-path" : "auto",
         pointerEvents: isVisible ? "auto" : "none",
@@ -134,7 +134,7 @@ export default memo(function LumenFullscreen({ open, onClose, onCollapse }: Lume
             boxShadow: "0 0 60px 20px hsla(38, 50%, 55%, 0.04), inset 0 0 30px hsla(38, 50%, 55%, 0.03)",
             opacity: isExpanding ? 1 : 0,
             transform: isExpanding ? "scale(4)" : "scale(0.3)",
-            transition: "opacity 1s ease-out, transform 1s cubic-bezier(0.16, 1, 0.3, 1)",
+            transition: "opacity 1.4s ease-out, transform 1.4s cubic-bezier(0.22, 0.61, 0.36, 1)",
           }}
         />
       </div>
@@ -145,7 +145,7 @@ export default memo(function LumenFullscreen({ open, onClose, onCollapse }: Lume
         style={{
           opacity: isFullyOpen ? 1 : 0,
           transform: isFullyOpen ? "translateY(0)" : "translateY(-8px)",
-          transition: "opacity 300ms ease 250ms, transform 300ms ease 250ms",
+          transition: "opacity 400ms ease 400ms, transform 400ms ease 400ms",
         }}
       >
         <button
@@ -186,7 +186,7 @@ export default memo(function LumenFullscreen({ open, onClose, onCollapse }: Lume
         className="absolute inset-0 flex flex-col"
         style={{
           opacity: isExpanding || isFullyOpen ? 1 : 0,
-          transition: "opacity 350ms ease 150ms",
+          transition: "opacity 500ms ease 250ms",
         }}
       >
         <ConvergenceChat embedded onClose={onClose} />
