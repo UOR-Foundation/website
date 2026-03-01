@@ -141,6 +141,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   const [dimensionValues, setDimensionValues] = useState<DimensionValues>(getDefaultValues());
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const deckPersonasRef = useRef<{ a: DimensionPreset | null; b: DimensionPreset | null; mix: number }>({ a: null, b: null, mix: 0.5 });
+  const [deckDisplay, setDeckDisplay] = useState<{ a: DimensionPreset | null; b: DimensionPreset | null; mix: number }>({ a: null, b: null, mix: 0.5 });
   const [resonancePanelOpen, setResonancePanelOpen] = useState(false);
   const [graphContext, setGraphContext] = useState<GraphContext | null>(null);
   const [bloomEnabled, setBloomEnabled] = useState(getBloomDefault);
@@ -771,6 +772,81 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
             }}
           />
 
+          {/* Active Persona Blend Indicator */}
+          {(deckDisplay.a || deckDisplay.b) && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-6 flex items-center justify-center gap-3"
+            >
+              <div
+                className="flex items-center gap-2.5 px-4 py-2 rounded-xl"
+                style={{
+                  background: "hsla(25, 12%, 12%, 0.6)",
+                  border: "1px solid hsla(38, 20%, 30%, 0.15)",
+                  backdropFilter: "blur(12px)",
+                  fontFamily: C.font,
+                }}
+              >
+                {/* Deck A */}
+                {deckDisplay.a && (
+                  <span className="flex items-center gap-1.5">
+                    <span style={{ fontSize: 14 }}>{deckDisplay.a.icon}</span>
+                    <span
+                      className="text-[11px] font-medium"
+                      style={{
+                        color: `hsla(38, 40%, 70%, ${0.3 + (1 - deckDisplay.mix) * 0.7})`,
+                        transition: "color 300ms ease",
+                      }}
+                    >
+                      {deckDisplay.a.name}
+                    </span>
+                  </span>
+                )}
+
+                {/* Blend bar */}
+                {deckDisplay.a && deckDisplay.b && (
+                  <div className="flex items-center gap-1.5 mx-1">
+                    <span className="text-[9px] font-mono" style={{ color: "hsla(38, 20%, 60%, 0.4)" }}>
+                      {Math.round((1 - deckDisplay.mix) * 100)}
+                    </span>
+                    <div
+                      className="relative rounded-full overflow-hidden"
+                      style={{ width: 48, height: 4, background: "hsla(38, 15%, 25%, 0.3)" }}
+                    >
+                      <motion.div
+                        className="absolute inset-y-0 left-0 rounded-full"
+                        style={{ background: "hsla(38, 50%, 55%, 0.5)" }}
+                        animate={{ width: `${(1 - deckDisplay.mix) * 100}%` }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                      />
+                    </div>
+                    <span className="text-[9px] font-mono" style={{ color: "hsla(38, 20%, 60%, 0.4)" }}>
+                      {Math.round(deckDisplay.mix * 100)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Deck B */}
+                {deckDisplay.b && (
+                  <span className="flex items-center gap-1.5">
+                    <span style={{ fontSize: 14 }}>{deckDisplay.b.icon}</span>
+                    <span
+                      className="text-[11px] font-medium"
+                      style={{
+                        color: `hsla(38, 40%, 70%, ${0.3 + deckDisplay.mix * 0.7})`,
+                        transition: "color 300ms ease",
+                      }}
+                    >
+                      {deckDisplay.b.name}
+                    </span>
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {/* Exchanges */}
           <div className="space-y-12">
             {exchanges.map((ex, idx) => (
@@ -836,7 +912,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
             onChange={handleDimensionChange}
             activePresetId={activePresetId}
             onSelectPreset={handleSelectPreset}
-            onDeckChange={(a, b, mix) => { deckPersonasRef.current = { a, b, mix }; }}
+            onDeckChange={(a, b, mix) => { deckPersonasRef.current = { a, b, mix }; setDeckDisplay({ a, b, mix }); }}
           />
         )}
       </AnimatePresence>
