@@ -14,7 +14,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint } from "lucide-react";
+import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight } from "lucide-react";
 
 // ── Palette (mirrors ConvergenceChat) ────────────────────────────────
 const C = {
@@ -117,30 +117,120 @@ function trustScore(meta?: ExchangeMeta): number {
   return Math.min(100, Math.round(score));
 }
 
-/** Generate follow-up suggestions based on claims */
-function generateFollowUps(claims: any[], thought: string): string[] {
+/** Generate follow-up suggestions based on claims and the response content */
+function generateFollowUps(claims: any[], thought: string, understanding: string): string[] {
   const suggestions: string[] = [];
-  if (!claims || claims.length === 0) {
-    suggestions.push(`What evidence supports this?`);
-    suggestions.push(`Can you explain your reasoning step by step?`);
-    return suggestions;
-  }
 
-  // Pick up to 3 claims and generate verification questions
-  const topClaims = claims.slice(0, 3);
-  for (const claim of topClaims) {
-    const text = typeof claim === "string" ? claim : claim.text || claim.claim || JSON.stringify(claim);
-    if (text.length > 10) {
-      suggestions.push(`How confident are you about: "${text.slice(0, 60)}${text.length > 60 ? "…" : ""}"?`);
+  // Strategy 1: If claims exist, target the weakest or most interesting ones
+  if (claims && claims.length > 0) {
+    // Find claims with lowest confidence or no source
+    const weakClaims = claims.filter((c: any) => {
+      const grade = typeof c === "object" ? c.grade : null;
+      return !grade || grade === "C" || grade === "D";
+    });
+    const targetClaims = weakClaims.length > 0 ? weakClaims : claims;
+
+    const first = targetClaims[0];
+    const firstText = typeof first === "string" ? first : first?.text || first?.claim || first?.label || "";
+    if (firstText.length > 5) {
+      suggestions.push(`What is the primary evidence for "${firstText.slice(0, 50)}${firstText.length > 50 ? "…" : ""}"?`);
     }
   }
 
-  if (suggestions.length < 2) {
-    suggestions.push("What are the limits of this understanding?");
+  // Strategy 2: Epistemic boundary question — what would change the answer
+  if (understanding.length > 50) {
+    const hasNumbers = /\d+%|\d+\.\d+|\$[\d,]+/.test(understanding);
+    if (hasNumbers) {
+      suggestions.push("What are the exact sources and dates for the figures cited?");
+    } else {
+      suggestions.push("What evidence would change or refine this answer?");
+    }
   }
-  suggestions.push("What would change this answer?");
+
+  // Strategy 3: Knowledge limit question
+  suggestions.push("What are the boundaries of your knowledge on this topic, and how could I verify this independently?");
 
   return suggestions.slice(0, 3);
+}
+
+/** Build a human-readable chain-of-thought narrative from the exchange data */
+function buildTraceNarrative(ex: { thought: string; understanding: string; meta?: ExchangeMeta }): string[] {
+  const steps: string[] = [];
+  const meta = ex.meta;
+
+  // Step 1: What was asked
+  steps.push(`① Received query: "${ex.thought.slice(0, 80)}${ex.thought.length > 80 ? "…" : ""}"`);
+
+  // Step 2: Decomposition
+  if (meta?.claims && meta.claims.length > 0) {
+    steps.push(`② Decomposed into ${meta.claims.length} verifiable claim${meta.claims.length !== 1 ? "s" : ""} for independent evaluation`);
+  } else {
+    steps.push(`② Single-pass reasoning — query did not require decomposition`);
+  }
+
+  // Step 3: Each claim as a reasoning step
+  if (meta?.claims && meta.claims.length > 0) {
+    meta.claims.forEach((claim: any, i: number) => {
+      const text = typeof claim === "string" ? claim : claim.text || claim.claim || claim.label || JSON.stringify(claim);
+      const grade = typeof claim === "object" && claim.grade ? claim.grade : null;
+      const gradeStr = grade ? ` [Grade ${grade}]` : "";
+      steps.push(`   ${String.fromCharCode(97 + i)}) ${text}${gradeStr}`);
+    });
+  }
+
+  // Step 4: Convergence result
+  if (meta?.iterations != null) {
+    steps.push(`③ Ran ${meta.iterations} convergence iteration${meta.iterations !== 1 ? "s" : ""} — curvature κ = ${meta.curvature?.toFixed(4) ?? "n/a"}`);
+  }
+
+  // Step 5: Final assessment
+  const gradeMap: Record<string, string> = { A: "High confidence", B: "Good confidence", C: "Moderate confidence", D: "Low confidence" };
+  const gradeStr = gradeMap[meta?.grade ?? ""] ?? "Ungraded";
+  const convergedStr = meta?.converged ? "Converged ✓" : "Did not converge";
+  steps.push(`④ Final assessment: ${gradeStr} · ${convergedStr}`);
+
+  // Step 6: Reward signal
+  if (meta?.reward != null) {
+    const direction = meta.reward > 0 ? "positive" : meta.reward < 0 ? "negative" : "neutral";
+    steps.push(`⑤ Coherence reward: ${direction} (Δ${meta.reward > 0 ? "+" : ""}${meta.reward.toFixed(3)}) — system ${meta.reward >= 0 ? "learned from" : "flagged"} this exchange`);
+  }
+
+  return steps;
+}
+
+/** Extract plausible source references from the response text */
+function extractSources(understanding: string, claims: any[]): { text: string; type: "cited" | "inferred" | "unverified" }[] {
+  const sources: { text: string; type: "cited" | "inferred" | "unverified" }[] = [];
+
+  // Check for explicit URL mentions
+  const urlMatches = understanding.match(/https?:\/\/[^\s)]+/g);
+  if (urlMatches) {
+    urlMatches.slice(0, 3).forEach(url => {
+      sources.push({ text: url, type: "cited" });
+    });
+  }
+
+  // Check for named sources (e.g., "according to X", "World Bank", etc.)
+  const namedSourcePatterns = [
+    /(?:according to|per|from|source:|via|reported by|published by)\s+([A-Z][^.,;]+)/gi,
+    /(?:World Bank|IMF|WHO|UN|OECD|NSB|Bureau of Statistics|Federal Reserve|ECB|IPCC)/gi,
+  ];
+  for (const pattern of namedSourcePatterns) {
+    let match;
+    while ((match = pattern.exec(understanding)) !== null) {
+      const name = match[1] || match[0];
+      if (!sources.some(s => s.text.includes(name.trim()))) {
+        sources.push({ text: name.trim(), type: "inferred" });
+      }
+    }
+  }
+
+  // If no sources found, mark claims as unverified
+  if (sources.length === 0 && claims.length > 0) {
+    sources.push({ text: "No external sources cited — based on model knowledge", type: "unverified" });
+  }
+
+  return sources.slice(0, 5);
 }
 
 // ── Trust Arc ────────────────────────────────────────────────────────
@@ -197,14 +287,27 @@ export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: E
   const isConverged = ex.pipeline.stage === "converged";
   const score = trustScore(ex.meta);
   const active = activeGuarantees(ex.meta, ex.understanding);
-  const followUps = ex.meta?.claims
-    ? generateFollowUps(ex.meta.claims, ex.thought)
-    : generateFollowUps([], ex.thought);
+  const followUps = generateFollowUps(ex.meta?.claims ?? [], ex.thought, ex.understanding);
+  const traceNarrative = buildTraceNarrative(ex);
+  const sources = extractSources(ex.understanding, ex.meta?.claims ?? []);
+  const [traceCopied, setTraceCopied] = useState(false);
 
   const handleFollowUp = useCallback((question: string) => {
-    // Dispatch a custom event that ConvergenceChat can listen for
     window.dispatchEvent(new CustomEvent("lumen:follow-up", { detail: question }));
   }, []);
+
+  const handleCopyTrace = useCallback(() => {
+    const text = traceNarrative.join("\n");
+    navigator.clipboard.writeText(text);
+    setTraceCopied(true);
+    setTimeout(() => setTraceCopied(false), 1500);
+  }, [traceNarrative]);
+
+  const handleReflect = useCallback(() => {
+    const narrativeText = traceNarrative.join("\n");
+    const reflectPrompt = `Reflect on this chain of thought and identify any weaknesses, assumptions, or gaps in the reasoning:\n\n${narrativeText}\n\nWhat could be improved, and where might this reasoning be wrong?`;
+    window.dispatchEvent(new CustomEvent("lumen:follow-up", { detail: reflectPrompt }));
+  }, [traceNarrative]);
 
   return (
     <motion.div
@@ -422,56 +525,83 @@ export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: E
                       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="mt-3 p-3 rounded-xl" style={{ background: "hsla(25, 8%, 8%, 0.5)", border: "1px solid hsla(38, 15%, 22%, 0.08)" }}>
-                        <p className="text-[9px] tracking-[0.2em] uppercase mb-3" style={{ color: "hsla(38, 20%, 55%, 0.4)" }}>
-                          Reasoning trace
-                        </p>
-
-                        {/* Scaffold claims */}
-                        {ex.meta.claims && ex.meta.claims.length > 0 ? (
-                          <div className="space-y-2">
-                            {ex.meta.claims.map((claim, i) => {
-                              const text = typeof claim === "string" ? claim : claim.text || claim.claim || claim.label || JSON.stringify(claim);
-                              const claimGrade = typeof claim === "object" && claim.grade ? claim.grade : ex.meta!.grade;
-                              return (
-                                <div key={i} className="flex items-start gap-2">
-                                  <div
-                                    className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-                                    style={{ background: gradeColor(claimGrade) }}
-                                  />
-                                  <p className="text-[12px] leading-relaxed" style={{ color: "hsla(30, 12%, 65%, 0.6)", fontFamily: C.font }}>
-                                    {text}
-                                  </p>
-                                </div>
-                              );
-                            })}
+                      <div className="mt-3 p-4 rounded-xl" style={{ background: "hsla(25, 8%, 8%, 0.5)", border: "1px solid hsla(38, 15%, 22%, 0.08)" }}>
+                        {/* Header with actions */}
+                        <div className="flex items-center justify-between mb-4">
+                          <p className="text-[9px] tracking-[0.2em] uppercase" style={{ color: "hsla(38, 20%, 55%, 0.4)" }}>
+                            Chain of thought
+                          </p>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={handleCopyTrace}
+                              className="flex items-center gap-1 px-2 py-1 rounded-md transition-all duration-300 hover:bg-[hsla(38,15%,25%,0.1)]"
+                              title="Copy chain of thought"
+                            >
+                              {traceCopied
+                                ? <Check className="w-3 h-3" style={{ color: "hsla(152, 50%, 55%, 0.6)" }} />
+                                : <Copy className="w-3 h-3" style={{ color: "hsla(38, 15%, 50%, 0.35)" }} />
+                              }
+                              <span className="text-[8px] tracking-wider uppercase" style={{ color: traceCopied ? "hsla(152, 50%, 55%, 0.6)" : "hsla(38, 15%, 50%, 0.3)" }}>
+                                {traceCopied ? "Copied" : "Copy"}
+                              </span>
+                            </button>
+                            <button
+                              onClick={handleReflect}
+                              className="flex items-center gap-1 px-2 py-1 rounded-md transition-all duration-300 hover:bg-[hsla(280,15%,25%,0.1)]"
+                              title="Ask Lumen to reflect on this reasoning"
+                            >
+                              <RotateCcw className="w-3 h-3" style={{ color: "hsla(280, 35%, 60%, 0.45)" }} />
+                              <span className="text-[8px] tracking-wider uppercase" style={{ color: "hsla(280, 35%, 60%, 0.4)" }}>
+                                Reflect
+                              </span>
+                            </button>
                           </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: gradeColor(ex.meta.grade) }} />
-                              <p className="text-[12px] leading-relaxed" style={{ color: "hsla(30, 12%, 65%, 0.5)" }}>
-                                Direct response: single-pass reasoning without decomposition
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                        </div>
 
-                        {/* Convergence metrics */}
-                        <div className="flex items-center gap-4 mt-3 pt-2" style={{ borderTop: "1px solid hsla(38, 15%, 22%, 0.06)" }}>
-                          {ex.meta.iterations != null && (
+                        {/* Human-readable narrative trace */}
+                        <div className="space-y-2.5">
+                          {traceNarrative.map((step, i) => {
+                            const isSubStep = step.startsWith("   ");
+                            return (
+                              <div key={i} className="flex items-start gap-2.5" style={{ paddingLeft: isSubStep ? 16 : 0 }}>
+                                {!isSubStep && (
+                                  <div className="w-1 h-1 rounded-full mt-[7px] flex-shrink-0" style={{ background: "hsla(38, 35%, 55%, 0.25)" }} />
+                                )}
+                                {isSubStep && (
+                                  <div className="w-[3px] h-[3px] rounded-sm mt-[6px] flex-shrink-0" style={{ background: gradeColor(ex.meta?.grade), opacity: 0.5 }} />
+                                )}
+                                <p className="text-[12px] leading-[1.7]" style={{
+                                  color: isSubStep ? "hsla(30, 12%, 65%, 0.55)" : "hsla(30, 12%, 70%, 0.7)",
+                                  fontFamily: C.font,
+                                  fontWeight: isSubStep ? 350 : 400,
+                                }}>
+                                  {step.trim()}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Convergence metrics footer */}
+                        <div className="flex items-center gap-4 mt-4 pt-3" style={{ borderTop: "1px solid hsla(38, 15%, 22%, 0.06)" }}>
+                          {ex.meta!.iterations != null && (
                             <span className="text-[9px] font-mono" style={{ color: "hsla(30, 10%, 50%, 0.3)" }}>
-                              {ex.meta.iterations} iteration{ex.meta.iterations !== 1 ? "s" : ""}
+                              {ex.meta!.iterations} iteration{ex.meta!.iterations !== 1 ? "s" : ""}
                             </span>
                           )}
-                          {ex.meta.curvature != null && (
+                          {ex.meta!.curvature != null && (
                             <span className="text-[9px] font-mono" style={{ color: "hsla(30, 10%, 50%, 0.3)" }}>
-                              κ {ex.meta.curvature.toFixed(4)}
+                              κ {ex.meta!.curvature.toFixed(4)}
                             </span>
                           )}
-                          {ex.meta.reward != null && (
-                            <span className="text-[9px] font-mono" style={{ color: ex.meta.reward > 0 ? "hsla(152, 40%, 55%, 0.4)" : "hsla(0, 35%, 55%, 0.3)" }}>
-                              Δ{ex.meta.reward > 0 ? "+" : ""}{ex.meta.reward.toFixed(3)}
+                          {ex.meta!.reward != null && (
+                            <span className="text-[9px] font-mono" style={{ color: ex.meta!.reward! > 0 ? "hsla(152, 40%, 55%, 0.4)" : "hsla(0, 35%, 55%, 0.3)" }}>
+                              Δ{ex.meta!.reward! > 0 ? "+" : ""}{ex.meta!.reward!.toFixed(3)}
+                            </span>
+                          )}
+                          {ex.meta!.inferenceMs != null && (
+                            <span className="text-[9px] font-mono" style={{ color: "hsla(30, 10%, 45%, 0.2)" }}>
+                              {ex.meta!.inferenceMs < 1000 ? `${ex.meta!.inferenceMs}ms` : `${(ex.meta!.inferenceMs / 1000).toFixed(1)}s`}
                             </span>
                           )}
                         </div>
@@ -490,37 +620,89 @@ export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: E
                       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="mt-3 p-3 rounded-xl" style={{ background: "hsla(152, 10%, 8%, 0.3)", border: "1px solid hsla(152, 20%, 30%, 0.08)" }}>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Lightbulb className="w-3 h-3" style={{ color: "hsla(38, 45%, 60%, 0.5)" }} />
-                          <p className="text-[9px] tracking-[0.2em] uppercase" style={{ color: "hsla(38, 20%, 55%, 0.4)" }}>
-                            Deepen understanding
-                          </p>
+                      <div className="mt-3 p-4 rounded-xl" style={{ background: "hsla(152, 10%, 8%, 0.3)", border: "1px solid hsla(152, 20%, 30%, 0.08)" }}>
+                        
+                        {/* Sources section */}
+                        <div className="mb-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Link2 className="w-3 h-3" style={{ color: "hsla(38, 40%, 58%, 0.45)" }} />
+                            <p className="text-[9px] tracking-[0.2em] uppercase" style={{ color: "hsla(38, 20%, 55%, 0.4)" }}>
+                              Sources
+                            </p>
+                          </div>
+                          <div className="space-y-1.5">
+                            {sources.map((src, i) => (
+                              <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded-lg" style={{ background: "hsla(38, 10%, 12%, 0.3)" }}>
+                                <div
+                                  className="w-1.5 h-1.5 rounded-full mt-[5px] flex-shrink-0"
+                                  style={{
+                                    background: src.type === "cited" ? "hsla(152, 50%, 55%, 0.6)"
+                                      : src.type === "inferred" ? "hsla(38, 50%, 55%, 0.5)"
+                                      : "hsla(0, 30%, 55%, 0.4)",
+                                  }}
+                                />
+                                <div className="min-w-0 flex-1">
+                                  {src.text.startsWith("http") ? (
+                                    <a
+                                      href={src.text}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[11px] leading-relaxed break-all transition-colors duration-200 hover:underline"
+                                      style={{ color: "hsla(38, 45%, 62%, 0.7)" }}
+                                    >
+                                      {src.text}
+                                    </a>
+                                  ) : (
+                                    <span className="text-[11px] leading-relaxed" style={{ color: "hsla(30, 12%, 65%, 0.55)" }}>
+                                      {src.text}
+                                    </span>
+                                  )}
+                                  <span className="ml-2 text-[8px] tracking-wider uppercase" style={{
+                                    color: src.type === "cited" ? "hsla(152, 40%, 55%, 0.4)"
+                                      : src.type === "inferred" ? "hsla(38, 35%, 55%, 0.35)"
+                                      : "hsla(0, 25%, 55%, 0.3)",
+                                  }}>
+                                    {src.type}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
 
-                        <p className="text-[11px] leading-relaxed mb-3" style={{ color: "hsla(30, 12%, 65%, 0.45)", fontFamily: C.font }}>
-                          Ask a follow-up to verify or strengthen specific claims in this response.
-                        </p>
+                        {/* Follow-up questions */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-3 pt-3" style={{ borderTop: "1px solid hsla(38, 15%, 22%, 0.06)" }}>
+                            <HelpCircle className="w-3 h-3" style={{ color: "hsla(38, 45%, 60%, 0.4)" }} />
+                            <p className="text-[9px] tracking-[0.2em] uppercase" style={{ color: "hsla(38, 20%, 55%, 0.4)" }}>
+                              Increase confidence
+                            </p>
+                          </div>
 
-                        <div className="space-y-1.5">
-                          {followUps.map((q, i) => (
-                            <button
-                              key={i}
-                              onClick={() => handleFollowUp(q)}
-                              className="w-full text-left flex items-start gap-2 px-2.5 py-2 rounded-lg transition-all duration-300 hover:bg-[hsla(38,15%,25%,0.08)] group"
-                            >
-                              <ExternalLink
-                                className="w-3 h-3 mt-0.5 flex-shrink-0 transition-colors duration-300"
-                                style={{ color: "hsla(38, 30%, 55%, 0.25)" }}
-                              />
-                              <span
-                                className="text-[12px] leading-relaxed transition-colors duration-300"
-                                style={{ color: "hsla(30, 15%, 65%, 0.5)" }}
+                          <p className="text-[10px] leading-relaxed mb-3" style={{ color: "hsla(30, 12%, 60%, 0.35)" }}>
+                            These questions target the weakest claims. Asking them will deepen verification and raise the trust score.
+                          </p>
+
+                          <div className="space-y-1">
+                            {followUps.map((q, i) => (
+                              <button
+                                key={i}
+                                onClick={() => handleFollowUp(q)}
+                                className="w-full text-left flex items-start gap-2.5 px-3 py-2.5 rounded-lg transition-all duration-300 hover:bg-[hsla(38,15%,20%,0.1)] group"
                               >
-                                {q}
-                              </span>
-                            </button>
-                          ))}
+                                <ArrowRight
+                                  className="w-3 h-3 mt-0.5 flex-shrink-0 transition-all duration-300 group-hover:translate-x-0.5"
+                                  style={{ color: "hsla(38, 35%, 55%, 0.3)" }}
+                                />
+                                <span
+                                  className="text-[12px] leading-[1.6] transition-colors duration-300 group-hover:text-[hsla(38,25%,75%,0.7)]"
+                                  style={{ color: "hsla(30, 15%, 65%, 0.5)" }}
+                                >
+                                  {q}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </motion.div>
