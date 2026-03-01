@@ -112,6 +112,7 @@ interface DesktopOsSidebarProps {
   onOpenMessenger?: () => void;
   onOpenJupyter?: () => void;
   onOpenQuantumWorkspace?: () => void;
+  onOpenCode?: () => void;
   onGoHome?: () => void;
   onReplayGuide?: () => void;
   onHoverPanel?: (panel: string) => void;

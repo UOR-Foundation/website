@@ -30,6 +30,7 @@ import MessengerProjection from "@/modules/hologram-ui/components/MessengerProje
 import TerminalProjection from "@/modules/hologram-ui/components/TerminalProjection";
 import JupyterProjection from "@/modules/hologram-ui/components/JupyterProjection";
 import QuantumWorkspaceProjection from "@/modules/hologram-ui/components/QuantumWorkspaceProjection";
+import CodeProjectionShell from "@/modules/hologram-ui/components/CodeProjectionShell";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
@@ -465,6 +466,7 @@ export default function HologramOsPage() {
       <TerminalProjection open={activePanel === "terminal"} preload={preloadedPanels.has("terminal")} onClose={() => k.closePanel()} onOpenJupyter={() => k.openPanel("jupyter")} />
       <JupyterProjection open={activePanel === "jupyter"} preload={preloadedPanels.has("jupyter")} onClose={() => k.closePanel()} />
       <QuantumWorkspaceProjection open={activePanel === "quantum-workspace"} preload={preloadedPanels.has("quantum-workspace")} onClose={() => k.closePanel()} />
+      <CodeProjectionShell open={activePanel === "code"} preload={preloadedPanels.has("code")} onClose={() => k.closePanel()} />
       <SnapGuideOverlay />
       
       <KernelDevTools />
