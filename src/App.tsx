@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
+import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/modules/core/ui/toaster";
 import { Toaster as Sonner } from "@/modules/core/ui/sonner";
 import { TooltipProvider } from "@/modules/core/ui/tooltip";
@@ -166,6 +167,7 @@ const App = () => {
   }, []);
 
   return (
+  <AuthProvider>
   <QueryClientProvider client={queryClient}>
     
     <FocusJournalProvider>
@@ -311,6 +313,7 @@ const App = () => {
     </FocusJournalProvider>
     
   </QueryClientProvider>
+  </AuthProvider>
   );
 };
 
