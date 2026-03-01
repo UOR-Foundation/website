@@ -7,6 +7,7 @@
  */
 
 import { useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   BookOpen, GraduationCap, Calculator, Languages, Microscope,
   Code2, Beaker, Target, MessageSquare, BarChart3,
@@ -103,12 +104,13 @@ function StarRating({ rating }: { rating?: number }) {
 }
 
 /* ── App card ─────────────────────────────────────────────── */
-function AppCard({ app, onInstall }: { app: StoreApp; onInstall: (id: string) => void }) {
+function AppCard({ app, onInstall, onClick }: { app: StoreApp; onInstall: (id: string) => void, onClick: () => void }) {
   const s = PHASE_STYLES[app.phase];
   const Icon = getIcon(app.iconKey);
 
   return (
     <div
+      onClick={onClick}
       className="group relative rounded-2xl border p-5 flex flex-col gap-3 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg cursor-pointer"
       style={{
         background: `linear-gradient(135deg, ${s.bgSoft}, transparent)`,
@@ -164,13 +166,14 @@ function AppCard({ app, onInstall }: { app: StoreApp; onInstall: (id: string) =>
 }
 
 /* ── Featured hero card ───────────────────────────────────── */
-function FeaturedCard({ app, onInstall }: { app: StoreApp; onInstall: (id: string) => void }) {
+function FeaturedCard({ app, onInstall, onClick }: { app: StoreApp; onInstall: (id: string) => void, onClick: () => void }) {
   const s = PHASE_STYLES[app.phase];
   const phase = phaseConfig[app.phase];
   const Icon = getIcon(app.iconKey);
 
   return (
     <div
+      onClick={onClick}
       className="relative rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.01] hover:shadow-xl cursor-pointer"
       style={{ borderColor: s.border }}
     >
@@ -246,10 +249,11 @@ function SubcategoryPill({ sub, active, phase, onClick }: {
 }
 
 /* ── Phase section ────────────────────────────────────────── */
-function PhaseSection({ phase, apps, onInstall }: {
+function PhaseSection({ phase, apps, onInstall, onAppClick }: {
   phase: TriadicPhase;
   apps: StoreApp[];
   onInstall: (id: string) => void;
+  onAppClick: (app: StoreApp) => void;
 }) {
   const config = phaseConfig[phase];
   const s = PHASE_STYLES[phase];
@@ -317,7 +321,7 @@ function PhaseSection({ phase, apps, onInstall }: {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {installed.map(app => (
-              <AppCard key={app.id} app={app} onInstall={onInstall} />
+              <AppCard key={app.id} app={app} onInstall={onInstall} onClick={() => onAppClick(app)} />
             ))}
           </div>
         </div>
@@ -336,7 +340,7 @@ function PhaseSection({ phase, apps, onInstall }: {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {available.map(app => (
-              <AppCard key={app.id} app={app} onInstall={onInstall} />
+              <AppCard key={app.id} app={app} onInstall={onInstall} onClick={() => onAppClick(app)} />
             ))}
           </div>
         </div>
@@ -351,6 +355,7 @@ function PhaseSection({ phase, apps, onInstall }: {
 
 /* ── Main page ────────────────────────────────────────────── */
 export default function AppStorePage() {
+  const navigate = useNavigate();
   const [installedIds, setInstalledIds] = useState<Set<string>>(() =>
     new Set(appCatalog.filter(a => a.installed).map(a => a.id))
   );
@@ -360,6 +365,12 @@ export default function AppStorePage() {
   const handleInstall = useCallback((id: string) => {
     setInstalledIds(prev => new Set(prev).add(id));
   }, []);
+
+  const handleAppClick = useCallback((app: StoreApp) => {
+    if (app.route) {
+      navigate(app.route);
+    }
+  }, [navigate]);
 
   const apps = useMemo(() =>
     appCatalog.map(a => ({
@@ -430,7 +441,7 @@ export default function AppStorePage() {
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {featured.slice(0, 3).map(app => (
-              <FeaturedCard key={app.id} app={app} onInstall={handleInstall} />
+              <FeaturedCard key={app.id} app={app} onInstall={handleInstall} onClick={() => handleAppClick(app)} />
             ))}
           </div>
         </section>
@@ -448,6 +459,7 @@ export default function AppStorePage() {
               phase={phase}
               apps={phaseApps}
               onInstall={handleInstall}
+              onAppClick={handleAppClick}
             />
           );
         })
