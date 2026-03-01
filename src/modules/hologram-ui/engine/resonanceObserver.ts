@@ -1,23 +1,27 @@
 /**
- * Resonance Observer — Cybernetic Feedback Loop
- * ═══════════════════════════════════════════════
+ * Resonance Observer — Multi-Loop Cybernetic Feedback Engine
+ * ═══════════════════════════════════════════════════════════
  *
- * Implements the cybernetic principle: observe → measure → adapt → observe.
+ * Implements Wiener's cybernetic principle across four timescales:
  *
- * The observer watches each exchange between human and Lumen,
- * extracting signals about the user's communication style, expertise,
- * emotional register, and domain interests. These observations accumulate
- * into a Resonance Profile — a compact vector that modulates Lumen's
- * system prompt so responses increasingly match the user's natural frequency.
+ *   μ-loop  (within exchange)  →  Did this response land? Response coherence.
+ *   σ-loop  (per session)      →  Session rhythm, temporal patterns, engagement arc.
+ *   Σ-loop  (across sessions)  →  Long-term profile evolution, encrypted cloud persistence.
+ *   Ω-loop  (self-reflection)  →  Meta-evaluation: is the feedback loop itself improving?
  *
- * Design principles:
- *   1. Silent observation — the user never sees this happening
- *   2. Negative feedback loop — if responses drift from resonance, correct
- *   3. Positive feedback loop — if responses resonate, reinforce the pattern
- *   4. Sacred attention — the profile exists to REDUCE cognitive load, never increase it
- *   5. Convergence — the system tends toward resonance, not toward verbose self-reference
+ * The optimization function is RESONANCE — the state where Lumen's responses
+ * match the user's natural frequency so precisely that understanding feels
+ * effortless. Every dimension converges toward this attractor.
  *
- * Storage: Hot (localStorage) + Cold (context graph via Supabase)
+ * Constitutional constraint: the user's time and attention are sacred.
+ * The profile exists to REDUCE cognitive load, never increase it.
+ *
+ * Storage architecture:
+ *   L1 (localStorage) — hot cache, instant reads
+ *   L2 (Data Bank)    — AES-256-GCM encrypted, cloud-synced, sovereign
+ *
+ * The user can view their profile at any time (sovereignty).
+ * The server never sees plaintext (zero-knowledge).
  *
  * @module hologram-ui/engine/resonanceObserver
  */
@@ -47,6 +51,97 @@ export interface ResonanceProfile {
   followUpRate: number;
   /** Last updated timestamp */
   updatedAt: number;
+
+  // ── σ-loop: Session-level signals ─────────────────────────────────
+  /** Session count — how many distinct sessions the user has had */
+  sessionCount: number;
+  /** Average session duration in minutes */
+  avgSessionDuration: number;
+  /** Time-of-day preference distribution [morning, afternoon, evening, night] */
+  temporalPreference: [number, number, number, number];
+  /** Average exchanges per session */
+  avgExchangesPerSession: number;
+  /** Session engagement arc — does user ask more/fewer questions over time? (0=declining, 1=increasing) */
+  engagementArc: number;
+
+  // ── μ-loop: Response coherence tracking ───────────────────────────
+  /** How often the user's next message continues the thread (vs. topic change) */
+  threadContinuityRate: number;
+  /** How often the user expresses explicit satisfaction signals */
+  satisfactionRate: number;
+  /** Response-to-reply latency ratio — if they reply quickly, response resonated */
+  replyVelocityTrend: number;
+
+  // ── Ω-loop: Self-reflection meta-signals ──────────────────────────
+  /** Rolling resonance score — overall quality of the feedback loop itself */
+  resonanceScore: number;
+  /** Rate of improvement — is the loop converging? (positive = improving) */
+  convergenceRate: number;
+  /** Number of self-reflections performed */
+  reflectionCount: number;
+  /** Last reflection timestamp */
+  lastReflectionAt: number;
+
+  // ── Cloud sync metadata ───────────────────────────────────────────
+  /** Last cloud sync timestamp */
+  lastCloudSyncAt: number;
+  /** Profile version for conflict resolution */
+  profileVersion: number;
+}
+
+// ── Session Tracking ──────────────────────────────────────────────────
+
+interface SessionState {
+  startedAt: number;
+  exchangeCount: number;
+  lastExchangeAt: number;
+  replyLatencies: number[];
+  satisfactionSignals: number;
+  correctionSignals: number;
+  topicChanges: number;
+  lastUserTopic: string[];
+}
+
+let currentSession: SessionState | null = null;
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes of inactivity = new session
+
+function getOrCreateSession(): SessionState {
+  const now = Date.now();
+  if (currentSession && (now - currentSession.lastExchangeAt) < SESSION_TIMEOUT_MS) {
+    return currentSession;
+  }
+  // New session — finalize old one if exists
+  if (currentSession) {
+    finalizeSession(currentSession);
+  }
+  currentSession = {
+    startedAt: now,
+    exchangeCount: 0,
+    lastExchangeAt: now,
+    replyLatencies: [],
+    satisfactionSignals: 0,
+    correctionSignals: 0,
+    topicChanges: 0,
+    lastUserTopic: [],
+  };
+  return currentSession;
+}
+
+function finalizeSession(session: SessionState): void {
+  const profile = loadResonanceProfile();
+  const duration = (session.lastExchangeAt - session.startedAt) / 60000; // minutes
+  const n = profile.sessionCount;
+
+  profile.sessionCount = n + 1;
+  profile.avgSessionDuration = ema(profile.avgSessionDuration, duration, n);
+  profile.avgExchangesPerSession = ema(profile.avgExchangesPerSession, session.exchangeCount, n);
+
+  // Engagement arc: ratio of exchanges in 2nd half vs 1st half
+  // Simplified: if they sent more in the session than avg, engagement is up
+  const engagementSignal = session.exchangeCount > profile.avgExchangesPerSession ? 0.7 : 0.3;
+  profile.engagementArc = ema(profile.engagementArc, engagementSignal, n);
+
+  saveResonanceProfile(profile);
 }
 
 // ── Signal Extraction ─────────────────────────────────────────────────
@@ -61,7 +156,10 @@ interface ExchangeSignals {
   emotionalMarkers: number;
   isCorrection: boolean;
   isFollowUp: boolean;
+  isSatisfaction: boolean;
+  isTopicChange: boolean;
   topicTokens: string[];
+  replyLatencyMs: number;
 }
 
 /** Technical vocabulary indicators */
@@ -112,6 +210,18 @@ const FOLLOWUP_PATTERNS = [
   /^more on/i, /^continue/i,
 ];
 
+/** Satisfaction indicators */
+const SATISFACTION_PATTERNS = [
+  /^(great|perfect|exactly|wonderful|excellent|brilliant|awesome)/i,
+  /that'?s (exactly|precisely) (what|right)/i,
+  /thank(s| you)/i,
+  /this (is|was) (very )?helpful/i,
+  /^(yes|yep|yeah),? (that|this)/i,
+  /well (said|put|explained)/i,
+  /makes? (perfect )?sense/i,
+  /^love (this|it|that)/i,
+];
+
 /** Emotional warmth markers */
 const WARMTH_MARKERS = new Set([
   "thanks", "thank", "please", "appreciate", "grateful", "love",
@@ -129,7 +239,12 @@ const DOMAIN_KEYWORDS: Record<string, string[]> = {
   personal: ["life", "relationship", "health", "wellness", "habit", "goal", "meditation", "mindfulness"],
 };
 
-function extractSignals(userMessage: string, assistantResponse: string, previousUserMessage?: string): ExchangeSignals {
+function extractSignals(
+  userMessage: string,
+  assistantResponse: string,
+  previousUserMessage?: string,
+  lastExchangeTimestamp?: number,
+): ExchangeSignals {
   const words = userMessage.split(/\s+/).filter(w => w.length > 0);
   const wordCount = words.length;
   const avgWordLength = wordCount > 0 ? words.reduce((s, w) => s + w.replace(/[^a-zA-Z]/g, "").length, 0) / wordCount : 0;
@@ -163,12 +278,31 @@ function extractSignals(userMessage: string, assistantResponse: string, previous
   // Follow-up detection
   const isFollowUp = FOLLOWUP_PATTERNS.some(p => p.test(userMessage));
 
-  // Topic extraction
+  // Satisfaction detection (μ-loop signal)
+  const isSatisfaction = SATISFACTION_PATTERNS.some(p => p.test(userMessage));
+
+  // Topic change detection — compare current topic tokens with previous
   const topicTokens: string[] = [];
   for (const [domain, keywords] of Object.entries(DOMAIN_KEYWORDS)) {
     const hits = lowerWords.filter(w => keywords.includes(w)).length;
     if (hits > 0) topicTokens.push(domain);
   }
+
+  // Topic change: if current topics don't overlap with previous user's topics
+  let isTopicChange = false;
+  if (previousUserMessage) {
+    const prevWords = previousUserMessage.toLowerCase().split(/\s+/);
+    const prevTopics: string[] = [];
+    for (const [domain, keywords] of Object.entries(DOMAIN_KEYWORDS)) {
+      if (prevWords.some(w => keywords.includes(w))) prevTopics.push(domain);
+    }
+    if (prevTopics.length > 0 && topicTokens.length > 0) {
+      isTopicChange = !topicTokens.some(t => prevTopics.includes(t));
+    }
+  }
+
+  // Reply latency (time between last exchange and this one)
+  const replyLatencyMs = lastExchangeTimestamp ? Date.now() - lastExchangeTimestamp : 0;
 
   return {
     userWordCount: wordCount,
@@ -180,7 +314,10 @@ function extractSignals(userMessage: string, assistantResponse: string, previous
     emotionalMarkers,
     isCorrection,
     isFollowUp,
+    isSatisfaction,
+    isTopicChange,
     topicTokens,
+    replyLatencyMs,
   };
 }
 
@@ -196,6 +333,7 @@ function ema(current: number, newValue: number, observationCount: number): numbe
 // ── Storage Keys ──────────────────────────────────────────────────────
 
 const STORAGE_KEY = "hologram:resonance-profile";
+const DATA_BANK_SLOT = "resonance:profile:v2";
 
 // ── Default Profile ───────────────────────────────────────────────────
 
@@ -212,6 +350,24 @@ function createDefaultProfile(): ResonanceProfile {
     correctionRate: 0,
     followUpRate: 0,
     updatedAt: Date.now(),
+    // σ-loop
+    sessionCount: 0,
+    avgSessionDuration: 0,
+    temporalPreference: [0.25, 0.25, 0.25, 0.25],
+    avgExchangesPerSession: 0,
+    engagementArc: 0.5,
+    // μ-loop
+    threadContinuityRate: 0.5,
+    satisfactionRate: 0,
+    replyVelocityTrend: 0.5,
+    // Ω-loop
+    resonanceScore: 0.5,
+    convergenceRate: 0,
+    reflectionCount: 0,
+    lastReflectionAt: 0,
+    // Cloud sync
+    lastCloudSyncAt: 0,
+    profileVersion: 1,
   };
 }
 
@@ -223,9 +379,12 @@ export function loadResonanceProfile(): ResonanceProfile {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Validate shape
+      // Validate shape + migrate from v1 if needed
       if (typeof parsed.expertiseLevel === "number" && typeof parsed.observationCount === "number") {
-        return parsed;
+        return {
+          ...createDefaultProfile(),
+          ...parsed,
+        };
       }
     }
   } catch { /* ignore corrupt storage */ }
@@ -239,72 +398,237 @@ function saveResonanceProfile(profile: ResonanceProfile): void {
   } catch { /* storage full — degrade gracefully */ }
 }
 
+// ── Cloud Persistence (Data Bank) ─────────────────────────────────────
+
+let syncDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Sync the resonance profile to the encrypted Data Bank.
+ * Debounced — batches rapid updates into a single cloud write.
+ */
+export async function syncProfileToCloud(userId: string): Promise<void> {
+  if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+
+  syncDebounceTimer = setTimeout(async () => {
+    try {
+      const { writeSlot } = await import("@/modules/data-bank/lib/sync");
+      const profile = loadResonanceProfile();
+      profile.lastCloudSyncAt = Date.now();
+      profile.profileVersion += 1;
+      saveResonanceProfile(profile);
+      await writeSlot(userId, DATA_BANK_SLOT, JSON.stringify(profile));
+    } catch {
+      // Silent failure — will retry on next exchange
+    }
+  }, 5000); // 5 second debounce
+}
+
+/**
+ * Load the resonance profile from the encrypted Data Bank.
+ * Used on boot to restore the long-term profile.
+ */
+export async function loadProfileFromCloud(userId: string): Promise<ResonanceProfile | null> {
+  try {
+    const { readSlot } = await import("@/modules/data-bank/lib/sync");
+    const slot = await readSlot(userId, DATA_BANK_SLOT);
+    if (!slot) return null;
+
+    const cloudProfile = JSON.parse(slot.value) as ResonanceProfile;
+
+    // Merge: take the higher-observation-count version
+    const localProfile = loadResonanceProfile();
+    if (cloudProfile.observationCount > localProfile.observationCount) {
+      saveResonanceProfile(cloudProfile);
+      return cloudProfile;
+    }
+    return localProfile;
+  } catch {
+    return null;
+  }
+}
+
+// ── Time-of-Day Classification ────────────────────────────────────────
+
+function getTimeSlot(): 0 | 1 | 2 | 3 {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return 0;  // morning
+  if (h >= 12 && h < 17) return 1; // afternoon
+  if (h >= 17 && h < 21) return 2; // evening
+  return 3; // night
+}
+
+// ── Self-Reflection (Ω-loop) ──────────────────────────────────────────
+
+/**
+ * Compute the overall resonance score — meta-evaluation of the feedback loop.
+ *
+ * A high resonance score means:
+ *   - Low correction rate (Lumen is accurate)
+ *   - High satisfaction rate (Lumen is helpful)
+ *   - High thread continuity (responses are relevant)
+ *   - Stable engagement (user keeps coming back)
+ *
+ * This is the system observing its own observation loop.
+ */
+function computeResonanceScore(profile: ResonanceProfile): number {
+  if (profile.observationCount < 5) return 0.5; // not enough data
+
+  const correctionPenalty = profile.correctionRate * 2; // corrections are expensive
+  const satisfactionReward = profile.satisfactionRate * 1.5;
+  const continuityReward = profile.threadContinuityRate * 1.0;
+  const engagementReward = profile.engagementArc * 0.5;
+
+  const raw = 0.5
+    - correctionPenalty
+    + satisfactionReward
+    + continuityReward * 0.3
+    + engagementReward * 0.2;
+
+  return Math.max(0, Math.min(1, raw));
+}
+
+/**
+ * Self-reflect: should the system adjust its own feedback sensitivity?
+ * Called periodically (every ~10 exchanges) to prevent drift.
+ */
+function selfReflect(profile: ResonanceProfile): ResonanceProfile {
+  const newScore = computeResonanceScore(profile);
+  const previousScore = profile.resonanceScore;
+
+  // Convergence rate: is the resonance improving?
+  const delta = newScore - previousScore;
+  profile.convergenceRate = ema(profile.convergenceRate, delta, profile.reflectionCount);
+  profile.resonanceScore = ema(profile.resonanceScore, newScore, profile.reflectionCount);
+  profile.reflectionCount += 1;
+  profile.lastReflectionAt = Date.now();
+
+  return profile;
+}
+
+// ── Core Observation ──────────────────────────────────────────────────
+
 /**
  * Observe an exchange and update the resonance profile.
- * This is the core cybernetic feedback function.
+ * This is the core cybernetic feedback function — the beating heart.
  *
  * Called after each Lumen exchange completes.
+ * Runs all four loops simultaneously:
+ *   μ-loop: response coherence within this exchange
+ *   σ-loop: session-level patterns
+ *   Σ-loop: long-term profile evolution
+ *   Ω-loop: self-reflection (every 10 exchanges)
+ *
  * Returns the updated profile.
  */
 export function observeExchange(
   userMessage: string,
   assistantResponse: string,
   previousUserMessage?: string,
+  lastExchangeTimestamp?: number,
+  userId?: string,
 ): ResonanceProfile {
   const profile = loadResonanceProfile();
-  const signals = extractSignals(userMessage, assistantResponse, previousUserMessage);
+  const session = getOrCreateSession();
+  const signals = extractSignals(userMessage, assistantResponse, previousUserMessage, lastExchangeTimestamp);
   const n = profile.observationCount;
 
-  // ── Update expertise level ──────────────────────────────────────
-  // Technical term density + average word length → expertise signal
+  // ═══ Σ-loop: Long-term dimension updates ═══════════════════════
+
+  // Expertise level
   const expertiseSignal = Math.min(1,
     signals.technicalTermDensity * 5 + (signals.avgWordLength > 5 ? 0.3 : 0),
   );
   profile.expertiseLevel = ema(profile.expertiseLevel, expertiseSignal, n);
 
-  // ── Update density preference ───────────────────────────────────
-  // Longer user messages → they're comfortable with density
-  // Short messages → they prefer brevity
+  // Density preference
   const densitySignal = Math.min(1, signals.userWordCount / 80);
   profile.densityPreference = ema(profile.densityPreference, densitySignal, n);
 
-  // ── Update formality register ───────────────────────────────────
+  // Formality register
   profile.formalityRegister = ema(profile.formalityRegister, signals.formalityScore, n);
 
-  // ── Update warmth preference ────────────────────────────────────
+  // Warmth preference
   const warmthSignal = Math.min(1, signals.emotionalMarkers / 3);
   profile.warmthPreference = ema(profile.warmthPreference, warmthSignal, n);
 
-  // ── Update pace preference ──────────────────────────────────────
-  // Short messages with questions → direct/fast pace
-  // Long messages → patient/exploratory
+  // Pace preference
   const paceSignal = signals.userWordCount < 15 ? 0.8 :
                      signals.userWordCount < 40 ? 0.5 : 0.2;
   profile.pacePreference = ema(profile.pacePreference, paceSignal, n);
 
-  // ── Update message length average ───────────────────────────────
+  // Message length average
   profile.avgMessageLength = ema(profile.avgMessageLength, signals.userWordCount, n);
 
-  // ── Update correction rate (negative feedback) ──────────────────
+  // Correction rate (negative feedback)
   profile.correctionRate = ema(profile.correctionRate, signals.isCorrection ? 1 : 0, n);
 
-  // ── Update follow-up rate (positive engagement) ─────────────────
+  // Follow-up rate (positive engagement)
   profile.followUpRate = ema(profile.followUpRate, signals.isFollowUp ? 1 : 0, n);
 
-  // ── Update domain interests ─────────────────────────────────────
+  // Domain interests
   for (const topic of signals.topicTokens) {
     profile.domainInterests[topic] = (profile.domainInterests[topic] || 0) + 1;
   }
 
-  // ── Increment observation count ─────────────────────────────────
+  // ═══ μ-loop: Response coherence tracking ═══════════════════════
+
+  // Satisfaction tracking
+  profile.satisfactionRate = ema(profile.satisfactionRate, signals.isSatisfaction ? 1 : 0, n);
+
+  // Thread continuity (inverse of topic change)
+  profile.threadContinuityRate = ema(
+    profile.threadContinuityRate,
+    signals.isTopicChange ? 0.2 : 0.8,
+    n,
+  );
+
+  // Reply velocity — fast replies suggest resonance
+  if (signals.replyLatencyMs > 0 && signals.replyLatencyMs < 600000) { // within 10 min
+    const velocitySignal = signals.replyLatencyMs < 30000 ? 0.9 : // < 30s = very engaged
+                           signals.replyLatencyMs < 120000 ? 0.6 : // < 2min = engaged
+                           0.3; // slower = thinking or disengaged
+    profile.replyVelocityTrend = ema(profile.replyVelocityTrend, velocitySignal, n);
+  }
+
+  // ═══ σ-loop: Session tracking ══════════════════════════════════
+
+  session.exchangeCount += 1;
+  session.lastExchangeAt = Date.now();
+  if (signals.isCorrection) session.correctionSignals += 1;
+  if (signals.isSatisfaction) session.satisfactionSignals += 1;
+  if (signals.isTopicChange) session.topicChanges += 1;
+  if (signals.replyLatencyMs > 0) session.replyLatencies.push(signals.replyLatencyMs);
+  session.lastUserTopic = signals.topicTokens;
+
+  // Temporal preference update
+  const timeSlot = getTimeSlot();
+  const tempPref = [...profile.temporalPreference] as [number, number, number, number];
+  for (let i = 0; i < 4; i++) {
+    tempPref[i] = ema(tempPref[i], i === timeSlot ? 1 : 0, n);
+  }
+  profile.temporalPreference = tempPref;
+
+  // ═══ Ω-loop: Self-reflection (every 10 exchanges) ═════════════
+
   profile.observationCount = n + 1;
   profile.updatedAt = Date.now();
 
-  // Persist
+  if (profile.observationCount % 10 === 0) {
+    selfReflect(profile);
+  }
+
+  // Persist to L1
   saveResonanceProfile(profile);
+
+  // Persist to L2 (encrypted cloud) — debounced
+  if (userId) {
+    syncProfileToCloud(userId).catch(() => {});
+  }
 
   return profile;
 }
+
+// ── Directive Compilation ─────────────────────────────────────────────
 
 /**
  * Compile the resonance profile into a system prompt fragment.
@@ -361,9 +685,40 @@ export function compileResonanceDirective(profile: ResonanceProfile): string {
     parts.push("They enjoy the journey of understanding. It's fine to unfold reasoning gradually. Context and nuance are valued.");
   }
 
-  // Negative feedback correction
+  // ── μ-loop signals: Response coherence feedback ─────────────────
+  if (profile.satisfactionRate > 0.4) {
+    parts.push("Recent exchanges show strong resonance — maintain this approach. Your responses are landing well.");
+  }
+
+  if (profile.threadContinuityRate > 0.7) {
+    parts.push("They tend to go deep on topics rather than jumping around. Stay focused and build on the thread.");
+  } else if (profile.threadContinuityRate < 0.3) {
+    parts.push("They explore many topics across exchanges. Be ready for context switches. Each response should be self-contained.");
+  }
+
+  // ── σ-loop signals: Session-level awareness ─────────────────────
+  if (profile.sessionCount > 3) {
+    const peakSlot = profile.temporalPreference.indexOf(Math.max(...profile.temporalPreference));
+    const timeLabels = ["morning", "afternoon", "evening", "late night"];
+    parts.push(`They frequently engage during the ${timeLabels[peakSlot]}. Calibrate energy and tone accordingly.`);
+  }
+
+  if (profile.avgSessionDuration > 0 && profile.avgSessionDuration < 5) {
+    parts.push("Their sessions tend to be focused and brief. Maximize value per exchange. No preamble.");
+  } else if (profile.avgSessionDuration > 20) {
+    parts.push("They engage in extended sessions. It's okay to be more expansive and exploratory. They have the patience for depth.");
+  }
+
+  // ── Negative feedback correction ────────────────────────────────
   if (profile.correctionRate > 0.15) {
     parts.push("CALIBRATION NOTE: Recent exchanges show a higher correction rate. This means your responses may be drifting from what they need. Listen more carefully. Be more precise. Match their intent exactly before elaborating.");
+  }
+
+  // ── Ω-loop: Self-reflection signal ──────────────────────────────
+  if (profile.resonanceScore < 0.35 && profile.observationCount > 15) {
+    parts.push("META-CALIBRATION: The feedback loop indicates suboptimal resonance. Slow down. Ask clarifying questions before assuming. Precision over speed. The user's time is sacred.");
+  } else if (profile.resonanceScore > 0.75 && profile.convergenceRate > 0) {
+    parts.push("The communication loop is in strong resonance. Continue this pattern. Trust has been built through consistency.");
   }
 
   // Domain awareness
@@ -385,30 +740,79 @@ export function compileResonanceDirective(profile: ResonanceProfile): string {
   return "\n\n" + parts.join("\n");
 }
 
+// ── Diagnostic API (for user-viewable Resonance Panel) ────────────────
+
 /**
- * Get a compact diagnostic summary of the resonance state.
- * For internal display in the Pro Mode panel, not for the AI.
+ * Get a comprehensive diagnostic of the resonance state.
+ * For the sovereign user-viewable panel — full transparency.
  */
 export function getResonanceDiagnostic(profile: ResonanceProfile): {
   label: string;
   confidence: number;
-  dimensions: { name: string; value: number; label: string }[];
+  resonanceScore: number;
+  convergenceRate: number;
+  dimensions: { name: string; value: number; label: string; description: string }[];
+  sessionInsights: { label: string; value: string }[];
+  loopHealth: { loop: string; status: "calibrating" | "adapting" | "resonant"; detail: string }[];
 } {
   const confidence = Math.min(1, profile.observationCount / 20);
 
   const dimLabel = (v: number, low: string, mid: string, high: string) =>
     v < 0.35 ? low : v > 0.65 ? high : mid;
 
+  const dimensions = [
+    { name: "Expertise", value: profile.expertiseLevel, label: dimLabel(profile.expertiseLevel, "Accessible", "Balanced", "Technical"), description: "How technical your language tends to be" },
+    { name: "Density", value: profile.densityPreference, label: dimLabel(profile.densityPreference, "Concise", "Balanced", "Thorough"), description: "Your preferred response depth" },
+    { name: "Register", value: profile.formalityRegister, label: dimLabel(profile.formalityRegister, "Casual", "Balanced", "Formal"), description: "Your communication formality" },
+    { name: "Warmth", value: profile.warmthPreference, label: dimLabel(profile.warmthPreference, "Analytical", "Balanced", "Warm"), description: "Emotional tone preference" },
+    { name: "Pace", value: profile.pacePreference, label: dimLabel(profile.pacePreference, "Exploratory", "Balanced", "Direct"), description: "How directly you prefer answers" },
+    { name: "Continuity", value: profile.threadContinuityRate, label: dimLabel(profile.threadContinuityRate, "Explorer", "Balanced", "Deep-diver"), description: "Topic focus pattern" },
+    { name: "Satisfaction", value: profile.satisfactionRate, label: dimLabel(profile.satisfactionRate, "Calibrating", "Growing", "Resonant"), description: "Response alignment quality" },
+  ];
+
+  const timeLabels = ["Morning", "Afternoon", "Evening", "Night"];
+  const peakSlot = profile.temporalPreference.indexOf(Math.max(...profile.temporalPreference));
+
+  const sessionInsights = [
+    { label: "Sessions", value: `${profile.sessionCount}` },
+    { label: "Avg Duration", value: profile.avgSessionDuration > 0 ? `${Math.round(profile.avgSessionDuration)}m` : "—" },
+    { label: "Peak Time", value: profile.sessionCount > 2 ? timeLabels[peakSlot] : "—" },
+    { label: "Exchanges", value: `${profile.observationCount}` },
+    { label: "Avg/Session", value: profile.avgExchangesPerSession > 0 ? `${Math.round(profile.avgExchangesPerSession)}` : "—" },
+  ];
+
+  const loopHealth: { loop: string; status: "calibrating" | "adapting" | "resonant"; detail: string }[] = [
+    {
+      loop: "μ Response",
+      status: profile.satisfactionRate > 0.4 ? "resonant" : profile.observationCount > 5 ? "adapting" : "calibrating",
+      detail: "Per-exchange coherence tracking",
+    },
+    {
+      loop: "σ Session",
+      status: profile.sessionCount > 5 ? "resonant" : profile.sessionCount > 1 ? "adapting" : "calibrating",
+      detail: "Session rhythm and temporal patterns",
+    },
+    {
+      loop: "Σ Long-term",
+      status: confidence > 0.7 ? "resonant" : confidence > 0.3 ? "adapting" : "calibrating",
+      detail: "Cross-session profile evolution",
+    },
+    {
+      loop: "Ω Reflection",
+      status: profile.reflectionCount > 3 && profile.convergenceRate > 0 ? "resonant" :
+              profile.reflectionCount > 0 ? "adapting" : "calibrating",
+      detail: "Meta-evaluation of the loop itself",
+    },
+  ];
+
   return {
     label: confidence < 0.3 ? "Calibrating…" : confidence < 0.7 ? "Adapting" : "Resonant",
     confidence,
-    dimensions: [
-      { name: "Expertise", value: profile.expertiseLevel, label: dimLabel(profile.expertiseLevel, "Accessible", "Balanced", "Technical") },
-      { name: "Density", value: profile.densityPreference, label: dimLabel(profile.densityPreference, "Concise", "Balanced", "Thorough") },
-      { name: "Register", value: profile.formalityRegister, label: dimLabel(profile.formalityRegister, "Casual", "Balanced", "Formal") },
-      { name: "Warmth", value: profile.warmthPreference, label: dimLabel(profile.warmthPreference, "Analytical", "Balanced", "Warm") },
-      { name: "Pace", value: profile.pacePreference, label: dimLabel(profile.pacePreference, "Exploratory", "Balanced", "Direct") },
-    ],
+    resonanceScore: profile.resonanceScore,
+    convergenceRate: profile.convergenceRate,
+    dimensions,
+    sessionInsights,
+    loopHealth,
   };
 }
 

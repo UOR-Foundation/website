@@ -24,7 +24,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles, Maximize2, SlidersHorizontal } from "lucide-react";
+import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles, Maximize2, SlidersHorizontal, Brain } from "lucide-react";
 import ExchangeCard from "./ExchangeCard";
 import ProModeMixer from "./ProModeMixer";
 import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
@@ -47,7 +47,8 @@ import {
   getProceduralMemory,
   getMirrorProtocol,
 } from "@/modules/hologram-ui/engine/reasoning";
-import { observeExchange, compileResonanceDirective, loadResonanceProfile } from "@/modules/hologram-ui/engine/resonanceObserver";
+import { observeExchange, compileResonanceDirective, loadResonanceProfile, loadProfileFromCloud } from "@/modules/hologram-ui/engine/resonanceObserver";
+import ResonancePanel from "./ResonancePanel";
 import ConvergencePipeline, { type PipelineState, type PipelineStage } from "./ConvergencePipeline";
 import ShowcasePipeline, { isComplexQuestion } from "./ShowcasePipeline";
 import { Sparkles as MagicIcon } from "lucide-react"; // Import magic icon
@@ -117,6 +118,8 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   const [proMode, setProMode] = useState(false);
   const [dimensionValues, setDimensionValues] = useState<DimensionValues>(getDefaultValues());
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [resonancePanelOpen, setResonancePanelOpen] = useState(false);
+  const lastExchangeTimestampRef = useRef<number>(0);
 
   const handleSelectPreset = useCallback((preset: DimensionPreset) => {
     setDimensionValues(preset.values);
@@ -432,9 +435,11 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
         saveReasoningProof(nsResult).catch(() => {});
       }
 
-      // ── Cybernetic feedback: observe this exchange ───────────
+      // ── Cybernetic feedback: observe this exchange (all 4 loops) ──
       const prevUserMsg = exchanges.length > 0 ? exchanges[exchanges.length - 1].thought : undefined;
-      observeExchange(thought, streamedText, prevUserMsg);
+      const lastTs = lastExchangeTimestampRef.current || undefined;
+      observeExchange(thought, streamedText, prevUserMsg, lastTs);
+      lastExchangeTimestampRef.current = Date.now();
 
     } catch (e) {
       updateExchange({
@@ -506,6 +511,18 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
               {exchanges.length} exchange{exchanges.length !== 1 ? "s" : ""}
             </span>
           )}
+          {/* Resonance Profile button */}
+          <button
+            onClick={() => setResonancePanelOpen(true)}
+            className="w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
+            style={{
+              color: "hsla(38, 15%, 60%, 0.4)",
+              background: "hsla(38, 15%, 30%, 0.08)",
+            }}
+            title="View resonance profile"
+          >
+            <Brain className="w-3 h-3" strokeWidth={1.5} />
+          </button>
           {onExpand && (
             <button
               onClick={onExpand}
@@ -853,6 +870,9 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
         </AnimatePresence>
 
       </div>{/* end flex row */}
+
+      {/* Resonance Profile Panel — sovereign data transparency */}
+      <ResonancePanel open={resonancePanelOpen} onClose={() => setResonancePanelOpen(false)} />
     </div>
   );
 }
