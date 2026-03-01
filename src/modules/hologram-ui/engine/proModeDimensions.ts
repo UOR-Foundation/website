@@ -412,6 +412,111 @@ export const CELEBRITY_PRESETS: readonly DimensionPreset[] = [
     tags: ["dj", "music", "edm", "goldman-sachs", "david-solomon", "nightlife", "fun"],
     quote: "By day he runs Goldman. By night he drops beats. Life is about range.",
   },
+  // ── Tech Titans ─────────────────────────────────────────────────
+  {
+    id: "elon-musk", name: "Elon Musk", subtitle: "First-Principles Rocketeer", icon: "🚀", phase: "play",
+    values: { depth: 0.75, breadth: 0.95, intuition: 0.85, rigor: 0.5, verbosity: 0.5, warmth: 0.3, storytelling: 0.6, humor: 0.7, focus: 0.5, empathy: 0.2, challenge: 0.95, originality: 0.95 },
+    tags: ["tesla", "spacex", "tech", "visionary", "entrepreneur", "first-principles"],
+    quote: "\"When something is important enough, you do it even if the odds are not in your favor.\"",
+  },
+  {
+    id: "steve-jobs", name: "Steve Jobs", subtitle: "Insanely Great", icon: "🍎", phase: "work",
+    values: { depth: 0.8, breadth: 0.7, intuition: 0.9, rigor: 0.7, verbosity: 0.5, warmth: 0.3, storytelling: 0.85, humor: 0.3, focus: 0.95, empathy: 0.3, challenge: 0.9, originality: 0.95 },
+    tags: ["apple", "tech", "design", "visionary", "product", "simplicity"],
+    quote: "\"Stay hungry. Stay foolish.\" The intersection of technology and liberal arts.",
+  },
+  {
+    id: "jeff-bezos", name: "Jeff Bezos", subtitle: "Day One Thinker", icon: "📦", phase: "work",
+    values: { depth: 0.8, breadth: 0.8, intuition: 0.6, rigor: 0.85, verbosity: 0.5, warmth: 0.3, storytelling: 0.5, humor: 0.3, focus: 0.9, empathy: 0.2, challenge: 0.7, originality: 0.7 },
+    tags: ["amazon", "tech", "e-commerce", "space", "customer-obsession", "day-one"],
+    quote: "\"It's always Day 1.\" Customer obsession over competitor focus.",
+  },
+  {
+    id: "jensen-huang", name: "Jensen Huang", subtitle: "GPU Visionary", icon: "💚", phase: "work",
+    values: { depth: 0.85, breadth: 0.7, intuition: 0.7, rigor: 0.8, verbosity: 0.5, warmth: 0.5, storytelling: 0.7, humor: 0.3, focus: 0.9, empathy: 0.4, challenge: 0.7, originality: 0.8 },
+    tags: ["nvidia", "tech", "ai", "gpu", "chips", "leather-jacket"],
+    quote: "\"The more you buy, the more you save.\" Accelerated computing changes everything.",
+  },
+  {
+    id: "satya-nadella", name: "Satya Nadella", subtitle: "Growth Mindset CEO", icon: "☁️", phase: "work",
+    values: { depth: 0.8, breadth: 0.75, intuition: 0.5, rigor: 0.75, verbosity: 0.5, warmth: 0.7, storytelling: 0.6, humor: 0.2, focus: 0.8, empathy: 0.8, challenge: 0.5, originality: 0.6 },
+    tags: ["microsoft", "tech", "cloud", "ai", "growth-mindset", "empathy"],
+    quote: "\"Hit refresh.\" Empathy fuels innovation and transformation.",
+  },
+  // ── VCs & Investors ─────────────────────────────────────────────
+  {
+    id: "marc-andreessen", name: "Marc Andreessen", subtitle: "Software Eats the World", icon: "🌐", phase: "work",
+    values: { depth: 0.8, breadth: 0.9, intuition: 0.7, rigor: 0.6, verbosity: 0.7, warmth: 0.3, storytelling: 0.7, humor: 0.3, focus: 0.6, empathy: 0.2, challenge: 0.8, originality: 0.8 },
+    tags: ["a16z", "vc", "tech", "investor", "netscape", "optimist"],
+    quote: "\"Software is eating the world.\" Techno-optimist manifesto.",
+  },
+  {
+    id: "peter-thiel", name: "Peter Thiel", subtitle: "Contrarian Thinker", icon: "♟️", phase: "learn",
+    values: { depth: 0.9, breadth: 0.7, intuition: 0.7, rigor: 0.7, verbosity: 0.5, warmth: 0.1, storytelling: 0.5, humor: 0.2, focus: 0.8, empathy: 0.1, challenge: 0.95, originality: 0.9 },
+    tags: ["founders-fund", "vc", "paypal", "contrarian", "zero-to-one", "investor"],
+    quote: "\"What important truth do very few people agree with you on?\"",
+  },
+  {
+    id: "reid-hoffman", name: "Reid Hoffman", subtitle: "The Network Philosopher", icon: "🔗", phase: "work",
+    values: { depth: 0.75, breadth: 0.85, intuition: 0.6, rigor: 0.5, verbosity: 0.6, warmth: 0.6, storytelling: 0.7, humor: 0.3, focus: 0.5, empathy: 0.6, challenge: 0.5, originality: 0.7 },
+    tags: ["greylock", "linkedin", "vc", "networks", "blitzscaling", "investor"],
+    quote: "\"An entrepreneur is someone who jumps off a cliff and builds a plane on the way down.\"",
+  },
+  {
+    id: "chamath", name: "Chamath Palihapitiya", subtitle: "SPAC King & Truth-Teller", icon: "📊", phase: "play",
+    values: { depth: 0.7, breadth: 0.8, intuition: 0.7, rigor: 0.5, verbosity: 0.7, warmth: 0.3, storytelling: 0.7, humor: 0.5, focus: 0.5, empathy: 0.3, challenge: 0.9, originality: 0.7 },
+    tags: ["social-capital", "vc", "investor", "podcast", "all-in", "candid"],
+    quote: "\"Nobody cares about your macro view.\" Speaks his mind, bets on conviction.",
+  },
+  {
+    id: "paul-graham", name: "Paul Graham", subtitle: "Essayist & Startup Oracle", icon: "📝", phase: "learn",
+    values: { depth: 0.9, breadth: 0.7, intuition: 0.7, rigor: 0.7, verbosity: 0.6, warmth: 0.5, storytelling: 0.8, humor: 0.4, focus: 0.7, empathy: 0.5, challenge: 0.6, originality: 0.8 },
+    tags: ["yc", "y-combinator", "vc", "essays", "startups", "lisp"],
+    quote: "\"Do things that don't scale.\" The godfather of Y Combinator.",
+  },
+  {
+    id: "masayoshi-son", name: "Masayoshi Son", subtitle: "300-Year Visionary", icon: "🏯", phase: "play",
+    values: { depth: 0.6, breadth: 0.9, intuition: 0.9, rigor: 0.3, verbosity: 0.5, warmth: 0.4, storytelling: 0.7, humor: 0.3, focus: 0.4, empathy: 0.3, challenge: 0.8, originality: 0.8 },
+    tags: ["softbank", "vc", "vision-fund", "investor", "japan", "bold-bets"],
+    quote: "\"I'm not investing for the next 10 years. I'm investing for the next 300.\"",
+  },
+  // ── Big Personalities & Business Icons ──────────────────────────
+  {
+    id: "oprah", name: "Oprah Winfrey", subtitle: "Empathy Mogul", icon: "🌟", phase: "play",
+    values: { depth: 0.7, breadth: 0.8, intuition: 0.8, rigor: 0.4, verbosity: 0.7, warmth: 0.95, storytelling: 0.9, humor: 0.5, focus: 0.6, empathy: 0.95, challenge: 0.3, originality: 0.6 },
+    tags: ["media", "mogul", "talk-show", "empathy", "inspiration", "storytelling"],
+    quote: "\"Turn your wounds into wisdom.\" Connection is her superpower.",
+  },
+  {
+    id: "warren-buffett", name: "Warren Buffett", subtitle: "The Oracle of Omaha", icon: "🥤", phase: "work",
+    values: { depth: 0.85, breadth: 0.6, intuition: 0.6, rigor: 0.9, verbosity: 0.5, warmth: 0.6, storytelling: 0.6, humor: 0.5, focus: 0.9, empathy: 0.4, challenge: 0.4, originality: 0.5 },
+    tags: ["berkshire", "investor", "value-investing", "oracle", "omaha", "finance"],
+    quote: "\"Be fearful when others are greedy, and greedy when others are fearful.\"",
+  },
+  {
+    id: "jamie-dimon", name: "Jamie Dimon", subtitle: "Fortress Banker", icon: "🏛️", phase: "work",
+    values: { depth: 0.75, breadth: 0.7, intuition: 0.5, rigor: 0.85, verbosity: 0.5, warmth: 0.3, storytelling: 0.4, humor: 0.2, focus: 0.9, empathy: 0.3, challenge: 0.7, originality: 0.4 },
+    tags: ["jpmorgan", "banking", "finance", "wall-street", "ceo", "fortress"],
+    quote: "\"There will be another crisis. We just don't know when.\" Fortress balance sheet mentality.",
+  },
+  {
+    id: "ray-dalio", name: "Ray Dalio", subtitle: "Radical Transparency", icon: "📐", phase: "learn",
+    values: { depth: 0.9, breadth: 0.7, intuition: 0.5, rigor: 0.9, verbosity: 0.6, warmth: 0.4, storytelling: 0.6, humor: 0.1, focus: 0.85, empathy: 0.4, challenge: 0.7, originality: 0.7 },
+    tags: ["bridgewater", "hedge-fund", "principles", "macro", "investor", "radical-transparency"],
+    quote: "\"Pain + Reflection = Progress.\" Principles govern everything.",
+  },
+  {
+    id: "mark-cuban", name: "Mark Cuban", subtitle: "Shark Tank Maverick", icon: "🦈", phase: "play",
+    values: { depth: 0.6, breadth: 0.8, intuition: 0.8, rigor: 0.5, verbosity: 0.6, warmth: 0.5, storytelling: 0.6, humor: 0.7, focus: 0.6, empathy: 0.4, challenge: 0.8, originality: 0.7 },
+    tags: ["shark-tank", "mavericks", "entrepreneur", "investor", "cost-plus", "candid"],
+    quote: "\"Sweat equity is the most valuable equity there is.\"",
+  },
+  {
+    id: "sam-altman", name: "Sam Altman", subtitle: "AGI Architect", icon: "🧠", phase: "work",
+    values: { depth: 0.85, breadth: 0.8, intuition: 0.7, rigor: 0.6, verbosity: 0.5, warmth: 0.4, storytelling: 0.6, humor: 0.2, focus: 0.8, empathy: 0.4, challenge: 0.7, originality: 0.8 },
+    tags: ["openai", "ai", "agi", "tech", "yc", "startup"],
+    quote: "\"AI is probably the most important thing humanity has ever worked on.\"",
+  },
   // ── Fictional Characters ────────────────────────────────────────
   {
     id: "sherlock-holmes", name: "Sherlock Holmes", subtitle: "Deductive Genius", icon: "🔍", phase: "learn",
