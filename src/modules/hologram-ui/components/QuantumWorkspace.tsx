@@ -986,6 +986,76 @@ function VerificationMetricsPanel({ probs, t, numQubits, gates, runResult }: {
   const depth = gates.length > 0 ? Math.max(...gates.map(g => g.col)) + 1 : 0;
   const hilbert = 1 << Math.min(numQubits, 16);
 
+  // If no gates placed, show initial |0...0⟩ state
+  const hasCircuit = realGates.length > 0;
+  const hasResults = probs.length > 0;
+
+  // Display data: show |0⟩^n initial state when no results
+  const displayData = hasResults ? sorted : sorted.map((s, i) => ({
+    ...s,
+    probability: i === 0 ? 1 : 0,
+    amplitude: (i === 0 ? [1, 0] : [0, 0]) as Complex,
+  }));
+  const displayNonZero = displayData.filter(s => s.probability > 1e-10);
+  const displayMaxProb = Math.max(...displayData.map(s => s.probability), 1e-10);
+  const displayTotalProb = displayData.reduce((s, p) => s + p.probability, 0);
+
+  /* Phase → HSL color */
+  const phaseColor = (amp: Complex) => {
+    const phase = Math.atan2(amp[1], amp[0]);
+    const hue = ((phase + Math.PI) / (2 * Math.PI)) * 360;
+    return `hsl(${hue}, 75%, 55%)`;
+  };
+
+  /* SVG phase circle */
+  const PhaseCircle = ({ amplitude, size = 18 }: { amplitude: Complex; size?: number }) => {
+    const mag = Math.sqrt(amplitude[0] ** 2 + amplitude[1] ** 2);
+    const phase = Math.atan2(amplitude[1], amplitude[0]);
+    const r = size / 2 - 1;
+    const px = r * Math.cos(phase);
+    const py = -r * Math.sin(phase); // SVG y is inverted
+    return (
+      <svg width={size} height={size} className="shrink-0">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={t.border} strokeWidth={0.5} />
+        <circle cx={size / 2} cy={size / 2} r={r * mag} fill={phaseColor(amplitude)} opacity={0.25} />
+        {mag > 1e-6 && (
+          <line x1={size / 2} y1={size / 2} x2={size / 2 + px} y2={size / 2 + py}
+            stroke={phaseColor(amplitude)} strokeWidth={1.5} strokeLinecap="round" />
+        )}
+      </svg>
+    );
+  };
+
+  /* Mini donut chart for gate composition */
+  const GateDonut = ({ gateMap }: { gateMap: [string, number][] }) => {
+    const total = gateMap.reduce((s, [, c]) => s + c, 0);
+    if (total === 0) return null;
+    const colors = [t.accent, t.green, t.gold, t.purple, t.blue, t.red, t.textMuted];
+    let cumAngle = -Math.PI / 2;
+    const R = 28, r = 16;
+    const arcs = gateMap.slice(0, 7).map(([gate, count], i) => {
+      const angle = (count / total) * 2 * Math.PI;
+      const startAngle = cumAngle;
+      cumAngle += angle;
+      const large = angle > Math.PI ? 1 : 0;
+      const x1 = 32 + R * Math.cos(startAngle), y1 = 32 + R * Math.sin(startAngle);
+      const x2 = 32 + R * Math.cos(startAngle + angle), y2 = 32 + R * Math.sin(startAngle + angle);
+      const ix1 = 32 + r * Math.cos(startAngle), iy1 = 32 + r * Math.sin(startAngle);
+      const ix2 = 32 + r * Math.cos(startAngle + angle), iy2 = 32 + r * Math.sin(startAngle + angle);
+      return (
+        <path key={gate}
+          d={`M ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} L ${ix2} ${iy2} A ${r} ${r} 0 ${large} 0 ${ix1} ${iy1} Z`}
+          fill={colors[i % colors.length]} opacity={0.85} />
+      );
+    });
+    return (
+      <svg width={64} height={64} className="shrink-0">
+        {arcs}
+        <text x={32} y={34} textAnchor="middle" fill={t.text} fontSize={11} fontWeight={700} fontFamily="monospace">{total}</text>
+      </svg>
+    );
+  };
+
   return (
     <div className="h-full flex flex-col overflow-hidden" style={{ background: t.panel }}>
       <div className="flex items-center gap-0 px-3 shrink-0" style={{ borderBottom: `1px solid ${t.border}` }}>
@@ -1005,121 +1075,168 @@ function VerificationMetricsPanel({ probs, t, numQubits, gates, runResult }: {
         ))}
         <div className="flex-1" />
         <div className="flex items-center gap-3 text-[10px] font-mono" style={{ color: t.textDim }}>
-          <span title="Non-zero basis states">|ψ⟩: {nonZero.length}/{hilbert}</span>
-          <span title="Shannon entropy">H: {entropy.toFixed(3)}</span>
-          <span title="Total probability (should be 1.000000)" style={{ color: Math.abs(totalProb - 1) < 1e-6 ? t.green : t.red }}>
-            ΣP: {totalProb.toFixed(6)} {Math.abs(totalProb - 1) < 1e-6 ? "✓" : "✗"}
+          <span title="Non-zero basis states">|ψ⟩: {displayNonZero.length}/{hilbert}</span>
+          <span title="Shannon entropy">H: {(hasResults ? entropy : 0).toFixed(3)}</span>
+          <span title="Total probability" style={{ color: Math.abs(displayTotalProb - 1) < 1e-6 ? t.green : t.red }}>
+            ΣP: {displayTotalProb.toFixed(6)} {Math.abs(displayTotalProb - 1) < 1e-6 ? "✓" : "✗"}
           </span>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto">
+        {/* ── Probabilities Tab ── */}
         {tab === "probs" && (
-          <div className="p-3">
-            {probs.length === 0 ? (
-              <div className="text-[12px] text-center py-8" style={{ color: t.textDim }}>
-                Place gates and run to see probabilities
-              </div>
-            ) : (
-              <div className="space-y-0.5">
-                {sorted.filter(s => s.probability > 1e-10 || sorted.length <= 32).map(p => (
-                  <div key={p.state} className="flex items-center gap-1.5 group">
-                    <span className="text-[10px] font-mono shrink-0 w-[60px] text-right" style={{ color: t.textMuted }}>
-                      |{p.state}⟩
-                    </span>
-                    <div className="flex-1 h-[14px] rounded-sm overflow-hidden" style={{ background: t.surfaceAlt }}>
-                      <div className="h-full rounded-sm transition-all duration-200" style={{
-                        width: `${(p.probability / maxProb) * 100}%`,
-                        background: p.probability > 0.5 ? t.accent : p.probability > 0.1 ? t.blue : t.textDim,
-                        minWidth: p.probability > 0 ? 2 : 0,
-                      }} />
-                    </div>
-                    <span className="text-[10px] font-mono w-[50px] shrink-0 text-right" style={{ color: t.text }}>
-                      {(p.probability * 100).toFixed(2)}%
-                    </span>
-                    {p.amplitude && (p.amplitude[0] !== 0 || p.amplitude[1] !== 0) && (
-                      <span className="text-[9px] font-mono w-[80px] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: t.textDim }}>
-                        {p.amplitude[0].toFixed(3)}{p.amplitude[1] >= 0 ? "+" : ""}{p.amplitude[1].toFixed(3)}i
-                      </span>
-                    )}
-                  </div>
-                ))}
+          <div className="p-3 space-y-2">
+            {!hasResults && (
+              <div className="text-[10px] font-mono px-1 py-1 rounded" style={{ color: t.textDim, background: t.surfaceAlt }}>
+                {hasCircuit ? "▸ Run circuit to compute probabilities" : "Initial state: |" + "0".repeat(Math.min(numQubits, 10)) + "⟩ (100%)"}
               </div>
             )}
-          </div>
-        )}
-
-        {tab === "state" && (
-          <div className="p-3">
-            {nonZero.length === 0 ? (
-              <div className="text-[12px] text-center py-8" style={{ color: t.textDim }}>Run circuit to inspect statevector</div>
-            ) : (
-              <div className="space-y-2">
-                <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-x-3 gap-y-0.5 text-[10px] font-mono">
-                  <span className="font-semibold" style={{ color: t.textDim }}>State</span>
-                  <span className="font-semibold" style={{ color: t.textDim }}>Amplitude</span>
-                  <span className="font-semibold" style={{ color: t.textDim }}>Phase</span>
-                  <span className="font-semibold text-right" style={{ color: t.textDim }}>Prob</span>
-                  {nonZero.slice(0, 64).map(p => {
-                    const phase = Math.atan2(p.amplitude[1], p.amplitude[0]);
-                    const mag = Math.sqrt(p.probability);
-                    return (
-                      <React.Fragment key={p.state}>
-                        <span style={{ color: t.accent }}>|{p.state}⟩</span>
-                        <span style={{ color: t.text }}>{mag.toFixed(5)}∠{(phase * 180 / Math.PI).toFixed(1)}°</span>
-                        <span style={{ color: t.textMuted }}>
-                          {p.amplitude[0].toFixed(5)}{p.amplitude[1] >= 0 ? "+" : ""}{p.amplitude[1].toFixed(5)}i
-                        </span>
-                        <span className="text-right" style={{ color: t.text }}>{(p.probability * 100).toFixed(2)}%</span>
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-                {nonZero.length > 64 && (
-                  <div className="text-[10px] text-center" style={{ color: t.textDim }}>Showing 64 of {nonZero.length} non-zero states</div>
-                )}
-                <div className="mt-3 pt-2 space-y-1" style={{ borderTop: `1px solid ${t.border}` }}>
-                  <h5 className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: t.textDim }}>Verification Checks</h5>
-                  {[
-                    { label: "Normalization ΣP = 1", pass: Math.abs(totalProb - 1) < 1e-6, value: totalProb.toFixed(8) },
-                    { label: "Shannon entropy H(ρ)", pass: true, value: `${entropy.toFixed(6)} / ${maxEntropy.toFixed(3)} bits` },
-                    { label: "Non-zero states", pass: true, value: `${nonZero.length} / ${hilbert}` },
-                    { label: "State purity Tr(ρ²)", pass: true, value: nonZero.reduce((s, p) => s + p.probability * p.probability, 0).toFixed(6) },
-                  ].map((check, i) => (
-                    <div key={i} className="flex items-center gap-2 text-[10px] font-mono">
-                      <span style={{ color: check.pass ? t.green : t.red }}>{check.pass ? "✓" : "✗"}</span>
-                      <span style={{ color: t.textSecondary }}>{check.label}</span>
-                      <span className="flex-1 text-right" style={{ color: t.text }}>{check.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {tab === "circuit" && (
-          <div className="p-3 space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: "Qubits", value: String(numQubits), icon: "⊗" },
-                { label: "Hilbert dim", value: `2^${numQubits} = ${hilbert}`, icon: "ℋ" },
-                { label: "Total gates", value: String(realGates.length), icon: "⊞" },
-                { label: "Circuit depth", value: String(depth), icon: "#" },
-                { label: "1Q gates", value: String(singleQ), icon: "□" },
-                { label: "2Q+ gates", value: String(multiQ), icon: "⊕" },
-                { label: "Exec time", value: runResult ? (runResult.executionTimeMs < 1 ? `${(runResult.executionTimeMs * 1000).toFixed(0)}µs` : `${runResult.executionTimeMs.toFixed(2)}ms`) : "—", icon: "⏱" },
-                { label: "Non-zero", value: `${nonZero.length} states`, icon: "Ψ" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded text-[11px]" style={{ background: t.surfaceAlt }}>
-                  <span className="text-[13px] w-5 text-center">{item.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[9px] uppercase tracking-wider" style={{ color: t.textDim }}>{item.label}</div>
-                    <div className="font-mono font-semibold truncate" style={{ color: t.text }}>{item.value}</div>
+            <div className="space-y-0.5">
+              {displayData.filter(s => s.probability > 1e-10 || displayData.length <= 32).map(p => (
+                <div key={p.state} className="flex items-center gap-1.5 group">
+                  <PhaseCircle amplitude={p.amplitude} size={16} />
+                  <span className="text-[10px] font-mono shrink-0 w-[60px] text-right" style={{ color: t.textMuted }}>
+                    |{p.state}⟩
+                  </span>
+                  <div className="flex-1 h-[14px] rounded-sm overflow-hidden" style={{ background: t.surfaceAlt }}>
+                    <div className="h-full rounded-sm transition-all duration-200" style={{
+                      width: `${(p.probability / displayMaxProb) * 100}%`,
+                      background: phaseColor(p.amplitude),
+                      minWidth: p.probability > 0 ? 2 : 0,
+                      opacity: 0.8,
+                    }} />
                   </div>
+                  <span className="text-[10px] font-mono w-[50px] shrink-0 text-right" style={{ color: t.text }}>
+                    {(p.probability * 100).toFixed(2)}%
+                  </span>
+                  {p.amplitude && (p.amplitude[0] !== 0 || p.amplitude[1] !== 0) && (
+                    <span className="text-[9px] font-mono w-[80px] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: t.textDim }}>
+                      {p.amplitude[0].toFixed(3)}{p.amplitude[1] >= 0 ? "+" : ""}{p.amplitude[1].toFixed(3)}i
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
+            {/* Phase legend */}
+            <div className="flex items-center gap-2 pt-1" style={{ borderTop: `1px solid ${t.border}` }}>
+              <span className="text-[9px]" style={{ color: t.textDim }}>Phase:</span>
+              <div className="flex-1 h-2.5 rounded-full" style={{
+                background: "linear-gradient(to right, hsl(0,75%,55%), hsl(60,75%,55%), hsl(120,75%,55%), hsl(180,75%,55%), hsl(240,75%,55%), hsl(300,75%,55%), hsl(360,75%,55%))",
+              }} />
+              <span className="text-[9px] font-mono" style={{ color: t.textDim }}>−π → +π</span>
+            </div>
+          </div>
+        )}
+
+        {/* ── Statevector Tab ── */}
+        {tab === "state" && (
+          <div className="p-3 space-y-3">
+            {!hasResults && (
+              <div className="text-[10px] font-mono px-1 py-1 rounded" style={{ color: t.textDim, background: t.surfaceAlt }}>
+                {hasCircuit ? "▸ Run circuit to inspect statevector" : "ψ = |" + "0".repeat(Math.min(numQubits, 10)) + "⟩ — run a circuit to see evolution"}
+              </div>
+            )}
+            {/* Hinton-style amplitude grid */}
+            <div className="flex flex-wrap gap-1 justify-center">
+              {displayData.slice(0, 64).map(p => {
+                const mag = Math.sqrt(p.probability);
+                const sz = Math.max(4, Math.round(mag * 28));
+                return (
+                  <div key={p.state} className="flex flex-col items-center gap-0.5" title={`|${p.state}⟩ = ${p.amplitude[0].toFixed(4)}${p.amplitude[1] >= 0 ? "+" : ""}${p.amplitude[1].toFixed(4)}i (${(p.probability * 100).toFixed(1)}%)`}>
+                    <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: t.surfaceAlt }}>
+                      <div className="rounded-sm" style={{
+                        width: sz, height: sz,
+                        background: p.probability > 1e-10 ? phaseColor(p.amplitude) : "transparent",
+                        opacity: p.probability > 1e-10 ? 0.85 : 0.1,
+                        border: p.probability > 1e-10 ? "none" : `1px dashed ${t.border}`,
+                      }} />
+                    </div>
+                    <span className="text-[7px] font-mono" style={{ color: t.textDim }}>
+                      {p.state.length <= 4 ? p.state : `${parseInt(p.state, 2)}`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {displayData.length > 64 && (
+              <div className="text-[10px] text-center" style={{ color: t.textDim }}>Showing 64 of {displayData.length} states</div>
+            )}
+            {/* Amplitude table */}
+            {displayNonZero.length > 0 && (
+              <div className="grid grid-cols-[auto_auto_1fr_auto] gap-x-3 gap-y-0.5 text-[10px] font-mono" style={{ borderTop: `1px solid ${t.border}`, paddingTop: 8 }}>
+                <span className="font-semibold" style={{ color: t.textDim }}></span>
+                <span className="font-semibold" style={{ color: t.textDim }}>State</span>
+                <span className="font-semibold" style={{ color: t.textDim }}>Amplitude</span>
+                <span className="font-semibold text-right" style={{ color: t.textDim }}>Prob</span>
+                {displayNonZero.slice(0, 64).map(p => {
+                  const phase = Math.atan2(p.amplitude[1], p.amplitude[0]);
+                  const mag = Math.sqrt(p.probability);
+                  return (
+                    <React.Fragment key={p.state}>
+                      <PhaseCircle amplitude={p.amplitude} size={14} />
+                      <span style={{ color: t.accent }}>|{p.state}⟩</span>
+                      <span style={{ color: t.text }}>{mag.toFixed(5)}∠{(phase * 180 / Math.PI).toFixed(1)}°
+                        <span style={{ color: t.textDim, marginLeft: 6 }}>{p.amplitude[0].toFixed(4)}{p.amplitude[1] >= 0 ? "+" : ""}{p.amplitude[1].toFixed(4)}i</span>
+                      </span>
+                      <span className="text-right" style={{ color: t.text }}>{(p.probability * 100).toFixed(2)}%</span>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            )}
+            {/* Verification checks */}
+            <div className="pt-2 space-y-1" style={{ borderTop: `1px solid ${t.border}` }}>
+              <h5 className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: t.textDim }}>Verification</h5>
+              {[
+                { label: "Normalization ΣP = 1", pass: Math.abs(displayTotalProb - 1) < 1e-6, value: displayTotalProb.toFixed(8) },
+                { label: "Shannon entropy H(ρ)", pass: true, value: `${(hasResults ? entropy : 0).toFixed(6)} / ${maxEntropy.toFixed(3)} bits` },
+                { label: "Non-zero states", pass: true, value: `${displayNonZero.length} / ${hilbert}` },
+                { label: "State purity Tr(ρ²)", pass: true, value: displayNonZero.reduce((s, p) => s + p.probability * p.probability, 0).toFixed(6) },
+              ].map((check, i) => (
+                <div key={i} className="flex items-center gap-2 text-[10px] font-mono">
+                  <span style={{ color: check.pass ? t.green : t.red }}>{check.pass ? "✓" : "✗"}</span>
+                  <span style={{ color: t.textSecondary }}>{check.label}</span>
+                  <span className="flex-1 text-right" style={{ color: t.text }}>{check.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Circuit Info Tab ── */}
+        {tab === "circuit" && (
+          <div className="p-3 space-y-3">
+            <div className="flex items-start gap-4">
+              {/* Gate donut */}
+              {realGates.length > 0 && (() => {
+                const gateMap = Object.entries(
+                  realGates.reduce<Record<string, number>>((acc, g) => { acc[g.gateId] = (acc[g.gateId] || 0) + 1; return acc; }, {})
+                ).sort((a, b) => b[1] - a[1]);
+                return <GateDonut gateMap={gateMap} />;
+              })()}
+              <div className="grid grid-cols-2 gap-2 flex-1">
+                {[
+                  { label: "Qubits", value: String(numQubits), icon: "⊗" },
+                  { label: "Hilbert dim", value: `2^${numQubits}`, icon: "ℋ" },
+                  { label: "Total gates", value: String(realGates.length), icon: "⊞" },
+                  { label: "Depth", value: String(depth), icon: "#" },
+                  { label: "1Q gates", value: String(singleQ), icon: "□" },
+                  { label: "2Q+ gates", value: String(multiQ), icon: "⊕" },
+                  { label: "Exec time", value: runResult ? (runResult.executionTimeMs < 1 ? `${(runResult.executionTimeMs * 1000).toFixed(0)}µs` : `${runResult.executionTimeMs.toFixed(2)}ms`) : "—", icon: "⏱" },
+                  { label: "Non-zero", value: `${displayNonZero.length}`, icon: "Ψ" },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded text-[11px]" style={{ background: t.surfaceAlt }}>
+                    <span className="text-[13px] w-5 text-center">{item.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[9px] uppercase tracking-wider" style={{ color: t.textDim }}>{item.label}</div>
+                      <div className="font-mono font-semibold truncate" style={{ color: t.text }}>{item.value}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Gate composition bars */}
             {realGates.length > 0 && (
               <div className="space-y-1">
                 <h5 className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: t.textDim }}>Gate Composition</h5>
@@ -1127,17 +1244,26 @@ function VerificationMetricsPanel({ probs, t, numQubits, gates, runResult }: {
                   realGates.reduce<Record<string, number>>((acc, g) => { acc[g.gateId] = (acc[g.gateId] || 0) + 1; return acc; }, {})
                 ).sort((a, b) => b[1] - a[1]).map(([gate, count]) => {
                   const def = findGateDef(gate);
+                  const pct = (count / realGates.length) * 100;
                   return (
                     <div key={gate} className="flex items-center gap-2 text-[10px] font-mono">
                       <span className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-bold text-white"
                         style={{ background: gateColor(def, t) }}>
                         {(def?.label || gate).slice(0, 2)}
                       </span>
-                      <span style={{ color: t.textSecondary }}>{def?.label || gate}</span>
-                      <span className="flex-1 text-right font-semibold" style={{ color: t.text }}>×{count}</span>
+                      <span className="w-8" style={{ color: t.textSecondary }}>{def?.label || gate}</span>
+                      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: t.surfaceAlt }}>
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: gateColor(def, t), opacity: 0.7 }} />
+                      </div>
+                      <span className="w-8 text-right font-semibold" style={{ color: t.text }}>×{count}</span>
                     </div>
                   );
                 })}
+              </div>
+            )}
+            {realGates.length === 0 && (
+              <div className="text-[11px] text-center py-4" style={{ color: t.textDim }}>
+                Add gates to see circuit composition
               </div>
             )}
           </div>
@@ -1146,10 +1272,6 @@ function VerificationMetricsPanel({ probs, t, numQubits, gates, runResult }: {
     </div>
   );
 }
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Gate Tile — IBM flat grid style
-   ═══════════════════════════════════════════════════════════════════════════ */
 
 function GateTile({ gate, t, selected, onClick, onDragStart }: {
   gate: GateDef; t: Theme; selected: boolean;
