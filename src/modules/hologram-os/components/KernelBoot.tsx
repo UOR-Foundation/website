@@ -2,15 +2,16 @@
  * KernelBoot — Startup Experience
  * ════════════════════════════════
  *
- * A warm, gentle sequence:
- *   1. A soft dot of light fades in at center
- *   2. It gently pulses, then a circle expands from it
- *   3. The circle opens outward, revealing the desktop beneath
- *
- * Language is plain, warm, human. No jargon, no mysticism.
+ * From total darkness:
+ *   1. DARK  — Pure black, 600ms of silence
+ *   2. DOT   — A tiny point of warm light fades in (800ms)
+ *   3. PULSE — The dot breathes, a heartbeat establishing life (2s+)
+ *   4. RING  — Light emanates outward into a circle (the kernel)
+ *   5. PROJECT — The circle expands as a radial projection,
+ *               revealing the desktop beneath like light through a lens
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { BootEvent } from "../projection-engine";
 import type { BootStage } from "@/modules/qkernel/q-boot";
@@ -24,18 +25,7 @@ interface KernelBootProps {
   skipAnimation?: boolean;
 }
 
-/* Simple, warm status words */
-function stageLabel(stage: BootStage): string {
-  switch (stage) {
-    case "off":        return "";
-    case "post":       return "Getting ready";
-    case "bootloader": return "Setting things up";
-    case "initrd":     return "Almost there";
-    case "init":       return "Here we go";
-    case "running":    return "Welcome";
-    case "panic":      return "Something went wrong";
-  }
-}
+type Phase = "dark" | "dot" | "pulse" | "ring" | "project";
 
 export default function KernelBoot({
   events,
@@ -46,139 +36,239 @@ export default function KernelBoot({
   skipAnimation,
 }: KernelBootProps) {
   const [visible, setVisible] = useState(true);
-  const [phase, setPhase] = useState<"dot" | "circle" | "open" | "gone">("dot");
+  const [phase, setPhase] = useState<Phase>("dark");
+  const bootedRef = useRef(false);
+  const phaseRef = useRef<Phase>("dark");
 
-  const latestEvent = events.length > 0 ? events[events.length - 1] : null;
-  const progress = latestEvent?.progress ?? 0;
+  // Keep ref in sync
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
 
-  // Advance phases with boot stages
+  // Sequenced phase timeline — independent of boot speed
   useEffect(() => {
-    if (stage === "post" || stage === "bootloader") setPhase("circle");
-    if (stage === "initrd" || stage === "init") setPhase("circle");
-  }, [stage]);
-
-  // Boot complete → open → exit
-  useEffect(() => {
-    if (!isBooted || phase === "open" || phase === "gone") return;
-
     if (skipAnimation) {
       setVisible(false);
       onEntered();
       return;
     }
 
-    const t1 = setTimeout(() => setPhase("open"), 400);
-    const t2 = setTimeout(() => {
-      setPhase("gone");
-      setVisible(false);
-      onEntered();
-    }, 1400);
+    // dark → dot (600ms)
+    const t1 = setTimeout(() => setPhase("dot"), 600);
+    // dot → pulse (after dot has been visible 800ms)
+    const t2 = setTimeout(() => setPhase("pulse"), 1400);
+    // pulse → ring (after 1.2s of heartbeat)
+    const t3 = setTimeout(() => setPhase("ring"), 2600);
 
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [isBooted, phase, onEntered, skipAnimation]);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [skipAnimation, onEntered]);
+
+  // When boot completes AND we're at least at ring phase → project
+  useEffect(() => {
+    if (!isBooted || bootedRef.current) return;
+    bootedRef.current = true;
+
+    const doProject = () => {
+      setPhase("project");
+      setTimeout(() => {
+        setVisible(false);
+        onEntered();
+      }, 1800);
+    };
+
+    // If we haven't reached ring yet, wait until we do
+    if (phaseRef.current !== "ring") {
+      const wait = setTimeout(doProject, 3000 - performance.now() % 3000 + 200);
+      return () => clearTimeout(wait);
+    } else {
+      // Hold ring for a beat, then project
+      const t = setTimeout(doProject, 800);
+      return () => clearTimeout(t);
+    }
+  }, [isBooted, onEntered]);
 
   if (!visible) return null;
 
   const isPanic = stage === "panic";
-  const warmLight = isPanic ? "hsla(0, 40%, 55%, 1)" : "hsla(38, 45%, 78%, 1)";
-  const warmRing = isPanic ? "hsla(0, 30%, 50%, 0.2)" : "hsla(38, 25%, 70%, 0.18)";
+  const lightColor = isPanic ? "hsla(0, 40%, 55%, 1)" : "hsla(38, 50%, 80%, 1)";
+  const ringStroke = isPanic ? "hsla(0, 30%, 50%, 0.25)" : "hsla(38, 30%, 72%, 0.22)";
+
+  // Clip-path for projection reveal: circle grows from center
+  const clipRadius = phase === "project" ? 150 : 0; // percentage
 
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
           className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden"
-          style={{ background: "hsl(25, 8%, 4%)" }}
+          style={{ background: "hsl(0, 0%, 0%)" }}
           initial={{ opacity: 1 }}
-          animate={{ opacity: phase === "open" || phase === "gone" ? 0 : 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.0, ease: "easeInOut" }}
+          transition={{ duration: 0.3 }}
         >
-          {/* Soft ambient warmth */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: `radial-gradient(circle at 50% 50%, hsla(38, 30%, 65%, ${0.03 + progress * 0.06}) 0%, transparent ${30 + progress * 30}%)`,
-              transition: "background 0.8s ease-out",
-            }}
-          />
-
-          {/* The dot — a simple, warm point of light */}
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              background: warmLight,
-              boxShadow: `0 0 16px 3px ${warmLight.replace("1)", "0.25)")}, 0 0 40px 8px ${warmLight.replace("1)", "0.06)")}`,
-            }}
-            initial={{ width: 0, height: 0, opacity: 0 }}
-            animate={{
-              width: phase === "dot" ? 5 : phase === "open" ? 4 : 5,
-              height: phase === "dot" ? 5 : phase === "open" ? 4 : 5,
-              opacity: phase === "open" || phase === "gone" ? 0 : 1,
-            }}
-            transition={{
-              width: { duration: 0.5, ease: "easeOut" },
-              height: { duration: 0.5, ease: "easeOut" },
-              opacity: { duration: 0.5, ease: "easeOut" },
-            }}
-          />
-
-          {/* Gentle pulse — one soft ring that breathes outward */}
-          {(phase === "circle") && (
+          {/* ── Projection reveal mask ── 
+              When phase=project, this growing radial clip reveals the 
+              desktop beneath by making the black overlay transparent from center */}
+          {phase === "project" && (
             <motion.div
-              className="absolute rounded-full pointer-events-none"
-              style={{ border: `1px solid ${warmRing}` }}
-              initial={{ width: 5, height: 5, opacity: 0.5 }}
-              animate={{
-                width: [5, 100],
-                height: [5, 100],
-                opacity: [0.4, 0],
+              className="fixed inset-0 z-[10000] pointer-events-none"
+              style={{ background: "hsl(0, 0%, 0%)" }}
+              initial={{ 
+                clipPath: "circle(40px at 50% 50%)",
+                opacity: 1,
               }}
-              transition={{
-                duration: 1.8,
-                repeat: Infinity,
-                ease: "easeOut",
+              animate={{ 
+                clipPath: "circle(0px at 50% 50%)",
+                opacity: 0,
+              }}
+              transition={{ 
+                clipPath: { duration: 1.4, ease: [0.25, 0.46, 0.45, 0.94] },
+                opacity: { duration: 1.6, delay: 0.2, ease: "easeOut" },
               }}
             />
           )}
 
-          {/* Circle that forms from the dot */}
+          {/* ── Ambient glow — grows with phases ── */}
           <motion.div
-            className="absolute rounded-full pointer-events-none"
-            style={{
-              border: `1px solid ${warmRing.replace("0.18)", "0.3)")}`,
-            }}
-            initial={{ width: 0, height: 0, opacity: 0 }}
+            className="absolute inset-0 pointer-events-none"
             animate={{
-              width: phase === "dot" ? 0 : phase === "open" ? 800 : 80 + progress * 40,
-              height: phase === "dot" ? 0 : phase === "open" ? 800 : 80 + progress * 40,
-              opacity: phase === "dot" ? 0 : phase === "open" ? 0 : 0.45,
+              opacity: phase === "dark" ? 0 : phase === "project" ? 0 : 1,
             }}
-            transition={{
-              width: { duration: phase === "open" ? 1.0 : 0.7, ease: "easeOut" },
-              height: { duration: phase === "open" ? 1.0 : 0.7, ease: "easeOut" },
-              opacity: { duration: phase === "open" ? 0.8 : 0.5, ease: "easeOut" },
+            transition={{ duration: 1.0, ease: "easeOut" }}
+            style={{
+              background: `radial-gradient(circle at 50% 50%, ${lightColor.replace("1)", "0.06)")} 0%, transparent ${
+                phase === "ring" ? "40%" : phase === "pulse" ? "20%" : "10%"
+              })`,
+              transition: "background 1.2s ease-out",
             }}
           />
 
-          {/* Status text — plain and warm */}
-          <motion.p
-            className="absolute text-center"
+          {/* ── The Dot — emerges from darkness ── */}
+          <motion.div
+            className="absolute rounded-full"
             style={{
-              top: "calc(50% + 55px)",
-              fontSize: "12px",
-              color: "hsla(38, 12%, 72%, 0.6)",
-              letterSpacing: "0.08em",
-              fontFamily: "'DM Sans', system-ui, sans-serif",
-              fontWeight: 400,
+              background: lightColor,
+              boxShadow: `0 0 20px 4px ${lightColor.replace("1)", "0.3)")}, 0 0 50px 10px ${lightColor.replace("1)", "0.08)")}`,
             }}
-            key={stage}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: phase === "open" || phase === "gone" ? 0 : 0.7, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-          >
-            {stageLabel(stage)}
-          </motion.p>
+            initial={{ width: 0, height: 0, opacity: 0 }}
+            animate={{
+              width: phase === "dark" ? 0 
+                : phase === "project" ? 8 
+                : 5,
+              height: phase === "dark" ? 0 
+                : phase === "project" ? 8 
+                : 5,
+              opacity: phase === "dark" ? 0 
+                : phase === "dot" ? 0.8 
+                : phase === "project" ? 1 
+                : 1,
+              scale: phase === "pulse" 
+                ? [1, 1.3, 1] 
+                : phase === "project" ? 1.5 
+                : 1,
+            }}
+            transition={{
+              width: { duration: 0.8, ease: "easeOut" },
+              height: { duration: 0.8, ease: "easeOut" },
+              opacity: { duration: 0.8, ease: "easeOut" },
+              scale: phase === "pulse" 
+                ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
+                : { duration: 0.6, ease: "easeOut" },
+            }}
+          />
+
+          {/* ── Heartbeat pulse — emanates from dot during pulse phase ── */}
+          {(phase === "pulse" || phase === "ring") && (
+            <>
+              <motion.div
+                className="absolute rounded-full pointer-events-none"
+                style={{ border: `1px solid ${ringStroke}` }}
+                initial={{ width: 5, height: 5, opacity: 0 }}
+                animate={{
+                  width: [5, 110],
+                  height: [5, 110],
+                  opacity: [0.5, 0],
+                }}
+                transition={{
+                  duration: 2.0,
+                  repeat: Infinity,
+                  ease: "easeOut",
+                }}
+              />
+              <motion.div
+                className="absolute rounded-full pointer-events-none"
+                style={{ border: `1px solid ${ringStroke}` }}
+                initial={{ width: 5, height: 5, opacity: 0 }}
+                animate={{
+                  width: [5, 110],
+                  height: [5, 110],
+                  opacity: [0.35, 0],
+                }}
+                transition={{
+                  duration: 2.0,
+                  repeat: Infinity,
+                  ease: "easeOut",
+                  delay: 1.0,
+                }}
+              />
+            </>
+          )}
+
+          {/* ── The Ring (Monad) — forms from the dot, the kernel boundary ── */}
+          <motion.div
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              border: `1.5px solid ${ringStroke.replace("0.22)", "0.4)")}`,
+            }}
+            initial={{ width: 0, height: 0, opacity: 0 }}
+            animate={{
+              width: phase === "ring" ? 90 
+                : phase === "project" ? 300 
+                : 0,
+              height: phase === "ring" ? 90 
+                : phase === "project" ? 300 
+                : 0,
+              opacity: phase === "ring" ? 0.6 
+                : phase === "project" ? 0 
+                : 0,
+            }}
+            transition={{
+              width: { duration: phase === "project" ? 1.2 : 1.0, ease: [0.25, 0.46, 0.45, 0.94] },
+              height: { duration: phase === "project" ? 1.2 : 1.0, ease: [0.25, 0.46, 0.45, 0.94] },
+              opacity: { duration: phase === "project" ? 0.8 : 0.8, ease: "easeOut" },
+            }}
+          />
+
+          {/* ── Projection burst — radial light expanding outward ── */}
+          {phase === "project" && (
+            <motion.div
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                background: `radial-gradient(circle, ${lightColor.replace("1)", "0.2)")} 0%, ${lightColor.replace("1)", "0.05)")} 40%, transparent 70%)`,
+              }}
+              initial={{ width: 90, height: 90, opacity: 0.8 }}
+              animate={{ width: 3000, height: 3000, opacity: 0 }}
+              transition={{ duration: 1.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            />
+          )}
+
+          {/* ── Status text — subtle, below center ── */}
+          {phase !== "dark" && phase !== "project" && (
+            <motion.p
+              className="absolute text-center"
+              style={{
+                top: "calc(50% + 60px)",
+                fontSize: "11px",
+                color: "hsla(38, 10%, 68%, 0.5)",
+                letterSpacing: "0.1em",
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontWeight: 400,
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+              {phase === "dot" || phase === "pulse" ? "" : ""}
+            </motion.p>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
