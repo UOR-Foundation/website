@@ -33,7 +33,8 @@ import {
   Command, HardDrive, FilePlus, FolderPlus, Trash2, Pencil,
   Cloud, CloudOff, CloudUpload, CloudDownload, Loader2, Check, AlertTriangle,
 } from "lucide-react";
-import { useQFs, type FSNode, type CloudSyncState } from "./useQFs";
+import { useQFs, type FSNode, type CloudSyncState, type FileDiff } from "./useQFs";
+import CloudDiffView from "./CloudDiffView";
 import { useMonacoLsp } from "./useMonacoLsp";
 import { resolveLanguage, getRegistrySummary } from "./language-projections";
 
@@ -1295,6 +1296,34 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
   const [inlineCreate, setInlineCreate] = useState<{ parentPath: string; type: "file" | "folder" } | null>(null);
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
 
+  // ── Cloud diff view state ────────────────────────────────────────────────
+  const [cloudDiffs, setCloudDiffs] = useState<FileDiff[] | null>(null);
+  const [showDiffView, setShowDiffView] = useState(false);
+
+  const handleOpenDiffView = useCallback(async () => {
+    const diffs = await qfs.fetchCloudDiff();
+    if (diffs) {
+      setCloudDiffs(diffs);
+      setShowDiffView(true);
+    }
+  }, [qfs]);
+
+  const handleApplyDiffs = useCallback((selected: FileDiff[]) => {
+    qfs.applyDiffs(selected);
+    setShowDiffView(false);
+    setCloudDiffs(null);
+    // Refresh open files with new content
+    setOpenFiles(prev => prev.map(f => {
+      const content = qfs.readFile(f.path);
+      return content !== null ? { ...f, content, modified: false } : f;
+    }));
+  }, [qfs]);
+
+  const handleCancelDiff = useCallback(() => {
+    setShowDiffView(false);
+    setCloudDiffs(null);
+  }, []);
+
   const handleExplorerContextMenu = useCallback((e: React.MouseEvent, node: FSNode) => {
     setContextMenu({ x: e.clientX, y: e.clientY, targetPath: node.path, targetIsFolder: node.type === "folder" });
   }, []);
@@ -2043,7 +2072,7 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
         cloudSync={qfs.cloudSync}
         lastCloudSync={qfs.lastCloudSync}
         onSyncToCloud={() => qfs.syncToCloud()}
-        onSyncFromCloud={() => qfs.syncFromCloud()}
+        onSyncFromCloud={handleOpenDiffView}
       />
 
       {/* ── Command Palette Overlay ───────────────────────────────── */}
@@ -2062,6 +2091,15 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
           onDelete={handleDeleteNode}
           onRename={handleRenameStart}
           onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {/* ── Cloud Diff View Overlay ───────────────────────────────── */}
+      {showDiffView && cloudDiffs && (
+        <CloudDiffView
+          diffs={cloudDiffs}
+          onApply={handleApplyDiffs}
+          onCancel={handleCancelDiff}
         />
       )}
     </div>
