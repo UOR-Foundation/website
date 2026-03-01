@@ -2057,15 +2057,6 @@ export default function QuantumWorkspace({ onClose }: Props) {
           className="text-[14px] font-semibold bg-transparent focus:outline-none px-1 mr-3 min-w-0"
           style={{ color: t.text, maxWidth: 180 }}
         />
-        <div className="w-px h-4 mx-1" style={{ background: t.border }} />
-        {["File", "Edit", "View", "Help"].map(m => (
-          <button key={m} className="px-2.5 py-1 text-[13px] rounded"
-            style={{ color: t.textSecondary }}
-            onMouseEnter={e => (e.currentTarget.style.background = t.accentBg)}
-            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-            {m}
-          </button>
-        ))}
         <div className="flex-1" />
         <button onClick={saveFile} className="flex items-center gap-1.5 px-3 py-1 text-[12px] rounded" style={{ color: t.textMuted }}>
           <Save size={13} /> Save file <Download size={12} />
