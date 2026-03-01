@@ -40,7 +40,7 @@ import {
   getMirrorProtocol,
 } from "@/modules/hologram-ui/engine/reasoning";
 import ConvergencePipeline, { type PipelineState, type PipelineStage } from "./ConvergencePipeline";
-
+import ShowcasePipeline, { isComplexQuestion } from "./ShowcasePipeline";
 // ── Palette — almost invisible, warm, human ──────────────────────────
 const C = {
   bg: "hsl(25, 8%, 6%)",
@@ -60,6 +60,7 @@ interface Exchange {
   understanding: string;
   timestamp: Date;
   pipeline: PipelineState;
+  showcase?: boolean;
   meta?: {
     grade?: string;
     curvature?: number;
@@ -79,6 +80,7 @@ export default function ConvergenceChat() {
   const [input, setInput] = useState("");
   const [isConverging, setIsConverging] = useState(false);
   const [pipeline, setPipeline] = useState<PipelineState>({ stage: "idle" });
+  const [showcaseMode, setShowcaseMode] = useState(false);
   const [greeting, setGreeting] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -152,6 +154,10 @@ export default function ConvergenceChat() {
     setInput("");
     setIsConverging(true);
 
+    // Detect showcase mode for complex questions
+    const isShowcase = isComplexQuestion(thought);
+    setShowcaseMode(isShowcase);
+
     const exchangeId = `ex-${Date.now()}`;
     const start = performance.now();
 
@@ -162,6 +168,7 @@ export default function ConvergenceChat() {
       understanding: "",
       timestamp: new Date(),
       pipeline: { stage: "decomposing" },
+      showcase: isShowcase,
     };
     setExchanges(prev => [...prev, newExchange]);
 
@@ -178,7 +185,7 @@ export default function ConvergenceChat() {
       const claimCount = scaffold?.constraints?.length ?? 0;
       setPipeline({ stage: "decomposing", claimCount });
       updateExchange({ pipeline: { stage: "decomposing", claimCount } });
-      await sleep(400);
+      await sleep(isShowcase ? 900 : 400);
 
       // ── Stage 1.5: Check procedural habits ───────────────────
       const procMem = getProceduralMemory();
@@ -196,18 +203,18 @@ export default function ConvergenceChat() {
 
       // ── Stage 2: Compile circuit ─────────────────────────────
       setPipeline({ stage: "compiling", claimCount });
-      await sleep(350);
+      await sleep(isShowcase ? 800 : 350);
       const circuitEngine = getCircuitEngine();
       const circuit = circuitEngine.project();
       setPipeline({ stage: "compiling", claimCount, gateCount: circuit.gateCount });
       updateExchange({ pipeline: { stage: "compiling", gateCount: circuit.gateCount } });
-      await sleep(300);
+      await sleep(isShowcase ? 700 : 300);
 
       // ── Stage 3: Stabilizer check ────────────────────────────
       const stabHealth = coherence.stabilizer?.health ?? 0.95;
       setPipeline({ stage: "stabilizing", syndromeHealth: stabHealth });
       updateExchange({ pipeline: { stage: "stabilizing", syndromeHealth: stabHealth } });
-      await sleep(400);
+      await sleep(isShowcase ? 900 : 400);
 
       // ── Stage 4: Reasoning (Cloud AI) ────────────────────────
       setPipeline({ stage: "reasoning" });
@@ -383,6 +390,7 @@ export default function ConvergenceChat() {
     } finally {
       setIsConverging(false);
       setPipeline({ stage: "idle" });
+      setShowcaseMode(false);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isConverging, exchanges, coherence]);
@@ -525,8 +533,12 @@ export default function ConvergenceChat() {
 
                 {/* Pipeline visualization — shows during convergence */}
                 {ex.pipeline.stage !== "idle" && ex.pipeline.stage !== "converged" && idx === exchanges.length - 1 && (
-                  <div className="flex justify-center py-2">
-                    <ConvergencePipeline state={ex.pipeline} />
+                  <div className={ex.showcase ? "py-4" : "flex justify-center py-2"}>
+                    {ex.showcase ? (
+                      <ShowcasePipeline state={ex.pipeline} />
+                    ) : (
+                      <ConvergencePipeline state={ex.pipeline} />
+                    )}
                   </div>
                 )}
 
@@ -686,8 +698,12 @@ export default function ConvergenceChat() {
 
           {/* Active pipeline (when converging without exchange yet) */}
           {isConverging && pipeline.stage !== "idle" && exchanges.length > 0 && exchanges[exchanges.length - 1].pipeline.stage !== "idle" && (
-            <div className="flex justify-center py-6">
-              <ConvergencePipeline state={pipeline} />
+            <div className={showcaseMode ? "py-6" : "flex justify-center py-6"}>
+              {showcaseMode ? (
+                <ShowcasePipeline state={pipeline} />
+              ) : (
+                <ConvergencePipeline state={pipeline} />
+              )}
             </div>
           )}
         </div>
@@ -705,7 +721,7 @@ export default function ConvergenceChat() {
                 exit={{ opacity: 0, height: 0 }}
                 className="flex justify-center pb-4 overflow-hidden"
               >
-                <ConvergencePipeline state={pipeline} />
+                {showcaseMode ? <ShowcasePipeline state={pipeline} /> : <ConvergencePipeline state={pipeline} />}
               </motion.div>
             )}
           </AnimatePresence>
