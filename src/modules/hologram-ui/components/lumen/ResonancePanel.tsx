@@ -12,7 +12,7 @@
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Brain, Eye, RefreshCw, Shield, Trash2, X } from "lucide-react";
+import { Activity, Brain, Download, Eye, RefreshCw, Shield, Trash2, X } from "lucide-react";
 import {
   loadResonanceProfile,
   getResonanceDiagnostic,
@@ -20,6 +20,7 @@ import {
   type ResonanceProfile,
 } from "@/modules/hologram-ui/engine/resonanceObserver";
 import { useState, useEffect, useCallback } from "react";
+import { buildResonanceArchive, downloadArchive } from "@/modules/hologram-ui/engine/exportResonanceArchive";
 import { supabase } from "@/integrations/supabase/client";
 import KnowledgeGraphInput from "./KnowledgeGraphInput";
 import KnowledgeGraphExplorer from "./KnowledgeGraphExplorer";
@@ -34,6 +35,7 @@ interface ResonancePanelProps {
 export default function ResonancePanel({ open, onClose }: ResonancePanelProps) {
   const [profile, setProfile] = useState<ResonanceProfile | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -284,17 +286,38 @@ export default function ResonancePanel({ open, onClose }: ResonancePanelProps) {
                     The server never sees plaintext. You own this data completely.
                   </p>
                 </div>
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors"
-                  style={{
-                    color: confirmReset ? "hsl(0, 60%, 60%)" : "hsl(30, 10%, 55%)",
-                    background: confirmReset ? "hsla(0, 60%, 60%, 0.1)" : "transparent",
-                  }}
-                >
-                  <Trash2 size={12} />
-                  {confirmReset ? "Confirm reset — this cannot be undone" : "Reset resonance profile"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      setExporting(true);
+                      try {
+                        const archive = await buildResonanceArchive(userId ?? undefined);
+                        downloadArchive(archive);
+                      } finally {
+                        setExporting(false);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors"
+                    style={{
+                      color: "hsl(38, 50%, 55%)",
+                      background: "hsla(38, 50%, 55%, 0.08)",
+                    }}
+                  >
+                    <Download size={12} />
+                    {exporting ? "Exporting…" : "Export sovereign archive"}
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors"
+                    style={{
+                      color: confirmReset ? "hsl(0, 60%, 60%)" : "hsl(30, 10%, 55%)",
+                      background: confirmReset ? "hsla(0, 60%, 60%, 0.1)" : "transparent",
+                    }}
+                  >
+                    <Trash2 size={12} />
+                    {confirmReset ? "Confirm reset" : "Reset"}
+                  </button>
+                </div>
               </section>
             </div>
           </motion.div>
