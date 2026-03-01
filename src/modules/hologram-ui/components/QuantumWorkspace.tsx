@@ -17,6 +17,7 @@ import {
   Save, Download, Settings, ChevronDown, Trash2, Plus, Minus,
   Info, Copy, RotateCcw, Atom, Grid3X3,
   Pencil, Scissors, ClipboardCopy, GripVertical,
+  Play, Check, Clock, Cpu, Hash, FileCode, Terminal,
 } from "lucide-react";
 import {
   createState,
@@ -26,6 +27,248 @@ import {
   type Complex,
 } from "@/hologram/kernel/q-simulator";
 import { useScreenTheme } from "@/modules/hologram-ui/hooks/useScreenTheme";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Framework Code Generators
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+type CodeFramework = "openqasm" | "qiskit" | "pennylane" | "cirq";
+
+const FRAMEWORK_LABELS: Record<CodeFramework, { label: string; ext: string; mime: string }> = {
+  openqasm: { label: "OpenQASM 2.0", ext: "qasm", mime: "text/plain" },
+  qiskit: { label: "Qiskit", ext: "py", mime: "text/x-python" },
+  pennylane: { label: "PennyLane", ext: "py", mime: "text/x-python" },
+  cirq: { label: "Cirq", ext: "py", mime: "text/x-python" },
+};
+
+function generateQiskitCode(numQubits: number, numClbits: number, gates: PlacedGate[]): string {
+  const lines: string[] = [
+    "from qiskit import QuantumCircuit",
+    "from qiskit.quantum_info import Statevector",
+    "",
+    `qc = QuantumCircuit(${numQubits}, ${numClbits})`,
+  ];
+  const sorted = [...gates].sort((a, b) => a.col - b.col || a.qubits[0] - b.qubits[0]);
+  for (const g of sorted) {
+    if (g.gateId === "barrier") { lines.push(`qc.barrier(${g.qubits[0]})`); continue; }
+    if (g.gateId === "measure") { lines.push(`qc.measure(${g.qubits[0]}, ${g.qubits[0]})`); continue; }
+    if (g.gateId === "|0>") { lines.push(`qc.reset(${g.qubits[0]})`); continue; }
+    const qs = g.qubits.join(", ");
+    if (g.params && g.params.length > 0) {
+      const ps = g.params.map(p => formatAngle(p)).join(", ");
+      lines.push(`qc.${g.gateId}(${ps}, ${qs})`);
+    } else {
+      lines.push(`qc.${g.gateId}(${qs})`);
+    }
+  }
+  lines.push("", "# Simulate", "sv = Statevector.from_instruction(qc)", "print(sv.probabilities_dict())");
+  return lines.join("\n");
+}
+
+function generatePennyLaneCode(numQubits: number, _numClbits: number, gates: PlacedGate[]): string {
+  const lines: string[] = [
+    "import pennylane as qml",
+    "import numpy as np",
+    "",
+    `dev = qml.device("default.qubit", wires=${numQubits})`,
+    "",
+    "@qml.qnode(dev)",
+    "def circuit():",
+  ];
+  const sorted = [...gates].sort((a, b) => a.col - b.col || a.qubits[0] - b.qubits[0]);
+  const gateMap: Record<string, string> = {
+    h: "Hadamard", x: "PauliX", y: "PauliY", z: "PauliZ",
+    s: "S", t: "T", sdg: "adjoint(qml.S)", tdg: "adjoint(qml.T)",
+    sx: "SX", rx: "RX", ry: "RY", rz: "RZ", p: "PhaseShift",
+    cx: "CNOT", cz: "CZ", swap: "SWAP", ccx: "Toffoli",
+  };
+  for (const g of sorted) {
+    if (g.gateId === "barrier" || g.gateId === "measure" || g.gateId === "|0>") continue;
+    const qmlName = gateMap[g.gateId] || g.gateId.toUpperCase();
+    const wires = g.qubits.length === 1 ? `wires=${g.qubits[0]}` : `wires=[${g.qubits.join(", ")}]`;
+    if (g.params && g.params.length > 0) {
+      lines.push(`    qml.${qmlName}(${g.params.map(p => formatAngle(p)).join(", ")}, ${wires})`);
+    } else {
+      lines.push(`    qml.${qmlName}(${wires})`);
+    }
+  }
+  lines.push(`    return qml.probs(wires=range(${numQubits}))`, "", "result = circuit()", "print(result)");
+  return lines.join("\n");
+}
+
+function generateCirqCode(numQubits: number, _numClbits: number, gates: PlacedGate[]): string {
+  const lines: string[] = [
+    "import cirq",
+    "import numpy as np",
+    "",
+    `qubits = cirq.LineQubit.range(${numQubits})`,
+    "circuit = cirq.Circuit()",
+  ];
+  const sorted = [...gates].sort((a, b) => a.col - b.col || a.qubits[0] - b.qubits[0]);
+  const gateMap: Record<string, string> = {
+    h: "H", x: "X", y: "Y", z: "Z", s: "S", t: "T",
+    cx: "CNOT", cz: "CZ", swap: "SWAP", ccx: "CCX",
+    rx: "rx", ry: "ry", rz: "rz",
+  };
+  for (const g of sorted) {
+    if (g.gateId === "barrier" || g.gateId === "measure" || g.gateId === "|0>") continue;
+    const cirqName = gateMap[g.gateId] || g.gateId.toUpperCase();
+    const qs = g.qubits.map(q => `qubits[${q}]`).join(", ");
+    if (g.params && g.params.length > 0 && ["rx", "ry", "rz"].includes(g.gateId)) {
+      lines.push(`circuit.append(cirq.${cirqName}(${g.params[0]}).on(${qs}))`);
+    } else {
+      lines.push(`circuit.append(cirq.${cirqName}(${qs}))`);
+    }
+  }
+  lines.push("", "# Simulate", "sim = cirq.Simulator()", "result = sim.simulate(circuit)", "print(result)");
+  return lines.join("\n");
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Q-Linux Canonical Representation
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+async function computeSHA256(data: string): Promise<string> {
+  const encoded = new TextEncoder().encode(data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+interface CanonicalRepresentation {
+  qasmSource: string;
+  derivationHash: string;
+  cid: string;
+  gateCount: number;
+  qubitCount: number;
+  depth: number;
+  timestamp: string;
+}
+
+async function generateCanonical(qasm: string, numQubits: number, gates: PlacedGate[]): Promise<CanonicalRepresentation> {
+  const canonical = `OPENQASM-CANONICAL:${qasm}`;
+  const hash = await computeSHA256(canonical);
+  const depth = gates.length > 0 ? Math.max(...gates.map(g => g.col)) + 1 : 0;
+  return {
+    qasmSource: qasm,
+    derivationHash: hash,
+    cid: `bafk${hash.slice(0, 52)}`,
+    gateCount: gates.filter(g => g.gateId !== "barrier" && g.gateId !== "measure" && g.gateId !== "|0>").length,
+    qubitCount: numQubits,
+    depth,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Run Results Panel
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+interface RunResult {
+  probs: { state: string; probability: number; amplitude: Complex }[];
+  executionTimeMs: number;
+  gateCount: number;
+  depth: number;
+  hilbertDim: number;
+  canonical: CanonicalRepresentation | null;
+  timestamp: string;
+}
+
+function RunResultsPanel({ result, t, onClose }: { result: RunResult; t: Theme; onClose: () => void }) {
+  const topStates = result.probs.filter(p => p.probability > 0.001).slice(0, 16);
+  return (
+    <div className="h-full flex flex-col" style={{ background: t.panel }}>
+      <div className="flex items-center gap-2 px-4 py-2 shrink-0" style={{ borderBottom: `1px solid ${t.border}` }}>
+        <Check size={14} style={{ color: t.green }} />
+        <span className="text-[13px] font-semibold" style={{ color: t.text }}>Run Results</span>
+        <div className="flex-1" />
+        <button onClick={onClose} className="p-1 rounded" style={{ color: t.textMuted }}><X size={14} /></button>
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+        {/* Execution Summary */}
+        <div className="space-y-2">
+          <h4 className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: t.textDim }}>Execution Summary</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { icon: <Clock size={12} />, label: "Time", value: result.executionTimeMs < 1 ? `${(result.executionTimeMs * 1000).toFixed(0)}µs` : `${result.executionTimeMs.toFixed(2)}ms` },
+              { icon: <Cpu size={12} />, label: "Gates", value: String(result.gateCount) },
+              { icon: <Hash size={12} />, label: "Depth", value: String(result.depth) },
+              { icon: <Atom size={12} />, label: "Hilbert", value: `2^${Math.log2(result.hilbertDim)} = ${result.hilbertDim}` },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded" style={{ background: t.surfaceAlt }}>
+                <span style={{ color: t.accent }}>{item.icon}</span>
+                <div>
+                  <span className="text-[10px] block" style={{ color: t.textDim }}>{item.label}</span>
+                  <span className="text-[12px] font-mono font-semibold" style={{ color: t.text }}>{item.value}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Top States */}
+        <div className="space-y-1.5">
+          <h4 className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: t.textDim }}>State Probabilities</h4>
+          {topStates.map(p => (
+            <div key={p.state} className="flex items-center gap-2">
+              <span className="text-[11px] font-mono w-16 text-right shrink-0" style={{ color: t.textMuted }}>|{p.state}⟩</span>
+              <div className="flex-1 h-3.5 rounded-sm overflow-hidden" style={{ background: t.surfaceAlt }}>
+                <div className="h-full rounded-sm" style={{ width: `${p.probability * 100}%`, background: t.probBar, minWidth: p.probability > 0 ? 2 : 0 }} />
+              </div>
+              <span className="text-[10px] font-mono w-12 shrink-0" style={{ color: t.textDim }}>{(p.probability * 100).toFixed(1)}%</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Q-Linux Canonical */}
+        {result.canonical && (
+          <div className="space-y-1.5">
+            <h4 className="text-[12px] font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: t.textDim }}>
+              <Terminal size={11} /> Q-Linux Canonical
+            </h4>
+            <div className="rounded-lg p-3 space-y-1.5 text-[11px] font-mono" style={{ background: t.surfaceAlt, border: `1px solid ${t.border}` }}>
+              <div className="flex justify-between">
+                <span style={{ color: t.textDim }}>derivation:</span>
+                <span className="truncate ml-2" style={{ color: t.accent, maxWidth: 160 }} title={result.canonical.derivationHash}>
+                  {result.canonical.derivationHash.slice(0, 16)}…
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span style={{ color: t.textDim }}>cid:</span>
+                <span className="truncate ml-2" style={{ color: t.gold, maxWidth: 160 }} title={result.canonical.cid}>
+                  {result.canonical.cid.slice(0, 20)}…
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span style={{ color: t.textDim }}>gates:</span>
+                <span style={{ color: t.text }}>{result.canonical.gateCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span style={{ color: t.textDim }}>depth:</span>
+                <span style={{ color: t.text }}>{result.canonical.depth}</span>
+              </div>
+              <div className="flex justify-between">
+                <span style={{ color: t.textDim }}>qubits:</span>
+                <span style={{ color: t.text }}>{result.canonical.qubitCount}</span>
+              </div>
+              <div className="pt-1" style={{ borderTop: `1px solid ${t.border}` }}>
+                <span style={{ color: t.textDim }}>issued:</span>
+                <span className="ml-1" style={{ color: t.textMuted }}>{new Date(result.canonical.timestamp).toLocaleString()}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => navigator.clipboard.writeText(JSON.stringify(result.canonical, null, 2))}
+              className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded"
+              style={{ color: t.accent, border: `1px solid ${t.border}` }}
+            >
+              <Copy size={10} /> Copy canonical JSON
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Theme
@@ -773,9 +1016,25 @@ export default function QuantumWorkspace({ onClose }: Props) {
   const [showInspect, setShowInspect] = useState(false);
   const [draggingCanvasGate, setDraggingCanvasGate] = useState<string | null>(null);
 
+  const [codeFramework, setCodeFramework] = useState<CodeFramework>("openqasm");
+  const [runResult, setRunResult] = useState<RunResult | null>(null);
+  const [showRunResults, setShowRunResults] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const qasmCode = useMemo(() => generateQASM(numQubits, numClbits, gates), [numQubits, numClbits, gates]);
+
+  const frameworkCode = useMemo(() => {
+    switch (codeFramework) {
+      case "openqasm": return qasmCode;
+      case "qiskit": return generateQiskitCode(numQubits, numClbits, gates);
+      case "pennylane": return generatePennyLaneCode(numQubits, numClbits, gates);
+      case "cirq": return generateCirqCode(numQubits, numClbits, gates);
+    }
+  }, [codeFramework, qasmCode, numQubits, numClbits, gates]);
+
   const maxCol = useMemo(() => Math.max(16, ...gates.map(g => g.col + 1)) + 4, [gates]);
 
   // Undo / Redo
@@ -929,8 +1188,8 @@ export default function QuantumWorkspace({ onClose }: Props) {
     setProbs([]);
   }, [pushUndo]);
 
-  // Simulation
-  const runCircuit = useCallback(() => {
+  // Simulation (lightweight auto-run for live preview)
+  const runCircuitQuiet = useCallback(() => {
     const simQubits = Math.min(numQubits, 16);
     const state = createState(simQubits);
     const sortedGates = [...gates].sort((a, b) => a.col - b.col);
@@ -943,9 +1202,59 @@ export default function QuantumWorkspace({ onClose }: Props) {
     setProbs(getStateProbabilities(state));
   }, [numQubits, gates]);
 
+  // Full "Set up and run" with results + canonical
+  const runCircuitFull = useCallback(async () => {
+    setIsRunning(true);
+    const simQubits = Math.min(numQubits, 16);
+    const state = createState(simQubits);
+    const sortedGates = [...gates].sort((a, b) => a.col - b.col);
+    let gateCount = 0;
+    for (const g of sortedGates) {
+      if (g.gateId === "barrier" || g.gateId === "|0>" || g.gateId === "measure") continue;
+      if (g.qubits.some(q => q >= simQubits)) continue;
+      state.ops.push({ gate: g.gateId, qubits: g.qubits, params: g.params } as SimOp);
+      gateCount++;
+    }
+    const t0 = performance.now();
+    simulateCircuit(state);
+    const elapsed = performance.now() - t0;
+    const probResults = getStateProbabilities(state);
+    setProbs(probResults);
+
+    const depth = gates.length > 0 ? Math.max(...gates.map(g => g.col)) + 1 : 0;
+    const canonical = await generateCanonical(qasmCode, numQubits, gates);
+
+    setRunResult({
+      probs: probResults,
+      executionTimeMs: elapsed,
+      gateCount,
+      depth,
+      hilbertDim: 1 << simQubits,
+      canonical,
+      timestamp: new Date().toISOString(),
+    });
+    setShowRunResults(true);
+    setIsRunning(false);
+  }, [numQubits, gates, qasmCode]);
+
+  // Save file
+  const saveFile = useCallback(() => {
+    const fw = FRAMEWORK_LABELS[codeFramework];
+    const blob = new Blob([frameworkCode], { type: fw.mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${circuitName}.${fw.ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setLastSaved(new Date());
+  }, [codeFramework, frameworkCode, circuitName]);
+
   useEffect(() => {
     if (gates.length > 0) {
-      const timer = setTimeout(runCircuit, 120);
+      const timer = setTimeout(runCircuitQuiet, 120);
       return () => clearTimeout(timer);
     } else { setProbs([]); }
   }, [gates, numQubits]);
@@ -1016,13 +1325,14 @@ export default function QuantumWorkspace({ onClose }: Props) {
           </button>
         ))}
         <div className="flex-1" />
-        <button className="flex items-center gap-1.5 px-3 py-1 text-[12px] rounded" style={{ color: t.textMuted }}>
+        <button onClick={saveFile} className="flex items-center gap-1.5 px-3 py-1 text-[12px] rounded" style={{ color: t.textMuted }}>
           <Save size={13} /> Save file <Download size={12} />
         </button>
-        <button onClick={runCircuit}
+        {lastSaved && <span className="text-[10px]" style={{ color: t.textDim }}>Saved {lastSaved.toLocaleTimeString()}</span>}
+        <button onClick={runCircuitFull} disabled={isRunning}
           className="flex items-center gap-1.5 px-4 py-1.5 rounded text-[13px] font-semibold ml-2"
-          style={{ background: t.accent, color: "white" }}>
-          Set up and run <Settings size={12} />
+          style={{ background: isRunning ? t.textDim : t.accent, color: "white" }}>
+          {isRunning ? <><RotateCcw size={12} className="animate-spin" /> Running…</> : <><Play size={12} /> Set up and run <Settings size={12} /></>}
         </button>
       </div>
 
@@ -1244,63 +1554,104 @@ export default function QuantumWorkspace({ onClose }: Props) {
           </div>
         </div>
 
-        {/* ── Right: OpenQASM Code ── */}
+        {/* ── Right: Code + Run Results ── */}
         {showQasm && (
-          <div className="w-[290px] shrink-0 flex flex-col" style={{ background: t.panel, borderLeft: `1px solid ${t.border}` }}>
-            <div className="flex items-center gap-2 px-4 py-2 shrink-0" style={{ borderBottom: `1px solid ${t.border}` }}>
-              <span className="text-[13px] font-semibold" style={{ color: t.text }}>OpenQASM 2.0</span>
-              <ChevronDown size={12} style={{ color: t.textMuted }} />
+          <div className="w-[300px] shrink-0 flex flex-col" style={{ background: t.panel, borderLeft: `1px solid ${t.border}` }}>
+            {/* Framework selector header */}
+            <div className="flex items-center gap-1 px-3 py-1.5 shrink-0" style={{ borderBottom: `1px solid ${t.border}` }}>
+              <FileCode size={13} style={{ color: t.accent }} />
+              <select
+                value={codeFramework}
+                onChange={e => setCodeFramework(e.target.value as CodeFramework)}
+                className="text-[13px] font-semibold bg-transparent focus:outline-none cursor-pointer px-1"
+                style={{ color: t.text, border: "none" }}
+              >
+                {Object.entries(FRAMEWORK_LABELS).map(([key, fw]) => (
+                  <option key={key} value={key} style={{ background: t.panel, color: t.text }}>{fw.label}</option>
+                ))}
+              </select>
               <div className="flex-1" />
-              {/* Right side measurement indicators */}
-              {Array.from({ length: Math.min(numQubits, 5) }, (_, q) => {
-                const hasMeasure = gates.some(g => g.gateId === "measure" && g.qubits.includes(q));
-                return (
-                  <div key={q} className="w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ border: `1.5px solid ${hasMeasure ? t.accent : t.wireColor}`, background: hasMeasure ? t.accent : "transparent" }}>
-                    {hasMeasure && <Minus size={8} style={{ color: "white" }} />}
-                  </div>
-                );
-              })}
+              <button onClick={() => setShowQasm(false)} className="p-1 rounded" style={{ color: t.textMuted }}><X size={13} /></button>
             </div>
-            <div className="flex-1 overflow-auto">
-              <pre className="text-[13px] font-mono leading-[1.8] px-0 py-3 select-all" style={{ color: t.text }}>
-                <div className="flex">
-                  <div className="select-none pr-3 text-right" style={{ minWidth: 40, color: t.textDim }}>
-                    {qasmCode.split("\n").map((_, i) => (
-                      <div key={i} className="px-2">{i + 1}</div>
-                    ))}
-                  </div>
-                  <div className="flex-1 min-w-0 pr-3">
-                    {highlightQASM(qasmCode, t)}
-                  </div>
+
+            {/* Tab bar: Code | Results */}
+            <div className="flex px-3 gap-0 shrink-0" style={{ borderBottom: `1px solid ${t.border}` }}>
+              <button
+                onClick={() => setShowRunResults(false)}
+                className="px-3 py-1.5 text-[12px] font-medium"
+                style={{
+                  color: !showRunResults ? t.accent : t.textMuted,
+                  borderBottom: !showRunResults ? `2px solid ${t.accent}` : "2px solid transparent",
+                }}
+              >
+                Code
+              </button>
+              <button
+                onClick={() => setShowRunResults(true)}
+                className="px-3 py-1.5 text-[12px] font-medium flex items-center gap-1"
+                style={{
+                  color: showRunResults ? t.accent : t.textMuted,
+                  borderBottom: showRunResults ? `2px solid ${t.accent}` : "2px solid transparent",
+                }}
+              >
+                Results
+                {runResult && <Check size={10} style={{ color: t.green }} />}
+              </button>
+            </div>
+
+            {/* Code view */}
+            {!showRunResults && (
+              <>
+                <div className="flex-1 overflow-auto">
+                  <pre className="text-[13px] font-mono leading-[1.8] px-0 py-3 select-all" style={{ color: t.text }}>
+                    <div className="flex">
+                      <div className="select-none pr-3 text-right" style={{ minWidth: 40, color: t.textDim }}>
+                        {frameworkCode.split("\n").map((_, i) => (
+                          <div key={i} className="px-2">{i + 1}</div>
+                        ))}
+                      </div>
+                      <div className="flex-1 min-w-0 pr-3">
+                        {codeFramework === "openqasm" ? highlightQASM(frameworkCode, t) : (
+                          frameworkCode.split("\n").map((line, i) => <div key={i}>{line || "\u00A0"}</div>)
+                        )}
+                      </div>
+                    </div>
+                  </pre>
                 </div>
-              </pre>
-            </div>
-            <div className="px-3 py-2 shrink-0 flex gap-2" style={{ borderTop: `1px solid ${t.border}` }}>
-              <button onClick={() => navigator.clipboard.writeText(qasmCode)}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-[12px]"
-                style={{ color: t.textSecondary, border: `1px solid ${t.border}` }}>
-                <Copy size={12} /> Copy
-              </button>
-              <button onClick={() => {
-                const blob = new Blob([qasmCode], { type: "text/plain" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url; a.download = `${circuitName}.qasm`; a.click();
-                URL.revokeObjectURL(url);
-              }}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-[12px]"
-                style={{ color: t.textSecondary, border: `1px solid ${t.border}` }}>
-                <Download size={12} /> Export
-              </button>
-            </div>
+                <div className="px-3 py-2 shrink-0 flex gap-2" style={{ borderTop: `1px solid ${t.border}` }}>
+                  <button onClick={() => navigator.clipboard.writeText(frameworkCode)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-[12px]"
+                    style={{ color: t.textSecondary, border: `1px solid ${t.border}` }}>
+                    <Copy size={12} /> Copy
+                  </button>
+                  <button onClick={saveFile}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-[12px]"
+                    style={{ color: t.textSecondary, border: `1px solid ${t.border}` }}>
+                    <Download size={12} /> Export .{FRAMEWORK_LABELS[codeFramework].ext}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Results view */}
+            {showRunResults && runResult && (
+              <RunResultsPanel result={runResult} t={t} onClose={() => setShowRunResults(false)} />
+            )}
+            {showRunResults && !runResult && (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center space-y-2">
+                  <Play size={24} style={{ color: t.textDim, margin: "0 auto" }} />
+                  <p className="text-[13px]" style={{ color: t.textDim }}>Click "Set up and run" to execute</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
         {!showQasm && (
           <button onClick={() => setShowQasm(true)}
             className="w-7 shrink-0 flex items-center justify-center"
             style={{ background: t.surface, borderLeft: `1px solid ${t.border}`, color: t.textMuted }}>
-            <span className="text-[10px] font-mono" style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}>QASM</span>
+            <span className="text-[10px] font-mono" style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}>Code</span>
           </button>
         )}
       </div>
