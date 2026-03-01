@@ -401,6 +401,7 @@ export const CodeProjection = memo(function CodeProjection({
         cellId={id}
         onRun={onRun}
         onFocus={onFocus}
+        onNavigate={onNavigate}
         showLineNumbers={lineNumbers}
         maxHeight={maxHeight}
         readOnly={readOnly}
@@ -448,10 +449,12 @@ export const CodeProjection = memo(function CodeProjection({
           <div
             className="absolute left-0 right-0 pointer-events-none z-[1]"
             style={{
-              top: 5 + activeLine * ROW_H,
+              transform: `translate3d(0, ${5 + activeLine * ROW_H}px, 0)`,
+              top: 0,
               height: ROW_H,
               background: `hsla(38, 50%, 55%, 0.04)`,
-              transition: "top 50ms ease-out",
+              transition: "transform 50ms ease-out",
+              willChange: "transform",
             }}
           />
         )}
@@ -532,13 +535,14 @@ export const CodeProjection = memo(function CodeProjection({
    ════════════════════════════════════════════════════════════════ */
 
 function PIPEditor({
-  source, onChange, cellId, onRun, onFocus, showLineNumbers, maxHeight, readOnly, t, className,
+  source, onChange, cellId, onRun, onFocus, onNavigate, showLineNumbers, maxHeight, readOnly, t, className,
 }: {
   source: string;
   onChange: (s: string) => void;
   cellId: string;
   onRun?: () => void;
   onFocus?: () => void;
+  onNavigate?: (direction: -1 | 1) => void;
   showLineNumbers: boolean;
   maxHeight: number;
   readOnly: boolean;
@@ -550,6 +554,8 @@ function PIPEditor({
   const [scrollTop, setScrollTop] = useState(0);
   const [viewH, setViewH] = useState(400);
   const [focusedLine, setFocusedLine] = useState<number | null>(null);
+  // Cursor column memory: remembers the "desired" column when navigating up/down
+  const desiredColRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -567,9 +573,19 @@ function PIPEditor({
   const handleLineChange = useCallback((idx: number, value: string) => {
     if (readOnly) return;
     const next = [...lines]; next[idx] = value; onChange(next.join("\n"));
+    // Any horizontal edit resets desired column
+    desiredColRef.current = null;
   }, [lines, onChange, readOnly]);
 
   const focusLine = useCallback((idx: number, pos?: number) => {
+    // Scroll into view if needed
+    const el = scrollRef.current;
+    if (el) {
+      const top = idx * PIP_LINE_H;
+      const bottom = top + PIP_LINE_H;
+      if (top < el.scrollTop) el.scrollTop = top;
+      else if (bottom > el.scrollTop + el.clientHeight) el.scrollTop = bottom - el.clientHeight;
+    }
     requestAnimationFrame(() => {
       const input = scrollRef.current?.querySelector(`[data-pip-line="${idx}"]`) as HTMLInputElement | null;
       if (input) { input.focus(); if (pos != null) input.selectionStart = input.selectionEnd = pos; }
@@ -579,6 +595,8 @@ function PIPEditor({
   const handleLineKeyDown = useCallback((idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (readOnly) return;
     const input = e.currentTarget;
+    const cursorPos = input.selectionStart ?? 0;
+
     if (e.key === "Enter" && (e.shiftKey || e.ctrlKey)) { e.preventDefault(); onRun?.(); return; }
     if (e.key === "Enter") {
       e.preventDefault();
@@ -592,6 +610,7 @@ function PIPEditor({
       next.splice(idx + 1, 0, indent + extraIndent + currentLine.slice(pos));
       onChange(next.join("\n"));
       focusLine(idx + 1, indent.length + extraIndent.length);
+      desiredColRef.current = null;
       return;
     }
     if (e.key === "Backspace" && input.selectionStart === 0 && input.selectionEnd === 0 && idx > 0) {
@@ -600,16 +619,78 @@ function PIPEditor({
       const next = [...lines]; next[idx - 1] += next[idx]; next.splice(idx, 1);
       onChange(next.join("\n"));
       focusLine(idx - 1, prevLen);
+      desiredColRef.current = null;
       return;
     }
     if (e.key === "Delete" && input.selectionStart === input.value.length && idx < lines.length - 1) {
       e.preventDefault();
       const next = [...lines]; next[idx] += next[idx + 1]; next.splice(idx + 1, 1);
       onChange(next.join("\n"));
+      desiredColRef.current = null;
       return;
     }
-    if (e.key === "ArrowUp" && idx > 0) { e.preventDefault(); focusLine(idx - 1, Math.min(input.selectionStart ?? 0, lines[idx - 1].length)); return; }
-    if (e.key === "ArrowDown" && idx < lines.length - 1) { e.preventDefault(); focusLine(idx + 1, Math.min(input.selectionStart ?? 0, lines[idx + 1].length)); return; }
+
+    // ArrowUp: move up within cell, or cross to previous cell
+    if (e.key === "ArrowUp" && !e.altKey) {
+      e.preventDefault();
+      if (desiredColRef.current === null) desiredColRef.current = cursorPos;
+      if (idx > 0) {
+        focusLine(idx - 1, Math.min(desiredColRef.current, lines[idx - 1].length));
+      } else if (onNavigate) {
+        desiredColRef.current = null;
+        onNavigate(-1);
+      }
+      return;
+    }
+
+    // ArrowDown: move down within cell, or cross to next cell
+    if (e.key === "ArrowDown" && !e.altKey) {
+      e.preventDefault();
+      if (desiredColRef.current === null) desiredColRef.current = cursorPos;
+      if (idx < lines.length - 1) {
+        focusLine(idx + 1, Math.min(desiredColRef.current, lines[idx + 1].length));
+      } else if (onNavigate) {
+        desiredColRef.current = null;
+        onNavigate(1);
+      }
+      return;
+    }
+
+    // Home: jump to start of line (Ctrl+Home: first line)
+    if (e.key === "Home") {
+      e.preventDefault();
+      desiredColRef.current = null;
+      if (e.ctrlKey || e.metaKey) { focusLine(0, 0); } else { input.selectionStart = input.selectionEnd = 0; }
+      return;
+    }
+
+    // End: jump to end of line (Ctrl+End: last line)
+    if (e.key === "End") {
+      e.preventDefault();
+      desiredColRef.current = null;
+      if (e.ctrlKey || e.metaKey) { focusLine(lines.length - 1, lines[lines.length - 1].length); } else { input.selectionStart = input.selectionEnd = input.value.length; }
+      return;
+    }
+
+    // PageUp / PageDown: jump ~visible page of lines
+    if (e.key === "PageUp") {
+      e.preventDefault();
+      const pageLines = Math.max(1, Math.floor(viewH / PIP_LINE_H) - 2);
+      const target = Math.max(0, idx - pageLines);
+      if (desiredColRef.current === null) desiredColRef.current = cursorPos;
+      focusLine(target, Math.min(desiredColRef.current, lines[target].length));
+      return;
+    }
+    if (e.key === "PageDown") {
+      e.preventDefault();
+      const pageLines = Math.max(1, Math.floor(viewH / PIP_LINE_H) - 2);
+      const target = Math.min(lines.length - 1, idx + pageLines);
+      if (desiredColRef.current === null) desiredColRef.current = cursorPos;
+      focusLine(target, Math.min(desiredColRef.current, lines[target].length));
+      return;
+    }
+
+    // Tab / Shift+Tab
     if (e.key === "Tab") {
       e.preventDefault();
       const pos = input.selectionStart ?? 0;
@@ -620,9 +701,72 @@ function PIPEditor({
         handleLineChange(idx, input.value.slice(0, pos) + "    " + input.value.slice(pos));
         requestAnimationFrame(() => { input.selectionStart = input.selectionEnd = pos + 4; });
       }
+      return;
     }
-    if (e.key === "Escape") { e.preventDefault(); input.blur(); }
-  }, [lines, onChange, onRun, handleLineChange, focusLine, readOnly]);
+
+    // Ctrl+D: Duplicate line
+    if (e.key === "d" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      e.preventDefault();
+      const next = [...lines];
+      next.splice(idx + 1, 0, lines[idx]);
+      onChange(next.join("\n"));
+      focusLine(idx + 1, cursorPos);
+      return;
+    }
+
+    // Ctrl+Shift+K: Delete line
+    if (e.key === "K" && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      e.preventDefault();
+      if (lines.length <= 1) { onChange(""); focusLine(0, 0); return; }
+      const next = [...lines]; next.splice(idx, 1);
+      onChange(next.join("\n"));
+      focusLine(Math.min(idx, next.length - 1), 0);
+      return;
+    }
+
+    // Ctrl+/ : Toggle comment
+    if (e.key === "/" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      const line = lines[idx];
+      const commentPrefix = "# ";
+      if (line.trimStart().startsWith("#")) {
+        const trimIdx = line.indexOf("#");
+        const removeLen = line[trimIdx + 1] === " " ? 2 : 1;
+        handleLineChange(idx, line.slice(0, trimIdx) + line.slice(trimIdx + removeLen));
+      } else {
+        const indent = line.match(/^(\s*)/)?.[1] ?? "";
+        handleLineChange(idx, indent + commentPrefix + line.slice(indent.length));
+      }
+      return;
+    }
+
+    // Alt+Up: Move line up
+    if (e.key === "ArrowUp" && e.altKey) {
+      e.preventDefault();
+      if (idx <= 0) return;
+      const next = [...lines]; [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+      onChange(next.join("\n"));
+      focusLine(idx - 1, cursorPos);
+      return;
+    }
+
+    // Alt+Down: Move line down
+    if (e.key === "ArrowDown" && e.altKey) {
+      e.preventDefault();
+      if (idx >= lines.length - 1) return;
+      const next = [...lines]; [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+      onChange(next.join("\n"));
+      focusLine(idx + 1, cursorPos);
+      return;
+    }
+
+    if (e.key === "Escape") { e.preventDefault(); input.blur(); return; }
+
+    // Any horizontal movement resets column memory
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      desiredColRef.current = null;
+    }
+  }, [lines, onChange, onRun, handleLineChange, focusLine, readOnly, onNavigate, viewH]);
 
   return (
     <div className={`relative flex rounded overflow-hidden ${className ?? ""}`}
@@ -637,11 +781,12 @@ function PIPEditor({
                 <div key={li} className="text-[12px] font-mono px-1 flex items-center justify-end"
                   style={{
                     position: "absolute",
-                    top: li * PIP_LINE_H - scrollTop,
+                    transform: `translate3d(0, ${li * PIP_LINE_H - scrollTop}px, 0)`,
+                    top: 0,
                     height: PIP_LINE_H,
                     color: li === focusedLine ? t.gold : t.textDim,
                     fontWeight: li === focusedLine ? 600 : 400,
-                    transition: "color 75ms",
+                    transition: "color 60ms",
                   }}>
                   {li + 1}
                 </div>
@@ -652,10 +797,16 @@ function PIPEditor({
       )}
       <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden"
         onScroll={e => setScrollTop((e.target as HTMLDivElement).scrollTop)}
-        style={{ maxHeight: Math.min(totalH + 4, maxHeight), background: t.bgCellCode }}>
-        <div style={{ height: totalH, position: "relative" }}>
+        style={{
+          maxHeight: Math.min(totalH + 4, maxHeight),
+          background: t.bgCellCode,
+          willChange: "scroll-position",
+          contain: "layout style",
+        }}>
+        <div style={{ height: totalH, position: "relative", contain: "layout" }}>
           {Array.from({ length: endIdx - startIdx }, (_, i) => {
             const li = startIdx + i;
+            const isFocused = li === focusedLine;
             return (
               <input key={li} data-pip-line={li} data-cell-id={cellId}
                 value={lines[li] ?? ""} onChange={e => handleLineChange(li, e.target.value)}
@@ -663,12 +814,15 @@ function PIPEditor({
                 onFocus={() => { setFocusedLine(li); onFocus?.(); }}
                 onBlur={() => setFocusedLine(null)}
                 readOnly={readOnly} spellCheck={false}
+                autoComplete="off" autoCorrect="off" autoCapitalize="off"
                 className="absolute left-0 right-0 px-4 font-mono text-[13px] bg-transparent focus:outline-none"
                 style={{
-                  top: li * PIP_LINE_H, height: PIP_LINE_H, lineHeight: `${PIP_LINE_H}px`,
+                  transform: `translate3d(0, ${li * PIP_LINE_H}px, 0)`,
+                  top: 0, height: PIP_LINE_H, lineHeight: `${PIP_LINE_H}px`,
                   color: t.textCode, caretColor: t.caret, border: "none",
-                  background: li === focusedLine ? `hsla(38, 50%, 55%, 0.04)` : "transparent",
-                  transition: "background 75ms",
+                  background: isFocused ? `hsla(38, 50%, 55%, 0.04)` : "transparent",
+                  transition: "background 60ms",
+                  willChange: isFocused ? "background-color" : "auto",
                 }}
               />
             );
