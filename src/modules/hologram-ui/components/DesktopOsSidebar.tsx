@@ -108,7 +108,11 @@ function FlyoutItem({
 }) {
   return (
     <button
-      onClick={onClick}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        onClick();
+      }}
       className="w-full flex items-center gap-3 px-3.5 py-2.5 text-left transition-colors duration-150 hover:bg-[var(--sb-hover)]"
       style={{ color: "var(--sb-text)" }}
     >
@@ -257,13 +261,24 @@ export default function DesktopOsSidebar({
     [location.pathname],
   );
 
-  /** Collapse and fire action simultaneously — zero delay */
+  /**
+   * Collapse and fire action simultaneously — zero delay.
+   * Used with onPointerDown for instant response (saves ~80ms vs onClick).
+   */
   const collapseAndDo = useCallback((action: () => void) => {
     if (expanded) setExpanded(false);
     setToolsFlyoutOpen(false);
     setSystemFlyoutOpen(false);
     action();
   }, [expanded]);
+
+  /** onPointerDown handler factory — fires on press, not release, for instant projection */
+  const pointerDown = useCallback((action: () => void) => (e: React.PointerEvent) => {
+    // Only primary button (left click)
+    if (e.button !== 0) return;
+    e.preventDefault();
+    collapseAndDo(action);
+  }, [collapseAndDo]);
 
   const w = expanded ? EXPANDED_W : COLLAPSED_W;
 
@@ -383,19 +398,23 @@ export default function DesktopOsSidebar({
           return (
             <IconTooltip key={item.label} label={item.label} show={!expanded}>
               <button
-                onClick={() => collapseAndDo(() => {
-                  if (item.panel === "apps" && onOpenApps) {
-                    onOpenApps();
-                  } else if (item.panel === "myspace" && onOpenMySpace) {
-                    onOpenMySpace();
-                  } else if (item.label === "Home" && onGoHome) {
-                    onGoHome();
-                  } else if (item.label === "My Space") {
-                    navigate("/ceremony");
-                  } else if (item.path) {
-                    navigate(item.path);
-                  }
-                })}
+                onPointerDown={(e) => {
+                  if (e.button !== 0) return;
+                  e.preventDefault();
+                  collapseAndDo(() => {
+                    if (item.panel === "apps" && onOpenApps) {
+                      onOpenApps();
+                    } else if (item.panel === "myspace" && onOpenMySpace) {
+                      onOpenMySpace();
+                    } else if (item.label === "Home" && onGoHome) {
+                      onGoHome();
+                    } else if (item.label === "My Space") {
+                      navigate("/ceremony");
+                    } else if (item.path) {
+                      navigate(item.path);
+                    }
+                  });
+                }}
                 onMouseEnter={() => item.panel ? onHoverPanel?.(item.panel) : undefined}
                 className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                   !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
@@ -422,7 +441,7 @@ export default function DesktopOsSidebar({
         {onOpenBrowser && (
           <IconTooltip label="Web" show={!expanded}>
             <button
-              onClick={() => collapseAndDo(onOpenBrowser)}
+              onPointerDown={pointerDown(onOpenBrowser)}
               onMouseEnter={() => onHoverPanel?.("browser")}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                 !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
@@ -439,7 +458,7 @@ export default function DesktopOsSidebar({
         {onOpenVault && (
           <IconTooltip label="Vault" show={!expanded}>
             <button
-              onClick={() => collapseAndDo(onOpenVault)}
+              onPointerDown={pointerDown(onOpenVault)}
               onMouseEnter={() => onHoverPanel?.("vault")}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                 !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
@@ -483,7 +502,7 @@ export default function DesktopOsSidebar({
               <div className="pl-2">
                 {onOpenTerminal && (
                   <button
-                    onClick={() => collapseAndDo(onOpenTerminal)}
+                    onPointerDown={pointerDown(onOpenTerminal)}
                     onMouseEnter={() => onHoverPanel?.("terminal")}
                     className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                     style={{ color: "var(--sb-text)" }}
@@ -494,7 +513,7 @@ export default function DesktopOsSidebar({
                 )}
                 {onOpenJupyter && (
                   <button
-                    onClick={() => collapseAndDo(onOpenJupyter)}
+                    onPointerDown={pointerDown(onOpenJupyter)}
                     onMouseEnter={() => onHoverPanel?.("jupyter")}
                     className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                     style={{ color: "var(--sb-text)" }}
@@ -505,7 +524,7 @@ export default function DesktopOsSidebar({
                 )}
                 {onOpenQuantumWorkspace && (
                   <button
-                    onClick={() => collapseAndDo(onOpenQuantumWorkspace)}
+                    onPointerDown={pointerDown(onOpenQuantumWorkspace)}
                     onMouseEnter={() => onHoverPanel?.("quantum-workspace")}
                     className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                     style={{ color: "var(--sb-text)" }}
@@ -516,7 +535,7 @@ export default function DesktopOsSidebar({
                 )}
                 {onOpenCode && (
                   <button
-                    onClick={() => collapseAndDo(onOpenCode)}
+                    onPointerDown={pointerDown(onOpenCode)}
                     onMouseEnter={() => onHoverPanel?.("code")}
                     className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                     style={{ color: "var(--sb-text)" }}
@@ -527,7 +546,7 @@ export default function DesktopOsSidebar({
                 )}
                 {onOpenPackages && (
                   <button
-                    onClick={() => collapseAndDo(onOpenPackages)}
+                    onPointerDown={pointerDown(onOpenPackages)}
                     onMouseEnter={() => onHoverPanel?.("packages")}
                     className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                     style={{ color: "var(--sb-text)" }}
@@ -636,7 +655,7 @@ export default function DesktopOsSidebar({
         )}
         <IconTooltip label={`Messages (${MOD_KEY} M)`} show={!expanded}>
           <button
-            onClick={() => collapseAndDo(() => onOpenMessenger?.())}
+            onPointerDown={pointerDown(() => onOpenMessenger?.())}
             onMouseEnter={() => onHoverPanel?.("messenger")}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
@@ -678,7 +697,7 @@ export default function DesktopOsSidebar({
             {systemOpen && (
               <div className="pl-2">
                 <button
-                  onClick={() => collapseAndDo(() => onOpenMemory?.())}
+                  onPointerDown={pointerDown(() => onOpenMemory?.())}
                   onMouseEnter={() => onHoverPanel?.("memory")}
                   className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                   style={{ color: "var(--sb-text)" }}
@@ -687,7 +706,7 @@ export default function DesktopOsSidebar({
                   <span className="text-[13px] font-light tracking-wide">Storage</span>
                 </button>
                 <button
-                  onClick={() => collapseAndDo(() => onOpenCompute?.())}
+                  onPointerDown={pointerDown(() => onOpenCompute?.())}
                   onMouseEnter={() => onHoverPanel?.("compute")}
                   className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                   style={{ color: "var(--sb-text)" }}
@@ -696,7 +715,7 @@ export default function DesktopOsSidebar({
                   <span className="text-[13px] font-light tracking-wide">Compute</span>
                 </button>
                 <button
-                  onClick={() => collapseAndDo(() => navigate("/settings"))}
+                  onPointerDown={pointerDown(() => navigate("/settings"))}
                   className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                   style={{ color: "var(--sb-text)" }}
                 >
