@@ -38,7 +38,7 @@ export default function AttentionToggle({ bgMode = "dark" }: AttentionToggleProp
         className="font-medium tracking-[0.35em] uppercase transition-colors duration-500"
         style={{
           writingMode: "vertical-rl",
-          fontSize: "12px",
+          fontSize: "10px",
           color: isFocus
             ? (isWhite ? "hsla(200, 55%, 30%, 1)" : "hsla(200, 70%, 82%, 1)")
             : (isWhite ? "hsla(0, 0%, 10%, 0.85)" : "hsla(0, 0%, 90%, 0.8)"),
