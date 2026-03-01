@@ -797,6 +797,8 @@ const CellView = React.memo(function CellView({
 
 /* ── File Browser ─────────────────────────────────────────────────────────── */
 
+type FolderKey = "python" | "quantum" | "my";
+
 function FileBrowser({ templates, activeId, onSelect, onNew }: {
   templates: ReturnType<typeof getTemplateNotebooks>;
   activeId: string;
@@ -808,8 +810,67 @@ function FileBrowser({ templates, activeId, onSelect, onNew }: {
   const [quantumOpen, setQuantumOpen] = useState(true);
   const [projectsOpen, setProjectsOpen] = useState(true);
 
-  const pythonTemplates = templates.filter(t => t.category === "python" || t.category === "data" || t.category === "ml");
-  const quantumTemplates = templates.filter(t => t.category === "quantum" || t.category === "hybrid");
+  // Drag-and-drop state
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<FolderKey | null>(null);
+  const [assignments, setAssignments] = useState<Record<string, FolderKey>>(() => {
+    try {
+      const saved = localStorage.getItem("hologram:nb:file-assignments");
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+
+  const getFolder = (tmpl: { id: string; category: string }): FolderKey => {
+    if (assignments[tmpl.id]) return assignments[tmpl.id];
+    if (tmpl.category === "quantum" || tmpl.category === "hybrid") return "quantum";
+    return "python";
+  };
+
+  const pythonTemplates = templates.filter(tmpl => getFolder(tmpl) === "python");
+  const quantumTemplates = templates.filter(tmpl => getFolder(tmpl) === "quantum");
+  const myTemplates = templates.filter(tmpl => getFolder(tmpl) === "my");
+
+  const handleDrop = (folder: FolderKey) => {
+    if (!dragId) return;
+    setAssignments(prev => {
+      const next = { ...prev, [dragId]: folder };
+      localStorage.setItem("hologram:nb:file-assignments", JSON.stringify(next));
+      return next;
+    });
+    setDragId(null);
+    setDropTarget(null);
+  };
+
+  const folderDragProps = (key: FolderKey) => ({
+    onDragOver: (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "move" as const; setDropTarget(key); },
+    onDragLeave: () => setDropTarget(prev => prev === key ? null : prev),
+    onDrop: (e: React.DragEvent) => { e.preventDefault(); handleDrop(key); },
+  });
+
+  const fileDragProps = (id: string) => ({
+    draggable: true,
+    onDragStart: (e: React.DragEvent) => { e.dataTransfer.effectAllowed = "move"; setDragId(id); },
+    onDragEnd: () => { setDragId(null); setDropTarget(null); },
+  });
+
+  const dropHighlight = (key: FolderKey) =>
+    dropTarget === key ? { background: `${t.blue}12`, outline: `2px dashed ${t.blue}55`, outlineOffset: -2, borderRadius: 8 } : {};
+
+  const renderFile = (tmpl: { id: string; name: string }) => (
+    <div
+      key={tmpl.id}
+      {...fileDragProps(tmpl.id)}
+      onClick={() => onSelect(tmpl.id)}
+      className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-left transition-all cursor-grab active:cursor-grabbing ${dragId === tmpl.id ? "opacity-40 scale-95" : ""}`}
+      style={{ background: activeId === tmpl.id ? t.blueBg : "transparent", color: activeId === tmpl.id ? t.blue : t.textMuted }}
+    >
+      <FileText size={13} />
+      <span className="text-sm truncate">{tmpl.name}.ipynb</span>
+      <span className="ml-auto opacity-0 group-hover:opacity-40 transition-opacity">
+        <ChevronRight size={10} style={{ color: t.textDim }} />
+      </span>
+    </div>
+  );
 
   return (
     <div className="h-full flex flex-col" style={{ background: t.bgToolbar, borderRight: `1px solid ${t.borderCell}` }}>
@@ -819,54 +880,45 @@ function FileBrowser({ templates, activeId, onSelect, onNew }: {
 
       <div className="flex-1 overflow-y-auto py-2">
         {/* Python & AI */}
-        <button onClick={() => setPythonOpen(!pythonOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors" style={{ color: t.text }}>
-          <ChevronRight size={12} className={`transition-transform ${pythonOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
-          {pythonOpen ? <FolderOpen size={14} style={{ color: t.blue }} /> : <Folder size={14} style={{ color: t.blue }} />}
-          <span className="text-sm font-medium">Python & AI</span>
-        </button>
-        {pythonOpen && (
-          <div className="pl-8 space-y-0.5">
-            {pythonTemplates.map(tmpl => (
-              <button key={tmpl.id} onClick={() => onSelect(tmpl.id)}
-                className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-left transition-colors"
-                style={{ background: activeId === tmpl.id ? t.blueBg : "transparent", color: activeId === tmpl.id ? t.blue : t.textMuted }}>
-                <FileText size={13} />
-                <span className="text-sm truncate">{tmpl.name}.ipynb</span>
-              </button>
-            ))}
-          </div>
-        )}
+        <div {...folderDragProps("python")} style={dropHighlight("python")} className="transition-all">
+          <button onClick={() => setPythonOpen(!pythonOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors" style={{ color: t.text }}>
+            <ChevronRight size={12} className={`transition-transform ${pythonOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
+            {pythonOpen ? <FolderOpen size={14} style={{ color: t.blue }} /> : <Folder size={14} style={{ color: t.blue }} />}
+            <span className="text-sm font-medium">Python & AI</span>
+            {dropTarget === "python" && <span className="text-[10px] ml-auto px-1.5 rounded" style={{ background: t.blueBg, color: t.blue }}>Drop here</span>}
+          </button>
+          {pythonOpen && <div className="pl-8 space-y-0.5 group">{pythonTemplates.map(renderFile)}</div>}
+        </div>
 
         {/* Quantum */}
-        <button onClick={() => setQuantumOpen(!quantumOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors mt-1" style={{ color: t.text }}>
-          <ChevronRight size={12} className={`transition-transform ${quantumOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
-          {quantumOpen ? <FolderOpen size={14} style={{ color: t.gold }} /> : <Folder size={14} style={{ color: t.gold }} />}
-          <span className="text-sm font-medium">Quantum</span>
-        </button>
-        {quantumOpen && (
-          <div className="pl-8 space-y-0.5">
-            {quantumTemplates.map(tmpl => (
-              <button key={tmpl.id} onClick={() => onSelect(tmpl.id)}
-                className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-left transition-colors"
-                style={{ background: activeId === tmpl.id ? t.blueBg : "transparent", color: activeId === tmpl.id ? t.blue : t.textMuted }}>
-                <FileText size={13} />
-                <span className="text-sm truncate">{tmpl.name}.ipynb</span>
-              </button>
-            ))}
-          </div>
-        )}
+        <div {...folderDragProps("quantum")} style={dropHighlight("quantum")} className="transition-all mt-1">
+          <button onClick={() => setQuantumOpen(!quantumOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors" style={{ color: t.text }}>
+            <ChevronRight size={12} className={`transition-transform ${quantumOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
+            {quantumOpen ? <FolderOpen size={14} style={{ color: t.gold }} /> : <Folder size={14} style={{ color: t.gold }} />}
+            <span className="text-sm font-medium">Quantum</span>
+            {dropTarget === "quantum" && <span className="text-[10px] ml-auto px-1.5 rounded" style={{ background: t.goldBg, color: t.gold }}>Drop here</span>}
+          </button>
+          {quantumOpen && <div className="pl-8 space-y-0.5 group">{quantumTemplates.map(renderFile)}</div>}
+        </div>
 
         {/* My Notebooks */}
-        <button onClick={() => setProjectsOpen(!projectsOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors mt-1" style={{ color: t.text }}>
-          <ChevronRight size={12} className={`transition-transform ${projectsOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
-          {projectsOpen ? <FolderOpen size={14} style={{ color: t.green }} /> : <Folder size={14} style={{ color: t.green }} />}
-          <span className="text-sm font-medium">My Notebooks</span>
-        </button>
-        {projectsOpen && (
-          <div className="pl-8 text-sm py-2 px-3" style={{ color: t.textDim }}>
-            Your saved work appears here
-          </div>
-        )}
+        <div {...folderDragProps("my")} style={dropHighlight("my")} className="transition-all mt-1">
+          <button onClick={() => setProjectsOpen(!projectsOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors" style={{ color: t.text }}>
+            <ChevronRight size={12} className={`transition-transform ${projectsOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
+            {projectsOpen ? <FolderOpen size={14} style={{ color: t.green }} /> : <Folder size={14} style={{ color: t.green }} />}
+            <span className="text-sm font-medium">My Notebooks</span>
+            {dropTarget === "my" && <span className="text-[10px] ml-auto px-1.5 rounded" style={{ background: t.greenBg, color: t.green }}>Drop here</span>}
+          </button>
+          {projectsOpen && (
+            <div className="pl-8 space-y-0.5 group">
+              {myTemplates.length > 0 ? myTemplates.map(renderFile) : (
+                <div className="text-sm py-2 px-3" style={{ color: t.textDim }}>
+                  {dragId ? "Drop to move here" : "Drag files here to organize"}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="p-3 space-y-1.5" style={{ borderTop: `1px solid ${t.border}` }}>
