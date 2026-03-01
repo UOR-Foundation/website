@@ -1,8 +1,8 @@
 /**
- * MessengerAIPanel — Lumen AI Integration for Messages & Calendar
- * ════════════════════════════════════════════════════════════════
+ * MessengerAIPanel — Lumen Integration for Messages & Calendar
+ * ═════════════════════════════════════════════════════════════
  *
- * Private AI assistant that uses your messaging history + calendar as context.
+ * Private intelligent companion that uses your messaging history + calendar as context.
  * Supports: querying emails, finding patterns, suggesting connections,
  * availability checking, and signal-from-noise separation.
  *
@@ -139,7 +139,7 @@ export default function MessengerAIPanel({
             <IconBrain size={15} style={{ color: P.accent }} />
           </div>
           <div>
-            <h3 style={{ fontSize: "15px", fontWeight: 600, color: P.text }}>Lumen AI</h3>
+            <h3 style={{ fontSize: "15px", fontWeight: 600, color: P.text }}>Lumen</h3>
             <span style={{ fontSize: "10px", color: P.dim }}>Private messaging intelligence</span>
           </div>
         </div>

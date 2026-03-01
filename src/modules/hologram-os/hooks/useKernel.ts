@@ -50,7 +50,7 @@ export interface UseKernelResult {
   // ── Projection-derived state (read from kernel frame) ─────────────
   /** Active projection panel — derived from kernel config */
   activePanel: PanelId;
-  /** Whether Lumen AI chat is open */
+  /** Whether Lumen chat is open */
   chatOpen: boolean;
   /** Active desktop mode — derived from kernel palette */
   desktopMode: DesktopMode;

@@ -3,7 +3,7 @@
  *
  * Overview  — Human-first: why memory matters, what's stored, compression stats
  * Pro       — Developer view: byte-level storage, tiers, CIDs, compression witnesses
- * Demo      — Drop a PDF → canonical compression → RAG interaction with Lumen AI
+ * Demo      — Drop a PDF → canonical compression → RAG interaction with Lumen
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
@@ -602,7 +602,7 @@ function CompressionDemo() {
 
     // Build document context EXCLUSIVELY from the UGC2 compressed form.
     // This is the key proof: the AI receives ONLY the decompressed semantic graph,
-    // never the raw PDF. If Lumen AI can answer precisely, the compression is lossless.
+    // never the raw PDF. If Lumen can answer precisely, the compression is lossless.
     const documentContext = [
       `DOCUMENT: "${file.name}"`,
       `Original size: ${formatBytes(file.originalSize)} → Compressed: ${formatBytes(file.compressedSize)} (${file.compressionRatio.toFixed(1)}× lossless compression)`,
@@ -827,7 +827,7 @@ function CompressionDemo() {
             </div>
           </div>
 
-          {/* RAG Chat — Lumen AI powered */}
+          {/* RAG Chat — Lumen powered */}
           <div className="rounded-xl overflow-hidden flex-1 flex flex-col" style={{ border: `1px solid ${P.cardBorder}` }}>
             <div className="px-5 py-4 flex items-center gap-3" style={{ background: P.card, borderBottom: `1px solid ${P.cardBorder}` }}>
               <IconBrain size={18} style={{ color: P.gold }} />

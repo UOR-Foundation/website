@@ -4,7 +4,7 @@
  *
  * Implements the graph union operation that merges multi-modal data
  * (user context, audio features, reasoning proofs, agent memories)
- * into a single UGC2-compressed triple graph for the Lumen AI
+ * into a single UGC2-compressed triple graph for the Lumen
  * context window.
  *
  * The holographic principle: N-dimensional multi-modal experience

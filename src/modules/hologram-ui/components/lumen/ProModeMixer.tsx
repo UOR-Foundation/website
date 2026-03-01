@@ -1,6 +1,6 @@
 /**
- * ProModeMixer — Dual-Deck DJ Mixer for Lumen AI
- * ═══════════════════════════════════════════════
+ * ProModeMixer — Dual-Deck DJ Mixer for Lumen
+ * ════════════════════════════════════════════
  *
  * Two turntable decks (A & B) each load a persona preset.
  * A central crossfader blends between them. The blended

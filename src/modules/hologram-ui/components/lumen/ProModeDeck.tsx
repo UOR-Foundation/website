@@ -1,6 +1,6 @@
 /**
- * ProModeDeck — Full-Screen DJ Controller for Lumen AI
- * ═════════════════════════════════════════════════════
+ * ProModeDeck — Full-Screen DJ Controller for Lumen
+ * ══════════════════════════════════════════════════
  *
  * Inspired by Pioneer DJ Opus-Quad. Two turntable decks load persona
  * presets; a center mixer section blends them via crossfader and

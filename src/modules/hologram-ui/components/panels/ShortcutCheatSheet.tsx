@@ -54,8 +54,8 @@ const SECTIONS: ShortcutSection[] = [
     title: "Communication",
     icon: IconMessageCircle,
     shortcuts: [
-      { keys: [MOD, ";"], label: "Open Lumen AI", description: "Start a conversation with the AI assistant" },
-      { keys: [MOD, "'"], label: "Voice Input", description: "Speak to the AI using your microphone" },
+      { keys: [MOD, ";"], label: "Open Lumen", description: "Start a conversation with Lumen" },
+      { keys: [MOD, "'"], label: "Voice Input", description: "Speak to Lumen using your microphone" },
       { keys: [MOD, ","], label: "Messages", description: "Open the unified messenger inbox" },
     ],
   },
