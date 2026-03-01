@@ -17,6 +17,7 @@ export interface StoreApp {
   badge?: string; // "new" | "popular" | "hologram"
   rating?: number;  // 1-5
   users?: string;   // e.g. "12.4k"
+  route?: string; // Route to navigate to
 }
 
 export interface SubcategoryDef {
@@ -75,14 +76,14 @@ export const appCatalog: StoreApp[] = [
   { id: "kanban-flow",       name: "Kanban Flow",         description: "Visual project management with sovereign data ownership",                       iconKey: "Columns3",      phase: "work", subcategory: "productivity",     installed: false, rating: 4.3, users: "7.8k" },
 
   // ═══ PLAY ═══
-  { id: "hologram-prime-music", name: "Hologram Prime — Music", description: "Stream and discover music with content-addressed audio",                  iconKey: "Music",         phase: "play", subcategory: "music", installed: true,  featured: true, badge: "hologram", rating: 4.9, users: "18.5k" },
-  { id: "hologram-prime-video", name: "Hologram Prime — Video", description: "Watch and share video content with sovereign streaming",                  iconKey: "Film",          phase: "play", subcategory: "video", installed: true,  badge: "hologram", rating: 4.8, users: "14.2k" },
-  { id: "hologram-prime-games", name: "Hologram Prime — Games", description: "Play browser-native games with verifiable scores",                        iconKey: "Gamepad2",      phase: "play", subcategory: "games", installed: true,  badge: "hologram", rating: 4.7, users: "9.8k" },
-  { id: "ambient-radio",       name: "Ambient Radio",          description: "Curated ambient stations for focus, relaxation, and creativity",           iconKey: "Radio",         phase: "play", subcategory: "music", installed: true,  badge: "popular", rating: 4.8, users: "12.1k" },
+  { id: "hologram-prime-music", name: "Hologram Prime — Music", description: "Stream and discover music with content-addressed audio",                  iconKey: "Music",         phase: "play", subcategory: "music", installed: true,  featured: true, badge: "hologram", rating: 4.9, users: "18.5k", route: "/hologram-prime" },
+  { id: "hologram-prime-video", name: "Hologram Prime — Video", description: "Watch and share video content with sovereign streaming",                  iconKey: "Film",          phase: "play", subcategory: "video", installed: true,  badge: "hologram", rating: 4.8, users: "14.2k", route: "/hologram-prime" },
+  { id: "hologram-prime-games", name: "Hologram Prime — Games", description: "Play browser-native games with verifiable scores",                        iconKey: "Gamepad2",      phase: "play", subcategory: "games", installed: true,  badge: "hologram", rating: 4.7, users: "9.8k", route: "/hologram-prime" },
+  { id: "ambient-radio",       name: "Ambient Radio",          description: "Curated ambient stations for focus, relaxation, and creativity",           iconKey: "Radio",         phase: "play", subcategory: "music", installed: true,  badge: "popular", rating: 4.8, users: "12.1k", route: "/hologram-prime" },
   { id: "mindful-moments",     name: "Mindful Moments",        description: "Guided meditation and breathing exercises",                                iconKey: "Heart",         phase: "play", subcategory: "wellness", installed: false, rating: 4.6, users: "6.4k" },
   { id: "social-graph",        name: "Social Graph",           description: "Visualize and nurture your social connections",                             iconKey: "Users",         phase: "play", subcategory: "social",   installed: false, badge: "new", rating: 4.4, users: "3.9k" },
   { id: "pixel-forge",         name: "Pixel Forge",            description: "Create pixel art and share with the community",                             iconKey: "Palette",       phase: "play", subcategory: "games",    installed: false, rating: 4.5, users: "2.7k" },
-  { id: "podcast-player",      name: "Podcast Player",         description: "Subscribe, listen, and auto-transcribe podcasts",                           iconKey: "Headphones",    phase: "play", subcategory: "music",    installed: false, rating: 4.3, users: "5.6k" },
+  { id: "podcast-player",      name: "Podcast Player",         description: "Subscribe, listen, and auto-transcribe podcasts",                           iconKey: "Headphones",    phase: "play", subcategory: "music",    installed: false, rating: 4.3, users: "5.6k", route: "/hologram-prime" },
 ];
 
 /* ── Phase metadata ──────────────────────────────────────── */
@@ -116,3 +117,4 @@ export const phaseConfig: Record<TriadicPhase, {
     iconKey: "Sparkles",
   },
 };
+
