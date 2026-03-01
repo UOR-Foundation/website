@@ -94,6 +94,7 @@ export const BROWSER_MODELS: Record<string, BrowserModelProfile> = {
     hfId: "Xenova/gpt2",
     downloadSizeMB: 250,
     onnxAvailable: true,
+    dtype: { model: "fp32" },
     manifest: {
       name: "GPT-2-124M",
       architecture: "generic",
@@ -115,6 +116,7 @@ export const BROWSER_MODELS: Record<string, BrowserModelProfile> = {
     hfId: "Xenova/phi-1_5",
     downloadSizeMB: 350,
     onnxAvailable: true,
+    dtype: { model: "q4" },
     manifest: {
       name: "Phi-1.5-1.3B",
       architecture: "phi",
