@@ -245,6 +245,75 @@ export const CELEBRITY_PRESETS: readonly DimensionPreset[] = [
     values: { depth: 0.8, breadth: 0.6, intuition: 0.5, rigor: 0.8, verbosity: 0.4, warmth: 0.3, storytelling: 0.4, humor: 0.3, focus: 0.85, empathy: 0.2, challenge: 0.7, originality: 0.6 },
     tags: ["amazon", "customer", "long-term", "leadership", "business"],
   },
+  // ── Philosophers ────────────────────────────────────────────────────
+  {
+    id: "nietzsche", name: "Friedrich Nietzsche", subtitle: "Will to Power", icon: "⚡", phase: "learn",
+    values: { depth: 0.95, breadth: 0.7, intuition: 0.8, rigor: 0.6, verbosity: 0.7, warmth: 0.2, storytelling: 0.8, humor: 0.4, focus: 0.5, empathy: 0.2, challenge: 0.95, originality: 0.95 },
+    tags: ["philosophy", "existentialism", "power", "übermensch", "provocative"],
+  },
+  {
+    id: "lao-tzu", name: "Lao Tzu", subtitle: "Way of Stillness", icon: "☯", phase: "learn",
+    values: { depth: 0.9, breadth: 0.6, intuition: 0.95, rigor: 0.3, verbosity: 0.2, warmth: 0.7, storytelling: 0.7, humor: 0.3, focus: 0.4, empathy: 0.8, challenge: 0.4, originality: 0.8 },
+    tags: ["taoism", "zen", "simplicity", "nature", "eastern", "dao"],
+  },
+  {
+    id: "simone-de-beauvoir", name: "Simone de Beauvoir", subtitle: "Existentialist Voice", icon: "🌹", phase: "learn",
+    values: { depth: 0.85, breadth: 0.7, intuition: 0.6, rigor: 0.8, verbosity: 0.7, warmth: 0.5, storytelling: 0.7, humor: 0.2, focus: 0.6, empathy: 0.7, challenge: 0.8, originality: 0.7 },
+    tags: ["feminism", "existentialism", "freedom", "philosophy", "writer"],
+  },
+  {
+    id: "alan-watts", name: "Alan Watts", subtitle: "Cosmic Jester", icon: "🌊", phase: "play",
+    values: { depth: 0.8, breadth: 0.8, intuition: 0.9, rigor: 0.3, verbosity: 0.6, warmth: 0.8, storytelling: 0.9, humor: 0.7, focus: 0.3, empathy: 0.7, challenge: 0.5, originality: 0.85 },
+    tags: ["zen", "eastern", "philosophy", "spirituality", "joy"],
+  },
+  // ── Tech Leaders ────────────────────────────────────────────────────
+  {
+    id: "sam-altman", name: "Sam Altman", subtitle: "AI Futurist", icon: "🤖", phase: "work",
+    values: { depth: 0.75, breadth: 0.8, intuition: 0.6, rigor: 0.65, verbosity: 0.4, warmth: 0.4, storytelling: 0.4, humor: 0.3, focus: 0.7, empathy: 0.3, challenge: 0.6, originality: 0.7 },
+    tags: ["openai", "ai", "startup", "silicon-valley", "future"],
+  },
+  {
+    id: "ada-lovelace", name: "Ada Lovelace", subtitle: "First Programmer", icon: "💎", phase: "work",
+    values: { depth: 0.85, breadth: 0.7, intuition: 0.7, rigor: 0.8, verbosity: 0.5, warmth: 0.5, storytelling: 0.5, humor: 0.2, focus: 0.8, empathy: 0.4, challenge: 0.5, originality: 0.8 },
+    tags: ["computing", "mathematics", "pioneer", "programming", "visionary"],
+  },
+  {
+    id: "satya-nadella", name: "Satya Nadella", subtitle: "Growth Mindset", icon: "☁️", phase: "work",
+    values: { depth: 0.7, breadth: 0.7, intuition: 0.5, rigor: 0.7, verbosity: 0.5, warmth: 0.7, storytelling: 0.5, humor: 0.2, focus: 0.75, empathy: 0.8, challenge: 0.4, originality: 0.5 },
+    tags: ["microsoft", "growth-mindset", "empathy", "cloud", "leadership"],
+  },
+  // ── Artists & Creatives ─────────────────────────────────────────────
+  {
+    id: "frida-kahlo", name: "Frida Kahlo", subtitle: "Radical Honesty", icon: "🌺", phase: "play",
+    values: { depth: 0.8, breadth: 0.5, intuition: 0.9, rigor: 0.3, verbosity: 0.6, warmth: 0.7, storytelling: 0.9, humor: 0.3, focus: 0.5, empathy: 0.85, challenge: 0.6, originality: 0.95 },
+    tags: ["art", "painting", "mexico", "surrealism", "emotion", "identity"],
+  },
+  {
+    id: "david-bowie", name: "David Bowie", subtitle: "Shapeshifter", icon: "⚡", phase: "play",
+    values: { depth: 0.6, breadth: 0.9, intuition: 0.95, rigor: 0.2, verbosity: 0.5, warmth: 0.5, storytelling: 0.8, humor: 0.6, focus: 0.3, empathy: 0.5, challenge: 0.7, originality: 0.95 },
+    tags: ["music", "reinvention", "art", "glam", "avant-garde"],
+  },
+  {
+    id: "miyazaki", name: "Hayao Miyazaki", subtitle: "Gentle Storyteller", icon: "🍃", phase: "play",
+    values: { depth: 0.7, breadth: 0.6, intuition: 0.85, rigor: 0.5, verbosity: 0.5, warmth: 0.9, storytelling: 0.95, humor: 0.4, focus: 0.6, empathy: 0.9, challenge: 0.3, originality: 0.85 },
+    tags: ["animation", "ghibli", "nature", "wonder", "film", "japan"],
+  },
+  // ── Leaders & Changemakers ──────────────────────────────────────────
+  {
+    id: "mlk", name: "Martin Luther King Jr.", subtitle: "Moral Clarity", icon: "✊", phase: "learn",
+    values: { depth: 0.8, breadth: 0.7, intuition: 0.6, rigor: 0.7, verbosity: 0.7, warmth: 0.9, storytelling: 0.9, humor: 0.2, focus: 0.7, empathy: 0.95, challenge: 0.7, originality: 0.6 },
+    tags: ["justice", "civil-rights", "speech", "nonviolence", "leader"],
+  },
+  {
+    id: "cleopatra", name: "Cleopatra", subtitle: "Strategic Sovereign", icon: "👑", phase: "work",
+    values: { depth: 0.7, breadth: 0.8, intuition: 0.7, rigor: 0.6, verbosity: 0.5, warmth: 0.5, storytelling: 0.6, humor: 0.3, focus: 0.8, empathy: 0.5, challenge: 0.7, originality: 0.6 },
+    tags: ["history", "leadership", "strategy", "diplomacy", "egypt"],
+  },
+  {
+    id: "carl-sagan", name: "Carl Sagan", subtitle: "Cosmic Wonder", icon: "🌌", phase: "learn",
+    values: { depth: 0.85, breadth: 0.9, intuition: 0.6, rigor: 0.75, verbosity: 0.7, warmth: 0.85, storytelling: 0.9, humor: 0.4, focus: 0.5, empathy: 0.7, challenge: 0.4, originality: 0.7 },
+    tags: ["cosmos", "science", "wonder", "astronomy", "pale-blue-dot"],
+  },
 ];
 
 // ── All presets combined for search ──────────────────────────────────
