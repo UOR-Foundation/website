@@ -1,18 +1,16 @@
 /**
- * KernelBoot — The Genesis Projection Sequence
- * ═════════════════════════════════════════════
+ * KernelBoot — Startup Experience
+ * ════════════════════════════════
  *
- * A seed appears — a single luminous point.
- * It pulses with a heartbeat, establishing coherence.
- * A ring emanates outward, tracing the topology.
- * The projection fills the field of view.
- * The portal is open.
+ * A warm, gentle sequence:
+ *   1. A soft dot of light fades in at center
+ *   2. It gently pulses, then a circle expands from it
+ *   3. The circle opens outward, revealing the desktop beneath
  *
- * Every visual maps to a real kernel event.
- * Less is more. Brief, magical, unmistakable.
+ * Language is plain, warm, human. No jargon, no mysticism.
  */
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { BootEvent } from "../projection-engine";
 import type { BootStage } from "@/modules/qkernel/q-boot";
@@ -26,21 +24,18 @@ interface KernelBootProps {
   skipAnimation?: boolean;
 }
 
-/* ── Human-friendly stage whispers ──────────────────── */
-function stageWhisper(stage: BootStage): string {
+/* Simple, warm status words */
+function stageLabel(stage: BootStage): string {
   switch (stage) {
-    case "off":        return "Waking";
-    case "post":       return "Finding coherence";
-    case "bootloader": return "Tracing topology";
-    case "initrd":     return "Remembering";
-    case "init":       return "Projecting";
+    case "off":        return "";
+    case "post":       return "Getting ready";
+    case "bootloader": return "Setting things up";
+    case "initrd":     return "Almost there";
+    case "init":       return "Here we go";
     case "running":    return "Welcome";
-    case "panic":      return "Something's not right";
+    case "panic":      return "Something went wrong";
   }
 }
-
-/* ── Heartbeat rhythm (synced to the ring's Z/256Z coherence) ── */
-const HEARTBEAT_DURATION = 1.6; // seconds per pulse
 
 export default function KernelBoot({
   events,
@@ -51,20 +46,20 @@ export default function KernelBoot({
   skipAnimation,
 }: KernelBootProps) {
   const [visible, setVisible] = useState(true);
-  const [phase, setPhase] = useState<"seed" | "ring" | "project" | "dissolve">("seed");
+  const [phase, setPhase] = useState<"dot" | "circle" | "open" | "gone">("dot");
 
   const latestEvent = events.length > 0 ? events[events.length - 1] : null;
   const progress = latestEvent?.progress ?? 0;
 
-  // Phase progression based on boot stage
+  // Advance phases with boot stages
   useEffect(() => {
-    if (stage === "post" || stage === "bootloader") setPhase("ring");
-    if (stage === "initrd" || stage === "init") setPhase("project");
+    if (stage === "post" || stage === "bootloader") setPhase("circle");
+    if (stage === "initrd" || stage === "init") setPhase("circle");
   }, [stage]);
 
-  // When boot completes → dissolve → onEntered
+  // Boot complete → open → exit
   useEffect(() => {
-    if (!isBooted || phase === "dissolve") return;
+    if (!isBooted || phase === "open" || phase === "gone") return;
 
     if (skipAnimation) {
       setVisible(false);
@@ -72,11 +67,12 @@ export default function KernelBoot({
       return;
     }
 
-    const t1 = setTimeout(() => setPhase("dissolve"), 600);
+    const t1 = setTimeout(() => setPhase("open"), 400);
     const t2 = setTimeout(() => {
+      setPhase("gone");
       setVisible(false);
       onEntered();
-    }, 1600);
+    }, 1400);
 
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [isBooted, phase, onEntered, skipAnimation]);
@@ -84,9 +80,8 @@ export default function KernelBoot({
   if (!visible) return null;
 
   const isPanic = stage === "panic";
-  const seedColor = isPanic ? "hsla(0, 50%, 55%, 1)" : "hsla(38, 50%, 75%, 1)";
-  const ringColor = isPanic ? "hsla(0, 40%, 50%, 0.25)" : "hsla(38, 30%, 70%, 0.2)";
-  const glowColor = isPanic ? "hsla(0, 50%, 45%, 0.15)" : "hsla(38, 40%, 65%, 0.12)";
+  const warmLight = isPanic ? "hsla(0, 40%, 55%, 1)" : "hsla(38, 45%, 78%, 1)";
+  const warmRing = isPanic ? "hsla(0, 30%, 50%, 0.2)" : "hsla(38, 25%, 70%, 0.18)";
 
   return (
     <AnimatePresence>
@@ -95,172 +90,95 @@ export default function KernelBoot({
           className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden"
           style={{ background: "hsl(25, 8%, 4%)" }}
           initial={{ opacity: 1 }}
-          animate={{ opacity: phase === "dissolve" ? 0 : 1 }}
+          animate={{ opacity: phase === "open" || phase === "gone" ? 0 : 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: phase === "dissolve" ? 1.0 : 0.2, ease: "easeInOut" }}
+          transition={{ duration: 1.0, ease: "easeInOut" }}
         >
-          {/* ── Ambient radial glow ── */}
-          <motion.div
+          {/* Soft ambient warmth */}
+          <div
             className="absolute inset-0 pointer-events-none"
-            animate={{
-              opacity: phase === "dissolve" ? 0 : 1,
-            }}
-            transition={{ duration: 0.8 }}
             style={{
-              background: `radial-gradient(circle at 50% 50%, ${glowColor} 0%, transparent ${phase === "project" || phase === "dissolve" ? "70%" : "25%"})`,
-              transition: "background 1s ease-out",
+              background: `radial-gradient(circle at 50% 50%, hsla(38, 30%, 65%, ${0.03 + progress * 0.06}) 0%, transparent ${30 + progress * 30}%)`,
+              transition: "background 0.8s ease-out",
             }}
           />
 
-          {/* ── The Seed — a luminous point, the portable kernel ── */}
+          {/* The dot — a simple, warm point of light */}
           <motion.div
             className="absolute rounded-full"
             style={{
-              background: seedColor,
-              boxShadow: `0 0 20px 4px ${seedColor.replace("1)", "0.3)")}, 0 0 60px 10px ${seedColor.replace("1)", "0.08)")}`,
+              background: warmLight,
+              boxShadow: `0 0 16px 3px ${warmLight.replace("1)", "0.25)")}, 0 0 40px 8px ${warmLight.replace("1)", "0.06)")}`,
             }}
             initial={{ width: 0, height: 0, opacity: 0 }}
             animate={{
-              width: phase === "seed" ? 6 : phase === "dissolve" ? 3 : 5,
-              height: phase === "seed" ? 6 : phase === "dissolve" ? 3 : 5,
-              opacity: phase === "dissolve" ? 0 : 1,
-              scale: phase === "dissolve" ? 0 : 1,
+              width: phase === "dot" ? 5 : phase === "open" ? 4 : 5,
+              height: phase === "dot" ? 5 : phase === "open" ? 4 : 5,
+              opacity: phase === "open" || phase === "gone" ? 0 : 1,
             }}
             transition={{
-              width: { duration: 0.6, ease: "easeOut" },
-              height: { duration: 0.6, ease: "easeOut" },
-              opacity: { duration: phase === "seed" ? 0.6 : 0.8, ease: "easeOut" },
-              scale: { duration: 0.8, ease: "easeInOut" },
+              width: { duration: 0.5, ease: "easeOut" },
+              height: { duration: 0.5, ease: "easeOut" },
+              opacity: { duration: 0.5, ease: "easeOut" },
             }}
           />
 
-          {/* ── Heartbeat pulse rings — emanate from the seed ── */}
-          {phase !== "seed" && phase !== "dissolve" && (
-            <>
-              <motion.div
-                className="absolute rounded-full pointer-events-none"
-                style={{
-                  border: `1px solid ${ringColor}`,
-                }}
-                initial={{ width: 6, height: 6, opacity: 0.6 }}
-                animate={{
-                  width: [6, 120],
-                  height: [6, 120],
-                  opacity: [0.5, 0],
-                }}
-                transition={{
-                  duration: HEARTBEAT_DURATION,
-                  repeat: Infinity,
-                  ease: "easeOut",
-                }}
-              />
-              <motion.div
-                className="absolute rounded-full pointer-events-none"
-                style={{
-                  border: `1px solid ${ringColor}`,
-                }}
-                initial={{ width: 6, height: 6, opacity: 0.4 }}
-                animate={{
-                  width: [6, 120],
-                  height: [6, 120],
-                  opacity: [0.4, 0],
-                }}
-                transition={{
-                  duration: HEARTBEAT_DURATION,
-                  repeat: Infinity,
-                  ease: "easeOut",
-                  delay: HEARTBEAT_DURATION / 2,
-                }}
-              />
-            </>
-          )}
-
-          {/* ── Coherence ring — forms and stabilizes ── */}
-          <motion.div
-            className="absolute rounded-full pointer-events-none"
-            style={{
-              border: `1px solid ${ringColor.replace("0.2)", "0.35)")}`,
-            }}
-            initial={{ width: 0, height: 0, opacity: 0 }}
-            animate={{
-              width: phase === "ring" ? 90 : phase === "project" ? 160 : phase === "dissolve" ? 600 : 0,
-              height: phase === "ring" ? 90 : phase === "project" ? 160 : phase === "dissolve" ? 600 : 0,
-              opacity: phase === "dissolve" ? 0 : phase === "seed" ? 0 : 0.5,
-            }}
-            transition={{
-              width: { duration: phase === "dissolve" ? 1.0 : 0.8, ease: "easeOut" },
-              height: { duration: phase === "dissolve" ? 1.0 : 0.8, ease: "easeOut" },
-              opacity: { duration: 0.6, ease: "easeOut" },
-            }}
-          />
-
-          {/* ── Second harmonic ring ── */}
-          {(phase === "project" || phase === "dissolve") && (
+          {/* Gentle pulse — one soft ring that breathes outward */}
+          {(phase === "circle") && (
             <motion.div
               className="absolute rounded-full pointer-events-none"
-              style={{
-                border: `1px solid ${ringColor.replace("0.2)", "0.15)")}`,
-              }}
-              initial={{ width: 90, height: 90, opacity: 0 }}
+              style={{ border: `1px solid ${warmRing}` }}
+              initial={{ width: 5, height: 5, opacity: 0.5 }}
               animate={{
-                width: phase === "dissolve" ? 900 : 240,
-                height: phase === "dissolve" ? 900 : 240,
-                opacity: phase === "dissolve" ? 0 : 0.3,
+                width: [5, 100],
+                height: [5, 100],
+                opacity: [0.4, 0],
               }}
               transition={{
-                duration: phase === "dissolve" ? 1.0 : 1.0,
+                duration: 1.8,
+                repeat: Infinity,
                 ease: "easeOut",
               }}
             />
           )}
 
-          {/* ── Projection flash — the moment the portal opens ── */}
-          {phase === "dissolve" && (
-            <motion.div
-              className="absolute rounded-full pointer-events-none"
-              style={{
-                background: `radial-gradient(circle, ${seedColor.replace("1)", "0.15)")} 0%, transparent 70%)`,
-              }}
-              initial={{ width: 100, height: 100, opacity: 0.6 }}
-              animate={{ width: 2000, height: 2000, opacity: 0 }}
-              transition={{ duration: 1.0, ease: "easeOut" }}
-            />
-          )}
-
-          {/* ── Stage whisper — human-friendly text ── */}
-          <motion.p
-            className="absolute font-serif text-center"
+          {/* Circle that forms from the dot */}
+          <motion.div
+            className="absolute rounded-full pointer-events-none"
             style={{
-              bottom: "calc(50% - 70px)",
-              fontSize: "13px",
-              color: "hsla(38, 15%, 80%, 0.7)",
-              letterSpacing: "0.12em",
-              fontFamily: "'Playfair Display', serif",
+              border: `1px solid ${warmRing.replace("0.18)", "0.3)")}`,
+            }}
+            initial={{ width: 0, height: 0, opacity: 0 }}
+            animate={{
+              width: phase === "dot" ? 0 : phase === "open" ? 800 : 80 + progress * 40,
+              height: phase === "dot" ? 0 : phase === "open" ? 800 : 80 + progress * 40,
+              opacity: phase === "dot" ? 0 : phase === "open" ? 0 : 0.45,
+            }}
+            transition={{
+              width: { duration: phase === "open" ? 1.0 : 0.7, ease: "easeOut" },
+              height: { duration: phase === "open" ? 1.0 : 0.7, ease: "easeOut" },
+              opacity: { duration: phase === "open" ? 0.8 : 0.5, ease: "easeOut" },
+            }}
+          />
+
+          {/* Status text — plain and warm */}
+          <motion.p
+            className="absolute text-center"
+            style={{
+              top: "calc(50% + 55px)",
+              fontSize: "12px",
+              color: "hsla(38, 12%, 72%, 0.6)",
+              letterSpacing: "0.08em",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontWeight: 400,
             }}
             key={stage}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: phase === "dissolve" ? 0 : 0.8, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
-            {stageWhisper(stage)}
-          </motion.p>
-
-          {/* ── Subtle progress trace — a thin golden line ── */}
-          <motion.div
-            className="absolute"
-            style={{
-              bottom: "calc(50% - 90px)",
-              height: "1px",
-              background: `linear-gradient(90deg, transparent, hsla(38, 40%, 65%, 0.4), transparent)`,
-              transformOrigin: "center",
-            }}
-            animate={{
-              width: phase === "dissolve" ? 0 : `${Math.max(20, progress * 80)}px`,
-              opacity: phase === "dissolve" ? 0 : 0.6,
-            }}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: phase === "open" || phase === "gone" ? 0 : 0.7, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-          />
+          >
+            {stageLabel(stage)}
+          </motion.p>
         </motion.div>
       )}
     </AnimatePresence>
