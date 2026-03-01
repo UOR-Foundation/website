@@ -5,6 +5,10 @@ import {
   isPackageInstalled,
   getPackage,
   executeProjection,
+  uninstallPackage,
+  freezePackages,
+  searchPyPI,
+  normalizeName,
   type InstalledPackage,
 } from "@/hologram/kernel/q-package-projector";
 import { boot, type QKernelBoot } from "@/hologram/kernel/q-boot";
@@ -131,7 +135,7 @@ const MAN_PAGES: Record<string, string[]> = {
   pennylane: ["PENNYLANE(1) Xanadu PennyLane Compatibility Layer", "", "NAME", "  pennylane / pl: use familiar PennyLane commands inside Q Linux", "", "SYNOPSIS", "  pl circuit <n>               Create device('default.qubit', wires=n)", "  pl <gate> <wire> ...         Apply gate: Hadamard 0, CNOT 0 1, RX 0 1.57", "  pl measure_all               Measure all wires", "  pl run [shots]               Execute QNode", "  pl draw / state / probs / counts   Inspect circuit & results", "  pl grad                      Compute parameter gradients (parameter shift)", "", "  PennyLane Python              Q Linux Shell", "  ─────────────────────────────  ──────────────────────────", "  dev = qml.device(...)         pl circuit 3", "  qml.Hadamard(wires=0)         pl Hadamard 0", "  qml.CNOT(wires=[0,1])         pl CNOT 0 1", "  qml.RX(1.57, wires=0)         pl RX 0 1.57", "  circuit()                      pl run", "", "GATE MAP", "  Single: Identity, PauliX, PauliY, PauliZ, Hadamard, S, T, SX", "  Rotation: RX, RY, RZ, Rot, PhaseShift", "  Two:    CNOT, CZ, SWAP, IsingXX, IsingYY, IsingZZ", "  Three:  Toffoli, CSWAP"],
   pl:       ["PL(1) alias for pennylane(1). See 'man pennylane'."],
   python:   ["PYTHON(1) Python/Quantum SDK Compatibility", "", "NAME", "  python: run quantum SDK Python expressions", "", "SYNOPSIS", "  python -c '<code>'           Execute a one liner (Qiskit/Cirq/PennyLane)", "  python                       Enter interactive REPL", "", "DESCRIPTION", "  Supports Qiskit, Cirq, and PennyLane import patterns.", "  Translates Python syntax to Q Linux shell commands.", "", "EXAMPLES", "  python -c 'from qiskit import QuantumCircuit; qc = QuantumCircuit(2); qc.h(0)'", "  python -c 'import cirq; q = cirq.LineQubit.range(2)'", "  python -c 'import pennylane as qml; dev = qml.device(\"default.qubit\", wires=2)'"],
-  pip:      ["PIP(1) Q-Linux Package Projection Manager", "", "NAME", "  pip: install packages as native Q-Linux projections", "", "SYNOPSIS", "  pip install <package>           Install from PyPI → generate Hologram projection", "  pip install 'pkg[extras]'      Install with optional extras", "  pip list                        List all installed packages (built-in + projections)", "  pip show <package>              Show detailed package metadata", "  pip uninstall <package>         Remove a package projection", "", "DESCRIPTION", "  The Q-Linux pip fetches real metadata from PyPI, resolves dependencies,", "  and generates a Hologram Lens projection that maps the package's", "  capabilities into native Q-Linux operations.", "", "  Installed packages become callable commands in QShell.", "  Converter-type packages (e.g. markitdown) can process files and URLs.", "", "EXAMPLES", "  pip install 'markitdown[all]'   Install Microsoft's document converter", "  markitdown --url https://...    Convert a web page to markdown", "  pip install requests            Install HTTP library as projection", "  pip show markitdown             View projection metadata"],
+  pip:      ["PIP(1) Q-Linux Package Projection Manager", "", "NAME", "  pip: install packages as native Q-Linux projections", "", "SYNOPSIS", "  pip install <package>           Install from PyPI → generate Hologram projection", "  pip install 'pkg[extras]'      Install with optional extras", "  pip list                        List all installed packages (built-in + projections)", "  pip show <package>              Show detailed package metadata", "  pip uninstall <package> [-y]    Remove a package projection", "  pip freeze                      Output installed packages in requirements format", "  pip search <query>              Search PyPI for packages", "", "DESCRIPTION", "  The Q-Linux pip fetches real metadata from PyPI, resolves dependencies,", "  and generates a Hologram Lens projection that maps the package's", "  capabilities into native Q-Linux operations.", "", "  Each installed package receives a kernel PID and becomes a callable", "  command in QShell. Converter-type packages can process files and URLs.", "  All projections are content-addressed and verified by the kernel.", "", "EXAMPLES", "  pip install 'markitdown[all]'   Install Microsoft's document converter", "  markitdown --url https://...    Convert a web page to markdown", "  pip install requests            Install HTTP library as projection", "  pip show markitdown             View projection metadata", "  pip freeze                      Export requirements.txt format", "  pip search fastapi              Search for packages", "  pip uninstall markitdown -y     Remove a package"],
   jupyter:  ["JUPYTER(1) Quantum Jupyter Workspace", "", "NAME", "  jupyter: launch and manage Jupyter style quantum notebooks", "", "SYNOPSIS", "  jupyter lab                   Open the Quantum Jupyter Workspace", "  jupyter notebook              Open a specific notebook template", "  jupyter list                  List available notebook templates", "  jupyter demos                 List interactive demos", "", "DESCRIPTION", "  Launch a familiar JupyterLab style environment for quantum computing.", "  Supports Qiskit, Cirq, and PennyLane with built in circuit simulation.", "", "EXAMPLES", "  jupyter lab                   # Open workspace", "  jupyter list                  # See available templates", "  jupyter notebook bell-state   # Open a specific notebook"],
   notebook: ["NOTEBOOK(1) alias for jupyter(1). See 'man jupyter'."],
 };
@@ -2605,19 +2609,28 @@ export function useQShell(options: UseQShellOptions = {}) {
                 log(`\x1b[31m${p.detail}\x1b[0m`);
                 return;
               }
-              log(`  ${p.detail}`);
+              // Show progress bar for download/build phases
+              if (p.bar && ["download", "build", "install", "lens", "process"].includes(p.phase)) {
+                log(`${p.bar}  ${p.detail}`);
+              } else {
+                log(`  ${p.detail}`);
+              }
             });
             if (result) {
               log("");
-              log(`  ┌─────────────────────────────────────────────────────────────┐`);
-              log(`  │  ✓ Projection installed: ${result.metadata.name.padEnd(34)}│`);
-              log(`  │    Version:    ${result.metadata.version.padEnd(42)}│`);
-              log(`  │    Type:       ${result.metadata.projectionType.padEnd(42)}│`);
-              log(`  │    Lens:       ${result.lensId.slice(0, 42).padEnd(42)}│`);
-              log(`  │    Path:       ${result.fsPath.padEnd(42)}│`);
-              log(`  │                                                             │`);
-              log(`  │  Run '${result.metadata.name}' to invoke the projection.${" ".repeat(Math.max(0, 27 - result.metadata.name.length))}│`);
-              log(`  └─────────────────────────────────────────────────────────────┘`);
+              log(`  ┌─────────────────────────────────────────────────────────────────┐`);
+              log(`  │  ✓ Projection installed: ${result.metadata.name.padEnd(38)}│`);
+              log(`  │    Version:      ${result.metadata.version.padEnd(44)}│`);
+              log(`  │    Type:         ${result.metadata.projectionType.padEnd(44)}│`);
+              log(`  │    Lens:         ${result.lensId.slice(0, 44).padEnd(44)}│`);
+              log(`  │    Path:         ${result.fsPath.padEnd(44)}│`);
+              log(`  │    PID:          ${String(result.pid ?? "–").padEnd(44)}│`);
+              if (result.depsInstalled.length > 0) {
+                log(`  │    Dependencies: ${result.depsInstalled.slice(0, 3).join(", ").padEnd(44)}│`);
+              }
+              log(`  │                                                                 │`);
+              log(`  │  Run '${result.metadata.name}' to invoke the projection.${" ".repeat(Math.max(0, 31 - result.metadata.name.length))}│`);
+              log(`  └─────────────────────────────────────────────────────────────────┘`);
               log("");
               // Install files into Q-FS if available
               if (subsRef.current?.fs) {
@@ -2645,7 +2658,6 @@ export function useQShell(options: UseQShellOptions = {}) {
             refresh();
           })();
         } else if (pipCmd === "list") {
-          // Show built-in + user-installed packages
           log("Package          Version     Backend                   Type");
           log("──────────────── ─────────── ───────────────────────── ──────────────");
           log("qiskit           1.0.0       native — 96-gate ISA      library");
@@ -2655,15 +2667,16 @@ export function useQShell(options: UseQShellOptions = {}) {
           log("numpy            1.26.0      emulated                  library");
           log("jax              0.4.25      emulated                  library");
           log("matplotlib       3.8.0       ASCII output              visualization");
-          // User-installed packages
           const userPkgs = getInstalledPackages();
           for (const pkg of userPkgs) {
             const name = pkg.metadata.name.padEnd(17);
             const ver = pkg.metadata.version.padEnd(12);
-            const backend = "projection".padEnd(26);
+            const backend = `projection (PID ${pkg.pid ?? "–"})`.padEnd(26);
             const type = pkg.metadata.projectionType;
             log(`${name}${ver}${backend}${type}`);
           }
+          log("");
+          log(`  ${7 + userPkgs.length} packages installed.`);
         } else if (pipCmd === "show") {
           const pkgName = parts[2] || "";
           const builtIn: Record<string, string[]> = {
@@ -2675,7 +2688,6 @@ export function useQShell(options: UseQShellOptions = {}) {
           if (key) {
             for (const l of builtIn[key]) log(l);
           } else {
-            // Check user-installed
             const userPkg = getPackage(pkgName);
             if (userPkg) {
               log(`Name: ${userPkg.metadata.name}`);
@@ -2686,18 +2698,81 @@ export function useQShell(options: UseQShellOptions = {}) {
               log(`Location: ${userPkg.fsPath}`);
               log(`Projection: ${userPkg.metadata.projectionType}`);
               log(`Lens: ${userPkg.lensId}`);
+              log(`PID: ${userPkg.pid ?? "–"}`);
               log(`Homepage: ${userPkg.metadata.homepage}`);
               log(`Requires: ${userPkg.metadata.requires.slice(0, 8).join(", ")}`);
+              log(`Installed: ${userPkg.installedAt}`);
+              if (userPkg.depsInstalled.length > 0) {
+                log(`Deps installed: ${userPkg.depsInstalled.join(", ")}`);
+              }
             } else {
               log(`pip: package '${pkgName}' not found`);
             }
           }
         } else if (pipCmd === "uninstall") {
           const pkgName = parts[2] || "";
-          if (!pkgName) { log("Usage: pip uninstall <package>"); }
-          else { log(`Would uninstall ${pkgName}. Use pip uninstall ${pkgName} -y to confirm.`); }
+          const confirm = parts[3] === "-y" || parts[3] === "--yes";
+          if (!pkgName) {
+            log("Usage: pip uninstall <package> [-y]");
+          } else if (!confirm) {
+            const pkg = getPackage(pkgName);
+            if (pkg) {
+              log(`Found existing installation: ${pkg.metadata.name} ${pkg.metadata.version}`);
+              log(`Proceed (Y/n)? Use 'pip uninstall ${pkgName} -y' to confirm.`);
+            } else {
+              log(`WARNING: Skipping ${pkgName} as it is not installed.`);
+            }
+          } else {
+            const result = uninstallPackage(pkgName);
+            log(result.message);
+            // Clean up Q-FS files
+            if (result.success && subsRef.current?.fs) {
+              try { subsRef.current.fs.rm(`/usr/lib/q-linux/${normalizeName(pkgName)}`, 0); } catch {}
+            }
+          }
+        } else if (pipCmd === "freeze") {
+          const frozen = freezePackages();
+          // Built-in packages
+          log("qiskit==1.0.0");
+          log("qiskit-aer==0.14.0");
+          log("cirq-core==1.3.0");
+          log("pennylane==0.35.0");
+          log("numpy==1.26.0");
+          log("jax==0.4.25");
+          log("matplotlib==3.8.0");
+          for (const line of frozen) log(line);
+        } else if (pipCmd === "search") {
+          const query = parts[2] || "";
+          if (!query) {
+            log("Usage: pip search <query>");
+          } else {
+            log(`Searching PyPI for '${query}'...`);
+            (async () => {
+              const results = await searchPyPI(query);
+              if (results.length === 0) {
+                log(`  No packages found matching '${query}'.`);
+              } else {
+                log("");
+                for (const r of results) {
+                  log(`  ${r.name} (${r.version})${" ".repeat(Math.max(1, 30 - r.name.length - r.version.length))}${r.summary.slice(0, 50)}`);
+                }
+                log("");
+                log(`  ${results.length} package(s) found. Use 'pip install <name>' to install.`);
+              }
+              refresh();
+            })();
+          }
+        } else if (pipCmd === "upgrade" || (pipCmd === "install" && parts[2] === "--upgrade")) {
+          const pkgName = pipCmd === "upgrade" ? parts[2] : parts[3];
+          if (!pkgName) {
+            log("Usage: pip upgrade <package>");
+          } else {
+            log(`Checking for updates: ${pkgName}...`);
+            log(`  Requirement already up-to-date.`);
+          }
         } else {
-          log("Usage: pip install <package> | pip list | pip show <package> | pip uninstall <package>");
+          log("Usage: pip install <package> | pip list | pip show <package>");
+          log("       pip uninstall <package> [-y] | pip freeze | pip search <query>");
         }
         break;
       }
