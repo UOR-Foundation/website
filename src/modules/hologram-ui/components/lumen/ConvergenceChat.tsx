@@ -32,6 +32,8 @@ import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
 import {
   getDefaultValues,
   buildDimensionPrompt,
+  describeDimensionMix,
+  DIMENSIONS,
   type DimensionValues,
   type DimensionPreset,
 } from "@/modules/hologram-ui/engine/proModeDimensions";
@@ -148,6 +150,14 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
     setDimensionValues(newValues);
     setActivePresetId(null); // custom mix clears preset selection
   }, []);
+
+  // Real-time style summary — recomputes as faders move
+  const styleSummary = useMemo(() => describeDimensionMix(dimensionValues), [dimensionValues]);
+  const dimPromptPreview = useMemo(() => buildDimensionPrompt(dimensionValues), [dimensionValues]);
+  const isCustomMix = useMemo(() => {
+    const defaults = getDefaultValues();
+    return DIMENSIONS.some(d => Math.abs((dimensionValues[d.id] ?? d.defaultValue) - defaults[d.id]) > 0.05);
+  }, [dimensionValues]);
 
   // ── Voice integration ────────────────────────────────────────────
   const voice = useConvergenceVoice({
@@ -479,7 +489,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
       setShowcaseMode(false);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [isConverging, exchanges, coherence]);
+  }, [isConverging, exchanges, coherence, dimensionValues, triadicMode, graphContext]);
 
   // ── Follow-up question listener ─────────────────────────────────
   useEffect(() => {
@@ -772,6 +782,52 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
                   className="flex justify-center pb-4 overflow-hidden"
                 >
                   {showcaseMode ? <ShowcasePipeline state={pipeline} /> : <ConvergencePipeline state={pipeline} />}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ── Real-time style indicator ─────────────────────── */}
+            <AnimatePresence>
+              {isCustomMix && !isConverging && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                  className="flex items-center gap-2 pb-3 overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
+                    style={{ background: "hsla(38, 20%, 15%, 0.4)", border: "1px solid hsla(38, 20%, 30%, 0.1)" }}>
+                    {/* Animated color dots representing dominant dimensions */}
+                    <div className="flex gap-1">
+                      {DIMENSIONS
+                        .filter(d => Math.abs((dimensionValues[d.id] ?? d.defaultValue) - 0.5) > 0.2)
+                        .slice(0, 4)
+                        .map(d => (
+                          <motion.div
+                            key={d.id}
+                            className="w-1.5 h-1.5 rounded-full"
+                            animate={{
+                              scale: [1, 1.3, 1],
+                              opacity: [0.6, 1, 0.6],
+                            }}
+                            transition={{
+                              duration: 2 + Math.random(),
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                              delay: Math.random() * 0.5,
+                            }}
+                            style={{
+                              background: `hsl(${d.hue}, ${40 + (dimensionValues[d.id] ?? 0.5) * 30}%, ${50 + (dimensionValues[d.id] ?? 0.5) * 15}%)`,
+                              boxShadow: `0 0 4px hsla(${d.hue}, 50%, 55%, 0.3)`,
+                            }}
+                          />
+                        ))}
+                    </div>
+                    <span className="text-[10px] tracking-wide" style={{ color: "hsla(38, 25%, 65%, 0.6)" }}>
+                      {styleSummary}
+                    </span>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

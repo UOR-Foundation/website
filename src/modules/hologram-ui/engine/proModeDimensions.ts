@@ -433,6 +433,38 @@ export function buildDimensionPrompt(values: DimensionValues): string {
   return parts.join(" ");
 }
 
+// ── Human-readable style summary ────────────────────────────────────
+
+/** Returns a short, poetic one-liner describing the current dimension mix */
+export function describeDimensionMix(values: DimensionValues): string {
+  const traits: string[] = [];
+  const ranked = DIMENSIONS
+    .map(d => ({ id: d.id, label: d.label, val: values[d.id] ?? d.defaultValue, dist: Math.abs((values[d.id] ?? d.defaultValue) - 0.5) }))
+    .sort((a, b) => b.dist - a.dist)
+    .slice(0, 3);
+  for (const r of ranked) {
+    if (r.val > 0.7) {
+      const highTraits: Record<string, string> = {
+        depth: "deep thinker", breadth: "wide explorer", intuition: "intuitive leaper",
+        rigor: "evidence-first", verbosity: "richly detailed", warmth: "warm & present",
+        storytelling: "narrative weaver", humor: "playfully witty", focus: "laser focused",
+        empathy: "emotionally attuned", challenge: "provocatively bold", originality: "wildly original",
+      };
+      traits.push(highTraits[r.id] || r.label.toLowerCase());
+    } else if (r.val < 0.3) {
+      const lowTraits: Record<string, string> = {
+        depth: "surface-swift", breadth: "tightly scoped", intuition: "logically precise",
+        rigor: "freely speculative", verbosity: "razor concise", warmth: "coolly neutral",
+        storytelling: "direct & clear", humor: "seriously focused", focus: "wandering freely",
+        empathy: "analytically pure", challenge: "gently supportive", originality: "classically grounded",
+      };
+      traits.push(lowTraits[r.id] || r.label.toLowerCase());
+    }
+  }
+  if (traits.length === 0) return "Balanced · harmonious center";
+  return traits.join(" · ");
+}
+
 // ── Category metadata ────────────────────────────────────────────────
 
 export const CATEGORY_META: Record<DimensionCategory, { label: string; hue: number }> = {
