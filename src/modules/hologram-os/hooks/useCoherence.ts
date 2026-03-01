@@ -19,7 +19,7 @@
  */
 
 import { useMemo } from "react";
-import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave, type RewardProjection, type StabilizerProjection, type CircuitProjection, type CompositorProjection, type ProceduralProjection } from "../projection-engine";
+import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave, type RewardProjection, type StabilizerProjection, type CircuitProjection, type CompositorProjection, type ProceduralProjection, type MirrorProjection } from "../projection-engine";
 import { useKernel } from "./useKernel";
 
 export interface CoherenceState {
@@ -47,6 +47,8 @@ export interface CoherenceState {
   readonly compositor: CompositorProjection;
   /** Procedural memory projection — the cerebellum habit ring */
   readonly procedural: ProceduralProjection;
+  /** Mirror protocol projection — inter-agent coherence bonds */
+  readonly mirror: MirrorProjection;
 }
 
 const DEFAULT_GRADIENT: CoherenceGradient = {
@@ -85,6 +87,11 @@ const DEFAULT_PROCEDURAL: ProceduralProjection = {
   topHabits: [], isLearning: false, accelerationFactor: 0,
 };
 
+const DEFAULT_MIRROR: MirrorProjection = {
+  bondCount: 0, activeBonds: 0, meanEmpathy: 0, totalSharedHabits: 0,
+  topBonds: [], collaborativeMode: false, networkCoherence: 0,
+};
+
 /**
  * useCoherence — read coherence wave state from the kernel.
  * Zero additional state — purely derived from ProjectionFrame.
@@ -104,6 +111,7 @@ export function useCoherence(): CoherenceState {
         circuit: DEFAULT_CIRCUIT,
         compositor: DEFAULT_COMPOSITOR,
         procedural: DEFAULT_PROCEDURAL,
+        mirror: DEFAULT_MIRROR,
       };
     }
 
@@ -121,6 +129,7 @@ export function useCoherence(): CoherenceState {
       circuit: frame.circuitProjection,
       compositor: frame.compositorProjection,
       procedural: frame.proceduralProjection,
+      mirror: frame.mirrorProjection,
     };
   }, [frame]);
 }

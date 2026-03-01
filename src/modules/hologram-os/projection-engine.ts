@@ -36,6 +36,7 @@ import { getCircuitEngine, type CircuitEngine, type CircuitProjection } from "@/
 import { getProjectionCompositor, type ProjectionCompositor, type CompositorProjection } from "@/hologram/kernel/projection-compositor";
 import { getKernelSupervisor, type KernelSupervisor, type SupervisorProjection } from "@/hologram/kernel/kernel-supervisor";
 import { getProceduralMemory, type ProceduralMemoryEngine, type ProceduralProjection } from "@/hologram/kernel/procedural-memory";
+import { getMirrorProtocol, type MirrorProtocolEngine, type MirrorProjection } from "@/hologram/kernel/mirror-protocol";
 
 // Re-export surface types for consumers
 export type { SurfaceState, SurfaceGradient, ProjectionReceipt };
@@ -44,6 +45,7 @@ export type { StabilizerProjection };
 export type { CircuitProjection };
 export type { CompositorProjection, SupervisorProjection };
 export type { ProceduralProjection };
+export type { MirrorProjection };
 
 // ═══════════════════════════════════════════════════════════════════════
 // Projection Frame Types — Pure data descriptions of what to render
@@ -181,6 +183,7 @@ export interface ProjectionFrame {
   readonly circuitProjection: CircuitProjection;
   readonly compositorProjection: CompositorProjection;
   readonly proceduralProjection: ProceduralProjection;
+  readonly mirrorProjection: MirrorProjection;
   readonly breathPeriodMs: number;
   readonly agentSources: readonly AgentFrameSource[];
 }
@@ -358,6 +361,7 @@ export class KernelProjector {
   private compositor: ProjectionCompositor = getProjectionCompositor();
   private supervisor: KernelSupervisor = getKernelSupervisor();
   private proceduralMemory: ProceduralMemoryEngine = getProceduralMemory();
+  private mirrorProtocol: MirrorProtocolEngine = getMirrorProtocol();
   private rewardAccumulator = new RewardAccumulator();
   private cachedRewardProjection: RewardProjection = { ema: 0, cumulative: 0, count: 0, trend: "stable", lastReward: 0, temperature: 1.0 };
   private cachedStabilizerProjection: StabilizerProjection = { syndromeWeight: 0, health: 1, correctionApplied: false, totalCorrections: 0, totalExtractions: 0, fanoViolations: 0, zone: "convergent", errorRate: 0 };
@@ -447,7 +451,7 @@ export class KernelProjector {
    * Only includes values that actually affect rendering.
    */
   private computeFrameFingerprint(frame: ProjectionFrame): string {
-    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}|${frame.coherenceGradient.dh.toFixed(3)}|${frame.agentSources.length}|${frame.rewardProjection.trend}|${frame.stabilizerProjection.syndromeWeight}|${frame.stabilizerProjection.health.toFixed(3)}|${frame.compositorProjection.kernelCount}`;
+    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}|${frame.coherenceGradient.dh.toFixed(3)}|${frame.agentSources.length}|${frame.rewardProjection.trend}|${frame.stabilizerProjection.syndromeWeight}|${frame.stabilizerProjection.health.toFixed(3)}|${frame.compositorProjection.kernelCount}|${frame.mirrorProjection.bondCount}`;
   }
 
   /**
@@ -1407,6 +1411,9 @@ export class KernelProjector {
     // ── Procedural Memory — habit ring projection ────────────────────
     const proceduralProjection = this.proceduralMemory.project();
 
+    // ── Mirror Protocol — inter-agent coherence bonds ────────────────
+    const mirrorProjection = this.mirrorProtocol.project();
+
     return {
       tick: this.tickCount,
       timestamp: Date.now(),
@@ -1426,6 +1433,7 @@ export class KernelProjector {
       circuitProjection: this.cachedCircuitProjection,
       compositorProjection,
       proceduralProjection,
+      mirrorProjection,
       breathPeriodMs: this.config.breathingRhythm.breathPeriodMs,
       agentSources: this.agentSources,
     };
