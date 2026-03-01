@@ -332,45 +332,86 @@ function makeTheme(dark: boolean): Theme {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Gate Definitions — IBM-style flat palette
+   Gate Definitions — IBM Quantum Composer palette (exact replica)
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Color categories match IBM:
+     pink   = "rot"     — Pauli, rotations, parameterized single-qubit
+     blue   = "phase"   — Clifford phase gates (S, T, Z, P), controlled gates
+     gray   = "special" — Utility (reset, barrier, measure, identity, if)
+     purple = "multi"   — Multi-qubit advanced gates (RXX, RZZ, RCCX, RC3X)
+
+   Layout is a 6-column grid, ordered to match the IBM screenshot row-by-row.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 interface GateDef {
   id: string; label: string; qubits: number; parameterized?: boolean;
-  paramCount?: number; description: string; color: "h" | "cx" | "phase" | "rot" | "special" | "measure" | "multi";
+  paramCount?: number; description: string;
+  color: "h" | "cx" | "phase" | "rot" | "special" | "measure" | "multi";
+  /** Q-Linux ISA opcode (maps to the 96-gate instruction set) */
+  isaOpcode?: string;
 }
 
+/**
+ * Palette rows — laid out to match the IBM Quantum Composer screenshot:
+ *
+ * Row 1: H  ⊕(CX)  ⊕̃(CCX)  ⊕̃̃(CSWAP)  ⨉(SWAP)  I
+ * Row 2: T  S  Z  T†  S†  P
+ * Row 3: RZ  CZ  |0⟩  ┊  M  if
+ * Row 4: √X  √X†  Y  RX  RY  RXX
+ * Row 5: RZZ  U  RCCX  RC3X  ⏲(delay)
+ */
 const PALETTE_GATES: GateDef[] = [
-  { id: "h", label: "H", qubits: 1, description: "Hadamard gate", color: "h" },
-  { id: "cx", label: "⊕", qubits: 2, description: "Controlled-NOT (CNOT)", color: "cx" },
-  { id: "ccx", label: "⊕", qubits: 3, description: "Toffoli (CCX)", color: "multi" },
-  { id: "swap", label: "⨉", qubits: 2, description: "SWAP gate", color: "cx" },
-  { id: "cswap", label: "⨉", qubits: 3, description: "Fredkin (CSWAP)", color: "multi" },
-  { id: "x", label: "X", qubits: 1, description: "Pauli-X (NOT)", color: "rot" },
-  { id: "id", label: "I", qubits: 1, description: "Identity", color: "special" },
-  { id: "t", label: "T", qubits: 1, description: "T gate (π/8)", color: "phase" },
-  { id: "s", label: "S", qubits: 1, description: "S gate (√Z)", color: "phase" },
-  { id: "z", label: "Z", qubits: 1, description: "Pauli-Z", color: "phase" },
-  { id: "tdg", label: "T†", qubits: 1, description: "T-dagger", color: "phase" },
-  { id: "sdg", label: "S†", qubits: 1, description: "S-dagger", color: "phase" },
-  { id: "p", label: "P", qubits: 1, parameterized: true, description: "Phase gate P(λ)", color: "phase" },
-  { id: "rz", label: "RZ", qubits: 1, parameterized: true, description: "Z-rotation RZ(θ)", color: "rot" },
-  { id: "cz", label: "CZ", qubits: 2, description: "Controlled-Z", color: "cx" },
-  { id: "|0>", label: "|0⟩", qubits: 1, description: "Reset to |0⟩", color: "special" },
-  { id: "barrier", label: "┊", qubits: 1, description: "Barrier", color: "special" },
-  { id: "measure", label: "M", qubits: 1, description: "Measurement", color: "measure" },
-  { id: "sx", label: "√X", qubits: 1, description: "√X gate", color: "rot" },
-  { id: "sxdg", label: "√X†", qubits: 1, description: "√X-dagger", color: "rot" },
-  { id: "y", label: "Y", qubits: 1, description: "Pauli-Y", color: "rot" },
-  { id: "rx", label: "RX", qubits: 1, parameterized: true, description: "X-rotation RX(θ)", color: "rot" },
-  { id: "ry", label: "RY", qubits: 1, parameterized: true, description: "Y-rotation RY(θ)", color: "rot" },
-  { id: "cy", label: "CY", qubits: 2, description: "Controlled-Y", color: "cx" },
-  { id: "ch", label: "CH", qubits: 2, description: "Controlled-H", color: "cx" },
-  { id: "u", label: "U", qubits: 1, parameterized: true, paramCount: 3, description: "Universal U(θ,φ,λ)", color: "rot" },
-  { id: "crx", label: "CRX", qubits: 2, parameterized: true, description: "Controlled-RX", color: "cx" },
-  { id: "cry", label: "CRY", qubits: 2, parameterized: true, description: "Controlled-RY", color: "cx" },
-  { id: "crz", label: "CRZ", qubits: 2, parameterized: true, description: "Controlled-RZ", color: "cx" },
+  // ── Row 1: Core single + multi-qubit ──────────────────────────────────
+  { id: "h",     label: "H",     qubits: 1, description: "Hadamard gate — creates superposition",             color: "h",       isaOpcode: "HAD" },
+  { id: "cx",    label: "⊕",     qubits: 2, description: "Controlled-NOT (CNOT)",                             color: "cx",      isaOpcode: "CNOT" },
+  { id: "ccx",   label: "⊕",     qubits: 3, description: "Toffoli (CCX) — controlled-controlled-NOT",         color: "multi",   isaOpcode: "CCX" },
+  { id: "cswap", label: "⊕̃",     qubits: 3, description: "Fredkin (CSWAP) — controlled SWAP",                 color: "multi",   isaOpcode: "CSWAP" },
+  { id: "swap",  label: "⨉",     qubits: 2, description: "SWAP gate — exchanges two qubits",                  color: "cx",      isaOpcode: "SWAP" },
+  { id: "id",    label: "I",     qubits: 1, description: "Identity — no operation",                           color: "special", isaOpcode: "ID" },
+
+  // ── Row 2: Clifford phase gates ───────────────────────────────────────
+  { id: "t",     label: "T",     qubits: 1, description: "T gate (π/8 phase)",                                color: "phase",   isaOpcode: "T" },
+  { id: "s",     label: "S",     qubits: 1, description: "S gate (√Z, π/4 phase)",                            color: "phase",   isaOpcode: "S" },
+  { id: "z",     label: "Z",     qubits: 1, description: "Pauli-Z (phase flip)",                              color: "phase",   isaOpcode: "Z" },
+  { id: "tdg",   label: "T†",    qubits: 1, description: "T-dagger (−π/8 phase)",                             color: "phase",   isaOpcode: "TDG" },
+  { id: "sdg",   label: "S†",    qubits: 1, description: "S-dagger (−π/4 phase)",                             color: "phase",   isaOpcode: "SDG" },
+  { id: "p",     label: "P",     qubits: 1, parameterized: true, description: "Phase gate P(λ)",              color: "phase",   isaOpcode: "P" },
+
+  // ── Row 3: Rotation + utility ─────────────────────────────────────────
+  { id: "rz",      label: "RZ",    qubits: 1, parameterized: true, description: "Z-rotation RZ(θ)",           color: "rot",     isaOpcode: "RZ" },
+  { id: "cz",      label: "CZ",    qubits: 2, description: "Controlled-Z",                                    color: "cx",      isaOpcode: "CZ" },
+  { id: "|0>",     label: "|0⟩",   qubits: 1, description: "Reset qubit to |0⟩",                              color: "special", isaOpcode: "RESET" },
+  { id: "barrier", label: "┊",     qubits: 1, description: "Barrier — scheduling boundary",                   color: "special", isaOpcode: "BARRIER" },
+  { id: "measure", label: "●",     qubits: 1, description: "Measurement — project to computational basis",    color: "measure", isaOpcode: "MEAS" },
+  { id: "if",      label: "if",    qubits: 1, description: "Classical conditional — apply gate if c==1",       color: "special", isaOpcode: "IF" },
+
+  // ── Row 4: Pauli rotations ────────────────────────────────────────────
+  { id: "sx",    label: "√X",    qubits: 1, description: "√X gate (half-X rotation)",                         color: "rot",     isaOpcode: "SX" },
+  { id: "sxdg",  label: "√X†",   qubits: 1, description: "√X-dagger",                                        color: "rot",     isaOpcode: "SXDG" },
+  { id: "y",     label: "Y",     qubits: 1, description: "Pauli-Y (bit + phase flip)",                        color: "rot",     isaOpcode: "Y" },
+  { id: "rx",    label: "RX",    qubits: 1, parameterized: true, description: "X-rotation RX(θ)",             color: "rot",     isaOpcode: "RX" },
+  { id: "ry",    label: "RY",    qubits: 1, parameterized: true, description: "Y-rotation RY(θ)",             color: "rot",     isaOpcode: "RY" },
+  { id: "rxx",   label: "RXX",   qubits: 2, parameterized: true, description: "XX-rotation RXX(θ)",           color: "rot",     isaOpcode: "RXX" },
+
+  // ── Row 5: Advanced multi-qubit ───────────────────────────────────────
+  { id: "rzz",   label: "RZZ",   qubits: 2, parameterized: true, description: "ZZ-rotation RZZ(θ)",           color: "rot",     isaOpcode: "RZZ" },
+  { id: "u",     label: "U",     qubits: 1, parameterized: true, paramCount: 3, description: "Universal U(θ,φ,λ)", color: "rot", isaOpcode: "U3" },
+  { id: "rccx",  label: "RCCX",  qubits: 3, description: "Relative-phase CCX (simplified Toffoli)",           color: "multi",   isaOpcode: "RCCX" },
+  { id: "rc3x",  label: "RC3X",  qubits: 4, description: "Relative-phase 3-controlled X",                     color: "multi",   isaOpcode: "RC3X" },
+  { id: "delay", label: "⏲",     qubits: 1, parameterized: true, description: "Delay — idle time on qubit",   color: "special", isaOpcode: "DELAY" },
+
+  // ── Controlled rotations (secondary, appear in search) ────────────────
+  { id: "x",     label: "X",     qubits: 1, description: "Pauli-X (NOT gate)",                                color: "rot",     isaOpcode: "X" },
+  { id: "ch",    label: "CH",    qubits: 2, description: "Controlled-Hadamard",                               color: "cx",      isaOpcode: "CH" },
+  { id: "cy",    label: "CY",    qubits: 2, description: "Controlled-Y",                                      color: "cx",      isaOpcode: "CY" },
+  { id: "crx",   label: "CRX",   qubits: 2, parameterized: true, description: "Controlled-RX",                color: "cx",      isaOpcode: "CRX" },
+  { id: "cry",   label: "CRY",   qubits: 2, parameterized: true, description: "Controlled-RY",                color: "cx",      isaOpcode: "CRY" },
+  { id: "crz",   label: "CRZ",   qubits: 2, parameterized: true, description: "Controlled-RZ",                color: "cx",      isaOpcode: "CRZ" },
 ];
+
+/** Number of gates to show in the main grid (6 cols × 5 rows = 30) */
+const PALETTE_MAIN_COUNT = 30;
 
 function findGateDef(gateId: string): GateDef | undefined {
   return PALETTE_GATES.find(g => g.id === gateId);
@@ -472,7 +513,7 @@ function generateQASM(numQubits: number, numClbits: number, gates: PlacedGate[])
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const QASM_KEYWORDS = new Set(["OPENQASM", "include", "qreg", "creg", "gate", "if", "barrier", "measure", "reset", "opaque"]);
-const QASM_GATES = new Set(["h", "x", "y", "z", "cx", "cz", "cy", "ch", "ccx", "swap", "cswap", "s", "sdg", "t", "tdg", "rx", "ry", "rz", "p", "u", "sx", "sxdg", "crx", "cry", "crz", "id"]);
+const QASM_GATES = new Set(["h", "x", "y", "z", "cx", "cz", "cy", "ch", "ccx", "swap", "cswap", "s", "sdg", "t", "tdg", "rx", "ry", "rz", "rxx", "rzz", "p", "u", "sx", "sxdg", "crx", "cry", "crz", "id", "rccx", "rc3x", "delay"]);
 
 function highlightQASM(code: string, t: Theme): React.ReactNode[] {
   return code.split("\n").map((line, li) => {
@@ -733,19 +774,25 @@ function GateTile({ gate, t, selected, onClick, onDragStart }: {
   onClick: () => void; onDragStart: (e: DragEvent, gate: GateDef) => void;
 }) {
   const bg = gateColor(gate, t);
+  const isWide = gate.label.length > 3;
   return (
     <div
       draggable
       onDragStart={e => onDragStart(e, gate)}
       onClick={onClick}
-      className="w-[40px] h-[40px] rounded flex items-center justify-center cursor-pointer select-none font-mono text-[13px] font-bold"
-      title={gate.description}
+      className={`${isWide ? "col-span-1" : ""} rounded flex items-center justify-center cursor-pointer select-none font-mono font-bold`}
+      title={`${gate.description}${gate.isaOpcode ? ` [ISA: ${gate.isaOpcode}]` : ""}`}
       style={{
-        background: selected ? bg : `${bg}22`,
-        color: selected ? "white" : bg,
-        border: selected ? `2px solid ${bg}` : `1.5px solid ${bg}44`,
-        boxShadow: selected ? `0 0 8px ${bg}44` : "none",
-        transition: "box-shadow 80ms, background 80ms",
+        width: isWide ? "auto" : 40,
+        minWidth: 40,
+        height: 40,
+        fontSize: isWide ? 11 : 13,
+        background: bg,
+        color: "white",
+        border: selected ? "2px solid white" : `1.5px solid transparent`,
+        boxShadow: selected ? `0 0 10px ${bg}88, inset 0 0 0 1px hsla(0,0%,100%,0.3)` : "none",
+        transition: "box-shadow 80ms, border 80ms",
+        opacity: selected ? 1 : 0.92,
       }}
     >
       {gate.label}
@@ -1355,7 +1402,8 @@ export default function QuantumWorkspace({ onClose }: Props) {
             />
           </div>
           <div className="flex-1 overflow-y-auto p-2">
-            <div className="flex flex-wrap gap-[5px]">
+            {/* 6-column IBM-style grid */}
+            <div className="grid gap-[5px]" style={{ gridTemplateColumns: "repeat(6, 1fr)" }}>
               {filteredGates.map((gate, i) => (
                 <GateTile
                   key={`${gate.id}-${i}`}
