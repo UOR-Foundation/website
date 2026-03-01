@@ -8,12 +8,13 @@
  *   - will-change: width for compositor-promoted expansion
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, User, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
   Terminal, Beaker, Atom, Code2, ChevronDown, Server, Package, FolderOpen,
+  Wrench,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 import DataBankIndicator from "./DataBankIndicator";
@@ -33,6 +34,87 @@ function IconTooltip({ label, children, show }: { label: string; children: React
         {label}
       </div>
     </div>
+  );
+}
+
+/* ── Flyout popover for collapsed grouped icons ─────────────── */
+function SidebarFlyout({
+  open,
+  onClose,
+  anchorRef,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  anchorRef: React.RefObject<HTMLButtonElement | null>;
+  children: React.ReactNode;
+}) {
+  const flyoutRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0 });
+
+  useEffect(() => {
+    if (open && anchorRef.current) {
+      const rect = anchorRef.current.getBoundingClientRect();
+      setPos({ top: rect.top });
+    }
+  }, [open, anchorRef]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        flyoutRef.current && !flyoutRef.current.contains(e.target as Node) &&
+        anchorRef.current && !anchorRef.current.contains(e.target as Node)
+      ) {
+        onClose();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open, onClose, anchorRef]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      ref={flyoutRef}
+      className="fixed z-[200] py-1.5 rounded-xl"
+      style={{
+        left: "62px",
+        top: `${pos.top}px`,
+        minWidth: "170px",
+        background: "var(--sb-bg-flat)",
+        border: "1px solid var(--sb-border)",
+        boxShadow: "8px 4px 32px -4px hsla(25, 10%, 0%, 0.4), 0 0 0 1px hsla(38, 20%, 90%, 0.04)",
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+        animation: "flyout-enter 150ms ease-out",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function FlyoutItem({
+  icon: Icon,
+  label,
+  iconColor,
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  iconColor?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-3.5 py-2.5 text-left transition-colors duration-150 hover:bg-[var(--sb-hover)]"
+      style={{ color: "var(--sb-text)" }}
+    >
+      <Icon className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: iconColor ?? "var(--sb-muted)" }} />
+      <span className="text-[13px] font-light tracking-wide">{label}</span>
+    </button>
   );
 }
 
@@ -150,7 +232,16 @@ export default function DesktopOsSidebar({
   const [systemOpen, setSystemOpen] = useState(() => {
     try { return localStorage.getItem("uor:sidebar:system-open") !== "false"; } catch { return true; }
   });
+  const [toolsOpen, setToolsOpen] = useState(() => {
+    try { return localStorage.getItem("uor:sidebar:tools-open") !== "false"; } catch { return true; }
+  });
   const { textSize, setTextSize } = useTextSize();
+
+  // Flyout state for collapsed mode
+  const [toolsFlyoutOpen, setToolsFlyoutOpen] = useState(false);
+  const [systemFlyoutOpen, setSystemFlyoutOpen] = useState(false);
+  const toolsFlyoutAnchor = useRef<HTMLButtonElement>(null);
+  const systemFlyoutAnchor = useRef<HTMLButtonElement>(null);
 
   // Text size changes flow through kernel automatically via useTextSize
   const handleTextSize = useCallback((size: TextSize) => {
@@ -165,6 +256,8 @@ export default function DesktopOsSidebar({
   /** Collapse and fire action simultaneously — zero delay */
   const collapseAndDo = useCallback((action: () => void) => {
     if (expanded) setExpanded(false);
+    setToolsFlyoutOpen(false);
+    setSystemFlyoutOpen(false);
     action();
   }, [expanded]);
 
@@ -178,6 +271,10 @@ export default function DesktopOsSidebar({
         40%  { transform: scale(0.91); }
         70%  { transform: scale(1.03); }
         100% { transform: scale(1); }
+      }
+      @keyframes flyout-enter {
+        0%   { opacity: 0; transform: translateX(-4px) scale(0.97); }
+        100% { opacity: 1; transform: translateX(0) scale(1); }
       }
       .sidebar-nav-btn:active,
       .sidebar-logo-btn:active {
@@ -346,90 +443,133 @@ export default function DesktopOsSidebar({
           </IconTooltip>
         )}
 
-        {/* Divider before tools section */}
-
-        {/* Terminal */}
-        {onOpenTerminal && (
-          <IconTooltip label="Terminal" show={!expanded}>
+        {/* ── Tools section ─────────────────────────────────────── */}
+        {/* When expanded: collapsible section with label + children inline */}
+        {/* When collapsed: single icon that opens a flyout popover */}
+        {expanded ? (
+          <>
             <button
-              onClick={() => collapseAndDo(onOpenTerminal)}
-              onMouseEnter={() => onHoverPanel?.("terminal")}
-              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
-              }`}
-              style={{ color: "var(--sb-text)" }}
+              onClick={() => {
+                setToolsOpen(prev => {
+                  const next = !prev;
+                  try { localStorage.setItem("uor:sidebar:tools-open", String(next)); } catch {}
+                  return next;
+                });
+              }}
+              className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-2"
+              style={{ color: "var(--sb-muted)" }}
             >
-              <Terminal className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
-              {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Terminal</span>}
+              <Wrench className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+              <span className="text-[11px] font-medium uppercase tracking-widest flex-1 text-left" style={{ color: "var(--sb-muted)" }}>Tools</span>
+              <ChevronDown
+                className="w-3 h-3 shrink-0 transition-transform duration-200"
+                strokeWidth={1.5}
+                style={{
+                  color: "var(--sb-muted)",
+                  transform: toolsOpen ? "rotate(0deg)" : "rotate(-90deg)",
+                }}
+              />
             </button>
-          </IconTooltip>
+            {toolsOpen && (
+              <div className="pl-2">
+                {onOpenTerminal && (
+                  <button
+                    onClick={() => collapseAndDo(onOpenTerminal)}
+                    onMouseEnter={() => onHoverPanel?.("terminal")}
+                    className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
+                    style={{ color: "var(--sb-text)" }}
+                  >
+                    <Terminal className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+                    <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Terminal</span>
+                  </button>
+                )}
+                {onOpenJupyter && (
+                  <button
+                    onClick={() => collapseAndDo(onOpenJupyter)}
+                    onMouseEnter={() => onHoverPanel?.("jupyter")}
+                    className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
+                    style={{ color: "var(--sb-text)" }}
+                  >
+                    <Beaker className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-gold)" }} />
+                    <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Jupyter</span>
+                  </button>
+                )}
+                {onOpenQuantumWorkspace && (
+                  <button
+                    onClick={() => collapseAndDo(onOpenQuantumWorkspace)}
+                    onMouseEnter={() => onHoverPanel?.("quantum-workspace")}
+                    className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
+                    style={{ color: "var(--sb-text)" }}
+                  >
+                    <Atom className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "hsl(200, 60%, 60%)" }} />
+                    <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Quantum Lab</span>
+                  </button>
+                )}
+                {onOpenCode && (
+                  <button
+                    onClick={() => collapseAndDo(onOpenCode)}
+                    onMouseEnter={() => onHoverPanel?.("code")}
+                    className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
+                    style={{ color: "var(--sb-text)" }}
+                  >
+                    <Code2 className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "hsl(210, 80%, 60%)" }} />
+                    <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Code</span>
+                  </button>
+                )}
+                {onOpenPackages && (
+                  <button
+                    onClick={() => collapseAndDo(onOpenPackages)}
+                    onMouseEnter={() => onHoverPanel?.("packages")}
+                    className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
+                    style={{ color: "var(--sb-text)" }}
+                  >
+                    <Package className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "hsl(38, 50%, 55%)" }} />
+                    <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Packages</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          /* Collapsed: single Tools icon → flyout */
+          <>
+            <IconTooltip label="Tools" show={!expanded}>
+              <button
+                ref={toolsFlyoutAnchor}
+                onClick={() => { setToolsFlyoutOpen(p => !p); setSystemFlyoutOpen(false); }}
+                className={`sidebar-nav-btn w-full flex items-center justify-center rounded-xl transition-colors duration-200 px-0 py-3.5`}
+                style={{
+                  color: "var(--sb-text)",
+                  background: toolsFlyoutOpen ? "var(--sb-active)" : "transparent",
+                }}
+              >
+                <Wrench className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: toolsFlyoutOpen ? "var(--sb-gold)" : "var(--sb-muted)" }} />
+              </button>
+            </IconTooltip>
+            <SidebarFlyout open={toolsFlyoutOpen} onClose={() => setToolsFlyoutOpen(false)} anchorRef={toolsFlyoutAnchor}>
+              <div className="px-3 pt-2 pb-1">
+                <span className="text-[10px] font-medium uppercase tracking-widest" style={{ color: "var(--sb-muted)" }}>Tools</span>
+              </div>
+              {onOpenTerminal && (
+                <FlyoutItem icon={Terminal} label="Terminal" onClick={() => collapseAndDo(onOpenTerminal)} />
+              )}
+              {onOpenJupyter && (
+                <FlyoutItem icon={Beaker} label="Jupyter" iconColor="var(--sb-gold)" onClick={() => collapseAndDo(onOpenJupyter)} />
+              )}
+              {onOpenQuantumWorkspace && (
+                <FlyoutItem icon={Atom} label="Quantum Lab" iconColor="hsl(200, 60%, 60%)" onClick={() => collapseAndDo(onOpenQuantumWorkspace)} />
+              )}
+              {onOpenCode && (
+                <FlyoutItem icon={Code2} label="Code" iconColor="hsl(210, 80%, 60%)" onClick={() => collapseAndDo(onOpenCode)} />
+              )}
+              {onOpenPackages && (
+                <FlyoutItem icon={Package} label="Packages" iconColor="hsl(38, 50%, 55%)" onClick={() => collapseAndDo(onOpenPackages)} />
+              )}
+            </SidebarFlyout>
+          </>
         )}
 
-        {/* Jupyter */}
-        {onOpenJupyter && (
-          <IconTooltip label="Jupyter" show={!expanded}>
-            <button
-              onClick={() => collapseAndDo(onOpenJupyter)}
-              onMouseEnter={() => onHoverPanel?.("jupyter")}
-              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
-              }`}
-              style={{ color: "var(--sb-text)" }}
-            >
-              <Beaker className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-gold)" }} />
-              {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Jupyter</span>}
-            </button>
-          </IconTooltip>
-        )}
-        {/* Quantum Workspace */}
-        {onOpenQuantumWorkspace && (
-          <IconTooltip label="Quantum Workspace" show={!expanded}>
-            <button
-              onClick={() => collapseAndDo(onOpenQuantumWorkspace)}
-              onMouseEnter={() => onHoverPanel?.("quantum-workspace")}
-              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
-              }`}
-              style={{ color: "var(--sb-text)" }}
-            >
-              <Atom className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "hsl(200, 60%, 60%)" }} />
-              {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Quantum Lab</span>}
-            </button>
-          </IconTooltip>
-        )}
-        {/* Code */}
-        {onOpenCode && (
-          <IconTooltip label="Code" show={!expanded}>
-            <button
-              onClick={() => collapseAndDo(onOpenCode)}
-              onMouseEnter={() => onHoverPanel?.("code")}
-              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
-              }`}
-              style={{ color: "var(--sb-text)" }}
-            >
-              <Code2 className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "hsl(210, 80%, 60%)" }} />
-              {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Code</span>}
-            </button>
-          </IconTooltip>
-        )}
-        {/* Packages */}
-        {onOpenPackages && (
-          <IconTooltip label="Packages" show={!expanded}>
-            <button
-              onClick={() => collapseAndDo(onOpenPackages)}
-              onMouseEnter={() => onHoverPanel?.("packages")}
-              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
-              }`}
-              style={{ color: "var(--sb-text)" }}
-            >
-              <Package className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "hsl(38, 50%, 55%)" }} />
-              {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Packages</span>}
-            </button>
-          </IconTooltip>
-        )}
-        {/* Share the Love — warm gradient heart, above divider */}
+        {/* Share the Love — warm gradient heart */}
         <IconTooltip label="Share the Love" show={!expanded}>
           <button
             onClick={() => collapseAndDo(() => setShareOpen(true))}
@@ -464,7 +604,7 @@ export default function DesktopOsSidebar({
         </IconTooltip>
       </div>
 
-      {/* ── Bottom: Text Size + Settings + Help ─────────────── */}
+      {/* ── Bottom: Help + Inbox + System ───────────────────── */}
       <div className="px-2 py-3 space-y-0 shrink-0" style={{ borderTop: "1px solid var(--sb-border)" }}>
         {/* Text Size Control — visible when expanded */}
         {expanded && (
@@ -498,86 +638,91 @@ export default function DesktopOsSidebar({
             {expanded && <span className="text-[13px] font-light tracking-wide">Inbox</span>}
           </button>
         </IconTooltip>
-        {/* ── System sub-section (collapsible) ──────────────── */}
-        {(() => {
-          const toggleSystem = () => {
-            setSystemOpen(prev => {
-              const next = !prev;
-              try { localStorage.setItem("uor:sidebar:system-open", String(next)); } catch {}
-              return next;
-            });
-          };
-          return (
-            <>
-              <IconTooltip label="System" show={!expanded}>
+
+        {/* ── System sub-section ────────────────────────────── */}
+        {/* Expanded: collapsible inline section */}
+        {/* Collapsed: single icon → flyout with Storage/Compute/Settings */}
+        {expanded ? (
+          <>
+            <button
+              onClick={() => {
+                setSystemOpen(prev => {
+                  const next = !prev;
+                  try { localStorage.setItem("uor:sidebar:system-open", String(next)); } catch {}
+                  return next;
+                });
+              }}
+              className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-2"
+              style={{ color: "var(--sb-muted)" }}
+            >
+              <Server className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+              <span className="text-[11px] font-medium uppercase tracking-widest flex-1 text-left" style={{ color: "var(--sb-muted)" }}>System</span>
+              <ChevronDown
+                className="w-3 h-3 shrink-0 transition-transform duration-200"
+                strokeWidth={1.5}
+                style={{
+                  color: "var(--sb-muted)",
+                  transform: systemOpen ? "rotate(0deg)" : "rotate(-90deg)",
+                }}
+              />
+            </button>
+            {systemOpen && (
+              <div className="pl-2">
                 <button
-                  onClick={toggleSystem}
-                  className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                    !expanded ? "justify-center px-0 py-2" : "px-3.5 py-2"
-                  }`}
-                  style={{ color: "var(--sb-muted)" }}
+                  onClick={() => collapseAndDo(() => onOpenMemory?.())}
+                  onMouseEnter={() => onHoverPanel?.("memory")}
+                  className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
+                  style={{ color: "var(--sb-text)" }}
                 >
-                  <Server className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
-                  {expanded && (
-                    <>
-                      <span className="text-[11px] font-medium uppercase tracking-widest flex-1 text-left" style={{ color: "var(--sb-muted)" }}>System</span>
-                      <ChevronDown
-                        className="w-3 h-3 shrink-0 transition-transform duration-200"
-                        strokeWidth={1.5}
-                        style={{
-                          color: "var(--sb-muted)",
-                          transform: systemOpen ? "rotate(0deg)" : "rotate(-90deg)",
-                        }}
-                      />
-                    </>
-                  )}
+                  <Database className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+                  <span className="text-[13px] font-light tracking-wide">Storage</span>
                 </button>
-              </IconTooltip>
-              {(systemOpen || !expanded) && (
-                <div className={expanded ? "pl-2" : ""}>
-                  <IconTooltip label="Storage" show={!expanded}>
-                    <button
-                      onClick={() => collapseAndDo(() => onOpenMemory?.())}
-                      onMouseEnter={() => onHoverPanel?.("memory")}
-                      className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                        !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3"
-                      }`}
-                      style={{ color: "var(--sb-text)" }}
-                    >
-                      <Database className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
-                      {expanded && <span className="text-[13px] font-light tracking-wide">Storage</span>}
-                    </button>
-                  </IconTooltip>
-                  <IconTooltip label="Compute" show={!expanded}>
-                    <button
-                      onClick={() => collapseAndDo(() => onOpenCompute?.())}
-                      onMouseEnter={() => onHoverPanel?.("compute")}
-                      className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                        !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3"
-                      }`}
-                      style={{ color: "var(--sb-text)" }}
-                    >
-                      <Cpu className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
-                      {expanded && <span className="text-[13px] font-light tracking-wide">Compute</span>}
-                    </button>
-                  </IconTooltip>
-                  <IconTooltip label="Settings" show={!expanded}>
-                    <button
-                      onClick={() => collapseAndDo(() => navigate("/settings"))}
-                      className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-                        !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3"
-                      }`}
-                      style={{ color: "var(--sb-text)" }}
-                    >
-                      <Settings className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
-                      {expanded && <span className="text-[13px] font-light tracking-wide">Settings</span>}
-                    </button>
-                  </IconTooltip>
-                </div>
-              )}
-            </>
-          );
-        })()}
+                <button
+                  onClick={() => collapseAndDo(() => onOpenCompute?.())}
+                  onMouseEnter={() => onHoverPanel?.("compute")}
+                  className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
+                  style={{ color: "var(--sb-text)" }}
+                >
+                  <Cpu className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+                  <span className="text-[13px] font-light tracking-wide">Compute</span>
+                </button>
+                <button
+                  onClick={() => collapseAndDo(() => navigate("/settings"))}
+                  className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
+                  style={{ color: "var(--sb-text)" }}
+                >
+                  <Settings className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+                  <span className="text-[13px] font-light tracking-wide">Settings</span>
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          /* Collapsed: single System icon → flyout */
+          <>
+            <IconTooltip label="System" show={!expanded}>
+              <button
+                ref={systemFlyoutAnchor}
+                onClick={() => { setSystemFlyoutOpen(p => !p); setToolsFlyoutOpen(false); }}
+                className={`sidebar-nav-btn w-full flex items-center justify-center rounded-xl transition-colors duration-200 px-0 py-3.5`}
+                style={{
+                  color: "var(--sb-text)",
+                  background: systemFlyoutOpen ? "var(--sb-active)" : "transparent",
+                }}
+              >
+                <Server className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: systemFlyoutOpen ? "var(--sb-gold)" : "var(--sb-muted)" }} />
+              </button>
+            </IconTooltip>
+            <SidebarFlyout open={systemFlyoutOpen} onClose={() => setSystemFlyoutOpen(false)} anchorRef={systemFlyoutAnchor}>
+              <div className="px-3 pt-2 pb-1">
+                <span className="text-[10px] font-medium uppercase tracking-widest" style={{ color: "var(--sb-muted)" }}>System</span>
+              </div>
+              <FlyoutItem icon={Database} label="Storage" onClick={() => collapseAndDo(() => onOpenMemory?.())} />
+              <FlyoutItem icon={Cpu} label="Compute" onClick={() => collapseAndDo(() => onOpenCompute?.())} />
+              <FlyoutItem icon={Settings} label="Settings" onClick={() => collapseAndDo(() => navigate("/settings"))} />
+            </SidebarFlyout>
+          </>
+        )}
       </div>
 
       {/* ── Genesis Dot — kernel heartbeat summary ────────── */}
