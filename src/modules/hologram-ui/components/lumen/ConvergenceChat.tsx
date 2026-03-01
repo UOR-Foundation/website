@@ -26,8 +26,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles, Maximize2, SlidersHorizontal, Brain } from "lucide-react";
 import ExchangeCard from "./ExchangeCard";
+import SavedRemixesPanel from "./SavedRemixesPanel";
 import { supabase } from "@/integrations/supabase/client";
 import ProModeDeck from "./ProModeDeck";
+import { useSavedRemixes } from "../../hooks/useSavedRemixes";
 import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
 import {
   getDefaultValues,
@@ -126,6 +128,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   const [voiceMode, setVoiceMode] = useState(false);
   const [triadicMode, setTriadicMode] = useState<TriadicMode>("balanced");
   const [proMode, setProMode] = useState(false);
+  const { remixes: savedRemixes, saveRemix, removeRemix, isSaved: isRemixSaved } = useSavedRemixes();
   const [dimensionValues, setDimensionValues] = useState<DimensionValues>(getDefaultValues());
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const [resonancePanelOpen, setResonancePanelOpen] = useState(false);
@@ -707,6 +710,15 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
             </motion.div>
           )}
 
+          {/* Saved Remixes */}
+          <SavedRemixesPanel
+            remixes={savedRemixes}
+            onRemove={removeRemix}
+            onReplay={(thought) => {
+              window.dispatchEvent(new CustomEvent("lumen:follow-up", { detail: thought }));
+            }}
+          />
+
           {/* Exchanges */}
           <div className="space-y-12">
             {exchanges.map((ex, idx) => (
@@ -714,6 +726,22 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
                 key={ex.id}
                 exchange={ex}
                 isActive={idx === exchanges.length - 1 && isConverging}
+                isRemixSaved={isRemixSaved(ex.id)}
+                onToggleSaveRemix={(exchange) => {
+                  if (isRemixSaved(exchange.id)) {
+                    removeRemix(exchange.id);
+                  } else if (exchange.remixOriginal) {
+                    saveRemix({
+                      id: exchange.id,
+                      thought: exchange.thought,
+                      original: exchange.remixOriginal,
+                      originalMix: exchange.remixOriginalMix || "Default",
+                      remixed: exchange.understanding,
+                      remixMix: exchange.mixLabel || "Default",
+                      grade: exchange.meta?.grade,
+                    });
+                  }
+                }}
                 pipelineSlot={
                   ex.pipeline.stage !== "idle" && ex.pipeline.stage !== "converged" && idx === exchanges.length - 1
                     ? (

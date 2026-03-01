@@ -15,7 +15,7 @@ import { useState, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import ContextualBloom from "./ContextualBloom";
-import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight, SlidersHorizontal, Bookmark } from "lucide-react";
 
 // ── Palette (mirrors ConvergenceChat) ────────────────────────────────
 const C = {
@@ -59,6 +59,10 @@ interface ExchangeCardProps {
   exchange: ExchangeData;
   isActive: boolean;
   pipelineSlot?: React.ReactNode;
+  /** Whether this remix is saved as favorite */
+  isRemixSaved?: boolean;
+  /** Callback to save/unsave this remix */
+  onToggleSaveRemix?: (exchange: ExchangeData) => void;
 }
 
 // ── The Eight Guarantees ─────────────────────────────────────────────
@@ -412,7 +416,7 @@ function TrustArc({ score, grade }: { score: number; grade?: string }) {
 }
 
 // ── Main Component ───────────────────────────────────────────────────
-function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: ExchangeCardProps) {
+function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onToggleSaveRemix }: ExchangeCardProps) {
   const [showTrace, setShowTrace] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showGuarantees, setShowGuarantees] = useState(false);
@@ -759,6 +763,21 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: ExchangeCardProp
                       <SlidersHorizontal className="w-3 h-3" />
                       <span className="text-[9px] tracking-[0.12em] uppercase">Remix</span>
                     </button>
+
+                    {/* Save remix as favorite */}
+                    {ex.remixOriginal && onToggleSaveRemix && (
+                      <button
+                        onClick={() => onToggleSaveRemix(ex)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-300 hover:bg-[hsla(38,20%,25%,0.1)]"
+                        style={{ color: isRemixSaved ? "hsla(38, 55%, 60%, 0.8)" : "hsla(38, 20%, 50%, 0.3)" }}
+                        title={isRemixSaved ? "Remove from saved" : "Save this remix"}
+                      >
+                        <Bookmark className="w-3 h-3" fill={isRemixSaved ? "currentColor" : "none"} />
+                        <span className="text-[9px] tracking-[0.12em] uppercase">
+                          {isRemixSaved ? "Saved" : "Save"}
+                        </span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
