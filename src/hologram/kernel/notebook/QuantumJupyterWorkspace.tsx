@@ -1770,10 +1770,33 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   const [isRenamingNotebook, setIsRenamingNotebook] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [kernelBusy, setKernelBusy] = useState(false);
+  const [cursorPos, setCursorPos] = useState<{ ln: number; col: number; sel: number }>({ ln: 1, col: 1, sel: 0 });
+  const [showGoToLine, setShowGoToLine] = useState(false);
+  const [goToLineValue, setGoToLineValue] = useState("");
   const notebookNameRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const lastDPressRef = useRef<number>(0);
+
+  // Track cursor position from active textarea
+  const updateCursorPos = useCallback(() => {
+    if (!activeCell) return;
+    const ta = document.querySelector(`textarea[data-cell-id="${activeCell}"]`) as HTMLTextAreaElement | null;
+    if (!ta) return;
+    const val = ta.value;
+    const pos = ta.selectionStart;
+    const selLen = Math.abs(ta.selectionEnd - ta.selectionStart);
+    const before = val.slice(0, pos);
+    const ln = before.split("\n").length;
+    const lastNl = before.lastIndexOf("\n");
+    const col = pos - (lastNl >= 0 ? lastNl : 0);
+    setCursorPos({ ln, col, sel: selLen });
+  }, [activeCell]);
+
+  useEffect(() => {
+    const interval = setInterval(updateCursorPos, 100);
+    return () => clearInterval(interval);
+  }, [updateCursorPos]);
 
   const updateCell = useCallback((id: string, source: string) => {
     setNotebook(prev => ({
@@ -2032,6 +2055,11 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
         if ((e.ctrlKey || e.metaKey) && e.key === "s") {
           e.preventDefault();
           saveNotebook();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === "g") {
+          e.preventDefault();
+          setShowGoToLine(true);
+          setGoToLineValue("");
         }
         return;
       }
@@ -2645,33 +2673,91 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
           </div>
         </div>
 
-        {/* Status bar */}
-        <div className="flex items-center gap-4 px-4 py-1.5" style={{
+        {/* Developer Precision Bar */}
+        <div className="flex items-center gap-3 px-4 py-1" style={{
           borderTop: `1px solid ${t.border}`,
           background: t.bgToolbar,
           fontSize: "12px",
         }}>
           <span className="flex items-center gap-1.5" style={{ color: kernelBusy ? t.gold : t.green }}>
             <span className="w-2 h-2 rounded-full" style={{ background: kernelBusy ? t.gold : t.green }} />
-            {kernelBusy ? "Kernel busy" : "Idle"}
+            {kernelBusy ? "Busy" : "Idle"}
           </span>
           <span className="text-xs font-mono" style={{ color: t.textDim }}>
             Q-Linux Python 3.11
           </span>
+          <div className="w-px h-3.5" style={{ background: t.border }} />
           <span style={{ color: t.textDim }}>
-            {notebook.cells.length} cells · {notebook.cells.filter(c => c.executionCount).length} executed
+            {notebook.cells.length} cells · {notebook.cells.filter(c => c.executionCount).length} run
           </span>
           <div className="flex-1" />
-          <span style={{ color: editMode ? t.editModeText : t.commandModeText }}>
-            {editMode ? "Edit Mode" : "Command Mode"}
+          {/* Cursor position */}
+          <button
+            onClick={() => { setShowGoToLine(true); setGoToLineValue(""); }}
+            className="font-mono text-xs px-1.5 py-0.5 rounded hover:opacity-80"
+            style={{ color: t.textMuted, cursor: "pointer" }}
+            title="Go to Line (Ctrl+G)"
+          >
+            Ln {cursorPos.ln}, Col {cursorPos.col}
+          </button>
+          {cursorPos.sel > 0 && (
+            <span className="font-mono text-xs px-1.5 py-0.5 rounded" style={{ color: t.gold, background: `${t.gold}15` }}>
+              {cursorPos.sel} selected
+            </span>
+          )}
+          <div className="w-px h-3.5" style={{ background: t.border }} />
+          <span style={{ color: editMode ? t.editModeText : t.commandModeText, fontWeight: 600 }}>
+            {editMode ? "EDIT" : "CMD"}
           </span>
-          <span style={{ color: t.textDim }}>
-            Ln {activeCellObj ? activeCellObj.source.split("\n").length : 0}
-          </span>
-          <span style={{ color: t.textDim }}>
+          <div className="w-px h-3.5" style={{ background: t.border }} />
+          <span className="text-xs" style={{ color: t.textDim }}>
             Qiskit · Cirq · PennyLane
           </span>
         </div>
+
+        {/* Go-to-line modal */}
+        {showGoToLine && (
+          <div className="absolute inset-0 z-50 flex items-start justify-center pt-[20%]" style={{ background: "hsla(0,0%,0%,0.35)" }}
+            onClick={() => setShowGoToLine(false)}>
+            <div className="rounded-xl p-4 shadow-xl" style={{ background: t.bg, border: `1px solid ${t.border}`, minWidth: 280 }}
+              onClick={e => e.stopPropagation()}>
+              <label className="text-sm font-medium block mb-2" style={{ color: t.textStrong }}>
+                Go to Line
+              </label>
+              <input
+                autoFocus
+                type="number"
+                min={1}
+                value={goToLineValue}
+                onChange={e => setGoToLineValue(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Escape") { setShowGoToLine(false); return; }
+                  if (e.key === "Enter") {
+                    const target = parseInt(goToLineValue);
+                    if (!activeCell || isNaN(target) || target < 1) { setShowGoToLine(false); return; }
+                    const ta = document.querySelector(`textarea[data-cell-id="${activeCell}"]`) as HTMLTextAreaElement | null;
+                    if (!ta) { setShowGoToLine(false); return; }
+                    const lines = ta.value.split("\n");
+                    const clampedLine = Math.min(target, lines.length);
+                    let pos = 0;
+                    for (let i = 0; i < clampedLine - 1; i++) pos += lines[i].length + 1;
+                    ta.focus();
+                    ta.selectionStart = ta.selectionEnd = pos;
+                    setEditMode(true);
+                    setShowGoToLine(false);
+                    updateCursorPos();
+                  }
+                }}
+                placeholder={`Line (1–${activeCellObj ? activeCellObj.source.split("\n").length : "?"})`}
+                className="w-full px-3 py-2 rounded-lg text-sm font-mono focus:outline-none"
+                style={{ background: t.bgSoft, border: `1px solid ${t.border}`, color: t.text }}
+              />
+              <p className="text-xs mt-2" style={{ color: t.textDim }}>
+                Press Enter to go, Escape to cancel
+              </p>
+            </div>
+          </div>
+        )}
 
         {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       </div>
