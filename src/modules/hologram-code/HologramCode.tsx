@@ -33,6 +33,7 @@ import {
   Command, HardDrive,
 } from "lucide-react";
 import { useQFs, type FSNode } from "./useQFs";
+import { useMonacoLsp } from "./useMonacoLsp";
 
 // ── VS Code Dark+ Color Tokens ──────────────────────────────────────────────
 const C = {
@@ -720,6 +721,10 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
   const [cursorLine, setCursorLine] = useState(1);
   const [cursorCol, setCursorCol] = useState(1);
   const editorRef = useRef<MonacoEditor>(null);
+  const monacoInstanceRef = useRef<any>(null);
+
+  // ── LSP: Monaco TypeScript worker + AI completions ─────────────────────
+  useMonacoLsp(monacoInstanceRef, qfs);
 
   const activeFile = useMemo(
     () => openFiles.find(f => f.path === activeFilePath) ?? null,
@@ -813,11 +818,33 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
 
   const handleEditorMount: OnMount = useCallback((editor, monaco) => {
     editorRef.current = editor;
+    monacoInstanceRef.current = monaco;
 
     // Cursor tracking
-    editor.onDidChangeCursorPosition((e) => {
+    editor.onDidChangeCursorPosition((e: any) => {
       setCursorLine(e.position.lineNumber);
       setCursorCol(e.position.column);
+    });
+
+    // Enable quick suggestions and parameter hints
+    editor.updateOptions({
+      quickSuggestions: { other: true, comments: false, strings: true },
+      suggestOnTriggerCharacters: true,
+      parameterHints: { enabled: true },
+      wordBasedSuggestions: "currentDocument",
+      suggest: {
+        showMethods: true,
+        showFunctions: true,
+        showVariables: true,
+        showInterfaces: true,
+        showProperties: true,
+        showClasses: true,
+        showModules: true,
+        showKeywords: true,
+        showSnippets: true,
+        preview: true,
+        insertMode: "replace",
+      },
     });
 
     // Focus the editor immediately
