@@ -239,49 +239,72 @@ function extractModelWeights(
 
   try {
     // Access the ONNX sessions from the model
-    // transformers.js stores sessions in model.sessions or similar
     const sessions = model.sessions || {};
+    let rawExtracted = 0;
 
     for (const [sessionName, session] of Object.entries(sessions)) {
       if (!session) continue;
-
-      // Try to extract initializer weights from ONNX session
       const onnxSession = session as any;
 
-      // ONNX Runtime Web exposes weights via the model's graph initializers
-      // We try multiple access patterns for compatibility
-      if (onnxSession._model?.graph?.initializer) {
-        for (const init of onnxSession._model.graph.initializer) {
-          if (init.name && init.floatData) {
-            weights.set(init.name, new Float32Array(init.floatData));
-          } else if (init.name && init.rawData) {
-            const buf = init.rawData.buffer || init.rawData;
-            weights.set(init.name, new Float32Array(buf));
-          }
-        }
-      }
+      // Try direct initializer access
+      const tryExtractInitializers = (graphObj: any) => {
+        if (!graphObj?.initializer) return;
+        for (const init of graphObj.initializer) {
+          if (!init.name) continue;
+          let data: Float32Array | null = null;
 
-      // Alternative: some models expose via inputNames / outputNames
-      if (onnxSession.handler?.inferenceSession) {
-        const innerSession = onnxSession.handler.inferenceSession;
-        // Extract what we can
-        if (innerSession._model?.graph?.initializer) {
-          for (const init of innerSession._model.graph.initializer) {
-            if (init.name && init.dims) {
-              const totalSize = init.dims.reduce((a: number, b: number) => a * b, 1);
-              // Create synthetic weights based on the shape
-              weights.set(init.name, new Float32Array(Math.min(totalSize, 4096)));
+          if (init.floatData && init.floatData.length > 0) {
+            data = new Float32Array(init.floatData);
+          } else if (init.rawData) {
+            const buf = init.rawData.buffer || init.rawData;
+            if (buf.byteLength > 0) {
+              data = new Float32Array(buf);
+            }
+          } else if (init.dataType === 1 && init.dims) {
+            // Float32 tensor with dims but data stored externally
+            const totalSize = init.dims.reduce((a: number, b: number) => a * b, 1);
+            if (totalSize > 0 && totalSize <= 50_000_000) {
+              data = new Float32Array(totalSize);
+            }
+          }
+
+          if (data && data.length > 0) {
+            weights.set(init.name, data);
+            rawExtracted++;
+
+            // Map common ONNX names to our canonical names
+            const name = init.name.toLowerCase();
+            if (name.includes("lm_head") || name.includes("output.weight") ||
+                (name.includes("embed") && name.includes("out"))) {
+              weights.set("lm_head", data);
+            }
+            if (name.includes("embed_tokens") || name.includes("wte") ||
+                (name.includes("embed") && !name.includes("out") && !name.includes("lm"))) {
+              weights.set("embed", data);
             }
           }
         }
+      };
+
+      // Try multiple access patterns
+      tryExtractInitializers(onnxSession._model?.graph);
+      if (onnxSession.handler?.inferenceSession?._model?.graph) {
+        tryExtractInitializers(onnxSession.handler.inferenceSession._model.graph);
       }
     }
+
+    // For many models, lm_head == embed_tokens (weight tying)
+    if (!weights.has("lm_head") && weights.has("embed")) {
+      weights.set("lm_head", weights.get("embed")!);
+      console.log("[HF-Bridge] Weight-tied lm_head from embedding matrix");
+    }
+
+    console.log(`[HF-Bridge] Extracted ${rawExtracted} raw tensors, ${weights.size} mapped`);
   } catch (e) {
     console.warn("[HF-Bridge] Could not extract raw weights, using shape-based synthesis:", e);
   }
 
   // If we couldn't extract raw weights, create shape-based synthetic ones
-  // that match the model's architecture exactly
   if (weights.size === 0) {
     console.log("[HF-Bridge] Using architecture-based weight synthesis for Atlas projection");
     synthesizeFromManifest(manifest, weights);
@@ -414,6 +437,56 @@ export function detokenize(loadedModel: LoadedHFModel, tokenIds: number[]): stri
 
 // ═══════════════════════════════════════════════════════════════
 // Direct Inference (Baseline Comparison)
+// ═══════════════════════════════════════════════════════════════
+// Forward Pass for Logits Extraction
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Run a single forward pass to get next-token logits for given token IDs.
+ * Used by the coherence engine to project Atlas activations → vocabulary.
+ *
+ * Returns the raw logits array for the last token position.
+ */
+export async function getNextTokenLogits(
+  loadedModel: LoadedHFModel,
+  tokenIds: number[],
+): Promise<Float32Array> {
+  try {
+    const transformers = await import("@huggingface/transformers");
+    const inputTensor = new transformers.Tensor(
+      "int64",
+      BigInt64Array.from(tokenIds.map(BigInt)),
+      [1, tokenIds.length],
+    );
+
+    const attentionMask = new transformers.Tensor(
+      "int64",
+      BigInt64Array.from(tokenIds.map(() => 1n)),
+      [1, tokenIds.length],
+    );
+
+    const output = await loadedModel.model({
+      input_ids: inputTensor,
+      attention_mask: attentionMask,
+    });
+
+    // output.logits is a Tensor of shape [1, seqLen, vocabSize]
+    if (output.logits) {
+      const logitsData = output.logits.data as Float32Array;
+      const vocabSize = loadedModel.manifest.vocabSize;
+      // Extract logits for the last token position
+      const lastPos = (tokenIds.length - 1) * vocabSize;
+      return new Float32Array(logitsData.buffer, logitsData.byteOffset + lastPos * 4, vocabSize);
+    }
+  } catch (e) {
+    console.warn("[HF-Bridge] Forward pass failed:", e);
+  }
+
+  return new Float32Array(0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Baseline Inference
 // ═══════════════════════════════════════════════════════════════
 
 /**

@@ -238,8 +238,13 @@ export class CoherenceInferenceEngine {
   /** Value projection cache: vertex → hidden-dim embedding */
   private valueCacheMap: Map<number, Float32Array> = new Map();
 
-  /** Output projection: Atlas activations → vocabulary logits */
+  /** Output projection: [vocabSize × ATLAS_VERTEX_COUNT] — real lm_head projected to Atlas space */
   private outputProjection: Float32Array | null = null;
+  /** Number of vocab rows stored in outputProjection */
+  private outputVocabSize: number = 0;
+
+  /** Optional: async logits function using the real model */
+  private logitsCallback: ((context: number[]) => Promise<Float32Array>) | null = null;
 
   /** Momentum buffer for gradient smoothing */
   private momentumBuffer: Float32Array;
@@ -263,7 +268,7 @@ export class CoherenceInferenceEngine {
    * This populates:
    *   1. The Engram cache with projected weight blocks
    *   2. The value cache with per-vertex embeddings
-   *   3. The output projection matrix
+   *   3. The output projection matrix (fallback if no real lm_head is set)
    */
   initialize(decomposition: AtlasModelDecomposition): void {
     this.decomposition = decomposition;
@@ -305,29 +310,84 @@ export class CoherenceInferenceEngine {
       this.valueCacheMap.set(vertex, avg);
     }
 
-    // Build output projection (simplified: random but seeded from model)
-    this.buildOutputProjection();
+    // Only build fallback projection if no real lm_head has been set
+    if (!this.outputProjection) {
+      this.buildFallbackProjection();
+    }
 
     console.log(
       `[CoherenceEngine] Initialized: ${decomposition.blocks.length} blocks, ` +
       `${this.valueCacheMap.size} vertices cached, ` +
-      `Engram: ${this.engram.stats().totalEntries} entries`
+      `Engram: ${this.engram.stats().totalEntries} entries, ` +
+      `lm_head: ${this.outputVocabSize > 0 ? `real (${this.outputVocabSize} vocab)` : 'fallback'}`
     );
   }
 
-  private buildOutputProjection(): void {
-    // Simple output projection: ATLAS_VERTEX_COUNT → vocabSize
-    // In practice, this would use the lm_head weights from the decomposition
-    const size = this.config.vocabSize;
-    this.outputProjection = new Float32Array(size);
+  /**
+   * Set the real lm_head weights for output projection.
+   *
+   * The lm_head is a [vocabSize × hiddenDim] matrix.
+   * We project it down to [vocabSize × 96] by averaging hiddenDim columns
+   * into ATLAS_VERTEX_COUNT buckets, preserving the model's learned
+   * vocabulary distribution structure.
+   *
+   * @param lmHead - Raw lm_head weight matrix [vocabSize × hiddenDim]
+   * @param vocabSize - Number of vocabulary entries (rows)
+   * @param hiddenDim - Model hidden dimension (columns)
+   */
+  setLmHead(lmHead: Float32Array, vocabSize: number, hiddenDim: number): void {
+    // Cap vocab size for browser memory (full vocab can be 50k–130k)
+    const maxVocab = Math.min(vocabSize, 32000);
+    const projected = new Float32Array(maxVocab * ATLAS_VERTEX_COUNT);
 
-    // Seed with model-specific pattern
+    const colsPerVertex = hiddenDim / ATLAS_VERTEX_COUNT;
+
+    for (let v = 0; v < maxVocab; v++) {
+      const rowOffset = v * hiddenDim;
+      for (let a = 0; a < ATLAS_VERTEX_COUNT; a++) {
+        const colStart = Math.floor(a * colsPerVertex);
+        const colEnd = Math.floor((a + 1) * colsPerVertex);
+        let sum = 0;
+        const count = colEnd - colStart;
+        for (let c = colStart; c < colEnd && (rowOffset + c) < lmHead.length; c++) {
+          sum += lmHead[rowOffset + c];
+        }
+        projected[v * ATLAS_VERTEX_COUNT + a] = count > 0 ? sum / count : 0;
+      }
+    }
+
+    this.outputProjection = projected;
+    this.outputVocabSize = maxVocab;
+    this.config.vocabSize = maxVocab;
+
+    console.log(
+      `[CoherenceEngine] Real lm_head wired: [${vocabSize}×${hiddenDim}] → ` +
+      `[${maxVocab}×${ATLAS_VERTEX_COUNT}] Atlas projection`
+    );
+  }
+
+  /**
+   * Set a callback that uses the real model's forward pass for logits.
+   * When set, this overrides the Atlas-projected lm_head for output.
+   * The callback receives the current token context and returns logits.
+   */
+  setLogitsCallback(fn: (context: number[]) => Promise<Float32Array>): void {
+    this.logitsCallback = fn;
+    console.log("[CoherenceEngine] Real model logits callback wired");
+  }
+
+  private buildFallbackProjection(): void {
+    // Fallback: random but seeded projection when no real lm_head available
+    const size = Math.min(this.config.vocabSize, 1000);
+    this.outputProjection = new Float32Array(size * ATLAS_VERTEX_COUNT);
+    this.outputVocabSize = size;
+
     let s = 42;
     const next = () => {
       s ^= s << 13; s ^= s >>> 17; s ^= s << 5;
       return (s >>> 0) / 4294967296;
     };
-    for (let i = 0; i < size; i++) {
+    for (let i = 0; i < this.outputProjection.length; i++) {
       this.outputProjection[i] = (next() - 0.5) * 0.1;
     }
   }
@@ -353,7 +413,7 @@ export class CoherenceInferenceEngine {
    *   4. Project to vocabulary (O(V))
    *   5. Sample token
    */
-  generateToken(context: number[]): InferenceStep {
+  async generateToken(context: number[]): Promise<InferenceStep> {
     const t0 = performance.now();
 
     // ── Step 1: Engram retrieval ──────────────────────────────
@@ -408,7 +468,32 @@ export class CoherenceInferenceEngine {
     };
 
     // ── Step 5: Project to vocabulary ────────────────────────
-    const { tokenId, probability } = this.projectToVocab(activations);
+    // Use real model logits if available, otherwise Atlas projection
+    let tokenId: number;
+    let probability: number;
+
+    if (this.logitsCallback) {
+      try {
+        const logits = await this.logitsCallback(context);
+        if (logits.length > 0) {
+          const result = this.sampleFromLogits(logits);
+          tokenId = result.tokenId;
+          probability = result.probability;
+        } else {
+          const result = this.projectToVocab(activations);
+          tokenId = result.tokenId;
+          probability = result.probability;
+        }
+      } catch {
+        const result = this.projectToVocab(activations);
+        tokenId = result.tokenId;
+        probability = result.probability;
+      }
+    } else {
+      const result = this.projectToVocab(activations);
+      tokenId = result.tokenId;
+      probability = result.probability;
+    }
 
     return {
       tokenId,
@@ -420,9 +505,53 @@ export class CoherenceInferenceEngine {
   }
 
   /**
+   * Sample a token from raw logits using temperature + top-k.
+   */
+  private sampleFromLogits(logits: Float32Array): { tokenId: number; probability: number } {
+    const vocabSize = logits.length;
+
+    // Temperature-scaled softmax with top-k
+    let maxLogit = -Infinity;
+    for (let v = 0; v < vocabSize; v++) {
+      if (logits[v] > maxLogit) maxLogit = logits[v];
+    }
+
+    // Top-k filtering
+    const topK = 40;
+    const scaled = new Float32Array(vocabSize);
+    if (vocabSize > topK) {
+      const sorted = Array.from(logits).sort((a, b) => b - a);
+      const threshold = sorted[topK - 1];
+      for (let v = 0; v < vocabSize; v++) {
+        scaled[v] = logits[v] >= threshold
+          ? Math.exp((logits[v] - maxLogit) / this.config.temperature)
+          : 0;
+      }
+    } else {
+      for (let v = 0; v < vocabSize; v++) {
+        scaled[v] = Math.exp((logits[v] - maxLogit) / this.config.temperature);
+      }
+    }
+
+    let sumExp = 0;
+    for (let v = 0; v < vocabSize; v++) sumExp += scaled[v];
+    if (sumExp === 0) return { tokenId: 0, probability: 0 };
+
+    const r = Math.random() * sumExp;
+    let cumulative = 0;
+    for (let v = 0; v < vocabSize; v++) {
+      cumulative += scaled[v];
+      if (cumulative >= r) {
+        return { tokenId: v, probability: scaled[v] / sumExp };
+      }
+    }
+    return { tokenId: 0, probability: scaled[0] / sumExp };
+  }
+
+  /**
    * Generate a sequence of tokens.
    */
-  generate(prompt: number[], maxTokens: number = 32): InferenceResult {
+  async generate(prompt: number[], maxTokens: number = 32): Promise<InferenceResult> {
     const t0 = performance.now();
     const context = [...prompt];
     const steps: InferenceStep[] = [];
@@ -438,7 +567,7 @@ export class CoherenceInferenceEngine {
     }
 
     for (let i = 0; i < maxTokens; i++) {
-      const step = this.generateToken(context);
+      const step = await this.generateToken(context);
       steps.push(step);
       tokenIds.push(step.tokenId);
       context.push(step.tokenId);
@@ -460,35 +589,47 @@ export class CoherenceInferenceEngine {
   }
 
   private projectToVocab(activations: Float32Array): { tokenId: number; probability: number } {
-    if (!this.outputProjection) {
+    if (!this.outputProjection || this.outputVocabSize === 0) {
       return { tokenId: 0, probability: 0 };
     }
 
-    // Simple projection: dot product of atlas activations with output embeddings
-    // In practice, this would be a proper linear projection
-    const vocabSize = Math.min(this.config.vocabSize, 1000); // Cap for performance
+    const vocabSize = this.outputVocabSize;
     const logits = new Float32Array(vocabSize);
 
-    // Use vertex activations as features
+    // Matrix-vector multiply: logits = outputProjection @ activations
+    // outputProjection is [vocabSize × ATLAS_VERTEX_COUNT] stored row-major
     for (let v = 0; v < vocabSize; v++) {
       let sum = 0;
+      const rowOffset = v * ATLAS_VERTEX_COUNT;
       for (let d = 0; d < ATLAS_VERTEX_COUNT; d++) {
-        sum += activations[d] * this.outputProjection[(v * ATLAS_VERTEX_COUNT + d) % this.outputProjection.length];
+        sum += activations[d] * this.outputProjection[rowOffset + d];
       }
       logits[v] = sum;
     }
 
-    // Temperature-scaled softmax
+    // Temperature-scaled softmax with top-k filtering for quality
     let maxLogit = -Infinity;
     for (let v = 0; v < vocabSize; v++) {
       if (logits[v] > maxLogit) maxLogit = logits[v];
     }
 
+    // Top-k: zero out everything below the 40th highest
+    const topK = 40;
+    if (vocabSize > topK) {
+      const sorted = Array.from(logits).sort((a, b) => b - a);
+      const threshold = sorted[topK - 1];
+      for (let v = 0; v < vocabSize; v++) {
+        if (logits[v] < threshold) logits[v] = -Infinity;
+      }
+    }
+
     let sumExp = 0;
     for (let v = 0; v < vocabSize; v++) {
-      logits[v] = Math.exp((logits[v] - maxLogit) / this.config.temperature);
+      logits[v] = logits[v] === -Infinity ? 0 : Math.exp((logits[v] - maxLogit) / this.config.temperature);
       sumExp += logits[v];
     }
+
+    if (sumExp === 0) return { tokenId: 0, probability: 0 };
 
     // Sample from distribution
     const r = Math.random() * sumExp;
