@@ -534,7 +534,7 @@ function PrinciplesContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; 
 
         <div className="mt-6 space-y-5">
           <Principle n="01" title="Your data stays with you" P={P} fontDisplay={fontDisplay}>
-            All processing happens within your boundary. Your information is never sent anywhere without your explicit, informed choice. There is no background data collection, no silent telemetry, no analytics you did not ask for.
+            All processing happens within your boundary. Your information is never sent anywhere without your explicit, informed choice. There is no background data collection, no silent telemetry, no analytics you did not ask for. In a world where surveillance has become the default business model, Hologram takes the opposite position: your data belongs to you, and no one else gets to decide what happens with it.
           </Principle>
 
           <Principle n="02" title="No fabrication, ever" P={P} fontDisplay={fontDisplay}>
@@ -572,16 +572,19 @@ function PrinciplesContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; 
           Under the hood, Hologram is built on a mathematical framework called the Universal Object Reference. Every piece of information you create, every file, every note, every conversation, gets a unique, permanent identity based on its actual content. This means your data is always verifiable, always portable, and never locked into one platform.
         </p>
         <p>
+          Hologram is a portable, interoperable substrate: a virtual operating system that works equally well on edge devices, mobile, desktop, and cloud. It is fully agnostic. Whether you are using traditional web services, decentralised protocols and chains, AI systems, or anything else that emerges next, Hologram unifies them into a single coherent experience. You do not have to choose between ecosystems. They all work together, with your identity and your data remaining sovereign throughout.
+        </p>
+        <p>
           Your identity works the same way. Instead of usernames and passwords scattered across dozens of services, you have one sovereign identity that you control. You choose what to share, with whom, and for how long. You can prove things about yourself without revealing the underlying information. And you can revoke access at any time.
         </p>
       </Section>
 
       <Section title="AI that works for you" P={P} fontDisplay={fontDisplay}>
         <p>
-          Hologram includes AI capabilities, but they work fundamentally differently from what you may be used to. The AI here is governed by the same eight rules above. It cannot fabricate information. It cannot access your data without permission. It cannot take autonomous actions beyond its trust level.
+          Hologram includes AI capabilities through <strong style={{ color: P.heading }}>Lumen AI</strong>, the native co-pilot built directly into your operating environment. Unlike external AI assistants, Lumen is governed by the same eight rules above. It cannot fabricate information. It cannot access your data without permission. It cannot take autonomous actions beyond its trust level.
         </p>
         <p>
-          Most importantly, the AI optimises for your coherence, not for engagement. It is not trying to keep you scrolling or clicking. It is trying to help you think clearly, work effectively, and stay aligned with what actually matters to you. When it does not have a good answer, it stays silent rather than guessing.
+          Most importantly, Lumen optimises for your coherence, not for engagement. It is not trying to keep you scrolling or clicking. It is trying to help you think clearly, work effectively, and stay aligned with what actually matters to you. When it does not have a good answer, it stays silent rather than guessing.
         </p>
       </Section>
 
