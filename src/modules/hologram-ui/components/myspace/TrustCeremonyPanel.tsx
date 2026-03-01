@@ -11,12 +11,13 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import {
   ArrowLeft, Search, UserPlus, Users, Shield, ShieldCheck,
   Check, X, Clock, Fingerprint, Loader2, Link2, Sparkles,
-  Star,
+  Star, GitGraph,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { KP } from "@/modules/hologram-os/kernel-palette";
+import TrustGraphVisualization from "./TrustGraphVisualization";
 
 interface TrustCeremonyPanelProps {
   onBack: () => void;
@@ -47,10 +48,10 @@ interface TrustConnection {
   peer_avatar?: string | null;
 }
 
-type Tab = "connections" | "requests" | "search";
+type Tab = "connections" | "requests" | "search" | "graph";
 
 export default function TrustCeremonyPanel({ onBack }: TrustCeremonyPanelProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [tab, setTab] = useState<Tab>("connections");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -291,6 +292,7 @@ export default function TrustCeremonyPanel({ onBack }: TrustCeremonyPanelProps) 
         <div className="flex px-5 gap-1 pb-3">
           {([
             { key: "connections" as Tab, label: "Connected", icon: Users },
+            { key: "graph" as Tab, label: "Graph", icon: GitGraph },
             { key: "requests" as Tab, label: `Requests${requestCount > 0 ? ` (${requestCount})` : ""}`, icon: Clock },
             { key: "search" as Tab, label: "Find", icon: Search },
           ]).map(t => (
@@ -313,6 +315,15 @@ export default function TrustCeremonyPanel({ onBack }: TrustCeremonyPanelProps) 
 
       {/* ── Content ── */}
       <div className="px-5 py-4">
+
+        {/* ═══ GRAPH TAB ═══ */}
+        {tab === "graph" && (
+          <TrustGraphVisualization
+            connections={connections}
+            userName={profile?.displayName}
+            userGlyph={profile?.uorGlyph}
+          />
+        )}
 
         {/* ═══ SEARCH TAB ═══ */}
         {tab === "search" && (
