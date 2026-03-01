@@ -322,35 +322,7 @@ export default function DesktopOsSidebar({
           </IconTooltip>
         )}
 
-        {/* Memory */}
-        <IconTooltip label="Memory" show={!expanded}>
-          <button
-            onClick={() => collapseAndDo(() => onOpenMemory?.())}
-            onMouseEnter={() => onHoverPanel?.("memory")}
-            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
-            }`}
-            style={{ color: "var(--sb-text)", background: "transparent" }}
-          >
-            <Database className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
-            {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Memory</span>}
-          </button>
-        </IconTooltip>
-
-        {/* Compute */}
-        <IconTooltip label="Compute" show={!expanded}>
-          <button
-            onClick={() => collapseAndDo(() => onOpenCompute?.())}
-            onMouseEnter={() => onHoverPanel?.("compute")}
-            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
-            }`}
-            style={{ color: "var(--sb-text)", background: "transparent" }}
-          >
-            <Cpu className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
-            {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Compute</span>}
-          </button>
-        </IconTooltip>
+        {/* Divider before tools section */}
 
         {/* Terminal */}
         {onOpenTerminal && (
@@ -484,6 +456,32 @@ export default function DesktopOsSidebar({
           >
             <Inbox className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
             {expanded && <span className="text-[13px] font-light tracking-wide">Inbox</span>}
+          </button>
+        </IconTooltip>
+        <IconTooltip label="Memory" show={!expanded}>
+          <button
+            onClick={() => collapseAndDo(() => onOpenMemory?.())}
+            onMouseEnter={() => onHoverPanel?.("memory")}
+            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
+            }`}
+            style={{ color: "var(--sb-text)" }}
+          >
+            <Database className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+            {expanded && <span className="text-[13px] font-light tracking-wide">Storage</span>}
+          </button>
+        </IconTooltip>
+        <IconTooltip label="Compute" show={!expanded}>
+          <button
+            onClick={() => collapseAndDo(() => onOpenCompute?.())}
+            onMouseEnter={() => onHoverPanel?.("compute")}
+            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
+            }`}
+            style={{ color: "var(--sb-text)" }}
+          >
+            <Cpu className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+            {expanded && <span className="text-[13px] font-light tracking-wide">Compute</span>}
           </button>
         </IconTooltip>
         <IconTooltip label="Settings" show={!expanded}>
