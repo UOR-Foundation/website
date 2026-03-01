@@ -1510,7 +1510,7 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
           borderBottom: `1px solid ${C.border}`,
           WebkitAppRegion: "drag",
         } as React.CSSProperties}
-      >
+        >
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 mr-3">
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#f14c4c" }} onClick={onClose} />
@@ -1520,6 +1520,23 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
           <span className="text-[12px]" style={{ color: C.textMuted }}>
             {activeFile ? `${activeFile.name} — ` : ""}Hologram Code
           </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              if (window.confirm("Reset workspace to default files? All changes will be lost.")) {
+                qfs.resetWorkspace();
+                setOpenFiles([]);
+                setActiveFilePath(null);
+              }
+            }}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] hover:opacity-80 transition-opacity"
+            style={{ color: C.textMuted, background: "transparent", border: `1px solid ${C.border}` }}
+            title="Reset Workspace"
+          >
+            <RotateCcw size={12} />
+            Reset Workspace
+          </button>
         </div>
       </div>
 
