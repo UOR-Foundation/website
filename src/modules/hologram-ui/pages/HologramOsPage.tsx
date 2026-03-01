@@ -439,7 +439,7 @@ export default function HologramOsPage() {
           <div
             className="absolute left-1/2 -translate-x-1/2 z-[400]"
             style={{
-              bottom: "clamp(180px, 22vh, 280px)",
+              bottom: "clamp(100px, 14vh, 180px)",
               opacity: isFocus ? 0 : 1,
               pointerEvents: isFocus ? "none" : "auto",
               transition: "opacity 300ms",
