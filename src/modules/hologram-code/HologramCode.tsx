@@ -30,7 +30,7 @@ import {
   Terminal as TerminalIcon, PanelBottom, Bell,
   FileText, FileCode, FileJson, FileType, Image as ImageIcon,
   Folder, FolderOpen, SplitSquareVertical, Play, RotateCcw,
-  Command, HardDrive,
+  Command, HardDrive, FilePlus, FolderPlus, Trash2,
 } from "lucide-react";
 import { useQFs, type FSNode } from "./useQFs";
 import { useMonacoLsp } from "./useMonacoLsp";
@@ -162,6 +162,139 @@ const ActivityBar = memo(function ActivityBar({
   );
 });
 
+// ── Context Menu ────────────────────────────────────────────────────────────
+
+interface ContextMenuState {
+  x: number;
+  y: number;
+  targetPath: string;
+  targetIsFolder: boolean;
+}
+
+const ExplorerContextMenu = memo(function ExplorerContextMenu({
+  menu,
+  onNewFile,
+  onNewFolder,
+  onDelete,
+  onClose,
+}: {
+  menu: ContextMenuState;
+  onNewFile: (parentPath: string) => void;
+  onNewFolder: (parentPath: string) => void;
+  onDelete: (path: string) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [onClose]);
+
+  const parentPath = menu.targetIsFolder ? menu.targetPath : menu.targetPath.replace(/\/[^/]+$/, "") || "/";
+
+  const items = [
+    { label: "New File…", icon: FilePlus, action: () => { onNewFile(parentPath); onClose(); } },
+    { label: "New Folder…", icon: FolderPlus, action: () => { onNewFolder(parentPath); onClose(); } },
+    null, // separator
+    { label: "Delete", icon: Trash2, action: () => { onDelete(menu.targetPath); onClose(); }, danger: true },
+  ];
+
+  return (
+    <div
+      ref={ref}
+      className="fixed z-[9999] min-w-[160px] rounded-md py-1 shadow-xl"
+      style={{
+        left: menu.x,
+        top: menu.y,
+        background: "#2d2d30",
+        border: `1px solid ${C.border}`,
+      }}
+    >
+      {items.map((item, i) =>
+        item === null ? (
+          <div key={`sep-${i}`} className="my-1 mx-2" style={{ height: 1, background: C.border }} />
+        ) : (
+          <button
+            key={item.label}
+            className="w-full flex items-center gap-2 px-3 py-[5px] text-[13px] text-left transition-colors"
+            style={{ color: (item as any).danger ? C.error : C.text }}
+            onClick={item.action}
+            onMouseEnter={(e) => (e.currentTarget.style.background = C.listHover)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            <item.icon size={14} />
+            {item.label}
+          </button>
+        ),
+      )}
+    </div>
+  );
+});
+
+// ── Inline Name Input ──────────────────────────────────────────────────────
+
+const InlineNameInput = memo(function InlineNameInput({
+  depth,
+  type,
+  onSubmit,
+  onCancel,
+}: {
+  depth: number;
+  type: "file" | "folder";
+  onSubmit: (name: string) => void;
+  onCancel: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [value, setValue] = useState("");
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const commit = () => {
+    const name = value.trim();
+    if (name) onSubmit(name);
+    else onCancel();
+  };
+
+  return (
+    <div
+      className="flex items-center gap-1 text-[13px] leading-[22px]"
+      style={{ paddingLeft: depth * 12 + 8, paddingRight: 8 }}
+    >
+      <span style={{ width: 14 }} />
+      {type === "folder" ? (
+        <Folder size={14} style={{ color: "#dcb67a" }} />
+      ) : (
+        <FileText size={14} style={{ color: C.textMuted }} />
+      )}
+      <input
+        ref={inputRef}
+        className="flex-1 ml-1 bg-transparent outline-none text-[13px]"
+        style={{
+          color: C.text,
+          border: `1px solid ${C.accent}`,
+          borderRadius: 2,
+          padding: "0 4px",
+          lineHeight: "20px",
+        }}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") onCancel();
+        }}
+        onBlur={commit}
+        placeholder={type === "folder" ? "folder name" : "filename.ext"}
+      />
+    </div>
+  );
+});
+
 // ── File Explorer ───────────────────────────────────────────────────────────
 
 const FileTreeNode = memo(function FileTreeNode({
@@ -169,15 +302,30 @@ const FileTreeNode = memo(function FileTreeNode({
   depth,
   onSelect,
   activeFile,
+  onContextMenu,
+  inlineCreate,
+  onInlineSubmit,
+  onInlineCancel,
 }: {
   node: FSNode;
   depth: number;
   onSelect: (node: FSNode) => void;
   activeFile: string | null;
+  onContextMenu: (e: React.MouseEvent, node: FSNode) => void;
+  inlineCreate: { parentPath: string; type: "file" | "folder" } | null;
+  onInlineSubmit: (name: string) => void;
+  onInlineCancel: () => void;
 }) {
   const [expanded, setExpanded] = useState(depth === 0);
   const isFolder = node.type === "folder";
   const isActive = activeFile === node.path;
+
+  // Auto-expand folder when creating inside it
+  useEffect(() => {
+    if (inlineCreate && isFolder && inlineCreate.parentPath === node.path) {
+      setExpanded(true);
+    }
+  }, [inlineCreate, isFolder, node.path]);
 
   return (
     <div>
@@ -192,6 +340,10 @@ const FileTreeNode = memo(function FileTreeNode({
         onClick={() => {
           if (isFolder) setExpanded(!expanded);
           else onSelect(node);
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onContextMenu(e, node);
         }}
         onMouseEnter={(e) => {
           if (!isActive) e.currentTarget.style.background = C.listHover;
@@ -212,15 +364,31 @@ const FileTreeNode = memo(function FileTreeNode({
         )}
         <span className="ml-1 truncate">{node.name}</span>
       </button>
-      {isFolder && expanded && node.children?.map((child) => (
-        <FileTreeNode
-          key={child.path}
-          node={child}
-          depth={depth + 1}
-          onSelect={onSelect}
-          activeFile={activeFile}
-        />
-      ))}
+      {isFolder && expanded && (
+        <>
+          {inlineCreate && inlineCreate.parentPath === node.path && (
+            <InlineNameInput
+              depth={depth + 1}
+              type={inlineCreate.type}
+              onSubmit={onInlineSubmit}
+              onCancel={onInlineCancel}
+            />
+          )}
+          {node.children?.map((child) => (
+            <FileTreeNode
+              key={child.path}
+              node={child}
+              depth={depth + 1}
+              onSelect={onSelect}
+              activeFile={activeFile}
+              onContextMenu={onContextMenu}
+              inlineCreate={inlineCreate}
+              onInlineSubmit={onInlineSubmit}
+              onInlineCancel={onInlineCancel}
+            />
+          ))}
+        </>
+      )}
     </div>
   );
 });
@@ -714,6 +882,42 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
   const editorRef = useRef<MonacoEditor>(null);
   const monacoInstanceRef = useRef<any>(null);
 
+  // ── Explorer context menu + inline creation state ───────────────────────
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [inlineCreate, setInlineCreate] = useState<{ parentPath: string; type: "file" | "folder" } | null>(null);
+
+  const handleExplorerContextMenu = useCallback((e: React.MouseEvent, node: FSNode) => {
+    setContextMenu({ x: e.clientX, y: e.clientY, targetPath: node.path, targetIsFolder: node.type === "folder" });
+  }, []);
+
+  const handleNewFile = useCallback((parentPath: string) => {
+    setInlineCreate({ parentPath, type: "file" });
+  }, []);
+
+  const handleNewFolder = useCallback((parentPath: string) => {
+    setInlineCreate({ parentPath, type: "folder" });
+  }, []);
+
+  const handleInlineSubmit = useCallback((name: string) => {
+    if (!inlineCreate) return;
+    if (inlineCreate.type === "folder") {
+      qfs.mkdir(inlineCreate.parentPath, name);
+    } else {
+      qfs.createFile(inlineCreate.parentPath, name, "");
+    }
+    setInlineCreate(null);
+  }, [inlineCreate, qfs]);
+
+  const handleInlineCancel = useCallback(() => setInlineCreate(null), []);
+
+  const handleDeleteNode = useCallback((path: string) => {
+    qfs.rm(path);
+    setOpenFiles(prev => prev.filter(f => !f.path.startsWith(path)));
+    if (activeFilePath?.startsWith(path)) {
+      setActiveFilePath(null);
+    }
+  }, [qfs, activeFilePath]);
+
   // ── LSP: Monaco TypeScript worker + AI completions ─────────────────────
   useMonacoLsp(monacoInstanceRef, qfs);
 
@@ -921,13 +1125,42 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
     switch (activityItem) {
       case "explorer":
         return (
-          <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+          <div
+            className="flex-1 overflow-y-auto"
+            style={{ scrollbarWidth: "thin" }}
+            onContextMenu={(e) => {
+              // Right-click on empty space → create at root
+              if (e.target === e.currentTarget || (e.target as HTMLElement).closest("[data-explorer-bg]")) {
+                e.preventDefault();
+                setContextMenu({ x: e.clientX, y: e.clientY, targetPath: "/", targetIsFolder: true });
+              }
+            }}
+          >
             <div
               className="flex items-center justify-between px-3 py-2 text-[11px] uppercase tracking-wider select-none"
               style={{ color: C.textMuted }}
             >
               <span>Explorer</span>
-              <MoreHorizontal size={14} style={{ color: C.textDim }} />
+              <div className="flex items-center gap-1">
+                <button
+                  title="New File"
+                  onClick={() => handleNewFile("/")}
+                  className="p-0.5 rounded transition-colors"
+                  onMouseEnter={(e) => (e.currentTarget.style.background = C.listHover)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  <FilePlus size={14} style={{ color: C.textDim }} />
+                </button>
+                <button
+                  title="New Folder"
+                  onClick={() => handleNewFolder("/")}
+                  className="p-0.5 rounded transition-colors"
+                  onMouseEnter={(e) => (e.currentTarget.style.background = C.listHover)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  <FolderPlus size={14} style={{ color: C.textDim }} />
+                </button>
+              </div>
             </div>
             <div
               className="flex items-center gap-1 px-3 py-1 text-[11px] uppercase tracking-wider font-semibold select-none"
@@ -936,6 +1169,14 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
               <ChevronDown size={12} />
               <span>hologram-workspace</span>
             </div>
+            {inlineCreate && inlineCreate.parentPath === "/" && (
+              <InlineNameInput
+                depth={1}
+                type={inlineCreate.type}
+                onSubmit={handleInlineSubmit}
+                onCancel={handleInlineCancel}
+              />
+            )}
             {qfs.tree.map((node) => (
               <FileTreeNode
                 key={node.path}
@@ -943,6 +1184,10 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
                 depth={1}
                 onSelect={openFile}
                 activeFile={activeFilePath}
+                onContextMenu={handleExplorerContextMenu}
+                inlineCreate={inlineCreate}
+                onInlineSubmit={handleInlineSubmit}
+                onInlineCancel={handleInlineCancel}
               />
             ))}
           </div>
@@ -1130,6 +1375,17 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
         onClose={() => setPaletteOpen(false)}
         onAction={handleCommand}
       />
+
+      {/* ── Explorer Context Menu ─────────────────────────────────── */}
+      {contextMenu && (
+        <ExplorerContextMenu
+          menu={contextMenu}
+          onNewFile={handleNewFile}
+          onNewFolder={handleNewFolder}
+          onDelete={handleDeleteNode}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   );
 }
