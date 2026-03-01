@@ -57,3 +57,67 @@ export type {
   CentroidRetrievalResult,
   CentroidCacheStats,
 } from "./hologram-matmul";
+
+// Atlas Model Projection — weight decomposition into Atlas coordinates
+export {
+  projectModel,
+  generateProjectionReport,
+  LLAMA_31_8B_MANIFEST,
+  mirrorVertex,
+  assignVertex,
+  quantizeToR8,
+  dequantizeFromR8,
+  detectMirrorPattern,
+  synthesizeWeights,
+} from "./atlas-model-projector";
+export type {
+  ProjectableArchitecture,
+  ModelManifest,
+  AtlasWeightBlock,
+  WeightMatrixType,
+  MirrorPatternKind,
+  AtlasModelDecomposition,
+} from "./atlas-model-projector";
+
+// Engram Conditional Memory — O(1) N-gram lookup via Atlas vertex space
+export {
+  EngramCache,
+  DEFAULT_ENGRAM_CONFIG,
+  multiHeadHash,
+  compressTokenId,
+} from "./engram-cache";
+export type {
+  NgramKey,
+  EngramEntry,
+  EngramConfig,
+  EngramRetrievalResult,
+  EngramStats,
+} from "./engram-cache";
+
+// Coherence Inference Engine — H-score gradient navigation
+export {
+  CoherenceInferenceEngine,
+  DEFAULT_INFERENCE_CONFIG,
+  computeHScore,
+  computeGradient,
+  classifyZone,
+} from "./coherence-inference";
+export type {
+  CoherenceState,
+  CoherenceInferenceConfig,
+  InferenceStep,
+  InferenceResult,
+} from "./coherence-inference";
+
+// Full Projection Pipeline — end-to-end model → Atlas → inference
+export {
+  AtlasProjectionPipeline,
+  DEFAULT_PIPELINE_CONFIG,
+  quickProject,
+  MODEL_MANIFESTS,
+} from "./projection-pipeline";
+export type {
+  ProjectionPipelineConfig,
+  PipelineStatus,
+  PipelineReport,
+} from "./projection-pipeline";
