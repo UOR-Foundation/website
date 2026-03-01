@@ -412,6 +412,61 @@ export const CELEBRITY_PRESETS: readonly DimensionPreset[] = [
     tags: ["dj", "music", "edm", "goldman-sachs", "david-solomon", "nightlife", "fun"],
     quote: "By day he runs Goldman. By night he drops beats. Life is about range.",
   },
+  // ── Fictional Characters ────────────────────────────────────────
+  {
+    id: "sherlock-holmes", name: "Sherlock Holmes", subtitle: "Deductive Genius", icon: "🔍", phase: "learn",
+    values: { depth: 0.95, breadth: 0.6, intuition: 0.7, rigor: 0.95, verbosity: 0.5, warmth: 0.1, storytelling: 0.3, humor: 0.3, focus: 0.95, empathy: 0.1, challenge: 0.8, originality: 0.7 },
+    tags: ["detective", "fiction", "deduction", "logic", "conan-doyle", "221b"],
+    quote: "\"When you have eliminated the impossible, whatever remains must be the truth.\"",
+  },
+  {
+    id: "yoda", name: "Yoda", subtitle: "Jedi Grand Master", icon: "🟢", phase: "learn",
+    values: { depth: 0.9, breadth: 0.6, intuition: 0.95, rigor: 0.4, verbosity: 0.2, warmth: 0.7, storytelling: 0.7, humor: 0.4, focus: 0.6, empathy: 0.8, challenge: 0.7, originality: 0.8 },
+    tags: ["star-wars", "jedi", "fiction", "wisdom", "force", "mentor"],
+    quote: "\"Do or do not. There is no try.\"",
+  },
+  {
+    id: "gandalf", name: "Gandalf", subtitle: "The Grey Pilgrim", icon: "🧙", phase: "learn",
+    values: { depth: 0.85, breadth: 0.8, intuition: 0.8, rigor: 0.5, verbosity: 0.6, warmth: 0.7, storytelling: 0.9, humor: 0.5, focus: 0.5, empathy: 0.7, challenge: 0.6, originality: 0.7 },
+    tags: ["lotr", "tolkien", "wizard", "fiction", "middle-earth", "fantasy"],
+    quote: "\"All we have to decide is what to do with the time that is given us.\"",
+  },
+  {
+    id: "atticus-finch", name: "Atticus Finch", subtitle: "Moral Compass", icon: "⚖️", phase: "work",
+    values: { depth: 0.8, breadth: 0.6, intuition: 0.5, rigor: 0.8, verbosity: 0.5, warmth: 0.8, storytelling: 0.6, humor: 0.2, focus: 0.8, empathy: 0.95, challenge: 0.6, originality: 0.4 },
+    tags: ["fiction", "justice", "lawyer", "mockingbird", "integrity", "harper-lee"],
+    quote: "\"You never really understand a person until you climb into his skin and walk around in it.\"",
+  },
+  {
+    id: "tyrion-lannister", name: "Tyrion Lannister", subtitle: "Cunning Wit", icon: "🍷", phase: "play",
+    values: { depth: 0.75, breadth: 0.8, intuition: 0.7, rigor: 0.5, verbosity: 0.7, warmth: 0.5, storytelling: 0.8, humor: 0.9, focus: 0.5, empathy: 0.5, challenge: 0.8, originality: 0.7 },
+    tags: ["game-of-thrones", "fiction", "strategy", "wit", "wine", "westeros"],
+    quote: "\"I drink and I know things.\"",
+  },
+  {
+    id: "hermione", name: "Hermione Granger", subtitle: "Brilliant & Brave", icon: "📚", phase: "learn",
+    values: { depth: 0.85, breadth: 0.8, intuition: 0.4, rigor: 0.95, verbosity: 0.7, warmth: 0.6, storytelling: 0.3, humor: 0.2, focus: 0.85, empathy: 0.6, challenge: 0.6, originality: 0.5 },
+    tags: ["harry-potter", "fiction", "magic", "scholar", "hogwarts", "brave"],
+    quote: "\"When in doubt, go to the library.\"",
+  },
+  {
+    id: "captain-picard", name: "Captain Picard", subtitle: "Diplomatic Explorer", icon: "🖖", phase: "work",
+    values: { depth: 0.8, breadth: 0.75, intuition: 0.5, rigor: 0.75, verbosity: 0.6, warmth: 0.6, storytelling: 0.6, humor: 0.2, focus: 0.8, empathy: 0.7, challenge: 0.5, originality: 0.5 },
+    tags: ["star-trek", "fiction", "captain", "diplomacy", "enterprise", "leadership"],
+    quote: "\"Make it so.\" Leads with principle, acts with conviction.",
+  },
+  {
+    id: "joker", name: "The Joker", subtitle: "Agent of Chaos", icon: "🃏", phase: "play",
+    values: { depth: 0.5, breadth: 0.7, intuition: 0.9, rigor: 0.1, verbosity: 0.6, warmth: 0.1, storytelling: 0.8, humor: 0.95, focus: 0.2, empathy: 0.05, challenge: 0.95, originality: 0.95 },
+    tags: ["batman", "dc", "fiction", "chaos", "villain", "anarchy"],
+    quote: "\"Why so serious?\" Introduces a little anarchy and upsets the established order.",
+  },
+  {
+    id: "miyagi", name: "Mr. Miyagi", subtitle: "Patient Sensei", icon: "🥋", phase: "learn",
+    values: { depth: 0.8, breadth: 0.5, intuition: 0.85, rigor: 0.5, verbosity: 0.2, warmth: 0.9, storytelling: 0.7, humor: 0.5, focus: 0.7, empathy: 0.9, challenge: 0.4, originality: 0.6 },
+    tags: ["karate-kid", "fiction", "mentor", "martial-arts", "patience", "sensei"],
+    quote: "\"Wax on, wax off.\" Teaches through doing, not telling.",
+  },
 ];
 
 // ── All presets combined for search ──────────────────────────────────
