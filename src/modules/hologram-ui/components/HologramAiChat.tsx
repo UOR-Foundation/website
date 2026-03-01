@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { TriadicPhase, CreatorStage } from "@/modules/hologram-ui/sovereign-creator";
 import {
   X, Send, Loader2, Cpu, Sparkles, MessageSquare,
-  Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap, User, Lock,
+  Plus, Trash2, ChevronLeft, ChevronDown, Check, Cloud, Zap, User, Lock, Shield,
   Eye, EyeOff, BookmarkCheck, Settings, History, BookOpen, Link2, Camera, Paperclip, ImagePlus,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -64,6 +64,7 @@ import {
   streamOptimized,
 } from "@/modules/ring-core/inference-accelerator";
 import { StreamingCurvatureMonitor } from "@/modules/ring-core/symbolica-enhancements";
+import { projectConversationForLLM, type ProfileContext } from "@/modules/hologram-ui/q-disclosure-projector";
 
 // ── Cloud AI Models (instant, no download) ─────────────────────────────────
 const CLOUD_MODELS = [
@@ -83,6 +84,7 @@ import { extractTopicTags } from "@/modules/hologram-ui/engine/extractTopicTags"
 import { useScreenContext } from "@/modules/hologram-ui/hooks/useScreenContext";
 import { useObserverCompanion } from "@/modules/hologram-ui/hooks/useObserverCompanion";
 import { useWhisperTranscription } from "@/modules/hologram-ui/hooks/useWhisperTranscription";
+import { useAuth } from "@/hooks/use-auth";
 import { Mic, MicOff, Brain } from "lucide-react";
 import SavedResponsesPanel from "@/modules/hologram-ui/components/SavedResponsesPanel";
 import { sf } from "@/modules/hologram-ui/utils/scaledFontSize";
@@ -189,7 +191,10 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     sessionSNR: null,
   });
 
-  // ── Voice-to-text (Whisper) ──────────────────────────────────────────
+  // ── QDisclosure: Privacy-preserving LLM context ──────────────────────
+  const { profile: authProfile, user: authUser } = useAuth();
+
+
   const whisper = useWhisperTranscription({
     onTranscript: useCallback((text: string) => {
       setInput((prev) => {
@@ -648,6 +653,36 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       }
 
       const doStream = async (extraMessages: Array<{role: string; content: string}> = [], scaffoldPrompt?: string, curvatureMonitor?: StreamingCurvatureMonitor): Promise<string> => {
+        // ── QDisclosure Projection: redact PII before sending to LLM ──
+        const rawMessages = [
+          ...messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content })),
+          { role: "user", content: text },
+          ...extraMessages,
+        ];
+
+        const profileCtx: ProfileContext = {
+          displayName: authProfile?.displayName,
+          email: authUser?.email,
+          handle: authProfile?.handle,
+          canonicalId: authProfile?.uorCanonicalId,
+          cid: authProfile?.uorCid,
+          ipv6: authProfile?.uorIpv6,
+          glyph: authProfile?.uorGlyph,
+          ceremonyCid: authProfile?.ceremonyCid,
+          threeWordName: authProfile?.threeWordName,
+          bio: authProfile?.bio,
+        };
+
+        const disclosure = projectConversationForLLM(
+          rawMessages,
+          authProfile?.privacyRules ?? null,
+          profileCtx,
+        );
+
+        if (disclosure.isProjected && disclosure.totalRedactions > 0) {
+          console.debug(`[QDisclosure] Projected ${disclosure.totalRedactions} redaction(s) before LLM`);
+        }
+
         const resp = await fetch(STREAM_URL, {
           method: "POST",
           headers: {
@@ -655,11 +690,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            messages: [
-              ...messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content })),
-              { role: "user", content: text },
-              ...extraMessages,
-            ],
+            messages: disclosure.projectedMessages,
             model: selectedCloudModel,
             personaId: selectedPersona.id,
             skillId,
@@ -669,6 +700,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             observerBriefing: privateSession ? undefined : (observer.promptText || undefined),
             conversationContext: privateSession ? undefined : (history.getConversationContext() || undefined),
             fusionContext: fusionContextBlock || undefined,
+            disclosureContext: disclosure.disclosureContext || undefined,
           }),
         });
 
@@ -1298,6 +1330,24 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             );
           })()}
           </AnimatePresence>
+
+          {/* ── QDisclosure Active Indicator ────────────────────── */}
+          {authProfile?.privacyRules && Object.values(authProfile.privacyRules).some(v => v === false) && !privateSession && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center gap-2 px-3 py-1.5 mb-1.5 rounded-lg"
+              style={{
+                background: "hsla(152, 30%, 15%, 0.25)",
+                border: "1px solid hsla(152, 40%, 40%, 0.12)",
+              }}
+            >
+              <Shield className="w-3 h-3 shrink-0" style={{ color: "hsl(152, 44%, 50%)" }} />
+              <span className="text-[11px] tracking-wide" style={{ color: "hsl(152, 30%, 60%)", fontFamily: P.font }}>
+                QDisclosure active — {Object.values(authProfile.privacyRules).filter(v => v === false).length} categories protected
+              </span>
+            </motion.div>
+          )}
 
           {/* Context topics removed — less clutter, more focus */}
 
