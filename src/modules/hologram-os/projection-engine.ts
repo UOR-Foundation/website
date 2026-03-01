@@ -1307,8 +1307,9 @@ export class KernelProjector {
     const attentionH = aperture * 0.3;
     const totalContrib = panelH + processH + attentionH || 1;
 
+    const dh = Math.max(-1, Math.min(1, this.gradientEma * 10));
     this.cachedGradient = {
-      dh: Math.max(-1, Math.min(1, this.gradientEma * 10)), // scale to [-1,1]
+      dh,
       amplitude: Math.abs(this.gradientEma * 10),
       phase: breathPhase,
       contributions: {
@@ -1317,6 +1318,9 @@ export class KernelProjector {
         attention: (attentionH / totalContrib) * meanH,
       },
     };
+
+    // Phase 1c: Feed ∂H/∂t into Prescience Engine as temperature signal
+    this.prescience.setCoherenceGradient(dh);
 
     // ── Aperture Wave — continuous wave function ────────────────────────
     this.apertureWavePhase = (this.apertureWavePhase + 0.02 * (1 + Math.abs(this.gradientEma * 5))) % (2 * Math.PI);

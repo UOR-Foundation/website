@@ -101,6 +101,19 @@ const SESSION_DECAY = 0.92;
 /** How much H-score amplifies a transition (1.0 = no amplification) */
 const COHERENCE_AMPLIFIER = 1.5;
 
+/**
+ * Gradient temperature scaling.
+ * ∂H/∂t ∈ [-1, +1] is mapped to a sharpening exponent:
+ *   rising coherence (dh > 0)  → exponent > 1 → sharpen distribution (exploit)
+ *   falling coherence (dh < 0) → exponent < 1 → flatten distribution (explore)
+ *   neutral (dh ≈ 0)           → exponent = 1 → unchanged
+ *
+ * The formula: exponent = e^(GRADIENT_SENSITIVITY * dh)
+ * At GRADIENT_SENSITIVITY=2: dh=+0.5 → e^1 ≈ 2.72 (strong sharpening)
+ *                            dh=-0.5 → e^-1 ≈ 0.37 (strong flattening)
+ */
+const GRADIENT_SENSITIVITY = 2.0;
+
 /** Sequence length to track for pattern detection */
 const SEQUENCE_LENGTH = 8;
 
@@ -122,6 +135,8 @@ export class PrescienceEngine {
   private currentState: string = "none:image";
   private listeners: Set<(hints: PreloadHint[]) => void> = new Set();
   private lastHints: PreloadHint[] = [];
+  /** Current coherence gradient ∂H/∂t — updated by kernel each tick */
+  private coherenceDh: number = 0;
 
   constructor() {
     this.state = this.load();
@@ -205,6 +220,18 @@ export class PrescienceEngine {
     this.emitHints();
   }
 
+  /**
+   * Update the coherence gradient from kernel ticker.
+   * This is the Phase 1c bridge: the kernel's ∂H/∂t continuously
+   * modulates how the engine distributes prediction confidence.
+   *
+   * Rising coherence → sharpen (exploit current path)
+   * Falling coherence → widen (explore alternatives)
+   */
+  setCoherenceGradient(dh: number): void {
+    this.coherenceDh = dh;
+  }
+
   /** Get engine stats for dev tools */
   getStats() {
     const edges = Object.values(this.state.matrix).reduce(
@@ -216,6 +243,10 @@ export class PrescienceEngine {
       currentState: this.currentState,
       sessionPhase: this.getSessionPhase(),
       activeHints: this.lastHints.length,
+      /** Current ∂H/∂t driving explore/exploit balance */
+      coherenceDh: this.coherenceDh,
+      /** Current sharpening exponent: >1 = exploit, <1 = explore */
+      gradientExponent: Math.exp(GRADIENT_SENSITIVITY * this.coherenceDh),
     };
   }
 
@@ -280,6 +311,17 @@ export class PrescienceEngine {
           }
         }
       }
+    }
+
+    // ── Coherence gradient modulation (Phase 1c) ──────────────────
+    // Apply ∂H/∂t as a temperature parameter on the score distribution.
+    // Mathematically: score_adjusted = score^exponent, where
+    //   exponent = e^(GRADIENT_SENSITIVITY × dh)
+    // This is a power-law sharpening/flattening that preserves ordering
+    // but concentrates or disperses probability mass.
+    const exponent = Math.exp(GRADIENT_SENSITIVITY * this.coherenceDh);
+    for (const [key, data] of candidates) {
+      data.score = Math.pow(Math.max(0, Math.min(1, data.score)), exponent);
     }
 
     // Filter and rank
