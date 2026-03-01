@@ -115,6 +115,15 @@ interface ConvergenceChatProps {
   onExpand?: () => void;
 }
 
+// ── Bloom persistence helpers ─────────────────────────────────────────
+const BLOOM_KEY = "lumen:bloom-enabled";
+function getBloomDefault(): boolean {
+  try { const v = localStorage.getItem(BLOOM_KEY); return v === null ? true : v === "true"; } catch { return true; }
+}
+function setBloomPersist(v: boolean) {
+  try { localStorage.setItem(BLOOM_KEY, String(v)); } catch {}
+}
+
 export default function ConvergenceChat({ embedded = false, onClose, onExpand }: ConvergenceChatProps = {}) {
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
   const [input, setInput] = useState("");
@@ -134,6 +143,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   const deckPersonasRef = useRef<{ a: DimensionPreset | null; b: DimensionPreset | null; mix: number }>({ a: null, b: null, mix: 0.5 });
   const [resonancePanelOpen, setResonancePanelOpen] = useState(false);
   const [graphContext, setGraphContext] = useState<GraphContext | null>(null);
+  const [bloomEnabled, setBloomEnabled] = useState(getBloomDefault);
   const lastExchangeTimestampRef = useRef<number>(0);
   const resonanceProfile = loadResonanceProfile();
   const rScore = resonanceProfile.resonanceScore;
@@ -655,6 +665,25 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
           >
             <Brain className="w-3 h-3" strokeWidth={1.5} />
           </button>
+
+          {/* Global Bloom toggle */}
+          <button
+            onClick={() => {
+              const next = !bloomEnabled;
+              setBloomEnabled(next);
+              setBloomPersist(next);
+            }}
+            className="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95"
+            style={{
+              color: bloomEnabled ? "hsla(38, 50%, 60%, 0.7)" : "hsla(38, 15%, 50%, 0.25)",
+              background: bloomEnabled ? "hsla(38, 40%, 50%, 0.08)" : "transparent",
+            }}
+            title={bloomEnabled ? "Disable keyword exploration" : "Enable keyword exploration"}
+          >
+            <Sparkles className="w-3 h-3" strokeWidth={1.5} />
+            <span className="text-[9px] tracking-[0.15em] uppercase" style={{ fontFamily: C.font }}>Bloom</span>
+          </button>
+
           {onExpand && (
             <button
               onClick={onExpand}
@@ -749,6 +778,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
                 key={ex.id}
                 exchange={ex}
                 isActive={idx === exchanges.length - 1 && isConverging}
+                bloomEnabled={bloomEnabled}
                 isRemixSaved={isRemixSaved(ex.id)}
                 onToggleSaveRemix={(exchange) => {
                   if (isRemixSaved(exchange.id)) {

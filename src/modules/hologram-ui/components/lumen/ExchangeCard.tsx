@@ -75,6 +75,8 @@ interface ExchangeCardProps {
   isRemixSaved?: boolean;
   /** Callback to save/unsave this remix */
   onToggleSaveRemix?: (exchange: ExchangeData) => void;
+  /** Global bloom toggle from parent */
+  bloomEnabled?: boolean;
 }
 
 // ── The Eight Guarantees ─────────────────────────────────────────────
@@ -428,8 +430,7 @@ function TrustArc({ score, grade }: { score: number; grade?: string }) {
 }
 
 // ── Main Component ───────────────────────────────────────────────────
-function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onToggleSaveRemix }: ExchangeCardProps) {
-  const [bloomEnabled, setBloomEnabled] = useState(getBloomDefault);
+function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onToggleSaveRemix, bloomEnabled = true }: ExchangeCardProps) {
   const [showTrace, setShowTrace] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showGuarantees, setShowGuarantees] = useState(false);
@@ -793,20 +794,6 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
                       </button>
                     )}
 
-                    {/* Bloom toggle */}
-                    <button
-                      onClick={() => {
-                        const next = !bloomEnabled;
-                        setBloomEnabled(next);
-                        setBloomPersist(next);
-                      }}
-                      className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-300 hover:bg-[hsla(38,20%,25%,0.08)]"
-                      style={{ color: bloomEnabled ? "hsla(38, 50%, 60%, 0.7)" : "hsla(38, 15%, 50%, 0.2)" }}
-                      title={bloomEnabled ? "Disable keyword exploration" : "Enable keyword exploration"}
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      <span className="text-[9px] tracking-[0.12em] uppercase">Bloom</span>
-                    </button>
                   </div>
                 </div>
 
