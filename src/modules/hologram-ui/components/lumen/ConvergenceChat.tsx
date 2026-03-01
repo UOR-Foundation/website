@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles, Maximize2, SlidersHorizontal, Brain } from "lucide-react";
 import ExchangeCard from "./ExchangeCard";
+import { supabase } from "@/integrations/supabase/client";
 import ProModeMixer from "./ProModeMixer";
 import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
 import {
@@ -48,6 +49,7 @@ import {
   getMirrorProtocol,
 } from "@/modules/hologram-ui/engine/reasoning";
 import { observeExchange, compileResonanceDirective, loadResonanceProfile, loadProfileFromCloud } from "@/modules/hologram-ui/engine/resonanceObserver";
+import { loadGraphContext, type GraphContext } from "@/modules/hologram-ui/engine/contextGraphBridge";
 import ResonancePanel from "./ResonancePanel";
 import ConvergencePipeline, { type PipelineState, type PipelineStage } from "./ConvergencePipeline";
 import ShowcasePipeline, { isComplexQuestion } from "./ShowcasePipeline";
@@ -119,7 +121,20 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   const [dimensionValues, setDimensionValues] = useState<DimensionValues>(getDefaultValues());
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const [resonancePanelOpen, setResonancePanelOpen] = useState(false);
+  const [graphContext, setGraphContext] = useState<GraphContext | null>(null);
   const lastExchangeTimestampRef = useRef<number>(0);
+
+  // Load graph context on mount (enrichment from knowledge graph)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const uid = data.session?.user?.id;
+      if (uid) {
+        loadGraphContext(uid).then(setGraphContext).catch(() => {});
+        // Also try to restore resonance profile from cloud
+        loadProfileFromCloud(uid).catch(() => {});
+      }
+    });
+  }, []);
 
   const handleSelectPreset = useCallback((preset: DimensionPreset) => {
     setDimensionValues(preset.values);
@@ -298,6 +313,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
           skillId: "reason",
           triadicMode: triadicMode !== "balanced" ? triadicMode : undefined,
           resonanceContext: compileResonanceDirective(loadResonanceProfile()),
+          graphContext: graphContext?.contextFragment || undefined,
         }),
       });
 
@@ -438,8 +454,16 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
       // ── Cybernetic feedback: observe this exchange (all 4 loops) ──
       const prevUserMsg = exchanges.length > 0 ? exchanges[exchanges.length - 1].thought : undefined;
       const lastTs = lastExchangeTimestampRef.current || undefined;
-      observeExchange(thought, streamedText, prevUserMsg, lastTs);
+      // Get userId for graph projection and cloud sync
+      const { data: sessionData } = await supabase.auth.getSession();
+      const currentUserId = sessionData.session?.user?.id;
+      observeExchange(thought, streamedText, prevUserMsg, lastTs, currentUserId);
       lastExchangeTimestampRef.current = Date.now();
+
+      // Refresh graph context periodically (every 5 exchanges)
+      if (currentUserId && exchanges.length % 5 === 0) {
+        loadGraphContext(currentUserId).then(setGraphContext).catch(() => {});
+      }
 
     } catch (e) {
       updateExchange({

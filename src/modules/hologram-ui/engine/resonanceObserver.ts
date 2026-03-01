@@ -615,6 +615,12 @@ export function observeExchange(
 
   if (profile.observationCount % 10 === 0) {
     selfReflect(profile);
+    // Project to context graph on self-reflection
+    if (userId) {
+      import("./contextGraphBridge").then(({ projectProfileToGraph }) => {
+        projectProfileToGraph(userId, profile).catch(() => {});
+      }).catch(() => {});
+    }
   }
 
   // Persist to L1
