@@ -172,12 +172,12 @@ const MOD_KEY = (() => {
 })();
 
 /* ── Nav items ─────────────────────────────────────────────── */
-interface NavItem { label: string; icon: React.ElementType; path: string }
+interface NavItem { label: string; icon: React.ElementType; path?: string; panel?: string }
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home",     icon: Home,       path: "/hologram-console" },
   { label: "My Space", icon: User,       path: "/your-space" },
-  { label: "Apps",     icon: LayoutGrid, path: "/console/apps" },
+  { label: "Apps",     icon: LayoutGrid, panel: "apps" },
 ];
 
 const COLLAPSED_W = 56;
@@ -197,6 +197,7 @@ interface DesktopOsSidebarProps {
   onOpenCode?: () => void;
   onOpenPackages?: () => void;
   onOpenVault?: () => void;
+  onOpenApps?: () => void;
   onGoHome?: () => void;
   onReplayGuide?: () => void;
   onHoverPanel?: (panel: string) => void;
@@ -217,6 +218,7 @@ export default function DesktopOsSidebar({
   onOpenCode,
   onOpenPackages,
   onOpenVault,
+  onOpenApps,
   onGoHome,
   onReplayGuide,
   onHoverPanel,
@@ -375,19 +377,22 @@ export default function DesktopOsSidebar({
       {/* ── Core Navigation ───────────────────────────────────── */}
       <div className="flex-1 px-2 space-y-0 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "none" }}>
         {NAV_ITEMS.map((item) => {
-          const active = isActive(item.path);
+          const active = item.path ? isActive(item.path) : false;
           return (
-            <IconTooltip key={item.path} label={item.label} show={!expanded}>
+            <IconTooltip key={item.label} label={item.label} show={!expanded}>
               <button
                 onClick={() => collapseAndDo(() => {
-                  if (item.label === "Home" && onGoHome) {
+                  if (item.panel === "apps" && onOpenApps) {
+                    onOpenApps();
+                  } else if (item.label === "Home" && onGoHome) {
                     onGoHome();
                   } else if (item.label === "My Space") {
                     navigate("/ceremony");
-                  } else {
+                  } else if (item.path) {
                     navigate(item.path);
                   }
                 })}
+                onMouseEnter={() => item.panel ? onHoverPanel?.(item.panel) : undefined}
                 className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                   !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
                 } ${active ? "sidebar-nav-active" : ""}`}
