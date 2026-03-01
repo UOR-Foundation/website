@@ -985,11 +985,11 @@ function MitigationMetricsCard({ raw, mitigated }: { raw: Record<string, number>
   if (!m) return null;
 
   const metrics = [
-    { label: "Classical Fidelity", desc: "Bhattacharyya coefficient vs. ideal — 1.0 is perfect",
+    { label: "Classical Fidelity", desc: "Bhattacharyya coefficient vs. ideal (1.0 is perfect)",
       rawVal: m.fidelityRaw.toFixed(4), mitVal: m.fidelityMit.toFixed(4), change: m.fidImprovement },
-    { label: "KL Divergence", desc: "Information loss from ideal — 0 is perfect",
+    { label: "KL Divergence", desc: "Information loss from ideal (0 is perfect)",
       rawVal: m.klRaw.toFixed(4), mitVal: m.klMit.toFixed(4), change: m.klReduction },
-    { label: "Total Variation", desc: "Max distinguishability from ideal — 0 is perfect",
+    { label: "Total Variation", desc: "Max distinguishability from ideal (0 is perfect)",
       rawVal: m.tvdRaw.toFixed(4), mitVal: m.tvdMit.toFixed(4),
       change: m.tvdRaw > 0 ? ((m.tvdRaw - m.tvdMit) / m.tvdRaw) * 100 : 0 },
   ];
@@ -2387,7 +2387,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
             <div className="max-w-5xl mx-auto">
               <h2 className="text-2xl font-serif font-semibold mb-2" style={{ color: t.textStrong }}>Quantum Simulation Lab</h2>
               <p className="text-base mb-6" style={{ color: t.textMuted }}>
-                Experience quantum computing through interactive simulations. Every demo runs on our built-in quantum simulator — no external hardware, no setup, fully reproducible.
+                Experience quantum computing through interactive simulations. Every demo runs on our built in quantum simulator. No external hardware, no setup, fully reproducible.
               </p>
 
               <div className="flex items-center gap-1 mb-6 pb-3" style={{ borderBottom: `1px solid ${t.border}` }}>
@@ -2809,7 +2809,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
               background: precisionMode ? `${t.gold}18` : "transparent",
               border: precisionMode ? `1px solid ${t.gold}33` : "1px solid transparent",
             }}
-            title="Precision Input Projection — per-line editing for large cells"
+            title="Precision Input Projection: per line editing for large cells"
           >
             <Hash size={10} />
             PIP
