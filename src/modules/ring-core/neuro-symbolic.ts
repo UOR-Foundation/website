@@ -207,13 +207,14 @@ export function buildScaffold(query: string, quantum: number = 0): SymbolicScaff
   const termList = termMap.map(t => `${t.term}`).join(", ");
 
   const promptFragment =
-    `\n\n[SYMBOLIC REASONING SCAFFOLD]\n` +
+    `\n\n[REASONING SCAFFOLD]\n` +
     `Key terms: ${termList}\n` +
     `Constraints (${constraints.length}):\n${constraintList}\n` +
-    `\nIMPORTANT: Structure your response so each substantive claim is on its own sentence. ` +
-    `After each factual claim, add a brief source indicator in the format ` +
-    `{source: "description of evidence or reasoning basis"}. ` +
-    `Prioritize accuracy and specificity. If uncertain, state the uncertainty explicitly.\n` +
+    `\nIMPORTANT: Structure your response with clear, well-grounded reasoning. ` +
+    `Each substantive claim should be on its own sentence for clarity. ` +
+    `Prioritize accuracy and specificity. If uncertain, state the uncertainty explicitly. ` +
+    `Do NOT add source markers, brackets, citations, or annotation syntax in your response. ` +
+    `Write naturally and directly for human readers.\n` +
     `[/SCAFFOLD]`;
 
   return {
@@ -334,10 +335,6 @@ function gradeSentence(
 ): { grade: EpistemicGrade; source: string; curv: number } {
   const lower = sentence.toLowerCase();
 
-  // Check for explicit source markers from LLM
-  const sourceMatch = sentence.match(/\{source:\s*"([^"]+)"\}/);
-  const hasSource = !!sourceMatch;
-
   // Check term coverage — how many scaffold terms appear
   const termsPresent = scaffold.termMap.filter(t => lower.includes(t.term));
   const termCoverage = scaffold.termMap.length > 0
@@ -362,19 +359,22 @@ function gradeSentence(
   const hashB = sentence.length & 0xff;
   const rawCurv = Math.abs(hashA - hashB) / 255;
 
-  // Grade assignment
-  if (hasSource && constraintCoverage > 0.3 && termCoverage > 0.3) {
+  // Check for hedging/uncertainty markers (epistemic signals without inline brackets)
+  const hasEpistemicSignal = /\b(because|since|according to|research shows|studies suggest|evidence indicates|historically|in practice)\b/i.test(sentence);
+
+  // Grade assignment — no longer depends on {source:} markers
+  if (hasEpistemicSignal && constraintCoverage > 0.3 && termCoverage > 0.3) {
     return {
       grade: "A",
-      source: sourceMatch![1],
-      curv: rawCurv * 0.2, // low curvature — well-grounded
+      source: `grounded: ${constraintsSatisfied.map(c => c.id).join(",")}`,
+      curv: rawCurv * 0.2,
     };
   }
 
-  if (hasSource || constraintCoverage > 0.2) {
+  if (hasEpistemicSignal || constraintCoverage > 0.2) {
     return {
       grade: "B",
-      source: sourceMatch?.[1] ?? `scaffold:${constraintsSatisfied.map(c => c.id).join(",")}`,
+      source: `scaffold:${constraintsSatisfied.map(c => c.id).join(",")}`,
       curv: rawCurv * 0.5,
     };
   }
@@ -403,9 +403,12 @@ function gradeSentence(
 export function formatAnnotatedResponse(claims: AnnotatedClaim[]): string {
   return claims
     .map(c => {
-      // Strip any LLM source markers from the text
-      const cleanText = c.text.replace(/\s*\{source:\s*"[^"]*"\}\s*/g, "").trim();
-      return `${cleanText} [[${c.grade}|${c.source}]]`;
+      // Strip any residual LLM source markers or annotation artifacts from the text
+      const cleanText = c.text
+        .replace(/\s*\{source:\s*"[^"]*"\}\s*/g, "")
+        .replace(/\s*\[\[[^\]]*\]\]\s*/g, "")
+        .trim();
+      return cleanText;
     })
     .join(" ");
 }
@@ -437,16 +440,16 @@ export function buildRefinementPrompt(
   iteration: number,
 ): string {
   return (
-    `[SYMBOLIC REFINEMENT — iteration ${iteration + 1}]\n` +
+    `[REFINEMENT — iteration ${iteration + 1}]\n` +
     `The previous response had curvature ${(curvature * 100).toFixed(1)}% ` +
     `(threshold: ${(CONVERGENCE_EPSILON * 100).toFixed(1)}%).\n\n` +
-    `Constraint violations detected (${violations.length}):\n` +
+    `Issues detected (${violations.length}):\n` +
     violations.map((v, i) => `  ${i + 1}. ${v}`).join("\n") +
     `\n\nPlease revise your response to:\n` +
-    `  1. Ground each claim with a specific source or reasoning chain\n` +
-    `  2. Address the violated constraints explicitly\n` +
-    `  3. Add {source: "..."} markers after each factual claim\n` +
-    `  4. State uncertainty explicitly where grounding is unavailable\n` +
+    `  1. Ground each claim with clear reasoning or evidence\n` +
+    `  2. Address the identified issues explicitly\n` +
+    `  3. State uncertainty explicitly where grounding is unavailable\n` +
+    `  4. Write clean prose without any source markers, brackets, or annotations\n` +
     `[/REFINEMENT]`
   );
 }
