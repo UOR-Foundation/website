@@ -28,6 +28,7 @@ interface Profile {
   uorGlyph: string | null;
   uorIpv6: string | null;
   uorCid: string | null;
+  claimedAt: string | null;
 }
 
 interface AuthState {
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, avatar_url, bio, handle, cover_image_url, three_word_name, ceremony_cid, trust_node_cid, disclosure_policy_cid, pqc_algorithm, collapse_intact, uor_canonical_id, uor_glyph, uor_ipv6, uor_cid")
+      .select("id, display_name, avatar_url, bio, handle, cover_image_url, three_word_name, ceremony_cid, trust_node_cid, disclosure_policy_cid, pqc_algorithm, collapse_intact, uor_canonical_id, uor_glyph, uor_ipv6, uor_cid, claimed_at")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -78,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         uorGlyph: data.uor_glyph,
         uorIpv6: data.uor_ipv6,
         uorCid: data.uor_cid,
+        claimedAt: data.claimed_at,
       });
     } else {
       setProfile(null);
