@@ -869,13 +869,22 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
+          ceremony_cid: string | null
           claimed_at: string
+          collapse_intact: boolean | null
+          cover_image_url: string | null
+          disclosure_policy_cid: string | null
           display_name: string | null
+          handle: string | null
           id: string
+          pqc_algorithm: string | null
           privacy_rules: Json | null
           session_cid: string | null
           session_derivation_id: string | null
           session_issued_at: string | null
+          three_word_name: string | null
+          trust_node_cid: string | null
           uor_canonical_id: string | null
           uor_cid: string | null
           uor_glyph: string | null
@@ -885,13 +894,22 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
+          ceremony_cid?: string | null
           claimed_at?: string
+          collapse_intact?: boolean | null
+          cover_image_url?: string | null
+          disclosure_policy_cid?: string | null
           display_name?: string | null
+          handle?: string | null
           id?: string
+          pqc_algorithm?: string | null
           privacy_rules?: Json | null
           session_cid?: string | null
           session_derivation_id?: string | null
           session_issued_at?: string | null
+          three_word_name?: string | null
+          trust_node_cid?: string | null
           uor_canonical_id?: string | null
           uor_cid?: string | null
           uor_glyph?: string | null
@@ -901,13 +919,22 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
+          ceremony_cid?: string | null
           claimed_at?: string
+          collapse_intact?: boolean | null
+          cover_image_url?: string | null
+          disclosure_policy_cid?: string | null
           display_name?: string | null
+          handle?: string | null
           id?: string
+          pqc_algorithm?: string | null
           privacy_rules?: Json | null
           session_cid?: string | null
           session_derivation_id?: string | null
           session_issued_at?: string | null
+          three_word_name?: string | null
+          trust_node_cid?: string | null
           uor_canonical_id?: string | null
           uor_cid?: string | null
           uor_glyph?: string | null

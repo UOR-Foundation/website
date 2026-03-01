@@ -2,25 +2,44 @@
  * MySpacePanel — "One Moment, One Identity"
  * ═══════════════════════════════════════════
  *
- * Auth-anchored identity creation & personal space, ported from ego-guard-forge.
+ * Auth-anchored identity creation & personal space, unified with
+ * QSovereignty.genesis() via CeremonyVault isolation.
  *
  * Phases:
  *  1. auth       — Sign in (Google / Apple / Magic Link)
  *  2. magic-sent — Waiting for magic link confirmation
  *  3. naming     — Choose a display name
- *  4. creating   — Crystallization animation
- *  5. reveal     — Identity confirmation
+ *  4. creating   — Vault-isolated founding ceremony + crystallization animation
+ *  5. reveal     — Identity confirmation with three-word name
  *  6. dashboard  — Personal sovereign dashboard
+ *
+ * Security:
+ *  - Founding ceremony executes inside CeremonyVault (5-layer isolation)
+ *  - Observer-collapse detection aborts on interception
+ *  - Entangled nonce pair ensures no third-party observation
+ *  - All intermediate crypto material is scrubbed post-ceremony
+ *  - QDisclosure default policy: everything private
+ *  - QTrustMesh Node 0: self-attestation at sovereign level
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Mail, LogOut, ArrowLeft, Pencil, Copy, Check, Shield } from "lucide-react";
+import { Mail, LogOut, Copy, Check, Shield, Fingerprint, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { KP } from "@/modules/hologram-os/kernel-palette";
-import { singleProofHash } from "@/modules/uns/core/identity";
+
+// ── Kernel imports ──
+import { QSovereignty, type GenesisResult, type AuthUser } from "@/hologram/kernel/q-sovereignty";
+import { QFs } from "@/hologram/kernel/q-fs";
+import { QMmu } from "@/hologram/kernel/q-mmu";
+import { QSecurity } from "@/hologram/kernel/q-security";
+import { QEcc } from "@/hologram/kernel/q-ecc";
+import { QDisclosure, type DisclosureRule } from "@/hologram/kernel/q-disclosure";
+import { QTrustMesh } from "@/hologram/kernel/q-trust-mesh";
+import { QNet } from "@/hologram/kernel/q-net";
+import { executeInVault, type VaultSeal } from "@/hologram/kernel/q-ceremony-vault";
 
 type Phase = "loading" | "auth" | "magic-sent" | "naming" | "creating" | "reveal" | "dashboard";
 
@@ -28,39 +47,54 @@ interface MySpacePanelProps {
   onClose: () => void;
 }
 
+// ── Ceremony result stored between phases ──
+interface CeremonyState {
+  genesis: GenesisResult;
+  seal: VaultSeal;
+  disclosurePolicyCid: string;
+  trustNodeCid: string;
+}
+
 export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   const { session, profile, loading, signOut, refreshProfile } = useAuth();
   const [phase, setPhase] = useState<Phase>("loading");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [ceremonyState, setCeremonyState] = useState<CeremonyState | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Route to correct phase based on auth state
   useEffect(() => {
-    if (loading) {
-      setPhase("loading");
-      return;
-    }
-    if (!session) {
-      setPhase("auth");
-      return;
-    }
+    if (loading) { setPhase("loading"); return; }
+    if (!session) { setPhase("auth"); return; }
+    if (profile?.ceremonyCid) { setPhase("dashboard"); return; }
     if (profile) {
-      setPhase("dashboard");
+      // Profile exists but no ceremony — check if ceremony was done
+      if (profile.uorCanonicalId) {
+        setPhase("dashboard");
+      } else {
+        const meta = session.user.user_metadata;
+        if (meta?.full_name) setName(meta.full_name);
+        else if (meta?.name) setName(meta.name);
+        setPhase("naming");
+      }
       return;
     }
-    // Session but no profile — check DB directly
+    // Session but no profile yet
     supabase
       .from("profiles")
-      .select("display_name")
+      .select("display_name, ceremony_cid, uor_canonical_id")
       .eq("user_id", session.user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.display_name) {
+        if (data?.ceremony_cid || data?.uor_canonical_id) {
           refreshProfile();
           setPhase("dashboard");
+        } else if (data?.display_name) {
+          setName(data.display_name);
+          setPhase("naming");
         } else {
           const meta = session.user.user_metadata;
           if (meta?.full_name) setName(meta.full_name);
@@ -70,21 +104,20 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
       });
   }, [loading, session, profile, refreshProfile]);
 
-  // Listen for auth changes (OAuth redirect / magic link)
+  // Listen for auth changes
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, sess) => {
       if (event === "SIGNED_IN" && sess) {
         const meta = sess.user.user_metadata;
         if (meta?.full_name) setName(meta.full_name);
         else if (meta?.name) setName(meta.name);
-        // Check if profile already exists
         supabase
           .from("profiles")
-          .select("display_name")
+          .select("display_name, ceremony_cid")
           .eq("user_id", sess.user.id)
           .maybeSingle()
           .then(({ data }) => {
-            if (data?.display_name) {
+            if (data?.ceremony_cid) {
               refreshProfile();
               setPhase("dashboard");
             } else {
@@ -154,7 +187,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     let raf: number;
 
     const draw = () => {
-      progress += 0.012;
+      progress += 0.008; // Slower for the ceremony gravitas
       ctx.clearRect(0, 0, w, h);
 
       const glowAlpha = Math.min(progress * 0.8, 0.4);
@@ -196,18 +229,20 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
       if (progress < 1.0) {
         raf = requestAnimationFrame(draw);
       } else {
-        setPhase("reveal");
+        // Animation done → reveal if ceremony completed
+        if (ceremonyState) {
+          setPhase("reveal");
+        }
       }
     };
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [phase]);
+  }, [phase, ceremonyState]);
 
   // ── Auth Handlers ──
 
   const handleGoogleSignIn = useCallback(async () => {
-    // Store return path before OAuth redirect (non-iframe flow navigates away)
     sessionStorage.setItem("auth_return_to", "/hologram-os");
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
@@ -237,7 +272,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     }
   }, [email]);
 
-  // ── Profile Creation ──
+  // ── Vault-Isolated Genesis Ceremony ──
 
   const handleCreate = useCallback(async () => {
     if (!name.trim()) return;
@@ -246,24 +281,107 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     const { data: { session: sess } } = await supabase.auth.getSession();
     if (!sess) return;
 
-    // Compute UOR identity from display name seed
     try {
-      const identity = await singleProofHash({ displayName: name.trim(), userId: sess.user.id });
+      const authUser: AuthUser = {
+        id: sess.user.id,
+        email: sess.user.email,
+        displayName: name.trim(),
+      };
 
+      // ── Execute founding ceremony inside CeremonyVault ──
+      // 5-layer isolation: entropy binding, observer-collapse,
+      // ephemeral memory, entanglement witness, ceremony seal
+      const vaultResult = await executeInVault(
+        async () => {
+          // Initialize kernel subsystems for this ceremony
+          const ecc = new QEcc();
+          const security = new QSecurity(ecc);
+          const mmu = new QMmu();
+          const fs = new QFs(mmu);
+          const sovereignty = new QSovereignty(fs, security, ecc);
+
+          // Execute the founding ceremony (Dilithium-3 keypair + observer-collapse)
+          const genesis = await sovereignty.genesis(authUser);
+
+          // ── Initialize QDisclosure: default policy = everything private ──
+          const disclosure = new QDisclosure();
+          const defaultRules: DisclosureRule[] = [
+            { attributeKey: "threeWord", visibility: "public", audienceCanonicalIds: [], expiresAt: null },
+            { attributeKey: "glyph", visibility: "public", audienceCanonicalIds: [], expiresAt: null },
+            { attributeKey: "canonicalId", visibility: "selective", audienceCanonicalIds: [], expiresAt: null },
+            { attributeKey: "ipv6", visibility: "private", audienceCanonicalIds: [], expiresAt: null },
+            { attributeKey: "cid", visibility: "private", audienceCanonicalIds: [], expiresAt: null },
+            { attributeKey: "email", visibility: "private", audienceCanonicalIds: [], expiresAt: null },
+          ];
+          const policy = disclosure.createPolicy(
+            genesis.sovereign.identity["u:canonicalId"],
+            defaultRules,
+            "private",
+          );
+
+          // ── Initialize QTrustMesh: Node 0 self-attestation ──
+          const net = new QNet();
+          const trustMesh = new QTrustMesh(net);
+          const selfAttestation = trustMesh.attest(
+            genesis.sovereign.identity["u:canonicalId"],
+            genesis.sovereign.threeWordName.display,
+            genesis.sovereign.identity["u:canonicalId"],
+            genesis.sovereign.threeWordName.display,
+            "sovereign",
+            "Founding self-attestation — genesis node",
+          );
+
+          return {
+            genesis,
+            disclosurePolicyCid: policy.policyId,
+            trustNodeCid: selfAttestation.attestationCid,
+          };
+        },
+        sess.access_token, // Bind auth token to vault entropy
+      );
+
+      const { genesis, disclosurePolicyCid, trustNodeCid } = vaultResult.result;
+
+      // ── Persist to database ──
       await supabase.from("profiles").upsert({
         user_id: sess.user.id,
         display_name: name.trim(),
-        uor_canonical_id: identity["u:canonicalId"],
-        uor_glyph: identity["u:glyph"],
-        uor_ipv6: identity["u:ipv6"],
-        uor_cid: identity["u:cid"],
+        uor_canonical_id: genesis.sovereign.identity["u:canonicalId"],
+        uor_glyph: genesis.sovereign.identity["u:glyph"],
+        uor_ipv6: genesis.sovereign.identity["u:ipv6"],
+        uor_cid: genesis.sovereign.identity["u:cid"],
+        ceremony_cid: genesis.sovereign.ceremonyCid,
+        three_word_name: genesis.sovereign.threeWordName.display,
+        trust_node_cid: trustNodeCid,
+        disclosure_policy_cid: disclosurePolicyCid,
+        pqc_algorithm: "ML-DSA-65",
+        collapse_intact: vaultResult.seal.clean,
+        session_cid: genesis.sovereign.sessionEntryCid,
+        session_derivation_id: genesis.sovereign.ceremonyCid,
+        session_issued_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
-    } catch {
-      // Still save profile even if identity derivation fails
-      await supabase.from("profiles").upsert({
-        user_id: sess.user.id,
-        display_name: name.trim(),
-      }, { onConflict: "user_id" });
+
+      setCeremonyState({
+        genesis,
+        seal: vaultResult.seal,
+        disclosurePolicyCid,
+        trustNodeCid,
+      });
+
+      console.log(
+        `[CeremonyVault] Founding ceremony complete in ${vaultResult.seal.elapsedMs.toFixed(0)}ms — ` +
+        `seal: ${vaultResult.seal.clean ? "CLEAN" : "BREACHED"}, ` +
+        `entanglement: ${vaultResult.seal.entanglementIntact ? "INTACT" : "COLLAPSED"}`
+      );
+
+    } catch (err) {
+      console.error("[MySpace] Vault-isolated genesis failed:", err);
+      toast.error(
+        err instanceof Error && err.message.includes("VAULT BREACH")
+          ? "Ceremony security breach detected. Please try again in a moment."
+          : "Identity creation failed. Please try again."
+      );
+      setPhase("naming");
     }
   }, [name]);
 
@@ -274,6 +392,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
 
   const handleSignOut = useCallback(async () => {
     await signOut();
+    setCeremonyState(null);
     setPhase("auth");
   }, [signOut]);
 
@@ -354,10 +473,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
                   onKeyDown={(e) => e.key === "Enter" && handleMagicLink()}
                   placeholder="your@email.com"
                   className="w-full min-h-[48px] bg-transparent rounded-full px-6 py-3 text-base text-center outline-none transition-colors duration-200"
-                  style={{
-                    border: `1px solid ${KP.border}`,
-                    color: KP.text,
-                  }}
+                  style={{ border: `1px solid ${KP.border}`, color: KP.text }}
                   autoComplete="email"
                   enterKeyHint="send"
                 />
@@ -433,6 +549,9 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
                 <br />
                 <span style={{ color: KP.gold }}>call you?</span>
               </h1>
+              <p className="text-xs mt-3" style={{ color: KP.dim }}>
+                A sovereign identity will be created for you via founding ceremony.
+              </p>
             </div>
 
             <div className="space-y-6">
@@ -445,10 +564,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
                 placeholder="Choose a name"
                 maxLength={30}
                 className="w-full bg-transparent text-center text-xl font-display py-4 outline-none transition-colors duration-300"
-                style={{
-                  borderBottom: `2px solid ${KP.border}`,
-                  color: KP.text,
-                }}
+                style={{ borderBottom: `2px solid ${KP.border}`, color: KP.text }}
                 onFocus={(e) => { e.currentTarget.style.borderBottomColor = KP.gold; }}
                 onBlur={(e) => { e.currentTarget.style.borderBottomColor = KP.border; }}
                 autoComplete="off"
@@ -466,11 +582,22 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
               >
                 <button
                   onClick={handleCreate}
-                  className="min-w-[160px] min-h-[48px] px-10 py-3.5 rounded-full text-base font-semibold active:scale-95 hover:opacity-90 transition-all duration-200 cursor-pointer"
+                  className="min-w-[160px] min-h-[48px] px-10 py-3.5 rounded-full text-base font-semibold active:scale-95 hover:opacity-90 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
                   style={{ background: KP.gold, color: KP.bg }}
                 >
-                  Create
+                  <Fingerprint className="w-4 h-4" />
+                  Begin Ceremony
                 </button>
+              </div>
+
+              {/* Security notice */}
+              <div className="flex items-start gap-2 mt-4" style={{ color: KP.dim }}>
+                <Lock className="w-3 h-3 mt-0.5 shrink-0" />
+                <p className="text-[10px] leading-relaxed">
+                  Your identity is created inside an isolated ceremony vault with 5-layer security: 
+                  entropy binding, observer-collapse detection, ephemeral memory scrubbing, 
+                  entanglement witness, and cryptographic seal. No interception possible.
+                </p>
               </div>
             </div>
           </div>
@@ -479,15 +606,18 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     );
   }
 
-  // ── Creating Phase (Animation) ──
+  // ── Creating Phase (Vault-Isolated Ceremony + Animation) ──
   if (phase === "creating") {
     return (
       <PanelShell onClose={onClose}>
         <div className="flex-1 flex flex-col items-center justify-center relative">
           <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ opacity: 0.9 }} />
-          <div className="relative z-10 text-center animate-fade-in">
+          <div className="relative z-10 text-center animate-fade-in space-y-3">
             <p className="text-lg font-display" style={{ color: KP.muted }}>
-              Creating your identity…
+              Founding ceremony in progress…
+            </p>
+            <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: KP.dim }}>
+              Vault-isolated · Observer-collapse armed · Entanglement active
             </p>
           </div>
         </div>
@@ -497,33 +627,60 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
 
   // ── Reveal Phase ──
   if (phase === "reveal") {
+    const threeWord = ceremonyState?.genesis.sovereign.threeWordName;
+    const identity = ceremonyState?.genesis.sovereign.identity;
+
     return (
       <PanelShell onClose={onClose}>
         <div className="flex-1 flex items-center justify-center relative">
           <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% 40%, hsl(38 60% 60% / 0.06) 0%, transparent 60%)" }} />
-          <div className="relative z-10 text-center px-8 animate-fade-in space-y-8">
+          <div className="relative z-10 text-center px-8 animate-fade-in space-y-6 max-w-sm">
+            {/* Identity glyph */}
             <div
               className="inline-flex items-center justify-center h-24 w-24 rounded-full mx-auto"
               style={{ border: `1px solid ${KP.gold}33`, background: `radial-gradient(circle, ${KP.gold}1a 0%, transparent 70%)` }}
             >
-              <span className="text-4xl font-display font-bold" style={{ color: KP.gold }}>
-                {name.trim().charAt(0).toUpperCase()}
+              <span className="text-3xl" title="Your unique identity glyph">
+                {identity?.["u:glyph"] || name.trim().charAt(0).toUpperCase()}
               </span>
             </div>
+
+            {/* Three-word name */}
             <div>
-              <h2 className="text-3xl font-display font-semibold" style={{ color: KP.text }}>
-                {name.trim()}
+              <h2 className="text-2xl font-display font-semibold" style={{ color: KP.text }}>
+                {threeWord?.display || name.trim()}
               </h2>
-              <p className="text-base mt-3 max-w-xs mx-auto leading-relaxed" style={{ color: KP.muted }}>
-                Your identity is ready. Everything is private by default.
+              <p className="text-sm mt-1 font-mono" style={{ color: KP.muted }}>
+                {name.trim()}
               </p>
             </div>
+
+            {/* Ceremony seal status */}
+            {ceremonyState?.seal && (
+              <div
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-wider uppercase"
+                style={{
+                  background: ceremonyState.seal.clean ? `${KP.gold}12` : "hsl(0, 60%, 50%, 0.12)",
+                  color: ceremonyState.seal.clean ? KP.gold : "hsl(0, 60%, 60%)",
+                  border: `1px solid ${ceremonyState.seal.clean ? KP.gold : "hsl(0, 60%, 50%)"}22`,
+                }}
+              >
+                <Shield className="w-3 h-3" />
+                {ceremonyState.seal.clean ? "Ceremony sealed · No interception" : "Seal compromised"}
+              </div>
+            )}
+
+            <p className="text-xs leading-relaxed max-w-xs mx-auto" style={{ color: KP.dim }}>
+              Your sovereign identity has been created with post-quantum cryptography (ML-DSA-65).
+              Everything is private by default.
+            </p>
+
             <button
               onClick={handleFinishReveal}
               className="min-w-[160px] min-h-[48px] px-10 py-3.5 rounded-full text-base font-semibold active:scale-95 hover:opacity-90 transition-all duration-200 cursor-pointer"
               style={{ background: KP.gold, color: KP.bg }}
             >
-              Enter
+              Enter My Space
             </button>
           </div>
         </div>
@@ -545,14 +702,19 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
                 className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-display font-bold"
                 style={{ background: `${KP.gold}1a`, color: KP.gold, border: `2px solid ${KP.border}` }}
               >
-                {(profile?.displayName ?? "U").charAt(0).toUpperCase()}
+                {profile?.uorGlyph || (profile?.displayName ?? "U").charAt(0).toUpperCase()}
               </div>
             )}
             <div className="min-w-0 flex-1">
               <h2 className="text-2xl font-display font-semibold truncate" style={{ color: KP.text }}>
                 {profile?.displayName ?? "User"}
               </h2>
-              {profile?.uorGlyph && (
+              {profile?.threeWordName && (
+                <p className="text-sm mt-0.5 truncate" style={{ color: KP.gold }}>
+                  {profile.threeWordName}
+                </p>
+              )}
+              {profile?.uorGlyph && !profile?.threeWordName && (
                 <p className="text-sm mt-1 truncate font-mono" style={{ color: KP.muted }}>
                   {profile.uorGlyph}
                 </p>
@@ -560,19 +722,38 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
             </div>
           </div>
 
+          {/* Security badge */}
+          {profile?.ceremonyCid && (
+            <div
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl mb-5"
+              style={{ background: `${KP.gold}08`, border: `1px solid ${KP.gold}18` }}
+            >
+              <Shield className="w-4 h-4" style={{ color: KP.gold }} />
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] font-semibold tracking-wider uppercase" style={{ color: KP.gold }}>
+                  Sovereign · {profile.pqcAlgorithm || "ML-DSA-65"} · {profile.collapseIntact ? "Intact" : "Observed"}
+                </span>
+              </div>
+              <Lock className="w-3 h-3" style={{ color: KP.dim }} />
+            </div>
+          )}
+
           {/* UOR Identity card */}
           {profile?.uorCanonicalId && (
             <div className="rounded-2xl p-5 space-y-3" style={{ background: KP.card, border: `1px solid ${KP.cardBorder}` }}>
               <div className="flex items-center gap-2 mb-3">
-                <Shield className="w-4 h-4" style={{ color: KP.gold }} />
+                <Fingerprint className="w-4 h-4" style={{ color: KP.gold }} />
                 <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: KP.gold }}>
                   Sovereign Identity
                 </span>
               </div>
+              {profile.threeWordName && <IdentityField label="Name" value={profile.threeWordName} />}
               <IdentityField label="Canonical ID" value={profile.uorCanonicalId} />
               {profile.uorCid && <IdentityField label="CID" value={profile.uorCid} />}
               {profile.uorIpv6 && <IdentityField label="IPv6" value={profile.uorIpv6} />}
               {profile.uorGlyph && <IdentityField label="Glyph" value={profile.uorGlyph} />}
+              {profile.ceremonyCid && <IdentityField label="Ceremony" value={profile.ceremonyCid} />}
+              {profile.trustNodeCid && <IdentityField label="Trust Node" value={profile.trustNodeCid} />}
             </div>
           )}
         </div>
@@ -584,6 +765,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
           </p>
           <p className="text-sm leading-relaxed" style={{ color: KP.muted }}>
             Everything is private by default. Your data belongs to you — no one else can access it without your explicit consent.
+            Your identity is protected by post-quantum cryptography and observer-collapse detection.
           </p>
         </div>
 
