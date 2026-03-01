@@ -304,10 +304,16 @@ export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: E
   }, [traceNarrative]);
 
   const handleReflect = useCallback(() => {
-    const narrativeText = traceNarrative.join("\n");
-    const reflectPrompt = `Reflect on this chain of thought and identify any weaknesses, assumptions, or gaps in the reasoning:\n\n${narrativeText}\n\nWhat could be improved, and where might this reasoning be wrong?`;
+    const thought = ex.thought;
+    const answer = ex.understanding;
+    const reflectPrompt =
+      `I just asked you this: "${thought}"\n\n` +
+      `And you responded with this:\n\n${answer}\n\n` +
+      `Now step back and reflect honestly. Where might this reasoning be incomplete, overconfident, or subtly wrong? ` +
+      `What assumptions are hiding beneath the surface? What would a thoughtful skeptic push back on? ` +
+      `Explain it clearly, as if to someone encountering these ideas for the first time.`;
     window.dispatchEvent(new CustomEvent("lumen:follow-up", { detail: reflectPrompt }));
-  }, [traceNarrative]);
+  }, [ex.thought, ex.understanding]);
 
   return (
     <motion.div
