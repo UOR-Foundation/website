@@ -106,14 +106,29 @@ export default function AtlasProjectionLab() {
 
       pipelineRef.current = pipeline;
 
-      // Wire real model logits callback if model is loaded
+      // Wire real lm_head weights into the coherence engine
       if (loadedModelRef.current) {
         const loadedModel = loadedModelRef.current;
+
+        // 1. Direct lm_head projection — extract the real lm_head.weight tensor
+        //    and project it into Atlas space for native O(96) vocabulary lookup
+        const lmHeadWeights = loadedModel.weights.get("lm_head");
+        if (lmHeadWeights) {
+          const vocabSize = loadedModel.manifest.vocabSize;
+          const hiddenDim = loadedModel.manifest.hiddenDim;
+          pipeline.setLmHead(lmHeadWeights, vocabSize, hiddenDim);
+          addLog(`✓ Real lm_head wired: [${vocabSize}×${hiddenDim}] → Atlas projection`);
+        } else {
+          addLog("⚠ lm_head weights not found, using fallback projection");
+        }
+
+        // 2. Also wire the full forward pass callback as secondary path
+        //    (used when lm_head projection alone isn't sufficient)
         const { getNextTokenLogits } = await import("@/modules/hologram-compute/hf-model-bridge");
         pipeline.setLogitsCallback(async (context: number[]) => {
-          return getNextTokenLogits(loadedModel, context.slice(-32)); // last 32 tokens for context window
+          return getNextTokenLogits(loadedModel, context.slice(-32));
         });
-        addLog("✓ Real model lm_head wired into coherence engine");
+        addLog("✓ Real model forward-pass callback wired as secondary path");
       }
 
       // Run the full benchmark
