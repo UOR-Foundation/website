@@ -469,12 +469,18 @@ const StatusBar = memo(function StatusBar({
   language,
   encoding,
   fsStats,
+  errorCount = 0,
+  warningCount = 0,
+  onProblemsClick,
 }: {
   line: number;
   col: number;
   language: string;
   encoding: string;
   fsStats?: { totalFiles: number; totalBytes: number; journalLength: number };
+  errorCount?: number;
+  warningCount?: number;
+  onProblemsClick?: () => void;
 }) {
   return (
     <div
@@ -496,10 +502,20 @@ const StatusBar = memo(function StatusBar({
           <RotateCcw size={11} />
           <span>0</span>
         </span>
-        <span className="flex items-center gap-1" style={{ color: C.warning }}>
-          <span>⚠</span>
-          <span>0</span>
-        </span>
+        <button
+          className="flex items-center gap-2 hover:bg-white/10 px-1 rounded cursor-pointer"
+          onClick={onProblemsClick}
+          title="Toggle Problems"
+        >
+          <span className="flex items-center gap-0.5" style={{ color: errorCount > 0 ? "#f14c4c" : C.statusText }}>
+            <span style={{ fontSize: 13 }}>✕</span>
+            <span>{errorCount}</span>
+          </span>
+          <span className="flex items-center gap-0.5" style={{ color: warningCount > 0 ? "#cca700" : C.statusText }}>
+            <span>⚠</span>
+            <span>{warningCount}</span>
+          </span>
+        </button>
         {fsStats && (
           <span className="flex items-center gap-1 opacity-80" title="Q-FS Merkle DAG">
             <HardDrive size={11} />
@@ -697,14 +713,179 @@ const GitPanel = memo(function GitPanel() {
   );
 });
 
-// ── Integrated Terminal ─────────────────────────────────────────────────────
+// ── Diagnostic Types ────────────────────────────────────────────────────────
 
-const IntegratedTerminal = memo(function IntegratedTerminal({
+interface DiagnosticEntry {
+  severity: "error" | "warning" | "info" | "hint";
+  message: string;
+  source: string;
+  startLine: number;
+  startCol: number;
+  endLine: number;
+  endCol: number;
+  code?: string;
+}
+
+// ── Problems Panel ──────────────────────────────────────────────────────────
+
+const ProblemsPanel = memo(function ProblemsPanel({
+  diagnostics,
+  onGoTo,
+}: {
+  diagnostics: Map<string, DiagnosticEntry[]>;
+  onGoTo?: (file: string, line: number, col: number) => void;
+}) {
+  const totalErrors = useMemo(() => {
+    let count = 0;
+    diagnostics.forEach(d => { count += d.filter(e => e.severity === "error").length; });
+    return count;
+  }, [diagnostics]);
+
+  const totalWarnings = useMemo(() => {
+    let count = 0;
+    diagnostics.forEach(d => { count += d.filter(e => e.severity === "warning").length; });
+    return count;
+  }, [diagnostics]);
+
+  const totalInfos = useMemo(() => {
+    let count = 0;
+    diagnostics.forEach(d => { count += d.filter(e => e.severity === "info" || e.severity === "hint").length; });
+    return count;
+  }, [diagnostics]);
+
+  const severityIcon = (sev: DiagnosticEntry["severity"]) => {
+    switch (sev) {
+      case "error": return <span style={{ color: C.error, fontSize: 13, fontWeight: 700 }}>✕</span>;
+      case "warning": return <span style={{ color: C.warning, fontSize: 12 }}>⚠</span>;
+      case "info": return <span style={{ color: C.info, fontSize: 13 }}>ℹ</span>;
+      case "hint": return <span style={{ color: C.textMuted, fontSize: 13 }}>💡</span>;
+    }
+  };
+
+  const severityColor = (sev: DiagnosticEntry["severity"]) => {
+    switch (sev) {
+      case "error": return C.error;
+      case "warning": return C.warning;
+      case "info": return C.info;
+      case "hint": return C.textMuted;
+    }
+  };
+
+  const filesWithDiags = useMemo(() => {
+    const entries: [string, DiagnosticEntry[]][] = [];
+    diagnostics.forEach((diags, file) => {
+      if (diags.length > 0) entries.push([file, diags]);
+    });
+    entries.sort((a, b) => {
+      const ae = a[1].filter(d => d.severity === "error").length;
+      const be = b[1].filter(d => d.severity === "error").length;
+      return be - ae;
+    });
+    return entries;
+  }, [diagnostics]);
+
+  return (
+    <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+      {/* Filter bar */}
+      <div className="flex items-center gap-3 px-3 py-1.5" style={{ borderBottom: `1px solid ${C.panelBorder}`, fontSize: 12 }}>
+        <span className="flex items-center gap-1" style={{ color: totalErrors > 0 ? C.error : C.textDim }}>
+          <span style={{ fontWeight: 700 }}>✕</span> {totalErrors} Errors
+        </span>
+        <span className="flex items-center gap-1" style={{ color: totalWarnings > 0 ? C.warning : C.textDim }}>
+          ⚠ {totalWarnings} Warnings
+        </span>
+        <span className="flex items-center gap-1" style={{ color: totalInfos > 0 ? C.info : C.textDim }}>
+          ℹ {totalInfos} Info
+        </span>
+      </div>
+
+      {filesWithDiags.length === 0 ? (
+        <div className="flex items-center justify-center py-8 text-[13px]" style={{ color: C.textDim }}>
+          No problems detected in workspace.
+        </div>
+      ) : (
+        filesWithDiags.map(([file, diags]) => (
+          <FileProblems
+            key={file}
+            file={file}
+            diags={diags}
+            severityIcon={severityIcon}
+            severityColor={severityColor}
+            onGoTo={onGoTo}
+          />
+        ))
+      )}
+    </div>
+  );
+});
+
+const FileProblems = memo(function FileProblems({
+  file,
+  diags,
+  severityIcon,
+  severityColor,
+  onGoTo,
+}: {
+  file: string;
+  diags: DiagnosticEntry[];
+  severityIcon: (sev: DiagnosticEntry["severity"]) => React.ReactNode;
+  severityColor: (sev: DiagnosticEntry["severity"]) => string;
+  onGoTo?: (file: string, line: number, col: number) => void;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const fileName = file.split("/").pop() || file;
+  const dirPath = file.split("/").slice(0, -1).join("/");
+
+  return (
+    <div>
+      <button
+        className="flex items-center gap-1.5 w-full text-left px-2 py-1 text-[13px] hover:bg-white/[0.04]"
+        onClick={() => setExpanded(!expanded)}
+      >
+        {expanded ? <ChevronDown size={12} style={{ color: C.textDim }} /> : <ChevronRight size={12} style={{ color: C.textDim }} />}
+        {getFileIcon(fileName)}
+        <span style={{ color: C.text }}>{fileName}</span>
+        {dirPath && <span className="ml-1 text-[11px]" style={{ color: C.textDim }}>{dirPath}</span>}
+        <span className="ml-auto text-[11px] tabular-nums" style={{ color: C.textMuted }}>{diags.length}</span>
+      </button>
+      {expanded && diags.map((d, i) => (
+        <button
+          key={i}
+          className="flex items-start gap-2 w-full text-left pl-8 pr-3 py-1 text-[13px] hover:bg-white/[0.04] cursor-pointer"
+          onClick={() => onGoTo?.(file, d.startLine, d.startCol)}
+        >
+          <span className="shrink-0 mt-0.5">{severityIcon(d.severity)}</span>
+          <span className="flex-1 min-w-0">
+            <span style={{ color: severityColor(d.severity) }}>{d.message}</span>
+            {d.code && <span className="ml-2 text-[11px]" style={{ color: C.textDim }}>ts({d.code})</span>}
+          </span>
+          <span className="shrink-0 text-[11px] tabular-nums" style={{ color: C.textDim }}>
+            [{d.startLine},{d.startCol}]
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+});
+
+// ── Bottom Panel (Problems + Terminal) ──────────────────────────────────────
+
+type BottomPanelTab = "problems" | "output" | "terminal";
+
+const BottomPanel = memo(function BottomPanel({
   visible,
   onToggle,
+  activeTab,
+  onTabChange,
+  diagnostics,
+  onGoToDiagnostic,
 }: {
   visible: boolean;
   onToggle: () => void;
+  activeTab: BottomPanelTab;
+  onTabChange: (tab: BottomPanelTab) => void;
+  diagnostics: Map<string, DiagnosticEntry[]>;
+  onGoToDiagnostic?: (file: string, line: number, col: number) => void;
 }) {
   const [lines, setLines] = useState<string[]>([
     "\x1b[32m➜\x1b[0m hologram-workspace \x1b[36mgit:(main)\x1b[0m",
@@ -724,18 +905,41 @@ const IntegratedTerminal = memo(function IntegratedTerminal({
     setTimeout(() => scrollRef.current?.scrollTo({ top: 99999 }), 16);
   }, [input, lines]);
 
+  // Count diagnostics for tab badge
+  const errorCount = useMemo(() => {
+    let c = 0;
+    diagnostics.forEach(d => { c += d.filter(e => e.severity === "error").length; });
+    return c;
+  }, [diagnostics]);
+  const warningCount = useMemo(() => {
+    let c = 0;
+    diagnostics.forEach(d => { c += d.filter(e => e.severity === "warning").length; });
+    return c;
+  }, [diagnostics]);
+
   if (!visible) return null;
+
+  const tabs: { id: BottomPanelTab; label: string; badge?: number; badgeColor?: string }[] = [
+    {
+      id: "problems",
+      label: "Problems",
+      badge: errorCount + warningCount,
+      badgeColor: errorCount > 0 ? C.error : warningCount > 0 ? C.warning : undefined,
+    },
+    { id: "output", label: "Output" },
+    { id: "terminal", label: "Terminal" },
+  ];
 
   return (
     <div
       className="flex flex-col shrink-0"
       style={{
-        height: 200,
+        height: 220,
         background: C.panelBg,
         borderTop: `1px solid ${C.panelBorder}`,
       }}
     >
-      {/* Terminal tab bar */}
+      {/* Tab bar */}
       <div
         className="flex items-center justify-between shrink-0"
         style={{
@@ -745,35 +949,45 @@ const IntegratedTerminal = memo(function IntegratedTerminal({
           borderBottom: `1px solid ${C.panelBorder}`,
         }}
       >
-        <div className="flex items-center gap-3">
-          <span className="text-[11px] uppercase tracking-wide" style={{ color: C.textMuted }}>
-            Problems
-          </span>
-          <span className="text-[11px] uppercase tracking-wide" style={{ color: C.textMuted }}>
-            Output
-          </span>
-          <span
-            className="text-[11px] uppercase tracking-wide"
-            style={{ color: C.text, borderBottom: `1px solid ${C.accent}`, paddingBottom: 6 }}
-          >
-            Terminal
-          </span>
+        <div className="flex items-center gap-0">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => onTabChange(t.id)}
+              className="flex items-center gap-1.5 px-3 text-[11px] uppercase tracking-wide h-full"
+              style={{
+                color: activeTab === t.id ? C.text : C.textMuted,
+                borderBottom: activeTab === t.id ? `1px solid ${C.accent}` : "1px solid transparent",
+                paddingBottom: activeTab === t.id ? 0 : 0,
+              }}
+            >
+              {t.label}
+              {t.badge !== undefined && t.badge > 0 && (
+                <span
+                  className="text-[10px] px-1.5 py-0 rounded-full tabular-nums"
+                  style={{
+                    background: t.badgeColor ? `${t.badgeColor}25` : "hsla(0,0%,100%,0.1)",
+                    color: t.badgeColor || C.textMuted,
+                    minWidth: 16,
+                    textAlign: "center",
+                  }}
+                >
+                  {t.badge}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
         <div className="flex items-center gap-1">
-          <button
-            className="p-1 rounded hover:bg-white/10"
-            style={{ color: C.textMuted }}
-            title="New Terminal"
-          >
-            <Plus size={13} />
-          </button>
-          <button
-            className="p-1 rounded hover:bg-white/10"
-            style={{ color: C.textMuted }}
-            title="Split Terminal"
-          >
-            <SplitSquareVertical size={13} />
-          </button>
+          {activeTab === "terminal" && (
+            <button
+              className="p-1 rounded hover:bg-white/10"
+              style={{ color: C.textMuted }}
+              title="New Terminal"
+            >
+              <Plus size={13} />
+            </button>
+          )}
           <button
             onClick={onToggle}
             className="p-1 rounded hover:bg-white/10"
@@ -785,31 +999,43 @@ const IntegratedTerminal = memo(function IntegratedTerminal({
         </div>
       </div>
 
-      {/* Terminal content */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-2 font-mono text-[13px] cursor-text"
-        style={{ color: C.text, scrollbarWidth: "thin" }}
-        onClick={() => inputRef.current?.focus()}
-      >
-        {lines.slice(0, -1).map((line, i) => (
-          <div key={i} className="leading-[20px] whitespace-pre-wrap">
-            {line.replace(/\x1b\[[0-9;]*m/g, "")}
-          </div>
-        ))}
-        <div className="flex leading-[20px]">
-          <span>$ </span>
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
-            className="flex-1 bg-transparent outline-none font-mono text-[13px]"
-            style={{ color: C.text }}
-            spellCheck={false}
-          />
+      {/* Panel content */}
+      {activeTab === "problems" && (
+        <ProblemsPanel diagnostics={diagnostics} onGoTo={onGoToDiagnostic} />
+      )}
+
+      {activeTab === "output" && (
+        <div className="flex-1 flex items-center justify-center text-[13px]" style={{ color: C.textDim }}>
+          No output available.
         </div>
-      </div>
+      )}
+
+      {activeTab === "terminal" && (
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto p-2 font-mono text-[13px] cursor-text"
+          style={{ color: C.text, scrollbarWidth: "thin" }}
+          onClick={() => inputRef.current?.focus()}
+        >
+          {lines.slice(0, -1).map((line, i) => (
+            <div key={i} className="leading-[20px] whitespace-pre-wrap">
+              {line.replace(/\x1b\[[0-9;]*m/g, "")}
+            </div>
+          ))}
+          <div className="flex leading-[20px]">
+            <span>$ </span>
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
+              className="flex-1 bg-transparent outline-none font-mono text-[13px]"
+              style={{ color: C.text }}
+              spellCheck={false}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 });
@@ -876,6 +1102,8 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
   const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
   const [terminalVisible, setTerminalVisible] = useState(false);
+  const [bottomTab, setBottomTab] = useState<BottomPanelTab>("problems");
+  const [diagnostics, setDiagnostics] = useState<Map<string, DiagnosticEntry[]>>(new Map());
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [cursorLine, setCursorLine] = useState(1);
   const [cursorCol, setCursorCol] = useState(1);
@@ -1020,6 +1248,33 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
       setCursorLine(e.position.lineNumber);
       setCursorCol(e.position.column);
     });
+
+    // Poll Monaco markers for diagnostics (errors/warnings)
+    const markerInterval = setInterval(() => {
+      if (!monaco) return;
+      const allMarkers = monaco.editor.getModelMarkers({});
+      const grouped = new Map<string, DiagnosticEntry[]>();
+      for (const m of allMarkers) {
+        const uri = m.resource.toString();
+        const fileName = uri.split("/").pop() || uri;
+        const sev = m.severity === 8 ? "error" : m.severity === 4 ? "warning" : m.severity === 2 ? "info" : "hint";
+        const entry: DiagnosticEntry = {
+          severity: sev,
+          message: m.message,
+          source: m.source || "ts",
+          startLine: m.startLineNumber,
+          startCol: m.startColumn,
+          endLine: m.endLineNumber,
+          endCol: m.endColumn,
+          code: typeof m.code === "object" ? String((m.code as any).value) : m.code ? String(m.code) : undefined,
+        };
+        if (!grouped.has(fileName)) grouped.set(fileName, []);
+        grouped.get(fileName)!.push(entry);
+      }
+      setDiagnostics(grouped);
+    }, 1500);
+
+    editor.onDidDispose(() => clearInterval(markerInterval));
 
     // Enable quick suggestions and parameter hints
     editor.updateOptions({
@@ -1352,10 +1607,21 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
             <WelcomeTab />
           )}
 
-          {/* Integrated Terminal */}
-          <IntegratedTerminal
+          {/* Bottom Panel (Problems + Terminal) */}
+          <BottomPanel
             visible={terminalVisible}
             onToggle={() => setTerminalVisible(false)}
+            activeTab={bottomTab}
+            onTabChange={setBottomTab}
+            diagnostics={diagnostics}
+            onGoToDiagnostic={(file, line, col) => {
+              const ed = editorRef.current;
+              if (ed) {
+                ed.revealLineInCenter(line);
+                ed.setPosition({ lineNumber: line, column: col });
+                ed.focus();
+              }
+            }}
           />
         </div>
       </div>
@@ -1367,6 +1633,9 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
         language={activeFile?.language ?? "Plain Text"}
         encoding="UTF-8"
         fsStats={qfs.stats}
+        errorCount={(() => { let c = 0; diagnostics.forEach(d => { c += d.filter(e => e.severity === "error").length; }); return c; })()}
+        warningCount={(() => { let c = 0; diagnostics.forEach(d => { c += d.filter(e => e.severity === "warning").length; }); return c; })()}
+        onProblemsClick={() => { setTerminalVisible(true); setBottomTab("problems"); }}
       />
 
       {/* ── Command Palette Overlay ───────────────────────────────── */}
