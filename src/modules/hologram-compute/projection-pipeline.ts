@@ -125,6 +125,9 @@ export class AtlasProjectionPipeline {
   };
   private holographicEncoding: HolographicEncoding | null = null;
 
+  /** Pending logits callback — stored here so it survives engine recreation */
+  private pendingLogitsCallback: ((context: number[]) => Promise<Float32Array>) | null = null;
+
   /** Status change listeners */
   private listeners = new Set<(status: PipelineStatus) => void>();
 
@@ -237,6 +240,12 @@ export class AtlasProjectionPipeline {
 
       this.engine.initialize(this.decomposition);
 
+      // Apply pending logits callback if one was set before engine creation
+      if (this.pendingLogitsCallback) {
+        this.engine.setLogitsCallback(this.pendingLogitsCallback);
+        console.log("[Pipeline] Applied pending logits callback to engine");
+      }
+
       this.updateStatus({
         stage: "ready",
         progress: 1.0,
@@ -297,7 +306,10 @@ export class AtlasProjectionPipeline {
   }
 
   /** Wire a real model logits callback into the engine */
+  /** Wire a real model logits callback into the engine */
   setLogitsCallback(fn: (context: number[]) => Promise<Float32Array>): void {
+    this.pendingLogitsCallback = fn;
+    // If engine already exists, apply immediately
     this.engine?.setLogitsCallback(fn);
   }
 }
