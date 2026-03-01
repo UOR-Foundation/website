@@ -13,7 +13,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, User, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
-  Terminal, Beaker, Atom, Code2, ChevronDown, Server, Package,
+  Terminal, Beaker, Atom, Code2, ChevronDown, Server, Package, FolderOpen,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 import DataBankIndicator from "./DataBankIndicator";
@@ -114,6 +114,7 @@ interface DesktopOsSidebarProps {
   onOpenQuantumWorkspace?: () => void;
   onOpenCode?: () => void;
   onOpenPackages?: () => void;
+  onOpenVault?: () => void;
   onGoHome?: () => void;
   onReplayGuide?: () => void;
   onHoverPanel?: (panel: string) => void;
@@ -133,6 +134,7 @@ export default function DesktopOsSidebar({
   onOpenQuantumWorkspace,
   onOpenCode,
   onOpenPackages,
+  onOpenVault,
   onGoHome,
   onReplayGuide,
   onHoverPanel,
@@ -323,6 +325,23 @@ export default function DesktopOsSidebar({
             >
               <Globe className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
               {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Web</span>}
+            </button>
+          </IconTooltip>
+        )}
+
+        {/* Vault */}
+        {onOpenVault && (
+          <IconTooltip label="Vault" show={!expanded}>
+            <button
+              onClick={() => collapseAndDo(onOpenVault)}
+              onMouseEnter={() => onHoverPanel?.("vault")}
+              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
+              }`}
+              style={{ color: "var(--sb-text)" }}
+            >
+              <FolderOpen className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-gold)" }} />
+              {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Vault</span>}
             </button>
           </IconTooltip>
         )}
