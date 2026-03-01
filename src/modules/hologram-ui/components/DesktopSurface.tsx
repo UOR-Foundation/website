@@ -468,6 +468,61 @@ export default function DesktopSurface({
               <TypewriterText text={getLumenSubtitle()} />
             </p>
           </div>
+
+          {/* ── Genesis-synced circle + dot — emanating from center ── */}
+          <div
+            className="flex flex-col items-center"
+            style={{
+              marginTop: "clamp(12px, 2vh, 28px)",
+              animation: "stagger-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) 2.8s both",
+            }}
+          >
+            <div className="relative flex items-center justify-center" style={{ width: 48, height: 48 }}>
+              {/* Outer emanating ring — breathes in sync with Genesis */}
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: 48,
+                  height: 48,
+                  border: `1px solid ${
+                    mode === "white"
+                      ? "hsla(32, 35%, 45%, 0.2)"
+                      : "hsla(38, 40%, 55%, 0.15)"
+                  }`,
+                  animation: "genesis-ring-emanate 2.4s ease-in-out infinite",
+                }}
+              />
+              {/* Second emanating ring — offset phase */}
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: 32,
+                  height: 32,
+                  border: `1px solid ${
+                    mode === "white"
+                      ? "hsla(32, 35%, 45%, 0.12)"
+                      : "hsla(38, 40%, 55%, 0.08)"
+                  }`,
+                  animation: "genesis-ring-emanate 2.4s ease-in-out 0.3s infinite",
+                }}
+              />
+              {/* Core dot — identical to sidebar Genesis dot */}
+              <div
+                className="rounded-full"
+                style={{
+                  width: 6,
+                  height: 6,
+                  background: mode === "white"
+                    ? "hsla(32, 40%, 50%, 0.85)"
+                    : "hsla(38, 50%, 60%, 0.85)",
+                  boxShadow: mode === "white"
+                    ? "0 0 12px hsla(32, 40%, 45%, 0.4), 0 0 4px hsla(32, 40%, 45%, 0.2)"
+                    : "0 0 16px hsla(38, 50%, 55%, 0.5), 0 0 6px hsla(38, 50%, 55%, 0.3)",
+                  animation: "heartbeat-love 2.4s ease-in-out infinite",
+                }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
