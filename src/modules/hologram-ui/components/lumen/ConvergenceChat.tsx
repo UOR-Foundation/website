@@ -24,9 +24,16 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles, Maximize2 } from "lucide-react";
+import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles, Maximize2, SlidersHorizontal } from "lucide-react";
 import ExchangeCard from "./ExchangeCard";
+import ProModeMixer from "./ProModeMixer";
 import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
+import {
+  getDefaultValues,
+  buildDimensionPrompt,
+  type DimensionValues,
+  type DimensionPreset,
+} from "@/modules/hologram-ui/engine/proModeDimensions";
 import { useConvergenceVoice, type VoicePhase } from "@/modules/hologram-ui/hooks/useConvergenceVoice";
 import {
   buildScaffold,
@@ -104,6 +111,19 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   const coherence = useCoherence();
   const [voiceMode, setVoiceMode] = useState(false);
   const [triadicMode, setTriadicMode] = useState<TriadicMode>("balanced");
+  const [proMode, setProMode] = useState(false);
+  const [dimensionValues, setDimensionValues] = useState<DimensionValues>(getDefaultValues());
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+
+  const handleSelectPreset = useCallback((preset: DimensionPreset) => {
+    setDimensionValues(preset.values);
+    setActivePresetId(preset.id);
+  }, []);
+
+  const handleDimensionChange = useCallback((newValues: DimensionValues) => {
+    setDimensionValues(newValues);
+    setActivePresetId(null); // custom mix clears preset selection
+  }, []);
 
   // ── Voice integration ────────────────────────────────────────────
   const voice = useConvergenceVoice({
@@ -251,6 +271,12 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
       // Add scaffold prompt if available
       if (scaffold?.promptFragment) {
         allMessages.push({ role: "system", content: scaffold.promptFragment });
+      }
+
+      // Add Pro Mode dimension prompt if any faders differ from default
+      const dimPrompt = buildDimensionPrompt(dimensionValues);
+      if (dimPrompt) {
+        allMessages.push({ role: "system", content: dimPrompt });
       }
 
       const resp = await fetch(STREAM_URL, {
@@ -485,9 +511,34 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
               <Maximize2 className="w-3 h-3" strokeWidth={1.5} />
             </button>
           )}
+
+          {/* Pro Mode toggle */}
+          <button
+            onPointerDown={() => setProMode(!proMode)}
+            className="h-7 px-2.5 rounded-lg flex items-center gap-1.5 transition-all duration-220"
+            style={{
+              background: proMode
+                ? "hsla(38, 40%, 45%, 0.15)"
+                : "hsla(38, 15%, 30%, 0.06)",
+              border: `1px solid ${proMode ? "hsla(38, 35%, 45%, 0.2)" : "hsla(38, 15%, 25%, 0.08)"}`,
+              color: proMode
+                ? "hsl(38, 50%, 65%)"
+                : "hsla(38, 15%, 55%, 0.35)",
+            }}
+          >
+            <SlidersHorizontal className="w-3 h-3" strokeWidth={1.5} />
+            <span className="text-[10px] tracking-[0.08em] font-medium">
+              Pro
+            </span>
+          </button>
         </div>
       </div>
 
+      {/* ── Main content area with Pro Mode panel ───────────── */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+
+        {/* ── Conversation column ──────────────────────────────── */}
+        <div className="flex-1 flex flex-col min-w-0">
       {/* ── Conversation — centered, serene ─────────────────── */}
       <div
         ref={scrollRef}
@@ -754,6 +805,35 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
           </div>
         </div>
       </div>
+      </div>{/* end conversation column */}
+
+        {/* ── Pro Mode panel — slides in from right ─────────────── */}
+        <AnimatePresence>
+          {proMode && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 320, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="flex-shrink-0 overflow-hidden"
+              style={{
+                borderLeft: "1px solid hsla(38, 15%, 25%, 0.1)",
+              }}
+            >
+              <div className="w-[320px] h-full">
+                <ProModeMixer
+                  coherenceH={coherence.h ?? 0.5}
+                  values={dimensionValues}
+                  onChange={handleDimensionChange}
+                  activePresetId={activePresetId}
+                  onSelectPreset={handleSelectPreset}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+      </div>{/* end flex row */}
     </div>
   );
 }
