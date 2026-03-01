@@ -206,6 +206,7 @@ interface DesktopOsSidebarProps {
   onOpenMySpace?: () => void;
   onGoHome?: () => void;
   onReplayGuide?: () => void;
+  onHoverChat?: () => void;
   onHoverPanel?: (panel: string) => void;
   hintOpacity?: (key: string) => number;
   bgMode?: "image" | "white" | "dark";
@@ -228,6 +229,7 @@ export default function DesktopOsSidebar({
   onOpenMySpace,
   onGoHome,
   onReplayGuide,
+  onHoverChat,
   onHoverPanel,
   hintOpacity,
   bgMode = "image",
@@ -375,6 +377,7 @@ export default function DesktopOsSidebar({
         ) : (
           <button
             onClick={() => setExpanded(true)}
+            onMouseEnter={() => onHoverChat?.()}
             className="group/logo sidebar-logo-btn w-9 h-9 mx-auto rounded-xl flex items-center justify-center transition-transform duration-200 hover:scale-105 relative"
             title={`Expand sidebar (${MOD_KEY} B)`}
           >
