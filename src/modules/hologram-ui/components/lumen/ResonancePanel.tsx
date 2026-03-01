@@ -20,6 +20,8 @@ import {
   type ResonanceProfile,
 } from "@/modules/hologram-ui/engine/resonanceObserver";
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import KnowledgeGraphInput from "./KnowledgeGraphInput";
 
 interface ResonancePanelProps {
   open: boolean;
@@ -29,11 +31,15 @@ interface ResonancePanelProps {
 export default function ResonancePanel({ open, onClose }: ResonancePanelProps) {
   const [profile, setProfile] = useState<ResonanceProfile | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setProfile(loadResonanceProfile());
       setConfirmReset(false);
+      supabase.auth.getUser().then(({ data }) => {
+        setUserId(data.user?.id ?? null);
+      });
     }
   }, [open]);
 
@@ -240,6 +246,9 @@ export default function ResonancePanel({ open, onClose }: ResonancePanelProps) {
                   ))}
                 </div>
               </section>
+
+              {/* Knowledge Graph Input */}
+              {userId && <KnowledgeGraphInput userId={userId} />}
 
               {/* Sovereignty notice + reset */}
               <section
