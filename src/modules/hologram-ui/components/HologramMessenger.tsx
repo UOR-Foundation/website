@@ -488,7 +488,7 @@ export default function HologramMessenger({ onClose }: HologramMessengerProps) {
 
   // Phase tab config
   const tabs: { key: TriadicPhase; label: string; count: number }[] = [
-    { key: "all", label: "Inbox", count: stats.unread },
+    { key: "all", label: "Inbox", count: stats.total },
     { key: "learn", label: "Learn", count: messages.filter(m => m.phase === "learn").length },
     { key: "work", label: "Work", count: messages.filter(m => m.phase === "work").length },
     { key: "play", label: "Play", count: messages.filter(m => m.phase === "play").length },
