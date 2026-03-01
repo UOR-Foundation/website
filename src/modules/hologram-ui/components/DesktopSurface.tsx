@@ -510,9 +510,9 @@ export default function DesktopSurface({
                     ? "hsla(32, 40%, 50%, 0.85)"
                     : "hsla(38, 50%, 60%, 0.85)",
                   boxShadow: mode === "white"
-                    ? "0 0 12px hsla(32, 40%, 45%, 0.4), 0 0 4px hsla(32, 40%, 45%, 0.2)"
-                    : "0 0 16px hsla(38, 50%, 55%, 0.5), 0 0 6px hsla(38, 50%, 55%, 0.3)",
-                  animation: "heartbeat-love 2.4s ease-in-out infinite",
+                    ? `0 0 calc(6px + 8px * var(--h-score, 0.5)) hsla(32, 40%, 45%, calc(0.2 + 0.3 * var(--h-score, 0.5))), 0 0 4px hsla(32, 40%, 45%, 0.2)`
+                    : `0 0 calc(8px + 12px * var(--h-score, 0.5)) hsla(38, 50%, 55%, calc(0.2 + 0.4 * var(--h-score, 0.5))), 0 0 calc(3px + 6px * var(--h-score, 0.5)) hsla(38, 50%, 55%, 0.3)`,
+                  animation: "heartbeat-love calc(1.8s + 1.2s * (1 - var(--h-score, 0.5))) ease-in-out infinite",
                 }}
               />
             </button>

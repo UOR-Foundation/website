@@ -94,8 +94,8 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
                 width: "8px",
                 height: "8px",
                 background: dotColor,
-                boxShadow: `0 0 12px ${dotColor}`,
-                animation: "heartbeat-love 2.4s ease-in-out infinite",
+                boxShadow: `0 0 calc(6px + 10px * var(--h-score, 0.5)) ${dotColor}`,
+                animation: "heartbeat-love calc(1.8s + 1.2s * (1 - var(--h-score, 0.5))) ease-in-out infinite",
               }}
             />
             <span
