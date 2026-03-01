@@ -338,7 +338,7 @@ export default function WeatherWidget() {
 
       {/* Primary label */}
       <span
-        className="text-[12px] tracking-[0.35em] uppercase text-center transition-all duration-300"
+        className="text-[10px] tracking-[0.35em] uppercase text-center transition-all duration-300"
         style={{
           fontFamily: "'DM Sans', system-ui, sans-serif",
           color: "hsla(38, 15%, 90%, 0.9)",
@@ -350,9 +350,9 @@ export default function WeatherWidget() {
 
       {/* Hover reveal: mood + details */}
       <div
-        className="absolute -top-12 left-1/2 flex flex-col items-center gap-1 transition-all duration-300 pointer-events-none whitespace-nowrap"
+        className="absolute -top-5 left-1/2 flex flex-col items-center gap-1 transition-all duration-300 pointer-events-none whitespace-nowrap"
         style={{
-          transform: `translateX(-50%) translateY(${hovered ? "4px" : "6px"})`,
+          transform: `translateX(-50%) translateY(${hovered ? "2px" : "4px"})`,
           opacity: hovered ? 1 : 0,
         }}
       >
