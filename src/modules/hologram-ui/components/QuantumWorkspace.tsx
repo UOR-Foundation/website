@@ -12,6 +12,8 @@
  */
 
 import React, { useState, useCallback, useMemo, useRef, useEffect, type DragEvent } from "react";
+import { CodeProjection } from "@/hologram/kernel/components/CodeProjection";
+import type { NbColors } from "@/hologram/kernel/notebook/notebook-theme";
 import {
   X, Sun, Moon, Undo2, Redo2, Search, SlidersHorizontal, BarChart3,
   Save, Download, Settings, ChevronDown, Trash2, Plus, Minus,
@@ -816,7 +818,110 @@ function highlightQASM(code: string, t: Theme): React.ReactNode[] {
       tokens.push(<span key={`${li}-${i}`}>{line[i]}</span>);
       i++;
     }
-    return <div key={li}>{tokens.length > 0 ? tokens : "\u00A0"}</div>;
+  return <div key={li}>{tokens.length > 0 ? tokens : "\u00A0"}</div>;
+  });
+}
+
+/** Adapter: Theme → NbColors for CodeProjection */
+function themeToNbColors(t: Theme): NbColors {
+  return {
+    bg: t.surface,
+    bgSoft: t.panel,
+    bgToolbar: t.surfaceAlt,
+    bgCell: t.panel,
+    bgCellCode: t.surfaceAlt,
+    bgCellCodeBorder: t.border,
+    bgCellCodeBorderActive: t.borderStrong,
+    bgHover: `${t.text}08`,
+    bgHoverStrong: `${t.text}12`,
+    bgSelected: `${t.accent}15`,
+    bgOverlay: "hsla(0,0%,0%,0.5)",
+    bgInput: t.surfaceAlt,
+    text: t.text,
+    textStrong: t.text,
+    textMuted: t.textMuted,
+    textDim: t.textDim,
+    textCode: t.text,
+    caret: t.accent,
+    border: t.border,
+    borderStrong: t.borderStrong,
+    borderCell: t.border,
+    synComment: t.codeComment,
+    synString: t.codeString,
+    synNumber: t.codeNumber,
+    synKeyword: t.codeKeyword,
+    synBuiltin: t.accent,
+    synOperator: t.textSecondary,
+    synDecorator: t.accent,
+    synSelf: t.codeKeyword,
+    gold: t.accent,
+    goldBg: `${t.accent}15`,
+    goldText: t.accent,
+    green: t.green,
+    greenBg: `${t.green}15`,
+    greenText: t.green,
+    blue: t.accent,
+    blueBg: `${t.accent}15`,
+    blueText: t.accent,
+    red: "#ef4444",
+    redBg: "hsla(0,70%,50%,0.1)",
+    redText: "#ef4444",
+    purple: "#a78bfa",
+    purpleBg: "hsla(260,60%,60%,0.1)",
+    cellBorderEdit: t.accent,
+    cellBorderCommand: t.border,
+    cellBorderSelected: t.accent,
+    editModeBg: `${t.accent}15`,
+    editModeText: t.accent,
+    commandModeBg: t.surfaceAlt,
+    commandModeText: t.textMuted,
+    chartBg: t.surface,
+    chartGrid: t.border,
+    chartLabel: t.textDim,
+    shadow: t.shadow,
+    shadowStrong: t.shadow,
+  } as NbColors;
+}
+
+/** QASM highlighter adapter for CodeProjection */
+function qasmHighlighter(code: string, nb: NbColors): { tokens: React.ReactNode[] }[] {
+  return code.split("\n").map((line, li) => {
+    const tokens: React.ReactNode[] = [];
+    let i = 0;
+    while (i < line.length) {
+      if (line.slice(i, i + 2) === "//") {
+        tokens.push(<span key={`${li}-${i}`} style={{ color: nb.synComment, fontStyle: "italic" }}>{line.slice(i)}</span>);
+        break;
+      }
+      if (line[i] === '"') {
+        let j = i + 1;
+        while (j < line.length && line[j] !== '"') j++;
+        tokens.push(<span key={`${li}-${i}`} style={{ color: nb.synString }}>{line.slice(i, j + 1)}</span>);
+        i = j + 1; continue;
+      }
+      if (/\d/.test(line[i])) {
+        let j = i;
+        while (j < line.length && /[\d.]/.test(line[j])) j++;
+        tokens.push(<span key={`${li}-${i}`} style={{ color: nb.synNumber }}>{line.slice(i, j)}</span>);
+        i = j; continue;
+      }
+      if (/[a-zA-Z_]/.test(line[i])) {
+        let j = i;
+        while (j < line.length && /[a-zA-Z0-9_]/.test(line[j])) j++;
+        const word = line.slice(i, j);
+        if (QASM_KEYWORDS.has(word)) {
+          tokens.push(<span key={`${li}-${i}`} style={{ color: nb.synKeyword, fontWeight: 600 }}>{word}</span>);
+        } else if (QASM_GATES.has(word)) {
+          tokens.push(<span key={`${li}-${i}`} style={{ color: nb.synBuiltin }}>{word}</span>);
+        } else {
+          tokens.push(<span key={`${li}-${i}`}>{word}</span>);
+        }
+        i = j; continue;
+      }
+      tokens.push(<span key={`${li}-${i}`}>{line[i]}</span>);
+      i++;
+    }
+    return { tokens: tokens.length > 0 ? tokens : [<span key={`${li}-empty`}>{"\u00A0"}</span>] };
   });
 }
 
@@ -1422,10 +1527,16 @@ export default function QuantumWorkspace({ onClose }: Props) {
   const [showRunResults, setShowRunResults] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [editableCode, setEditableCode] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const qasmCode = useMemo(() => generateQASM(numQubits, numClbits, gates), [numQubits, numClbits, gates]);
+
+  // Sync generated code to editable state when circuit changes
+  useEffect(() => {
+    setEditableCode(null); // reset to generated code when circuit changes
+  }, [numQubits, numClbits, gates, codeFramework]);
 
   const frameworkCode = useMemo(() => {
     switch (codeFramework) {
@@ -1746,7 +1857,7 @@ export default function QuantumWorkspace({ onClose }: Props) {
   // Save file
   const saveFile = useCallback(() => {
     const fw = FRAMEWORK_LABELS[codeFramework];
-    const blob = new Blob([frameworkCode], { type: fw.mime });
+    const blob = new Blob([editableCode ?? frameworkCode], { type: fw.mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -2109,31 +2220,37 @@ export default function QuantumWorkspace({ onClose }: Props) {
               </button>
             </div>
 
-            {/* Code view */}
+            {/* Code view — editable via CodeProjection */}
             {!showRunResults && (
               <>
-                <div className="flex-1 overflow-auto">
-                  <pre className="text-[13px] font-mono leading-[1.8] px-0 py-3 select-all" style={{ color: t.text }}>
-                    <div className="flex">
-                      <div className="select-none pr-3 text-right" style={{ minWidth: 40, color: t.textDim }}>
-                        {frameworkCode.split("\n").map((_, i) => (
-                          <div key={i} className="px-2">{i + 1}</div>
-                        ))}
-                      </div>
-                      <div className="flex-1 min-w-0 pr-3">
-                        {codeFramework === "openqasm" ? highlightQASM(frameworkCode, t) : (
-                          frameworkCode.split("\n").map((line, i) => <div key={i}>{line || "\u00A0"}</div>)
-                        )}
-                      </div>
-                    </div>
-                  </pre>
+                <div className="flex-1 overflow-hidden">
+                  <CodeProjection
+                    value={editableCode ?? frameworkCode}
+                    onChange={setEditableCode}
+                    id="qw-code-editor"
+                    language="plain"
+                    lineNumbers
+                    syntaxOverlay
+                    highlighter={codeFramework === "openqasm" ? qasmHighlighter : undefined}
+                    theme={themeToNbColors(t)}
+                    maxHeight={9999}
+                    minRows={5}
+                    placeholder="// Enter code here..."
+                  />
                 </div>
                 <div className="px-3 py-2 shrink-0 flex gap-2" style={{ borderTop: `1px solid ${t.border}` }}>
-                  <button onClick={() => navigator.clipboard.writeText(frameworkCode)}
+                  <button onClick={() => navigator.clipboard.writeText(editableCode ?? frameworkCode)}
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-[12px]"
                     style={{ color: t.textSecondary, border: `1px solid ${t.border}` }}>
                     <Copy size={12} /> Copy
                   </button>
+                  {editableCode !== null && (
+                    <button onClick={() => setEditableCode(null)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-[12px]"
+                      style={{ color: t.accent, border: `1px solid ${t.accent}40` }}>
+                      <RotateCcw size={12} /> Reset
+                    </button>
+                  )}
                   <button onClick={saveFile}
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded text-[12px]"
                     style={{ color: t.textSecondary, border: `1px solid ${t.border}` }}>
